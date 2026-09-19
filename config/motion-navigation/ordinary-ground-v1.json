@@ -1,0 +1,33 @@
+{
+  "schema_version": "mc2p.ordinary-ground-profile.v1",
+  "scope": {
+    "minecraft_version": "1.21",
+    "movement": "walking_without_sprint_jump_sneak_or_collision",
+    "tick_seconds": 0.05,
+    "support_materials": [
+      "minecraft:grass_block"
+    ]
+  },
+  "profile": {
+    "acceleration_blocks_per_second2": 40.00000075298273,
+    "velocity_retention_per_tick": 0.546000063419342,
+    "maximum_speed_blocks_per_second": 4.370969732409911
+  },
+  "validation": {
+    "calibration_samples": 55,
+    "independent_validation_samples": 55,
+    "input_categories": [
+      "forward_only",
+      "strafe_only",
+      "diagonal",
+      "release"
+    ],
+    "position_error_p95_blocks": 0.0028295354772617494,
+    "position_error_max_blocks": 0.004094801484172171,
+    "velocity_error_p95_blocks_per_second": 0.030898531000646566,
+    "velocity_error_max_blocks_per_second": 0.044715237400960284,
+    "six_step_position_error_p99_blocks": 0.02440922462822599,
+    "six_step_position_error_max_blocks": 0.02440922462822599,
+    "source_run": "artifacts/fabric-deployment/20260918T145741886164Z-5f828079"
+  }
+}
