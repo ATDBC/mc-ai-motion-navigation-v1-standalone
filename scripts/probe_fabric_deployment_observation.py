@@ -366,6 +366,13 @@ def _close_client(runtime, backend, transport, process, identity) -> tuple[dict 
     return cleanup, failures
 
 
+def _runtime_trace(directory: Path, backend, *, capture_close_diagnostics: bool):
+    if capture_close_diagnostics:
+        from scripts.fabric_visibility_scenario import CloseDiagnosticsTrace
+        return CloseDiagnosticsTrace(directory, backend)
+    return JsonlTraceWriterV0(directory / "trace.jsonl")
+
+
 def _scenario(runtime, backend, episode, directory, deadline, previous_gui=None, *, b02_air_probe=False):
     task = TaskIntentV0("deployment-probe", "control-gui-probe", "{}",
         (SuccessCriterionV0("horizontal_displacement", ComparisonOperatorV0.GREATER_THAN, .1, "blocks"),),
@@ -509,7 +516,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                b06_ordinary_material_probe: bool = False,
                b07_step_probe: bool = False,
                b08_ground_modes_probe: bool = False,
-               b09_air_motion_probe: bool = False) -> int:
+               b09_air_motion_probe: bool = False,
+               physics_tick_diagnostics: bool = False) -> int:
     if sum((container_probe,mining_probe,visibility_probe,b02_air_probe,
             b03_fixed_route_probe,b03_shape_probe,b04_known_map_probe,
             b05_jump_calibration_probe,b05_jump_route_probe,
@@ -578,7 +586,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
             (directory / "options.txt").write_text(options, encoding="utf-8")
             token = secrets.token_hex(32)
             environment = client_environment(dict(os.environ), token=token, server_port=server_port, ipc_port=ipc_port,
-                time_diagnostics=time_diagnostics,block_parity_diagnostics=block_parity)
+                time_diagnostics=time_diagnostics,block_parity_diagnostics=block_parity,
+                physics_tick_diagnostics=physics_tick_diagnostics)
             player_uuid = str(uuid.UUID(bytes=hashlib.md5(b"OfflinePlayer:MC2PProbe").digest(), version=3))
             arguments = ["-Xms256M", "-Xmx2G", *PROXY_ARGS, "-Djava.net.preferIPv4Stack=true", *launch["jvm_args"],
                 "-cp", os.pathsep.join(str(ROOT / item["path"]) for item in launch["classpath"]), launch["main_class"],
@@ -594,11 +603,11 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                     identity = ClientProcessIdentity(process.pid, psutil.Process(process.pid).create_time())
                     write_json_atomic(directory / "identity.json", asdict(identity))
                     backend = create_deployment_backend(transport, identity, token, server_port)
-                    if visibility_probe:
-                        from scripts.fabric_visibility_scenario import CloseDiagnosticsTrace
-                        trace=CloseDiagnosticsTrace(directory,backend)
-                    else:
-                        trace=JsonlTraceWriterV0(directory/'trace.jsonl')
+                    trace = _runtime_trace(
+                        directory,
+                        backend,
+                        capture_close_diagnostics=visibility_probe or time_diagnostics,
+                    )
                     runtime = PlayerRuntimeV1(backend,trace)
                     episode = f"fabric-{seed}-{number}"
                     reset = runtime.reset(ResetRequestV0(f"reset-{number}", episode, "remote-session", 0,
@@ -1066,6 +1075,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
         perception_variant='active_perception_v1' if mining_probe else None,
         perception_config=asdict(PerceptionConfig()) if mining_probe else None,
         time_diagnostics=time_diagnostics,
+        physics_tick_diagnostics=physics_tick_diagnostics,
         status="passed" if failure is None and not cleanup_failures else "failed", checks=checks,
         primary_failure=failure, cleanup_failures=cleanup_failures, diagnostic_failures=diagnostic_failures, sessions=sessions,
         limits=["local vanilla server/direct client interface slice only", "no complete timing, visibility or training acceptance"])
@@ -1083,6 +1093,8 @@ def main(argv=None) -> int:
     parser.add_argument("--container-probe", action="store_true", help="verify nonempty normal chest transfer and reconnect")
     parser.add_argument("--mining-probe", action="store_true", help="verify shared Runtime mining, pickup, placement and persisted server state")
     parser.add_argument("--time-diagnostics", action="store_true", help="record read-only tick/time-packet attribution outside actor payloads")
+    parser.add_argument("--physics-tick-diagnostics", action="store_true",
+                        help="join pre-state, sampled input and post-state for each actor movement tick")
     parser.add_argument('--visibility-probe',action='store_true',help='run the shared original-speed visibility scene')
     parser.add_argument('--block-parity',action='store_true',help='test-only same-tick first-hit comparison, not a speed benchmark')
     parser.add_argument('--b02-air-probe',action='store_true',help='measure bounded positive-only air confirmation')
@@ -1116,6 +1128,8 @@ def main(argv=None) -> int:
             args.b09_air_motion_probe))>1:
         parser.error('probe scenarios are mutually exclusive')
     if args.block_parity and not args.visibility_probe: parser.error('block parity requires visibility scenario')
+    if args.physics_tick_diagnostics and not args.time_diagnostics:
+        parser.error('physics tick diagnostics require --time-diagnostics')
     if (not math.isfinite(args.timeout_seconds) or not 120 <= args.timeout_seconds <= 600
             or not 1 <= args.server_port <= 65535 or not 1 <= args.ipc_port <= 65535 or args.server_port == args.ipc_port):
         parser.error("invalid bounded probe configuration")
@@ -1130,7 +1144,8 @@ def main(argv=None) -> int:
                           args.b04_known_map_probe,args.b05_jump_calibration_probe,
                           args.b05_jump_route_probe,args.b05_jump_acceptance_probe,
                           args.b06_ordinary_material_probe,args.b07_step_probe,
-                          args.b08_ground_modes_probe,args.b09_air_motion_probe)
+                          args.b08_ground_modes_probe,args.b09_air_motion_probe,
+                          args.physics_tick_diagnostics)
 
     if not port_free(args.server_port) or not port_free(args.ipc_port):
         parser.error("a local test port is occupied")
@@ -1159,6 +1174,8 @@ def main(argv=None) -> int:
         command.append("--mining-probe")
     if args.time_diagnostics:
         command.append("--time-diagnostics")
+    if args.physics_tick_diagnostics:
+        command.append("--physics-tick-diagnostics")
     if args.visibility_probe: command.append('--visibility-probe')
     if args.block_parity: command.append('--block-parity')
     if args.b02_air_probe: command.append('--b02-air-probe')

@@ -8,7 +8,9 @@ from mc2p.motion_nav.known_map_planner import (
     KnownMapBounds, SurfacePlanningRequest, astar_surface_plan,
     build_surface_graph,
 )
-from mc2p.motion_nav.route_admission import AdmissionStatus, RouteAdmitter
+from mc2p.motion_nav.route_admission import (
+    ActiveRouteTracker, AdmissionStatus, CorridorStatus, RouteAdmitter,
+)
 from tests.motion_nav.test_b07_step_transition import frame, profile as step_profile
 from tests.motion_nav.test_b07_surface_planning import mixed_height_world, ordinary_profile
 from tests.motion_nav.test_jump_up import jump_profile
@@ -61,6 +63,23 @@ class B07StepRouteTests(unittest.TestCase):
 
         self.assertIs(result.status, AdmissionStatus.REJECTED)
         self.assertEqual(result.reason, "route_dependencies_changed")
+
+    def test_active_surface_route_tracker_invalidates_a_changed_corridor(self):
+        world, candidate, request = self.candidate()
+        initial = frame(world, 0, candidate.path[0].position)
+        admitted = RouteAdmitter().admit_surface(
+            candidate, initial, expected_request_id=request.request_id,
+            goal_id=request.goal_id, goal_revision=request.goal_revision,
+            changed_cells=(),
+        )
+        self.assertIsNotNone(admitted.route)
+        tracker = ActiveRouteTracker(admitted.route, candidate)
+        changed = admitted.route.corridor.dependencies[0]
+
+        tracker.apply_changes((changed,))
+        update = tracker.update(0.0)
+
+        self.assertIs(update.status, CorridorStatus.BLOCKED_BY_CHANGE)
 
     def test_executor_runs_step_controller_and_observes_endpoint(self):
         world, candidate, request = self.candidate()

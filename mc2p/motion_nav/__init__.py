@@ -53,6 +53,16 @@ from mc2p.motion_nav.ground_modes import (
     evaluate_ground_mode, load_ground_mode_profiles, movement_for_ground_mode,
     observed_ground_mode,
 )
+from mc2p.motion_nav.physics_types import (
+    JAVA_1_21_RULESET, CalculationStatus, PhysicsRuleset, PhysicsState,
+    StateBuildResult, StateBuildStatus, StepResult, TickInput,
+)
+from mc2p.motion_nav.physics_adapter import PhysicsWorldView, build_physics_state
+from mc2p.motion_nav.physics_1_21 import step as physics_step
+from mc2p.motion_nav.physics_rollout import (
+    RolloutOptions, RolloutOutputMode, RolloutResult, RolloutStopReason,
+    rollout as physics_rollout,
+)
 
 __all__ = (
     "Aabb", "BlockGeometry", "CellKnowledge", "ObservationStamp",
@@ -86,4 +96,9 @@ __all__ = (
     "AirMotionQuery", "AirMotionState", "load_air_motion_profiles",
     "query_air_motion", "ControlledDropEdge", "query_controlled_drop",
     "JumpGapEdge", "query_jump_gap",
+    "JAVA_1_21_RULESET", "CalculationStatus", "PhysicsRuleset",
+    "PhysicsState", "StateBuildResult", "StateBuildStatus", "StepResult",
+    "TickInput", "PhysicsWorldView", "build_physics_state", "physics_step",
+    "RolloutOptions", "RolloutOutputMode", "RolloutResult",
+    "RolloutStopReason", "physics_rollout",
 )

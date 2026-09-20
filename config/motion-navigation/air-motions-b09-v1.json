@@ -14,6 +14,7 @@
       "target_height_delta_blocks": 0.0,
       "jump_input": true,
       "sprint_input": true,
+      "minimum_food_points": 7,
       "entry": {
         "minimum_horizontal_speed_blocks_per_second": 0.0,
         "maximum_horizontal_speed_blocks_per_second": 0.1,
@@ -74,6 +75,7 @@
       "target_height_delta_blocks": -1.0,
       "jump_input": false,
       "sprint_input": false,
+      "minimum_food_points": 0,
       "entry": {
         "minimum_horizontal_speed_blocks_per_second": 0.0,
         "maximum_horizontal_speed_blocks_per_second": 0.1,

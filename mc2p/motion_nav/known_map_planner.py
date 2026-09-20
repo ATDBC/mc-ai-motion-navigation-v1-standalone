@@ -12,6 +12,7 @@ from mc2p.motion_nav.air_motion import AirMotionProfile
 from mc2p.motion_nav.controlled_drop import ControlledDropEdge, query_controlled_drop
 from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
 from mc2p.motion_nav.ground_motion import GroundMotionProfile
+from mc2p.motion_nav.ground_modes import GroundModeProfile
 from mc2p.motion_nav.jump_gap import JumpGapEdge, query_jump_gap
 from mc2p.motion_nav.jump_up import JumpUpEdge, JumpUpProfile, query_jump_up
 from mc2p.motion_nav.movement_transition import (
@@ -383,6 +384,10 @@ def _resource_aware_search(
         if expanded > maximum_expansions:
             return _SearchResult((), (), None, None, expanded, True)
         for segment in outgoing(current):
+            transition = getattr(segment, "transition", None)
+            if (transition is not None
+                    and not resources.at_least(transition.minimum_entry_resources)):
+                continue
             updated = resources.apply(
                 segment.resource_change, minimum_resources, initial_resources,
             )
@@ -420,18 +425,28 @@ def _walk_transition(
     profile: GroundMotionProfile,
     cost_seconds: float,
     dependencies: tuple[BlockPos, ...],
+    *,
+    mode_profile: GroundModeProfile | None = None,
 ) -> MovementTransition:
+    mode = mode_profile.mode if mode_profile is not None else MovementMode.WALK
+    pose = (sorted(mode_profile.poses)[0]
+            if mode_profile is not None else "standing")
     state = MovementStateClass(
-        MovementMode.WALK, "standing", 0.0,
+        mode, pose, 0.0,
         profile.maximum_speed_blocks_per_second,
     )
     return MovementTransition(
-        f"{profile.profile_id}/walk", profile.environment_id,
-        MovementMode.WALK, state, (state,), cost_seconds, dependencies,
+        f"{profile.profile_id}/{mode.value}", profile.environment_id,
+        mode, state, (state,), cost_seconds, dependencies,
         ResourceChange(), CancellationMode.GROUND_STOP,
         CancellationMode.GROUND_STOP,
         trajectory_profile_id=profile.profile_id,
         risk_tags=frozenset(),
+        minimum_entry_resources=(
+            ResourceState((("food_points", float(mode_profile.minimum_food_points)),))
+            if mode_profile is not None and mode_profile.minimum_food_points > 0
+            else ResourceState()
+        ),
     )
 
 
@@ -972,6 +987,9 @@ class SurfacePlanningRequest:
     start: SurfaceNodeId
     goal: SurfaceNodeId
     maximum_expansions: int = 100_000
+    initial_resources: ResourceState = ResourceState()
+    minimum_resources: ResourceState = ResourceState()
+    goal_state: GoalState | None = None
 
     def __post_init__(self) -> None:
         require_nonnegative_int(self.sequence, "surface planning request sequence")
@@ -983,6 +1001,16 @@ class SurfacePlanningRequest:
             raise ContractViolation("surface planning requires surface node ids")
         if type(self.maximum_expansions) is not int or not 1 <= self.maximum_expansions <= 1_000_000:
             raise ContractViolation("surface planning expansion budget is invalid")
+        if (type(self.initial_resources) is not ResourceState
+                or type(self.minimum_resources) is not ResourceState):
+            raise ContractViolation("surface planning resources must use resource states")
+        if not self.initial_resources.at_least(self.minimum_resources):
+            raise ContractViolation("surface planning initial resources are below the minimum")
+        if self.goal_state is not None:
+            if type(self.goal_state) is not GoalState:
+                raise ContractViolation("surface planning goal state must be typed")
+            if not self.minimum_resources.at_least(self.goal_state.minimum_resources):
+                raise ContractViolation("surface planning minimum omits the goal requirement")
 
 
 @dataclass(frozen=True, slots=True)
@@ -1001,16 +1029,25 @@ class SurfaceRouteCandidate:
     total_cost_seconds: float | None
     dependencies: tuple[BlockPos, ...]
     expanded_nodes: int
+    final_resources: ResourceState | None = None
+    goal_state: GoalState | None = None
+    initial_resources: ResourceState = ResourceState()
+    minimum_resources: ResourceState = ResourceState()
 
 
-def _surface_walk_query(world: WorldView, start: SupportSurface,
-                        end: SupportSurface) -> tuple[QueryStatus, tuple[BlockPos, ...]]:
+def _surface_walk_query(
+    world: WorldView,
+    start: SupportSurface,
+    end: SupportSurface,
+    *,
+    body_height_blocks: float = 1.8,
+) -> tuple[QueryStatus, tuple[BlockPos, ...]]:
     if abs(end.position[1] - start.position[1]) > 1.0e-6:
         return QueryStatus.UNSUPPORTED, tuple(sorted(
             set(start.dependencies) | set(end.dependencies)
         ))
     body = Aabb(start.position[0] - .3, start.position[1], start.position[2] - .3,
-                start.position[0] + .3, start.position[1] + 1.8,
+                start.position[0] + .3, start.position[1] + body_height_blocks,
                 start.position[2] + .3)
     dx = end.position[0] - start.position[0]
     dz = end.position[2] - start.position[2]
@@ -1065,6 +1102,10 @@ def _air_transition(profile: AirMotionProfile,
         CancellationMode.SAFE_LANDING,
         trajectory_profile_id=profile.profile_id,
         risk_tags=frozenset(),
+        minimum_entry_resources=(
+            ResourceState((("food_points", float(profile.minimum_food_points)),))
+            if profile.sprint_input else ResourceState()
+        ),
     )
 
 
@@ -1072,7 +1113,9 @@ def build_surface_graph(world: WorldView, bounds: KnownMapBounds,
                         ground_profile: GroundMotionProfile,
                         step_profile: StepProfile,
                         jump_profile: JumpUpProfile | None = None,
-                        *, air_profiles: tuple[AirMotionProfile, ...] = ()) -> SurfaceGraph:
+                        *, air_profiles: tuple[AirMotionProfile, ...] = (),
+                        ground_mode_profile: GroundModeProfile | None = None,
+                        ) -> SurfaceGraph:
     """Materialize the known standable surfaces and verified adjacent edges."""
     if (type(world) is not WorldView or type(bounds) is not KnownMapBounds
             or type(ground_profile) is not GroundMotionProfile
@@ -1080,11 +1123,29 @@ def build_surface_graph(world: WorldView, bounds: KnownMapBounds,
         raise ContractViolation("surface graph construction requires typed inputs")
     if jump_profile is not None and type(jump_profile) is not JumpUpProfile:
         raise ContractViolation("surface graph JumpUp profile must be typed")
+    if ground_mode_profile is not None:
+        if type(ground_mode_profile) is not GroundModeProfile:
+            raise ContractViolation("surface graph ground mode profile must be typed")
+        if (ground_mode_profile.motion.profile_id != ground_profile.profile_id
+                or ground_mode_profile.motion.environment_id
+                != ground_profile.environment_id):
+            raise ContractViolation("surface graph ground mode and motion profile differ")
     if (type(air_profiles) is not tuple
             or any(type(profile) is not AirMotionProfile for profile in air_profiles)
             or len({profile.mode for profile in air_profiles}) != len(air_profiles)):
         raise ContractViolation("surface graph air profiles must be typed and unique")
     air_by_mode = {profile.mode: profile for profile in air_profiles}
+    movement_mode = (ground_mode_profile.mode
+                     if ground_mode_profile is not None else MovementMode.WALK)
+    pose = (sorted(ground_mode_profile.poses)[0]
+            if ground_mode_profile is not None else "standing")
+    body_height = {
+        "standing": 1.8,
+        "crouching": 1.5,
+        "swimming": .6,
+    }.get(pose)
+    if body_height is None:
+        raise ContractViolation("surface graph ground pose has no body height")
     nodes: list[SurfaceNode] = []
     complete = bounds.complete_scope
     has_unsupported = False
@@ -1093,6 +1154,7 @@ def build_surface_graph(world: WorldView, bounds: KnownMapBounds,
             result = query_support_surfaces(
                 world, x, z, float(bounds.min_feet_y),
                 float(bounds.max_feet_y + 1),
+                body_height=body_height,
             )
             complete = complete and result.status is not QueryStatus.NEEDS_INFORMATION
             has_unsupported = has_unsupported or result.status is QueryStatus.UNSUPPORTED
@@ -1141,6 +1203,7 @@ def build_surface_graph(world: WorldView, bounds: KnownMapBounds,
                 if abs(delta_y) <= 1.0e-6 and distance == 1:
                     status, dependencies = _surface_walk_query(
                         world, start.surface, end.surface,
+                        body_height_blocks=body_height,
                     )
                     complete = complete and status is not QueryStatus.NEEDS_INFORMATION
                     has_unsupported = has_unsupported or status is QueryStatus.UNSUPPORTED
@@ -1150,9 +1213,13 @@ def build_surface_graph(world: WorldView, bounds: KnownMapBounds,
                         )
                         edges.append(SurfaceWalkEdge(
                             start.node_id, end.node_id, cost, dependencies,
-                            _walk_transition(ground_profile, cost, dependencies),
+                            _walk_transition(
+                                ground_profile, cost, dependencies,
+                                mode_profile=ground_mode_profile,
+                            ),
                         ))
-                elif abs(delta_y) > 1.0e-6 and distance <= 1:
+                elif (movement_mode is MovementMode.WALK
+                      and abs(delta_y) > 1.0e-6 and distance <= 1):
                     result = query_step(world, start.surface, end.surface, step_profile)
                     complete = complete and result.status is not QueryStatus.NEEDS_INFORMATION
                     has_unsupported = has_unsupported or result.status is QueryStatus.UNSUPPORTED
@@ -1244,7 +1311,9 @@ def _surface_candidate(request: SurfacePlanningRequest, graph: SurfaceGraph,
                        path_ids: tuple[SurfaceNodeId, ...] = (),
                        segments: tuple[SurfaceEdge, ...] = (),
                        cost: float | None = None,
-                       expanded: int = 0) -> SurfaceRouteCandidate:
+                       expanded: int = 0,
+                       final_resources: ResourceState | None = None,
+                       ) -> SurfaceRouteCandidate:
     by_id = {node.node_id: node for node in graph.nodes}
     path = tuple(by_id[node_id] for node_id in path_ids)
     dependencies = tuple(sorted(
@@ -1255,7 +1324,8 @@ def _surface_candidate(request: SurfacePlanningRequest, graph: SurfaceGraph,
         request.sequence, request.request_id, request.goal_id,
         request.goal_revision, request.world_session, graph.geometry_revision,
         request.start, request.goal, status, path, segments, cost,
-        dependencies, expanded,
+        dependencies, expanded, final_resources, request.goal_state,
+        request.initial_resources, request.minimum_resources,
     )
 
 
@@ -1271,6 +1341,18 @@ def astar_surface_plan(graph: SurfaceGraph,
                   SurfacePlanningStatus.NO_ROUTE_WITHIN_COMPLETE_SCOPE
                   if graph.complete_scope else SurfacePlanningStatus.NO_KNOWN_ROUTE)
         return _surface_candidate(request, graph, status)
+    if request.goal_state is not None:
+        goal_position = positions[request.goal]
+        region = request.goal_state.region
+        if not (
+            region.min_x <= goal_position[0] <= region.max_x
+            and region.min_y <= goal_position[1] <= region.max_y
+            and region.min_z <= goal_position[2] <= region.max_z
+            and request.goal_state.support in {GoalSupport.SOLID, GoalSupport.ANY}
+        ):
+            return _surface_candidate(
+                request, graph, SurfacePlanningStatus.UNSUPPORTED,
+            )
     adjacency: dict[SurfaceNodeId, list[SurfaceEdge]] = {
         node_id: [] for node_id in positions
     }
@@ -1280,47 +1362,42 @@ def astar_surface_plan(graph: SurfaceGraph,
         math.dist(positions[edge.start], positions[edge.end]) / edge.cost_seconds
         for edge in graph.edges
     ), default=1.0)
-    queue = [(0.0, 0, 0.0, request.start)]
-    costs = {request.start: 0.0}
-    previous: dict[SurfaceNodeId, tuple[SurfaceNodeId, SurfaceEdge]] = {}
-    serial = expanded = 0
-    while queue:
-        _, _, cost, current = heapq.heappop(queue)
-        if cost != costs.get(current):
-            continue
-        if current == request.goal:
-            path = [current]
-            segments: list[SurfaceEdge] = []
-            while path[-1] != request.start:
-                prior, edge = previous[path[-1]]
-                segments.append(edge)
-                path.append(prior)
-            path.reverse(); segments.reverse()
-            return _surface_candidate(
-                request, graph, SurfacePlanningStatus.COMPLETE,
-                tuple(path), tuple(segments), cost, expanded,
-            )
-        expanded += 1
-        if expanded > request.maximum_expansions:
-            return _surface_candidate(
-                request, graph, SurfacePlanningStatus.TIMEOUT,
-                expanded=expanded,
-            )
-        for edge in adjacency[current]:
-            candidate = cost + edge.cost_seconds
-            if candidate + 1.0e-12 >= costs.get(edge.end, math.inf):
-                continue
-            costs[edge.end] = candidate
-            previous[edge.end] = current, edge
-            serial += 1
-            heuristic = math.dist(
-                positions[edge.end], positions[request.goal],
-            ) / max(1.0e-12, maximum_edge_speed)
-            heapq.heappush(queue, (candidate + heuristic, serial, candidate, edge.end))
+    def heuristic(node_id: SurfaceNodeId) -> float:
+        return math.dist(
+            positions[node_id], positions[request.goal],
+        ) / max(1.0e-12, maximum_edge_speed)
+
+    search = _resource_aware_search(
+        request.start, request.goal,
+        request.initial_resources, request.minimum_resources,
+        request.maximum_expansions, heuristic,
+        lambda node_id: tuple(adjacency[node_id]),
+    )
+    if search.timed_out:
+        return _surface_candidate(
+            request, graph, SurfacePlanningStatus.TIMEOUT,
+            expanded=search.expanded,
+        )
+    if search.path:
+        if request.goal_state is not None and search.segments:
+            terminal = search.segments[-1].transition
+            if (terminal is None or not any(
+                    state.mode in request.goal_state.allowed_modes
+                    and state.pose in request.goal_state.allowed_poses
+                    for state in terminal.exits)):
+                return _surface_candidate(
+                    request, graph, SurfacePlanningStatus.UNSUPPORTED,
+                    expanded=search.expanded,
+                )
+        return _surface_candidate(
+            request, graph, SurfacePlanningStatus.COMPLETE,
+            search.path, search.segments, search.cost_seconds,
+            search.expanded, search.final_resources,
+        )
     status = (SurfacePlanningStatus.UNSUPPORTED if graph.has_unsupported else
               SurfacePlanningStatus.NO_ROUTE_WITHIN_COMPLETE_SCOPE
               if graph.complete_scope else SurfacePlanningStatus.NO_KNOWN_ROUTE)
-    return _surface_candidate(request, graph, status, expanded=expanded)
+    return _surface_candidate(request, graph, status, expanded=search.expanded)
 
 
 def plan_known_surface_snapshot(
@@ -1331,6 +1408,7 @@ def plan_known_surface_snapshot(
     jump_profile: JumpUpProfile | None = None,
     *,
     air_profiles: tuple[AirMotionProfile, ...] = (),
+    ground_mode_profile: GroundModeProfile | None = None,
 ) -> SurfaceRouteCandidate:
     """Build and search a surface graph from a detached snapshot."""
     if (type(snapshot) is not KnownMapSnapshot
@@ -1347,7 +1425,7 @@ def plan_known_surface_snapshot(
         raise ContractViolation("surface snapshot planning requires typed air profiles")
     graph = build_surface_graph(
         snapshot.world, snapshot.bounds, ground_profile, step_profile, jump_profile,
-        air_profiles=air_profiles,
+        air_profiles=air_profiles, ground_mode_profile=ground_mode_profile,
     )
     return astar_surface_plan(graph, request)
 

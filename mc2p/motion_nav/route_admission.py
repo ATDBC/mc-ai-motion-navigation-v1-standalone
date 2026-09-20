@@ -23,6 +23,7 @@ from mc2p.motion_nav.known_map_planner import (
     SurfaceControlledDropEdge, SurfaceJumpGapEdge, SurfaceJumpUpEdge,
 )
 from mc2p.motion_nav.step_transition import StepEdge
+from mc2p.motion_nav.support_surfaces import SurfaceNodeId
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.world_model import BlockPos
 
@@ -34,10 +35,10 @@ class AdmissionStatus(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class ExecutableCorridor:
-    node_ids: tuple[WalkNodeId, ...]
+    node_ids: tuple[WalkNodeId | SurfaceNodeId, ...]
     dependencies: tuple[BlockPos, ...]
     length_blocks: float
-    stop_node: WalkNodeId
+    stop_node: WalkNodeId | SurfaceNodeId
 
     def affected_by(self, changed_cells: tuple[BlockPos, ...]) -> bool:
         return bool(set(self.dependencies).intersection(changed_cells))
@@ -404,7 +405,11 @@ class RouteAdmitter:
                 pending_points = [RoutePoint(*next_node.position)]
                 pending_dependencies = set(next_node.dependencies)
         flush_walk()
-        return ActionRoute(route_id, tuple(actions)) if actions else None
+        return (ActionRoute(
+            route_id, tuple(actions), candidate.goal_state,
+            candidate.final_resources if candidate.final_resources is not None
+            else ResourceState(),
+        ) if actions else None)
 
     def admit_surface(
         self,
@@ -433,6 +438,44 @@ class RouteAdmitter:
             return AdmissionResult(AdmissionStatus.REJECTED, "world_delta_missing")
         if set(candidate.dependencies).intersection(changed_cells):
             return AdmissionResult(AdmissionStatus.REJECTED, "route_dependencies_changed")
+        resource_names = {
+            name for name, _ in candidate.initial_resources.values
+        } | {
+            name for name, _ in candidate.minimum_resources.values
+        } | {
+            name
+            for edge in candidate.segments
+            if edge.transition is not None
+            for name, _ in edge.transition.minimum_entry_resources.values
+        }
+        observed_values = []
+        for name in sorted(resource_names):
+            if name != "food_points":
+                return AdmissionResult(
+                    AdmissionStatus.REJECTED, "route_resource_unobservable",
+                )
+            observed_values.append((name, float(frame.body.food_points)))
+        resources = ResourceState(tuple(observed_values))
+        if not resources.at_least(candidate.minimum_resources):
+            return AdmissionResult(
+                AdmissionStatus.REJECTED, "route_resources_below_minimum",
+            )
+        capacity = resources
+        for edge in candidate.segments:
+            if (edge.transition is not None
+                    and not resources.at_least(
+                        edge.transition.minimum_entry_resources)):
+                return AdmissionResult(
+                    AdmissionStatus.REJECTED, "route_entry_resources_unavailable",
+                )
+            updated = resources.apply(
+                edge.resource_change, candidate.minimum_resources, capacity,
+            )
+            if updated is None:
+                return AdmissionResult(
+                    AdmissionStatus.REJECTED, "route_resources_unavailable",
+                )
+            resources = updated
         connected, connection_length, connection_dependencies = self._connection(
             candidate, frame,
         )
@@ -474,7 +517,7 @@ class RouteAdmitter:
             route_id, 1, candidate.request_id, candidate.goal_id,
             candidate.goal_revision, candidate.world_session, None,
             full_length, connection_length, connection_dependencies, corridor,
-            action_route,
+            action_route, candidate.goal_state,
         )
         return AdmissionResult(AdmissionStatus.ACCEPTED,
                                "candidate_admitted", active)
@@ -483,9 +526,11 @@ class RouteAdmitter:
 class ActiveRouteTracker:
     """Own corridor progress and remembered route changes for one admitted route."""
 
-    def __init__(self, route: ActiveRoute, candidate: RouteCandidate,
+    def __init__(self, route: ActiveRoute,
+                 candidate: RouteCandidate | SurfaceRouteCandidate,
                  *, maximum_corridor_blocks: float = 8.0) -> None:
-        if type(route) is not ActiveRoute or type(candidate) is not RouteCandidate:
+        if (type(route) is not ActiveRoute
+                or type(candidate) not in (RouteCandidate, SurfaceRouteCandidate)):
             raise ContractViolation("route tracker requires an active route and source candidate")
         if route.source_request_id!=candidate.request_id:
             raise ContractViolation("active route and candidate identities differ")

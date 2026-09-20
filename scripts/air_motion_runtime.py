@@ -25,7 +25,7 @@ from mc2p.motion_nav.known_map_planner import (
     KnownMapBounds, KnownMapSnapshotBuilder, SnapshotBuildStatus,
     SurfacePlanningRequest, SurfacePlanningStatus, build_surface_graph,
 )
-from mc2p.motion_nav.movement_transition import MovementMode
+from mc2p.motion_nav.movement_transition import MovementMode, ResourceState
 from mc2p.motion_nav.planner_worker import PlannerWorker
 from mc2p.motion_nav.route_admission import AdmissionStatus, RouteAdmitter
 from mc2p.motion_nav.runtime_adapter import NavigationObservationAdapter
@@ -341,6 +341,9 @@ def run_air_motion_runtime(
         planning_request = SurfacePlanningRequest(
             frame.body.sequence_id, f"{episode}-{name}", f"goal-{name}", 1,
             frame.session.value, start_surface.node_id, end_surface.node_id,
+            initial_resources=ResourceState((
+                ("food_points", float(frame.body.food_points)),
+            )),
         )
         debug_graph = build_surface_graph(
             progress.snapshot.world, progress.snapshot.bounds,

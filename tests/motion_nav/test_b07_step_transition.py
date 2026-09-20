@@ -110,6 +110,42 @@ class B07StepTransitionTests(unittest.TestCase):
         complete = controller.decide(landed)
         self.assertIs(complete.state, StepState.COMPLETE)
 
+    def test_controller_rechecks_changed_step_geometry_before_sending_more_input(self):
+        world = step_world()
+        low, high = surfaces(world)
+        controller = StepController(profile())
+        initial = frame(world, 0, low.position)
+        controller.start(low, high, initial)
+        self.assertIs(controller.decide(initial).state, StepState.MOVING)
+        stamp = ObservationStamp(
+            world.session, 2, 2, "test-clock", 100_000_000,
+        )
+        world.observe_blocks(stamp, {
+            (1, 1, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        changed = replace(
+            frame(world, 2, low.position), changed_cells=((1, 1, 0),),
+        )
+
+        decision = controller.decide(changed)
+
+        self.assertIs(decision.state, StepState.BLOCKED)
+        self.assertEqual(decision.movement, MovementV1())
+        self.assertEqual(decision.reason_code, "step_blocked")
+
+    def test_controller_rejects_a_body_that_is_not_on_the_declared_start_surface(self):
+        world = step_world()
+        low, high = surfaces(world)
+        controller = StepController(profile())
+        wrong_start = frame(world, 0, high.position)
+        controller.start(low, high, wrong_start)
+
+        decision = controller.decide(wrong_start)
+
+        self.assertIs(decision.state, StepState.UNSUPPORTED)
+        self.assertEqual(decision.movement, MovementV1())
+        self.assertEqual(decision.reason_code, "invalid_entry_surface")
+
     def test_cancel_waits_for_observed_ground_stop(self):
         world = step_world()
         low, high = surfaces(world)

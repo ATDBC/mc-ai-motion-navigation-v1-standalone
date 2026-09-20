@@ -158,6 +158,7 @@ class MovementTransition:
     input_loss: CancellationMode
     trajectory_profile_id: str | None = None
     risk_tags: frozenset[str] = frozenset()
+    minimum_entry_resources: ResourceState = ResourceState()
 
     def __post_init__(self) -> None:
         require_identifier(self.transition_id, "movement transition id")
@@ -173,6 +174,8 @@ class MovementTransition:
             raise ContractViolation("movement transition dependencies must be immutable")
         if type(self.resource_change) is not ResourceChange:
             raise ContractViolation("movement transition requires a resource change")
+        if type(self.minimum_entry_resources) is not ResourceState:
+            raise ContractViolation("movement transition entry resources must be typed")
         if (type(self.cancellation) is not CancellationMode
                 or type(self.input_loss) is not CancellationMode):
             raise ContractViolation("movement transition requires cancellation modes")
@@ -282,6 +285,10 @@ def compose_movement_transitions(
         for item in transitions
     ):
         raise ContractViolation("incompatible movement transitions cannot be composed")
+    minimum_by_name: dict[str, float] = {}
+    for item in transitions:
+        for name, value in item.minimum_entry_resources.values:
+            minimum_by_name[name] = max(minimum_by_name.get(name, 0.0), value)
     return MovementTransition(
         transition_id=transition_id,
         environment_id=first.environment_id,
@@ -304,4 +311,5 @@ def compose_movement_transitions(
         risk_tags=frozenset(
             risk for item in transitions for risk in item.risk_tags
         ),
+        minimum_entry_resources=ResourceState(tuple(sorted(minimum_by_name.items()))),
     )

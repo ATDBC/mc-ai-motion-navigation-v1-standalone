@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>导航实验回放 · MC2P</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<header class="header"><div class="brand"><span class="brand-icon">↗</span><div><div class="eyebrow">MC2P · 实验工具</div><h1>导航实验回放</h1></div></div><div class="header-note"><a href="/physics.html">B09-R 运动计算器</a>　<span class="dot"></span> 本地记录 · 只读回放</div></header>
+<main>
+  <section class="selectors card">
+    <label>实验轮次<select id="batch" aria-label="实验轮次"><option>正在查找实验…</option></select></label>
+    <label>场次<select id="run" aria-label="场次"><option>请先选择轮次</option></select></label>
+    <button id="refresh" class="quiet" title="重新查找实验记录">↻ 刷新</button>
+  </section>
+  <div id="status" class="status" role="status">正在读取实验目录…</div>
+  <div class="workspace">
+    <section class="map-card card">
+      <div class="map-header"><div><h2 id="scene-title">选择一场实验</h2><div class="subtle" id="scene-meta">轨迹、观察和记忆，沿同一条时间轴查看</div></div><span id="outcome" class="badge">待载入</span></div>
+      <div class="layers">
+        <label><input id="base-layer" type="checkbox" checked><i class="swatch base"></i>评测底图</label>
+        <label><input id="seen-layer" type="checkbox" checked><i class="swatch seen"></i>当前观察</label>
+        <label><input id="memory-layer" type="checkbox" checked><i class="swatch memory"></i>地形记忆</label>
+        <label><input id="plan-layer" type="checkbox" checked><i class="swatch plan"></i>计划路线</label>
+        <select id="height" aria-label="显示高度"><option value="all">地面与墙体 · 按列合并</option></select>
+      </div>
+      <div id="map-wrap"><canvas id="map" aria-label="机器人位置、轨迹与地形认知回放"></canvas><div id="tooltip" hidden></div><div id="empty-state"><div class="empty-icon">⌖</div><p>载入实验后，在这里查看完整过程</p></div></div>
+      <div class="map-caption"><span><i class="line-key"></i>实际轨迹 <i class="reference-key"></i>理想轨迹 <i class="target-key"></i>阶段目标</span><span id="layer-count">蓝色优先；未着色表示没有对应记录</span></div>
+      <div class="change-row"><span id="change-status"></span><div id="change-events"></div></div>
+      <p class="map-note" id="map-note">评测地图仅供人查看，不提供给机器人。合并视图中，任一所选高度当前观察到，该列即为蓝色。</p>
+    </section>
+    <aside class="sidebar">
+      <section class="card state-card"><div class="section-heading"><h2>此刻状态</h2><span id="frame-count" class="subtle">—</span></div>
+        <div class="metric-grid"><div><span>回放时间</span><strong id="time-value">0.000 <small>s</small></strong></div><div><span>距最终目标</span><strong id="distance-value">—</strong></div></div>
+        <dl><dt>位置 X / Y / Z</dt><dd id="position">—</dd><dt>水平速度</dt><dd id="velocity">—</dd><dt>朝向 / 俯仰</dt><dd id="heading">—</dd><dt>当前阶段目标</dt><dd id="stage-target">—</dd></dl>
+        <div class="reason-box"><div class="reason-copy"><span>记录中的行动原因</span><strong id="reason">等待载入</strong><code id="reason-code"></code></div><div class="keys" role="img" aria-label="移动请求方向；高亮表示按下" title="移动请求：高亮表示按下"><b id="key-forward" title="前进">↑</b><b id="key-left" title="左移">←</b><b id="key-back" title="后退">↓</b><b id="key-right" title="右移">→</b></div></div>
+        <div class="movement"><span>移动请求</span><span id="movement-text">—</span></div>
+        <div class="small-row"><span>本轮规划计算</span><strong id="planning">—</strong></div>
+        <details id="observation-details"><summary>观察参考与搜索进度</summary><div id="observation-detail-text" class="subtle">旧记录未提供细分状态</div></details>
+      </section>
+      <section class="card events-card"><div class="section-heading"><h2>阶段目标变化</h2><span class="subtle">点击定位</span></div><div id="events"><p class="subtle">尚无记录</p></div></section>
+      <section id="shape-card" class="card shape-card" hidden><div class="section-heading"><h2>轨迹误差</h2><span id="shape-error-now" class="subtle">—</span></div><canvas id="error-chart" aria-label="轨迹误差随时间变化"></canvas><dl id="shape-metrics"></dl></section>
+      <section class="card provenance"><h2>本场记录</h2><dl><dt>源码版本</dt><dd id="source">—</dd><dt>记忆还原</dt><dd id="memory-status">—</dd><dt>总耗时 / 路程</dt><dd id="summary">—</dd></dl><details><summary>记录位置</summary><code id="record-path"></code></details></section>
+    </aside>
+  </div>
+  <section class="player card"><div class="transport"><button id="previous" title="上一身体采样（←）" aria-label="上一帧">◀│</button><button id="play" class="primary" disabled>▶ 播放</button><button id="next" title="下一身体采样（→）" aria-label="下一帧">│▶</button></div><div class="timeline"><input id="seek" type="range" min="0" max="1" step="0.001" value="0" aria-label="回放时间轴"><div><span id="elapsed">00:00.000</span><span id="duration">00:00.000</span></div></div><label class="speed">倍速<select id="speed" aria-label="播放倍速"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option><option value="8">8×</option></select></label><button id="restart" class="quiet">回到起点</button></section>
+  <footer>按原始采样回放，不平滑轨迹。空格播放／暂停，方向键逐帧。任务耗时包含观察、规划、行走和成功确认。</footer>
+</main><script type="module" src="/app.js"></script>
+</body></html>

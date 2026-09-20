@@ -59,6 +59,7 @@ class AirMotionProfile:
     minecraft_version: str = "1.21"
     tick_seconds: float = .05
     risk_policy_id: str = "no_expected_damage"
+    minimum_food_points: int = 0
 
     def __post_init__(self) -> None:
         require_identifier(self.profile_id, "air motion profile id")
@@ -72,6 +73,11 @@ class AirMotionProfile:
             raise ContractViolation("air motion horizontal distance must be positive cells")
         if type(self.jump_input) is not bool or type(self.sprint_input) is not bool:
             raise ContractViolation("air motion input flags must be bool")
+        if (type(self.minimum_food_points) is not int
+                or not 0 <= self.minimum_food_points <= 20):
+            raise ContractViolation("air motion food threshold must be within 0..20")
+        if self.sprint_input and self.minimum_food_points < 7:
+            raise ContractViolation("sprint air motion must require at least seven food points")
         if self.mode is MovementMode.JUMP_GAP and not self.jump_input:
             raise ContractViolation("gap jump profile must request jump")
         if self.mode is MovementMode.CONTROLLED_DROP and self.jump_input:
@@ -189,6 +195,7 @@ def load_air_motion_profiles(
                 value["maximum_fall_distance_blocks"], value["cost_seconds"],
                 materials, scope["minecraft_version"], scope["tick_seconds"],
                 value.get("risk_policy_id", "no_expected_damage"),
+                value.get("minimum_food_points", 0),
             ))
         result = tuple(profiles)
         if (not result or len({profile.mode for profile in result}) != len(result)):
@@ -530,6 +537,18 @@ class AirMotionController:
             )
 
         if self.state is AirMotionState.PREPARE:
+            if not input_confirmed:
+                self.state = AirMotionState.INPUT_LOST
+                return self._decision(
+                    self.state, MovementV1(), "input_lost_before_departure", started,
+                )
+            if (self.profile.sprint_input
+                    and frame.body.game_mode in {"survival", "adventure"}
+                    and frame.body.food_points < self.profile.minimum_food_points):
+                self.state = AirMotionState.UNSUPPORTED
+                return self._decision(
+                    self.state, MovementV1(), "sprint_resource_unavailable", started,
+                )
             geometry = query_air_motion(frame.world, self._start, self._end, self.profile)
             if geometry.status is not QueryStatus.FEASIBLE:
                 self.state = {

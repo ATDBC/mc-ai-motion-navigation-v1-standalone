@@ -26,7 +26,9 @@ from mc2p.motion_nav.known_map_planner import (
     SurfacePlanningRequest, SurfacePlanningStatus, astar_surface_plan,
     build_surface_graph, dijkstra_surface_reference,
 )
-from mc2p.motion_nav.movement_transition import MovementMode
+from mc2p.motion_nav.movement_transition import (
+    GoalState, GoalSupport, MovementMode, ResourceState,
+)
 from mc2p.motion_nav.planner_worker import PlannerWorker
 from mc2p.motion_nav.environment_identity import load_frozen_environment
 from mc2p.motion_nav.runtime_adapter import BodyState, NavigationFrame
@@ -68,6 +70,7 @@ def air_profile(mode: MovementMode) -> AirMotionProfile:
             maximum_settle_ticks=10, recovery_forward_blocks=.1,
             maximum_fall_distance_blocks=0.0, cost_seconds=.9,
             support_materials=frozenset({"minecraft:grass_block"}),
+            minimum_food_points=7,
         )
     if mode is MovementMode.CONTROLLED_DROP:
         return AirMotionProfile(
@@ -125,7 +128,8 @@ def surface(world: WorldKnowledge, x: int, z: int, y: float):
 
 def frame(world: WorldKnowledge, sequence: int, position: tuple[float, float, float],
           velocity: tuple[float, float, float], *, on_ground: bool,
-          yaw_radians: float = 0.0) -> NavigationFrame:
+          yaw_radians: float = 0.0, food_points: int = 20,
+          game_mode: str = "survival") -> NavigationFrame:
     stamp = ObservationStamp(
         world.session, sequence, sequence, "test-clock", sequence * 50_000_000,
     )
@@ -133,12 +137,59 @@ def frame(world: WorldKnowledge, sequence: int, position: tuple[float, float, fl
     body = BodyState(
         world.session, sequence, stamp, position, velocity, yaw_radians, 0.0,
         "standing", Aabb(x - .3, y, z - .3, x + .3, y + 1.8, z + .3),
-        on_ground, False, False,
+        on_ground, False, False, food_points=food_points, game_mode=game_mode,
     )
     return NavigationFrame(world.session, body, world.view(), "fabric")
 
 
 class B09AirTransitionTests(unittest.TestCase):
+    def test_prepare_releases_input_when_the_previous_input_was_not_confirmed(self):
+        world = known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:grass_block"),
+            (0, 0, 2): BlockGeometry.full_cube("minecraft:grass_block"),
+        })
+        start, end = surface(world, 0, 0, 1.0), surface(world, 0, 2, 1.0)
+        controller = AirMotionController(air_profile(MovementMode.JUMP_GAP))
+        initial = frame(world, 1, start.position, (0, 0, 0), on_ground=True)
+        controller.start(start, end, initial)
+
+        decision = controller.decide(initial, input_confirmed=False)
+
+        self.assertIs(decision.state, AirMotionState.INPUT_LOST)
+        self.assertEqual(decision.movement, MovementV1())
+        self.assertEqual(decision.reason_code, "input_lost_before_departure")
+
+    def test_sprint_gap_requires_seven_food_points_before_departure(self):
+        world = known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:grass_block"),
+            (0, 0, 2): BlockGeometry.full_cube("minecraft:grass_block"),
+        })
+        start, end = surface(world, 0, 0, 1.0), surface(world, 0, 2, 1.0)
+        profile = air_profile(MovementMode.JUMP_GAP)
+
+        low = AirMotionController(profile)
+        low_frame = frame(
+            world, 1, start.position, (0, 0, 0), on_ground=True,
+            food_points=6,
+        )
+        low.start(start, end, low_frame)
+        rejected = low.decide(low_frame)
+
+        self.assertIs(rejected.state, AirMotionState.UNSUPPORTED)
+        self.assertEqual(rejected.movement, MovementV1())
+        self.assertEqual(rejected.reason_code, "sprint_resource_unavailable")
+
+        enough = AirMotionController(profile)
+        enough_frame = frame(
+            world, 2, start.position, (0, 0, 0), on_ground=True,
+            food_points=7,
+        )
+        enough.start(start, end, enough_frame)
+        accepted = enough.decide(enough_frame)
+
+        self.assertIs(accepted.state, AirMotionState.REQUEST_DEPARTURE)
+        self.assertTrue(accepted.movement.sprint)
+
     def test_public_motion_navigation_entry_exports_b09_contracts(self) -> None:
         expected = {
             "AirMotionController", "AirMotionDecision", "AirMotionProfile",
@@ -391,6 +442,79 @@ class B09AirTransitionTests(unittest.TestCase):
         )
         self.assertIs(landed.state, AirMotionState.INPUT_LOST)
 
+    def test_surface_planning_preserves_goal_and_rejects_a_hungry_sprint_gap(self):
+        world = known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:grass_block"),
+            (0, 0, 2): BlockGeometry.full_cube("minecraft:grass_block"),
+        })
+        graph = build_surface_graph(
+            world.view(), KnownMapBounds(0, 0, 0, 1, 0, 2, True),
+            ground_profile(), step_profile(),
+            air_profiles=(air_profile(MovementMode.JUMP_GAP),),
+        )
+        gap = next(edge for edge in graph.edges if type(edge) is SurfaceJumpGapEdge)
+        end = next(node for node in graph.nodes if node.node_id == gap.end)
+        goal = GoalState(
+            Aabb(
+                end.position[0] - .2, end.position[1] - .1, end.position[2] - .2,
+                end.position[0] + .2, end.position[1] + .1, end.position[2] + .2,
+            ),
+            GoalSupport.SOLID, frozenset({MovementMode.WALK}),
+            frozenset({"standing"}), .15,
+            minimum_resources=ResourceState((("food_points", 7.0),)),
+        )
+        hungry = SurfacePlanningRequest(
+            1, "hungry-gap", "goal", 1, graph.world_session,
+            gap.start, gap.end, initial_resources=ResourceState((("food_points", 6.0),)),
+        )
+        rejected = astar_surface_plan(graph, hungry)
+        self.assertIsNot(rejected.status, SurfacePlanningStatus.COMPLETE)
+
+        request = SurfacePlanningRequest(
+            2, "fed-gap", "goal", 1, graph.world_session,
+            gap.start, gap.end,
+            initial_resources=ResourceState((("food_points", 7.0),)),
+            minimum_resources=ResourceState((("food_points", 7.0),)),
+            goal_state=goal,
+        )
+        candidate = astar_surface_plan(graph, request)
+
+        self.assertIs(candidate.status, SurfacePlanningStatus.COMPLETE)
+        self.assertEqual(candidate.final_resources,
+                         ResourceState((("food_points", 7.0),)))
+        self.assertIs(candidate.goal_state, goal)
+        self.assertEqual(
+            candidate.segments[0].transition.minimum_entry_resources,
+            ResourceState((("food_points", 7.0),)),
+        )
+        hungry_admission = RouteAdmitter().admit_surface(
+            candidate,
+            frame(
+                world, 3, candidate.path[0].position, (0, 0, 0),
+                on_ground=True, food_points=6,
+            ),
+            expected_request_id=request.request_id,
+            goal_id=request.goal_id, goal_revision=request.goal_revision,
+            changed_cells=(),
+        )
+        self.assertIs(hungry_admission.status, AdmissionStatus.REJECTED)
+        self.assertEqual(hungry_admission.reason,
+                         "route_resources_below_minimum")
+        initial = frame(
+            world, 4, candidate.path[0].position, (0, 0, 0),
+            on_ground=True, food_points=7,
+        )
+        admitted = RouteAdmitter().admit_surface(
+            candidate, initial, expected_request_id=request.request_id,
+            goal_id=request.goal_id, goal_revision=request.goal_revision,
+            changed_cells=(),
+        )
+        self.assertIs(admitted.status, AdmissionStatus.ACCEPTED)
+        self.assertIs(admitted.route.goal_state, goal)
+        self.assertIs(admitted.route.action_route.goal_state, goal)
+        self.assertEqual(admitted.route.action_route.final_resources,
+                         candidate.final_resources)
+
     def test_surface_graph_adds_typed_gap_and_drop_edges_and_astar_matches_dijkstra(self):
         world = known_world({
             (0, 0, 0): BlockGeometry.full_cube("minecraft:grass_block"),
@@ -411,6 +535,7 @@ class B09AirTransitionTests(unittest.TestCase):
         request = SurfacePlanningRequest(
             1, "b09-route", "goal", 1, graph.world_session,
             gap.start, drop.end,
+            initial_resources=ResourceState((("food_points", 20.0),)),
         )
         candidate = astar_surface_plan(graph, request)
         self.assertIs(candidate.status, SurfacePlanningStatus.COMPLETE)
@@ -487,6 +612,7 @@ class B09AirTransitionTests(unittest.TestCase):
         request = SurfacePlanningRequest(
             2, "b09-walk-gap-walk", "goal", 1, graph.world_session,
             start, goal,
+            initial_resources=ResourceState((("food_points", 20.0),)),
         )
         candidate = astar_surface_plan(graph, request)
         self.assertEqual(

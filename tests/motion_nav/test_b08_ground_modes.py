@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 from pathlib import Path
 import math
+import time
 import unittest
 
 from mc2p.contracts.action_v1 import MovementV1
@@ -13,9 +14,13 @@ from mc2p.motion_nav.ground_modes import (
     load_ground_mode_profiles, movement_for_ground_mode, observed_ground_mode,
 )
 from mc2p.motion_nav.known_map_planner import (
-    KnownMapBounds, PlanningRequest, PlanningStatus,
-    WalkEdge, WalkGraph, WalkNode, astar_plan,
+    KnownMapBounds, KnownMapSnapshotBuilder, PlanningRequest, PlanningStatus,
+    SnapshotBuildStatus,
+    SurfacePlanningRequest, SurfacePlanningStatus, SurfaceWalkEdge,
+    WalkEdge, WalkGraph, WalkNode, astar_plan, astar_surface_plan,
+    build_surface_graph,
 )
+from mc2p.motion_nav.planner_worker import PlannerWorker
 from mc2p.motion_nav.fixed_route import (
     FixedRoute, FixedRouteController, FixedRouteState, RoutePoint,
 )
@@ -30,6 +35,8 @@ from mc2p.motion_nav.world_model import Aabb
 from mc2p.motion_nav.world_model import BlockGeometry, ObservationStamp
 from mc2p.motion_nav.movement_transition import MovementMode
 from tests.motion_nav.test_fixed_route_walk import FlatFixture
+from tests.motion_nav.test_b07_step_transition import profile as step_profile
+from tests.motion_nav.test_b07_support_surfaces import surface_world
 from mc2p.motion_nav.ground_motion import (
     GroundControl, PlanarBodyState, control_world_direction,
 )
@@ -65,6 +72,126 @@ class B08GroundModeTests(unittest.TestCase):
         })
         identifiers = {profile.motion.profile_id for profile in self.profiles.modes.values()}
         self.assertEqual(len(identifiers), 4)
+
+    def test_surface_planner_uses_the_requested_ground_mode_and_its_clearance(self):
+        world = surface_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:grass_block"),
+            (1, 0, 0): BlockGeometry.full_cube("minecraft:grass_block"),
+            (0, 2, 0): BlockGeometry.full_cube("minecraft:stone"),
+            (1, 2, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        bounds = KnownMapBounds(0, 1, 1, 1, 0, 0, True)
+        walk = self.profiles.require(MovementMode.WALK)
+        crawl = self.profiles.require(MovementMode.CRAWL)
+
+        blocked = build_surface_graph(
+            world.view(), bounds, walk.motion, step_profile(),
+            ground_mode_profile=walk,
+        )
+        self.assertFalse(any(type(edge) is SurfaceWalkEdge for edge in blocked.edges))
+
+        graph = build_surface_graph(
+            world.view(), bounds, crawl.motion, step_profile(),
+            ground_mode_profile=crawl,
+        )
+        start, goal = graph.nodes[0].node_id, graph.nodes[-1].node_id
+        candidate = astar_surface_plan(graph, SurfacePlanningRequest(
+            1, "crawl-surface", "goal", 1, graph.world_session, start, goal,
+        ))
+
+        self.assertIs(candidate.status, SurfacePlanningStatus.COMPLETE)
+        self.assertTrue(candidate.segments)
+        self.assertTrue(all(
+            edge.transition.mode is MovementMode.CRAWL
+            and edge.transition.entry.pose == "swimming"
+            for edge in candidate.segments
+        ))
+
+    def test_surface_planner_carries_sprint_resource_gate_and_speed(self):
+        world = surface_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:grass_block"),
+            (1, 0, 0): BlockGeometry.full_cube("minecraft:grass_block"),
+        })
+        sprint = self.profiles.require(MovementMode.SPRINT)
+        graph = build_surface_graph(
+            world.view(), KnownMapBounds(0, 1, 1, 1, 0, 0, True),
+            sprint.motion, step_profile(), ground_mode_profile=sprint,
+        )
+        start, goal = graph.nodes[0].node_id, graph.nodes[-1].node_id
+        hungry = astar_surface_plan(graph, SurfacePlanningRequest(
+            1, "hungry-sprint", "goal", 1, graph.world_session, start, goal,
+            initial_resources=ResourceState((("food_points", 6.0),)),
+        ))
+        self.assertIsNot(hungry.status, SurfacePlanningStatus.COMPLETE)
+
+        fed = astar_surface_plan(graph, SurfacePlanningRequest(
+            2, "fed-sprint", "goal", 1, graph.world_session, start, goal,
+            initial_resources=ResourceState((("food_points", 7.0),)),
+        ))
+        self.assertIs(fed.status, SurfacePlanningStatus.COMPLETE)
+        transition = fed.segments[0].transition
+        self.assertIs(transition.mode, MovementMode.SPRINT)
+        self.assertEqual(
+            transition.minimum_entry_resources,
+            ResourceState((("food_points", 7.0),)),
+        )
+        self.assertAlmostEqual(
+            fed.total_cost_seconds,
+            1.0 / sprint.motion.maximum_speed_blocks_per_second,
+        )
+        end = graph.nodes[-1].position
+        incompatible_goal = GoalState(
+            Aabb(end[0] - .1, end[1] - .1, end[2] - .1,
+                 end[0] + .1, end[1] + .1, end[2] + .1),
+            GoalSupport.SOLID, frozenset({MovementMode.CROUCH}),
+            frozenset({"crouching"}), .2,
+        )
+        incompatible = astar_surface_plan(graph, SurfacePlanningRequest(
+            3, "sprint-to-crouch-goal", "goal", 1, graph.world_session,
+            start, goal,
+            initial_resources=ResourceState((("food_points", 7.0),)),
+            goal_state=incompatible_goal,
+        ))
+        self.assertIs(incompatible.status, SurfacePlanningStatus.UNSUPPORTED)
+
+    def test_background_surface_planner_keeps_the_requested_ground_mode(self):
+        world = surface_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:grass_block"),
+            (1, 0, 0): BlockGeometry.full_cube("minecraft:grass_block"),
+        })
+        bounds = KnownMapBounds(0, 1, 1, 1, 0, 0, True)
+        sprint = self.profiles.require(MovementMode.SPRINT)
+        graph = build_surface_graph(
+            world.view(), bounds, sprint.motion, step_profile(),
+            ground_mode_profile=sprint,
+        )
+        builder = KnownMapSnapshotBuilder(world.view(), bounds)
+        progress = builder.advance(world.view(), 10_000)
+        self.assertIs(progress.status, SnapshotBuildStatus.COMPLETE)
+        request = SurfacePlanningRequest(
+            1, "background-sprint", "goal", 1, world.session.value,
+            graph.nodes[0].node_id, graph.nodes[-1].node_id,
+            initial_resources=ResourceState((("food_points", 20.0),)),
+        )
+        worker = PlannerWorker()
+        try:
+            worker.submit_surface_snapshot(
+                progress.snapshot, sprint.motion, step_profile(), request,
+                ground_mode_profile=sprint,
+            )
+            candidate = None
+            deadline = time.perf_counter() + 3.0
+            while candidate is None and time.perf_counter() < deadline:
+                candidate = worker.poll_latest()
+                time.sleep(.01)
+            self.assertIsNotNone(candidate)
+            self.assertIs(candidate.status, SurfacePlanningStatus.COMPLETE)
+            self.assertTrue(all(
+                edge.transition.mode is MovementMode.SPRINT
+                for edge in candidate.segments
+            ))
+        finally:
+            worker.close()
 
     def test_requested_input_is_not_actual_mode_evidence(self):
         sprint = self.profiles.require(MovementMode.SPRINT)

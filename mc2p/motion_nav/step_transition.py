@@ -250,6 +250,7 @@ class StepController:
         self._ticks = 0
         self._cancel_requested = False
         self._input_lost = False
+        self._dependencies: tuple[BlockPos, ...] = ()
 
     def start(self, start: SupportSurface, end: SupportSurface,
               frame: NavigationFrame) -> None:
@@ -264,6 +265,7 @@ class StepController:
         self._ticks = 0
         self._cancel_requested = False
         self._input_lost = False
+        self._dependencies = ()
         self.state = StepState.PREPARE
 
     def cancel(self) -> None:
@@ -315,6 +317,32 @@ class StepController:
 
         return max(candidates, key=alignment)
 
+    def _body_is_on_start_surface(self, frame: NavigationFrame) -> bool:
+        assert self._start is not None
+        region = self._start.region
+        box = frame.body.body_box
+        return (
+            abs(frame.body.position[1] - self._start.position[1]) <= .1
+            and box.min_x >= region.min_x - _EPSILON
+            and box.max_x <= region.max_x + _EPSILON
+            and box.min_z >= region.min_z - _EPSILON
+            and box.max_z <= region.max_z + _EPSILON
+        )
+
+    def _apply_geometry_result(self, geometry: StepQuery, started: int) -> StepDecision | None:
+        self._dependencies = geometry.dependencies
+        if geometry.status is QueryStatus.FEASIBLE:
+            return None
+        self.state = {
+            QueryStatus.NEEDS_INFORMATION: StepState.NEEDS_INFORMATION,
+            QueryStatus.UNSUPPORTED: StepState.UNSUPPORTED,
+            QueryStatus.BLOCKED: StepState.BLOCKED,
+        }[geometry.status]
+        return self._decision(
+            self.state, MovementV1(), geometry.reason_code, started,
+            geometry.missing_cells,
+        )
+
     def decide(self, frame: NavigationFrame, *, input_confirmed: bool = True) -> StepDecision:
         started = time.perf_counter_ns()
         if type(frame) is not NavigationFrame:
@@ -343,21 +371,29 @@ class StepController:
                       else "cancelling")
             return self._decision(self.state, MovementV1(), reason, started)
 
+        if (self.state in {StepState.MOVING, StepState.VERIFY_LANDING}
+                and set(frame.changed_cells).intersection(self._dependencies)):
+            geometry_decision = self._apply_geometry_result(
+                query_step(frame.world, self._start, self._end, self.profile), started,
+            )
+            if geometry_decision is not None:
+                return geometry_decision
+
         if self.state is StepState.PREPARE:
             geometry = query_step(frame.world, self._start, self._end, self.profile)
-            if geometry.status is not QueryStatus.FEASIBLE:
-                self.state = {
-                    QueryStatus.NEEDS_INFORMATION: StepState.NEEDS_INFORMATION,
-                    QueryStatus.UNSUPPORTED: StepState.UNSUPPORTED,
-                    QueryStatus.BLOCKED: StepState.BLOCKED,
-                }[geometry.status]
-                return self._decision(self.state, MovementV1(), geometry.reason_code,
-                                      started, geometry.missing_cells)
+            geometry_decision = self._apply_geometry_result(geometry, started)
+            if geometry_decision is not None:
+                return geometry_decision
             if (frame.body.pose != "standing" or not frame.body.is_on_ground
                     or speed > self.profile.maximum_entry_speed_blocks_per_second):
                 self.state = StepState.UNSUPPORTED
                 return self._decision(self.state, MovementV1(),
                                       "invalid_entry_body", started)
+            if not self._body_is_on_start_surface(frame):
+                self.state = StepState.UNSUPPORTED
+                return self._decision(
+                    self.state, MovementV1(), "invalid_entry_surface", started,
+                )
             self.state = StepState.MOVING
 
         self._ticks += 1

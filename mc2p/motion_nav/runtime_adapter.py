@@ -9,6 +9,7 @@ from mc2p.contracts.observation_request_v3 import (
     MAX_AIR_QUERY_POSITIONS, ObservationRequestV3,
 )
 from mc2p.contracts.observation_v3 import ObservationSnapshotV3
+from mc2p.contracts.observation_v2 import StatusEffectV2
 from mc2p.motion_nav.pre_floating_adapter import apply_visible_blocks
 from mc2p.motion_nav.world_model import (
     Aabb, BlockPos, CellKnowledge, ObservationStamp, WorldKnowledge, WorldSessionId, WorldView,
@@ -48,6 +49,13 @@ class BodyState:
     is_swimming: bool = False
     is_submerged_in_water: bool = False
     game_mode: str = "survival"
+    fall_distance_blocks: float = 0.0
+    status_effects: tuple[StatusEffectV2, ...] = ()
+    is_climbing: bool = False
+    is_fall_flying: bool = False
+    is_flying: bool = False
+    allow_flying: bool = False
+    is_using_item: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -95,6 +103,13 @@ def _body(snapshot: ObservationSnapshotV3, session: WorldSessionId,
         is_swimming=own.is_swimming,
         is_submerged_in_water=own.is_submerged_in_water,
         game_mode=own.game_mode,
+        fall_distance_blocks=own.fall_distance_blocks,
+        status_effects=own.status_effects,
+        is_climbing=own.is_climbing,
+        is_fall_flying=own.is_fall_flying,
+        is_flying=own.is_flying,
+        allow_flying=own.allow_flying,
+        is_using_item=own.is_using_item,
         body_box=Aabb(x - half, y, z - half, x + half, y + height, z + half),
         is_on_ground=own.is_on_ground,
         horizontal_collision=own.horizontal_collision,

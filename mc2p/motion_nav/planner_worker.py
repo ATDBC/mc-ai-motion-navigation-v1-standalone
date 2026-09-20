@@ -15,6 +15,7 @@ from mc2p.motion_nav.known_map_planner import (
     astar_surface_plan, plan_known_surface_snapshot,
 )
 from mc2p.motion_nav.ground_motion import GroundMotionProfile
+from mc2p.motion_nav.ground_modes import GroundModeProfile
 from mc2p.motion_nav.air_motion import AirMotionProfile
 from mc2p.motion_nav.jump_up import JumpUpProfile
 from mc2p.motion_nav.step_transition import StepProfile
@@ -25,6 +26,7 @@ class _PlanningJob:
     graph: WalkGraph | SurfaceGraph | None
     snapshot: KnownMapSnapshot | None
     profile: GroundMotionProfile | None
+    ground_mode_profile: GroundModeProfile | None
     step_profile: StepProfile | None
     jump_profile: JumpUpProfile | None
     air_profiles: tuple[AirMotionProfile, ...]
@@ -100,6 +102,7 @@ def _worker(requests, results, delay_seconds: float) -> None:
             candidate = plan_known_surface_snapshot(
                 job.snapshot, job.profile, job.step_profile, job.request,
                 job.jump_profile, air_profiles=job.air_profiles,
+                ground_mode_profile=job.ground_mode_profile,
             )
         else:
             candidate = plan_known_snapshot(
@@ -137,7 +140,7 @@ class PlannerWorker:
         if self._closed:raise ContractViolation("planner worker is closed")
         if type(graph) is not WalkGraph or type(request) is not PlanningRequest:
             raise ContractViolation("planner submission requires graph and request")
-        self._pending=_PlanningJob(graph,None,None,None,None,(),request)
+        self._pending=_PlanningJob(graph,None,None,None,None,None,(),request)
         self._flush_pending()
         return True
 
@@ -147,7 +150,7 @@ class PlannerWorker:
             raise ContractViolation("planner worker is closed")
         if type(graph) is not SurfaceGraph or type(request) is not SurfacePlanningRequest:
             raise ContractViolation("surface planner submission requires graph and request")
-        self._pending = _PlanningJob(graph, None, None, None, None, (), request)
+        self._pending = _PlanningJob(graph, None, None, None, None, None, (), request)
         self._flush_pending()
         return True
 
@@ -162,7 +165,7 @@ class PlannerWorker:
             raise ContractViolation("snapshot submission requires snapshot, profile and request")
         if jump_profile is not None and type(jump_profile) is not JumpUpProfile:
             raise ContractViolation("snapshot submission requires a JumpUp profile or None")
-        self._pending=_PlanningJob(None,snapshot,profile,None,jump_profile,(),request)
+        self._pending=_PlanningJob(None,snapshot,profile,None,None,jump_profile,(),request)
         self._flush_pending()
         return True
 
@@ -175,6 +178,7 @@ class PlannerWorker:
         jump_profile: JumpUpProfile | None = None,
         *,
         air_profiles: tuple[AirMotionProfile, ...] = (),
+        ground_mode_profile: GroundModeProfile | None = None,
     ) -> bool:
         if self._closed:
             raise ContractViolation("planner worker is closed")
@@ -194,8 +198,14 @@ class PlannerWorker:
             raise ContractViolation(
                 "surface snapshot submission requires typed air profiles"
             )
+        if (ground_mode_profile is not None
+                and type(ground_mode_profile) is not GroundModeProfile):
+            raise ContractViolation(
+                "surface snapshot submission requires a typed ground mode profile"
+            )
         self._pending = _PlanningJob(
-            None, snapshot, ground_profile, step_profile, jump_profile,
+            None, snapshot, ground_profile, ground_mode_profile,
+            step_profile, jump_profile,
             air_profiles, request,
         )
         self._flush_pending()

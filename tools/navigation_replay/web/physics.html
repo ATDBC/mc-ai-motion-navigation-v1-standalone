@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>B09-R 逐 tick 运动计算器 · MC2P</title>
+  <link rel="stylesheet" href="/physics.css">
+</head>
+<body>
+<header>
+  <div><div class="eyebrow">MC2P · 只读证据工具</div><h1>B09-R 逐 tick 运动计算器</h1></div>
+  <nav><a href="/">导航实验回放</a><span class="live"><i></i>真实记录与计算结果</span></nav>
+</header>
+<main>
+  <section class="toolbar panel">
+    <label>证据组<select id="run"><option>正在查找 B08 / B09 证据…</option></select></label>
+    <label>连续计算段<select id="sequence"><option>等待载入</option></select></label>
+    <button id="refresh">↻ 重新查找</button>
+    <div id="status" role="status">正在读取封存记录…</div>
+  </section>
+
+  <section class="summary" aria-label="计算摘要">
+    <article class="panel"><span>逐 tick 样本</span><strong id="tick-count">—</strong><small>每 tick 50 ms</small></article>
+    <article class="panel"><span>连续计算段</span><strong id="sequence-count">—</strong><small>状态跳变时重新起算</small></article>
+    <article class="panel"><span>最大位置误差</span><strong id="position-max">—</strong><small>方块</small></article>
+    <article class="panel"><span>最大速度误差</span><strong id="velocity-max">—</strong><small>方块 / tick</small></article>
+  </section>
+
+  <section class="visuals">
+    <article class="panel chart-card">
+      <div class="heading"><div><h2>俯视轨迹</h2><p>X / Z 平面；方框是当前玩家碰撞箱</p></div><div class="legend"><span class="actual">实机</span><span class="predicted">计算</span></div></div>
+      <canvas id="top-view" aria-label="实机和预测俯视轨迹"></canvas>
+    </article>
+    <article class="panel chart-card">
+      <div class="heading"><div><h2>高度变化</h2><p>横轴是沿实机轨迹累计走过的距离</p></div><div class="legend"><span class="actual">实机</span><span class="predicted">计算</span></div></div>
+      <canvas id="side-view" aria-label="实机和预测高度轨迹"></canvas>
+    </article>
+  </section>
+
+  <section class="details">
+    <article class="panel state-card">
+      <div class="heading"><div><h2>当前 tick</h2><p id="segment-reason">—</p></div><strong id="clock">0.000 s</strong></div>
+      <div class="state-columns">
+        <div><h3>实机结果</h3><dl id="actual-state"></dl></div>
+        <div><h3>计算结果</h3><dl id="predicted-state"></dl></div>
+      </div>
+      <div class="input-box"><span>本 tick 输入</span><code id="tick-input">连续段起点</code></div>
+      <div class="events"><div><span>实机事件</span><b id="actual-events">—</b></div><div><span>计算事件</span><b id="predicted-events">—</b></div></div>
+    </article>
+    <article class="panel error-card">
+      <div class="heading"><div><h2>误差放大图</h2><p>零误差也会保留坐标；纵轴自动放大</p></div><strong id="error-now">—</strong></div>
+      <canvas id="error-view" aria-label="位置与速度误差"></canvas>
+      <div class="error-legend"><span class="position">位置最大轴误差</span><span class="velocity">速度最大轴误差</span></div>
+    </article>
+  </section>
+
+  <section class="player panel">
+    <button id="previous" aria-label="上一 tick">◀│</button><button id="play" class="primary">▶ 播放</button><button id="next" aria-label="下一 tick">│▶</button>
+    <div class="timeline"><input id="seek" type="range" min="0" max="0" value="0" step="1" aria-label="物理 tick 时间轴"><div><span id="frame">0 / 0</span><span id="duration">0.000 s</span></div></div>
+    <label>倍速<select id="speed"><option>.25</option><option>.5</option><option selected>1</option><option>2</option><option>4</option><option>8</option></select></label>
+  </section>
+  <footer><span id="source">—</span><span>橙色虚线来自同一起点的开环计算，蓝线来自 Fabric 实机记录。切段后会从新的实机状态重新起算。</span></footer>
+</main>
+<script type="module" src="/physics.js"></script>
+</body></html>
