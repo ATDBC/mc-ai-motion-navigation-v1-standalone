@@ -11,24 +11,46 @@ from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.known_map_planner import (
     KnownMapSnapshot, PlanningRequest, RouteCandidate, WalkGraph, astar_plan,
     plan_known_snapshot,
+    SurfaceGraph, SurfacePlanningRequest, SurfaceRouteCandidate,
+    astar_surface_plan, plan_known_surface_snapshot,
 )
 from mc2p.motion_nav.ground_motion import GroundMotionProfile
+from mc2p.motion_nav.air_motion import AirMotionProfile
 from mc2p.motion_nav.jump_up import JumpUpProfile
+from mc2p.motion_nav.step_transition import StepProfile
 
 
 @dataclass(frozen=True, slots=True)
 class _PlanningJob:
-    graph: WalkGraph | None
+    graph: WalkGraph | SurfaceGraph | None
     snapshot: KnownMapSnapshot | None
     profile: GroundMotionProfile | None
+    step_profile: StepProfile | None
     jump_profile: JumpUpProfile | None
-    request: PlanningRequest
+    air_profiles: tuple[AirMotionProfile, ...]
+    request: PlanningRequest | SurfacePlanningRequest
 
     def __post_init__(self) -> None:
         if (self.graph is None) == (self.snapshot is None):
             raise ContractViolation("planning job requires exactly one map source")
         if self.snapshot is not None and type(self.profile) is not GroundMotionProfile:
             raise ContractViolation("snapshot planning requires a motion profile")
+        if ((type(self.graph) is SurfaceGraph) !=
+                (type(self.request) is SurfacePlanningRequest)):
+            if self.graph is not None:
+                raise ContractViolation("surface graph requires a surface planning request")
+        if self.snapshot is not None:
+            surface = type(self.request) is SurfacePlanningRequest
+            if surface != (type(self.step_profile) is StepProfile):
+                raise ContractViolation(
+                    "surface snapshot requires a surface request and Step profile"
+                )
+        if (type(self.air_profiles) is not tuple
+                or any(type(profile) is not AirMotionProfile
+                       for profile in self.air_profiles)):
+            raise ContractViolation("planning job air profiles must be typed")
+        if type(self.request) is not SurfacePlanningRequest and self.air_profiles:
+            raise ContractViolation("air profiles require surface planning")
 
 
 def _replace(queue, value) -> bool:
@@ -70,10 +92,19 @@ def _worker(requests, results, delay_seconds: float) -> None:
             if latest is None:return
             job=latest
         if delay_seconds:time.sleep(delay_seconds)
-        candidate = (astar_plan(job.graph, job.request) if job.graph is not None
-                     else plan_known_snapshot(
-                         job.snapshot, job.profile, job.request, job.jump_profile,
-                     ))
+        if type(job.graph) is SurfaceGraph:
+            candidate = astar_surface_plan(job.graph, job.request)
+        elif job.graph is not None:
+            candidate = astar_plan(job.graph, job.request)
+        elif type(job.request) is SurfacePlanningRequest:
+            candidate = plan_known_surface_snapshot(
+                job.snapshot, job.profile, job.step_profile, job.request,
+                job.jump_profile, air_profiles=job.air_profiles,
+            )
+        else:
+            candidate = plan_known_snapshot(
+                job.snapshot, job.profile, job.request, job.jump_profile,
+            )
         _publish_latest(results,candidate)
 
 
@@ -106,7 +137,17 @@ class PlannerWorker:
         if self._closed:raise ContractViolation("planner worker is closed")
         if type(graph) is not WalkGraph or type(request) is not PlanningRequest:
             raise ContractViolation("planner submission requires graph and request")
-        self._pending=_PlanningJob(graph,None,None,None,request)
+        self._pending=_PlanningJob(graph,None,None,None,None,(),request)
+        self._flush_pending()
+        return True
+
+    def submit_surface(self, graph: SurfaceGraph,
+                       request: SurfacePlanningRequest) -> bool:
+        if self._closed:
+            raise ContractViolation("planner worker is closed")
+        if type(graph) is not SurfaceGraph or type(request) is not SurfacePlanningRequest:
+            raise ContractViolation("surface planner submission requires graph and request")
+        self._pending = _PlanningJob(graph, None, None, None, None, (), request)
         self._flush_pending()
         return True
 
@@ -121,7 +162,42 @@ class PlannerWorker:
             raise ContractViolation("snapshot submission requires snapshot, profile and request")
         if jump_profile is not None and type(jump_profile) is not JumpUpProfile:
             raise ContractViolation("snapshot submission requires a JumpUp profile or None")
-        self._pending=_PlanningJob(None,snapshot,profile,jump_profile,request)
+        self._pending=_PlanningJob(None,snapshot,profile,None,jump_profile,(),request)
+        self._flush_pending()
+        return True
+
+    def submit_surface_snapshot(
+        self,
+        snapshot: KnownMapSnapshot,
+        ground_profile: GroundMotionProfile,
+        step_profile: StepProfile,
+        request: SurfacePlanningRequest,
+        jump_profile: JumpUpProfile | None = None,
+        *,
+        air_profiles: tuple[AirMotionProfile, ...] = (),
+    ) -> bool:
+        if self._closed:
+            raise ContractViolation("planner worker is closed")
+        if (type(snapshot) is not KnownMapSnapshot
+                or type(ground_profile) is not GroundMotionProfile
+                or type(step_profile) is not StepProfile
+                or type(request) is not SurfacePlanningRequest):
+            raise ContractViolation(
+                "surface snapshot submission requires snapshot, profiles and request"
+            )
+        if jump_profile is not None and type(jump_profile) is not JumpUpProfile:
+            raise ContractViolation(
+                "surface snapshot submission requires a JumpUp profile or None"
+            )
+        if (type(air_profiles) is not tuple
+                or any(type(profile) is not AirMotionProfile for profile in air_profiles)):
+            raise ContractViolation(
+                "surface snapshot submission requires typed air profiles"
+            )
+        self._pending = _PlanningJob(
+            None, snapshot, ground_profile, step_profile, jump_profile,
+            air_profiles, request,
+        )
         self._flush_pending()
         return True
 
@@ -129,7 +205,7 @@ class PlannerWorker:
         if self._pending is not None and _replace(self._requests,self._pending):
             self._pending=None
 
-    def poll_latest(self) -> RouteCandidate | None:
+    def poll_latest(self) -> RouteCandidate | SurfaceRouteCandidate | None:
         self._flush_pending()
         latest=None
         while True:

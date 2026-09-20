@@ -8,13 +8,21 @@ import json
 import math
 
 from mc2p.contracts.common import ContractViolation
-from mc2p.motion_nav.action_route import ActionRoute, JumpUpSegment, WalkSegment
+from mc2p.motion_nav.action_route import (
+    ActionRoute, ControlledDropSegment, JumpGapSegment, JumpUpSegment,
+    StepSegment, WalkSegment,
+)
 from mc2p.motion_nav.fixed_route import FixedRoute, RoutePoint
 from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
 from mc2p.motion_nav.jump_up import JumpUpEdge
+from mc2p.motion_nav.movement_transition import compose_movement_transitions
+from mc2p.motion_nav.movement_transition import GoalState, ResourceState
 from mc2p.motion_nav.known_map_planner import (
     PlanningStatus, RouteCandidate, WalkEdge, WalkNode, WalkNodeId,
+    SurfacePlanningStatus, SurfaceRouteCandidate, SurfaceWalkEdge,
+    SurfaceControlledDropEdge, SurfaceJumpGapEdge, SurfaceJumpUpEdge,
 )
+from mc2p.motion_nav.step_transition import StepEdge
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.world_model import BlockPos
 
@@ -49,6 +57,7 @@ class ActiveRoute:
     connection_dependencies: tuple[BlockPos, ...]
     corridor: ExecutableCorridor
     action_route: ActionRoute
+    goal_state: GoalState | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -86,10 +95,14 @@ class RouteAdmitter:
                       goal_revision=candidate.goal_revision,
                       path=[node.node_id for node in candidate.path],
                       actions=[{
-                          "kind": "jump_up" if type(edge) is JumpUpEdge else "walk",
-                          "start": edge.start,
-                          "end": edge.end,
-                          "profile": edge.profile_id if type(edge) is JumpUpEdge else None,
+                      "kind": "jump_up" if type(edge) is JumpUpEdge else "walk",
+                      "start": edge.start,
+                      "end": edge.end,
+                      "profile": (edge.profile_id if type(edge) is JumpUpEdge
+                                  else (edge.transition.trajectory_profile_id
+                                        if edge.transition is not None else None)),
+                      "mode": (None if type(edge) is JumpUpEdge or edge.transition is None
+                               else edge.transition.mode.value),
                       } for edge in candidate.segments])
         return hashlib.sha256(json.dumps(identity,sort_keys=True,separators=(',',':')).encode()).hexdigest()[:24]
 
@@ -135,6 +148,7 @@ class RouteAdmitter:
         pending_nodes = [candidate.path[0]]
         pending_points = []
         pending_dependencies = set(connection_dependencies)
+        pending_transitions = []
         if connection_length > 1e-9:
             pending_points.append(RoutePoint(
                 frame.body.position[0], candidate.path[0].position[1],
@@ -143,7 +157,7 @@ class RouteAdmitter:
         pending_points.append(RoutePoint(*candidate.path[0].position))
 
         def flush_walk() -> None:
-            nonlocal pending_nodes, pending_points, pending_dependencies
+            nonlocal pending_nodes, pending_points, pending_dependencies, pending_transitions
             if len(pending_points) >= 2:
                 if connection_length > 1e-9 and len(actions) == 0:
                     graph_nodes = tuple(pending_nodes)
@@ -156,14 +170,30 @@ class RouteAdmitter:
                     FixedRoute(f"{route_id}-walk-{len(actions)}", route_points),
                     tuple(node.node_id for node in pending_nodes),
                     tuple(sorted(pending_dependencies)),
+                    ((pending_transitions[0] if len(pending_transitions) == 1
+                      else compose_movement_transitions(
+                          f"{route_id}/walk/{len(actions)}", tuple(pending_transitions),
+                      )) if pending_transitions
+                     and len(pending_transitions) == len(pending_nodes) - 1
+                     else None),
                 ))
             pending_nodes = []
             pending_points = []
             pending_dependencies = set()
+            pending_transitions = []
 
         for segment_index, (edge, next_node) in enumerate(
                 zip(candidate.segments, candidate.path[1:])):
             if type(edge) is WalkEdge:
+                if (pending_transitions and edge.transition is not None
+                        and edge.transition.mode is not pending_transitions[-1].mode):
+                    flush_walk()
+                changes_resources = (edge.transition is not None and any(
+                    abs(delta) > 1.0e-12
+                    for _, delta in edge.transition.resource_change.deltas
+                ))
+                if changes_resources:
+                    flush_walk()
                 if not pending_nodes:
                     previous = candidate.path[segment_index]
                     pending_nodes = [previous]
@@ -172,15 +202,22 @@ class RouteAdmitter:
                 pending_points.append(RoutePoint(*next_node.position))
                 pending_dependencies.update(edge.dependencies)
                 pending_dependencies.update(next_node.dependencies)
+                if edge.transition is not None:
+                    pending_transitions.append(edge.transition)
+                if changes_resources:
+                    flush_walk()
             else:
                 flush_walk()
                 assert type(edge) is JumpUpEdge
-                actions.append(JumpUpSegment(edge, edge.dependencies))
+                actions.append(JumpUpSegment(edge, edge.dependencies, edge.transition))
                 pending_nodes = [next_node]
                 pending_points = [RoutePoint(*next_node.position)]
                 pending_dependencies = set(next_node.dependencies)
         flush_walk()
-        return ActionRoute(route_id, tuple(actions)) if actions else None
+        return (ActionRoute(
+            route_id, tuple(actions), candidate.goal_state,
+            candidate.final_resources if candidate.final_resources is not None else ResourceState(),
+        ) if actions else None)
 
     @staticmethod
     def _connection(candidate: RouteCandidate, frame: NavigationFrame
@@ -252,8 +289,195 @@ class RouteAdmitter:
         active=ActiveRoute(route_id,1,candidate.request_id,candidate.goal_id,
                            candidate.goal_revision,candidate.world_session,fixed_route,
                            full_length,connection_length,connection_dependencies,corridor,
-                           action_route)
+                           action_route,candidate.goal_state)
         return AdmissionResult(AdmissionStatus.ACCEPTED,"candidate_admitted",active)
+
+    @staticmethod
+    def _surface_route_id(candidate: SurfaceRouteCandidate) -> str:
+        def node_value(node_id):
+            return [node_id.column_x, node_id.column_z,
+                    node_id.vertical_band, node_id.surface_index]
+        identity = {
+            "world": candidate.world_session,
+            "goal": candidate.goal_id,
+            "goal_revision": candidate.goal_revision,
+            "path": [node_value(node.node_id) for node in candidate.path],
+            "actions": [{
+                "kind": ("step" if type(edge) is StepEdge else
+                          "jump_up" if type(edge) is SurfaceJumpUpEdge else
+                          "jump_gap" if type(edge) is SurfaceJumpGapEdge else
+                          "controlled_drop"
+                          if type(edge) is SurfaceControlledDropEdge else "walk"),
+                "start": node_value(edge.start),
+                "end": node_value(edge.end),
+                "profile": (edge.profile_id if type(edge) is StepEdge else
+                            edge.jump_edge.profile_id
+                            if type(edge) is SurfaceJumpUpEdge else
+                            edge.air_edge.profile_id
+                            if type(edge) in (SurfaceJumpGapEdge,
+                                              SurfaceControlledDropEdge) else None),
+            } for edge in candidate.segments],
+        }
+        return hashlib.sha256(json.dumps(
+            identity, sort_keys=True, separators=(",", ":"),
+        ).encode()).hexdigest()[:24]
+
+    @classmethod
+    def _surface_action_route(
+        cls,
+        candidate: SurfaceRouteCandidate,
+        frame: NavigationFrame,
+        connection_length: float,
+        connection_dependencies: tuple[BlockPos, ...],
+        route_id: str,
+    ) -> ActionRoute | None:
+        actions = []
+        pending_nodes = [candidate.path[0]]
+        pending_points = []
+        pending_dependencies = set(connection_dependencies)
+        pending_transitions = []
+        if connection_length > 1.0e-9:
+            pending_points.append(RoutePoint(
+                frame.body.position[0], candidate.path[0].position[1],
+                frame.body.position[2],
+            ))
+        pending_points.append(RoutePoint(*candidate.path[0].position))
+
+        def flush_walk() -> None:
+            nonlocal pending_nodes, pending_points, pending_dependencies, pending_transitions
+            if len(pending_points) >= 2:
+                actions.append(WalkSegment(
+                    FixedRoute(f"{route_id}-walk-{len(actions)}", tuple(pending_points)),
+                    tuple(node.node_id for node in pending_nodes),
+                    tuple(sorted(pending_dependencies)),
+                    ((pending_transitions[0] if len(pending_transitions) == 1
+                      else compose_movement_transitions(
+                          f"{route_id}/walk/{len(actions)}", tuple(pending_transitions),
+                      )) if pending_transitions
+                     and len(pending_transitions) == len(pending_nodes) - 1
+                     else None),
+                ))
+            pending_nodes = []
+            pending_points = []
+            pending_dependencies = set()
+            pending_transitions = []
+
+        for index, (edge, next_node) in enumerate(zip(
+                candidate.segments, candidate.path[1:])):
+            if type(edge) is SurfaceWalkEdge:
+                if (pending_transitions
+                        and edge.transition.mode is not pending_transitions[-1].mode):
+                    flush_walk()
+                if not pending_nodes:
+                    previous = candidate.path[index]
+                    pending_nodes = [previous]
+                    pending_points = [RoutePoint(*previous.position)]
+                pending_nodes.append(next_node)
+                pending_points.append(RoutePoint(*next_node.position))
+                pending_dependencies.update(edge.dependencies)
+                pending_dependencies.update(next_node.dependencies)
+                pending_transitions.append(edge.transition)
+            else:
+                flush_walk()
+                previous = candidate.path[index]
+                if type(edge) is StepEdge:
+                    actions.append(StepSegment(
+                        edge, previous.surface, next_node.surface,
+                        edge.dependencies, edge.transition,
+                    ))
+                elif type(edge) is SurfaceJumpUpEdge:
+                    actions.append(JumpUpSegment(
+                        edge.jump_edge, edge.dependencies, edge.transition,
+                    ))
+                elif type(edge) is SurfaceJumpGapEdge:
+                    actions.append(JumpGapSegment(
+                        edge.air_edge, previous.surface, next_node.surface,
+                        edge.dependencies, edge.transition,
+                    ))
+                else:
+                    assert type(edge) is SurfaceControlledDropEdge
+                    actions.append(ControlledDropSegment(
+                        edge.air_edge, previous.surface, next_node.surface,
+                        edge.dependencies, edge.transition,
+                    ))
+                pending_nodes = [next_node]
+                pending_points = [RoutePoint(*next_node.position)]
+                pending_dependencies = set(next_node.dependencies)
+        flush_walk()
+        return ActionRoute(route_id, tuple(actions)) if actions else None
+
+    def admit_surface(
+        self,
+        candidate: SurfaceRouteCandidate,
+        frame: NavigationFrame,
+        *,
+        expected_request_id: str,
+        goal_id: str,
+        goal_revision: int,
+        changed_cells: tuple[BlockPos, ...],
+    ) -> AdmissionResult:
+        """Recheck a B07 surface route before it enters the control thread."""
+        if type(candidate) is not SurfaceRouteCandidate or type(frame) is not NavigationFrame:
+            raise ContractViolation("surface route admission requires candidate and frame")
+        if type(changed_cells) is not tuple:
+            raise ContractViolation("route changes must be immutable")
+        if candidate.status is not SurfacePlanningStatus.COMPLETE or not candidate.path:
+            return AdmissionResult(AdmissionStatus.REJECTED, "candidate_not_complete")
+        if candidate.request_id != expected_request_id:
+            return AdmissionResult(AdmissionStatus.REJECTED, "planning_request_replaced")
+        if candidate.world_session != frame.session.value:
+            return AdmissionResult(AdmissionStatus.REJECTED, "world_session_changed")
+        if candidate.goal_id != goal_id or candidate.goal_revision != goal_revision:
+            return AdmissionResult(AdmissionStatus.REJECTED, "goal_revision_changed")
+        if frame.world.geometry_revision != candidate.geometry_revision and not changed_cells:
+            return AdmissionResult(AdmissionStatus.REJECTED, "world_delta_missing")
+        if set(candidate.dependencies).intersection(changed_cells):
+            return AdmissionResult(AdmissionStatus.REJECTED, "route_dependencies_changed")
+        connected, connection_length, connection_dependencies = self._connection(
+            candidate, frame,
+        )
+        if not connected:
+            return AdmissionResult(AdmissionStatus.REJECTED,
+                                   "current_body_cannot_connect")
+        route_id = self._surface_route_id(candidate)
+        action_route = self._surface_action_route(
+            candidate, frame, connection_length, connection_dependencies, route_id,
+        )
+        if action_route is None:
+            return AdmissionResult(AdmissionStatus.REJECTED, "candidate_has_no_actions")
+
+        length = 0.0
+        corridor_nodes = [candidate.path[0]]
+        corridor_segments = []
+        for edge, node in zip(candidate.segments, candidate.path[1:]):
+            segment_length = math.dist(corridor_nodes[-1].position, node.position)
+            if (corridor_segments and connection_length + length + segment_length
+                    > self.maximum_corridor_blocks):
+                break
+            corridor_segments.append(edge)
+            corridor_nodes.append(node)
+            length += segment_length
+        dependencies = tuple(sorted(
+            {cell for node in corridor_nodes for cell in node.dependencies}
+            | {cell for edge in corridor_segments for cell in edge.dependencies}
+            | set(connection_dependencies)
+        ))
+        full_length = connection_length + sum(
+            math.dist(first.position, second.position)
+            for first, second in zip(candidate.path, candidate.path[1:])
+        )
+        corridor = ExecutableCorridor(
+            tuple(node.node_id for node in corridor_nodes), dependencies,
+            connection_length + length, corridor_nodes[-1].node_id,
+        )
+        active = ActiveRoute(
+            route_id, 1, candidate.request_id, candidate.goal_id,
+            candidate.goal_revision, candidate.world_session, None,
+            full_length, connection_length, connection_dependencies, corridor,
+            action_route,
+        )
+        return AdmissionResult(AdmissionStatus.ACCEPTED,
+                               "candidate_admitted", active)
 
 
 class ActiveRouteTracker:
@@ -314,7 +538,7 @@ class ActiveRouteTracker:
                           self.route.fixed_route,self.route.fixed_route_length_blocks,
                           self.route.connection_length_blocks,
                           self.route.connection_dependencies,corridor,
-                          self.route.action_route)
+                          self.route.action_route,self.route.goal_state)
         self.route=route
         if self._invalidated.intersection(dependencies):
             return CorridorUpdate(CorridorStatus.BLOCKED_BY_CHANGE,route,

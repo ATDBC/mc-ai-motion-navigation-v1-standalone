@@ -235,6 +235,11 @@ def run_jump_up_acceptance_runtime(
             if phase is JumpUpState.REQUEST_TAKEOFF and injected_sequence is None:
                 if decision.state is not JumpUpState.REQUEST_TAKEOFF:
                     raise RuntimeError("B05 REQUEST_TAKEOFF cancellation state was not reached")
+                # Dispatch the takeoff request first.  Cancellation must handle
+                # the real window where input was accepted but the next body
+                # observation may still be grounded and moving.
+                result = step(decision.movement, look=decision.look, request=air_request)
+                input_confirmed = receipt_confirms_input(result.backend_result.receipt.status)
                 controller.cancel()
                 injected_sequence = frame.body.sequence_id
                 continue

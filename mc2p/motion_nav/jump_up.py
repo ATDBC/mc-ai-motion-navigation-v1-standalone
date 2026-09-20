@@ -1,7 +1,7 @@
 """Calibrated adjacent one-block JumpUp capability and observed-state executor."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 import json
 import math
@@ -9,8 +9,13 @@ from pathlib import Path
 
 from mc2p.contracts.action_v1 import LookV1, MovementV1
 from mc2p.contracts.common import ContractViolation, require_identifier
+from mc2p.motion_nav.block_motion_traits import (
+    BlockMotionCatalog, unsupported_motion_cells,
+)
+from mc2p.motion_nav.environment_identity import MotionEnvironmentIdentity
 from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
 from mc2p.motion_nav.ground_motion import GroundControl, control_world_direction
+from mc2p.motion_nav.movement_transition import MovementTransition, ResourceChange
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.world_model import Aabb, BlockPos, WorldView
 
@@ -51,9 +56,19 @@ class JumpUpProfile:
     maximum_exit_speed_blocks_per_second: float
     maximum_settle_ticks: int
     cost_seconds: float
+    environment_id: str = "legacy-unbound"
+    ground_model_id: str | None = None
+    motion_catalog: BlockMotionCatalog | None = field(default=None, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         require_identifier(self.profile_id, "JumpUp profile id")
+        require_identifier(self.environment_id, "JumpUp environment id")
+        if self.ground_model_id is not None:
+            require_identifier(self.ground_model_id, "JumpUp ground model id")
+        if self.motion_catalog is not None and type(self.motion_catalog) is not BlockMotionCatalog:
+            raise ContractViolation("JumpUp motion catalog must be typed")
+        if (self.motion_catalog is None) != (self.ground_model_id is None):
+            raise ContractViolation("JumpUp ground model and motion catalog must be declared together")
         if self.minecraft_version != "1.21":
             raise ContractViolation("JumpUp profile Minecraft version is unsupported")
         if type(self.support_materials) is not frozenset or not self.support_materials:
@@ -93,18 +108,37 @@ class JumpUpProfile:
             raise ContractViolation("JumpUp reference trajectory must land one block up")
 
 
-def load_jump_up_profile(path: Path) -> JumpUpProfile:
+def load_jump_up_profile(
+    path: Path,
+    *,
+    environment: MotionEnvironmentIdentity | None = None,
+    catalog: BlockMotionCatalog | None = None,
+) -> JumpUpProfile:
     if not isinstance(path, Path):
         raise ContractViolation("JumpUp profile path must be a Path")
     value = json.loads(path.read_text("utf-8"))
-    if value.get("schema_version") != "mc2p.jump-up-profile.v1":
+    schema = value.get("schema_version")
+    if schema not in {"mc2p.jump-up-profile.v1", "mc2p.jump-up-profile.v2"}:
         raise ContractViolation("unsupported JumpUp profile schema")
     scope, entry, trajectory, landing = (
         value["scope"], value["entry"], value["trajectory"], value["landing"]
     )
+    if schema == "mc2p.jump-up-profile.v2":
+        if type(environment) is not MotionEnvironmentIdentity or type(catalog) is not BlockMotionCatalog:
+            raise ContractViolation("JumpUp v2 profile requires environment and block catalog")
+        environment.require_profile_environment(scope["environment_id"])
+        if scope["minecraft_version"] != environment.minecraft_version:
+            raise ContractViolation("JumpUp Minecraft version does not match environment")
+        model_id = scope["ground_model_id"]
+        support_materials = catalog.materials_for_ground_model(model_id)
+        environment_id = scope["environment_id"]
+    else:
+        model_id = None
+        support_materials = frozenset(scope["support_materials"])
+        environment_id = "legacy-unbound"
     return JumpUpProfile(
         value["profile_id"], scope["minecraft_version"], scope["tick_seconds"],
-        frozenset(scope["support_materials"]),
+        support_materials,
         entry["maximum_horizontal_speed_blocks_per_second"],
         entry["center_tolerance_blocks"],
         entry["maximum_forward_offset_blocks"],
@@ -119,6 +153,7 @@ def load_jump_up_profile(path: Path) -> JumpUpProfile:
         landing["horizontal_radius_blocks"], landing["level_tolerance_blocks"],
         landing["maximum_exit_speed_blocks_per_second"],
         landing["maximum_settle_ticks"], value["cost_seconds"],
+        environment_id, model_id, catalog if schema == "mc2p.jump-up-profile.v2" else None,
     )
 
 
@@ -138,6 +173,7 @@ class JumpUpEdge:
     direction: tuple[int, int]
     cost_seconds: float
     dependencies: tuple[BlockPos, ...]
+    transition: MovementTransition | None = None
 
     def __post_init__(self) -> None:
         _node(self.start, "JumpUp edge start")
@@ -153,6 +189,12 @@ class JumpUpEdge:
             raise ContractViolation("JumpUp edge cost must be positive")
         if type(self.dependencies) is not tuple:
             raise ContractViolation("JumpUp edge dependencies must be immutable")
+        if self.transition is not None and type(self.transition) is not MovementTransition:
+            raise ContractViolation("JumpUp edge transition must be typed")
+
+    @property
+    def resource_change(self) -> ResourceChange:
+        return self.transition.resource_change if self.transition is not None else ResourceChange()
 
 
 def _body_at(node: JumpNodeId, margin: float = 0.0) -> Aabb:
@@ -189,6 +231,12 @@ def query_jump_up(world: WorldView, start: JumpNodeId, end: JumpNodeId,
         dependencies.update(support.dependencies)
         missing.update(support.missing_cells)
         status = _merge_status(status, support.status)
+        if (profile.motion_catalog is not None and profile.ground_model_id is not None
+                and unsupported_motion_cells(
+                    profile.motion_catalog, world, support.dependencies,
+                    profile.ground_model_id,
+                )):
+            status = _merge_status(status, QueryStatus.UNSUPPORTED)
         if (support.status is QueryStatus.FEASIBLE
                 and (support.support_fraction < .999
                      or not set(support.support_materials).issubset(profile.support_materials))):
@@ -216,6 +264,12 @@ def query_jump_up(world: WorldView, start: JumpNodeId, end: JumpNodeId,
             dependencies.update(result.dependencies)
             missing.update(result.missing_cells)
             status = _merge_status(status, result.status)
+            if (profile.motion_catalog is not None and profile.ground_model_id is not None
+                    and unsupported_motion_cells(
+                        profile.motion_catalog, world, result.dependencies,
+                        profile.ground_model_id,
+                    )):
+                status = _merge_status(status, QueryStatus.UNSUPPORTED)
             base = base.moved(*move)
         previous = point
     reason = {
@@ -264,19 +318,29 @@ class JumpUpController:
         self.state = JumpUpState.IDLE
         self._start: JumpNodeId | None = None
         self._end: JumpNodeId | None = None
+        self._session = None
         self._takeoff_wait = 0
         self._airborne_ticks = 0
         self._settle_ticks = 0
+        self._takeoff_observed = False
         self._cancel_requested = False
         self._input_lost = False
 
     def start(self, start: JumpNodeId, end: JumpNodeId, frame: NavigationFrame) -> None:
         if type(frame) is not NavigationFrame:
             raise ContractViolation("JumpUp start requires a navigation frame")
+        if self.state in {
+            JumpUpState.PREPARE, JumpUpState.REQUEST_TAKEOFF,
+            JumpUpState.AIRBORNE, JumpUpState.VERIFY_LANDING,
+            JumpUpState.CANCELLING,
+        }:
+            raise ContractViolation("active JumpUp must finish or cancel before restart")
         _node(start, "JumpUp start"); _node(end, "JumpUp end")
         self._start, self._end = start, end
+        self._session = frame.session
         self.state = JumpUpState.PREPARE
         self._takeoff_wait = self._airborne_ticks = self._settle_ticks = 0
+        self._takeoff_observed = False
         self._cancel_requested = False
         self._input_lost = False
 
@@ -331,14 +395,46 @@ class JumpUpController:
             raise ContractViolation("JumpUp decision requires a navigation frame")
         if self._start is None or self._end is None or self.state is JumpUpState.IDLE:
             return self._decision(JumpUpState.IDLE, MovementV1(), "not_started", started)
-        if frame.session != frame.body.session:
+        if (frame.session != self._session or frame.body.session != self._session
+                or frame.world.session != self._session):
             self.state = JumpUpState.FAILED
             return self._decision(self.state, MovementV1(), "world_session_changed", started)
+        if self.state in {
+            JumpUpState.COMPLETE, JumpUpState.CANCELLED, JumpUpState.INPUT_LOST,
+            JumpUpState.FAILED, JumpUpState.NEEDS_INFORMATION,
+            JumpUpState.UNSUPPORTED, JumpUpState.BLOCKED,
+        }:
+            return self._decision(self.state, MovementV1(), self.state.value, started)
+
+        speed = math.hypot(frame.body.velocity_blocks_per_second[0],
+                           frame.body.velocity_blocks_per_second[2])
+        if (self._cancel_requested
+                and self.state in {JumpUpState.PREPARE, JumpUpState.REQUEST_TAKEOFF}):
+            if frame.body.is_on_ground:
+                if speed <= self.profile.maximum_exit_speed_blocks_per_second:
+                    self.state = JumpUpState.CANCELLED
+                    return self._decision(
+                        self.state, MovementV1(), "cancelled_after_ground_stop", started,
+                    )
+                self.state = JumpUpState.CANCELLING
+                return self._decision(
+                    self.state, MovementV1(), "cancelling_before_takeoff", started,
+                )
+            self._takeoff_observed = True
+            self.state = JumpUpState.CANCELLING
+
+        if (self.state is JumpUpState.CANCELLING and not self._takeoff_observed
+                and frame.body.is_on_ground):
+            if speed <= self.profile.maximum_exit_speed_blocks_per_second:
+                self.state = JumpUpState.CANCELLED
+                return self._decision(
+                    self.state, MovementV1(), "cancelled_after_ground_stop", started,
+                )
+            return self._decision(
+                self.state, MovementV1(), "cancelling_before_takeoff", started,
+            )
 
         if self.state is JumpUpState.PREPARE:
-            if self._cancel_requested:
-                self.state = JumpUpState.CANCELLED
-                return self._decision(self.state, MovementV1(), "cancelled_before_takeoff", started)
             geometry = query_jump_up(frame.world, self._start, self._end, self.profile)
             if geometry.status is not QueryStatus.FEASIBLE:
                 self.state = {
@@ -349,8 +445,6 @@ class JumpUpController:
                 return self._decision(self.state, MovementV1(), geometry.reason_code,
                                       started, geometry.missing_cells)
             center = (self._start[0] + .5, self._start[2] + .5)
-            speed = math.hypot(frame.body.velocity_blocks_per_second[0],
-                               frame.body.velocity_blocks_per_second[2])
             if (frame.body.pose != "standing" or not frame.body.is_on_ground
                     or abs(frame.body.position[1] - self._start[1]) > .10):
                 self.state = JumpUpState.UNSUPPORTED
@@ -388,14 +482,12 @@ class JumpUpController:
                                   "takeoff_requested", started)
 
         if not frame.body.is_on_ground:
+            self._takeoff_observed = True
             self.state = (JumpUpState.CANCELLING
                           if self._cancel_requested or self._input_lost or not input_confirmed
                           else JumpUpState.AIRBORNE)
 
         if self.state is JumpUpState.REQUEST_TAKEOFF:
-            if self._cancel_requested:
-                self.state = JumpUpState.CANCELLED
-                return self._decision(self.state, MovementV1(), "cancelled_before_takeoff", started)
             if not input_confirmed:
                 self.state = JumpUpState.FAILED
                 return self._decision(self.state, MovementV1(), "takeoff_input_rejected", started)

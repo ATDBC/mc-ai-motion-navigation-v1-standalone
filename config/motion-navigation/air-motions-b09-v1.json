@@ -1,0 +1,128 @@
+{
+  "schema_version": "mc2p.air-motion-profiles.v1",
+  "scope": {
+    "environment_id": "fabric-1_21-motion-v1",
+    "minecraft_version": "1.21",
+    "tick_seconds": 0.05,
+    "ground_model_id": "ordinary-ground-v1"
+  },
+  "profiles": [
+    {
+      "profile_id": "fabric-1_21-ordinary-gap-one-cell-b09-v1",
+      "mode": "jump_gap",
+      "horizontal_cells": 2,
+      "target_height_delta_blocks": 0.0,
+      "jump_input": true,
+      "sprint_input": true,
+      "entry": {
+        "minimum_horizontal_speed_blocks_per_second": 0.0,
+        "maximum_horizontal_speed_blocks_per_second": 0.1,
+        "center_tolerance_blocks": 0.15,
+        "maximum_forward_offset_blocks": 0.12,
+        "maximum_backward_offset_blocks": 0.12,
+        "maximum_lateral_offset_blocks": 0.08,
+        "maximum_yaw_error_degrees": 2.0
+      },
+      "trajectory": {
+        "horizontal_safety_margin_blocks": 0.01,
+        "reference_positions": [
+          [0.0, 0.0, 0.0],
+          [0.0, 0.419999987, 0.327400012],
+          [0.0, 0.753199981, 0.531640439],
+          [0.0, 1.001335979, 0.717499233],
+          [0.0, 1.166109261, 0.88663074],
+          [0.0, 1.249187079, 1.040540416],
+          [0.0, 1.25220334, 1.180598225],
+          [0.0, 1.176759275, 1.308050835],
+          [0.0, 1.024424088, 1.424032713],
+          [0.0, 0.796735601, 1.529576226],
+          [0.0, 0.495200877, 1.625620825],
+          [0.0, 0.121296841, 1.713021413],
+          [0.0, 0.0, 1.79255595],
+          [0.0, 0.0, 1.86493238],
+          [0.0, 0.0, 1.904449916],
+          [0.0, 0.0, 1.926026493],
+          [0.0, 0.0, 1.937807306]
+        ],
+        "departure_release_progress_blocks": 0.0,
+        "forward_release_progress_blocks": 0.4,
+        "maximum_departure_wait_ticks": 4,
+        "maximum_airborne_ticks": 16
+      },
+      "landing": {
+        "horizontal_radius_blocks": 0.28,
+        "level_tolerance_blocks": 0.1,
+        "maximum_exit_speed_blocks_per_second": 0.15,
+        "maximum_settle_ticks": 10,
+        "recovery_forward_blocks": 0.1
+      },
+      "maximum_fall_distance_blocks": 0.0,
+      "cost_seconds": 0.9,
+      "risk_policy_id": "no_expected_damage",
+      "validation": {
+        "status": "passed_b09_fabric_cardinal_and_mixed_route",
+        "artifact": "20260919T162705802883Z-d13e291e",
+        "cardinal_trials": 40,
+        "maximum_cardinal_landing_error_blocks": 0.062192694271632654,
+        "mixed_route_final_error_blocks": 0.11813733418061378
+      }
+    },
+    {
+      "profile_id": "fabric-1_21-ordinary-controlled-drop-one-block-b09-v1",
+      "mode": "controlled_drop",
+      "horizontal_cells": 1,
+      "target_height_delta_blocks": -1.0,
+      "jump_input": false,
+      "sprint_input": false,
+      "entry": {
+        "minimum_horizontal_speed_blocks_per_second": 0.0,
+        "maximum_horizontal_speed_blocks_per_second": 0.1,
+        "center_tolerance_blocks": 0.12,
+        "maximum_forward_offset_blocks": 0.08,
+        "maximum_backward_offset_blocks": 0.01,
+        "maximum_lateral_offset_blocks": 0.08,
+        "maximum_yaw_error_degrees": 2.0
+      },
+      "trajectory": {
+        "horizontal_safety_margin_blocks": 0.01,
+        "reference_positions": [
+          [0.0, 0.0, 0.0],
+          [0.0, 0.0, 0.098000003],
+          [0.0, 0.0, 0.249508015],
+          [0.0, 0.0, 0.430231402],
+          [0.0, 0.0, 0.626906386],
+          [0.0, 0.0, 0.832290943],
+          [0.0, -0.078400002, 0.944430925],
+          [0.0, -0.233632006, 1.005659362],
+          [0.0, -0.464159375, 1.061377241],
+          [0.0, -0.768476202, 1.112080512],
+          [0.0, -1.0, 1.158220491],
+          [0.0, -1.0, 1.200207872],
+          [0.0, -1.0, 1.223132985],
+          [0.0, -1.0, 1.235650098]
+        ],
+        "departure_release_progress_blocks": 0.7,
+        "forward_release_progress_blocks": 0.72,
+        "maximum_departure_wait_ticks": 8,
+        "maximum_airborne_ticks": 12
+      },
+      "landing": {
+        "horizontal_radius_blocks": 0.34,
+        "level_tolerance_blocks": 0.1,
+        "maximum_exit_speed_blocks_per_second": 0.15,
+        "maximum_settle_ticks": 10,
+        "recovery_forward_blocks": 0.1
+      },
+      "maximum_fall_distance_blocks": 1.0,
+      "cost_seconds": 0.7,
+      "risk_policy_id": "no_expected_damage",
+      "validation": {
+        "status": "passed_b09_fabric_cardinal_and_mixed_route",
+        "artifact": "20260919T162705802883Z-d13e291e",
+        "cardinal_trials": 40,
+        "maximum_cardinal_landing_error_blocks": 0.2356500984470724,
+        "mixed_route_final_error_blocks": 0.03963354914926942
+      }
+    }
+  ]
+}

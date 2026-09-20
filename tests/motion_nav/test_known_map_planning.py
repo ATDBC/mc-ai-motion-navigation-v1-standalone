@@ -47,8 +47,8 @@ class KnownMapPlanningTests(unittest.TestCase):
         session=WorldSessionId('b04-known')
         world=WorldKnowledge(session)
         stamp=ObservationStamp(session,1,1,'clock',50_000_000)
-        floors={(x,0,z):BlockGeometry.full_cube('minecraft:grass_block')
-                for x in range(5) for z in range(5)}
+        floors={(x,y,z):BlockGeometry.full_cube('minecraft:grass_block')
+                for x in range(5) for y in (-1,0) for z in range(5)}
         del floors[(2,0,2)]
         world.observe_blocks(stamp,floors)
         air={(x,y,z) for x in range(5) for y in (1,2) for z in range(5)}|{(2,0,2)}

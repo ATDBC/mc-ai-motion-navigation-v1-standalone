@@ -1,0 +1,74 @@
+{
+  "schema_version": "mc2p.block-motion-traits.v1",
+  "environment_id": "fabric-1_21-motion-v1",
+  "minecraft_version": "1.21",
+  "ground_models": {
+    "ordinary-ground-v1": [
+      "minecraft:dirt",
+      "minecraft:glass",
+      "minecraft:grass_block",
+      "minecraft:oak_planks",
+      "minecraft:stone"
+    ]
+  },
+  "ground_shape_models": {
+    "ordinary-ground-v1": [
+      "minecraft:dirt_path",
+      "minecraft:oak_stairs",
+      "minecraft:smooth_stone_slab",
+      "minecraft:snow",
+      "minecraft:white_carpet"
+    ]
+  },
+  "special_effects": {
+    "bouncy": [
+      "minecraft:slime_block"
+    ],
+    "climbable": [
+      "minecraft:cave_vines",
+      "minecraft:cave_vines_plant",
+      "minecraft:ladder",
+      "minecraft:scaffolding",
+      "minecraft:twisting_vines",
+      "minecraft:twisting_vines_plant",
+      "minecraft:vine",
+      "minecraft:weeping_vines",
+      "minecraft:weeping_vines_plant"
+    ],
+    "conditional_support": [
+      "minecraft:powder_snow"
+    ],
+    "fluid": [
+      "minecraft:lava",
+      "minecraft:water"
+    ],
+    "hazard": [
+      "minecraft:cactus",
+      "minecraft:campfire",
+      "minecraft:fire",
+      "minecraft:lava",
+      "minecraft:magma_block",
+      "minecraft:powder_snow",
+      "minecraft:soul_campfire",
+      "minecraft:soul_fire",
+      "minecraft:sweet_berry_bush"
+    ],
+    "slippery": [
+      "minecraft:blue_ice",
+      "minecraft:frosted_ice",
+      "minecraft:ice",
+      "minecraft:packed_ice"
+    ],
+    "surface_slowing": [
+      "minecraft:honey_block",
+      "minecraft:soul_sand"
+    ],
+    "volume_slowing": [
+      "minecraft:cobweb",
+      "minecraft:sweet_berry_bush"
+    ],
+    "world_change_risk": [
+      "minecraft:farmland"
+    ]
+  }
+}

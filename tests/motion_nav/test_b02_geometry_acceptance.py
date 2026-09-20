@@ -74,7 +74,14 @@ class B02GeometryAcceptanceTests(unittest.TestCase):
         floor = (((7, -61, 2), BlockGeometry.full_cube("minecraft:stone")),)
         world = known_world(start, (0, 0, 1), floor, air=((7, -61, 3),))
         self.assertIs(query_support(start, world).status, QueryStatus.FEASIBLE)
-        support = query_support(endpoint, world)
+        first = query_support(endpoint, world)
+        world_owner = world._owner
+        self.assertIsNotNone(world_owner)
+        world_owner.confirm_air(
+            ObservationStamp(world.session, 2, 2, "test-clock", 2),
+            first.missing_cells,
+        )
+        support = query_support(endpoint, world_owner.view())
         self.assertIs(support.status, QueryStatus.BLOCKED)
         self.assertEqual(support.missing_cells, ())
 

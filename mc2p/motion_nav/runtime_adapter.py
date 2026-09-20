@@ -41,6 +41,13 @@ class BodyState:
     is_on_ground: bool
     horizontal_collision: bool
     vertical_collision: bool
+    is_sprinting: bool = False
+    is_sneaking: bool = False
+    food_points: int = 20
+    saturation_points: float = 5.0
+    is_swimming: bool = False
+    is_submerged_in_water: bool = False
+    game_mode: str = "survival"
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,6 +88,13 @@ def _body(snapshot: ObservationSnapshotV3, session: WorldSessionId,
         yaw_radians=math.radians(own.yaw_degrees),
         pitch_radians=math.radians(own.pitch_degrees),
         pose=own.pose,
+        is_sprinting=own.is_sprinting,
+        is_sneaking=own.is_sneaking,
+        food_points=own.food_points,
+        saturation_points=own.saturation_points,
+        is_swimming=own.is_swimming,
+        is_submerged_in_water=own.is_submerged_in_water,
+        game_mode=own.game_mode,
         body_box=Aabb(x - half, y, z - half, x + half, y + height, z + half),
         is_on_ground=own.is_on_ground,
         horizontal_collision=own.horizontal_collision,

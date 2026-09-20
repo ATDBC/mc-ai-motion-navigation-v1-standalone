@@ -1,10 +1,14 @@
 """Explicit-unit ordinary-ground prediction; parameters require later calibration."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+import json
 import math
+from pathlib import Path
 
 from mc2p.contracts.common import ContractViolation, require_identifier
+from mc2p.motion_nav.block_motion_traits import BlockMotionCatalog
+from mc2p.motion_nav.environment_identity import MotionEnvironmentIdentity
 
 
 def _finite(value: float, name: str) -> None:
@@ -19,6 +23,10 @@ class GroundMotionProfile:
     velocity_retention_per_tick: float
     maximum_speed_blocks_per_second: float
     support_materials: frozenset[str] = frozenset()
+    profile_id: str = "inline-ground-profile"
+    environment_id: str = "legacy-unbound"
+    ground_model_id: str | None = None
+    motion_catalog: BlockMotionCatalog | None = field(default=None, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         for name in ("tick_seconds", "acceleration_blocks_per_second2",
@@ -32,6 +40,52 @@ class GroundMotionProfile:
             raise ContractViolation("ordinary-ground support materials must be a frozenset")
         for material in self.support_materials:
             require_identifier(material, "ordinary-ground support material")
+        require_identifier(self.profile_id, "ordinary-ground profile id")
+        require_identifier(self.environment_id, "ordinary-ground environment id")
+        if self.ground_model_id is not None:
+            require_identifier(self.ground_model_id, "ordinary-ground model id")
+        if self.motion_catalog is not None and type(self.motion_catalog) is not BlockMotionCatalog:
+            raise ContractViolation("ordinary-ground motion catalog must be typed")
+        if (self.motion_catalog is None) != (self.ground_model_id is None):
+            raise ContractViolation("ordinary-ground model and motion catalog must be declared together")
+
+
+def load_ground_motion_profile(
+    path: Path,
+    *,
+    environment: MotionEnvironmentIdentity,
+    catalog: BlockMotionCatalog,
+) -> GroundMotionProfile:
+    if (not isinstance(path, Path) or type(environment) is not MotionEnvironmentIdentity
+            or type(catalog) is not BlockMotionCatalog):
+        raise ContractViolation("ordinary-ground profile requires path, environment and catalog")
+    try:
+        document = json.loads(path.read_text("utf-8"))
+        if document.get("schema_version") != "mc2p.ordinary-ground-profile.v2":
+            raise ContractViolation("unsupported ordinary-ground profile schema")
+        scope, profile = document["scope"], document["profile"]
+        environment.require_profile_environment(scope["environment_id"])
+        if scope["minecraft_version"] != environment.minecraft_version:
+            raise ContractViolation("ordinary-ground Minecraft version does not match environment")
+        if abs(float(scope["tick_seconds"]) - environment.tick_seconds) > 1.0e-12:
+            raise ContractViolation("ordinary-ground tick duration does not match environment")
+        model_id = scope["ground_model_id"]
+        return GroundMotionProfile(
+            tick_seconds=scope["tick_seconds"],
+            acceleration_blocks_per_second2=profile["acceleration_blocks_per_second2"],
+            velocity_retention_per_tick=profile["velocity_retention_per_tick"],
+            maximum_speed_blocks_per_second=profile["maximum_speed_blocks_per_second"],
+            support_materials=catalog.materials_for_ground_model(
+                model_id,
+                include_shape_materials=scope.get("include_shape_materials", False),
+            ),
+            profile_id=document["profile_id"],
+            environment_id=scope["environment_id"],
+            ground_model_id=model_id,
+            motion_catalog=catalog,
+        )
+    except (KeyError, TypeError, json.JSONDecodeError) as error:
+        raise ContractViolation("ordinary-ground profile is invalid") from error
 
 
 @dataclass(frozen=True, slots=True)

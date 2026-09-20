@@ -12,16 +12,16 @@
 | 有效动作 | 100/100 到达正确层高；四个正方向各 25 次 |
 | 入口扰动 | 覆盖静止偏移、横向偏移和最高实测 `0.095109 格/秒` 的移动入口 |
 | 落地 | 最大水平误差 `0.168552` 格；错误完成、碰撞和掉落均为 0 |
-| 取消 | PREPARE、REQUEST_TAKEOFF、AIRBORNE、VERIFY_LANDING 均到达 `CANCELLED`；空中和落地确认阶段先实际落地 |
+| 取消 | PREPARE、REQUEST_TAKEOFF、AIRBORNE、VERIFY_LANDING 均到达 `CANCELLED`；REQUEST_TAKEOFF 先实际发送起跳输入，下一观测速度约 `1.07 格/秒`，落地并减速至约 `0.093 格/秒` 后才结束 |
 | 拒绝 | 超速入口、低顶、未支持材质、未知几何、未观察到离地分别返回 `UNSUPPORTED`、`BLOCKED`、`UNSUPPORTED`、`NEEDS_INFORMATION`、`FAILED` |
 | 控制耗时 | 1542 个样本；P95 `0.3452 ms`，P99 `0.3623 ms`，最大 `0.4412 ms` |
-| 组件回归 | `tests/motion_nav` 共 95 项通过 |
+| 组件回归 | `tests/motion_nav` 共 129 项通过 |
 | 实机回归 | B03 固定路线与 B04 已知图探针均通过 |
 
 正式证据：
 
 - 校准：`artifacts/fabric-deployment/20260919T002850521136Z-f44ee64f`；
-- 百次、取消和拒绝：`artifacts/fabric-deployment/20260919T013356976722Z-c3642b87`；
+- 百次、取消和拒绝：`artifacts/fabric-deployment/20260919T051031830636Z-f8da78b3`；
 - Walk—JumpUp—Walk：`artifacts/fabric-deployment/20260919T013756389007Z-9959d166`；
 - B03 回归：`artifacts/fabric-deployment/20260919T011433784299Z-67619d31`；
 - B04 回归：`artifacts/fabric-deployment/20260919T012100565979Z-719a291e`。
@@ -67,6 +67,8 @@
 - 输入已确认但没有离地；
 - 离地观测迟到但仍在允许窗口；
 - 空中收到取消、新目标或输入失联；
+- 世界会话变化后旧动作立即失败并输出中立输入；活动中的 JumpUp 不能被第二次启动覆盖；
+- REQUEST_TAKEOFF 已发出起跳输入、下一观测仍可能接地或已离地时收到取消；
 - 接地但落在原层、错误层或目标区外；
 - 落地成功但速度尚未进入下一 Walk 的入口范围；
 - JumpUp 前相关格变化与无关远处变化。

@@ -6,7 +6,9 @@ from enum import StrEnum
 import math
 
 from mc2p.contracts.common import ContractViolation
-from mc2p.motion_nav.world_model import Aabb, BlockPos, CellKnowledge, WorldView
+from mc2p.motion_nav.world_model import (
+    Aabb, BlockPos, COLLISION_OWNER_BELOW_REACH_CELLS, CellKnowledge, WorldView,
+)
 
 
 _EPSILON = 1.0e-9
@@ -41,6 +43,16 @@ def _axis_cells(minimum: float, maximum: float) -> range:
     return range(math.floor(minimum + _EPSILON), math.floor(maximum - _EPSILON) + 1)
 
 
+def _possible_owner_cells(cells: tuple[BlockPos, ...]) -> tuple[BlockPos, ...]:
+    """Include lower owners whose bounded shape may enter queried cells."""
+    reach = COLLISION_OWNER_BELOW_REACH_CELLS
+    return tuple(sorted({
+        (x, y - dy, z)
+        for x, y, z in cells
+        for dy in range(reach + 1)
+    }))
+
+
 def required_cells_for_sweep(body: Aabb, delta: tuple[float, float, float]) -> tuple[BlockPos, ...]:
     if type(body) is not Aabb or type(delta) is not tuple or len(delta) != 3:
         raise ContractViolation("sweep requires an AABB and a three-axis displacement")
@@ -50,17 +62,36 @@ def required_cells_for_sweep(body: Aabb, delta: tuple[float, float, float]) -> t
     end = body.moved(dx, dy, dz)
     broad = Aabb(min(body.min_x, end.min_x), min(body.min_y, end.min_y), min(body.min_z, end.min_z),
                  max(body.max_x, end.max_x), max(body.max_y, end.max_y), max(body.max_z, end.max_z))
-    return tuple((x, y, z) for x in _axis_cells(broad.min_x, broad.max_x)
-                 for y in _axis_cells(broad.min_y, broad.max_y)
-                 for z in _axis_cells(broad.min_z, broad.max_z))
+    occupied = tuple((x, y, z) for x in _axis_cells(broad.min_x, broad.max_x)
+                     for y in _axis_cells(broad.min_y, broad.max_y)
+                     for z in _axis_cells(broad.min_z, broad.max_z))
+    return _possible_owner_cells(occupied)
 
 
 def _sweep_fraction(body: Aabb, delta: tuple[float, float, float], obstacle: Aabb) -> float | None:
+    initially_overlapping = (
+        body.max_x > obstacle.min_x + _EPSILON
+        and body.min_x < obstacle.max_x - _EPSILON
+        and body.max_y > obstacle.min_y + _EPSILON
+        and body.min_y < obstacle.max_y - _EPSILON
+        and body.max_z > obstacle.min_z + _EPSILON
+        and body.min_z < obstacle.max_z - _EPSILON
+    )
     entries, exits = [], []
     for body_min, body_max, obstacle_min, obstacle_max, movement in (
             (body.min_x, body.max_x, obstacle.min_x, obstacle.max_x, delta[0]),
             (body.min_y, body.max_y, obstacle.min_y, obstacle.max_y, delta[1]),
             (body.min_z, body.max_z, obstacle.min_z, obstacle.max_z, delta[2])):
+        # Contact within the geometry tolerance is not penetration.  If the
+        # requested movement goes farther away on any separating axis, the
+        # boxes cannot collide during this sweep.  Checking this before time
+        # division also keeps the result translation invariant at negative
+        # integer coordinates, where the same contact can carry a few extra
+        # floating-point bits.
+        if (movement > _EPSILON and body_min >= obstacle_max - _EPSILON):
+            return None
+        if (movement < -_EPSILON and body_max <= obstacle_min + _EPSILON):
+            return None
         if abs(movement) <= _EPSILON:
             if body_max <= obstacle_min + _EPSILON or body_min >= obstacle_max - _EPSILON:
                 return None
@@ -73,6 +104,10 @@ def _sweep_fraction(body: Aabb, delta: tuple[float, float, float], obstacle: Aab
             exits.append((obstacle_min - body_max) / movement)
     entry, exit_ = max(entries), min(exits)
     if entry > exit_ + _EPSILON or exit_ < -_EPSILON or entry > 1 + _EPSILON:
+        return None
+    if not initially_overlapping and exit_ <= _EPSILON:
+        return None
+    if entry >= 1.0 - _EPSILON:
         return None
     return max(0.0, entry)
 
@@ -142,9 +177,13 @@ def query_support(body: Aabb, world: WorldView, *, vertical_tolerance: float = 0
         math.floor(body.min_y - _EPSILON),
         math.floor(body.min_y - vertical_tolerance - _EPSILON),
     })
-    cells = tuple((x, support_y, z) for x in _axis_cells(body.min_x, body.max_x)
-                  for support_y in support_levels
-                  for z in _axis_cells(body.min_z, body.max_z))
+    contact_cells = tuple(
+        (x, support_y, z)
+        for x in _axis_cells(body.min_x, body.max_x)
+        for support_y in support_levels
+        for z in _axis_cells(body.min_z, body.max_z)
+    )
+    cells = _possible_owner_cells(contact_cells)
     missing = []
     unsupported = False
     rectangles: list[tuple[float, float, float, float]] = []

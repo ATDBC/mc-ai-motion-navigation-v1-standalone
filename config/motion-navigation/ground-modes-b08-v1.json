@@ -1,0 +1,65 @@
+{
+  "schema_version": "mc2p.ground-modes.v1",
+  "profile_set_id": "fabric-1_21-ground-modes-b08-v1",
+  "scope": {
+    "environment_id": "fabric-1_21-motion-v1",
+    "minecraft_version": "1.21",
+    "tick_seconds": 0.05,
+    "ground_model_id": "ordinary-ground-v1"
+  },
+  "modes": {
+    "walk": {
+      "profile_id": "fabric-1_21-walk-b08-v1",
+      "poses": ["standing"],
+      "confirmation_ticks": 4,
+      "minimum_food_points": 0,
+      "input": {"sprint": false, "sneak": false},
+      "motion": {
+        "acceleration_blocks_per_second2": 40.00000075298273,
+        "velocity_retention_per_tick": 0.546000063419342,
+        "maximum_speed_blocks_per_second": 4.370969732409911
+      }
+    },
+    "sprint": {
+      "profile_id": "fabric-1_21-sprint-b08-v1",
+      "poses": ["standing"],
+      "confirmation_ticks": 4,
+      "minimum_food_points": 7,
+      "input": {"sprint": true, "sneak": false},
+      "motion": {
+        "acceleration_blocks_per_second2": 50.96000496387491,
+        "velocity_retention_per_tick": 0.546000063419342,
+        "maximum_speed_blocks_per_second": 5.6119860044961865
+      }
+    },
+    "crouch": {
+      "profile_id": "fabric-1_21-crouch-b08-v1",
+      "poses": ["crouching"],
+      "confirmation_ticks": 4,
+      "minimum_food_points": 0,
+      "input": {"sprint": false, "sneak": true},
+      "motion": {
+        "acceleration_blocks_per_second2": 11.76000135779383,
+        "velocity_retention_per_tick": 0.546000063419342,
+        "maximum_speed_blocks_per_second": 1.2950737167231396
+      }
+    },
+    "crawl": {
+      "profile_id": "fabric-1_21-crawl-b08-v1",
+      "poses": ["swimming"],
+      "confirmation_ticks": 0,
+      "minimum_food_points": 0,
+      "input": {"sprint": false, "sneak": false},
+      "motion": {
+        "acceleration_blocks_per_second2": 11.76000135779383,
+        "velocity_retention_per_tick": 0.546000063419342,
+        "maximum_speed_blocks_per_second": 1.2950737167231396
+      }
+    }
+  },
+  "validation": {
+    "status": "passed_b08_fabric_calibration",
+    "walk_source": "config/motion-navigation/ordinary-ground-b06-v1.json",
+    "sprint_crouch_crawl_source": "artifacts/fabric-deployment/20260919T145642621482Z-d88d4398/client-0/b08-ground-modes.json"
+  }
+}

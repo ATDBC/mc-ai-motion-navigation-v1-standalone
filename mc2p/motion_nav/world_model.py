@@ -11,6 +11,9 @@ from mc2p.contracts.common import ContractViolation, require_identifier, require
 
 BlockPos = tuple[int, int, int]
 _EPSILON = 1.0e-9
+MIN_BLOCK_COLLISION_Y = 0.0
+MAX_BLOCK_COLLISION_Y = 2.0
+COLLISION_OWNER_BELOW_REACH_CELLS = 1
 
 
 def _position(value: BlockPos) -> None:
@@ -109,9 +112,16 @@ class BlockGeometry:
             if not self.boxes or tuple(box.as_tuple() for box in self.boxes) != tuple(
                     sorted(set(box.as_tuple() for box in self.boxes))):
                 raise ContractViolation("explicit collision boxes must be sorted and unique")
-            if any(min(box.as_tuple()) < -_EPSILON or max(box.as_tuple()) > 1 + _EPSILON
-                   for box in self.boxes):
-                raise ContractViolation("block collision boxes must be cell-local")
+            if any(
+                box.min_x < -_EPSILON or box.max_x > 1.0 + _EPSILON
+                or box.min_z < -_EPSILON or box.max_z > 1.0 + _EPSILON
+                or box.min_y < MIN_BLOCK_COLLISION_Y - _EPSILON
+                or box.max_y > MAX_BLOCK_COLLISION_Y + _EPSILON
+                for box in self.boxes
+            ):
+                raise ContractViolation(
+                    "block collision boxes exceed the supported vertical neighbor extent"
+                )
         elif self.boxes:
             raise ContractViolation("compact collision kinds cannot carry boxes")
         if type(self.fluid) is not bool:

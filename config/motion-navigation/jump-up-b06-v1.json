@@ -1,0 +1,107 @@
+{
+  "schema_version": "mc2p.jump-up-profile.v2",
+  "profile_id": "fabric-1_21-ordinary-adjacent-low-speed-b06-v1",
+  "scope": {
+    "minecraft_version": "1.21",
+    "movement": "standing_adjacent_one_block_up_without_sprint_or_sneak",
+    "tick_seconds": 0.05,
+    "environment_id": "fabric-1_21-motion-v1",
+    "ground_model_id": "ordinary-ground-v1"
+  },
+  "entry": {
+    "maximum_horizontal_speed_blocks_per_second": 0.1,
+    "center_tolerance_blocks": 0.18,
+    "maximum_forward_offset_blocks": 0.01,
+    "maximum_backward_offset_blocks": 0.18,
+    "maximum_lateral_offset_blocks": 0.16,
+    "maximum_yaw_error_degrees": 2.0
+  },
+  "trajectory": {
+    "horizontal_safety_margin_blocks": 0.02,
+    "reference_positions": [
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.41999998688697815,
+        0.0980000033676625
+      ],
+      [
+        0.0,
+        0.7531999805212026,
+        0.1711080113648768
+      ],
+      [
+        0.0,
+        1.0013359791121483,
+        0.2572363005030525
+      ],
+      [
+        0.0,
+        1.1661092609382144,
+        0.3552130458209722
+      ],
+      [
+        0.0,
+        1.2491870787446802,
+        0.463971886573196
+      ],
+      [
+        0.0,
+        1.252203340253729,
+        0.58254243445341
+      ],
+      [
+        0.0,
+        1.1767592750642395,
+        0.7100416360774164
+      ],
+      [
+        0.0,
+        1.024424088213685,
+        0.826065912899062
+      ],
+      [
+        0.0,
+        1.0,
+        0.9316480078496174
+      ]
+    ],
+    "forward_release_progress_blocks": 0.62,
+    "maximum_takeoff_wait_ticks": 3,
+    "maximum_airborne_ticks": 14
+  },
+  "landing": {
+    "horizontal_radius_blocks": 0.25,
+    "level_tolerance_blocks": 0.1,
+    "maximum_exit_speed_blocks_per_second": 0.12,
+    "maximum_settle_ticks": 10
+  },
+  "cost_seconds": 0.75,
+  "validation": {
+    "source_run": "artifacts/fabric-deployment/20260919T002850521136Z-f44ee64f",
+    "acceptance_run": "artifacts/fabric-deployment/20260919T012623160660Z-c18b605b",
+    "observed_takeoff_sequence": 4,
+    "observed_landing_sequence": 12,
+    "observed_maximum_rise_blocks": 1.252203340253729,
+    "observed_landing_horizontal_error_blocks": 0.06835199215038257,
+    "observed_walk_handoff_offset_blocks": 0.157345787423479,
+    "accepted_trials": 100,
+    "maximum_observed_landing_error_blocks": 0.16855223934615976,
+    "maximum_observed_entry_speed_blocks_per_second": 0.09510854812565786,
+    "scope_note": "B05 已验收的首个名义动作；能力只覆盖本文声明的低速、相邻一格上升和普通草方块。",
+    "base_profile": "config/motion-navigation/jump-up-v1.json",
+    "material_equivalence_status": "passed_b06_fabric_replacement_check",
+    "material_equivalence_run": "artifacts/fabric-deployment/20260919T041645290023Z-b74bdec7",
+    "material_equivalence_materials": [
+      "minecraft:dirt",
+      "minecraft:glass",
+      "minecraft:grass_block",
+      "minecraft:oak_planks",
+      "minecraft:stone"
+    ]
+  }
+}

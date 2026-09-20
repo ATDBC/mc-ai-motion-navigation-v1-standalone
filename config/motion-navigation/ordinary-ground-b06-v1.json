@@ -1,0 +1,31 @@
+{
+  "schema_version": "mc2p.ordinary-ground-profile.v2",
+  "profile_id": "fabric-1_21-ordinary-ground-b06-v1",
+  "scope": {
+    "environment_id": "fabric-1_21-motion-v1",
+    "minecraft_version": "1.21",
+    "movement": "walking_without_sprint_jump_sneak_or_collision",
+    "tick_seconds": 0.05,
+    "ground_model_id": "ordinary-ground-v1"
+  },
+  "profile": {
+    "acceleration_blocks_per_second2": 40.00000075298273,
+    "velocity_retention_per_tick": 0.546000063419342,
+    "maximum_speed_blocks_per_second": 4.370969732409911
+  },
+  "validation": {
+    "base_profile": "config/motion-navigation/ordinary-ground-v1.json",
+    "calibration_samples": 55,
+    "independent_validation_samples": 55,
+    "source_run": "artifacts/fabric-deployment/20260918T145741886164Z-5f828079",
+    "material_equivalence_status": "passed_b06_fabric_replacement_check",
+    "material_equivalence_run": "artifacts/fabric-deployment/20260919T041645290023Z-b74bdec7",
+    "material_equivalence_materials": [
+      "minecraft:dirt",
+      "minecraft:glass",
+      "minecraft:grass_block",
+      "minecraft:oak_planks",
+      "minecraft:stone"
+    ]
+  }
+}

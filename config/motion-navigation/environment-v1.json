@@ -1,0 +1,30 @@
+{
+  "schema_version": "mc2p.motion-environment.v1",
+  "environment_id": "fabric-1_21-motion-v1",
+  "stack": {
+    "minecraft_version": "1.21",
+    "fabric_loader_version": "0.15.11",
+    "fabric_api_version": "0.100.6+1.21",
+    "yarn_mappings": "1.21+build.9",
+    "java_major": 21,
+    "python_major": 3,
+    "python_minor": 11
+  },
+  "runtime": {
+    "tick_seconds": 0.05,
+    "automatic_jump": false
+  },
+  "deployment": {
+    "observation_protocol": "mc2p.client_observation.v3",
+    "action_protocol": "mc2p.action-snapshot.v1",
+    "client_mod_id": "mc2p_deployment_probe",
+    "client_mod_version": "0.1.0",
+    "server_kind": "vanilla-dedicated",
+    "baseline_source_commit": "1114d84fc8acb19ec2d5e5dcd29bbce67ec04267"
+  },
+  "evidence_roles": {
+    "component_fixture": "May construct a bounded complete known world for deterministic component checks.",
+    "fabric_observation": "May provide only facts obtained through the formal Fabric observation path.",
+    "test_oracle": "May reset and score a test scene but must not feed hidden world facts or answer routes to the actor."
+  }
+}

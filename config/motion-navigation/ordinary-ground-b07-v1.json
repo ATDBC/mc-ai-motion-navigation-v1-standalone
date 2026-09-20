@@ -1,0 +1,33 @@
+{
+  "schema_version": "mc2p.ordinary-ground-profile.v2",
+  "profile_id": "fabric-1_21-ordinary-ground-b07-v1",
+  "scope": {
+    "environment_id": "fabric-1_21-motion-v1",
+    "minecraft_version": "1.21",
+    "movement": "walking_without_sprint_jump_sneak_or_collision",
+    "tick_seconds": 0.05,
+    "ground_model_id": "ordinary-ground-v1",
+    "include_shape_materials": true
+  },
+  "profile": {
+    "acceleration_blocks_per_second2": 40.00000075298273,
+    "velocity_retention_per_tick": 0.546000063419342,
+    "maximum_speed_blocks_per_second": 4.370969732409911
+  },
+  "validation": {
+    "base_profile": "config/motion-navigation/ordinary-ground-b06-v1.json",
+    "status": "passed_b07_fabric_shape_validation",
+    "source_run": "artifacts/fabric-deployment/20260919T140738400900Z-7dcd37a2",
+    "walk_trials": [
+      "upper_slab_level",
+      "continuous_lower_slab"
+    ],
+    "shape_materials": [
+      "minecraft:dirt_path",
+      "minecraft:oak_stairs",
+      "minecraft:smooth_stone_slab",
+      "minecraft:snow",
+      "minecraft:white_carpet"
+    ]
+  }
+}

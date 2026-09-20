@@ -119,6 +119,77 @@ class WorldKnowledgeTests(unittest.TestCase):
 
 
 class GeometryTests(unittest.TestCase):
+    def test_cross_cell_collision_box_is_owned_by_and_depends_on_source_cell(self):
+        session = WorldSessionId("cross-cell-owner")
+        world = WorldKnowledge(session)
+        body = Aabb(.2, 1.2, .2, .8, 3.0, .8)
+        initial = sweep(body, (0.0, 0.0, 0.0), world.view())
+        world.confirm_air(stamp(session, 1, 1), initial.missing_cells)
+        world.observe_blocks(stamp(session, 2, 2), {
+            (0, 0, 0): BlockGeometry(
+                "minecraft:cobblestone_wall", "boxes",
+                (Aabb(.25, 0.0, .25, .75, 1.5, .75),),
+            ),
+        })
+
+        result = sweep(body, (0.0, 0.0, 0.0), world.view())
+
+        self.assertIs(result.status, QueryStatus.BLOCKED)
+        self.assertIn((0, 0, 0), result.dependencies)
+
+    def test_cross_cell_owner_lookup_works_across_negative_coordinate_boundary(self):
+        session = WorldSessionId("negative-cross-cell-owner")
+        world = WorldKnowledge(session)
+        body = Aabb(-.75, 1.2, .2, -.25, 3.0, .8)
+        initial = sweep(body, (0.0, 0.0, 0.0), world.view())
+        world.confirm_air(stamp(session, 1, 1), initial.missing_cells)
+        world.observe_blocks(stamp(session, 2, 2), {
+            (-1, 0, 0): BlockGeometry(
+                "minecraft:cobblestone_wall", "boxes",
+                (Aabb(.25, 0.0, .25, .75, 1.5, .75),),
+            ),
+        })
+
+        result = sweep(body, (0.0, 0.0, 0.0), world.view())
+
+        self.assertIs(result.status, QueryStatus.BLOCKED)
+        self.assertIn((-1, 0, 0), result.dependencies)
+
+    def test_cross_cell_support_uses_actual_top_and_owner_dependency(self):
+        session = WorldSessionId("cross-cell-support")
+        world = WorldKnowledge(session)
+        body = Aabb(.2, 1.5, .2, .8, 3.3, .8)
+        initial = query_support(body, world.view())
+        world.confirm_air(stamp(session, 1, 1), initial.missing_cells)
+        world.observe_blocks(stamp(session, 2, 2), {
+            (0, 0, 0): BlockGeometry(
+                "minecraft:cobblestone_wall", "boxes",
+                (Aabb(0.0, 0.0, 0.0, 1.0, 1.5, 1.0),),
+            ),
+        })
+
+        result = query_support(body, world.view())
+
+        self.assertIs(result.status, QueryStatus.FEASIBLE)
+        self.assertAlmostEqual(result.support_fraction, 1.0)
+        self.assertIn((0, 0, 0), result.dependencies)
+
+    def test_collision_box_extent_is_finite_and_bounded_to_neighbor_cells(self):
+        BlockGeometry(
+            "minecraft:cobblestone_wall", "boxes",
+            (Aabb(0.0, 0.0, 0.0, 1.0, 2.0, 1.0),),
+        )
+        with self.assertRaisesRegex(ContractViolation, "vertical neighbor extent"):
+            BlockGeometry(
+                "minecraft:custom", "boxes",
+                (Aabb(-.01, 0.0, 0.0, 1.0, 1.0, 1.0),),
+            )
+        with self.assertRaisesRegex(ContractViolation, "vertical neighbor extent"):
+            BlockGeometry(
+                "minecraft:custom", "boxes",
+                (Aabb(0.0, 0.0, 0.0, 1.0, 2.01, 1.0),),
+            )
+
     def test_support_tolerance_checks_the_block_below_an_integer_boundary(self) -> None:
         session = WorldSessionId("support-tolerance")
         world = WorldKnowledge(session)
@@ -174,6 +245,23 @@ class GeometryTests(unittest.TestCase):
         cells = sweep(touching, (-.1, 0.0, 0.0), world.view()).missing_cells
         world.confirm_air(stamp(session, 3, 3), cells)
         self.assertIs(sweep(touching, (-.1, 0.0, 0.0), world.view()).status,
+                      QueryStatus.FEASIBLE)
+
+    def test_sweep_treats_negative_integer_contact_as_contact_when_moving_up(self):
+        session = WorldSessionId("negative-contact")
+        world = WorldKnowledge(session)
+        world.observe_blocks(stamp(session, 1, 1), {
+            (19, -61, -8): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        body = Aabb(
+            19.19, -60.00000000000001, -7.88,
+            19.81, -58.20000000000001, -7.26,
+        )
+        movement = (0.0, 1.0e-6, 0.0)
+        missing = sweep(body, movement, world.view()).missing_cells
+        world.confirm_air(stamp(session, 2, 2), missing)
+
+        self.assertIs(sweep(body, movement, world.view()).status,
                       QueryStatus.FEASIBLE)
 
     def test_partial_support_is_reported_without_turning_unknown_into_air(self):

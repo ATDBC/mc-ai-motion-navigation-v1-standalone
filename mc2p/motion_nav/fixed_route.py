@@ -8,10 +8,16 @@ import time
 
 from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.common import ContractViolation, require_identifier
+from mc2p.motion_nav.block_motion_traits import unsupported_motion_cells
 from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
 from mc2p.motion_nav.ground_motion import (
     GroundControl, GroundMotionProfile, PlanarBodyState, predict_ground,
 )
+from mc2p.motion_nav.ground_modes import (
+    GroundModeProfile, ModeReadiness, evaluate_ground_mode, movement_for_ground_mode,
+    observed_ground_mode,
+)
+from mc2p.motion_nav.movement_transition import MovementMode
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.world_model import Aabb, BlockPos, WorldView
 
@@ -251,11 +257,17 @@ class FixedRouteController:
     """Owns one fixed route and proposes one safe ordinary-ground input per frame."""
 
     def __init__(self, profile: GroundMotionProfile,
-                 config: FixedRouteConfig = FixedRouteConfig()) -> None:
+                 config: FixedRouteConfig = FixedRouteConfig(), *,
+                 mode_profile: GroundModeProfile | None = None) -> None:
         if type(profile) is not GroundMotionProfile or type(config) is not FixedRouteConfig:
             raise ContractViolation("fixed route controller requires typed motion configuration")
+        if mode_profile is not None and type(mode_profile) is not GroundModeProfile:
+            raise ContractViolation("fixed route ground mode profile must be typed")
+        if mode_profile is not None and mode_profile.motion != profile:
+            raise ContractViolation("fixed route ground mode and motion profiles disagree")
         self.profile = profile
         self.config = config
+        self.mode_profile = mode_profile
         self.state = FixedRouteState.IDLE
         self._route: FixedRoute | None = None
         self._geometry: _RouteGeometry | None = None
@@ -269,6 +281,7 @@ class FixedRouteController:
         self._no_progress_frames = 0
         self._stall_detected = False
         self._segment_index = 0
+        self._mode_pending_frames = 0
 
     def start(self, route: FixedRoute, frame: NavigationFrame) -> None:
         if type(route) is not FixedRoute or type(frame) is not NavigationFrame:
@@ -290,6 +303,7 @@ class FixedRouteController:
         self._no_progress_frames = 0
         self._stall_detected = False
         self._segment_index = 0
+        self._mode_pending_frames = 0
         self.state = FixedRouteState.RUNNING
 
     def cancel(self) -> None:
@@ -309,6 +323,13 @@ class FixedRouteController:
 
     def _decision(self, started: int, movement: MovementV1, reason: str,
                   missing: tuple[BlockPos, ...] = ()) -> FixedRouteDecision:
+        if (self.mode_profile is not None
+                and self.state not in {
+                    FixedRouteState.CANCELLED, FixedRouteState.SUCCEEDED,
+                    FixedRouteState.INPUT_LOST, FixedRouteState.FAILED,
+                    FixedRouteState.UNSUPPORTED,
+                }):
+            movement = movement_for_ground_mode(self.mode_profile, movement)
         self._previous_movement = movement
         return FixedRouteDecision(
             self.state, movement, self._progress, self._cross_track,
@@ -336,9 +357,60 @@ class FixedRouteController:
         if not input_confirmed:
             self.state = FixedRouteState.INPUT_LOST
             return self._decision(started, MovementV1(), "input_application_unconfirmed")
-        if frame.body.pose != "standing" or not frame.body.is_on_ground:
-            self.state = FixedRouteState.UNSUPPORTED
-            return self._decision(started, MovementV1(), "ordinary_ground_state_lost")
+        mode_pending = False
+        if self.mode_profile is None:
+            if frame.body.pose != "standing" or not frame.body.is_on_ground:
+                self.state = FixedRouteState.UNSUPPORTED
+                return self._decision(started, MovementV1(), "ordinary_ground_state_lost")
+        else:
+            readiness = evaluate_ground_mode(self.mode_profile, frame.body)
+            if readiness is ModeReadiness.GROUND_STATE_LOST:
+                self.state = FixedRouteState.UNSUPPORTED
+                return self._decision(started, MovementV1(), "ground_mode_ground_state_lost")
+            if readiness is ModeReadiness.RESOURCE_UNAVAILABLE:
+                self.state = FixedRouteState.UNSUPPORTED
+                return self._decision(started, MovementV1(), "ground_mode_resource_unavailable")
+            if readiness is ModeReadiness.INVALID_ENTRY:
+                self.state = FixedRouteState.UNSUPPORTED
+                return self._decision(started, MovementV1(), "ground_mode_invalid_entry")
+            if readiness is ModeReadiness.PENDING:
+                if self._mode_pending_frames >= self.mode_profile.confirmation_ticks:
+                    self.state = FixedRouteState.UNSUPPORTED
+                    return self._decision(started, MovementV1(),
+                                          "ground_mode_confirmation_timeout")
+                mode_pending = True
+                if not self.mode_profile.request_sprint:
+                    if (self.mode_profile.mode is MovementMode.WALK
+                            and observed_ground_mode(frame.body) in {
+                                MovementMode.CROUCH, MovementMode.CRAWL,
+                            }):
+                        standing = Aabb(
+                            frame.body.body_box.min_x, frame.body.body_box.min_y,
+                            frame.body.body_box.min_z, frame.body.body_box.max_x,
+                            frame.body.body_box.min_y + 1.8, frame.body.body_box.max_z,
+                        )
+                        clearance = sweep(standing, (0.0, 0.0, 0.0), frame.world)
+                        if clearance.status is QueryStatus.NEEDS_INFORMATION:
+                            self.state = FixedRouteState.NEEDS_INFORMATION
+                            return self._decision(
+                                started, MovementV1(), "ground_mode_exit_requires_information",
+                                clearance.missing_cells,
+                            )
+                        if clearance.status is QueryStatus.BLOCKED:
+                            self.state = FixedRouteState.BLOCKED
+                            return self._decision(
+                                started, MovementV1(), "ground_mode_exit_clearance_blocked",
+                            )
+                        if clearance.status is QueryStatus.UNSUPPORTED:
+                            self.state = FixedRouteState.UNSUPPORTED
+                            return self._decision(
+                                started, MovementV1(), "ground_mode_exit_clearance_unsupported",
+                            )
+                    self._mode_pending_frames += 1
+                    return self._decision(started, MovementV1(),
+                                          "ground_mode_confirmation_pending")
+            else:
+                self._mode_pending_frames = 0
         route_level = self._geometry.points[0].y
         if abs(frame.body.position[1] - route_level) > 0.10:
             self.state = FixedRouteState.UNSUPPORTED
@@ -351,6 +423,17 @@ class FixedRouteController:
             self.state = FixedRouteState.UNSUPPORTED
             return self._decision(started, MovementV1(), "ordinary_ground_speed_outside_model")
         current_support = query_support(frame.body.body_box, frame.world)
+        current_clearance = sweep(frame.body.body_box, (0.0, 0.0, 0.0), frame.world)
+        if (self.profile.motion_catalog is not None
+                and self.profile.ground_model_id is not None
+                and unsupported_motion_cells(
+                    self.profile.motion_catalog, frame.world,
+                    tuple(sorted(set(current_clearance.dependencies
+                                     + current_support.dependencies))),
+                    self.profile.ground_model_id,
+                )):
+            self.state = FixedRouteState.UNSUPPORTED
+            return self._decision(started, MovementV1(), "ordinary_ground_motion_trait_unsupported")
         if current_support.status is QueryStatus.UNSUPPORTED:
             self.state = FixedRouteState.UNSUPPORTED
             return self._decision(started, MovementV1(), "ordinary_ground_support_shape_unsupported")
@@ -436,8 +519,24 @@ class FixedRouteController:
         feasible = [candidate for candidate in candidates
                     if not candidate.blocked and not candidate.unsupported and not candidate.missing]
         if feasible:
-            selected = min(feasible, key=lambda candidate: (candidate.score, candidate.movement.forward,
-                                                              candidate.movement.strafe))
+            if (mode_pending and self.mode_profile is not None
+                    and self.mode_profile.mode is MovementMode.SPRINT):
+                activation = [candidate for candidate in feasible
+                              if candidate.movement.forward > 0
+                              and candidate.progress_gain > .005]
+                if not activation:
+                    self.state = FixedRouteState.UNSUPPORTED
+                    return self._decision(
+                        started, MovementV1(), "sprint_requires_forward_alignment",
+                    )
+                selected = min(activation, key=lambda candidate: (
+                    candidate.score, candidate.movement.strafe,
+                ))
+                self._mode_pending_frames += 1
+            else:
+                selected = min(feasible, key=lambda candidate: (
+                    candidate.score, candidate.movement.forward, candidate.movement.strafe,
+                ))
             deferred = [candidate for candidate in candidates
                         if candidate.missing and candidate.progress_gain > selected.progress_gain + 0.005]
             if selected.progress_gain <= 0.005 and deferred:
@@ -457,7 +556,9 @@ class FixedRouteController:
                 self.state = FixedRouteState.BLOCKED
                 return self._decision(started, MovementV1(), "fixed_route_has_no_forward_control")
             self.state = FixedRouteState.RUNNING
-            return self._decision(started, selected.movement, "tracking_fixed_route",
+            return self._decision(started, selected.movement,
+                                  ("ground_mode_confirmation_pending" if mode_pending
+                                   else "tracking_fixed_route"),
                                   preview_missing)
         missing = tuple(cell for candidate in candidates for cell in candidate.missing)
         if missing:
@@ -566,6 +667,14 @@ class FixedRouteController:
         for state in states[1:]:
             delta = (state.x - previous_state.x, 0.0, state.z - previous_state.z)
             collision = sweep(collision_box, delta, frame.world)
+            if (self.profile.motion_catalog is not None
+                    and self.profile.ground_model_id is not None
+                    and unsupported_motion_cells(
+                        self.profile.motion_catalog, frame.world, collision.dependencies,
+                        self.profile.ground_model_id,
+                    )):
+                unsupported = True
+                break
             if collision.status is QueryStatus.UNSUPPORTED:
                 unsupported = True
                 break
@@ -596,13 +705,22 @@ class FixedRouteController:
                 # material or unknown cell that position error could enter.
                 support_evidence.append(query_support(next_collision_box, frame.world))
             for evidence in support_evidence:
-                missing.update(evidence.missing_cells)
+                if (self.profile.motion_catalog is not None
+                        and self.profile.ground_model_id is not None
+                        and unsupported_motion_cells(
+                            self.profile.motion_catalog, frame.world, evidence.dependencies,
+                            self.profile.ground_model_id,
+                        )):
+                    unsupported = True
+                    break
                 if evidence.status is QueryStatus.UNSUPPORTED:
                     unsupported = True
                     break
                 if evidence.status is QueryStatus.BLOCKED:
                     blocked = True
                     break
+                if evidence.status is QueryStatus.NEEDS_INFORMATION:
+                    missing.update(evidence.missing_cells)
                 if (evidence.status is QueryStatus.FEASIBLE
                         and (not self.profile.support_materials
                              or not set(evidence.support_materials).issubset(

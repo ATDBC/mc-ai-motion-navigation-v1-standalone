@@ -1,0 +1,30 @@
+{
+  "schema_version": "mc2p.step-profile.v1",
+  "profile_id": "fabric-1_21-step-b07-v1",
+  "scope": {
+    "environment_id": "fabric-1_21-motion-v1",
+    "minecraft_version": "1.21",
+    "tick_seconds": 0.05,
+    "movement": "walking_step_without_jump_sprint_or_sneak"
+  },
+  "limits": {
+    "maximum_up_height_blocks": 0.5,
+    "maximum_down_height_blocks": 0.5,
+    "maximum_entry_speed_blocks_per_second": 0.1,
+    "maximum_exit_speed_blocks_per_second": 0.1,
+    "target_horizontal_radius_blocks": 0.28,
+    "target_level_tolerance_blocks": 0.08,
+    "maximum_ticks": 30
+  },
+  "cost_seconds": 0.8,
+  "validation": {
+    "status": "passed_static_entry_representative_shape_transitions",
+    "source_run": "artifacts/fabric-deployment/20260919T140738400900Z-7dcd37a2",
+    "trial_count": 16,
+    "maximum_observed_horizontal_error_blocks": 0.17843432119466884,
+    "maximum_observed_level_error_blocks": 0.0,
+    "control_p95_ns": 4289300,
+    "control_p99_ns": 5208300,
+    "limits": "Only static low-speed transitions up to half a block are validated; moving-entry continuity remains outside B07."
+  }
+}

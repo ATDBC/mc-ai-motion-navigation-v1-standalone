@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import json
 import math
+from dataclasses import replace
 from pathlib import Path
 import time
 import unittest
 
+from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.ground_motion import PlanarBodyState
 from mc2p.motion_nav.geometry import QueryStatus
 from mc2p.motion_nav.jump_up import (
@@ -17,11 +19,14 @@ from mc2p.motion_nav.known_map_planner import (
     SnapshotBuildStatus, astar_plan, build_walk_graph, dijkstra_reference,
     plan_known_snapshot,
 )
-from mc2p.motion_nav.action_route import JumpUpSegment, WalkSegment
+from mc2p.motion_nav.action_route import ActionRoute, JumpUpSegment, WalkSegment
 from mc2p.motion_nav.action_route_executor import ActionRouteExecutor, ActionRouteState
 from mc2p.motion_nav.route_admission import AdmissionStatus, RouteAdmitter
 from mc2p.motion_nav.planner_worker import PlannerWorker
-from mc2p.motion_nav.world_model import BlockGeometry, ObservationStamp
+from mc2p.motion_nav.runtime_adapter import NavigationFrame
+from mc2p.motion_nav.world_model import (
+    BlockGeometry, ObservationStamp, WorldKnowledge, WorldSessionId,
+)
 from tests.motion_nav.test_fixed_route_walk import (
     FlatFixture, apply, profile as ground_profile,
 )
@@ -225,6 +230,67 @@ class JumpUpTests(unittest.TestCase):
         terminal = controller.decide(landing, input_confirmed=True)
         self.assertIs(terminal.state, JumpUpState.INPUT_LOST)
 
+    def test_ground_cancel_waits_for_observed_stop_after_takeoff_request(self) -> None:
+        fixture, profile = self.raised_fixture(), jump_profile()
+        controller = JumpUpController(profile)
+        start = fixture.frame(0, PlanarBodyState(.5, .5, 0, 0, 0))
+        controller.start((0, 1, 0), (0, 2, 1), start)
+        self.assertIs(controller.decide(start).state, JumpUpState.REQUEST_TAKEOFF)
+
+        controller.cancel()
+        moving = fixture.frame(1, PlanarBodyState(.5, .54, 0, .8, 0))
+        cancelling = controller.decide(moving)
+        self.assertIs(cancelling.state, JumpUpState.CANCELLING)
+        self.assertEqual(cancelling.movement.forward, 0)
+        self.assertFalse(cancelling.movement.jump)
+
+        stopped = fixture.frame(2, PlanarBodyState(.5, .55, 0, .05, 0))
+        self.assertIs(controller.decide(stopped).state, JumpUpState.CANCELLED)
+
+    def test_world_session_change_terminates_old_jump(self) -> None:
+        fixture, profile = self.raised_fixture(), jump_profile()
+        controller = JumpUpController(profile)
+        start = fixture.frame(0, PlanarBodyState(.5, .5, 0, 0, 0))
+        controller.start((0, 1, 0), (0, 2, 1), start)
+
+        new_session = WorldSessionId("b05-new-world")
+        new_stamp = ObservationStamp(new_session, 1, 1, "new-clock", 50_000_000)
+        new_world = WorldKnowledge(new_session)
+        changed = NavigationFrame(
+            new_session,
+            replace(start.body, session=new_session, sequence_id=1, stamp=new_stamp),
+            new_world.view(),
+            "fabric",
+        )
+        decision = controller.decide(changed)
+        self.assertIs(decision.state, JumpUpState.FAILED)
+        self.assertEqual(decision.reason_code, "world_session_changed")
+        self.assertEqual(decision.movement.forward, 0)
+        self.assertFalse(decision.movement.jump)
+
+    def test_active_jump_cannot_be_replaced_and_terminal_failure_is_stable(self) -> None:
+        fixture, profile = self.raised_fixture(), jump_profile()
+        controller = JumpUpController(profile)
+        start = fixture.frame(0, PlanarBodyState(.5, .5, 0, 0, 0))
+        controller.start((0, 1, 0), (0, 2, 1), start)
+        self.assertIs(controller.decide(start).state, JumpUpState.REQUEST_TAKEOFF)
+
+        with self.assertRaisesRegex(Exception, "active JumpUp"):
+            controller.start((0, 1, 0), (0, 2, 1), start)
+
+        rejected = controller.decide(
+            fixture.frame(1, PlanarBodyState(.5, .5, 0, 0, 0)),
+            input_confirmed=False,
+        )
+        self.assertIs(rejected.state, JumpUpState.FAILED)
+
+        airborne = fixture.frame(2, PlanarBodyState(.5, .7, 0, 1, 0), body_y=1.42)
+        object.__setattr__(airborne.body, "is_on_ground", False)
+        stable = controller.decide(airborne)
+        self.assertIs(stable.state, JumpUpState.FAILED)
+        self.assertEqual(stable.movement.forward, 0)
+        self.assertFalse(stable.movement.jump)
+
     def test_multilevel_graph_and_snapshot_plan_walk_jump_walk(self) -> None:
         fixture, jump = self.raised_fixture(), jump_profile()
         stamp = ObservationStamp(fixture.session, 2, 2, "test-clock", 100_000_000)
@@ -320,6 +386,27 @@ class JumpUpTests(unittest.TestCase):
             (0, 1, 0), (0, 2, 1),
         )
         self.assertIsNot(astar_plan(graph, request).status, PlanningStatus.COMPLETE)
+
+    def test_action_route_cannot_replace_an_active_airborne_jump(self) -> None:
+        fixture, jump = self.raised_fixture(), jump_profile()
+        edge = JumpUpEdge(
+            (0, 1, 0), (0, 2, 1), jump.profile_id, (0, 1), jump.cost_seconds, (),
+        )
+        route = ActionRoute("active-jump", (JumpUpSegment(edge, ()),))
+        executor = ActionRouteExecutor(ground_profile(), jump)
+        initial = fixture.frame(0, PlanarBodyState(.5, .5, 0, 0, 0))
+        executor.start(route, initial)
+        executor.decide(initial)
+        airborne = fixture.frame(1, PlanarBodyState(.5, .62, 0, 1.4, 0), body_y=1.42)
+        object.__setattr__(airborne.body, "is_on_ground", False)
+        self.assertIs(executor.decide(airborne).state, ActionRouteState.RUNNING)
+
+        with self.assertRaisesRegex(ContractViolation, "already active"):
+            executor.start(route, airborne)
+
+        continued = fixture.frame(2, PlanarBodyState(.5, .9, 0, 1.0, 0), body_y=1.7)
+        object.__setattr__(continued.body, "is_on_ground", False)
+        self.assertIs(executor.decide(continued).state, ActionRouteState.RUNNING)
 
     def test_background_worker_accepts_calibrated_jump_profile(self) -> None:
         fixture, jump = self.raised_fixture(), jump_profile()

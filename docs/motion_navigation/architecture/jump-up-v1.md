@@ -108,6 +108,9 @@ control_time_ns
 - VERIFY_LANDING 中取消：完成落地核验和必要停稳，再报告取消。
 - 输入回执被拒绝：不把动作推进到下一阶段。
 - 空中输入失联：MotorGateway 仍按租约释放输入；执行器继续观察实际轨迹，安全落地后报告 `INPUT_LOST`。
+- 控制器在启动时保存世界会话。后续帧来自新会话时，旧动作立即失败并输出中立输入。
+- PREPARE 到 CANCELLING 属于一个活动动作。第二次 `start()` 不能覆盖它；COMPLETE、CANCELLED、INPUT_LOST、FAILED、UNSUPPORTED 和 BLOCKED 等终态不会被后续身体帧自行改写。
+- 活动保护同时存在于 JumpUp 控制器和上层动作路线执行器。新路线不能通过新建控制器来绕过空中动作的保护。
 
 ## 与 B04 的兼容关系
 

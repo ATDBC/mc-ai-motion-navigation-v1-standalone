@@ -29,7 +29,32 @@ class B02RuntimeAdapterTests(unittest.TestCase):
                     base.self_state.value.velocity.y,
                     base.self_state.value.velocity.z,
                 )))
+            self.assertFalse(frame.body.is_sprinting)
+            self.assertFalse(frame.body.is_sneaking)
+            self.assertEqual(frame.body.food_points, 20)
+            self.assertEqual(frame.body.saturation_points, 5.0)
         self.assertNotEqual(fabric_frame.session, craftground_frame.session)
+
+    def test_actual_ground_mode_facts_are_projected_from_observation(self):
+        snapshot = valid_snapshot_v3(sequence=4)
+        own = replace(
+            snapshot.self_state.value,
+            pose="crouching",
+            is_sprinting=False,
+            is_sneaking=True,
+            food_points=7,
+            saturation_points=1.5,
+        )
+        frame = NavigationObservationAdapter().ingest(replace(
+            snapshot,
+            self_state=replace(snapshot.self_state, value=own),
+            food_points=replace(snapshot.food_points, value=7.0),
+        ))
+        self.assertEqual(frame.body.pose, "crouching")
+        self.assertFalse(frame.body.is_sprinting)
+        self.assertTrue(frame.body.is_sneaking)
+        self.assertEqual(frame.body.food_points, 7)
+        self.assertEqual(frame.body.saturation_points, 1.5)
 
     def test_new_episode_replaces_world_owner_and_rejects_old_snapshot(self):
         adapter = NavigationObservationAdapter()

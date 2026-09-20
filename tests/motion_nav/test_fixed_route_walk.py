@@ -40,8 +40,8 @@ class FlatFixture:
         self.session = WorldSessionId("b03-flat")
         self.world = WorldKnowledge(self.session)
         stamp = ObservationStamp(self.session, 0, 0, "test-clock", 0)
-        floors = {(x, 0, z): BlockGeometry.full_cube(material)
-                  for x in range(-16, 17) for z in range(-16, 17)}
+        floors = {(x, y, z): BlockGeometry.full_cube(material)
+                  for x in range(-16, 17) for y in (-1, 0) for z in range(-16, 17)}
         self.world.observe_blocks(stamp, floors)
         self.world.confirm_air(stamp, tuple(
             (x, y, z) for x in range(-16, 17) for y in (1, 2, 3) for z in range(-16, 17)
