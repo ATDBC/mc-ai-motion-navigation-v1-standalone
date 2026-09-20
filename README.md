@@ -37,11 +37,10 @@ B09-R 是无副作用的运动计算器。它返回位置、速度、姿态、�
 ## 推荐阅读顺序
 
 1. `docs/motion_navigation/architecture/mc_motion_navigation_architecture_v1.md`
-2. `docs/motion_navigation/architecture/mc_navigation_B09R_physics_calculator_java_1_21_0.md`
-3. `docs/motion_navigation/architecture/physics-calculator-1_21-v1.md`
-4. `docs/motion_navigation/stages/B09R-physics-calculator.md`
-5. `docs/motion_navigation/acceptance/B09R-physics-calculator.md`
-6. `docs/motion_navigation/decisions/0011-b09r-calculator-before-continuous-handoff.md`
+2. `docs/motion_navigation/architecture/physics-calculator-1_21-v1.md`
+3. `docs/motion_navigation/stages/B09R-physics-calculator.md`
+4. `docs/motion_navigation/acceptance/B09R-physics-calculator.md`
+5. `docs/motion_navigation/decisions/0011-b09r-calculator-before-continuous-handoff.md`
 
 ## 回放页
 
