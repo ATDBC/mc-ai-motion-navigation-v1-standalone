@@ -1,7 +1,7 @@
 # Minecraft Java 1.21.0：第二批运动／导航交付计划（B06–B15）
 
 日期：2026-09-19
-状态：已采用；B06、B07、B08、B09、B09-R 已完成，B10–B15 仍是待实施计划。实际结果以各阶段的 `acceptance` 文档为准。
+状态：历史总计划；B06、B07、B08、B09、B09-R 已完成。B10–B15 的现行实施安排已由 2026-09-21 修订计划取代，实际范围和结果以新的 `stages`、`acceptance`、`architecture` 和 `decisions` 文档为准。
 适用项目：Minecraft 常驻 2P AI 机器人。
 阅读基线：`ATDBC/mc-ai-motion-navigation-v1-standalone`，公开提交 `fdad6e3a4cfed5934c5e744f6f4d7c6b3744c20b`；README 标注的来源提交为 `1114d84`。
 设计依据：`docs/motion_navigation/architecture/mc_motion_navigation_architecture_v1.md`，以及 B02–B05 专项架构、阶段、验收与 D004/D006/D007/D008 决策。
@@ -13,6 +13,8 @@
 **技术栈：** 保留当前 Python 运动核心与独立 Fabric 实机链路。沿用已经锁定并通过前序阶段的环境：Minecraft Java 1.21.0（工程版本标识 `1.21`）、Fabric Loader 0.15.11、Fabric API 0.100.6+1.21、Yarn 1.21+build.9、OpenJDK 21、Python 3.11。B06 核对实际运行工程与这些版本是否一致，并补齐客户端、服务端、mod 清单和配置哈希；不得重新选择版本或静默升级。
 
 **执行方式：** 本文件是下一批交付包计划，不要求一次生成全部代码。逐包细化可独立验收的小任务，先反例、再最小实现、再回归；前一门槛不通过，不用后一层特判补救。实现可采用逐任务执行与独立审查，不依赖必须安装某个开发插件。
+
+> B10 以后请从 [B10–B15 修订计划](../stages/B10-B15-revised-delivery.md)进入。本文件继续保留 B06–B09-R 的历史设计背景，不再作为 B10–B15 的现行实施细则。
 
 ---
 
@@ -571,3 +573,4 @@ B15 才发布第二批的“已知环境多能力移动”版本：在冻结材�
 - [E5] Fabric Yarn 1.21+build.9：LivingEntity。`https://maven.fabricmc.net/docs/yarn-1.21%2Bbuild.9/net/minecraft/entity/LivingEntity.html`
 
 API 文档用于确定接口和核验目标，不替代完整运行工程的源码检查与实机校准。引用 Yarn 版本是参考文档选择，不等于要求替换项目当前已冻结的映射版本。
+

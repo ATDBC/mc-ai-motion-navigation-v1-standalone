@@ -47,6 +47,11 @@ B01“三版参照与统一比较口径”至 B09“参数化跳跃与受控下�
 - [B09 验收结果](docs/motion_navigation/acceptance/B09-parameterized-air-transitions.md)
 - [B09-R 阶段记录](docs/motion_navigation/stages/B09R-physics-calculator.md)
 - [B09-R 验收结果](docs/motion_navigation/acceptance/B09R-physics-calculator.md)
+- [B10–B15 修订计划](docs/motion_navigation/stages/B10-B15-revised-delivery.md)
+- [B10-A 阶段记录](docs/motion_navigation/stages/B10A-online-motion-foundation.md)
+- [B10-B 阶段记录](docs/motion_navigation/stages/B10B-single-action-solving.md)
+- [B10-C 阶段记录](docs/motion_navigation/stages/B10C-planning-continuous-execution.md)
+- [B10 验收计划](docs/motion_navigation/acceptance/B10-motion-solving-continuous-execution.md)
 - [导航层实时原型验收](docs/motion_navigation/acceptance/B02-navigation-layer-live-prototype.md)
 - [当前架构](docs/motion_navigation/architecture/mc_motion_navigation_architecture_v1.md)
 - [导航层观察原型](docs/motion_navigation/architecture/navigation-layer-observation-v1.md)
@@ -60,7 +65,8 @@ B01“三版参照与统一比较口径”至 B09“参数化跳跃与受控下�
 - [支撑面与小台阶](docs/motion_navigation/architecture/support-surfaces-v1.md)
 - [空中转换](docs/motion_navigation/architecture/air-transitions-v1.md)
 - [运动计算器](docs/motion_navigation/architecture/physics-calculator-1_21-v1.md)
-- [B06–B15 交付计划](docs/motion_navigation/architecture/mc_navigation_B06_B15_plan_java_1_21_0.md)
+- [B10 动作求解与连续执行](docs/motion_navigation/architecture/B10-motion-solving-continuous-execution-v1.md)
+- [B06–B15 历史交付计划](docs/motion_navigation/architecture/mc_navigation_B06_B15_plan_java_1_21_0.md)
 - [交付顺序决定](docs/motion_navigation/decisions/0001-incremental-delivery-order.md)
 - [三版参照决定](docs/motion_navigation/decisions/0002-three-reference-versions.md)
 - [B02 Fabric 验收范围](docs/motion_navigation/decisions/0005-b02-fabric-acceptance-scope.md)
@@ -70,8 +76,9 @@ B01“三版参照与统一比较口径”至 B09“参数化跳跃与受控下�
 - [先完成已知地形移动](docs/motion_navigation/decisions/0009-known-world-mobility-before-exploration.md)
 - [B08 Crawl 与证据取样](docs/motion_navigation/decisions/0010-b08-evidence-and-observed-crawl.md)
 - [先做运动计算器](docs/motion_navigation/decisions/0011-b09r-calculator-before-continuous-handoff.md)
+- [B10 分步接入动作求解](docs/motion_navigation/decisions/0012-b10-staged-motion-solving.md)
 
-三版参照承担不同的比较用途，没有任何一版被指定为新架构底座。当前已接入 Walk、Sprint、Crouch、合法预置后的 Crawl、一格跨隙和相邻一格零伤害下降，并保留 B05 的一格上升。B09-R 只计算给定输入的后果，尚未替换在线控制。带速连续接续留给 B10；主动进入 Crawl、攀爬、游泳和特殊地面仍未授权。
+三版参照承担不同的比较用途，没有任何一版被指定为新架构底座。当前已接入 Walk、Sprint、Crouch、合法预置后的 Crawl、一格跨隙和相邻一格零伤害下降，并保留 B05 的一格上升。B09-R 只计算给定输入的后果，尚未替换在线控制。B10 已拆成 A/B/C，当前从 B10-A 开始；主动进入 Crawl、攀爬、游泳和特殊地面仍未授权。
 
 ## 4. 工程要求
 
@@ -143,3 +150,4 @@ D:\Miniforge3\Scripts\conda.exe run --prefix D:\My_project\mc_ai\.venv --no-capt
 - 计划不等于实现，组件测试不等于实机通过，有限场景成功不等于能力已经普遍可靠。
 - 只提交当前任务文件。除非用户明确要求，不推送、不发布、不启动训练或外部服务器实验。
 - 非必要不使用子 agent。使用时必须划清文件所有权，避免多个 agent 同时修改共享文件。
+

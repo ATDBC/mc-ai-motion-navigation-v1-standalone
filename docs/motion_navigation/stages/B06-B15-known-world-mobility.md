@@ -9,7 +9,7 @@
 
 本批只实现玩家自身运动。不使用载具或消耗型道具，不主动改变世界。未知探索、观察站位、动态实体避让和跟随不属于本批范围。
 
-详细交付顺序见 [B06–B15 计划](../architecture/mc_navigation_B06_B15_plan_java_1_21_0.md)。改变阶段顺序或验收门槛时，先更新 `decisions`。
+详细历史设计见 [B06–B15 原计划](../architecture/mc_navigation_B06_B15_plan_java_1_21_0.md)。B10 以后的现行顺序见 [B10–B15 修订计划](B10-B15-revised-delivery.md)。改变阶段顺序或验收门槛时，先更新 `decisions`。
 
 ## B06：版本、共享契约和普通材质
 
@@ -46,7 +46,9 @@
 | B08 | Walk、Sprint、Crouch、Crawl | 模式切换、身体高度、制动和资源条件成立 |
 | B09 | 参数化上升、跨隙和受控下降 | 每类动作有独立入口、轨迹、出口和失败边界 |
 | B09-R | 给定输入的逐 tick 运动计算 | 地面、空中、姿态和碰撞共享确定性计算与独立差分 |
-| B10 | 带速接续和执行走廊 | 动作之间不必为了接口而无谓停稳 |
+| B10-A | 在线状态、输入投影和计算预算 | 一个限定能力具备可信在线预测前提 |
+| B10-B | 单动作真实命令求解 | 试点可以自动求解并独立实机完成 |
+| B10-C | 规划接纳、连续接续和在线执行 | 冻结接续矩阵全部通过 |
 | B11 | 滑、慢、弹性、条件支撑等特殊机制 | 每个机制族有代表实测和反例 |
 | B12 | 攀爬 | 地面—攀爬—地面闭环成立 |
 | B13 | 水中移动 | 地面—水中—地面闭环和呼吸资源成立 |
@@ -69,6 +71,7 @@ B08 已完成四种地面模式的正式状态、独立动力学、固定路线�
 
 B09 已完成跨隙和受控下降的入口、轨迹、落地、规划边、后台选路、路线接纳和实机执行。B05 的一格上升继续沿用原控制器。三类空中动作都有明确的稳定入口与低速出口，取消和输入失联不会在空中假装停止。
 
-B09-R 又固定了给定输入的逐 tick 计算、状态构造、碰撞、姿态、多步演算、差分和性能边界。它保持只读，没有接管旧控制器。B10 可以只处理动作之间的带速接续和短时执行走廊，不得重新复制空中物理、目标、地图或输入出口。
+B09-R 又固定了给定输入的逐 tick 计算、状态构造、碰撞、姿态、多步演算、差分和性能边界。它保持只读，没有接管旧控制器。B10 分成 A/B/C：先建立正式状态和输入投影，再自动求解单动作，最后接入规划和连续执行。不得重新复制空中物理、目标、地图或输入出口。
 
-B09 完成范围和证据见 [B09 阶段记录](B09-parameterized-air-transitions.md)、[空中转换架构](../architecture/air-transitions-v1.md)和[验收记录](../acceptance/B09-parameterized-air-transitions.md)。B09-R 见 [阶段记录](B09R-physics-calculator.md)、[运动计算器架构](../architecture/physics-calculator-1_21-v1.md)和[验收记录](../acceptance/B09R-physics-calculator.md)。
+B09 完成范围和证据见 [B09 阶段记录](B09-parameterized-air-transitions.md)、[空中转换架构](../architecture/air-transitions-v1.md)和[验收记录](../acceptance/B09-parameterized-air-transitions.md)。B09-R 见 [阶段记录](B09R-physics-calculator.md)、[运动计算器架构](../architecture/physics-calculator-1_21-v1.md)和[验收记录](../acceptance/B09R-physics-calculator.md)。B10 的现行范围见 [B10-A](B10A-online-motion-foundation.md)、[B10-B](B10B-single-action-solving.md)、[B10-C](B10C-planning-continuous-execution.md)和 [B10 验收计划](../acceptance/B10-motion-solving-continuous-execution.md)。
+
