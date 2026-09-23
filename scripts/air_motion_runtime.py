@@ -23,8 +23,9 @@ from mc2p.motion_nav.ground_motion import load_ground_motion_profile
 from mc2p.motion_nav.jump_up import load_jump_up_profile
 from mc2p.motion_nav.known_map_planner import (
     KnownMapBounds, KnownMapSnapshotBuilder, SnapshotBuildStatus,
-    SurfacePlanningRequest, SurfacePlanningStatus, build_surface_graph,
+    SurfacePlanningRequest, SurfacePlanningStatus,
 )
+from mc2p.motion_nav.planning_reference import build_surface_graph
 from mc2p.motion_nav.movement_transition import MovementMode, ResourceState
 from mc2p.motion_nav.planner_worker import PlannerWorker
 from mc2p.motion_nav.route_admission import AdmissionStatus, RouteAdmitter

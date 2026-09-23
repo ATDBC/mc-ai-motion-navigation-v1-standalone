@@ -9,11 +9,12 @@ import time
 
 from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.known_map_planner import (
-    KnownMapSnapshot, PlanningRequest, RouteCandidate, WalkGraph, astar_plan,
+    KnownMapSnapshot, PlanningRequest, RouteCandidate, WalkGraph,
     plan_known_snapshot,
     SurfaceGraph, SurfacePlanningRequest, SurfaceRouteCandidate,
-    astar_surface_plan, plan_known_surface_snapshot,
+    plan_known_surface_snapshot,
 )
+from mc2p.motion_nav.planning_reference import astar_plan, astar_surface_plan
 from mc2p.motion_nav.ground_motion import GroundMotionProfile
 from mc2p.motion_nav.ground_modes import GroundModeProfile
 from mc2p.motion_nav.air_motion import AirMotionProfile
@@ -137,6 +138,7 @@ class PlannerWorker:
         return self._process.is_alive()
 
     def submit(self, graph: WalkGraph, request: PlanningRequest) -> bool:
+        """Submit a frozen materialized graph for compatibility tests only."""
         if self._closed:raise ContractViolation("planner worker is closed")
         if type(graph) is not WalkGraph or type(request) is not PlanningRequest:
             raise ContractViolation("planner submission requires graph and request")
@@ -146,6 +148,7 @@ class PlannerWorker:
 
     def submit_surface(self, graph: SurfaceGraph,
                        request: SurfacePlanningRequest) -> bool:
+        """Submit a materialized surface graph for diagnostics only."""
         if self._closed:
             raise ContractViolation("planner worker is closed")
         if type(graph) is not SurfaceGraph or type(request) is not SurfacePlanningRequest:

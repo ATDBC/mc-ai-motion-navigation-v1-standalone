@@ -3,7 +3,9 @@ from copy import deepcopy
 
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView
 from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET
-from mc2p.motion_nav.physics_validation import compare_open_loop_rows, compare_tick_rows
+from mc2p.motion_nav.evidence.physics_validation import (
+    compare_open_loop_rows, compare_tick_rows,
+)
 from mc2p.motion_nav.world_model import (
     BlockGeometry, ObservationStamp, WorldKnowledge, WorldSessionId,
 )

@@ -2,7 +2,7 @@ import math
 import unittest
 
 from scripts.calibrate_b02_ground_motion import rollout_error_summary
-from mc2p.motion_nav.ground_calibration import (
+from mc2p.motion_nav.evidence.ground_calibration import (
     GroundMotionSample, calibrate_ground_motion,
 )
 from mc2p.motion_nav.ground_motion import (

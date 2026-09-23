@@ -621,6 +621,12 @@ def _walk_edge(world: WorldView, start: WalkNodeId, end: WalkNodeId,
 def build_walk_graph(world: WorldView, bounds: KnownMapBounds,
                      profile: GroundMotionProfile,
                      jump_profile: JumpUpProfile | None = None) -> WalkGraph:
+    """Materialize the B04 walk graph for regression and diagnostics only.
+
+    Live planning uses :func:`plan_known_snapshot` and expands only reached
+    nodes. New reference callers should import this function through
+    :mod:`mc2p.motion_nav.planning_reference`.
+    """
     if type(world) is not WorldView or type(bounds) is not KnownMapBounds:
         raise ContractViolation("walk graph construction requires a world view and bounds")
     if type(profile) is not GroundMotionProfile:
@@ -822,6 +828,7 @@ def _candidate(request: PlanningRequest, graph: WalkGraph, status: PlanningStatu
 
 
 def astar_plan(graph: WalkGraph, request: PlanningRequest) -> RouteCandidate:
+    """Search a materialized B04 graph; retained as a reference path."""
     if type(graph) is not WalkGraph or type(request) is not PlanningRequest:
         raise ContractViolation("A* requires a walk graph and planning request")
     if graph.world_session!=request.world_session:
@@ -866,7 +873,7 @@ def astar_plan(graph: WalkGraph, request: PlanningRequest) -> RouteCandidate:
 
 def dijkstra_reference(graph: WalkGraph, start: WalkNodeId,
                        goal: WalkNodeId) -> tuple[float,tuple[WalkNodeId,...]] | None:
-    """Independent zero-heuristic reference used by B04 acceptance."""
+    """Independent zero-heuristic reference used by B04 acceptance only."""
     nodes={node.node_id for node in graph.nodes}
     if start not in nodes or goal not in nodes:return None
     adjacency={node:[] for node in nodes}
@@ -1548,7 +1555,12 @@ def build_surface_graph(world: WorldView, bounds: KnownMapBounds,
                         *, air_profiles: tuple[AirMotionProfile, ...] = (),
                         ground_mode_profile: GroundModeProfile | None = None,
                         ) -> SurfaceGraph:
-    """Materialize all known surfaces; retained for reference and diagnostics."""
+    """Materialize known surfaces for reference and diagnostics only.
+
+    Live planning uses :func:`plan_known_surface_snapshot`. New reference
+    callers should import this function through
+    :mod:`mc2p.motion_nav.planning_reference`.
+    """
     expander = _SurfaceExpander(
         world, bounds, ground_profile, step_profile, jump_profile,
         air_profiles=air_profiles, ground_mode_profile=ground_mode_profile,
@@ -1622,6 +1634,7 @@ def _surface_successor_states(
 
 def astar_surface_plan(graph: SurfaceGraph,
                        request: SurfacePlanningRequest) -> SurfaceRouteCandidate:
+    """Search a materialized surface graph; retained as a reference path."""
     if type(graph) is not SurfaceGraph or type(request) is not SurfacePlanningRequest:
         raise ContractViolation("surface A* requires a surface graph and request")
     if graph.world_session != request.world_session:
@@ -1855,6 +1868,7 @@ def plan_known_surface_snapshot(
 
 def dijkstra_surface_reference(graph: SurfaceGraph, start: SurfaceNodeId,
                                goal: SurfaceNodeId) -> float | None:
+    """Independent small-graph reference; never a live planning hot path."""
     if type(graph) is not SurfaceGraph:
         raise ContractViolation("surface reference requires a surface graph")
     nodes = {node.node_id for node in graph.nodes}

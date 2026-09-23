@@ -17,7 +17,7 @@
 | `physics_adapter.py` | 把正式观察和明确假设组装成完整状态；提供只读碰撞形状查询 |
 | `physics_1_21.py` | 执行一个 50 ms Minecraft 逻辑 tick |
 | `physics_rollout.py` | 对调用者给定的输入序列连续演算，并处理预算、取消和外部事件边界 |
-| `physics_validation.py` | 把计算结果与独立 Fabric tick 记录对齐和比较 |
+| `evidence/physics_validation.py` | 把计算结果与独立 Fabric tick 记录对齐和比较；只用于离线验收 |
 
 真实客户端中的 `ClientPhysicsTickDiagnostics` 只在明确开启诊断时记录同一 `movement_tick_id` 的运动前状态、采样后输入、运动采用的 yaw、运动后状态和接触事件。它不进入正式 actor 数据，也不改变输入。
 

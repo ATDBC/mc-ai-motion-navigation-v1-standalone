@@ -12,7 +12,9 @@ from typing import Any
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from mc2p.motion_nav.ground_calibration import GroundMotionSample, calibrate_ground_motion
+from mc2p.motion_nav.evidence.ground_calibration import (
+    GroundMotionSample, calibrate_ground_motion,
+)
 from mc2p.motion_nav.ground_motion import (
     GroundControl, GroundMotionProfile, PlanarBodyState, predict_ground,
 )

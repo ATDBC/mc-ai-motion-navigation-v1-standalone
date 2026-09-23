@@ -12,7 +12,7 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(ROOT))
 
 from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET
-from mc2p.motion_nav.physics_validation import (
+from mc2p.motion_nav.evidence.physics_validation import (
     compare_open_loop_rows, compare_tick_rows, declared_fixture_validation_world,
     ordinary_flat_validation_world,
 )

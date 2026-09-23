@@ -67,6 +67,7 @@ B01“三版参照与统一比较口径”至 B10“动作求解与连续执行�
 - [空中转换](docs/motion_navigation/architecture/air-transitions-v1.md)
 - [运动计算器](docs/motion_navigation/architecture/physics-calculator-1_21-v1.md)
 - [B10 动作求解与连续执行](docs/motion_navigation/architecture/B10-motion-solving-continuous-execution-v1.md)
+- [运动导航代码边界](docs/motion_navigation/architecture/package-boundaries-v1.md)
 - [交付顺序决定](docs/motion_navigation/decisions/0001-incremental-delivery-order.md)
 - [三版参照决定](docs/motion_navigation/decisions/0002-three-reference-versions.md)
 - [B02 Fabric 验收范围](docs/motion_navigation/decisions/0005-b02-fabric-acceptance-scope.md)

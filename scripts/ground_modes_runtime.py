@@ -15,7 +15,9 @@ from mc2p.contracts.task import ComparisonOperatorV0, SuccessCriterionV0, TaskIn
 from mc2p.motion_nav.block_motion_traits import BlockMotionCatalog
 from mc2p.motion_nav.environment_identity import load_frozen_environment
 from mc2p.motion_nav.fixed_route import FixedRoute, FixedRouteController, FixedRouteState, RoutePoint
-from mc2p.motion_nav.ground_calibration import GroundMotionSample, calibrate_ground_motion
+from mc2p.motion_nav.evidence.ground_calibration import (
+    GroundMotionSample, calibrate_ground_motion,
+)
 from mc2p.motion_nav.ground_modes import load_ground_mode_profiles
 from mc2p.motion_nav.ground_motion import GroundControl, PlanarBodyState, predict_ground
 from mc2p.motion_nav.movement_transition import MovementMode

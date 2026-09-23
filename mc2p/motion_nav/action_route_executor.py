@@ -233,6 +233,11 @@ class ActionRouteExecutor:
               applied_risk_policy_id: str = "no_expected_damage",
               verified_motion: tuple[AdmittedMotionCandidate, ...] = (),
               require_verified_gap_motion: bool = True) -> None:
+        """Start one route under the current B10 execution contract.
+
+        Setting ``require_verified_gap_motion`` to ``False`` is a bounded B09
+        regression hook. Formal runtime callers must keep the default.
+        """
         if type(route) is not ActionRoute or type(frame) is not NavigationFrame:
             raise ContractViolation("action route start requires a route and frame")
         if type(applied_risk_policy_id) is not str or not applied_risk_policy_id:

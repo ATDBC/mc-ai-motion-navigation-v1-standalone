@@ -3,7 +3,7 @@ import unittest
 
 from mc2p.contracts.common import ContractViolation
 from mc2p.contracts.observation_v3 import CollisionShapeV3, ObservedBlockV3
-from mc2p.motion_nav.air_confirmation import (
+from mc2p.motion_nav.legacy.air_confirmation import (
     AirConfirmationBatch, AirConfirmationService,
 )
 from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep

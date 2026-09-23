@@ -20,6 +20,10 @@ from mc2p.motion_nav.known_map_planner import (
     SurfaceRouteCandidate, SurfaceWalkEdge, astar_surface_plan,
     build_surface_graph, dijkstra_surface_reference,
 )
+
+# The materialized graph symbols above remain public only because B04-B09
+# evidence imported them here. New code uses the lazy ``plan_known_*`` entries;
+# reference and diagnostic callers use ``mc2p.motion_nav.planning_reference``.
 from mc2p.motion_nav.air_motion import (
     AirMotionController, AirMotionDecision, AirMotionProfile, AirMotionQuery,
     AirMotionState, load_air_motion_profiles, query_air_motion,
