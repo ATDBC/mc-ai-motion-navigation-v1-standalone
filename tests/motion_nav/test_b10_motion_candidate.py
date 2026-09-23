@@ -1,6 +1,7 @@
 from dataclasses import replace
 import math
 import unittest
+from unittest.mock import patch
 
 from mc2p.contracts.action_receipt import ClientInputApplicationV1
 from mc2p.contracts.action_v1 import ActionSnapshotV1, MovementV1
@@ -16,9 +17,10 @@ from mc2p.motion_nav.motion_candidate import (
 )
 from mc2p.motion_nav.motion_solver import SolveResult, SolveStatus, solve_one_cell_gap
 from mc2p.motion_nav.motion_coordination import (
-    GapPreparationStatus, MotionRouteCoordinator, prepare_planned_gap_motion,
+    GapPreparationResult, GapPreparationStatus, MotionRouteCoordinator,
+    prepare_planned_gap_motion,
 )
-from mc2p.motion_nav.motion_worker import MotionSolverWorker
+from mc2p.motion_nav.motion_worker import GapMotionSolveResult, MotionSolverWorker
 from mc2p.motion_nav.runtime_adapter import BodyState, NavigationFrame
 from mc2p.motion_nav.support_surfaces import (
     HorizontalRegion, SupportSurface, SurfaceNodeId,
@@ -532,6 +534,128 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
             decision.expected_movement_tick,
         )
         self.assertEqual(executor.action_index, 0)
+
+    def test_online_coordinator_stops_waiting_when_solver_worker_dies(self):
+        anchor, physics_world, _, _ = fixture()
+        start_id = SurfaceNodeId(0, 0, 64, 0)
+        end_id = SurfaceNodeId(0, 2, 64, 0)
+        start_surface = SupportSurface(
+            start_id, (.5, 64.0, .5), HorizontalRegion(0, 0, 1, 1),
+            1.0, ("minecraft:grass_block",), (),
+        )
+        end_surface = SupportSurface(
+            end_id, (.5, 64.0, 2.5), HorizontalRegion(0, 2, 1, 3),
+            1.0, ("minecraft:grass_block",), (),
+        )
+        action_route = ActionRoute(
+            "dead-worker-gap",
+            (JumpGapSegment(
+                JumpGapEdge(start_id, end_id, "test-jump-gap", .9, ()),
+                start_surface, end_surface, (),
+            ),),
+        )
+        active = ActiveRoute(
+            "dead-worker-gap", 1, "request", "goal", 1,
+            anchor.session.value, None, 2.0, 0.0, (),
+            ExecutableCorridor((start_id, end_id), (), 2.0, end_id),
+            action_route, planning_generation=2,
+        )
+        executor = ActionRouteExecutor(
+            ground_profile(), jump_profile(), step_profile(),
+            air_profiles=(air_profile(MovementMode.JUMP_GAP),),
+        )
+        frame = self.frame(physics_world._world, anchor.physics_state, 1)
+        ledger = InputApplicationLedger(max_records=64)
+        worker = MotionSolverWorker(max_pending=4)
+        try:
+            coordinator = MotionRouteCoordinator(active, executor, worker)
+            coordinator.start(frame)
+            worker._process.terminate()
+            worker._process.join(2)
+
+            decision = coordinator.decide(
+                frame, anchor, ledger, physics_world, changed_cells=(),
+            )
+
+            self.assertFalse(decision.submit_input)
+            self.assertEqual(coordinator.last_failure_reason,
+                             "motion_solver_worker_died")
+        finally:
+            worker.close()
+
+    def test_coordinator_bounds_identical_revalidation_retries(self):
+        anchor, physics_world, _, _ = fixture()
+        start_id = SurfaceNodeId(0, 0, 64, 0)
+        end_id = SurfaceNodeId(0, 2, 64, 0)
+        start_surface = SupportSurface(
+            start_id, (.5, 64.0, .5), HorizontalRegion(0, 0, 1, 1),
+            1.0, ("minecraft:grass_block",), (),
+        )
+        end_surface = SupportSurface(
+            end_id, (.5, 64.0, 2.5), HorizontalRegion(0, 2, 1, 3),
+            1.0, ("minecraft:grass_block",), (),
+        )
+        action_route = ActionRoute(
+            "bounded-retry-gap",
+            (JumpGapSegment(
+                JumpGapEdge(start_id, end_id, "test-jump-gap", .9, ()),
+                start_surface, end_surface, (),
+            ),),
+        )
+        active = ActiveRoute(
+            "bounded-retry-gap", 1, "request", "goal", 1,
+            anchor.session.value, None, 2.0, 0.0, (),
+            ExecutableCorridor((start_id, end_id), (), 2.0, end_id),
+            action_route, planning_generation=2,
+        )
+        executor = ActionRouteExecutor(
+            ground_profile(), jump_profile(), step_profile(),
+            air_profiles=(air_profile(MovementMode.JUMP_GAP),),
+        )
+        current_frame = self.frame(
+            physics_world._world, anchor.physics_state, 1,
+        )
+        worker = MotionSolverWorker(max_pending=1)
+        failure = SolveResult(
+            SolveStatus.NO_SOLUTION_WITHIN_SEARCH,
+            reasons=("revalidated_commands_failed",),
+        )
+        try:
+            coordinator = MotionRouteCoordinator(active, executor, worker)
+            coordinator.start(current_frame)
+            connection = coordinator._connection_id(0)
+            rejected = GapPreparationResult(
+                GapPreparationStatus.ADMISSION_REJECTED,
+                solve_result=failure,
+                reason="candidate_revalidation_failed",
+            )
+            with patch(
+                "mc2p.motion_nav.motion_coordination.prepare_planned_gap_motion",
+                return_value=rejected,
+            ):
+                for revision in (1, 2):
+                    coordinator._pending_connection = connection
+                    coordinator._accept_result(
+                        GapMotionSolveResult(
+                            connection, revision, failure, 0,
+                        ),
+                        anchor, physics_world, (),
+                    )
+                    self.assertIs(executor.state, ActionRouteState.RUNNING)
+
+                coordinator._pending_connection = connection
+                coordinator._accept_result(
+                    GapMotionSolveResult(connection, 3, failure, 0),
+                    anchor, physics_world, (),
+                )
+
+            self.assertIs(executor.state, ActionRouteState.CANCELLED)
+            self.assertEqual(
+                coordinator.last_failure_reason,
+                "motion_retry_exhausted:candidate_revalidation_failed",
+            )
+        finally:
+            worker.close()
 
     def test_planned_gap_is_locally_solved_bound_admitted_then_executable(self):
         anchor, _, _, _ = fixture()

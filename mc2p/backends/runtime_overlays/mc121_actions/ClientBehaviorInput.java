@@ -17,7 +17,7 @@ public final class ClientBehaviorInput extends Input {
     private final SampleObserver observer;
     private int forward, strafe;
     private boolean jump, sneak, sprint, appliedSprint;
-    private long samples, leasedSamples;
+    private long samples, leasedSamples, droppedSamples;
     private String acceptedEpisode;
     private long acceptedSequence = -1;
     private Sample lastSample;
@@ -89,6 +89,10 @@ public final class ClientBehaviorInput extends Input {
     public Sample lastSample() { return lastSample; }
     public long sampleCount() { return samples; }
     public long leasedSampleCount() { return leasedSamples; }
+    public long droppedSampleCount() { return droppedSamples; }
+    public long oldestRetainedMovementTick() {
+        return pendingSamples.isEmpty() ? 0L : pendingSamples.get(0).movementTickId();
+    }
     public java.util.List<Sample> drainSamples() {
         gate.requireOwnerThread();
         var result = java.util.List.copyOf(pendingSamples);
@@ -129,8 +133,10 @@ public final class ClientBehaviorInput extends Input {
         }
         lastSample = new Sample(acceptedEpisode, acceptedSequence, samples, now, sampleState,
                 movementForward, movementSideways, jumping, sneaking, appliedSprint);
-        if (pendingSamples.size() >= 64)
-            throw new IllegalStateException("unobserved input sample ledger is full");
+        if (pendingSamples.size() >= 64) {
+            pendingSamples.remove(0);
+            droppedSamples++;
+        }
         pendingSamples.add(lastSample);
         observer.accept(lastSample);
     }

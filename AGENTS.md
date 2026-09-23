@@ -25,7 +25,7 @@
 
 ## 3. 当前阶段
 
-B01“三版参照与统一比较口径”至 B10“动作求解与连续执行”已经完成。B10-C 已完成规划接纳、八行接续矩阵和默认后台协调链；下一阶段顺序尚未通过新的设计决定变更：
+B01“三版参照与统一比较口径”至 B10“动作求解与连续执行”已经完成。B10-C 已完成规划接纳、八行接续矩阵和默认后台协调链，并完成三方审查整改。按照 D013，下一项新能力是范围受限的 C1 战斗纵切片：
 
 - [阶段记录](docs/motion_navigation/stages/B01-reference-baselines.md)
 - [验收结果](docs/motion_navigation/acceptance/B01-reference-baselines.md)
@@ -67,6 +67,8 @@ B01“三版参照与统一比较口径”至 B10“动作求解与连续执行�
 - [空中转换](docs/motion_navigation/architecture/air-transitions-v1.md)
 - [运动计算器](docs/motion_navigation/architecture/physics-calculator-1_21-v1.md)
 - [B10 动作求解与连续执行](docs/motion_navigation/architecture/B10-motion-solving-continuous-execution-v1.md)
+- [B10 后先做战斗纵切片](docs/motion_navigation/decisions/0013-combat-vertical-slice-after-b10.md)
+- [B10 审查整改](docs/motion_navigation/decisions/0014-b10-audit-hardening.md)
 - [运动导航代码边界](docs/motion_navigation/architecture/package-boundaries-v1.md)
 - [交付顺序决定](docs/motion_navigation/decisions/0001-incremental-delivery-order.md)
 - [三版参照决定](docs/motion_navigation/decisions/0002-three-reference-versions.md)

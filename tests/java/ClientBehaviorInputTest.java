@@ -56,7 +56,21 @@ public final class ClientBehaviorInputTest {
         sneakProjectionDoesNotGrantOrRenewControls();
         diagnosticCallbackReportsActualConsumptionWithoutChangingLease();
         operationSpecificRejectionDoesNotBindDiagnosticIdentity();
+        boundedLedgerDropsOldestSamplesWithoutCrashing();
         System.out.println("CLIENT_BEHAVIOR_INPUT_OK");
+    }
+
+    private static void boundedLedgerDropsOldestSamplesWithoutCrashing() {
+        ClientRequestGate gate = new ClientRequestGate();
+        ClientBehaviorInput input = new ClientBehaviorInput(gate, () -> 1L, () -> true);
+        for (int index = 0; index < 70; index++) input.tick(false, 1);
+        yes(input.oldestRetainedMovementTick() == 7);
+        var retained = input.drainSamples();
+        yes(retained.size() == 64);
+        yes(retained.get(0).movementTickId() == 7);
+        yes(retained.get(63).movementTickId() == 70);
+        yes(input.droppedSampleCount() == 6);
+        yes(input.oldestRetainedMovementTick() == 0);
     }
 
     private static void singleTickSneakSurvivesUnleasedSamplingGaps() {

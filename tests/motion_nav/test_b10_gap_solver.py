@@ -1,11 +1,12 @@
 from dataclasses import replace
 import math
+import pickle
 import unittest
 
 from mc2p.motion_nav.online_motion import (
     CandidateExecutionWindow, MotionTickPhase, StateAnchor,
 )
-from mc2p.motion_nav.physics_adapter import PhysicsWorldView
+from mc2p.motion_nav.physics_adapter import PhysicsWorldBounds, PhysicsWorldView
 from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET, PhysicsState
 from mc2p.motion_nav.world_model import (
     BlockGeometry, ObservationStamp, WorldKnowledge, WorldSessionId,
@@ -69,6 +70,25 @@ def fixture(direction=(0, 1), *, missing=(), ceiling=False, food=20,
 
 
 class B10GapSolverTests(unittest.TestCase):
+    def test_gap_coordination_crops_the_live_world_before_worker_submission(self):
+        from mc2p.motion_nav.motion_coordination import _gap_physics_snapshot
+        anchor, world, target, _ = fixture()
+
+        local = _gap_physics_snapshot(world, anchor, self.request(target))
+
+        self.assertTrue(local.is_detached)
+        self.assertLess(len(pickle.dumps(local)), len(pickle.dumps(world)))
+
+    def test_bounded_physics_snapshot_is_detached_and_keeps_gap_solution(self):
+        from mc2p.motion_nav.motion_solver import SolveStatus, solve_one_cell_gap
+        anchor, world, target, _ = fixture()
+        local = world.snapshot(PhysicsWorldBounds(-2, 2, 61, 68, -2, 4))
+
+        self.assertTrue(local.is_detached)
+        self.assertLess(len(pickle.dumps(local)), len(pickle.dumps(world)))
+        result = solve_one_cell_gap(anchor, local, self.request(target))
+        self.assertIs(result.status, SolveStatus.SOLVED)
+
     def request(self, target, direction=(0, 1), *, candidates=12):
         from mc2p.motion_nav.motion_solver import GapSolveRequest, LandingRegion
         return GapSolveRequest(
@@ -90,6 +110,10 @@ class B10GapSolverTests(unittest.TestCase):
         self.assertEqual(len(proof.trajectory), len(proof.commands) + 1)
         self.assertEqual(proof.trajectory[0], proof.entry_state)
         self.assertEqual(proof.trajectory[-1], proof.exit_state)
+        self.assertEqual(
+            proof.release_safe_command_indices,
+            tuple(range(len(proof.commands))),
+        )
         self.assertTrue(proof.commands[0].movement.jump)
         self.assertTrue(proof.commands[0].movement.sprint)
         self.assertTrue(proof.commands[0].movement.forward)

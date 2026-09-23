@@ -179,6 +179,29 @@ class InputApplicationLedgerTests(unittest.TestCase):
         ledger.observe_receipt(missing_tick)
         self.assertIs(ledger.snapshot()[0].status, InputApplicationStatus.AMBIGUOUS)
 
+    def test_first_receipt_reports_dropped_samples_as_ambiguous(self):
+        ledger = InputApplicationLedger(max_records=3)
+        ledger.submit(SESSION, action(3), requested_first_tick=7)
+        receipt = behavior_receipt_from_mapping({
+            "schema_version": "mc2p.client_action_receipt.v3",
+            "generation_id": 1, "execution_path": "client_behavior_v1",
+            "episode_id": "episode", "request_sequence_id": 3,
+            "status": "executed", "reason": "movement_applied",
+            "execution_thread": "Render thread", "on_client_thread": True,
+            "execution_phase": "client_tick_action_boundary", "world_tick": 1,
+            "action_keyboard_callbacks": 0, "action_mouse_callbacks": 0,
+            "handled_screen_render_attempts": 0,
+            "handled_screen_render_completions": 0,
+            "input_samples": 70, "leased_input_samples": 1,
+            "dropped_input_samples": 6,
+            "oldest_retained_input_tick": 7,
+            "input_applications": [],
+        })
+
+        ledger.observe_receipt(receipt)
+
+        self.assertIs(ledger.snapshot()[0].status, InputApplicationStatus.AMBIGUOUS)
+
     def test_unowned_neutral_sample_advances_motion_tick_without_claiming_a_command(self):
         ledger = InputApplicationLedger(max_records=2)
         unowned = ClientInputApplicationV1(

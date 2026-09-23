@@ -8,15 +8,19 @@ from unittest.mock import patch
 from mc2p.motion_nav.known_map_planner import (
     KnownMapBounds, KnownMapSnapshotBuilder, SnapshotBuildStatus,
     SurfacePlanningRequest, SurfacePlanningStatus,
-    SurfaceGraph, SurfaceJumpUpEdge, astar_surface_plan, build_surface_graph,
+    SurfaceGraph, SurfaceJumpUpEdge, SurfaceNode, _SurfaceExpander,
+    astar_surface_plan, build_surface_graph,
     dijkstra_surface_reference, plan_known_surface_snapshot,
 )
 from mc2p.motion_nav.block_motion_traits import BlockMotionCatalog
 from mc2p.motion_nav.environment_identity import load_frozen_environment
 from mc2p.motion_nav.ground_motion import load_ground_motion_profile
+from mc2p.motion_nav.geometry import QueryStatus
 from mc2p.motion_nav.step_transition import StepEdge
 from mc2p.motion_nav.planner_worker import PlannerWorker
-from mc2p.motion_nav.support_surfaces import SurfaceNodeId
+from mc2p.motion_nav.support_surfaces import (
+    HorizontalRegion, SupportSurface, SurfaceNodeId,
+)
 from mc2p.motion_nav.world_model import (
     Aabb, BlockGeometry, ObservationStamp, WorldKnowledge, WorldSessionId,
 )
@@ -109,6 +113,9 @@ class B07SurfacePlanningTests(unittest.TestCase):
             (forward.start, forward.end),
         )
         self.assertIsNotNone(candidate.planner_states[-1].movement_mode)
+        self.assertTrue(all(
+            state.heading is None for state in candidate.planner_states
+        ))
 
     def test_surface_snapshot_search_expands_lazily_without_materializing_graph(self):
         size = 20
@@ -134,6 +141,50 @@ class B07SurfacePlanningTests(unittest.TestCase):
 
         self.assertIs(candidate.status, SurfacePlanningStatus.COMPLETE)
         self.assertLessEqual(candidate.expanded_nodes, 2 * size)
+
+    def test_non_diagonal_flat_search_does_not_expand_the_whole_rectangle(self):
+        size = 100
+        world = flat_surface_world(size)
+        bounds = KnownMapBounds(0, size - 1, 1, 1, 0, size - 1, True)
+        progress = KnownMapSnapshotBuilder(world.view(), bounds).advance(
+            world.view(), 1_000_000,
+        )
+        request = SurfacePlanningRequest(
+            5, "off-axis-surface", "off-axis-goal", 1,
+            world.session.value, SurfaceNodeId(0, 0, 1, 0),
+            SurfaceNodeId(99, 33, 1, 0), maximum_planning_seconds=5.0,
+        )
+
+        candidate = plan_known_surface_snapshot(
+            progress.snapshot, ordinary_profile(), step_profile(), request,
+        )
+
+        self.assertIs(candidate.status, SurfacePlanningStatus.COMPLETE)
+        self.assertLessEqual(candidate.expanded_nodes, 150)
+
+    def test_adjacent_columns_with_same_representative_keep_positive_walk_cost(self):
+        world = flat_surface_world(2)
+        expander = _SurfaceExpander(
+            world.view(), KnownMapBounds(0, 1, 1, 1, 0, 0, True),
+            ordinary_profile(), step_profile(),
+        )
+        region = HorizontalRegion(0, 0, 1, 1)
+        first = SurfaceNode(SupportSurface(
+            SurfaceNodeId(0, 0, 1, 0), (1.0, 1.0, .5), region,
+            1.0, ("minecraft:stone",), (),
+        ))
+        second = SurfaceNode(SupportSurface(
+            SurfaceNodeId(1, 0, 1, 0), (1.0, 1.0, .5),
+            HorizontalRegion(1, 0, 2, 1), 1.0,
+            ("minecraft:stone",), (),
+        ))
+        with patch(
+            "mc2p.motion_nav.known_map_planner._surface_walk_query",
+            return_value=(QueryStatus.FEASIBLE, ()),
+        ):
+            edge = expander._build_edge(first, second)
+
+        self.assertGreater(edge.cost_seconds, 0.0)
 
     def test_b07_ground_profile_adds_only_declared_shape_materials(self):
         from pathlib import Path

@@ -80,6 +80,7 @@ class InputApplicationLedger:
         self._observed_samples: dict[int, ClientInputApplicationV1] = {}
         self._max_samples = max_records * 20 + 1
         self._last_input_samples: int | None = None
+        self._last_dropped_input_samples: int | None = None
         self._latest_movement_tick_id: int | None = None
 
     def submit(self, session: WorldSessionId, action: ActionSnapshotV1, *,
@@ -179,6 +180,10 @@ class InputApplicationLedger:
         if (self._last_input_samples is not None
                 and receipt.input_samples < self._last_input_samples):
             raise ContractViolation("input sample counter regressed")
+        if (type(receipt) is ClientBehaviorReceiptV3
+                and self._last_dropped_input_samples is not None
+                and receipt.dropped_input_samples < self._last_dropped_input_samples):
+            raise ContractViolation("dropped input sample counter regressed")
         changed: list[InputApplicationRecord] = []
         if type(receipt) is ClientBehaviorReceiptV3:
             for application in receipt.input_applications:
@@ -212,6 +217,18 @@ class InputApplicationLedger:
                 }:
                     changed.append(self.mark_ambiguous(
                         record.control_sequence, at_tick=receipt.input_samples))
+        if type(receipt) is ClientBehaviorReceiptV3:
+            previous_dropped = self._last_dropped_input_samples or 0
+            if receipt.dropped_input_samples > previous_dropped:
+                for record in tuple(self._records.values()):
+                    if record.status in {
+                        InputApplicationStatus.IN_FLIGHT,
+                        InputApplicationStatus.PARTIALLY_APPLIED,
+                    }:
+                        changed.append(self.mark_ambiguous(
+                            record.control_sequence, at_tick=receipt.input_samples,
+                        ))
+            self._last_dropped_input_samples = receipt.dropped_input_samples
         self._last_input_samples = receipt.input_samples
         sequence = receipt.request_sequence_id
         if sequence is not None and sequence in self._records:

@@ -78,23 +78,114 @@ def run_benchmark(*, size: int = 100, runs: int = 20,
             break
     if progress.snapshot is None or not progress.snapshot.bounds.complete_scope:
         raise RuntimeError("surface benchmark snapshot is incomplete")
-    request = SurfacePlanningRequest(
-        1, "surface-benchmark", "surface-benchmark-goal", 1, session.value,
-        SurfaceNodeId(0, 0, 1, 0),
-        SurfaceNodeId(size - 1, size - 1, 1, 0),
-    )
     ground, step = profiles()
     planning_ms: list[float] = []
+    targets = tuple(dict.fromkeys((
+        (size - 1, size - 1),
+        (size - 1, (size - 1) // 3),
+        ((size - 1) // 4, size - 1),
+    )))
+    cases = []
     result = None
-    for _ in range(runs):
-        started = time.perf_counter_ns()
-        result = plan_known_surface_snapshot(
-            progress.snapshot, ground, step, request,
+    for case_index, (goal_x, goal_z) in enumerate(targets, start=1):
+        request = SurfacePlanningRequest(
+            case_index, f"surface-benchmark-{case_index}",
+            f"surface-benchmark-goal-{case_index}", 1, session.value,
+            SurfaceNodeId(0, 0, 1, 0),
+            SurfaceNodeId(goal_x, goal_z, 1, 0),
         )
-        planning_ms.append((time.perf_counter_ns() - started) / 1e6)
+        case_ms: list[float] = []
+        for _ in range(runs):
+            started = time.perf_counter_ns()
+            result = plan_known_surface_snapshot(
+                progress.snapshot, ground, step, request,
+            )
+            elapsed_ms = (time.perf_counter_ns() - started) / 1e6
+            case_ms.append(elapsed_ms)
+            planning_ms.append(elapsed_ms)
+        if result.status is not SurfacePlanningStatus.COMPLETE:
+            raise RuntimeError(
+                f"surface benchmark route failed for {(goal_x, goal_z)}: "
+                f"{result.status.value}"
+            )
+        cases.append(dict(
+            kind="flat",
+            goal=[goal_x, goal_z],
+            planning_p50_ms=percentile(case_ms, .50),
+            planning_p95_ms=percentile(case_ms, .95),
+            planning_max_ms=max(case_ms),
+            expanded_nodes=result.expanded_nodes,
+            path_nodes=len(result.path),
+        ))
+    maze_size = min(size, 20)
+    if maze_size >= 8:
+        maze_session = WorldSessionId("surface-planner-maze-benchmark")
+        maze_world = WorldKnowledge(maze_session)
+        maze_stamp = ObservationStamp(
+            maze_session, 0, 0, "benchmark-clock", 0,
+        )
+        wall_cells: set[tuple[int, int, int]] = set()
+        for wall_index, x in enumerate(range(2, maze_size - 1, 3)):
+            opening = maze_size - 1 if wall_index % 2 == 0 else 0
+            for z in range(maze_size):
+                if z != opening:
+                    wall_cells.update(((x, 1, z), (x, 2, z)))
+        maze_world.confirm_air(maze_stamp, tuple(
+            (x, y, z)
+            for x in range(maze_size)
+            for z in range(maze_size)
+            for y in (-1, 1, 2)
+            if (x, y, z) not in wall_cells
+        ))
+        maze_blocks = {
+            (x, 0, z): BlockGeometry.full_cube("minecraft:stone")
+            for x in range(maze_size) for z in range(maze_size)
+        }
+        maze_blocks.update({
+            position: BlockGeometry.full_cube("minecraft:stone")
+            for position in wall_cells
+        })
+        maze_world.observe_blocks(maze_stamp, maze_blocks)
+        maze_bounds = KnownMapBounds(
+            0, maze_size - 1, 1, 1, 0, maze_size - 1, True,
+        )
+        maze_progress = KnownMapSnapshotBuilder(
+            maze_world.view(), maze_bounds,
+        ).advance(maze_world.view(), 10_000_000)
+        if maze_progress.snapshot is None:
+            raise RuntimeError("surface maze benchmark snapshot is incomplete")
+        maze_request = SurfacePlanningRequest(
+            len(cases) + 1, "surface-benchmark-maze",
+            "surface-benchmark-maze-goal", 1, maze_session.value,
+            SurfaceNodeId(0, 0, 1, 0),
+            SurfaceNodeId(maze_size - 1, maze_size - 1, 1, 0),
+        )
+        maze_ms: list[float] = []
+        maze_result = None
+        for _ in range(min(runs, 5)):
+            started = time.perf_counter_ns()
+            maze_result = plan_known_surface_snapshot(
+                maze_progress.snapshot, ground, step, maze_request,
+            )
+            elapsed_ms = (time.perf_counter_ns() - started) / 1e6
+            maze_ms.append(elapsed_ms)
+            planning_ms.append(elapsed_ms)
+        if (maze_result is None
+                or maze_result.status is not SurfacePlanningStatus.COMPLETE):
+            status = None if maze_result is None else maze_result.status.value
+            raise RuntimeError(f"surface maze benchmark failed: {status}")
+        cases.append(dict(
+            kind="maze",
+            size=maze_size,
+            goal=[maze_size - 1, maze_size - 1],
+            planning_p50_ms=percentile(maze_ms, .50),
+            planning_p95_ms=percentile(maze_ms, .95),
+            planning_max_ms=max(maze_ms),
+            expanded_nodes=maze_result.expanded_nodes,
+            path_nodes=len(maze_result.path),
+        ))
     assert result is not None
-    if result.status is not SurfacePlanningStatus.COMPLETE:
-        raise RuntimeError(f"surface benchmark route failed: {result.status.value}")
+    diagonal = cases[0]
     return dict(
         schema_version="mc2p.surface-planner-benchmark.v1",
         planner_entry="plan_known_surface_snapshot",
@@ -107,9 +198,10 @@ def run_benchmark(*, size: int = 100, runs: int = 20,
         planning_p50_ms=percentile(planning_ms, .50),
         planning_p95_ms=percentile(planning_ms, .95),
         planning_max_ms=max(planning_ms),
-        expanded_nodes=result.expanded_nodes,
-        path_nodes=len(result.path),
-        passed=percentile(planning_ms, .95) <= 500.0,
+        expanded_nodes=diagonal["expanded_nodes"],
+        path_nodes=diagonal["path_nodes"],
+        cases=cases,
+        passed=all(case["planning_p95_ms"] <= 500.0 for case in cases),
     )
 
 

@@ -36,6 +36,10 @@ class MotionBenchmarkTests(unittest.TestCase):
         self.assertTrue(result["passed"])
         self.assertGreater(result["path_nodes"], 0)
         self.assertLessEqual(result["expanded_nodes"], 16)
+        self.assertEqual(
+            {case["kind"] for case in result["cases"]},
+            {"flat", "maze"},
+        )
 
 
 if __name__ == "__main__":

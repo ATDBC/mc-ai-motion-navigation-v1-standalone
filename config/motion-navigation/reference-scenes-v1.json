@@ -1,0 +1,62 @@
+{
+  "schema_version": "mc2p.motion-navigation-reference-scenes.v1",
+  "scenes": [
+    {
+      "id": "S00",
+      "name": "空地直行与停止",
+      "purpose": "固定路线执行、加速、制动和到点判断",
+      "identity": {
+        "kind": "generated_layout",
+        "case": "empty",
+        "seed": 21001,
+        "runtime_layout_sha256": "30f6c7101f4eb92f737e246a24aa8d687b9d8b4bfa089b14b00cff94ce768166",
+        "start": [1.5, -60.0, 1.5],
+        "goal": [1.5, -60.0, 12.5]
+      }
+    },
+    {
+      "id": "S02",
+      "name": "转角走廊",
+      "purpose": "转弯、路点进度和连续行走",
+      "identity": {
+        "kind": "generated_layout",
+        "case": "corner_prelook",
+        "seed": 21003,
+        "runtime_layout_sha256": "b32cf6a0aa1bf76a26642581e3728ae24bd37a7d75baea193d293092138bb7d5",
+        "start": [5.5, -60.0, 2.5],
+        "goal": [13.5, -60.0, 13.5]
+      }
+    },
+    {
+      "id": "S04",
+      "name": "悬浮墙净空",
+      "purpose": "空气与未知、支撑和身体净空语义",
+      "identity": {
+        "kind": "sealed_layout",
+        "case": "maze_03_floating",
+        "seed": 21001,
+        "layout_path": "experiments/navigation-floating-wall-mazes-v1/layouts/maze_03_floating.json",
+        "source_file_sha256": "99c144d6806e16e5e217d33062f0cf6b6a94de11d39b831d91ac5b103747740d",
+        "runtime_layout_sha256": "dd49eb1df8b22e70d00b3b838383d9cc2aa891db2ea2545fa2b78773818bfe8f",
+        "start": [1.5, -60.0, 1.5],
+        "goal": [19.5, -60.0, 19.5],
+        "ground_y": -61,
+        "floating_wall_y": -59
+      }
+    },
+    {
+      "id": "S05",
+      "name": "坑边绕行",
+      "purpose": "支撑缺失、扫掠安全和绕行",
+      "identity": {
+        "kind": "generated_layout",
+        "case": "pit",
+        "seed": 21001,
+        "runtime_layout_sha256": "70a57e5acfb2875cbbbb135bb81a238c7c0715dbf90af068300dca952870f488",
+        "start": [7.5, -60.0, 2.5],
+        "goal": [7.5, -60.0, 12.5],
+        "pit_cell_count": 9
+      }
+    }
+  ]
+}

@@ -263,6 +263,7 @@ class PlanningStatus(StrEnum):
     NO_ROUTE_WITHIN_COMPLETE_SCOPE = "no_route_within_complete_scope"
     TIMEOUT = "timeout"
     UNSUPPORTED = "unsupported"
+    INTERNAL_ERROR = "internal_error"
 
 
 @dataclass(frozen=True, slots=True)
@@ -335,6 +336,7 @@ class RouteCandidate:
     expanded_nodes: int
     final_resources: ResourceState | None = None
     goal_state: GoalState | None = None
+    reasons: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -345,6 +347,14 @@ class _SearchResult:
     final_resources: ResourceState | None
     expanded: int
     timed_out: bool = False
+
+
+_PLANNING_PRIORITY_UNITS_PER_SECOND = 1_000_000
+
+
+def _planning_priority_units(seconds: float) -> int:
+    """Use one deterministic microsecond lattice for A* queue ordering."""
+    return int(round(seconds * _PLANNING_PRIORITY_UNITS_PER_SECOND))
 
 
 def _resource_aware_search(
@@ -363,7 +373,7 @@ def _resource_aware_search(
     """A* over nondominated (node, remaining-resources) labels."""
     deadline_ns = time.perf_counter_ns() + int(maximum_planning_seconds * 1e9)
     serial = 0
-    frontier = [(round(heuristic(start), 12), -0.0, serial, 0.0,
+    frontier = [(_planning_priority_units(heuristic(start)), -0.0, serial, 0.0,
                  start, initial_resources)]
     labels: dict[WalkNodeId, list[tuple[float, ResourceState]]] = {
         start: [(0.0, initial_resources)],
@@ -431,7 +441,7 @@ def _resource_aware_search(
                 serial += 1
                 heapq.heappush(
                     frontier,
-                    (round(candidate + heuristic(successor), 12), -candidate,
+                    (_planning_priority_units(candidate + heuristic(successor)), -candidate,
                      serial, candidate, successor, updated),
                 )
     return _SearchResult((), (), None, None, expanded)
@@ -452,7 +462,7 @@ def _plain_search(
     """A* for paths whose transitions neither require nor change resources."""
     deadline_ns = time.perf_counter_ns() + int(maximum_planning_seconds * 1e9)
     serial = 0
-    frontier = [(round(heuristic(start), 12), -0.0, serial, 0.0, start)]
+    frontier = [(_planning_priority_units(heuristic(start)), -0.0, serial, 0.0, start)]
     costs = {start: 0.0}
     previous = {}
     expanded = 0
@@ -491,7 +501,7 @@ def _plain_search(
                 serial += 1
                 heapq.heappush(
                     frontier,
-                    (round(candidate + heuristic(successor), 12), -candidate,
+                    (_planning_priority_units(candidate + heuristic(successor)), -candidate,
                      serial, candidate, successor),
                 )
     return _SearchResult((), (), None, None, expanded)
@@ -1125,6 +1135,7 @@ class SurfacePlanningStatus(StrEnum):
     NO_ROUTE_WITHIN_COMPLETE_SCOPE = "no_route_within_complete_scope"
     TIMEOUT = "timeout"
     UNSUPPORTED = "unsupported"
+    INTERNAL_ERROR = "internal_error"
 
 
 @dataclass(frozen=True, slots=True)
@@ -1191,6 +1202,7 @@ class SurfaceRouteCandidate:
     initial_resources: ResourceState = ResourceState()
     minimum_resources: ResourceState = ResourceState()
     planner_states: tuple[PlannerStateKey, ...] = ()
+    reasons: tuple[str, ...] = ()
 
 
 def _surface_walk_query(
@@ -1328,9 +1340,10 @@ class _SurfaceExpander:
                 )
         self.offsets = tuple(sorted(offsets))
         self.columns: dict[tuple[int, int], tuple[SurfaceNode, ...]] = {}
+        self.column_status: dict[tuple[int, int], QueryStatus] = {}
         self.nodes: dict[SurfaceNodeId, SurfaceNode] = {}
         self.edge_cache: dict[
-            tuple[SurfaceNodeId, SurfaceNodeId], SurfaceEdge | None
+            tuple[SurfaceNodeId, SurfaceNodeId], tuple[SurfaceEdge, ...]
         ] = {}
         self.outgoing_cache: dict[SurfaceNodeId, tuple[SurfaceEdge, ...]] = {}
         self.complete = bounds.complete_scope
@@ -1351,6 +1364,7 @@ class _SurfaceExpander:
             float(self.bounds.max_feet_y + 1), body_height=self.body_height,
         )
         self.complete = self.complete and result.status is not QueryStatus.NEEDS_INFORMATION
+        self.column_status[key] = result.status
         self.has_unsupported = (
             self.has_unsupported or result.status is QueryStatus.UNSUPPORTED
         )
@@ -1392,11 +1406,12 @@ class _SurfaceExpander:
         self.complete = self.complete and status is not QueryStatus.NEEDS_INFORMATION
         self.has_unsupported = self.has_unsupported or status is QueryStatus.UNSUPPORTED
 
-    def _build_edge(self, start: SurfaceNode, end: SurfaceNode) -> SurfaceEdge | None:
+    def _build_edges(self, start: SurfaceNode,
+                     end: SurfaceNode) -> tuple[SurfaceEdge, ...]:
         key = start.node_id, end.node_id
         if key in self.edge_cache:
             return self.edge_cache[key]
-        edge: SurfaceEdge | None = None
+        found: list[SurfaceEdge] = []
         dx = end.node_id.column_x - start.node_id.column_x
         dz = end.node_id.column_z - start.node_id.column_z
         delta_y = end.position[1] - start.position[1]
@@ -1408,31 +1423,30 @@ class _SurfaceExpander:
             )
             self._remember_status(status)
             if status is QueryStatus.FEASIBLE:
-                cost = math.dist(start.position, end.position) / (
+                cost = distance / (
                     self.ground_profile.maximum_speed_blocks_per_second
                 )
-                edge = SurfaceWalkEdge(
+                found.append(SurfaceWalkEdge(
                     start.node_id, end.node_id, cost, dependencies,
                     _walk_transition(
                         self.ground_profile, cost, dependencies,
                         mode_profile=self.ground_mode_profile,
                     ),
-                )
-        elif (self.movement_mode is MovementMode.WALK
-              and abs(delta_y) > 1.0e-6 and distance <= 1):
+                ))
+        if (self.movement_mode is MovementMode.WALK
+                and abs(delta_y) > 1.0e-6 and distance <= 1):
             result = query_step(
                 self.world, start.surface, end.surface, self.step_profile,
             )
             self._remember_status(result.status)
             if result.status is QueryStatus.FEASIBLE:
-                edge = StepEdge(
+                found.append(StepEdge(
                     start.node_id, end.node_id, self.step_profile.profile_id,
                     result.direction, self.step_profile.cost_seconds,
                     result.dependencies,
                     _step_transition(self.step_profile, result.dependencies),
-                )
-            elif (self.jump_profile is not None
-                  and result.status is QueryStatus.UNSUPPORTED
+                ))
+            if (self.jump_profile is not None
                   and abs(delta_y - 1.0) <= 1.0e-6
                   and distance == 1
                   and abs(start.position[0] - (start.node_id.column_x + .5)) <= 1.0e-6
@@ -1460,12 +1474,11 @@ class _SurfaceExpander:
                         jump.dependencies,
                         _jump_transition(self.jump_profile, jump.dependencies),
                     )
-                    edge = SurfaceJumpUpEdge(
+                    found.append(SurfaceJumpUpEdge(
                         start.node_id, end.node_id, jump_edge,
-                    )
-            elif (result.status is QueryStatus.UNSUPPORTED
-                  and delta_y < -1.0e-6
-                  and MovementMode.CONTROLLED_DROP in self.air_by_mode):
+                    ))
+            if (delta_y < -1.0e-6
+                    and MovementMode.CONTROLLED_DROP in self.air_by_mode):
                 profile = self.air_by_mode[MovementMode.CONTROLLED_DROP]
                 drop = query_controlled_drop(
                     self.world, start.surface, end.surface, profile,
@@ -1477,27 +1490,53 @@ class _SurfaceExpander:
                         start.node_id, end.node_id, profile.profile_id,
                         profile.cost_seconds, drop.dependencies, transition,
                     )
-                    edge = SurfaceControlledDropEdge(
+                    found.append(SurfaceControlledDropEdge(
                         start.node_id, end.node_id, air_edge,
-                    )
-        elif (abs(delta_y) <= 1.0e-6
-              and MovementMode.JUMP_GAP in self.air_by_mode):
+                    ))
+        if (abs(delta_y) <= 1.0e-6
+                and MovementMode.JUMP_GAP in self.air_by_mode):
             profile = self.air_by_mode[MovementMode.JUMP_GAP]
-            jump = query_jump_gap(
-                self.world, start.surface, end.surface, profile,
-            )
-            self._remember_status(jump.status)
-            if jump.status is QueryStatus.FEASIBLE:
-                transition = _air_transition(profile, jump.dependencies)
-                air_edge = JumpGapEdge(
-                    start.node_id, end.node_id, profile.profile_id,
-                    profile.cost_seconds, jump.dependencies, transition,
+            if distance != profile.horizontal_cells:
+                pass
+            else:
+                unit_x, unit_z = dx // distance, dz // distance
+                middle = self.column(
+                    start.node_id.column_x + unit_x,
+                    start.node_id.column_z + unit_z,
                 )
-                edge = SurfaceJumpGapEdge(
-                    start.node_id, end.node_id, air_edge,
+                middle_status = self.column_status.get(
+                    (start.node_id.column_x + unit_x,
+                     start.node_id.column_z + unit_z),
+                    QueryStatus.NEEDS_INFORMATION,
                 )
-        self.edge_cache[key] = edge
-        return edge
+                if (middle_status not in {
+                        QueryStatus.NEEDS_INFORMATION, QueryStatus.UNSUPPORTED}
+                        and not any(
+                            abs(node.position[1] - start.position[1]) <= 1.0e-6
+                            for node in middle
+                        )):
+                    jump = query_jump_gap(
+                        self.world, start.surface, end.surface, profile,
+                    )
+                    self._remember_status(jump.status)
+                    if jump.status is QueryStatus.FEASIBLE:
+                        transition = _air_transition(profile, jump.dependencies)
+                        air_edge = JumpGapEdge(
+                            start.node_id, end.node_id, profile.profile_id,
+                            profile.cost_seconds, jump.dependencies, transition,
+                        )
+                        found.append(SurfaceJumpGapEdge(
+                            start.node_id, end.node_id, air_edge,
+                        ))
+        value = tuple(sorted(found, key=_surface_edge_identity))
+        self.edge_cache[key] = value
+        return value
+
+    def _build_edge(self, start: SurfaceNode,
+                    end: SurfaceNode) -> SurfaceEdge | None:
+        """Return the first edge for old diagnostics; planning uses all edges."""
+        edges = self._build_edges(start, end)
+        return edges[0] if edges else None
 
     def outgoing(self, node_id: SurfaceNodeId) -> tuple[SurfaceEdge, ...]:
         if node_id in self.outgoing_cache:
@@ -1513,10 +1552,8 @@ class _SurfaceExpander:
             ):
                 if end.node_id == node_id:
                     continue
-                edge = self._build_edge(start, end)
-                if edge is not None:
-                    found.append(edge)
-        value = tuple(sorted(found, key=lambda item: (item.end, type(item).__name__)))
+                found.extend(self._build_edges(start, end))
+        value = tuple(sorted(found, key=_surface_edge_identity))
         self.outgoing_cache[node_id] = value
         return value
 
@@ -1571,7 +1608,7 @@ def build_surface_graph(world: WorldView, bounds: KnownMapBounds,
     for node_id in tuple(sorted(expander.nodes)):
         expander.outgoing(node_id)
     edges = tuple(sorted(
-        (edge for edge in expander.edge_cache.values() if edge is not None),
+        (edge for edges in expander.edge_cache.values() for edge in edges),
         key=_surface_edge_identity,
     ))
     return SurfaceGraph(
@@ -1588,6 +1625,7 @@ def _surface_candidate(request: SurfacePlanningRequest, graph: SurfaceGraph,
                        expanded: int = 0,
                        final_resources: ResourceState | None = None,
                        planner_states: tuple[PlannerStateKey, ...] = (),
+                       reasons: tuple[str, ...] = (),
                        ) -> SurfaceRouteCandidate:
     by_id = {node.node_id: node for node in graph.nodes}
     path = tuple(by_id[node_id] for node_id in path_ids)
@@ -1601,21 +1639,14 @@ def _surface_candidate(request: SurfacePlanningRequest, graph: SurfaceGraph,
         request.start, request.goal, status, path, segments, cost,
         dependencies, expanded, final_resources, request.goal_state,
         request.initial_resources, request.minimum_resources,
-        planner_states,
+        planner_states, reasons,
     )
 
 
 def _surface_successor_states(
         current: PlannerStateKey, edge: SurfaceEdge,
 ) -> tuple[PlannerStateKey, ...]:
-    dx = edge.end.column_x - edge.start.column_x
-    dz = edge.end.column_z - edge.start.column_z
     heading = None
-    if dx or dz:
-        heading = (
-            0 if dx == 0 else (1 if dx > 0 else -1),
-            0 if dz == 0 else (1 if dz > 0 else -1),
-        )
     transition = edge.transition
     if transition is None:
         return (PlannerStateKey(
@@ -1766,7 +1797,7 @@ def plan_known_surface_snapshot(
 
     def discovered_graph() -> SurfaceGraph:
         edges = tuple(sorted(
-            (edge for edge in expander.edge_cache.values() if edge is not None),
+            (edge for edges in expander.edge_cache.values() for edge in edges),
             key=_surface_edge_identity,
         ))
         return SurfaceGraph(
@@ -1774,6 +1805,16 @@ def plan_known_surface_snapshot(
             expander.actual_bounds(),
             tuple(expander.nodes[node_id] for node_id in sorted(expander.nodes)),
             edges, expander.has_unsupported,
+        )
+
+    required_top_clearance = max((
+        math.ceil(max(0.0, *(point[1] for point in profile.reference_positions)))
+        for profile in air_profiles
+    ), default=0)
+    if snapshot.bounds.extra_top_clearance_cells < required_top_clearance:
+        return _surface_candidate(
+            request, discovered_graph(), SurfacePlanningStatus.UNSUPPORTED,
+            reasons=("insufficient_top_clearance",),
         )
 
     if snapshot.world.session.value != request.world_session:

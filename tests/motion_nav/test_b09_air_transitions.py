@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from dataclasses import replace
 import math
 from pathlib import Path
 import time
 import unittest
+from unittest.mock import patch
 
 import mc2p.motion_nav as motion_nav
 from mc2p.contracts.action_v1 import MovementV1
@@ -25,6 +27,7 @@ from mc2p.motion_nav.known_map_planner import (
     SurfaceControlledDropEdge, SurfaceJumpGapEdge, SurfaceWalkEdge,
     SurfacePlanningRequest, SurfacePlanningStatus, astar_surface_plan,
     build_surface_graph, dijkstra_surface_reference,
+    plan_known_surface_snapshot,
 )
 from mc2p.motion_nav.movement_transition import (
     GoalState, GoalSupport, MovementMode, ResourceState,
@@ -33,7 +36,7 @@ from mc2p.motion_nav.planner_worker import PlannerWorker
 from mc2p.motion_nav.environment_identity import load_frozen_environment
 from mc2p.motion_nav.runtime_adapter import BodyState, NavigationFrame
 from mc2p.motion_nav.route_admission import AdmissionStatus, RouteAdmitter
-from mc2p.motion_nav.support_surfaces import query_support_surfaces
+from mc2p.motion_nav.support_surfaces import SurfaceNodeId, query_support_surfaces
 from mc2p.motion_nav.world_model import (
     Aabb, BlockGeometry, ObservationStamp, WorldKnowledge, WorldSessionId,
 )
@@ -594,6 +597,89 @@ class B09AirTransitionTests(unittest.TestCase):
             yaw_radians=-math.pi / 2,
         ))
         self.assertIs(completed.state, ActionRouteState.COMPLETE)
+
+    def test_formal_snapshot_planner_considers_step_and_drop_for_same_surfaces(self):
+        world = known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:grass_block"),
+            (1, -1, 0): BlockGeometry.full_cube("minecraft:grass_block"),
+        })
+        bounds = KnownMapBounds(0, 1, 0, 1, 0, 0, True)
+        progress = KnownMapSnapshotBuilder(world.view(), bounds).advance(
+            world.view(), 10_000,
+        )
+        self.assertIs(progress.status, SnapshotBuildStatus.COMPLETE)
+        graph = build_surface_graph(
+            world.view(), bounds, ground_profile(),
+            replace(
+                step_profile(), maximum_down_height_blocks=1.0,
+                cost_seconds=1.0,
+            ),
+            air_profiles=(air_profile(MovementMode.CONTROLLED_DROP),),
+        )
+        start = next(node.node_id for node in graph.nodes
+                     if node.node_id.column_x == 0)
+        goal = next(node.node_id for node in graph.nodes
+                    if node.node_id.column_x == 1)
+        request = SurfacePlanningRequest(
+            9, "parallel-step-drop", "goal", 1, world.session.value,
+            start, goal,
+        )
+
+        candidate = plan_known_surface_snapshot(
+            progress.snapshot, ground_profile(),
+            replace(
+                step_profile(), maximum_down_height_blocks=1.0,
+                cost_seconds=1.0,
+            ),
+            request,
+            air_profiles=(air_profile(MovementMode.CONTROLLED_DROP),),
+        )
+
+        self.assertIs(candidate.status, SurfacePlanningStatus.COMPLETE)
+        self.assertIs(type(candidate.segments[0]), SurfaceControlledDropEdge)
+        self.assertAlmostEqual(candidate.total_cost_seconds, .7)
+
+    def test_flat_middle_support_rejects_gap_before_expensive_sweep(self):
+        world = known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:grass_block"),
+            (0, 0, 1): BlockGeometry.full_cube("minecraft:grass_block"),
+            (0, 0, 2): BlockGeometry.full_cube("minecraft:grass_block"),
+        })
+        with patch(
+            "mc2p.motion_nav.known_map_planner.query_jump_gap",
+            side_effect=AssertionError("flat support must reject JumpGap early"),
+        ):
+            graph = build_surface_graph(
+                world.view(), KnownMapBounds(0, 0, 1, 1, 0, 2, True),
+                ground_profile(), step_profile(),
+                air_profiles=(air_profile(MovementMode.JUMP_GAP),),
+            )
+
+        self.assertFalse(any(type(edge) is SurfaceJumpGapEdge
+                             for edge in graph.edges))
+
+    def test_formal_air_planning_reports_missing_top_clearance(self):
+        world = known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:grass_block"),
+            (0, 0, 2): BlockGeometry.full_cube("minecraft:grass_block"),
+        })
+        bounds = KnownMapBounds(0, 0, 1, 1, 0, 2, True)
+        progress = KnownMapSnapshotBuilder(world.view(), bounds).advance(
+            world.view(), 10_000,
+        )
+        request = SurfacePlanningRequest(
+            10, "missing-air-clearance", "goal", 1, world.session.value,
+            SurfaceNodeId(0, 0, 1, 0), SurfaceNodeId(0, 2, 1, 0),
+        )
+
+        candidate = plan_known_surface_snapshot(
+            progress.snapshot, ground_profile(), step_profile(), request,
+            air_profiles=(air_profile(MovementMode.JUMP_GAP),),
+        )
+
+        self.assertIs(candidate.status, SurfacePlanningStatus.UNSUPPORTED)
+        self.assertEqual(candidate.reasons,
+                         ("insufficient_top_clearance",))
 
     def test_walk_gap_walk_route_is_built_and_can_be_planned_in_background(self):
         world = known_world({

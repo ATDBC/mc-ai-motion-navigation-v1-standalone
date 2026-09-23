@@ -9,9 +9,10 @@ import time
 
 from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.known_map_planner import (
-    KnownMapSnapshot, PlanningRequest, RouteCandidate, WalkGraph,
+    KnownMapSnapshot, PlanningRequest, PlanningStatus, RouteCandidate, WalkGraph,
     plan_known_snapshot,
-    SurfaceGraph, SurfacePlanningRequest, SurfaceRouteCandidate,
+    SurfaceGraph, SurfacePlanningRequest, SurfacePlanningStatus,
+    SurfaceRouteCandidate,
     plan_known_surface_snapshot,
 )
 from mc2p.motion_nav.planning_reference import astar_plan, astar_surface_plan
@@ -85,6 +86,51 @@ def _publish_latest(queue, value) -> None:
                 continue
 
 
+def _failure_candidate(job: _PlanningJob, reason: str):
+    request = job.request
+    source = job.graph if job.graph is not None else job.snapshot
+    geometry_revision = (
+        source.geometry_revision if job.graph is not None
+        else source.world.geometry_revision
+    )
+    if type(request) is SurfacePlanningRequest:
+        return SurfaceRouteCandidate(
+            request.sequence, request.request_id, request.goal_id,
+            request.goal_revision, request.world_session, geometry_revision,
+            request.start, request.goal, SurfacePlanningStatus.INTERNAL_ERROR,
+            (), (), None, (), 0, goal_state=request.goal_state,
+            initial_resources=request.initial_resources,
+            minimum_resources=request.minimum_resources,
+            reasons=(reason,),
+        )
+    return RouteCandidate(
+        request.sequence, request.request_id, request.goal_id,
+        request.goal_revision, request.world_session, geometry_revision,
+        request.start, request.goal, PlanningStatus.INTERNAL_ERROR,
+        (), (), None, (), 0, goal_state=request.goal_state,
+        reasons=(reason,),
+    )
+
+
+def _execute_job(job: _PlanningJob):
+    try:
+        if type(job.graph) is SurfaceGraph:
+            return astar_surface_plan(job.graph, job.request)
+        if job.graph is not None:
+            return astar_plan(job.graph, job.request)
+        if type(job.request) is SurfacePlanningRequest:
+            return plan_known_surface_snapshot(
+                job.snapshot, job.profile, job.step_profile, job.request,
+                job.jump_profile, air_profiles=job.air_profiles,
+                ground_mode_profile=job.ground_mode_profile,
+            )
+        return plan_known_snapshot(
+            job.snapshot, job.profile, job.request, job.jump_profile,
+        )
+    except Exception as error:
+        return _failure_candidate(job, type(error).__name__)
+
+
 def _worker(requests, results, delay_seconds: float) -> None:
     while True:
         job=requests.get()
@@ -95,20 +141,7 @@ def _worker(requests, results, delay_seconds: float) -> None:
             if latest is None:return
             job=latest
         if delay_seconds:time.sleep(delay_seconds)
-        if type(job.graph) is SurfaceGraph:
-            candidate = astar_surface_plan(job.graph, job.request)
-        elif job.graph is not None:
-            candidate = astar_plan(job.graph, job.request)
-        elif type(job.request) is SurfacePlanningRequest:
-            candidate = plan_known_surface_snapshot(
-                job.snapshot, job.profile, job.step_profile, job.request,
-                job.jump_profile, air_profiles=job.air_profiles,
-                ground_mode_profile=job.ground_mode_profile,
-            )
-        else:
-            candidate = plan_known_snapshot(
-                job.snapshot, job.profile, job.request, job.jump_profile,
-            )
+        candidate = _execute_job(job)
         _publish_latest(results,candidate)
 
 
@@ -129,6 +162,8 @@ class PlannerWorker:
         )
         self._process.start();self._closed=False
         self._pending:_PlanningJob|None=None
+        self._last_submitted:_PlanningJob|None=None
+        self._death_reported=False
 
     @property
     def pid(self) -> int | None:
@@ -216,6 +251,8 @@ class PlannerWorker:
 
     def _flush_pending(self) -> None:
         if self._pending is not None and _replace(self._requests,self._pending):
+            self._last_submitted=self._pending
+            self._death_reported=False
             self._pending=None
 
     def poll_latest(self) -> RouteCandidate | SurfaceRouteCandidate | None:
@@ -224,7 +261,22 @@ class PlannerWorker:
         while True:
             try:candidate=self._results.get_nowait()
             except Empty:
-                self._flush_pending();return latest
+                self._flush_pending()
+                if latest is not None:
+                    if (self._last_submitted is not None
+                            and latest.request_sequence >= self._last_submitted.request.sequence):
+                        self._last_submitted=None
+                    return latest
+                if (not self._closed and not self._process.is_alive()
+                        and self._last_submitted is not None
+                        and not self._death_reported):
+                    self._death_reported=True
+                    failed=_failure_candidate(
+                        self._last_submitted, "planner_worker_died",
+                    )
+                    self._last_submitted=None
+                    return failed
+                return None
             if latest is None or candidate.request_sequence>=latest.request_sequence:
                 latest=candidate
 

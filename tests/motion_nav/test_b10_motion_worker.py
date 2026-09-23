@@ -1,17 +1,36 @@
 import time
 import unittest
+from unittest.mock import patch
 
 from mc2p.motion_nav.motion_solver import (
     GapSolveRequest, LandingRegion, SolveStatus,
 )
 from mc2p.motion_nav.motion_worker import (
-    GapMotionSolveJob, MotionSolverWorker,
+    GapMotionSolveJob, MotionSolverWorker, _execute_job,
 )
 from mc2p.motion_nav.online_motion import CandidateExecutionWindow
 from tests.motion_nav.test_b10_gap_solver import fixture
 
 
 class B10MotionWorkerTests(unittest.TestCase):
+    def test_solver_exception_becomes_a_typed_failure(self):
+        anchor, world, target, _ = fixture()
+        job = GapMotionSolveJob(
+            "route-1/action-0", 3, anchor, world,
+            GapSolveRequest(
+                (0, 1), LandingRegion(*target),
+                CandidateExecutionWindow(11, 20),
+            ),
+        )
+        with patch(
+            "mc2p.motion_nav.motion_worker.solve_one_cell_gap",
+            side_effect=RuntimeError("boom"),
+        ):
+            result = _execute_job(job)
+
+        self.assertIs(result.solve_result.status, SolveStatus.INTERNAL_ERROR)
+        self.assertEqual(result.solve_result.reasons, ("RuntimeError",))
+
     def test_background_worker_returns_the_same_bounded_gap_result(self):
         anchor, world, target, _ = fixture()
         job = GapMotionSolveJob(

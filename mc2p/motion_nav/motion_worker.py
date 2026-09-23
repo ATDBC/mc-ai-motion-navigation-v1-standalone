@@ -10,7 +10,7 @@ from mc2p.contracts.common import (
     ContractViolation, require_identifier, require_nonnegative_int,
 )
 from mc2p.motion_nav.motion_solver import (
-    GapSolveRequest, SolveResult, solve_one_cell_gap,
+    GapSolveRequest, SolveResult, SolveStatus, solve_one_cell_gap,
 )
 from mc2p.motion_nav.online_motion import StateAnchor
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView
@@ -49,17 +49,30 @@ class GapMotionSolveResult:
             raise ContractViolation("motion worker elapsed time must be nonnegative")
 
 
+def _execute_job(job: GapMotionSolveJob) -> GapMotionSolveResult:
+    """Turn solver exceptions into a typed result without killing the worker."""
+    if type(job) is not GapMotionSolveJob:
+        raise ContractViolation("motion worker requires a typed job")
+    started = time.perf_counter_ns()
+    try:
+        solved = solve_one_cell_gap(job.anchor, job.world, job.request)
+    except Exception as error:
+        solved = SolveResult(
+            SolveStatus.INTERNAL_ERROR,
+            reasons=(type(error).__name__,),
+        )
+    return GapMotionSolveResult(
+        job.connection_id, job.candidate_revision, solved,
+        time.perf_counter_ns() - started,
+    )
+
+
 def _worker(requests, results) -> None:
     while True:
         job = requests.get()
         if job is None:
             return
-        started = time.perf_counter_ns()
-        solved = solve_one_cell_gap(job.anchor, job.world, job.request)
-        result = GapMotionSolveResult(
-            job.connection_id, job.candidate_revision, solved,
-            time.perf_counter_ns() - started,
-        )
+        result = _execute_job(job)
         # Backpressure stays in the worker.  The control thread only uses
         # non-blocking submit and poll operations.
         results.put(result)

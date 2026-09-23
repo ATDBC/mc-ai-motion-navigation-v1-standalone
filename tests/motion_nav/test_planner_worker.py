@@ -131,7 +131,10 @@ class PlannerWorkerTests(unittest.TestCase):
             worker.terminate()
             worker.join(2)
             self.assertFalse(worker.is_alive())
-            self.assertIsNone(worker.poll_latest())
+            failed = worker.poll_latest()
+            self.assertIs(failed.status, PlanningStatus.INTERNAL_ERROR)
+            self.assertEqual(failed.request_id, "request")
+            self.assertEqual(failed.reasons, ("planner_worker_died",))
         finally:
             worker.close()
 

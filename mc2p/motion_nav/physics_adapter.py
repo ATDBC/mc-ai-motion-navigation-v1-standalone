@@ -1,6 +1,7 @@
 """Build complete B09-R simulation state from formal observations and known world facts."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Mapping
 
 from mc2p.contracts.common import ContractViolation
@@ -19,6 +20,25 @@ _REQUIRED_ASSUMPTIONS = (
     "gravity_attribute",
     "jump_strength_attribute",
 )
+
+
+@dataclass(frozen=True, slots=True)
+class PhysicsWorldBounds:
+    min_x: int
+    max_x: int
+    min_y: int
+    max_y: int
+    min_z: int
+    max_z: int
+
+    def __post_init__(self) -> None:
+        if any(type(value) is not int for value in (
+                self.min_x, self.max_x, self.min_y, self.max_y,
+                self.min_z, self.max_z)):
+            raise ContractViolation("physics world bounds must use integer cells")
+        if (self.min_x > self.max_x or self.min_y > self.max_y
+                or self.min_z > self.max_z):
+            raise ContractViolation("physics world bounds are inverted")
 
 
 def build_physics_state(frame: NavigationFrame, ruleset: PhysicsRuleset,
@@ -111,6 +131,31 @@ class PhysicsWorldView:
     @property
     def session(self) -> WorldSessionId:
         return self._world.session
+
+    @property
+    def geometry_revision(self) -> int:
+        return self._world.geometry_revision
+
+    @property
+    def is_detached(self) -> bool:
+        return self._world._owner is None
+
+    def snapshot(self, bounds: PhysicsWorldBounds) -> "PhysicsWorldView":
+        if type(bounds) is not PhysicsWorldBounds:
+            raise ContractViolation("physics snapshot requires typed bounds")
+        facts = {}
+        for x in range(bounds.min_x, bounds.max_x + 1):
+            for y in range(bounds.min_y, bounds.max_y + 1):
+                for z in range(bounds.min_z, bounds.max_z + 1):
+                    position = (x, y, z)
+                    fact = self._world.cell(position)
+                    if fact.knowledge is not CellKnowledge.UNKNOWN:
+                        facts[position] = fact
+        detached = WorldView.detached(
+            self._world.session, self._world.geometry_revision,
+            self._world.evidence_revision, facts,
+        )
+        return PhysicsWorldView(detached, self.ruleset)
 
     def cell(self, position: BlockPos):
         return self._world.cell(position)

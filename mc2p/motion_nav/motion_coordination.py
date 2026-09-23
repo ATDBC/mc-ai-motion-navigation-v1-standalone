@@ -23,13 +23,40 @@ from mc2p.motion_nav.motion_worker import (
 from mc2p.motion_nav.online_motion import (
     CandidateExecutionWindow, InputApplicationLedger, StateAnchor,
 )
-from mc2p.motion_nav.physics_adapter import PhysicsWorldView
+from mc2p.motion_nav.physics_adapter import PhysicsWorldBounds, PhysicsWorldView
 from mc2p.motion_nav.route_admission import ActiveRoute, RouteAdmitter
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.world_model import BlockPos
 
 
 _RESOURCE_ASSUMPTIONS = ("server_hunger_clock_not_in_physics_state",)
+_MAX_IDENTICAL_REVALIDATION_RETRIES = 2
+
+
+def _gap_physics_snapshot(
+        world: PhysicsWorldView, anchor: StateAnchor,
+        request: GapSolveRequest) -> PhysicsWorldView:
+    """Copy only the collision volume one bounded gap solve can reach."""
+    if (type(world) is not PhysicsWorldView or type(anchor) is not StateAnchor
+            or type(request) is not GapSolveRequest):
+        raise ContractViolation("gap physics snapshot requires typed inputs")
+    state = anchor.physics_state
+    x, y, z = state.position
+    half = state.body_width / 2.0
+    horizontal_margin = 2.0
+    vertical_margin = 2.0
+    bounds = PhysicsWorldBounds(
+        math.floor(min(x - half, request.landing.min_x) - horizontal_margin),
+        math.ceil(max(x + half, request.landing.max_x) + horizontal_margin) - 1,
+        math.floor(min(y, request.landing.surface_y) - vertical_margin),
+        math.ceil(max(
+            y + state.body_height,
+            request.landing.surface_y + state.body_height,
+        ) + vertical_margin) - 1,
+        math.floor(min(z - half, request.landing.min_z) - horizontal_margin),
+        math.ceil(max(z + half, request.landing.max_z) + horizontal_margin) - 1,
+    )
+    return world.snapshot(bounds)
 
 
 class GapPreparationStatus(StrEnum):
@@ -196,14 +223,20 @@ class MotionRouteCoordinator:
         self.executor = executor
         self.worker = worker
         self._pending_connection: str | None = None
+        self._pending_submitted_tick: int | None = None
         self._candidate_revision = 0
+        self._retry_signature: tuple | None = None
+        self._retry_failures = 0
         self.last_failure_reason = ""
 
     def start(self, frame: NavigationFrame) -> None:
         if type(frame) is not NavigationFrame:
             raise ContractViolation("motion route coordinator requires a frame")
         self._pending_connection = None
+        self._pending_submitted_tick = None
         self._candidate_revision = 0
+        self._retry_signature = None
+        self._retry_failures = 0
         self.last_failure_reason = ""
         self.executor.start(
             self.route.action_route, frame,
@@ -213,12 +246,44 @@ class MotionRouteCoordinator:
     def _connection_id(self, action_index: int) -> str:
         return f"{self.route.route_id}/action-{action_index}"
 
+    @staticmethod
+    def _revalidation_signature(
+            connection: str, reason: str, anchor: StateAnchor,
+            world: PhysicsWorldView,
+            changed_cells: tuple[BlockPos, ...]) -> tuple:
+        state = anchor.physics_state
+        return (
+            connection, reason, world.geometry_revision, changed_cells,
+            state.position, state.velocity_blocks_per_tick,
+            state.yaw_radians, state.pitch_radians, state.pose,
+            state.on_ground, state.horizontal_collision,
+            state.vertical_collision, state.sprinting, state.sneaking,
+            state.jumping_cooldown_ticks, state.food_points,
+            state.saturation_points, state.is_using_item,
+        )
+
+    def _record_retryable_failure(
+            self, connection: str, reason: str, anchor: StateAnchor,
+            world: PhysicsWorldView,
+            changed_cells: tuple[BlockPos, ...]) -> bool:
+        signature = self._revalidation_signature(
+            connection, reason, anchor, world, changed_cells,
+        )
+        if signature == self._retry_signature:
+            self._retry_failures += 1
+        else:
+            self._retry_signature = signature
+            self._retry_failures = 1
+        return self._retry_failures > _MAX_IDENTICAL_REVALIDATION_RETRIES
+
     def _accept_result(
             self, result: GapMotionSolveResult, anchor: StateAnchor,
             world: PhysicsWorldView, changed_cells: tuple[BlockPos, ...]) -> bool:
         if result.connection_id != self._pending_connection:
             return False
+        connection = result.connection_id
         self._pending_connection = None
+        self._pending_submitted_tick = None
         prepared = prepare_planned_gap_motion(
             self.route, self.executor.action_index, anchor, world,
             candidate_revision=result.candidate_revision,
@@ -228,12 +293,23 @@ class MotionRouteCoordinator:
         )
         if prepared.status is not GapPreparationStatus.READY:
             self.last_failure_reason = prepared.reason
-            if prepared.reason not in {
-                    "candidate_revalidation_failed",
-                    "world_dependency_changed"}:
+            retryable = prepared.reason in {
+                "candidate_revalidation_failed", "world_dependency_changed",
+            }
+            if retryable and self._record_retryable_failure(
+                    connection, prepared.reason, anchor, world, changed_cells):
+                self.last_failure_reason = (
+                    f"motion_retry_exhausted:{prepared.reason}"
+                )
+                self.executor.cancel()
+            elif not retryable:
+                self._retry_signature = None
+                self._retry_failures = 0
                 self.executor.cancel()
             return False
         self.executor.install_verified_motion(prepared.candidate)
+        self._retry_signature = None
+        self._retry_failures = 0
         self.last_failure_reason = ""
         return True
 
@@ -253,11 +329,13 @@ class MotionRouteCoordinator:
             self.executor.cancel()
             return
         self._candidate_revision += 1
+        solve_world = _gap_physics_snapshot(world, anchor, request)
         submitted = self.worker.submit(GapMotionSolveJob(
-            connection, self._candidate_revision, anchor, world, request,
+            connection, self._candidate_revision, anchor, solve_world, request,
         ))
         if submitted:
             self._pending_connection = connection
+            self._pending_submitted_tick = anchor.movement_tick_id
             self.last_failure_reason = ""
         else:
             self._candidate_revision -= 1
@@ -275,6 +353,20 @@ class MotionRouteCoordinator:
                 or type(changed_cells) is not tuple):
             raise ContractViolation("motion route decision requires current typed state")
         installed = False
+        worker_available = True
+        if not self.worker.is_alive():
+            worker_available = False
+            self._pending_connection = None
+            self._pending_submitted_tick = None
+            self.last_failure_reason = "motion_solver_worker_died"
+            self.executor.cancel()
+        elif (self._pending_connection is not None
+              and self._pending_submitted_tick is not None
+              and anchor.movement_tick_id > self._pending_submitted_tick + 20):
+            self._pending_connection = None
+            self._pending_submitted_tick = None
+            self.last_failure_reason = "motion_solver_request_expired"
+            self.executor.cancel()
         for result in self.worker.poll_available():
             installed = self._accept_result(
                 result, anchor, world, changed_cells,
@@ -284,6 +376,7 @@ class MotionRouteCoordinator:
             state_anchor=anchor, input_ledger=ledger,
         )
         if (decision.reason_code == "awaiting_verified_motion"
-                and self._pending_connection is None and not installed):
+                and self._pending_connection is None and not installed
+                and worker_available):
             self._submit_current(anchor, world)
         return decision

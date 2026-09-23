@@ -36,6 +36,7 @@ class SolveStatus(StrEnum):
     BUDGET_EXHAUSTED = "budget_exhausted"
     NO_SOLUTION_WITHIN_SEARCH = "no_solution_within_search"
     INVALID_INPUT = "invalid_input"
+    INTERNAL_ERROR = "internal_error"
 
 
 @dataclass(frozen=True, slots=True)
@@ -132,6 +133,7 @@ class VerifiedMotionResult:
     step_events: tuple[tuple[str, ...], ...]
     exit_state: PhysicsState
     landing: LandingRegion
+    release_safe_command_indices: tuple[int, ...]
     world_dependencies: tuple[BlockPos, ...]
     resource_incomplete_reasons: tuple[str, ...]
     execution_window: CandidateExecutionWindow
@@ -154,6 +156,11 @@ class VerifiedMotionResult:
             raise ContractViolation("verified motion crosses world sessions")
         if self.anchor_movement_tick_id != self.entry_state.movement_tick_id:
             raise ContractViolation("verified motion anchor tick does not match entry")
+        if (self.release_safe_command_indices
+                != tuple(sorted(set(self.release_safe_command_indices)))
+                or any(type(index) is not int or not 0 <= index < count
+                       for index in self.release_safe_command_indices)):
+            raise ContractViolation("release-safe command indices are invalid")
         if self.world_dependencies != tuple(sorted(set(self.world_dependencies))):
             raise ContractViolation("world dependencies must be sorted and unique")
         if self.direction not in _CARDINAL_DIRECTIONS:
@@ -284,6 +291,74 @@ def validate_gap_trajectory(
     return TrajectoryValidation(not reasons, tuple(reasons))
 
 
+def _release_recovery_evidence(
+        trajectory: tuple[PhysicsState, ...], world: PhysicsWorldView,
+        request: GapSolveRequest,
+) -> tuple[
+        tuple[int, ...], tuple[BlockPos, ...], tuple[str, ...],
+        SolveStatus | None, tuple[BlockPos, ...], tuple[str, ...],
+]:
+    """Prove that releasing every remaining input still reaches safe support."""
+    safe: list[int] = []
+    dependencies: set[BlockPos] = set()
+    resource_reasons: set[str] = set()
+    for index, release_state in enumerate(trajectory[:-1]):
+        if release_state.on_ground:
+            safe.append(index)
+            continue
+        current = release_state
+        recovered = False
+        for _ in range(request.max_ticks):
+            neutral = TickInput(
+                0.0, 0.0, False, False, False, current.yaw_radians,
+            )
+            calculated = step(current, neutral, world, JAVA_1_21_RULESET)
+            dependencies.update(calculated.dependencies)
+            if calculated.status is CalculationStatus.NEEDS_WORLD:
+                return (
+                    tuple(safe), tuple(sorted(dependencies)),
+                    tuple(sorted(resource_reasons)), SolveStatus.NEEDS_WORLD,
+                    calculated.missing_cells,
+                    ("release_recovery_world_incomplete",),
+                )
+            if calculated.status is CalculationStatus.UNSUPPORTED:
+                return (
+                    tuple(safe), tuple(sorted(dependencies)),
+                    tuple(sorted(resource_reasons)), SolveStatus.UNSUPPORTED,
+                    (), calculated.unsupported_reasons,
+                )
+            if (calculated.status is not CalculationStatus.OK
+                    or calculated.next_state is None):
+                return (
+                    tuple(safe), tuple(sorted(dependencies)),
+                    tuple(sorted(resource_reasons)), SolveStatus.INVALID_INPUT,
+                    (), calculated.invalid_reasons
+                    or ("release_recovery_physics_invalid",),
+                )
+            assert calculated.resource_update is not None
+            resource_reasons.update(
+                calculated.resource_update.incomplete_reasons
+            )
+            current = calculated.next_state
+            if current.horizontal_collision:
+                break
+            if current.on_ground:
+                # Interruption safety is weaker than successful completion:
+                # the body may stop near the landing edge, but it must regain
+                # known support at the trial's original level without impact.
+                recovered = math.isclose(
+                    current.position[1], request.landing.surface_y,
+                    abs_tol=1.0e-7,
+                )
+                break
+        if recovered:
+            safe.append(index)
+    return (
+        tuple(safe), tuple(sorted(dependencies)),
+        tuple(sorted(resource_reasons)), None, (), (),
+    )
+
+
 def _candidate_timings(request: GapSolveRequest):
     for pre_jump_ticks in range(3):
         for held_ticks in range(1, 5):
@@ -393,11 +468,27 @@ def revalidate_gap_motion(
             SolveStatus.NO_SOLUTION_WITHIN_SEARCH,
             reasons=("revalidated_commands_failed", *validation.reasons),
         )
+    (release_safe, release_dependencies, release_resource_reasons,
+     release_status, release_missing, release_reasons) = \
+        _release_recovery_evidence(trajectory, world, request)
+    if release_status is not None:
+        return SolveResult(
+            release_status, missing_cells=release_missing,
+            reasons=release_reasons,
+        )
+    if len(release_safe) != len(proof.commands):
+        return SolveResult(
+            SolveStatus.NO_SOLUTION_WITHIN_SEARCH,
+            reasons=("release_recovery_not_safe",),
+        )
+    dependencies.update(release_dependencies)
+    resource_reasons.update(release_resource_reasons)
     refreshed = VerifiedMotionResult(
         proof.solver_id, proof.ruleset_id, proof.input_projection_version,
         anchor.observation_sequence_id, anchor.movement_tick_id,
         anchor.physics_state, proof.commands, tuple(inputs), trajectory,
         step_events, trajectory[-1], proof.landing,
+        release_safe,
         tuple(sorted(dependencies)), tuple(sorted(resource_reasons)),
         execution_window, proof.direction, proof.exit_direction,
         proof.exit_motion_ticks,
@@ -412,6 +503,7 @@ def solve_one_cell_gap(anchor: StateAnchor, world: PhysicsWorldView,
         return rejected
     evaluated = 0
     saw_validation_failure = False
+    saw_release_recovery_failure = False
     for pre_jump_ticks, held_ticks in _candidate_timings(request):
         if evaluated >= request.max_candidates:
             return SolveResult(
@@ -503,11 +595,25 @@ def solve_one_cell_gap(anchor: StateAnchor, world: PhysicsWorldView,
         if not validation.accepted:
             saw_validation_failure = True
             continue
+        (release_safe, release_dependencies, release_resource_reasons,
+         release_status, release_missing, release_reasons) = \
+            _release_recovery_evidence(trajectory, world, request)
+        if release_status is not None:
+            return SolveResult(
+                release_status, candidates_evaluated=evaluated,
+                missing_cells=release_missing, reasons=release_reasons,
+            )
+        if len(release_safe) != len(commands):
+            saw_release_recovery_failure = True
+            continue
+        dependencies.update(release_dependencies)
+        resource_reasons.update(release_resource_reasons)
         proof = VerifiedMotionResult(
             SOLVER_ID, JAVA_1_21_RULESET.ruleset_id, _PROJECTION_ID,
             anchor.observation_sequence_id, anchor.movement_tick_id,
             anchor.physics_state, tuple(commands), tuple(inputs), trajectory,
             step_events, trajectory[-1], request.landing,
+            release_safe,
             tuple(sorted(dependencies)), tuple(sorted(resource_reasons)),
             request.execution_window, request.direction,
             request.exit_direction, request.exit_motion_ticks,
@@ -518,6 +624,10 @@ def solve_one_cell_gap(anchor: StateAnchor, world: PhysicsWorldView,
     return SolveResult(
         SolveStatus.NO_SOLUTION_WITHIN_SEARCH,
         candidates_evaluated=evaluated,
-        reasons=("validated_candidates_failed",)
-        if saw_validation_failure else ("empty_candidate_space",),
+        reasons=(
+            ("release_recovery_not_safe",)
+            if saw_release_recovery_failure else
+            ("validated_candidates_failed",)
+            if saw_validation_failure else ("empty_candidate_space",)
+        ),
     )
