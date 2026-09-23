@@ -16,7 +16,8 @@ from tests.motion_nav.test_b07_surface_planning import mixed_height_world, ordin
 from tests.motion_nav.test_jump_up import jump_profile
 from tests.motion_nav.test_fixed_route_walk import profile as grass_profile
 from tests.motion_nav.test_b07_support_surfaces import surface_world
-from mc2p.motion_nav.world_model import BlockGeometry
+from mc2p.motion_nav.world_model import BlockGeometry, ObservationStamp
+from mc2p.motion_nav.world_model import Aabb
 
 
 class B07StepRouteTests(unittest.TestCase):
@@ -128,6 +129,58 @@ class B07StepRouteTests(unittest.TestCase):
 
         self.assertIs(admitted.status, AdmissionStatus.ACCEPTED)
         self.assertIs(type(admitted.route.action_route.actions[0]), JumpUpSegment)
+
+    def test_two_step_actions_handoff_in_the_same_control_frame(self):
+        world = surface_world({
+            (0, 0, 0): BlockGeometry(
+                "minecraft:smooth_stone_slab", "boxes",
+                (Aabb(0, 0, 0, 1, .5, 1),),
+            ),
+            (1, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+            (2, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+            (2, 1, 0): BlockGeometry(
+                "minecraft:smooth_stone_slab", "boxes",
+                (Aabb(0, 0, 0, 1, .5, 1),),
+            ),
+        })
+        world.confirm_air(
+            ObservationStamp(world.session, 2, 2, "test-clock", 2),
+            ((2, -2, 0), (2, -1, 0), (2, 2, 0), (2, 3, 0)),
+        )
+        graph = build_surface_graph(
+            world.view(), KnownMapBounds(0, 2, 0, 2, 0, 0, True),
+            ordinary_profile(), step_profile(),
+        )
+        ordered = sorted(graph.nodes, key=lambda node: node.position[0])
+        request = SurfacePlanningRequest(
+            2, "two-step-route", "two-step-goal", 1,
+            world.session.value, ordered[0].node_id, ordered[-1].node_id,
+        )
+        candidate = astar_surface_plan(graph, request)
+        admitted = RouteAdmitter().admit_surface(
+            candidate, frame(world, 0, ordered[0].position),
+            expected_request_id=request.request_id,
+            goal_id=request.goal_id, goal_revision=request.goal_revision,
+            changed_cells=(),
+        ).route
+        self.assertIsNotNone(admitted)
+        self.assertEqual(
+            tuple(type(action) for action in admitted.action_route.actions),
+            (StepSegment, StepSegment),
+        )
+        executor = ActionRouteExecutor(
+            ordinary_profile(), jump_profile(), step_profile(),
+        )
+        initial = frame(world, 0, ordered[0].position)
+        executor.start(admitted.action_route, initial)
+        executor.decide(initial)
+
+        handoff = executor.decide(frame(world, 1, ordered[1].position))
+
+        self.assertIs(handoff.state, ActionRouteState.RUNNING)
+        self.assertEqual(handoff.action_index, 1)
+        self.assertNotEqual(handoff.reason_code, "action_route_complete")
+        self.assertNotEqual(handoff.reason_code, "step_complete")
 
 
 if __name__ == "__main__":

@@ -26,7 +26,7 @@ from mc2p.backends.deployment_transport import ClientProcessIdentity, Deployment
 from mc2p.backends.fabric_behavior import FabricBehaviorBackendV1
 from mc2p.contracts.action import ActionPriorityV0
 from mc2p.contracts.action_v1 import ActionIntentV1, MovementV1, LookV1, OpenInventoryV1, CloseScreenV1, ClickSlotV1, SelectHotbarV1
-from mc2p.contracts.action_receipt import ClientBehaviorReceiptV2
+from mc2p.contracts.action_receipt import behavior_receipt_from_mapping
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.observation_request_v3 import OBSERVATION_V3, ObservationRequestV3
 from mc2p.contracts.reset import ResetRequestV0
@@ -107,6 +107,14 @@ B09_AIR_MOTION_SOURCES = (
     "mc2p/motion_nav/controlled_drop.py",
     "config/motion-navigation/air-motions-b09-v1.json",
 )
+B10_GAP_SOLVER_SOURCES = (
+    "scripts/b10_gap_solver_runtime.py",
+    "mc2p/motion_nav/motion_candidate.py",
+    "mc2p/motion_nav/motion_solver.py",
+    "mc2p/motion_nav/online_motion.py",
+    "mc2p/motion_nav/physics_adapter.py",
+    "mc2p/motion_nav/physics_1_21.py",
+)
 
 
 def frozen_deployment_sources(*, b03_fixed_route_probe: bool,
@@ -118,7 +126,8 @@ def frozen_deployment_sources(*, b03_fixed_route_probe: bool,
                               b06_ordinary_material_probe: bool = False,
                               b07_step_probe: bool = False,
                               b08_ground_modes_probe: bool = False,
-                              b09_air_motion_probe: bool = False) -> dict[str, str]:
+                              b09_air_motion_probe: bool = False,
+                              b10_gap_solver_probe: bool = False) -> dict[str, str]:
     sources = frozen_probe_sources()
     if b03_fixed_route_probe or b03_shape_probe:
         sources.update({name: _hash(ROOT / name) for name in B03_SOURCES})
@@ -150,6 +159,10 @@ def frozen_deployment_sources(*, b03_fixed_route_probe: bool,
             *B03_SOURCES, *B04_SOURCES, *B05_CALIBRATION_SOURCES,
             *B05_ROUTE_SOURCES, *B06_MATERIAL_SOURCES, *B07_STEP_SOURCES,
             *B09_AIR_MOTION_SOURCES,
+        )})
+    if b10_gap_solver_probe:
+        sources.update({name: _hash(ROOT / name) for name in (
+            *B03_SOURCES, *B09_AIR_MOTION_SOURCES, *B10_GAP_SOLVER_SOURCES,
         )})
     return sources
 
@@ -194,7 +207,7 @@ def evaluate_trace(records: list[dict], rows: list[dict], *, server_port: int,
         reset = [r["payload"]["result"] for r in records if r["record_type"] == "reset"]
         steps = [r["payload"] for r in records if r["record_type"] == "step"]
         obs = [r["observation"] for r in reset] + [r["backend_result"]["observation"] for r in steps]
-        receipts = [ClientBehaviorReceiptV2.from_mapping(r["backend_result"]["receipt"]) for r in steps]
+        receipts = [behavior_receipt_from_mapping(r["backend_result"]["receipt"]) for r in steps]
         dispatch = [r["payload"]["decision"] for r in records if r["record_type"] == "dispatch"]
         order = [r["record_type"] for r in records if r["record_type"] in {"reset", "dispatch", "step"}]
         checks = dict(
@@ -517,12 +530,14 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                b07_step_probe: bool = False,
                b08_ground_modes_probe: bool = False,
                b09_air_motion_probe: bool = False,
+               b10_gap_solver_probe: bool = False,
                physics_tick_diagnostics: bool = False) -> int:
     if sum((container_probe,mining_probe,visibility_probe,b02_air_probe,
             b03_fixed_route_probe,b03_shape_probe,b04_known_map_probe,
             b05_jump_calibration_probe,b05_jump_route_probe,
             b05_jump_acceptance_probe,b06_ordinary_material_probe,
-            b07_step_probe,b08_ground_modes_probe,b09_air_motion_probe))>1:
+            b07_step_probe,b08_ground_modes_probe,b09_air_motion_probe,
+            b10_gap_solver_probe))>1:
         raise ValueError('probe scenarios are mutually exclusive')
     if block_parity and not visibility_probe: raise ValueError('block parity requires visibility scenario')
     source_before = frozen_deployment_sources(
@@ -536,6 +551,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
         b07_step_probe=b07_step_probe,
         b08_ground_modes_probe=b08_ground_modes_probe,
         b09_air_motion_probe=b09_air_motion_probe,
+        b10_gap_solver_probe=b10_gap_solver_probe,
     )
     deadline = time.perf_counter_ns() + round((timeout - 25) * 1e9)
     failure, cleanup_failures, checks, sessions = None, [], [], []
@@ -574,14 +590,15 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                                   or b05_jump_acceptance_probe
                                   or b06_ordinary_material_probe
                                   or b07_step_probe or b08_ground_modes_probe
-                                  or b09_air_motion_probe) else 2):
+                                  or b09_air_motion_probe
+                                  or b10_gap_solver_probe) else 2):
             directory = run_dir / f"client-{number}"
             directory.mkdir(exist_ok=False)
             options = "pauseOnLostFocus:false\nrenderDistance:2\nsimulationDistance:5\nmaxFps:60\nenableVsync:false\ntutorialStep:none\njoinedFirstServer:true\nskipMultiplayerWarning:true\nsoundCategory_master:0.0\n"
             if (b05_jump_calibration_probe or b05_jump_route_probe
                     or b05_jump_acceptance_probe or b06_ordinary_material_probe
                     or b07_step_probe or b08_ground_modes_probe
-                    or b09_air_motion_probe):
+                    or b09_air_motion_probe or b10_gap_solver_probe):
                 options += "autoJump:false\n"
             (directory / "options.txt").write_text(options, encoding="utf-8")
             token = secrets.token_hex(32)
@@ -595,6 +612,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                 "--gameDir", str(directory), "--quickPlayMultiplayer", f"127.0.0.1:{server_port}"]
             write_argument_file(directory / "client.args", arguments)
             process = identity = backend = runtime = None
+            client_preclosed = False
             with (directory / "console.log").open("xb") as output:
                 transport = DeploymentTransport(port=ipc_port)
                 try:
@@ -726,9 +744,19 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                                 material=material,
                                 positions=[list(position) for position in positions],
                             ))
+                        def teleport_b05_route_player(x, y, z, yaw, pitch):
+                            if server is None or server.stdin is None:
+                                raise RuntimeError("B05 route server command channel is unavailable")
+                            command = f"tp MC2PProbe {x:.6f} {y:.6f} {z:.6f} {yaw:.6f} {pitch:.6f}"
+                            server.stdin.write((command + "\n").encode("utf-8"))
+                            server.stdin.flush()
+                            append_jsonl(directory / "b05-route-teleports.jsonl", dict(
+                                x=x, y=y, z=z, yaw=yaw, pitch=pitch,
+                            ))
                         stages, rows, episode_checks = run_jump_up_navigation_runtime(
                             runtime, backend, episode, directory, deadline,
                             fixture_writer=write_b05_route_fixture,
+                            player_teleporter=teleport_b05_route_player,
                         )
                     elif b05_jump_acceptance_probe:
                         from scripts.jump_up_acceptance_runtime import run_jump_up_acceptance_runtime
@@ -897,6 +925,36 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                             fixture_writer=write_b09_fixture,
                             player_teleporter=teleport_b09_player,
                         )
+                    elif b10_gap_solver_probe:
+                        from scripts.b10_gap_solver_runtime import run_b10_gap_solver_runtime
+                        allowed_materials = {"minecraft:air", "minecraft:grass_block"}
+                        def write_b10_fixture(positions, material):
+                            if material not in allowed_materials:
+                                raise ValueError("undeclared B10 gap-solver fixture material")
+                            if server is None or server.stdin is None:
+                                raise RuntimeError("B10 fixture server command channel is unavailable")
+                            commands = [f"setblock {x} {y} {z} {material} replace"
+                                        for x, y, z in positions]
+                            server.stdin.write(("\n".join(commands) + "\n").encode("utf-8"))
+                            server.stdin.flush()
+                            append_jsonl(directory / "b10-fixture-commands.jsonl", dict(
+                                material=material,
+                                positions=[list(position) for position in positions],
+                            ))
+                        def teleport_b10_player(x, y, z, yaw, pitch):
+                            if server is None or server.stdin is None:
+                                raise RuntimeError("B10 fixture server command channel is unavailable")
+                            command = f"tp MC2PProbe {x:.6f} {y:.6f} {z:.6f} {yaw:.6f} {pitch:.6f}"
+                            server.stdin.write((command + "\n").encode("utf-8"))
+                            server.stdin.flush()
+                            append_jsonl(directory / "b10-teleports.jsonl", dict(
+                                x=x, y=y, z=z, yaw=yaw, pitch=pitch,
+                            ))
+                        stages, rows, episode_checks = run_b10_gap_solver_runtime(
+                            runtime, backend, episode, directory, deadline,
+                            fixture_writer=write_b10_fixture,
+                            player_teleporter=teleport_b10_player,
+                        )
                     else:
                         scenario = run_container_scenario if container_probe else _scenario
                         if b02_air_probe:
@@ -907,6 +965,26 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                             stages, rows, previous_gui = scenario(runtime, backend, episode, directory, deadline, previous_gui)
                             air_evidence = None
                     final = runtime.observation
+                    if (b03_fixed_route_probe or b03_shape_probe
+                            or b04_known_map_probe or b05_jump_calibration_probe
+                            or b05_jump_route_probe or b05_jump_acceptance_probe
+                            or b06_ordinary_material_probe or b07_step_probe
+                            or b08_ground_modes_probe or b09_air_motion_probe
+                            or b10_gap_solver_probe):
+                        # Motion scenarios can produce large offline reports. Close
+                        # the live control session before parsing and serializing
+                        # them, otherwise the fixed client input-sample ledger can
+                        # fill while no Runtime step is consuming receipts.
+                        cleanup, close_failures = _close_client(
+                            runtime, backend, transport, process, identity,
+                        )
+                        client_preclosed = True
+                        cleanup_failures.extend(close_failures)
+                        if cleanup is not None:
+                            write_json_atomic(directory / "cleanup.json", cleanup)
+                            if not cleanup["passed"] or not cleanup["graceful"]:
+                                cleanup_failures.append(dict(client=number, **cleanup))
+                        runtime = backend = process = None
                     records = [json.loads(line) for line in (directory / "trace.jsonl").read_text("utf-8").splitlines()]
                     session_records.append(records)
                     if visibility_probe and number==0:
@@ -917,7 +995,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                           or b05_jump_calibration_probe or b05_jump_route_probe
                           or b05_jump_acceptance_probe or b06_ordinary_material_probe
                           or b07_step_probe or b08_ground_modes_probe
-                          or b09_air_motion_probe):
+                          or b09_air_motion_probe or b10_gap_solver_probe):
                         pass
                     else:
                         episode_checks = (evaluate_container(stages, records) if container_probe else evaluate_stages(
@@ -938,13 +1016,14 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                                                              or b06_ordinary_material_probe
                                                              or b07_step_probe
                                                              or b08_ground_modes_probe
-                                                             or b09_air_motion_probe) else 28,
+                                                             or b09_air_motion_probe
+                                                             or b10_gap_solver_probe) else 28,
                         require_gui_attempts=not (
                             b03_fixed_route_probe or b03_shape_probe or b04_known_map_probe
                             or b05_jump_calibration_probe or b05_jump_route_probe
                             or b05_jump_acceptance_probe or b06_ordinary_material_probe
                             or b07_step_probe or b08_ground_modes_probe
-                            or b09_air_motion_probe))
+                            or b09_air_motion_probe or b10_gap_solver_probe))
                     checks.extend({**check, "name": f"client-{number}:" + check["name"]} for check in episode_checks)
                     sessions.append(dict(identity=asdict(identity), episode=episode, initial=trace_projection(initial),
                         final=trace_projection(final), stages=stages, proof=proof,
@@ -961,14 +1040,19 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                         sessions[-1]["b08_ground_modes"] = stages
                     if b09_air_motion_probe:
                         sessions[-1]["b09_air_motion"] = stages
+                    if b10_gap_solver_probe:
+                        sessions[-1]["b10_gap_solver"] = stages
                     write_json_atomic(directory / "episode.json", sessions[-1])
                 finally:
-                    cleanup, close_failures = _close_client(runtime, backend, transport, process, identity)
-                    cleanup_failures.extend(close_failures)
-                    if cleanup is not None:
-                        write_json_atomic(directory / "cleanup.json", cleanup)
-                        if not cleanup["passed"] or not cleanup["graceful"]:
-                            cleanup_failures.append(dict(client=number, **cleanup))
+                    if not client_preclosed:
+                        cleanup, close_failures = _close_client(
+                            runtime, backend, transport, process, identity,
+                        )
+                        cleanup_failures.extend(close_failures)
+                        if cleanup is not None:
+                            write_json_atomic(directory / "cleanup.json", cleanup)
+                            if not cleanup["passed"] or not cleanup["graceful"]:
+                                cleanup_failures.append(dict(client=number, **cleanup))
                     time_check, diagnostic_failure = collect_time_evidence(directory, enabled=time_diagnostics)
                     checks.append({**time_check, "name": f"client-{number}:" + time_check["name"]})
                     if diagnostic_failure is not None:
@@ -996,7 +1080,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
         elif not (b04_known_map_probe or b05_jump_calibration_probe
                   or b05_jump_route_probe or b05_jump_acceptance_probe
                   or b06_ordinary_material_probe or b07_step_probe
-                  or b08_ground_modes_probe or b09_air_motion_probe):
+                  or b08_ground_modes_probe or b09_air_motion_probe
+                  or b10_gap_solver_probe):
             first, second = sessions
             if container_probe:
                 checks += evaluate_container_reconnect(first["stages"], session_records[0], second["stages"], session_records[1])
@@ -1016,7 +1101,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
         if not (b03_shape_probe or b04_known_map_probe or b05_jump_calibration_probe
                 or b05_jump_route_probe or b05_jump_acceptance_probe
                 or b06_ordinary_material_probe or b07_step_probe
-                or b08_ground_modes_probe or b09_air_motion_probe):
+                or b08_ground_modes_probe or b09_air_motion_probe
+                or b10_gap_solver_probe):
             start, end = second["initial"], first["final"]
             checks += [dict(name="new_jvm_episode_and_client_clock", passed=first["identity"] != second["identity"]
                 and first["episode"] != second["episode"] and end["client_sample"]["clock_id"] != start["client_sample"]["clock_id"]),
@@ -1051,6 +1137,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
         b07_step_probe=b07_step_probe,
         b08_ground_modes_probe=b08_ground_modes_probe,
         b09_air_motion_probe=b09_air_motion_probe,
+        b10_gap_solver_probe=b10_gap_solver_probe,
     )
     checks.append(dict(name='v3_python_and_java_sources_unchanged',passed=source_before==source_after))
     if failure is None and (not checks or not all(check["passed"] for check in checks)):
@@ -1069,7 +1156,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
             else "b06-ordinary-material" if b06_ordinary_material_probe
             else "b07-step" if b07_step_probe
             else "b08-ground-modes" if b08_ground_modes_probe
-            else "b09-air-motion" if b09_air_motion_probe else "runtime-controls-gui",
+            else "b09-air-motion" if b09_air_motion_probe
+            else "b10-gap-solver" if b10_gap_solver_probe else "runtime-controls-gui",
         block_parity=block_parity,
         core_sources_before=source_before,core_sources_after=source_after,
         perception_variant='active_perception_v1' if mining_probe else None,
@@ -1117,6 +1205,8 @@ def main(argv=None) -> int:
                         help='calibrate and validate Sprint and Crouch fixed routes')
     parser.add_argument('--b09-air-motion-probe',action='store_true',
                         help='calibrate and validate gap jumps and controlled drops')
+    parser.add_argument('--b10-gap-solver-probe', action='store_true',
+                        help='solve and validate one-cell gaps in a controlled session')
     parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--run-dir", type=Path, help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
@@ -1125,7 +1215,7 @@ def main(argv=None) -> int:
             args.b05_jump_calibration_probe,args.b05_jump_route_probe,
             args.b05_jump_acceptance_probe,args.b06_ordinary_material_probe,
             args.b07_step_probe,args.b08_ground_modes_probe,
-            args.b09_air_motion_probe))>1:
+            args.b09_air_motion_probe,args.b10_gap_solver_probe))>1:
         parser.error('probe scenarios are mutually exclusive')
     if args.block_parity and not args.visibility_probe: parser.error('block parity requires visibility scenario')
     if args.physics_tick_diagnostics and not args.time_diagnostics:
@@ -1145,6 +1235,7 @@ def main(argv=None) -> int:
                           args.b05_jump_route_probe,args.b05_jump_acceptance_probe,
                           args.b06_ordinary_material_probe,args.b07_step_probe,
                           args.b08_ground_modes_probe,args.b09_air_motion_probe,
+                          args.b10_gap_solver_probe,
                           args.physics_tick_diagnostics)
 
     if not port_free(args.server_port) or not port_free(args.ipc_port):
@@ -1189,6 +1280,7 @@ def main(argv=None) -> int:
     if args.b07_step_probe: command.append('--b07-step-probe')
     if args.b08_ground_modes_probe: command.append('--b08-ground-modes-probe')
     if args.b09_air_motion_probe: command.append('--b09-air-motion-probe')
+    if args.b10_gap_solver_probe: command.append('--b10-gap-solver-probe')
     supervision = run_bounded_process(command, cwd=ROOT, environment=dict(os.environ), log_path=run_dir / "worker.log",
                                       timeout_seconds=args.timeout_seconds)
     write_json_atomic(run_dir / "supervision.json", trace_projection(supervision))

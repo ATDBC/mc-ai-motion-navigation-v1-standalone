@@ -393,7 +393,12 @@ def run_air_motion_runtime(
         executor = ActionRouteExecutor(
             ground_profile, jump_profile, step_profile, air_profiles=profiles,
         )
-        executor.start(admitted.route.action_route, frame)
+        # B09 keeps its frozen controller-only regression path. B10 and normal
+        # business routes use MotionRouteCoordinator and verified gap motion.
+        executor.start(
+            admitted.route.action_route, frame,
+            require_verified_gap_motion=False,
+        )
         input_confirmed = True
         samples = []
         for _ in range(240):
@@ -439,28 +444,29 @@ def run_air_motion_runtime(
             samples=samples,
         ))
 
-    run_planned_route(
-        "walk-gap-walk",
-        (gap_route_x + .5, float(feet_y), origin_z - .5),
-        (gap_route_x + .5, float(feet_y), origin_z + 3.5),
-        KnownMapBounds(
-            gap_route_x, gap_route_x, feet_y, feet_y,
-            origin_z - 1, origin_z + 3, True, 2,
-        ),
-        gap_route_request,
-        ("SurfaceWalkEdge", "SurfaceJumpGapEdge", "SurfaceWalkEdge"),
-    )
-    run_planned_route(
-        "walk-drop-walk",
-        (drop_route_x + .5, float(feet_y), origin_z - .5),
-        (drop_route_x + .5, float(feet_y - 1), origin_z + 2.5),
-        KnownMapBounds(
-            drop_route_x, drop_route_x, feet_y - 1, feet_y,
-            origin_z - 1, origin_z + 2, True, 2,
-        ),
-        drop_route_request,
-        ("SurfaceWalkEdge", "SurfaceControlledDropEdge", "SurfaceWalkEdge"),
-    )
+    for repetition in range(10):
+        run_planned_route(
+            f"walk-gap-walk-{repetition}",
+            (gap_route_x + .5, float(feet_y), origin_z - .5),
+            (gap_route_x + .5, float(feet_y), origin_z + 3.5),
+            KnownMapBounds(
+                gap_route_x, gap_route_x, feet_y, feet_y,
+                origin_z - 1, origin_z + 3, True, 2,
+            ),
+            gap_route_request,
+            ("SurfaceWalkEdge", "SurfaceJumpGapEdge", "SurfaceWalkEdge"),
+        )
+        run_planned_route(
+            f"walk-drop-walk-{repetition}",
+            (drop_route_x + .5, float(feet_y), origin_z - .5),
+            (drop_route_x + .5, float(feet_y - 1), origin_z + 2.5),
+            KnownMapBounds(
+                drop_route_x, drop_route_x, feet_y - 1, feet_y,
+                origin_z - 1, origin_z + 2, True, 2,
+            ),
+            drop_route_request,
+            ("SurfaceWalkEdge", "SurfaceControlledDropEdge", "SurfaceWalkEdge"),
+        )
 
     interruption_trials: list[dict] = []
 
@@ -568,7 +574,7 @@ def run_air_motion_runtime(
             and summary["control_time_ns"]["maximum"] < 30_000_000
         )),
         dict(name="b09_background_routes_execute", passed=(
-            len(route_trials) == 2
+            len(route_trials) == 20
             and all(trial["status"] == ActionRouteState.COMPLETE.value
                     for trial in route_trials)
         )),

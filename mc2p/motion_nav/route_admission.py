@@ -17,6 +17,16 @@ from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
 from mc2p.motion_nav.jump_up import JumpUpEdge
 from mc2p.motion_nav.movement_transition import compose_movement_transitions
 from mc2p.motion_nav.movement_transition import GoalState, ResourceState
+from mc2p.motion_nav.motion_candidate import (
+    MotionCandidateAdmission, MotionCandidateAdmitter, MotionCandidateContext,
+    MotionCandidateStatus,
+    VerifiedMotionCandidate,
+)
+from mc2p.motion_nav.motion_solver import (
+    SolveStatus, VerifiedMotionResult, revalidate_gap_motion,
+)
+from mc2p.motion_nav.online_motion import CandidateExecutionWindow, StateAnchor
+from mc2p.motion_nav.physics_adapter import PhysicsWorldView
 from mc2p.motion_nav.known_map_planner import (
     PlanningStatus, RouteCandidate, WalkEdge, WalkNode, WalkNodeId,
     SurfacePlanningStatus, SurfaceRouteCandidate, SurfaceWalkEdge,
@@ -59,6 +69,7 @@ class ActiveRoute:
     corridor: ExecutableCorridor
     action_route: ActionRoute
     goal_state: GoalState | None = None
+    planning_generation: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -89,6 +100,87 @@ class RouteAdmitter:
                 or maximum_corridor_blocks<=0):
             raise ContractViolation("corridor length must be positive and finite")
         self.maximum_corridor_blocks=float(maximum_corridor_blocks)
+        self._motion_admitter = MotionCandidateAdmitter()
+
+    @staticmethod
+    def bind_verified_motion(
+            route: ActiveRoute, proof: VerifiedMotionResult, *,
+            action_index: int, candidate_revision: int,
+            risk_policy_id: str = "no_expected_damage",
+            accepted_resource_incomplete_reasons: tuple[str, ...] = (),
+    ) -> VerifiedMotionCandidate:
+        if type(route) is not ActiveRoute or type(proof) is not VerifiedMotionResult:
+            raise ContractViolation("verified motion binding requires route and proof")
+        if type(action_index) is not int or not 0 <= action_index < len(
+                route.action_route.actions):
+            raise ContractViolation("verified motion action index is outside the route")
+        if type(route.action_route.actions[action_index]) is not JumpGapSegment:
+            raise ContractViolation("B10 verified motion currently binds JumpGap only")
+        return VerifiedMotionCandidate(
+            proof,
+            MotionCandidateContext(
+                route.source_request_id, route.planning_generation,
+                route.goal_id, route.goal_revision,
+                route.route_id, route.route_revision, action_index,
+                candidate_revision, risk_policy_id,
+                accepted_resource_incomplete_reasons,
+            ),
+        )
+
+    def admit_verified_motion(
+            self, candidate: VerifiedMotionCandidate, route: ActiveRoute,
+            anchor: StateAnchor, *, candidate_revision: int,
+            intended_start_tick: int,
+            changed_cells: tuple[BlockPos, ...],
+            risk_policy_id: str = "no_expected_damage",
+            world: PhysicsWorldView | None = None,
+    ) -> MotionCandidateAdmission:
+        if type(route) is not ActiveRoute:
+            raise ContractViolation("verified motion admission requires an active route")
+        admission = self._motion_admitter.admit(
+            candidate, anchor,
+            planning_request_id=route.source_request_id,
+            planning_generation=route.planning_generation,
+            goal_id=route.goal_id, goal_revision=route.goal_revision,
+            route_id=route.route_id, route_revision=route.route_revision,
+            action_index=candidate.context.action_index,
+            candidate_revision=candidate_revision,
+            risk_policy_id=risk_policy_id,
+            intended_start_tick=intended_start_tick,
+            changed_cells=changed_cells,
+        )
+        if admission.status is MotionCandidateStatus.ACCEPTED or world is None:
+            return admission
+        if admission.reason not in {
+                "execution_window_expired", "state_anchor_advanced",
+                "entry_state_changed"}:
+            return admission
+        if set(changed_cells).intersection(candidate.proof.world_dependencies):
+            return MotionCandidateAdmission(
+                MotionCandidateStatus.REJECTED, "world_dependency_changed",
+            )
+        refreshed = revalidate_gap_motion(
+            candidate.proof, anchor, world,
+            CandidateExecutionWindow(intended_start_tick, intended_start_tick + 1),
+        )
+        if refreshed.status is not SolveStatus.SOLVED or refreshed.proof is None:
+            return MotionCandidateAdmission(
+                MotionCandidateStatus.REJECTED,
+                "candidate_revalidation_failed",
+            )
+        rebound = VerifiedMotionCandidate(refreshed.proof, candidate.context)
+        return self._motion_admitter.admit(
+            rebound, anchor,
+            planning_request_id=route.source_request_id,
+            planning_generation=route.planning_generation,
+            goal_id=route.goal_id, goal_revision=route.goal_revision,
+            route_id=route.route_id, route_revision=route.route_revision,
+            action_index=candidate.context.action_index,
+            candidate_revision=candidate_revision,
+            risk_policy_id=risk_policy_id,
+            intended_start_tick=intended_start_tick,
+            changed_cells=changed_cells,
+        )
 
     @staticmethod
     def _route_id(candidate: RouteCandidate) -> str:
@@ -290,7 +382,7 @@ class RouteAdmitter:
         active=ActiveRoute(route_id,1,candidate.request_id,candidate.goal_id,
                            candidate.goal_revision,candidate.world_session,fixed_route,
                            full_length,connection_length,connection_dependencies,corridor,
-                           action_route,candidate.goal_state)
+                           action_route,candidate.goal_state,candidate.request_sequence)
         return AdmissionResult(AdmissionStatus.ACCEPTED,"candidate_admitted",active)
 
     @staticmethod
@@ -517,7 +609,7 @@ class RouteAdmitter:
             route_id, 1, candidate.request_id, candidate.goal_id,
             candidate.goal_revision, candidate.world_session, None,
             full_length, connection_length, connection_dependencies, corridor,
-            action_route, candidate.goal_state,
+            action_route, candidate.goal_state, candidate.request_sequence,
         )
         return AdmissionResult(AdmissionStatus.ACCEPTED,
                                "candidate_admitted", active)
@@ -583,7 +675,8 @@ class ActiveRouteTracker:
                           self.route.fixed_route,self.route.fixed_route_length_blocks,
                           self.route.connection_length_blocks,
                           self.route.connection_dependencies,corridor,
-                          self.route.action_route,self.route.goal_state)
+                          self.route.action_route,self.route.goal_state,
+                          self.route.planning_generation)
         self.route=route
         if self._invalidated.intersection(dependencies):
             return CorridorUpdate(CorridorStatus.BLOCKED_BY_CHANGE,route,

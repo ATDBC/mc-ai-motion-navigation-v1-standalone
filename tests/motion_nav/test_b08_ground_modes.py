@@ -24,9 +24,9 @@ from mc2p.motion_nav.planner_worker import PlannerWorker
 from mc2p.motion_nav.fixed_route import (
     FixedRoute, FixedRouteController, FixedRouteState, RoutePoint,
 )
-from mc2p.motion_nav.action_route import ActionRoute, WalkSegment
+from mc2p.motion_nav.action_route import ActionRoute, JumpUpSegment, WalkSegment
 from mc2p.motion_nav.action_route_executor import ActionRouteExecutor, ActionRouteState
-from mc2p.motion_nav.jump_up import load_jump_up_profile
+from mc2p.motion_nav.jump_up import JumpUpEdge, load_jump_up_profile
 from mc2p.motion_nav.movement_transition import (
     CancellationMode, GoalState, GoalSupport, MovementStateClass,
     MovementTransition, ResourceChange, ResourceState,
@@ -510,6 +510,93 @@ class B08GroundModeTests(unittest.TestCase):
         self.assertIs(decision.state, ActionRouteState.RUNNING)
         self.assertTrue(decision.movement.sprint)
         self.assertEqual(decision.reason_code, "ground_mode_confirmation_pending")
+
+    def test_walk_to_sprint_handoff_does_not_brake_for_the_interface(self):
+        fixture = FlatFixture()
+        initial = fixture.frame(0, PlanarBodyState(.5, .5, 0, 0, 0))
+        route = ActionRoute("walk-sprint-continuous", (
+            WalkSegment(
+                FixedRoute("walk-prefix", (
+                    RoutePoint(.5, 1.0, .5), RoutePoint(.5, 1.0, 1.5),
+                )),
+                ((0, 1, 0), (0, 1, 1)), (),
+                self.transition(MovementMode.WALK),
+            ),
+            WalkSegment(
+                FixedRoute("sprint-suffix", (
+                    RoutePoint(.5, 1.0, 1.5), RoutePoint(.5, 1.0, 3.5),
+                )),
+                ((0, 1, 1), (0, 1, 3)), (),
+                self.transition(MovementMode.SPRINT),
+            ),
+        ))
+        executor = self.executor()
+        executor.start(route, initial)
+        moving_at_boundary = fixture.frame(
+            1, PlanarBodyState(.5, 1.5, 0.0, 2.0, 0.0),
+        )
+
+        decision = executor.decide(moving_at_boundary)
+
+        self.assertIs(decision.state, ActionRouteState.RUNNING)
+        self.assertEqual(decision.action_index, 1)
+        self.assertTrue(decision.movement.sprint)
+        self.assertGreater(decision.movement.forward, 0)
+        self.assertEqual(decision.reason_code, "ground_mode_confirmation_pending")
+
+    def test_sprint_hands_to_jump_only_after_real_speed_enters_jump_range(self):
+        fixture = FlatFixture()
+        fixture.world.observe_blocks(
+            ObservationStamp(fixture.session, 1, 1, "test-clock", 1),
+            {(0, 1, 1): BlockGeometry.full_cube("minecraft:grass_block")},
+        )
+        fixture.world.confirm_air(
+            ObservationStamp(fixture.session, 2, 2, "test-clock", 2),
+            tuple((0, y, z) for y in (1, 2, 3, 4) for z in (0, 1)
+                  if (0, y, z) != (0, 1, 1)),
+        )
+        sprint = WalkSegment(
+            FixedRoute("sprint-before-jump", (
+                RoutePoint(.5, 1.0, -1.5), RoutePoint(.5, 1.0, .5),
+            )),
+            ((0, 1, -2), (0, 1, 0)), (),
+            self.transition(MovementMode.SPRINT),
+        )
+        profile = self.executor().jump_profile
+        jump = JumpUpSegment(
+            JumpUpEdge(
+                (0, 1, 0), (0, 2, 1), profile.profile_id,
+                (0, 1), profile.cost_seconds, (),
+            ),
+            (),
+        )
+        route = ActionRoute("sprint-brake-jump", (sprint, jump))
+        executor = self.executor()
+        initial = fixture.frame(0, PlanarBodyState(.5, -1.5, 0, 0, 0))
+        executor.start(route, initial)
+
+        fast_body = replace(
+            fixture.frame(1, PlanarBodyState(.5, .5, 0, 1.0, 0)).body,
+            is_sprinting=True,
+        )
+        braking = executor.decide(replace(
+            fixture.frame(1, PlanarBodyState(.5, .5, 0, 1.0, 0)),
+            body=fast_body,
+        ))
+        self.assertEqual(braking.action_index, 0)
+        self.assertNotEqual(braking.reason_code, "request_jump")
+        self.assertFalse(braking.movement.sprint)
+
+        slow_body = replace(
+            fixture.frame(2, PlanarBodyState(.5, .5, 0, .05, 0)).body,
+            is_sprinting=False,
+        )
+        handoff = executor.decide(replace(
+            fixture.frame(2, PlanarBodyState(.5, .5, 0, .05, 0)),
+            body=slow_body,
+        ))
+        self.assertEqual(handoff.action_index, 1)
+        self.assertTrue(handoff.movement.jump)
 
     def test_explicit_walk_segment_releases_an_observed_crouch(self):
         fixture = FlatFixture()

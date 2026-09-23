@@ -6,7 +6,7 @@ import net.minecraft.client.input.Input;
 
 /** Robot-owned input values. Vanilla still consumes movement, collision, jump and slowdown. */
 public final class ClientBehaviorInput extends Input {
-    public record Sample(String episodeId, long requestSequenceId,
+    public record Sample(String episodeId, long requestSequenceId, long movementTickId,
             long sampledAtJvmNs, String state, float forward, float strafe,
             boolean jump, boolean sneak, boolean sprint) {}
     @FunctionalInterface public interface SampleObserver { void accept(Sample sample); }
@@ -21,6 +21,7 @@ public final class ClientBehaviorInput extends Input {
     private String acceptedEpisode;
     private long acceptedSequence = -1;
     private Sample lastSample;
+    private final java.util.ArrayList<Sample> pendingSamples = new java.util.ArrayList<>();
 
     public ClientBehaviorInput(ClientRequestGate gate, LongSupplier clock, BooleanSupplier allowed) {
         this(gate, clock, allowed, NO_DIAGNOSTICS);
@@ -88,6 +89,12 @@ public final class ClientBehaviorInput extends Input {
     public Sample lastSample() { return lastSample; }
     public long sampleCount() { return samples; }
     public long leasedSampleCount() { return leasedSamples; }
+    public java.util.List<Sample> drainSamples() {
+        gate.requireOwnerThread();
+        var result = java.util.List.copyOf(pendingSamples);
+        pendingSamples.clear();
+        return result;
+    }
 
     public void expireOnClientTick() {
         gate.requireOwnerThread();
@@ -120,8 +127,11 @@ public final class ClientBehaviorInput extends Input {
             // A held lease is consumed by actual player input sampling, not observation emission.
             gate.endControlTick();
         }
-        lastSample = new Sample(acceptedEpisode, acceptedSequence, now, sampleState,
+        lastSample = new Sample(acceptedEpisode, acceptedSequence, samples, now, sampleState,
                 movementForward, movementSideways, jumping, sneaking, appliedSprint);
+        if (pendingSamples.size() >= 64)
+            throw new IllegalStateException("unobserved input sample ledger is full");
+        pendingSamples.add(lastSample);
         observer.accept(lastSample);
     }
 }

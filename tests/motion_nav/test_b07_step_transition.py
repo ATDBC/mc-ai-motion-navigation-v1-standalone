@@ -12,7 +12,7 @@ from mc2p.motion_nav.step_transition import (
     StepController, StepProfile, StepState, load_step_profile, query_step,
 )
 from mc2p.motion_nav.environment_identity import load_frozen_environment
-from mc2p.motion_nav.support_surfaces import query_support_surfaces
+from mc2p.motion_nav.support_surfaces import HorizontalRegion, query_support_surfaces
 from mc2p.motion_nav.world_model import Aabb, BlockGeometry, ObservationStamp
 from tests.motion_nav.test_b07_support_surfaces import surface_world
 
@@ -145,6 +145,23 @@ class B07StepTransitionTests(unittest.TestCase):
         self.assertIs(decision.state, StepState.UNSUPPORTED)
         self.assertEqual(decision.movement, MovementV1())
         self.assertEqual(decision.reason_code, "invalid_entry_surface")
+
+    def test_controller_allows_the_body_to_overhang_a_narrow_start_tread(self):
+        world = step_world()
+        low, high = surfaces(world)
+        narrow = replace(
+            low,
+            position=(.5, low.position[1], .2),
+            region=HorizontalRegion(0.0, 0.0, 1.0, .5),
+        )
+        controller = StepController(profile())
+        initial = frame(world, 0, narrow.position)
+        controller.start(narrow, high, initial)
+
+        decision = controller.decide(initial)
+
+        self.assertIs(decision.state, StepState.MOVING)
+        self.assertNotEqual(decision.movement, MovementV1())
 
     def test_cancel_waits_for_observed_ground_stop(self):
         world = step_world()

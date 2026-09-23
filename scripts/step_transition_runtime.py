@@ -12,13 +12,21 @@ from mc2p.contracts.action_v1 import ActionIntentV1, LookV1, MovementV1
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.contracts.task import ComparisonOperatorV0, SuccessCriterionV0, TaskIntentV0
+from mc2p.motion_nav.action_route_executor import ActionRouteExecutor, ActionRouteState
 from mc2p.motion_nav.environment_identity import load_frozen_environment
 from mc2p.motion_nav.block_motion_traits import BlockMotionCatalog
 from mc2p.motion_nav.fixed_route import (
     FixedRoute, FixedRouteController, FixedRouteState, RoutePoint,
 )
 from mc2p.motion_nav.ground_motion import load_ground_motion_profile
+from mc2p.motion_nav.jump_up import load_jump_up_profile
 from mc2p.motion_nav.geometry import QueryStatus, sweep
+from mc2p.motion_nav.known_map_planner import (
+    KnownMapBounds, KnownMapSnapshotBuilder, SnapshotBuildStatus,
+    SurfacePlanningRequest, SurfacePlanningStatus, build_surface_graph,
+    astar_surface_plan,
+)
+from mc2p.motion_nav.route_admission import AdmissionStatus, RouteAdmitter
 from mc2p.motion_nav.runtime_adapter import NavigationObservationAdapter
 from mc2p.motion_nav.step_transition import (
     StepController, StepState, load_step_profile, query_step,
@@ -119,14 +127,18 @@ def run_step_transition_runtime(
     z = math.floor(frame.body.position[2])
     floor = (x, feet_y - 1, z)
     slab = (x, feet_y, z + 1)
+    approach = (x, feet_y - 1, z - 1)
+    upper = (x, feet_y, z + 2)
+    exit_support = (x, feet_y, z + 3)
     volume = tuple(
         (cx, cy, cz)
         for cx in range(x - 1, x + 2)
-        for cz in range(z - 1, z + 3)
+        for cz in range(z - 1, z + 4)
         for cy in range(feet_y - 3, feet_y + 4)
     )
-    clear = tuple(position for position in volume if position not in {floor, slab})
-    fixture_writer((floor,), "minecraft:grass_block")
+    route_supports = {approach, floor, slab, upper, exit_support}
+    clear = tuple(position for position in volume if position not in route_supports)
+    fixture_writer((approach, floor, upper, exit_support), "minecraft:grass_block")
     fixture_writer(clear, "minecraft:air")
     fixture_writer((slab,), "minecraft:smooth_stone_slab[type=bottom]")
     air_request = ObservationRequestV3("navigation_v1", volume)
@@ -156,11 +168,16 @@ def run_step_transition_runtime(
         ROOT / "config/motion-navigation/ordinary-ground-b07-v1.json",
         environment=environment, catalog=catalog,
     )
+    jump_profile = load_jump_up_profile(
+        ROOT / "config/motion-navigation/jump-up-b06-v1.json",
+        environment=environment, catalog=catalog,
+    )
     floor_center = (x + .5, float(feet_y), z + .5)
     slab_center = (x + .5, float(feet_y) + .5, z + 1.5)
     trials = []
     walk_trials = []
     rejection_trials = []
+    continuity_trials = []
     control_times_ns: list[int] = []
 
     def teleport(position: tuple[float, float, float], yaw: float) -> None:
@@ -276,6 +293,97 @@ def run_step_transition_runtime(
 
     run_step_trial("up", surface_at(floor_center), surface_at(slab_center), 0.0)
     run_step_trial("down", surface_at(slab_center), surface_at(floor_center), 180.0)
+
+    continuity_start_position = (x + .5, float(feet_y), z - .5)
+    continuity_goal_position = (x + .5, float(feet_y + 1), z + 3.5)
+    teleport(continuity_start_position, 0.0)
+    continuity_bounds = KnownMapBounds(
+        x, x, feet_y, feet_y + 1, z - 1, z + 3, True,
+    )
+    continuity_builder = KnownMapSnapshotBuilder(frame.world, continuity_bounds)
+    continuity_snapshot = continuity_builder.advance(frame.world, 10_000)
+    if (continuity_snapshot.status is not SnapshotBuildStatus.COMPLETE
+            or continuity_snapshot.snapshot is None):
+        raise RuntimeError("B10 Step continuity snapshot did not complete")
+    continuity_graph = build_surface_graph(
+        continuity_snapshot.snapshot.world, continuity_snapshot.snapshot.bounds,
+        ground, profile,
+    )
+    continuity_start = surface_at((x + .5, float(feet_y), z - .5)).node_id
+    continuity_goal = surface_at((x + .5, float(feet_y + 1), z + 3.5)).node_id
+    continuity_request = SurfacePlanningRequest(
+        1, f"{episode}-step-continuity", "b10-step-continuity-goal", 1,
+        frame.session.value, continuity_start, continuity_goal,
+    )
+    continuity_candidate = astar_surface_plan(
+        continuity_graph, continuity_request,
+    )
+    if continuity_candidate.status is not SurfacePlanningStatus.COMPLETE:
+        raise RuntimeError(
+            "B10 Step continuity route failed: "
+            f"{continuity_candidate.status.value}"
+        )
+    continuity_admission = RouteAdmitter().admit_surface(
+        continuity_candidate, frame,
+        expected_request_id=continuity_request.request_id,
+        goal_id=continuity_request.goal_id,
+        goal_revision=continuity_request.goal_revision,
+        changed_cells=(),
+    )
+    if (continuity_admission.status is not AdmissionStatus.ACCEPTED
+            or continuity_admission.route is None):
+        raise RuntimeError(
+            f"B10 Step continuity admission failed: {continuity_admission.reason}"
+        )
+    continuity_kinds = tuple(
+        type(action).__name__
+        for action in continuity_admission.route.action_route.actions
+    )
+    if continuity_kinds != (
+            "WalkSegment", "StepSegment", "StepSegment", "WalkSegment"):
+        raise RuntimeError(
+            f"B10 Step continuity selected {continuity_kinds}"
+        )
+    for repetition in range(10):
+        teleport(continuity_start_position, 0.0)
+        executor = ActionRouteExecutor(ground, jump_profile, profile)
+        executor.start(continuity_admission.route.action_route, frame)
+        input_confirmed = True
+        samples = []
+        for _ in range(120):
+            decision = executor.decide(frame, input_confirmed=input_confirmed)
+            samples.append({
+                "sequence": frame.body.sequence_id,
+                "state": decision.state.value,
+                "reason": decision.reason_code,
+                "action_index": decision.action_index,
+                "movement": asdict(decision.movement),
+                "position": list(frame.body.position),
+            })
+            if decision.state is ActionRouteState.COMPLETE:
+                break
+            if decision.state in {
+                    ActionRouteState.BLOCKED, ActionRouteState.FAILED,
+                    ActionRouteState.INPUT_LOST, ActionRouteState.UNSUPPORTED,
+                    ActionRouteState.NEEDS_INFORMATION}:
+                raise RuntimeError(
+                    "B10 Step continuity failed: "
+                    f"{decision.state.value}/{decision.reason_code}"
+                )
+            result = step(decision.movement, request=air_request)
+            input_confirmed = receipt_confirms_input(
+                result.backend_result.receipt.status
+            )
+        error = math.dist(frame.body.position, continuity_goal_position)
+        trial = {
+            "repetition": repetition,
+            "status": executor.state.value,
+            "final_error_blocks": error,
+            "action_kinds": list(continuity_kinds),
+            "samples": samples,
+        }
+        continuity_trials.append(trial)
+        append_jsonl(directory / "b10-step-continuity.jsonl", trial)
 
     # Read the collision shapes from the real Fabric observation path.  The
     # component matrix uses the same query code, but it must not be the source
@@ -414,6 +522,7 @@ def run_step_transition_runtime(
         "fixture": {"floor": list(floor), "slab": list(slab)},
         "trials": trials,
         "walk_trials": walk_trials,
+        "continuity_trials": continuity_trials,
         "rejection_trials": rejection_trials,
         "shape_observations": shape_observations,
     })
@@ -465,5 +574,10 @@ def run_step_transition_runtime(
              }
          ) and next(row for row in shape_observations
                     if row["name"] == "farmland")["trait_status"] == "deferred"},
+        {"name": "b10_walk_step_step_walk_repeats_ten_times",
+         "passed": len(continuity_trials) == 10
+         and all(trial["status"] == ActionRouteState.COMPLETE.value
+                 and trial["final_error_blocks"] <= .25
+                 for trial in continuity_trials)},
     ]
     return summary, rows, checks

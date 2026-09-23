@@ -79,6 +79,7 @@ class FixedRouteConfig:
     prediction_ticks: int = 6
     maximum_recovery_ticks: int = 30
     input_lease_ticks: int = 2
+    handoff_speed_blocks_per_second: float | None = None
 
     def __post_init__(self) -> None:
         for name in (
@@ -105,6 +106,14 @@ class FixedRouteConfig:
             raise ContractViolation("recovery ticks must be within 1..100")
         if type(self.input_lease_ticks) is not int or not 1 <= self.input_lease_ticks <= 20:
             raise ContractViolation("input lease ticks must be within 1..20")
+        if self.handoff_speed_blocks_per_second is not None:
+            value = _finite(
+                self.handoff_speed_blocks_per_second, "handoff speed",
+            )
+            if value < self.stopped_speed_blocks_per_second:
+                raise ContractViolation(
+                    "handoff speed cannot be below the stopped threshold"
+                )
 
 
 class FixedRouteState(StrEnum):
@@ -324,6 +333,10 @@ class FixedRouteController:
     def _decision(self, started: int, movement: MovementV1, reason: str,
                   missing: tuple[BlockPos, ...] = ()) -> FixedRouteDecision:
         if (self.mode_profile is not None
+                and not (self.mode_profile.mode is MovementMode.SPRINT
+                         and self.state in {
+                             FixedRouteState.BRAKING, FixedRouteState.CANCELLING,
+                         })
                 and self.state not in {
                     FixedRouteState.CANCELLED, FixedRouteState.SUCCEEDED,
                     FixedRouteState.INPUT_LOST, FixedRouteState.FAILED,
@@ -374,12 +387,19 @@ class FixedRouteController:
                 self.state = FixedRouteState.UNSUPPORTED
                 return self._decision(started, MovementV1(), "ground_mode_invalid_entry")
             if readiness is ModeReadiness.PENDING:
-                if self._mode_pending_frames >= self.mode_profile.confirmation_ticks:
+                if (self.mode_profile.mode is MovementMode.SPRINT
+                        and self.state is FixedRouteState.BRAKING):
+                    # Releasing sprint is part of the verified endpoint brake.
+                    # Do not accelerate again merely to re-confirm a mode that
+                    # this segment is deliberately leaving.
+                    pass
+                elif self._mode_pending_frames >= self.mode_profile.confirmation_ticks:
                     self.state = FixedRouteState.UNSUPPORTED
                     return self._decision(started, MovementV1(),
                                           "ground_mode_confirmation_timeout")
-                mode_pending = True
-                if not self.mode_profile.request_sprint:
+                else:
+                    mode_pending = True
+                if mode_pending and not self.mode_profile.request_sprint:
                     if (self.mode_profile.mode is MovementMode.WALK
                             and observed_ground_mode(frame.body) in {
                                 MovementMode.CROUCH, MovementMode.CRAWL,
@@ -477,10 +497,20 @@ class FixedRouteController:
                    and abs(frame.body.position[1] - goal.y) <= 0.10
                    and goal_support.status is QueryStatus.FEASIBLE
                    and goal_support.support_fraction >= self.config.minimum_support_fraction)
-        if at_goal and speed <= self.config.stopped_speed_blocks_per_second:
+        completion_speed = (
+            self.config.handoff_speed_blocks_per_second
+            if self.config.handoff_speed_blocks_per_second is not None
+            else self.config.stopped_speed_blocks_per_second
+        )
+        if at_goal and speed <= completion_speed:
             self.state = FixedRouteState.SUCCEEDED
             self._progress = self._geometry.total_length
-            return self._decision(started, MovementV1(), "goal_reached_and_stopped")
+            return self._decision(
+                started, MovementV1(),
+                ("goal_reached_for_handoff"
+                 if self.config.handoff_speed_blocks_per_second is not None
+                 else "goal_reached_and_stopped"),
+            )
 
         if self._stall_detected:
             if speed <= self.config.stopped_speed_blocks_per_second:
@@ -490,9 +520,9 @@ class FixedRouteController:
             return self._brake(frame, body, started, hold_position=True,
                                reason="fixed_route_stall_braking")
 
-        stop_distance = self._release_stop_distance(body)
+        stop_distance = self._release_distance(body, completion_speed)
         remaining = max(0.0, self._geometry.total_length - self._progress)
-        if at_goal or (speed > self.config.stopped_speed_blocks_per_second
+        if at_goal or (speed > completion_speed
                        and remaining <= stop_distance + self.config.endpoint_tolerance_blocks * 0.65):
             self.state = FixedRouteState.BRAKING
             return self._brake(frame, body, started, hold_position=False, reason="goal_braking")
@@ -582,12 +612,13 @@ class FixedRouteController:
         )
         return result.missing_cells
 
-    def _release_stop_distance(self, body: PlanarBodyState) -> float:
+    def _release_distance(self, body: PlanarBodyState,
+                          target_speed_blocks_per_second: float) -> float:
         state = body
         distance = 0.0
         neutral = GroundControl(0, 0, body.yaw_radians)
         for _ in range(self.config.maximum_recovery_ticks):
-            if math.hypot(state.velocity_x, state.velocity_z) <= self.config.stopped_speed_blocks_per_second:
+            if math.hypot(state.velocity_x, state.velocity_z) <= target_speed_blocks_per_second:
                 break
             next_state = predict_ground(state, (neutral,), self.profile)[-1]
             distance += math.hypot(next_state.x - state.x, next_state.z - state.z)

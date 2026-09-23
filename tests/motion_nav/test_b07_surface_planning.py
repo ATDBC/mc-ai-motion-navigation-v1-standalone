@@ -3,19 +3,23 @@ from __future__ import annotations
 import unittest
 from dataclasses import replace
 import time
+from unittest.mock import patch
 
 from mc2p.motion_nav.known_map_planner import (
     KnownMapBounds, KnownMapSnapshotBuilder, SnapshotBuildStatus,
     SurfacePlanningRequest, SurfacePlanningStatus,
-    SurfaceJumpUpEdge, astar_surface_plan, build_surface_graph,
-    dijkstra_surface_reference,
+    SurfaceGraph, SurfaceJumpUpEdge, astar_surface_plan, build_surface_graph,
+    dijkstra_surface_reference, plan_known_surface_snapshot,
 )
 from mc2p.motion_nav.block_motion_traits import BlockMotionCatalog
 from mc2p.motion_nav.environment_identity import load_frozen_environment
 from mc2p.motion_nav.ground_motion import load_ground_motion_profile
 from mc2p.motion_nav.step_transition import StepEdge
 from mc2p.motion_nav.planner_worker import PlannerWorker
-from mc2p.motion_nav.world_model import Aabb, BlockGeometry
+from mc2p.motion_nav.support_surfaces import SurfaceNodeId
+from mc2p.motion_nav.world_model import (
+    Aabb, BlockGeometry, ObservationStamp, WorldKnowledge, WorldSessionId,
+)
 from tests.motion_nav.test_b07_step_transition import profile as step_profile
 from tests.motion_nav.test_b07_support_surfaces import surface_world
 from tests.motion_nav.test_fixed_route_walk import profile as ground_profile
@@ -41,7 +45,96 @@ def ordinary_profile():
     )
 
 
+def flat_surface_world(size: int) -> WorldKnowledge:
+    session = WorldSessionId("b07-flat-surface")
+    world = WorldKnowledge(session)
+    observed = ObservationStamp(session, 1, 1, "test-clock", 50_000_000)
+    world.confirm_air(observed, tuple(
+        (x, y, z)
+        for x in range(-1, size + 1)
+        for y in range(-1, 4)
+        for z in range(-1, size + 1)
+    ))
+    world.observe_blocks(observed, {
+        (x, 0, z): BlockGeometry.full_cube("minecraft:stone")
+        for x in range(size)
+        for z in range(size)
+    })
+    return world
+
+
 class B07SurfacePlanningTests(unittest.TestCase):
+    def test_parallel_motion_edges_keep_distinct_planner_states(self):
+        world = mixed_height_world()
+        base = build_surface_graph(
+            world.view(), KnownMapBounds(0, 1, 0, 1, 0, 0, True),
+            ordinary_profile(), step_profile(),
+        )
+        forward = next(
+            edge for edge in base.edges
+            if edge.start.column_x == 0 and edge.end.column_x == 1
+        )
+        fast_transition = replace(
+            forward.transition,
+            trajectory_profile_id="parallel-fast-profile",
+            duration_seconds=forward.cost_seconds / 2,
+        )
+        fast = replace(
+            forward,
+            profile_id="parallel-fast-profile",
+            cost_seconds=forward.cost_seconds / 2,
+            transition=fast_transition,
+        )
+        graph = SurfaceGraph(
+            base.world_session, base.geometry_revision, base.bounds, base.nodes,
+            tuple(sorted((forward, fast), key=lambda edge: (
+                edge.start, edge.end, edge.transition.trajectory_profile_id,
+            ))),
+            False,
+        )
+        request = SurfacePlanningRequest(
+            5, "parallel-surface", "parallel-goal", 1,
+            world.session.value, forward.start, forward.end,
+        )
+
+        candidate = astar_surface_plan(graph, request)
+
+        self.assertIs(candidate.status, SurfacePlanningStatus.COMPLETE)
+        self.assertEqual(
+            candidate.segments[0].transition.trajectory_profile_id,
+            "parallel-fast-profile",
+        )
+        self.assertEqual(
+            tuple(state.node_id for state in candidate.planner_states),
+            (forward.start, forward.end),
+        )
+        self.assertIsNotNone(candidate.planner_states[-1].movement_mode)
+
+    def test_surface_snapshot_search_expands_lazily_without_materializing_graph(self):
+        size = 20
+        world = flat_surface_world(size)
+        bounds = KnownMapBounds(0, size - 1, 1, 1, 0, size - 1, True)
+        progress = KnownMapSnapshotBuilder(world.view(), bounds).advance(
+            world.view(), 1_000_000,
+        )
+        self.assertIs(progress.status, SnapshotBuildStatus.COMPLETE)
+        request = SurfacePlanningRequest(
+            4, "lazy-surface", "lazy-goal", 1, world.session.value,
+            SurfaceNodeId(0, 0, 1, 0),
+            SurfaceNodeId(size - 1, size - 1, 1, 0),
+        )
+
+        with patch(
+            "mc2p.motion_nav.known_map_planner.build_surface_graph",
+            side_effect=AssertionError("snapshot planning must stay lazy"),
+        ):
+            candidate = plan_known_surface_snapshot(
+                progress.snapshot, ordinary_profile(), step_profile(), request,
+            )
+
+        self.assertIs(candidate.status, SurfacePlanningStatus.COMPLETE)
+        self.assertLessEqual(candidate.expanded_nodes, 2 * size)
+
     def test_b07_ground_profile_adds_only_declared_shape_materials(self):
         from pathlib import Path
         root = Path(__file__).resolve().parents[2]

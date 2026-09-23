@@ -64,9 +64,27 @@
 D:\Miniforge3\Scripts\conda.exe run --prefix D:\My_project\mc_ai\.venv --no-capture-output python scripts/benchmark_motion_calculator.py --repetitions 30 --output output/b09r-validation/benchmark.json
 ```
 
-修正后在当前机器的普通静态世界约为 2,300～2,580 tick／秒：单 tick P50 `0.387 ms`；20 tick 单分支 P50 `8.393 ms`；60 tick P50 `25.967 ms`；32 个 20-tick 分支 P50 `267.474 ms`；128 个 20-tick 分支 P50 `1066.838 ms`。完整 rollout 现在保留逐步结果，峰值 Python 跟踪内存为 694,558 字节。
+2026-09-21 的原始结果约为 2,300～2,580 tick／秒：单 tick P50 `0.387 ms`；20 tick 单分支 P50 `8.393 ms`；60 tick P50 `25.967 ms`；32 个 20-tick 分支 P50 `267.474 ms`；128 个 20-tick 分支 P50 `1066.838 ms`。完整 rollout 保留逐步结果；当时记录的峰值 Python 跟踪内存为 694,558 字节。
 
 这说明首版适合离线验证和有界小批量比较。未来求解器不能在一个控制帧内无条件展开 128 条 20-tick 候选。
+
+### 2026-09-23 计时勘误
+
+原脚本在正式计时前启动了 `tracemalloc`，因此上述吞吐包含 Python 分配跟踪开销，不能作为正常运行速度。旧结果保留，不删除或改写。
+
+修正后的脚本把墙钟计时和峰值内存分成两遍运行，并在输出中记录 `timing_under_tracemalloc: false`、Python 版本、CPU 和预热次数。当前机器使用 Python 3.11.16、30 次计时和每组 5 次预热，得到：
+
+| 范围 | P50 | P95 | 有效吞吐 |
+|---|---:|---:|---:|
+| 1 tick，1 个候选 | 0.0651 ms | 0.0727 ms | 15,361 tick／秒 |
+| 20 tick，1 个候选 | 1.3091 ms | 1.3168 ms | 15,278 tick／秒 |
+| 60 tick，1 个候选 | 3.9554 ms | 3.9701 ms | 15,169 tick／秒 |
+| 20 tick，32 个候选 | 41.8121 ms | 41.8424 ms | 15,307 tick／秒 |
+| 20 tick，128 个候选 | 166.5114 ms | 166.8912 ms | 15,374 tick／秒 |
+
+独立内存遍历的 Python 跟踪峰值为 20,878 字节。它与旧版在计时循环中持续跟踪得到的峰值口径不同，只用于观察当前基准夹具的分配量。
+
+勘误不改变 B10 的预算结论。32 个 20-tick 候选已经超过控制帧 P95 8 ms 门槛；128 个候选也超过 50 ms 提交期限。批量搜索继续放在有界后台任务中。
 
 ## 自动检查
 

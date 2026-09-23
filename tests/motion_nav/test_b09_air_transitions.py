@@ -570,7 +570,10 @@ class B09AirTransitionTests(unittest.TestCase):
             air_profiles=(air_profile(MovementMode.JUMP_GAP),
                           air_profile(MovementMode.CONTROLLED_DROP)),
         )
-        executor.start(admitted.route.action_route, start_frame)
+        executor.start(
+            admitted.route.action_route, start_frame,
+            require_verified_gap_motion=False,
+        )
         first = executor.decide(start_frame)
         self.assertTrue(first.movement.jump)
         executor.decide(frame(

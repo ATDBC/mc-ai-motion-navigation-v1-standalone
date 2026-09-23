@@ -11,6 +11,13 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class FabricDeploymentProbeTests(unittest.TestCase):
+    def test_b10_source_freeze_includes_the_receipt_driven_executor(self):
+        from scripts.probe_fabric_deployment_observation import (
+            B10_GAP_SOLVER_SOURCES,
+        )
+        self.assertIn("mc2p/motion_nav/motion_candidate.py",
+                      B10_GAP_SOLVER_SOURCES)
+
     def setUp(self):
         self.assertTrue((ROOT / "scripts/probe_fabric_deployment_observation.py").is_file(), "independent real-game probe is missing")
 
@@ -203,6 +210,16 @@ class FabricDeploymentProbeTests(unittest.TestCase):
         for i, row in enumerate(rows):
             row["diagnostics"]["gui_render_attempts"] = 0 if i < 20 else 3
         self.assertTrue(all(item["passed"] for item in evaluate_trace(records, rows, server_port=25599)))
+        v3_records = deepcopy(records)
+        for record in v3_records:
+            if record["record_type"] != "step":
+                continue
+            receipt = record["payload"]["backend_result"]["receipt"]
+            receipt["schema_version"] = "mc2p.client_action_receipt.v3"
+            receipt["input_applications"] = []
+        self.assertTrue(all(item["passed"] for item in evaluate_trace(
+            v3_records, rows, server_port=25599,
+        )))
         try:
             shorter = evaluate_trace(records[:-2], rows[:-1], server_port=25599, expected_steps=27)
         except TypeError:

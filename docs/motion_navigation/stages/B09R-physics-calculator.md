@@ -35,4 +35,3 @@
 - 旧在线行为没有被计算器改写。
 
 基础运动的既有实机差分满足上述门槛。审查后新增的潜行防跌落、落地同 tick 跨步、冲刺单独释放和连续姿态切换仍需专项 Fabric sidecar；在补齐前，只能把它们记为组件已通过。B10-A 只前置首个试点实际使用的规则分支，其他分支在对应能力启用前补齐。详细边界见 [B09-R 验收记录](../acceptance/B09R-physics-calculator.md)和 [B10-A 阶段记录](B10A-online-motion-foundation.md)。
-

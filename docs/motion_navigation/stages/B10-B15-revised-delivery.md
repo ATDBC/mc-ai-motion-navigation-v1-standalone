@@ -1,13 +1,13 @@
 # B10–B15：B09-R 之后的已知地形移动计划
 
 日期：2026-09-21
-状态：已采用；B10 尚未开始
+状态：已采用；B10 已完成当前冻结范围，B11 尚未开始
 
 ## 范围
 
 本计划继续只处理已知地形中的玩家自身运动。不使用载具或消耗型道具，不主动改变世界。未知探索、观察站位、动态实体避让和跟随继续后置。
 
-B01–B09 已建立世界、几何、固定路线、后台已知图规划和有限动作闭环。B09-R 已建立只读逐 tick 运动计算器。后续工作在这些结果上增加输入求解、连续接续和更多运动机制，不另起一套导航系统。
+B01–B09 已建立世界、几何、固定路线、后台已知图规划和有限动作闭环。B09-R 已建立只读逐 tick 运动计算器。B10 已完成状态锚点、输入求解、连续接续和在线执行。后续阶段继续在同一系统内增加运动机制，不另起一套导航系统。
 
 ## 顺序
 
@@ -84,5 +84,4 @@ D* Lite、完整 NavMesh、GPU 和机器学习都不是 B14 的默认前置。�
 - 场景、门槛和结果以 `acceptance` 为准；
 - 改变顺序或门槛先写 `decisions`。
 
-旧的 `mc_navigation_B06_B15_plan_java_1_21_0.md` 保留 B06–B09-R 的历史设计背景。从 B10 开始，发生冲突时以本文件、[B10 架构](../architecture/B10-motion-solving-continuous-execution-v1.md)、[B10 验收计划](../acceptance/B10-motion-solving-continuous-execution.md)和 D012 为准。
-
+B06–B09-R 的完成范围分别保存在对应阶段、架构、验收和 decisions 文档中。旧的 B06–B15 总计划已经移除，避免其未完成条目继续被误当成现行安排。从 B10 开始，发生冲突时以本文件、[B10 架构](../architecture/B10-motion-solving-continuous-execution-v1.md)、[B10 验收计划](../acceptance/B10-motion-solving-continuous-execution.md)和 D012 为准。

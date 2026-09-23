@@ -165,14 +165,18 @@ public final class ClientBehaviorInputTest {
         input.tick(true, .3f);
         yes(samples.size() == 1);
         var leased = samples.get(0);
+        yes(leased.movementTickId() == 1);
         yes("diagnostic".equals(leased.episodeId()) && leased.requestSequenceId() == 7);
         yes("leased".equals(leased.state()) && leased.sampledAtJvmNs() == 50);
         yes(leased.forward() == .3f && leased.strafe() == -.3f);
         yes(input.leasedSampleCount() == 1 && !gate.leaseActive(50));
+        yes(input.drainSamples().size() == 1);
+        yes(input.drainSamples().isEmpty());
         now[0] = 51;
         input.tick(false, 1);
         yes(samples.size() == 2);
         var released = samples.get(1);
+        yes(released.movementTickId() == 2);
         yes("lease_exhausted".equals(released.state()));
         yes(released.forward() == 0 && released.strafe() == 0);
         yes(released.requestSequenceId() == 7);

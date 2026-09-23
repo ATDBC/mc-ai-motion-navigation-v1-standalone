@@ -131,7 +131,10 @@ public final class ClientPhysicsTickDiagnostics {
     public static synchronized void close() {
         if (closed) return;
         closed = true;
-        if (active != null) throw new IllegalStateException("cannot seal an incomplete movement tick");
+        // Shutdown can begin between the injected before/after movement hooks.
+        // Only complete rows are evidence, so discard that unfinished tail instead
+        // of crashing the client while preserving every already sealed tick.
+        active = null;
         if (writer != null) try { writer.close(); }
         catch (IOException error) { throw new UncheckedIOException(error); }
     }

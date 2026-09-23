@@ -4,7 +4,9 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 from pathlib import Path
+import platform
 import statistics
 import sys
 import time
@@ -57,59 +59,81 @@ def _percentile(values, fraction):
     return ordered[max(0, math.ceil(len(ordered) * fraction) - 1)]
 
 
+def _run_case(initial, world, inputs, branches: int):
+    for _ in range(branches):
+        result = rollout(
+            initial, inputs, world, JAVA_1_21_RULESET,
+            RolloutOptions(output_mode=RolloutOutputMode.SUMMARY),
+        )
+        if result.ticks_completed != len(inputs):
+            raise RuntimeError(
+                f"benchmark stopped at {result.ticks_completed}/{len(inputs)}"
+            )
+
+
+def run_benchmark(*, repetitions: int = 30, warmups: int = 5) -> dict:
+    if type(repetitions) is not int or repetitions < 1:
+        raise ValueError("repetitions must be positive")
+    if type(warmups) is not int or warmups < 0:
+        raise ValueError("warmups must be nonnegative")
+    if tracemalloc.is_tracing():
+        raise RuntimeError("timing benchmark cannot run under tracemalloc")
+    initial, world = _fixture()
+    results = []
+    cases = tuple((ticks, 1) for ticks in (1, 6, 20, 60)) + (
+        (20, 32), (20, 128),
+    )
+    for ticks, branches in cases:
+        inputs = tuple(TickInput(1, 0, False, False, False, 0) for _ in range(ticks))
+        for _ in range(warmups):
+            _run_case(initial, world, inputs, branches)
+        timings = []
+        samples = repetitions if branches == 1 else max(3, repetitions // 5)
+        for _ in range(samples):
+            started = time.perf_counter_ns()
+            _run_case(initial, world, inputs, branches)
+            timings.append((time.perf_counter_ns() - started) / 1_000_000)
+        results.append({
+            "ticks": ticks, "branches": branches,
+            "p50_ms": statistics.median(timings),
+            "p95_ms": _percentile(timings, .95),
+            "p99_ms": _percentile(timings, .99), "max_ms": max(timings),
+            "effective_ticks_per_second": (
+                branches * ticks / (statistics.median(timings) / 1000)
+            ),
+        })
+
+    # Memory is deliberately measured in a separate pass.  tracemalloc adds
+    # substantial allocation overhead and must never surround the timing loop.
+    tracemalloc.start()
+    for ticks, branches in cases:
+        inputs = tuple(TickInput(1, 0, False, False, False, 0) for _ in range(ticks))
+        _run_case(initial, world, inputs, branches)
+    _, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    return {
+        "schema_version": "mc2p.physics-benchmark.v1",
+        "ruleset_id": JAVA_1_21_RULESET.ruleset_id,
+        "clock": "perf_counter_ns", "repetitions": repetitions,
+        "warmups": warmups,
+        "timing_under_tracemalloc": False,
+        "python_version": platform.python_version(),
+        "cpu": platform.processor() or os.environ.get("PROCESSOR_IDENTIFIER", "unknown"),
+        "peak_traced_bytes": peak, "results": results,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repetitions", type=int, default=30)
+    parser.add_argument("--warmups", type=int, default=5)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     if args.repetitions < 1:
         parser.error("--repetitions must be positive")
-    initial, world = _fixture()
-    results = []
-    tracemalloc.start()
-    for ticks in (1, 6, 20, 60):
-        inputs = tuple(TickInput(1, 0, False, False, False, 0) for _ in range(ticks))
-        timings = []
-        for _ in range(args.repetitions):
-            started = time.perf_counter_ns()
-            result = rollout(initial, inputs, world, JAVA_1_21_RULESET,
-                             RolloutOptions(output_mode=RolloutOutputMode.SUMMARY))
-            timings.append((time.perf_counter_ns() - started) / 1_000_000)
-            if result.ticks_completed != ticks:
-                raise RuntimeError(f"benchmark stopped at {result.ticks_completed}/{ticks}")
-        results.append({
-            "ticks": ticks, "branches": 1,
-            "p50_ms": statistics.median(timings),
-            "p95_ms": _percentile(timings, .95),
-            "p99_ms": _percentile(timings, .99), "max_ms": max(timings),
-            "effective_ticks_per_second": ticks / (statistics.median(timings) / 1000),
-        })
-    for branches in (32, 128):
-        inputs = tuple(TickInput(1, 0, False, False, False, 0) for _ in range(20))
-        timings = []
-        for _ in range(max(3, args.repetitions // 5)):
-            started = time.perf_counter_ns()
-            for _ in range(branches):
-                result = rollout(initial, inputs, world, JAVA_1_21_RULESET,
-                                 RolloutOptions(output_mode=RolloutOutputMode.SUMMARY))
-                if result.ticks_completed != 20:
-                    raise RuntimeError("batch benchmark stopped early")
-            timings.append((time.perf_counter_ns() - started) / 1_000_000)
-        results.append({
-            "ticks": 20, "branches": branches,
-            "p50_ms": statistics.median(timings),
-            "p95_ms": _percentile(timings, .95),
-            "p99_ms": _percentile(timings, .99), "max_ms": max(timings),
-            "effective_ticks_per_second": branches * 20 / (statistics.median(timings) / 1000),
-        })
-    _, peak = tracemalloc.get_traced_memory()
-    tracemalloc.stop()
-    payload = {
-        "schema_version": "mc2p.physics-benchmark.v1",
-        "ruleset_id": JAVA_1_21_RULESET.ruleset_id,
-        "clock": "perf_counter_ns", "repetitions": args.repetitions,
-        "peak_traced_bytes": peak, "results": results,
-    }
+    if args.warmups < 0:
+        parser.error("--warmups must be nonnegative")
+    payload = run_benchmark(repetitions=args.repetitions, warmups=args.warmups)
     encoded = json.dumps(payload, indent=2) + "\n"
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)

@@ -320,13 +320,11 @@ class StepController:
     def _body_is_on_start_surface(self, frame: NavigationFrame) -> bool:
         assert self._start is not None
         region = self._start.region
-        box = frame.body.body_box
+        x, y, z = frame.body.position
         return (
-            abs(frame.body.position[1] - self._start.position[1]) <= .1
-            and box.min_x >= region.min_x - _EPSILON
-            and box.max_x <= region.max_x + _EPSILON
-            and box.min_z >= region.min_z - _EPSILON
-            and box.max_z <= region.max_z + _EPSILON
+            abs(y - self._start.position[1]) <= .1
+            and region.min_x - _EPSILON <= x <= region.max_x + _EPSILON
+            and region.min_z - _EPSILON <= z <= region.max_z + _EPSILON
         )
 
     def _apply_geometry_result(self, geometry: StepQuery, started: int) -> StepDecision | None:

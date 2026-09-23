@@ -14,7 +14,8 @@ from mc2p.motion_nav.known_map_planner import (
     PlanningStatus, RouteCandidate, SnapshotBuildProgress, SnapshotBuildStatus,
     WalkEdge, WalkGraph, WalkNode, astar_plan, build_walk_graph,
     plan_known_snapshot, plan_known_surface_snapshot,
-    SurfaceGraph, SurfaceNode, SurfacePlanningRequest, SurfacePlanningStatus,
+    PlannerStateKey, SurfaceGraph, SurfaceNode, SurfacePlanningRequest,
+    SurfacePlanningStatus,
     SurfaceControlledDropEdge, SurfaceJumpGapEdge, SurfaceJumpUpEdge,
     SurfaceRouteCandidate, SurfaceWalkEdge, astar_surface_plan,
     build_surface_graph, dijkstra_surface_reference,
@@ -63,6 +64,29 @@ from mc2p.motion_nav.physics_rollout import (
     RolloutOptions, RolloutOutputMode, RolloutResult, RolloutStopReason,
     rollout as physics_rollout,
 )
+from mc2p.motion_nav.online_motion import (
+    AnchorBuildResult, AnchorBuildStatus, CandidateExecutionWindow,
+    InputApplicationLedger, InputApplicationRecord, InputApplicationStatus,
+    MotionTickPhase, PredictionValidity, ProjectionResult, ProjectionStatus,
+    StateAnchor, StateAnchorBuilder, project_movement_command,
+)
+from mc2p.motion_nav.motion_solver import (
+    GapSolveRequest, LandingRegion, MotionCommandTick, SolveResult,
+    SolveStatus, TrajectoryValidation, VerifiedMotionResult,
+    revalidate_gap_motion, solve_one_cell_gap, validate_gap_trajectory,
+)
+from mc2p.motion_nav.motion_candidate import (
+    AdmittedMotionCandidate, MotionCandidateAdmission, MotionCandidateAdmitter,
+    MotionCandidateContext, MotionCandidateStatus, VerifiedMotionCandidate,
+    VerifiedMotionDecision, VerifiedMotionExecutor, VerifiedMotionExecutorState,
+)
+from mc2p.motion_nav.motion_coordination import (
+    GapPreparationResult, GapPreparationStatus, MotionRouteCoordinator,
+    prepare_planned_gap_motion,
+)
+from mc2p.motion_nav.motion_worker import (
+    GapMotionSolveJob, GapMotionSolveResult, MotionSolverWorker,
+)
 
 __all__ = (
     "Aabb", "BlockGeometry", "CellKnowledge", "ObservationStamp",
@@ -75,7 +99,7 @@ __all__ = (
     "SnapshotBuildProgress", "SnapshotBuildStatus", "WalkEdge", "WalkGraph",
     "WalkNode", "astar_plan", "build_walk_graph", "plan_known_snapshot",
     "plan_known_surface_snapshot",
-    "SurfaceGraph", "SurfaceNode", "SurfacePlanningRequest",
+    "PlannerStateKey", "SurfaceGraph", "SurfaceNode", "SurfacePlanningRequest",
     "SurfacePlanningStatus", "SurfaceControlledDropEdge", "SurfaceJumpGapEdge",
     "SurfaceJumpUpEdge", "SurfaceRouteCandidate", "SurfaceWalkEdge",
     "astar_surface_plan", "build_surface_graph", "dijkstra_surface_reference",
@@ -101,4 +125,19 @@ __all__ = (
     "TickInput", "PhysicsWorldView", "build_physics_state", "physics_step",
     "RolloutOptions", "RolloutOutputMode", "RolloutResult",
     "RolloutStopReason", "physics_rollout",
+    "AnchorBuildResult", "AnchorBuildStatus", "CandidateExecutionWindow",
+    "InputApplicationLedger", "InputApplicationRecord", "InputApplicationStatus",
+    "MotionTickPhase", "PredictionValidity", "ProjectionResult", "ProjectionStatus",
+    "StateAnchor", "StateAnchorBuilder", "project_movement_command",
+    "GapSolveRequest", "LandingRegion", "MotionCommandTick", "SolveResult",
+    "SolveStatus", "TrajectoryValidation", "VerifiedMotionResult",
+    "revalidate_gap_motion", "solve_one_cell_gap", "validate_gap_trajectory",
+    "AdmittedMotionCandidate", "MotionCandidateAdmission",
+    "MotionCandidateAdmitter", "MotionCandidateContext",
+    "MotionCandidateStatus", "VerifiedMotionCandidate",
+    "VerifiedMotionDecision", "VerifiedMotionExecutor",
+    "VerifiedMotionExecutorState",
+    "GapPreparationResult", "GapPreparationStatus",
+    "MotionRouteCoordinator", "prepare_planned_gap_motion",
+    "GapMotionSolveJob", "GapMotionSolveResult", "MotionSolverWorker",
 )

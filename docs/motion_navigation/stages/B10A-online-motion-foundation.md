@@ -1,7 +1,7 @@
 # B10-A：在线状态、输入投影与计算预算
 
 日期：2026-09-21
-状态：尚未开始
+状态：已完成；B10-B 可以开始
 
 ## 目标
 
@@ -67,6 +67,17 @@ B10.0 不再作为“补完所有边界后才能继续”的总前置。每项�
 - 完整检查预算支持一个限定能力进入后台求解开发；
 - 现有 B03–B09 控制器没有被新链路改写。
 
+## 实施结果
+
+B10-A 已完成以下交付：
+
+- Fabric 回执升级到 `mc2p.client_action_receipt.v3`。回执按真实玩家运动 tick 保存采样后的输入，并保留 V2 读取兼容。
+- `InputApplicationLedger` 以固定容量保存命令及应用结果。它区分在途、部分应用、已应用、窗口外应用、过期、拒绝和歧义。未完成记录不会因容量不足被静默删除。
+- `StateAnchorBuilder` 生成不可变锚点，保存会话、观察序号、运动 tick、tick 相位、最近确认命令及其实际作用区间。
+- `project_movement_command` 只把正式 `MovementV1` 命令投影为 `TickInput`。Crouch 输入不会重复缩放；尚未支持的物品使用减速明确返回不支持。
+- `PredictionValidity` 与 `CandidateExecutionWindow` 分开表达预测可算到哪里，以及候选最迟何时仍可开始执行。
+- 新增输入链核验工具和计算预算工具。它们不取得输入控制权，也不改变 B03–B09 控制器。
+
+实机和性能结果见 [B10-A 验收结果](../acceptance/B10A-online-motion-foundation.md)。
+
 详细接口见 [B10 动作求解与连续执行架构](../architecture/B10-motion-solving-continuous-execution-v1.md)，验收口径见 [B10 验收计划](../acceptance/B10-motion-solving-continuous-execution.md)。
-
-
