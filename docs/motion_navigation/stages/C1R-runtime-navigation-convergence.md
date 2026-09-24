@@ -1,7 +1,7 @@
 # C1-R：公共控制与导航收敛实施方案
 
 日期：2026-09-24
-状态：实施中；R0 至 R4 已完成，当前进入 R5
+状态：已完成；R0 至 R5 均已通过
 
 ## 目标
 
@@ -262,17 +262,32 @@
 
 ### R5：完整回归、公开快照和 GitHub 同步
 
+**完成情况（2026-09-25）**
+
+- 建立了由固定清单驱动的源码导出器。它只允许清理工作区 `.tmp` 的明确子目录，并生成来源提交、清单哈希、逐文件 SHA-256 和工作树状态；
+- 公开仓库的 `.gitattributes` 禁止 Git 改写文件字节。Windows 本地发布树与 GitHub 干净克隆的根目录树 SHA 完全一致；
+- C1 固定近战只依赖带来源哈希的 11 项精简控制能力，不再依赖未公开的 315 KB 原始实验产物；实时导航演示只在实际启动时查找本地 Gradle，导入和离线测试不再依赖缓存；
+- 主工作区和独立导出树的 `tests/motion_nav` 均为 401／401，通过 README 声明的 C1 检查 41／41、纯 Java 门禁 1／1；
+- 从 GitHub 默认分支重新干净克隆后，再次得到 401／401、41／41 和 1／1。哈希检查报告 568 个受检文件，运行检查后仓库保持干净；
+- 普通单元测试已停止用当前机器的墙钟 P95／P99 判定功能正确性。原毫秒门槛和 R4 正式 Fabric 样本继续保留，不因这次调整而放宽；
+- 公开仓库只包含实现源码、配置、测试、精简文档和门禁。世界、完整轨迹、日志、缓存、构建产物及本地参考文档没有上传。
+
+公开仓库根目录的 `EXPORT-METADATA.json` 记录准确的主项目来源提交；`SHA256SUMS.txt` 记录可克隆文件的字节哈希。远端默认分支只有在干净克隆通过上述命令后才视为同步完成。
+
 **新建**
 
 - `config/motion-navigation/standalone-export-v1.json`
 - `scripts/export_motion_navigation_standalone.py`
 - `tests/motion_nav/test_standalone_export.py`
+- `tests/test_standalone_java_gates.py`
+- `packaging/motion-navigation-standalone/` 下的公开仓库入口文件
 
 **修改**
 
 - `tests/motion_nav/test_public_repository_completeness.py`
 - `tests/motion_nav/test_fixed_route_walk.py`
 - `docs/motion_navigation/acceptance/B03-fixed-route-walk.md`
+- C1 固定近战配置来源
 - 独立仓库 `README.md`、`AGENTS.md` 和 `SHA256SUMS.txt`
 
 **工作**
