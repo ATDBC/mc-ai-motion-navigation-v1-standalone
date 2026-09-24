@@ -48,7 +48,8 @@ C1 战斗纵切片也已完成当前冻结范围：
 - `mc2p/backends/`：正式观察、Fabric 行为协议和客户端实现；
 - `deployment/fabric-c1-fixture-server/`：固定种子、移动目标和受控原版攻击的验收夹具；
 - `tests/`：行为、错误边界、重放和 Java 门禁；
-- `reports/fabric-acceptance/`：精简正式报告、运行清单与重放结论。
+- `reports/fabric-acceptance/`：精简正式报告、运行清单与重放结论；
+- `reviews/`：外部审查意见，不属于四类正式文档，不改变阶段结论。
 
 ## 结论边界
 
