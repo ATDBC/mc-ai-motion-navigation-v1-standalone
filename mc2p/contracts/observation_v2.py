@@ -217,6 +217,7 @@ class SelfStateV2:
     allow_flying: bool
     hurt_animation_ticks: int | None = None
     movement_tick_id: int | None = None
+    eye_height_blocks: float | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.position, Vec3V0) or not isinstance(
@@ -296,6 +297,10 @@ class SelfStateV2:
             if self.hurt_animation_ticks > 20:
                 raise ContractViolation("self hurt animation ticks cannot exceed 20")
             require_nonnegative_int(self.movement_tick_id, "self movement tick")
+        if self.eye_height_blocks is not None:
+            require_finite(self.eye_height_blocks, "self eye height")
+            if not 0.0 < self.eye_height_blocks <= 3.0:
+                raise ContractViolation("self eye height must be in (0,3]")
 
 
 @dataclass(frozen=True, slots=True)

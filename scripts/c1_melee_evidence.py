@@ -25,6 +25,28 @@ def _failure(layer: str, reason: str, identity: dict | None = None,
     }
 
 
+def _c1_attack_operation(value: object, track_id: str) -> dict | None:
+    """Normalize old C1 full-cooldown records and the explicit current form."""
+    if type(value) is not dict:
+        return None
+    if set(value) not in (
+        {"entity_ref", "kind"},
+        {"entity_ref", "kind", "minimum_cooldown_progress"},
+    ):
+        return None
+    cooldown = value.get("minimum_cooldown_progress", 1.0)
+    if (value.get("entity_ref") != track_id
+            or value.get("kind") != "attack_entity"
+            or type(cooldown) not in (int, float)
+            or float(cooldown) != 1.0):
+        return None
+    return {
+        "entity_ref": track_id,
+        "kind": "attack_entity",
+        "minimum_cooldown_progress": 1.0,
+    }
+
+
 def _observation_from_record(row: dict):
     record_type, payload = row.get("record_type"), row.get("payload")
     if type(payload) is not dict:
@@ -196,11 +218,21 @@ def replay_c1_melee(evidence: Path) -> dict:
         expected_operation = ({
             "entity_ref": skill_identity["track_id"],
             "kind": "attack_entity",
+            "minimum_cooldown_progress": 1.0,
         } if decision.selected_candidate_id == "attack" else None)
+        skill_operation = skill.get("operation")
+        intent_operation = None if type(intent) is not dict else intent.get("operation")
+        if expected_operation is not None:
+            skill_operation = _c1_attack_operation(
+                skill_operation, skill_identity["track_id"],
+            )
+            intent_operation = _c1_attack_operation(
+                intent_operation, skill_identity["track_id"],
+            )
         if (skill.get("candidate_id") != decision.selected_candidate_id
-                or skill.get("operation") != expected_operation
+                or skill_operation != expected_operation
                 or type(intent) is not dict
-                or intent.get("operation") != expected_operation):
+                or intent_operation != expected_operation):
             return _failure("skill_execution", "skill_or_intent_mismatch", skill_identity,
                             len(generations))
 
@@ -208,8 +240,14 @@ def replay_c1_melee(evidence: Path) -> dict:
                          if ["operation", intent_id] in item.get("selected_intents", [])
                          or ["look", intent_id] in item.get("selected_intents", [])), None)
         expected_group = "operation" if expected_operation is not None else "look"
+        dispatch_operation = (None if dispatch is None else
+                              dispatch.get("action", {}).get("operation"))
+        if expected_operation is not None:
+            dispatch_operation = _c1_attack_operation(
+                dispatch_operation, skill_identity["track_id"],
+            )
         if (dispatch is None or [expected_group, intent_id] not in dispatch.get("selected_intents", [])
-                or dispatch.get("action", {}).get("operation") != expected_operation
+                or dispatch_operation != expected_operation
                 or not skill.get("selected_by_arbiter")):
             return _failure("arbitration", "arbitration_output_mismatch", skill_identity,
                             len(generations))

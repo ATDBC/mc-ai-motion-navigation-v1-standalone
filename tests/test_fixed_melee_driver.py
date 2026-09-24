@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+import math
 import unittest
 
 from mc2p.contracts.action_v1 import ActionSnapshotV1, AttackEntityV1
@@ -15,12 +16,11 @@ from mc2p.runtime.backend_v1 import BackendStepResultV1
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1
 from mc2p.skills.fixed_melee import CombatTargetV1
 from mc2p.skills.melee_strike_driver import MeleeStrikeDriver
-from mc2p.skills.navigation_state import NavigationState
-from mc2p.skills.point_goal_policy import PointGoalPolicy
+from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
 from tests.follow_fixtures import player_value
 from tests.follow_v3_fixtures import follow_snapshot, observed_block
 from tests.test_action_receipt import receipt_value
-from tests.test_navigation_joint_policy import TestCapabilities
+from tests.navigation_session_fixtures import FakeNavigationSession
 from tests.test_player_runtime import _RecordingTrace
 
 
@@ -42,6 +42,7 @@ class MeleeBackend:
         self.reject_reason = None
         self.attack_error = None
         self.query_track = None
+        self.query_air = ()
         self.dead = False
         self.health = 20.0
         self.confirm_hit = True
@@ -50,6 +51,8 @@ class MeleeBackend:
         self.own_health = 20.0
         self.own_ground = True
         self.own_velocity = (0.0, 0.0, 0.0)
+        self.own_pose = "standing"
+        self.own_eye_height = 1.62
         self.actions = []
         self.closed = False
 
@@ -71,6 +74,8 @@ class MeleeBackend:
                 "health_points": self.own_health,
                 "is_on_ground": self.own_ground,
                 "velocity": dict(zip(("x", "y", "z"), self.own_velocity)),
+                "pose": self.own_pose,
+                "eye_height_blocks": self.own_eye_height,
             },
         )
         if self.profile == "interaction_v1":
@@ -100,6 +105,7 @@ class MeleeBackend:
         self.actions.append(action)
         self.profile = observation_request.field_profile
         self.query_track = observation_request.entity_track_id
+        self.query_air = observation_request.air_positions
         status, reason = "executed", "neutral"
         if type(action.operation) is AttackEntityV1:
             if self.attack_error is not None:
@@ -143,12 +149,11 @@ class FixedMeleeDriverTests(unittest.TestCase):
     def tearDown(self):
         self.runtime.close()
 
-    def driver(self, capabilities=None):
+    def driver(self):
         from mc2p.skills.fixed_melee_driver import FixedMeleeDriver
         return FixedMeleeDriver(
             self.runtime,
-            NavigationState("scope"),
-            PointGoalPolicy("D", control_capabilities=capabilities or TestCapabilities()),
+            FakeNavigationSession(),
             clock_ns=lambda: self.clock[0],
         )
 
@@ -179,7 +184,7 @@ class FixedMeleeDriverTests(unittest.TestCase):
         for expected in ("combat_assessment", "combat_candidates", "combat_selection", "combat_skill"):
             self.assertIn(expected, kinds)
 
-    def test_far_target_delegates_to_real_point_goal_driver(self):
+    def test_far_target_delegates_to_navigation_session(self):
         self.runtime.close()
         self.backend = MeleeBackend(self.clock, distance=5.0)
         self.trace = _RecordingTrace()
@@ -189,15 +194,12 @@ class FixedMeleeDriverTests(unittest.TestCase):
         ).succeeded)
         driver = self.driver()
         driver.start(self.target(), self.clock[0])
-        from mc2p.skills.point_goal_driver import PointGoalDriver
-        self.assertIs(type(driver.approach_driver), PointGoalDriver)
+        self.assertIs(type(driver.approach_driver), RuntimeNavigationDriver)
         goal = driver.approach_driver._goal
-        self.assertEqual(goal.radius, 0.4)
-        self.assertAlmostEqual(goal.position.z, 3.0)
+        self.assertAlmostEqual((goal.region.min_z + goal.region.max_z) / 2, 3.3)
         self.assertEqual(driver.report.state, "approaching")
 
     def test_failed_approach_releases_ordered_source_before_next_trial(self):
-        from mc2p.skills.normal_control_capabilities import ControlCapabilities
         self.runtime.close()
         self.backend = MeleeBackend(self.clock, distance=5.0)
         self.trace = _RecordingTrace()
@@ -205,8 +207,7 @@ class FixedMeleeDriverTests(unittest.TestCase):
         self.assertTrue(self.runtime.reset(
             ResetRequestV0("reset-far-failure", "episode-1", "test", 1, 2_000_000_000)
         ).succeeded)
-        denied = ControlCapabilities((), (), ".")
-        first = self.driver(denied)
+        first = self.driver()
         first.start(self.target(), self.clock[0])
         approach = first.approach_driver
         self.assertIsNotNone(approach)
@@ -221,7 +222,7 @@ class FixedMeleeDriverTests(unittest.TestCase):
         approach.tick = blocked_tick
         first.tick(self.profile, self.clock[0] + 2_000_000_000)
         self.assertTrue(first.report.terminal)
-        second = self.driver(denied)
+        second = self.driver()
         second.start(self.target(), self.clock[0])
         self.assertEqual(second.report.state, "approaching")
 
@@ -314,14 +315,17 @@ class FixedMeleeDriverTests(unittest.TestCase):
             attacks,
         )
 
-    def test_existing_hurt_animation_waits_for_clear(self):
+    def test_existing_hurt_animation_does_not_block_attack(self):
         self.backend.hurt = 4
         driver = self.driver()
         driver.start(self.target(), self.clock[0])
-        for _ in range(3):
-            driver.tick(self.profile, self.clock[0] + 2_000_000_000)
-        self.assertFalse(any(type(action.operation) is AttackEntityV1 for action in self.backend.actions))
-        self.assertEqual(driver.report.reason, "existing_hurt_animation_must_clear")
+        self.tick_until_terminal(driver)
+        self.assertEqual(
+            sum(type(action.operation) is AttackEntityV1 for action in self.backend.actions),
+            1,
+        )
+        self.assertEqual((driver.report.state, driver.report.reason),
+                         ("complete", "hit_confirmed"))
 
     def test_unconfirmed_aim_is_bounded_instead_of_spinning_until_runtime_deadline(self):
         self.backend.targeted = False
@@ -334,6 +338,23 @@ class FixedMeleeDriverTests(unittest.TestCase):
         self.assertEqual(driver.report.state, "failed")
         self.assertEqual(driver.report.reason, "aim_not_confirmed")
         self.assertFalse(any(type(action.operation) is AttackEntityV1 for action in self.backend.actions))
+
+    def test_crouching_aim_uses_observed_eye_height(self):
+        self.backend.targeted = False
+        self.backend.own_pose = "crouching"
+        self.backend.own_eye_height = 1.27
+        driver = self.driver()
+        driver.start(self.target(), self.clock[0])
+
+        driver.tick(self.profile, self.clock[0] + 2_000_000_000)
+        driver.tick(self.profile, self.clock[0] + 2_000_000_000)
+
+        expected_pitch = math.degrees(math.atan2(1.27 - .9, 2.5))
+        self.assertAlmostEqual(
+            self.backend.actions[-1].look.pitch_delta_degrees,
+            expected_pitch,
+            places=6,
+        )
 
 
 if __name__ == "__main__":

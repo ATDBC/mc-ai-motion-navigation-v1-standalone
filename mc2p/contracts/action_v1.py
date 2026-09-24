@@ -122,12 +122,18 @@ class MineBlockV1(InteractBlockV1):
 @dataclass(frozen=True, slots=True)
 class AttackEntityV1:
     entity_ref: str
+    minimum_cooldown_progress: float = 1.0
     kind: str = field(default="attack_entity", init=False)
 
     def __post_init__(self) -> None:
         require_identifier(self.entity_ref, "attack entity reference")
         if len(self.entity_ref) > 128:
             raise ContractViolation("attack entity reference exceeds 128 characters")
+        require_finite(self.minimum_cooldown_progress, "minimum attack cooldown progress")
+        if type(self.minimum_cooldown_progress) not in (int, float):
+            raise ContractViolation("minimum attack cooldown progress must be numeric")
+        if not 0.0 <= self.minimum_cooldown_progress <= 1.0:
+            raise ContractViolation("minimum attack cooldown progress must be in [0,1]")
 
 
 BehaviorOperationV1: TypeAlias = (

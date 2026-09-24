@@ -9,6 +9,10 @@ from mc2p.contracts.observation import Vec3V0
 from mc2p.motion_nav.external_motion import (
     DamageKnockbackDetector, ExternalMotionEventV1, ExternalMotionSource,
 )
+from mc2p.motion_nav.motion_residual import (
+    MotionResidualResult, MotionResidualStatus,
+)
+from mc2p.motion_nav.physics_types import PhysicsState
 from mc2p.motion_nav.external_motion_recovery import ExternalMotionRecoveryController
 from mc2p.runtime.segmented_trace import iter_segmented_jsonl
 from mc2p.runtime.trace import trace_projection
@@ -41,6 +45,37 @@ def _event(raw: dict) -> ExternalMotionEventV1:
         _vec(raw["previous_position"]), _vec(raw["position"]),
         _vec(raw["previous_velocity"]), _vec(raw["velocity"]),
         raw["was_on_ground"], raw["is_on_ground"],
+        raw.get("absorption_delta_points", 0.0),
+        raw.get("position_residual_blocks"),
+        raw.get("velocity_residual_blocks_per_tick"),
+    )
+
+
+def _residual(raw: object) -> MotionResidualResult | None:
+    if raw is None:
+        return None
+    if type(raw) is not dict:
+        raise ValueError("motion residual record is invalid")
+    predicted_raw = raw.get("predicted_state")
+    predicted = None
+    if predicted_raw is not None:
+        if type(predicted_raw) is not dict:
+            raise ValueError("predicted state record is invalid")
+        state_data = dict(predicted_raw)
+        session = state_data.get("session")
+        if type(session) is dict:
+            state_data["session"] = session.get("value")
+        predicted = PhysicsState.from_mapping(state_data)
+    return MotionResidualResult(
+        MotionResidualStatus(raw["status"]),
+        raw["anchor_tick"], raw["observed_tick"], predicted,
+        raw.get("position_error_blocks"),
+        raw.get("velocity_error_blocks_per_tick"),
+        raw.get("contact_mismatch", False),
+        tuple(tuple(cell) for cell in raw.get("dependencies", ())),
+        tuple(raw.get("missing_ticks", ())),
+        tuple(tuple(cell) for cell in raw.get("missing_cells", ())),
+        tuple(raw.get("reasons", ())),
     )
 
 
@@ -113,7 +148,12 @@ def _replay_rows(rows: list[dict]) -> dict:
                 task_id = payload["task_id"]
                 observation = observations[payload["observation_sequence_id"]]
                 detector = detectors.setdefault(task_id, DamageKnockbackDetector())
-                detection = detector.observe(observation)
+                logged_detection = payload.get("detection")
+                residual = _residual(
+                    None if type(logged_detection) is not dict
+                    else logged_detection.get("motion_residual")
+                )
+                detection = detector.observe(observation, residual)
                 if trace_projection(detection) != payload.get("detection"):
                     return _failure(
                         "event_identity", "external_detection_replay_mismatch", replayed,

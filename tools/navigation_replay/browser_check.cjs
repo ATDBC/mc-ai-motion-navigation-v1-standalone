@@ -1,0 +1,56 @@
+// Uses the already bundled browser library; no package installation or game launch.
+const {chromium}=require('C:/Users/Admin/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+
+(async()=>{
+  const base=process.argv[2]||'http://127.0.0.1:8766';
+  const catalog=await(await fetch(base+'/api/catalog')).json();
+  const batch=catalog.batches.find(b=>b.experiment==='navigation-control-v1'&&b.runs.some(r=>r.case==='staggered_walls'));
+  assert.ok(batch,'缺少真实交错墙场次');
+  const run=batch.runs.find(r=>r.case==='staggered_walls');
+  const browser=await chromium.launch({channel:'msedge',headless:true});
+  const page=await browser.newPage({viewport:{width:1440,height:1100}});
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.goto(base+'/?run='+run.id);
+  await page.waitForFunction(()=>!document.getElementById('play').disabled,{},{timeout:120000});
+  assert.match(await page.locator('#scene-title').innerText(),/交错墙/);
+  assert.match(await page.locator('#memory-status').innerText(),/核对通过/);
+  await page.locator('#seek').evaluate(el=>{el.value='8';el.dispatchEvent(new Event('input'));});
+  assert.match(await page.locator('#time-value').innerText(),/8.000/);
+  const later=await page.locator('#layer-count').innerText();
+  await page.locator('#seek').evaluate(el=>{el.value='0';el.dispatchEvent(new Event('input'));});
+  assert.notEqual(await page.locator('#layer-count').innerText(),later,'倒放应恢复早期认知');
+  await page.locator('#speed').selectOption('2');await page.locator('#play').click();
+  await page.waitForTimeout(800);await page.locator('#play').click();
+  const elapsed=parseFloat(await page.locator('#time-value').innerText());
+  assert.ok(elapsed>.8&&elapsed<3.5,'倍速播放推进时间');
+  await page.locator('#next').click();
+  assert.ok(parseFloat(await page.locator('#time-value').innerText())>elapsed,'逐帧前进');
+  await page.locator('#height').selectOption('-61');
+  await page.locator('#memory-layer').uncheck();await page.locator('#memory-layer').check();
+  await page.locator('#height').selectOption('all');
+  await page.locator('#seek').evaluate(el=>{el.value='8.5';el.dispatchEvent(new Event('input'));});
+  const output=path.resolve('output/playwright/navigation-replay');fs.mkdirSync(output,{recursive:true});
+  await page.screenshot({path:path.join(output,'desktop.png'),fullPage:true});
+  await page.setViewportSize({width:390,height:844});
+  await page.screenshot({path:path.join(output,'mobile.png'),fullPage:true});
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'移动布局不能横向溢出');
+  await page.setViewportSize({width:1440,height:1100});
+  const other=batch.runs.find(r=>r.id!==run.id&&r.complete);
+  if(other){await page.locator('#run').selectOption(other.id);await page.waitForFunction(()=>!document.getElementById('play').disabled,{},{timeout:120000});assert.match(await page.locator('#time-value').innerText(),/0.000/);}
+  const oldBatch=catalog.batches.find(b=>b.experiment==='j5-static-v1'&&b.runs.some(r=>r.outcome==='timeout'));
+  assert.ok(oldBatch,'旧版超时记录应在列表中保留');
+  const old=oldBatch.runs.find(r=>r.outcome==='timeout');
+  await page.locator('#batch').selectOption(oldBatch.id);await page.locator('#run').selectOption(old.id);
+  await page.waitForFunction(()=>!document.getElementById('play').disabled,{},{timeout:120000});
+  assert.equal(await page.locator('#outcome').innerText(),'超时');
+  assert.match(await page.locator('#memory-status').innerText(),/核对通过/);
+  await page.locator('#seek').evaluate(el=>{el.value='80';el.dispatchEvent(new Event('input'));});
+  assert.match(await page.locator('#time-value').innerText(),/80.000/);
+  await page.screenshot({path:path.join(output,'historical-timeout.png'),fullPage:true});
+  assert.deepEqual(errors,[]);
+  console.log(JSON.stringify({passed:true,batches:catalog.batches.length,run:run.id,oldRun:old.id,memory:await page.locator('#memory-status').innerText(),screenshot:output}));
+  await browser.close();
+})().catch(e=>{console.error(e);process.exit(1);});

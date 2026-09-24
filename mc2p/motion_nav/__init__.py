@@ -2,7 +2,8 @@
 
 from mc2p.motion_nav.world_model import (
     Aabb, BlockGeometry, CellKnowledge, ObservationStamp, WorldKnowledge,
-    WorldSessionId, WorldView,
+    WorldSessionId, WorldUpdateResult, WorldUpdateStatus, WorldView,
+    block_section,
 )
 from mc2p.motion_nav.runtime_adapter import BodyState, NavigationFrame, NavigationObservationAdapter
 from mc2p.motion_nav.fixed_route import (
@@ -75,8 +76,11 @@ from mc2p.motion_nav.online_motion import (
     StateAnchor, StateAnchorBuilder, project_movement_command,
 )
 from mc2p.motion_nav.motion_solver import (
-    GapSolveRequest, LandingRegion, MotionCommandTick, SolveResult,
+    DEFAULT_GAP_SOLVER_POLICY, GapCommandTemplate, GapSolveRequest,
+    GapSolverPolicy, LandingRegion, MotionCommandTick, SolveResult,
     SolveStatus, TrajectoryValidation, VerifiedMotionResult,
+    VerifiedMotionStartVariant,
+    load_gap_solver_policy,
     revalidate_gap_motion, solve_one_cell_gap, validate_gap_trajectory,
 )
 from mc2p.motion_nav.motion_candidate import (
@@ -91,9 +95,20 @@ from mc2p.motion_nav.motion_coordination import (
 from mc2p.motion_nav.motion_worker import (
     GapMotionSolveJob, GapMotionSolveResult, MotionSolverWorker,
 )
+from mc2p.motion_nav.navigation_session import (
+    ExternalMotionReentryDecision, ExternalMotionReentryStatus,
+    NavigationSession, NavigationSessionPort, NavigationSessionProfiles,
+    NavigationSessionProposal, NavigationSessionReport, NavigationSessionState,
+)
 from mc2p.motion_nav.external_motion import (
+    DamageFactDetection, DamageFactDetector, DamageFactV1,
     DamageKnockbackDetector, ExternalMotionDetection, ExternalMotionEventV1,
     ExternalMotionSource,
+)
+from mc2p.motion_nav.motion_residual import (
+    DEFAULT_MOTION_RESIDUAL_THRESHOLDS, MotionResidualResult,
+    MotionResidualStatus, MotionResidualThresholds, MotionResidualTracker,
+    calculate_motion_residual,
 )
 from mc2p.motion_nav.external_motion_recovery import (
     ExternalMotionRecoveryConfig, ExternalMotionRecoveryController,
@@ -102,7 +117,8 @@ from mc2p.motion_nav.external_motion_recovery import (
 
 __all__ = (
     "Aabb", "BlockGeometry", "CellKnowledge", "ObservationStamp",
-    "WorldKnowledge", "WorldSessionId", "WorldView", "BodyState", "NavigationFrame",
+    "WorldKnowledge", "WorldSessionId", "WorldUpdateResult",
+    "WorldUpdateStatus", "WorldView", "block_section", "BodyState", "NavigationFrame",
     "NavigationObservationAdapter",
     "FixedRoute", "FixedRouteConfig", "FixedRouteController", "FixedRouteDecision",
     "FixedRouteState", "RoutePoint",
@@ -141,8 +157,11 @@ __all__ = (
     "InputApplicationLedger", "InputApplicationRecord", "InputApplicationStatus",
     "MotionTickPhase", "PredictionValidity", "ProjectionResult", "ProjectionStatus",
     "StateAnchor", "StateAnchorBuilder", "project_movement_command",
-    "GapSolveRequest", "LandingRegion", "MotionCommandTick", "SolveResult",
+    "DEFAULT_GAP_SOLVER_POLICY", "GapCommandTemplate", "GapSolveRequest",
+    "GapSolverPolicy", "LandingRegion", "MotionCommandTick", "SolveResult",
     "SolveStatus", "TrajectoryValidation", "VerifiedMotionResult",
+    "VerifiedMotionStartVariant",
+    "load_gap_solver_policy",
     "revalidate_gap_motion", "solve_one_cell_gap", "validate_gap_trajectory",
     "AdmittedMotionCandidate", "MotionCandidateAdmission",
     "MotionCandidateAdmitter", "MotionCandidateContext",
@@ -152,8 +171,16 @@ __all__ = (
     "GapPreparationResult", "GapPreparationStatus",
     "MotionRouteCoordinator", "prepare_planned_gap_motion",
     "GapMotionSolveJob", "GapMotionSolveResult", "MotionSolverWorker",
+    "ExternalMotionReentryDecision", "ExternalMotionReentryStatus",
+    "NavigationSession", "NavigationSessionPort", "NavigationSessionProfiles",
+    "NavigationSessionProposal", "NavigationSessionReport",
+    "NavigationSessionState",
+    "DamageFactDetection", "DamageFactDetector", "DamageFactV1",
     "DamageKnockbackDetector", "ExternalMotionDetection",
     "ExternalMotionEventV1", "ExternalMotionSource",
+    "DEFAULT_MOTION_RESIDUAL_THRESHOLDS", "MotionResidualResult",
+    "MotionResidualStatus", "MotionResidualThresholds",
+    "MotionResidualTracker", "calculate_motion_residual",
     "ExternalMotionRecoveryConfig", "ExternalMotionRecoveryController",
     "ExternalMotionRecoveryDecision", "RecoveryDirective",
 )

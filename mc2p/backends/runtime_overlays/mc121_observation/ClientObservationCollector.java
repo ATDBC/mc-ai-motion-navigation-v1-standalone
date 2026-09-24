@@ -207,6 +207,9 @@ public final class ClientObservationCollector {
         value.addProperty("horizontal_collision", player.horizontalCollision);
         value.addProperty("vertical_collision", player.verticalCollision);
         value.addProperty("pose", player.getPose().name().toLowerCase(Locale.ROOT));
+        value.addProperty(
+                "eye_height_blocks",
+                player.getCameraPosVec(1.0f).y - player.getY());
         value.addProperty("is_sprinting", player.isSprinting());
         value.addProperty("is_sneaking", player.isSneaking());
         value.addProperty("is_swimming", player.isSwimming());

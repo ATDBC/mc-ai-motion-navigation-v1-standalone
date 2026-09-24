@@ -19,7 +19,7 @@ class B10MotionWorkerTests(unittest.TestCase):
             "route-1/action-0", 3, anchor, world,
             GapSolveRequest(
                 (0, 1), LandingRegion(*target),
-                CandidateExecutionWindow(11, 20),
+                CandidateExecutionWindow(11, 12),
             ),
         )
         with patch(
@@ -37,7 +37,7 @@ class B10MotionWorkerTests(unittest.TestCase):
             "route-1/action-0", 3, anchor, world,
             GapSolveRequest(
                 (0, 1), LandingRegion(*target),
-                CandidateExecutionWindow(11, 20),
+                CandidateExecutionWindow(11, 12),
             ),
         )
         with MotionSolverWorker(max_pending=4) as worker:
@@ -60,7 +60,7 @@ class B10MotionWorkerTests(unittest.TestCase):
     def test_distinct_connections_are_not_replaced_by_arrival_order(self):
         anchor, world, target, _ = fixture()
         request = GapSolveRequest(
-            (0, 1), LandingRegion(*target), CandidateExecutionWindow(11, 20),
+            (0, 1), LandingRegion(*target), CandidateExecutionWindow(11, 12),
         )
         jobs = (
             GapMotionSolveJob("route-1/action-0", 1, anchor, world, request),

@@ -22,7 +22,7 @@ from mc2p.motion_nav.movement_transition import (
 )
 from mc2p.motion_nav.world_model import (
     Aabb, BlockPos, COLLISION_OWNER_BELOW_REACH_CELLS, CellFact, CellKnowledge,
-    WorldView,
+    WORLD_SECTION_SIZE, WorldView,
 )
 from mc2p.motion_nav.step_transition import StepEdge, StepProfile, query_step
 from mc2p.motion_nav.support_surfaces import (
@@ -89,6 +89,7 @@ class SnapshotBuildProgress:
     scanned_cells: int
     total_cells: int
     snapshot: KnownMapSnapshot | None = None
+    missing_cells: tuple[BlockPos, ...] = ()
 
 
 class KnownMapSnapshotBuilder:
@@ -111,6 +112,24 @@ class KnownMapSnapshotBuilder:
                         + self._owner_reach)
         self._depth = bounds.max_z - bounds.min_z + 1
         self._total = self._width * self._depth * self._height
+        minimum_y = bounds.min_feet_y - 1 - self._owner_reach
+        maximum_y = minimum_y + self._height - 1
+        sections = tuple(
+            (section_x, section_y, section_z)
+            for section_x in range(
+                bounds.min_x // WORLD_SECTION_SIZE,
+                bounds.max_x // WORLD_SECTION_SIZE + 1,
+            )
+            for section_y in range(
+                minimum_y // WORLD_SECTION_SIZE,
+                maximum_y // WORLD_SECTION_SIZE + 1,
+            )
+            for section_z in range(
+                bounds.min_z // WORLD_SECTION_SIZE,
+                bounds.max_z // WORLD_SECTION_SIZE + 1,
+            )
+        )
+        self._section_geometry_revisions = source.geometry_revisions(sections)
         self._index = 0
         self._facts: dict[BlockPos, CellFact] = {}
         self._unknown_positions: set[BlockPos] = set()
@@ -134,7 +153,9 @@ class KnownMapSnapshotBuilder:
                 SnapshotBuildStatus.COMPLETE, self._total, self._total, self._complete,
             )
         if (self._stale or source.session != self._session
-                or source.geometry_revision != self._geometry_revision):
+                or source.geometry_revisions(
+                    section for section, _ in self._section_geometry_revisions
+                ) != self._section_geometry_revisions):
             self._stale = True
             return SnapshotBuildProgress(
                 SnapshotBuildStatus.STALE, self._index, self._total,
@@ -194,7 +215,8 @@ class KnownMapSnapshotBuilder:
         )
         self._complete = KnownMapSnapshot(detached, actual_bounds)
         return SnapshotBuildProgress(
-            SnapshotBuildStatus.COMPLETE, self._total, self._total, self._complete,
+            SnapshotBuildStatus.COMPLETE, self._total, self._total,
+            self._complete, tuple(sorted(self._unknown_positions)),
         )
 
 

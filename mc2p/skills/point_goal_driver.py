@@ -10,7 +10,10 @@ from mc2p.contracts.action import ActionPriorityV0
 from mc2p.contracts.action_v1 import ActionIntentV1, MovementV1
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.common import ContractViolation, require_nonnegative_int
-from mc2p.contracts.intent_source import OrderedIntentV1, ordered_intent_id
+from mc2p.contracts.intent_source import (
+    ControlFrameEventV1, ControlFrameProposalV1, OrderedIntentV1,
+    ordered_intent_id,
+)
 from mc2p.contracts.observation_v3 import ObservationSnapshotV3
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.contracts.task import ComparisonOperatorV0, SuccessCriterionV0, TaskIntentV0
@@ -143,15 +146,20 @@ class PointGoalDriver:
         return project_playground_view(observation, now_ns, self.clock_id)
 
     def _event(self, record_type: str, schema: str, **values) -> None:
+        self.runtime.record_task_event(
+            record_type, self._event_payload(schema, **values),
+        )
+
+    def _event_payload(self, schema: str, **values) -> dict:
         assert self.source is not None and self._task is not None
-        self.runtime.record_task_event(record_type, dict(
+        return dict(
             schema_version=schema,
             task_id=self._task.task_id,
             attempt_id=self.attempt_id,
             episode_id=self.source.episode_id,
             source_generation=self.source.generation,
             **values,
-        ))
+        )
 
     @staticmethod
     def _receipt(result: RuntimeStepResultV1):
@@ -255,9 +263,36 @@ class PointGoalDriver:
                 movement=decision.movement, look=decision.look, valid_for_ticks=1,
                 movement_requires_look=True,
             )
+            planning_event = ControlFrameEventV1(
+                "playground_task", self._event_payload(
+                "mc2p.playground-task-step.v1",
+                intent_sequence=next_sequence,
+                observation_sequence_id=view.base.sequence_id,
+                group=self.policy.group,
+                state=decision.state,
+                reason=decision.reason,
+                movement=decision.movement,
+                look=decision.look,
+                selected_waypoint=self.policy.selected_waypoint,
+                planning_diagnostic=self.policy.planning_diagnostic,
+                owner_deadline_ns=owner_deadline_ns,
+                ),
+            )
+            self.next_update_at_ns = now_ns+INTERVAL_NS
+            step_task = TaskIntentV0(
+                self._task.task_id, self._task.task_type,
+                self._task.parameters_json, self._task.success_criteria,
+                self._task.priority, deadline_ns, self._task.interruptible,
+                self._task.max_risk, self._task.forbidden_actions,
+            )
             try:
-                self.runtime.submit_ordered_intent(
-                    OrderedIntentV1(self.source, next_sequence, intent)
+                result = self.runtime.control_frame(
+                    step_task, profile, deadline_ns,
+                    proposals=(ControlFrameProposalV1(
+                        (OrderedIntentV1(self.source, next_sequence, intent),),
+                        self._observation_request,
+                        (planning_event,),
+                    ),),
                 )
             except ContractViolation as error:
                 current = self._clock()
@@ -271,30 +306,6 @@ class PointGoalDriver:
                           else "action_lease_expired_before_dispatch")
                 return self.stop(profile, reason)
             self.sequence = next_sequence
-            self._event(
-                "playground_task", "mc2p.playground-task-step.v1",
-                intent_sequence=self.sequence,
-                observation_sequence_id=view.base.sequence_id,
-                group=self.policy.group,
-                state=decision.state,
-                reason=decision.reason,
-                movement=decision.movement,
-                look=decision.look,
-                selected_waypoint=self.policy.selected_waypoint,
-                planning_diagnostic=self.policy.planning_diagnostic,
-                owner_deadline_ns=owner_deadline_ns,
-            )
-            self.next_update_at_ns = now_ns+INTERVAL_NS
-            step_task = TaskIntentV0(
-                self._task.task_id, self._task.task_type,
-                self._task.parameters_json, self._task.success_criteria,
-                self._task.priority, deadline_ns, self._task.interruptible,
-                self._task.max_risk, self._task.forbidden_actions,
-            )
-            result = self.runtime.step(
-                step_task, profile, deadline_ns,
-                observation_request=self._observation_request,
-            )
             receipt = self._receipt(result)
             cancelled = receipt is not None and receipt.status == "cancelled"
             runtime_cancelled = (result.report.failure is not None
@@ -364,9 +375,11 @@ class PointGoalDriver:
                 self._task.interruptible, self._task.max_risk,
                 self._task.forbidden_actions,
             )
-            result = self.runtime.step(
+            result = self.runtime.control_frame(
                 cleanup, profile, deadline_ns,
-                observation_request=self._observation_request,
+                proposals=(ControlFrameProposalV1(
+                    observation_request=self._observation_request,
+                ),),
             )
             receipt = self._receipt(result)
             if (result.observation is None or result.decision is None

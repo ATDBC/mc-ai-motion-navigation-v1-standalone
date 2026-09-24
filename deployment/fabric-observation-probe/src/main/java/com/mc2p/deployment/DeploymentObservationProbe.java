@@ -103,6 +103,12 @@ public final class DeploymentObservationProbe implements ClientModInitializer {
             }
             requireWorld(client);
             executor.tick(client);
+            // A coupled attack may wait until the next actual player-input sample.
+            // Keep the current request exclusive until that sample has happened.
+            if (pending && !executor.receiptReady()) {
+                executor.advance(client);
+                return;
+            }
             byte[] frame = transport.poll();
             if (frame != null) {
                 byte[] actionPayload = frame;
@@ -148,6 +154,7 @@ public final class DeploymentObservationProbe implements ClientModInitializer {
         if (failed || !pending) return;
         try {
             requireWorld(client);
+            if (!executor.receiptReady()) return;
             byte[] payload;
             if (v3()) {
                 ClientObservationRequestV3 request = observationRequest;

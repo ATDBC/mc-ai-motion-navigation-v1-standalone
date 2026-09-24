@@ -20,7 +20,9 @@ from mc2p.motion_nav.motion_coordination import (
     GapPreparationResult, GapPreparationStatus, MotionRouteCoordinator,
     prepare_planned_gap_motion,
 )
-from mc2p.motion_nav.motion_worker import GapMotionSolveResult, MotionSolverWorker
+from mc2p.motion_nav.motion_worker import (
+    GapMotionSolveResult, MotionSolverWorker, _execute_job,
+)
 from mc2p.motion_nav.runtime_adapter import BodyState, NavigationFrame
 from mc2p.motion_nav.support_surfaces import (
     HorizontalRegion, SupportSurface, SurfaceNodeId,
@@ -200,12 +202,14 @@ class VerifiedMotionExecutorTests(unittest.TestCase):
         self.assertIs(first.state, VerifiedMotionExecutorState.RUNNING)
         self.assertEqual(first.command_index, 0)
         self.assertEqual(first.movement, candidate.proof.commands[0].movement)
+        self.assertTrue(first.submittable_as_verified_command)
         executor.register_submission(0, control_sequence=20,
                                      requested_movement_tick=11)
 
         waiting = executor.decide(anchor, ledger)
         self.assertIsNone(waiting.movement)
         self.assertEqual(waiting.reason, "awaiting_application")
+        self.assertFalse(waiting.submittable_as_verified_command)
 
         self.applied(ledger, anchor, 20, 11,
                      candidate.proof.commands[0].movement)
@@ -266,6 +270,43 @@ class VerifiedMotionExecutorTests(unittest.TestCase):
         self.assertEqual(second.expected_movement_tick, 13)
         self.assertEqual(second.latest_movement_tick, 13)
 
+    def test_delayed_first_command_completes_against_its_verified_start_variant(self):
+        anchor, candidate = self.admitted()
+        delayed = candidate.proof.start_variant(12)
+        self.assertIsNotNone(delayed)
+        executor = VerifiedMotionExecutor()
+        executor.start(candidate)
+        ledger = InputApplicationLedger(max_records=64)
+
+        for index, command in enumerate(candidate.proof.commands):
+            decision = executor.decide(anchor, ledger)
+            self.assertEqual(decision.command_index, index)
+            tick = 12 + index
+            executor.register_submission(
+                index,
+                control_sequence=200 + index,
+                requested_movement_tick=decision.expected_movement_tick,
+                requested_latest_movement_tick=decision.latest_movement_tick,
+            )
+            self.applied(
+                ledger, anchor, 200 + index, tick, command.movement,
+                requested_tick=decision.expected_movement_tick,
+                requested_latest_tick=decision.latest_movement_tick,
+            )
+            state = delayed.trajectory[index + 1]
+            anchor = replace(
+                anchor,
+                observation_sequence_id=anchor.observation_sequence_id + 1,
+                movement_tick_id=tick,
+                physics_state=state,
+            )
+
+        completed = executor.decide(anchor, ledger)
+
+        self.assertIs(completed.state, VerifiedMotionExecutorState.COMPLETE)
+        self.assertEqual(completed.reason, "verified_motion_complete")
+        self.assertFalse(completed.submittable_as_verified_command)
+
     def test_cancel_in_air_retains_landing_responsibility(self):
         anchor, candidate = self.admitted()
         executor = VerifiedMotionExecutor()
@@ -323,6 +364,7 @@ class VerifiedMotionExecutorTests(unittest.TestCase):
 
         self.assertIs(decision.state, VerifiedMotionExecutorState.RECOVERING)
         self.assertEqual(decision.reason, "world_dependency_changed_retain_landing")
+        self.assertFalse(decision.submittable_as_verified_command)
 
     def test_world_dependency_change_after_air_cancel_discards_verified_remainder(self):
         anchor, candidate = self.admitted()
@@ -447,6 +489,70 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
             )
         self.assertIs(final.state, ActionRouteState.COMPLETE)
         self.assertEqual(final.reason_code, "action_route_complete")
+
+    def test_walk_hands_moving_body_to_verified_gap_without_braking_to_rest(self):
+        anchor, physics_world, _, _ = fixture()
+        anchor = replace(
+            anchor,
+            physics_state=replace(
+                anchor.physics_state,
+                velocity_blocks_per_tick=(0.0, -0.0784000015258789, 0.1),
+            ),
+        )
+        start_id = SurfaceNodeId(0, 0, 64, 0)
+        end_id = SurfaceNodeId(0, 2, 64, 0)
+        start_surface = SupportSurface(
+            start_id, (.5, 64.0, .5), HorizontalRegion(0, 0, 1, 1),
+            1.0, ("minecraft:grass_block",), (),
+        )
+        end_surface = SupportSurface(
+            end_id, (.5, 64.0, 2.5), HorizontalRegion(0, 2, 1, 3),
+            1.0, ("minecraft:grass_block",), (),
+        )
+        action_route = ActionRoute("moving-gap-handoff", (
+            WalkSegment(
+                FixedRoute("moving-gap-approach", (RoutePoint(.5, 64.0, .5),)),
+                (start_id,), (),
+            ),
+            JumpGapSegment(
+                JumpGapEdge(start_id, end_id, "test-jump-gap", .9, ()),
+                start_surface, end_surface, (),
+            ),
+        ))
+        active = ActiveRoute(
+            "moving-gap-handoff", 1, "request", "goal", 1,
+            anchor.session.value, None, 2.0, 0.0, (),
+            ExecutableCorridor((start_id, end_id), (), 2.0, end_id),
+            action_route, planning_generation=2,
+        )
+        prepared = prepare_planned_gap_motion(
+            active, 1, anchor, physics_world,
+            candidate_revision=1, intended_start_tick=11,
+        )
+        self.assertIs(prepared.status, GapPreparationStatus.READY)
+        executor = ActionRouteExecutor(
+            ground_profile(), jump_profile(), step_profile(),
+            air_profiles=(air_profile(MovementMode.JUMP_GAP),),
+        )
+        current_frame = self.frame(
+            physics_world._world, anchor.physics_state, 1,
+        )
+        executor.start(
+            action_route, current_frame,
+            verified_motion=(prepared.candidate,),
+        )
+
+        decision = executor.decide(
+            current_frame, state_anchor=anchor,
+            input_ledger=InputApplicationLedger(max_records=64),
+        )
+
+        self.assertIs(decision.state, ActionRouteState.RUNNING)
+        self.assertEqual(decision.action_index, 1)
+        self.assertTrue(decision.submit_input)
+        self.assertTrue(decision.movement.jump)
+        self.assertEqual(decision.verified_command_index, 0)
+        self.assertNotIn(decision.reason_code, {"goal_braking", "awaiting_verified_motion"})
 
     def test_action_route_rejects_raw_or_wrong_route_proofs(self):
         anchor, reusable = solved_candidate()
@@ -604,6 +710,100 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
             decision.expected_movement_tick,
         )
         self.assertEqual(executor.action_index, 0)
+
+    def test_coordinator_prepares_next_gap_from_the_next_applied_walk_state(self):
+        anchor, physics_world, _, _ = fixture()
+        anchor = replace(
+            anchor,
+            physics_state=replace(
+                anchor.physics_state,
+                position=(.5, 64.0, .2),
+                velocity_blocks_per_tick=(0.0, -0.0784000015258789, 0.1),
+            ),
+        )
+        start_id = SurfaceNodeId(0, 0, 64, 0)
+        end_id = SurfaceNodeId(0, 2, 64, 0)
+        start_surface = SupportSurface(
+            start_id, (.5, 64.0, .5), HorizontalRegion(0, 0, 1, 1),
+            1.0, ("minecraft:grass_block",), (),
+        )
+        end_surface = SupportSurface(
+            end_id, (.5, 64.0, 2.5), HorizontalRegion(0, 2, 1, 3),
+            1.0, ("minecraft:grass_block",), (),
+        )
+        action_route = ActionRoute("predicted-gap", (
+            WalkSegment(
+                FixedRoute("predicted-approach", (
+                    RoutePoint(.5, 64.0, .2),
+                    RoutePoint(.5, 64.0, .5),
+                )),
+                (start_id,), (),
+            ),
+            JumpGapSegment(
+                JumpGapEdge(start_id, end_id, "test-jump-gap", .9, ()),
+                start_surface, end_surface, (),
+            ),
+        ))
+        active = ActiveRoute(
+            "predicted-gap", 1, "request", "goal", 1,
+            anchor.session.value, None, 2.3, 0.0, (),
+            ExecutableCorridor((start_id, end_id), (), 2.3, end_id),
+            action_route, planning_generation=2,
+        )
+        executor = ActionRouteExecutor(
+            ground_profile(), jump_profile(), step_profile(),
+            air_profiles=(air_profile(MovementMode.JUMP_GAP),),
+        )
+        current_frame = self.frame(
+            physics_world._world, anchor.physics_state, 1,
+        )
+        jobs = []
+        with MotionSolverWorker(max_pending=1) as worker:
+            coordinator = MotionRouteCoordinator(active, executor, worker)
+            coordinator.start(current_frame)
+            with (
+                patch.object(worker, "is_alive", return_value=True),
+                patch.object(worker, "poll_available", return_value=()),
+                patch.object(
+                    worker, "submit",
+                    side_effect=lambda job: jobs.append(job) or True,
+                ),
+            ):
+                decision = coordinator.decide(
+                    current_frame, anchor,
+                    InputApplicationLedger(max_records=64),
+                    physics_world, changed_cells=(),
+                )
+
+            self.assertEqual(len(jobs), 1)
+            predicted_anchor = jobs[0].anchor
+            solved = _execute_job(jobs[0])
+            predicted_frame = self.frame(
+                physics_world._world, predicted_anchor.physics_state, 2,
+            )
+            with (
+                patch.object(worker, "is_alive", return_value=True),
+                patch.object(worker, "poll_available", return_value=(solved,)),
+            ):
+                handoff = coordinator.decide(
+                    predicted_frame, predicted_anchor,
+                    InputApplicationLedger(max_records=64),
+                    physics_world, changed_cells=(),
+                )
+
+        self.assertEqual(decision.action_index, 0)
+        self.assertTrue(decision.submit_input)
+        self.assertEqual(jobs[0].connection_id, "predicted-gap/action-1")
+        self.assertEqual(jobs[0].anchor.movement_tick_id, 11)
+        self.assertGreater(jobs[0].anchor.physics_state.position[2], .2)
+        self.assertEqual(
+            jobs[0].request.policy.maximum_entry_speed_blocks_per_second,
+            3.0,
+        )
+        self.assertEqual(handoff.action_index, 1)
+        self.assertTrue(handoff.submit_input)
+        self.assertTrue(handoff.movement.jump)
+        self.assertNotEqual(handoff.reason_code, "awaiting_verified_motion")
 
     def test_online_coordinator_stops_waiting_when_solver_worker_dies(self):
         anchor, physics_world, _, _ = fixture()
@@ -763,8 +963,8 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
         self.assertEqual(prepared.candidate.context.planning_generation, 7)
         self.assertEqual(prepared.candidate.context.route_revision, 2)
         self.assertEqual(prepared.candidate.context.action_index, 0)
-        self.assertEqual(prepared.candidate.proof.solver_id,
-                         "b10-one-cell-gap-command-search-v1")
+        from mc2p.motion_nav.motion_solver import SOLVER_ID
+        self.assertEqual(prepared.candidate.proof.solver_id, SOLVER_ID)
 
         changed = prepare_planned_gap_motion(
             active, 0, anchor, physics_world,

@@ -4,24 +4,29 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import math
 
-from mc2p.contracts.common import ContractViolation, require_finite, require_nonnegative_int
+from mc2p.contracts.common import (
+    ContractViolation, require_finite, require_identifier,
+    require_nonnegative_int,
+)
 from mc2p.contracts.observation import Vec3V0
+from mc2p.motion_nav.movement_transition import GoalState
 from mc2p.skills.engagement_memory import TargetPositionFactV1
 from mc2p.skills.fixed_melee import (
+    COMBAT_GOAL_RADIUS_BLOCKS,
+    COMBAT_STAND_DISTANCE_BLOCKS,
     MAX_COARSE_ATTACK_DISTANCE_BLOCKS,
-    stable_attack_position,
+    combat_standoff_goal_state,
 )
-from mc2p.skills.point_goal import PointGoal
 
 
 TARGET_MOVEMENT_THRESHOLD_BLOCKS = .75
-COMBAT_GOAL_RADIUS_BLOCKS = .25
 COMBAT_ATTACK_MARGIN_BLOCKS = .05
 
 
 @dataclass(frozen=True, slots=True)
 class MovingGoalDecisionV1:
-    goal: PointGoal
+    goal_state: GoalState
+    stand_position: Vec3V0
     revision: int
     changed: bool
     reason: str
@@ -31,8 +36,10 @@ class MovingGoalDecisionV1:
     schema_version: str = field(default="mc2p.moving-goal-decision.v1", init=False)
 
     def __post_init__(self) -> None:
-        if type(self.goal) is not PointGoal:
-            raise ContractViolation("moving goal requires PointGoal")
+        if type(self.goal_state) is not GoalState:
+            raise ContractViolation("moving goal requires GoalState")
+        if type(self.stand_position) is not Vec3V0:
+            raise ContractViolation("moving goal stand position is invalid")
         require_nonnegative_int(self.revision, "moving goal revision")
         if type(self.changed) is not bool or type(self.reason) is not str or not self.reason:
             raise ContractViolation("moving goal change metadata is invalid")
@@ -61,6 +68,8 @@ def decide_moving_goal(
 ) -> MovingGoalDecisionV1:
     if type(fact) is not TargetPositionFactV1 or type(self_position) is not Vec3V0:
         raise ContractViolation("moving goal requires typed position facts")
+    require_identifier(scope_id, "moving goal scope")
+    require_nonnegative_int(deadline_ns, "moving goal deadline")
     if previous is not None and type(previous) is not MovingGoalDecisionV1:
         raise ContractViolation("previous moving goal is invalid")
     if type(old_endpoint_attack_valid) is not bool or type(route_connectable) is not bool:
@@ -74,18 +83,20 @@ def decide_moving_goal(
         self_position.y + fact.relative_position.y,
         self_position.z + fact.relative_position.z,
     )
-    stand = stable_attack_position(self_position, fact.relative_position)
+    stand, goal = combat_standoff_goal_state(
+        self_position, fact.relative_position,
+    )
     support = _support_region(target_position)
     reason = "initial_goal"
     changed = previous is None
     if previous is not None:
         endpoint_distance = math.hypot(
-            target_position.x - previous.goal.position.x,
-            target_position.z - previous.goal.position.z,
+            target_position.x - previous.stand_position.x,
+            target_position.z - previous.stand_position.z,
         )
         old_endpoint_attack_valid = bool(
             old_endpoint_attack_valid
-            and endpoint_distance + previous.goal.radius
+            and endpoint_distance + math.sqrt(2.0) * COMBAT_GOAL_RADIUS_BLOCKS
                 <= MAX_COARSE_ATTACK_DISTANCE_BLOCKS - COMBAT_ATTACK_MARGIN_BLOCKS
         )
         movement = math.hypot(
@@ -102,17 +113,14 @@ def decide_moving_goal(
             changed, reason = True, "route_unconnectable"
         else:
             return MovingGoalDecisionV1(
-                previous.goal, previous.revision, False, "within_reuse_bounds",
+                previous.goal_state, previous.stand_position,
+                previous.revision, False, "within_reuse_bounds",
                 previous.adopted_target_position, previous.support_region,
                 fact.observation_sequence_id,
             )
 
     revision = 1 if previous is None else previous.revision + 1
-    goal = PointGoal(
-        f"moving-target-{revision}", scope_id, stand, deadline_ns,
-        radius=COMBAT_GOAL_RADIUS_BLOCKS,
-    )
     return MovingGoalDecisionV1(
-        goal, revision, changed, reason, target_position, support,
+        goal, stand, revision, changed, reason, target_position, support,
         fact.observation_sequence_id,
     )

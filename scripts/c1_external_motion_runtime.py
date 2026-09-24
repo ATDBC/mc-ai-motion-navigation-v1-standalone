@@ -16,11 +16,11 @@ from mc2p.motion_nav.external_motion import DamageKnockbackDetector
 from mc2p.motion_nav.external_motion_recovery import (
     ExternalMotionRecoveryController, RecoveryDirective,
 )
+from mc2p.motion_nav.navigation_session import (
+    NavigationSession, NavigationSessionProfiles,
+)
 from mc2p.skills.fixed_melee import CombatTargetV1
 from mc2p.skills.moving_melee_driver import MovingMeleeDriver
-from mc2p.skills.navigation_state import NavigationState
-from mc2p.skills.point_goal_policy import PointGoalPolicy
-from scripts.c1_fixed_melee_runtime import c1_acceptance_control_capabilities
 from scripts.c1_moving_melee_runtime import (
     PLAYER_START,
     _DIRECTIONS,
@@ -35,6 +35,8 @@ from scripts.c1_moving_melee_runtime import (
 from scripts.control_probe_core import append_jsonl, write_json_atomic
 
 
+ROOT = Path(__file__).resolve().parents[1]
+CONFIG = ROOT / "config/motion-navigation"
 C1C_AI_SEEDS = tuple(range(51001, 51021))
 C1C_NEGATIVE_INJECTIONS = (
     "route_deviation_without_damage",
@@ -54,6 +56,22 @@ def wait_after_fast_poll(result) -> None:
     """Yield until the next 20 Hz driver window after a non-control poll."""
     if result is None:
         time.sleep(.01)
+
+
+def selected_retired_route(
+    selected_movement: str | None,
+    retired_movement_sources: Iterable[str],
+) -> bool:
+    """Return whether this frame selected a route retired before the frame."""
+    return bool(
+        selected_movement is not None
+        and any(
+            selected_movement.startswith(source_id + "/")
+            for source_id in retired_movement_sources
+        )
+    )
+
+
 _POSITIVE_STAGES = (
     "pursuing", "pursuing", "aim_or_cooldown",
     "attack_submitted", "post_recovery_rehit",
@@ -470,7 +488,7 @@ def run_c1_external_motion_runtime(
         "trials": list(trials),
     })
     rows: list[dict] = []
-    capabilities = c1_acceptance_control_capabilities()
+    profiles = NavigationSessionProfiles.load(CONFIG)
     for trial in trials:
         fixture_writer(_fixture_commands(trial), trial)
         receipt = _await_seed_receipt(fixture_events, trial, deadline_ns)
@@ -496,8 +514,8 @@ def run_c1_external_motion_runtime(
             1, episode, entity.track_id,
         )
         driver = MovingMeleeDriver(
-            runtime, NavigationState("c1c-" + trial["trial_id"]),
-            PointGoalPolicy("D", control_capabilities=capabilities),
+            runtime,
+            NavigationSession("c1c-" + trial["trial_id"], profiles),
         )
         driver.start(target, time.perf_counter_ns())
         profile = BehaviorProfileV0()
@@ -520,6 +538,7 @@ def run_c1_external_motion_runtime(
                 }
             finally:
                 _cleanup_trial(driver, profile, trial, fixture_writer)
+                driver.navigation_session.close()
             rows.append(row)
             append_jsonl(directory / "c1-external-motion-trials.jsonl", row)
             continue
@@ -585,17 +604,20 @@ def run_c1_external_motion_runtime(
             driver_outside_backend_ms.append(
                 max(0, wall_elapsed_ns - backend_elapsed_ns) / 1_000_000
             )
-            if (approach_source_before is not None
-                    and driver.report.state == "recovering_external_motion"):
-                retired_movement_sources.add(approach_source_before)
             selected_movement = (
                 None if result is None or result.decision is None
                 else dict(result.decision.selected_intents).get("movement")
             )
-            if (selected_movement is not None and any(
-                    selected_movement.startswith(source_id + "/")
-                    for source_id in retired_movement_sources)):
+            selected_route_was_retired = selected_retired_route(
+                selected_movement, retired_movement_sources,
+            )
+            if selected_route_was_retired:
                 stale_route_takeovers += 1
+            # The returned decision was selected before its observation could
+            # reveal damage. Retire that source only for later frames.
+            if (approach_source_before is not None
+                    and driver.report.state == "recovering_external_motion"):
+                retired_movement_sources.add(approach_source_before)
             own = runtime.observation.self_state.value
             _append_motion_observation(observations, runtime.observation)
             hurt = own.hurt_animation_ticks or 0
@@ -644,11 +666,7 @@ def run_c1_external_motion_runtime(
                     and result is not None
                     and result.decision is not None
                     and result.decision.action.movement == MovementV1()
-                    and not (
-                        selected_movement is not None
-                        and any(selected_movement.startswith(source_id + "/")
-                                for source_id in retired_movement_sources)
-                    )
+                    and not selected_route_was_retired
                 ):
                     latency_ms = recovery_application_latency_ms(
                         pending_recovery_client_ns, result,
@@ -666,9 +684,6 @@ def run_c1_external_motion_runtime(
                 if recovery is not None:
                     if recovery.source is not None:
                         recovery_sources.add(recovery.source.source_id)
-                    if (recovery.hold_driver is not None
-                            and recovery.hold_driver.source is not None):
-                        recovery_sources.add(recovery.hold_driver.source.source_id)
                 if any(selected_movement.startswith(source_id + "/")
                        for source_id in recovery_sources):
                     latency_ms = recovery_application_latency_ms(
@@ -700,6 +715,7 @@ def run_c1_external_motion_runtime(
             wait_after_fast_poll(result)
         report = driver.report
         _cleanup_trial(driver, profile, trial, fixture_writer)
+        driver.navigation_session.close()
         fixture_rows = _fixture_events_for_trial(fixture_events, trial["trial_id"])
         attack_rows = tuple(
             row for row in fixture_rows if row.get("event") == "controlled_attack"

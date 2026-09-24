@@ -89,6 +89,7 @@ def valid_payload_value(
         "horizontal_collision": False,
         "vertical_collision": True,
         "pose": "standing",
+        "eye_height_blocks": 1.62,
         "is_sprinting": False,
         "is_sneaking": False,
         "is_swimming": False,

@@ -7,7 +7,7 @@
 
 用一个固定、持续可见、关闭 AI 的敌人跑通第一条战斗闭环：接近、稳定瞄准、提交一次有目标身份的近战攻击，并根据后续正式观察确认命中。
 
-这一步检查 B10 的公共链能否服务导航以外的任务。它不交付完整战斗系统。
+这一步检查 B10 共用的正式观察、Runtime、仲裁、唯一输入出口和回执能否服务导航以外的任务。它没有验证战斗已经接入 B04–B10 的新运动规划与执行主线，也不交付完整战斗系统。
 
 ## 现行分步
 
@@ -28,6 +28,8 @@ C1-B 已按独立的[阶段记录](C1B-moving-target-melee.md)、[架构](../arc
 C1-B 当前源码批次 `20260924T091651661550Z-34995f43` 通过 20／20 个移动追击正例和 10／10 个反例，并逐帧重放 3,145 次决策。共享核心修改后，C1-A 又以批次 `20260924T053939064824Z-40292978` 完成 40／40 个正例和 7／7 个反例回归。
 
 C1-C 已完成共用外部运动处理链的首个正式来源。当前源码批次 `20260924T091041609545Z-d7c3c88b` 通过 20／20 个正例和 10／10 个反例；整帧控制 P95 为 5.7396 ms，受击到首个安全恢复输入实际应用的 P99 为 49.3256 ms。首版只正式覆盖僵尸伤害和击退、已知完整平地；实体挤压、活塞推动和复杂地形仍需分别补来源证据与验收。
+
+C1 后续审查确认：上述战斗阶段复用了正式观察、Runtime、仲裁、唯一输入出口和回执，但接近与追击仍使用旧平地导航，没有验证 B04–B10 的 `motion_nav` 规划和执行主线。该事实不撤销原冻结场景结果。迁移和公共边界整改由 [C1-R](C1R-runtime-navigation-convergence.md) 单独实施和验收。
 
 ## C1-A 范围
 
@@ -73,6 +75,7 @@ C1-B 实施时必须按独立架构和验收门槛补证据，不能把 C1-A 的
 - [C1-C 阶段记录](C1C-external-motion-recovery.md)
 - [C1-C 架构](../architecture/C1C-external-motion-recovery-v1.md)
 - [C1-C 验收计划](../acceptance/C1C-external-motion-recovery.md)
+- [C1-R 公共控制与导航收敛](C1R-runtime-navigation-convergence.md)
 - [D013：B10 后先做战斗纵切片](../decisions/0013-combat-vertical-slice-after-b10.md)
 - [D015：交战记忆与攻击能力边界](../decisions/0015-engagement-awareness-and-attack-capability.md)
 - [D016：C1-B 目标事实、生命和固定种子](../decisions/0016-c1b-target-vitality-and-seeds.md)

@@ -10,7 +10,7 @@ from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
 from mc2p.motion_nav.pre_floating_adapter import apply_visible_blocks
 from mc2p.motion_nav.world_model import (
     Aabb, BlockGeometry, CellKnowledge, ObservationStamp, WorldKnowledge,
-    WorldSessionId, elapsed_seconds,
+    WorldSessionId, WorldUpdateStatus, elapsed_seconds,
 )
 
 
@@ -37,6 +37,99 @@ class PositiveAirProbe:
 
 
 class WorldKnowledgeTests(unittest.TestCase):
+    def test_live_view_expires_only_when_its_queried_section_changes(self):
+        session = WorldSessionId("partitioned-world")
+        world = WorldKnowledge(session)
+        world.observe_blocks(stamp(session, 1, 1), {
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        local_view = world.view()
+
+        world.observe_blocks(stamp(session, 2, 2), {
+            (32, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        self.assertIs(local_view.cell((0, 0, 0)).knowledge, CellKnowledge.BLOCK)
+
+        world.observe_blocks(stamp(session, 3, 3), {
+            (1, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        with self.assertRaisesRegex(ContractViolation, "section changed"):
+            local_view.cell((0, 0, 0))
+
+    def test_capacity_never_evicts_current_area_or_route_dependencies(self):
+        session = WorldSessionId("bounded-world")
+        world = WorldKnowledge(session, max_known_cells=2)
+        world.set_protection((0.5, 0.5, 0.5), ((32, 0, 0),))
+        world.observe_blocks(stamp(session, 1, 1), {
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+            (32, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+
+        full = world.observe_blocks(stamp(session, 2, 2), {
+            (64, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+
+        self.assertIs(full.status, WorldUpdateStatus.CAPACITY_EXHAUSTED)
+        self.assertEqual(full.rejected_positions, ((64, 0, 0),))
+        self.assertIs(world.view().cell((0, 0, 0)).knowledge, CellKnowledge.BLOCK)
+        self.assertIs(world.view().cell((32, 0, 0)).knowledge, CellKnowledge.BLOCK)
+
+        world.set_protection((128.5, 0.5, 0.5), ())
+        admitted = world.observe_blocks(stamp(session, 3, 3), {
+            (64, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        self.assertIs(admitted.status, WorldUpdateStatus.APPLIED)
+        self.assertEqual(admitted.applied_count, 1)
+        self.assertGreaterEqual(len(admitted.evicted_positions), 1)
+        self.assertEqual(world.known_cell_count, 2)
+
+    def test_section_recency_never_moves_backward_for_an_older_cell_fact(self):
+        session = WorldSessionId("section-recency")
+        world = WorldKnowledge(session, max_known_cells=3)
+        stone = BlockGeometry.full_cube("minecraft:stone")
+        world.observe_blocks(stamp(session, 100, 100), {(0, 0, 0): stone})
+        world.observe_blocks(stamp(session, 50, 50), {(1, 0, 0): stone})
+        world.observe_blocks(stamp(session, 75, 75), {(32, 0, 0): stone})
+
+        result = world.observe_blocks(
+            stamp(session, 101, 101), {(64, 0, 0): stone},
+        )
+
+        self.assertEqual(result.evicted_positions, ((32, 0, 0),))
+        view = world.view()
+        self.assertIs(view.cell((0, 0, 0)).knowledge, CellKnowledge.BLOCK)
+        self.assertIs(view.cell((1, 0, 0)).knowledge, CellKnowledge.BLOCK)
+        self.assertIs(view.cell((32, 0, 0)).knowledge, CellKnowledge.UNKNOWN)
+
+    def test_evicted_then_reobserved_section_never_revives_an_old_view(self):
+        session = WorldSessionId("section-reobserved")
+        world = WorldKnowledge(session, max_known_cells=1)
+        stone = BlockGeometry.full_cube("minecraft:stone")
+        world.observe_blocks(stamp(session, 1, 1), {(0, 0, 0): stone})
+        old_view = world.view()
+        self.assertIs(old_view.cell((0, 0, 0)).knowledge, CellKnowledge.BLOCK)
+
+        world.observe_blocks(stamp(session, 2, 2), {(32, 0, 0): stone})
+        world.observe_blocks(stamp(session, 3, 3), {(0, 0, 0): stone})
+
+        with self.assertRaisesRegex(ContractViolation, "section changed"):
+            old_view.cell((0, 0, 0))
+
+    def test_thirty_minute_equivalent_updates_keep_world_state_bounded(self):
+        session = WorldSessionId("thirty-minute-capacity")
+        world = WorldKnowledge(session, max_known_cells=32)
+        for tick in range(1, 36_001):
+            position = (tick * 16, 0, 0)
+            world.confirm_air(stamp(session, tick, tick), (position,))
+            world.invalidate(stamp(session, tick + 40_000, tick + 40_000), (
+                (tick * 16, 32, 0),
+            ))
+
+        self.assertLessEqual(world.known_cell_count, 32)
+        self.assertLessEqual(world.tombstone_count, 32)
+        self.assertLessEqual(world.section_count, 32)
+        self.assertLessEqual(world.metadata_section_count, 64)
+
     def test_elapsed_time_requires_same_world_session_and_clock(self):
         first_session = WorldSessionId("world-a")
         later = stamp(first_session, 2, 11, 1_150_000_000)

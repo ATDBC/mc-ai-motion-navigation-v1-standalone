@@ -1,6 +1,11 @@
 from pathlib import Path
 import unittest
 
+from scripts.export_motion_navigation_standalone import (
+    collect_export_files,
+    load_manifest,
+)
+
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -29,6 +34,26 @@ class PublicRepositoryCompletenessTests(unittest.TestCase):
         missing = tuple(path for path in required if not (ROOT / path).is_file())
 
         self.assertEqual(missing, ())
+
+    def test_standalone_manifest_selects_reviewed_runtime_dependencies(self):
+        selected = collect_export_files(load_manifest())
+        required = (
+            "tests/test_navigation_motion.py",
+            "tests/test_craftground_backend.py",
+            "tests/test_craftground_runtime.py",
+            "tests/test_visible_equipment_projection.py",
+            "tests/observation_v2_fixtures.py",
+            "tests/observation_v3_fixtures.py",
+            "mc2p/runtime/player_runtime_v1.py",
+            "mc2p/backends/deployment_transport.py",
+            "scripts/export_motion_navigation_standalone.py",
+        )
+        selected_paths = {item.as_posix() for item in selected}
+
+        self.assertEqual(
+            tuple(path for path in required if path not in selected_paths),
+            (),
+        )
 
 
 if __name__ == "__main__":

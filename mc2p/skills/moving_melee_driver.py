@@ -13,12 +13,16 @@ from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.common import ContractViolation, require_nonnegative_int
 from mc2p.contracts.observation_v3 import ObservationSnapshotV3
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
-from mc2p.contracts.intent_source import OrderedIntentV1, ordered_intent_id
+from mc2p.contracts.intent_source import (
+    ControlFrameProposalV1, OrderedIntentV1, ordered_intent_id,
+)
 from mc2p.contracts.task import ComparisonOperatorV0, SuccessCriterionV0, TaskIntentV0
 from mc2p.motion_nav.external_motion import DamageKnockbackDetector, ExternalMotionEventV1
+from mc2p.motion_nav.navigation_session import ExternalMotionReentryStatus
 from mc2p.motion_nav.external_motion_recovery import ExternalMotionRecoveryController
+from mc2p.motion_nav.navigation_session import NavigationSessionPort
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1, RuntimeStateV1, RuntimeStepResultV1
-from mc2p.runtime.trace import trace_projection
+from mc2p.skills.combat_aim import combat_aim_angles
 from mc2p.skills.engagement_memory import (
     EngagementEventKind, EngagementStateV1, TargetPositionFactV1,
     TargetPositionSource, advance_engagement, event_from_observation,
@@ -31,9 +35,7 @@ from mc2p.skills.gaze_controller import GazeController
 from mc2p.skills.melee_strike_driver import MeleeStrikeDriver, TASK_LIMIT_NS
 from mc2p.skills.moving_melee import MovingMeleePhase, decide_moving_melee
 from mc2p.skills.moving_target import MovingGoalDecisionV1, decide_moving_goal
-from mc2p.skills.navigation_state import NavigationState
-from mc2p.skills.point_goal_driver import PointGoalDriver
-from mc2p.skills.point_goal_policy import PointGoalPolicy
+from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
 
 
 MAX_REAPPROACHES = 16
@@ -62,21 +64,18 @@ class MovingMeleeDriver:
     def __init__(
         self,
         runtime: PlayerRuntimeV1,
-        navigation_state: NavigationState,
-        point_policy: PointGoalPolicy,
+        navigation_session: NavigationSessionPort,
         *,
         clock_ns: Callable[[], int] = time.perf_counter_ns,
     ) -> None:
         if (type(runtime) is not PlayerRuntimeV1
-                or type(navigation_state) is not NavigationState
-                or type(point_policy) is not PointGoalPolicy):
-            raise ContractViolation("moving melee requires formal Runtime/navigation/policy")
+                or not isinstance(navigation_session, NavigationSessionPort)):
+            raise ContractViolation("moving melee requires Runtime/navigation session")
         if runtime.state is not RuntimeStateV1.READY \
                 or type(runtime.observation) is not ObservationSnapshotV3:
             raise ContractViolation("moving melee requires ready V3 Runtime")
         self.runtime = runtime
-        self.navigation_state = navigation_state
-        self.point_policy = point_policy
+        self.navigation_session = navigation_session
         self._clock = clock_ns
         self._target: CombatTargetV1 | None = None
         self._deadline_ns = 0
@@ -85,6 +84,7 @@ class MovingMeleeDriver:
         self._engagement: EngagementStateV1 | None = None
         self._fact: TargetPositionFactV1 | None = None
         self._moving_goal: MovingGoalDecisionV1 | None = None
+        self._navigation_goal_revision = 0
         self._confirmed_hits = 0
         self._completed_attack_submissions = 0
         self._reapproaches = 0
@@ -102,7 +102,7 @@ class MovingMeleeDriver:
         self._reacquire_attempts = 0
         self._gaze = GazeController()
         self._pending_target: CombatTargetV1 | None = None
-        self.approach_driver: PointGoalDriver | None = None
+        self.approach_driver: RuntimeNavigationDriver | None = None
         self.strike_driver: MeleeStrikeDriver | None = None
         self.recovery_driver: ExternalMotionRecoveryDriver | None = None
 
@@ -161,9 +161,9 @@ class MovingMeleeDriver:
                 "target_revision": self._target.revision,
                 "track_id": self._target.track_id,
                 "decision_time_ns": decision_time_ns,
-                "event": trace_projection(event),
-                "state": trace_projection(self._engagement),
-                "fact": trace_projection(self._fact),
+                "event": event,
+                "state": self._engagement,
+                "fact": self._fact,
             })
         if self._fact is not None:
             self._last_health = self._fact.health_points
@@ -179,7 +179,10 @@ class MovingMeleeDriver:
 
     def _detect_external_motion(self, observation: ObservationSnapshotV3):
         assert self._target is not None
-        detection = self._external_detector.observe(observation)
+        residual = self.navigation_session.motion_residual(
+            observation, self.runtime.input_ledger,
+        )
+        detection = self._external_detector.observe(observation, residual)
         self.runtime.record_task_event("external_motion_detection", {
             "schema_version": "mc2p.external-motion-detection-event.v1",
             "episode_id": observation.episode_id,
@@ -187,7 +190,7 @@ class MovingMeleeDriver:
             "goal_id": self._target.goal_id,
             "target_revision": self._target.revision,
             "observation_sequence_id": observation.sequence_id,
-            "detection": trace_projection(detection),
+            "detection": detection,
         })
         return detection
 
@@ -214,7 +217,7 @@ class MovingMeleeDriver:
             ),
             "target_dead": target_dead,
             "strike_reason": strike_reason,
-            "decision": trace_projection(decision),
+            "decision": decision,
         })
 
     def _record_goal_decision(
@@ -234,12 +237,12 @@ class MovingMeleeDriver:
             "target_revision": self._target.revision,
             "track_id": self._target.track_id,
             "observation_sequence_id": self.runtime.observation.sequence_id,
-            "fact": trace_projection(self._fact),
-            "self_position": trace_projection(self_position),
-            "scope_id": self.navigation_state.scope_id,
+            "fact": self._fact,
+            "self_position": self_position,
+            "scope_id": self.navigation_session.report.session_id,
             "deadline_ns": self._deadline_ns,
-            "previous": trace_projection(previous),
-            "decision": trace_projection(decision),
+            "previous": previous,
+            "decision": decision,
             "adopted": adopted,
         })
 
@@ -270,11 +273,13 @@ class MovingMeleeDriver:
                 "target_fact_refreshed", ComparisonOperatorV0.GREATER_THAN, 0, "frames",
             ),), 100, deadline, True, 0.5,
         )
-        return self.runtime.step(
+        return self.runtime.control_frame(
             task, profile, deadline,
-            observation_request=ObservationRequestV3(
-                "navigation_v1", entity_track_id=self._target.track_id,
-            ),
+            proposals=(ControlFrameProposalV1(
+                observation_request=ObservationRequestV3(
+                    "navigation_v1", entity_track_id=self._target.track_id,
+                ),
+            ),),
         )
 
     def _release_reacquire(self) -> None:
@@ -300,32 +305,45 @@ class MovingMeleeDriver:
             self._reacquire_sequence = 0
         observation = self.runtime.observation
         relative = self._fact.relative_position
-        horizontal = max(.01, math.hypot(relative.x, relative.z))
-        yaw = math.degrees(math.atan2(-relative.x, relative.z))
-        pitch = math.degrees(math.atan2(-(relative.y + .9), horizontal))
+        own = observation.self_state.value
+        tracked = observation.tracked_entity.value
+        if (own is None or own.eye_height_blocks is None or tracked is None
+                or tracked.track_id != self._target.track_id):
+            self._release_reacquire()
+            self._phase = MovingMeleePhase.FAILED
+            self._reason = "reacquire_geometry_unavailable"
+            return self._refresh_between_actions(profile, owner_deadline_ns)
+        yaw, pitch = combat_aim_angles(
+            relative,
+            tracked.bounding_box_size,
+            own.eye_height_blocks,
+        )
         now = self._clock()
         view = project_playground_view(observation, now, observation.controller_clock_id)
         look = self._gaze.command(view, yaw, pitch, now, precise=False)
         self._reacquire_sequence += 1
         intent_id = ordered_intent_id(self._reacquire_source, self._reacquire_sequence)
         deadline = min(owner_deadline_ns, self._deadline_ns, now + 250_000_000)
-        self.runtime.submit_ordered_intent(OrderedIntentV1(
+        envelope = OrderedIntentV1(
             self._reacquire_source, self._reacquire_sequence,
             ActionIntentV1(
                 intent_id, self._reacquire_source.source_id, self._target.episode_id,
                 observation.sequence_id, ActionPriorityV0.TASK, now, deadline, look=look,
             ),
-        ))
-        result = self.runtime.step(
+        )
+        result = self.runtime.control_frame(
             TaskIntentV0(
                 self._target.task_id, "moving_melee_reacquire", "{}",
                 (SuccessCriterionV0("target_visible", ComparisonOperatorV0.EQUAL,
                                     1, "boolean"),),
                 100, deadline, True, 0.5,
             ), profile, deadline,
-            observation_request=ObservationRequestV3(
-                "navigation_v1", entity_track_id=self._target.track_id,
-            ),
+            proposals=(ControlFrameProposalV1(
+                (envelope,),
+                ObservationRequestV3(
+                    "navigation_v1", entity_track_id=self._target.track_id,
+                ),
+            ),),
         )
         self._reacquire_attempts += 1
         self._observe()
@@ -351,20 +369,24 @@ class MovingMeleeDriver:
             self._phase, self._reason = MovingMeleePhase.FAILED, "self_state_unavailable"
             return
         decision = decide_moving_goal(
-            self._fact, own.position, self.navigation_state.scope_id,
+            self._fact, own.position, self.navigation_session.report.session_id,
             self._deadline_ns, previous=self._moving_goal,
         )
         self._record_goal_decision(
             decision, own.position, self._moving_goal, adopted=True,
         )
         self._moving_goal = decision
-        self.approach_driver = PointGoalDriver(
-            self.runtime, self.navigation_state, self.point_policy, self._clock,
+        self._navigation_goal_revision += 1
+        self.approach_driver = RuntimeNavigationDriver(
+            self.runtime, self.navigation_session, clock_ns=self._clock,
             observation_request=ObservationRequestV3(
                 "navigation_v1", entity_track_id=self._target.track_id,
             ),
         )
-        self.approach_driver.start(decision.goal, self._clock())
+        self.approach_driver.start(
+            self._target.goal_id, self._navigation_goal_revision,
+            decision.goal_state, self._clock(),
+        )
         self._reapproaches += 1
         self._phase, self._reason = MovingMeleePhase.PURSUING, decision.reason
 
@@ -443,10 +465,21 @@ class MovingMeleeDriver:
             else (MovingMeleePhase.STRIKING, "target_revised")
         )
 
-    def _release_approach(self, profile: BehaviorProfileV0,
-                          reason: str) -> RuntimeStepResultV1:
+    def _release_approach(
+        self,
+        profile: BehaviorProfileV0,
+        reason: str,
+        *,
+        advance_runtime: bool = True,
+    ) -> RuntimeStepResultV1 | None:
         assert self.approach_driver is not None
-        result = self.approach_driver.stop(profile, reason)
+        result = (
+            self.approach_driver.stop(profile, reason)
+            if advance_runtime
+            else None
+        )
+        if not advance_runtime:
+            self.approach_driver.release(reason)
         self.approach_driver = None
         self._observe()
         return result
@@ -504,6 +537,8 @@ class MovingMeleeDriver:
         profile: BehaviorProfileV0,
         owner_deadline_ns: int,
         event: ExternalMotionEventV1,
+        *,
+        step_already_performed: bool = False,
     ) -> RuntimeStepResultV1 | None:
         assert self._target is not None
         result = None
@@ -517,7 +552,10 @@ class MovingMeleeDriver:
             None if self.strike_driver is None else self.strike_driver.control_source_id,
         ) if source_id is not None)
         if self.approach_driver is not None:
-            result = self._release_approach(profile, "external_motion_disrupted")
+            result = self._release_approach(
+                profile, "external_motion_disrupted",
+                advance_runtime=not step_already_performed,
+            )
         self._release_reacquire()
         if self.strike_driver is not None:
             self.strike_driver.interrupt_for_external_motion(
@@ -525,8 +563,6 @@ class MovingMeleeDriver:
             )
         self.recovery_driver = ExternalMotionRecoveryDriver(
             self.runtime,
-            self.navigation_state,
-            self.point_policy,
             task_deadline_ns=self._deadline_ns,
             clock_ns=self._clock,
             observation_request=ObservationRequestV3(
@@ -551,9 +587,36 @@ class MovingMeleeDriver:
         self._external_motion_events += 1
         self._phase = MovingMeleePhase.RECOVERING_EXTERNAL_MOTION
         self._reason = "damage_knockback_captured"
+        if step_already_performed:
+            return None
         if result is not None:
             return result
         return self._tick_external_recovery(profile, owner_deadline_ns)
+
+    def _continue_navigation_after_external_motion(
+        self, event: ExternalMotionEventV1,
+    ) -> bool:
+        if self.approach_driver is None or self.recovery_driver is not None:
+            return False
+        reentry = self.navigation_session.external_motion_reentry(
+            self.runtime.observation,
+        )
+        if reentry.status is not ExternalMotionReentryStatus.CONTINUE_NAVIGATION:
+            return False
+        self._external_motion_events += 1
+        self._phase = MovingMeleePhase.PURSUING
+        self._reason = reentry.reason
+        self.runtime.record_task_event("external_motion_recovery", {
+            "schema_version": "mc2p.external-motion-recovery-event.v1",
+            "episode_id": self._target.episode_id,
+            "recovery_scope_id": self._target.task_id,
+            "stage": "navigation_reanchored",
+            "observation_sequence_id": self.runtime.observation.sequence_id,
+            "movement_tick_id": self.runtime.observation.self_state.value.movement_tick_id,
+            "event": event,
+            "reason": reentry.reason,
+        })
+        return True
 
     def _capture_external_motion(
         self,
@@ -571,8 +634,11 @@ class MovingMeleeDriver:
             # facts before releasing that child, otherwise engagement history
             # skips the exact frame that carried the damage transition.
             self._observe()
+            if self._continue_navigation_after_external_motion(detection.event):
+                return True, None
             return True, self._begin_external_recovery(
                 profile, owner_deadline_ns, detection.event,
+                step_already_performed=True,
             )
         self.recovery_driver.observe_event(detection.event)
         self._external_motion_events += 1
@@ -667,14 +733,20 @@ class MovingMeleeDriver:
                 self.recovery_driver = None
             self._phase, self._reason = MovingMeleePhase.FAILED, "world_session_changed"
             return None
-        if observation.episode_id == self._target.episode_id:
-            detection = self._detect_external_motion(observation)
-            if detection.event is not None:
-                self._last_external_motion_observation = observation
-                if self.recovery_driver is None:
+        detection = self._detect_external_motion(observation)
+        if detection.event is not None:
+            self._last_external_motion_observation = observation
+            self._last_external_motion_detected_at_ns = self._clock()
+            if self.recovery_driver is None:
+                if self._continue_navigation_after_external_motion(
+                    detection.event,
+                ):
+                    pass
+                else:
                     return self._begin_external_recovery(
                         profile, owner_deadline_ns, detection.event,
                     )
+            else:
                 self.recovery_driver.observe_event(detection.event)
                 self._external_motion_events += 1
         if self.recovery_driver is not None:
@@ -699,23 +771,26 @@ class MovingMeleeDriver:
                 result = self._release_approach(profile, "self_state_unavailable")
                 self._phase, self._reason = MovingMeleePhase.FAILED, "self_state_unavailable"
                 return result
-            # A PointGoalDriver that completed on the previous frame is no
-            # longer replaceable.  Consume its success before considering a
-            # moving-target goal refresh.
+            # A completed route is no longer replaceable. Consume its success
+            # before considering a moving-target goal refresh.
             if self.approach_driver.state == "success":
                 result = self._release_approach(profile, "combat_standoff_reached")
                 self._phase, self._reason = MovingMeleePhase.RECOVERING_CADENCE, \
                     "standoff_reached_refresh_required"
                 return result
             update = decide_moving_goal(
-                self._fact, own.position, self.navigation_state.scope_id,
+                self._fact, own.position, self.navigation_session.report.session_id,
                 self._deadline_ns, previous=self._moving_goal,
             )
             self._record_goal_decision(
                 update, own.position, self._moving_goal, adopted=update.changed,
             )
             if update.changed:
-                self.approach_driver.replace_goal(update.goal, self._clock())
+                self._navigation_goal_revision += 1
+                self.approach_driver.replace_goal(
+                    self._target.goal_id, self._navigation_goal_revision,
+                    update.goal_state, self._clock(),
+                )
                 self._moving_goal = update
             result = self.approach_driver.tick(profile, owner_deadline_ns)
             captured, capture_result = self._capture_external_motion(
@@ -724,10 +799,19 @@ class MovingMeleeDriver:
             if captured:
                 return capture_result if capture_result is not None else result
             self._observe()
+            if self.approach_driver.state == "success":
+                self._release_approach(
+                    profile, "combat_standoff_reached", advance_runtime=False,
+                )
+                self._phase, self._reason = MovingMeleePhase.RECOVERING_CADENCE, \
+                    "standoff_reached_refresh_required"
+                return result
             if self.approach_driver.state in {"failed", "cancelled", "stopped", "blocked"}:
                 reason = "approach/" + str(self.approach_driver.reason)
-                if self.approach_driver.state == "blocked":
-                    result = self._release_approach(profile, reason)
+                if self.approach_driver.source is not None:
+                    self._release_approach(
+                        profile, reason, advance_runtime=False,
+                    )
                 else:
                     self.approach_driver = None
                 if (self._fact is not None and self._engagement.active
@@ -785,15 +869,6 @@ class MovingMeleeDriver:
             return capture_result if capture_result is not None else result
         if result is not None:
             self._observe()
-            if (result.decision is not None
-                    and dict(result.decision.selected_intents).get("movement") is not None
-                    and result.decision.action.movement != MovementV1()):
-                self._phase, self._reason = (
-                    MovingMeleePhase.FAILED,
-                    "simultaneous_navigation_and_combat_control",
-                )
-                self.runtime.fail_closed(self._reason)
-                return result
         self._adopt_strike_report()
         return result
 

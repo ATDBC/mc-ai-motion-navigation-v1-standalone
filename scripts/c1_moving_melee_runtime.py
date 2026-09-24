@@ -13,6 +13,9 @@ from mc2p.contracts.common import ContractViolation, FieldStatusV0
 from mc2p.contracts.observation import Vec3V0
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.contracts.task import ComparisonOperatorV0, SuccessCriterionV0, TaskIntentV0
+from mc2p.motion_nav.navigation_session import (
+    NavigationSession, NavigationSessionProfiles,
+)
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1, RuntimeStateV1
 from mc2p.skills.fixed_melee import CombatTargetV1
 from mc2p.skills.engagement_memory import (
@@ -20,9 +23,6 @@ from mc2p.skills.engagement_memory import (
     advance_engagement, event_from_observation, resolve_target_position,
 )
 from mc2p.skills.moving_melee_driver import MovingMeleeDriver
-from mc2p.skills.navigation_state import NavigationState
-from mc2p.skills.point_goal_policy import PointGoalPolicy
-from scripts.c1_fixed_melee_runtime import c1_acceptance_control_capabilities
 from scripts.control_probe_core import append_jsonl, write_json_atomic
 
 
@@ -40,6 +40,8 @@ _DIRECTIONS = {
     "west": ({"x": 6.5, "y": 100.0, "z": .5}, -90.0),
 }
 PLAYER_START = {"x": .5, "y": 100.0, "z": .5}
+ROOT = Path(__file__).resolve().parents[1]
+CONFIG = ROOT / "config/motion-navigation"
 
 
 def c1b_trial_plan(world_seed: int) -> tuple[dict, ...]:
@@ -268,7 +270,8 @@ def _run_driver_until(driver: MovingMeleeDriver, profile: BehaviorProfileV0,
 
 
 def _run_negative(runtime: PlayerRuntimeV1, trial: dict, target: CombatTargetV1,
-                  deadline_ns: int, fixture_writer, capabilities) -> tuple[bool, dict]:
+                  deadline_ns: int, fixture_writer,
+                  profiles: NavigationSessionProfiles) -> tuple[bool, dict]:
     injection = trial["injection"]
     observation = runtime.observation
     profile = BehaviorProfileV0()
@@ -311,8 +314,10 @@ def _run_negative(runtime: PlayerRuntimeV1, trial: dict, target: CombatTargetV1,
         passed = not state.active and state.revocation_reason == "world_session_changed"
         return passed, {"state": "complete" if passed else "failed",
                         "reason": state.revocation_reason, "attack_submissions": 0}
-    driver = MovingMeleeDriver(runtime, NavigationState("c1b-" + trial["trial_id"]),
-        PointGoalPolicy("D", control_capabilities=capabilities))
+    driver = MovingMeleeDriver(
+        runtime,
+        NavigationSession("c1b-" + trial["trial_id"], profiles),
+    )
     driver.start(target, time.perf_counter_ns())
     if injection == "cancel_pursuing":
         driver.cancel(profile, "negative_cancel_pursuing")
@@ -343,7 +348,9 @@ def _run_negative(runtime: PlayerRuntimeV1, trial: dict, target: CombatTargetV1,
     else:
         return False, {"state": "failed", "reason": "unsupported_negative",
                        "attack_submissions": 0}
-    return passed, asdict(driver.report)
+    report = asdict(driver.report)
+    driver.navigation_session.close()
+    return passed, report
 
 
 def run_c1_moving_melee_runtime(
@@ -360,7 +367,7 @@ def run_c1_moving_melee_runtime(
         "world_seed": world_seed, "code_hashes": dict(sorted(code_hashes.items())),
         "trials": list(trials)})
     rows = []
-    capabilities = c1_acceptance_control_capabilities()
+    profiles = NavigationSessionProfiles.load(CONFIG)
     for trial in trials:
         fixture_writer(_fixture_commands(trial), trial)
         if trial["injection"] == "seed_not_applied":
@@ -421,7 +428,7 @@ def run_c1_moving_melee_runtime(
             continue
         if trial["classification"] == "negative":
             passed, negative_report = _run_negative(
-                runtime, trial, target, deadline_ns, fixture_writer, capabilities,
+                runtime, trial, target, deadline_ns, fixture_writer, profiles,
             )
             row = {"schema_version": "mc2p.c1-moving-melee-trial.v1",
                    "trial_id": trial["trial_id"], "classification": "negative",
@@ -431,8 +438,10 @@ def run_c1_moving_melee_runtime(
             rows.append(row); append_jsonl(directory / "c1-moving-melee-trials.jsonl", row)
             fixture_writer((f"mc2p_c1_remove {trial['trial_id']}",), trial)
             continue
-        driver = MovingMeleeDriver(runtime, NavigationState("c1b-" + trial["trial_id"]),
-            PointGoalPolicy("D", control_capabilities=capabilities))
+        driver = MovingMeleeDriver(
+            runtime,
+            NavigationSession("c1b-" + trial["trial_id"], profiles),
+        )
         driver.start(target, time.perf_counter_ns())
         profile = BehaviorProfileV0()
         first_attack_position = None
@@ -495,6 +504,7 @@ def run_c1_moving_melee_runtime(
             if result is None:
                 time.sleep(.01)
         report = driver.report
+        driver.navigation_session.close()
         final_observation = runtime.observation
         final_health = final_observation.self_state.value.health_points
         moved = 0.0 if first_attack_position is None else _distance(first_target, first_attack_position)

@@ -1,0 +1,25 @@
+{
+  "schema_version": "mc2p.normal-control-capability.v2",
+  "profile_id": "c1-sealed-j3-control-subset-v1",
+  "source_artifact": {
+    "path": "artifacts/normal-navigation/control-capability-v2.json",
+    "sha256": "d1e882e5a686eace4a8716d368241e98c1e21b847c7e5065909ba968b107e3f1"
+  },
+  "allowed_controls": [
+    [-1, 0, "fixed"],
+    [0, -1, "fixed"],
+    [0, -1, "yaw"],
+    [0, 0, "pitch"],
+    [0, 0, "yaw"],
+    [0, 1, "fixed"],
+    [1, -1, "yaw"],
+    [1, 0, "fixed"],
+    [1, 0, "pitch"],
+    [1, 0, "yaw"],
+    [1, 1, "yaw"]
+  ],
+  "measurements": {
+    "look_rate_degrees_per_second": 60.0
+  },
+  "scope": "C1 controlled acceptance only; not a general navigation capability"
+}

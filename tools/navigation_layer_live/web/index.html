@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>导航层实时视图</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <canvas id="viewport" aria-label="机器人导航层第一人称三维视图"></canvas>
+  <div class="hud top">
+    <div>
+      <h1>导航层第一人称视图</h1>
+      <p>120° 匿名三维通行信息 · 半透明轮廓可透视已知障碍</p>
+    </div>
+    <div id="connection" class="badge waiting">等待游戏数据</div>
+  </div>
+  <section class="hud stats">
+    <div><span>序列</span><strong id="sequence">—</strong></div>
+    <div><span>浏览器帧龄</span><strong id="age">—</strong></div>
+    <div><span>客户端采样</span><strong id="sample">—</strong></div>
+    <div><span>查询格数</span><strong id="cells">—</strong></div>
+    <div><span>位置</span><strong id="position">—</strong></div>
+    <div><span>朝向</span><strong id="look">—</strong></div>
+    <div><span>本帧几何</span><strong id="geometry">—</strong></div>
+    <div><span>WebGL 渲染器</span><strong id="renderer">—</strong></div>
+  </section>
+  <div class="crosshair" aria-hidden="true"></div>
+  <footer class="hud legend">
+    <span><i class="air"></i>已知空气</span>
+    <span><i class="occupied"></i>有碰撞（可透视轮廓）</span>
+    <span><i class="passable"></i>无碰撞非空气／流体</span>
+    <span><i class="unknown"></i>黑色：未知或查询范围外</span>
+  </footer>
+  <div id="unsupported" hidden>浏览器无法创建 WebGL2，不能显示三维导航信息。</div>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

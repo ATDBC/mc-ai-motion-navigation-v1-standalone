@@ -1,1 +1,0 @@
-{"completed_trials": 30, "control_decision_ms": {"count": 2118, "max": 10.1979, "p50": 2.6136, "p95": 5.7939, "p99": 7.1828}, "fixture_invalid": 0, "negative_passed": 10, "negative_total": 10, "planned_trials": 30, "positive_passed": 20, "positive_total": 20, "schema_version": "mc2p.c1-moving-melee-summary.v1"}

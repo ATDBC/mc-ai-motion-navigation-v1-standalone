@@ -20,6 +20,9 @@ import net.minecraft.util.hit.HitResult;
 
 /** Shared normal-client behavior executor. Bridges provide only transport/tick lifecycle. */
 public final class ClientBehaviorExecutor {
+    private record PendingAttack(String episode, long sequence, String entityRef,
+                                 float minimumCooldownProgress) {}
+
     private final ClientRequestGate gate = new ClientRequestGate();
     private long latestObservation = -1;
     private long observationAnchorNs;
@@ -37,6 +40,7 @@ public final class ClientBehaviorExecutor {
     private final ClientMiningLoop mining = new ClientMiningLoop();
     private ClientMiningDriver miningDriver;
     private boolean miningEnabled;
+    private PendingAttack pendingAttack;
 
     public void keyboardCallback() { if (dispatching) keyboardCallbacks++; }
     public void mouseCallback() { if (dispatching) mouseCallbacks++; }
@@ -48,6 +52,7 @@ public final class ClientBehaviorExecutor {
         miningDriver = null;
         mining.reset(() -> {
             releaseInput();
+            pendingAttack = null;
             gate.reset();
             latestObservation = -1;
             lastRequest = null;
@@ -66,6 +71,10 @@ public final class ClientBehaviorExecutor {
     public void tick(MinecraftClient client) {
         requireClientThread(client);
         if (input != null) input.expireOnClientTick();
+        if (pendingAttack != null && !gate.leaseActive(System.nanoTime())) {
+            pendingAttack = null;
+            reject("deadline_exceeded");
+        }
         try { mining.expire(!gate.wallClockExpired(System.nanoTime())); }
         finally { if (!mining.active()) miningDriver = null; }
     }
@@ -109,6 +118,7 @@ public final class ClientBehaviorExecutor {
                                 budget, action.ticks());
         if (denied != null) { reject(denied); return; }
         requestAdmitted = true;
+        pendingAttack = null;
         if (action.cancel() == null && input != null) input.beginSnapshot();
         if (action.cancel() == null && !action.operationKind().equals("mine_block")) stopMining();
         if (client.player == null || client.world == null || client.interactionManager == null) {
@@ -117,6 +127,7 @@ public final class ClientBehaviorExecutor {
         if (!client.player.isAlive()) { reject("player_dead"); return; }
         if (action.cancel() != null) {
             boolean owned = gate.cancel(action.cancel());
+            if (owned) pendingAttack = null;
             if (owned && input != null) {
                 input.bindAcceptedRequest(action.episode(), action.sequence());
                 input.clear();
@@ -129,7 +140,7 @@ public final class ClientBehaviorExecutor {
         boolean controls = action.forward() != 0 || action.strafe() != 0 || action.jump() || action.sneak()
                 || action.sprint() || action.yawDelta() != 0 || action.pitchDelta() != 0;
         if (controls && client.currentScreen != null) { reject("screen_conflict"); return; }
-        if (controls && action.operation() != null) {
+        if (controls && !ClientOperationCompatibility.allowsControls(action.operationKind())) {
             stopMining();
             reject("unsupported_control_operation_combination"); return;
         }
@@ -181,7 +192,7 @@ public final class ClientBehaviorExecutor {
                 case "click_slot" -> clickSlot(client, action.operation());
                 case "interact_block" -> interactBlock(client, action.operation());
                 case "mine_block" -> mineBlock(client, action.operation());
-                case "attack_entity" -> attackEntity(client, action.operation());
+                case "attack_entity" -> stageAttack(client, action, action.operation());
                 default -> reject("unsupported_operation");
             }
             input.bindDispatchedRequest(action.episode(), action.sequence(), status);
@@ -191,6 +202,7 @@ public final class ClientBehaviorExecutor {
     }
 
     private void reject(String code) {
+        pendingAttack = null;
         status = "rejected";
         reason = code;
         if (requestAdmitted && lastRequest != null && input != null) {
@@ -246,32 +258,62 @@ public final class ClientBehaviorExecutor {
         reason = released ? "block_use_dispatched_sustained_fallback_released" : "block_use_dispatched";
     }
 
-    private void attackEntity(MinecraftClient client, JsonObject op) {
-        if (client.currentScreen != null) { reject("screen_conflict"); return; }
-        if (client.player.isRiding()) { reject("riding_conflict"); return; }
-        if (client.player.isUsingItem()) { reject("item_use_in_progress"); return; }
-        if (client.interactionManager.isBreakingBlock()) { reject("block_break_in_progress"); return; }
+    private String attackDenial(MinecraftClient client, PendingAttack attack) {
+        if (client.currentScreen != null) return "screen_conflict";
+        if (client.player == null || client.world == null || client.interactionManager == null) return "no_world";
+        if (!client.player.isAlive()) return "player_dead";
+        if (client.player.isRiding()) return "riding_conflict";
+        if (client.player.isUsingItem()) return "item_use_in_progress";
+        if (client.interactionManager.isBreakingBlock()) return "block_break_in_progress";
         ClientBehaviorAccess access = (ClientBehaviorAccess) client;
-        if (access.mc2p$attackCooldown() > 0) { reject("attack_click_cooldown"); return; }
-        if (client.player.getAttackCooldownProgress(0.0f) < 1.0f) {
-            reject("attack_strength_cooldown"); return;
-        }
+        if (access.mc2p$attackCooldown() > 0) return "attack_click_cooldown";
+        if (!ClientOperationCompatibility.cooldownSatisfied(
+                client.player.getAttackCooldownProgress(0.0f), attack.minimumCooldownProgress()))
+            return "attack_strength_cooldown";
         client.gameRenderer.updateCrosshairTarget(1.0f);
         EntityHitResult hit = client.crosshairTarget instanceof EntityHitResult entity
                 && entity.getType() == HitResult.Type.ENTITY ? entity : null;
         String actualTrack = hit == null ? null
                 : ClientObservationCollector.currentTrackId(hit.getEntity());
         String denied = ClientEntityGuard.validate(
-                op.get("entity_ref").getAsString(), actualTrack,
+                attack.entityRef(), actualTrack,
                 hit == null ? 0.0 : client.player.getCameraPosVec(1.0f).distanceTo(hit.getPos()),
                 client.player.getEntityInteractionRange());
+        if (denied != null) return denied;
+        return gate.leaseActive(System.nanoTime()) ? null : "deadline_exceeded";
+    }
+
+    private void stageAttack(MinecraftClient client, ClientActionRequest action, JsonObject op) {
+        var attack = new PendingAttack(action.episode(), action.sequence(),
+                op.get("entity_ref").getAsString(),
+                op.get("minimum_cooldown_progress").getAsFloat());
+        String denied = attackDenial(client, attack);
         if (denied != null) { reject(denied); return; }
-        if (!gate.leaseActive(System.nanoTime())) { reject("deadline_exceeded"); return; }
+        pendingAttack = attack;
+        status = "pending_confirmation";
+        reason = "entity_attack_scheduled";
+    }
+
+    private void dispatchPendingAttack(MinecraftClient client) {
+        PendingAttack attack = pendingAttack;
+        if (attack == null) return;
+        pendingAttack = null;
+        String denied = attackDenial(client, attack);
+        if (denied != null) { reject(denied); return; }
+        dispatching = true;
+        try {
         // Vanilla returns false after a normal entity attack; this boolean is
         // the block-breaking continuation signal, not dispatch confirmation.
-        access.mc2p$attack();
-        status = "pending_confirmation";
-        reason = "entity_attack_dispatched";
+            ((ClientBehaviorAccess) client).mc2p$attack();
+            ClientControlDiagnostics.attackDispatched(
+                    client, attack.episode(), attack.sequence(), System.nanoTime(),
+                    attack.entityRef());
+            status = "pending_confirmation";
+            reason = "entity_attack_dispatched";
+            requestAdmitted = false;
+        } finally {
+            dispatching = false;
+        }
     }
 
     private void acquireInput(MinecraftClient client) {
@@ -284,6 +326,7 @@ public final class ClientBehaviorExecutor {
                 client.player == inputPlayer && client.world == world && inputPlayer.isAlive()
                 && client.currentScreen == null,
                 () -> ClientObservationCollector.diagnosticSampleClock().sampledAtMonotonicNs(),
+                () -> dispatchPendingAttack(client),
                 sample -> {
                     if (sample.episodeId() != null) ClientControlDiagnostics.inputConsumed(
                             client, sample.episodeId(), sample.requestSequenceId(),
@@ -294,6 +337,7 @@ public final class ClientBehaviorExecutor {
     }
 
     private void releaseInput() {
+        pendingAttack = null;
         if (input != null) input.clear();
         if (inputPlayer != null && inputPlayer.input == input) inputPlayer.input = previousInput;
         input = null; inputPlayer = null; previousInput = null;
@@ -384,5 +428,11 @@ public final class ClientBehaviorExecutor {
         }
         result.add("input_applications", applications);
         return result;
+    }
+
+    /** A transport must not acknowledge a coupled operation before its input sample. */
+    public boolean receiptReady() {
+        gate.requireOwnerThread();
+        return pendingAttack == null;
     }
 }

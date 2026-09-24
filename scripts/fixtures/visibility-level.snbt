@@ -1,0 +1,54 @@
+{
+  Data: {
+    DataVersion: 3953,
+    Version: {Id: 3953, Name: "1.21", Series: "main", Snapshot: 0b},
+    version: 19133,
+    LevelName: "mc2p-visibility-recipe",
+    GameType: 0,
+    hardcore: 0b,
+    Difficulty: 0b,
+    DifficultyLocked: 0b,
+    allowCommands: 1b,
+    initialized: 1b,
+    SpawnX: 0, SpawnY: -60, SpawnZ: 0, SpawnAngle: 0.0f,
+    Time: 0L, DayTime: 6000L, LastPlayed: 0L,
+    raining: 0b, thundering: 0b, rainTime: 120000, thunderTime: 120000,
+    GameRules: {
+      spawnRadius: "0", spawnChunkRadius: "0", doMobSpawning: "false",
+      doDaylightCycle: "false", doWeatherCycle: "false",
+      doPatrolSpawning: "false", doTraderSpawning: "false"
+    },
+    DataPacks: {Enabled: ["vanilla"], Disabled: ["bundle", "trade_rebalance"]},
+    ScheduledEvents: [],
+    WorldGenSettings: {
+      seed: 21001L, generate_features: 0b, bonus_chest: 0b,
+      dimensions: {
+        "minecraft:overworld": {
+          type: "minecraft:overworld",
+          generator: {
+            type: "minecraft:flat",
+            settings: {
+              biome: "minecraft:plains", features: 0b, lakes: 0b,
+              structure_overrides: [],
+              layers: [
+                {block: "minecraft:bedrock", height: 1},
+                {block: "minecraft:dirt", height: 2},
+                {block: "minecraft:grass_block", height: 1}
+              ]
+            }
+          }
+        },
+        "minecraft:the_nether": {
+          type: "minecraft:the_nether",
+          generator: {type: "minecraft:noise", settings: "minecraft:nether",
+            biome_source: {type: "minecraft:multi_noise", preset: "minecraft:nether"}}
+        },
+        "minecraft:the_end": {
+          type: "minecraft:the_end",
+          generator: {type: "minecraft:noise", settings: "minecraft:end",
+            biome_source: {type: "minecraft:the_end"}}
+        }
+      }
+    }
+  }
+}

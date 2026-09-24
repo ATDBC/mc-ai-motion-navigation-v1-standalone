@@ -15,18 +15,20 @@ from mc2p.contracts.common import FieldStatusV0
 from mc2p.contracts.intent_source import OrderedIntentV1, ordered_intent_id
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.contracts.task import ComparisonOperatorV0, SuccessCriterionV0, TaskIntentV0
+from mc2p.motion_nav.navigation_session import (
+    NavigationSession, NavigationSessionProfiles,
+)
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1, RuntimeStateV1
 from mc2p.skills.fixed_melee import CombatTargetV1
 from mc2p.skills.fixed_melee_driver import FixedMeleeDriver, FixedMeleeReportV1
-from mc2p.skills.navigation_state import NavigationState
 from mc2p.skills.normal_control_capabilities import ControlCapabilities, SCHEMA
-from mc2p.skills.point_goal_policy import PointGoalPolicy
 from scripts.control_probe_core import append_jsonl, write_json_atomic
 
 
 TARGET = {"x": 0.5, "y": 100.0, "z": 0.5}
 ROOT = Path(__file__).resolve().parents[1]
-CONTROL_CAPABILITIES = ROOT / "artifacts/normal-navigation/control-capability-v2.json"
+CONFIG = ROOT / "config/motion-navigation"
+CONTROL_CAPABILITIES = CONFIG / "c1-control-capability-v1.json"
 _DIRECTIONS = {
     "north": ({"x": 0.5, "y": 100.0, "z": -3.0}, 0.0),
     "east": ({"x": 4.0, "y": 100.0, "z": 0.5}, 90.0),
@@ -216,11 +218,11 @@ def _refresh_navigation(runtime: PlayerRuntimeV1, trial: dict,
 
 
 def _run_driver(runtime: PlayerRuntimeV1, trial: dict, target: CombatTargetV1,
-                deadline_ns: int, control_capabilities) -> FixedMeleeDriver:
+                deadline_ns: int,
+                profiles: NavigationSessionProfiles) -> FixedMeleeDriver:
     driver = FixedMeleeDriver(
         runtime,
-        NavigationState("c1-" + trial["trial_id"]),
-        PointGoalPolicy("D", control_capabilities=control_capabilities),
+        NavigationSession("c1-" + trial["trial_id"], profiles),
     )
     driver.start(target, time.perf_counter_ns())
     profile = BehaviorProfileV0()
@@ -372,7 +374,7 @@ def run_c1_fixed_melee_runtime(
         raise ValueError("C1 runtime requires ready PlayerRuntimeV1")
     manifest = write_c1_manifest(directory, world_seed=world_seed, code_hashes=code_hashes)
     rows = []
-    control_capabilities = c1_acceptance_control_capabilities()
+    profiles = NavigationSessionProfiles.load(CONFIG)
     for trial in c1_trial_plan(world_seed):
         fixture_writer(_fixture_commands(trial), trial)
         entity = _refresh_navigation(runtime, trial, deadline_ns)
@@ -391,7 +393,8 @@ def run_c1_fixed_melee_runtime(
                 runtime, trial, target, deadline_ns,
             )
         else:
-            driver = _run_driver(runtime, trial, target, deadline_ns, control_capabilities)
+            driver = _run_driver(runtime, trial, target, deadline_ns, profiles)
+            driver.navigation_session.close()
             report = driver.report
         passed = ((trial["classification"] == "positive"
                    and report.state == "complete"

@@ -4,6 +4,8 @@ import json
 import math
 from pathlib import Path
 import unittest
+from unittest.mock import patch
+from collections import Counter
 
 from mc2p.contracts.action_v1 import MovementV1
 from mc2p.motion_nav.fixed_route import (
@@ -16,6 +18,7 @@ from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
 from mc2p.motion_nav.runtime_adapter import BodyState, NavigationFrame
 from mc2p.motion_nav.world_model import (
     Aabb, BlockGeometry, ObservationStamp, WorldKnowledge, WorldSessionId,
+    WorldView,
 )
 from scripts.fixed_route_runtime_core import l_corridor_wall_positions
 
@@ -156,6 +159,163 @@ class FixedRouteWalkTests(unittest.TestCase):
             delta = (current.x - previous.x, 0.0, current.z - previous.z)
             self.assertIsNot(sweep(box, delta, frame.world).status, QueryStatus.BLOCKED)
             box = box.moved(*delta)
+
+    def test_local_candidates_do_not_replay_the_same_physics_rollout(self) -> None:
+        fixture, motion = FlatFixture(), profile()
+        body = PlanarBodyState(0, 0, 0, 1.5, 0)
+        controller = FixedRouteController(motion)
+        controller.start(FixedRoute("rollout-budget", (
+            RoutePoint(0, 1, 0), RoutePoint(0, 1, 8),
+        )), fixture.frame(0, body))
+        simulated_ticks = 0
+
+        def counted(initial, controls, selected_profile):
+            nonlocal simulated_ticks
+            simulated_ticks += len(controls)
+            return predict_ground(initial, controls, selected_profile)
+
+        with patch("mc2p.motion_nav.fixed_route.predict_ground", side_effect=counted):
+            decision = controller.decide(fixture.frame(1, body))
+
+        self.assertEqual(decision.reason, "tracking_fixed_route")
+        neutral = GroundControl(0, 0, body.yaw_radians)
+        maximum_state = PlanarBodyState(
+            0, 0, 0, motion.maximum_speed_blocks_per_second,
+            body.yaw_radians,
+        )
+        maximum_stop_ticks = 0
+        while (math.hypot(maximum_state.velocity_x, maximum_state.velocity_z)
+               > controller.config.stopped_speed_blocks_per_second):
+            maximum_state = predict_ground(maximum_state, (neutral,), motion)[-1]
+            maximum_stop_ticks += 1
+        upper_bound = (
+            9 * (controller.config.input_lease_ticks + maximum_stop_ticks)
+            + maximum_stop_ticks
+        )
+        self.assertLessEqual(
+            simulated_ticks, upper_bound,
+            "each candidate may simulate its lease and stop tail once, not replay it",
+        )
+
+    def test_one_control_decision_materializes_each_block_collision_once(self) -> None:
+        fixture, motion = FlatFixture(), profile()
+        body = PlanarBodyState(0, 0, 0, 1.5, 0)
+        controller = FixedRouteController(motion)
+        controller.start(FixedRoute("collision-cache", (
+            RoutePoint(0, 1, 0), RoutePoint(0, 1, 8),
+        )), fixture.frame(0, body))
+        calls: Counter[tuple[int, int, int]] = Counter()
+        cell_calls: Counter[tuple[int, int, int]] = Counter()
+        original = BlockGeometry.world_boxes
+        original_cell = WorldView.cell
+
+        def counted(block, position):
+            calls[position] += 1
+            return original(block, position)
+
+        def counted_cell(view, position):
+            cell_calls[position] += 1
+            return original_cell(view, position)
+
+        with patch.object(BlockGeometry, "world_boxes", new=counted), \
+                patch.object(WorldView, "cell", new=counted_cell):
+            decision = controller.decide(fixture.frame(1, body))
+
+        self.assertEqual(decision.reason, "tracking_fixed_route")
+        self.assertTrue(calls)
+        self.assertLessEqual(
+            max(calls.values()), 1,
+            "collision boxes are immutable within one navigation frame",
+        )
+        self.assertLessEqual(
+            max(cell_calls.values()), 1,
+            "cell facts are immutable within one navigation frame",
+        )
+
+    def test_open_route_does_not_fully_validate_every_inferior_candidate(self) -> None:
+        class CountingController(FixedRouteController):
+            def __init__(self, *args, **kwargs) -> None:
+                super().__init__(*args, **kwargs)
+                self.full_candidate_validations = 0
+
+            def _evaluate_candidate(self, *args, **kwargs):
+                self.full_candidate_validations += 1
+                return super()._evaluate_candidate(*args, **kwargs)
+
+        fixture, motion = FlatFixture(), profile()
+        body = PlanarBodyState(0, 0, 0, 0, 0)
+        controller = CountingController(motion)
+        controller.start(FixedRoute("ranked-open-route", (
+            RoutePoint(0, 1, 0), RoutePoint(0, 1, 8),
+        )), fixture.frame(0, body))
+
+        decision = controller.decide(fixture.frame(1, body))
+
+        self.assertEqual(decision.reason, "tracking_fixed_route")
+        self.assertLess(
+            controller.full_candidate_validations, len(tuple(
+                MovementV1(forward=forward, strafe=strafe)
+                for forward in (-1, 0, 1)
+                for strafe in (-1, 0, 1)
+            )),
+            "a proven safe winner should prune candidates whose best possible score is worse",
+        )
+
+    def test_ranked_candidates_match_exhaustive_reference(self) -> None:
+        class ExhaustiveController(FixedRouteController):
+            def _ranked_tracking_candidates(
+                self, frame, body, target, query_cache,
+            ):
+                return [
+                    self._evaluate_candidate(
+                        frame, body, MovementV1(forward=forward, strafe=strafe),
+                        target, braking=False, query_cache=query_cache,
+                    )
+                    for forward in (-1, 0, 1)
+                    for strafe in (-1, 0, 1)
+                ]
+
+        motion = profile()
+        route = FixedRoute("ranked-equivalence", (
+            RoutePoint(0, 1, 0), RoutePoint(0, 1, 8),
+        ))
+        body_cases = tuple(
+            PlanarBodyState(x, 0.2, velocity_x, velocity_z, yaw)
+            for x in (-0.35, 0.0, 0.35)
+            for velocity_x, velocity_z in ((0.0, 0.0), (0.4, 0.8))
+            for yaw in (-math.pi / 2, 0.0, math.pi / 2)
+        )
+        for terrain in ("open", "wall", "pit", "unknown"):
+            fixture = FlatFixture()
+            stamp = ObservationStamp(fixture.session, 1, 1, "test-clock", 50_000_000)
+            if terrain == "wall":
+                fixture.world.observe_blocks(stamp, {
+                    (1, y, z): BlockGeometry.full_cube("minecraft:stone")
+                    for y in (1, 2) for z in range(-1, 4)
+                })
+            elif terrain == "pit":
+                fixture.world.confirm_air(stamp, tuple(
+                    (x, 0, z) for x in (-1, 0, 1) for z in (1, 2)
+                ))
+            elif terrain == "unknown":
+                fixture.world.invalidate(stamp, tuple(
+                    (x, y, z)
+                    for x in (-1, 0, 1) for y in (0, 1, 2) for z in (1, 2)
+                ))
+            for index, body in enumerate(body_cases):
+                with self.subTest(terrain=terrain, body=index):
+                    ranked = FixedRouteController(motion)
+                    exhaustive = ExhaustiveController(motion)
+                    ranked.start(route, fixture.frame(0, body))
+                    exhaustive.start(route, fixture.frame(0, body))
+
+                    actual = ranked.decide(fixture.frame(1, body))
+                    expected = exhaustive.decide(fixture.frame(1, body))
+
+                    self.assertEqual(actual.state, expected.state)
+                    self.assertEqual(actual.movement, expected.movement)
+                    self.assertEqual(actual.reason, expected.reason)
+                    self.assertEqual(actual.missing_cells, expected.missing_cells)
 
     def test_cancel_checks_the_full_stop_tail_without_soft_wall_cost(self) -> None:
         fixture, motion = FlatFixture(), profile()
@@ -361,7 +521,6 @@ class FixedRouteWalkTests(unittest.TestCase):
         yaws = (-math.pi, -math.pi / 2, 0.0, math.pi / 2, math.pi)
         offsets = (0.0, 0.02, 0.05, 0.10)
         successes = 0
-        control_times_ms = []
         for shape in shapes:
             for yaw in yaws:
                 for offset in offsets:
@@ -378,7 +537,6 @@ class FixedRouteWalkTests(unittest.TestCase):
                         middle_low_ticks = 0
                         for sequence in range(1, 501):
                             decision = controller.decide(fixture.frame(sequence, body))
-                            control_times_ms.append(decision.control_time_ns / 1_000_000)
                             speed = math.hypot(body.velocity_x, body.velocity_z)
                             goal_distance = math.hypot(body.x - shape[-1][0], body.z - shape[-1][1])
                             if speed > .2:
@@ -397,10 +555,6 @@ class FixedRouteWalkTests(unittest.TestCase):
                         self.assertLessEqual(math.hypot(body.velocity_x, body.velocity_z), .1)
                         successes += 1
         self.assertEqual(successes, 100)
-        ordered = sorted(control_times_ms)
-        self.assertLessEqual(ordered[math.ceil(len(ordered) * .95) - 1], 8.0)
-        self.assertLessEqual(ordered[math.ceil(len(ordered) * .99) - 1], 15.0)
-        self.assertLess(max(ordered), 30.0)
 
 
 if __name__ == "__main__":

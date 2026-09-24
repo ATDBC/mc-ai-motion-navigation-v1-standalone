@@ -1,0 +1,1142 @@
+"""Online owner for planning, route admission and route execution.
+
+The session never advances a backend. It turns the newest navigation frame
+into an ordered control-frame proposal and keeps asynchronous results bound to
+the request and goal revision that produced them.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass, replace
+from enum import StrEnum
+import math
+from pathlib import Path
+import time
+from typing import Callable, Protocol, runtime_checkable
+
+from mc2p.contracts.action import ActionPriorityV0
+from mc2p.contracts.action_v1 import ActionIntentV1, LookV1, MovementV1
+from mc2p.contracts.common import ContractViolation, require_identifier
+from mc2p.contracts.intent_source import (
+    ControlFrameProposalV1,
+    IntentSourceV1,
+    OrderedIntentV1,
+    ordered_intent_id,
+)
+from mc2p.contracts.observation_request_v3 import (
+    ObservationRequestV3, merge_observation_requests,
+)
+from mc2p.contracts.observation_v3 import ObservationSnapshotV3
+from mc2p.motion_nav.action_route import JumpGapSegment
+from mc2p.motion_nav.action_route_executor import (
+    ActionRouteDecision,
+    ActionRouteExecutor,
+    ActionRouteState,
+)
+from mc2p.motion_nav.air_motion import AirMotionProfile
+from mc2p.motion_nav.air_motion import load_air_motion_profiles
+from mc2p.motion_nav.block_motion_traits import BlockMotionCatalog
+from mc2p.motion_nav.environment_identity import load_frozen_environment
+from mc2p.motion_nav.ground_modes import GroundModeProfiles
+from mc2p.motion_nav.ground_modes import load_ground_mode_profiles
+from mc2p.motion_nav.ground_motion import GroundMotionProfile
+from mc2p.motion_nav.jump_up import JumpUpProfile, load_jump_up_profile
+from mc2p.motion_nav.known_map_planner import (
+    KnownMapBounds,
+    KnownMapSnapshotBuilder,
+    PlanningRequest,
+    PlanningStatus,
+    SnapshotBuildStatus,
+    SurfacePlanningRequest,
+    SurfacePlanningStatus,
+    SurfaceRouteCandidate,
+)
+from mc2p.motion_nav.motion_coordination import MotionRouteCoordinator
+from mc2p.motion_nav.motion_solver import (
+    DEFAULT_GAP_SOLVER_POLICY, GapSolverPolicy, load_gap_solver_policy,
+)
+from mc2p.motion_nav.motion_worker import MotionSolverWorker
+from mc2p.motion_nav.movement_transition import (
+    GoalState, MovementMode, ResourceState,
+)
+from mc2p.motion_nav.online_motion import InputApplicationLedger, StateAnchor
+from mc2p.motion_nav.motion_residual import (
+    MotionResidualResult, MotionResidualStatus, MotionResidualTracker,
+)
+from mc2p.motion_nav.physics_adapter import PhysicsWorldView
+from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET
+from mc2p.motion_nav.planner_worker import PlannerWorker
+from mc2p.motion_nav.route_admission import (
+    ActiveRoute,
+    AdmissionStatus,
+    RouteAdmitter,
+)
+from mc2p.motion_nav.runtime_adapter import (
+    NavigationFrame,
+    NavigationObservationAdapter,
+    world_session_from_observation,
+)
+from mc2p.motion_nav.step_transition import StepProfile, load_step_profile
+from mc2p.motion_nav.support_surfaces import SurfaceNodeId, query_support_surfaces
+from mc2p.motion_nav.world_model import BlockPos
+
+
+class NavigationSessionState(StrEnum):
+    READY = "ready"
+    NEEDS_INFORMATION = "needs_information"
+    SNAPSHOTTING = "snapshotting"
+    PLANNING = "planning"
+    EXECUTING = "executing"
+    COMPLETE = "complete"
+    CANCELLED = "cancelled"
+    FAILED = "failed"
+    CLOSED = "closed"
+
+
+class ExternalMotionReentryStatus(StrEnum):
+    CONTINUE_NAVIGATION = "continue_navigation"
+    REQUIRES_BODY_RECOVERY = "requires_body_recovery"
+
+
+@dataclass(frozen=True, slots=True)
+class ExternalMotionReentryDecision:
+    status: ExternalMotionReentryStatus
+    reason: str
+
+    def __post_init__(self) -> None:
+        if type(self.status) is not ExternalMotionReentryStatus:
+            raise ContractViolation("external-motion reentry status must be typed")
+        require_identifier(self.reason, "external-motion reentry reason")
+
+
+@dataclass(frozen=True, slots=True)
+class NavigationSessionProfiles:
+    ground: GroundMotionProfile
+    jump_up: JumpUpProfile
+    step: StepProfile
+    ground_modes: GroundModeProfiles | None = None
+    air: tuple[AirMotionProfile, ...] = ()
+    gap_solver: GapSolverPolicy = DEFAULT_GAP_SOLVER_POLICY
+
+    def __post_init__(self) -> None:
+        if (type(self.ground) is not GroundMotionProfile
+                or type(self.jump_up) is not JumpUpProfile
+                or type(self.step) is not StepProfile):
+            raise ContractViolation("navigation session requires calibrated profiles")
+        if (self.ground_modes is not None
+                and type(self.ground_modes) is not GroundModeProfiles):
+            raise ContractViolation("navigation ground modes must be typed")
+        if (type(self.air) is not tuple
+                or any(type(profile) is not AirMotionProfile for profile in self.air)):
+            raise ContractViolation("navigation air profiles must be immutable")
+        if type(self.gap_solver) is not GapSolverPolicy:
+            raise ContractViolation("navigation gap solver policy must be typed")
+
+    @classmethod
+    def load(cls, config_root: Path) -> "NavigationSessionProfiles":
+        """Load the one frozen Java 1.21 profile set used by formal sessions."""
+        if not isinstance(config_root, Path):
+            raise ContractViolation("navigation profile root must be a Path")
+        environment = load_frozen_environment(config_root / "environment-v1.json")
+        catalog = BlockMotionCatalog.load(
+            config_root / "block-motion-traits-v1.json",
+            config_root / "vanilla-block-registry-1_21.json",
+        )
+        modes = load_ground_mode_profiles(
+            config_root / "ground-modes-b08-v1.json",
+            environment=environment,
+            catalog=catalog,
+        )
+        return cls(
+            # B08's walk entry contains the same calibrated dynamics and
+            # shape-material catalog as B07, and is the profile the mode
+            # controller actually executes.  Planning and execution must use
+            # that one object instead of mixing two profile identities.
+            ground=modes.require(MovementMode.WALK).motion,
+            jump_up=load_jump_up_profile(
+                config_root / "jump-up-b06-v1.json",
+                environment=environment,
+                catalog=catalog,
+            ),
+            step=load_step_profile(
+                config_root / "step-b07-v1.json",
+                environment=environment,
+            ),
+            ground_modes=modes,
+            air=load_air_motion_profiles(
+                config_root / "air-motions-b09-v1.json",
+                environment=environment,
+                catalog=catalog,
+            ),
+            gap_solver=load_gap_solver_policy(
+                config_root / "air-motions-b09-v1.json",
+            ),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class NavigationSessionReport:
+    session_id: str
+    state: NavigationSessionState
+    reason: str
+    goal_id: str | None
+    goal_revision: int | None
+    request_id: str | None
+    planning_generation: int
+    route_id: str | None
+    action_index: int | None
+    missing_cells: tuple[BlockPos, ...]
+    terminal: bool
+    schema_version: str = "mc2p.navigation-session-report.v1"
+
+
+@dataclass(frozen=True, slots=True)
+class NavigationSessionProposal:
+    control_frame: ControlFrameProposalV1 | None
+    report: NavigationSessionReport
+    route_decision: ActionRouteDecision | None = None
+
+
+@runtime_checkable
+class NavigationSessionPort(Protocol):
+    """Small runtime-facing contract; tests can replace planning, not semantics."""
+
+    @property
+    def report(self) -> NavigationSessionReport: ...
+
+    def bind_source(self, source: IntentSourceV1) -> None: ...
+    def unbind_source(self, source: IntentSourceV1) -> None: ...
+    def ingest(self, snapshot: ObservationSnapshotV3) -> NavigationFrame: ...
+    def motion_residual(
+        self, snapshot: ObservationSnapshotV3, ledger: InputApplicationLedger,
+    ) -> MotionResidualResult | None: ...
+    def external_motion_reentry(
+        self, snapshot: ObservationSnapshotV3,
+    ) -> ExternalMotionReentryDecision: ...
+    def observation_request(
+        self, *, max_positions: int = 128,
+    ) -> ObservationRequestV3: ...
+    def start_goal(
+        self, goal_id: str, goal_revision: int, goal_state: GoalState,
+        frame: NavigationFrame, *, maximum_expansions: int = 100_000,
+        maximum_planning_seconds: float = .5,
+    ) -> None: ...
+    def update_goal(
+        self, goal_id: str, goal_revision: int, goal_state: GoalState,
+    ) -> None: ...
+    def propose(
+        self, frame: NavigationFrame, state_anchor: StateAnchor | None,
+        deadline_ns: int, *, input_ledger: InputApplicationLedger | None = None,
+    ) -> NavigationSessionProposal: ...
+    def cancel(self, reason: str) -> None: ...
+
+
+class NavigationSession:
+    """Own one goal/request/route lifecycle while reading one world owner."""
+
+    def __init__(
+        self,
+        session_id: str,
+        profiles: NavigationSessionProfiles,
+        *,
+        planner_worker=None,
+        motion_worker: MotionSolverWorker | None = None,
+        observation_adapter: NavigationObservationAdapter | None = None,
+        route_admitter: RouteAdmitter | None = None,
+        clock_ns: Callable[[], int] = time.perf_counter_ns,
+        snapshot_cells_per_step: int = 4096,
+        planning_margin_cells: int = 1,
+    ) -> None:
+        require_identifier(session_id, "navigation session id")
+        if type(profiles) is not NavigationSessionProfiles:
+            raise ContractViolation("navigation session profiles are invalid")
+        if type(snapshot_cells_per_step) is not int or snapshot_cells_per_step < 1:
+            raise ContractViolation("snapshot step budget must be positive")
+        if type(planning_margin_cells) is not int or not 0 <= planning_margin_cells <= 16:
+            raise ContractViolation("planning margin must be within 0..16 cells")
+        self.session_id = session_id
+        self.profiles = profiles
+        self._planner = planner_worker or PlannerWorker()
+        self._motion_worker = motion_worker
+        self._owns_motion_worker = False
+        self._adapter = observation_adapter or NavigationObservationAdapter()
+        self._admitter = route_admitter or RouteAdmitter()
+        self._clock = clock_ns
+        self._snapshot_cells_per_step = snapshot_cells_per_step
+        self._planning_margin = planning_margin_cells
+        self._source: IntentSourceV1 | None = None
+        self._intent_sequence = 0
+        self._state = NavigationSessionState.READY
+        self._reason = "not_started"
+        self._request: PlanningRequest | SurfacePlanningRequest | None = None
+        self._frame: NavigationFrame | None = None
+        self._snapshot_builder: KnownMapSnapshotBuilder | None = None
+        self._snapshot_missing: tuple[BlockPos, ...] = ()
+        self._residual_missing: tuple[BlockPos, ...] = ()
+        self._planning_changes: set[BlockPos] = set()
+        self._active_route: ActiveRoute | None = None
+        self._executor: ActionRouteExecutor | None = None
+        self._coordinator: MotionRouteCoordinator | None = None
+        self._last_decision: ActionRouteDecision | None = None
+        self._pending_goal: tuple[str, int, GoalState] | None = None
+        self._motion_residual = MotionResidualTracker()
+        self._closed = False
+
+    @property
+    def active_route(self) -> ActiveRoute | None:
+        return self._active_route
+
+    @property
+    def report(self) -> NavigationSessionReport:
+        request = self._request
+        route = self._active_route
+        pending = self._pending_goal
+        return NavigationSessionReport(
+            self.session_id,
+            self._state,
+            self._reason,
+            (pending[0] if request is None and pending is not None
+             else None if request is None else request.goal_id),
+            (pending[1] if request is None and pending is not None
+             else None if request is None else request.goal_revision),
+            None if request is None else request.request_id,
+            0 if request is None else request.sequence,
+            None if route is None else route.route_id,
+            None if self._last_decision is None else self._last_decision.action_index,
+            tuple(sorted(set(self._snapshot_missing) | set(self._residual_missing))),
+            self._state in {
+                NavigationSessionState.COMPLETE,
+                NavigationSessionState.CANCELLED,
+                NavigationSessionState.FAILED,
+                NavigationSessionState.CLOSED,
+            },
+        )
+
+    def bind_source(self, source: IntentSourceV1) -> None:
+        if type(source) is not IntentSourceV1:
+            raise ContractViolation("navigation source must be ordered")
+        if self._source is not None and self._source != source:
+            raise ContractViolation("navigation session already has an input source")
+        self._source = source
+
+    def unbind_source(self, source: IntentSourceV1) -> None:
+        if type(source) is not IntentSourceV1 or self._source != source:
+            raise ContractViolation("navigation source does not own this session")
+        self._source = None
+
+    def ingest(self, snapshot: ObservationSnapshotV3) -> NavigationFrame:
+        """Project one formal observation through this session's sole adapter."""
+        if type(snapshot) is not ObservationSnapshotV3:
+            raise ContractViolation("navigation session requires Observation V3")
+        if (self._frame is not None
+                and snapshot.sequence_id == self._frame.body.sequence_id
+                and world_session_from_observation(snapshot) == self._frame.session):
+            return self._frame
+        frame = self._adapter.ingest(snapshot)
+        self.observe(frame, frame.changed_cells)
+        return frame
+
+    def motion_residual(
+        self,
+        snapshot: ObservationSnapshotV3,
+        ledger: InputApplicationLedger,
+    ) -> MotionResidualResult | None:
+        """Compare one new body observation with the sole applied-input ledger."""
+        if type(ledger) is not InputApplicationLedger:
+            raise ContractViolation("navigation residual requires the Runtime input ledger")
+        frame = self.ingest(snapshot)
+        result = self._motion_residual.observe(snapshot, frame, ledger)
+        if result is not None:
+            self._residual_missing = (
+                result.missing_cells
+                if result.status is MotionResidualStatus.NEEDS_WORLD
+                else ()
+            )
+        return result
+
+    def external_motion_reentry(
+        self, snapshot: ObservationSnapshotV3,
+    ) -> ExternalMotionReentryDecision:
+        """Decide whether the existing navigation owner can absorb a shove."""
+        frame = self.ingest(snapshot)
+        if not frame.body.is_on_ground:
+            return ExternalMotionReentryDecision(
+                ExternalMotionReentryStatus.REQUIRES_BODY_RECOVERY,
+                "external_motion_airborne",
+            )
+        if self._request is None or self._state in {
+            NavigationSessionState.FAILED,
+            NavigationSessionState.CANCELLED,
+            NavigationSessionState.COMPLETE,
+            NavigationSessionState.CLOSED,
+        }:
+            return ExternalMotionReentryDecision(
+                ExternalMotionReentryStatus.REQUIRES_BODY_RECOVERY,
+                "navigation_contract_unavailable",
+            )
+        support, missing = self._surface_for_body(frame)
+        if support is None:
+            return ExternalMotionReentryDecision(
+                ExternalMotionReentryStatus.REQUIRES_BODY_RECOVERY,
+                "current_support_unknown" if missing
+                else "current_support_unavailable",
+            )
+        # The route executor already evaluates the observed continuous state on
+        # its next decision.  Keeping that owner preserves the existing safety
+        # checks and avoids turning every recoverable shove into a stop command.
+        return ExternalMotionReentryDecision(
+            ExternalMotionReentryStatus.CONTINUE_NAVIGATION,
+            "current_support_allows_navigation_reentry",
+        )
+
+    def observation_request(self, *, max_positions: int = 128) -> ObservationRequestV3:
+        residual_missing = tuple(sorted(set(self._residual_missing)))
+        planning_missing = tuple(sorted(
+            set(self._snapshot_missing) - set(residual_missing)
+        ))
+        missing = residual_missing + planning_missing
+        if not missing:
+            return ObservationRequestV3("navigation_v1")
+        if not self._adapter.has_frame:
+            return ObservationRequestV3(
+                "navigation_v1", missing[:max_positions],
+            )
+        residual_request = ObservationRequestV3("navigation_v1")
+        if residual_missing:
+            residual_request, _ = self._adapter.air_request(
+                residual_missing, max_positions=max_positions,
+            )
+        remaining = max_positions - len(residual_request.air_positions)
+        planning_request = ObservationRequestV3("navigation_v1")
+        if planning_missing and remaining:
+            planning_request, _ = self._adapter.air_request(
+                planning_missing, max_positions=remaining,
+            )
+        return merge_observation_requests((
+            residual_request, planning_request,
+        ))
+
+    def start(
+        self,
+        request: PlanningRequest | SurfacePlanningRequest,
+        frame: NavigationFrame,
+    ) -> None:
+        if type(request) not in (PlanningRequest, SurfacePlanningRequest):
+            raise ContractViolation("navigation session requires a planning request")
+        if type(frame) is not NavigationFrame:
+            raise ContractViolation("navigation session requires a navigation frame")
+        if self._closed:
+            raise ContractViolation("navigation session is closed")
+        if request.world_session != frame.session.value:
+            raise ContractViolation("navigation request belongs to another world")
+        if self._request is not None and request.sequence <= self._request.sequence:
+            raise ContractViolation("navigation request generation did not advance")
+        self._pending_goal = None
+        self._replace_request(request, frame, "request_started")
+
+    def start_goal(
+        self,
+        goal_id: str,
+        goal_revision: int,
+        goal_state: GoalState,
+        frame: NavigationFrame,
+        *,
+        maximum_expansions: int = 100_000,
+        maximum_planning_seconds: float = .5,
+    ) -> None:
+        """Resolve current and goal support without creating point-goal state."""
+        if self._request is not None:
+            raise ContractViolation("navigation session already has a request")
+        require_identifier(goal_id, "navigation goal id")
+        if type(goal_revision) is not int or goal_revision < 0:
+            raise ContractViolation("navigation goal revision is invalid")
+        if type(goal_state) is not GoalState or type(frame) is not NavigationFrame:
+            raise ContractViolation("navigation goal requires typed state and frame")
+        goal_node, missing = self._surface_for_goal(frame, goal_state)
+        if goal_node is None:
+            self._frame = frame
+            self._pending_goal = (goal_id, goal_revision, goal_state)
+            self._snapshot_missing = missing
+            self._state = (
+                NavigationSessionState.NEEDS_INFORMATION
+                if missing else NavigationSessionState.FAILED
+            )
+            self._reason = (
+                "goal_surface_requires_information"
+                if missing else "goal_surface_unavailable"
+            )
+            return
+        start_node, start_missing = self._surface_for_body(frame)
+        if start_node is None:
+            self._frame = frame
+            self._pending_goal = (goal_id, goal_revision, goal_state)
+            self._snapshot_missing = start_missing
+            self._state = (
+                NavigationSessionState.NEEDS_INFORMATION
+                if start_missing else NavigationSessionState.FAILED
+            )
+            self._reason = (
+                "current_surface_requires_information"
+                if start_missing else "current_surface_unavailable"
+            )
+            return
+        request = self._goal_request(
+            goal_id, goal_revision, goal_state, start_node, goal_node, frame,
+            maximum_expansions=maximum_expansions,
+            maximum_planning_seconds=maximum_planning_seconds,
+        )
+        self._replace_request(request, frame, "goal_started")
+
+    def update_goal(
+        self,
+        goal_id: str,
+        goal_revision: int,
+        goal_state: GoalState,
+    ) -> None:
+        if self._frame is None:
+            raise ContractViolation("surface goal update requires an active request")
+        if self._request is None:
+            if self._pending_goal is None:
+                raise ContractViolation(
+                    "surface goal update requires an active request"
+                )
+            pending_id, pending_revision, _ = self._pending_goal
+            if (goal_id != pending_id or type(goal_revision) is not int
+                    or goal_revision <= pending_revision
+                    or type(goal_state) is not GoalState):
+                raise ContractViolation(
+                    "navigation goal identity or revision is invalid"
+                )
+            self._pending_goal = None
+            self._snapshot_missing = ()
+            self.start_goal(goal_id, goal_revision, goal_state, self._frame)
+            return
+        if type(self._request) is not SurfacePlanningRequest:
+            raise ContractViolation("surface goal update requires an active request")
+        if (goal_id != self._request.goal_id
+                or type(goal_revision) is not int
+                or goal_revision <= self._request.goal_revision
+                or type(goal_state) is not GoalState):
+            raise ContractViolation("navigation goal identity or revision is invalid")
+        goal_node, missing = self._surface_for_goal(self._frame, goal_state)
+        if goal_node is None:
+            self._pending_goal = (goal_id, goal_revision, goal_state)
+            self._snapshot_missing = missing
+            self._state = (
+                NavigationSessionState.NEEDS_INFORMATION
+                if missing else NavigationSessionState.FAILED
+            )
+            self._reason = (
+                "goal_surface_requires_information"
+                if missing else "goal_surface_unavailable"
+            )
+            self._request = replace(
+                self._request,
+                sequence=self._request.sequence + 1,
+                request_id=f"{self.session_id}-request-{self._request.sequence + 1}",
+                goal_id=goal_id,
+                goal_revision=goal_revision,
+                goal_state=goal_state,
+            )
+            self._retire_route()
+            return
+        start_node, start_missing = self._surface_for_body(self._frame)
+        if start_node is None:
+            self._pending_goal = (goal_id, goal_revision, goal_state)
+            self._snapshot_missing = start_missing
+            self._state = (
+                NavigationSessionState.NEEDS_INFORMATION
+                if start_missing else NavigationSessionState.FAILED
+            )
+            self._reason = (
+                "current_surface_requires_information"
+                if start_missing else "current_surface_unavailable"
+            )
+            self._request = replace(
+                self._request,
+                sequence=self._request.sequence + 1,
+                request_id=f"{self.session_id}-request-{self._request.sequence + 1}",
+                goal_id=goal_id,
+                goal_revision=goal_revision,
+                goal_state=goal_state,
+            )
+            self._retire_route()
+            return
+        request = replace(
+            self._request,
+            sequence=self._request.sequence + 1,
+            request_id=f"{self.session_id}-request-{self._request.sequence + 1}",
+            start=start_node,
+            goal=goal_node,
+            goal_id=goal_id,
+            goal_revision=goal_revision,
+            goal_state=goal_state,
+        )
+        self._pending_goal = None
+        self._replace_request(request, self._frame, "goal_revised")
+
+    def _goal_request(
+        self,
+        goal_id: str,
+        goal_revision: int,
+        goal_state: GoalState,
+        start_node: SurfaceNodeId,
+        goal_node: SurfaceNodeId,
+        frame: NavigationFrame,
+        *,
+        maximum_expansions: int = 100_000,
+        maximum_planning_seconds: float = .5,
+    ) -> SurfacePlanningRequest:
+        return SurfacePlanningRequest(
+            1, f"{self.session_id}-request-1", goal_id, goal_revision,
+            frame.session.value, start_node, goal_node,
+            maximum_expansions=maximum_expansions,
+            initial_resources=ResourceState((
+                ("food_points", float(frame.body.food_points)),
+            )),
+            goal_state=goal_state,
+            maximum_planning_seconds=maximum_planning_seconds,
+        )
+
+    def observe(
+        self,
+        frame: NavigationFrame,
+        changed_cells: tuple[BlockPos, ...],
+    ) -> None:
+        if type(frame) is not NavigationFrame or type(changed_cells) is not tuple:
+            raise ContractViolation("navigation observation requires typed current state")
+        if self._closed:
+            raise ContractViolation("navigation session is closed")
+        if self._frame is not None:
+            if frame.session != self._frame.session:
+                self._state = NavigationSessionState.FAILED
+                self._reason = "world_session_changed"
+                self._retire_route()
+                self._frame = frame
+                return
+            if frame.body.sequence_id < self._frame.body.sequence_id:
+                raise ContractViolation("navigation observation sequence regressed")
+            if frame.body.sequence_id == self._frame.body.sequence_id:
+                # ``ingest`` and ``propose`` can receive the same formal
+                # observation in one public control tick.  Its world changes
+                # already belong to the snapshot/request created from that
+                # frame; replaying them would falsely invalidate the route as
+                # though they happened after planning began.
+                self._frame = frame
+                return
+        self._frame = frame
+        route = self._active_route
+        frame.world.set_protection(
+            frame.body.position,
+            () if route is None else route.action_route.dependencies,
+        )
+        self._planning_changes.update(changed_cells)
+        if (self._state is NavigationSessionState.NEEDS_INFORMATION
+                and set(changed_cells).intersection(self._snapshot_missing)):
+            if self._pending_goal is not None:
+                goal_id, revision, goal_state = self._pending_goal
+                if self._request is None:
+                    self._state = NavigationSessionState.READY
+                    self._snapshot_missing = ()
+                    self.start_goal(goal_id, revision, goal_state, frame)
+                else:
+                    goal_node, missing = self._surface_for_goal(frame, goal_state)
+                    start_node, start_missing = self._surface_for_body(frame)
+                    if goal_node is not None and start_node is not None:
+                        request = replace(
+                            self._request,
+                            sequence=self._request.sequence + 1,
+                            request_id=(
+                                f"{self.session_id}-request-"
+                                f"{self._request.sequence + 1}"
+                            ),
+                            start=start_node,
+                            goal=goal_node,
+                        )
+                        self._pending_goal = None
+                        self._replace_request(request, frame, "goal_information_updated")
+                    else:
+                        combined = tuple(sorted(set(missing) | set(start_missing)))
+                        self._snapshot_missing = combined
+                        if not combined:
+                            self._state = NavigationSessionState.FAILED
+                            self._reason = (
+                                "goal_surface_unavailable"
+                                if goal_node is None else "current_surface_unavailable"
+                            )
+            elif self._request is not None:
+                self._restart_request_from_current(
+                    frame, "planning_information_updated",
+                )
+        route = self._active_route
+        if route is not None and set(route.action_route.dependencies).intersection(changed_cells):
+            self._replan_from_current("active_route_dependency_changed")
+
+    def propose(
+        self,
+        frame: NavigationFrame,
+        state_anchor: StateAnchor | None,
+        deadline_ns: int,
+        *,
+        input_ledger: InputApplicationLedger | None = None,
+    ) -> NavigationSessionProposal:
+        if type(frame) is not NavigationFrame:
+            raise ContractViolation("navigation proposal requires a frame")
+        if type(deadline_ns) is not int or deadline_ns <= self._clock():
+            raise ContractViolation("navigation proposal deadline must be in the future")
+        self.observe(frame, frame.changed_cells)
+        if self._state in {
+            NavigationSessionState.CLOSED,
+            NavigationSessionState.FAILED,
+            NavigationSessionState.COMPLETE,
+            NavigationSessionState.CANCELLED,
+        }:
+            return self._proposal(MovementV1(), None, 1, deadline_ns)
+        self._advance_planning(frame)
+        if self._active_route is None:
+            return self._proposal(MovementV1(), None, 1, deadline_ns)
+
+        assert self._executor is not None
+        if (self._coordinator is not None and state_anchor is not None
+                and input_ledger is not None):
+            decision = self._coordinator.decide(
+                frame, state_anchor, input_ledger,
+                PhysicsWorldView(frame.world, JAVA_1_21_RULESET),
+                changed_cells=frame.changed_cells,
+            )
+        else:
+            decision = self._executor.decide(
+                frame, state_anchor=state_anchor, input_ledger=input_ledger,
+            )
+        self._last_decision = decision
+        self._apply_decision_state(decision)
+        movement = decision.movement if decision.submit_input else MovementV1()
+        return self._proposal(
+            movement, decision.look, decision.input_lease_ticks,
+            deadline_ns, route_decision=decision,
+        )
+
+    def register_verified_submission(
+        self,
+        proposal: NavigationSessionProposal,
+        *,
+        control_sequence: int,
+    ) -> None:
+        decision = proposal.route_decision
+        if (decision is None or decision.verified_command_index is None
+                or decision.expected_movement_tick is None
+                or self._executor is None):
+            return
+        self._executor.register_verified_submission(
+            decision.verified_command_index,
+            control_sequence=control_sequence,
+            requested_movement_tick=decision.expected_movement_tick,
+            requested_latest_movement_tick=decision.latest_movement_tick,
+        )
+
+    def cancel(self, reason: str) -> None:
+        if type(reason) is not str or not reason.strip():
+            raise ContractViolation("navigation cancellation reason is required")
+        if self._closed:
+            raise ContractViolation("navigation session is closed")
+        if self._executor is not None:
+            self._executor.cancel()
+        self._state = NavigationSessionState.CANCELLED
+        self._reason = reason.strip()
+
+    def close(self) -> None:
+        if self._closed:
+            return
+        self._closed = True
+        if hasattr(self._planner, "close"):
+            self._planner.close()
+        if self._motion_worker is not None and self._owns_motion_worker:
+            self._motion_worker.close()
+        self._state = NavigationSessionState.CLOSED
+        self._reason = "closed"
+
+    def _replace_request(
+        self,
+        request: PlanningRequest | SurfacePlanningRequest,
+        frame: NavigationFrame,
+        reason: str,
+    ) -> None:
+        self._retire_route()
+        self._request = request
+        self._frame = frame
+        self._planning_changes.clear()
+        self._snapshot_missing = ()
+        self._snapshot_builder = KnownMapSnapshotBuilder(
+            frame.world, self._bounds(request),
+        )
+        self._state = NavigationSessionState.SNAPSHOTTING
+        self._reason = reason
+
+    def _retire_route(self) -> None:
+        if self._executor is not None:
+            self._executor.cancel()
+        self._active_route = None
+        self._executor = None
+        self._coordinator = None
+        self._last_decision = None
+
+    def _replan_from_current(self, reason: str) -> None:
+        if self._request is None or self._frame is None:
+            return
+        request = self._request
+        sequence = request.sequence + 1
+        if type(request) is SurfacePlanningRequest:
+            start_node, start_missing = self._surface_for_body(self._frame)
+            if start_node is None:
+                self._retire_route()
+                self._snapshot_missing = start_missing
+                self._state = (
+                    NavigationSessionState.NEEDS_INFORMATION
+                    if start_missing else NavigationSessionState.FAILED
+                )
+                self._reason = (
+                    "current_surface_requires_information"
+                    if start_missing else "current_surface_unavailable"
+                )
+                return
+            request = replace(
+                request,
+                sequence=sequence,
+                request_id=f"{self.session_id}-request-{sequence}",
+                start=start_node,
+            )
+        else:
+            x, y, z = self._frame.body.position
+            request = replace(
+                request,
+                sequence=sequence,
+                request_id=f"{self.session_id}-request-{sequence}",
+                start=(math.floor(x), math.floor(y), math.floor(z)),
+            )
+        self._replace_request(request, self._frame, reason)
+
+    def _restart_request_from_current(
+        self,
+        frame: NavigationFrame,
+        reason: str,
+    ) -> None:
+        request = self._request
+        if request is None:
+            return
+        sequence = request.sequence + 1
+        if type(request) is SurfacePlanningRequest:
+            start_node, missing = self._surface_for_body(frame)
+            if start_node is None:
+                self._retire_route()
+                self._snapshot_missing = missing
+                self._state = (
+                    NavigationSessionState.NEEDS_INFORMATION
+                    if missing else NavigationSessionState.FAILED
+                )
+                self._reason = (
+                    "current_surface_requires_information"
+                    if missing else "current_surface_unavailable"
+                )
+                return
+            request = replace(
+                request,
+                sequence=sequence,
+                request_id=f"{self.session_id}-request-{sequence}",
+                start=start_node,
+            )
+        else:
+            x, y, z = frame.body.position
+            request = replace(
+                request,
+                sequence=sequence,
+                request_id=f"{self.session_id}-request-{sequence}",
+                start=(math.floor(x), math.floor(y), math.floor(z)),
+            )
+        self._replace_request(request, frame, reason)
+
+    def _advance_planning(self, frame: NavigationFrame) -> None:
+        request = self._request
+        if request is None or self._state is NavigationSessionState.NEEDS_INFORMATION:
+            return
+        if self._active_route is not None:
+            return
+        if self._snapshot_builder is not None:
+            progress = self._snapshot_builder.advance(
+                frame.world, self._snapshot_cells_per_step,
+            )
+            if progress.status is SnapshotBuildStatus.STALE:
+                self._snapshot_builder = KnownMapSnapshotBuilder(
+                    frame.world, self._bounds(request),
+                )
+                self._state = NavigationSessionState.SNAPSHOTTING
+                self._reason = "snapshot_restarted_after_world_change"
+                return
+            if progress.status is SnapshotBuildStatus.BUILDING:
+                self._state = NavigationSessionState.SNAPSHOTTING
+                self._reason = "snapshot_building"
+                return
+            assert progress.snapshot is not None
+            # Unknown cells remain blocked inside the detached snapshot.  The
+            # planner can therefore safely use an incomplete scope when the
+            # known facts already contain a route.  Missing facts only become
+            # a blocker after the planner proves that no known route exists.
+            self._snapshot_missing = progress.missing_cells
+            if type(request) is SurfacePlanningRequest:
+                planning_mode = (
+                    None if self.profiles.ground_modes is None
+                    else self.profiles.ground_modes.require(MovementMode.WALK)
+                )
+                self._planner.submit_surface_snapshot(
+                    progress.snapshot,
+                    self.profiles.ground,
+                    self.profiles.step,
+                    request,
+                    self.profiles.jump_up,
+                    air_profiles=self.profiles.air,
+                    ground_mode_profile=planning_mode,
+                )
+            else:
+                self._planner.submit_snapshot(
+                    progress.snapshot,
+                    self.profiles.ground,
+                    request,
+                    self.profiles.jump_up,
+                )
+            self._snapshot_builder = None
+            self._state = NavigationSessionState.PLANNING
+            self._reason = "planning_submitted"
+
+        candidate = self._planner.poll_latest()
+        if candidate is None:
+            if hasattr(self._planner, "is_alive") and not self._planner.is_alive():
+                self._state = NavigationSessionState.FAILED
+                self._reason = "planner_worker_died"
+            return
+        current = self._request
+        if current is None:
+            return
+        status = candidate.status
+        no_known_route = (
+            status is SurfacePlanningStatus.NO_KNOWN_ROUTE
+            if type(candidate) is SurfaceRouteCandidate
+            else status is PlanningStatus.NO_KNOWN_ROUTE
+        )
+        if no_known_route:
+            if self._snapshot_missing:
+                if set(self._snapshot_missing).intersection(self._planning_changes):
+                    self._replace_request(
+                        current, frame, "planning_information_updated",
+                    )
+                else:
+                    self._state = NavigationSessionState.NEEDS_INFORMATION
+                    self._reason = "no_known_route_requires_information"
+                return
+            self._state = NavigationSessionState.FAILED
+            self._reason = "no_known_route_without_missing_cells"
+            return
+        complete = (
+            status is SurfacePlanningStatus.COMPLETE
+            if type(candidate) is SurfaceRouteCandidate
+            else status is PlanningStatus.COMPLETE
+        )
+        if not complete:
+            self._state = NavigationSessionState.FAILED
+            self._reason = f"planning_{status.value}"
+            return
+        if type(candidate) is SurfaceRouteCandidate:
+            admitted = self._admitter.admit_surface(
+                candidate, frame,
+                expected_request_id=current.request_id,
+                goal_id=current.goal_id,
+                goal_revision=current.goal_revision,
+                changed_cells=tuple(sorted(self._planning_changes)),
+            )
+        else:
+            admitted = self._admitter.admit(
+                candidate, frame,
+                expected_request_id=current.request_id,
+                goal_id=current.goal_id,
+                goal_revision=current.goal_revision,
+                changed_cells=tuple(sorted(self._planning_changes)),
+            )
+        if admitted.status is not AdmissionStatus.ACCEPTED or admitted.route is None:
+            if admitted.reason in {
+                "planning_request_replaced", "goal_revision_changed",
+                "world_session_changed", "route_dependencies_changed",
+            }:
+                self._state = (
+                    NavigationSessionState.SNAPSHOTTING
+                    if self._snapshot_builder is not None
+                    else NavigationSessionState.PLANNING
+                )
+                self._reason = admitted.reason
+                return
+            self._state = NavigationSessionState.FAILED
+            self._reason = admitted.reason
+            return
+        self._active_route = admitted.route
+        self._executor = ActionRouteExecutor(
+            self.profiles.ground,
+            self.profiles.jump_up,
+            self.profiles.step,
+            self.profiles.ground_modes,
+            self.profiles.air,
+            gap_solver_policy=self.profiles.gap_solver,
+        )
+        if any(type(action) is JumpGapSegment
+               for action in admitted.route.action_route.actions):
+            if self._motion_worker is None:
+                self._motion_worker = MotionSolverWorker(max_pending=4)
+                self._owns_motion_worker = True
+            self._coordinator = MotionRouteCoordinator(
+                admitted.route, self._executor, self._motion_worker,
+                gap_solver_policy=self.profiles.gap_solver,
+            )
+            self._coordinator.start(frame)
+        else:
+            self._executor.start(admitted.route.action_route, frame)
+        self._planning_changes.clear()
+        self._snapshot_missing = ()
+        self._state = NavigationSessionState.EXECUTING
+        self._reason = "route_admitted"
+
+    def _apply_decision_state(self, decision: ActionRouteDecision) -> None:
+        mapping = {
+            ActionRouteState.COMPLETE: NavigationSessionState.COMPLETE,
+            ActionRouteState.CANCELLED: NavigationSessionState.CANCELLED,
+            ActionRouteState.NEEDS_INFORMATION: NavigationSessionState.NEEDS_INFORMATION,
+            ActionRouteState.FAILED: NavigationSessionState.FAILED,
+            ActionRouteState.BLOCKED: NavigationSessionState.FAILED,
+            ActionRouteState.UNSUPPORTED: NavigationSessionState.FAILED,
+            ActionRouteState.INPUT_LOST: NavigationSessionState.FAILED,
+        }
+        self._state = mapping.get(decision.state, NavigationSessionState.EXECUTING)
+        self._reason = decision.reason_code
+        self._snapshot_missing = decision.missing_cells
+
+    def _proposal(
+        self,
+        movement: MovementV1,
+        look: LookV1 | None,
+        lease_ticks: int,
+        deadline_ns: int,
+        *,
+        route_decision: ActionRouteDecision | None = None,
+    ) -> NavigationSessionProposal:
+        control = None
+        if self._source is not None:
+            if self._frame is None:
+                raise ContractViolation("navigation intent has no current frame")
+            observation_request = self.observation_request()
+            if route_decision is not None and not route_decision.submit_input:
+                return NavigationSessionProposal(
+                    ControlFrameProposalV1(
+                        observation_request=observation_request,
+                    ),
+                    self.report,
+                    route_decision,
+                )
+            now = self._clock()
+            expires = min(deadline_ns, now + 250_000_000)
+            if expires <= now:
+                raise ContractViolation("navigation intent window expired")
+            self._intent_sequence += 1
+            identity = ordered_intent_id(self._source, self._intent_sequence)
+            intent = ActionIntentV1(
+                identity,
+                self._source.source_id,
+                self._source.episode_id,
+                self._frame.body.sequence_id,
+                ActionPriorityV0.TASK,
+                now,
+                expires,
+                movement=movement,
+                look=look,
+                valid_for_ticks=max(1, min(20, lease_ticks)),
+                movement_requires_look=(look is not None and movement != MovementV1()),
+            )
+            control = ControlFrameProposalV1(
+                (OrderedIntentV1(self._source, self._intent_sequence, intent),),
+                observation_request,
+            )
+        return NavigationSessionProposal(control, self.report, route_decision)
+
+    def _bounds(
+        self,
+        request: PlanningRequest | SurfacePlanningRequest,
+    ) -> KnownMapBounds:
+        if type(request) is SurfacePlanningRequest:
+            start_x, start_z, start_y = (
+                request.start.column_x, request.start.column_z,
+                request.start.vertical_band,
+            )
+            goal_x, goal_z, goal_y = (
+                request.goal.column_x, request.goal.column_z,
+                request.goal.vertical_band,
+            )
+        else:
+            start_x, start_y, start_z = request.start
+            goal_x, goal_y, goal_z = request.goal
+        extra_top = max((
+            math.ceil(max((point[1] for point in profile.reference_positions), default=0.0))
+            for profile in self.profiles.air
+        ), default=0)
+        margin = self._planning_margin
+        return KnownMapBounds(
+            min(start_x, goal_x) - margin,
+            max(start_x, goal_x) + margin,
+            min(start_y, goal_y),
+            max(start_y, goal_y),
+            min(start_z, goal_z) - margin,
+            max(start_z, goal_z) + margin,
+            True,
+            max(0, extra_top),
+        )
+
+    @staticmethod
+    def _surface_for_body(
+        frame: NavigationFrame,
+    ) -> tuple[SurfaceNodeId | None, tuple[BlockPos, ...]]:
+        x, y, z = frame.body.position
+        result = query_support_surfaces(
+            frame.world, math.floor(x), math.floor(z), y - 1.0, y + 1.0,
+        )
+        if not result.surfaces:
+            return None, result.missing_cells
+        return min(
+            result.surfaces,
+            key=lambda surface: math.dist(surface.position, frame.body.position),
+        ).node_id, result.missing_cells
+
+    @staticmethod
+    def _surface_for_goal(
+        frame: NavigationFrame,
+        goal: GoalState,
+    ) -> tuple[SurfaceNodeId | None, tuple[BlockPos, ...]]:
+        candidates = []
+        missing: set[BlockPos] = set()
+        max_x = math.floor(math.nextafter(goal.region.max_x, -math.inf))
+        max_z = math.floor(math.nextafter(goal.region.max_z, -math.inf))
+        for x in range(math.floor(goal.region.min_x), max_x + 1):
+            for z in range(math.floor(goal.region.min_z), max_z + 1):
+                result = query_support_surfaces(
+                    frame.world, x, z,
+                    goal.region.min_y, goal.region.max_y,
+                )
+                missing.update(result.missing_cells)
+                for surface in result.surfaces:
+                    px, py, pz = surface.position
+                    if (goal.region.min_x <= px <= goal.region.max_x
+                            and goal.region.min_y <= py <= goal.region.max_y
+                            and goal.region.min_z <= pz <= goal.region.max_z):
+                        candidates.append(surface)
+        if not candidates:
+            return None, tuple(sorted(missing))
+        center = (
+            (goal.region.min_x + goal.region.max_x) / 2.0,
+            (goal.region.min_y + goal.region.max_y) / 2.0,
+            (goal.region.min_z + goal.region.max_z) / 2.0,
+        )
+        return min(
+            candidates,
+            key=lambda surface: math.dist(surface.position, center),
+        ).node_id, tuple(sorted(missing))

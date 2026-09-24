@@ -8,11 +8,9 @@ from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1
 from mc2p.runtime.trace import trace_projection
 from mc2p.skills.fixed_melee import CombatTargetV1
 from mc2p.skills.moving_melee_driver import MovingMeleeDriver
-from mc2p.skills.navigation_state import NavigationState
-from mc2p.skills.point_goal_policy import PointGoalPolicy
 from scripts.c1_moving_melee_evidence import _replay_rows
 from tests.test_fixed_melee_driver import MeleeBackend, TRACK
-from tests.test_navigation_joint_policy import TestCapabilities
+from tests.navigation_session_fixtures import FakeNavigationSession
 from tests.test_player_runtime import _RecordingTrace
 
 
@@ -25,8 +23,7 @@ def actual_rows():
         "reset", "episode-1", "test", 1, 5_000_000_000,
     )).succeeded
     driver = MovingMeleeDriver(
-        runtime, NavigationState("scope"),
-        PointGoalPolicy("D", control_capabilities=TestCapabilities()),
+        runtime, FakeNavigationSession(),
         clock_ns=lambda: clock[0],
     )
     driver.start(CombatTargetV1(

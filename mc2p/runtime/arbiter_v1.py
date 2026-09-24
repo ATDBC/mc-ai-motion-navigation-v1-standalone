@@ -2,7 +2,9 @@
 from dataclasses import dataclass, field, replace
 import threading
 
-from mc2p.contracts.action_v1 import ActionIntentV1, ActionSnapshotV1, LookV1, MovementV1
+from mc2p.contracts.action_v1 import (
+    ActionIntentV1, ActionSnapshotV1, AttackEntityV1, LookV1, MovementV1,
+)
 from mc2p.contracts.common import ContractViolation, require_identifier, require_nonnegative_int
 from mc2p.contracts.intent_source import IntentSourceV1, OrderedIntentV1, ORDERED_PREFIX
 from mc2p.runtime.intent_sources import OrderedSourceRegistry
@@ -133,7 +135,8 @@ class ActionArbiterV1:
             operation = winners.get("operation")
             nonneutral = [winners[g] for g, empty in (("movement", MovementV1()), ("look", LookV1()))
                           if g in winners and getattr(winners[g], g) != empty]
-            if operation is not None and nonneutral:
+            if (operation is not None and nonneutral
+                    and type(operation.operation) is not AttackEntityV1):
                 if _rank(operation) >= max(map(_rank, nonneutral)):
                     for group in ("movement", "look"):
                         if group in winners:

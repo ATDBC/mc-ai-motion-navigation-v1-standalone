@@ -1,1 +1,0 @@
-{"earliest_failure_layer": null, "passed": true, "reason": "formal_trace_replay_matched", "replayed_decisions": 3145, "schema_version": "mc2p.c1-moving-melee-replay.v2", "simulated_entity_ai": false}

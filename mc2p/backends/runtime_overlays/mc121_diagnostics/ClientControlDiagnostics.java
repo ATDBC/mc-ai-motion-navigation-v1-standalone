@@ -92,6 +92,20 @@ public final class ClientControlDiagnostics {
         writer.accept(row.toString());
     }
 
+    public static void attackDispatched(MinecraftClient client, String episode,
+                                        long requestSequence, long sampledAtJvmNs,
+                                        String entityRef) {
+        if (entityRef == null || !entityRef.matches("[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}"))
+            throw new IllegalArgumentException("attack diagnostic entity reference");
+        var row = event(client, "attack_dispatched", episode, requestSequence, sampledAtJvmNs);
+        if (row == null) return;
+        var operation = new JsonObject();
+        operation.addProperty("kind", "attack_entity");
+        operation.addProperty("entity_ref", entityRef);
+        row.add("actual_operation", operation);
+        writer.accept(row.toString());
+    }
+
     public static void inputConsumed(MinecraftClient client, String episode,
                                      long requestSequence, long sampledAtJvmNs,
                                      String state, float forward, float strafe,

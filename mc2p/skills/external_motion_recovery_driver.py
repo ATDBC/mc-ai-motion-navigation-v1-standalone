@@ -11,7 +11,9 @@ from mc2p.contracts.action import ActionPriorityV0
 from mc2p.contracts.action_v1 import ActionIntentV1, MovementV1
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.common import ContractViolation, require_nonnegative_int
-from mc2p.contracts.intent_source import IntentSourceV1, OrderedIntentV1, ordered_intent_id
+from mc2p.contracts.intent_source import (
+    ControlFrameProposalV1, IntentSourceV1, OrderedIntentV1, ordered_intent_id,
+)
 from mc2p.contracts.observation_v3 import ObservationSnapshotV3
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.contracts.task import ComparisonOperatorV0, SuccessCriterionV0, TaskIntentV0
@@ -23,10 +25,6 @@ from mc2p.motion_nav.external_motion_recovery import (
 )
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1, RuntimeStateV1, RuntimeStepResultV1
 from mc2p.runtime.trace import trace_projection
-from mc2p.skills.navigation_state import NavigationState
-from mc2p.skills.point_goal import PointGoal
-from mc2p.skills.point_goal_driver import PointGoalDriver
-from mc2p.skills.point_goal_policy import PointGoalPolicy
 
 
 STEP_LEASE_NS = 250_000_000
@@ -49,8 +47,6 @@ class ExternalMotionRecoveryDriver:
     def __init__(
         self,
         runtime: PlayerRuntimeV1,
-        state: NavigationState,
-        policy: PointGoalPolicy,
         *,
         task_deadline_ns: int,
         clock_ns: Callable[[], int] = time.perf_counter_ns,
@@ -58,22 +54,14 @@ class ExternalMotionRecoveryDriver:
         controller: ExternalMotionRecoveryController | None = None,
         evidence_scope_id: str = "external-motion-recovery",
     ) -> None:
-        if (
-            type(runtime) is not PlayerRuntimeV1
-            or type(state) is not NavigationState
-            or type(policy) is not PointGoalPolicy
-        ):
-            raise ContractViolation(
-                "external recovery driver requires formal Runtime/state/policy"
-            )
+        if type(runtime) is not PlayerRuntimeV1:
+            raise ContractViolation("external recovery driver requires formal Runtime")
         require_nonnegative_int(task_deadline_ns, "external recovery task deadline")
         if runtime.state is not RuntimeStateV1.READY or task_deadline_ns <= clock_ns():
             raise ContractViolation("external recovery requires ready Runtime and future deadline")
         if type(runtime.observation) is not ObservationSnapshotV3:
             raise ContractViolation("external recovery requires V3 observation")
         self.runtime = runtime
-        self.navigation_state = state
-        self.policy = policy
         self.task_deadline_ns = task_deadline_ns
         self._clock = clock_ns
         if observation_request is not None and type(observation_request) is not ObservationRequestV3:
@@ -86,7 +74,6 @@ class ExternalMotionRecoveryDriver:
             raise ContractViolation("external recovery evidence scope is invalid")
         self.evidence_scope_id = evidence_scope_id
         self.source: IntentSourceV1 | None = None
-        self.hold_driver: PointGoalDriver | None = None
         self.sequence = 0
         self._event: ExternalMotionEventV1 | None = None
         self._last_decision: ExternalMotionRecoveryDecision | None = None
@@ -118,7 +105,7 @@ class ExternalMotionRecoveryDriver:
         self._record("started", event=event)
 
     def observe_event(self, event: ExternalMotionEventV1) -> bool:
-        if self._state not in {"running", "braking", "returning_air"}:
+        if self._state not in {"running", "braking"}:
             raise ContractViolation("external recovery driver has no active recovery")
         accepted = self.controller.observe_event(event)
         if accepted:
@@ -145,30 +132,15 @@ class ExternalMotionRecoveryDriver:
         if self.runtime.state is not RuntimeStateV1.READY:
             raise ContractViolation("external recovery Runtime is not ready")
 
-        # Keep one backend step per public tick.  Releasing the point-goal
-        # source in the same call as the second stable sample would skip an
-        # observation for every parent that consumes only the returned result.
+        # Keep one backend step per public tick.  The same neutral owner covers
+        # airborne settling and ground braking; friction is part of the game
+        # physics, so recovery does not need a second point-goal navigator.
         if self._state == "releasing":
-            if self.hold_driver is None:
-                raise ContractViolation("releasing recovery has no point-goal owner")
-            cleanup = self.hold_driver.stop(
+            cleanup = self._release_source(
                 profile, "external_motion_recovery_complete"
             )
             self._state, self._reason = "complete", "stable_reanchored"
             self._record("completed")
-            return cleanup
-        if self._state == "returning_air":
-            if self.hold_driver is None:
-                raise ContractViolation("air handoff has no point-goal owner")
-            cleanup = self.hold_driver.stop(
-                profile, "external_motion_airborne_again"
-            )
-            self.hold_driver = None
-            self.source = self.runtime.register_ordered_source(
-                "external-motion-recovery"
-            )
-            self._state, self._reason = "running", "air_source_reacquired"
-            self._record("air_source_reacquired")
             return cleanup
 
         decision = self.controller.decide(self.runtime.observation)
@@ -176,32 +148,19 @@ class ExternalMotionRecoveryDriver:
         self._record("decision", decision=decision)
         if decision.directive is RecoveryDirective.EXHAUSTED:
             return self.cancel(profile, decision.reason)
-        if decision.directive is RecoveryDirective.NEUTRAL_AIR:
-            result = self._neutral_step(profile, owner_deadline_ns)
-            post = self.controller.decide(result.observation)
-            self._last_decision = post
-            self._record("decision", decision=post)
-            if post.directive is RecoveryDirective.START_GROUND_HOLD:
-                self._start_hold()
-            return result
-        if decision.directive is RecoveryDirective.START_GROUND_HOLD:
-            self._start_hold()
-        if self.hold_driver is None:
-            raise ContractViolation("ground recovery has no point-goal owner")
-
-        result = self.hold_driver.tick(profile, owner_deadline_ns)
-        if result is None:
-            return None
+        result = self._neutral_step(profile, owner_deadline_ns)
         post = self.controller.decide(result.observation)
         self._last_decision = post
         self._record("decision", decision=post)
-        if post.directive is RecoveryDirective.NEUTRAL_AIR:
-            self._state, self._reason = "returning_air", post.reason
-            return result
         if post.complete:
             self._state, self._reason = "releasing", post.reason
             return result
-        self._state, self._reason = "braking", post.reason
+        self._state = (
+            "running"
+            if post.directive is RecoveryDirective.NEUTRAL_AIR
+            else "braking"
+        )
+        self._reason = post.reason
         return result
 
     def cancel(self, profile: BehaviorProfileV0, reason: str) -> RuntimeStepResultV1:
@@ -211,10 +170,7 @@ class ExternalMotionRecoveryDriver:
             raise ContractViolation("external recovery cancel requires reason")
         if self._state in {"ready", "complete", "cancelled", "failed"}:
             raise ContractViolation("external recovery driver is already closed")
-        if self.hold_driver is not None:
-            result = self.hold_driver.stop(profile, reason)
-        else:
-            result = self._release_air_source(profile, reason)
+        result = self._release_source(profile, reason)
         self._state, self._reason = "cancelled", reason
         self._record("cancelled")
         return result
@@ -228,13 +184,7 @@ class ExternalMotionRecoveryDriver:
     ) -> None:
         observation = self.runtime.observation
         own = observation.self_state.value
-        hold_source = None
-        if self.hold_driver is not None and self.hold_driver.source is not None:
-            hold_source = self.hold_driver.source.source_id
-        owners = tuple(source for source in (
-            None if self.source is None else self.source.source_id,
-            hold_source,
-        ) if source is not None)
+        owners = (() if self.source is None else (self.source.source_id,))
         self.runtime.record_task_event("external_motion_recovery", {
             "schema_version": "mc2p.external-motion-recovery-event.v1",
             "episode_id": observation.episode_id,
@@ -250,39 +200,6 @@ class ExternalMotionRecoveryDriver:
             "decision": trace_projection(decision),
             "movement_owner_source_ids": owners,
         })
-
-    def _start_hold(self) -> None:
-        if self.hold_driver is not None:
-            return
-        if self.source is not None:
-            self.runtime.cancel_source(self.source.source_id)
-            self.runtime.unregister_ordered_source(self.source)
-            self.source = None
-        own = self.runtime.observation.self_state.value
-        if own is None:
-            raise ContractViolation("ground recovery requires current self state")
-        now_ns = self._clock()
-        self.hold_driver = PointGoalDriver(
-            self.runtime,
-            self.navigation_state,
-            self.policy,
-            clock_ns=self._clock,
-            observation_request=self._observation_request,
-        )
-        self.hold_driver.start(
-            PointGoal(
-                goal_id=f"external-recovery/{self._event.event_id}",
-                scope_id=self.navigation_state.scope_id,
-                position=own.position,
-                deadline_ns=self.task_deadline_ns,
-                radius=.10,
-                height_tolerance=.10,
-                dwell_ns=300_000_000,
-                stop_speed=.03,
-            ),
-            now_ns,
-        )
-        self._state, self._reason = "braking", "ground_hold_started"
 
     def _neutral_step(
         self,
@@ -309,32 +226,36 @@ class ExternalMotionRecoveryDriver:
             movement=MovementV1(),
             valid_for_ticks=1,
         )
-        self.runtime.submit_ordered_intent(OrderedIntentV1(self.source, self.sequence, intent))
-        task = self._task("external_motion_airborne", deadline_ns)
-        result = self.runtime.step(
+        task = self._task("external_motion_neutral", deadline_ns)
+        result = self.runtime.control_frame(
             task,
             profile,
             deadline_ns,
-            observation_request=self._observation_request,
+            proposals=(ControlFrameProposalV1(
+                (OrderedIntentV1(self.source, self.sequence, intent),),
+                self._observation_request,
+            ),),
         )
         self._require_confirmed(result, intent_id)
         return result
 
-    def _release_air_source(
+    def _release_source(
         self,
         profile: BehaviorProfileV0,
         reason: str,
     ) -> RuntimeStepResultV1:
         if self.source is None:
-            raise ContractViolation("external recovery has no airborne source")
+            raise ContractViolation("external recovery has no input source")
         self.runtime.cancel_source(self.source.source_id)
         now_ns = self._clock()
         deadline_ns = min(self.task_deadline_ns, now_ns + CLEANUP_NS)
-        result = self.runtime.step(
+        result = self.runtime.control_frame(
             self._task("external_motion_release", deadline_ns, reason),
             profile,
             deadline_ns,
-            observation_request=self._observation_request,
+            proposals=(ControlFrameProposalV1(
+                observation_request=self._observation_request,
+            ),),
         )
         receipt = None if result.backend_result is None else result.backend_result.receipt
         if (

@@ -9,7 +9,9 @@ from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.common import (
     ContractViolation, require_identifier, require_nonnegative_int,
 )
-from mc2p.motion_nav.motion_solver import VerifiedMotionResult
+from mc2p.motion_nav.motion_solver import (
+    VerifiedMotionResult, VerifiedMotionStartVariant,
+)
 from mc2p.motion_nav.online_motion import (
     InputApplicationLedger, InputApplicationStatus, StateAnchor,
 )
@@ -241,6 +243,7 @@ class VerifiedMotionDecision:
     latest_movement_tick: int | None
     input_lease_ticks: int
     reason: str
+    submittable_as_verified_command: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -257,6 +260,7 @@ class VerifiedMotionExecutor:
     def __init__(self) -> None:
         self.state = VerifiedMotionExecutorState.IDLE
         self._candidate: AdmittedMotionCandidate | None = None
+        self._start_variant: VerifiedMotionStartVariant | None = None
         self._start_tick: int | None = None
         self._command_index = 0
         self._pending: _PendingSubmission | None = None
@@ -275,6 +279,9 @@ class VerifiedMotionExecutor:
                 VerifiedMotionExecutorState.RECOVERING}:
             raise ContractViolation("verified executor is already active")
         self._candidate = candidate
+        self._start_variant = candidate.proof.start_variant(intended_start_tick)
+        if self._start_variant is None:
+            raise ContractViolation("verified candidate omitted its intended start")
         self._start_tick = intended_start_tick
         self._command_index = 0
         self._pending = None
@@ -336,7 +343,9 @@ class VerifiedMotionExecutor:
         return self._expected_tick()
 
     def _decision(self, movement: MovementV1 | None,
-                  yaw: float | None, reason: str) -> VerifiedMotionDecision:
+                  yaw: float | None, reason: str, *,
+                  submittable_as_verified_command: bool = False,
+                  ) -> VerifiedMotionDecision:
         expected = (self._expected_tick()
                     if self.state in {
                         VerifiedMotionExecutorState.RUNNING,
@@ -350,6 +359,7 @@ class VerifiedMotionExecutor:
         return VerifiedMotionDecision(
             self.state, movement, yaw, self._command_index, expected, latest,
             1 if movement is not None else 0, reason,
+            submittable_as_verified_command,
         )
 
     def _consume_pending(self, ledger: InputApplicationLedger) -> str | None:
@@ -388,7 +398,13 @@ class VerifiedMotionExecutor:
             # The solver proves a bounded start window.  Once the first input
             # is observed, all remaining commands are anchored to that real
             # player movement tick and must continue without gaps.
-            self._start_tick = record.applied_ticks[0]
+            actual_start_tick = record.applied_ticks[0]
+            variant = self._candidate.proof.start_variant(actual_start_tick)
+            if variant is None:
+                self.state = VerifiedMotionExecutorState.INPUT_LOST
+                return "unverified_start_tick"
+            self._start_tick = actual_start_tick
+            self._start_variant = variant
         self._command_index += 1
         self._pending = None
         return None
@@ -446,6 +462,7 @@ class VerifiedMotionExecutor:
                         command.movement,
                         command.required_movement_yaw_radians,
                         "complete_verified_landing_after_cancel",
+                        submittable_as_verified_command=True,
                     )
             return self._decision(MovementV1(), None, "retain_landing_responsibility")
         if self.state is not VerifiedMotionExecutorState.RUNNING:
@@ -472,7 +489,9 @@ class VerifiedMotionExecutor:
             if not anchor.physics_state.on_ground:
                 self.state = VerifiedMotionExecutorState.RECOVERING
                 return self._decision(MovementV1(), None, "awaiting_verified_landing")
-            if not _state_fits_entry(anchor.physics_state, proof.exit_state):
+            assert self._start_variant is not None
+            if not _state_fits_entry(
+                    anchor.physics_state, self._start_variant.exit_state):
                 self.state = VerifiedMotionExecutorState.FAILED
                 return self._decision(MovementV1(), None, "verified_exit_not_observed")
             self.state = VerifiedMotionExecutorState.COMPLETE
@@ -481,4 +500,5 @@ class VerifiedMotionExecutor:
         return self._decision(
             command.movement, command.required_movement_yaw_radians,
             "submit_verified_command",
+            submittable_as_verified_command=True,
         )

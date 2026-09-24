@@ -7,7 +7,8 @@ import math
 
 from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.world_model import (
-    Aabb, BlockPos, COLLISION_OWNER_BELOW_REACH_CELLS, CellKnowledge, WorldView,
+    Aabb, BlockPos, COLLISION_OWNER_BELOW_REACH_CELLS, CellKnowledge,
+    WorldQueryCache, WorldView,
 )
 
 
@@ -112,15 +113,25 @@ def _sweep_fraction(body: Aabb, delta: tuple[float, float, float], obstacle: Aab
     return max(0.0, entry)
 
 
-def sweep(body: Aabb, delta: tuple[float, float, float], world: WorldView) -> SweepResult:
+def sweep(
+    body: Aabb,
+    delta: tuple[float, float, float],
+    world: WorldView,
+    *,
+    query_cache: WorldQueryCache | None = None,
+) -> SweepResult:
     if type(world) is not WorldView:
         raise ContractViolation("sweep requires a world view")
+    if query_cache is not None and (
+            type(query_cache) is not WorldQueryCache
+            or query_cache.world is not world):
+        raise ContractViolation("sweep query cache belongs to another world view")
     cells = required_cells_for_sweep(body, delta)
     missing = []
     unsupported = False
     first: float | None = None
     for position in cells:
-        fact = world.cell(position)
+        fact = world.cell(position) if query_cache is None else query_cache.cell(position)
         if fact.knowledge is CellKnowledge.UNKNOWN:
             missing.append(position)
             continue
@@ -130,7 +141,9 @@ def sweep(body: Aabb, delta: tuple[float, float, float], world: WorldView) -> Sw
         if fact.block.fluid or fact.block.collision_kind == "unsupported":
             unsupported = True
             continue
-        for obstacle in fact.block.world_boxes(position):
+        boxes = (fact.block.world_boxes(position) if query_cache is None
+                 else query_cache.collision_boxes(position))
+        for obstacle in boxes:
             fraction = _sweep_fraction(body, delta, obstacle)
             if fraction is not None and (first is None or fraction < first):
                 first = fraction
@@ -167,12 +180,22 @@ def _rectangle_union_area(rectangles: list[tuple[float, float, float, float]]) -
     return area
 
 
-def query_support(body: Aabb, world: WorldView, *, vertical_tolerance: float = 0.05) -> SupportResult:
+def query_support(
+    body: Aabb,
+    world: WorldView,
+    *,
+    vertical_tolerance: float = 0.05,
+    query_cache: WorldQueryCache | None = None,
+) -> SupportResult:
     if type(body) is not Aabb or type(world) is not WorldView:
         raise ContractViolation("support query requires an AABB and world view")
     if (type(vertical_tolerance) not in (int, float) or not math.isfinite(float(vertical_tolerance))
             or vertical_tolerance < 0):
         raise ContractViolation("support tolerance must be finite and nonnegative")
+    if query_cache is not None and (
+            type(query_cache) is not WorldQueryCache
+            or query_cache.world is not world):
+        raise ContractViolation("support query cache belongs to another world view")
     support_levels = sorted({
         math.floor(body.min_y - _EPSILON),
         math.floor(body.min_y - vertical_tolerance - _EPSILON),
@@ -189,7 +212,7 @@ def query_support(body: Aabb, world: WorldView, *, vertical_tolerance: float = 0
     rectangles: list[tuple[float, float, float, float]] = []
     materials: set[str] = set()
     for position in cells:
-        fact = world.cell(position)
+        fact = world.cell(position) if query_cache is None else query_cache.cell(position)
         if fact.knowledge is CellKnowledge.UNKNOWN:
             missing.append(position)
             continue
@@ -199,7 +222,9 @@ def query_support(body: Aabb, world: WorldView, *, vertical_tolerance: float = 0
         if fact.block.fluid or fact.block.collision_kind == "unsupported":
             unsupported = True
             continue
-        for box in fact.block.world_boxes(position):
+        boxes = (fact.block.world_boxes(position) if query_cache is None
+                 else query_cache.collision_boxes(position))
+        for box in boxes:
             if abs(box.max_y - body.min_y) > vertical_tolerance:
                 continue
             left, right = max(body.min_x, box.min_x), min(body.max_x, box.max_x)

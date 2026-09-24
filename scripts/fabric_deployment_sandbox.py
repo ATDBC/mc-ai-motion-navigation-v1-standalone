@@ -104,7 +104,8 @@ def write_argument_file(target: Path, arguments: list[str]) -> None:
 
 def client_environment(base: dict[str, str], *, token: str, server_port: int, ipc_port: int,
                        time_diagnostics: bool = False, block_parity_diagnostics: bool = False,
-                       physics_tick_diagnostics: bool = False) -> dict[str, str]:
+                       physics_tick_diagnostics: bool = False,
+                       control_diagnostics: bool = False) -> dict[str, str]:
     _port(server_port)
     _port(ipc_port)
     if type(token) is not str or re.fullmatch("[0-9a-f]{64}", token) is None:
@@ -115,8 +116,10 @@ def client_environment(base: dict[str, str], *, token: str, server_port: int, ip
         raise ValueError('block parity diagnostics selection must be boolean')
     if type(physics_tick_diagnostics) is not bool:
         raise ValueError('physics tick diagnostics selection must be boolean')
-    if physics_tick_diagnostics and not time_diagnostics:
-        raise ValueError('physics tick diagnostics require time diagnostics')
+    if type(control_diagnostics) is not bool:
+        raise ValueError('control diagnostics selection must be boolean')
+    if (physics_tick_diagnostics or control_diagnostics) and not time_diagnostics:
+        raise ValueError('physics and control diagnostics require time diagnostics')
     blocked = {"JAVA_TOOL_OPTIONS", "_JAVA_OPTIONS", "JDK_JAVA_OPTIONS", "CLASSPATH"}
     result = {key: value for key, value in base.items()
               if key.upper() not in blocked and not key.upper().startswith(("FABRIC_", "MC2P_"))}
@@ -129,4 +132,6 @@ def client_environment(base: dict[str, str], *, token: str, server_port: int, ip
         result['MC2P_BLOCK_PARITY_DIAGNOSTICS']='1'
     if physics_tick_diagnostics:
         result['MC2P_PHYSICS_TICK_DIAGNOSTICS']='1'
+    if control_diagnostics:
+        result['MC2P_CONTROL_DIAGNOSTICS']='1'
     return result

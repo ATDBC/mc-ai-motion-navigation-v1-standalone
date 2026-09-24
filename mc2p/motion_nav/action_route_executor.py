@@ -27,6 +27,9 @@ from mc2p.motion_nav.motion_candidate import (
     AdmittedMotionCandidate, VerifiedMotionExecutor,
     VerifiedMotionExecutorState,
 )
+from mc2p.motion_nav.motion_solver import (
+    DEFAULT_GAP_SOLVER_POLICY, GapSolverPolicy,
+)
 from mc2p.motion_nav.online_motion import InputApplicationLedger, StateAnchor
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.world_model import BlockPos
@@ -68,7 +71,8 @@ class ActionRouteExecutor:
                  jump_profile: JumpUpProfile,
                  step_profile: StepProfile | None = None,
                  ground_modes: GroundModeProfiles | None = None,
-                 air_profiles: tuple[AirMotionProfile, ...] = ()) -> None:
+                 air_profiles: tuple[AirMotionProfile, ...] = (), *,
+                 gap_solver_policy: GapSolverPolicy = DEFAULT_GAP_SOLVER_POLICY) -> None:
         if type(ground_profile) is not GroundMotionProfile or type(jump_profile) is not JumpUpProfile:
             raise ContractViolation("action route executor requires calibrated profiles")
         self.ground_profile = ground_profile
@@ -84,6 +88,9 @@ class ActionRouteExecutor:
                 or len({profile.profile_id for profile in air_profiles}) != len(air_profiles)):
             raise ContractViolation("action route air profiles must be typed and unique")
         self.air_profiles = {profile.profile_id: profile for profile in air_profiles}
+        if type(gap_solver_policy) is not GapSolverPolicy:
+            raise ContractViolation("action route gap solver policy must be typed")
+        self.gap_solver_policy = gap_solver_policy
         self.route: ActionRoute | None = None
         self.state = ActionRouteState.IDLE
         self.action_index = 0
@@ -158,17 +165,33 @@ class ActionRouteExecutor:
                         raise ContractViolation("Step segment requires a calibrated profile")
                     entry_tolerance = self.step_profile.target_horizontal_radius_blocks
                     entry_speed = self.step_profile.maximum_entry_speed_blocks_per_second
-                config = replace(
-                    config,
+                common = dict(
                     endpoint_tolerance_blocks=min(
                         config.endpoint_tolerance_blocks,
                         entry_tolerance,
                     ),
-                    stopped_speed_blocks_per_second=min(
-                        config.stopped_speed_blocks_per_second,
-                        entry_speed,
-                    ),
                 )
+                if (type(next_action) is JumpGapSegment
+                        and self._require_verified_gap_motion):
+                    # The R4 solver validates the continuous entry state.  The
+                    # approach controller therefore preserves eligible motion
+                    # and leaves only one tick of input ownership at the edge.
+                    config = replace(
+                        config, **common,
+                        handoff_speed_blocks_per_second=(
+                            self.gap_solver_policy
+                            .maximum_entry_speed_blocks_per_second
+                        ),
+                        input_lease_ticks=1,
+                    )
+                else:
+                    config = replace(
+                        config, **common,
+                        stopped_speed_blocks_per_second=min(
+                            config.stopped_speed_blocks_per_second,
+                            entry_speed,
+                        ),
+                    )
             if (self.action_index + 1 == len(self.route.actions)
                     and self.route.goal_state is not None):
                 goal = self.route.goal_state
@@ -308,6 +331,11 @@ class ActionRouteExecutor:
             controller.start(candidate)
             self._controller = controller
 
+    def has_verified_motion(self, action_index: int) -> bool:
+        if type(action_index) is not int or action_index < 0:
+            raise ContractViolation("verified motion lookup requires an action index")
+        return action_index in self._verified_motion
+
     def register_verified_submission(
             self, command_index: int, *, control_sequence: int,
             requested_movement_tick: int,
@@ -427,9 +455,18 @@ class ActionRouteExecutor:
                 started, verified.movement or MovementV1(),
                 max(1, verified.input_lease_ticks), verified.reason,
                 look=look, submit_input=verified.movement is not None,
-                verified_command_index=verified.command_index,
-                expected_movement_tick=verified.expected_movement_tick,
-                latest_movement_tick=verified.latest_movement_tick,
+                verified_command_index=(
+                    verified.command_index
+                    if verified.submittable_as_verified_command else None
+                ),
+                expected_movement_tick=(
+                    verified.expected_movement_tick
+                    if verified.submittable_as_verified_command else None
+                ),
+                latest_movement_tick=(
+                    verified.latest_movement_tick
+                    if verified.submittable_as_verified_command else None
+                ),
             )
         if type(action) is WalkSegment:
             decision = self._controller.decide(frame, input_confirmed=input_confirmed)

@@ -9,7 +9,7 @@ from pathlib import Path
 from mc2p.contracts.common import ContractViolation, require_identifier
 from mc2p.motion_nav.environment_identity import FROZEN_ENVIRONMENT_ID
 from mc2p.motion_nav.world_model import (
-    BlockGeometry, BlockPos, CellKnowledge, WorldView,
+    BlockGeometry, BlockPos, CellKnowledge, WorldQueryCache, WorldView,
 )
 
 
@@ -203,15 +203,21 @@ def unsupported_motion_cells(
     world: WorldView,
     positions: tuple[BlockPos, ...],
     ground_model_id: str,
+    *,
+    query_cache: WorldQueryCache | None = None,
 ) -> tuple[BlockPos, ...]:
     """Return known blocks that the declared ordinary-motion model cannot enter or use."""
     if (type(catalog) is not BlockMotionCatalog or type(world) is not WorldView
             or type(positions) is not tuple):
         raise ContractViolation("motion cell check requires catalog, world and immutable cells")
     require_identifier(ground_model_id, "motion cell ground model id")
+    if query_cache is not None and (
+            type(query_cache) is not WorldQueryCache
+            or query_cache.world is not world):
+        raise ContractViolation("motion cell query cache belongs to another world view")
     rejected = []
     for position in sorted(set(positions)):
-        fact = world.cell(position)
+        fact = world.cell(position) if query_cache is None else query_cache.cell(position)
         if fact.knowledge is not CellKnowledge.BLOCK:
             continue
         assert fact.block is not None

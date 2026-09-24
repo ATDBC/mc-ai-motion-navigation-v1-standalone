@@ -8,17 +8,17 @@ from typing import Callable
 
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.common import ContractViolation, FieldStatusV0, require_nonnegative_int
+from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.contracts.observation_v2 import VisibleEntityV2
 from mc2p.contracts.observation_v3 import ObservationSnapshotV3
+from mc2p.motion_nav.navigation_session import NavigationSessionPort
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1, RuntimeStateV1, RuntimeStepResultV1
 from mc2p.skills.fixed_melee import (
-    CombatTargetV1, MAX_COARSE_ATTACK_DISTANCE_BLOCKS, stable_attack_position,
+    CombatTargetV1, MAX_COARSE_ATTACK_DISTANCE_BLOCKS,
+    combat_standoff_goal_state,
 )
 from mc2p.skills.melee_strike_driver import MeleeStrikeDriver, TASK_LIMIT_NS
-from mc2p.skills.navigation_state import NavigationState
-from mc2p.skills.point_goal import PointGoal
-from mc2p.skills.point_goal_driver import PointGoalDriver
-from mc2p.skills.point_goal_policy import PointGoalPolicy
+from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,25 +37,22 @@ class FixedMeleeDriver:
     def __init__(
         self,
         runtime: PlayerRuntimeV1,
-        navigation_state: NavigationState,
-        point_policy: PointGoalPolicy,
+        navigation_session: NavigationSessionPort,
         *,
         clock_ns: Callable[[], int] = time.perf_counter_ns,
     ) -> None:
         if (type(runtime) is not PlayerRuntimeV1
-                or type(navigation_state) is not NavigationState
-                or type(point_policy) is not PointGoalPolicy):
-            raise ContractViolation("fixed melee driver requires formal Runtime/navigation/policy")
+                or not isinstance(navigation_session, NavigationSessionPort)):
+            raise ContractViolation("fixed melee driver requires Runtime/navigation session")
         if runtime.state is not RuntimeStateV1.READY or type(runtime.observation) is not ObservationSnapshotV3:
             raise ContractViolation("fixed melee driver requires ready V3 Runtime")
         self.runtime = runtime
-        self.navigation_state = navigation_state
-        self.point_policy = point_policy
+        self.navigation_session = navigation_session
         self._clock = clock_ns
         self._target: CombatTargetV1 | None = None
         self._task_deadline_ns = 0
         self._state, self._reason = "ready", "not_started"
-        self.approach_driver: PointGoalDriver | None = None
+        self.approach_driver: RuntimeNavigationDriver | None = None
         self.strike_driver: MeleeStrikeDriver | None = None
 
     @property
@@ -109,19 +106,28 @@ class FixedMeleeDriver:
             if own is None:
                 self._state, self._reason = "failed", "self_state_unavailable"
                 return
-            goal = PointGoal(
-                f"combat-stand-{self._target.goal_id}-{self._target.revision}",
-                self.navigation_state.scope_id,
-                stable_attack_position(own.position, entity.relative_position),
-                self._task_deadline_ns,
-                radius=.4,
+            _, goal = combat_standoff_goal_state(
+                own.position, entity.relative_position,
             )
-            self.approach_driver = PointGoalDriver(
-                self.runtime, self.navigation_state, self.point_policy, self._clock,
-            )
-            self.approach_driver.start(goal, now_ns)
+            if self.approach_driver is None:
+                self.approach_driver = RuntimeNavigationDriver(
+                    self.runtime, self.navigation_session, clock_ns=self._clock,
+                    observation_request=ObservationRequestV3(
+                        "navigation_v1", entity_track_id=self._target.track_id,
+                    ),
+                )
+                self.approach_driver.start(
+                    self._target.goal_id, self._target.revision, goal, now_ns,
+                )
+            else:
+                self.approach_driver.replace_goal(
+                    self._target.goal_id, self._target.revision, goal, now_ns,
+                )
             self._state, self._reason = "approaching", "outside_stable_attack_distance"
         else:
+            if self.approach_driver is not None:
+                self.approach_driver.release("target_entered_attack_range")
+                self.approach_driver = None
             self._start_strike(now_ns)
 
     def start(self, target: CombatTargetV1, now_ns: int) -> None:
@@ -158,13 +164,6 @@ class FixedMeleeDriver:
                 self.strike_driver.report.state, self.strike_driver.report.reason,
             )
             return
-        if self.approach_driver is not None:
-            source = self.approach_driver.source
-            if source is not None:
-                self.runtime.cancel_source(source.source_id)
-                self.runtime.unregister_ordered_source(source)
-            self.approach_driver = None
-            self.point_policy.clear()
         self._target = target
         self._prepare_target(now_ns)
 
@@ -178,18 +177,23 @@ class FixedMeleeDriver:
             raise ContractViolation("fixed melee driver is terminal")
         if self.approach_driver is not None:
             if self.approach_driver.state == "success":
-                result = self.approach_driver.stop(profile, "combat_standoff_reached")
+                self.approach_driver.release("combat_standoff_reached")
+                self.approach_driver = None
+                self._start_strike(self._clock())
+                return self.strike_driver.tick(profile, owner_deadline_ns)
+            result = self.approach_driver.tick(profile, owner_deadline_ns)
+            if self.approach_driver.state == "success":
+                self.approach_driver.release("combat_standoff_reached")
                 self.approach_driver = None
                 self._start_strike(self._clock())
                 return result
-            result = self.approach_driver.tick(profile, owner_deadline_ns)
             if self.approach_driver.state in {"failed", "cancelled", "stopped", "blocked"}:
                 reason = "approach/" + str(self.approach_driver.reason)
-                cleanup = (self.approach_driver.stop(profile, reason)
-                           if self.approach_driver.state == "blocked" else result)
+                if self.approach_driver.source is not None:
+                    self.approach_driver.release(reason)
                 self.approach_driver = None
                 self._state, self._reason = "failed", reason
-                return cleanup
+                return result
             return result
         assert self.strike_driver is not None
         result = self.strike_driver.tick(profile, owner_deadline_ns)

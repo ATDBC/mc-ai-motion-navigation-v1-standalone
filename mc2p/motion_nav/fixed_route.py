@@ -19,7 +19,7 @@ from mc2p.motion_nav.ground_modes import (
 )
 from mc2p.motion_nav.movement_transition import MovementMode
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
-from mc2p.motion_nav.world_model import Aabb, BlockPos, WorldView
+from mc2p.motion_nav.world_model import Aabb, BlockPos, WorldQueryCache, WorldView
 
 
 _EPSILON = 1.0e-9
@@ -240,7 +240,24 @@ class _Candidate:
     progress_gain: float
 
 
-def _horizontal_wall_penalty(body: Aabb, world: WorldView, margin: float) -> float:
+@dataclass(frozen=True, slots=True)
+class _CandidateRollout:
+    movement: MovementV1
+    states: tuple[PlanarBodyState, ...]
+    tracking_end: PlanarBodyState
+    base_score: float
+    progress_gain: float
+    raw_progress_gain: float
+    cross_track_blocked: bool
+    unsupported: bool
+
+
+def _horizontal_wall_penalty(
+    body: Aabb,
+    world: WorldView,
+    margin: float,
+    query_cache: WorldQueryCache,
+) -> float:
     """Return a smooth known-wall proximity cost without changing collision truth."""
     if margin <= 0:
         return 0.0
@@ -248,10 +265,11 @@ def _horizontal_wall_penalty(body: Aabb, world: WorldView, margin: float) -> flo
     for x in range(math.floor(body.min_x - margin), math.floor(body.max_x + margin) + 1):
         for y in range(math.floor(body.min_y + _EPSILON), math.floor(body.max_y - _EPSILON) + 1):
             for z in range(math.floor(body.min_z - margin), math.floor(body.max_z + margin) + 1):
-                fact = world.cell((x, y, z))
+                position = (x, y, z)
+                fact = query_cache.cell(position)
                 if fact.block is None or fact.block.fluid or fact.block.collision_kind == "unsupported":
                     continue
-                for obstacle in fact.block.world_boxes((x, y, z)):
+                for obstacle in query_cache.collision_boxes(position):
                     if body.max_y <= obstacle.min_y + _EPSILON or body.min_y >= obstacle.max_y - _EPSILON:
                         continue
                     gap_x = max(obstacle.min_x - body.max_x, body.min_x - obstacle.max_x, 0.0)
@@ -370,6 +388,7 @@ class FixedRouteController:
         if not input_confirmed:
             self.state = FixedRouteState.INPUT_LOST
             return self._decision(started, MovementV1(), "input_application_unconfirmed")
+        query_cache = WorldQueryCache(frame.world)
         mode_pending = False
         if self.mode_profile is None:
             if frame.body.pose != "standing" or not frame.body.is_on_ground:
@@ -409,7 +428,10 @@ class FixedRouteController:
                             frame.body.body_box.min_z, frame.body.body_box.max_x,
                             frame.body.body_box.min_y + 1.8, frame.body.body_box.max_z,
                         )
-                        clearance = sweep(standing, (0.0, 0.0, 0.0), frame.world)
+                        clearance = sweep(
+                            standing, (0.0, 0.0, 0.0), frame.world,
+                            query_cache=query_cache,
+                        )
                         if clearance.status is QueryStatus.NEEDS_INFORMATION:
                             self.state = FixedRouteState.NEEDS_INFORMATION
                             return self._decision(
@@ -442,8 +464,13 @@ class FixedRouteController:
                     + self.config.speed_model_tolerance_blocks_per_second):
             self.state = FixedRouteState.UNSUPPORTED
             return self._decision(started, MovementV1(), "ordinary_ground_speed_outside_model")
-        current_support = query_support(frame.body.body_box, frame.world)
-        current_clearance = sweep(frame.body.body_box, (0.0, 0.0, 0.0), frame.world)
+        current_support = query_support(
+            frame.body.body_box, frame.world, query_cache=query_cache,
+        )
+        current_clearance = sweep(
+            frame.body.body_box, (0.0, 0.0, 0.0), frame.world,
+            query_cache=query_cache,
+        )
         if (self.profile.motion_catalog is not None
                 and self.profile.ground_model_id is not None
                 and unsupported_motion_cells(
@@ -451,6 +478,7 @@ class FixedRouteController:
                     tuple(sorted(set(current_clearance.dependencies
                                      + current_support.dependencies))),
                     self.profile.ground_model_id,
+                    query_cache=query_cache,
                 )):
             self.state = FixedRouteState.UNSUPPORTED
             return self._decision(started, MovementV1(), "ordinary_ground_motion_trait_unsupported")
@@ -470,7 +498,7 @@ class FixedRouteController:
         self._progress = max(self._progress, projection.progress)
         self._segment_index = max(self._segment_index, projection.segment_index)
         self._cross_track = projection.distance
-        preview_missing = self._route_preview_missing(frame)
+        preview_missing = self._route_preview_missing(frame, query_cache)
         if self._progress >= self._progress_anchor + 0.10:
             self._progress_anchor = self._progress
             self._no_progress_frames = 0
@@ -484,11 +512,16 @@ class FixedRouteController:
                 self.state = FixedRouteState.CANCELLED
                 return self._decision(started, MovementV1(), "cancelled_after_stop")
             self.state = FixedRouteState.CANCELLING
-            return self._brake(frame, body, started, hold_position=True, reason="cancel_braking")
+            return self._brake(
+                frame, body, started, hold_position=True,
+                reason="cancel_braking", query_cache=query_cache,
+            )
 
         goal = self._geometry.goal
         goal_distance = math.hypot(body.x - goal.x, body.z - goal.z)
-        goal_support = query_support(frame.body.body_box, frame.world)
+        goal_support = query_support(
+            frame.body.body_box, frame.world, query_cache=query_cache,
+        )
         route_complete = (self._geometry.total_length <= _EPSILON
                           or self._progress >= self._geometry.total_length
                              - self.config.endpoint_tolerance_blocks)
@@ -517,15 +550,20 @@ class FixedRouteController:
                 self.state = FixedRouteState.BLOCKED
                 return self._decision(started, MovementV1(), "fixed_route_stalled")
             self.state = FixedRouteState.BRAKING
-            return self._brake(frame, body, started, hold_position=True,
-                               reason="fixed_route_stall_braking")
+            return self._brake(
+                frame, body, started, hold_position=True,
+                reason="fixed_route_stall_braking", query_cache=query_cache,
+            )
 
         stop_distance = self._release_distance(body, completion_speed)
         remaining = max(0.0, self._geometry.total_length - self._progress)
         if at_goal or (speed > completion_speed
                        and remaining <= stop_distance + self.config.endpoint_tolerance_blocks * 0.65):
             self.state = FixedRouteState.BRAKING
-            return self._brake(frame, body, started, hold_position=False, reason="goal_braking")
+            return self._brake(
+                frame, body, started, hold_position=False,
+                reason="goal_braking", query_cache=query_cache,
+            )
 
         corner_distance=self._geometry.next_sharp_corner_distance(
             self._progress,self._segment_index)
@@ -534,7 +572,10 @@ class FixedRouteController:
                 and speed>self.config.corner_speed_blocks_per_second):
             corner_target=self._geometry.point_at(
                 min(self._geometry.total_length,self._progress+self.config.lookahead_min_blocks))
-            neutral=self._evaluate_candidate(frame,body,MovementV1(),corner_target,braking=True)
+            neutral=self._evaluate_candidate(
+                frame, body, MovementV1(), corner_target, braking=True,
+                query_cache=query_cache,
+            )
             if not neutral.blocked and not neutral.unsupported and not neutral.missing:
                 self.state=FixedRouteState.RUNNING
                 return self._decision(started,MovementV1(),"corner_speed_control",preview_missing)
@@ -544,8 +585,17 @@ class FixedRouteController:
             max(self.config.lookahead_min_blocks, self.config.lookahead_min_blocks + speed * 0.18),
         )
         target = self._geometry.point_at(self._progress + lookahead)
-        candidates = [self._evaluate_candidate(frame, body, movement, target, braking=False)
-                      for movement in _MOVEMENTS]
+        if (mode_pending and self.mode_profile is not None
+                and self.mode_profile.mode is MovementMode.SPRINT):
+            candidates = [self._evaluate_candidate(
+                              frame, body, movement, target, braking=False,
+                              query_cache=query_cache,
+                          )
+                          for movement in _MOVEMENTS]
+        else:
+            candidates = self._ranked_tracking_candidates(
+                frame, body, target, query_cache,
+            )
         feasible = [candidate for candidate in candidates
                     if not candidate.blocked and not candidate.unsupported and not candidate.missing]
         if feasible:
@@ -600,7 +650,9 @@ class FixedRouteController:
         self.state = FixedRouteState.BLOCKED
         return self._decision(started, MovementV1(), "no_safe_ground_candidate")
 
-    def _route_preview_missing(self, frame: NavigationFrame) -> tuple[BlockPos, ...]:
+    def _route_preview_missing(
+        self, frame: NavigationFrame, query_cache: WorldQueryCache,
+    ) -> tuple[BlockPos, ...]:
         """Ask for near-future headroom while the already-proven prefix keeps moving."""
         assert self._geometry is not None
         target_x, target_z = self._geometry.point_at(self._progress + 2.0)
@@ -609,6 +661,7 @@ class FixedRouteController:
             (target_x - frame.body.position[0], 0.0,
              target_z - frame.body.position[2]),
             frame.world,
+            query_cache=query_cache,
         )
         return result.missing_cells
 
@@ -625,10 +678,96 @@ class FixedRouteController:
             state = next_state
         return distance
 
+    @staticmethod
+    def _candidate_key(candidate: _Candidate) -> tuple[float, int, int]:
+        return (
+            candidate.score,
+            candidate.movement.forward,
+            candidate.movement.strafe,
+        )
+
+    @staticmethod
+    def _rollout_key(rollout: _CandidateRollout) -> tuple[float, int, int]:
+        return (
+            rollout.base_score,
+            rollout.movement.forward,
+            rollout.movement.strafe,
+        )
+
+    def _ranked_tracking_candidates(
+        self,
+        frame: NavigationFrame,
+        body: PlanarBodyState,
+        target: tuple[float, float],
+        query_cache: WorldQueryCache,
+    ) -> list[_Candidate]:
+        """Validate only candidates that can still beat the proven safe winner.
+
+        Geometry penalties are nonnegative.  The kinematic score is therefore a
+        lower bound on the final score.  Candidates whose lower bound is already
+        worse than a feasible result cannot change the selected control.  Low-
+        progress and no-feasible cases still evaluate the remaining candidates
+        needed for the existing information and failure classifications.
+        """
+        rollouts = tuple(
+            self._prepare_candidate_rollout(body, movement, target, braking=False)
+            for movement in _MOVEMENTS
+        )
+        ordered = tuple(sorted(rollouts, key=self._rollout_key))
+        evaluated: dict[tuple[int, int], _Candidate] = {}
+
+        def evaluate(rollout: _CandidateRollout) -> _Candidate:
+            key = (rollout.movement.forward, rollout.movement.strafe)
+            candidate = evaluated.get(key)
+            if candidate is None:
+                candidate = self._evaluate_candidate(
+                    frame, body, rollout.movement, target, braking=False,
+                    query_cache=query_cache, rollout=rollout,
+                )
+                evaluated[key] = candidate
+            return candidate
+
+        selected: _Candidate | None = None
+        for rollout in ordered:
+            if (selected is not None
+                    and self._rollout_key(rollout) >= self._candidate_key(selected)):
+                break
+            candidate = evaluate(rollout)
+            if (not candidate.blocked and not candidate.unsupported
+                    and not candidate.missing
+                    and (selected is None
+                         or self._candidate_key(candidate) < self._candidate_key(selected))):
+                selected = candidate
+
+        if selected is None:
+            for rollout in ordered:
+                evaluate(rollout)
+        else:
+            if selected.progress_gain <= 0.005:
+                for rollout in ordered:
+                    if rollout.progress_gain > selected.progress_gain + 0.005:
+                        evaluate(rollout)
+            if (selected.movement == MovementV1()
+                    and selected.progress_gain <= 0.005
+                    and math.hypot(body.velocity_x, body.velocity_z)
+                    <= self.config.stopped_speed_blocks_per_second):
+                for rollout in ordered:
+                    evaluate(rollout)
+
+        return [
+            evaluated[(movement.forward, movement.strafe)]
+            for movement in _MOVEMENTS
+            if (movement.forward, movement.strafe) in evaluated
+        ]
+
     def _brake(self, frame: NavigationFrame, body: PlanarBodyState, started: int,
-               *, hold_position: bool, reason: str) -> FixedRouteDecision:
+               *, hold_position: bool, reason: str,
+               query_cache: WorldQueryCache) -> FixedRouteDecision:
         target = (body.x, body.z) if hold_position else (self._geometry.goal.x, self._geometry.goal.z)  # type: ignore[union-attr]
-        candidates = [self._evaluate_candidate(frame, body, movement, target, braking=True)
+        candidates = [self._evaluate_candidate(
+                          frame, body, movement, target, braking=True,
+                          query_cache=query_cache,
+                      )
                       for movement in _MOVEMENTS]
         feasible = [candidate for candidate in candidates
                     if not candidate.blocked and not candidate.unsupported and not candidate.missing]
@@ -645,9 +784,14 @@ class FixedRouteController:
             return self._decision(started, MovementV1(), "braking_release_unsupported_geometry")
         return self._decision(started, MovementV1(), "braking_release_no_safe_reverse")
 
-    def _evaluate_candidate(self, frame: NavigationFrame, body: PlanarBodyState,
-                            movement: MovementV1, target: tuple[float, float],
-                            *, braking: bool) -> _Candidate:
+    def _prepare_candidate_rollout(
+        self,
+        body: PlanarBodyState,
+        movement: MovementV1,
+        target: tuple[float, float],
+        *,
+        braking: bool,
+    ) -> _CandidateRollout:
         control = GroundControl(movement.forward, -movement.strafe, body.yaw_radians)
         # A stream interruption can leave the selected input active for its full
         # lease. Validate every leased tick, then neutral input until the model
@@ -657,31 +801,80 @@ class FixedRouteController:
         lease_states = predict_ground(body, lease_controls, self.profile)
         tracking_end = lease_states[-1]
         released = tracking_end
-        release_controls: list[GroundControl] = []
+        states = list(lease_states)
         for _ in range(self.config.maximum_recovery_ticks):
             if math.hypot(released.velocity_x, released.velocity_z) <= (
                     self.config.stopped_speed_blocks_per_second):
                 break
-            release_controls.append(neutral)
             released = predict_ground(released, (neutral,), self.profile)[-1]
+            states.append(released)
         released_speed = math.hypot(released.velocity_x, released.velocity_z)
         if released_speed > self.config.stopped_speed_blocks_per_second:
-            return _Candidate(movement, math.inf, (), False, True, -math.inf)
-        controls = lease_controls + tuple(release_controls)
-        states = list(predict_ground(body, controls, self.profile))
+            return _CandidateRollout(
+                movement, tuple(states), tracking_end, math.inf,
+                -math.inf, -math.inf, False, True,
+            )
         # Completion may report stopped at 0.1 block/s, but collision safety must
         # still cover all remaining neutral-input drift. The calibrated model has
         # geometric decay, so its infinite tail has a closed-form displacement.
         retention = self.profile.velocity_retention_per_tick
         if released_speed > _EPSILON:
             if retention >= 1.0:
-                return _Candidate(movement, math.inf, (), False, True, -math.inf)
+                return _CandidateRollout(
+                    movement, tuple(states), tracking_end, math.inf,
+                    -math.inf, -math.inf, False, True,
+                )
             scale = self.profile.tick_seconds / (1.0 - retention)
             states.append(PlanarBodyState(
                 released.x + released.velocity_x * scale,
                 released.z + released.velocity_z * scale,
                 0.0, 0.0, released.yaw_radians,
             ))
+        end = states[-1] if braking else tracking_end
+        end_speed = math.hypot(end.velocity_x, end.velocity_z)
+        distance_to_target = math.hypot(end.x - target[0], end.z - target[1])
+        projection = self._geometry.project(
+            end.x, end.z, self._progress, self._segment_index,
+            self.config.maximum_cross_track_blocks,
+        )  # type: ignore[union-attr]
+        raw_progress_gain = projection.progress - self._progress
+        cross_track_blocked = (
+            not braking
+            and projection.distance > self.config.maximum_cross_track_blocks
+        )
+        progress_gain = (
+            raw_progress_gain if braking else max(-0.25, raw_progress_gain)
+        )
+        input_switch = (movement.forward != self._previous_movement.forward
+                        or movement.strafe != self._previous_movement.strafe)
+        if braking:
+            base_score = end_speed * 8.0 + distance_to_target * 12.0
+        else:
+            base_score = (
+                distance_to_target * 2.0
+                + projection.distance * 5.0
+                - progress_gain * 7.0
+                + (0.04 if input_switch else 0.0)
+                + (0.30 if movement == MovementV1() else 0.0)
+            )
+        return _CandidateRollout(
+            movement, tuple(states), tracking_end, base_score,
+            progress_gain, raw_progress_gain, cross_track_blocked, False,
+        )
+
+    def _evaluate_candidate(self, frame: NavigationFrame, body: PlanarBodyState,
+                            movement: MovementV1, target: tuple[float, float],
+                            *, braking: bool,
+                            query_cache: WorldQueryCache,
+                            rollout: _CandidateRollout | None = None) -> _Candidate:
+        if rollout is None:
+            rollout = self._prepare_candidate_rollout(
+                body, movement, target, braking=braking,
+            )
+        if rollout.unsupported:
+            return _Candidate(movement, math.inf, (), False, True, -math.inf)
+        states = rollout.states
+        tracking_end = rollout.tracking_end
         missing: set[BlockPos] = set()
         support_penalty = 0.0
         wall_penalty = 0.0
@@ -697,12 +890,16 @@ class FixedRouteController:
         unsupported = False
         for state in states[1:]:
             delta = (state.x - previous_state.x, 0.0, state.z - previous_state.z)
-            collision = sweep(collision_box, delta, frame.world)
+            collision = sweep(
+                collision_box, delta, frame.world,
+                query_cache=query_cache,
+            )
             if (self.profile.motion_catalog is not None
                     and self.profile.ground_model_id is not None
                     and unsupported_motion_cells(
                         self.profile.motion_catalog, frame.world, collision.dependencies,
                         self.profile.ground_model_id,
+                        query_cache=query_cache,
                     )):
                 unsupported = True
                 break
@@ -716,7 +913,10 @@ class FixedRouteController:
                 missing.update(collision.missing_cells)
             next_collision_box = collision_box.moved(*delta)
             next_support_box = support_box.moved(*delta)
-            support = query_support(next_support_box, frame.world)
+            support = query_support(
+                next_support_box, frame.world,
+                query_cache=query_cache,
+            )
             support_evidence = [support]
             actual_span = (
                 math.floor(next_support_box.min_x + _EPSILON),
@@ -734,13 +934,17 @@ class FixedRouteController:
                 # The expanded box is only an evidence envelope here. Its area
                 # is never counted as real foot contact; it merely discovers a
                 # material or unknown cell that position error could enter.
-                support_evidence.append(query_support(next_collision_box, frame.world))
+                support_evidence.append(query_support(
+                    next_collision_box, frame.world,
+                    query_cache=query_cache,
+                ))
             for evidence in support_evidence:
                 if (self.profile.motion_catalog is not None
                         and self.profile.ground_model_id is not None
                         and unsupported_motion_cells(
                             self.profile.motion_catalog, frame.world, evidence.dependencies,
                             self.profile.ground_model_id,
+                            query_cache=query_cache,
                         )):
                     unsupported = True
                     break
@@ -774,7 +978,9 @@ class FixedRouteController:
             shortfall = max(0.0, self.config.preferred_support_fraction - worst_support)
             support_penalty += shortfall * shortfall
             wall_penalty += _horizontal_wall_penalty(
-                next_collision_box, frame.world, self.config.wall_soft_margin_blocks)
+                next_collision_box, frame.world,
+                self.config.wall_soft_margin_blocks, query_cache,
+            )
             collision_box, support_box = next_collision_box, next_support_box
             previous_state = state
         if blocked or unsupported:
@@ -787,34 +993,22 @@ class FixedRouteController:
         # stopped position and can prefer neutral input at a corner.  Tracking
         # utility uses the end of the input lease; braking still uses the stopped
         # state because settling is its purpose.
-        end = states[-1] if braking else tracking_end
-        end_speed = math.hypot(end.velocity_x, end.velocity_z)
-        distance_to_target = math.hypot(end.x - target[0], end.z - target[1])
-        projection = self._geometry.project(
-            end.x, end.z, self._progress, self._segment_index,
-            self.config.maximum_cross_track_blocks,
-        )  # type: ignore[union-attr]
-        progress_gain = projection.progress - self._progress
-        if not braking and projection.distance > self.config.maximum_cross_track_blocks:
+        if rollout.cross_track_blocked:
             return _Candidate(
-                movement, math.inf, tuple(sorted(missing)), True, False, progress_gain,
+                movement, math.inf, tuple(sorted(missing)), True, False,
+                rollout.raw_progress_gain,
             )
-        input_switch = (movement.forward != self._previous_movement.forward
-                        or movement.strafe != self._previous_movement.strafe)
         if braking:
             # Braking must settle inside the requested region. Weighting only speed
             # creates a limit cycle where release stops just outside the tolerance.
-            score = (end_speed * 8.0 + distance_to_target * 12.0
-                     + support_penalty * 8.0 + wall_penalty * 2.0)
+            score = rollout.base_score + support_penalty * 8.0 + wall_penalty * 2.0
         else:
-            progress_gain = max(-0.25, projection.progress - self._progress)
             score = (
-                distance_to_target * 2.0
-                + projection.distance * 5.0
-                - progress_gain * 7.0
+                rollout.base_score
                 + support_penalty * 10.0
                 + wall_penalty * 2.0
-                + (0.04 if input_switch else 0.0)
-                + (0.30 if movement == MovementV1() else 0.0)
             )
-        return _Candidate(movement, score, tuple(sorted(missing)), False, False, progress_gain)
+        return _Candidate(
+            movement, score, tuple(sorted(missing)), False, False,
+            rollout.progress_gain,
+        )

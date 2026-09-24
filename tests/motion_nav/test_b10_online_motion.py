@@ -46,6 +46,50 @@ def sample(sequence, tick, *, forward=1.0, strafe=0.0, jump=False,
 
 
 class InputApplicationLedgerTests(unittest.TestCase):
+    def test_session_baseline_discards_pre_reset_and_foreign_episode_samples(self):
+        ledger = InputApplicationLedger(max_records=3)
+        ledger.establish_baseline(SESSION, "episode", movement_tick_id=50)
+        historical = ClientInputApplicationV1(
+            "mc2p.input-application.v1", 49, "old-episode", 999, 149,
+            "leased", 1.0, 0.0, False, False, False,
+        )
+        delayed_foreign = replace(historical, movement_tick_id=51)
+
+        self.assertIsNone(ledger.observe_sample(historical))
+        self.assertIsNone(ledger.observe_sample(delayed_foreign))
+        self.assertIsNone(ledger.sample(49))
+        self.assertIsNone(ledger.sample(51))
+
+        ledger.submit(SESSION, action(0), requested_first_tick=51)
+        applied = ledger.observe_sample(sample(0, 51))
+        self.assertIs(applied.status, InputApplicationStatus.APPLIED)
+
+    def test_session_baseline_still_rejects_unknown_current_episode_command(self):
+        ledger = InputApplicationLedger(max_records=3)
+        ledger.establish_baseline(SESSION, "episode", movement_tick_id=50)
+
+        with self.assertRaisesRegex(ContractViolation, "no submitted command"):
+            ledger.observe_sample(sample(999, 51))
+
+    def test_read_only_sample_window_does_not_invent_missing_neutral_ticks(self):
+        ledger = InputApplicationLedger(max_records=3)
+        first_action = action(1)
+        ledger.submit(SESSION, first_action, requested_first_tick=4)
+        first_sample = sample(1, 4)
+        ledger.observe_sample(first_sample)
+        ledger.observe_sample(ClientInputApplicationV1(
+            "mc2p.input-application.v1", 6, None, None, 106,
+            "lease_exhausted", 0.0, 0.0, False, False, False,
+        ))
+
+        self.assertEqual(ledger.record(1).action, first_action)
+        self.assertEqual(ledger.sample(4), first_sample)
+        self.assertIsNone(ledger.sample(5))
+        self.assertEqual(
+            tuple(item.movement_tick_id for item in ledger.samples_between(4, 6)),
+            (4, 6),
+        )
+
     def test_tracks_exact_application_and_duplicate_sample_once(self):
         ledger = InputApplicationLedger(max_records=3)
         ledger.submit(SESSION, action(7, MovementV1(forward=1, jump=True)),
@@ -82,6 +126,22 @@ class InputApplicationLedgerTests(unittest.TestCase):
             ledger.submit(SESSION, action(2), requested_first_tick=6)
         complete = ledger.observe_sample(sample(1, 5))
         self.assertIs(complete.status, InputApplicationStatus.APPLIED)
+
+    def test_new_applied_command_supersedes_remaining_ticks_of_old_lease(self):
+        ledger = InputApplicationLedger(max_records=2)
+        ledger.submit(SESSION, action(1, lease=2), requested_first_tick=4)
+        partial = ledger.observe_sample(sample(1, 4))
+        self.assertIs(partial.status, InputApplicationStatus.PARTIALLY_APPLIED)
+        ledger.submit(SESSION, action(2), requested_first_tick=5)
+
+        current = ledger.observe_sample(sample(2, 5))
+
+        self.assertIs(current.status, InputApplicationStatus.APPLIED)
+        self.assertIs(
+            ledger.record(1).status, InputApplicationStatus.SUPERSEDED,
+        )
+        self.assertEqual(ledger.record(1).applied_ticks, (4,))
+        ledger.submit(SESSION, action(3), requested_first_tick=6)
 
     def test_single_tick_command_keeps_start_window_separate_from_lease(self):
         ledger = InputApplicationLedger(max_records=1)

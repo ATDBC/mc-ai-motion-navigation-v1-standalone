@@ -48,11 +48,24 @@ class C1FixedMeleeRuntimeTests(unittest.TestCase):
         from scripts.c1_fixed_melee_runtime import c1_acceptance_control_capabilities
         controls = c1_acceptance_control_capabilities()
         document = json.loads(Path(
-            "artifacts/normal-navigation/control-capability-v2.json"
+            "config/motion-navigation/c1-control-capability-v1.json"
         ).read_text("utf-8"))
+        expected = {
+            (-1, 0, "fixed"), (0, -1, "fixed"), (0, -1, "yaw"),
+            (0, 0, "pitch"), (0, 0, "yaw"), (0, 1, "fixed"),
+            (1, -1, "yaw"), (1, 0, "fixed"), (1, 0, "pitch"),
+            (1, 0, "yaw"), (1, 1, "yaw"),
+        }
         self.assertEqual(
             set(controls.allowed_controls),
-            {tuple(item) for item in document["allowed_controls"]},
+            expected,
+        )
+        self.assertEqual(
+            {tuple(item) for item in document["allowed_controls"]}, expected,
+        )
+        self.assertEqual(
+            document["source_artifact"]["sha256"],
+            "d1e882e5a686eace4a8716d368241e98c1e21b847c7e5065909ba968b107e3f1",
         )
         self.assertEqual(controls.source_fingerprints, ())
 

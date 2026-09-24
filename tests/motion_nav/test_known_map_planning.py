@@ -100,6 +100,19 @@ class KnownMapPlanningTests(unittest.TestCase):
         self.assertIs(stale.advance(fixture.world.view(),7).status,
                       SnapshotBuildStatus.STALE)
 
+    def test_snapshot_copy_ignores_updates_in_unrelated_world_sections(self):
+        fixture=FlatFixture();bounds=KnownMapBounds(-3,3,1,1,-3,3,True)
+        builder=KnownMapSnapshotBuilder(fixture.world.view(),bounds)
+        self.assertIs(builder.advance(fixture.world.view(),1).status,
+                      SnapshotBuildStatus.BUILDING)
+
+        fixture.world.observe_blocks(ObservationStamp(
+            fixture.session,4,4,'test-clock',200_000_000),
+            {(64,1,64):BlockGeometry.full_cube('minecraft:stone')})
+
+        self.assertIsNot(builder.advance(fixture.world.view(),7).status,
+                         SnapshotBuildStatus.STALE)
+
     def test_snapshot_completion_does_not_recopy_all_validated_facts(self):
         fixture=FlatFixture();bounds=KnownMapBounds(-3,3,1,1,-3,3,True)
         builder=KnownMapSnapshotBuilder(fixture.world.view(),bounds)

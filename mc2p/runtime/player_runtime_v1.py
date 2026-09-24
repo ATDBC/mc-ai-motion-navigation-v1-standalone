@@ -9,11 +9,15 @@ from typing import Callable, TypeVar
 from mc2p.contracts.action_v1 import ActionIntentV1, ActionSnapshotV1
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.common import ContractViolation, require_nonnegative_int
-from mc2p.contracts.intent_source import IntentSourceV1, OrderedIntentV1
+from mc2p.contracts.intent_source import (
+    ControlFrameProposalV1, IntentSourceV1, OrderedIntentV1,
+)
 from mc2p.contracts.observation_v2 import ObservationSnapshotV2
 from mc2p.contracts.observation_v3 import ObservationSnapshotV3
+from mc2p.contracts.action_receipt import ClientBehaviorReceiptV3
 from mc2p.contracts.observation_request_v3 import (
-    OBSERVATION_V3, ObservationRequestV3, validate_observation_schema, resolve_observation_request,
+    OBSERVATION_V3, ObservationRequestV3, merge_observation_requests,
+    resolve_observation_request, validate_observation_schema,
 )
 from mc2p.contracts.report import ExecutionReportV0, ExecutionStatusV0, FailureCodeV0, FailureV0
 from mc2p.contracts.reset import ResetRequestV0, ResetResultV0
@@ -21,6 +25,8 @@ from mc2p.contracts.task import TaskIntentV0
 from mc2p.runtime.arbiter_v1 import ActionArbiterV1, ArbitrationDecisionV1
 from mc2p.runtime.backend_v1 import BackendStepResultV1, PlayerBackendV1
 from mc2p.runtime.trace import TraceSinkV0
+from mc2p.motion_nav.online_motion import InputApplicationLedger
+from mc2p.motion_nav.runtime_adapter import world_session_from_observation
 
 _OrderedResult = TypeVar('_OrderedResult')
 
@@ -61,6 +67,7 @@ class PlayerRuntimeV1:
         self._cleanup_failures: list[FailureV0] = []
         self._backend_elapsed_ns_total = 0
         self._backend_blocking_io_ns_total = 0
+        self._input_ledger = InputApplicationLedger()
 
     @property
     def state(self) -> RuntimeStateV1:
@@ -73,6 +80,11 @@ class PlayerRuntimeV1:
     @property
     def cleanup_failures(self) -> tuple[FailureV0, ...]:
         return tuple(self._cleanup_failures)
+
+    @property
+    def input_ledger(self) -> InputApplicationLedger:
+        """Read-only access to the input history owned by the sole output path."""
+        return self._input_ledger
 
     @property
     def backend_elapsed_ns_total(self) -> int:
@@ -124,6 +136,15 @@ class PlayerRuntimeV1:
                 raise
             if result.succeeded:
                 self._observation = result.observation
+                self._input_ledger = InputApplicationLedger()
+                if type(self._observation) is ObservationSnapshotV3:
+                    own = self._observation.self_state.value
+                    if own is not None and own.movement_tick_id is not None:
+                        self._input_ledger.establish_baseline(
+                            world_session_from_observation(self._observation),
+                            self._observation.episode_id,
+                            movement_tick_id=own.movement_tick_id,
+                        )
                 self._request_sequence = self._step_number = 0
                 self._state = RuntimeStateV1.READY
             else:
@@ -244,6 +265,44 @@ class PlayerRuntimeV1:
             try: self._record_failure('task_driver_failure',{'reason':reason})
             finally: self._seal()
 
+    def control_frame(
+        self,
+        task: TaskIntentV0,
+        profile: BehaviorProfileV0,
+        deadline_monotonic_ns: int,
+        *,
+        proposals: tuple[ControlFrameProposalV1, ...] = (),
+    ) -> RuntimeStepResultV1:
+        """Submit all skill proposals, then advance the backend exactly once."""
+        with self._io_lock:
+            self._require_ready()
+            if (type(proposals) is not tuple
+                    or any(type(proposal) is not ControlFrameProposalV1
+                           for proposal in proposals)):
+                raise ContractViolation("control frame requires a proposal tuple")
+            envelopes = tuple(
+                envelope for proposal in proposals for envelope in proposal.intents
+            )
+            identities = tuple(envelope.intent.intent_id for envelope in envelopes)
+            if len(set(identities)) != len(identities):
+                raise ContractViolation("control frame repeats an intent identity")
+            requests = tuple(proposal.observation_request for proposal in proposals)
+            if self._observation_schema == OBSERVATION_V3:
+                observation_request = merge_observation_requests(requests)
+            else:
+                if any(request is not None for request in requests):
+                    raise ContractViolation("V2 control frame cannot request V3 fields")
+                observation_request = None
+            for envelope in envelopes:
+                self.submit_ordered_intent(envelope)
+            for proposal in proposals:
+                for event in proposal.task_events:
+                    self.record_task_event(event.record_type, event.payload)
+            return self.step(
+                task, profile, deadline_monotonic_ns,
+                observation_request=observation_request,
+            )
+
     def step(self, task: TaskIntentV0, profile: BehaviorProfileV0,
              deadline_monotonic_ns: int, *, observation_request: ObservationRequestV3 | None = None) -> RuntimeStepResultV1:
         with self._io_lock:
@@ -276,9 +335,12 @@ class PlayerRuntimeV1:
                 self._trace.write("dispatch", {"decision": decision, "task": task, "profile": profile,
                                                 "observation_request": request})
                 phase_code = FailureCodeV0.BACKEND_IO
+                self._submit_input_record(action)
                 backend_result = self._backend_step(action, action.deadline_monotonic_ns, request)
                 self._check_deadline(action.deadline_monotonic_ns)
                 self._validate_result(action, backend_result, request)
+                self._ensure_input_record(action, backend_result)
+                self._input_ledger.observe_receipt(backend_result.receipt)
                 self._observation = backend_result.observation
                 receipt = backend_result.receipt
                 failure = None
@@ -286,7 +348,9 @@ class PlayerRuntimeV1:
                 phase = "constraint_filtered" if any(r.startswith("task_forbidden_")
                     for _, r in decision.suppressed_intents) else task.task_type
                 if receipt.status in {"rejected", "timed_out"}:
-                    status = ExecutionStatusV0.TIMED_OUT if receipt.status == "timed_out" or receipt.reason == "deadline_exceeded" else ExecutionStatusV0.FAILED
+                    status = (ExecutionStatusV0.TIMED_OUT
+                              if receipt.status == "timed_out"
+                              else ExecutionStatusV0.FAILED)
                     failure = FailureV0(FailureCodeV0.DEADLINE_EXCEEDED if status is ExecutionStatusV0.TIMED_OUT else FailureCodeV0.CONTRACT,
                         receipt.reason, True, "client_behavior")
                     phase = "action_rejected"
@@ -313,7 +377,11 @@ class PlayerRuntimeV1:
                 report = self._report(task, decision,
                     ExecutionStatusV0.TIMED_OUT if failure.code is FailureCodeV0.DEADLINE_EXCEEDED else ExecutionStatusV0.FAILED,
                     "runtime_failure", failure, None)
-                self._record_failure("step_failure", {"decision": decision, "report": report})
+                self._record_failure("step_failure", {
+                    "decision": decision,
+                    "backend_result": backend_result,
+                    "report": report,
+                })
                 return RuntimeStepResultV1(None, decision, report)
             except BaseException:
                 self._seal()
@@ -365,9 +433,12 @@ class PlayerRuntimeV1:
                                               self._observation.sequence_id, deadline)
                     self._request_sequence += 1
                     request = resolve_observation_request(self._observation_schema, None)
+                    self._submit_input_record(action)
                     result = self._backend_step(action, deadline, request)
                     self._check_deadline(deadline)
                     self._validate_result(action, result, request)
+                    self._ensure_input_record(action, result)
+                    self._input_ledger.observe_receipt(result.receipt)
                     if result.receipt.status not in {"executed", "confirmed_local"}:
                         raise ContractViolation("close neutral was not locally accepted")
                     self._trace.write("close_release", {"action": action, "backend_result": result})
@@ -384,6 +455,54 @@ class PlayerRuntimeV1:
                         self._cleanup_failures.append(self._exception_failure(error, FailureCodeV0.CLEANUP, classify=False))
                     finally:
                         self._state = RuntimeStateV1.CLOSED
+
+    def _submit_input_record(self, action: ActionSnapshotV1) -> None:
+        """Bind a dispatched command to the next expected player movement tick."""
+        observation = self._observation
+        if type(observation) is not ObservationSnapshotV3:
+            return
+        own = observation.self_state.value
+        if own is None or own.movement_tick_id is None:
+            return
+        self._input_ledger.submit(
+            world_session_from_observation(observation), action,
+            requested_first_tick=own.movement_tick_id + 1,
+        )
+
+    def _ensure_input_record(
+        self, action: ActionSnapshotV1, result: BackendStepResultV1,
+    ) -> None:
+        """Anchor the first V3 command when reset lacked a movement tick.
+
+        The client can legitimately omit diagnostic movement facts from the
+        reset observation while returning them with the first action receipt.
+        In that case, the first exact application becomes the ledger's bounded
+        starting point.  Older buffered applications remain outside ownership.
+        """
+        if self._input_ledger.record(action.request_sequence_id) is not None:
+            return
+        if (type(result.observation) is not ObservationSnapshotV3
+                or type(result.receipt) is not ClientBehaviorReceiptV3):
+            return
+        matching_ticks = tuple(
+            sample.movement_tick_id
+            for sample in result.receipt.input_applications
+            if (sample.episode_id == action.episode_id
+                and sample.request_sequence_id == action.request_sequence_id)
+        )
+        own = result.observation.self_state.value
+        observed_tick = None if own is None else own.movement_tick_id
+        first_tick = min(matching_ticks) if matching_ticks else observed_tick
+        if first_tick is None or first_tick <= 0:
+            return
+        session = world_session_from_observation(result.observation)
+        if self._input_ledger.baseline_movement_tick_id is None:
+            self._input_ledger.establish_baseline(
+                session, action.episode_id, movement_tick_id=first_tick - 1,
+            )
+        self._input_ledger.submit(
+            session, action, requested_first_tick=first_tick,
+        )
 
     def _close_backend(self) -> None:
         if self._backend_closed:

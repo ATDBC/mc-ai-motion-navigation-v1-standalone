@@ -38,27 +38,60 @@ def export_time_evidence(source: Path, offset: int, run: Path, *, observations: 
 def export_runtime_time_evidence(directory: Path) -> dict:
     """Export after client cleanup; attribution cannot replace the owning probe's result."""
     try:
+        from scripts.streaming_time_evidence import iter_bounded_jsonl
+
         trace_path = directory / "trace.jsonl"
         if trace_path.is_file():
-            records = _read_jsonl(trace_path)
+            records = iter_bounded_jsonl(trace_path)
         else:
             from mc2p.runtime.segmented_trace import iter_segmented_jsonl
-            records = list(iter_segmented_jsonl(directory / "runtime-trace" / "trace"))
-        rows = _read_jsonl(directory / "diagnostics.jsonl")
-        observations = [r["payload"]["result"]["observation"] if r["record_type"] == "reset"
-            else r["payload"]["backend_result"]["observation"] for r in records
-            if r["record_type"] in {"reset", "step", "close_release"}]
-        result = export_time_evidence(directory / "mc2p-client-time.jsonl", 0, directory, observations=observations)
-        if result["status"] == "passed":
-            if (len(rows) != len(observations) or len(result["intervals"]) != len(observations) - 1
-                    or not all(o["source_backend"] == "fabric" and o["sequence_id"] == i
-                        and row["observation_sequence_id"] == i and row["episode_id"] == o["episode_id"]
-                        and type(row["diagnostics"]["client_tick"]) is int and row["diagnostics"]["client_tick"] >= 0
-                        for i, (o, row) in enumerate(zip(observations, rows)))):
-                raise ValueError("deployment timing samples do not cover one exact Runtime episode")
-            if not all(interval["client_tick_calls"] == b["diagnostics"]["client_tick"] - a["diagnostics"]["client_tick"]
-                    for interval, a, b in zip(result["intervals"], rows, rows[1:])):
-                raise ValueError("time events disagree with independent deployment client tick counters")
+            records = iter_segmented_jsonl(directory / "runtime-trace" / "trace")
+        diagnostics = iter(iter_bounded_jsonl(directory / "diagnostics.jsonl"))
+
+        def observations():
+            expected_sequence = 0
+            for record in records:
+                if record["record_type"] not in {"reset", "step", "close_release"}:
+                    continue
+                observation = (
+                    record["payload"]["result"]["observation"]
+                    if record["record_type"] == "reset" else
+                    record["payload"]["backend_result"]["observation"]
+                )
+                try:
+                    row = next(diagnostics)
+                except StopIteration:
+                    raise ValueError(
+                        "deployment timing samples do not cover one exact Runtime episode"
+                    ) from None
+                client_tick = row["diagnostics"]["client_tick"]
+                if (observation["source_backend"] != "fabric"
+                        or observation["sequence_id"] != expected_sequence
+                        or row["observation_sequence_id"] != expected_sequence
+                        or row["episode_id"] != observation["episode_id"]
+                        or type(client_tick) is not int or client_tick < 0):
+                    raise ValueError(
+                        "deployment timing samples do not cover one exact Runtime episode"
+                    )
+                expected_sequence += 1
+                yield {
+                    **observation,
+                    "_diagnostic_client_tick": client_tick,
+                }
+            try:
+                next(diagnostics)
+            except StopIteration:
+                return
+            raise ValueError(
+                "deployment timing samples do not cover one exact Runtime episode"
+            )
+
+        result = export_time_evidence(
+            directory / "mc2p-client-time.jsonl",
+            0,
+            directory,
+            observations=observations(),
+        )
     except (OSError, UnicodeError, KeyError, IndexError, TypeError, ValueError) as error:
         result = {"schema_version": "mc2p.client-time-evidence.v1", "status": "failed", "errors": [str(error)]}
     write_json_atomic(directory / "time-report.json", result)

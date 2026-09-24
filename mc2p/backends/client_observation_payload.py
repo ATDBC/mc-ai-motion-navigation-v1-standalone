@@ -207,6 +207,7 @@ _SELF_KEYS = {
     "allow_flying",
 }
 _SELF_MOTION_KEYS = {"hurt_animation_ticks", "movement_tick_id"}
+_SELF_EYE_KEYS = {"eye_height_blocks"}
 
 
 def _self_state(value: Any) -> SelfStateV2:
@@ -215,11 +216,14 @@ def _self_state(value: Any) -> SelfStateV2:
     actual = set(value)
     has_hurt = "hurt_animation_ticks" in actual
     has_tick = "movement_tick_id" in actual
+    has_eye_height = "eye_height_blocks" in actual
     if has_hurt != has_tick:
         raise ClientObservationPayloadError(
             "self hurt animation and movement tick must appear together"
         )
-    expected = _SELF_KEYS | (_SELF_MOTION_KEYS if has_hurt else set())
+    expected = (_SELF_KEYS
+                | (_SELF_MOTION_KEYS if has_hurt else set())
+                | (_SELF_EYE_KEYS if has_eye_height else set()))
     item = _object(value, expected, "self_state.value")
     return SelfStateV2(
         position=_vec(item["position"], "self_state.position"),
@@ -296,6 +300,10 @@ def _self_state(value: Any) -> SelfStateV2:
         ),
         movement_tick_id=_optional_integer(
             item.get("movement_tick_id"), "self_state.movement_tick_id"
+        ),
+        eye_height_blocks=(
+            _number(item["eye_height_blocks"], "self_state.eye_height_blocks")
+            if has_eye_height else None
         ),
     )
 

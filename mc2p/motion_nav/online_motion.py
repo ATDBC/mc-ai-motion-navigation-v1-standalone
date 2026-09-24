@@ -23,6 +23,7 @@ class InputApplicationStatus(StrEnum):
     EXPIRED = "expired"
     REJECTED = "rejected"
     AMBIGUOUS = "ambiguous"
+    SUPERSEDED = "superseded"
 
 
 _TERMINAL_INPUT_STATES = frozenset({
@@ -31,6 +32,7 @@ _TERMINAL_INPUT_STATES = frozenset({
     InputApplicationStatus.EXPIRED,
     InputApplicationStatus.REJECTED,
     InputApplicationStatus.AMBIGUOUS,
+    InputApplicationStatus.SUPERSEDED,
 })
 
 
@@ -82,6 +84,41 @@ class InputApplicationLedger:
         self._last_input_samples: int | None = None
         self._last_dropped_input_samples: int | None = None
         self._latest_movement_tick_id: int | None = None
+        self._baseline_session: WorldSessionId | None = None
+        self._baseline_episode_id: str | None = None
+        self._baseline_movement_tick_id: int | None = None
+
+    def establish_baseline(
+        self,
+        session: WorldSessionId,
+        episode_id: str,
+        *,
+        movement_tick_id: int,
+    ) -> None:
+        """Start ownership after a reset without claiming older client samples."""
+        if type(session) is not WorldSessionId:
+            raise ContractViolation("input ledger baseline requires a world session")
+        require_identifier(episode_id, "input ledger baseline episode")
+        require_nonnegative_int(movement_tick_id, "input ledger baseline movement tick")
+        baseline = (session, episode_id, movement_tick_id)
+        existing = (
+            self._baseline_session,
+            self._baseline_episode_id,
+            self._baseline_movement_tick_id,
+        )
+        if self._baseline_session is not None:
+            if existing != baseline:
+                raise ContractViolation("input ledger baseline cannot change")
+            return
+        if self._records or self._observed_samples:
+            raise ContractViolation("input ledger baseline must precede input records")
+        self._baseline_session, self._baseline_episode_id, \
+            self._baseline_movement_tick_id = baseline
+        self._latest_movement_tick_id = movement_tick_id
+
+    @property
+    def baseline_movement_tick_id(self) -> int | None:
+        return self._baseline_movement_tick_id
 
     def submit(self, session: WorldSessionId, action: ActionSnapshotV1, *,
                requested_first_tick: int,
@@ -89,6 +126,11 @@ class InputApplicationLedger:
         if type(session) is not WorldSessionId or type(action) is not ActionSnapshotV1:
             raise ContractViolation("input submission requires a session and action")
         require_nonnegative_int(requested_first_tick, "requested first tick")
+        if (self._baseline_session is not None
+                and (session != self._baseline_session
+                     or action.episode_id != self._baseline_episode_id
+                     or requested_first_tick <= self._baseline_movement_tick_id)):
+            raise ContractViolation("input submission precedes or crosses its session baseline")
         if latest_allowed_first_tick is None:
             latest_allowed_first_tick = requested_first_tick
         require_nonnegative_int(
@@ -118,9 +160,42 @@ class InputApplicationLedger:
     def latest_movement_tick_id(self) -> int | None:
         return self._latest_movement_tick_id
 
+    def record(self, control_sequence: int) -> InputApplicationRecord | None:
+        """Return one immutable command record without exposing ledger ownership."""
+        require_nonnegative_int(control_sequence, "control sequence")
+        return self._records.get(control_sequence)
+
+    def sample(self, movement_tick_id: int) -> ClientInputApplicationV1 | None:
+        """Return the exact client input consumed by one movement tick, if retained."""
+        require_nonnegative_int(movement_tick_id, "movement tick id")
+        return self._observed_samples.get(movement_tick_id)
+
+    def samples_between(
+        self, first_tick: int, last_tick: int,
+    ) -> tuple[ClientInputApplicationV1, ...]:
+        """Return retained samples in a closed tick interval, in tick order.
+
+        Missing ticks stay missing.  The residual calculator must distinguish an
+        incomplete input history from a neutral input instead of inventing one.
+        """
+        require_nonnegative_int(first_tick, "first movement tick")
+        require_nonnegative_int(last_tick, "last movement tick")
+        if last_tick < first_tick:
+            raise ContractViolation("input sample interval is reversed")
+        return tuple(
+            sample for tick in range(first_tick, last_tick + 1)
+            if (sample := self._observed_samples.get(tick)) is not None
+        )
+
     def observe_sample(self, sample: ClientInputApplicationV1) -> InputApplicationRecord | None:
         if type(sample) is not ClientInputApplicationV1:
             raise ContractViolation("input ledger requires a formal input sample")
+        if self._baseline_movement_tick_id is not None:
+            if sample.movement_tick_id <= self._baseline_movement_tick_id:
+                return None
+            if (sample.episode_id is not None
+                    and sample.episode_id != self._baseline_episode_id):
+                return None
         existing = self._observed_samples.get(sample.movement_tick_id)
         if existing is not None:
             if existing != sample:
@@ -172,7 +247,29 @@ class InputApplicationLedger:
             resolved_at_tick=max(ticks),
         )
         self._records[record.control_sequence] = updated
+        self._supersede_older_records(
+            record.control_sequence, sample.movement_tick_id, record.session,
+        )
         return updated
+
+    def _supersede_older_records(
+        self,
+        current_sequence: int,
+        movement_tick_id: int,
+        session: WorldSessionId,
+    ) -> None:
+        for sequence, candidate in tuple(self._records.items()):
+            if (sequence >= current_sequence or candidate.session != session
+                    or candidate.status not in {
+                        InputApplicationStatus.IN_FLIGHT,
+                        InputApplicationStatus.PARTIALLY_APPLIED,
+                    }):
+                continue
+            self._records[sequence] = replace(
+                candidate,
+                status=InputApplicationStatus.SUPERSEDED,
+                resolved_at_tick=movement_tick_id,
+            )
 
     def observe_receipt(self, receipt: ClientBehaviorReceipt) -> tuple[InputApplicationRecord, ...]:
         if type(receipt) not in (ClientBehaviorReceiptV2, ClientBehaviorReceiptV3):
@@ -365,6 +462,7 @@ class StateAnchorBuilder:
                               InputApplicationStatus.PARTIALLY_APPLIED,
                               InputApplicationStatus.APPLIED,
                               InputApplicationStatus.APPLIED_OUTSIDE_WINDOW,
+                              InputApplicationStatus.SUPERSEDED,
                           }
                           and record.applied_ticks
                           and max(record.applied_ticks) <= movement_tick_id)

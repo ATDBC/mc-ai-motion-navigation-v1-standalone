@@ -75,6 +75,7 @@ class EngagementStateV1:
     last_client_completed_at_monotonic_ns: int | None = None
     last_received_at_monotonic_ns: int | None = None
     last_visible_position: Vec3V0 | None = None
+    awaiting_continuity_reanchor: bool = False
     revocation_reason: str | None = None
     schema_version: str = field(default="mc2p.engagement-state.v1", init=False)
 
@@ -83,7 +84,8 @@ class EngagementStateV1:
             require_identifier(getattr(self, name), name)
         require_nonnegative_int(self.target_revision, "target revision")
         if type(self.active) is not bool or type(self.seen_directly) is not bool \
-                or type(self.engagement_granted) is not bool:
+                or type(self.engagement_granted) is not bool \
+                or type(self.awaiting_continuity_reanchor) is not bool:
             raise ContractViolation("engagement flags must be boolean")
 
     @classmethod
@@ -187,11 +189,12 @@ def advance_engagement(state: EngagementStateV1,
         return _revoke(state, "target_dead")
 
     previous_sequence = state.last_observation_sequence_id
+    observation_gap = False
     if previous_sequence is not None:
         if event.observation_sequence_id < previous_sequence:
             return _revoke(state, "observation_sequence_regressed")
         if event.observation_sequence_id > previous_sequence + 1:
-            return _revoke(state, "observation_gap")
+            observation_gap = True
         if (event.observation_sequence_id == previous_sequence
                 and event.kind is not EngagementEventKind.CONFIRMED_HIT):
             return _revoke(state, "observation_sequence_regressed")
@@ -221,6 +224,8 @@ def advance_engagement(state: EngagementStateV1,
         last_visible_position=(event.visible_position
                                if event.visible_position is not None
                                else state.last_visible_position),
+        awaiting_continuity_reanchor=observation_gap,
+        revocation_reason="observation_gap" if observation_gap else None,
     )
 
 
@@ -237,7 +242,7 @@ def resolve_target_position(
         raise ContractViolation("target position resolution requires typed values")
     require_nonnegative_int(now_ns, "target position decision time")
     require_nonnegative_int(freshness_ns, "target position freshness")
-    if (not state.active
+    if (not state.active or state.awaiting_continuity_reanchor
             or (target.task_id, target.goal_id, target.revision, target.episode_id, target.track_id)
                 != (state.task_id, state.goal_id, state.target_revision,
                     state.episode_id, state.track_id)

@@ -11,12 +11,15 @@ from mc2p.contracts.action import ActionPriorityV0
 from mc2p.contracts.action_v1 import ActionIntentV1, AttackEntityV1, LookV1
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.common import ContractViolation, FieldStatusV0, require_nonnegative_int
-from mc2p.contracts.intent_source import IntentSourceV1, OrderedIntentV1, ordered_intent_id
+from mc2p.contracts.intent_source import (
+    ControlFrameProposalV1, IntentSourceV1, OrderedIntentV1, ordered_intent_id,
+)
 from mc2p.contracts.observation_v2 import VisibleEntityV2
 from mc2p.contracts.observation_v3 import ObservationSnapshotV3
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.contracts.task import ComparisonOperatorV0, SuccessCriterionV0, TaskIntentV0
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1, RuntimeStateV1, RuntimeStepResultV1
+from mc2p.skills.combat_aim import combat_aim_angles
 from mc2p.skills.fixed_melee import (
     CombatTargetV1, FixedMeleeDecisionV1, FixedMeleePhase,
     MAX_COARSE_ATTACK_DISTANCE_BLOCKS, decide_fixed_melee,
@@ -208,23 +211,28 @@ class MeleeStrikeDriver:
                     selected_candidate_id=decision.selected_candidate_id,
                     phase=decision.phase)
 
-    def _runtime_step(self, profile: BehaviorProfileV0,
-                      owner_deadline_ns: int) -> RuntimeStepResultV1:
+    def _runtime_step(
+        self, profile: BehaviorProfileV0, owner_deadline_ns: int,
+        envelope: OrderedIntentV1 | None = None,
+    ) -> RuntimeStepResultV1:
         assert self._task is not None and self._target is not None
         now_ns = self._clock()
         require_nonnegative_int(owner_deadline_ns, "melee strike owner deadline")
         deadline = min(owner_deadline_ns, self._task_deadline_ns, now_ns + STEP_LEASE_NS)
         if deadline <= now_ns:
             raise ContractViolation("melee strike owner/task deadline expired")
-        return self.runtime.step(
+        return self.runtime.control_frame(
             self._task, profile, deadline,
-            observation_request=ObservationRequestV3(
+            proposals=(ControlFrameProposalV1(
+                () if envelope is None else (envelope,),
+                ObservationRequestV3(
                 "interaction_v1", entity_track_id=self._target.track_id,
-            ),
+                ),
+            ),),
         )
 
     def _submit(self, *, look: LookV1 | None = None,
-                operation: AttackEntityV1 | None = None) -> str:
+                operation: AttackEntityV1 | None = None) -> tuple[str, OrderedIntentV1]:
         source = self._ensure_combat_source()
         self.runtime.cancel_source(source.source_id)
         self._sequence += 1
@@ -239,16 +247,7 @@ class MeleeStrikeDriver:
             now_ns, min(self._task_deadline_ns, now_ns + STEP_LEASE_NS),
             look=look, operation=operation,
         )
-        self.runtime.submit_ordered_intent(OrderedIntentV1(source, self._sequence, intent))
-        return intent_id
-
-    @staticmethod
-    def _aim_angles(entity: VisibleEntityV2) -> tuple[float, float]:
-        horizontal = math.hypot(entity.relative_position.x, entity.relative_position.z)
-        yaw = math.degrees(math.atan2(-entity.relative_position.x, entity.relative_position.z))
-        target_center_y = entity.relative_position.y + entity.bounding_box_size.y / 2
-        pitch = math.degrees(math.atan2(1.62 - target_center_y, max(horizontal, .001)))
-        return yaw, pitch
+        return intent_id, OrderedIntentV1(source, self._sequence, intent)
 
     def _finish(self, state: str, reason: str) -> None:
         self._drop_combat_source()
@@ -383,6 +382,7 @@ class MeleeStrikeDriver:
             return None
 
         intent_id = None
+        envelope = None
         if selected == "aim":
             if self._aim_attempts >= MAX_AIM_ATTEMPTS:
                 self._finish("failed", "aim_not_confirmed")
@@ -390,11 +390,19 @@ class MeleeStrikeDriver:
             self._aim_attempts += 1
             entity = self._visible_target(observation, self._target.track_id)
             assert entity is not None
-            yaw, pitch = self._aim_angles(entity)
+            own = observation.self_state.value
+            if own is None or own.eye_height_blocks is None:
+                self._finish("failed", "eye_height_not_observed")
+                return None
+            yaw, pitch = combat_aim_angles(
+                entity.relative_position,
+                entity.bounding_box_size,
+                own.eye_height_blocks,
+            )
             view = project_playground_view(observation, self._clock(), self._clock_id)
             look = self._gate.request(view, yaw, pitch, self._clock(),
                                       yaw_tolerance=.5, pitch_tolerance=.5)
-            intent_id = self._submit(look=look)
+            intent_id, envelope = self._submit(look=look)
             self._phase = FixedMeleePhase.ALIGNING
         elif selected == "attack":
             entity = self._visible_target(observation, self._target.track_id)
@@ -402,13 +410,15 @@ class MeleeStrikeDriver:
             self._attack_observation_sequence_id = observation.sequence_id
             self._pre_attack_hurt = entity.hurt_animation_ticks
             self._confirmation_deadline_ns = self._clock() + CONFIRMATION_NS
-            intent_id = self._submit(operation=AttackEntityV1(self._target.track_id))
+            intent_id, envelope = self._submit(
+                operation=AttackEntityV1(self._target.track_id),
+            )
         elif selected == "wait_hurt_clear":
             self._phase = FixedMeleePhase.WAITING_HURT_CLEAR
         elif selected == "wait_cooldown":
             self._phase = FixedMeleePhase.WAITING_COOLDOWN
 
-        result = self._runtime_step(profile, owner_deadline_ns)
+        result = self._runtime_step(profile, owner_deadline_ns, envelope)
         if result.backend_result is None and result.report.failure is not None:
             self._finish("failed", "runtime_failure")
             return result

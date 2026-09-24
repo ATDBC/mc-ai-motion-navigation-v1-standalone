@@ -1,0 +1,84 @@
+from __future__ import annotations
+
+from pathlib import Path
+import shutil
+import unittest
+import uuid
+
+from scripts.export_motion_navigation_standalone import (
+    ExportViolation,
+    export_tree,
+    load_manifest,
+    verify_tree,
+)
+
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+class StandaloneExportTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.root = ROOT / ".tmp" / f"standalone-export-test-{uuid.uuid4().hex}"
+        cls.manifest = load_manifest()
+        export_tree(cls.root, clean=True, manifest=cls.manifest)
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        if cls.root.exists():
+            shutil.rmtree(cls.root)
+
+    def test_real_export_has_a_closed_hash_manifest(self) -> None:
+        report = verify_tree(self.root, manifest=self.manifest)
+
+        self.assertGreater(report.file_count, 100)
+        self.assertEqual(report.missing_files, ())
+        self.assertEqual(report.extra_files, ())
+        self.assertEqual(report.changed_files, ())
+        self.assertTrue((self.root / "README.md").is_file())
+        self.assertTrue((self.root / "requirements.txt").is_file())
+        self.assertEqual(
+            (self.root / ".gitattributes").read_text("utf-8").splitlines()[-1],
+            "* -text whitespace=cr-at-eol,-blank-at-eof",
+        )
+
+    def test_reviewed_missing_dependencies_are_real_export_files(self) -> None:
+        required = (
+            "tests/test_navigation_motion.py",
+            "tests/test_craftground_backend.py",
+            "tests/test_craftground_runtime.py",
+            "tests/test_visible_equipment_projection.py",
+        )
+
+        self.assertEqual(
+            tuple(path for path in required if not (self.root / path).is_file()),
+            (),
+        )
+        requirements = (self.root / "requirements.txt").read_text("utf-8")
+        self.assertIn("psutil", requirements)
+
+    def test_verifier_rejects_changed_and_extra_files(self) -> None:
+        target = self.root / "README.md"
+        original = target.read_bytes()
+        extra = self.root / "unexpected.txt"
+        try:
+            target.write_bytes(original + b"\nchanged\n")
+            extra.write_text("unexpected", encoding="utf-8")
+            with self.assertRaises(ExportViolation) as raised:
+                verify_tree(self.root, manifest=self.manifest)
+            self.assertIn("README.md", str(raised.exception))
+            self.assertIn("unexpected.txt", str(raised.exception))
+        finally:
+            target.write_bytes(original)
+            extra.unlink(missing_ok=True)
+
+    def test_clean_guard_rejects_workspace_and_paths_outside_tmp(self) -> None:
+        with self.assertRaises(ExportViolation):
+            export_tree(ROOT, clean=True, manifest=self.manifest)
+        with self.assertRaises(ExportViolation):
+            export_tree(ROOT.parent / "standalone-export", clean=True,
+                        manifest=self.manifest)
+
+
+if __name__ == "__main__":
+    unittest.main()

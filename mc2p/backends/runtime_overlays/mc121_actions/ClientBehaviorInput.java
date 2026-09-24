@@ -11,10 +11,12 @@ public final class ClientBehaviorInput extends Input {
             boolean jump, boolean sneak, boolean sprint) {}
     @FunctionalInterface public interface SampleObserver { void accept(Sample sample); }
     private static final SampleObserver NO_DIAGNOSTICS = sample -> {};
+    private static final Runnable NO_BEFORE_SAMPLE = () -> {};
     private final ClientRequestGate gate;
     private final LongSupplier clock;
     private final LongSupplier applicationClock;
     private final BooleanSupplier allowed;
+    private final Runnable beforeSample;
     private final SampleObserver observer;
     private int forward, strafe;
     private boolean jump, sneak, sprint, appliedSprint;
@@ -25,20 +27,27 @@ public final class ClientBehaviorInput extends Input {
     private final java.util.ArrayList<Sample> pendingSamples = new java.util.ArrayList<>();
 
     public ClientBehaviorInput(ClientRequestGate gate, LongSupplier clock, BooleanSupplier allowed) {
-        this(gate, clock, allowed, clock, NO_DIAGNOSTICS);
+        this(gate, clock, allowed, clock, NO_BEFORE_SAMPLE, NO_DIAGNOSTICS);
     }
 
     public ClientBehaviorInput(ClientRequestGate gate, LongSupplier clock, BooleanSupplier allowed,
                                SampleObserver observer) {
-        this(gate, clock, allowed, clock, observer);
+        this(gate, clock, allowed, clock, NO_BEFORE_SAMPLE, observer);
     }
 
     public ClientBehaviorInput(ClientRequestGate gate, LongSupplier clock, BooleanSupplier allowed,
                                LongSupplier applicationClock, SampleObserver observer) {
+        this(gate, clock, allowed, applicationClock, NO_BEFORE_SAMPLE, observer);
+    }
+
+    public ClientBehaviorInput(ClientRequestGate gate, LongSupplier clock, BooleanSupplier allowed,
+                               LongSupplier applicationClock, Runnable beforeSample,
+                               SampleObserver observer) {
         this.gate = gate;
         this.clock = java.util.Objects.requireNonNull(clock);
         this.allowed = allowed;
         this.applicationClock = java.util.Objects.requireNonNull(applicationClock);
+        this.beforeSample = java.util.Objects.requireNonNull(beforeSample);
         this.observer = java.util.Objects.requireNonNull(observer);
     }
 
@@ -61,7 +70,13 @@ public final class ClientBehaviorInput extends Input {
 
     public void rejectAdmittedRequest(long sequence) {
         gate.requireOwnerThread();
-        if (gate.cancel(sequence)) clear();
+        if (gate.cancel(sequence)) {
+            clear();
+            if (acceptedSequence == sequence) {
+                acceptedEpisode = null;
+                acceptedSequence = -1;
+            }
+        }
     }
 
     public void set(int forward, int strafe, boolean jump, boolean sneak, boolean sprint) {
@@ -88,6 +103,10 @@ public final class ClientBehaviorInput extends Input {
 
     public void prepareForPlayerTick() {
         gate.requireOwnerThread();
+        // Operations coupled to movement run immediately before vanilla samples
+        // this same input. They may reject and clear the lease before any movement
+        // edge becomes visible to the player simulation.
+        beforeSample.run();
         // Semantic sneak is a current, admitted input level. Vanilla reads it
         // before Input.tick to decide legal crouching and its attribute factor.
         // Without this projection a one-sample lease separated by idle samples

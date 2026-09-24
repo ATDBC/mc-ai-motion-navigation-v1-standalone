@@ -13,6 +13,7 @@ from scripts.c1_external_motion_runtime import (
     c1c_trial_plan,
     evaluate_c1c_positive,
     recovery_application_latency_ms,
+    selected_retired_route,
     summarize_c1c_trials,
     validate_c1c_seed_receipt,
     wait_after_fast_poll,
@@ -20,6 +21,18 @@ from scripts.c1_external_motion_runtime import (
 
 
 class C1ExternalMotionRuntimeTests(unittest.TestCase):
+    def test_route_becomes_stale_only_after_transition_frame_finishes(self):
+        source_id = "navigation-session/test/7"
+        selected = source_id + "/movement/41"
+        retired_sources: set[str] = set()
+
+        # This input was selected before the returned observation revealed
+        # damage, so the transition frame itself is still causally valid.
+        self.assertFalse(selected_retired_route(selected, retired_sources))
+
+        retired_sources.add(source_id)
+        self.assertTrue(selected_retired_route(selected, retired_sources))
+
     def test_fast_poll_yields_but_completed_control_does_not(self):
         with patch('scripts.c1_external_motion_runtime.time.sleep') as sleep:
             wait_after_fast_poll(None)

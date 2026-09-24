@@ -55,10 +55,31 @@ public final class ClientBehaviorInputTest {
         singleTickSneakSurvivesUnleasedSamplingGaps();
         sneakProjectionDoesNotGrantOrRenewControls();
         diagnosticCallbackReportsActualConsumptionWithoutChangingLease();
+        beforeSampleCallbackRunsBeforeActualInputConsumption();
         applicationTimestampCanUseFormalObservationClock();
         operationSpecificRejectionDoesNotBindDiagnosticIdentity();
+        deferredRejectionClearsPreviouslyBoundDiagnosticIdentity();
         boundedLedgerDropsOldestSamplesWithoutCrashing();
         System.out.println("CLIENT_BEHAVIOR_INPUT_OK");
+    }
+
+    private static void beforeSampleCallbackRunsBeforeActualInputConsumption() {
+        ClientRequestGate gate = new ClientRequestGate();
+        long[] now = {60};
+        java.util.ArrayList<String> order = new java.util.ArrayList<>();
+        ClientBehaviorInput input = new ClientBehaviorInput(
+            gate, () -> now[0], () -> true, () -> now[0],
+            () -> order.add("before"), sample -> order.add("sample"));
+        yes(gate.admit("phase", 8, 0, 0, 100, 1, now[0]) == null);
+        input.bindAcceptedRequest("phase", 8);
+        input.set(1, 0, false, false, false);
+
+        input.prepareForPlayerTick();
+        input.tick(false, 1);
+
+        yes(order.equals(java.util.List.of("before", "sample")));
+        yes(input.lastSample().requestSequenceId() == 8);
+        yes(input.lastSample().forward() == 1);
     }
 
     private static void applicationTimestampCanUseFormalObservationClock() {
@@ -236,5 +257,22 @@ public final class ClientBehaviorInputTest {
         yes(samples.size() == 2);
         yes("operation".equals(samples.get(1).episodeId())
             && samples.get(1).requestSequenceId() == 12);
+    }
+
+    private static void deferredRejectionClearsPreviouslyBoundDiagnosticIdentity() {
+        ClientRequestGate gate = new ClientRequestGate();
+        long[] now = {80};
+        ClientBehaviorInput input = new ClientBehaviorInput(gate, () -> now[0], () -> true);
+        yes(gate.admit("deferred", 13, 0, 0, 100, 1, now[0]) == null);
+        input.beginSnapshot();
+        input.set(1, 0, false, false, false);
+        input.bindDispatchedRequest("deferred", 13, "pending_confirmation");
+
+        input.rejectAdmittedRequest(13);
+        input.tick(false, 1);
+
+        yes(input.lastSample().episodeId() == null);
+        yes(input.lastSample().requestSequenceId() == -1);
+        yes(input.lastSample().forward() == 0);
     }
 }

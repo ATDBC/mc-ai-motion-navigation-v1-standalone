@@ -15,10 +15,8 @@ from mc2p.runtime.segmented_trace import (
 )
 from mc2p.skills.fixed_melee import CombatTargetV1
 from mc2p.skills.fixed_melee_driver import FixedMeleeDriver
-from mc2p.skills.navigation_state import NavigationState
-from mc2p.skills.point_goal_policy import PointGoalPolicy
+from tests.navigation_session_fixtures import FakeNavigationSession
 from tests.test_fixed_melee_driver import MeleeBackend, TRACK
-from tests.test_navigation_joint_policy import TestCapabilities
 
 
 class C1MeleeEvidenceTests(unittest.TestCase):
@@ -33,8 +31,7 @@ class C1MeleeEvidenceTests(unittest.TestCase):
             ResetRequestV0("reset", "episode-1", "test", 1, 2_000_000_000)
         ).succeeded)
         driver = FixedMeleeDriver(
-            runtime, NavigationState("scope"),
-            PointGoalPolicy("D", control_capabilities=TestCapabilities()),
+            runtime, FakeNavigationSession(),
             clock_ns=lambda: clock[0],
         )
         driver.start(
@@ -146,8 +143,7 @@ class C1MeleeEvidenceTests(unittest.TestCase):
                         task, BehaviorProfileV0(), clock[0] + 2_000_000_000,
                     )
                     driver = FixedMeleeDriver(
-                        runtime, NavigationState(f"scope-{index}"),
-                        PointGoalPolicy("D", control_capabilities=TestCapabilities()),
+                        runtime, FakeNavigationSession(),
                         clock_ns=lambda: clock[0],
                     )
                     driver.start(CombatTargetV1(

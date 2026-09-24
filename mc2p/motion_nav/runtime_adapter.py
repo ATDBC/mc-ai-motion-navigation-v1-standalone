@@ -67,7 +67,9 @@ class NavigationFrame:
     changed_cells: tuple[BlockPos, ...] = ()
 
 
-def _session(snapshot: ObservationSnapshotV3) -> WorldSessionId:
+def world_session_from_observation(snapshot: ObservationSnapshotV3) -> WorldSessionId:
+    if type(snapshot) is not ObservationSnapshotV3:
+        raise ContractViolation("world session requires Observation V3")
     return WorldSessionId(
         f"{snapshot.source_backend}:{snapshot.episode_id}:{snapshot.client_sample.clock_id}"
     )
@@ -130,6 +132,11 @@ class NavigationObservationAdapter:
         self._air_retry_after_ticks = air_retry_after_ticks
         self._air_last_attempt: dict[BlockPos, int] = {}
 
+    @property
+    def has_frame(self) -> bool:
+        """Whether this adapter has ingested the world view used by requests."""
+        return self._world is not None and self._latest_order is not None
+
     def air_request(self, positions: tuple[BlockPos, ...], *, max_positions: int = 128,
                     field_profile: str = "navigation_v1") -> tuple[ObservationRequestV3, tuple[BlockPos, ...]]:
         if type(positions) is not tuple:
@@ -153,7 +160,7 @@ class NavigationObservationAdapter:
     def ingest(self, snapshot: ObservationSnapshotV3) -> NavigationFrame:
         if type(snapshot) is not ObservationSnapshotV3:
             raise ContractViolation("navigation adapter requires Observation V3")
-        session = _session(snapshot)
+        session = world_session_from_observation(snapshot)
         if session != self._session:
             if session in self._retired:
                 raise ContractViolation("snapshot belongs to a retired world session")
@@ -189,5 +196,8 @@ class NavigationObservationAdapter:
             for block in blocks:
                 self._air_last_attempt.pop(block.position, None)
         self._latest_order = stamp.world_order
-        return NavigationFrame(session, _body(snapshot, session, stamp), self._world.view(),
-                               snapshot.source_backend, changed_cells)
+        body = _body(snapshot, session, stamp)
+        self._world.set_protection_center(body.position)
+        return NavigationFrame(
+            session, body, self._world.view(), snapshot.source_backend, changed_cells,
+        )

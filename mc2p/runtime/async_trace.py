@@ -62,19 +62,23 @@ class BoundedAsyncTraceWriter:
     def write(self, record_type: str, payload: object) -> None:
         if type(record_type) is not str or not record_type:
             raise ValueError("record_type must be non-empty")
-        started = time.perf_counter_ns()
-        projected = trace_projection(payload)
-        elapsed = time.perf_counter_ns() - started
         with self._lock:
             if self._closed or self._closing:
                 raise ValueError("asynchronous trace writer is closed")
-            self._raise_worker_error()
-            self._projection_count += 1
-            self._projection_total += elapsed
-            self._projection_max = max(self._projection_max, elapsed)
-            self._projection_samples.append(elapsed)
+            if self._worker_error is not None:
+                self._dropped += 1
+                self._dropped_by_type[record_type] += 1
+                return
+        snapshot = self._snapshot_payload(payload)
+        with self._lock:
+            if self._closed or self._closing:
+                raise ValueError("asynchronous trace writer is closed")
+            if self._worker_error is not None:
+                self._dropped += 1
+                self._dropped_by_type[record_type] += 1
+                return
             try:
-                self._queue.put_nowait((record_type, projected))
+                self._queue.put_nowait((record_type, snapshot))
             except Full:
                 self._dropped += 1
                 self._dropped_by_type[record_type] += 1
@@ -99,7 +103,15 @@ class BoundedAsyncTraceWriter:
                     self._drop_accepted(record_type)
                     continue
                 try:
-                    self._sink.write(record_type, payload)
+                    started = time.perf_counter_ns()
+                    projected = trace_projection(payload)
+                    elapsed = time.perf_counter_ns() - started
+                    with self._lock:
+                        self._projection_count += 1
+                        self._projection_total += elapsed
+                        self._projection_max = max(self._projection_max, elapsed)
+                        self._projection_samples.append(elapsed)
+                    self._sink.write(record_type, projected)
                 except BaseException as error:
                     with self._lock:
                         if self._worker_error is None:
@@ -111,6 +123,28 @@ class BoundedAsyncTraceWriter:
                         self._written += 1
             finally:
                 self._queue.task_done()
+
+    @classmethod
+    def _snapshot_payload(cls, value: object) -> object:
+        """Copy mutable containers while retaining immutable typed records.
+
+        Runtime contracts are frozen dataclasses.  Copying only their small
+        surrounding containers keeps caller mutation from changing evidence
+        without walking and projecting an entire observation on the control
+        thread.
+        """
+        if type(value) is dict:
+            return {
+                cls._snapshot_payload(key): cls._snapshot_payload(item)
+                for key, item in value.items()
+            }
+        if type(value) is list:
+            return [cls._snapshot_payload(item) for item in value]
+        if type(value) is tuple:
+            return tuple(cls._snapshot_payload(item) for item in value)
+        if type(value) is set:
+            return frozenset(cls._snapshot_payload(item) for item in value)
+        return value
 
     @staticmethod
     def _percentile(samples: tuple[int, ...], fraction: float) -> int:

@@ -84,9 +84,10 @@ public record ClientActionRequest(String episode, long sequence, long observatio
                     throw new IllegalArgumentException("block face");
             }
             case "attack_entity" -> {
-                keys(op, "kind", "entity_ref");
+                keys(op, "kind", "entity_ref", "minimum_cooldown_progress");
                 if (!string(op, "entity_ref").matches("[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}"))
                     throw new IllegalArgumentException("entity reference");
+                number(op, "minimum_cooldown_progress", 0.0, 1.0);
             }
             case "click_slot" -> {
                 keys(op, "kind", "gui_session_id", "sync_id", "expected_revision", "slot", "button", "click_type");
@@ -156,10 +157,13 @@ public record ClientActionRequest(String episode, long sequence, long observatio
         return number;
     }
     private static float angle(JsonObject root, String name) {
+        return (float) number(root, name, -180, 180);
+    }
+    private static double number(JsonObject root, String name, double min, double max) {
         JsonPrimitive value = primitive(root, name);
         if (!value.isNumber()) throw new IllegalArgumentException(name);
         double number = value.getAsDouble();
-        if (!Double.isFinite(number) || number < -180 || number > 180) throw new IllegalArgumentException(name);
-        return (float) number;
+        if (!Double.isFinite(number) || number < min || number > max) throw new IllegalArgumentException(name);
+        return number;
     }
 }

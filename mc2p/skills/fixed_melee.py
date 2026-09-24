@@ -11,6 +11,10 @@ from mc2p.contracts.common import (
 from mc2p.contracts.observation import Vec3V0
 from mc2p.contracts.observation_v2 import VisibleEntityV2
 from mc2p.contracts.observation_v3 import ObservationSnapshotV3
+from mc2p.motion_nav.movement_transition import (
+    GoalState, GoalSupport, MovementMode,
+)
+from mc2p.motion_nav.world_model import Aabb
 from mc2p.skills.targeting import confirmed_entity_target
 
 
@@ -41,6 +45,8 @@ _ACTION_CANDIDATES = frozenset({
     "approach", "aim", "wait_hurt_clear", "wait_cooldown", "attack", "wait_hit", "complete",
 })
 MAX_COARSE_ATTACK_DISTANCE_BLOCKS = 3.0
+COMBAT_GOAL_RADIUS_BLOCKS = .5
+COMBAT_STAND_DISTANCE_BLOCKS = 2.2
 
 
 @dataclass(frozen=True, slots=True)
@@ -113,6 +119,27 @@ def stable_attack_position(
         target_x - target_relative_position.x / length * stand_distance_blocks,
         self_position.y,
         target_z - target_relative_position.z / length * stand_distance_blocks,
+    )
+
+
+def combat_standoff_goal_state(
+    self_position: Vec3V0,
+    target_relative_position: Vec3V0,
+) -> tuple[Vec3V0, GoalState]:
+    """Return one stand point and a planner goal that stays inside melee reach."""
+    stand = stable_attack_position(
+        self_position, target_relative_position, COMBAT_STAND_DISTANCE_BLOCKS,
+    )
+    radius = COMBAT_GOAL_RADIUS_BLOCKS
+    return stand, GoalState(
+        Aabb(
+            stand.x - radius, stand.y - .1, stand.z - radius,
+            stand.x + radius, stand.y + .1, stand.z + radius,
+        ),
+        GoalSupport.SOLID,
+        frozenset({MovementMode.WALK}),
+        frozenset({"standing"}),
+        .6,
     )
 
 
@@ -195,15 +222,15 @@ def decide_fixed_melee(
     if entity is not None and phase is FixedMeleePhase.CONFIRMING_HIT:
         for value, name in (
             (attack_observation_sequence_id, "attack observation sequence"),
+            (pre_attack_hurt_animation_ticks, "pre-attack hurt animation"),
             (confirmation_deadline_ns, "confirmation deadline"),
         ):
             require_nonnegative_int(value, name)
         if hurt is None:
             selected, reason = "fail_missing_hurt_observation", "hurt_animation_not_observed"
-        elif pre_attack_hurt_animation_ticks != 0:
-            selected, reason = "fail_invalid_attack_baseline", "attack_baseline_was_not_zero"
         elif (observation.sequence_id > attack_observation_sequence_id
-                and hurt > 0 and observation.received_at_monotonic_ns <= confirmation_deadline_ns):
+                and hurt > pre_attack_hurt_animation_ticks
+                and observation.received_at_monotonic_ns <= confirmation_deadline_ns):
             selected, reason = "complete", "new_hurt_animation_confirmed"
         elif now_ns >= confirmation_deadline_ns:
             selected, reason = "fail_confirmation_timeout", "confirmation_deadline_reached"
@@ -218,8 +245,6 @@ def decide_fixed_melee(
         selected, reason = "aim", "exact_entity_not_under_crosshair"
     elif entity is not None and hurt is None:
         selected, reason = "fail_missing_hurt_observation", "hurt_animation_not_observed"
-    elif entity is not None and hurt > 0:
-        selected, reason = "wait_hurt_clear", "existing_hurt_animation_must_clear"
     elif entity is not None and cooldown is not None and cooldown < 1.0:
         selected, reason = "wait_cooldown", "attack_cooldown_not_full"
     elif entity is not None:

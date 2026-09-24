@@ -46,6 +46,11 @@ def trace_projection(value: Any) -> Any:
             key: trace_projection(item)
             for key, item in sorted(value.items())
         }
+    if isinstance(value, frozenset):
+        projected = [trace_projection(item) for item in value]
+        return sorted(projected, key=lambda item: json.dumps(
+            item, ensure_ascii=False, sort_keys=True,
+        ))
     if isinstance(value, (tuple, list)):
         return [trace_projection(item) for item in value]
     raise TypeError(f"unsupported trace value: {type(value).__name__}")

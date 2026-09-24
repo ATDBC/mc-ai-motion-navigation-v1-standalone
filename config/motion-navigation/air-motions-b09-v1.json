@@ -6,6 +6,26 @@
     "tick_seconds": 0.05,
     "ground_model_id": "ordinary-ground-v1"
   },
+  "verified_gap_solver": {
+    "solver_id": "r4-moving-one-cell-gap-command-search-v1",
+    "maximum_entry_speed_blocks_per_second": 3.0,
+    "direction_check_minimum_speed_blocks_per_second": 0.5,
+    "maximum_velocity_heading_error_degrees": 5.0,
+    "templates": [
+      {"pre_jump_forward_ticks": 0, "post_jump_axis": 1, "post_jump_ticks": 1},
+      {"pre_jump_forward_ticks": 0, "post_jump_axis": 0, "post_jump_ticks": 0},
+      {"pre_jump_forward_ticks": 0, "post_jump_axis": -1, "post_jump_ticks": 1},
+      {"pre_jump_forward_ticks": 0, "post_jump_axis": -1, "post_jump_ticks": 2},
+      {"pre_jump_forward_ticks": 0, "post_jump_axis": -1, "post_jump_ticks": 3},
+      {"pre_jump_forward_ticks": 0, "post_jump_axis": -1, "post_jump_ticks": 4},
+      {"pre_jump_forward_ticks": 0, "post_jump_axis": -1, "post_jump_ticks": 5},
+      {"pre_jump_forward_ticks": 1, "post_jump_axis": 0, "post_jump_ticks": 0},
+      {"pre_jump_forward_ticks": 1, "post_jump_axis": -1, "post_jump_ticks": 1},
+      {"pre_jump_forward_ticks": 1, "post_jump_axis": -1, "post_jump_ticks": 2},
+      {"pre_jump_forward_ticks": 1, "post_jump_axis": -1, "post_jump_ticks": 3},
+      {"pre_jump_forward_ticks": 1, "post_jump_axis": -1, "post_jump_ticks": 4}
+    ]
+  },
   "profiles": [
     {
       "profile_id": "fabric-1_21-ordinary-gap-one-cell-b09-v1",

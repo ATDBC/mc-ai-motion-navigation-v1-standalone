@@ -64,3 +64,24 @@ def resolve_observation_request(schema: str, request: ObservationRequestV3 | Non
     if request is not None and type(request) is not ObservationRequestV3:
         raise ContractViolation("observation request must be ObservationRequestV3")
     return ObservationRequestV3() if request is None else request
+
+
+def merge_observation_requests(
+    requests: tuple[ObservationRequestV3 | None, ...],
+) -> ObservationRequestV3:
+    """Merge same-frame needs without choosing one tracked entity by accident."""
+    if (type(requests) is not tuple
+            or any(request is not None and type(request) is not ObservationRequestV3
+                   for request in requests)):
+        raise ContractViolation("control frame requests must be an observation request tuple")
+    present = tuple(request for request in requests if request is not None)
+    profiles = {request.field_profile for request in present}
+    entity_ids = {request.entity_track_id for request in present
+                  if request.entity_track_id is not None}
+    if len(entity_ids) > 1:
+        raise ContractViolation("one control frame cannot track different entities")
+    return ObservationRequestV3(
+        "interaction_v1" if "interaction_v1" in profiles else "navigation_v1",
+        tuple(position for request in present for position in request.air_positions),
+        next(iter(entity_ids), None),
+    )
