@@ -70,7 +70,7 @@ def _joint_case(case: str, seed: int) -> tuple[list[tuple[int, int]], list[float
 
     if case in ('terrain_removed','terrain_wall_added','terrain_entity'):
         points=[];decision=region(6.,9.,6.,9.)
-        intent='����������ڻ����˾���z=4��ı�ǰ���ѹ۲�λ�ã�actor�����Ŀ��������Ϸ��۲졣'
+        intent='隔离评测端在机器人经过z=4后改变前方已观察位置；actor仅获得目标和正常合法观察。'
     elif case == "staggered_walls":
         # Exact user grid: x=0..15, z=0..14; the existing z=15 row is rear padding.
         points = sorted({(x,10) for x in range(3,12)} | {(x,7) for x in range(6,12)}
@@ -80,7 +80,7 @@ def _joint_case(case: str, seed: int) -> tuple[list[tuple[int, int]], list[float
                     landmark(12,-61,2,"right_outer_support"),
                     landmark(12,-61,10,"goal_corridor_support")]
         decision = region(8.,13.,1.,5.)
-        intent = "�û�ָ������ʯǽ���Ƚ��м��۷����������Ƴ�ǽ�¶˽����Ҳ�յء����κͷ�·���ֻ�����⣬actor����Ŀ�����ꡣ"
+        intent = "用户指定交错石墙：比较中间折返绕行与先绕长墙下端进入右侧空地。地形和分路标记只供评测，actor仅获目标坐标。"
     elif case == "side_information":
         # Straight prefix is clear; the wall's side opening changes the detour choice.
         left, right, spur_end = {21001: (3, 10, 5), 21002: (2, 11, 6), 21003: (4, 9, 4)}[seed]
@@ -89,7 +89,7 @@ def _joint_case(case: str, seed: int) -> tuple[list[tuple[int, int]], list[float
         relevant = [landmark(right, -59, 8, "branch_wall_end"),
                     landmark(right + 1, -61, 8, "branch_support")]
         decision = region(5.0, 13.0, 6.0, 8.0)
-        intent = "ǰ���̶�ƽ̹����ǽ���˿����У��Ҳ����������ӳ�ǽӰ����һ��ѡ·����ʷǰ׺���ɺϷ�Ԥ�۲�ȡ�á�"
+        intent = "前方短段平坦，横墙两端可绕行；右侧入口与左侧延长墙影响下一段选路。历史前缀须由合法预观察取得。"
     elif case == "corner_prelook":
         end, marker_x = {21001: (8, 11), 21002: (9, 12), 21003: (7, 10)}[seed]
         points = [(8, z) for z in range(end + 1)] + [(marker_x, end + 3)]
@@ -99,7 +99,7 @@ def _joint_case(case: str, seed: int) -> tuple[list[tuple[int, int]], list[float
         checks = [{"from_position": start, "target_block": target, "expected_visible": False},
                   {"from_position": [7.5, -60.0, end + 1.5], "target_block": target, "expected_visible": True}]
         decision = region(7.0, 10.0, end + 1.0, end + 3.0)
-        intent = "�س�ǽ����ǽ�˺�����ת����㿴����ǽ����棬�ӽ�ǽ��ʱ�ſ��ܺϷ�ȡ��ת���ͨ·��Ϣ��"
+        intent = "沿长墙走向墙端后再右转。起点看不到墙后地面，接近墙端时才可能合法取得转弯后通路信息。"
     elif case == "narrow_clearance":
         gap, depth = {21001: (7, 1), 21002: (8, 2), 21003: (6, 3)}[seed]
         points = [(x, z) for x in range(16) if x != gap for z in range(7, 7 + depth)]
@@ -107,7 +107,7 @@ def _joint_case(case: str, seed: int) -> tuple[list[tuple[int, int]], list[float
                     landmark(gap - 1, -59, 7, "mouth_left_wall"),
                     landmark(gap + 1, -59, 7, "mouth_right_wall")]
         decision = region(gap, gap + 1.0, 6.0, 8.0 + depth)
-        intent = "��ǽֻ��һ�����ͨͨ�ڣ�����ͬ�ߡ�0.6��������ͨ������������һ��ƫ0.25�����ǽ����Ҫͣ���������"
+        intent = "横墙只留一格宽普通通口，地面同高。0.6格宽身体可通过，中心向任一侧偏0.25格会碰墙；必要停步不算错误。"
     elif case == "reposition_view":
         left, right, rear_z = {21001: (6, 9, 9), 21002: (5, 10, 10), 21003: (6, 10, 8)}[seed]
         points = [(x, 6) for x in range(left, right + 1)] + [(7, rear_z)]
@@ -117,7 +117,7 @@ def _joint_case(case: str, seed: int) -> tuple[list[tuple[int, int]], list[float
         checks = [{"from_position": start, "target_block": target, "expected_visible": False},
                   {"from_position": [right + 1.5, -60.0, 7.5], "target_block": target, "expected_visible": True}]
         decision = region(left - 1.0, right + 2.0, 7.0, rear_z + 1.0)
-        intent = "������ڵ�ǽ��ס���ϰ������ԭ��תͷ���ܿ�������ƽ���Ƶ�ǽ��󣬲ſ��ܿ������·���ϰ���"
+        intent = "三格高遮挡墙挡住后方障碍，起点原地转头不能看穿。沿平地绕到墙侧后，才可能看清后续路线障碍。"
     elif case == "irrelevant_side":
         # Similar side-wall complexity, but no block intersects the straight task corridor.
         end, tooth = {21001: (10, 5), 21002: (11, 7), 21003: (9, 6)}[seed]
@@ -125,7 +125,7 @@ def _joint_case(case: str, seed: int) -> tuple[list[tuple[int, int]], list[float
         irrelevant = [landmark(2, -59, end, "off_route_wall"),
                       landmark(3, -59, tooth, "off_route_tooth")]
         decision = region(6.0, 9.0, 6.0, 9.0)
-        intent = "���յ�ֱ��ͨ·ƽ̹���������ิ��ʯǽ��ȫλ������ͨ·֮�⡣δ�����෽��Ϣ�������ڼ���޼�ֵͣ�������С�"
+        intent = "起终点直线通路平坦开阔，西侧复杂石墙完全位于任务通路之外。未声明侧方信息需求，用于检查无价值停看与绕行。"
     else:
         raise ValueError("undeclared joint navigation case")
     diagnostics = {

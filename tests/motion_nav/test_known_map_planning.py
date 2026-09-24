@@ -65,9 +65,9 @@ class KnownMapPlanningTests(unittest.TestCase):
         bounds=KnownMapBounds(0,4,1,1,0,4,True)
         graph=build_walk_graph(world.view(),bounds,profile())
         ids={node.node_id for node in graph.nodes}
-        self.assertNotIn((1,1,2),ids,'�����ǽ���ܳ�Ϊվλ')
-        self.assertNotIn((2,1,2),ids,'�Ӳ��ܳ�Ϊվλ')
-        self.assertNotIn((3,1,2),ids,'�ڶ�������ǽ������ֹ���徻��')
+        self.assertNotIn((1,1,2),ids,'两格高墙不能成为站位')
+        self.assertNotIn((2,1,2),ids,'坑不能成为站位')
+        self.assertNotIn((3,1,2),ids,'第二层悬浮墙必须阻止身体净空')
         self.assertIn((0,1,0),ids)
         self.assertTrue(graph.complete_scope)
         edge_pairs={(edge.start,edge.end) for edge in graph.edges}
@@ -89,7 +89,7 @@ class KnownMapPlanningTests(unittest.TestCase):
         stamp=ObservationStamp(fixture.session,3,3,'test-clock',150_000_000)
         fixture.world.observe_blocks(stamp,{(0,1,0):BlockGeometry.full_cube('minecraft:stone')})
         self.assertEqual(progress.snapshot.world.cell((0,1,0)),old,
-                         '��̨���ղ�������Ʋ���������仯')
+                         '后台快照不能随控制侧世界继续变化')
 
         stale=KnownMapSnapshotBuilder(fixture.world.view(),bounds)
         self.assertIs(stale.advance(fixture.world.view(),1).status,
@@ -235,7 +235,7 @@ class KnownMapPlanningTests(unittest.TestCase):
         self.assertIsNotNone(active)
         self.assertLess(active.corridor.length_blocks,active.fixed_route_length_blocks)
         self.assertEqual(len(active.fixed_route.points),2,
-                         '����ͬ����ͼ��Ӧ�ϲ�Ϊִ��ֱ�ߣ�������������������')
+                         '连续同方向图边应合并为执行直线，不能让网格点制造减速')
         same=admitter.admit(candidate,frame,expected_request_id='request-7',
                             goal_id='goal-a',goal_revision=3,
                             changed_cells=())

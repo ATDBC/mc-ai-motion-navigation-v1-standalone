@@ -68,9 +68,9 @@ class ClientTimeSegmentTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
             self.assertIn('CLIENT_TIME_SEGMENTS_OK', result.stdout)
             self.assertEqual(list(iter_segmented_jsonl(root/'good')),
-                             [{'number': n, 'text': '����'} for n in range(1000)])
+                             [{'number': n, 'text': '汉字'} for n in range(1000)])
             raw = b''.join(p.read_bytes() for p in sorted((root/'good').glob('segment-*.jsonl')))
-            expected = ''.join('{"number":'+str(n)+',"text":"����"}\n' for n in range(1000)).encode('utf-8')
+            expected = ''.join('{"number":'+str(n)+',"text":"汉字"}\n' for n in range(1000)).encode('utf-8')
             self.assertEqual(raw, expected)
             for name in ('half', 'seal'):
                 with self.assertRaises(ValueError): list(iter_segmented_jsonl(root/name))

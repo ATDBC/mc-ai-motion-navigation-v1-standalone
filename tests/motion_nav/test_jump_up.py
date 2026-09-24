@@ -343,7 +343,7 @@ class JumpUpTests(unittest.TestCase):
             (WalkSegment, JumpUpSegment, WalkSegment),
         )
         self.assertIsNone(admitted.route.fixed_route,
-                          "��߶�·�߲���αװ�� B03 ��ͬ�� FixedRoute")
+                          "跨高度路线不能伪装成 B03 的同高 FixedRoute")
 
         executor = ActionRouteExecutor(ground_profile(), jump)
         body = PlanarBodyState(.5, -1.5, 0, 0, 0)

@@ -198,7 +198,7 @@ def run_fixed_route_shape_runtime(runtime, backend, episode: str, directory: Pat
         for sample in line_run["samples"]
     ]
     line_run.update(
-        case="shape_line_rotating_view", title="ƽ��ֱ�� �� ˳��ʱ���תһȦ",
+        case="shape_line_rotating_view", title="平视直行 · 顺逆时针各转一圈",
         kind="line", reference_path=[list(point) for point in line_points],
         start=list(origin), goal=list(line_points[-1]),
         metrics=line_metrics(line_run["samples"], origin),
@@ -234,7 +234,7 @@ def run_fixed_route_shape_runtime(runtime, backend, episode: str, directory: Pat
             ]
             run.update(
                 case=f"shape_circle_r{int(radius)}_{side}",
-                title=f"�̶��ӽ� �� {'��' if side == 'left' else '��'}Բ �� �뾶 {int(radius)} ��",
+                title=f"固定视角 · {'左' if side == 'left' else '右'}圆 · 半径 {int(radius)} 格",
                 kind="circle", radius_blocks=radius, side=side,
                 reference_path=[list(point) for point in points],
                 start=list(circle_origin), goal=list(circle_origin),
@@ -262,7 +262,7 @@ def run_fixed_route_shape_runtime(runtime, backend, episode: str, directory: Pat
                 error=None, retained_in_radius=False),
             knowledge=[], observations=[], entities=[], changes=[], warnings=[],
             navigation_volume=False, current_history_batches=False,
-            map_note="����켣ֻ���ط����֣����ṩ�������ˡ���ʽ�׶α���ƽ�ӡ�",
+            map_note="理想轨迹只供回放评分，不提供给机器人。正式阶段保持平视。",
         )
 
     evidence = dict(schema_version="mc2p.b03-shape-trials.v1", scenarios=scenarios)
