@@ -1,0 +1,110 @@
+import groovy.json.JsonOutput
+import java.security.MessageDigest
+
+plugins { id 'fabric-loom' version '1.6-SNAPSHOT' }
+
+version = '0.1.0'
+group = 'com.mc2p'
+base { archivesName = 'mc2p-deployment-probe' }
+repositories { maven { url = 'https://repo.huaweicloud.com/repository/maven/' }; mavenCentral() }
+dependencies {
+    minecraft 'com.mojang:minecraft:1.21'
+    mappings 'net.fabricmc:yarn:1.21+build.9:v2'
+    modImplementation 'net.fabricmc:fabric-loader:0.15.11'
+    modImplementation 'net.fabricmc.fabric-api:fabric-api:0.100.6+1.21'
+}
+java { sourceCompatibility = JavaVersion.VERSION_21; targetCompatibility = JavaVersion.VERSION_21 }
+def repositoryRoot = projectDir.toPath().resolve('../..').normalize().toFile()
+sourceSets.main.java.srcDirs += [
+    new File(repositoryRoot, 'mc2p/backends/runtime_overlays/mc121_actions'),
+    new File(repositoryRoot, 'mc2p/backends/runtime_overlays/mc121_observation'),
+    new File(repositoryRoot, 'mc2p/backends/runtime_overlays/mc121_diagnostics')
+]
+def provenanceDir = layout.buildDirectory.dir('provenance')
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+}
+tasks.named('compileJava') {
+    outputs.dir(provenanceDir)
+    doFirst {
+        // The hashes come from the actual JavaCompile input, not a parallel directory inventory.
+        def sourceHashes = new TreeMap<String, String>()
+        source.files.each { sourceFile ->
+            def relative = repositoryRoot.toPath().relativize(sourceFile.toPath()).toString().replace('\\', '/')
+            sourceHashes[relative] = MessageDigest.getInstance('SHA-256').digest(sourceFile.bytes).encodeHex().toString()
+        }
+        def classpathFiles = classpath.files.collect { dependencyFile ->
+            if (!dependencyFile.isFile()) throw new GradleException('Non-file compile classpath is unsupported')
+            def digest = MessageDigest.getInstance('SHA-256')
+            dependencyFile.withInputStream { input ->
+                byte[] buffer = new byte[1024 * 1024]
+                int count
+                while ((count = input.read(buffer)) != -1) digest.update(buffer, 0, count)
+            }
+            [path: repositoryRoot.toPath().relativize(dependencyFile.toPath()).toString().replace('\\', '/'),
+             size: dependencyFile.length(), sha256: digest.digest().encodeHex().toString()]
+        }
+        def evidence = [schema_version: 'mc2p.compiled_sources.v2', sources: sourceHashes,
+            classpath_files: classpathFiles,
+            classpath: configurations.compileClasspath.resolvedConfiguration.resolvedArtifacts.collect {
+                it.moduleVersion.id.toString()
+            }.sort(), source_roots: sourceSets.main.java.srcDirs.collect {
+                repositoryRoot.toPath().relativize(it.toPath()).toString().replace('\\', '/')
+            }.sort()]
+        def target = provenanceDir.get().file('mc2p-compiled-sources.json').asFile
+        target.parentFile.mkdirs()
+        target.text = JsonOutput.toJson(evidence)
+    }
+}
+tasks.named('processResources') {
+    dependsOn tasks.named('compileJava')
+    from(provenanceDir)
+}
+loom { mixin { defaultRefmapName = 'mc2p-deployment.refmap.json' } }
+
+// Export the pinned Loom launch recipe without starting a game or an integrated server.
+tasks.register('exportClientLaunch') {
+    dependsOn tasks.named('classes'), tasks.named('configureClientLaunch')
+    doLast {
+        def fileEvidence = { inputFile ->
+            def digest = MessageDigest.getInstance('SHA-256')
+            inputFile.withInputStream { input ->
+                byte[] buffer = new byte[1024 * 1024]
+                int count
+                while ((count = input.read(buffer)) != -1) digest.update(buffer, 0, count)
+            }
+            [size: inputFile.length(), sha256: digest.digest().encodeHex().toString()]
+        }
+        def relativeName = { inputFile -> repositoryRoot.toPath().relativize(inputFile.toPath()).toString().replace('\\', '/') }
+        def launchConfig = net.fabricmc.loom.configuration.ide.RunConfig.runConfig(project, loom.runs.getByName('client'))
+        def runtimeFiles = tasks.named('runClient').get().classpath.files.collect { inputFile ->
+            if (inputFile.isDirectory()) {
+                def members = new TreeMap<String, Object>()
+                fileTree(inputFile).files.each { member ->
+                    members[inputFile.toPath().relativize(member.toPath()).toString().replace('\\', '/')] = fileEvidence(member)
+                }
+                [kind: 'directory', path: relativeName(inputFile), files: members]
+            } else {
+                [kind: 'jar', path: relativeName(inputFile)] + fileEvidence(inputFile)
+            }
+        }
+        def auxiliary = new TreeMap<String, Object>()
+        ['launch.cfg', 'log4j.xml', 'remapClasspath.txt'].each { name ->
+            def candidate = new File(projectDir, '.gradle/loom-cache/' + name)
+            if (candidate.isFile()) auxiliary[relativeName(candidate)] = fileEvidence(candidate)
+        }
+        def remapFile = new File(projectDir, '.gradle/loom-cache/remapClasspath.txt')
+        def remapFiles = remapFile.text.split(java.util.regex.Pattern.quote(File.pathSeparator)).collect { name ->
+            def dependencyFile = new File(name)
+            [path: relativeName(dependencyFile)] + fileEvidence(dependencyFile)
+        }
+        def result = [schema_version: 'mc2p.deployment_launch.v1', main_class: launchConfig.mainClass,
+            jvm_args: launchConfig.vmArgs, game_args: launchConfig.programArgs,
+            environment: launchConfig.environmentVariables, classpath: runtimeFiles,
+            remap_classpath: remapFiles, auxiliary: auxiliary]
+        def target = layout.buildDirectory.file('launch/client-launch.json').get().asFile
+        target.parentFile.mkdirs()
+        target.text = JsonOutput.toJson(result)
+    }
+}

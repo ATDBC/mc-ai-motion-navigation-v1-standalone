@@ -177,3 +177,4 @@ class ActionSnapshotV0:
             hotbar=HotbarActionV0(),
             gui=GuiActionV0(),
         )
+

@@ -17,7 +17,7 @@ from mc2p.contracts.observation_v2 import (
 )
 from mc2p.contracts.observation_v3 import (
     MAX_BLOCKS_V3, AabbV3, CollisionShapeV3, ObservedBlockV3, ObservationSnapshotV3,
-    PerceptionStateV3, TargetingStateV3, validate_v3_groups,
+    PerceptionStateV3, TargetingStateV3, TrackedEntityStateV3, validate_v3_groups,
 )
 
 
@@ -35,6 +35,7 @@ class ClientObservationPayloadV3:
     perception: ObservationGroupV2[PerceptionStateV3]
     field_profile: str
     targeting: ObservationGroupV2[TargetingStateV3]
+    tracked_entity: ObservationGroupV2[TrackedEntityStateV3]
     schema_version: str = field(default="mc2p.client_observation.v3", init=False)
 
     def __post_init__(self) -> None:
@@ -42,7 +43,8 @@ class ClientObservationPayloadV3:
         if type(self.client_sample) is not ClientSampleTimingV2:
             raise ContractViolation("client sample must carry typed JVM-local timing")
         validate_v3_groups(self.sample_world_tick, self.field_profile, self.self_state,
-                           self.inventory, self.gui, self.perception, self.targeting)
+                           self.inventory, self.gui, self.perception, self.targeting,
+                           self.tracked_entity)
 
 
 def _grid(value: Any) -> tuple[int, int, int]:
@@ -79,6 +81,27 @@ def _targeting(value: Any) -> TargetingStateV3:
         None if item["distance_blocks"] is None else _v2._number(item["distance_blocks"], "target distance"))
 
 
+def _tracked_entity(value: Any) -> TrackedEntityStateV3:
+    item = _v2._object(value, {"track_id", "entity_type", "relative_position", "relative_velocity",
+        "relative_yaw_degrees", "pitch_degrees", "bounding_box_size", "pose", "is_on_ground",
+        "is_loaded", "is_dead", "health_points", "max_health_points"}, "tracked entity")
+    return TrackedEntityStateV3(
+        track_id=_v2._string(item["track_id"], "tracked entity id"),
+        entity_type=_v2._string(item["entity_type"], "tracked entity type"),
+        relative_position=_v2._vec(item["relative_position"], "tracked entity relative position"),
+        relative_velocity=_v2._vec(item["relative_velocity"], "tracked entity relative velocity"),
+        relative_yaw_degrees=_v2._number(item["relative_yaw_degrees"], "tracked entity relative yaw"),
+        pitch_degrees=_v2._number(item["pitch_degrees"], "tracked entity pitch"),
+        bounding_box_size=_v2._vec(item["bounding_box_size"], "tracked entity bounding box"),
+        pose=_v2._string(item["pose"], "tracked entity pose"),
+        is_on_ground=_v2._boolean(item["is_on_ground"], "tracked entity on ground"),
+        is_loaded=_v2._boolean(item["is_loaded"], "tracked entity loaded"),
+        is_dead=_v2._boolean(item["is_dead"], "tracked entity dead"),
+        health_points=_v2._number(item["health_points"], "tracked entity health"),
+        max_health_points=_v2._number(item["max_health_points"], "tracked entity max health"),
+    )
+
+
 def _perception(value: Any) -> PerceptionStateV3:
     item = _v2._object(value, {"horizontal_fov_degrees", "vertical_fov_degrees", "ray_columns", "ray_rows",
         "max_block_distance", "body_expansion_blocks", "block_epsilon_blocks", "entity_max_distance",
@@ -111,7 +134,8 @@ be recovered from a dict. Every field is still checked and copied to typed value
 """
     try:
         item = _v2._object(value, {"schema_version", "generation_id", "sample_world_tick", "client_sample",
-            "self_state", "inventory", "gui", "perception", "field_profile", "targeting"}, "V3 client payload")
+            "self_state", "inventory", "gui", "perception", "field_profile", "targeting",
+            "tracked_entity"}, "V3 client payload")
         if item["schema_version"] != "mc2p.client_observation.v3":
             raise ClientObservationPayloadError("invalid V3 client schema")
         timing = _v2._object(item["client_sample"], {"clock_id", "started_at_monotonic_ns", "completed_at_monotonic_ns"}, "client timing")
@@ -124,7 +148,9 @@ be recovered from a dict. Every field is still checked and copied to typed value
             gui=_v2._group(item["gui"], "gui", "client_screen_handler", _v2._gui),
             perception=_v2._group(item["perception"], "perception", "client_perception_filtered", _perception),
             field_profile=_v2._string(item["field_profile"], "field profile"),
-            targeting=_v2._group(item["targeting"], "targeting", "client_perception_filtered", _targeting))
+            targeting=_v2._group(item["targeting"], "targeting", "client_perception_filtered", _targeting),
+            tracked_entity=_v2._group(item["tracked_entity"], "tracked_entity",
+                                      "client_registered_entity", _tracked_entity))
     except ClientObservationPayloadError:
         raise
     except (ContractViolation, ValueError, TypeError, OverflowError, RecursionError) as error:
@@ -169,5 +195,6 @@ def snapshot_v3_from_payload(decoded: ClientObservationPayloadV3, *, episode_id:
         received_at_monotonic_ns=received_at_monotonic_ns, controller_clock_id=controller_clock_id,
         client_sample=decoded.client_sample, world_time_ticks=FieldValueV0.valid(decoded.sample_world_tick),
         self_state=decoded.self_state, inventory=decoded.inventory, gui=decoded.gui, perception=decoded.perception,
-        targeting=decoded.targeting, field_profile=decoded.field_profile, source_backend=source_backend,
+        targeting=decoded.targeting, tracked_entity=decoded.tracked_entity,
+        field_profile=decoded.field_profile, source_backend=source_backend,
         privileged_fields_present=privileged_fields_present)

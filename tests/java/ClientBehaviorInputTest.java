@@ -55,9 +55,24 @@ public final class ClientBehaviorInputTest {
         singleTickSneakSurvivesUnleasedSamplingGaps();
         sneakProjectionDoesNotGrantOrRenewControls();
         diagnosticCallbackReportsActualConsumptionWithoutChangingLease();
+        applicationTimestampCanUseFormalObservationClock();
         operationSpecificRejectionDoesNotBindDiagnosticIdentity();
         boundedLedgerDropsOldestSamplesWithoutCrashing();
         System.out.println("CLIENT_BEHAVIOR_INPUT_OK");
+    }
+
+    private static void applicationTimestampCanUseFormalObservationClock() {
+        ClientRequestGate gate = new ClientRequestGate();
+        long[] leaseNow = {9_000_000_000L};
+        long[] observationNow = {125_000_000L};
+        ClientBehaviorInput input = new ClientBehaviorInput(
+            gate, () -> leaseNow[0], () -> true, () -> observationNow[0], sample -> {});
+        yes(gate.admit("shared-clock", 1, 0, 0, 100, 1, leaseNow[0]) == null);
+        input.bindAcceptedRequest("shared-clock", 1);
+        input.set(1, 0, false, false, false);
+        input.tick(false, 1);
+        yes(input.lastSample().sampledAtJvmNs() == observationNow[0]);
+        yes(!gate.leaseActive(leaseNow[0]));
     }
 
     private static void boundedLedgerDropsOldestSamplesWithoutCrashing() {
@@ -206,9 +221,11 @@ public final class ClientBehaviorInputTest {
         yes(gate.admit("operation", 11, 0, 0, 100, 1, now[0]) == null);
         input.beginSnapshot();
         input.set(0, 0, false, false, false);
+        input.rejectAdmittedRequest(11);
         input.bindDispatchedRequest("operation", 11, "rejected");
         input.tick(false, 1);
         yes(samples.size() == 1 && samples.get(0).episodeId() == null);
+        yes("lease_exhausted".equals(samples.get(0).state()));
 
         now[0]++;
         yes(gate.admit("operation", 12, 0, 0, 100, 1, now[0]) == null);

@@ -142,7 +142,7 @@ def run_known_map_navigation_runtime(
     for yaw in (0.0, 90.0, 180.0, -90.0):
         absolute_look(yaw, 65.0, air_request)
 
-    def snapshot():
+    def snapshot(*, require_complete_scope: bool = True):
         builder = KnownMapSnapshotBuilder(frame.world, bounds)
         progress = builder.advance(frame.world, 512)
         if progress.status is not SnapshotBuildStatus.COMPLETE:
@@ -150,7 +150,7 @@ def run_known_map_navigation_runtime(
                 f"B04 planning prism is not complete: {progress.status.value} "
                 f"{progress.scanned_cells}/{progress.total_cells}"
             )
-        if not progress.snapshot.bounds.complete_scope:
+        if require_complete_scope and not progress.snapshot.bounds.complete_scope:
             raise RuntimeError("B04 planning prism still contains unknown cells")
         return progress.snapshot
 
@@ -200,7 +200,11 @@ def run_known_map_navigation_runtime(
                 synchronize(positions, "minecraft:air")
 
             target = end if current == start else start
-            current_snapshot = snapshot()
+            # Knowing that the immediate support block is air is sufficient
+            # to reject the same-level pit cell.  The still-hidden substrate
+            # may change the pit depth, but it cannot invalidate the known
+            # safe detour that this scenario is meant to exercise.
+            current_snapshot = snapshot(require_complete_scope=name != "pit")
             request = PlanningRequest(
                 index, f"{episode}-{name}", f"goal-{name}", index,
                 frame.session.value, current, target,

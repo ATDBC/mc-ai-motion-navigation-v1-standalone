@@ -15,6 +15,23 @@ def empty_item_value() -> dict[str, object]:
     }
 
 
+def visible_entity_value(*, hurt_animation_ticks: int = 0) -> dict[str, object]:
+    return {
+        "track_id": "entity-test-1",
+        "entity_type": "minecraft:zombie",
+        "display_name": "Zombie",
+        "relative_position": {"x": 0.0, "y": 0.0, "z": 2.0},
+        "relative_velocity": {"x": 0.0, "y": 0.0, "z": 0.0},
+        "relative_yaw_degrees": 0.0,
+        "pitch_degrees": 0.0,
+        "bounding_box_size": {"x": 0.6, "y": 1.95, "z": 0.6},
+        "pose": "standing",
+        "is_on_ground": True,
+        "equipment": [],
+        "hurt_animation_ticks": hurt_animation_ticks,
+    }
+
+
 def miss_ray_value(ray_id: int) -> dict[str, object]:
     row, column = divmod(ray_id, 15)
     return {
@@ -92,6 +109,8 @@ def valid_payload_value(
         "experience_progress": 0.0,
         "total_experience": 0,
         "attack_cooldown": 1.0,
+        "hurt_animation_ticks": 0,
+        "movement_tick_id": 1,
         "active_hand": None,
         "is_using_item": False,
         "item_use_ticks_remaining": 0,

@@ -66,7 +66,7 @@ class DeploymentSandboxTests(unittest.TestCase):
         from scripts.fabric_deployment_sandbox import write_argument_file
         with TemporaryDirectory(prefix="mc2p-args-") as directory:
             target = Path(directory) / "client.args"
-            values = ["space value", "D:\\windows\\path", 'quote"value', "#not-comment", "中文"]
+            values = ["space value", "D:\\windows\\path", 'quote"value', "#not-comment", "����"]
             write_argument_file(target, [str(ROOT / "tests/java/LaunchArgumentEcho.java"), *values])
             result = subprocess.run([str(ROOT / ".venv/Library/bin/java.exe"), "@" + str(target)],
                                     capture_output=True, text=True, timeout=15)

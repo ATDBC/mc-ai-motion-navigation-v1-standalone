@@ -1,0 +1,15 @@
+# This standalone repository is a byte-exact source and evidence snapshot.
+* -text whitespace=cr-at-eol,-blank-at-eof
+
+# Preserve experiment source fingerprints and byte-exact historical patches.
+experiments/navigation-control-v1/** -text
+experiments/navigation-mazes-v1/** -text
+experiments/navigation-maze-boundaries-v1/** -text
+experiments/navigation-low-wall-mazes-v1/** -text
+experiments/navigation-wall-pit-mazes-v1/** -text
+experiments/navigation-maze01-pits-v1/** -text
+experiments/navigation-maze03-pits-v1/** -text
+experiments/navigation-route-exploration-v1/** -text
+
+# Preserve the byte-frozen B06 environment identity on every platform.
+config/motion-navigation/environment-v1.json -text

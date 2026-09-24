@@ -11,12 +11,107 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class FabricDeploymentProbeTests(unittest.TestCase):
+    def test_c1_source_freeze_includes_full_control_and_replay_chain(self):
+        from scripts.probe_fabric_deployment_observation import (
+            C1_FIXED_MELEE_SOURCES, frozen_deployment_sources,
+        )
+        required = {
+            "mc2p/skills/fixed_melee.py",
+            "mc2p/skills/fixed_melee_driver.py",
+            "mc2p/contracts/action_v1.py",
+            "mc2p/contracts/observation_v2.py",
+            "mc2p/runtime/async_trace.py",
+            "scripts/c1_melee_evidence.py",
+            "scripts/c1_fixed_melee_runtime.py",
+            "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorExecutor.java",
+            "mc2p/backends/runtime_overlays/mc121_observation/ClientEntityIndex.java",
+        }
+        self.assertTrue(required <= set(C1_FIXED_MELEE_SOURCES))
+        frozen = frozen_deployment_sources(
+            b03_fixed_route_probe=False,
+            c1_fixed_melee_probe=True,
+        )
+        self.assertTrue(required <= set(frozen))
+
+    def test_c1b_source_freeze_includes_moving_chain_and_server_fixture(self):
+        from scripts.probe_fabric_deployment_observation import (
+            C1_MOVING_MELEE_SOURCES, frozen_deployment_sources,
+        )
+        required = {
+            "mc2p/skills/engagement_memory.py",
+            "mc2p/skills/moving_target.py",
+            "mc2p/skills/melee_strike_driver.py",
+            "mc2p/skills/moving_melee_driver.py",
+            "scripts/c1_moving_melee_runtime.py",
+            "scripts/c1_moving_melee_evidence.py",
+            "deployment/fabric-c1-fixture-server/src/main/java/com/mc2p/fixture/C1FixtureServer.java",
+        }
+        self.assertTrue(required <= set(C1_MOVING_MELEE_SOURCES))
+        frozen = frozen_deployment_sources(
+            b03_fixed_route_probe=False, c1_moving_melee_probe=True,
+        )
+        self.assertTrue(required <= set(frozen))
+
+    def test_c1b_cli_is_bounded_and_mutually_exclusive(self):
+        script = ROOT / "scripts/probe_fabric_deployment_observation.py"
+        invalid = subprocess.run(
+            [sys.executable, str(script), "--c1-moving-melee-probe",
+             "--c1-fixed-melee-probe"], cwd=ROOT, capture_output=True, text=True,
+        )
+        self.assertNotEqual(invalid.returncode, 0)
+        self.assertIn("mutually exclusive", invalid.stderr)
+        too_long = subprocess.run(
+            [sys.executable, str(script), "--c1-moving-melee-probe",
+             "--timeout-seconds", "1201"], cwd=ROOT, capture_output=True, text=True,
+        )
+        self.assertNotEqual(too_long.returncode, 0)
+        self.assertIn("invalid bounded probe configuration", too_long.stderr)
+
+    def test_c1c_source_freeze_and_cli_are_independent(self):
+        from scripts.probe_fabric_deployment_observation import (
+            C1_EXTERNAL_MOTION_SOURCES, frozen_deployment_sources,
+        )
+        required = {
+            "mc2p/motion_nav/external_motion.py",
+            "mc2p/motion_nav/external_motion_recovery.py",
+            "mc2p/skills/external_motion_recovery_driver.py",
+            "scripts/c1_external_motion_runtime.py",
+            "scripts/c1_external_motion_evidence.py",
+        }
+        self.assertTrue(required <= set(C1_EXTERNAL_MOTION_SOURCES))
+        frozen = frozen_deployment_sources(
+            b03_fixed_route_probe=False, c1_external_motion_probe=True,
+        )
+        self.assertTrue(required <= set(frozen))
+        script = ROOT / "scripts/probe_fabric_deployment_observation.py"
+        invalid = subprocess.run(
+            [sys.executable, str(script), "--c1-external-motion-probe",
+             "--c1-moving-melee-probe"], cwd=ROOT, capture_output=True, text=True,
+        )
+        self.assertNotEqual(invalid.returncode, 0)
+        self.assertIn("mutually exclusive", invalid.stderr)
+
     def test_b10_source_freeze_includes_the_receipt_driven_executor(self):
         from scripts.probe_fabric_deployment_observation import (
             B10_GAP_SOLVER_SOURCES,
         )
         self.assertIn("mc2p/motion_nav/motion_candidate.py",
                       B10_GAP_SOLVER_SOURCES)
+
+    def test_input_buffer_idle_source_is_frozen_for_live_evidence(self):
+        from scripts.probe_fabric_deployment_observation import (
+            INPUT_BUFFER_IDLE_SOURCES,
+            frozen_deployment_sources,
+        )
+        self.assertEqual(
+            INPUT_BUFFER_IDLE_SOURCES,
+            ("scripts/input_buffer_idle_runtime.py",),
+        )
+        frozen = frozen_deployment_sources(
+            b03_fixed_route_probe=False,
+            input_buffer_idle_probe=True,
+        )
+        self.assertIn(INPUT_BUFFER_IDLE_SOURCES[0], frozen)
 
     def setUp(self):
         self.assertTrue((ROOT / "scripts/probe_fabric_deployment_observation.py").is_file(), "independent real-game probe is missing")
@@ -54,6 +149,76 @@ class FabricDeploymentProbeTests(unittest.TestCase):
             plain = probe._runtime_trace(plain_root, backend, capture_close_diagnostics=False)
             self.assertIsInstance(plain, JsonlTraceWriterV0)
             plain.close()
+
+    def test_segmented_c1_trace_captures_diagnostics_for_every_formal_observation(self):
+        import json
+        from tempfile import TemporaryDirectory
+        from types import SimpleNamespace
+        from scripts import probe_fabric_deployment_observation as probe
+
+        class Trace:
+            def __init__(self):
+                self.writes = []
+                self.closed = False
+                self.stats = "stats"
+
+            def write(self, kind, payload):
+                self.writes.append((kind, payload))
+
+            def close(self):
+                self.closed = True
+
+        backend = SimpleNamespace(last_diagnostics={"client_tick": 7})
+        observation = SimpleNamespace(episode_id="episode", sequence_id=3)
+        with TemporaryDirectory(prefix="mc2p-c1-diagnostics-") as directory:
+            delegate = Trace()
+            trace = probe._RuntimeDiagnosticsTrace(Path(directory), backend, delegate)
+            trace.write("step", {"backend_result": SimpleNamespace(observation=observation)})
+            trace.close()
+            rows = [json.loads(line) for line in
+                    (Path(directory) / "diagnostics.jsonl").read_text("utf-8").splitlines()]
+        self.assertEqual(delegate.writes[0][0], "step")
+        self.assertTrue(delegate.closed)
+        self.assertEqual(trace.stats, "stats")
+        self.assertEqual(rows, [{
+            "diagnostics": {"client_tick": 7},
+            "episode_id": "episode",
+            "observation_sequence_id": 3,
+        }])
+
+    def test_diagnostic_trace_does_not_hide_a_failed_reset_without_observation(self):
+        from tempfile import TemporaryDirectory
+        from types import SimpleNamespace
+        from scripts import probe_fabric_deployment_observation as probe
+
+        class Trace:
+            stats = "stats"
+            def __init__(self): self.writes = []
+            def write(self, kind, payload): self.writes.append((kind, payload))
+            def close(self): pass
+
+        with TemporaryDirectory(prefix="mc2p-c1-failed-reset-") as directory:
+            delegate = Trace()
+            trace = probe._RuntimeDiagnosticsTrace(
+                Path(directory), SimpleNamespace(last_diagnostics={}), delegate,
+            )
+            trace.write("reset", {"result": SimpleNamespace(observation=None)})
+            self.assertEqual(delegate.writes[0][0], "reset")
+            self.assertFalse((Path(directory) / "diagnostics.jsonl").exists())
+
+    def test_collector_keeps_damage_clock_unknown_until_movement_clock_exists(self):
+        source = (ROOT / (
+            "mc2p/backends/runtime_overlays/mc121_observation/"
+            "ClientObservationCollector.java"
+        )).read_text("utf-8")
+        before_sample, after_sample = source.split("if (inputSample == null) {", 1)
+        null_branch, live_branch = after_sample.split("} else {", 1)
+
+        self.assertNotIn('addProperty("hurt_animation_ticks"', before_sample[-500:])
+        self.assertIn('add("hurt_animation_ticks", JsonNull.INSTANCE)', null_branch)
+        self.assertIn('add("movement_tick_id", JsonNull.INSTANCE)', null_branch)
+        self.assertIn('addProperty("hurt_animation_ticks", player.hurtTime)', live_branch[:500])
+        self.assertIn('addProperty("movement_tick_id", inputSample.movementTickId())', live_branch[:500])
 
     def test_time_report_write_failure_cannot_replace_an_active_runtime_failure(self):
         from tempfile import TemporaryDirectory

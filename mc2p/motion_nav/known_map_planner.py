@@ -113,7 +113,7 @@ class KnownMapSnapshotBuilder:
         self._total = self._width * self._depth * self._height
         self._index = 0
         self._facts: dict[BlockPos, CellFact] = {}
-        self._has_unknown = False
+        self._unknown_positions: set[BlockPos] = set()
         self._complete: KnownMapSnapshot | None = None
         self._stale = False
 
@@ -145,7 +145,7 @@ class KnownMapSnapshotBuilder:
                 position = self._position(self._index)
                 fact = source.cell(position)
                 if fact.knowledge is CellKnowledge.UNKNOWN:
-                    self._has_unknown = True
+                    self._unknown_positions.add(position)
                 else:
                     self._facts[position] = fact
                 self._index += 1
@@ -158,11 +158,29 @@ class KnownMapSnapshotBuilder:
             return SnapshotBuildProgress(
                 SnapshotBuildStatus.BUILDING, self._index, self._total,
             )
+        def unknown_affects_scope(position: BlockPos) -> bool:
+            x, y, z = position
+            # A known solid full cube directly above hides every collision
+            # owner below it from the player's body and support queries.  The
+            # substrate therefore need not be observed merely because shapes
+            # elsewhere are allowed to cross one vertical cell boundary.
+            for cover_y in range(y + 1, self._bounds.min_feet_y):
+                cover = self._facts.get((x, cover_y, z))
+                if (cover is not None and cover.knowledge is CellKnowledge.BLOCK
+                        and cover.block is not None
+                        and cover.block.collision_kind == "full_cube"
+                        and not cover.block.fluid):
+                    return False
+            return True
+
+        has_relevant_unknown = any(
+            unknown_affects_scope(position) for position in self._unknown_positions
+        )
         actual_bounds = KnownMapBounds(
             self._bounds.min_x, self._bounds.max_x,
             self._bounds.min_feet_y, self._bounds.max_feet_y,
             self._bounds.min_z, self._bounds.max_z,
-            self._bounds.complete_scope and not self._has_unknown,
+            self._bounds.complete_scope and not has_relevant_unknown,
             self._bounds.extra_top_clearance_cells,
         )
         # Every fact was already validated while it was copied under the

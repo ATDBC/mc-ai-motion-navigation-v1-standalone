@@ -32,3 +32,4 @@ class BehaviorProfileV0:
             require_finite(value, name)
             if not 0.0 <= float(value) <= 1.0:
                 raise ContractViolation(f"{name} must be within [0, 1]")
+

@@ -91,6 +91,14 @@ from mc2p.motion_nav.motion_coordination import (
 from mc2p.motion_nav.motion_worker import (
     GapMotionSolveJob, GapMotionSolveResult, MotionSolverWorker,
 )
+from mc2p.motion_nav.external_motion import (
+    DamageKnockbackDetector, ExternalMotionDetection, ExternalMotionEventV1,
+    ExternalMotionSource,
+)
+from mc2p.motion_nav.external_motion_recovery import (
+    ExternalMotionRecoveryConfig, ExternalMotionRecoveryController,
+    ExternalMotionRecoveryDecision, RecoveryDirective,
+)
 
 __all__ = (
     "Aabb", "BlockGeometry", "CellKnowledge", "ObservationStamp",
@@ -144,4 +152,8 @@ __all__ = (
     "GapPreparationResult", "GapPreparationStatus",
     "MotionRouteCoordinator", "prepare_planned_gap_motion",
     "GapMotionSolveJob", "GapMotionSolveResult", "MotionSolverWorker",
+    "DamageKnockbackDetector", "ExternalMotionDetection",
+    "ExternalMotionEventV1", "ExternalMotionSource",
+    "ExternalMotionRecoveryConfig", "ExternalMotionRecoveryController",
+    "ExternalMotionRecoveryDecision", "RecoveryDirective",
 )

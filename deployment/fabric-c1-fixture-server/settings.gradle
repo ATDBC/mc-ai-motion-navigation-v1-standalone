@@ -1,0 +1,8 @@
+pluginManagement {
+    repositories {
+        maven { url = 'https://repo.huaweicloud.com/repository/maven/' }
+        maven { name = 'Fabric'; url = 'https://maven.fabricmc.net/' }
+        gradlePluginPortal()
+    }
+}
+rootProject.name = 'mc2p-c1-fixture-server'

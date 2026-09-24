@@ -15,6 +15,7 @@ import net.minecraft.client.input.Input;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 
 /** Shared normal-client behavior executor. Bridges provide only transport/tick lifecycle. */
@@ -27,6 +28,7 @@ public final class ClientBehaviorExecutor {
     private String executionThread = "none";
     private boolean onClientThread;
     private boolean dispatching;
+    private boolean requestAdmitted;
     private long keyboardCallbacks, mouseCallbacks;
     private long handledScreenRenderAttempts, handledScreenRenderCompletions;
     private ClientBehaviorInput input;
@@ -92,6 +94,7 @@ public final class ClientBehaviorExecutor {
 
     public void execute(MinecraftClient client, byte[] payload) {
         requireClientThread(client);
+        requestAdmitted = false;
         ClientActionRequest action = ClientActionRequest.decode(payload);
         lastRequest = action;
         executionThread = Thread.currentThread().getName();
@@ -105,6 +108,7 @@ public final class ClientBehaviorExecutor {
                 : gate.validate(action.episode(), action.sequence(), action.observation(), latestObservation,
                                 budget, action.ticks());
         if (denied != null) { reject(denied); return; }
+        requestAdmitted = true;
         if (action.cancel() == null && input != null) input.beginSnapshot();
         if (action.cancel() == null && !action.operationKind().equals("mine_block")) stopMining();
         if (client.player == null || client.world == null || client.interactionManager == null) {
@@ -177,6 +181,7 @@ public final class ClientBehaviorExecutor {
                 case "click_slot" -> clickSlot(client, action.operation());
                 case "interact_block" -> interactBlock(client, action.operation());
                 case "mine_block" -> mineBlock(client, action.operation());
+                case "attack_entity" -> attackEntity(client, action.operation());
                 default -> reject("unsupported_operation");
             }
             input.bindDispatchedRequest(action.episode(), action.sequence(), status);
@@ -185,7 +190,14 @@ public final class ClientBehaviorExecutor {
         }
     }
 
-    private void reject(String code) { status = "rejected"; reason = code; }
+    private void reject(String code) {
+        status = "rejected";
+        reason = code;
+        if (requestAdmitted && lastRequest != null && input != null) {
+            input.rejectAdmittedRequest(lastRequest.sequence());
+        }
+        requestAdmitted = false;
+    }
 
     private void mineBlock(MinecraftClient client, JsonObject op) {
         if (!miningEnabled) { reject("unsupported_operation"); return; }
@@ -234,6 +246,34 @@ public final class ClientBehaviorExecutor {
         reason = released ? "block_use_dispatched_sustained_fallback_released" : "block_use_dispatched";
     }
 
+    private void attackEntity(MinecraftClient client, JsonObject op) {
+        if (client.currentScreen != null) { reject("screen_conflict"); return; }
+        if (client.player.isRiding()) { reject("riding_conflict"); return; }
+        if (client.player.isUsingItem()) { reject("item_use_in_progress"); return; }
+        if (client.interactionManager.isBreakingBlock()) { reject("block_break_in_progress"); return; }
+        ClientBehaviorAccess access = (ClientBehaviorAccess) client;
+        if (access.mc2p$attackCooldown() > 0) { reject("attack_click_cooldown"); return; }
+        if (client.player.getAttackCooldownProgress(0.0f) < 1.0f) {
+            reject("attack_strength_cooldown"); return;
+        }
+        client.gameRenderer.updateCrosshairTarget(1.0f);
+        EntityHitResult hit = client.crosshairTarget instanceof EntityHitResult entity
+                && entity.getType() == HitResult.Type.ENTITY ? entity : null;
+        String actualTrack = hit == null ? null
+                : ClientObservationCollector.currentTrackId(hit.getEntity());
+        String denied = ClientEntityGuard.validate(
+                op.get("entity_ref").getAsString(), actualTrack,
+                hit == null ? 0.0 : client.player.getCameraPosVec(1.0f).distanceTo(hit.getPos()),
+                client.player.getEntityInteractionRange());
+        if (denied != null) { reject(denied); return; }
+        if (!gate.leaseActive(System.nanoTime())) { reject("deadline_exceeded"); return; }
+        // Vanilla returns false after a normal entity attack; this boolean is
+        // the block-breaking continuation signal, not dispatch confirmation.
+        access.mc2p$attack();
+        status = "pending_confirmation";
+        reason = "entity_attack_dispatched";
+    }
+
     private void acquireInput(MinecraftClient client) {
         if (inputPlayer == client.player && input != null && inputPlayer.input == input) return;
         releaseInput();
@@ -243,6 +283,7 @@ public final class ClientBehaviorExecutor {
         input = new ClientBehaviorInput(gate, System::nanoTime, () ->
                 client.player == inputPlayer && client.world == world && inputPlayer.isAlive()
                 && client.currentScreen == null,
+                () -> ClientObservationCollector.diagnosticSampleClock().sampledAtMonotonicNs(),
                 sample -> {
                     if (sample.episodeId() != null) ClientControlDiagnostics.inputConsumed(
                             client, sample.episodeId(), sample.requestSequenceId(),

@@ -21,7 +21,8 @@ def _port(value: int) -> None:
         raise ValueError("invalid local test port")
 
 
-def prepare_server(target: Path, *, seed: int, port: int, world_name: str = "world",fixture_animals: bool=False) -> dict:
+def prepare_server(target: Path, *, seed: int, port: int, world_name: str = "world",
+                   fixture_animals: bool=False, c1_fixture=None) -> dict:
     _port(port)
     if type(seed) is not int or not -(2 ** 63) <= seed < 2 ** 63:
         raise ValueError("invalid test world seed")
@@ -30,6 +31,18 @@ def prepare_server(target: Path, *, seed: int, port: int, world_name: str = "wor
         raise ValueError("unapproved local test world name")
     if type(fixture_animals) is not bool or (fixture_animals and not world_name.startswith('mc2p-visibility-')):
         raise ValueError('authored animals require an explicit visibility fixture')
+    fixture_evidence = []
+    if c1_fixture is not None:
+        from scripts.build_fabric_c1_fixture import (
+            C1FixtureArtifact, inspect_fixture, inspect_server_launch,
+        )
+        if type(c1_fixture) is not C1FixtureArtifact:
+            raise ValueError("invalid C1 fixture artifact")
+        if (not c1_fixture.jar.is_file()
+                or _hash(c1_fixture.jar) != c1_fixture.sha256):
+            raise ValueError("C1 fixture artifact hash changed")
+        inspect_fixture(c1_fixture.jar)
+        inspect_server_launch(c1_fixture.launch)
     target = target.absolute()
     _no_links(target.parent)
     if target.exists():
@@ -46,6 +59,8 @@ def prepare_server(target: Path, *, seed: int, port: int, world_name: str = "wor
         "spawn-animals": "false", "spawn-monsters": "false", "motd": "MC2P isolated local deployment test"})
     # Vanilla discards even saved animals when false. The visibility save separately disables natural mob spawning.
     if fixture_animals: properties['spawn-animals']='true'
+    if c1_fixture is not None:
+        properties["difficulty"] = "normal"
     properties["generator-settings"] = json.dumps(dict(biome="minecraft:plains", layers=[
         {"height": 1, "block": "minecraft:bedrock"}, {"height": 2, "block": "minecraft:dirt"},
         {"height": 1, "block": "minecraft:grass_block"}], lakes=False, features=False, structure_overrides=[]), separators=(",", ":"))
@@ -57,9 +72,21 @@ def prepare_server(target: Path, *, seed: int, port: int, world_name: str = "wor
         stream.write("".join(f"{key}={value}\n" for key, value in properties.items()))
     with (target / "eula.txt").open("x", encoding="utf-8", newline="\n") as stream:
         stream.write("eula=true\n")
+    if c1_fixture is not None:
+        fixture_dir = target / "fixture-artifacts"
+        fixture_dir.mkdir()
+        copied = fixture_dir / c1_fixture.jar.name
+        shutil.copyfile(c1_fixture.jar, copied)
+        if _hash(copied) != c1_fixture.sha256:
+            raise ValueError("C1 fixture changed during fresh copy")
+        fixture_evidence.append({"name": copied.name, "sha256": c1_fixture.sha256})
     return dict(upstream_sha1=SERVER_SHA1, server_sha256=_hash(target / "server.jar"),
                 properties_sha256=_hash(target / "server.properties"), seed=seed, server_port=port, world_name=world_name,
-                server_mods=[],fixture_animals=fixture_animals, scope="new isolated loopback vanilla test server; offline identity only")
+                server_mods=fixture_evidence, fixture_animals=fixture_animals,
+                server_launch=(c1_fixture.launch if c1_fixture is not None else None),
+                scope=("new isolated loopback Fabric C1 fixture server; offline identity only"
+                       if c1_fixture is not None else
+                       "new isolated loopback vanilla test server; offline identity only"))
 
 
 def write_argument_file(target: Path, arguments: list[str]) -> None:

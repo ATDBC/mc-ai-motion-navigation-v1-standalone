@@ -353,6 +353,15 @@ class ActionRouteExecutor:
         if self.route is None:
             self.state = ActionRouteState.IDLE
             return self._result(started, MovementV1(), 1, "not_started")
+        if self.state in {
+            ActionRouteState.COMPLETE, ActionRouteState.CANCELLED,
+            ActionRouteState.FAILED, ActionRouteState.UNSUPPORTED,
+            ActionRouteState.INPUT_LOST,
+        }:
+            return self._result(
+                started, MovementV1(), 1, self.state.value,
+                submit_input=False,
+            )
         if self._controller is None:
             action = self.route.actions[self.action_index]
             if (type(action) is JumpGapSegment
@@ -364,12 +373,6 @@ class ActionRouteExecutor:
                 )
             self.state = ActionRouteState.IDLE
             return self._result(started, MovementV1(), 1, "not_started")
-        if self.state in {
-            ActionRouteState.COMPLETE, ActionRouteState.CANCELLED,
-            ActionRouteState.FAILED, ActionRouteState.UNSUPPORTED,
-            ActionRouteState.INPUT_LOST,
-        }:
-            return self._result(started, MovementV1(), 1, self.state.value)
         if (frame.session != self._session or frame.body.session != self._session
                 or frame.world.session != self._session):
             self.state = ActionRouteState.FAILED
@@ -393,7 +396,9 @@ class ActionRouteExecutor:
                 )
             if self._cancel_requested:
                 self._controller.cancel(state_anchor)
-            verified = self._controller.decide(state_anchor, input_ledger)
+            verified = self._controller.decide(
+                state_anchor, input_ledger, changed_cells=frame.changed_cells,
+            )
             terminal = {
                 VerifiedMotionExecutorState.CANCELLED: ActionRouteState.CANCELLED,
                 VerifiedMotionExecutorState.FAILED: ActionRouteState.FAILED,

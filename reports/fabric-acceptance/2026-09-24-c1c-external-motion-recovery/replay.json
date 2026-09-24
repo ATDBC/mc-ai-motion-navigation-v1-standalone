@@ -1,0 +1,1 @@
+{"earliest_failure_layer": null, "handoffs": 32, "passed": true, "reanchors": 25, "reason": "formal_recovery_trace_matched", "replayed_records": 4501, "schema_version": "mc2p.c1-external-motion-replay.v2", "simulated_server_physics": false}

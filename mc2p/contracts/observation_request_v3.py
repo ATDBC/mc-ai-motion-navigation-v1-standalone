@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 import json
 from typing import Literal
 
-from mc2p.contracts.common import ContractViolation
+from mc2p.contracts.common import ContractViolation, require_identifier
 
 OBSERVATION_V2 = "mc2p.client_observation.v2"
 OBSERVATION_V3 = "mc2p.client_observation.v3"
@@ -33,15 +33,21 @@ def validate_observation_schema(value: str) -> str:
 class ObservationRequestV3:
     field_profile: Literal["navigation_v1", "interaction_v1"] = "navigation_v1"
     air_positions: tuple[tuple[int, int, int], ...] = ()
+    entity_track_id: str | None = None
     schema_version: str = field(default="mc2p.observation_request.v3", init=False)
 
     def __post_init__(self) -> None:
         if type(self.field_profile) is not str or self.field_profile not in ("navigation_v1", "interaction_v1"):
             raise ContractViolation("unsupported observation field profile")
+        if self.entity_track_id is not None:
+            require_identifier(self.entity_track_id, "entity track id")
+            if len(self.entity_track_id) > 128:
+                raise ContractViolation("entity track id exceeds size bound")
         ordered = _air_positions(self.air_positions)
         payload = json.dumps({
             "field_profile": self.field_profile,
             "air_positions": ordered,
+            "entity_track_id": self.entity_track_id,
             "schema_version": self.schema_version,
         }, separators=(",", ":")).encode("utf-8")
         if len(payload) > MAX_OBSERVATION_REQUEST_BYTES:

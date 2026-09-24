@@ -106,3 +106,4 @@ class ExecutionReportV0:
             raise ContractViolation(
                 f"{self.status.value} report cannot carry a failure"
             )
+

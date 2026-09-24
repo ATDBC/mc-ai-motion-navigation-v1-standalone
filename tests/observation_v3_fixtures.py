@@ -12,6 +12,24 @@ def block_value(position=(0, 63, 0), block_id="minecraft:stone", sources=("first
                 fluid_id=None, sources=list(sources))
 
 
+def tracked_entity_value(track_id="entity-world-7", *, health=20.0, dead=False):
+    return dict(
+        track_id=track_id,
+        entity_type="minecraft:zombie",
+        relative_position=dict(x=2.0, y=0.0, z=1.0),
+        relative_velocity=dict(x=0.1, y=0.0, z=0.0),
+        relative_yaw_degrees=15.0,
+        pitch_degrees=0.0,
+        bounding_box_size=dict(x=0.6, y=1.95, z=0.6),
+        pose="standing",
+        is_on_ground=True,
+        is_loaded=True,
+        is_dead=dead,
+        health_points=health,
+        max_health_points=20.0,
+    )
+
+
 def valid_payload_value(profile="navigation_v1"):
     shared = legacy_payload()
     shared["self_state"]["value"]["position"] = dict(x=.5, y=64., z=.5)
@@ -30,7 +48,9 @@ def valid_payload_value(profile="navigation_v1"):
     return dict(schema_version="mc2p.client_observation.v3", generation_id=0,
                 sample_world_tick=100, client_sample=shared["client_sample"],
                 self_state=shared["self_state"], inventory=shared["inventory"], gui=shared["gui"],
-                field_profile=profile, perception=group(perception), targeting=targeting)
+                field_profile=profile, perception=group(perception), targeting=targeting,
+                tracked_entity=dict(status="missing", sample_world_tick=100,
+                    source_kind="client_registered_entity", reason_code="not_requested", value=None))
 
 
 def encoded(value):
@@ -48,7 +68,7 @@ def valid_snapshot_v3(*, profile="navigation_v1", blocks=(), sequence=1,
     value["sample_world_tick"] = 100 + sequence
     value["client_sample"].update(started_at_monotonic_ns=9000 + sequence * 100,
                                    completed_at_monotonic_ns=9010 + sequence * 100)
-    for key in ("self_state", "inventory", "gui", "perception", "targeting"):
+    for key in ("self_state", "inventory", "gui", "perception", "targeting", "tracked_entity"):
         value[key]["sample_world_tick"] = 100 + sequence
     value["perception"]["value"]["blocks"] = [dict(position=list(b.position), block_id=b.block_id,
         collision=dict(kind=b.collision.kind, boxes=[list(astuple(box)) for box in b.collision.boxes],

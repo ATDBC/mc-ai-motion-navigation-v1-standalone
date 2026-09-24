@@ -115,6 +115,50 @@ B10_GAP_SOLVER_SOURCES = (
     "mc2p/motion_nav/physics_adapter.py",
     "mc2p/motion_nav/physics_1_21.py",
 )
+INPUT_BUFFER_IDLE_SOURCES = (
+    "scripts/input_buffer_idle_runtime.py",
+)
+C1_FIXED_MELEE_SOURCES = (
+    "mc2p/skills/fixed_melee.py",
+    "mc2p/skills/fixed_melee_driver.py",
+    "mc2p/skills/targeting.py",
+    "mc2p/skills/normal_control_capabilities.py",
+    "mc2p/contracts/action_v1.py",
+    "mc2p/contracts/observation_v2.py",
+    "mc2p/runtime/async_trace.py",
+    "scripts/c1_melee_evidence.py",
+    "scripts/c1_fixed_melee_runtime.py",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorExecutor.java",
+    "mc2p/backends/runtime_overlays/mc121_observation/ClientEntityIndex.java",
+    "artifacts/normal-navigation/control-capability-v2.json",
+)
+C1_MOVING_MELEE_SOURCES = (
+    *C1_FIXED_MELEE_SOURCES,
+    "mc2p/contracts/observation_request_v3.py",
+    "mc2p/contracts/observation_v3.py",
+    "mc2p/backends/client_observation_payload_v3.py",
+    "mc2p/backends/fabric_behavior.py",
+    "mc2p/skills/engagement_memory.py",
+    "mc2p/skills/moving_target.py",
+    "mc2p/skills/melee_strike_driver.py",
+    "mc2p/skills/moving_melee.py",
+    "mc2p/skills/moving_melee_driver.py",
+    "mc2p/skills/point_goal_driver.py",
+    "scripts/c1_moving_melee_runtime.py",
+    "scripts/c1_moving_melee_evidence.py",
+    "scripts/build_fabric_c1_fixture.py",
+    "deployment/fabric-c1-fixture-server/src/main/java/com/mc2p/fixture/C1FixtureServer.java",
+)
+C1_EXTERNAL_MOTION_SOURCES = (
+    *C1_MOVING_MELEE_SOURCES,
+    "mc2p/motion_nav/external_motion.py",
+    "mc2p/motion_nav/external_motion_recovery.py",
+    "mc2p/skills/external_motion_recovery_driver.py",
+    "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorInput.java",
+    "mc2p/backends/runtime_overlays/mc121_observation/ClientObservationCollector.java",
+    "scripts/c1_external_motion_runtime.py",
+    "scripts/c1_external_motion_evidence.py",
+)
 
 
 def frozen_deployment_sources(*, b03_fixed_route_probe: bool,
@@ -127,7 +171,11 @@ def frozen_deployment_sources(*, b03_fixed_route_probe: bool,
                               b07_step_probe: bool = False,
                               b08_ground_modes_probe: bool = False,
                               b09_air_motion_probe: bool = False,
-                              b10_gap_solver_probe: bool = False) -> dict[str, str]:
+                              b10_gap_solver_probe: bool = False,
+                              input_buffer_idle_probe: bool = False,
+                              c1_fixed_melee_probe: bool = False,
+                              c1_moving_melee_probe: bool = False,
+                              c1_external_motion_probe: bool = False) -> dict[str, str]:
     sources = frozen_probe_sources()
     if b03_fixed_route_probe or b03_shape_probe:
         sources.update({name: _hash(ROOT / name) for name in B03_SOURCES})
@@ -164,6 +212,14 @@ def frozen_deployment_sources(*, b03_fixed_route_probe: bool,
         sources.update({name: _hash(ROOT / name) for name in (
             *B03_SOURCES, *B09_AIR_MOTION_SOURCES, *B10_GAP_SOLVER_SOURCES,
         )})
+    if input_buffer_idle_probe:
+        sources.update({name: _hash(ROOT / name) for name in INPUT_BUFFER_IDLE_SOURCES})
+    if c1_fixed_melee_probe:
+        sources.update({name: _hash(ROOT / name) for name in C1_FIXED_MELEE_SOURCES})
+    if c1_moving_melee_probe:
+        sources.update({name: _hash(ROOT / name) for name in C1_MOVING_MELEE_SOURCES})
+    if c1_external_motion_probe:
+        sources.update({name: _hash(ROOT / name) for name in C1_EXTERNAL_MOTION_SOURCES})
     return sources
 
 
@@ -386,6 +442,36 @@ def _runtime_trace(directory: Path, backend, *, capture_close_diagnostics: bool)
     return JsonlTraceWriterV0(directory / "trace.jsonl")
 
 
+class _RuntimeDiagnosticsTrace:
+    """Pair each formal observation with the same-tick client diagnostics."""
+
+    def __init__(self, directory: Path, backend, delegate):
+        self.directory = Path(directory)
+        self.backend = backend
+        self.delegate = delegate
+
+    @property
+    def stats(self):
+        return self.delegate.stats
+
+    def write(self, kind, payload):
+        self.delegate.write(kind, payload)
+        if kind not in {"reset", "step", "close_release"}:
+            return
+        result = payload["result"] if kind == "reset" else payload["backend_result"]
+        observation = result.observation
+        if observation is None:
+            return
+        append_jsonl(self.directory / "diagnostics.jsonl", dict(
+            episode_id=observation.episode_id,
+            observation_sequence_id=observation.sequence_id,
+            diagnostics=self.backend.last_diagnostics,
+        ))
+
+    def close(self):
+        self.delegate.close()
+
+
 def _scenario(runtime, backend, episode, directory, deadline, previous_gui=None, *, b02_air_probe=False):
     task = TaskIntentV0("deployment-probe", "control-gui-probe", "{}",
         (SuccessCriterionV0("horizontal_displacement", ComparisonOperatorV0.GREATER_THAN, .1, "blocks"),),
@@ -487,12 +573,14 @@ def _scenario(runtime, backend, episode, directory, deadline, previous_gui=None,
     return stages, rows, old_gui
 
 
-def prepare_scenario(run_dir: Path, *, seed: int, port: int, container_probe: bool,visibility_probe: bool=False) -> dict:
+def prepare_scenario(run_dir: Path, *, seed: int, port: int, container_probe: bool,
+                     visibility_probe: bool = False, c1_fixture=None) -> dict:
     if type(container_probe) is not bool or type(visibility_probe) is not bool or (container_probe and visibility_probe):
         raise ValueError('probe scene selection must be exclusive booleans')
     world_name = f"mc2p-visibility-deployment-{seed}" if container_probe or visibility_probe else "world"
-    result = {"server": prepare_server(run_dir / "server", seed=seed, port=port, world_name=world_name,
-                                       fixture_animals=visibility_probe)}
+    result = {"server": prepare_server(run_dir / "server", seed=seed, port=port,
+                                       world_name=world_name, fixture_animals=visibility_probe,
+                                       c1_fixture=c1_fixture)}
     if container_probe or visibility_probe:
         result["fixture"] = build_visibility_fixture(run_dir / "fixture", seed=seed, level_name=world_name)
         installed = install_visibility_fixture(run_dir / "fixture", run_dir / "server")
@@ -531,13 +619,19 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                b08_ground_modes_probe: bool = False,
                b09_air_motion_probe: bool = False,
                b10_gap_solver_probe: bool = False,
+               input_buffer_idle_probe: bool = False,
+               c1_fixed_melee_probe: bool = False,
+               c1_moving_melee_probe: bool = False,
+               c1_external_motion_probe: bool = False,
                physics_tick_diagnostics: bool = False) -> int:
+    c1_probe = c1_fixed_melee_probe or c1_moving_melee_probe or c1_external_motion_probe
     if sum((container_probe,mining_probe,visibility_probe,b02_air_probe,
             b03_fixed_route_probe,b03_shape_probe,b04_known_map_probe,
             b05_jump_calibration_probe,b05_jump_route_probe,
             b05_jump_acceptance_probe,b06_ordinary_material_probe,
             b07_step_probe,b08_ground_modes_probe,b09_air_motion_probe,
-            b10_gap_solver_probe))>1:
+            b10_gap_solver_probe,input_buffer_idle_probe,c1_fixed_melee_probe,
+            c1_moving_melee_probe,c1_external_motion_probe))>1:
         raise ValueError('probe scenarios are mutually exclusive')
     if block_parity and not visibility_probe: raise ValueError('block parity requires visibility scenario')
     source_before = frozen_deployment_sources(
@@ -552,6 +646,10 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
         b08_ground_modes_probe=b08_ground_modes_probe,
         b09_air_motion_probe=b09_air_motion_probe,
         b10_gap_solver_probe=b10_gap_solver_probe,
+        input_buffer_idle_probe=input_buffer_idle_probe,
+        c1_fixed_melee_probe=c1_fixed_melee_probe,
+        c1_moving_melee_probe=c1_moving_melee_probe,
+        c1_external_motion_probe=c1_external_motion_probe,
     )
     deadline = time.perf_counter_ns() + round((timeout - 25) * 1e9)
     failure, cleanup_failures, checks, sessions = None, [], [], []
@@ -563,13 +661,27 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
     try:
         provenance["launch"] = inspect_launch(launch)
         provenance["assets"] = verify_assets()
-        provenance.update(prepare_scenario(run_dir, seed=seed, port=server_port, container_probe=container_probe,
-                                          visibility_probe=visibility_probe))
+        c1_artifact = None
+        if c1_moving_melee_probe or c1_external_motion_probe:
+            from scripts.build_fabric_c1_fixture import build_fixture
+            c1_artifact = build_fixture()
+        provenance.update(prepare_scenario(
+            run_dir, seed=seed, port=server_port, container_probe=container_probe,
+            visibility_probe=visibility_probe, c1_fixture=c1_artifact,
+        ))
         server_log = (run_dir / "server-console.log").open("xb")
         server_env = client_environment(dict(os.environ), token="0" * 64, server_port=server_port, ipc_port=ipc_port)
         for key in tuple(server_env):
             if key.startswith("MC2P_"): del server_env[key]
-        server_command = [str(JAVA), "-Xms256M", "-Xmx1G", *PROXY_ARGS, "-jar", str(run_dir / "server/server.jar"), "nogui"]
+        if c1_artifact is None:
+            server_command = [str(JAVA), "-Xms256M", "-Xmx1G", *PROXY_ARGS,
+                              "-jar", str(run_dir / "server/server.jar"), "nogui"]
+        else:
+            server_command = [str(JAVA), "-Xms256M", "-Xmx1G", *PROXY_ARGS,
+                *c1_artifact.launch["jvm_args"], "-cp",
+                os.pathsep.join(str(ROOT / item["path"])
+                                for item in c1_artifact.launch["classpath"]),
+                c1_artifact.launch["main_class"], *c1_artifact.launch["game_args"]]
         write_json_atomic(run_dir / "server-command.json", server_command)
         server = subprocess.Popen(server_command, cwd=run_dir / "server", env=server_env, stdin=subprocess.PIPE,
             stdout=server_log, stderr=subprocess.STDOUT, creationflags=subprocess.CREATE_NO_WINDOW)
@@ -591,14 +703,17 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                                   or b06_ordinary_material_probe
                                   or b07_step_probe or b08_ground_modes_probe
                                   or b09_air_motion_probe
-                                  or b10_gap_solver_probe) else 2):
+                                  or b10_gap_solver_probe
+                                  or input_buffer_idle_probe
+                                  or c1_probe) else 2):
             directory = run_dir / f"client-{number}"
             directory.mkdir(exist_ok=False)
             options = "pauseOnLostFocus:false\nrenderDistance:2\nsimulationDistance:5\nmaxFps:60\nenableVsync:false\ntutorialStep:none\njoinedFirstServer:true\nskipMultiplayerWarning:true\nsoundCategory_master:0.0\n"
             if (b05_jump_calibration_probe or b05_jump_route_probe
                     or b05_jump_acceptance_probe or b06_ordinary_material_probe
                     or b07_step_probe or b08_ground_modes_probe
-                    or b09_air_motion_probe or b10_gap_solver_probe):
+                    or b09_air_motion_probe or b10_gap_solver_probe
+                    or input_buffer_idle_probe or c1_probe):
                 options += "autoJump:false\n"
             (directory / "options.txt").write_text(options, encoding="utf-8")
             token = secrets.token_hex(32)
@@ -621,11 +736,25 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                     identity = ClientProcessIdentity(process.pid, psutil.Process(process.pid).create_time())
                     write_json_atomic(directory / "identity.json", asdict(identity))
                     backend = create_deployment_backend(transport, identity, token, server_port)
-                    trace = _runtime_trace(
-                        directory,
-                        backend,
-                        capture_close_diagnostics=visibility_probe or time_diagnostics,
-                    )
+                    if c1_probe:
+                        from mc2p.runtime.async_trace import BoundedAsyncTraceWriter
+                        from mc2p.runtime.segmented_trace import SegmentedTraceWriter
+                        trace = BoundedAsyncTraceWriter(
+                            SegmentedTraceWriter(directory / "runtime-trace" / "trace"),
+                            # A full C1 batch emits short bursts of leases,
+                            # intents and observations faster than the JSONL
+                            # sink can serialize them. Keep the control thread
+                            # non-blocking while retaining the bounded evidence.
+                            capacity=2048,
+                        )
+                        if time_diagnostics:
+                            trace = _RuntimeDiagnosticsTrace(directory, backend, trace)
+                    else:
+                        trace = _runtime_trace(
+                            directory,
+                            backend,
+                            capture_close_diagnostics=visibility_probe or time_diagnostics,
+                        )
                     runtime = PlayerRuntimeV1(backend,trace)
                     episode = f"fabric-{seed}-{number}"
                     reset = runtime.reset(ResetRequestV0(f"reset-{number}", episode, "remote-session", 0,
@@ -955,6 +1084,58 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                             fixture_writer=write_b10_fixture,
                             player_teleporter=teleport_b10_player,
                         )
+                    elif input_buffer_idle_probe:
+                        from scripts.input_buffer_idle_runtime import run_input_buffer_idle_runtime
+                        stages, rows, episode_checks = run_input_buffer_idle_runtime(
+                            runtime, backend, episode, directory, deadline,
+                        )
+                    elif c1_fixed_melee_probe:
+                        from scripts.c1_fixed_melee_runtime import run_c1_fixed_melee_runtime
+                        def write_c1_fixture(commands, trial):
+                            if server is None or server.stdin is None:
+                                raise RuntimeError("C1 fixture server command channel is unavailable")
+                            server.stdin.write(("\n".join(commands) + "\n").encode("utf-8"))
+                            server.stdin.flush()
+                            append_jsonl(directory / "c1-fixture-commands.jsonl", {
+                                "trial_id": trial["trial_id"],
+                                "commands": list(commands),
+                            })
+                        stages, rows, episode_checks = run_c1_fixed_melee_runtime(
+                            runtime, episode, directory, deadline,
+                            world_seed=seed,
+                            code_hashes=source_before,
+                            fixture_writer=write_c1_fixture,
+                        )
+                    elif c1_moving_melee_probe:
+                        from scripts.c1_moving_melee_runtime import run_c1_moving_melee_runtime
+                        def write_c1b_fixture(commands, trial):
+                            if server is None or server.stdin is None:
+                                raise RuntimeError("C1-B fixture server command channel is unavailable")
+                            server.stdin.write(("\n".join(commands) + "\n").encode("utf-8"))
+                            server.stdin.flush()
+                            append_jsonl(directory / "c1-moving-fixture-commands.jsonl", {
+                                "trial_id": trial["trial_id"], "commands": list(commands),
+                            })
+                        stages, rows, episode_checks = run_c1_moving_melee_runtime(
+                            runtime, episode, directory, deadline, world_seed=seed,
+                            code_hashes=source_before, fixture_writer=write_c1b_fixture,
+                            fixture_events=run_dir / "server" / "c1-fixture-events.jsonl",
+                        )
+                    elif c1_external_motion_probe:
+                        from scripts.c1_external_motion_runtime import run_c1_external_motion_runtime
+                        def write_c1c_fixture(commands, trial):
+                            if server is None or server.stdin is None:
+                                raise RuntimeError("C1-C fixture server command channel is unavailable")
+                            server.stdin.write(("\n".join(commands) + "\n").encode("utf-8"))
+                            server.stdin.flush()
+                            append_jsonl(directory / "c1-external-motion-fixture-commands.jsonl", {
+                                "trial_id": trial["trial_id"], "commands": list(commands),
+                            })
+                        stages, rows, episode_checks = run_c1_external_motion_runtime(
+                            runtime, episode, directory, deadline, world_seed=seed,
+                            code_hashes=source_before, fixture_writer=write_c1c_fixture,
+                            fixture_events=run_dir / "server" / "c1-fixture-events.jsonl",
+                        )
                     else:
                         scenario = run_container_scenario if container_probe else _scenario
                         if b02_air_probe:
@@ -970,7 +1151,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                             or b05_jump_route_probe or b05_jump_acceptance_probe
                             or b06_ordinary_material_probe or b07_step_probe
                             or b08_ground_modes_probe or b09_air_motion_probe
-                            or b10_gap_solver_probe):
+                            or b10_gap_solver_probe or input_buffer_idle_probe
+                            or c1_probe):
                         # Motion scenarios can produce large offline reports. Close
                         # the live control session before parsing and serializing
                         # them, otherwise the fixed client input-sample ledger can
@@ -985,7 +1167,51 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                             if not cleanup["passed"] or not cleanup["graceful"]:
                                 cleanup_failures.append(dict(client=number, **cleanup))
                         runtime = backend = process = None
-                    records = [json.loads(line) for line in (directory / "trace.jsonl").read_text("utf-8").splitlines()]
+                    if c1_fixed_melee_probe:
+                        from mc2p.runtime.segmented_trace import iter_segmented_jsonl
+                        from scripts.c1_melee_evidence import replay_c1_melee
+                        records = list(iter_segmented_jsonl(directory / "runtime-trace" / "trace"))
+                        replay = replay_c1_melee(directory / "runtime-trace" / "trace")
+                        write_json_atomic(directory / "c1-fixed-melee-replay.json", replay)
+                        stages["replay"] = replay
+                        stages["trace_stats"] = asdict(trace.stats)
+                        episode_checks += [
+                            {"name": "c1_offline_replay_matches", "passed": replay["passed"]},
+                            {"name": "c1_trace_has_no_delivery_gap",
+                             "passed": trace.stats.dropped_records == 0},
+                        ]
+                    elif c1_moving_melee_probe:
+                        from mc2p.runtime.segmented_trace import iter_segmented_jsonl
+                        from scripts.c1_moving_melee_evidence import replay_c1_moving_melee
+                        records = list(iter_segmented_jsonl(directory / "runtime-trace" / "trace"))
+                        replay = replay_c1_moving_melee(
+                            directory / "runtime-trace" / "trace",
+                        )
+                        write_json_atomic(directory / "c1-moving-melee-replay.json", replay)
+                        stages["replay"] = replay
+                        stages["trace_stats"] = asdict(trace.stats)
+                        episode_checks += [
+                            {"name": "c1b_offline_replay_matches", "passed": replay["passed"]},
+                            {"name": "c1b_trace_has_no_delivery_gap",
+                             "passed": trace.stats.dropped_records == 0},
+                        ]
+                    elif c1_external_motion_probe:
+                        from mc2p.runtime.segmented_trace import iter_segmented_jsonl
+                        from scripts.c1_external_motion_evidence import replay_c1_external_motion
+                        records = list(iter_segmented_jsonl(directory / "runtime-trace" / "trace"))
+                        replay = replay_c1_external_motion(
+                            directory / "runtime-trace" / "trace",
+                        )
+                        write_json_atomic(directory / "c1-external-motion-replay.json", replay)
+                        stages["replay"] = replay
+                        stages["trace_stats"] = asdict(trace.stats)
+                        episode_checks += [
+                            {"name": "c1c_offline_replay_matches", "passed": replay["passed"]},
+                            {"name": "c1c_trace_has_no_delivery_gap",
+                             "passed": trace.stats.dropped_records == 0},
+                        ]
+                    else:
+                        records = [json.loads(line) for line in (directory / "trace.jsonl").read_text("utf-8").splitlines()]
                     session_records.append(records)
                     if visibility_probe and number==0:
                         pass  # Shared visibility stages already evaluated above.
@@ -995,7 +1221,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                           or b05_jump_calibration_probe or b05_jump_route_probe
                           or b05_jump_acceptance_probe or b06_ordinary_material_probe
                           or b07_step_probe or b08_ground_modes_probe
-                          or b09_air_motion_probe or b10_gap_solver_probe):
+                          or b09_air_motion_probe or b10_gap_solver_probe
+                          or input_buffer_idle_probe or c1_probe):
                         pass
                     else:
                         episode_checks = (evaluate_container(stages, records) if container_probe else evaluate_stages(
@@ -1006,7 +1233,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                                 air_evidence is not None and air_evidence["positive_positions_match"]
                                 and air_evidence["non_air_not_confirmed"]
                                 and air_evidence["within_one_tick_budget"]})
-                    episode_checks += evaluate_trace(records, rows, server_port=server_port,
+                    if not c1_probe:
+                        episode_checks += evaluate_trace(records, rows, server_port=server_port,
                         expected_steps=final.sequence_id if (container_probe or mining_probe or visibility_probe
                                                              or b02_air_probe or b03_fixed_route_probe
                                                              or b03_shape_probe or b04_known_map_probe
@@ -1017,13 +1245,15 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                                                              or b07_step_probe
                                                              or b08_ground_modes_probe
                                                              or b09_air_motion_probe
-                                                             or b10_gap_solver_probe) else 28,
+                                                             or b10_gap_solver_probe
+                                                             or input_buffer_idle_probe) else 28,
                         require_gui_attempts=not (
                             b03_fixed_route_probe or b03_shape_probe or b04_known_map_probe
                             or b05_jump_calibration_probe or b05_jump_route_probe
                             or b05_jump_acceptance_probe or b06_ordinary_material_probe
                             or b07_step_probe or b08_ground_modes_probe
-                            or b09_air_motion_probe or b10_gap_solver_probe))
+                            or b09_air_motion_probe or b10_gap_solver_probe
+                            or input_buffer_idle_probe))
                     checks.extend({**check, "name": f"client-{number}:" + check["name"]} for check in episode_checks)
                     sessions.append(dict(identity=asdict(identity), episode=episode, initial=trace_projection(initial),
                         final=trace_projection(final), stages=stages, proof=proof,
@@ -1042,6 +1272,14 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                         sessions[-1]["b09_air_motion"] = stages
                     if b10_gap_solver_probe:
                         sessions[-1]["b10_gap_solver"] = stages
+                    if input_buffer_idle_probe:
+                        sessions[-1]["input_buffer_idle"] = stages
+                    if c1_fixed_melee_probe:
+                        sessions[-1]["c1_fixed_melee"] = stages
+                    if c1_moving_melee_probe:
+                        sessions[-1]["c1_moving_melee"] = stages
+                    if c1_external_motion_probe:
+                        sessions[-1]["c1_external_motion"] = stages
                     write_json_atomic(directory / "episode.json", sessions[-1])
                 finally:
                     if not client_preclosed:
@@ -1058,10 +1296,13 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                     if diagnostic_failure is not None:
                         diagnostic_failures.append(dict(client=number, **diagnostic_failure))
                     try:
-                        closed_records=[json.loads(line) for line in (directory/'trace.jsonl').read_text('utf-8').splitlines()]
-                        parity_check=parity_file_check(directory/'mc2p-block-parity.jsonl',
-                            formal_samples_from_records(closed_records),enabled=block_parity,
-                            require_profile_cycle=visibility_probe and number==0)
+                        if c1_probe:
+                            parity_check = dict(name='block_parity_evidence', passed=not block_parity)
+                        else:
+                            closed_records=[json.loads(line) for line in (directory/'trace.jsonl').read_text('utf-8').splitlines()]
+                            parity_check=parity_file_check(directory/'mc2p-block-parity.jsonl',
+                                formal_samples_from_records(closed_records),enabled=block_parity,
+                                require_profile_cycle=visibility_probe and number==0)
                     except (OSError,ValueError,KeyError,TypeError) as error:
                         parity_check=dict(name='block_parity_evidence',passed=False,error=str(error))
                     checks.append(dict(parity_check,name=f'client-{number}:'+parity_check['name']))
@@ -1081,7 +1322,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                   or b05_jump_route_probe or b05_jump_acceptance_probe
                   or b06_ordinary_material_probe or b07_step_probe
                   or b08_ground_modes_probe or b09_air_motion_probe
-                  or b10_gap_solver_probe):
+                  or b10_gap_solver_probe or input_buffer_idle_probe
+                  or c1_probe):
             first, second = sessions
             if container_probe:
                 checks += evaluate_container_reconnect(first["stages"], session_records[0], second["stages"], session_records[1])
@@ -1102,7 +1344,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                 or b05_jump_route_probe or b05_jump_acceptance_probe
                 or b06_ordinary_material_probe or b07_step_probe
                 or b08_ground_modes_probe or b09_air_motion_probe
-                or b10_gap_solver_probe):
+                or b10_gap_solver_probe or input_buffer_idle_probe
+                or c1_probe):
             start, end = second["initial"], first["final"]
             checks += [dict(name="new_jvm_episode_and_client_clock", passed=first["identity"] != second["identity"]
                 and first["episode"] != second["episode"] and end["client_sample"]["clock_id"] != start["client_sample"]["clock_id"]),
@@ -1138,13 +1381,17 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
         b08_ground_modes_probe=b08_ground_modes_probe,
         b09_air_motion_probe=b09_air_motion_probe,
         b10_gap_solver_probe=b10_gap_solver_probe,
+        input_buffer_idle_probe=input_buffer_idle_probe,
+        c1_fixed_melee_probe=c1_fixed_melee_probe,
+        c1_moving_melee_probe=c1_moving_melee_probe,
+        c1_external_motion_probe=c1_external_motion_probe,
     )
     checks.append(dict(name='v3_python_and_java_sources_unchanged',passed=source_before==source_after))
     if failure is None and (not checks or not all(check["passed"] for check in checks)):
         failure = dict(type="DeploymentEvidenceFailure", message=str([c["name"] for c in checks if not c["passed"]]))
     result = dict(schema_version="mc2p.fabric-deployment-probe.v2", observation_schema_version="mc2p.observation.v3",
         knowledge_model="block_state_v1", default_field_profile="navigation_v1",
-        field_profiles=["navigation_v1", "interaction_v1"] if (mining_probe or container_probe or visibility_probe) else ["navigation_v1"],
+        field_profiles=["navigation_v1", "interaction_v1"] if (mining_probe or container_probe or visibility_probe or c1_probe) else ["navigation_v1"],
         seed=seed, provenance=provenance,
         scenario="visibility" if visibility_probe else "mining" if mining_probe else "container" if container_probe
             else "b02-air-query" if b02_air_probe else "b03-fixed-route" if b03_fixed_route_probe
@@ -1157,7 +1404,11 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
             else "b07-step" if b07_step_probe
             else "b08-ground-modes" if b08_ground_modes_probe
             else "b09-air-motion" if b09_air_motion_probe
-            else "b10-gap-solver" if b10_gap_solver_probe else "runtime-controls-gui",
+            else "b10-gap-solver" if b10_gap_solver_probe
+            else "input-buffer-idle" if input_buffer_idle_probe
+            else "c1-fixed-melee" if c1_fixed_melee_probe
+            else "c1-moving-melee" if c1_moving_melee_probe
+            else "c1-external-motion" if c1_external_motion_probe else "runtime-controls-gui",
         block_parity=block_parity,
         core_sources_before=source_before,core_sources_after=source_after,
         perception_variant='active_perception_v1' if mining_probe else None,
@@ -1207,6 +1458,14 @@ def main(argv=None) -> int:
                         help='calibrate and validate gap jumps and controlled drops')
     parser.add_argument('--b10-gap-solver-probe', action='store_true',
                         help='solve and validate one-cell gaps in a controlled session')
+    parser.add_argument('--input-buffer-idle-probe', action='store_true',
+                        help='idle past the 64-sample input ledger and resume control')
+    parser.add_argument('--c1-fixed-melee-probe', action='store_true',
+                        help='run the frozen fixed-visible-target melee slice')
+    parser.add_argument('--c1-moving-melee-probe', action='store_true',
+                        help='run the frozen moving-target melee slice')
+    parser.add_argument('--c1-external-motion-probe', action='store_true',
+                        help='run the frozen real-damage external-motion slice')
     parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--run-dir", type=Path, help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
@@ -1215,12 +1474,17 @@ def main(argv=None) -> int:
             args.b05_jump_calibration_probe,args.b05_jump_route_probe,
             args.b05_jump_acceptance_probe,args.b06_ordinary_material_probe,
             args.b07_step_probe,args.b08_ground_modes_probe,
-            args.b09_air_motion_probe,args.b10_gap_solver_probe))>1:
+            args.b09_air_motion_probe,args.b10_gap_solver_probe,
+            args.input_buffer_idle_probe,args.c1_fixed_melee_probe,
+            args.c1_moving_melee_probe,args.c1_external_motion_probe))>1:
         parser.error('probe scenarios are mutually exclusive')
     if args.block_parity and not args.visibility_probe: parser.error('block parity requires visibility scenario')
     if args.physics_tick_diagnostics and not args.time_diagnostics:
         parser.error('physics tick diagnostics require --time-diagnostics')
-    if (not math.isfinite(args.timeout_seconds) or not 120 <= args.timeout_seconds <= 600
+    maximum_timeout = 1200 if (args.c1_fixed_melee_probe
+                               or args.c1_moving_melee_probe
+                               or args.c1_external_motion_probe) else 600
+    if (not math.isfinite(args.timeout_seconds) or not 120 <= args.timeout_seconds <= maximum_timeout
             or not 1 <= args.server_port <= 65535 or not 1 <= args.ipc_port <= 65535 or args.server_port == args.ipc_port):
         parser.error("invalid bounded probe configuration")
     if args.worker:
@@ -1236,6 +1500,10 @@ def main(argv=None) -> int:
                           args.b06_ordinary_material_probe,args.b07_step_probe,
                           args.b08_ground_modes_probe,args.b09_air_motion_probe,
                           args.b10_gap_solver_probe,
+                          args.input_buffer_idle_probe,
+                          args.c1_fixed_melee_probe,
+                          args.c1_moving_melee_probe,
+                          args.c1_external_motion_probe,
                           args.physics_tick_diagnostics)
 
     if not port_free(args.server_port) or not port_free(args.ipc_port):
@@ -1281,6 +1549,10 @@ def main(argv=None) -> int:
     if args.b08_ground_modes_probe: command.append('--b08-ground-modes-probe')
     if args.b09_air_motion_probe: command.append('--b09-air-motion-probe')
     if args.b10_gap_solver_probe: command.append('--b10-gap-solver-probe')
+    if args.input_buffer_idle_probe: command.append('--input-buffer-idle-probe')
+    if args.c1_fixed_melee_probe: command.append('--c1-fixed-melee-probe')
+    if args.c1_moving_melee_probe: command.append('--c1-moving-melee-probe')
+    if args.c1_external_motion_probe: command.append('--c1-external-motion-probe')
     supervision = run_bounded_process(command, cwd=ROOT, environment=dict(os.environ), log_path=run_dir / "worker.log",
                                       timeout_seconds=args.timeout_seconds)
     write_json_atomic(run_dir / "supervision.json", trace_projection(supervision))

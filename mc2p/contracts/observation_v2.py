@@ -24,6 +24,7 @@ _GROUP_SOURCES = frozenset(
         "client_inventory",
         "client_screen_handler",
         "client_perception_filtered",
+        "client_registered_entity",
     }
 )
 _GAME_MODES = frozenset({"survival", "creative", "adventure", "spectator"})
@@ -214,6 +215,8 @@ class SelfStateV2:
     game_mode: str
     is_flying: bool
     allow_flying: bool
+    hurt_animation_ticks: int | None = None
+    movement_tick_id: int | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.position, Vec3V0) or not isinstance(
@@ -282,6 +285,17 @@ class SelfStateV2:
             raise ContractViolation("status effects must be a tuple")
         if not all(isinstance(item, StatusEffectV2) for item in self.status_effects):
             raise ContractViolation("status effects contain an invalid entry")
+        if (self.hurt_animation_ticks is None) != (self.movement_tick_id is None):
+            raise ContractViolation(
+                "self hurt animation and movement tick must be available together"
+            )
+        if self.hurt_animation_ticks is not None:
+            require_nonnegative_int(
+                self.hurt_animation_ticks, "self hurt animation ticks"
+            )
+            if self.hurt_animation_ticks > 20:
+                raise ContractViolation("self hurt animation ticks cannot exceed 20")
+            require_nonnegative_int(self.movement_tick_id, "self movement tick")
 
 
 @dataclass(frozen=True, slots=True)
@@ -581,6 +595,7 @@ class VisibleEntityV2:
     pose: str
     is_on_ground: bool
     equipment: tuple[tuple[str, VisibleItemV2], ...]
+    hurt_animation_ticks: int | None = None
 
     def __post_init__(self) -> None:
         require_identifier(self.track_id, "entity track id")
@@ -595,6 +610,10 @@ class VisibleEntityV2:
         if self.pose not in _POSES:
             raise ContractViolation("entity pose is invalid")
         _require_bool(self.is_on_ground, "entity on ground")
+        if self.hurt_animation_ticks is not None:
+            if (type(self.hurt_animation_ticks) is not int
+                    or not 0 <= self.hurt_animation_ticks <= 20):
+                raise ContractViolation("entity hurt animation ticks must be between zero and 20")
         if type(self.equipment) is not tuple:
             raise ContractViolation("entity equipment must be a tuple")
         valid_slots = {"main_hand", "off_hand", "head", "chest", "legs", "feet"}

@@ -3,8 +3,8 @@
   "scenes": [
     {
       "id": "S00",
-      "name": "空地直行与停止",
-      "purpose": "固定路线执行、加速、制动和到点判断",
+      "name": "�յ�ֱ����ֹͣ",
+      "purpose": "�̶�·��ִ�С����١��ƶ��͵����ж�",
       "identity": {
         "kind": "generated_layout",
         "case": "empty",
@@ -16,8 +16,8 @@
     },
     {
       "id": "S02",
-      "name": "转角走廊",
-      "purpose": "转弯、路点进度和连续行走",
+      "name": "ת������",
+      "purpose": "ת�䡢·����Ⱥ���������",
       "identity": {
         "kind": "generated_layout",
         "case": "corner_prelook",
@@ -29,8 +29,8 @@
     },
     {
       "id": "S04",
-      "name": "悬浮墙净空",
-      "purpose": "空气与未知、支撑和身体净空语义",
+      "name": "����ǽ����",
+      "purpose": "������δ֪��֧�ź����徻������",
       "identity": {
         "kind": "sealed_layout",
         "case": "maze_03_floating",
@@ -46,8 +46,8 @@
     },
     {
       "id": "S05",
-      "name": "坑边绕行",
-      "purpose": "支撑缺失、扫掠安全和绕行",
+      "name": "�ӱ�����",
+      "purpose": "֧��ȱʧ��ɨ�Ӱ�ȫ������",
       "identity": {
         "kind": "generated_layout",
         "case": "pit",

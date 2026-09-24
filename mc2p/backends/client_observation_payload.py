@@ -206,10 +206,21 @@ _SELF_KEYS = {
     "is_flying",
     "allow_flying",
 }
+_SELF_MOTION_KEYS = {"hurt_animation_ticks", "movement_tick_id"}
 
 
 def _self_state(value: Any) -> SelfStateV2:
-    item = _object(value, _SELF_KEYS, "self_state.value")
+    if not isinstance(value, dict):
+        raise ClientObservationPayloadError("self_state.value must be an object")
+    actual = set(value)
+    has_hurt = "hurt_animation_ticks" in actual
+    has_tick = "movement_tick_id" in actual
+    if has_hurt != has_tick:
+        raise ClientObservationPayloadError(
+            "self hurt animation and movement tick must appear together"
+        )
+    expected = _SELF_KEYS | (_SELF_MOTION_KEYS if has_hurt else set())
+    item = _object(value, expected, "self_state.value")
     return SelfStateV2(
         position=_vec(item["position"], "self_state.position"),
         velocity=_vec(item["velocity"], "self_state.velocity"),
@@ -280,6 +291,12 @@ def _self_state(value: Any) -> SelfStateV2:
         game_mode=_string(item["game_mode"], "self_state.game_mode"),
         is_flying=_boolean(item["is_flying"], "self_state.is_flying"),
         allow_flying=_boolean(item["allow_flying"], "self_state.allow_flying"),
+        hurt_animation_ticks=_optional_integer(
+            item.get("hurt_animation_ticks"), "self_state.hurt_animation_ticks"
+        ),
+        movement_tick_id=_optional_integer(
+            item.get("movement_tick_id"), "self_state.movement_tick_id"
+        ),
     )
 
 
@@ -436,13 +453,14 @@ def _body_contact(value: Any, index: int) -> BodyContactV2:
 
 def _visible_entity(value: Any, index: int) -> VisibleEntityV2:
     name = f"perception.visible_entities[{index}]"
+    has_hurt_animation = isinstance(value, dict) and "hurt_animation_ticks" in value
     item = _object(
         value,
         {
             "track_id", "entity_type", "display_name", "relative_position",
             "relative_velocity", "relative_yaw_degrees", "pitch_degrees",
             "bounding_box_size", "pose", "is_on_ground", "equipment",
-        },
+        } | ({"hurt_animation_ticks"} if has_hurt_animation else set()),
         name,
     )
     equipment: list[tuple[str, VisibleItemV2]] = []
@@ -472,6 +490,10 @@ def _visible_entity(value: Any, index: int) -> VisibleEntityV2:
         pose=_string(item["pose"], f"{name}.pose"),
         is_on_ground=_boolean(item["is_on_ground"], f"{name}.is_on_ground"),
         equipment=tuple(equipment),
+        hurt_animation_ticks=(
+            _integer(item["hurt_animation_ticks"], f"{name}.hurt_animation_ticks")
+            if has_hurt_animation else None
+        ),
     )
 
 

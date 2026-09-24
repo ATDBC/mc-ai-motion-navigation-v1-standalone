@@ -77,3 +77,4 @@ class TaskIntentV0:
             require_identifier(action, "forbidden action")
         if len(set(self.forbidden_actions)) != len(self.forbidden_actions):
             raise ContractViolation("forbidden actions must be unique")
+

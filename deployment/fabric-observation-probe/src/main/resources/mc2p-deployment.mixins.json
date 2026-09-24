@@ -1,0 +1,10 @@
+{
+  "required": true,
+  "package": "com.mc2p.deployment.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "refmap": "mc2p-deployment.refmap.json",
+  "client": ["BehaviorInputMixin", "BehaviorPlayerMixin", "BehaviorKeyboardMixin", "BehaviorMouseMixin",
+    "WindowOffScreenMixin", "GameRendererMixin", "HandledScreenRenderMixin", "ScreenHandlerPropertiesMixin",
+    "ScreenshotGuardMixin", "NativeImageGuardMixin", "ClientClockTickMixin", "ClientClockWorldMixin", "ClientClockPacketMixin"],
+  "injectors": { "defaultRequire": 1 }
+}

@@ -292,6 +292,61 @@ class VerifiedMotionExecutorTests(unittest.TestCase):
         cancelled = executor.decide(landed, InputApplicationLedger())
         self.assertIs(cancelled.state, VerifiedMotionExecutorState.CANCELLED)
 
+    def test_world_dependency_change_stops_ground_execution(self):
+        anchor, candidate = self.admitted()
+        executor = VerifiedMotionExecutor()
+        executor.start(candidate)
+
+        decision = executor.decide(
+            anchor, InputApplicationLedger(),
+            changed_cells=(candidate.proof.world_dependencies[0],),
+        )
+
+        self.assertIs(decision.state, VerifiedMotionExecutorState.FAILED)
+        self.assertEqual(decision.reason, "world_dependency_changed_during_execution")
+        self.assertEqual(decision.movement, MovementV1())
+
+    def test_world_dependency_change_in_air_retains_landing_responsibility(self):
+        anchor, candidate = self.admitted()
+        executor = VerifiedMotionExecutor()
+        executor.start(candidate)
+        airborne = replace(
+            anchor,
+            movement_tick_id=12,
+            physics_state=replace(candidate.proof.trajectory[2], on_ground=False),
+        )
+
+        decision = executor.decide(
+            airborne, InputApplicationLedger(),
+            changed_cells=(candidate.proof.world_dependencies[0],),
+        )
+
+        self.assertIs(decision.state, VerifiedMotionExecutorState.RECOVERING)
+        self.assertEqual(decision.reason, "world_dependency_changed_retain_landing")
+
+    def test_world_dependency_change_after_air_cancel_discards_verified_remainder(self):
+        anchor, candidate = self.admitted()
+        executor = VerifiedMotionExecutor()
+        executor.start(candidate)
+        ledger = InputApplicationLedger()
+        airborne = replace(
+            anchor,
+            movement_tick_id=12,
+            physics_state=replace(candidate.proof.trajectory[2], on_ground=False),
+        )
+        executor.cancel(airborne)
+        changed = candidate.proof.world_dependencies[0]
+
+        decision = executor.decide(airborne, ledger, changed_cells=(changed,))
+
+        self.assertEqual(decision.state, VerifiedMotionExecutorState.RECOVERING)
+        self.assertEqual(decision.movement, MovementV1())
+        self.assertEqual(decision.reason, "world_dependency_changed_retain_landing")
+        landed = replace(airborne, physics_state=replace(airborne.physics_state, on_ground=True))
+        terminal = executor.decide(landed, ledger)
+        self.assertEqual(terminal.state, VerifiedMotionExecutorState.FAILED)
+        self.assertEqual(decision.movement, MovementV1())
+
 
 class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
     @staticmethod
@@ -466,6 +521,21 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
         self.assertIs(waiting.state, ActionRouteState.RUNNING)
         self.assertFalse(waiting.submit_input)
         self.assertEqual(waiting.reason_code, "awaiting_verified_motion")
+
+        cancelled_executor = ActionRouteExecutor(
+            ground_profile(), jump_profile(), step_profile(),
+            air_profiles=(air_profile(MovementMode.JUMP_GAP),),
+        )
+        cancelled_executor.start(action_route, frame)
+        cancelled_executor.cancel()
+        for _ in range(3):
+            cancelled = cancelled_executor.decide(
+                frame, state_anchor=anchor,
+                input_ledger=InputApplicationLedger(max_records=64),
+            )
+            self.assertIs(cancelled.state, ActionRouteState.CANCELLED)
+            self.assertFalse(cancelled.submit_input)
+            self.assertEqual(cancelled.reason_code, "cancelled")
 
         executor.install_verified_motion(prepared.candidate)
         started = executor.decide(

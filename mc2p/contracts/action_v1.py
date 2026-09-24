@@ -119,8 +119,25 @@ class MineBlockV1(InteractBlockV1):
     kind: str = field(default="mine_block", init=False)
 
 
-BehaviorOperationV1: TypeAlias = OpenInventoryV1 | CloseScreenV1 | SelectHotbarV1 | ClickSlotV1 | InteractBlockV1 | MineBlockV1
-_OPERATION_TYPES = (OpenInventoryV1, CloseScreenV1, SelectHotbarV1, ClickSlotV1, InteractBlockV1, MineBlockV1)
+@dataclass(frozen=True, slots=True)
+class AttackEntityV1:
+    entity_ref: str
+    kind: str = field(default="attack_entity", init=False)
+
+    def __post_init__(self) -> None:
+        require_identifier(self.entity_ref, "attack entity reference")
+        if len(self.entity_ref) > 128:
+            raise ContractViolation("attack entity reference exceeds 128 characters")
+
+
+BehaviorOperationV1: TypeAlias = (
+    OpenInventoryV1 | CloseScreenV1 | SelectHotbarV1 | ClickSlotV1
+    | InteractBlockV1 | MineBlockV1 | AttackEntityV1
+)
+_OPERATION_TYPES = (
+    OpenInventoryV1, CloseScreenV1, SelectHotbarV1, ClickSlotV1,
+    InteractBlockV1, MineBlockV1, AttackEntityV1,
+)
 
 
 @dataclass(frozen=True, slots=True)

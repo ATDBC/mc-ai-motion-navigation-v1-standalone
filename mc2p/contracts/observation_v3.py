@@ -16,7 +16,7 @@ from mc2p.contracts.observation import Vec3V0
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.contracts.observation_v2 import (
     ClientSampleTimingV2, GuiStateV2, InventoryStateV2, ObservationGroupV2,
-    SelfStateV2, VisibleEntityV2,
+    SelfStateV2, VisibleEntityV2, _POSES,
 )
 
 
@@ -134,6 +134,43 @@ class TargetingStateV3:
 
 
 @dataclass(frozen=True, slots=True)
+class TrackedEntityStateV3:
+    track_id: str
+    entity_type: str
+    relative_position: Vec3V0
+    relative_velocity: Vec3V0
+    relative_yaw_degrees: float
+    pitch_degrees: float
+    bounding_box_size: Vec3V0
+    pose: str
+    is_on_ground: bool
+    is_loaded: bool
+    is_dead: bool
+    health_points: float
+    max_health_points: float
+
+    def __post_init__(self) -> None:
+        require_identifier(self.track_id, "entity track id")
+        require_identifier(self.entity_type, "entity type")
+        for name in ("relative_position", "relative_velocity", "bounding_box_size"):
+            if type(getattr(self, name)) is not Vec3V0:
+                raise ContractViolation(f"tracked entity {name} is invalid")
+        _finite(self.relative_yaw_degrees, "tracked entity relative yaw")
+        _finite(self.pitch_degrees, "tracked entity pitch")
+        if type(self.pose) is not str or self.pose not in _POSES:
+            raise ContractViolation("tracked entity pose is invalid")
+        for name in ("is_on_ground", "is_loaded", "is_dead"):
+            if type(getattr(self, name)) is not bool:
+                raise ContractViolation(f"tracked entity {name} must be boolean")
+        if not self.is_loaded:
+            raise ContractViolation("tracked entity must be loaded")
+        _finite(self.health_points, "tracked entity health")
+        _finite(self.max_health_points, "tracked entity max health")
+        if self.max_health_points <= 0 or not 0 <= self.health_points <= self.max_health_points:
+            raise ContractViolation("tracked entity health is outside its valid range")
+
+
+@dataclass(frozen=True, slots=True)
 class PerceptionStateV3:
     horizontal_fov_degrees: float
     vertical_fov_degrees: float
@@ -198,14 +235,16 @@ class PerceptionStateV3:
 def validate_v3_groups(tick: int, field_profile: str, self_state: ObservationGroupV2[SelfStateV2],
                        inventory: ObservationGroupV2[InventoryStateV2], gui: ObservationGroupV2[GuiStateV2],
                        perception: ObservationGroupV2[PerceptionStateV3],
-                       targeting: ObservationGroupV2[TargetingStateV3]) -> None:
+                       targeting: ObservationGroupV2[TargetingStateV3],
+                       tracked_entity: ObservationGroupV2[TrackedEntityStateV3]) -> None:
     """Shared checks for decoded wire values and independently constructed snapshots."""
     require_nonnegative_int(tick, "sample world tick")
     ObservationRequestV3(field_profile)
     for group, source, cls in ((self_state, "client_player", SelfStateV2),
             (inventory, "client_inventory", InventoryStateV2), (gui, "client_screen_handler", GuiStateV2),
             (perception, "client_perception_filtered", PerceptionStateV3),
-            (targeting, "client_perception_filtered", TargetingStateV3)):
+            (targeting, "client_perception_filtered", TargetingStateV3),
+            (tracked_entity, "client_registered_entity", TrackedEntityStateV3)):
         if type(group) is not ObservationGroupV2 or group.source_kind != source or group.sample_world_tick != tick:
             raise ContractViolation("invalid observation group source or sample tick")
         if group.status is FieldStatusV0.VALID and type(group.value) is not cls:
@@ -254,6 +293,7 @@ class ObservationSnapshotV3:
     source_backend: str
     field_profile: str
     targeting: ObservationGroupV2[TargetingStateV3]
+    tracked_entity: ObservationGroupV2[TrackedEntityStateV3]
     server_state_age_ns: FieldValueV0[int] = field(default_factory=lambda: FieldValueV0.missing("server_state_age_unknown"))
     privileged_fields_present: tuple[str, ...] = ()
     schema_version: str = field(default="mc2p.observation.v3", init=False)
@@ -278,7 +318,8 @@ class ObservationSnapshotV3:
         if type(self.world_time_ticks) is not FieldValueV0 or self.world_time_ticks.status is not FieldStatusV0.VALID:
             raise ContractViolation("world time must be valid")
         validate_v3_groups(self.world_time_ticks.value, self.field_profile, self.self_state,
-                           self.inventory, self.gui, self.perception, self.targeting)
+                           self.inventory, self.gui, self.perception, self.targeting,
+                           self.tracked_entity)
         own = self.self_state.value
         for name, expected_type in (("position", Vec3V0), ("yaw_degrees", (int, float)),
                 ("pitch_degrees", (int, float)), ("is_on_ground", bool), ("is_dead", bool),

@@ -394,12 +394,34 @@ class VerifiedMotionExecutor:
         return None
 
     def decide(self, anchor: StateAnchor,
-               ledger: InputApplicationLedger) -> VerifiedMotionDecision:
-        if type(anchor) is not StateAnchor or type(ledger) is not InputApplicationLedger:
+               ledger: InputApplicationLedger, *,
+               changed_cells: tuple[BlockPos, ...] = ()) -> VerifiedMotionDecision:
+        if (type(anchor) is not StateAnchor
+                or type(ledger) is not InputApplicationLedger
+                or type(changed_cells) is not tuple):
             raise ContractViolation("verified decision requires anchor and input ledger")
         if self._candidate is None:
             self.state = VerifiedMotionExecutorState.IDLE
             return self._decision(None, None, "not_started")
+        proof = self._candidate.proof
+        if (self.state in {
+                VerifiedMotionExecutorState.RUNNING,
+                VerifiedMotionExecutorState.RECOVERING,
+        } and set(changed_cells).intersection(proof.world_dependencies)):
+            self._pending = None
+            if anchor.physics_state.on_ground:
+                self.state = VerifiedMotionExecutorState.FAILED
+                return self._decision(
+                    MovementV1(), None,
+                    "world_dependency_changed_during_execution",
+                )
+            self.state = VerifiedMotionExecutorState.RECOVERING
+            self._recovery_uses_verified_remainder = False
+            self._terminal_after_recovery = VerifiedMotionExecutorState.FAILED
+            return self._decision(
+                MovementV1(), None,
+                "world_dependency_changed_retain_landing",
+            )
         if self.state is VerifiedMotionExecutorState.RECOVERING:
             if anchor.physics_state.on_ground:
                 self.state = self._terminal_after_recovery
@@ -428,7 +450,6 @@ class VerifiedMotionExecutor:
             return self._decision(MovementV1(), None, "retain_landing_responsibility")
         if self.state is not VerifiedMotionExecutorState.RUNNING:
             return self._decision(None, None, self.state.value)
-        proof = self._candidate.proof
         if anchor.session != proof.entry_state.session:
             self.state = VerifiedMotionExecutorState.FAILED
             return self._decision(MovementV1(), None, "world_session_changed")

@@ -13,6 +13,7 @@ public final class ClientBehaviorInput extends Input {
     private static final SampleObserver NO_DIAGNOSTICS = sample -> {};
     private final ClientRequestGate gate;
     private final LongSupplier clock;
+    private final LongSupplier applicationClock;
     private final BooleanSupplier allowed;
     private final SampleObserver observer;
     private int forward, strafe;
@@ -24,14 +25,20 @@ public final class ClientBehaviorInput extends Input {
     private final java.util.ArrayList<Sample> pendingSamples = new java.util.ArrayList<>();
 
     public ClientBehaviorInput(ClientRequestGate gate, LongSupplier clock, BooleanSupplier allowed) {
-        this(gate, clock, allowed, NO_DIAGNOSTICS);
+        this(gate, clock, allowed, clock, NO_DIAGNOSTICS);
     }
 
     public ClientBehaviorInput(ClientRequestGate gate, LongSupplier clock, BooleanSupplier allowed,
                                SampleObserver observer) {
+        this(gate, clock, allowed, clock, observer);
+    }
+
+    public ClientBehaviorInput(ClientRequestGate gate, LongSupplier clock, BooleanSupplier allowed,
+                               LongSupplier applicationClock, SampleObserver observer) {
         this.gate = gate;
-        this.clock = clock;
+        this.clock = java.util.Objects.requireNonNull(clock);
         this.allowed = allowed;
+        this.applicationClock = java.util.Objects.requireNonNull(applicationClock);
         this.observer = java.util.Objects.requireNonNull(observer);
     }
 
@@ -50,6 +57,11 @@ public final class ClientBehaviorInput extends Input {
         } else if (!"rejected".equals(status)) {
             throw new IllegalArgumentException("invalid dispatched request status");
         }
+    }
+
+    public void rejectAdmittedRequest(long sequence) {
+        gate.requireOwnerThread();
+        if (gate.cancel(sequence)) clear();
     }
 
     public void set(int forward, int strafe, boolean jump, boolean sneak, boolean sprint) {
@@ -112,6 +124,8 @@ public final class ClientBehaviorInput extends Input {
         gate.requireOwnerThread();
         samples++;
         long now = clock.getAsLong();
+        long sampledAtJvmNs = applicationClock.getAsLong();
+        if (sampledAtJvmNs < 0) throw new IllegalStateException("input application clock regressed");
         boolean permitted = allowed.getAsBoolean();
         boolean active = permitted && gate.leaseActive(now);
         String sampleState;
@@ -131,7 +145,7 @@ public final class ClientBehaviorInput extends Input {
             // A held lease is consumed by actual player input sampling, not observation emission.
             gate.endControlTick();
         }
-        lastSample = new Sample(acceptedEpisode, acceptedSequence, samples, now, sampleState,
+        lastSample = new Sample(acceptedEpisode, acceptedSequence, samples, sampledAtJvmNs, sampleState,
                 movementForward, movementSideways, jumping, sneaking, appliedSprint);
         if (pendingSamples.size() >= 64) {
             pendingSamples.remove(0);
