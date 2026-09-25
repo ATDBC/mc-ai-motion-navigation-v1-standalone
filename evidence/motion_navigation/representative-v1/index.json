@@ -1,0 +1,116 @@
+{
+  "corpus_id": "representative-v1",
+  "max_total_archive_bytes": 31457280,
+  "runs": [
+    {
+      "archive": "archives/b10c-pass-20260923T063950738376Z-5a9f5ab9.tar.gz",
+      "archive_sha256": "797ed9fe12fc4d67f8a8e4a0b1fd8ce6323243109542d08c259dd36717a42ec1",
+      "archive_size_bytes": 6774967,
+      "expected": {
+        "failure_message": null,
+        "failure_type": null,
+        "negative_passed": null,
+        "negative_total": null,
+        "positive_passed": null,
+        "positive_total": null,
+        "trial_rows": 82
+      },
+      "recorded_outcome": "pass",
+      "recorded_status": "passed",
+      "run_id": "20260923T063950738376Z-5a9f5ab9",
+      "stage": "b10c"
+    },
+    {
+      "archive": "archives/b10c-fail-20260923T083302580358Z-a019b110.tar.gz",
+      "archive_sha256": "c6b94d2640ee21c89957c308cca72d125b25480db30b1eb1b1defa4890969892",
+      "archive_size_bytes": 6700287,
+      "expected": {
+        "failure_message": "verified executor already has an in-flight command",
+        "failure_type": "ContractViolation",
+        "negative_passed": null,
+        "negative_total": null,
+        "positive_passed": null,
+        "positive_total": null,
+        "trial_rows": 82
+      },
+      "recorded_outcome": "fail",
+      "recorded_status": "failed",
+      "run_id": "20260923T083302580358Z-a019b110",
+      "stage": "b10c"
+    },
+    {
+      "archive": "archives/c1b-pass-20260925T015540321761Z-d008bbc3.tar.gz",
+      "archive_sha256": "a95533220e9c6769728702000d56cb922e5e2bec05210e3209d8abac12c70b84",
+      "archive_size_bytes": 1812201,
+      "expected": {
+        "failure_message": null,
+        "failure_type": null,
+        "negative_passed": 10,
+        "negative_total": 10,
+        "positive_passed": 20,
+        "positive_total": 20,
+        "trial_rows": 30
+      },
+      "recorded_outcome": "pass",
+      "recorded_status": "passed",
+      "run_id": "20260925T015540321761Z-d008bbc3",
+      "stage": "c1b"
+    },
+    {
+      "archive": "archives/c1b-fail-20260925T014651611158Z-8fbbd0bb.tar.gz",
+      "archive_sha256": "b5e21d83844144b18b249cda6dedeff07d7571c1c14179c60441a0e1bc20bfa6",
+      "archive_size_bytes": 1751742,
+      "expected": {
+        "failure_message": "['client-0:c1b_20_of_20_positive_tasks']",
+        "failure_type": "DeploymentEvidenceFailure",
+        "negative_passed": 10,
+        "negative_total": 10,
+        "positive_passed": 19,
+        "positive_total": 20,
+        "trial_rows": 30
+      },
+      "recorded_outcome": "fail",
+      "recorded_status": "failed",
+      "run_id": "20260925T014651611158Z-8fbbd0bb",
+      "stage": "c1b"
+    },
+    {
+      "archive": "archives/c1c-pass-20260925T013056709842Z-97bc0db8.tar.gz",
+      "archive_sha256": "c1ca7e76f519a3380352aa7a5c114f1dde5fbe946aaecbeaa6ed88a535d05691",
+      "archive_size_bytes": 1387269,
+      "expected": {
+        "failure_message": null,
+        "failure_type": null,
+        "negative_passed": 10,
+        "negative_total": 10,
+        "positive_passed": 20,
+        "positive_total": 20,
+        "trial_rows": 30
+      },
+      "recorded_outcome": "pass",
+      "recorded_status": "passed",
+      "run_id": "20260925T013056709842Z-97bc0db8",
+      "stage": "c1c"
+    },
+    {
+      "archive": "archives/c1c-fail-20260924T164017683290Z-1c95ef4a.tar.gz",
+      "archive_sha256": "ebd61646473615eb1ff7b3ab51186aac37acc7d190b77c550feae21571c21d7b",
+      "archive_size_bytes": 1560508,
+      "expected": {
+        "failure_message": "['client-0:c1c_20_of_20_positive_tasks']",
+        "failure_type": "DeploymentEvidenceFailure",
+        "negative_passed": 10,
+        "negative_total": 10,
+        "positive_passed": 18,
+        "positive_total": 20,
+        "trial_rows": 30
+      },
+      "recorded_outcome": "fail",
+      "recorded_status": "failed",
+      "run_id": "20260924T164017683290Z-1c95ef4a",
+      "stage": "c1c"
+    }
+  ],
+  "schema_version": "mc2p.public-runtime-evidence.v1",
+  "total_archive_bytes": 19986974
+}

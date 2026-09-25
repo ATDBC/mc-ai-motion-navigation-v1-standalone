@@ -23,9 +23,11 @@
     "docs/motion_navigation/stages/*.md",
     "docs/motion_navigation/acceptance/*.md",
     "docs/motion_navigation/decisions/*.md",
+    "evidence/motion_navigation/representative-v1/**/*",
     "experiments/navigation-floating-wall-mazes-v1/layouts/maze_03_floating.json",
     "scripts/fixtures/**/*",
     "tests/java/*.java",
+    "tests/java/stubs/**/*.java",
     "tools/navigation_layer_live/**/*",
     "tools/navigation_replay/**/*"
   ],
@@ -39,6 +41,7 @@
     "scripts/c1_fixed_melee_runtime.py",
     "scripts/c1_moving_melee_runtime.py",
     "scripts/c1_external_motion_runtime.py",
+    "scripts/public_runtime_evidence.py",
     "tests/motion_nav/test_*.py",
     "tests/test_c1_melee_evidence.py",
     "tests/test_c1_moving_melee_evidence.py",
@@ -62,7 +65,8 @@
     "tests/test_craftground_backend.py",
     "tests/test_craftground_runtime.py",
     "tests/test_visible_equipment_projection.py",
-    "tests/test_standalone_java_gates.py"
+    "tests/test_standalone_java_gates.py",
+    "tests/test_public_runtime_evidence.py"
   ],
   "required_paths": [
     "README.md",
@@ -81,6 +85,12 @@
     "tests/test_craftground_runtime.py",
     "tests/test_visible_equipment_projection.py",
     "tests/test_standalone_java_gates.py",
+    "tests/java/stubs/net/minecraft/client/input/Input.java",
+    "scripts/public_runtime_evidence.py",
+    "tests/test_public_runtime_evidence.py",
+    "evidence/motion_navigation/representative-v1/index.json",
+    "evidence/motion_navigation/representative-v1/README.md",
+    "evidence/motion_navigation/representative-v1/SHA256SUMS.txt",
     "tests/test_action_arbiter_v1.py",
     "tests/test_player_runtime_v1.py",
     "tests/test_runtime_failure_disposition.py",

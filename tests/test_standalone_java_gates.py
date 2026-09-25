@@ -47,6 +47,35 @@ class StandaloneJavaGateTests(unittest.TestCase):
                 )
                 self.assertIn(marker, executed.stdout)
 
+    def test_behavior_input_compiles_and_runs_with_minimal_minecraft_stub(self):
+        tools = discover_java_tools()
+        source_root = ROOT / "mc2p/backends/runtime_overlays/mc121_actions"
+        harness_root = ROOT / "tests/java"
+        stub = harness_root / "stubs/net/minecraft/client/input/Input.java"
+        with TemporaryDirectory(prefix="mc2p-standalone-input-") as directory:
+            compiled = subprocess.run(
+                [
+                    str(tools.javac), "-J-Duser.language=en",
+                    "-encoding", "UTF-8", "-d", directory,
+                    str(stub),
+                    str(source_root / "ClientRequestGate.java"),
+                    str(source_root / "ClientBehaviorInput.java"),
+                    str(harness_root / "ClientBehaviorInputTest.java"),
+                ],
+                capture_output=True, text=True, timeout=30,
+            )
+            self.assertEqual(
+                compiled.returncode, 0, compiled.stdout + compiled.stderr,
+            )
+            executed = subprocess.run(
+                [str(tools.java), "-cp", directory, "ClientBehaviorInputTest"],
+                capture_output=True, text=True, timeout=30,
+            )
+            self.assertEqual(
+                executed.returncode, 0, executed.stdout + executed.stderr,
+            )
+            self.assertIn("CLIENT_BEHAVIOR_INPUT_OK", executed.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

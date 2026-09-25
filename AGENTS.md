@@ -29,6 +29,8 @@ python -m unittest tests.test_c1_melee_evidence tests.test_c1_moving_melee_evide
 python -m unittest tests.test_action_arbiter_v1 tests.test_action_receipt tests.test_player_runtime_v1 tests.test_runtime_failure_disposition tests.test_engagement_memory tests.test_fixed_melee tests.test_fixed_melee_driver tests.test_melee_strike_driver tests.test_moving_melee tests.test_moving_melee_driver tests.test_external_motion_recovery_driver tests.test_c1_navigation_session -v
 python scripts/export_motion_navigation_standalone.py check-java
 python -m unittest tests.test_standalone_java_gates -v
+python scripts/public_runtime_evidence.py verify --root evidence/motion_navigation/representative-v1
 ```
 
 正式实机结论以 `docs/motion_navigation/acceptance/` 中的运行 ID、样本范围和限制为准。组件测试不能替代 Fabric 实机验收。
+公开真实运行样本只用于核对冻结的历史批次。修复后的重放结果不能覆盖样本原有的失败分类。
