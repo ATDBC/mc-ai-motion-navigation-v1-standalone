@@ -25,7 +25,7 @@ from mc2p.contracts.task import TaskIntentV0
 from mc2p.runtime.arbiter_v1 import ActionArbiterV1, ArbitrationDecisionV1
 from mc2p.runtime.backend_v1 import BackendStepResultV1, PlayerBackendV1
 from mc2p.runtime.failure_disposition import (
-    FailureDispositionDecision, FailureDispositionPolicy,
+    FailureDisposition, FailureDispositionDecision, FailureDispositionPolicy,
 )
 from mc2p.runtime.trace import TraceSinkV0
 from mc2p.motion_nav.online_motion import InputApplicationLedger
@@ -79,6 +79,7 @@ class PlayerRuntimeV1:
         self._navigation_observation_adapter = NavigationObservationAdapter()
         self._failure_policy = FailureDispositionPolicy()
         self._last_failure_disposition: FailureDispositionDecision | None = None
+        self._force_neutral_reason: str | None = None
 
     @property
     def state(self) -> RuntimeStateV1:
@@ -106,6 +107,14 @@ class PlayerRuntimeV1:
     def last_failure_disposition(self) -> FailureDispositionDecision | None:
         return self._last_failure_disposition
 
+    def apply_failure(self, failure: FailureV0) -> FailureDispositionDecision:
+        """Execute one typed lifecycle decision at a Runtime frame boundary."""
+        with self._io_lock:
+            self._require_ready()
+            if type(failure) is not FailureV0:
+                raise ContractViolation("Runtime failure handling requires FailureV0")
+            return self._apply_failure(failure, record=True)
+
     @property
     def backend_elapsed_ns_total(self) -> int:
         """Wall time spent inside backend calls; used only for timing attribution."""
@@ -129,6 +138,7 @@ class PlayerRuntimeV1:
             self._observation = None
             with self._cancel_lock:
                 self._cancel_reason = None
+            self._force_neutral_reason = None
             code = FailureCodeV0.BACKEND_START
             try:
                 self._check_deadline(request.deadline_monotonic_ns)
@@ -144,12 +154,14 @@ class PlayerRuntimeV1:
                         raise ContractViolation("reset observation/result identity mismatch")
                     if type(obs) is ObservationSnapshotV3 and obs.field_profile != "navigation_v1":
                         raise ContractViolation("reset requires navigation observation")
+                    if type(obs) is ObservationSnapshotV3:
+                        self._navigation_observation_adapter.ingest(obs)
                 code = FailureCodeV0.TRACE_IO
                 self._trace.write("reset", {"request": request, "result": result})
             except Exception as error:
                 self._seal()
                 failure = self._exception_failure(error, code)
-                self._last_failure_disposition = self._failure_policy.decide(failure)
+                self._apply_failure(failure, record=False)
                 result = ResetResultV0(request.request_id, request.episode_id, False, failure=failure)
                 self._record_failure("reset_failure", {"request": request, "result": result})
             except BaseException:
@@ -169,6 +181,7 @@ class PlayerRuntimeV1:
                 self._request_sequence = self._step_number = 0
                 self._failure_policy.clear()
                 self._last_failure_disposition = None
+                self._force_neutral_reason = None
                 self._state = RuntimeStateV1.READY
             else:
                 self._seal()
@@ -342,8 +355,9 @@ class PlayerRuntimeV1:
                 self._check_deadline(deadline)
                 with self._cancel_lock:
                     cancel_reason = self._cancel_reason
+                force_neutral_reason = self._force_neutral_reason
                 obs = self._observation
-                if cancel_reason is not None:
+                if cancel_reason is not None or force_neutral_reason is not None:
                     self._arbiter.clear()
                     decision = ArbitrationDecisionV1(ActionSnapshotV1(
                         obs.episode_id, self._request_sequence, obs.sequence_id, deadline))
@@ -365,6 +379,8 @@ class PlayerRuntimeV1:
                 self._ensure_input_record(action, backend_result)
                 self._input_ledger.observe_receipt(backend_result.receipt)
                 self._observation = backend_result.observation
+                if type(self._observation) is ObservationSnapshotV3:
+                    self._navigation_observation_adapter.ingest(self._observation)
                 receipt = backend_result.receipt
                 failure = None
                 status = ExecutionStatusV0.RUNNING
@@ -376,10 +392,9 @@ class PlayerRuntimeV1:
                               else ExecutionStatusV0.FAILED)
                     failure = FailureV0(FailureCodeV0.DEADLINE_EXCEEDED if status is ExecutionStatusV0.TIMED_OUT else FailureCodeV0.CONTRACT,
                         receipt.reason, True, "client_behavior")
-                    self._last_failure_disposition = self._failure_policy.decide(failure)
                     phase = "action_rejected"
                     if cancel_reason is not None or status is ExecutionStatusV0.TIMED_OUT:
-                        self._seal()
+                        self._apply_failure(failure, record=False)
                 elif receipt.status == "operation_rejected":
                     # The operation guard rejected only the one-shot operation.
                     # Movement/look in the same admitted frame remains valid and
@@ -392,11 +407,15 @@ class PlayerRuntimeV1:
                     failure = FailureV0(FailureCodeV0.CANCELLED, cancel_reason, True, "runtime")
                     self._last_failure_disposition = self._failure_policy.decide(failure)
                     self._state = RuntimeStateV1.CANCELLED
+                elif force_neutral_reason is not None:
+                    if receipt.status not in {"executed", "confirmed_local"}:
+                        raise ContractViolation("failure release was not locally accepted")
+                    self._force_neutral_reason = None
+                    phase = "failure_release"
                 if backend_result.terminated or backend_result.truncated or self._observation.is_dead.value is True:
                     status, phase = ExecutionStatusV0.FAILED, "episode_ended"
-                    failure = FailureV0(FailureCodeV0.BACKEND_DISCONNECTED, "episode ended; task completion not established", True, "runtime")
-                    self._last_failure_disposition = self._failure_policy.decide(failure)
-                    self._seal(RuntimeStateV1.ENDED)
+                    failure = FailureV0(FailureCodeV0.BACKEND_DISCONNECTED, "episode ended; task completion not established", False, "runtime")
+                    self._apply_failure(failure, record=False)
                 report = self._report(task, decision, status, phase, failure, self._observation)
                 phase_code = FailureCodeV0.TRACE_IO
                 self._trace.write("step", {"task": task, "profile": profile, "decision": decision,
@@ -404,8 +423,7 @@ class PlayerRuntimeV1:
                 return RuntimeStepResultV1(self._observation, decision, report, backend_result)
             except Exception as error:
                 failure = self._exception_failure(error, phase_code)
-                self._last_failure_disposition = self._failure_policy.decide(failure)
-                self._seal()
+                self._apply_failure(failure, record=False)
                 report = self._report(task, decision,
                     ExecutionStatusV0.TIMED_OUT if failure.code is FailureCodeV0.DEADLINE_EXCEEDED else ExecutionStatusV0.FAILED,
                     "runtime_failure", failure, None)
@@ -547,8 +565,46 @@ class PlayerRuntimeV1:
 
     def _seal(self, state: RuntimeStateV1 = RuntimeStateV1.FAILED) -> None:
         self._state = state
+        self._force_neutral_reason = None
         self._arbiter.clear()
         self._close_backend()
+
+    def _apply_failure(
+        self, failure: FailureV0, *, record: bool,
+    ) -> FailureDispositionDecision:
+        decision = self._failure_policy.decide(failure)
+        if record:
+            try:
+                self._trace.write("failure_disposition", {
+                    "failure": failure,
+                    "decision": decision,
+                })
+            except Exception as error:
+                trace_failure = self._exception_failure(
+                    error, FailureCodeV0.TRACE_IO,
+                )
+                decision = self._failure_policy.decide(trace_failure)
+                self._last_failure_disposition = decision
+                self._seal()
+                return decision
+            except BaseException:
+                self._seal()
+                raise
+        self._last_failure_disposition = decision
+        if decision.disposition is FailureDisposition.CONTINUE_WITH_INCOMPLETE_EVIDENCE:
+            return decision
+        if decision.disposition in {
+            FailureDisposition.RETRY_TASK_BOUNDED,
+            FailureDisposition.CANCEL_TASK,
+        }:
+            self._arbiter.clear()
+            self._force_neutral_reason = decision.reason_code
+            return decision
+        if decision.disposition is FailureDisposition.END_EPISODE:
+            self._seal(RuntimeStateV1.ENDED)
+            return decision
+        self._seal()
+        return decision
 
     def _check_deadline(self, deadline: int) -> None:
         if self._clock() >= deadline:

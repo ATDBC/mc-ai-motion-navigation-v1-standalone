@@ -1,0 +1,51 @@
+# C1-R6：运行时失败处置与世界知识验收
+
+日期：2026-09-25  
+状态：组件与 Runtime 集成验收通过；未新增 Fabric 结果
+
+## 1. 失败处置场景
+
+1. 异步证据写入失败：Runtime 保持 `READY`，后端不关闭，决定明确标记证据不完整；
+2. 可重试任务期限失败：前两次返回有界重试，旧输入来源失效，下一帧为中性输入；
+3. 同原因第三次失败：返回任务取消，不继续增加重试；Runtime 仍可接受新任务；
+4. 后端输入状态不确定：进入 `FAILED`，后端只关闭一次；
+5. 不可恢复的连接或世界结束：进入 `ENDED`，不能继续提交动作；
+6. 同步正式 trace 写入失败：不能按“异步证据降级”继续控制。
+
+## 2. 世界知识场景
+
+1. V3 reset 返回后，Runtime 的适配器已经包含 reset 观察；
+2. 后续 step 返回前，新增或变化的方块已经写入相同适配器；
+3. 没有启动导航任务时，世界知识仍会随观察更新；
+4. 结束第一个导航任务并新建第二个任务后，第二个任务读取此前地图，不重新得到空地图；
+5. 正式导航驱动会把会话绑定到 Runtime 的适配器；已经消费私有地图的会话不能中途换拥有者；
+6. 换世界或换 episode 后建立新会话，旧会话事实不混入新世界。
+
+## 3. 回归范围
+
+- `tests.test_runtime_failure_disposition`
+- `tests.test_player_runtime_v1`
+- `tests.test_c1_navigation_session`
+- `tests.motion_nav.test_runtime_adapter`
+- `tests.motion_nav.test_navigation_session`
+- `tests.motion_nav.test_runtime_navigation_verified_handoff`
+- `tests/motion_nav` 全量检查
+- C1 声明与公共控制／战斗检查
+- 公开源码 Java 门禁
+
+正式结果必须记录运行命令、通过数量和证据边界。组件与 Runtime 集成检查不能冒充新的 Fabric 实机场景。
+
+## 4. 验收结果
+
+| 检查 | 结果 |
+|---|---:|
+| C1-R6 直接相关 Runtime、适配器、导航会话和跨隙集成 | 81／81 |
+| `tests/motion_nav` | 414／414 |
+| C1 声明与重放 | 42／42 |
+| 公共控制与战斗 | 146／146 |
+| 纯 Java 门禁 | 1／1 |
+| 分段证据读取 | 12／12，其中 1 项按既有条件跳过 |
+
+失败处置测试覆盖证据降级、两次有界重试、第三次任务取消、Runtime 重建、世界结束和同步 trace 失败。世界知识测试覆盖无导航任务的 reset／step 更新、共享适配器绑定、会话启动后禁止换拥有者，以及通过正式 Runtime 桥接执行跨隙。
+
+本轮没有修改 C1-A、C1-B、C1-C 的冻结样本，也没有重跑游戏。上述结果不能替代既有 Fabric 验收。

@@ -199,6 +199,10 @@ class NavigationSessionProposal:
 
 @runtime_checkable
 class NavigationSessionPort(Protocol):
+    def attach_observation_adapter(
+        self, adapter: NavigationObservationAdapter,
+    ) -> None: ...
+
     """Small runtime-facing contract; tests can replace planning, not semantics."""
 
     @property
@@ -326,6 +330,22 @@ class NavigationSession:
         if self._source is not None and self._source != source:
             raise ContractViolation("navigation session already has an input source")
         self._source = source
+
+    def attach_observation_adapter(
+        self, adapter: NavigationObservationAdapter,
+    ) -> None:
+        """Bind a fresh session to the Runtime-owned world projection."""
+        if type(adapter) is not NavigationObservationAdapter:
+            raise ContractViolation("navigation world owner is invalid")
+        if adapter is self._adapter:
+            return
+        if (self._frame is not None or self._request is not None
+                or self._active_route is not None
+                or self._state is not NavigationSessionState.READY):
+            raise ContractViolation(
+                "navigation world owner cannot change after session start"
+            )
+        self._adapter = adapter
 
     def unbind_source(self, source: IntentSourceV1) -> None:
         if type(source) is not IntentSourceV1 or self._source != source:
