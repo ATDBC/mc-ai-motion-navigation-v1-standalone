@@ -54,10 +54,15 @@ def classify_failure(failure: FailureV0) -> FailureDispositionDecision:
             FailureDisposition.CANCEL_TASK, "explicit_cancellation", True, False,
         )
     if code is FailureCodeV0.DEADLINE_EXCEEDED:
-        if failure.retryable:
+        if failure.retryable and failure.source == "task":
             return FailureDispositionDecision(
                 FailureDisposition.RETRY_TASK_BOUNDED,
                 "deadline_retryable", True, True,
+            )
+        if failure.retryable:
+            return FailureDispositionDecision(
+                FailureDisposition.RECREATE_RUNTIME,
+                "control_deadline_has_uncertain_input_state", True, False,
             )
         return FailureDispositionDecision(
             FailureDisposition.CANCEL_TASK, "deadline_not_retryable", True, False,

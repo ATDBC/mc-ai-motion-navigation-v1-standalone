@@ -40,6 +40,7 @@ class MeleeBackend:
         self.hurt = 0
         self.targeted = True
         self.reject_reason = None
+        self.operation_reject_reason = None
         self.attack_error = None
         self.query_track = None
         self.query_air = ()
@@ -110,7 +111,9 @@ class MeleeBackend:
         if type(action.operation) is AttackEntityV1:
             if self.attack_error is not None:
                 raise self.attack_error
-            if self.reject_reason is not None:
+            if self.operation_reject_reason is not None:
+                status, reason = "operation_rejected", self.operation_reject_reason
+            elif self.reject_reason is not None:
                 status, reason = "rejected", self.reject_reason
             else:
                 status, reason = "pending_confirmation", "entity_attack_dispatched"
@@ -198,6 +201,29 @@ class FixedMeleeDriverTests(unittest.TestCase):
         goal = driver.approach_driver._goal
         self.assertAlmostEqual((goal.region.min_z + goal.region.max_z) / 2, 3.3)
         self.assertEqual(driver.report.state, "approaching")
+
+    def test_cancel_keeps_delayed_navigation_owner_until_safe_stop_finishes(self):
+        self.runtime.close()
+        self.backend = MeleeBackend(self.clock, distance=5.0)
+        self.runtime = PlayerRuntimeV1(self.backend, self.trace, lambda: self.clock[0])
+        self.assertTrue(self.runtime.reset(
+            ResetRequestV0("reset-delayed-cancel", "episode-1", "test", 1,
+                           2_000_000_000)
+        ).succeeded)
+        from mc2p.skills.fixed_melee_driver import FixedMeleeDriver
+        driver = FixedMeleeDriver(
+            self.runtime, FakeNavigationSession(cancel_steps=2),
+            clock_ns=lambda: self.clock[0],
+        )
+        driver.start(self.target(), self.clock[0])
+
+        driver.cancel(self.profile, "user_cancelled")
+
+        self.assertEqual(driver.report.state, "cancelling")
+        self.assertIsNotNone(driver.approach_driver)
+        driver.tick(self.profile, self.clock[0] + 2_000_000_000)
+        self.assertEqual(driver.report.state, "cancelled")
+        self.assertIsNone(driver.approach_driver)
 
     def test_failed_approach_releases_ordered_source_before_next_trial(self):
         self.runtime.close()
@@ -315,15 +341,40 @@ class FixedMeleeDriverTests(unittest.TestCase):
             attacks,
         )
 
-    def test_existing_hurt_animation_does_not_block_attack(self):
+    def test_existing_hurt_animation_waits_then_attacks_after_it_clears(self):
         self.backend.hurt = 4
         driver = self.driver()
         driver.start(self.target(), self.clock[0])
+
+        for _ in range(3):
+            driver.tick(self.profile, self.clock[0] + 2_000_000_000)
+        self.assertFalse(any(
+            type(action.operation) is AttackEntityV1
+            for action in self.backend.actions
+        ))
+
+        self.backend.hurt = 0
         self.tick_until_terminal(driver)
         self.assertEqual(
             sum(type(action.operation) is AttackEntityV1 for action in self.backend.actions),
             1,
         )
+        self.assertEqual((driver.report.state, driver.report.reason),
+                         ("complete", "hit_confirmed"))
+
+    def test_health_loss_confirms_attack_when_hurt_timer_does_not_restart(self):
+        self.backend.confirm_hit = False
+        driver = self.driver()
+        driver.start(self.target(), self.clock[0])
+        while not driver.report.attack_submitted:
+            driver.tick(self.profile, self.clock[0] + 2_000_000_000)
+
+        self.backend.health = 18.0
+        for _ in range(2):
+            if driver.report.terminal:
+                break
+            driver.tick(self.profile, self.clock[0] + 2_000_000_000)
+
         self.assertEqual((driver.report.state, driver.report.reason),
                          ("complete", "hit_confirmed"))
 

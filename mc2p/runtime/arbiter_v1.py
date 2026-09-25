@@ -27,6 +27,23 @@ def _rank(intent: ActionIntentV1) -> tuple[int, int, str]:
     return int(intent.priority), intent.submitted_at_monotonic_ns, intent.intent_id
 
 
+def _heading_compatible(
+    movement: ActionIntentV1,
+    look: ActionIntentV1 | None,
+) -> bool:
+    if look is movement:
+        return True
+    tolerance = movement.movement_look_tolerance_degrees
+    if (look is None or tolerance <= 0.0 or movement.look is None or look.look is None
+            or movement.observation_sequence_id != look.observation_sequence_id):
+        return False
+    difference = abs(
+        (movement.look.yaw_delta_degrees - look.look.yaw_delta_degrees + 180.0)
+        % 360.0 - 180.0
+    )
+    return difference <= tolerance
+
+
 class ActionArbiterV1:
     def __init__(self) -> None:
         self._intents: dict[str, ActionIntentV1] = {}
@@ -144,7 +161,8 @@ class ActionArbiterV1:
                 else:
                     suppressed.append((winners.pop("operation").intent_id, "operation_control_conflict"))
             movement = winners.get("movement")
-            if movement is not None and movement.movement_requires_look and winners.get("look") is not movement:
+            if (movement is not None and movement.movement_requires_look
+                    and not _heading_compatible(movement, winners.get("look"))):
                 suppressed.append((winners.pop("movement").intent_id, "required_look_not_selected"))
             action = replace(neutral,
                 movement=winners["movement"].movement if "movement" in winners else MovementV1(),

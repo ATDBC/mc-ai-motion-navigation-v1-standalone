@@ -218,11 +218,14 @@ def _refresh_navigation(runtime: PlayerRuntimeV1, trial: dict,
 
 
 def _run_driver(runtime: PlayerRuntimeV1, trial: dict, target: CombatTargetV1,
-                deadline_ns: int,
-                profiles: NavigationSessionProfiles) -> FixedMeleeDriver:
+                 deadline_ns: int,
+                 profiles: NavigationSessionProfiles) -> FixedMeleeDriver:
     driver = FixedMeleeDriver(
         runtime,
-        NavigationSession("c1-" + trial["trial_id"], profiles),
+        NavigationSession(
+            "c1-" + trial["trial_id"], profiles,
+            observation_adapter=runtime.navigation_observation_adapter,
+        ),
     )
     driver.start(target, time.perf_counter_ns())
     profile = BehaviorProfileV0()
@@ -318,7 +321,7 @@ def _run_guard_negative(runtime: PlayerRuntimeV1, trial: dict, target: CombatTar
         "targeting_entity_ref": None if targeting is None else targeting.entity_ref,
     }
     return FixedMeleeReportV1(
-        "failed", "client_rejected/" + reason, target.revision,
+        "operation_rejected", "client_rejected/" + reason, target.revision,
         False, False, 1, True,
     ), evidence
 
@@ -343,9 +346,9 @@ def _negative_passed(trial: dict, report, evidence: dict | None = None) -> bool:
         return bool(
             evidence is not None
             and evidence.get("selected_by_arbiter") is True
-            and evidence.get("receipt_status") == "rejected"
+            and evidence.get("receipt_status") == "operation_rejected"
             and (evidence.get("targeting_hit_kind"), evidence.get("receipt_reason")) == expected
-            and report.state == "failed"
+            and report.state == "operation_rejected"
             and report.reason == "client_rejected/" + expected[1]
             and report.attack_submissions == 1
             and not report.attack_submitted
@@ -355,7 +358,7 @@ def _negative_passed(trial: dict, report, evidence: dict | None = None) -> bool:
         return (report.state == "cancelled" and report.reason == "cancelled_after_submit"
                 and report.attack_submissions == 1)
     if injection == "confirmation_timeout":
-        return (report.state == "failed" and report.attack_submissions == 1
+        return (report.state == "unconfirmed" and report.attack_submissions == 1
                 and not report.hit_observed)
     return False
 
@@ -393,7 +396,9 @@ def run_c1_fixed_melee_runtime(
                 runtime, trial, target, deadline_ns,
             )
         else:
-            driver = _run_driver(runtime, trial, target, deadline_ns, profiles)
+            driver = _run_driver(
+                runtime, trial, target, deadline_ns, profiles,
+            )
             driver.navigation_session.close()
             report = driver.report
         passed = ((trial["classification"] == "positive"

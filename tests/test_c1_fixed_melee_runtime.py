@@ -130,7 +130,7 @@ class C1FixedMeleeRuntimeTests(unittest.TestCase):
     def test_crosshair_and_wall_negatives_require_exact_client_rejection(self):
         from scripts.c1_fixed_melee_runtime import _negative_passed
         report = SimpleNamespace(
-            state="failed", reason="client_rejected/wrong_entity_target",
+            state="operation_rejected", reason="client_rejected/wrong_entity_target",
             attack_submissions=1, attack_submitted=False, hit_observed=False,
         )
         for injection, kind, reason in (
@@ -140,17 +140,17 @@ class C1FixedMeleeRuntimeTests(unittest.TestCase):
             trial = {"injection": injection}
             evidence = {
                 "selected_by_arbiter": True,
-                "receipt_status": "rejected",
+                "receipt_status": "operation_rejected",
                 "receipt_reason": reason,
                 "targeting_hit_kind": kind,
             }
             report = SimpleNamespace(
-                state="failed", reason="client_rejected/" + reason,
+                state="operation_rejected", reason="client_rejected/" + reason,
                 attack_submissions=1, attack_submitted=False, hit_observed=False,
             )
             self.assertTrue(_negative_passed(trial, report, evidence))
             self.assertFalse(_negative_passed(
-                trial, report, evidence | {"receipt_status": "pending_confirmation"},
+                trial, report, evidence | {"receipt_status": "rejected"},
             ))
 
     def test_manifest_freezes_identity_geometry_equipment_and_deadline(self):

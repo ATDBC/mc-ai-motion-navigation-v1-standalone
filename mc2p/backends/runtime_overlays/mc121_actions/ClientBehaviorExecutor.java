@@ -211,6 +211,21 @@ public final class ClientBehaviorExecutor {
         requestAdmitted = false;
     }
 
+    private void rejectAttackOnly(String code) {
+        pendingAttack = null;
+        if ("screen_conflict".equals(code) || "no_world".equals(code)
+                || "player_dead".equals(code) || "deadline_exceeded".equals(code)) {
+            reject(code);
+            return;
+        }
+        // The control frame was admitted and may still be sampled this tick.
+        // Reject only the guarded attack operation; keep the movement lease and
+        // its diagnostic owner so Python can observe the exact applied input.
+        status = "operation_rejected";
+        reason = code;
+        requestAdmitted = false;
+    }
+
     private void mineBlock(MinecraftClient client, JsonObject op) {
         if (!miningEnabled) { reject("unsupported_operation"); return; }
         var target = new ClientBlockGuard.Target(op.get("block_x").getAsInt(), op.get("block_y").getAsInt(),
@@ -288,7 +303,7 @@ public final class ClientBehaviorExecutor {
                 op.get("entity_ref").getAsString(),
                 op.get("minimum_cooldown_progress").getAsFloat());
         String denied = attackDenial(client, attack);
-        if (denied != null) { reject(denied); return; }
+        if (denied != null) { rejectAttackOnly(denied); return; }
         pendingAttack = attack;
         status = "pending_confirmation";
         reason = "entity_attack_scheduled";
@@ -299,7 +314,7 @@ public final class ClientBehaviorExecutor {
         if (attack == null) return;
         pendingAttack = null;
         String denied = attackDenial(client, attack);
-        if (denied != null) { reject(denied); return; }
+        if (denied != null) { rejectAttackOnly(denied); return; }
         dispatching = true;
         try {
         // Vanilla returns false after a normal entity attack; this boolean is

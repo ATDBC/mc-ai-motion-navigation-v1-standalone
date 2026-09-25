@@ -52,6 +52,12 @@ python -m unittest discover -s tests/motion_nav -p "test_*.py" -v
 python -m unittest tests.test_c1_melee_evidence tests.test_c1_moving_melee_evidence tests.test_c1_external_motion_evidence tests.test_c1_fixed_melee_runtime tests.test_c1_moving_melee_runtime tests.test_c1_external_motion_runtime -v
 ```
 
+运行公共控制帧、仲裁、失败处置、交战记忆和战斗驱动检查：
+
+```text
+python -m unittest tests.test_action_arbiter_v1 tests.test_action_receipt tests.test_player_runtime_v1 tests.test_runtime_failure_disposition tests.test_engagement_memory tests.test_fixed_melee tests.test_fixed_melee_driver tests.test_melee_strike_driver tests.test_moving_melee tests.test_moving_melee_driver tests.test_external_motion_recovery_driver tests.test_c1_navigation_session -v
+```
+
 运行不依赖 Minecraft 类库的 Java 控制门禁：
 
 ```text

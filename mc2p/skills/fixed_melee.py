@@ -6,7 +6,8 @@ from enum import StrEnum
 import math
 
 from mc2p.contracts.common import (
-    ContractViolation, FieldStatusV0, require_identifier, require_nonnegative_int,
+    ContractViolation, FieldStatusV0, require_finite, require_identifier,
+    require_nonnegative_int,
 )
 from mc2p.contracts.observation import Vec3V0
 from mc2p.contracts.observation_v2 import VisibleEntityV2
@@ -78,6 +79,7 @@ class MeleeAssessmentV1:
     targeting_confirmed: bool
     attack_cooldown: float | None
     hurt_animation_ticks: int | None
+    target_health_points: float | None
     phase: FixedMeleePhase
     schema_version: str = field(default="mc2p.combat-assessment.v1", init=False)
 
@@ -176,6 +178,7 @@ def decide_fixed_melee(
     controller_clock_id: str,
     attack_observation_sequence_id: int | None = None,
     pre_attack_hurt_animation_ticks: int | None = None,
+    pre_attack_health_points: float | None = None,
     confirmation_deadline_ns: int | None = None,
 ) -> FixedMeleeDecisionV1:
     if type(observation) is not ObservationSnapshotV3:
@@ -212,9 +215,16 @@ def decide_fixed_melee(
     self_state = observation.self_state.value if identity_valid else None
     cooldown = None if self_state is None else self_state.attack_cooldown
     hurt = None if entity is None else entity.hurt_animation_ticks
+    tracked = observation.tracked_entity.value if identity_valid else None
+    target_health = (
+        tracked.health_points
+        if tracked is not None and tracked.track_id == target.track_id
+        else None
+    )
     assessment = MeleeAssessmentV1(
         generation, observation.sequence_id, target.revision, entity is not None,
-        distance, surface_distance, target_hit_distance, aligned, cooldown, hurt, phase,
+        distance, surface_distance, target_hit_distance, aligned, cooldown, hurt,
+        target_health, phase,
     )
     reach_distance = target_hit_distance if aligned else surface_distance
 
@@ -226,12 +236,28 @@ def decide_fixed_melee(
             (confirmation_deadline_ns, "confirmation deadline"),
         ):
             require_nonnegative_int(value, name)
-        if hurt is None:
-            selected, reason = "fail_missing_hurt_observation", "hurt_animation_not_observed"
-        elif (observation.sequence_id > attack_observation_sequence_id
-                and hurt > pre_attack_hurt_animation_ticks
-                and observation.received_at_monotonic_ns <= confirmation_deadline_ns):
-            selected, reason = "complete", "new_hurt_animation_confirmed"
+        if pre_attack_health_points is not None:
+            require_finite(pre_attack_health_points, "pre-attack target health")
+            if pre_attack_health_points < 0:
+                raise ContractViolation("pre-attack target health cannot be negative")
+        later = observation.sequence_id > attack_observation_sequence_id
+        within_window = observation.received_at_monotonic_ns <= confirmation_deadline_ns
+        hurt_increased = (
+            hurt is not None and hurt > pre_attack_hurt_animation_ticks
+        )
+        health_decreased = (
+            pre_attack_health_points is not None
+            and target_health is not None
+            and target_health < pre_attack_health_points
+        )
+        if later and within_window and (hurt_increased or health_decreased):
+            selected, reason = (
+                ("complete", "target_health_decrease_confirmed")
+                if health_decreased and not hurt_increased
+                else ("complete", "new_hurt_animation_confirmed")
+            )
+        elif hurt is None and target_health is None:
+            selected, reason = "fail_missing_hurt_observation", "hit_observation_unavailable"
         elif now_ns >= confirmation_deadline_ns:
             selected, reason = "fail_confirmation_timeout", "confirmation_deadline_reached"
         else:
@@ -245,6 +271,8 @@ def decide_fixed_melee(
         selected, reason = "aim", "exact_entity_not_under_crosshair"
     elif entity is not None and hurt is None:
         selected, reason = "fail_missing_hurt_observation", "hurt_animation_not_observed"
+    elif entity is not None and hurt > 0:
+        selected, reason = "wait_hurt_clear", "target_invulnerability_window_active"
     elif entity is not None and cooldown is not None and cooldown < 1.0:
         selected, reason = "wait_cooldown", "attack_cooldown_not_full"
     elif entity is not None:

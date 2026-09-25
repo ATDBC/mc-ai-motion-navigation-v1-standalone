@@ -14,6 +14,7 @@ from mc2p.skills.engagement_memory import (
 )
 from mc2p.skills.fixed_melee import CombatTargetV1, MAX_COARSE_ATTACK_DISTANCE_BLOCKS
 from mc2p.skills.moving_melee import MovingMeleePhase, decide_moving_melee
+from mc2p.skills.melee_strike_driver import MeleeStrikeOutcome
 from mc2p.skills.moving_target import decide_moving_goal
 from scripts.c1_melee_evidence import _observation_from_record
 
@@ -121,26 +122,38 @@ def _replay_rows(rows: list[dict]) -> dict:
                 key = (target.task_id, target.revision)
                 observation = observations[payload["observation_sequence_id"]]
                 fact, fact_sequence, fact_target = engagement_facts[key]
+                position_source = None if fact is None else fact.source
+                within_attack_distance = (
+                    False if fact is None else
+                    math.hypot(fact.relative_position.x, fact.relative_position.z)
+                    <= MAX_COARSE_ATTACK_DISTANCE_BLOCKS
+                )
+                target_dead = False if fact is None else fact.is_dead is True
                 if (fact_sequence != observation.sequence_id
                         or fact_target != target
-                        or payload.get("position_source") != fact.source.value
-                        or payload.get("within_attack_distance") != (
-                            math.hypot(fact.relative_position.x, fact.relative_position.z)
-                            <= MAX_COARSE_ATTACK_DISTANCE_BLOCKS
+                        or payload.get("position_source") != (
+                            None if position_source is None else position_source.value
                         )
-                        or payload.get("target_dead") is not (fact.is_dead is True)):
+                        or payload.get("within_attack_distance")
+                        is not within_attack_distance
+                        or payload.get("target_dead") is not target_dead):
                     return _failure(
                         "moving_decision", "decision_input_not_from_engagement", replayed,
                     )
                 decision = decide_moving_melee(
                     MovingMeleePhase(payload["input_phase"]),
-                    position_source=fact.source,
-                    within_attack_distance=(
-                        math.hypot(fact.relative_position.x, fact.relative_position.z)
-                        <= MAX_COARSE_ATTACK_DISTANCE_BLOCKS
+                    position_source=position_source,
+                    within_attack_distance=within_attack_distance,
+                    target_dead=target_dead,
+                    strike_outcome=(
+                        MeleeStrikeOutcome(payload["strike_outcome"])
+                        if payload.get("strike_outcome") is not None
+                        else (
+                            MeleeStrikeOutcome.HIT_CONFIRMED
+                            if payload.get("strike_reason") == "hit_confirmed"
+                            else None
+                        )
                     ),
-                    target_dead=fact.is_dead is True,
-                    strike_reason=payload.get("strike_reason"),
                 )
                 if trace_projection(decision) != payload.get("decision"):
                     return _failure("moving_decision", "moving_decision_replay_mismatch", replayed)

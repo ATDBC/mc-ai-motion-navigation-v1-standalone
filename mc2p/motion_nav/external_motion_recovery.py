@@ -81,6 +81,7 @@ class ExternalMotionRecoveryController:
         self._active = False
         self._complete = False
         self._exhausted_reason: str | None = None
+        self._task_limit_reason: str | None = None
 
     @property
     def event_count(self) -> int:
@@ -89,6 +90,11 @@ class ExternalMotionRecoveryController:
     @property
     def active_generation(self) -> int | None:
         return self._generation if self._active else None
+
+    @property
+    def task_limit_reason(self) -> str | None:
+        """A task-policy signal that does not release the current body owner."""
+        return self._task_limit_reason
 
     def start(self, event: ExternalMotionEventV1) -> None:
         self._require_event(event)
@@ -104,10 +110,10 @@ class ExternalMotionRecoveryController:
         self._ground_hold_started = False
         self._active = True
         self._complete = False
-        self._exhausted_reason = (
+        self._exhausted_reason = None
+        self._task_limit_reason = (
             "event_budget_exhausted"
-            if self._event_count > self.config.maximum_events
-            else None
+            if self._event_count > self.config.maximum_events else None
         )
 
     def observe_event(self, event: ExternalMotionEventV1) -> bool:
@@ -128,7 +134,7 @@ class ExternalMotionRecoveryController:
         self._last_tick = event.movement_tick_id
         self._stable_ticks = 0
         if self._event_count > self.config.maximum_events:
-            self._exhausted_reason = "event_budget_exhausted"
+            self._task_limit_reason = "event_budget_exhausted"
         return True
 
     def decide(self, snapshot: ObservationSnapshotV3) -> ExternalMotionRecoveryDecision:

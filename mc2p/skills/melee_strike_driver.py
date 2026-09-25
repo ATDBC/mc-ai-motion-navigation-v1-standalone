@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
 import json
 import math
 import time
@@ -34,6 +35,18 @@ CONFIRMATION_NS = 1_000_000_000
 MAX_AIM_ATTEMPTS = 20
 
 
+class MeleeStrikeOutcome(StrEnum):
+    IN_PROGRESS = "in_progress"
+    NEEDS_APPROACH = "needs_approach"
+    HIT_CONFIRMED = "hit_confirmed"
+    TARGET_DEAD = "target_dead"
+    UNCONFIRMED = "unconfirmed"
+    RETRYABLE_OPERATION_REJECTION = "retryable_operation_rejection"
+    RETRY_AFTER_TARGET_REVISION = "retry_after_target_revision"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
 @dataclass(frozen=True, slots=True)
 class MeleeStrikeReportV1:
     state: str
@@ -42,6 +55,7 @@ class MeleeStrikeReportV1:
     attack_submitted: bool
     hit_observed: bool
     attack_submissions: int
+    outcome: MeleeStrikeOutcome
     terminal: bool
     schema_version: str = "mc2p.melee-strike-report.v1"
 
@@ -73,6 +87,7 @@ class MeleeStrikeDriver:
         self._attack_submissions = 0
         self._attack_observation_sequence_id: int | None = None
         self._pre_attack_hurt: int | None = None
+        self._pre_attack_health: float | None = None
         self._confirmation_deadline_ns: int | None = None
         self._hit_observed = False
         self._aim_attempts = 0
@@ -83,10 +98,30 @@ class MeleeStrikeDriver:
     @property
     def report(self) -> MeleeStrikeReportV1:
         revision = 0 if self._target is None else self._target.revision
+        if self._state == "needs_approach":
+            outcome = MeleeStrikeOutcome.NEEDS_APPROACH
+        elif self._state == "complete" and self._reason == "hit_confirmed":
+            outcome = MeleeStrikeOutcome.HIT_CONFIRMED
+        elif self._state == "complete" and self._reason == "target_dead":
+            outcome = MeleeStrikeOutcome.TARGET_DEAD
+        elif self._state == "unconfirmed":
+            outcome = MeleeStrikeOutcome.UNCONFIRMED
+        elif self._state == "operation_rejected":
+            outcome = MeleeStrikeOutcome.RETRYABLE_OPERATION_REJECTION
+        elif self._state == "failed" and self._reason == "target_revised_after_submit":
+            outcome = MeleeStrikeOutcome.RETRY_AFTER_TARGET_REVISION
+        elif self._state == "failed":
+            outcome = MeleeStrikeOutcome.FAILED
+        elif self._state == "cancelled":
+            outcome = MeleeStrikeOutcome.CANCELLED
+        else:
+            outcome = MeleeStrikeOutcome.IN_PROGRESS
         return MeleeStrikeReportV1(
             self._state, self._reason, revision, self._attack_submitted,
-            self._hit_observed, self._attack_submissions,
-            self._state in {"complete", "failed", "cancelled"},
+            self._hit_observed, self._attack_submissions, outcome,
+            self._state in {
+                "complete", "unconfirmed", "operation_rejected", "failed", "cancelled",
+            },
         )
 
     @property
@@ -106,6 +141,17 @@ class MeleeStrikeDriver:
     def _explicitly_dead(observation: ObservationSnapshotV3, track_id: str) -> bool:
         entity = observation.tracked_entity.value
         return entity is not None and entity.track_id == track_id and entity.is_dead
+
+    @staticmethod
+    def _tracked_health(
+        observation: ObservationSnapshotV3, track_id: str,
+    ) -> float | None:
+        entity = observation.tracked_entity.value
+        return (
+            entity.health_points
+            if entity is not None and entity.track_id == track_id
+            else None
+        )
 
     def _make_task(self, target: CombatTargetV1) -> TaskIntentV0:
         return TaskIntentV0(
@@ -204,6 +250,7 @@ class MeleeStrikeDriver:
                     controller_clock_id=self._clock_id,
                     attack_observation_sequence_id=self._attack_observation_sequence_id,
                     pre_attack_hurt_animation_ticks=self._pre_attack_hurt,
+                    pre_attack_health_points=self._pre_attack_health,
                     confirmation_deadline_ns=self._confirmation_deadline_ns)
         self._event("combat_candidates", "mc2p.combat-candidates.v1",
                     candidates=decision.candidates)
@@ -214,8 +261,21 @@ class MeleeStrikeDriver:
     def _runtime_step(
         self, profile: BehaviorProfileV0, owner_deadline_ns: int,
         envelope: OrderedIntentV1 | None = None,
+        *,
+        additional_proposals: tuple[ControlFrameProposalV1, ...] = (),
+        additional_proposal_supplier: (
+            Callable[[], tuple[ControlFrameProposalV1, ...]] | None
+        ) = None,
     ) -> RuntimeStepResultV1:
         assert self._task is not None and self._target is not None
+        if additional_proposal_supplier is not None:
+            if not callable(additional_proposal_supplier) or additional_proposals:
+                raise ContractViolation("control proposal supplier is invalid")
+            additional_proposals = additional_proposal_supplier()
+        if (type(additional_proposals) is not tuple
+                or any(type(item) is not ControlFrameProposalV1
+                       for item in additional_proposals)):
+            raise ContractViolation("additional control proposals must be typed")
         now_ns = self._clock()
         require_nonnegative_int(owner_deadline_ns, "melee strike owner deadline")
         deadline = min(owner_deadline_ns, self._task_deadline_ns, now_ns + STEP_LEASE_NS)
@@ -223,7 +283,7 @@ class MeleeStrikeDriver:
             raise ContractViolation("melee strike owner/task deadline expired")
         return self.runtime.control_frame(
             self._task, profile, deadline,
-            proposals=(ControlFrameProposalV1(
+            proposals=additional_proposals + (ControlFrameProposalV1(
                 () if envelope is None else (envelope,),
                 ObservationRequestV3(
                 "interaction_v1", entity_track_id=self._target.track_id,
@@ -304,6 +364,7 @@ class MeleeStrikeDriver:
             controller_clock_id=self._clock_id,
             attack_observation_sequence_id=self._attack_observation_sequence_id,
             pre_attack_hurt_animation_ticks=self._pre_attack_hurt,
+            pre_attack_health_points=self._pre_attack_health,
             confirmation_deadline_ns=self._confirmation_deadline_ns,
         )
         self._record_decision(decision, decision_time_ns)
@@ -315,13 +376,23 @@ class MeleeStrikeDriver:
         if selected == "complete":
             self._hit_observed = True
             self._finish("complete", "hit_confirmed")
+        elif selected == "fail_confirmation_timeout":
+            self._finish("unconfirmed", self._reason)
         elif selected.startswith("fail_"):
             self._finish("failed", self._reason)
         else:
             self._state = "observing_after_submit"
 
-    def tick(self, profile: BehaviorProfileV0,
-             owner_deadline_ns: int) -> RuntimeStepResultV1 | None:
+    def tick(
+        self,
+        profile: BehaviorProfileV0,
+        owner_deadline_ns: int,
+        *,
+        additional_proposals: tuple[ControlFrameProposalV1, ...] = (),
+        additional_proposal_supplier: (
+            Callable[[], tuple[ControlFrameProposalV1, ...]] | None
+        ) = None,
+    ) -> RuntimeStepResultV1 | None:
         if type(profile) is not BehaviorProfileV0:
             raise ContractViolation("melee strike tick requires BehaviorProfileV0")
         if self._target is None or self._task is None or self._clock_id is None:
@@ -348,7 +419,11 @@ class MeleeStrikeDriver:
             return None
         if observation.field_profile != "interaction_v1":
             self._ensure_combat_source()
-            result = self._runtime_step(profile, owner_deadline_ns)
+            result = self._runtime_step(
+                profile, owner_deadline_ns,
+                additional_proposals=additional_proposals,
+                additional_proposal_supplier=additional_proposal_supplier,
+            )
             self._state, self._reason = "aligning", "interaction_observation_acquired"
             return result
 
@@ -361,6 +436,7 @@ class MeleeStrikeDriver:
             controller_clock_id=self._clock_id,
             attack_observation_sequence_id=self._attack_observation_sequence_id,
             pre_attack_hurt_animation_ticks=self._pre_attack_hurt,
+            pre_attack_health_points=self._pre_attack_health,
             confirmation_deadline_ns=self._confirmation_deadline_ns,
         )
         self._record_decision(decision, decision_time_ns)
@@ -375,6 +451,12 @@ class MeleeStrikeDriver:
                 self._finish("failed", "target_revised_after_submit")
             else:
                 self._finish("complete", "hit_confirmed")
+            return None
+        if selected == "fail_confirmation_timeout":
+            self._finish(
+                "cancelled" if self._cancel_after_submit else "unconfirmed",
+                "cancelled_after_submit" if self._cancel_after_submit else self._reason,
+            )
             return None
         if selected.startswith("fail_"):
             self._finish("cancelled" if self._cancel_after_submit else "failed",
@@ -409,6 +491,9 @@ class MeleeStrikeDriver:
             assert entity is not None
             self._attack_observation_sequence_id = observation.sequence_id
             self._pre_attack_hurt = entity.hurt_animation_ticks
+            self._pre_attack_health = self._tracked_health(
+                observation, self._target.track_id,
+            )
             self._confirmation_deadline_ns = self._clock() + CONFIRMATION_NS
             intent_id, envelope = self._submit(
                 operation=AttackEntityV1(self._target.track_id),
@@ -418,7 +503,11 @@ class MeleeStrikeDriver:
         elif selected == "wait_cooldown":
             self._phase = FixedMeleePhase.WAITING_COOLDOWN
 
-        result = self._runtime_step(profile, owner_deadline_ns, envelope)
+        result = self._runtime_step(
+            profile, owner_deadline_ns, envelope,
+            additional_proposals=additional_proposals,
+            additional_proposal_supplier=additional_proposal_supplier,
+        )
         if result.backend_result is None and result.report.failure is not None:
             self._finish("failed", "runtime_failure")
             return result
@@ -440,6 +529,12 @@ class MeleeStrikeDriver:
                 return result
         if selected == "attack":
             self._attack_submissions += 1
+            if receipt is not None and receipt.status == "operation_rejected":
+                self._finish(
+                    "operation_rejected",
+                    "client_rejected/" + receipt.reason,
+                )
+                return result
             if receipt is None or receipt.status != "pending_confirmation":
                 reason = "missing_receipt" if receipt is None else receipt.reason
                 self._finish("failed", "client_rejected/" + reason)

@@ -20,6 +20,7 @@ from mc2p.motion_nav.motion_residual import (
 
 class ExternalMotionSource(StrEnum):
     DAMAGE_KNOCKBACK = "damage_knockback"
+    DAMAGE_WITH_UNVERIFIED_MOTION = "damage_with_unverified_motion"
     UNATTRIBUTED_EXTERNAL_MOTION = "unattributed_external_motion"
 
 
@@ -112,8 +113,11 @@ class ExternalMotionEventV1:
         require_finite(self.health_delta_points, "external motion health delta")
         require_finite(self.absorption_delta_points, "external motion absorption delta")
         total_delta = self.health_delta_points + self.absorption_delta_points
-        if self.source is ExternalMotionSource.DAMAGE_KNOCKBACK and total_delta >= 0:
-            raise ContractViolation("damage knockback requires a net damage fact")
+        if self.source in {
+            ExternalMotionSource.DAMAGE_KNOCKBACK,
+            ExternalMotionSource.DAMAGE_WITH_UNVERIFIED_MOTION,
+        } and total_delta >= 0:
+            raise ContractViolation("damage external motion requires a net damage fact")
         if (self.source is ExternalMotionSource.UNATTRIBUTED_EXTERNAL_MOTION
                 and total_delta != 0):
             raise ContractViolation("unattributed external motion cannot claim damage")
@@ -334,6 +338,13 @@ class DamageKnockbackDetector:
             self._pending_residual = None
 
         if damage.fact is not None:
+            if self._residual_permanently_unavailable(usable_residual):
+                self._pending_damage = None
+                event = self._unverified_damage_event(damage.fact)
+                return ExternalMotionDetection(
+                    event, "damage_motion_unverified",
+                    damage.fact, usable_residual,
+                )
             if not self._residual_is_complete(usable_residual):
                 self._pending_damage = damage.fact
                 return ExternalMotionDetection(
@@ -343,6 +354,13 @@ class DamageKnockbackDetector:
             self._pending_damage = None
         elif self._pending_damage is not None:
             pending = self._pending_damage
+            if self._residual_permanently_unavailable(usable_residual):
+                self._pending_damage = None
+                event = self._unverified_damage_event(pending)
+                return ExternalMotionDetection(
+                    event, "damage_motion_unverified",
+                    pending, usable_residual,
+                )
             if self._residual_covers_damage(usable_residual, pending):
                 self._pending_damage = None
                 if usable_residual.status is MotionResidualStatus.DEVIATION:
@@ -406,6 +424,15 @@ class DamageKnockbackDetector:
             MotionResidualStatus.DEVIATION,
         }
 
+    @staticmethod
+    def _residual_permanently_unavailable(
+        residual: MotionResidualResult | None,
+    ) -> bool:
+        return residual is not None and residual.status in {
+            MotionResidualStatus.UNSUPPORTED,
+            MotionResidualStatus.INVALID_INPUT,
+        }
+
     @classmethod
     def _residual_covers_damage(
         cls,
@@ -436,6 +463,22 @@ class DamageKnockbackDetector:
             fact.absorption_delta_points,
             residual.position_error_blocks,
             residual.velocity_error_blocks_per_tick,
+        )
+
+    def _unverified_damage_event(
+        self, fact: DamageFactV1,
+    ) -> ExternalMotionEventV1:
+        """Invalidate the old route without pretending knockback was measured."""
+        generation = self._next_generation()
+        return ExternalMotionEventV1(
+            f"external/{fact.episode_id}/{fact.movement_tick_id}/{generation}",
+            generation, fact.episode_id, fact.observation_sequence_id,
+            fact.movement_tick_id,
+            ExternalMotionSource.DAMAGE_WITH_UNVERIFIED_MOTION,
+            fact.health_delta_points, fact.previous_position, fact.position,
+            fact.previous_velocity, fact.velocity,
+            fact.was_on_ground, fact.is_on_ground,
+            fact.absorption_delta_points,
         )
 
     def _unattributed_event(

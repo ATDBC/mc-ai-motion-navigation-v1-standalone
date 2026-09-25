@@ -162,6 +162,7 @@ class ActionIntentV1:
     operation: BehaviorOperationV1 | None = None
     valid_for_ticks: int = 1
     movement_requires_look: bool = False  # Internal arbitration dependency; not a client wire field.
+    movement_look_tolerance_degrees: float = 0.0
     schema_version: str = field(default="mc2p.action-intent.v1", init=False)
 
     def __post_init__(self) -> None:
@@ -191,6 +192,14 @@ class ActionIntentV1:
             raise ContractViolation("movement_requires_look must be bool")
         if self.movement_requires_look and (self.movement is None or self.look is None or self.valid_for_ticks != 1):
             raise ContractViolation("heading-bound movement requires both controls and one tick")
+        require_finite(
+            self.movement_look_tolerance_degrees,
+            "movement look tolerance",
+        )
+        if not 0.0 <= self.movement_look_tolerance_degrees <= 5.0:
+            raise ContractViolation("movement look tolerance must be in [0,5] degrees")
+        if not self.movement_requires_look and self.movement_look_tolerance_degrees != 0.0:
+            raise ContractViolation("only heading-bound movement may tolerate another look")
 
 
 @dataclass(frozen=True, slots=True)

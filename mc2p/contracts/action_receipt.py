@@ -92,7 +92,8 @@ class ClientBehaviorReceiptV2:
         if type(self.on_client_thread) is not bool or type(self.execution_thread) is not str:
             raise ContractViolation("invalid client thread evidence")
         if type(self.status) is not str or self.status not in {
-                "idle", "executed", "pending_confirmation", "confirmed_local", "rejected", "timed_out", "cancelled"}:
+                "idle", "executed", "pending_confirmation", "confirmed_local",
+                "operation_rejected", "rejected", "timed_out", "cancelled"}:
             raise ContractViolation("invalid behavior result state")
         require_identifier(self.reason, "reason")
 

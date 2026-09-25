@@ -59,6 +59,7 @@ public final class ClientBehaviorInputTest {
         applicationTimestampCanUseFormalObservationClock();
         operationSpecificRejectionDoesNotBindDiagnosticIdentity();
         deferredRejectionClearsPreviouslyBoundDiagnosticIdentity();
+        operationRejectionPreservesAdmittedMovementAndIdentity();
         boundedLedgerDropsOldestSamplesWithoutCrashing();
         System.out.println("CLIENT_BEHAVIOR_INPUT_OK");
     }
@@ -274,5 +275,22 @@ public final class ClientBehaviorInputTest {
         yes(input.lastSample().episodeId() == null);
         yes(input.lastSample().requestSequenceId() == -1);
         yes(input.lastSample().forward() == 0);
+    }
+
+    private static void operationRejectionPreservesAdmittedMovementAndIdentity() {
+        ClientRequestGate gate = new ClientRequestGate();
+        long[] now = {90};
+        ClientBehaviorInput input = new ClientBehaviorInput(gate, () -> now[0], () -> true);
+        yes(gate.admit("operation-only", 14, 0, 0, 100, 1, now[0]) == null);
+        input.beginSnapshot();
+        input.set(1, 0, false, false, false);
+        input.bindDispatchedRequest("operation-only", 14, "operation_rejected");
+
+        input.tick(false, 1);
+
+        yes("operation-only".equals(input.lastSample().episodeId()));
+        yes(input.lastSample().requestSequenceId() == 14);
+        yes(input.lastSample().forward() == 1);
+        yes("leased".equals(input.lastSample().state()));
     }
 }

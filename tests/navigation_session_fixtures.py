@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from mc2p.contracts.action import ActionPriorityV0
-from mc2p.contracts.action_v1 import ActionIntentV1, MovementV1
+from mc2p.contracts.action_v1 import ActionIntentV1, LookV1, MovementV1
 from mc2p.contracts.intent_source import (
     ControlFrameProposalV1, OrderedIntentV1, ordered_intent_id,
 )
@@ -19,7 +19,7 @@ from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 
 
 class FakeNavigationSession:
-    def __init__(self):
+    def __init__(self, *, cancel_steps=0):
         self.source = None
         self.goal_id = None
         self.goal_revision = None
@@ -29,9 +29,17 @@ class FakeNavigationSession:
         self.updates = []
         self.frames = []
         self.movement = MovementV1(forward=1)
+        self.look: LookV1 | None = None
+        self.movement_look_tolerance_degrees = 0.0
         self.proposal_sequence = 0
         self._motion_baseline = None
         self.request_positions = ()
+        self.execution_anchor_token = object()
+        self.execution_anchor_requests = []
+        self.proposal_anchors = []
+        self.proposal_ledgers = []
+        self.cancel_steps = cancel_steps
+        self.cancel_remaining = 0
 
     @property
     def report(self):
@@ -95,6 +103,10 @@ class FakeNavigationSession:
             0.2 if damaged else 0.0,
         )
 
+    def execution_anchor(self, snapshot, ledger):
+        self.execution_anchor_requests.append((snapshot.sequence_id, ledger))
+        return self.execution_anchor_token
+
     def external_motion_reentry(self, snapshot):
         own = snapshot.self_state.value
         can_continue = (
@@ -124,15 +136,29 @@ class FakeNavigationSession:
         self.updates.append((goal_id, revision, goal_state))
         self.state, self.reason = NavigationSessionState.EXECUTING, "goal_revised"
 
-    def propose(self, frame, _anchor, deadline_ns, *, input_ledger=None):
+    def propose(self, frame, anchor, deadline_ns, *, input_ledger=None):
         source = self.source
+        self.proposal_anchors.append(anchor)
+        self.proposal_ledgers.append(input_ledger)
         self.proposal_sequence += 1
+        if self.state is NavigationSessionState.CANCELLING:
+            self.cancel_remaining -= 1
+            if self.cancel_remaining <= 0:
+                self.state = NavigationSessionState.CANCELLED
         intent = ActionIntentV1(
             ordered_intent_id(source, self.proposal_sequence),
             source.source_id, source.episode_id,
             frame.body.sequence_id, ActionPriorityV0.TASK,
             deadline_ns - 500_000_000, deadline_ns,
-            movement=self.movement, valid_for_ticks=1,
+            movement=self.movement, look=self.look, valid_for_ticks=1,
+            movement_requires_look=(
+                self.look is not None and self.movement != MovementV1()
+            ),
+            movement_look_tolerance_degrees=(
+                self.movement_look_tolerance_degrees
+                if self.look is not None and self.movement != MovementV1()
+                else 0.0
+            ),
         )
         return NavigationSessionProposal(
             ControlFrameProposalV1((OrderedIntentV1(
@@ -142,4 +168,9 @@ class FakeNavigationSession:
         )
 
     def cancel(self, reason):
-        self.state, self.reason = NavigationSessionState.CANCELLED, reason
+        self.reason = reason
+        if self.cancel_steps:
+            self.cancel_remaining = self.cancel_steps
+            self.state = NavigationSessionState.CANCELLING
+        else:
+            self.state = NavigationSessionState.CANCELLED

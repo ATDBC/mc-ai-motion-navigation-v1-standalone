@@ -4,9 +4,12 @@ import unittest
 
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.reset import ResetRequestV0
+from mc2p.motion_nav.navigation_session import NavigationSessionState
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1
 from mc2p.runtime.trace import trace_projection
 from mc2p.skills.fixed_melee import CombatTargetV1
+from mc2p.skills.melee_strike_driver import MeleeStrikeOutcome
+from mc2p.skills.moving_melee import MovingMeleePhase, decide_moving_melee
 from mc2p.skills.moving_melee_driver import MovingMeleeDriver
 from scripts.c1_moving_melee_evidence import _replay_rows
 from tests.test_fixed_melee_driver import MeleeBackend, TRACK
@@ -39,12 +42,62 @@ def actual_rows():
     return rows
 
 
+def cancelled_after_attack_rows():
+    clock = [100_000_000]
+    backend = MeleeBackend(clock, distance=5.0)
+    trace = _RecordingTrace()
+    runtime = PlayerRuntimeV1(backend, trace, lambda: clock[0])
+    assert runtime.reset(ResetRequestV0(
+        "reset", "episode-1", "test", 1, 5_000_000_000,
+    )).succeeded
+    driver = MovingMeleeDriver(
+        runtime, FakeNavigationSession(),
+        clock_ns=lambda: clock[0],
+    )
+    driver.start(CombatTargetV1(
+        "combat-task-cancel", "combat-goal-cancel", 1, "episode-1", TRACK,
+    ), clock[0])
+    profile = BehaviorProfileV0()
+    driver.tick(profile, clock[0] + 2_000_000_000)
+    backend.distance = 2.5
+    driver.approach_driver.session.state = NavigationSessionState.COMPLETE
+    driver.approach_driver.session.reason = "goal_reached"
+    for _ in range(8):
+        driver.tick(profile, clock[0] + 2_000_000_000)
+        if driver.report.attack_submissions >= 1:
+            break
+    assert driver.report.attack_submissions == 1
+    driver.cancel(profile, "evidence_cancel_after_attack")
+    decision = decide_moving_melee(
+        MovingMeleePhase.STRIKING,
+        position_source=None,
+        within_attack_distance=False,
+        target_dead=False,
+        strike_outcome=MeleeStrikeOutcome.HIT_CONFIRMED,
+    )
+    driver._record_melee_decision(
+        decision, MovingMeleePhase.STRIKING, False,
+        MeleeStrikeOutcome.HIT_CONFIRMED,
+    )
+    rows = [{
+        "schema_version": "mc2p.trace-record.v0",
+        "record_type": kind,
+        "payload": trace_projection(payload),
+    } for kind, payload in trace.records]
+    runtime.close()
+    return rows
+
+
 class C1MovingMeleeEvidenceTests(unittest.TestCase):
     def test_actual_frame_decisions_replay(self):
         result = _replay_rows(actual_rows())
         self.assertTrue(result["passed"], result)
         self.assertGreaterEqual(result["replayed_decisions"], 3)
         self.assertFalse(result["simulated_entity_ai"])
+
+    def test_cancelled_engagement_can_replay_a_decision_without_a_position_fact(self):
+        result = _replay_rows(cancelled_after_attack_rows())
+        self.assertTrue(result["passed"], result)
 
     def test_tampered_moving_decision_is_attributed(self):
         rows = deepcopy(actual_rows())

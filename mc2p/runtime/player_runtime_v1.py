@@ -24,9 +24,14 @@ from mc2p.contracts.reset import ResetRequestV0, ResetResultV0
 from mc2p.contracts.task import TaskIntentV0
 from mc2p.runtime.arbiter_v1 import ActionArbiterV1, ArbitrationDecisionV1
 from mc2p.runtime.backend_v1 import BackendStepResultV1, PlayerBackendV1
+from mc2p.runtime.failure_disposition import (
+    FailureDispositionDecision, FailureDispositionPolicy,
+)
 from mc2p.runtime.trace import TraceSinkV0
 from mc2p.motion_nav.online_motion import InputApplicationLedger
-from mc2p.motion_nav.runtime_adapter import world_session_from_observation
+from mc2p.motion_nav.runtime_adapter import (
+    NavigationObservationAdapter, world_session_from_observation,
+)
 
 _OrderedResult = TypeVar('_OrderedResult')
 
@@ -68,6 +73,12 @@ class PlayerRuntimeV1:
         self._backend_elapsed_ns_total = 0
         self._backend_blocking_io_ns_total = 0
         self._input_ledger = InputApplicationLedger()
+        # Keep one navigation world owner for the Runtime session.  Individual
+        # tasks may create and retire navigation sessions without losing or
+        # duplicating the live map.
+        self._navigation_observation_adapter = NavigationObservationAdapter()
+        self._failure_policy = FailureDispositionPolicy()
+        self._last_failure_disposition: FailureDispositionDecision | None = None
 
     @property
     def state(self) -> RuntimeStateV1:
@@ -85,6 +96,15 @@ class PlayerRuntimeV1:
     def input_ledger(self) -> InputApplicationLedger:
         """Read-only access to the input history owned by the sole output path."""
         return self._input_ledger
+
+    @property
+    def navigation_observation_adapter(self) -> NavigationObservationAdapter:
+        """The sole live world/observation owner shared by Runtime tasks."""
+        return self._navigation_observation_adapter
+
+    @property
+    def last_failure_disposition(self) -> FailureDispositionDecision | None:
+        return self._last_failure_disposition
 
     @property
     def backend_elapsed_ns_total(self) -> int:
@@ -129,6 +149,7 @@ class PlayerRuntimeV1:
             except Exception as error:
                 self._seal()
                 failure = self._exception_failure(error, code)
+                self._last_failure_disposition = self._failure_policy.decide(failure)
                 result = ResetResultV0(request.request_id, request.episode_id, False, failure=failure)
                 self._record_failure("reset_failure", {"request": request, "result": result})
             except BaseException:
@@ -146,6 +167,8 @@ class PlayerRuntimeV1:
                             movement_tick_id=own.movement_tick_id,
                         )
                 self._request_sequence = self._step_number = 0
+                self._failure_policy.clear()
+                self._last_failure_disposition = None
                 self._state = RuntimeStateV1.READY
             else:
                 self._seal()
@@ -353,18 +376,26 @@ class PlayerRuntimeV1:
                               else ExecutionStatusV0.FAILED)
                     failure = FailureV0(FailureCodeV0.DEADLINE_EXCEEDED if status is ExecutionStatusV0.TIMED_OUT else FailureCodeV0.CONTRACT,
                         receipt.reason, True, "client_behavior")
+                    self._last_failure_disposition = self._failure_policy.decide(failure)
                     phase = "action_rejected"
                     if cancel_reason is not None or status is ExecutionStatusV0.TIMED_OUT:
                         self._seal()
+                elif receipt.status == "operation_rejected":
+                    # The operation guard rejected only the one-shot operation.
+                    # Movement/look in the same admitted frame remains valid and
+                    # is accounted for by the input-application ledger.
+                    phase = "operation_rejected"
                 elif cancel_reason is not None:
                     if receipt.status not in {"executed", "confirmed_local", "cancelled"}:
                         raise ContractViolation("neutral cancellation was not locally accepted")
                     status, phase = ExecutionStatusV0.CANCELLED, "cancel"
                     failure = FailureV0(FailureCodeV0.CANCELLED, cancel_reason, True, "runtime")
+                    self._last_failure_disposition = self._failure_policy.decide(failure)
                     self._state = RuntimeStateV1.CANCELLED
                 if backend_result.terminated or backend_result.truncated or self._observation.is_dead.value is True:
                     status, phase = ExecutionStatusV0.FAILED, "episode_ended"
                     failure = FailureV0(FailureCodeV0.BACKEND_DISCONNECTED, "episode ended; task completion not established", True, "runtime")
+                    self._last_failure_disposition = self._failure_policy.decide(failure)
                     self._seal(RuntimeStateV1.ENDED)
                 report = self._report(task, decision, status, phase, failure, self._observation)
                 phase_code = FailureCodeV0.TRACE_IO
@@ -373,6 +404,7 @@ class PlayerRuntimeV1:
                 return RuntimeStepResultV1(self._observation, decision, report, backend_result)
             except Exception as error:
                 failure = self._exception_failure(error, phase_code)
+                self._last_failure_disposition = self._failure_policy.decide(failure)
                 self._seal()
                 report = self._report(task, decision,
                     ExecutionStatusV0.TIMED_OUT if failure.code is FailureCodeV0.DEADLINE_EXCEEDED else ExecutionStatusV0.FAILED,

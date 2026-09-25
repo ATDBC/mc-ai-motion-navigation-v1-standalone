@@ -132,6 +132,43 @@ class ExternalMotionDetectorTests(unittest.TestCase):
         self.assertIsNotNone(result.damage_fact)
         self.assertEqual(result.reason, "motion_residual_unavailable")
 
+    def test_damage_with_unsupported_motion_model_requests_conservative_recovery(self):
+        detector = DamageKnockbackDetector()
+        detector.observe(snapshot(seq=1, tick=20, hurt=0, health=20))
+        unsupported = MotionResidualResult(
+            MotionResidualStatus.UNSUPPORTED, 20, 21,
+            reasons=("surface_motion_rule_not_supported",),
+        )
+
+        result = detector.observe(
+            snapshot(seq=2, tick=21, hurt=10, health=18), unsupported,
+        )
+
+        self.assertEqual(
+            result.event.source,
+            ExternalMotionSource.DAMAGE_WITH_UNVERIFIED_MOTION,
+        )
+        self.assertEqual(result.reason, "damage_motion_unverified")
+        self.assertEqual(result.event.health_delta_points, -2)
+        self.assertIsNone(result.event.position_residual_blocks)
+
+    def test_invalid_residual_with_damage_also_invalidates_the_old_motion_proof(self):
+        detector = DamageKnockbackDetector()
+        detector.observe(snapshot(seq=1, tick=20, hurt=0, health=20))
+        invalid = MotionResidualResult(
+            MotionResidualStatus.INVALID_INPUT, 20, 21,
+            reasons=("anchor_or_identity_not_comparable",),
+        )
+
+        result = detector.observe(
+            snapshot(seq=2, tick=21, hurt=10, health=18), invalid,
+        )
+
+        self.assertEqual(
+            result.event.source,
+            ExternalMotionSource.DAMAGE_WITH_UNVERIFIED_MOTION,
+        )
+
     def test_damage_waits_for_residual_that_still_covers_the_damage_tick(self):
         detector = DamageKnockbackDetector()
         detector.observe(snapshot(seq=1, tick=20, hurt=0, health=20))

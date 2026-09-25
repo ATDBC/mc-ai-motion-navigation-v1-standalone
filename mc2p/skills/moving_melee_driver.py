@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
 import json
 import math
 import time
@@ -17,7 +18,9 @@ from mc2p.contracts.intent_source import (
     ControlFrameProposalV1, OrderedIntentV1, ordered_intent_id,
 )
 from mc2p.contracts.task import ComparisonOperatorV0, SuccessCriterionV0, TaskIntentV0
-from mc2p.motion_nav.external_motion import DamageKnockbackDetector, ExternalMotionEventV1
+from mc2p.motion_nav.external_motion import (
+    DamageKnockbackDetector, ExternalMotionEventV1, ExternalMotionSource,
+)
 from mc2p.motion_nav.navigation_session import ExternalMotionReentryStatus
 from mc2p.motion_nav.external_motion_recovery import ExternalMotionRecoveryController
 from mc2p.motion_nav.navigation_session import NavigationSessionPort
@@ -32,7 +35,9 @@ from mc2p.skills.fixed_melee import CombatTargetV1, MAX_COARSE_ATTACK_DISTANCE_B
 from mc2p.skills.external_motion_recovery_driver import ExternalMotionRecoveryDriver
 from mc2p.skills.follow_tracking import project_playground_view
 from mc2p.skills.gaze_controller import GazeController
-from mc2p.skills.melee_strike_driver import MeleeStrikeDriver, TASK_LIMIT_NS
+from mc2p.skills.melee_strike_driver import (
+    MeleeStrikeDriver, MeleeStrikeOutcome, TASK_LIMIT_NS,
+)
 from mc2p.skills.moving_melee import MovingMeleePhase, decide_moving_melee
 from mc2p.skills.moving_target import MovingGoalDecisionV1, decide_moving_goal
 from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
@@ -40,7 +45,17 @@ from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
 
 MAX_REAPPROACHES = 16
 MAX_CONFIRMED_STRIKES = 16
+MAX_UNCONFIRMED_STRIKES = 2
 MAX_REACQUIRE_LOOKS = 20
+
+
+class _ApproachHandoff(StrEnum):
+    STRIKE = "strike"
+    FAIL = "fail"
+    RECOVER_CADENCE = "recover_cadence"
+    CANCEL = "cancel"
+    COMPLETE = "complete"
+    NEEDS_TASK_DECISION = "needs_task_decision"
 
 
 @dataclass(frozen=True, slots=True)
@@ -87,6 +102,7 @@ class MovingMeleeDriver:
         self._navigation_goal_revision = 0
         self._confirmed_hits = 0
         self._completed_attack_submissions = 0
+        self._unconfirmed_strikes = 0
         self._reapproaches = 0
         self._engagement_position_uses = 0
         self._last_engagement_sequence: int | None = None
@@ -102,6 +118,8 @@ class MovingMeleeDriver:
         self._reacquire_attempts = 0
         self._gaze = GazeController()
         self._pending_target: CombatTargetV1 | None = None
+        self._pending_approach_handoff: _ApproachHandoff | None = None
+        self._pending_approach_reason: str | None = None
         self.approach_driver: RuntimeNavigationDriver | None = None
         self.strike_driver: MeleeStrikeDriver | None = None
         self.recovery_driver: ExternalMotionRecoveryDriver | None = None
@@ -122,7 +140,7 @@ class MovingMeleeDriver:
             active_recovery,
             self._phase in {
                 MovingMeleePhase.COMPLETE, MovingMeleePhase.FAILED,
-                MovingMeleePhase.CANCELLED,
+                MovingMeleePhase.CANCELLED, MovingMeleePhase.NEEDS_TASK_DECISION,
             },
         )
 
@@ -199,7 +217,7 @@ class MovingMeleeDriver:
         decision,
         input_phase: MovingMeleePhase,
         target_dead: bool,
-        strike_reason: str | None,
+        strike_outcome: MeleeStrikeOutcome | None,
     ) -> None:
         assert self._target is not None
         self.runtime.record_task_event("moving_melee_decision", {
@@ -216,7 +234,7 @@ class MovingMeleeDriver:
                 False if self._fact is None else self._within_attack_distance(self._fact)
             ),
             "target_dead": target_dead,
-            "strike_reason": strike_reason,
+            "strike_outcome": None if strike_outcome is None else strike_outcome.value,
             "decision": decision,
         })
 
@@ -248,8 +266,8 @@ class MovingMeleeDriver:
 
     def _start_strike(self) -> None:
         assert self._target is not None
-        if self.approach_driver is not None or self._reacquire_source is not None:
-            raise ContractViolation("navigation must be released before striking")
+        if self._reacquire_source is not None:
+            raise ContractViolation("reacquire look must be released before striking")
         self.strike_driver = MeleeStrikeDriver(
             self.runtime, clock_ns=self._clock, task_deadline_ns=self._deadline_ns,
         )
@@ -471,6 +489,7 @@ class MovingMeleeDriver:
         reason: str,
         *,
         advance_runtime: bool = True,
+        handoff: _ApproachHandoff | None = None,
     ) -> RuntimeStepResultV1 | None:
         assert self.approach_driver is not None
         result = (
@@ -480,31 +499,71 @@ class MovingMeleeDriver:
         )
         if not advance_runtime:
             self.approach_driver.release(reason)
-        self.approach_driver = None
+        if self.approach_driver.source is None:
+            self.approach_driver = None
+        else:
+            if handoff is None:
+                raise ContractViolation(
+                    "nonterminal navigation release requires a typed handoff"
+                )
+            self._pending_approach_handoff = handoff
+            self._pending_approach_reason = reason
         self._observe()
         return result
+
+    def _finish_approach_handoff(self) -> None:
+        handoff = self._pending_approach_handoff
+        reason = self._pending_approach_reason
+        self._pending_approach_handoff = None
+        self._pending_approach_reason = None
+        if handoff is None:
+            return
+        if handoff is _ApproachHandoff.STRIKE:
+            self._start_strike()
+        elif handoff is _ApproachHandoff.FAIL:
+            self._phase = MovingMeleePhase.FAILED
+            self._reason = reason or "approach_handoff_failed"
+        elif handoff is _ApproachHandoff.RECOVER_CADENCE:
+            self._phase = MovingMeleePhase.RECOVERING_CADENCE
+            self._reason = reason or "approach_handoff_complete"
+        elif handoff is _ApproachHandoff.CANCEL:
+            self._phase = MovingMeleePhase.CANCELLED
+            self._reason = "task_cancelled"
+        elif handoff is _ApproachHandoff.COMPLETE:
+            self._phase = MovingMeleePhase.COMPLETE
+            self._reason = reason or "target_dead"
+        elif handoff is _ApproachHandoff.NEEDS_TASK_DECISION:
+            self._phase = MovingMeleePhase.NEEDS_TASK_DECISION
+            self._reason = reason or "task_strategy_required"
 
     def _adopt_strike_report(self) -> None:
         assert self.strike_driver is not None and self._target is not None
         report = self.strike_driver.report
         self._reason = report.reason
-        if report.state == "needs_approach":
+        if report.outcome is MeleeStrikeOutcome.NEEDS_APPROACH:
             self._completed_attack_submissions += report.attack_submissions
             self.strike_driver = None
             self._observe()
             if self._fact is None:
                 self._phase, self._reason = MovingMeleePhase.FAILED, "target_unavailable"
+            elif self.approach_driver is not None:
+                # A composed strike may discover that the target has left
+                # range while the existing navigation owner is still valid.
+                # Reuse it; the normal pursuit tick will revise its goal from
+                # the latest target fact without registering a second owner.
+                self._phase = MovingMeleePhase.PURSUING
+                self._reason = "target_left_attack_distance"
             else:
                 self._start_approach()
             return
-        if not report.terminal:
+        if report.outcome is MeleeStrikeOutcome.IN_PROGRESS:
             self._phase = MovingMeleePhase.STRIKING
             return
         self._completed_attack_submissions += report.attack_submissions
         self.strike_driver = None
-        if report.state == "complete" and report.reason == "target_dead":
+        if report.outcome is MeleeStrikeOutcome.TARGET_DEAD:
             self._phase, self._reason = MovingMeleePhase.COMPLETE, "target_dead"
-        elif report.state == "complete" and report.reason == "hit_confirmed":
+        elif report.outcome is MeleeStrikeOutcome.HIT_CONFIRMED:
             self._confirmed_hits += 1
             if self._confirmed_hits > MAX_CONFIRMED_STRIKES:
                 self._phase, self._reason = MovingMeleePhase.FAILED, "strike_limit_exhausted"
@@ -515,22 +574,131 @@ class MovingMeleeDriver:
                 position_source=None if self._fact is None else self._fact.source,
                 within_attack_distance=(False if self._fact is None
                                         else self._within_attack_distance(self._fact)),
-                target_dead=False, strike_reason="hit_confirmed",
+                target_dead=False,
+                strike_outcome=MeleeStrikeOutcome.HIT_CONFIRMED,
             )
             self._record_melee_decision(
-                decision, MovingMeleePhase.STRIKING, False, "hit_confirmed",
+                decision, MovingMeleePhase.STRIKING, False,
+                MeleeStrikeOutcome.HIT_CONFIRMED,
             )
             self._phase, self._reason = decision.phase, decision.reason
-        elif (report.state == "failed" and report.reason == "target_revised_after_submit"
+        elif report.outcome in {
+            MeleeStrikeOutcome.UNCONFIRMED,
+            MeleeStrikeOutcome.RETRYABLE_OPERATION_REJECTION,
+        }:
+            self._unconfirmed_strikes += 1
+            self._observe()
+            tracked = self.runtime.observation.tracked_entity.value
+            if (tracked is not None and tracked.track_id == self._target.track_id
+                    and tracked.is_dead):
+                self._phase, self._reason = MovingMeleePhase.COMPLETE, "target_dead"
+            elif self._unconfirmed_strikes >= MAX_UNCONFIRMED_STRIKES:
+                self._phase = MovingMeleePhase.NEEDS_TASK_DECISION
+                self._reason = (
+                    "attack_operation_rejected"
+                    if report.outcome is MeleeStrikeOutcome.RETRYABLE_OPERATION_REJECTION
+                    else "hit_confirmation_uncertain"
+                )
+            else:
+                self._phase = MovingMeleePhase.RECOVERING_CADENCE
+                self._reason = (
+                    "attack_operation_rejected_retryable"
+                    if report.outcome is MeleeStrikeOutcome.RETRYABLE_OPERATION_REJECTION
+                    else "hit_unconfirmed_retryable"
+                )
+        elif (report.outcome is MeleeStrikeOutcome.FAILED
+              and report.reason in {
+                  "target_or_observation_unavailable",
+                  "hit_observation_unavailable",
+              }):
+            # A one-frame visibility gap invalidates this strike attempt, not
+            # the engagement.  Return ownership to the moving combat layer so
+            # it can use engagement memory to turn back toward the target.
+            self._completed_attack_submissions += report.attack_submissions
+            self.strike_driver = None
+            self._observe()
+            if self._engagement.active:
+                self._phase = MovingMeleePhase.PURSUING
+                self._reason = "target_observation_gap"
+            else:
+                self._phase = MovingMeleePhase.FAILED
+                self._reason = self._engagement.revocation_reason or report.reason
+        elif (report.outcome is MeleeStrikeOutcome.RETRY_AFTER_TARGET_REVISION
               and self._pending_target is not None):
             target = self._pending_target
             self._pending_target = None
             self._activate_revised_target(target)
             self._phase, self._reason = MovingMeleePhase.RECOVERING_CADENCE, "target_revised"
-        elif report.state == "cancelled":
+        elif report.outcome is MeleeStrikeOutcome.CANCELLED:
             self._phase, self._reason = MovingMeleePhase.CANCELLED, report.reason
         else:
             self._phase, self._reason = MovingMeleePhase.FAILED, report.reason
+
+    def _retire_approach_after_strike_terminal(self) -> None:
+        if self.approach_driver is None:
+            return
+        terminal_phase, terminal_reason = self._phase, self._reason
+        handoff = {
+            MovingMeleePhase.COMPLETE: _ApproachHandoff.COMPLETE,
+            MovingMeleePhase.NEEDS_TASK_DECISION: _ApproachHandoff.NEEDS_TASK_DECISION,
+            MovingMeleePhase.CANCELLED: _ApproachHandoff.CANCEL,
+            MovingMeleePhase.FAILED: _ApproachHandoff.FAIL,
+        }.get(terminal_phase)
+        if handoff is None:
+            return
+        released = self.approach_driver.release(
+            "combat_terminal/" + terminal_reason
+        )
+        if released:
+            self.approach_driver = None
+            return
+        self._pending_approach_handoff = handoff
+        self._pending_approach_reason = terminal_reason
+        self._phase = MovingMeleePhase.CANCELLING
+        self._reason = "finishing_navigation_after_combat_terminal"
+
+    def _tick_strike(
+        self,
+        profile: BehaviorProfileV0,
+        owner_deadline_ns: int,
+    ) -> RuntimeStepResultV1 | None:
+        assert self.strike_driver is not None
+        approach = self.approach_driver
+        supplier = (
+            None
+            if approach is None
+            else lambda: approach.prepare_proposals(owner_deadline_ns)
+        )
+        try:
+            result = self.strike_driver.tick(
+                profile,
+                owner_deadline_ns,
+                additional_proposal_supplier=supplier,
+            )
+        except BaseException:
+            if approach is not None and approach.has_prepared_frame:
+                approach.discard_prepared()
+            raise
+        if approach is not None and approach.has_prepared_frame:
+            if result is None:
+                approach.discard_prepared()
+            else:
+                approach.adopt_result(result)
+                if approach.source is None:
+                    self.approach_driver = None
+                elif approach.state == "success":
+                    approach.release("combat_standoff_reached")
+                    self.approach_driver = None
+        captured, capture_result = self._capture_external_motion(
+            profile, owner_deadline_ns,
+        )
+        if captured:
+            return capture_result if capture_result is not None else result
+        if result is not None:
+            self._observe()
+        self._adopt_strike_report()
+        self._retire_approach_after_strike_terminal()
+        return result
 
     def _begin_external_recovery(
         self,
@@ -541,7 +709,6 @@ class MovingMeleeDriver:
         step_already_performed: bool = False,
     ) -> RuntimeStepResultV1 | None:
         assert self._target is not None
-        result = None
         old_movement_source_id = (
             None if self.approach_driver is None or self.approach_driver.source is None
             else self.approach_driver.source.source_id
@@ -551,15 +718,10 @@ class MovingMeleeDriver:
             None if self._reacquire_source is None else self._reacquire_source.source_id,
             None if self.strike_driver is None else self.strike_driver.control_source_id,
         ) if source_id is not None)
-        if self.approach_driver is not None:
-            result = self._release_approach(
-                profile, "external_motion_disrupted",
-                advance_runtime=not step_already_performed,
-            )
         self._release_reacquire()
         if self.strike_driver is not None:
             self.strike_driver.interrupt_for_external_motion(
-                profile, "damage_knockback"
+                profile, event.source.value,
             )
         self.recovery_driver = ExternalMotionRecoveryDriver(
             self.runtime,
@@ -572,6 +734,13 @@ class MovingMeleeDriver:
             evidence_scope_id=self._target.task_id,
         )
         self.recovery_driver.start(event)
+        if self.approach_driver is not None:
+            # The recovery source now owns landing/braking. Only after that
+            # successor exists may navigation relinquish its body responsibility.
+            self.approach_driver.transfer_to_successor(
+                "external_motion_recovery_owns_body"
+            )
+            self.approach_driver = None
         self.runtime.record_task_event("external_motion_recovery", {
             "schema_version": "mc2p.external-motion-recovery-event.v1",
             "episode_id": self._target.episode_id,
@@ -586,11 +755,13 @@ class MovingMeleeDriver:
         })
         self._external_motion_events += 1
         self._phase = MovingMeleePhase.RECOVERING_EXTERNAL_MOTION
-        self._reason = "damage_knockback_captured"
+        self._reason = (
+            "damage_knockback_captured"
+            if event.source is ExternalMotionSource.DAMAGE_KNOCKBACK
+            else "external_motion_captured/" + event.source.value
+        )
         if step_already_performed:
             return None
-        if result is not None:
-            return result
         return self._tick_external_recovery(profile, owner_deadline_ns)
 
     def _continue_navigation_after_external_motion(
@@ -652,7 +823,7 @@ class MovingMeleeDriver:
                 self._adopt_strike_report()
                 if self._phase in {MovingMeleePhase.COMPLETE, MovingMeleePhase.FAILED}:
                     return
-            elif report.state == "needs_approach":
+            elif report.outcome is MeleeStrikeOutcome.NEEDS_APPROACH:
                 self._completed_attack_submissions += report.attack_submissions
                 self.strike_driver = None
             else:
@@ -709,7 +880,11 @@ class MovingMeleeDriver:
                 "completed_generation": recovery_report.active_generation,
             })
             self.recovery_driver = None
-            self._resume_after_external_recovery()
+            if recovery_report.task_limit_reason is not None:
+                self._phase = MovingMeleePhase.NEEDS_TASK_DECISION
+                self._reason = "external_motion/" + recovery_report.task_limit_reason
+            else:
+                self._resume_after_external_recovery()
         else:
             self._phase = MovingMeleePhase.RECOVERING_EXTERNAL_MOTION
             self._reason = recovery_report.reason or "external_motion_recovery"
@@ -752,24 +927,57 @@ class MovingMeleeDriver:
         if self.recovery_driver is not None:
             return self._tick_external_recovery(profile, owner_deadline_ns)
 
+        if self.strike_driver is not None and self.approach_driver is not None:
+            return self._tick_strike(profile, owner_deadline_ns)
+
         if self.approach_driver is not None:
+            if self._pending_approach_handoff is not None:
+                result = self.approach_driver.tick(profile, owner_deadline_ns)
+                if self.approach_driver.source is None:
+                    self.approach_driver = None
+                    self._finish_approach_handoff()
+                return result
             self._observe()
+            if (self._engagement.active and self._fact is None
+                    and self._engagement.awaiting_continuity_reanchor):
+                result = self.approach_driver.tick(profile, owner_deadline_ns)
+                captured, capture_result = self._capture_external_motion(
+                    profile, owner_deadline_ns,
+                )
+                if captured:
+                    return capture_result if capture_result is not None else result
+                self._observe()
+                self._phase = MovingMeleePhase.PURSUING
+                self._reason = (
+                    "target_observation_reanchored"
+                    if self._fact is not None
+                    else "target_observation_gap"
+                )
+                return result
             if not self._engagement.active or self._fact is None:
-                result = self._release_approach(profile, "target_unavailable")
-                self._phase, self._reason = MovingMeleePhase.FAILED, \
-                    self._engagement.revocation_reason or "target_unavailable"
+                failure_reason = self._engagement.revocation_reason or "target_unavailable"
+                result = self._release_approach(
+                    profile, failure_reason, handoff=_ApproachHandoff.FAIL,
+                )
+                if self.approach_driver is None:
+                    self._phase, self._reason = MovingMeleePhase.FAILED, failure_reason
                 return result
             if (self._fact.source.value == "vision"
                     and self._within_attack_distance(self._fact)):
-                result = self._release_approach(profile, "strike_range_reached")
                 self._start_strike()
-                return result
+                return self._tick_strike(profile, owner_deadline_ns)
             observation = self.runtime.observation
             assert type(observation) is ObservationSnapshotV3
             own = observation.self_state.value
             if own is None:
-                result = self._release_approach(profile, "self_state_unavailable")
-                self._phase, self._reason = MovingMeleePhase.FAILED, "self_state_unavailable"
+                result = self._release_approach(
+                    profile, "self_state_unavailable",
+                    handoff=_ApproachHandoff.FAIL,
+                )
+                if self.approach_driver is None:
+                    self._phase, self._reason = (
+                        MovingMeleePhase.FAILED, "self_state_unavailable",
+                    )
                 return result
             # A completed route is no longer replaceable. Consume its success
             # before considering a moving-target goal refresh.
@@ -835,6 +1043,11 @@ class MovingMeleeDriver:
                 if captured:
                     return capture_result if capture_result is not None else refresh_result
             self._observe()
+            if (self._fact is None and self._engagement.active
+                    and self._engagement.awaiting_continuity_reanchor):
+                self._phase = MovingMeleePhase.PURSUING
+                self._reason = "target_observation_gap"
+                return refresh_result
             tracked = self.runtime.observation.tracked_entity.value
             if tracked is not None and tracked.track_id == self._target.track_id and tracked.is_dead:
                 self._phase, self._reason = MovingMeleePhase.COMPLETE, "target_dead"
@@ -860,17 +1073,7 @@ class MovingMeleeDriver:
                 self._phase, self._reason = decision.phase, decision.reason
                 return refresh_result
 
-        assert self.strike_driver is not None
-        result = self.strike_driver.tick(profile, owner_deadline_ns)
-        captured, capture_result = self._capture_external_motion(
-            profile, owner_deadline_ns,
-        )
-        if captured:
-            return capture_result if capture_result is not None else result
-        if result is not None:
-            self._observe()
-        self._adopt_strike_report()
-        return result
+        return self._tick_strike(profile, owner_deadline_ns)
 
     def cancel(self, profile: BehaviorProfileV0,
                reason: str) -> RuntimeStepResultV1 | None:
@@ -883,7 +1086,9 @@ class MovingMeleeDriver:
             result = self.recovery_driver.cancel(profile, reason)
             self.recovery_driver = None
         elif self.approach_driver is not None:
-            result = self._release_approach(profile, reason)
+            result = self._release_approach(
+                profile, reason, handoff=_ApproachHandoff.CANCEL,
+            )
         elif self.strike_driver is not None:
             result = self.strike_driver.cancel(profile, reason)
             self._completed_attack_submissions += self.strike_driver.report.attack_submissions
@@ -891,5 +1096,9 @@ class MovingMeleeDriver:
         self._release_reacquire()
         if self._engagement is not None:
             self._observe(EngagementEventKind.CANCELLED)
-        self._phase, self._reason = MovingMeleePhase.CANCELLED, "task_cancelled"
+        if self.approach_driver is not None:
+            self._phase, self._reason = MovingMeleePhase.CANCELLING, \
+                "finishing_navigation_cancellation"
+        else:
+            self._phase, self._reason = MovingMeleePhase.CANCELLED, "task_cancelled"
         return result

@@ -316,17 +316,22 @@ def _run_negative(runtime: PlayerRuntimeV1, trial: dict, target: CombatTargetV1,
                         "reason": state.revocation_reason, "attack_submissions": 0}
     driver = MovingMeleeDriver(
         runtime,
-        NavigationSession("c1b-" + trial["trial_id"], profiles),
+        NavigationSession(
+            "c1b-" + trial["trial_id"], profiles,
+            observation_adapter=runtime.navigation_observation_adapter,
+        ),
     )
     driver.start(target, time.perf_counter_ns())
     if injection == "cancel_pursuing":
         driver.cancel(profile, "negative_cancel_pursuing")
+        _run_driver_until(driver, profile, deadline_ns, lambda report: report.terminal)
         passed = driver.report.state == "cancelled" and driver.report.attack_submissions == 0
     elif injection == "target_revision":
         driver.replace_target(CombatTargetV1(
             target.task_id, target.goal_id, 2, target.episode_id, target.track_id,
         ), time.perf_counter_ns())
         driver.cancel(profile, "negative_target_revision")
+        _run_driver_until(driver, profile, deadline_ns, lambda report: report.terminal)
         passed = driver.report.state == "cancelled" and driver.report.target_revision == 2 \
             and driver.report.attack_submissions == 0
     elif injection == "cancel_after_attack_submit":
@@ -334,6 +339,7 @@ def _run_negative(runtime: PlayerRuntimeV1, trial: dict, target: CombatTargetV1,
                           lambda report: report.attack_submissions >= 1)
         before = driver.report.attack_submissions
         driver.cancel(profile, "negative_cancel_after_submit")
+        _run_driver_until(driver, profile, deadline_ns, lambda report: report.terminal)
         passed = driver.report.state == "cancelled" and driver.report.attack_submissions == before
     elif injection == "attack_after_explicit_death":
         _run_driver_until(driver, profile, deadline_ns, lambda report: report.terminal)
@@ -440,7 +446,10 @@ def run_c1_moving_melee_runtime(
             continue
         driver = MovingMeleeDriver(
             runtime,
-            NavigationSession("c1b-" + trial["trial_id"], profiles),
+            NavigationSession(
+                "c1b-" + trial["trial_id"], profiles,
+                observation_adapter=runtime.navigation_observation_adapter,
+            ),
         )
         driver.start(target, time.perf_counter_ns())
         profile = BehaviorProfileV0()

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
 import math
 import time
 from typing import Callable
@@ -19,6 +20,11 @@ from mc2p.skills.fixed_melee import (
 )
 from mc2p.skills.melee_strike_driver import MeleeStrikeDriver, TASK_LIMIT_NS
 from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
+
+
+class _ApproachExit(StrEnum):
+    STRIKE = "strike"
+    CANCEL = "cancel"
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,6 +58,7 @@ class FixedMeleeDriver:
         self._target: CombatTargetV1 | None = None
         self._task_deadline_ns = 0
         self._state, self._reason = "ready", "not_started"
+        self._pending_approach_exit: _ApproachExit | None = None
         self.approach_driver: RuntimeNavigationDriver | None = None
         self.strike_driver: MeleeStrikeDriver | None = None
 
@@ -126,8 +133,17 @@ class FixedMeleeDriver:
             self._state, self._reason = "approaching", "outside_stable_attack_distance"
         else:
             if self.approach_driver is not None:
-                self.approach_driver.release("target_entered_attack_range")
-                self.approach_driver = None
+                released = self.approach_driver.release(
+                    "target_entered_attack_range"
+                )
+                if released:
+                    self.approach_driver = None
+                else:
+                    self._pending_approach_exit = _ApproachExit.STRIKE
+                    self._state, self._reason = (
+                        "stopping_approach", "finishing_navigation_before_strike",
+                    )
+                    return
             self._start_strike(now_ns)
 
     def start(self, target: CombatTargetV1, now_ns: int) -> None:
@@ -176,6 +192,19 @@ class FixedMeleeDriver:
         if self.report.terminal:
             raise ContractViolation("fixed melee driver is terminal")
         if self.approach_driver is not None:
+            if self._pending_approach_exit is not None:
+                result = self.approach_driver.tick(profile, owner_deadline_ns)
+                if self.approach_driver.source is None:
+                    pending = self._pending_approach_exit
+                    self._pending_approach_exit = None
+                    self.approach_driver = None
+                    if pending is _ApproachExit.STRIKE:
+                        self._start_strike(self._clock())
+                    else:
+                        self._state, self._reason = (
+                            "cancelled", "cancelled_before_submit",
+                        )
+                return result
             if self.approach_driver.state == "success":
                 self.approach_driver.release("combat_standoff_reached")
                 self.approach_driver = None
@@ -210,8 +239,14 @@ class FixedMeleeDriver:
             raise ContractViolation("fixed melee driver cannot be cancelled")
         if self.approach_driver is not None:
             result = self.approach_driver.stop(profile, reason)
-            self.approach_driver = None
-            self._state, self._reason = "cancelled", "cancelled_before_submit"
+            if self.approach_driver.source is None:
+                self.approach_driver = None
+                self._state, self._reason = "cancelled", "cancelled_before_submit"
+            else:
+                self._pending_approach_exit = _ApproachExit.CANCEL
+                self._state, self._reason = (
+                    "cancelling", "finishing_navigation_cancellation",
+                )
             return result
         assert self.strike_driver is not None
         result = self.strike_driver.cancel(profile, reason)

@@ -43,6 +43,22 @@ class AdmissionStatus(StrEnum):
     REJECTED = "rejected"
 
 
+class AdmissionReason(StrEnum):
+    CANDIDATE_NOT_COMPLETE = "candidate_not_complete"
+    PLANNING_REQUEST_REPLACED = "planning_request_replaced"
+    WORLD_SESSION_CHANGED = "world_session_changed"
+    GOAL_REVISION_CHANGED = "goal_revision_changed"
+    WORLD_DELTA_MISSING = "world_delta_missing"
+    ROUTE_DEPENDENCIES_CHANGED = "route_dependencies_changed"
+    CURRENT_BODY_CANNOT_CONNECT = "current_body_cannot_connect"
+    CANDIDATE_HAS_NO_ACTIONS = "candidate_has_no_actions"
+    ROUTE_RESOURCE_UNOBSERVABLE = "route_resource_unobservable"
+    ROUTE_RESOURCES_BELOW_MINIMUM = "route_resources_below_minimum"
+    ROUTE_ENTRY_RESOURCES_UNAVAILABLE = "route_entry_resources_unavailable"
+    ROUTE_RESOURCES_UNAVAILABLE = "route_resources_unavailable"
+    CANDIDATE_ADMITTED = "candidate_admitted"
+
+
 @dataclass(frozen=True, slots=True)
 class ExecutableCorridor:
     node_ids: tuple[WalkNodeId | SurfaceNodeId, ...]
@@ -75,8 +91,13 @@ class ActiveRoute:
 @dataclass(frozen=True, slots=True)
 class AdmissionResult:
     status: AdmissionStatus
-    reason: str
+    reason: AdmissionReason
     route: ActiveRoute | None = None
+
+    def __post_init__(self) -> None:
+        if type(self.status) is not AdmissionStatus \
+                or type(self.reason) is not AdmissionReason:
+            raise ContractViolation("route admission result must be typed")
 
 
 class CorridorStatus(StrEnum):
@@ -338,20 +359,20 @@ class RouteAdmitter:
         if type(changed_cells) is not tuple:
             raise ContractViolation("route changes must be immutable")
         if candidate.status is not PlanningStatus.COMPLETE or not candidate.path:
-            return AdmissionResult(AdmissionStatus.REJECTED,"candidate_not_complete")
+            return AdmissionResult(AdmissionStatus.REJECTED,AdmissionReason.CANDIDATE_NOT_COMPLETE)
         if candidate.request_id!=expected_request_id:
-            return AdmissionResult(AdmissionStatus.REJECTED,"planning_request_replaced")
+            return AdmissionResult(AdmissionStatus.REJECTED,AdmissionReason.PLANNING_REQUEST_REPLACED)
         if candidate.world_session!=frame.session.value:
-            return AdmissionResult(AdmissionStatus.REJECTED,"world_session_changed")
+            return AdmissionResult(AdmissionStatus.REJECTED,AdmissionReason.WORLD_SESSION_CHANGED)
         if candidate.goal_id!=goal_id or candidate.goal_revision!=goal_revision:
-            return AdmissionResult(AdmissionStatus.REJECTED,"goal_revision_changed")
+            return AdmissionResult(AdmissionStatus.REJECTED,AdmissionReason.GOAL_REVISION_CHANGED)
         if frame.world.geometry_revision!=candidate.geometry_revision and not changed_cells:
-            return AdmissionResult(AdmissionStatus.REJECTED,"world_delta_missing")
+            return AdmissionResult(AdmissionStatus.REJECTED,AdmissionReason.WORLD_DELTA_MISSING)
         if set(candidate.dependencies).intersection(changed_cells):
-            return AdmissionResult(AdmissionStatus.REJECTED,"route_dependencies_changed")
+            return AdmissionResult(AdmissionStatus.REJECTED,AdmissionReason.ROUTE_DEPENDENCIES_CHANGED)
         connected,connection_length,connection_dependencies=self._connection(candidate,frame)
         if not connected:
-            return AdmissionResult(AdmissionStatus.REJECTED,"current_body_cannot_connect")
+            return AdmissionResult(AdmissionStatus.REJECTED,AdmissionReason.CURRENT_BODY_CANNOT_CONNECT)
 
         length=0.0;corridor_nodes=[candidate.path[0]];corridor_segments=[]
         for edge,node in zip(candidate.segments,candidate.path[1:]):
@@ -370,7 +391,7 @@ class RouteAdmitter:
             candidate,frame,connection_length,connection_dependencies,route_id,
         )
         if action_route is None:
-            return AdmissionResult(AdmissionStatus.REJECTED,"candidate_has_no_actions")
+            return AdmissionResult(AdmissionStatus.REJECTED,AdmissionReason.CANDIDATE_HAS_NO_ACTIONS)
         fixed_route=(action_route.actions[0].fixed_route
                      if len(action_route.actions)==1
                      and type(action_route.actions[0]) is WalkSegment else None)
@@ -383,7 +404,7 @@ class RouteAdmitter:
                            candidate.goal_revision,candidate.world_session,fixed_route,
                            full_length,connection_length,connection_dependencies,corridor,
                            action_route,candidate.goal_state,candidate.request_sequence)
-        return AdmissionResult(AdmissionStatus.ACCEPTED,"candidate_admitted",active)
+        return AdmissionResult(AdmissionStatus.ACCEPTED,AdmissionReason.CANDIDATE_ADMITTED,active)
 
     @staticmethod
     def _surface_route_id(candidate: SurfaceRouteCandidate) -> str:
@@ -519,17 +540,17 @@ class RouteAdmitter:
         if type(changed_cells) is not tuple:
             raise ContractViolation("route changes must be immutable")
         if candidate.status is not SurfacePlanningStatus.COMPLETE or not candidate.path:
-            return AdmissionResult(AdmissionStatus.REJECTED, "candidate_not_complete")
+            return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.CANDIDATE_NOT_COMPLETE)
         if candidate.request_id != expected_request_id:
-            return AdmissionResult(AdmissionStatus.REJECTED, "planning_request_replaced")
+            return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.PLANNING_REQUEST_REPLACED)
         if candidate.world_session != frame.session.value:
-            return AdmissionResult(AdmissionStatus.REJECTED, "world_session_changed")
+            return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.WORLD_SESSION_CHANGED)
         if candidate.goal_id != goal_id or candidate.goal_revision != goal_revision:
-            return AdmissionResult(AdmissionStatus.REJECTED, "goal_revision_changed")
+            return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.GOAL_REVISION_CHANGED)
         if frame.world.geometry_revision != candidate.geometry_revision and not changed_cells:
-            return AdmissionResult(AdmissionStatus.REJECTED, "world_delta_missing")
+            return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.WORLD_DELTA_MISSING)
         if set(candidate.dependencies).intersection(changed_cells):
-            return AdmissionResult(AdmissionStatus.REJECTED, "route_dependencies_changed")
+            return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.ROUTE_DEPENDENCIES_CHANGED)
         resource_names = {
             name for name, _ in candidate.initial_resources.values
         } | {
@@ -544,13 +565,13 @@ class RouteAdmitter:
         for name in sorted(resource_names):
             if name != "food_points":
                 return AdmissionResult(
-                    AdmissionStatus.REJECTED, "route_resource_unobservable",
+                    AdmissionStatus.REJECTED, AdmissionReason.ROUTE_RESOURCE_UNOBSERVABLE,
                 )
             observed_values.append((name, float(frame.body.food_points)))
         resources = ResourceState(tuple(observed_values))
         if not resources.at_least(candidate.minimum_resources):
             return AdmissionResult(
-                AdmissionStatus.REJECTED, "route_resources_below_minimum",
+                AdmissionStatus.REJECTED, AdmissionReason.ROUTE_RESOURCES_BELOW_MINIMUM,
             )
         capacity = resources
         for edge in candidate.segments:
@@ -558,14 +579,14 @@ class RouteAdmitter:
                     and not resources.at_least(
                         edge.transition.minimum_entry_resources)):
                 return AdmissionResult(
-                    AdmissionStatus.REJECTED, "route_entry_resources_unavailable",
+                    AdmissionStatus.REJECTED, AdmissionReason.ROUTE_ENTRY_RESOURCES_UNAVAILABLE,
                 )
             updated = resources.apply(
                 edge.resource_change, candidate.minimum_resources, capacity,
             )
             if updated is None:
                 return AdmissionResult(
-                    AdmissionStatus.REJECTED, "route_resources_unavailable",
+                    AdmissionStatus.REJECTED, AdmissionReason.ROUTE_RESOURCES_UNAVAILABLE,
                 )
             resources = updated
         connected, connection_length, connection_dependencies = self._connection(
@@ -573,13 +594,13 @@ class RouteAdmitter:
         )
         if not connected:
             return AdmissionResult(AdmissionStatus.REJECTED,
-                                   "current_body_cannot_connect")
+                                   AdmissionReason.CURRENT_BODY_CANNOT_CONNECT)
         route_id = self._surface_route_id(candidate)
         action_route = self._surface_action_route(
             candidate, frame, connection_length, connection_dependencies, route_id,
         )
         if action_route is None:
-            return AdmissionResult(AdmissionStatus.REJECTED, "candidate_has_no_actions")
+            return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.CANDIDATE_HAS_NO_ACTIONS)
 
         length = 0.0
         corridor_nodes = [candidate.path[0]]
@@ -612,7 +633,7 @@ class RouteAdmitter:
             action_route, candidate.goal_state, candidate.request_sequence,
         )
         return AdmissionResult(AdmissionStatus.ACCEPTED,
-                               "candidate_admitted", active)
+                               AdmissionReason.CANDIDATE_ADMITTED, active)
 
 
 class ActiveRouteTracker:

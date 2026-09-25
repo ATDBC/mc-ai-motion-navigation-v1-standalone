@@ -100,6 +100,15 @@ class ActionReceiptTests(unittest.TestCase):
         from mc2p.backends.client_behavior_payload import decode_behavior_receipt
         self.assertEqual(decode_behavior_receipt(json.dumps(asdict(receipt)).encode()), asdict(receipt))
 
+    def test_operation_rejection_can_report_a_partially_applied_control_frame(self):
+        from mc2p.contracts.action_receipt import ClientBehaviorReceiptV2
+        raw = receipt_value(
+            status="operation_rejected", reason="entity_target_mismatch",
+        )
+        receipt = ClientBehaviorReceiptV2.from_mapping(raw)
+        self.assertEqual(receipt.status, "operation_rejected")
+        self.assertEqual(receipt.reason, "entity_target_mismatch")
+
     def test_invalid_evidence_fails_contract_instead_of_coercion(self):
         from mc2p.contracts.action_receipt import ClientBehaviorReceiptV2
         for change in ({"extra": 1}, {"world_tick": True}, {"status": []}, {"reason": None},

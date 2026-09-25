@@ -96,14 +96,17 @@ class ExternalMotionRecoveryControllerTests(unittest.TestCase):
         self.assertEqual(decision.directive, RecoveryDirective.EXHAUSTED)
         self.assertEqual(decision.elapsed_ticks, 41)
 
-    def test_fifth_event_exhausts_the_task_budget(self):
+    def test_fifth_event_requests_task_strategy_but_keeps_body_recovery(self):
         control = ExternalMotionRecoveryController()
         control.start(event(generation=1, tick=30))
         for generation in range(2, 6):
             control.observe_event(event(generation=generation, tick=29 + generation))
         decision = control.decide(snapshot(tick=35, ground=False))
-        self.assertEqual(decision.directive, RecoveryDirective.EXHAUSTED)
-        self.assertEqual(decision.reason, "event_budget_exhausted")
+        self.assertEqual(decision.directive, RecoveryDirective.NEUTRAL_AIR)
+        self.assertEqual(control.task_limit_reason, "event_budget_exhausted")
+        control.decide(snapshot(tick=36, ground=True, speed=.01))
+        settled = control.decide(snapshot(tick=37, ground=True, speed=.01))
+        self.assertTrue(settled.complete)
 
     def test_session_and_order_must_remain_consistent(self):
         control = ExternalMotionRecoveryController()

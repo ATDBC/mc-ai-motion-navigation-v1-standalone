@@ -6,6 +6,7 @@ import time
 import unittest
 from unittest.mock import Mock
 
+from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.intent_source import IntentSourceV1
 from mc2p.motion_nav.known_map_planner import (
     SurfacePlanningRequest,
@@ -25,6 +26,9 @@ from mc2p.motion_nav.navigation_session import (
     NavigationSession,
     NavigationSessionProfiles,
     NavigationSessionState,
+)
+from mc2p.motion_nav.action_route_executor import (
+    ActionRouteDecision, ActionRouteState,
 )
 from mc2p.motion_nav.support_surfaces import query_support_surfaces
 from mc2p.motion_nav.world_model import (
@@ -83,6 +87,29 @@ class _InlinePlanner:
 
     def close(self) -> None:
         self.closed = True
+
+
+class _DelayedCancelExecutor:
+    """Models an airborne owner that needs one more frame to land."""
+
+    def __init__(self) -> None:
+        self.cancel_requested = False
+        self.decisions = 0
+
+    def cancel(self) -> None:
+        self.cancel_requested = True
+
+    def decide(self, frame, **_):
+        self.decisions += 1
+        if self.decisions == 1:
+            return ActionRouteDecision(
+                ActionRouteState.CANCELLING, MovementV1(forward=1), None,
+                1, 0, "landing_after_cancel", (), 0,
+            )
+        return ActionRouteDecision(
+            ActionRouteState.CANCELLED, MovementV1(), None,
+            1, 0, "cancelled_after_landing", (), 0,
+        )
 
 
 def _goal(position: tuple[float, float, float]) -> GoalState:
@@ -421,6 +448,42 @@ class NavigationSessionTests(unittest.TestCase):
         })
         self.assertEqual(stale.report.goal_revision, 2)
 
+    def test_goal_revision_keeps_safe_active_route_until_replacement_is_ready(self):
+        world = _known_world({
+            (x, 0, 0): BlockGeometry.full_cube("minecraft:stone")
+            for x in range(-1, 9)
+        })
+        start, old_goal, new_goal = _nodes(world, (0, 6, 8))
+        planner = _InlinePlanner()
+        session = NavigationSession(
+            "live-revision-session", self.profiles(), planner_worker=planner,
+            clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        initial = frame(world, 0, start.position)
+        session.start(SurfacePlanningRequest(
+            1, "request-1", "goal", 1, world.session.value,
+            start.node_id, old_goal.node_id, goal_state=_goal(old_goal.position),
+        ), initial)
+        moving = session.propose(initial, None, 2_000_000_000)
+        self.assertNotEqual(
+            moving.control_frame.intents[0].intent.movement, MovementV1(),
+        )
+        old_route_id = session.active_route.route_id
+
+        planner.hold_first = True
+        session.update_goal("goal", 2, _goal(new_goal.position))
+        while_replanning = session.propose(
+            frame(world, 1, start.position), None, 2_000_000_000,
+        )
+
+        self.assertEqual(session.active_route.route_id, old_route_id)
+        self.assertEqual(while_replanning.report.goal_revision, 2)
+        self.assertNotEqual(
+            while_replanning.control_frame.intents[0].intent.movement,
+            MovementV1(),
+        )
+
     def test_pending_goal_accepts_a_new_revision_before_support_is_known(self):
         world = _known_world({
             (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
@@ -490,7 +553,9 @@ class NavigationSessionTests(unittest.TestCase):
         session.propose(initial, None, 2_000_000_000)
 
         session.cancel("task_cancelled")
-        cancelled = session.propose(initial, None, 2_000_000_000)
+        cancelled = session.propose(
+            frame(world, 1, start.position), None, 2_000_000_000,
+        )
         session.close()
 
         self.assertIs(cancelled.report.state, NavigationSessionState.CANCELLED)
@@ -498,6 +563,44 @@ class NavigationSessionTests(unittest.TestCase):
             cancelled.control_frame.intents[0].intent.movement.forward, 0,
         )
         self.assertTrue(planner.closed)
+
+    def test_cancel_keeps_executor_until_its_landing_responsibility_finishes(self):
+        world = _known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+            (1, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        start, goal = _nodes(world, (0, 1))
+        session = NavigationSession(
+            "cancel-owner-session", self.profiles(),
+            planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        initial = frame(world, 0, start.position)
+        session.start(SurfacePlanningRequest(
+            1, "cancel-owner-request", "cancel-owner-goal", 1,
+            world.session.value, start.node_id, goal.node_id,
+            goal_state=_goal(goal.position),
+        ), initial)
+        session.propose(initial, None, 2_000_000_000)
+        owner = _DelayedCancelExecutor()
+        session._executor = owner
+
+        session.cancel("task_cancelled")
+        landing = session.propose(
+            frame(world, 1, start.position), None, 2_000_000_000,
+        )
+        finished = session.propose(
+            frame(world, 2, start.position), None, 2_000_000_000,
+        )
+
+        self.assertTrue(owner.cancel_requested)
+        self.assertEqual(owner.decisions, 2)
+        self.assertIs(landing.report.state, NavigationSessionState.CANCELLING)
+        self.assertEqual(
+            landing.control_frame.intents[0].intent.movement,
+            MovementV1(forward=1),
+        )
+        self.assertIs(finished.report.state, NavigationSessionState.CANCELLED)
 
     def test_gap_route_is_solved_by_the_session_coordinator(self):
         anchor, _, _, _ = gap_fixture()

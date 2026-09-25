@@ -41,6 +41,7 @@ class ExternalMotionRecoveryReport:
     elapsed_ticks: int
     stable_ticks: int
     complete: bool
+    task_limit_reason: str | None
 
 
 class ExternalMotionRecoveryDriver:
@@ -91,6 +92,7 @@ class ExternalMotionRecoveryDriver:
             elapsed_ticks=0 if decision is None else decision.elapsed_ticks,
             stable_ticks=0 if decision is None else decision.stable_ticks,
             complete=self._state == "complete",
+            task_limit_reason=self.controller.task_limit_reason,
         )
 
     def start(self, event: ExternalMotionEventV1) -> None:

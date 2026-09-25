@@ -61,7 +61,8 @@ public final class ClientBehaviorInput extends Input {
     public void bindDispatchedRequest(String episode, long sequence, String status) {
         gate.requireOwnerThread();
         if ("executed".equals(status) || "confirmed_local".equals(status)
-                || "pending_confirmation".equals(status)) {
+                || "pending_confirmation".equals(status)
+                || "operation_rejected".equals(status)) {
             bindAcceptedRequest(episode, sequence);
         } else if (!"rejected".equals(status)) {
             throw new IllegalArgumentException("invalid dispatched request status");

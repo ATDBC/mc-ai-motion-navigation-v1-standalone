@@ -64,6 +64,16 @@ class B02RuntimeAdapterTests(unittest.TestCase):
         with self.assertRaisesRegex(ContractViolation, "retired world session"):
             adapter.ingest(replace(valid_snapshot_v3(sequence=2), episode_id="one"))
 
+    def test_shared_world_owner_reuses_the_same_frame_across_task_sessions(self):
+        adapter = NavigationObservationAdapter()
+        snapshot = valid_snapshot_v3(sequence=3)
+
+        first = adapter.ingest(snapshot)
+        second = adapter.ingest(snapshot)
+
+        self.assertIs(second, first)
+        self.assertIs(second.world, first.world)
+
     def test_air_request_is_bounded_sorted_and_positive_only(self):
         positions = tuple((x, 64, 0) for x in range(3))
         request = ObservationRequestV3("navigation_v1", tuple(reversed(positions)))

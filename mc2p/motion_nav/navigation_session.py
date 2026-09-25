@@ -26,7 +26,7 @@ from mc2p.contracts.observation_request_v3 import (
     ObservationRequestV3, merge_observation_requests,
 )
 from mc2p.contracts.observation_v3 import ObservationSnapshotV3
-from mc2p.motion_nav.action_route import JumpGapSegment
+from mc2p.motion_nav.action_route import JumpGapSegment, WalkSegment
 from mc2p.motion_nav.action_route_executor import (
     ActionRouteDecision,
     ActionRouteExecutor,
@@ -66,7 +66,7 @@ from mc2p.motion_nav.physics_adapter import PhysicsWorldView
 from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET
 from mc2p.motion_nav.planner_worker import PlannerWorker
 from mc2p.motion_nav.route_admission import (
-    ActiveRoute,
+    ActiveRoute, AdmissionReason,
     AdmissionStatus,
     RouteAdmitter,
 )
@@ -86,6 +86,7 @@ class NavigationSessionState(StrEnum):
     SNAPSHOTTING = "snapshotting"
     PLANNING = "planning"
     EXECUTING = "executing"
+    CANCELLING = "cancelling"
     COMPLETE = "complete"
     CANCELLED = "cancelled"
     FAILED = "failed"
@@ -209,6 +210,9 @@ class NavigationSessionPort(Protocol):
     def motion_residual(
         self, snapshot: ObservationSnapshotV3, ledger: InputApplicationLedger,
     ) -> MotionResidualResult | None: ...
+    def execution_anchor(
+        self, snapshot: ObservationSnapshotV3, ledger: InputApplicationLedger,
+    ) -> StateAnchor | None: ...
     def external_motion_reentry(
         self, snapshot: ObservationSnapshotV3,
     ) -> ExternalMotionReentryDecision: ...
@@ -279,6 +283,8 @@ class NavigationSession:
         self._last_decision: ActionRouteDecision | None = None
         self._pending_goal: tuple[str, int, GoalState] | None = None
         self._motion_residual = MotionResidualTracker()
+        self._restart_after_active_terminal = False
+        self._cancel_reason: str | None = None
         self._closed = False
 
     @property
@@ -352,6 +358,22 @@ class NavigationSession:
                 else ()
             )
         return result
+
+    def execution_anchor(
+        self,
+        snapshot: ObservationSnapshotV3,
+        ledger: InputApplicationLedger,
+    ) -> StateAnchor | None:
+        """Return a current, ledger-backed anchor for verified route motion."""
+        self.motion_residual(snapshot, ledger)
+        anchor = self._motion_residual.anchor
+        own = snapshot.self_state.value
+        if (anchor is None or own is None or own.movement_tick_id is None
+                or anchor.session != world_session_from_observation(snapshot)
+                or anchor.observation_sequence_id != snapshot.sequence_id
+                or anchor.movement_tick_id != own.movement_tick_id):
+            return None
+        return anchor
 
     def external_motion_reentry(
         self, snapshot: ObservationSnapshotV3,
@@ -537,7 +559,6 @@ class NavigationSession:
                 goal_revision=goal_revision,
                 goal_state=goal_state,
             )
-            self._retire_route()
             return
         start_node, start_missing = self._surface_for_body(self._frame)
         if start_node is None:
@@ -559,7 +580,6 @@ class NavigationSession:
                 goal_revision=goal_revision,
                 goal_state=goal_state,
             )
-            self._retire_route()
             return
         request = replace(
             self._request,
@@ -572,7 +592,10 @@ class NavigationSession:
             goal_state=goal_state,
         )
         self._pending_goal = None
-        self._replace_request(request, self._frame, "goal_revised")
+        self._replace_request(
+            request, self._frame, "goal_revised",
+            preserve_active_route=self._executor is not None,
+        )
 
     def _goal_request(
         self,
@@ -630,7 +653,8 @@ class NavigationSession:
             () if route is None else route.action_route.dependencies,
         )
         self._planning_changes.update(changed_cells)
-        if (self._state is NavigationSessionState.NEEDS_INFORMATION
+        if ((self._state is NavigationSessionState.NEEDS_INFORMATION
+             or self._pending_goal is not None)
                 and set(changed_cells).intersection(self._snapshot_missing)):
             if self._pending_goal is not None:
                 goal_id, revision, goal_state = self._pending_goal
@@ -653,7 +677,10 @@ class NavigationSession:
                             goal=goal_node,
                         )
                         self._pending_goal = None
-                        self._replace_request(request, frame, "goal_information_updated")
+                        self._replace_request(
+                            request, frame, "goal_information_updated",
+                            preserve_active_route=self._executor is not None,
+                        )
                     else:
                         combined = tuple(sorted(set(missing) | set(start_missing)))
                         self._snapshot_missing = combined
@@ -691,8 +718,12 @@ class NavigationSession:
             NavigationSessionState.CANCELLED,
         }:
             return self._proposal(MovementV1(), None, 1, deadline_ns)
-        self._advance_planning(frame)
+        if self._state is not NavigationSessionState.CANCELLING:
+            self._advance_planning(frame)
         if self._active_route is None:
+            if self._state is NavigationSessionState.CANCELLING:
+                self._state = NavigationSessionState.CANCELLED
+                self._reason = self._cancel_reason or "cancelled"
             return self._proposal(MovementV1(), None, 1, deadline_ns)
 
         assert self._executor is not None
@@ -708,7 +739,51 @@ class NavigationSession:
                 frame, state_anchor=state_anchor, input_ledger=input_ledger,
             )
         self._last_decision = decision
-        self._apply_decision_state(decision)
+        active_request_id = self._active_route.source_request_id
+        current_request_id = None if self._request is None else self._request.request_id
+        if self._state is NavigationSessionState.CANCELLING:
+            if decision.state in {
+                ActionRouteState.CANCELLED, ActionRouteState.COMPLETE,
+            }:
+                self._clear_active_execution()
+                self._state = NavigationSessionState.CANCELLED
+                self._reason = self._cancel_reason or decision.reason_code
+            elif decision.state in {
+                ActionRouteState.FAILED, ActionRouteState.BLOCKED,
+                ActionRouteState.UNSUPPORTED, ActionRouteState.INPUT_LOST,
+            }:
+                self._clear_active_execution()
+                self._state = NavigationSessionState.FAILED
+                self._reason = decision.reason_code
+            else:
+                self._state = NavigationSessionState.CANCELLING
+                self._reason = decision.reason_code
+        elif active_request_id != current_request_id:
+            if decision.state in {
+                ActionRouteState.COMPLETE, ActionRouteState.CANCELLED,
+                ActionRouteState.FAILED, ActionRouteState.BLOCKED,
+                ActionRouteState.UNSUPPORTED, ActionRouteState.INPUT_LOST,
+            }:
+                restart = self._restart_after_active_terminal
+                self._clear_active_execution()
+                if restart:
+                    self._restart_after_active_terminal = False
+                    self._restart_request_from_current(
+                        frame, "route_handoff_reanchored",
+                    )
+                else:
+                    self._state = (
+                        NavigationSessionState.SNAPSHOTTING
+                        if self._snapshot_builder is not None
+                        else NavigationSessionState.PLANNING
+                    )
+                    self._reason = "replacement_route_pending"
+            else:
+                self._state = NavigationSessionState.EXECUTING
+                self._reason = "executing_safe_prefix_during_replan"
+                self._snapshot_missing = decision.missing_cells
+        else:
+            self._apply_decision_state(decision)
         movement = decision.movement if decision.submit_input else MovementV1()
         return self._proposal(
             movement, decision.look, decision.input_lease_ticks,
@@ -740,8 +815,14 @@ class NavigationSession:
             raise ContractViolation("navigation session is closed")
         if self._executor is not None:
             self._executor.cancel()
+            self._state = NavigationSessionState.CANCELLING
+            self._cancel_reason = reason.strip()
+            self._reason = "cancellation_requested"
+            self._snapshot_builder = None
+            return
         self._state = NavigationSessionState.CANCELLED
-        self._reason = reason.strip()
+        self._cancel_reason = reason.strip()
+        self._reason = self._cancel_reason
 
     def close(self) -> None:
         if self._closed:
@@ -759,8 +840,11 @@ class NavigationSession:
         request: PlanningRequest | SurfacePlanningRequest,
         frame: NavigationFrame,
         reason: str,
+        *,
+        preserve_active_route: bool = False,
     ) -> None:
-        self._retire_route()
+        if not preserve_active_route:
+            self._retire_route()
         self._request = request
         self._frame = frame
         self._planning_changes.clear()
@@ -771,13 +855,16 @@ class NavigationSession:
         self._state = NavigationSessionState.SNAPSHOTTING
         self._reason = reason
 
-    def _retire_route(self) -> None:
-        if self._executor is not None:
-            self._executor.cancel()
+    def _clear_active_execution(self) -> None:
         self._active_route = None
         self._executor = None
         self._coordinator = None
         self._last_decision = None
+
+    def _retire_route(self) -> None:
+        if self._executor is not None:
+            self._executor.cancel()
+        self._clear_active_execution()
 
     def _replan_from_current(self, reason: str) -> None:
         if self._request is None or self._frame is None:
@@ -857,7 +944,8 @@ class NavigationSession:
         request = self._request
         if request is None or self._state is NavigationSessionState.NEEDS_INFORMATION:
             return
-        if self._active_route is not None:
+        if (self._active_route is not None
+                and self._active_route.source_request_id == request.request_id):
             return
         if self._snapshot_builder is not None:
             progress = self._snapshot_builder.advance(
@@ -960,8 +1048,10 @@ class NavigationSession:
             )
         if admitted.status is not AdmissionStatus.ACCEPTED or admitted.route is None:
             if admitted.reason in {
-                "planning_request_replaced", "goal_revision_changed",
-                "world_session_changed", "route_dependencies_changed",
+                AdmissionReason.PLANNING_REQUEST_REPLACED,
+                AdmissionReason.GOAL_REVISION_CHANGED,
+                AdmissionReason.WORLD_SESSION_CHANGED,
+                AdmissionReason.ROUTE_DEPENDENCIES_CHANGED,
             }:
                 self._state = (
                     NavigationSessionState.SNAPSHOTTING
@@ -973,6 +1063,16 @@ class NavigationSession:
             self._state = NavigationSessionState.FAILED
             self._reason = admitted.reason
             return
+        if (self._active_route is not None
+                and self._active_route.source_request_id != current.request_id):
+            if not frame.body.is_on_ground:
+                assert self._executor is not None
+                self._executor.cancel()
+                self._restart_after_active_terminal = True
+                self._state = NavigationSessionState.EXECUTING
+                self._reason = "route_handoff_waiting_for_landing"
+                return
+            self._clear_active_execution()
         self._active_route = admitted.route
         self._executor = ActionRouteExecutor(
             self.profiles.ground,
@@ -1053,6 +1153,21 @@ class NavigationSession:
                 look=look,
                 valid_for_ticks=max(1, min(20, lease_ticks)),
                 movement_requires_look=(look is not None and movement != MovementV1()),
+                movement_look_tolerance_degrees=(
+                    5.0
+                    if (
+                        look is not None
+                        and movement != MovementV1()
+                        and route_decision is not None
+                        and self._executor is not None
+                        and self._executor.route is not None
+                        and 0 <= route_decision.action_index
+                            < len(self._executor.route.actions)
+                        and type(self._executor.route.actions[route_decision.action_index])
+                            is WalkSegment
+                    )
+                    else 0.0
+                ),
             )
             control = ControlFrameProposalV1(
                 (OrderedIntentV1(self._source, self._intent_sequence, intent),),

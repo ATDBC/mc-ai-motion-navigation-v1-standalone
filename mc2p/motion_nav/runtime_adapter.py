@@ -128,6 +128,7 @@ class NavigationObservationAdapter:
         self._session: WorldSessionId | None = None
         self._world: WorldKnowledge | None = None
         self._latest_order: tuple[int, int] | None = None
+        self._latest_frame: NavigationFrame | None = None
         self._retired: set[WorldSessionId] = set()
         self._air_retry_after_ticks = air_retry_after_ticks
         self._air_last_attempt: dict[BlockPos, int] = {}
@@ -169,6 +170,7 @@ class NavigationObservationAdapter:
             self._session = session
             self._world = WorldKnowledge(session)
             self._latest_order = None
+            self._latest_frame = None
             self._air_last_attempt.clear()
         assert self._world is not None
         stamp = ObservationStamp(
@@ -178,8 +180,12 @@ class NavigationObservationAdapter:
             controller_clock_id=snapshot.controller_clock_id,
             received_monotonic_ns=snapshot.received_at_monotonic_ns,
         )
-        if self._latest_order is not None and stamp.world_order <= self._latest_order:
-            raise ContractViolation("navigation observation order did not advance")
+        if self._latest_order is not None and stamp.world_order == self._latest_order:
+            if self._latest_frame is None:
+                raise ContractViolation("navigation adapter lost its latest frame")
+            return self._latest_frame
+        if self._latest_order is not None and stamp.world_order < self._latest_order:
+            raise ContractViolation("navigation observation order moved backward")
         changed_cells: tuple[BlockPos, ...] = ()
         if snapshot.perception.status is FieldStatusV0.VALID:
             assert snapshot.perception.value is not None
@@ -198,6 +204,8 @@ class NavigationObservationAdapter:
         self._latest_order = stamp.world_order
         body = _body(snapshot, session, stamp)
         self._world.set_protection_center(body.position)
-        return NavigationFrame(
+        frame = NavigationFrame(
             session, body, self._world.view(), snapshot.source_backend, changed_cells,
         )
+        self._latest_frame = frame
+        return frame

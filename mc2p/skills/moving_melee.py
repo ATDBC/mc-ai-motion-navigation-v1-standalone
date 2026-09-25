@@ -6,6 +6,7 @@ from enum import StrEnum
 
 from mc2p.contracts.common import ContractViolation
 from mc2p.skills.engagement_memory import TargetPositionSource
+from mc2p.skills.melee_strike_driver import MeleeStrikeOutcome
 
 
 class MovingMeleePhase(StrEnum):
@@ -16,6 +17,8 @@ class MovingMeleePhase(StrEnum):
     RECOVERING_CADENCE = "recovering_cadence"
     RECOVERING_EXTERNAL_MOTION = "recovering_external_motion"
     CONFIRMING_DEATH = "confirming_death"
+    CANCELLING = "cancelling"
+    NEEDS_TASK_DECISION = "needs_task_decision"
     COMPLETE = "complete"
     FAILED = "failed"
     CANCELLED = "cancelled"
@@ -35,23 +38,29 @@ def decide_moving_melee(
     position_source: TargetPositionSource | None,
     within_attack_distance: bool,
     target_dead: bool,
-    strike_reason: str | None = None,
+    strike_outcome: MeleeStrikeOutcome | None = None,
+    failure_reason: str | None = None,
 ) -> MovingMeleeDecisionV1:
     if type(phase) is not MovingMeleePhase:
         raise ContractViolation("moving melee requires a typed phase")
     if (position_source is not None and type(position_source) is not TargetPositionSource
             or type(within_attack_distance) is not bool or type(target_dead) is not bool
-            or strike_reason is not None and type(strike_reason) is not str):
+            or strike_outcome is not None and type(strike_outcome) is not MeleeStrikeOutcome
+            or failure_reason is not None and type(failure_reason) is not str):
         raise ContractViolation("moving melee facts are invalid")
     if phase is MovingMeleePhase.COMPLETE:
         return MovingMeleeDecisionV1(phase, "target_dead", True)
     if phase is MovingMeleePhase.FAILED:
-        return MovingMeleeDecisionV1(phase, strike_reason or "task_failed", True)
+        return MovingMeleeDecisionV1(phase, failure_reason or "task_failed", True)
     if phase is MovingMeleePhase.CANCELLED:
-        return MovingMeleeDecisionV1(phase, strike_reason or "task_cancelled", True)
+        return MovingMeleeDecisionV1(phase, failure_reason or "task_cancelled", True)
+    if phase is MovingMeleePhase.NEEDS_TASK_DECISION:
+        return MovingMeleeDecisionV1(
+            phase, failure_reason or "task_strategy_required", True,
+        )
     if target_dead:
         return MovingMeleeDecisionV1(MovingMeleePhase.COMPLETE, "target_dead", True)
-    if strike_reason == "hit_confirmed":
+    if strike_outcome is MeleeStrikeOutcome.HIT_CONFIRMED:
         return MovingMeleeDecisionV1(
             MovingMeleePhase.RECOVERING_CADENCE, "target_hit_but_alive", False,
         )

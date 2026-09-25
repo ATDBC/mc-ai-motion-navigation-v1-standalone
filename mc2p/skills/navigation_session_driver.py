@@ -65,6 +65,11 @@ class RuntimeNavigationDriver:
         self._goal_id: str | None = None
         self._goal_revision: int | None = None
         self._goal: GoalState | None = None
+        self._prepared_deadline_ns: int | None = None
+
+    @property
+    def has_prepared_frame(self) -> bool:
+        return self._prepared_deadline_ns is not None
 
     def start(
         self,
@@ -125,27 +130,70 @@ class RuntimeNavigationDriver:
             "ready", "success", "failed", "cancelled", "stopped",
         }:
             raise ContractViolation("runtime navigation driver cannot tick")
+        proposals = self.prepare_proposals(owner_deadline_ns)
+        assert self._prepared_deadline_ns is not None
+        deadline = self._prepared_deadline_ns
+        try:
+            result = self.runtime.control_frame(
+                self._task(deadline), profile, deadline, proposals=proposals,
+            )
+        except BaseException:
+            self.discard_prepared()
+            raise
+        self.adopt_result(result)
+        return result
+
+    def prepare_proposals(
+        self,
+        owner_deadline_ns: int,
+    ) -> tuple[ControlFrameProposalV1, ...]:
+        """Prepare navigation for a parent-owned shared Runtime control frame."""
+        if self._prepared_deadline_ns is not None:
+            raise ContractViolation("runtime navigation already has a prepared frame")
+        if self.source is None or self.state in {
+            "ready", "success", "failed", "cancelled", "stopped",
+        }:
+            raise ContractViolation("runtime navigation driver cannot prepare")
         now = self._clock()
         require_nonnegative_int(owner_deadline_ns, "runtime navigation owner deadline")
         deadline = min(owner_deadline_ns, now + _STEP_WINDOW_NS)
         if deadline <= now:
             raise ContractViolation("runtime navigation action window expired")
-        frame = self.session.ingest(self.runtime.observation)
-        proposal = self.session.propose(frame, None, deadline)
+        observation = self.runtime.observation
+        frame = self.session.ingest(observation)
+        ledger = self.runtime.input_ledger
+        anchor = self.session.execution_anchor(observation, ledger)
+        proposal = self.session.propose(
+            frame, anchor, deadline, input_ledger=ledger,
+        )
         proposals = tuple(item for item in (
             proposal.control_frame,
             ControlFrameProposalV1(
                 observation_request=self._observation_request,
             ),
         ) if item is not None)
-        result = self.runtime.control_frame(
-            self._task(deadline), profile, deadline, proposals=proposals,
-        )
+        self._prepared_deadline_ns = deadline
+        return proposals
+
+    def adopt_result(self, result: RuntimeStepResultV1) -> None:
+        """Adopt the one Runtime result produced from ``prepare_proposals``."""
+        if self._prepared_deadline_ns is None:
+            raise ContractViolation("runtime navigation has no prepared frame")
+        if type(result) is not RuntimeStepResultV1:
+            raise ContractViolation("runtime navigation result is invalid")
+        self._prepared_deadline_ns = None
         if result.report.failure is not None:
             self.state, self.reason = "failed", "runtime_failure"
         else:
             self._sync_report()
-        return result
+        if self.state in {"failed", "cancelled"}:
+            self._release_source()
+
+    def discard_prepared(self) -> None:
+        """Forget a proposal when the parent did not advance Runtime."""
+        if self._prepared_deadline_ns is None:
+            raise ContractViolation("runtime navigation has no prepared frame")
+        self._prepared_deadline_ns = None
 
     def stop(
         self,
@@ -157,7 +205,18 @@ class RuntimeNavigationDriver:
             raise ContractViolation("runtime navigation stop requires profile and reason")
         if self.source is None:
             raise ContractViolation("runtime navigation driver has no input owner")
-        self.release(reason)
+        report = self.session.report
+        if report.state not in {
+            NavigationSessionState.COMPLETE,
+            NavigationSessionState.CANCELLED,
+            NavigationSessionState.FAILED,
+            NavigationSessionState.CLOSED,
+        }:
+            self.session.cancel(reason)
+        self._sync_report()
+        if self.state == "stopping":
+            return self.tick(profile, self._clock() + _STEP_WINDOW_NS)
+        self._release_source()
         now = self._clock()
         deadline = now + _STEP_WINDOW_NS
         result = self.runtime.control_frame(
@@ -166,8 +225,6 @@ class RuntimeNavigationDriver:
                 observation_request=self._current_observation_request(),
             ),),
         )
-        self.state = "stopped"
-        self.reason = reason
         return result
 
     def _current_observation_request(self) -> ObservationRequestV3:
@@ -176,12 +233,14 @@ class RuntimeNavigationDriver:
             self.session.observation_request(),
         ))
 
-    def release(self, reason: str) -> None:
-        """Relinquish ownership after a tick without advancing Runtime again."""
+    def release(self, reason: str) -> bool:
+        """Release a terminal session, or begin cancellation without abandoning it."""
         if not isinstance(reason, str) or not reason.strip():
             raise ContractViolation("runtime navigation release requires reason")
         if self.source is None:
             raise ContractViolation("runtime navigation driver has no input owner")
+        if self._prepared_deadline_ns is not None:
+            raise ContractViolation("prepared navigation must be adopted or discarded")
         report = self.session.report
         if report.state not in {
             NavigationSessionState.COMPLETE,
@@ -189,6 +248,23 @@ class RuntimeNavigationDriver:
             NavigationSessionState.FAILED,
             NavigationSessionState.CLOSED,
         }:
+            self.session.cancel(reason)
+        self._sync_report()
+        if self.state == "stopping":
+            return False
+        self._release_source()
+        self.reason = reason
+        return True
+
+    def transfer_to_successor(self, reason: str) -> None:
+        """Relinquish input only after the caller has installed a body successor."""
+        if not isinstance(reason, str) or not reason.strip():
+            raise ContractViolation("runtime navigation transfer requires reason")
+        if self.source is None:
+            raise ContractViolation("runtime navigation driver has no input owner")
+        if self._prepared_deadline_ns is not None:
+            raise ContractViolation("prepared navigation must be adopted or discarded")
+        if not self.session.report.terminal:
             self.session.cancel(reason)
         self._release_source()
         self.state = "stopped"
@@ -207,6 +283,7 @@ class RuntimeNavigationDriver:
     def _sync_report(self) -> None:
         report = self.session.report
         mapping = {
+            NavigationSessionState.CANCELLING: "stopping",
             NavigationSessionState.COMPLETE: "success",
             NavigationSessionState.CANCELLED: "cancelled",
             NavigationSessionState.FAILED: "failed",

@@ -445,10 +445,10 @@ def _run_negative(
             ),
         )
         decision = injected_controller.decide(forced)
-        passed = decision.directive is RecoveryDirective.EXHAUSTED \
-            and decision.reason == "event_budget_exhausted"
+        passed = decision.directive is RecoveryDirective.NEUTRAL_AIR \
+            and injected_controller.task_limit_reason == "event_budget_exhausted"
         driver.cancel(profile, "negative_event_budget_complete")
-        return passed, decision.reason
+        return passed, injected_controller.task_limit_reason or decision.reason
     if injection == "duplicate_attack_after_damage":
         before = driver.report.attack_submissions
         driver.tick(profile, min(deadline_ns, time.perf_counter_ns() + 3_000_000_000))
@@ -515,7 +515,10 @@ def run_c1_external_motion_runtime(
         )
         driver = MovingMeleeDriver(
             runtime,
-            NavigationSession("c1c-" + trial["trial_id"], profiles),
+            NavigationSession(
+                "c1c-" + trial["trial_id"], profiles,
+                observation_adapter=runtime.navigation_observation_adapter,
+            ),
         )
         driver.start(target, time.perf_counter_ns())
         profile = BehaviorProfileV0()
