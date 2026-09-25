@@ -328,6 +328,19 @@ C1-B 的运行 `20260925T012052536298Z-a6847277` 在游戏试次全部通过后�
 
 本轮未新增圆石、沙子、深板岩和状态效果的 Fabric 正式场景。它们的安全兜底由确定性组件检查覆盖；完整运动预测和对应实机范围留待材质与状态能力阶段。
 
+### 第二轮复审整改（2026-09-25）
+
+第二轮复审继续检查了平地验收没有覆盖的组合情况。本轮完成以下修正：
+
+1. 已验证跨隙动作暂时拿不到状态锚点时，不再抛异常。原执行器继续拥有身体，以中性输入等待新观察和落地确认。
+2. 路线依赖变化不会在空中删除执行器。目标修订、依赖变化和新路线接管现在使用同一条安全交接判断。
+3. 身体仍在地面但已验证命令已经提交时，新路线也要等待。取消至少经过一帧更新后的正式观察，避免首条起跳命令晚一个 tick 生效时出现无人负责。
+4. 伤害事实等待运动残差超过八个运动 tick 后，转成 `DAMAGE_WITH_UNVERIFIED_MOTION`，不再静默消失。
+5. `RuntimeNavigationDriver` 会把真正赢得移动仲裁的请求序号登记回动作执行器。输入账本因此能确认跨隙命令在哪个运动 tick 实际生效。
+6. 新增整条运行时集成检查。它通过 Runtime、导航桥、真实导航会话、后台跨隙求解和输入账本提交跳跃，并分别注入缺锚点和落地区域变化。
+
+主工作区和独立导出树的完整运动导航回归均为 412／412，C1 声明检查均为 42／42，公共控制与战斗检查均为 141／141；独立导出树的纯 Java 门禁为 1／1，584 个导出文件通过哈希闭合检查。本轮仍没有扩大 Fabric 实机场景。新增检查证明的是跨模块交接不会丢失身体责任；原跨隙动作的物理有效范围继续沿用 R4 的正式结果。
+
 ## 提交顺序
 
 每个子阶段单独提交，不能把五个阶段压成一个大提交：
@@ -422,6 +435,7 @@ D:\Miniforge3\Scripts\conda.exe run --prefix D:\My_project\mc_ai\.venv --no-capt
 ## 相关文档
 
 - [D019：先收敛公共控制和导航主线](../decisions/0019-converge-runtime-navigation-before-new-capabilities.md)
+- [D021：缺少运动证据时仍保留身体责任](../decisions/0021-verified-motion-evidence-and-handoff.md)
 - [运行时与导航收敛架构](../architecture/runtime-navigation-convergence-v1.md)
 - [C1-R 验收计划](../acceptance/C1R-runtime-navigation-convergence.md)
 - [现有总架构](../architecture/mc_motion_navigation_architecture_v1.md)

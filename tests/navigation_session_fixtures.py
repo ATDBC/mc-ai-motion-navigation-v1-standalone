@@ -38,6 +38,8 @@ class FakeNavigationSession:
         self.execution_anchor_requests = []
         self.proposal_anchors = []
         self.proposal_ledgers = []
+        self.route_decision = None
+        self.verified_submissions = []
         self.cancel_steps = cancel_steps
         self.cancel_remaining = 0
 
@@ -165,7 +167,11 @@ class FakeNavigationSession:
                 source, self.proposal_sequence, intent,
             ),), self.observation_request()),
             self.report,
+            self.route_decision,
         )
+
+    def register_verified_submission(self, proposal, *, control_sequence):
+        self.verified_submissions.append((proposal, control_sequence))
 
     def cancel(self, reason):
         self.reason = reason

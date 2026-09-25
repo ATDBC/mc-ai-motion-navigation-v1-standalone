@@ -21,7 +21,7 @@ from mc2p.contracts.task import (
 )
 from mc2p.motion_nav.movement_transition import GoalState
 from mc2p.motion_nav.navigation_session import (
-    NavigationSessionPort, NavigationSessionState,
+    NavigationSessionPort, NavigationSessionProposal, NavigationSessionState,
 )
 from mc2p.runtime.player_runtime_v1 import (
     PlayerRuntimeV1, RuntimeStateV1, RuntimeStepResultV1,
@@ -66,6 +66,7 @@ class RuntimeNavigationDriver:
         self._goal_revision: int | None = None
         self._goal: GoalState | None = None
         self._prepared_deadline_ns: int | None = None
+        self._prepared_proposal: NavigationSessionProposal | None = None
 
     @property
     def has_prepared_frame(self) -> bool:
@@ -173,6 +174,7 @@ class RuntimeNavigationDriver:
             ),
         ) if item is not None)
         self._prepared_deadline_ns = deadline
+        self._prepared_proposal = proposal
         return proposals
 
     def adopt_result(self, result: RuntimeStepResultV1) -> None:
@@ -181,10 +183,32 @@ class RuntimeNavigationDriver:
             raise ContractViolation("runtime navigation has no prepared frame")
         if type(result) is not RuntimeStepResultV1:
             raise ContractViolation("runtime navigation result is invalid")
+        proposal = self._prepared_proposal
         self._prepared_deadline_ns = None
+        self._prepared_proposal = None
         if result.report.failure is not None:
             self.state, self.reason = "failed", "runtime_failure"
         else:
+            if (proposal is not None and proposal.route_decision is not None
+                    and proposal.route_decision.verified_command_index is not None
+                    and proposal.control_frame is not None
+                    and result.decision is not None):
+                navigation_intents = {
+                    ordered.intent.intent_id
+                    for ordered in proposal.control_frame.intents
+                }
+                selected_movement = {
+                    intent_id for group, intent_id
+                    in result.decision.selected_intents
+                    if group == "movement"
+                }
+                if navigation_intents.intersection(selected_movement):
+                    self.session.register_verified_submission(
+                        proposal,
+                        control_sequence=(
+                            result.decision.action.request_sequence_id
+                        ),
+                    )
             self._sync_report()
         if self.state in {"failed", "cancelled"}:
             self._release_source()
@@ -194,6 +218,7 @@ class RuntimeNavigationDriver:
         if self._prepared_deadline_ns is None:
             raise ContractViolation("runtime navigation has no prepared frame")
         self._prepared_deadline_ns = None
+        self._prepared_proposal = None
 
     def stop(
         self,

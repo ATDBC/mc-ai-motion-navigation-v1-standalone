@@ -386,7 +386,17 @@ class DamageKnockbackDetector:
                         None, "motion_residual_unavailable",
                         pending, usable_residual,
                     )
+                if current is None or current.movement_tick_id is None:
+                    return ExternalMotionDetection(
+                        None, "motion_residual_unavailable",
+                        pending, usable_residual,
+                    )
                 self._pending_damage = None
+                event = self._unverified_damage_event(pending)
+                return ExternalMotionDetection(
+                    event, "damage_motion_unverified_timeout",
+                    pending, usable_residual,
+                )
 
         if usable_residual is None or usable_residual.status not in {
             MotionResidualStatus.MATCHED, MotionResidualStatus.DEVIATION,

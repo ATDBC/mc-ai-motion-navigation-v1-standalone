@@ -132,6 +132,78 @@ def _nodes(world, columns: tuple[int, ...]):
     return tuple(result)
 
 
+def _gap_session(*, session_id: str = "gap-session"):
+    anchor, _, _, _ = gap_fixture()
+    knowledge = WorldKnowledge(anchor.session)
+    known = ObservationStamp(anchor.session, 1, 1, "test", 1)
+    knowledge.confirm_air(known, tuple(
+        (x, y, z)
+        for x in range(-2, 3)
+        for y in range(60, 71)
+        for z in range(-2, 5)
+    ))
+    knowledge.observe_blocks(known, {
+        (0, 63, 0): BlockGeometry.full_cube("minecraft:grass_block"),
+        (0, 63, 2): BlockGeometry.full_cube("minecraft:grass_block"),
+    })
+    world = knowledge.view()
+    goal = query_support_surfaces(world, 0, 2, 64, 64).surfaces[0]
+    state = anchor.physics_state
+    x, y, z = state.position
+    body = BodyState(
+        state.session, anchor.observation_sequence_id,
+        ObservationStamp(
+            state.session, anchor.observation_sequence_id,
+            anchor.movement_tick_id, "test", 1_000_000_000,
+        ),
+        state.position,
+        tuple(value * 20.0 for value in state.velocity_blocks_per_tick),
+        state.yaw_radians, state.pitch_radians, state.pose,
+        Aabb(
+            x - state.body_width / 2, y, z - state.body_width / 2,
+            x + state.body_width / 2, y + state.body_height,
+            z + state.body_width / 2,
+        ),
+        state.on_ground, state.horizontal_collision, state.vertical_collision,
+        is_sprinting=state.sprinting, is_sneaking=state.sneaking,
+        food_points=state.food_points,
+        saturation_points=state.saturation_points,
+    )
+    current = NavigationFrame(state.session, body, world, "fabric")
+    profiles = NavigationSessionProfiles(
+        replace(
+            ordinary_profile(),
+            support_materials=frozenset({"minecraft:grass_block"}),
+        ),
+        jump_profile(), step_profile(),
+        air=(air_profile(MovementMode.JUMP_GAP),),
+    )
+    session = NavigationSession(
+        session_id, profiles, planner_worker=_InlinePlanner(),
+        clock_ns=lambda: 1_000_000_000,
+    )
+    session.bind_source(_source())
+    session.start_goal("gap-goal", 1, _goal(goal.position), current)
+    return session, current, anchor
+
+
+def _drive_until_verified_command(session, current, anchor):
+    ledger = InputApplicationLedger(max_records=64)
+    deadline = time.perf_counter() + 5.0
+    saw_motion_wait = False
+    while time.perf_counter() < deadline:
+        proposal = session.propose(
+            current, anchor, 2_000_000_000, input_ledger=ledger,
+        )
+        decision = proposal.route_decision
+        if decision is not None and decision.reason_code == "awaiting_verified_motion":
+            saw_motion_wait = True
+        if decision is not None and decision.submit_input:
+            return proposal, ledger, saw_motion_wait
+        time.sleep(.01)
+    raise AssertionError("verified jump command was not submitted")
+
+
 def _source() -> IntentSourceV1:
     return IntentSourceV1(
         "0" * 32, "episode", 0, 1,
@@ -603,80 +675,10 @@ class NavigationSessionTests(unittest.TestCase):
         self.assertIs(finished.report.state, NavigationSessionState.CANCELLED)
 
     def test_gap_route_is_solved_by_the_session_coordinator(self):
-        anchor, _, _, _ = gap_fixture()
-        knowledge = WorldKnowledge(anchor.session)
-        known = ObservationStamp(anchor.session, 1, 1, "test", 1)
-        knowledge.confirm_air(known, tuple(
-            (x, y, z)
-            for x in range(-2, 3)
-            for y in range(60, 71)
-            for z in range(-2, 5)
-        ))
-        knowledge.observe_blocks(known, {
-            (0, 63, 0): BlockGeometry.full_cube("minecraft:grass_block"),
-            (0, 63, 2): BlockGeometry.full_cube("minecraft:grass_block"),
-        })
-        world = knowledge.view()
-        start = query_support_surfaces(world, 0, 0, 64, 64).surfaces[0]
-        goal = query_support_surfaces(world, 0, 2, 64, 64).surfaces[0]
-        state = anchor.physics_state
-        x, y, z = state.position
-        body = BodyState(
-            state.session, anchor.observation_sequence_id,
-            ObservationStamp(
-                state.session, anchor.observation_sequence_id,
-                anchor.movement_tick_id, "test", 1_000_000_000,
-            ),
-            state.position,
-            tuple(value * 20.0 for value in state.velocity_blocks_per_tick),
-            state.yaw_radians, state.pitch_radians, state.pose,
-            Aabb(
-                x - state.body_width / 2, y, z - state.body_width / 2,
-                x + state.body_width / 2, y + state.body_height,
-                z + state.body_width / 2,
-            ),
-            state.on_ground, state.horizontal_collision,
-            state.vertical_collision, is_sprinting=state.sprinting,
-            is_sneaking=state.sneaking, food_points=state.food_points,
-            saturation_points=state.saturation_points,
+        session, current, anchor = _gap_session()
+        proposal, _, saw_motion_wait = _drive_until_verified_command(
+            session, current, anchor,
         )
-        current = NavigationFrame(state.session, body, world, "fabric")
-        profiles = NavigationSessionProfiles(
-            replace(
-                ordinary_profile(),
-                support_materials=frozenset({"minecraft:grass_block"}),
-            ),
-            jump_profile(), step_profile(),
-            air=(air_profile(MovementMode.JUMP_GAP),),
-        )
-        session = NavigationSession(
-            "gap-session", profiles, planner_worker=_InlinePlanner(),
-            clock_ns=lambda: 1_000_000_000,
-        )
-        session.bind_source(_source())
-        session.start_goal("gap-goal", 1, _goal(goal.position), current)
-        ledger = InputApplicationLedger(max_records=64)
-        proposal = session.propose(
-            current, anchor, 2_000_000_000, input_ledger=ledger,
-        )
-        saw_motion_wait = False
-        deadline = time.perf_counter() + 5.0
-        while (proposal.route_decision is None
-               or not proposal.route_decision.submit_input) \
-                and time.perf_counter() < deadline:
-            if (proposal.route_decision is not None
-                    and proposal.route_decision.reason_code
-                        == "awaiting_verified_motion"):
-                saw_motion_wait = True
-                self.assertIsNotNone(proposal.control_frame)
-                self.assertEqual(proposal.control_frame.intents, ())
-                self.assertIsNotNone(
-                    proposal.control_frame.observation_request,
-                )
-            time.sleep(.01)
-            proposal = session.propose(
-                current, anchor, 2_000_000_000, input_ledger=ledger,
-            )
 
         from mc2p.motion_nav.action_route import JumpGapSegment
         self.assertIs(
@@ -687,6 +689,113 @@ class NavigationSessionTests(unittest.TestCase):
         self.assertTrue(proposal.route_decision.submit_input)
         self.assertTrue(proposal.control_frame.intents[0].intent.movement.jump)
         session.close()
+
+    def test_verified_motion_without_current_anchor_keeps_landing_owner(self):
+        session, current, anchor = _gap_session(
+            session_id="gap-missing-anchor-session",
+        )
+        try:
+            _, ledger, _ = _drive_until_verified_command(
+                session, current, anchor,
+            )
+            executor = session._executor
+
+            proposal = session.propose(
+                current, None, 2_000_000_000, input_ledger=ledger,
+            )
+
+            self.assertIs(session._executor, executor)
+            self.assertIs(
+                proposal.report.state, NavigationSessionState.EXECUTING,
+            )
+            self.assertEqual(
+                proposal.route_decision.reason_code,
+                "verified_motion_anchor_unavailable_retain_landing",
+            )
+            self.assertTrue(proposal.route_decision.submit_input)
+            self.assertEqual(
+                proposal.control_frame.intents[0].intent.movement,
+                MovementV1(),
+            )
+        finally:
+            session.close()
+
+    def test_airborne_dependency_change_keeps_executor_until_safe_terminal(self):
+        session, current, anchor = _gap_session(
+            session_id="gap-dependency-session",
+        )
+        try:
+            _drive_until_verified_command(session, current, anchor)
+            executor = session._executor
+            dependency = session.active_route.action_route.dependencies[0]
+            gap_position = (.5, 64.0, 1.5)
+            airborne = replace(
+                current.body,
+                sequence_id=current.body.sequence_id + 1,
+                position=gap_position,
+                body_box=Aabb(.2, 64.0, 1.2, .8, 65.8, 1.8),
+                is_on_ground=False,
+            )
+            changed = NavigationFrame(
+                current.session, airborne, current.world, "fabric", (dependency,),
+            )
+            airborne_anchor = replace(
+                anchor,
+                observation_sequence_id=airborne.sequence_id,
+                physics_state=replace(
+                    anchor.physics_state,
+                    position=gap_position,
+                    on_ground=False,
+                ),
+            )
+
+            session.observe(changed, changed.changed_cells)
+            proposal = session.propose(
+                changed, airborne_anchor, 2_000_000_000,
+                input_ledger=InputApplicationLedger(max_records=64),
+            )
+
+            self.assertIs(session._executor, executor)
+            self.assertIsNotNone(session.active_route)
+            self.assertIs(
+                proposal.report.state, NavigationSessionState.EXECUTING,
+            )
+            self.assertIsNotNone(proposal.route_decision)
+        finally:
+            session.close()
+
+    def test_ground_handoff_waits_for_inflight_verified_command(self):
+        session, current, anchor = _gap_session(
+            session_id="gap-ground-handoff-session",
+        )
+        try:
+            submitted, ledger, _ = _drive_until_verified_command(
+                session, current, anchor,
+            )
+            session.register_verified_submission(
+                submitted, control_sequence=41,
+            )
+            old_executor = session._executor
+            goal = query_support_surfaces(
+                current.world, 0, 2, 64, 64,
+            ).surfaces[0]
+            session.update_goal("gap-goal", 2, _goal(goal.position))
+
+            proposal = session.propose(
+                current, anchor, 2_000_000_000, input_ledger=ledger,
+            )
+
+            self.assertIs(session._executor, old_executor)
+            self.assertEqual(
+                proposal.report.reason,
+                "executing_safe_prefix_during_replan",
+            )
+            self.assertIsNotNone(proposal.route_decision)
+            self.assertEqual(
+                proposal.route_decision.reason_code, "awaiting_application",
+            )
+        finally:
+            session.close()
 
 
 if __name__ == "__main__":

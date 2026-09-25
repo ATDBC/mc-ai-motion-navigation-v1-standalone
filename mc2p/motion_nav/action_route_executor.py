@@ -336,6 +336,25 @@ class ActionRouteExecutor:
             raise ContractViolation("verified motion lookup requires an action index")
         return action_index in self._verified_motion
 
+    def requires_safe_handoff(self, frame: NavigationFrame) -> bool:
+        """Return whether another route must wait for this action to finish."""
+        if type(frame) is not NavigationFrame:
+            raise ContractViolation("route handoff requires a navigation frame")
+        if self.route is None or self._controller is None or self.state in {
+            ActionRouteState.COMPLETE, ActionRouteState.CANCELLED,
+            ActionRouteState.FAILED, ActionRouteState.UNSUPPORTED,
+            ActionRouteState.INPUT_LOST,
+        }:
+            return False
+        if not frame.body.is_on_ground:
+            return True
+        if type(self._controller) is VerifiedMotionExecutor:
+            return self._controller.state in {
+                VerifiedMotionExecutorState.RUNNING,
+                VerifiedMotionExecutorState.RECOVERING,
+            }
+        return type(self.route.actions[self.action_index]) is not WalkSegment
+
     def register_verified_submission(
             self, command_index: int, *, control_sequence: int,
             requested_movement_tick: int,
@@ -419,14 +438,16 @@ class ActionRouteExecutor:
         if type(self._controller) is VerifiedMotionExecutor:
             if (type(state_anchor) is not StateAnchor
                     or type(input_ledger) is not InputApplicationLedger):
-                raise ContractViolation(
-                    "verified route motion requires state anchor and input ledger"
-                )
-            if self._cancel_requested:
+                verified = self._controller.recover_without_anchor()
+            elif self._cancel_requested:
                 self._controller.cancel(state_anchor)
-            verified = self._controller.decide(
-                state_anchor, input_ledger, changed_cells=frame.changed_cells,
-            )
+                verified = self._controller.decide(
+                    state_anchor, input_ledger, changed_cells=frame.changed_cells,
+                )
+            else:
+                verified = self._controller.decide(
+                    state_anchor, input_ledger, changed_cells=frame.changed_cells,
+                )
             terminal = {
                 VerifiedMotionExecutorState.CANCELLED: ActionRouteState.CANCELLED,
                 VerifiedMotionExecutorState.FAILED: ActionRouteState.FAILED,

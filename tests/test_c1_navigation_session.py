@@ -8,6 +8,9 @@ from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.motion_nav.navigation_session import NavigationSessionState
+from mc2p.motion_nav.action_route_executor import (
+    ActionRouteDecision, ActionRouteState,
+)
 from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
 from tests.test_fixed_melee_driver import MeleeBackend
 from tests.test_player_runtime import _RecordingTrace
@@ -80,6 +83,36 @@ class C1NavigationSessionTests(unittest.TestCase):
         self.assertIs(session.execution_anchor_requests[0][1], self.runtime.input_ledger)
         self.assertIs(session.proposal_anchors[-1], session.execution_anchor_token)
         self.assertIs(session.proposal_ledgers[-1], self.runtime.input_ledger)
+
+    def test_bridge_registers_selected_verified_command_with_runtime_sequence(self):
+        session = FakeNavigationSession()
+        session.movement = MovementV1(forward=1, jump=True, sprint=True)
+        session.route_decision = ActionRouteDecision(
+            ActionRouteState.RUNNING, session.movement, None,
+            1, 0, "submit_verified_command", (), 0, True,
+            0, 1, 2,
+        )
+        driver = RuntimeNavigationDriver(
+            self.runtime, session, clock_ns=lambda: self.clock[0],
+        )
+        from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, MovementMode
+        from mc2p.motion_nav.world_model import Aabb
+        goal = GoalState(
+            Aabb(0, 64, 1, 1, 64.2, 2), GoalSupport.SOLID,
+            frozenset({MovementMode.WALK}), frozenset({"standing"}), .6,
+        )
+        driver.start("combat-goal", 1, goal, self.clock[0])
+
+        result = driver.tick(
+            BehaviorProfileV0(), self.clock[0] + 500_000_000,
+        )
+
+        self.assertEqual(len(session.verified_submissions), 1)
+        proposal, control_sequence = session.verified_submissions[0]
+        self.assertIs(proposal.route_decision, session.route_decision)
+        self.assertEqual(
+            control_sequence, result.decision.action.request_sequence_id,
+        )
 
     def test_bridge_ingests_each_runtime_observation_only_when_it_is_needed(self):
         session = FakeNavigationSession()

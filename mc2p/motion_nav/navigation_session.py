@@ -231,6 +231,9 @@ class NavigationSessionPort(Protocol):
         self, frame: NavigationFrame, state_anchor: StateAnchor | None,
         deadline_ns: int, *, input_ledger: InputApplicationLedger | None = None,
     ) -> NavigationSessionProposal: ...
+    def register_verified_submission(
+        self, proposal: NavigationSessionProposal, *, control_sequence: int,
+    ) -> None: ...
     def cancel(self, reason: str) -> None: ...
 
 
@@ -741,6 +744,11 @@ class NavigationSession:
         self._last_decision = decision
         active_request_id = self._active_route.source_request_id
         current_request_id = None if self._request is None else self._request.request_id
+        terminal_decisions = {
+            ActionRouteState.COMPLETE, ActionRouteState.CANCELLED,
+            ActionRouteState.FAILED, ActionRouteState.BLOCKED,
+            ActionRouteState.UNSUPPORTED, ActionRouteState.INPUT_LOST,
+        }
         if self._state is NavigationSessionState.CANCELLING:
             if decision.state in {
                 ActionRouteState.CANCELLED, ActionRouteState.COMPLETE,
@@ -758,26 +766,22 @@ class NavigationSession:
             else:
                 self._state = NavigationSessionState.CANCELLING
                 self._reason = decision.reason_code
+        elif (self._restart_after_active_terminal
+                and decision.state in terminal_decisions):
+            self._restart_after_active_terminal = False
+            self._clear_active_execution()
+            self._restart_request_from_current(
+                frame, "route_handoff_reanchored",
+            )
         elif active_request_id != current_request_id:
-            if decision.state in {
-                ActionRouteState.COMPLETE, ActionRouteState.CANCELLED,
-                ActionRouteState.FAILED, ActionRouteState.BLOCKED,
-                ActionRouteState.UNSUPPORTED, ActionRouteState.INPUT_LOST,
-            }:
-                restart = self._restart_after_active_terminal
+            if decision.state in terminal_decisions:
                 self._clear_active_execution()
-                if restart:
-                    self._restart_after_active_terminal = False
-                    self._restart_request_from_current(
-                        frame, "route_handoff_reanchored",
-                    )
-                else:
-                    self._state = (
-                        NavigationSessionState.SNAPSHOTTING
-                        if self._snapshot_builder is not None
-                        else NavigationSessionState.PLANNING
-                    )
-                    self._reason = "replacement_route_pending"
+                self._state = (
+                    NavigationSessionState.SNAPSHOTTING
+                    if self._snapshot_builder is not None
+                    else NavigationSessionState.PLANNING
+                )
+                self._reason = "replacement_route_pending"
             else:
                 self._state = NavigationSessionState.EXECUTING
                 self._reason = "executing_safe_prefix_during_replan"
@@ -843,6 +847,11 @@ class NavigationSession:
         *,
         preserve_active_route: bool = False,
     ) -> None:
+        # Replacing a planning request never revokes an active body's owner.
+        # The admitted-route handoff below decides when that owner is safe to
+        # replace.  Callers may still state the preservation intent explicitly
+        # to make the reason visible, but an existing executor is authoritative.
+        preserve_active_route = preserve_active_route or self._executor is not None
         if not preserve_active_route:
             self._retire_route()
         self._request = request
@@ -866,6 +875,18 @@ class NavigationSession:
             self._executor.cancel()
         self._clear_active_execution()
 
+    def _wait_for_active_terminal(
+        self, missing: tuple[BlockPos, ...], reason: str,
+    ) -> bool:
+        if self._executor is None:
+            return False
+        self._executor.cancel()
+        self._restart_after_active_terminal = True
+        self._snapshot_missing = missing
+        self._state = NavigationSessionState.EXECUTING
+        self._reason = reason
+        return True
+
     def _replan_from_current(self, reason: str) -> None:
         if self._request is None or self._frame is None:
             return
@@ -874,6 +895,10 @@ class NavigationSession:
         if type(request) is SurfacePlanningRequest:
             start_node, start_missing = self._surface_for_body(self._frame)
             if start_node is None:
+                if self._wait_for_active_terminal(
+                    start_missing, "replan_waiting_for_safe_terminal",
+                ):
+                    return
                 self._retire_route()
                 self._snapshot_missing = start_missing
                 self._state = (
@@ -899,7 +924,10 @@ class NavigationSession:
                 request_id=f"{self.session_id}-request-{sequence}",
                 start=(math.floor(x), math.floor(y), math.floor(z)),
             )
-        self._replace_request(request, self._frame, reason)
+        self._replace_request(
+            request, self._frame, reason,
+            preserve_active_route=self._executor is not None,
+        )
 
     def _restart_request_from_current(
         self,
@@ -913,6 +941,10 @@ class NavigationSession:
         if type(request) is SurfacePlanningRequest:
             start_node, missing = self._surface_for_body(frame)
             if start_node is None:
+                if self._wait_for_active_terminal(
+                    missing, "restart_waiting_for_safe_terminal",
+                ):
+                    return
                 self._retire_route()
                 self._snapshot_missing = missing
                 self._state = (
@@ -938,7 +970,10 @@ class NavigationSession:
                 request_id=f"{self.session_id}-request-{sequence}",
                 start=(math.floor(x), math.floor(y), math.floor(z)),
             )
-        self._replace_request(request, frame, reason)
+        self._replace_request(
+            request, frame, reason,
+            preserve_active_route=self._executor is not None,
+        )
 
     def _advance_planning(self, frame: NavigationFrame) -> None:
         request = self._request
@@ -1065,12 +1100,12 @@ class NavigationSession:
             return
         if (self._active_route is not None
                 and self._active_route.source_request_id != current.request_id):
-            if not frame.body.is_on_ground:
-                assert self._executor is not None
+            assert self._executor is not None
+            if self._executor.requires_safe_handoff(frame):
                 self._executor.cancel()
                 self._restart_after_active_terminal = True
                 self._state = NavigationSessionState.EXECUTING
-                self._reason = "route_handoff_waiting_for_landing"
+                self._reason = "route_handoff_waiting_for_safe_terminal"
                 return
             self._clear_active_execution()
         self._active_route = admitted.route

@@ -265,6 +265,7 @@ class VerifiedMotionExecutor:
         self._command_index = 0
         self._pending: _PendingSubmission | None = None
         self._cancel_requested = False
+        self._cancel_requested_at_tick: int | None = None
         self._recovery_uses_verified_remainder = False
         self._terminal_after_recovery = VerifiedMotionExecutorState.INPUT_LOST
 
@@ -286,6 +287,7 @@ class VerifiedMotionExecutor:
         self._command_index = 0
         self._pending = None
         self._cancel_requested = False
+        self._cancel_requested_at_tick = None
         self._recovery_uses_verified_remainder = False
         self._terminal_after_recovery = VerifiedMotionExecutorState.INPUT_LOST
         self.state = VerifiedMotionExecutorState.RUNNING
@@ -325,12 +327,35 @@ class VerifiedMotionExecutor:
         if self.state is not VerifiedMotionExecutorState.RUNNING:
             return
         self._cancel_requested = True
-        if anchor.physics_state.on_ground:
-            self.state = VerifiedMotionExecutorState.CANCELLED
-        else:
+        self._cancel_requested_at_tick = anchor.movement_tick_id
+        self.state = VerifiedMotionExecutorState.RECOVERING
+        self._recovery_uses_verified_remainder = (
+            self._pending is not None or not anchor.physics_state.on_ground
+        )
+        self._terminal_after_recovery = VerifiedMotionExecutorState.CANCELLED
+
+    def recover_without_anchor(self) -> VerifiedMotionDecision:
+        """Keep body ownership when current motion cannot be re-anchored.
+
+        A missing anchor means the proof may no longer describe the observed
+        body.  New proof commands therefore cannot be issued.  The executor
+        still owns the body and sends neutral movement until a later anchor can
+        confirm landing and finish the recovery.
+        """
+        if self._candidate is None:
+            self.state = VerifiedMotionExecutorState.IDLE
+            return self._decision(None, None, "not_started")
+        if self.state is VerifiedMotionExecutorState.RUNNING:
+            self._pending = None
             self.state = VerifiedMotionExecutorState.RECOVERING
-            self._recovery_uses_verified_remainder = True
-            self._terminal_after_recovery = VerifiedMotionExecutorState.CANCELLED
+            self._recovery_uses_verified_remainder = False
+            self._terminal_after_recovery = VerifiedMotionExecutorState.INPUT_LOST
+        if self.state is VerifiedMotionExecutorState.RECOVERING:
+            return self._decision(
+                MovementV1(), None,
+                "verified_motion_anchor_unavailable_retain_landing",
+            )
+        return self._decision(None, None, self.state.value)
 
     def _expected_tick(self) -> int:
         assert self._start_tick is not None
@@ -425,6 +450,10 @@ class VerifiedMotionExecutor:
                 VerifiedMotionExecutorState.RECOVERING,
         } and set(changed_cells).intersection(proof.world_dependencies)):
             self._pending = None
+            # The changed dependency supersedes an earlier cancellation.
+            # Landing now terminates as a failed proof, so it must not wait
+            # for the cancellation's next-observation gate.
+            self._cancel_requested_at_tick = None
             if anchor.physics_state.on_ground:
                 self.state = VerifiedMotionExecutorState.FAILED
                 return self._decision(
@@ -439,7 +468,12 @@ class VerifiedMotionExecutor:
                 "world_dependency_changed_retain_landing",
             )
         if self.state is VerifiedMotionExecutorState.RECOVERING:
-            if anchor.physics_state.on_ground:
+            cancel_observation_advanced = (
+                self._cancel_requested_at_tick is None
+                or anchor.movement_tick_id > self._cancel_requested_at_tick
+            )
+            if (anchor.physics_state.on_ground and self._pending is None
+                    and cancel_observation_advanced):
                 self.state = self._terminal_after_recovery
                 return self._decision(MovementV1(), None, self.state.value)
             if self._recovery_uses_verified_remainder:
@@ -464,6 +498,13 @@ class VerifiedMotionExecutor:
                         "complete_verified_landing_after_cancel",
                         submittable_as_verified_command=True,
                     )
+            if anchor.physics_state.on_ground:
+                if not cancel_observation_advanced:
+                    return self._decision(
+                        MovementV1(), None, "awaiting_cancel_observation",
+                    )
+                self.state = self._terminal_after_recovery
+                return self._decision(MovementV1(), None, self.state.value)
             return self._decision(MovementV1(), None, "retain_landing_responsibility")
         if self.state is not VerifiedMotionExecutorState.RUNNING:
             return self._decision(None, None, self.state.value)

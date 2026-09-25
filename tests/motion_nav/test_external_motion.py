@@ -191,6 +191,33 @@ class ExternalMotionDetectorTests(unittest.TestCase):
         )
         self.assertEqual(found.event.observation_sequence_id, 2)
 
+    def test_damage_residual_timeout_requests_conservative_recovery(self):
+        detector = DamageKnockbackDetector()
+        detector.observe(snapshot(seq=1, tick=20, hurt=0, health=20))
+        found = None
+        for index in range(12):
+            tick = 21 + index
+            found = detector.observe(
+                snapshot(
+                    seq=2 + index, tick=tick,
+                    hurt=max(0, 10 - index), health=17, ground=False,
+                ),
+                MotionResidualResult(
+                    MotionResidualStatus.NEEDS_WORLD, 20, tick,
+                    missing_cells=((0, 62, -2),),
+                ),
+            )
+            if found.event is not None:
+                break
+
+        self.assertIsNotNone(found.event)
+        self.assertEqual(
+            found.event.source,
+            ExternalMotionSource.DAMAGE_WITH_UNVERIFIED_MOTION,
+        )
+        self.assertEqual(found.reason, "damage_motion_unverified_timeout")
+        self.assertEqual(found.event.movement_tick_id, 21)
+
     def test_later_residual_cannot_claim_damage_tick_outside_its_interval(self):
         detector = DamageKnockbackDetector()
         detector.observe(snapshot(seq=1, tick=20, hurt=0, health=20))
