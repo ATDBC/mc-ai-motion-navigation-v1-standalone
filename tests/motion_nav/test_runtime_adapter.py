@@ -11,14 +11,6 @@ from tests.observation_v3_fixtures import valid_snapshot_v3
 
 
 class B02RuntimeAdapterTests(unittest.TestCase):
-    def test_latest_frame_is_empty_before_ingest_then_tracks_current_world(self):
-        adapter = NavigationObservationAdapter()
-        self.assertIsNone(adapter.latest_frame)
-
-        frame = adapter.ingest(valid_snapshot_v3(sequence=1))
-
-        self.assertIs(adapter.latest_frame, frame)
-
     def test_fabric_and_craftground_share_body_and_world_contract(self):
         base = valid_snapshot_v3(sequence=3)
         fabric = replace(base, episode_id="same-episode", source_backend="fabric")

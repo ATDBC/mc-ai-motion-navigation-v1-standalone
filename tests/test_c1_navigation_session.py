@@ -119,10 +119,6 @@ class C1NavigationSessionTests(unittest.TestCase):
         driver = RuntimeNavigationDriver(
             self.runtime, session, clock_ns=lambda: self.clock[0],
         )
-        self.assertIs(
-            session.observation_adapter,
-            self.runtime.navigation_observation_adapter,
-        )
         from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, MovementMode
         from mc2p.motion_nav.world_model import Aabb
         goal = GoalState(

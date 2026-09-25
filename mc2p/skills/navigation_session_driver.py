@@ -53,9 +53,6 @@ class RuntimeNavigationDriver:
         if (observation_request is not None
                 and type(observation_request) is not ObservationRequestV3):
             raise ContractViolation("runtime navigation observation request is invalid")
-        session.attach_observation_adapter(
-            runtime.navigation_observation_adapter,
-        )
         self.runtime = runtime
         self.session = session
         self._clock = clock_ns

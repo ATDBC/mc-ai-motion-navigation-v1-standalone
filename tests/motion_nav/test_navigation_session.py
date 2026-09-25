@@ -6,7 +6,6 @@ import time
 import unittest
 from unittest.mock import Mock
 
-from mc2p.contracts.common import ContractViolation
 from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.intent_source import IntentSourceV1
 from mc2p.motion_nav.known_map_planner import (
@@ -272,14 +271,6 @@ class NavigationSessionTests(unittest.TestCase):
         return NavigationSessionProfiles(
             ordinary_profile(), jump_profile(), step_profile(),
         )
-
-    def test_started_session_cannot_replace_its_world_owner(self):
-        from mc2p.motion_nav.runtime_adapter import NavigationObservationAdapter
-
-        session, _, _ = _gap_session(session_id="owner-is-frozen")
-
-        with self.assertRaisesRegex(ContractViolation, "world owner"):
-            session.attach_observation_adapter(NavigationObservationAdapter())
 
     def test_motion_residual_world_query_precedes_bulk_planning_queries(self):
         session = NavigationSession(

@@ -138,11 +138,6 @@ class NavigationObservationAdapter:
         """Whether this adapter has ingested the world view used by requests."""
         return self._world is not None and self._latest_order is not None
 
-    @property
-    def latest_frame(self) -> NavigationFrame | None:
-        """Return the current immutable projection without ingesting again."""
-        return self._latest_frame
-
     def air_request(self, positions: tuple[BlockPos, ...], *, max_positions: int = 128,
                     field_profile: str = "navigation_v1") -> tuple[ObservationRequestV3, tuple[BlockPos, ...]]:
         if type(positions) is not tuple:

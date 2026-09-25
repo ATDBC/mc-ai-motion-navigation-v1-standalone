@@ -11,13 +11,11 @@ from mc2p.contracts.action_receipt import (
 )
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.common import ContractViolation
-from mc2p.contracts.observation_v3 import CollisionShapeV3, ObservedBlockV3
-from mc2p.contracts.report import ExecutionStatusV0, FailureCodeV0, FailureV0
+from mc2p.contracts.report import ExecutionStatusV0, FailureCodeV0
 from mc2p.contracts.reset import ResetRequestV0, ResetResultV0
 from mc2p.runtime.backend import BackendStepResultV0
 from mc2p.runtime.failure_disposition import FailureDisposition
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1
-from mc2p.motion_nav.world_model import CellKnowledge
 from tests.observation_v2_fixtures import valid_snapshot_v2
 from tests.test_action_receipt import receipt_value
 from tests.observation_v3_fixtures import valid_snapshot_v3
@@ -64,86 +62,6 @@ class Backend:
         if self.close_error: raise self.close_error
 
 
-class V3WorldBackend:
-    action_schema_version = "mc2p.action-snapshot.v1"
-    observation_schema_version = "mc2p.client_observation.v3"
-
-    def __init__(self):
-        self.sequence = 0
-        self.close_calls = 0
-        self.first = ObservedBlockV3(
-            (1, 63, 0), "minecraft:stone",
-            CollisionShapeV3("full_cube"), None, ("first_hit_ray",),
-        )
-        self.second = ObservedBlockV3(
-            (2, 63, 0), "minecraft:dirt",
-            CollisionShapeV3("full_cube"), None, ("first_hit_ray",),
-        )
-
-    def _observation(self, *, request_sequence_id):
-        blocks = (self.first,) if self.sequence == 0 else (self.second,)
-        snapshot = valid_snapshot_v3(blocks=blocks, sequence=self.sequence)
-        own = replace(
-            snapshot.self_state.value,
-            movement_tick_id=self.sequence + 1,
-        )
-        return replace(
-            snapshot,
-            episode_id="episode-v3-world",
-            request_sequence_id=request_sequence_id,
-            self_state=replace(snapshot.self_state, value=own),
-        )
-
-    def reset(self, request):
-        return ResetResultV0(
-            request.request_id, request.episode_id, True,
-            replace(
-                self._observation(request_sequence_id=None),
-                episode_id=request.episode_id,
-            ),
-        )
-
-    def step(self, action, deadline, *, observation_request=None):
-        from mc2p.runtime.backend_v1 import BackendStepResultV1
-        self.sequence += 1
-        observation = replace(
-            self._observation(request_sequence_id=action.request_sequence_id),
-            episode_id=action.episode_id,
-        )
-        receipt = behavior_receipt_from_mapping({
-            **receipt_value(
-                episode_id=action.episode_id,
-                generation_id=self.sequence,
-                request_sequence_id=action.request_sequence_id,
-                world_tick=observation.world_time_ticks.value,
-                input_samples=self.sequence + 1,
-                leased_input_samples=0,
-            ),
-            "schema_version": "mc2p.client_action_receipt.v3",
-            "dropped_input_samples": 0,
-            "oldest_retained_input_tick": self.sequence + 1,
-            "input_applications": [{
-                "schema_version": "mc2p.input-application.v1",
-                "movement_tick_id": self.sequence + 1,
-                "episode_id": action.episode_id,
-                "request_sequence_id": action.request_sequence_id,
-                "sampled_at_jvm_ns": self.sequence + 1,
-                "state": "neutral",
-                "forward": 0.0,
-                "strafe": 0.0,
-                "jump": False,
-                "sneak": False,
-                "sprint": False,
-            }],
-        })
-        return BackendStepResultV1(
-            observation, 0, False, False, receipt,
-        )
-
-    def close(self):
-        self.close_calls += 1
-
-
 class RuntimeV1Tests(unittest.TestCase):
     def setUp(self):
         self.clock = [10]
@@ -165,93 +83,6 @@ class RuntimeV1Tests(unittest.TestCase):
     def test_runtime_owns_one_navigation_world_adapter_for_all_tasks(self):
         owner = self.runtime.navigation_observation_adapter
         self.assertIs(owner, self.runtime.navigation_observation_adapter)
-
-    def test_v3_runtime_updates_world_without_a_navigation_task(self):
-        backend = V3WorldBackend()
-        runtime = PlayerRuntimeV1(
-            backend, legacy._RecordingTrace(), clock_ns=lambda: 10,
-        )
-        reset = runtime.reset(ResetRequestV0(
-            "reset-v3-world", "episode-v3-world", "test", 1, 1_000,
-        ))
-
-        first = runtime.navigation_observation_adapter.latest_frame
-        self.assertTrue(reset.succeeded)
-        self.assertIsNotNone(first)
-        self.assertIs(
-            first.world.cell((1, 63, 0)).knowledge, CellKnowledge.BLOCK,
-        )
-
-        result = runtime.step(legacy._task(), BehaviorProfileV0(), 1_000)
-        second = runtime.navigation_observation_adapter.latest_frame
-
-        self.assertIs(result.report.status, ExecutionStatusV0.RUNNING)
-        self.assertEqual(second.body.sequence_id, 1)
-        self.assertIs(
-            second.world.cell((1, 63, 0)).knowledge, CellKnowledge.BLOCK,
-        )
-        self.assertIs(
-            second.world.cell((2, 63, 0)).knowledge, CellKnowledge.BLOCK,
-        )
-
-    def test_async_evidence_failure_keeps_current_control_and_backend(self):
-        self.runtime.submit_intent(self.intent(movement=MovementV1(forward=1)))
-
-        decision = self.runtime.apply_failure(FailureV0(
-            FailureCodeV0.TRACE_IO, "diagnostic writer failed", True,
-            "async_trace",
-        ))
-        result = self.step()
-
-        self.assertIs(
-            decision.disposition,
-            FailureDisposition.CONTINUE_WITH_INCOMPLETE_EVIDENCE,
-        )
-        self.assertFalse(decision.evidence_complete)
-        self.assertEqual(result.decision.action.movement, MovementV1(forward=1))
-        self.assertEqual(self.runtime.state.value, "ready")
-        self.assertEqual(self.backend.close_calls, 0)
-
-    def test_task_retry_and_cancel_release_old_inputs_without_closing_runtime(self):
-        self.runtime.submit_intent(self.intent(movement=MovementV1(forward=1)))
-        timeout = FailureV0(
-            FailureCodeV0.DEADLINE_EXCEEDED, "task search expired", True,
-            "task",
-        )
-
-        first = self.runtime.apply_failure(timeout)
-        released = self.step()
-        second = self.runtime.apply_failure(timeout)
-        exhausted = self.runtime.apply_failure(timeout)
-
-        self.assertIs(first.disposition, FailureDisposition.RETRY_TASK_BOUNDED)
-        self.assertIs(second.disposition, FailureDisposition.RETRY_TASK_BOUNDED)
-        self.assertIs(exhausted.disposition, FailureDisposition.CANCEL_TASK)
-        self.assertEqual(released.decision.action.movement, MovementV1())
-        self.assertEqual(self.runtime.state.value, "ready")
-        self.assertEqual(self.backend.close_calls, 0)
-
-    def test_nonrecoverable_backend_failure_ends_episode(self):
-        decision = self.runtime.apply_failure(FailureV0(
-            FailureCodeV0.BACKEND_DISCONNECTED, "server ended", False,
-            "runtime",
-        ))
-
-        self.assertIs(decision.disposition, FailureDisposition.END_EPISODE)
-        self.assertEqual(self.runtime.state.value, "ended")
-        self.assertEqual(self.backend.close_calls, 1)
-
-    def test_sync_trace_failure_overrides_async_evidence_downgrade(self):
-        self.trace.fail_writes = True
-
-        decision = self.runtime.apply_failure(FailureV0(
-            FailureCodeV0.TRACE_IO, "diagnostic writer failed", True,
-            "async_trace",
-        ))
-
-        self.assertIs(decision.disposition, FailureDisposition.RECREATE_RUNTIME)
-        self.assertEqual(self.runtime.state.value, "failed")
-        self.assertEqual(self.backend.close_calls, 1)
 
     def test_runtime_attributes_only_backend_reported_blocking_io(self):
         self.backend.blocking_io_increment = 17

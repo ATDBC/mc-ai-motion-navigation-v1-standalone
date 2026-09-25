@@ -168,6 +168,7 @@ class RuntimeVerifiedMotionHandoffTests(unittest.TestCase):
         session = _AnchorInjectionSession(
             "runtime-gap-session", profiles,
             planner_worker=_InlinePlanner(),
+            observation_adapter=runtime.navigation_observation_adapter,
             clock_ns=lambda: clock[0],
         )
         driver = RuntimeNavigationDriver(runtime, session, clock_ns=lambda: clock[0])
