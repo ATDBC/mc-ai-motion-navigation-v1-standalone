@@ -283,6 +283,24 @@ class WorldView:
             values.append((section, revision))
         return tuple(values)
 
+    def validate_sections(self, sections: Iterable[SectionPos]) -> None:
+        """Reject a live snapshot after any requested section changes.
+
+        Batch geometry users call this once before reusing facts derived from
+        several cells. Detached snapshots are immutable and need no check.
+        """
+        if self._owner is None:
+            return
+        for section in set(sections):
+            _section(section)
+            geometry = 0 if self._section_geometry_revisions is None \
+                else self._section_geometry_revisions.get(section, 0)
+            evidence = 0 if self._section_evidence_revisions is None \
+                else self._section_evidence_revisions.get(section, 0)
+            if (self._owner.section_geometry_revision(section) != geometry
+                    or self._owner.section_evidence_revision(section) != evidence):
+                raise ContractViolation("world view expired after section changed")
+
     def set_protection(
         self,
         center: tuple[float, float, float],

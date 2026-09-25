@@ -393,6 +393,27 @@ class WorldChangeNavigationIntegrationTests(unittest.TestCase):
         self.assertEqual(driver.session.report.goal_revision, 2)
         self.assertEqual(driver.session.bridge_remaining, 1)
 
+    def test_goal_revision_at_edge_replans_from_overlapping_support(self):
+        clock, backend, driver = self._fixture(maximum_blocks=1)
+        for _ in range(120):
+            driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
+            placement = driver.placement
+            if (placement is not None
+                    and placement.transaction.report.reason == "target_not_aligned"):
+                break
+        self.assertIsNotNone(driver.placement)
+        self.assertGreater(backend.position_x, 1.0)
+
+        driver.replace_goal(
+            "goal-b11", 2, _revised_goal(backend), clock[0],
+        )
+        self.assertFalse(driver.report.terminal, driver.report)
+        self._run(driver, clock, limit=400)
+
+        self.assertEqual(driver.report.state, "success", driver.report)
+        self.assertEqual(driver.report.confirmed_placements, 1)
+        self.assertEqual(backend.placed_cells, {1})
+
     def test_goal_revision_after_dispatch_waits_for_confirmation(self):
         clock, backend, driver = self._fixture(maximum_blocks=1)
         for _ in range(80):

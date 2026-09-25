@@ -18,7 +18,7 @@ from scripts.public_runtime_evidence import (
 
 
 RUNS = (
-    ("20260923T063950738376Z-5a9f5ab9", "b10c", "pass", "passed", None),
+    ("20260925T123521898324Z-5d0a66dc", "b10c", "pass", "passed", None),
     (
         "20260923T083302580358Z-a019b110",
         "b10c",
@@ -34,7 +34,7 @@ RUNS = (
         "failed",
         ("DeploymentEvidenceFailure", "['client-0:c1b_20_of_20_positive_tasks']"),
     ),
-    ("20260925T013056709842Z-97bc0db8", "c1c", "pass", "passed", None),
+    ("20260925T124344500270Z-ac8d6347", "c1c", "pass", "passed", None),
     (
         "20260924T164017683290Z-1c95ef4a",
         "c1c",
@@ -42,7 +42,7 @@ RUNS = (
         "failed",
         ("DeploymentEvidenceFailure", "['client-0:c1c_20_of_20_positive_tasks']"),
     ),
-    ("20260925T104441670754Z-64a4005e", "b11", "pass", "passed", None),
+    ("20260925T120057978030Z-c17b889e", "b11", "pass", "passed", None),
 )
 
 
@@ -83,8 +83,8 @@ def _make_sources(root: Path) -> None:
                 "passed_trials": 60,
                 "confirmed_placements": 90,
                 "all_passed": True,
-                "negative_trials": 20,
-                "negative_passed_trials": 20,
+                "negative_trials": 24,
+                "negative_passed_trials": 24,
                 "negative_all_passed": True,
             })
             _write_jsonl(
@@ -95,7 +95,7 @@ def _make_sources(root: Path) -> None:
             _write_jsonl(
                 client / "b11-negative-trials.jsonl",
                 [{"trial_id": f"negative-{index}", "passed": True}
-                 for index in range(20)],
+                for index in range(24)],
             )
             _write_jsonl(
                 client / "b11-fixture-commands.jsonl",
@@ -106,10 +106,22 @@ def _make_sources(root: Path) -> None:
             _write_jsonl(client / "trace.jsonl", [{"event": "observation"}])
             _write_jsonl(
                 client / "b10-gap-solver-trials.jsonl",
-                [{"name": f"trial-{index}"} for index in range(82)],
+                [{"name": f"trial-{index}"}
+                 for index in range(142 if status == "passed" else 82)],
             )
             if status == "passed":
-                _write_json(client / "b10-gap-solver.json", {"passed": True})
+                _write_json(client / "b10-gap-solver.json", {
+                    "coordinator_validation_count": 10,
+                    "coordinator_validation_success_count": 10,
+                })
+                _write_jsonl(
+                    client / "b10-coordinator-control-frames.jsonl",
+                    [{"actual_minus_latest_ticks": 0} for _ in range(210)],
+                )
+                _write_jsonl(
+                    client / "b10-coordinator-trials.jsonl",
+                    [{"name": f"coordinator-{index}"} for index in range(10)],
+                )
                 trace = client / "physics-tick-events"
                 _write_jsonl(trace / "manifest.jsonl", [{"segment": 0}])
                 _write_json(trace / "complete.json", {"complete": True})
@@ -207,6 +219,12 @@ class PublicRuntimeEvidenceTests(unittest.TestCase):
         self.assertEqual(report.archive_count, 7)
         self.assertLessEqual(report.total_archive_bytes, 30 * 1024 * 1024)
         self.assertEqual(report.stages, ("b10c", "b11", "c1b", "c1c"))
+
+        b10 = next((self.corpus / "archives").glob("b10c-pass-*.tar.gz"))
+        with tarfile.open(b10, mode="r:gz") as archive:
+            names = set(archive.getnames())
+        self.assertIn("client-0/b10-coordinator-control-frames.jsonl", names)
+        self.assertNotIn("client-0/trace.jsonl", names)
 
     def test_build_is_byte_deterministic(self) -> None:
         second = self.temp / "corpus-second"

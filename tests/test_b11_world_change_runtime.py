@@ -43,7 +43,7 @@ class B11WorldChangeRuntimeTests(unittest.TestCase):
         groups = {}
         for trial in trials:
             groups[trial["case"]] = groups.get(trial["case"], 0) + 1
-        self.assertEqual(len(trials), 20)
+        self.assertEqual(len(trials), 24)
         self.assertEqual(set(groups.values()), {2})
         self.assertEqual(set(groups), {
             "no_authorization",
@@ -55,6 +55,8 @@ class B11WorldChangeRuntimeTests(unittest.TestCase):
             "cancel_after_first_confirmation",
             "confirmation_timeout",
             "goal_revision_changed",
+            "goal_revision_at_edge_before_dispatch",
+            "goal_revision_after_dispatch",
             "bridge_cell_claimed",
         })
 

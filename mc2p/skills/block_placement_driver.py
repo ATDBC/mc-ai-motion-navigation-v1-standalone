@@ -31,6 +31,7 @@ from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.world_interaction import (
     BlockPlacementTransaction,
     PlacementProposal,
+    PlacementState,
 )
 from mc2p.runtime.player_runtime_v1 import (
     PlayerRuntimeV1,
@@ -123,21 +124,28 @@ class RuntimeBlockPlacementDriver:
         frame = self.runtime.navigation_observation_adapter.latest_frame
         if frame is None:
             raise ContractViolation("block placement requires current world frame")
-        if self._preparation_started_sequence is None:
+        ready = self.transaction.report.state is PlacementState.READY
+        preparing = ready and self._selection_started_sequence is None
+        if preparing and self._preparation_started_sequence is None:
             self._preparation_started_sequence = observation.sequence_id
         preparation_age = (
-            observation.sequence_id - self._preparation_started_sequence
+            None if self._preparation_started_sequence is None
+            else observation.sequence_id - self._preparation_started_sequence
         )
+        if (preparing and preparation_age is not None
+                and preparation_age >= self._preparation_timeout_observations):
+            self.transaction.fail("preparation_timeout")
+        placement = self.transaction.propose(observation, frame)
         selection_age = (
             None if self._selection_started_sequence is None
             else observation.sequence_id - self._selection_started_sequence
         )
-        if preparation_age >= self._preparation_timeout_observations:
-            self.transaction.fail("preparation_timeout")
+        if placement.operation is None:
+            self._selection_started_sequence = None
         elif (selection_age is not None
               and selection_age >= self._selection_timeout_observations):
             self.transaction.fail("operation_selection_timeout")
-        placement = self.transaction.propose(observation, frame)
+            placement = self.transaction.propose(observation, frame)
         intents: tuple[OrderedIntentV1, ...] = ()
         intent_id = None
         movement = self._movement_for(placement, frame)
@@ -268,6 +276,7 @@ class RuntimeBlockPlacementDriver:
             intent_id is None or selected_movement
         )
         if proposal.operation is None:
+            self._selection_started_sequence = None
             return
         selected = (
             result.decision is not None
@@ -284,6 +293,7 @@ class RuntimeBlockPlacementDriver:
             control_sequence=result.decision.action.request_sequence_id,
         )
         if selected:
+            self._preparation_started_sequence = None
             self._selection_started_sequence = None
         elif self._selection_started_sequence is None:
             self._selection_started_sequence = proposal.observation_sequence

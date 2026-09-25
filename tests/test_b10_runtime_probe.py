@@ -4,9 +4,12 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
+from mc2p.motion_nav.online_motion import InputApplicationLedger
+
 from scripts import b10_gap_solver_runtime as probe
 from scripts.b10_gap_solver_runtime import (
     _input_window_diagnostics,
+    _runtime_input_ledger,
     _runtime_navigation_frame,
     _verified_submission_window,
 )
@@ -61,6 +64,12 @@ class B10RuntimeProbeTests(unittest.TestCase):
 
         self.assertIs(actual, expected)
         self.assertEqual(adapter.ingest_calls, 0)
+
+    def test_coordinator_uses_runtime_owned_input_ledger(self):
+        expected = InputApplicationLedger()
+        runtime = SimpleNamespace(input_ledger=expected)
+
+        self.assertIs(_runtime_input_ledger(runtime), expected)
 
     def test_neutral_landing_responsibility_has_no_verified_submission_window(self):
         decision = SimpleNamespace(

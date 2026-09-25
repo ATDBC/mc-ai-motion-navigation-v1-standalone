@@ -39,6 +39,7 @@ class RunSpec:
     positive_total: int | None = None
     negative_passed: int | None = None
     negative_total: int | None = None
+    control_frame_rows: int | None = None
 
     @property
     def archive_name(self) -> str:
@@ -55,8 +56,8 @@ class VerificationReport:
 
 RUN_SPECS = (
     RunSpec(
-        "20260923T063950738376Z-5a9f5ab9", "b10c", "pass", "passed",
-        None, None, 82,
+        "20260925T123521898324Z-5d0a66dc", "b10c", "pass", "passed",
+        None, None, 142, control_frame_rows=210,
     ),
     RunSpec(
         "20260923T083302580358Z-a019b110", "b10c", "fail", "failed",
@@ -72,7 +73,7 @@ RUN_SPECS = (
         "['client-0:c1b_20_of_20_positive_tasks']", 30, 19, 20, 10, 10,
     ),
     RunSpec(
-        "20260925T013056709842Z-97bc0db8", "c1c", "pass", "passed",
+        "20260925T124344500270Z-ac8d6347", "c1c", "pass", "passed",
         None, None, 30, 20, 20, 10, 10,
     ),
     RunSpec(
@@ -81,8 +82,8 @@ RUN_SPECS = (
         "['client-0:c1c_20_of_20_positive_tasks']", 30, 18, 20, 10, 10,
     ),
     RunSpec(
-        "20260925T104441670754Z-64a4005e", "b11", "pass", "passed",
-        None, None, 80, 60, 60, 20, 20,
+        "20260925T120057978030Z-c17b889e", "b11", "pass", "passed",
+        None, None, 84, 60, 60, 24, 24,
     ),
 )
 
@@ -154,14 +155,20 @@ def _source_paths(run: Path, spec: RunSpec) -> tuple[Path, ...]:
             client / "b11-fixture-commands.jsonl",
         ))
     elif spec.stage == "b10c":
-        relative.extend((client / "trace.jsonl", client / "b10-gap-solver-trials.jsonl"))
+        relative.append(client / "b10-gap-solver-trials.jsonl")
         if spec.outcome == "pass":
-            relative.append(client / "b10-gap-solver.json")
+            relative.extend((
+                client / "b10-gap-solver.json",
+                client / "b10-coordinator-control-frames.jsonl",
+                client / "b10-coordinator-trials.jsonl",
+            ))
             relative.extend(
                 path.relative_to(run)
                 for path in sorted((run / client / "physics-tick-events").glob("*"))
                 if path.is_file()
             )
+        else:
+            relative.append(client / "trace.jsonl")
     else:
         prefix = "c1-moving-melee" if spec.stage == "c1b" else "c1-external-motion"
         relative.extend(
@@ -260,6 +267,33 @@ def _check_source_summary(run: Path, spec: RunSpec) -> None:
             raise EvidenceViolation(
                 f"run {spec.run_id} has {count} B10-C trials, expected {spec.trial_rows}"
             )
+        if spec.outcome == "pass":
+            summary = _load_json(client / "b10-gap-solver.json", "B10-C summary")
+            if (summary.get("coordinator_validation_count") != 10
+                    or summary.get("coordinator_validation_success_count") != 10):
+                raise EvidenceViolation(
+                    f"run {spec.run_id} B10-C coordinator result differs"
+                )
+            control_path = client / "b10-coordinator-control-frames.jsonl"
+            control_count = _count_jsonl(control_path)
+            if control_count != spec.control_frame_rows:
+                raise EvidenceViolation(
+                    f"run {spec.run_id} has {control_count} B10-C control frames, "
+                    f"expected {spec.control_frame_rows}"
+                )
+            with control_path.open("r", encoding="utf-8") as source:
+                for line_number, line in enumerate(source, 1):
+                    row = json.loads(line)
+                    late_by = row.get("actual_minus_latest_ticks")
+                    if type(late_by) is int and late_by > 0:
+                        raise EvidenceViolation(
+                            f"run {spec.run_id} has a late B10-C input at "
+                            f"control frame {line_number}"
+                        )
+            if _count_jsonl(client / "b10-coordinator-trials.jsonl") != 10:
+                raise EvidenceViolation(
+                    f"run {spec.run_id} B10-C coordinator trial count differs"
+                )
         return
     prefix = "c1-moving-melee" if spec.stage == "c1b" else "c1-external-motion"
     summary = _load_json(client / f"{prefix}-summary.json", "C1 summary")
@@ -338,7 +372,7 @@ def _write_archive(archive: Path, run: Path, spec: RunSpec, paths: Iterable[Path
 def _readme() -> str:
     return """# 代表性真实运行证据
 
-这里保留 B10-C 跨隙、C1-B 移动近战和 C1-C 外力恢复各一个完整通过批次、一个完整失败批次，并加入 B11 放置与有限搭桥的最新完整通过批次。归档只含结构化结果、试次清单和轨迹，不含 Minecraft/Fabric JAR、世界、普通日志、画面或缓存。
+这里保留 B10-C 跨隙、C1-B 移动近战和 C1-C 外力恢复各一个完整通过批次、一个完整失败批次，并加入 B11 放置与有限搭桥的最新完整通过批次。B10-C 通过批次保留 210 个协调控制帧、10 个协调试次、142 个求解试次和物理 tick 片段，可以直接核对输入是否晚于许可窗口；不复制近 500 MB 的完整 trace。归档只含结构化结果、试次清单和轨迹，不含 Minecraft/Fabric JAR、世界、普通日志、画面或缓存。
 
 运行：
 
@@ -582,6 +616,7 @@ def _verify_archive(root: Path, entry: Mapping[str, object], spec: RunSpec) -> N
 
             parsed: dict[str, object] = {}
             jsonl_counts: dict[str, int] = {}
+            b10_late_inputs = 0
             for name, item in listed_by_name.items():
                 member = by_name[name]
                 data = _read_member_bytes(tar, member)
@@ -593,6 +628,14 @@ def _verify_archive(root: Path, entry: Mapping[str, object], spec: RunSpec) -> N
                     parsed[name] = _parse_json_bytes(data, name)
                 elif name.endswith(".jsonl"):
                     jsonl_counts[name] = _validate_jsonl_bytes(data, name)
+                    if name == "client-0/b10-coordinator-control-frames.jsonl":
+                        for line in data.decode("utf-8").splitlines():
+                            if not line.strip():
+                                continue
+                            row = json.loads(line)
+                            late_by = row.get("actual_minus_latest_ticks")
+                            if type(late_by) is int and late_by > 0:
+                                b10_late_inputs += 1
             result = parsed.get("result.json")
             if type(result) is not dict:
                 raise EvidenceViolation(f"run {spec.run_id} result.json is missing")
@@ -619,7 +662,8 @@ def _verify_archive(root: Path, entry: Mapping[str, object], spec: RunSpec) -> N
                 negative = jsonl_counts.get(
                     "client-0/b11-negative-trials.jsonl"
                 )
-                if positive != 60 or negative != 20:
+                if (positive != spec.positive_total
+                        or negative != spec.negative_total):
                     raise EvidenceViolation(
                         f"run {spec.run_id} B11 trial count differs"
                     )
@@ -627,6 +671,31 @@ def _verify_archive(root: Path, entry: Mapping[str, object], spec: RunSpec) -> N
                 trial_name = "client-0/b10-gap-solver-trials.jsonl"
                 if jsonl_counts.get(trial_name) != spec.trial_rows:
                     raise EvidenceViolation(f"run {spec.run_id} B10-C trial count differs")
+                if spec.outcome == "pass":
+                    summary = parsed.get("client-0/b10-gap-solver.json")
+                    if (type(summary) is not dict
+                            or summary.get("coordinator_validation_count") != 10
+                            or summary.get("coordinator_validation_success_count") != 10):
+                        raise EvidenceViolation(
+                            f"run {spec.run_id} B10-C coordinator result differs"
+                        )
+                    control_name = (
+                        "client-0/b10-coordinator-control-frames.jsonl"
+                    )
+                    if jsonl_counts.get(control_name) != spec.control_frame_rows:
+                        raise EvidenceViolation(
+                            f"run {spec.run_id} B10-C control frame count differs"
+                        )
+                    if b10_late_inputs:
+                        raise EvidenceViolation(
+                            f"run {spec.run_id} B10-C contains late inputs"
+                        )
+                    if jsonl_counts.get(
+                        "client-0/b10-coordinator-trials.jsonl"
+                    ) != 10:
+                        raise EvidenceViolation(
+                            f"run {spec.run_id} B10-C coordinator trial count differs"
+                        )
             else:
                 prefix = (
                     "c1-moving-melee" if spec.stage == "c1b" else "c1-external-motion"

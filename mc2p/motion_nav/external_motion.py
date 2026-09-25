@@ -471,10 +471,8 @@ class DamageKnockbackDetector:
             and (
                 residual.anchor_tick < damage.movement_tick_id
                 <= residual.observed_tick
-                or (
-                    residual.anchor_tick == damage.movement_tick_id
-                    and residual.observed_tick == damage.movement_tick_id + 1
-                )
+                or residual.anchor_tick == damage.movement_tick_id
+                < residual.observed_tick
             )
         )
 

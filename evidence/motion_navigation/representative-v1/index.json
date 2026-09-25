@@ -3,9 +3,9 @@
   "max_total_archive_bytes": 31457280,
   "runs": [
     {
-      "archive": "archives/b10c-pass-20260923T063950738376Z-5a9f5ab9.tar.gz",
-      "archive_sha256": "797ed9fe12fc4d67f8a8e4a0b1fd8ce6323243109542d08c259dd36717a42ec1",
-      "archive_size_bytes": 6774967,
+      "archive": "archives/b10c-pass-20260925T123521898324Z-5d0a66dc.tar.gz",
+      "archive_sha256": "9cda2ba2bb6a043ba6b4e346dcca5010f367480f75b687fa7356288ac2457ebb",
+      "archive_size_bytes": 394025,
       "expected": {
         "failure_message": null,
         "failure_type": null,
@@ -13,11 +13,11 @@
         "negative_total": null,
         "positive_passed": null,
         "positive_total": null,
-        "trial_rows": 82
+        "trial_rows": 142
       },
       "recorded_outcome": "pass",
       "recorded_status": "passed",
-      "run_id": "20260923T063950738376Z-5a9f5ab9",
+      "run_id": "20260925T123521898324Z-5d0a66dc",
       "stage": "b10c"
     },
     {
@@ -75,9 +75,9 @@
       "stage": "c1b"
     },
     {
-      "archive": "archives/c1c-pass-20260925T013056709842Z-97bc0db8.tar.gz",
-      "archive_sha256": "c1ca7e76f519a3380352aa7a5c114f1dde5fbe946aaecbeaa6ed88a535d05691",
-      "archive_size_bytes": 1387269,
+      "archive": "archives/c1c-pass-20260925T124344500270Z-ac8d6347.tar.gz",
+      "archive_sha256": "b5fd19e7b5c104caa1fa5e5a35f5d3632748a269ec84616f68bdf805fb51bc16",
+      "archive_size_bytes": 1409984,
       "expected": {
         "failure_message": null,
         "failure_type": null,
@@ -89,7 +89,7 @@
       },
       "recorded_outcome": "pass",
       "recorded_status": "passed",
-      "run_id": "20260925T013056709842Z-97bc0db8",
+      "run_id": "20260925T124344500270Z-ac8d6347",
       "stage": "c1c"
     },
     {
@@ -111,24 +111,24 @@
       "stage": "c1c"
     },
     {
-      "archive": "archives/b11-pass-20260925T104441670754Z-64a4005e.tar.gz",
-      "archive_sha256": "e603f9c004c8ce9cb09daf487edcc022b17e733f2c9b19f6ae0891c7ca86148d",
-      "archive_size_bytes": 1290235,
+      "archive": "archives/b11-pass-20260925T120057978030Z-c17b889e.tar.gz",
+      "archive_sha256": "50d7f4e01b00b447b56334dc8689ffb979c0f21f833666604fce6bd12e2a349d",
+      "archive_size_bytes": 1442380,
       "expected": {
         "failure_message": null,
         "failure_type": null,
-        "negative_passed": 20,
-        "negative_total": 20,
+        "negative_passed": 24,
+        "negative_total": 24,
         "positive_passed": 60,
         "positive_total": 60,
-        "trial_rows": 80
+        "trial_rows": 84
       },
       "recorded_outcome": "pass",
       "recorded_status": "passed",
-      "run_id": "20260925T104441670754Z-64a4005e",
+      "run_id": "20260925T120057978030Z-c17b889e",
       "stage": "b11"
     }
   ],
   "schema_version": "mc2p.public-runtime-evidence.v1",
-  "total_archive_bytes": 21277209
+  "total_archive_bytes": 15071127
 }

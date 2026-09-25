@@ -1405,15 +1405,30 @@ class NavigationSession:
         frame: NavigationFrame,
     ) -> tuple[SurfaceNodeId | None, tuple[BlockPos, ...]]:
         x, y, z = frame.body.position
-        result = query_support_surfaces(
-            frame.world, math.floor(x), math.floor(z), y - 1.0, y + 1.0,
-        )
-        if not result.surfaces:
-            return None, result.missing_cells
+        body = frame.body.body_box
+        max_x = math.floor(math.nextafter(body.max_x, -math.inf))
+        max_z = math.floor(math.nextafter(body.max_z, -math.inf))
+        candidates = []
+        missing: set[BlockPos] = set()
+        for column_x in range(math.floor(body.min_x), max_x + 1):
+            for column_z in range(math.floor(body.min_z), max_z + 1):
+                result = query_support_surfaces(
+                    frame.world, column_x, column_z, y - 1.0, y + 1.0,
+                )
+                missing.update(result.missing_cells)
+                for surface in result.surfaces:
+                    region = surface.region
+                    if (min(body.max_x, region.max_x)
+                            > max(body.min_x, region.min_x) + 1.0e-9
+                            and min(body.max_z, region.max_z)
+                            > max(body.min_z, region.min_z) + 1.0e-9):
+                        candidates.append(surface)
+        if not candidates:
+            return None, tuple(sorted(missing))
         return min(
-            result.surfaces,
-            key=lambda surface: math.dist(surface.position, frame.body.position),
-        ).node_id, result.missing_cells
+            candidates,
+            key=lambda surface: math.dist(surface.position, (x, y, z)),
+        ).node_id, tuple(sorted(missing))
 
     @staticmethod
     def _surface_for_goal(

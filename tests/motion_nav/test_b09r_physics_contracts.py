@@ -8,7 +8,9 @@ from mc2p.motion_nav.physics_types import (
     JAVA_1_21_RULESET, PhysicsState, StateBuildStatus, TickInput,
 )
 from mc2p.motion_nav.runtime_adapter import NavigationObservationAdapter
-from mc2p.motion_nav.world_model import WorldSessionId, WorldView
+from mc2p.motion_nav.world_model import (
+    ObservationStamp, WorldKnowledge, WorldSessionId, WorldView,
+)
 from tests.observation_v3_fixtures import valid_snapshot_v3
 
 
@@ -96,6 +98,34 @@ class B09RPhysicsContractsTests(unittest.TestCase):
         other = WorldView.detached(WorldSessionId("other"), 0, 0, {})
         with self.assertRaises(ValueError):
             PhysicsWorldView(other, JAVA_1_21_RULESET, expected_session=self.frame.session)
+
+    def test_physics_world_reuses_an_identical_shape_query(self):
+        known = WorldKnowledge(self.frame.session)
+        known.confirm_air(self.frame.body.stamp, ((0, 64, 0), (1, 64, 0)))
+        world = PhysicsWorldView(known.view(), JAVA_1_21_RULESET)
+
+        first = world.shapes(((1, 64, 0), (0, 64, 0)))
+        second = world.shapes(((0, 64, 0), (1, 64, 0), (0, 64, 0)))
+
+        self.assertIs(second, first)
+
+    def test_cached_shape_query_still_rejects_an_expired_live_view(self):
+        known = WorldKnowledge(self.frame.session)
+        position = (0, 64, 0)
+        known.confirm_air(self.frame.body.stamp, (position,))
+        world = PhysicsWorldView(known.view(), JAVA_1_21_RULESET)
+        world.shapes((position,))
+        newer = ObservationStamp(
+            self.frame.session,
+            self.frame.body.stamp.sequence_id + 1,
+            self.frame.body.stamp.world_tick + 1,
+            self.frame.body.stamp.controller_clock_id,
+            self.frame.body.stamp.received_monotonic_ns + 50_000_000,
+        )
+        known.confirm_air(newer, (position,))
+
+        with self.assertRaises(ValueError):
+            world.shapes((position,))
 
 
 if __name__ == "__main__":

@@ -320,12 +320,15 @@ def verify_tree(root: Path, *,
     if not target.is_dir():
         raise ExportViolation(f"standalone tree is missing: {target}")
     expected = _parse_hashes(target / HASH_FILE)
-    actual_paths = {
-        path.relative_to(target).as_posix(): path
-        for path in target.rglob("*")
-        if path.is_file() and ".git" not in path.relative_to(target).parts
-        and path.name != HASH_FILE
-    }
+    actual_paths = {}
+    for path in target.rglob("*"):
+        if not path.is_file() or path.name == HASH_FILE:
+            continue
+        relative = path.relative_to(target)
+        if (set(relative.parts).intersection(_FORBIDDEN_PARTS)
+                or path.suffix.lower() in _FORBIDDEN_SUFFIXES):
+            continue
+        actual_paths[relative.as_posix()] = path
     missing = tuple(sorted(set(expected) - set(actual_paths)))
     extra = tuple(sorted(set(actual_paths) - set(expected)))
     changed = tuple(sorted(

@@ -92,6 +92,14 @@ def _runtime_navigation_frame(runtime):
     return frame
 
 
+def _runtime_input_ledger(runtime) -> InputApplicationLedger:
+    """Use the ledger owned by Runtime's sole input output path."""
+    ledger = runtime.input_ledger
+    if type(ledger) is not InputApplicationLedger:
+        raise RuntimeError("B10 requires the Runtime-owned input ledger")
+    return ledger
+
+
 def _verified_submission_window(decision) -> tuple[int, int, int] | None:
     """Return a complete proof window, while allowing neutral safety output."""
     values = (
@@ -613,7 +621,7 @@ def _run_b10_gap_solver_runtime(
                     ("food_points", float(frame.body.food_points)),
                 )),
             ), frame)
-            ledger = InputApplicationLedger(max_records=64)
+            ledger = _runtime_input_ledger(runtime)
             waiting_polls = 0
             current_anchor = anchor
             samples: list[dict] = []
@@ -721,6 +729,12 @@ def _run_b10_gap_solver_runtime(
                         proposal.control_frame,
                         ControlFrameProposalV1(observation_request=request),
                     ),
+                    input_execution_window=(
+                        None if verified_window is None
+                        else CandidateExecutionWindow(
+                            verified_window[1], verified_window[2],
+                        )
+                    ),
                 )
                 control_wall_ns = time.perf_counter_ns() - now
                 backend_elapsed_ns = (
@@ -736,13 +750,6 @@ def _run_b10_gap_solver_runtime(
                     )
                 action = result.decision.action
                 if verified_window is not None:
-                    _, expected_tick, latest_tick = verified_window
-                    ledger.submit(
-                        current_anchor.session,
-                        action,
-                        requested_first_tick=expected_tick,
-                        latest_allowed_first_tick=latest_tick,
-                    )
                     session.register_verified_submission(
                         proposal, control_sequence=action.request_sequence_id,
                     )
@@ -760,8 +767,6 @@ def _run_b10_gap_solver_runtime(
                     raise RuntimeError(
                         "B10 session input had no formal application sample"
                     )
-                for application in owned_applications:
-                    ledger.observe_sample(application)
                 latest_application = receipt.last_input_sample
                 frame = _runtime_navigation_frame(runtime)
                 diagnostic()

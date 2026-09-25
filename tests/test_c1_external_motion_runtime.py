@@ -1,5 +1,8 @@
 """Frozen C1-C real-damage plan and result accounting."""
 from types import SimpleNamespace
+from pathlib import Path
+from tempfile import TemporaryDirectory
+import time
 import unittest
 from unittest.mock import patch
 
@@ -7,6 +10,7 @@ from mc2p.contracts.behavior import BehaviorProfileV0
 from scripts.c1_external_motion_runtime import (
     C1C_NEGATIVE_INJECTIONS,
     _append_motion_observation,
+    _await_controlled_attack,
     _fixture_commands,
     _cleanup_trial,
     controlled_attack_due,
@@ -21,6 +25,22 @@ from scripts.c1_external_motion_runtime import (
 
 
 class C1ExternalMotionRuntimeTests(unittest.TestCase):
+    def test_controlled_attack_waits_for_the_requested_server_application(self):
+        with TemporaryDirectory() as directory:
+            events = Path(directory) / "events.jsonl"
+            events.write_text(
+                '{"event":"controlled_attack","scenario_id":"trial-a",'
+                '"success":true}\n',
+                encoding="utf-8",
+            )
+
+            row = _await_controlled_attack(
+                events, "trial-a", 1, time.perf_counter_ns() + 1_000_000_000,
+            )
+
+        self.assertIsNotNone(row)
+        self.assertTrue(row["success"])
+
     def test_route_becomes_stale_only_after_transition_frame_finishes(self):
         source_id = "navigation-session/test/7"
         selected = source_id + "/movement/41"

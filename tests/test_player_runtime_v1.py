@@ -18,6 +18,7 @@ from mc2p.runtime.backend import BackendStepResultV0
 from mc2p.runtime.failure_disposition import FailureDisposition
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1
 from mc2p.motion_nav.world_model import CellKnowledge
+from mc2p.motion_nav.online_motion import CandidateExecutionWindow
 from tests.observation_v2_fixtures import valid_snapshot_v2
 from tests.test_action_receipt import receipt_value
 from tests.observation_v3_fixtures import valid_snapshot_v3
@@ -193,6 +194,29 @@ class RuntimeV1Tests(unittest.TestCase):
         self.assertIs(
             second.world.cell((2, 63, 0)).knowledge, CellKnowledge.BLOCK,
         )
+
+    def test_v3_runtime_records_verified_start_window_before_dispatch(self):
+        backend = V3WorldBackend()
+        runtime = PlayerRuntimeV1(
+            backend, legacy._RecordingTrace(), clock_ns=lambda: 10,
+        )
+        reset = runtime.reset(ResetRequestV0(
+            "reset-v3-window", "episode-v3-world", "test", 1, 1_000,
+        ))
+        self.assertTrue(reset.succeeded)
+        self.addCleanup(runtime.close)
+
+        result = runtime.control_frame(
+            legacy._task(), BehaviorProfileV0(), 1_000,
+            input_execution_window=CandidateExecutionWindow(2, 3),
+        )
+
+        record = runtime.input_ledger.record(
+            result.decision.action.request_sequence_id,
+        )
+        self.assertIsNotNone(record)
+        self.assertEqual(record.requested_first_tick, 2)
+        self.assertEqual(record.latest_allowed_first_tick, 3)
 
     def test_async_evidence_failure_keeps_current_control_and_backend(self):
         self.runtime.submit_intent(self.intent(movement=MovementV1(forward=1)))

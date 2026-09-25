@@ -297,6 +297,32 @@ def _fixture_events_for_trial(path: Path, trial_id: str) -> tuple[dict, ...]:
     return tuple(rows)
 
 
+def _await_controlled_attack(
+    path: Path,
+    trial_id: str,
+    expected_count: int,
+    deadline_ns: int,
+) -> dict | None:
+    """Wait for the server to apply an injected attack before advancing combat.
+
+    The console command is asynchronous.  Advancing the melee driver
+    immediately after writing it can submit the player's own attack first and
+    make the recorded damage stage depend on scheduler timing.
+    """
+    if expected_count <= 0:
+        raise ValueError("expected controlled attack count must be positive")
+    local_deadline = min(deadline_ns, time.perf_counter_ns() + 2_000_000_000)
+    while time.perf_counter_ns() < local_deadline:
+        attacks = tuple(
+            row for row in _fixture_events_for_trial(path, trial_id)
+            if row.get("event") == "controlled_attack"
+        )
+        if len(attacks) >= expected_count:
+            return attacks[expected_count - 1]
+        time.sleep(.005)
+    return None
+
+
 def _append_motion_observation(observations: list[dict], snapshot: object) -> None:
     """Keep the compact causal samples ordered even when a child tick advances twice."""
     own = snapshot.self_state.value
@@ -582,6 +608,19 @@ def run_c1_external_motion_runtime(
                     f"mc2p_c1_strike {trial['trial_id']} "
                     f"{trial['damage_stage']}_{controlled_attack_requests}",
                 ), trial)
+                applied_attack = _await_controlled_attack(
+                    fixture_events, trial["trial_id"],
+                    controlled_attack_requests, deadline_ns,
+                )
+                if applied_attack is not None and applied_attack.get("success") is True:
+                    if (trial["damage_stage"] == "post_recovery_rehit"
+                            and controlled_attack_requests >= 2):
+                        observed_stage = "post_recovery_rehit"
+                    elif observed_stage is None:
+                        # No driver frame ran between the stage predicate and
+                        # the confirmed server-side hit, so this is the actual
+                        # controller stage in which damage was injected.
+                        observed_stage = trial["damage_stage"]
             phase_before = driver.report.state
             attacks_before = driver.report.attack_submissions
             recoveries_before = driver.report.external_recoveries_completed
@@ -626,7 +665,8 @@ def run_c1_external_motion_runtime(
             hurt = own.hurt_animation_ticks or 0
             if previous_hurt == 0 and hurt > 0:
                 damage_transitions += 1
-                if (trial["damage_stage"] == "post_recovery_rehit"
+                if (observed_stage is None
+                        and trial["damage_stage"] == "post_recovery_rehit"
                         and damage_transitions >= 2
                         and driver.report.external_recoveries_completed >= 1):
                     observed_stage = "post_recovery_rehit"

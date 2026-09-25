@@ -28,7 +28,9 @@ from mc2p.runtime.failure_disposition import (
     FailureDisposition, FailureDispositionDecision, FailureDispositionPolicy,
 )
 from mc2p.runtime.trace import TraceSinkV0
-from mc2p.motion_nav.online_motion import InputApplicationLedger
+from mc2p.motion_nav.online_motion import (
+    CandidateExecutionWindow, InputApplicationLedger,
+)
 from mc2p.motion_nav.runtime_adapter import (
     NavigationObservationAdapter, world_session_from_observation,
 )
@@ -308,6 +310,7 @@ class PlayerRuntimeV1:
         deadline_monotonic_ns: int,
         *,
         proposals: tuple[ControlFrameProposalV1, ...] = (),
+        input_execution_window: CandidateExecutionWindow | None = None,
     ) -> RuntimeStepResultV1:
         """Submit all skill proposals, then advance the backend exactly once."""
         with self._io_lock:
@@ -337,12 +340,22 @@ class PlayerRuntimeV1:
             return self.step(
                 task, profile, deadline_monotonic_ns,
                 observation_request=observation_request,
+                input_execution_window=input_execution_window,
             )
 
     def step(self, task: TaskIntentV0, profile: BehaviorProfileV0,
-             deadline_monotonic_ns: int, *, observation_request: ObservationRequestV3 | None = None) -> RuntimeStepResultV1:
+             deadline_monotonic_ns: int, *, observation_request: ObservationRequestV3 | None = None,
+             input_execution_window: CandidateExecutionWindow | None = None) -> RuntimeStepResultV1:
         with self._io_lock:
             self._require_ready()
+            if (input_execution_window is not None
+                    and type(input_execution_window) is not CandidateExecutionWindow):
+                raise ContractViolation("input execution window must be typed")
+            if (input_execution_window is not None
+                    and type(self._observation) is not ObservationSnapshotV3):
+                raise ContractViolation(
+                    "input execution window requires V3 movement ticks"
+                )
             request = resolve_observation_request(self._observation_schema, observation_request)
             if type(task) is not TaskIntentV0 or type(profile) is not BehaviorProfileV0:
                 raise ContractViolation("step requires versioned task and behavior profile")
@@ -372,11 +385,13 @@ class PlayerRuntimeV1:
                 self._trace.write("dispatch", {"decision": decision, "task": task, "profile": profile,
                                                 "observation_request": request})
                 phase_code = FailureCodeV0.BACKEND_IO
-                self._submit_input_record(action)
+                self._submit_input_record(action, input_execution_window)
                 backend_result = self._backend_step(action, action.deadline_monotonic_ns, request)
                 self._check_deadline(action.deadline_monotonic_ns)
                 self._validate_result(action, backend_result, request)
-                self._ensure_input_record(action, backend_result)
+                self._ensure_input_record(
+                    action, backend_result, input_execution_window,
+                )
                 self._input_ledger.observe_receipt(backend_result.receipt)
                 self._observation = backend_result.observation
                 if type(self._observation) is ObservationSnapshotV3:
@@ -506,7 +521,11 @@ class PlayerRuntimeV1:
                     finally:
                         self._state = RuntimeStateV1.CLOSED
 
-    def _submit_input_record(self, action: ActionSnapshotV1) -> None:
+    def _submit_input_record(
+        self,
+        action: ActionSnapshotV1,
+        execution_window: CandidateExecutionWindow | None = None,
+    ) -> None:
         """Bind a dispatched command to the next expected player movement tick."""
         observation = self._observation
         if type(observation) is not ObservationSnapshotV3:
@@ -514,13 +533,23 @@ class PlayerRuntimeV1:
         own = observation.self_state.value
         if own is None or own.movement_tick_id is None:
             return
+        requested_tick = own.movement_tick_id + 1
+        latest_tick = requested_tick
+        if execution_window is not None:
+            if execution_window.earliest_start_tick != requested_tick:
+                raise ContractViolation(
+                    "input execution window is detached from the current movement tick"
+                )
+            latest_tick = execution_window.latest_start_tick
         self._input_ledger.submit(
             world_session_from_observation(observation), action,
-            requested_first_tick=own.movement_tick_id + 1,
+            requested_first_tick=requested_tick,
+            latest_allowed_first_tick=latest_tick,
         )
 
     def _ensure_input_record(
         self, action: ActionSnapshotV1, result: BackendStepResultV1,
+        execution_window: CandidateExecutionWindow | None = None,
     ) -> None:
         """Anchor the first V3 command when reset lacked a movement tick.
 
@@ -546,12 +575,21 @@ class PlayerRuntimeV1:
         if first_tick is None or first_tick <= 0:
             return
         session = world_session_from_observation(result.observation)
+        requested_tick = (
+            first_tick if execution_window is None
+            else execution_window.earliest_start_tick
+        )
+        latest_tick = (
+            requested_tick if execution_window is None
+            else execution_window.latest_start_tick
+        )
         if self._input_ledger.baseline_movement_tick_id is None:
             self._input_ledger.establish_baseline(
-                session, action.episode_id, movement_tick_id=first_tick - 1,
+                session, action.episode_id, movement_tick_id=requested_tick - 1,
             )
         self._input_ledger.submit(
-            session, action, requested_first_tick=first_tick,
+            session, action, requested_first_tick=requested_tick,
+            latest_allowed_first_tick=latest_tick,
         )
 
     def _close_backend(self) -> None:

@@ -420,6 +420,69 @@ class RuntimeBlockPlacementDriverTests(unittest.TestCase):
         self.assertEqual(transaction.report.reason, "preparation_timeout")
         self.assertLessEqual(len(backend.actions), 3)
 
+    def test_preparation_timeout_stops_after_dispatch(self):
+        class _DelayedConfirmationBackend(_PlacementBackend):
+            def __init__(self, clock):
+                super().__init__(clock)
+                self.dispatched_at = None
+
+            def step(self, action, deadline, *, observation_request=None):
+                self.actions.append(action)
+                self.sequence += 1
+                self.clock[0] += 50_000_000
+                clicked = action.operation == InteractBlockV1(*SUPPORT, "east")
+                if clicked and self.dispatched_at is None:
+                    self.dispatched_at = self.sequence
+                placed = (
+                    self.dispatched_at is not None
+                    and self.sequence >= self.dispatched_at + 2
+                )
+                observed = self._observation(
+                    placed=placed,
+                    request_sequence_id=action.request_sequence_id,
+                )
+                receipt = behavior_receipt_from_mapping({
+                    **receipt_value(
+                        episode_id=action.episode_id,
+                        generation_id=self.sequence,
+                        request_sequence_id=action.request_sequence_id,
+                        world_tick=observed.world_time_ticks.value,
+                        status="pending_confirmation" if clicked else "executed",
+                        reason="block_use_dispatched" if clicked else "neutral",
+                    ),
+                    "schema_version": "mc2p.client_action_receipt.v3",
+                    "dropped_input_samples": 0,
+                    "oldest_retained_input_tick": self.sequence,
+                    "input_applications": [],
+                })
+                return BackendStepResultV1(observed, 0.0, False, False, receipt)
+
+        clock = [200_000_000]
+        backend = _DelayedConfirmationBackend(clock)
+        runtime = PlayerRuntimeV1(backend, _RecordingTrace(), lambda: clock[0])
+        reset = runtime.reset(ResetRequestV0(
+            "reset-delayed-placement", "episode-1", "test", 1,
+            5_000_000_000,
+        ))
+        self.assertTrue(reset.succeeded)
+        self.addCleanup(runtime.close)
+        transaction = BlockPlacementTransaction(requirement())
+        driver = RuntimeBlockPlacementDriver(
+            runtime,
+            transaction,
+            preparation_timeout_observations=3,
+            clock_ns=lambda: clock[0],
+        )
+        driver.start()
+
+        for _ in range(8):
+            driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
+            if transaction.report.terminal:
+                break
+
+        self.assertEqual(transaction.report.state, PlacementState.COMPLETE)
+        self.assertEqual(transaction.report.reason, "placement_confirmed")
+
 
 if __name__ == "__main__":
     unittest.main()

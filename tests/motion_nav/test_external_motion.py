@@ -272,6 +272,22 @@ class ExternalMotionDetectorTests(unittest.TestCase):
         self.assertIsNotNone(found.damage_fact)
         self.assertEqual(found.damage_fact.movement_tick_id, 21)
 
+    def test_two_tick_matched_residual_after_grace_proves_no_knockback(self):
+        detector = DamageKnockbackDetector()
+        detector.observe(snapshot(seq=444, tick=447, hurt=0, health=20))
+        grace = detector.observe(
+            snapshot(seq=445, tick=448, hurt=10, health=17),
+            residual(deviation=False, first=447, last=448),
+        )
+        settled = detector.observe(
+            snapshot(seq=446, tick=450, hurt=9, health=17),
+            residual(deviation=False, first=448, last=450),
+        )
+
+        self.assertEqual(grace.reason, "damage_motion_grace")
+        self.assertIsNone(settled.event)
+        self.assertEqual(settled.reason, "damage_without_motion_residual")
+
     def test_unconfirmed_damage_residual_cannot_leak_into_later_damage(self):
         detector = DamageKnockbackDetector()
         detector.observe(snapshot(seq=1, tick=20, hurt=0, health=20))

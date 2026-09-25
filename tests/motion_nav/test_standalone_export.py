@@ -72,6 +72,21 @@ class StandaloneExportTests(unittest.TestCase):
             target.write_bytes(original)
             extra.unlink(missing_ok=True)
 
+    def test_verifier_ignores_generated_python_cache(self) -> None:
+        cache = self.root / "mc2p" / "__pycache__"
+        compiled = cache / "generated.cpython-311.pyc"
+        cache.mkdir(exist_ok=True)
+        compiled.write_bytes(b"generated")
+        try:
+            report = verify_tree(self.root, manifest=self.manifest)
+            self.assertEqual(report.extra_files, ())
+        finally:
+            compiled.unlink(missing_ok=True)
+            try:
+                cache.rmdir()
+            except OSError:
+                pass
+
     def test_clean_guard_rejects_workspace_and_paths_outside_tmp(self) -> None:
         with self.assertRaises(ExportViolation):
             export_tree(ROOT, clean=True, manifest=self.manifest)

@@ -62,6 +62,8 @@ def b11_negative_trial_plan() -> tuple[dict, ...]:
         "cancel_after_first_confirmation",
         "confirmation_timeout",
         "goal_revision_changed",
+        "goal_revision_at_edge_before_dispatch",
+        "goal_revision_after_dispatch",
         "bridge_cell_claimed",
     )
     return tuple(
@@ -492,6 +494,87 @@ def _run_negative(
                 "passed": operations == 0,
             }
 
+        if case == "goal_revision_at_edge_before_dispatch":
+            for _ in range(120):
+                record(driver.tick(
+                    profile,
+                    min(deadline_ns, time.perf_counter_ns() + 500_000_000),
+                ))
+                placement = driver.placement
+                if (placement is not None
+                        and placement.transaction.report.reason
+                        == "target_not_aligned"):
+                    break
+            placement = driver.placement
+            if (placement is None
+                    or placement.transaction.report.state is not PlacementState.READY
+                    or operations != 0):
+                raise RuntimeError(
+                    "B11 edge goal revision did not reach the pre-dispatch edge"
+                )
+            driver.replace_goal(
+                trial["trial_id"] + "/goal", 2, goal,
+                time.perf_counter_ns(),
+            )
+            while ticks < 240 and not driver.report.terminal:
+                record(driver.tick(
+                    profile,
+                    min(deadline_ns, time.perf_counter_ns() + 500_000_000),
+                ))
+            passed = (
+                driver.report.state == "success"
+                and driver.report.confirmed_placements == 1
+                and operations == 1
+                and session.report.goal_revision == 2
+            )
+            return {
+                "ticks": ticks,
+                "operations": operations,
+                "reason": "edge_revision_replanned",
+                "passed": passed,
+            }
+
+        if case == "goal_revision_after_dispatch":
+            for _ in range(160):
+                record(driver.tick(
+                    profile,
+                    min(deadline_ns, time.perf_counter_ns() + 500_000_000),
+                ))
+                placement = driver.placement
+                if (placement is not None
+                        and placement.transaction.report.state
+                        is PlacementState.AWAITING_CONFIRMATION):
+                    break
+            placement = driver.placement
+            if (placement is None
+                    or placement.transaction.report.state
+                    is not PlacementState.AWAITING_CONFIRMATION
+                    or operations != 1):
+                raise RuntimeError(
+                    "B11 post-dispatch revision did not retain its placement"
+                )
+            driver.replace_goal(
+                trial["trial_id"] + "/goal", 2, goal,
+                time.perf_counter_ns(),
+            )
+            while ticks < 240 and not driver.report.terminal:
+                record(driver.tick(
+                    profile,
+                    min(deadline_ns, time.perf_counter_ns() + 500_000_000),
+                ))
+            passed = (
+                driver.report.state == "success"
+                and driver.report.confirmed_placements == 1
+                and operations == 1
+                and session.report.goal_revision == 2
+            )
+            return {
+                "ticks": ticks,
+                "operations": operations,
+                "reason": "dispatched_revision_confirmed_then_replanned",
+                "passed": passed,
+            }
+
         if case == "bridge_cell_claimed":
             for _ in range(40):
                 record(driver.tick(
@@ -661,7 +744,7 @@ def run_b11_world_change_runtime(
             bool(row["passed"]) for row in negative_rows
         ),
         "negative_all_passed": (
-            len(negative_rows) == 20
+            len(negative_rows) == 24
             and all(row["passed"] for row in negative_rows)
         ),
     }

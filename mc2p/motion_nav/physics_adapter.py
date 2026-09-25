@@ -10,7 +10,9 @@ from mc2p.motion_nav.physics_types import (
     WorldShapeQuery,
 )
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
-from mc2p.motion_nav.world_model import BlockPos, CellKnowledge, WorldSessionId, WorldView
+from mc2p.motion_nav.world_model import (
+    BlockPos, CellKnowledge, WorldSessionId, WorldView, block_section,
+)
 
 
 _REQUIRED_ASSUMPTIONS = (
@@ -119,6 +121,8 @@ def build_physics_state(frame: NavigationFrame, ruleset: PhysicsRuleset,
 class PhysicsWorldView:
     """Narrow, read-only shape access. It performs no observation or world mutation."""
 
+    _MAX_SHAPE_CACHE_ENTRIES = 1024
+
     def __init__(self, world: WorldView, ruleset: PhysicsRuleset,
                  *, expected_session: WorldSessionId | None = None) -> None:
         if type(world) is not WorldView or type(ruleset) is not PhysicsRuleset:
@@ -127,6 +131,7 @@ class PhysicsWorldView:
             raise ContractViolation("physics world belongs to another session")
         self._world = world
         self.ruleset = ruleset
+        self._shape_cache: dict[tuple[BlockPos, ...], WorldShapeQuery] = {}
 
     @property
     def session(self) -> WorldSessionId:
@@ -164,6 +169,15 @@ class PhysicsWorldView:
         if type(positions) is not tuple:
             raise ContractViolation("shape positions must be immutable")
         dependencies = tuple(sorted(set(positions)))
+        cached = self._shape_cache.get(dependencies)
+        if cached is not None:
+            # A live WorldView must still reject cached geometry after any
+            # dependency section changes. Check section revisions in one
+            # batch without rebuilding boxes or rereading cell facts.
+            self._world.validate_sections(
+                block_section(position) for position in dependencies
+            )
+            return cached
         boxes = []
         missing = []
         unsupported = []
@@ -177,4 +191,10 @@ class PhysicsWorldView:
                     unsupported.append(position)
                 else:
                     boxes.extend(fact.block.world_boxes(position))
-        return WorldShapeQuery(tuple(boxes), dependencies, tuple(missing), tuple(unsupported))
+        result = WorldShapeQuery(
+            tuple(boxes), dependencies, tuple(missing), tuple(unsupported),
+        )
+        if len(self._shape_cache) >= self._MAX_SHAPE_CACHE_ENTRIES:
+            self._shape_cache.clear()
+        self._shape_cache[dependencies] = result
+        return result
