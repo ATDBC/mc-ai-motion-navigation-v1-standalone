@@ -52,6 +52,7 @@ class RuntimeWorldChangeNavigationDriver:
         self.placement: RuntimeBlockPlacementDriver | None = None
         self._active_interaction_id: str | None = None
         self._confirmed_placements = 0
+        self._pending_goal_update: tuple[str, int, GoalState] | None = None
         self._state = "ready"
         self._reason = "not_started"
 
@@ -76,6 +77,45 @@ class RuntimeWorldChangeNavigationDriver:
             raise ContractViolation("world-change navigation already started")
         self.navigation.start(goal_id, goal_revision, goal, now_ns)
         self._sync_navigation()
+
+    def replace_goal(
+        self,
+        goal_id: str,
+        goal_revision: int,
+        goal: GoalState,
+        now_ns: int,
+    ) -> None:
+        """Apply the latest goal without abandoning an in-flight placement."""
+        require_nonnegative_int(now_ns, "world-change goal update time")
+        latest_revision = (
+            self._pending_goal_update[1]
+            if self._pending_goal_update is not None
+            else self.navigation.goal_revision
+        )
+        if (self.navigation.goal_id is None
+                or goal_id != self.navigation.goal_id
+                or type(goal_revision) is not int
+                or latest_revision is None or goal_revision <= latest_revision
+                or type(goal) is not GoalState):
+            raise ContractViolation("world-change goal update is stale")
+        placement = self.placement
+        if placement is None:
+            self.navigation.replace_goal(goal_id, goal_revision, goal, now_ns)
+            self._sync_navigation()
+            return
+        if placement.has_prepared_frame:
+            placement.discard_prepared()
+        if placement.transaction.report.state is PlacementState.READY:
+            placement.cancel("goal_revised_before_dispatch")
+            self.placement = None
+            self._active_interaction_id = None
+            self.navigation.resume_after_interaction()
+            self.navigation.replace_goal(goal_id, goal_revision, goal, now_ns)
+            self._sync_navigation()
+            return
+        self._pending_goal_update = (goal_id, goal_revision, goal)
+        self._state = "placing"
+        self._reason = "goal_update_waiting_for_placement_result"
 
     def tick(
         self,
@@ -127,6 +167,7 @@ class RuntimeWorldChangeNavigationDriver:
         if self.placement is not None:
             self.placement.cancel(reason)
             self.placement = None
+        self._pending_goal_update = None
         if not self.session.report.terminal:
             self.session.cancel(reason)
         self._state = "cancelled"
@@ -174,7 +215,7 @@ class RuntimeWorldChangeNavigationDriver:
             self.placement = None
             self._active_interaction_id = None
             self.navigation.resume_after_interaction()
-            self._sync_navigation()
+            self._apply_pending_goal_or_sync()
         elif placement_report.state in {
             PlacementState.FAILED,
             PlacementState.CANCELLED,
@@ -192,7 +233,7 @@ class RuntimeWorldChangeNavigationDriver:
                 # ingest that observation and decide whether the new fact
                 # opens a route or blocks it.
                 self.navigation.resume_after_interaction()
-                self._sync_navigation()
+                self._apply_pending_goal_or_sync()
             else:
                 self._fail(placement_report.reason)
         else:
@@ -214,6 +255,18 @@ class RuntimeWorldChangeNavigationDriver:
         if held.count < required_count:
             return "insufficient_bridge_materials"
         return None
+
+    def _apply_pending_goal_or_sync(self) -> None:
+        pending = self._pending_goal_update
+        self._pending_goal_update = None
+        if pending is None:
+            self._sync_navigation()
+            return
+        goal_id, goal_revision, goal = pending
+        self.navigation.replace_goal(
+            goal_id, goal_revision, goal, self._clock(),
+        )
+        self._sync_navigation()
 
     def _fail(self, reason: str) -> None:
         if not self.session.report.terminal:

@@ -5,6 +5,8 @@ from scripts.export_motion_navigation_standalone import (
     collect_export_files,
     load_manifest,
 )
+from scripts.follow_playground_session import CORE_SOURCES
+from scripts import probe_fabric_deployment_observation as deployment_probe
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -49,16 +51,36 @@ class PublicRepositoryCompletenessTests(unittest.TestCase):
             "tests/test_fixed_melee_driver.py",
             "tests/test_moving_melee_driver.py",
             "tests/test_c1_navigation_session.py",
+            "tests/test_b10_runtime_probe.py",
+            "tests/test_b11_world_change_runtime.py",
+            "tests/test_fabric_deployment_probe.py",
             "tests/observation_v2_fixtures.py",
             "tests/observation_v3_fixtures.py",
             "mc2p/runtime/player_runtime_v1.py",
             "mc2p/backends/deployment_transport.py",
             "scripts/export_motion_navigation_standalone.py",
+            "scripts/b11_world_change_runtime.py",
+            "scripts/java/FollowPlaygroundInitializer.java",
         )
         selected_paths = {item.as_posix() for item in selected}
 
         self.assertEqual(
             tuple(path for path in required if path not in selected_paths),
+            (),
+        )
+
+    def test_standalone_manifest_contains_every_frozen_probe_source(self):
+        selected_paths = {
+            item.as_posix() for item in collect_export_files(load_manifest())
+        }
+        frozen_sources = set(CORE_SOURCES)
+        for name, value in vars(deployment_probe).items():
+            if (name.endswith("_SOURCES") and isinstance(value, tuple)
+                    and all(isinstance(item, str) for item in value)):
+                frozen_sources.update(value)
+
+        self.assertEqual(
+            tuple(sorted(frozen_sources - selected_paths)),
             (),
         )
 

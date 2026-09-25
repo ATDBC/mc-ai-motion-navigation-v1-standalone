@@ -12,6 +12,9 @@ from mc2p.motion_nav.known_map_planner import (
     SnapshotBuildStatus,
     SurfacePlanningRequest,
 )
+from mc2p.motion_nav.movement_transition import (
+    GoalState, GoalSupport, MovementMode,
+)
 from mc2p.motion_nav.support_surfaces import SurfaceNodeId
 from mc2p.motion_nav.navigation_session import (
     NavigationSession,
@@ -239,6 +242,43 @@ class BridgePlanningTests(unittest.TestCase):
             NavigationSessionState.REQUIRES_INTERACTION,
         )
         self.assertEqual(session.report.reason, "interaction_work_position_reached")
+
+    def test_goal_revision_does_not_refill_the_task_bridge_budget(self):
+        world = bridge_world(gap=(1,))
+        frame = NavigationFrame(SESSION, self._body(0.5), world.view(), "fixture")
+        session = NavigationSession(
+            "bridge-budget-session",
+            NavigationSessionProfiles(
+                ordinary_profile(), jump_profile(), step_profile(),
+            ),
+            planner_worker=_InlinePlanner(),
+            bridge_policy=BridgePlacementPolicy(maximum_blocks=3),
+            clock_ns=lambda: 1,
+        )
+        self.addCleanup(session.close)
+        session.start(request(), frame)
+        for _ in range(4):
+            session.propose(frame, None, 1_000_000)
+            if session.report.state is NavigationSessionState.REQUIRES_INTERACTION:
+                break
+        interaction = session.required_interaction
+        self.assertIsNotNone(interaction)
+        assert interaction is not None
+        session.confirm_required_interaction(
+            interaction.requirement.interaction_id,
+        )
+        self.assertEqual(session.bridge_remaining, 2)
+
+        revised = GoalState(
+            Aabb(3.4, 63.95, 0.4, 3.6, 64.05, 0.6),
+            GoalSupport.SOLID,
+            frozenset({MovementMode.WALK}),
+            frozenset({"standing"}),
+            0.6,
+        )
+        session.update_goal("goal-1", 2, revised)
+
+        self.assertEqual(session.bridge_remaining, 2)
 
 
 if __name__ == "__main__":

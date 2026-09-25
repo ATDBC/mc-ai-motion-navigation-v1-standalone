@@ -75,6 +75,14 @@ class RuntimeNavigationDriver:
     def has_prepared_frame(self) -> bool:
         return self._prepared_deadline_ns is not None
 
+    @property
+    def goal_id(self) -> str | None:
+        return self._goal_id
+
+    @property
+    def goal_revision(self) -> int | None:
+        return self._goal_revision
+
     def start(
         self,
         goal_id: str,

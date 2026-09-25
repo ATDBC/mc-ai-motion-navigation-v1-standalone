@@ -373,6 +373,53 @@ class RuntimeBlockPlacementDriverTests(unittest.TestCase):
         self.assertEqual(len(backend.actions), 2)
         self.assertIsNone(driver.source)
 
+    def test_preparation_is_bounded_by_new_observations(self):
+        class _NeverAlignedBackend(_PlacementBackend):
+            def _observation(
+                self, *, placed: bool, request_sequence_id,
+                profile="interaction_v1",
+            ):
+                value = observation(
+                    self.sequence,
+                    destination="minecraft:dirt" if placed else "air",
+                    count=2 if placed else 3,
+                    targeted=False,
+                    profile=profile,
+                )
+                return replace(
+                    value,
+                    episode_id="episode-1",
+                    request_sequence_id=request_sequence_id,
+                    received_at_monotonic_ns=self.clock[0],
+                )
+
+        clock = [200_000_000]
+        backend = _NeverAlignedBackend(clock)
+        runtime = PlayerRuntimeV1(backend, _RecordingTrace(), lambda: clock[0])
+        reset = runtime.reset(ResetRequestV0(
+            "reset-placement-timeout", "episode-1", "test", 1,
+            5_000_000_000,
+        ))
+        self.assertTrue(reset.succeeded)
+        self.addCleanup(runtime.close)
+        transaction = BlockPlacementTransaction(requirement())
+        driver = RuntimeBlockPlacementDriver(
+            runtime,
+            transaction,
+            preparation_timeout_observations=3,
+            clock_ns=lambda: clock[0],
+        )
+        driver.start()
+
+        for _ in range(6):
+            driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
+            if transaction.report.terminal:
+                break
+
+        self.assertEqual(transaction.report.state, PlacementState.FAILED)
+        self.assertEqual(transaction.report.reason, "preparation_timeout")
+        self.assertLessEqual(len(backend.actions), 3)
+
 
 if __name__ == "__main__":
     unittest.main()

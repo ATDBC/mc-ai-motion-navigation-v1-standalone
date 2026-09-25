@@ -25,6 +25,7 @@ from mc2p.motion_nav.motion_solver import (
     SOLVER_ID, GapSolveRequest, LandingRegion, SolveStatus,
     load_gap_solver_policy, solve_one_cell_gap,
 )
+from mc2p.motion_nav.motion_worker import MotionSolverWorker
 from mc2p.motion_nav.motion_candidate import (
     MotionCandidateAdmitter, MotionCandidateContext, MotionCandidateStatus,
     VerifiedMotionCandidate, VerifiedMotionExecutor,
@@ -43,8 +44,8 @@ from mc2p.motion_nav.navigation_session import (
     NavigationSession, NavigationSessionProfiles, NavigationSessionState,
 )
 from mc2p.motion_nav.known_map_planner import SurfacePlanningRequest
+from mc2p.motion_nav.planner_worker import PlannerWorker
 from mc2p.motion_nav.movement_transition import ResourceState
-from mc2p.motion_nav.runtime_adapter import NavigationObservationAdapter
 from mc2p.motion_nav.step_transition import load_step_profile
 from mc2p.motion_nav.support_surfaces import query_support_surfaces
 from mc2p.motion_nav.world_model import CellKnowledge
@@ -80,6 +81,58 @@ def _application_matches(application, movement: MovementV1) -> bool:
     )
 
 
+def _runtime_navigation_frame(runtime):
+    """Read the immutable navigation projection already owned by Runtime."""
+    frame = runtime.navigation_observation_adapter.latest_frame
+    observation = runtime.observation
+    if frame is None or observation is None:
+        raise RuntimeError("B10 requires a Runtime-owned navigation frame")
+    if frame.body.sequence_id != observation.sequence_id:
+        raise RuntimeError("B10 Runtime navigation frame is stale")
+    return frame
+
+
+def _verified_submission_window(decision) -> tuple[int, int, int] | None:
+    """Return a complete proof window, while allowing neutral safety output."""
+    values = (
+        decision.verified_command_index,
+        decision.expected_movement_tick,
+        decision.latest_movement_tick,
+    )
+    if values == (None, None, None):
+        return None
+    if any(value is None for value in values):
+        raise RuntimeError("B10 session returned incomplete verified command identity")
+    return values
+
+
+def _input_window_diagnostics(
+    applications,
+    verified_window: tuple[int, int, int] | None,
+) -> dict:
+    ticks = [item.movement_tick_id for item in applications]
+    states = [item.state for item in applications]
+    command_index = expected_tick = latest_tick = None
+    if verified_window is not None:
+        command_index, expected_tick, latest_tick = verified_window
+    actual_tick = ticks[0] if ticks else None
+    return {
+        "verified_command_index": command_index,
+        "expected_movement_tick": expected_tick,
+        "latest_movement_tick": latest_tick,
+        "actual_movement_ticks": ticks,
+        "application_states": states,
+        "actual_minus_expected_ticks": (
+            None if actual_tick is None or expected_tick is None
+            else actual_tick - expected_tick
+        ),
+        "actual_minus_latest_ticks": (
+            None if actual_tick is None or latest_tick is None
+            else actual_tick - latest_tick
+        ),
+    }
+
+
 def run_b10_gap_solver_runtime(
     runtime,
     backend,
@@ -89,6 +142,35 @@ def run_b10_gap_solver_runtime(
     fixture_writer: Callable[[tuple[tuple[int, int, int], ...], str], None],
     player_teleporter: Callable[[float, float, float, float, float], None],
 ) -> tuple[dict, list[dict], list[dict]]:
+    """Keep background workers alive across the whole controlled probe."""
+    with PlannerWorker() as planner_worker, MotionSolverWorker(
+        max_pending=4,
+    ) as motion_worker:
+        return _run_b10_gap_solver_runtime(
+            runtime,
+            backend,
+            episode,
+            directory,
+            deadline_ns,
+            fixture_writer,
+            player_teleporter,
+            planner_worker=planner_worker,
+            motion_worker=motion_worker,
+        )
+
+
+def _run_b10_gap_solver_runtime(
+    runtime,
+    backend,
+    episode: str,
+    directory: Path,
+    deadline_ns: int,
+    fixture_writer: Callable[[tuple[tuple[int, int, int], ...], str], None],
+    player_teleporter: Callable[[float, float, float, float, float], None],
+    *,
+    planner_worker: PlannerWorker,
+    motion_worker: MotionSolverWorker,
+) -> tuple[dict, list[dict], list[dict]]:
     """Solve and execute frozen trials, including the default coordinator."""
     task = TaskIntentV0(
         "b10-gap-solver", "solve_same_height_one_cell_gap", "{}",
@@ -96,8 +178,7 @@ def run_b10_gap_solver_runtime(
         5000, deadline_ns, True, 0.0,
     )
     behavior = BehaviorProfileV0()
-    adapter = NavigationObservationAdapter()
-    frame = adapter.ingest(runtime.observation)
+    frame = _runtime_navigation_frame(runtime)
     rows: list[dict] = []
     counter = 0
     latest_application = None
@@ -150,7 +231,7 @@ def run_b10_gap_solver_runtime(
         if not owned or not any(_application_matches(item, movement) for item in owned):
             raise RuntimeError("B10 command was not observed at the player movement input")
         latest_application = receipt.last_input_sample
-        frame = adapter.ingest(result.observation)
+        frame = _runtime_navigation_frame(runtime)
         diagnostic()
         return result
 
@@ -509,7 +590,14 @@ def run_b10_gap_solver_runtime(
         start_id = start_query.surfaces[0].node_id
         end_id = target_query.surfaces[0].node_id
         route_id = f"b10-session-{direction_index}-{repetition}"
-        session = NavigationSession(route_id, session_profiles)
+        session = NavigationSession(
+            route_id,
+            session_profiles,
+            planner_worker=planner_worker,
+            owns_planner_worker=False,
+            motion_worker=motion_worker,
+            observation_adapter=runtime.navigation_observation_adapter,
+        )
         source = runtime.register_ordered_source(route_id)
         session.bind_source(source)
         try:
@@ -531,12 +619,19 @@ def run_b10_gap_solver_runtime(
             samples: list[dict] = []
             poll_deadline = time.perf_counter() + 5.0
             while len(samples) < 22:
+                proposal_started_ns = time.perf_counter_ns()
+                observation_age_ns = max(
+                    0,
+                    proposal_started_ns
+                    - runtime.observation.received_at_monotonic_ns,
+                )
                 proposal = session.propose(
                     frame,
                     current_anchor,
                     min(deadline_ns, time.perf_counter_ns() + 500_000_000),
                     input_ledger=ledger,
                 )
+                proposal_elapsed_ns = time.perf_counter_ns() - proposal_started_ns
                 decision = proposal.route_decision
                 if proposal.report.state is NavigationSessionState.COMPLETE:
                     break
@@ -555,11 +650,21 @@ def run_b10_gap_solver_runtime(
                     if (decision is not None
                             and decision.reason_code == "awaiting_verified_motion"
                             and proposal.control_frame is not None):
+                        control_started_ns = time.perf_counter_ns()
+                        backend_started_ns = runtime.backend_elapsed_ns_total
+                        blocking_started_ns = runtime.backend_blocking_io_ns_total
                         idle = runtime.control_frame(
                             task,
                             behavior,
                             min(deadline_ns, time.perf_counter_ns() + 5_000_000_000),
                             proposals=(proposal.control_frame,),
+                        )
+                        control_wall_ns = time.perf_counter_ns() - control_started_ns
+                        backend_elapsed_ns = (
+                            runtime.backend_elapsed_ns_total - backend_started_ns
+                        )
+                        blocking_elapsed_ns = (
+                            runtime.backend_blocking_io_ns_total - blocking_started_ns
                         )
                         if (idle.observation is None
                                 or idle.backend_result is None
@@ -577,20 +682,37 @@ def run_b10_gap_solver_runtime(
                             raise RuntimeError(
                                 "B10 waiting observation lost its movement tick"
                             )
-                        frame = adapter.ingest(idle.observation)
+                        frame = _runtime_navigation_frame(runtime)
                         diagnostic()
                         current_anchor = anchor_now()
+                        append_jsonl(
+                            directory / "b10-coordinator-control-frames.jsonl",
+                            {
+                                "trial": f"default-session-{direction_index}-{repetition}",
+                                "observation_sequence_id": frame.body.sequence_id,
+                                "session_state": proposal.report.state.value,
+                                "decision_state": decision.state.value,
+                                "reason_code": decision.reason_code,
+                                "submit_input": decision.submit_input,
+                                "observation_age_ns": observation_age_ns,
+                                "proposal_elapsed_ns": proposal_elapsed_ns,
+                                "control_wall_ns": control_wall_ns,
+                                "backend_elapsed_ns": backend_elapsed_ns,
+                                "backend_blocking_io_ns": blocking_elapsed_ns,
+                                "runtime_outside_backend_ns": max(
+                                    0, control_wall_ns - backend_elapsed_ns,
+                                ),
+                            },
+                        )
                     else:
                         time.sleep(.005)
                     continue
-                if (proposal.control_frame is None
-                        or decision.verified_command_index is None
-                        or decision.expected_movement_tick is None
-                        or decision.latest_movement_tick is None):
-                    raise RuntimeError(
-                        "B10 session omitted verified command identity"
-                    )
+                if proposal.control_frame is None:
+                    raise RuntimeError("B10 session omitted its control frame")
+                verified_window = _verified_submission_window(decision)
                 now = time.perf_counter_ns()
+                backend_started_ns = runtime.backend_elapsed_ns_total
+                blocking_started_ns = runtime.backend_blocking_io_ns_total
                 result = runtime.control_frame(
                     task,
                     behavior,
@@ -600,21 +722,30 @@ def run_b10_gap_solver_runtime(
                         ControlFrameProposalV1(observation_request=request),
                     ),
                 )
+                control_wall_ns = time.perf_counter_ns() - now
+                backend_elapsed_ns = (
+                    runtime.backend_elapsed_ns_total - backend_started_ns
+                )
+                blocking_elapsed_ns = (
+                    runtime.backend_blocking_io_ns_total - blocking_started_ns
+                )
                 if (result.observation is None or result.backend_result is None
                         or result.decision is None):
                     raise RuntimeError(
                         f"B10 navigation session Fabric step failed: {result.report}"
                     )
                 action = result.decision.action
-                ledger.submit(
-                    current_anchor.session,
-                    action,
-                    requested_first_tick=decision.expected_movement_tick,
-                    latest_allowed_first_tick=decision.latest_movement_tick,
-                )
-                session.register_verified_submission(
-                    proposal, control_sequence=action.request_sequence_id,
-                )
+                if verified_window is not None:
+                    _, expected_tick, latest_tick = verified_window
+                    ledger.submit(
+                        current_anchor.session,
+                        action,
+                        requested_first_tick=expected_tick,
+                        latest_allowed_first_tick=latest_tick,
+                    )
+                    session.register_verified_submission(
+                        proposal, control_sequence=action.request_sequence_id,
+                    )
                 receipt = result.backend_result.receipt
                 if type(receipt) is not ClientBehaviorReceiptV3:
                     raise RuntimeError(
@@ -632,16 +763,42 @@ def run_b10_gap_solver_runtime(
                 for application in owned_applications:
                     ledger.observe_sample(application)
                 latest_application = receipt.last_input_sample
-                frame = adapter.ingest(result.observation)
+                frame = _runtime_navigation_frame(runtime)
                 diagnostic()
                 current_anchor = anchor_now()
-                samples.append(dict(
+                window_diagnostics = _input_window_diagnostics(
+                    owned_applications, verified_window,
+                )
+                sample = dict(
                     command_index=decision.verified_command_index,
+                    decision_state=decision.state.value,
+                    reason_code=decision.reason_code,
+                    submit_input=decision.submit_input,
                     movement=asdict(decision.movement),
                     position=list(frame.body.position),
                     on_ground=frame.body.is_on_ground,
                     horizontal_collision=frame.body.horizontal_collision,
-                ))
+                    observation_age_ns=observation_age_ns,
+                    proposal_elapsed_ns=proposal_elapsed_ns,
+                    route_control_time_ns=decision.control_time_ns,
+                    control_wall_ns=control_wall_ns,
+                    backend_elapsed_ns=backend_elapsed_ns,
+                    backend_blocking_io_ns=blocking_elapsed_ns,
+                    runtime_outside_backend_ns=max(
+                        0, control_wall_ns - backend_elapsed_ns,
+                    ),
+                    **window_diagnostics,
+                )
+                samples.append(sample)
+                append_jsonl(
+                    directory / "b10-coordinator-control-frames.jsonl",
+                    {
+                        "trial": f"default-session-{direction_index}-{repetition}",
+                        "observation_sequence_id": frame.body.sequence_id,
+                        "session_state": proposal.report.state.value,
+                        **sample,
+                    },
+                )
             else:
                 raise RuntimeError("B10 navigation session exceeded its motion horizon")
             if session.report.state is not NavigationSessionState.COMPLETE:

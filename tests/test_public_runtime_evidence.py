@@ -42,6 +42,7 @@ RUNS = (
         "failed",
         ("DeploymentEvidenceFailure", "['client-0:c1c_20_of_20_positive_tasks']"),
     ),
+    ("20260925T104441670754Z-64a4005e", "b11", "pass", "passed", None),
 )
 
 
@@ -74,6 +75,33 @@ def _make_sources(root: Path) -> None:
             },
         )
         client = run / "client-0"
+        if stage == "b11":
+            _write_jsonl(client / "trace.jsonl", [{"event": "observation"}])
+            _write_json(client / "b11-summary.json", {
+                "schema_version": "mc2p.b11-world-change-summary.v1",
+                "positive_trials": 60,
+                "passed_trials": 60,
+                "confirmed_placements": 90,
+                "all_passed": True,
+                "negative_trials": 20,
+                "negative_passed_trials": 20,
+                "negative_all_passed": True,
+            })
+            _write_jsonl(
+                client / "b11-trials.jsonl",
+                [{"trial_id": f"positive-{index}", "passed": True}
+                 for index in range(60)],
+            )
+            _write_jsonl(
+                client / "b11-negative-trials.jsonl",
+                [{"trial_id": f"negative-{index}", "passed": True}
+                 for index in range(20)],
+            )
+            _write_jsonl(
+                client / "b11-fixture-commands.jsonl",
+                [{"trial_id": "positive-0", "commands": []}],
+            )
+            continue
         if stage == "b10c":
             _write_jsonl(client / "trace.jsonl", [{"event": "observation"}])
             _write_jsonl(
@@ -171,14 +199,14 @@ class PublicRuntimeEvidenceTests(unittest.TestCase):
     def tearDown(self) -> None:
         shutil.rmtree(self.temp, ignore_errors=True)
 
-    def test_build_and_verify_six_frozen_batches(self) -> None:
+    def test_build_and_verify_seven_frozen_batches(self) -> None:
         build_corpus(self.sources, self.corpus)
 
         report = verify_corpus(self.corpus)
 
-        self.assertEqual(report.archive_count, 6)
+        self.assertEqual(report.archive_count, 7)
         self.assertLessEqual(report.total_archive_bytes, 30 * 1024 * 1024)
-        self.assertEqual(report.stages, ("b10c", "c1b", "c1c"))
+        self.assertEqual(report.stages, ("b10c", "b11", "c1b", "c1c"))
 
     def test_build_is_byte_deterministic(self) -> None:
         second = self.temp / "corpus-second"

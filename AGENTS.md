@@ -27,6 +27,7 @@ python scripts/export_motion_navigation_standalone.py verify --root .
 python -m unittest discover -s tests/motion_nav -p "test_*.py" -v
 python -m unittest tests.test_c1_melee_evidence tests.test_c1_moving_melee_evidence tests.test_c1_external_motion_evidence tests.test_c1_fixed_melee_runtime tests.test_c1_moving_melee_runtime tests.test_c1_external_motion_runtime -v
 python -m unittest tests.test_action_arbiter_v1 tests.test_action_receipt tests.test_player_runtime_v1 tests.test_runtime_failure_disposition tests.test_engagement_memory tests.test_fixed_melee tests.test_fixed_melee_driver tests.test_melee_strike_driver tests.test_moving_melee tests.test_moving_melee_driver tests.test_external_motion_recovery_driver tests.test_c1_navigation_session -v
+python -m unittest tests.test_b10_runtime_probe tests.test_b11_world_change_runtime tests.test_fabric_deployment_probe -v
 python scripts/export_motion_navigation_standalone.py check-java
 python -m unittest tests.test_standalone_java_gates -v
 python scripts/public_runtime_evidence.py verify --root evidence/motion_navigation/representative-v1

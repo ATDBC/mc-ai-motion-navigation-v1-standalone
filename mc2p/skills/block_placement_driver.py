@@ -40,6 +40,8 @@ from mc2p.runtime.player_runtime_v1 import (
 
 
 _STEP_WINDOW_NS = 500_000_000
+_DEFAULT_PREPARATION_TIMEOUT_OBSERVATIONS = 120
+_DEFAULT_SELECTION_TIMEOUT_OBSERVATIONS = 20
 
 
 class RuntimeBlockPlacementDriver:
@@ -51,6 +53,12 @@ class RuntimeBlockPlacementDriver:
         transaction: BlockPlacementTransaction,
         *,
         approach_mode: GroundModeProfile | None = None,
+        preparation_timeout_observations: int = (
+            _DEFAULT_PREPARATION_TIMEOUT_OBSERVATIONS
+        ),
+        selection_timeout_observations: int = (
+            _DEFAULT_SELECTION_TIMEOUT_OBSERVATIONS
+        ),
         clock_ns: Callable[[], int] = time.perf_counter_ns,
     ) -> None:
         if type(runtime) is not PlayerRuntimeV1:
@@ -67,6 +75,12 @@ class RuntimeBlockPlacementDriver:
             )
         if runtime.state is not RuntimeStateV1.READY:
             raise ContractViolation("block placement driver requires ready Runtime")
+        for value, name in (
+            (preparation_timeout_observations, "placement preparation timeout"),
+            (selection_timeout_observations, "placement selection timeout"),
+        ):
+            if type(value) is not int or not 1 <= value <= 1_200:
+                raise ContractViolation(f"{name} must be within 1..1200 observations")
         self.runtime = runtime
         self.transaction = transaction
         self._clock = clock_ns
@@ -78,6 +92,10 @@ class RuntimeBlockPlacementDriver:
         self._prepared: PlacementProposal | None = None
         self._prepared_intent_id: str | None = None
         self._prepared_deadline_ns: int | None = None
+        self._preparation_timeout_observations = preparation_timeout_observations
+        self._selection_timeout_observations = selection_timeout_observations
+        self._preparation_started_sequence: int | None = None
+        self._selection_started_sequence: int | None = None
 
     def start(self) -> None:
         if self.source is not None or self.transaction.report.terminal:
@@ -88,6 +106,10 @@ class RuntimeBlockPlacementDriver:
     def prepared_placement(self) -> PlacementProposal | None:
         """Expose the immutable proposal for evidence and controlled tests."""
         return self._prepared
+
+    @property
+    def has_prepared_frame(self) -> bool:
+        return self._prepared is not None
 
     def prepare_proposal(self, owner_deadline_ns: int) -> ControlFrameProposalV1:
         if self.source is None or self._prepared is not None:
@@ -101,6 +123,20 @@ class RuntimeBlockPlacementDriver:
         frame = self.runtime.navigation_observation_adapter.latest_frame
         if frame is None:
             raise ContractViolation("block placement requires current world frame")
+        if self._preparation_started_sequence is None:
+            self._preparation_started_sequence = observation.sequence_id
+        preparation_age = (
+            observation.sequence_id - self._preparation_started_sequence
+        )
+        selection_age = (
+            None if self._selection_started_sequence is None
+            else observation.sequence_id - self._selection_started_sequence
+        )
+        if preparation_age >= self._preparation_timeout_observations:
+            self.transaction.fail("preparation_timeout")
+        elif (selection_age is not None
+              and selection_age >= self._selection_timeout_observations):
+            self.transaction.fail("operation_selection_timeout")
         placement = self.transaction.propose(observation, frame)
         intents: tuple[OrderedIntentV1, ...] = ()
         intent_id = None
@@ -247,6 +283,10 @@ class RuntimeBlockPlacementDriver:
             receipt_reason=receipt.reason,
             control_sequence=result.decision.action.request_sequence_id,
         )
+        if selected:
+            self._selection_started_sequence = None
+        elif self._selection_started_sequence is None:
+            self._selection_started_sequence = proposal.observation_sequence
 
     def tick(
         self,

@@ -256,6 +256,7 @@ class NavigationSession:
         profiles: NavigationSessionProfiles,
         *,
         planner_worker=None,
+        owns_planner_worker: bool = True,
         motion_worker: MotionSolverWorker | None = None,
         observation_adapter: NavigationObservationAdapter | None = None,
         route_admitter: RouteAdmitter | None = None,
@@ -267,6 +268,12 @@ class NavigationSession:
         require_identifier(session_id, "navigation session id")
         if type(profiles) is not NavigationSessionProfiles:
             raise ContractViolation("navigation session profiles are invalid")
+        if type(owns_planner_worker) is not bool:
+            raise ContractViolation("planner worker ownership must be bool")
+        if planner_worker is None and not owns_planner_worker:
+            raise ContractViolation(
+                "a borrowed planner worker must be supplied explicitly"
+            )
         if type(snapshot_cells_per_step) is not int or snapshot_cells_per_step < 1:
             raise ContractViolation("snapshot step budget must be positive")
         if type(planning_margin_cells) is not int or not 0 <= planning_margin_cells <= 16:
@@ -276,6 +283,7 @@ class NavigationSession:
         self.session_id = session_id
         self.profiles = profiles
         self._planner = planner_worker or PlannerWorker()
+        self._owns_planner_worker = owns_planner_worker
         self._motion_worker = motion_worker
         self._owns_motion_worker = False
         self._adapter = observation_adapter or NavigationObservationAdapter()
@@ -513,10 +521,6 @@ class NavigationSession:
             raise ContractViolation("navigation request belongs to another world")
         if self._request is not None and request.sequence <= self._request.sequence:
             raise ContractViolation("navigation request generation did not advance")
-        if self._request is None:
-            self._bridge_remaining = (
-                0 if self._bridge_policy is None else self._bridge_policy.maximum_blocks
-            )
         self._pending_goal = None
         self._replace_request(request, frame, "request_started")
 
@@ -538,9 +542,6 @@ class NavigationSession:
             raise ContractViolation("navigation goal revision is invalid")
         if type(goal_state) is not GoalState or type(frame) is not NavigationFrame:
             raise ContractViolation("navigation goal requires typed state and frame")
-        self._bridge_remaining = (
-            0 if self._bridge_policy is None else self._bridge_policy.maximum_blocks
-        )
         goal_node, missing = self._surface_for_goal(frame, goal_state)
         if goal_node is None:
             self._frame = frame
@@ -607,9 +608,6 @@ class NavigationSession:
                 or goal_revision <= self._request.goal_revision
                 or type(goal_state) is not GoalState):
             raise ContractViolation("navigation goal identity or revision is invalid")
-        self._bridge_remaining = (
-            0 if self._bridge_policy is None else self._bridge_policy.maximum_blocks
-        )
         goal_node, missing = self._surface_for_goal(self._frame, goal_state)
         if goal_node is None:
             self._pending_goal = (goal_id, goal_revision, goal_state)
@@ -924,7 +922,7 @@ class NavigationSession:
         if self._closed:
             return
         self._closed = True
-        if hasattr(self._planner, "close"):
+        if self._owns_planner_worker and hasattr(self._planner, "close"):
             self._planner.close()
         if self._motion_worker is not None and self._owns_motion_worker:
             self._motion_worker.close()

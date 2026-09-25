@@ -683,6 +683,20 @@ class NavigationSessionTests(unittest.TestCase):
         )
         self.assertIs(finished.report.state, NavigationSessionState.CANCELLED)
 
+    def test_session_can_borrow_a_long_lived_planner_worker(self):
+        planner = _InlinePlanner()
+        session = NavigationSession(
+            "borrowed-planner-session",
+            self.profiles(),
+            planner_worker=planner,
+            owns_planner_worker=False,
+            clock_ns=lambda: 1_000_000_000,
+        )
+
+        session.close()
+
+        self.assertFalse(planner.closed)
+
     def test_gap_route_is_solved_by_the_session_coordinator(self):
         session, current, anchor = _gap_session()
         proposal, _, saw_motion_wait = _drive_until_verified_command(

@@ -384,10 +384,17 @@ class DamageKnockbackDetector:
                     pending, usable_residual,
                 )
             if self._residual_is_complete(usable_residual):
-                # This replay starts after the damage tick.  It can still prove
-                # unrelated external motion, but cannot attribute that motion
-                # to the older damage fact.
+                # Missing world/input evidence left a causal gap between the
+                # damage fact and this later complete residual.  Do not turn
+                # the first motion after that gap into an unrelated event: the
+                # safe claim is that damage occurred and its motion could not
+                # be verified.
                 self._pending_damage = None
+                event = self._unverified_damage_event(pending)
+                return ExternalMotionDetection(
+                    event, "damage_motion_unverified_gap",
+                    pending, usable_residual,
+                )
             else:
                 current = snapshot.self_state.value
                 if (current is not None and current.movement_tick_id is not None

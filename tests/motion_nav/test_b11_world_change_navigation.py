@@ -16,6 +16,7 @@ from mc2p.motion_nav.bridge_planner import BridgePlacementPolicy
 from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, MovementMode
 from mc2p.motion_nav.navigation_session import NavigationSession, NavigationSessionProfiles
 from mc2p.motion_nav.world_model import Aabb
+from mc2p.motion_nav.world_interaction import PlacementState
 from mc2p.runtime.backend_v1 import BackendStepResultV1
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1
 from mc2p.skills.world_change_navigation_driver import RuntimeWorldChangeNavigationDriver
@@ -365,11 +366,71 @@ class WorldChangeNavigationIntegrationTests(unittest.TestCase):
             frozenset({"standing"}),
             0.6,
         )
-        driver.navigation.replace_goal(
+        driver.replace_goal(
             "goal-b11", 2, revised_goal, clock[0],
         )
 
         self.assertEqual(driver.session.report.goal_revision, 2)
+
+    def test_goal_revision_before_dispatch_cancels_stale_placement(self):
+        clock, backend, driver = self._fixture(maximum_blocks=1)
+        for _ in range(40):
+            driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
+            if driver.placement is not None:
+                break
+        self.assertIsNotNone(driver.placement)
+        assert driver.placement is not None
+        self.assertEqual(
+            driver.placement.transaction.report.state,
+            PlacementState.READY,
+        )
+
+        driver.replace_goal(
+            "goal-b11", 2, _revised_goal(backend), clock[0],
+        )
+
+        self.assertIsNone(driver.placement)
+        self.assertEqual(driver.session.report.goal_revision, 2)
+        self.assertEqual(driver.session.bridge_remaining, 1)
+
+    def test_goal_revision_after_dispatch_waits_for_confirmation(self):
+        clock, backend, driver = self._fixture(maximum_blocks=1)
+        for _ in range(80):
+            driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
+            placement = driver.placement
+            if (placement is not None
+                    and placement.transaction.report.state
+                    is PlacementState.AWAITING_CONFIRMATION):
+                break
+        self.assertIsNotNone(driver.placement)
+        assert driver.placement is not None
+        self.assertEqual(
+            driver.placement.transaction.report.state,
+            PlacementState.AWAITING_CONFIRMATION,
+        )
+
+        driver.replace_goal(
+            "goal-b11", 2, _revised_goal(backend), clock[0],
+        )
+        self.assertEqual(driver.session.report.goal_revision, 1)
+
+        driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
+
+        self.assertEqual(driver.session.report.goal_revision, 2)
+        self.assertEqual(driver.report.confirmed_placements, 1)
+
+
+def _revised_goal(backend: _WorldChangeBackend) -> GoalState:
+    return GoalState(
+        Aabb(
+            backend.goal_x + 0.35, 63.95, 0.35,
+            backend.goal_x + 0.65, 64.05, 0.65,
+        ),
+        GoalSupport.SOLID,
+        frozenset({MovementMode.WALK}),
+        frozenset({"standing"}),
+        0.6,
+    )
 
 
 if __name__ == "__main__":

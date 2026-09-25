@@ -36,7 +36,7 @@ artifacts/fabric-deployment/20260921T100604591938Z-7d11cfd4
 ```
 
 ```powershell
-D:\Miniforge3\Scripts\conda.exe run --prefix D:\My_project\mc_ai\.venv --no-capture-output python scripts/probe_fabric_deployment_observation.py --b10-gap-solver-probe --time-diagnostics --physics-tick-diagnostics --timeout-seconds 360
+D:\Miniforge3\Scripts\conda.exe run --prefix D:\My_project\mc_ai\.venv --no-capture-output python scripts/probe_fabric_deployment_observation.py --b10-gap-solver-probe --time-diagnostics --physics-tick-diagnostics --timeout-seconds 600
 ```
 
 | 项目 | 结果 |
@@ -63,6 +63,28 @@ D:\Miniforge3\Scripts\conda.exe run --prefix D:\My_project\mc_ai\.venv --no-capt
 3. 第三轮动作样本再次全部完成，但 Python 离线整理大报告时没有及时关闭控制会话，客户端 64 条未读取输入记录达到上限并按设计失败。现在场景结束后先发送最终中性输入并关闭唯一控制会话，再离线生成报告。
 
 前两次完成动作的运行仍按整轮失败保留，没有并入正式通过结果。只有最后一次重新运行全部门槛后，才形成 40／40 的正式结果。
+
+## 2026-09-25 跨阶段回归
+
+B11 首轮后的两次 B10 回归失败分别暴露了探针误拒绝中性落地帧，以及输入晚于许可窗口。整改后移除了对 Runtime 世界知识的第二次写入，并让整轮探针复用一组后台 worker。完整复跑：
+
+```text
+artifacts/fabric-deployment/20260925T103445684561Z-9a2d62d9
+```
+
+| 项目 | 结果 |
+|---|---:|
+| 固定跨隙 | 40／40 |
+| 转弯出口 | 40／40 |
+| 三档带速跨隙 | 60／60 |
+| 默认协调链 | 10／10 |
+| 带速反例 | 24／24 |
+| 协调控制帧 | 210 |
+| 晚于许可窗口 | 0 |
+| 求解耗时 P95／P99／最大 | 27.892／28.424／29.586 ms |
+| 本地非后端控制耗时 P95／P99／最大 | 7.939／9.006／12.513 ms |
+
+完整冻结场景需要超过 360 秒。360 秒运行 `20260925T101843847155Z-0f0ce143` 已完成协调链 10／10，但在动作样本 142／150 时被外层进程终止；它保留为运行期限不足的证据。600 秒只扩大整轮监督期限，没有改变任何单动作、求解或输入许可窗口。
 
 ## 尚未证明
 

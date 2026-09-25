@@ -249,7 +249,7 @@ class ExternalMotionDetectorTests(unittest.TestCase):
         self.assertEqual(found.reason, "damage_motion_unverified_timeout")
         self.assertEqual(found.event.movement_tick_id, 21)
 
-    def test_later_residual_cannot_claim_damage_tick_outside_its_interval(self):
+    def test_later_residual_after_missing_world_keeps_damage_attribution(self):
         detector = DamageKnockbackDetector()
         detector.observe(snapshot(seq=1, tick=20, hurt=0, health=20))
         detector.observe(
@@ -266,9 +266,11 @@ class ExternalMotionDetectorTests(unittest.TestCase):
 
         self.assertEqual(
             found.event.source,
-            ExternalMotionSource.UNATTRIBUTED_EXTERNAL_MOTION,
+            ExternalMotionSource.DAMAGE_WITH_UNVERIFIED_MOTION,
         )
-        self.assertIsNone(found.damage_fact)
+        self.assertEqual(found.reason, "damage_motion_unverified_gap")
+        self.assertIsNotNone(found.damage_fact)
+        self.assertEqual(found.damage_fact.movement_tick_id, 21)
 
     def test_unconfirmed_damage_residual_cannot_leak_into_later_damage(self):
         detector = DamageKnockbackDetector()

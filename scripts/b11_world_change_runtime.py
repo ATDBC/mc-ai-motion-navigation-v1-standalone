@@ -477,7 +477,7 @@ def _run_negative(
             if interaction is None:
                 raise RuntimeError("B11 goal revision case never produced an interaction")
             old_id = interaction.requirement.interaction_id
-            driver.navigation.replace_goal(
+            driver.replace_goal(
                 trial["trial_id"] + "/goal", 2, goal, time.perf_counter_ns(),
             )
             replacement = session.required_interaction

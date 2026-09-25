@@ -80,6 +80,10 @@ RUN_SPECS = (
         "DeploymentEvidenceFailure",
         "['client-0:c1c_20_of_20_positive_tasks']", 30, 18, 20, 10, 10,
     ),
+    RunSpec(
+        "20260925T104441670754Z-64a4005e", "b11", "pass", "passed",
+        None, None, 80, 60, 60, 20, 20,
+    ),
 )
 
 _SENSITIVE_MARKERS = (
@@ -141,7 +145,15 @@ def _scan_public_bytes(path: Path) -> None:
 def _source_paths(run: Path, spec: RunSpec) -> tuple[Path, ...]:
     relative = [Path("result.json")]
     client = Path("client-0")
-    if spec.stage == "b10c":
+    if spec.stage == "b11":
+        relative.extend((
+            client / "trace.jsonl",
+            client / "b11-summary.json",
+            client / "b11-trials.jsonl",
+            client / "b11-negative-trials.jsonl",
+            client / "b11-fixture-commands.jsonl",
+        ))
+    elif spec.stage == "b10c":
         relative.extend((client / "trace.jsonl", client / "b10-gap-solver-trials.jsonl"))
         if spec.outcome == "pass":
             relative.append(client / "b10-gap-solver.json")
@@ -212,6 +224,36 @@ def _count_jsonl(path: Path) -> int:
 
 def _check_source_summary(run: Path, spec: RunSpec) -> None:
     client = run / "client-0"
+    if spec.stage == "b11":
+        summary = _load_json(client / "b11-summary.json", "B11 summary")
+        expected = {
+            "positive_trials": spec.positive_total,
+            "passed_trials": spec.positive_passed,
+            "negative_trials": spec.negative_total,
+            "negative_passed_trials": spec.negative_passed,
+            "confirmed_placements": 90,
+            "all_passed": True,
+            "negative_all_passed": True,
+        }
+        mismatches = {
+            key: (summary.get(key), value)
+            for key, value in expected.items()
+            if summary.get(key) != value
+        }
+        if mismatches:
+            raise EvidenceViolation(
+                f"run {spec.run_id} B11 summary differs: {mismatches}"
+            )
+        count = (
+            _count_jsonl(client / "b11-trials.jsonl")
+            + _count_jsonl(client / "b11-negative-trials.jsonl")
+        )
+        if count != spec.trial_rows:
+            raise EvidenceViolation(
+                f"run {spec.run_id} has {count} B11 trials, "
+                f"expected {spec.trial_rows}"
+            )
+        return
     if spec.stage == "b10c":
         count = _count_jsonl(client / "b10-gap-solver-trials.jsonl")
         if count != spec.trial_rows:
@@ -296,7 +338,7 @@ def _write_archive(archive: Path, run: Path, spec: RunSpec, paths: Iterable[Path
 def _readme() -> str:
     return """# 代表性真实运行证据
 
-这里保留 B10-C 跨隙、C1-B 移动近战和 C1-C 外力恢复各一个完整通过批次、一个完整失败批次。归档只含结构化结果、试次清单和轨迹，不含 Minecraft/Fabric JAR、世界、日志、画面或缓存。
+这里保留 B10-C 跨隙、C1-B 移动近战和 C1-C 外力恢复各一个完整通过批次、一个完整失败批次，并加入 B11 放置与有限搭桥的最新完整通过批次。归档只含结构化结果、试次清单和轨迹，不含 Minecraft/Fabric JAR、世界、普通日志、画面或缓存。
 
 运行：
 
@@ -555,7 +597,33 @@ def _verify_archive(root: Path, entry: Mapping[str, object], spec: RunSpec) -> N
             if type(result) is not dict:
                 raise EvidenceViolation(f"run {spec.run_id} result.json is missing")
             _check_recorded_result(result, spec)
-            if spec.stage == "b10c":
+            if spec.stage == "b11":
+                summary = parsed.get("client-0/b11-summary.json")
+                if type(summary) is not dict:
+                    raise EvidenceViolation(f"run {spec.run_id} summary is missing")
+                expected_summary = {
+                    "positive_trials": spec.positive_total,
+                    "passed_trials": spec.positive_passed,
+                    "negative_trials": spec.negative_total,
+                    "negative_passed_trials": spec.negative_passed,
+                    "confirmed_placements": 90,
+                    "all_passed": True,
+                    "negative_all_passed": True,
+                }
+                for key, value in expected_summary.items():
+                    if summary.get(key) != value:
+                        raise EvidenceViolation(
+                            f"run {spec.run_id} summary field {key} differs"
+                        )
+                positive = jsonl_counts.get("client-0/b11-trials.jsonl")
+                negative = jsonl_counts.get(
+                    "client-0/b11-negative-trials.jsonl"
+                )
+                if positive != 60 or negative != 20:
+                    raise EvidenceViolation(
+                        f"run {spec.run_id} B11 trial count differs"
+                    )
+            elif spec.stage == "b10c":
                 trial_name = "client-0/b10-gap-solver-trials.jsonl"
                 if jsonl_counts.get(trial_name) != spec.trial_rows:
                     raise EvidenceViolation(f"run {spec.run_id} B10-C trial count differs")
@@ -601,7 +669,9 @@ def verify_corpus(root: Path) -> VerificationReport:
         raise EvidenceViolation("public evidence size limit differs")
     runs = index.get("runs")
     if type(runs) is not list or len(runs) != len(RUN_SPECS):
-        raise EvidenceViolation("public evidence must contain exactly six frozen runs")
+        raise EvidenceViolation(
+            f"public evidence must contain exactly {len(RUN_SPECS)} frozen runs"
+        )
     entries_by_id = {
         entry.get("run_id"): entry
         for entry in runs
