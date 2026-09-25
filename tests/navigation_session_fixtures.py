@@ -20,6 +20,7 @@ from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 
 class FakeNavigationSession:
     def __init__(self, *, cancel_steps=0):
+        self.observation_adapter = None
         self.source = None
         self.goal_id = None
         self.goal_revision = None
@@ -42,6 +43,11 @@ class FakeNavigationSession:
         self.verified_submissions = []
         self.cancel_steps = cancel_steps
         self.cancel_remaining = 0
+
+    def attach_observation_adapter(self, adapter):
+        if self.frames and adapter is not self.observation_adapter:
+            raise AssertionError("test session world owner changed after use")
+        self.observation_adapter = adapter
 
     @property
     def report(self):
