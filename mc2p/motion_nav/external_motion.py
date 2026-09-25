@@ -351,6 +351,16 @@ class DamageKnockbackDetector:
                     None, "motion_residual_unavailable",
                     damage.fact, usable_residual,
                 )
+            if usable_residual.status is MotionResidualStatus.MATCHED:
+                # The server can publish damage one movement tick before the
+                # resulting knockback appears in the player's motion.  Keep
+                # the fact for exactly that adjacent interval instead of
+                # prematurely classifying it as damage without displacement.
+                self._pending_damage = damage.fact
+                return ExternalMotionDetection(
+                    None, "damage_motion_grace",
+                    damage.fact, usable_residual,
+                )
             self._pending_damage = None
         elif self._pending_damage is not None:
             pending = self._pending_damage
@@ -361,7 +371,7 @@ class DamageKnockbackDetector:
                     event, "damage_motion_unverified",
                     pending, usable_residual,
                 )
-            if self._residual_covers_damage(usable_residual, pending):
+            if self._residual_can_attribute_damage(usable_residual, pending):
                 self._pending_damage = None
                 if usable_residual.status is MotionResidualStatus.DEVIATION:
                     event = self._event_from_damage(pending, usable_residual)
@@ -444,15 +454,21 @@ class DamageKnockbackDetector:
         }
 
     @classmethod
-    def _residual_covers_damage(
+    def _residual_can_attribute_damage(
         cls,
         residual: MotionResidualResult | None,
         damage: DamageFactV1,
     ) -> bool:
         return (
             cls._residual_is_complete(residual)
-            and residual.anchor_tick < damage.movement_tick_id
-            <= residual.observed_tick
+            and (
+                residual.anchor_tick < damage.movement_tick_id
+                <= residual.observed_tick
+                or (
+                    residual.anchor_tick == damage.movement_tick_id
+                    and residual.observed_tick == damage.movement_tick_id + 1
+                )
+            )
         )
 
     def _next_generation(self) -> int:

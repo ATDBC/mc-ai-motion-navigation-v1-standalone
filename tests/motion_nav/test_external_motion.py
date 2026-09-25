@@ -101,13 +101,44 @@ class ExternalMotionDetectorTests(unittest.TestCase):
     def test_damage_without_residual_does_not_start_motion_recovery(self):
         detector = DamageKnockbackDetector()
         detector.observe(snapshot(seq=1, tick=20, hurt=0, health=20))
-        found = detector.observe(
+        pending = detector.observe(
             snapshot(seq=2, tick=21, hurt=10, health=18),
             residual(deviation=False),
         )
+        found = detector.observe(
+            snapshot(seq=3, tick=22, hurt=9, health=18),
+            residual(deviation=False, first=21, last=22),
+        )
+        self.assertIsNone(pending.event)
+        self.assertEqual(pending.reason, "damage_motion_grace")
         self.assertIsNone(found.event)
         self.assertIsNotNone(found.damage_fact)
         self.assertEqual(found.reason, "damage_without_motion_residual")
+
+    def test_damage_and_knockback_one_tick_apart_form_one_damage_event(self):
+        detector = DamageKnockbackDetector()
+        detector.observe(snapshot(seq=444, tick=447, hurt=0, health=20))
+        damage = detector.observe(
+            snapshot(seq=445, tick=448, hurt=10, health=17),
+            residual(deviation=False, first=447, last=448),
+        )
+        found = detector.observe(
+            snapshot(
+                seq=446, tick=449, hurt=9, health=17,
+                velocity=(0.35, 0.18, 0.0), ground=False,
+            ),
+            residual(deviation=True, first=448, last=449),
+        )
+
+        self.assertIsNone(damage.event)
+        self.assertEqual(damage.reason, "damage_motion_grace")
+        self.assertEqual(
+            found.event.source, ExternalMotionSource.DAMAGE_KNOCKBACK,
+        )
+        self.assertEqual(found.reason, "damage_knockback_confirmed")
+        self.assertEqual(found.event.observation_sequence_id, 445)
+        self.assertEqual(found.event.movement_tick_id, 448)
+        self.assertEqual(found.event.health_delta_points, -3)
 
     def test_motion_deviation_without_damage_is_unattributed_external_motion(self):
         detector = DamageKnockbackDetector()
@@ -229,8 +260,8 @@ class ExternalMotionDetectorTests(unittest.TestCase):
             ),
         )
         found = detector.observe(
-            snapshot(seq=3, tick=22, hurt=9, health=18),
-            residual(deviation=True, first=21, last=22),
+            snapshot(seq=3, tick=23, hurt=8, health=18),
+            residual(deviation=True, first=22, last=23),
         )
 
         self.assertEqual(
@@ -254,11 +285,17 @@ class ExternalMotionDetectorTests(unittest.TestCase):
             snapshot(seq=4, tick=23, hurt=10, health=18),
             residual(deviation=False, first=22, last=23),
         )
+        settled = detector.observe(
+            snapshot(seq=5, tick=24, hurt=9, health=18),
+            residual(deviation=False, first=23, last=24),
+        )
 
         self.assertEqual(pending.reason, "damage_amount_pending")
         self.assertEqual(cleared.reason, "motion_matches_prediction")
         self.assertIsNone(found.event)
-        self.assertEqual(found.reason, "damage_without_motion_residual")
+        self.assertEqual(found.reason, "damage_motion_grace")
+        self.assertIsNone(settled.event)
+        self.assertEqual(settled.reason, "damage_without_motion_residual")
 
     def test_missing_motion_evidence_clears_comparison_baseline(self):
         detector = DamageKnockbackDetector()
