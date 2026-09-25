@@ -30,6 +30,22 @@ class FormalArbiterTests(unittest.TestCase):
         self.assertEqual(first.selected_intents, (("movement", "move"), ("look", "look")))
         self.assertEqual(first.action.valid_for_ticks, 1)
 
+    def test_verified_movement_window_follows_winner_and_is_consumed_once(self):
+        window = values.MovementTickWindowV1(11, 12)
+        self.arbiter.submit(self.intent(
+            "verified",
+            movement=values.MovementV1(forward=1, jump=True),
+            movement_tick_window=window,
+        ))
+
+        first = self.resolve()
+        second = self.resolve(observation=1)
+
+        self.assertEqual(first.movement_tick_window, window)
+        self.assertEqual(first.action.movement.jump, True)
+        self.assertIsNone(second.movement_tick_window)
+        self.assertEqual(second.action.movement, values.MovementV1())
+
     def test_heading_bound_movement_is_once_only_and_requires_own_look_winner(self):
         for forbidden, other in (((), False), (("look",), False), ((), True)):
             self.arbiter.clear()

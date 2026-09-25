@@ -14,7 +14,9 @@ import time
 from typing import Callable, Protocol, runtime_checkable
 
 from mc2p.contracts.action import ActionPriorityV0
-from mc2p.contracts.action_v1 import ActionIntentV1, LookV1, MovementV1
+from mc2p.contracts.action_v1 import (
+    ActionIntentV1, LookV1, MovementTickWindowV1, MovementV1,
+)
 from mc2p.contracts.common import ContractViolation, require_identifier
 from mc2p.contracts.intent_source import (
     ControlFrameProposalV1,
@@ -1361,6 +1363,19 @@ class NavigationSession:
                     )
                     else 0.0
                 ),
+                movement_tick_window=(
+                    MovementTickWindowV1(
+                        route_decision.expected_movement_tick,
+                        route_decision.latest_movement_tick,
+                    )
+                    if (
+                        route_decision is not None
+                        and route_decision.verified_command_index is not None
+                        and route_decision.expected_movement_tick is not None
+                        and route_decision.latest_movement_tick is not None
+                    )
+                    else None
+                ),
             )
             control = ControlFrameProposalV1(
                 (OrderedIntentV1(self._source, self._intent_sequence, intent),),
@@ -1427,7 +1442,11 @@ class NavigationSession:
             return None, tuple(sorted(missing))
         return min(
             candidates,
-            key=lambda surface: math.dist(surface.position, (x, y, z)),
+            key=lambda surface: (
+                abs(surface.position[1] - body.min_y),
+                math.hypot(surface.position[0] - x, surface.position[2] - z),
+                surface.node_id,
+            ),
         ).node_id, tuple(sorted(missing))
 
     @staticmethod

@@ -3,7 +3,8 @@ from dataclasses import dataclass, field, replace
 import threading
 
 from mc2p.contracts.action_v1 import (
-    ActionIntentV1, ActionSnapshotV1, AttackEntityV1, LookV1, MovementV1,
+    ActionIntentV1, ActionSnapshotV1, AttackEntityV1, LookV1,
+    MovementTickWindowV1, MovementV1,
 )
 from mc2p.contracts.common import ContractViolation, require_identifier, require_nonnegative_int
 from mc2p.contracts.intent_source import IntentSourceV1, OrderedIntentV1, ORDERED_PREFIX
@@ -20,6 +21,7 @@ class ArbitrationDecisionV1:
     selected_intents: tuple[tuple[str, str], ...] = ()
     candidate_intent_ids: tuple[str, ...] = ()
     suppressed_intents: tuple[tuple[str, str], ...] = ()
+    movement_tick_window: MovementTickWindowV1 | None = None
     schema_version: str = field(default="mc2p.arbitration-decision.v1", init=False)
 
 
@@ -172,10 +174,15 @@ class ActionArbiterV1:
                 deadline_monotonic_ns=min([deadline_monotonic_ns] + [i.expires_at_monotonic_ns for i in winners.values()]))
             # Consume all current one-shot proposals, including losers: no delayed stale GUI click/look.
             for intent in active:
-                if intent.movement is None or intent.movement_requires_look:
+                if (intent.movement is None or intent.movement_requires_look
+                        or intent.movement_tick_window is not None):
                     del self._intents[intent.intent_id]
                 elif intent.look is not None or intent.operation is not None:
                     self._intents[intent.intent_id] = replace(intent, look=None, operation=None)
-            return ArbitrationDecisionV1(action,
+            return ArbitrationDecisionV1(
+                action,
                 tuple((g, i.intent_id) for g, i in winners.items()),
-                tuple(sorted(i.intent_id for i in active)), tuple(sorted(set(suppressed))))
+                tuple(sorted(i.intent_id for i in active)),
+                tuple(sorted(set(suppressed))),
+                movement.movement_tick_window if movement is not None else None,
+            )

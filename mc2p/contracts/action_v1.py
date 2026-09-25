@@ -34,6 +34,20 @@ class MovementV1:
 
 
 @dataclass(frozen=True, slots=True)
+class MovementTickWindowV1:
+    """Movement ticks on which an intent's first sample may take effect."""
+
+    earliest_tick: int
+    latest_tick: int
+
+    def __post_init__(self) -> None:
+        require_nonnegative_int(self.earliest_tick, "earliest movement tick")
+        require_nonnegative_int(self.latest_tick, "latest movement tick")
+        if self.latest_tick < self.earliest_tick:
+            raise ContractViolation("movement tick window is reversed")
+
+
+@dataclass(frozen=True, slots=True)
 class LookV1:
     yaw_delta_degrees: float = 0.0
     pitch_delta_degrees: float = 0.0
@@ -163,6 +177,7 @@ class ActionIntentV1:
     valid_for_ticks: int = 1
     movement_requires_look: bool = False  # Internal arbitration dependency; not a client wire field.
     movement_look_tolerance_degrees: float = 0.0
+    movement_tick_window: MovementTickWindowV1 | None = None
     schema_version: str = field(default="mc2p.action-intent.v1", init=False)
 
     def __post_init__(self) -> None:
@@ -200,6 +215,11 @@ class ActionIntentV1:
             raise ContractViolation("movement look tolerance must be in [0,5] degrees")
         if not self.movement_requires_look and self.movement_look_tolerance_degrees != 0.0:
             raise ContractViolation("only heading-bound movement may tolerate another look")
+        if (self.movement_tick_window is not None
+                and type(self.movement_tick_window) is not MovementTickWindowV1):
+            raise ContractViolation("movement tick window must be typed")
+        if self.movement_tick_window is not None and self.movement is None:
+            raise ContractViolation("movement tick window requires movement ownership")
 
 
 @dataclass(frozen=True, slots=True)

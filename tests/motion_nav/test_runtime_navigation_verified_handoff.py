@@ -15,6 +15,7 @@ from mc2p.motion_nav.navigation_session import (
     NavigationSessionState,
 )
 from mc2p.motion_nav.movement_transition import MovementMode
+from mc2p.motion_nav.online_motion import InputApplicationStatus
 from mc2p.runtime.backend_v1 import BackendStepResultV1
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1
 from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
@@ -32,12 +33,16 @@ class _GapRuntimeBackend:
     action_schema_version = "mc2p.action-snapshot.v1"
     observation_schema_version = "mc2p.client_observation.v3"
 
-    def __init__(self, clock, *, change_landing_on_jump: bool = False) -> None:
+    def __init__(
+        self, clock, *, change_landing_on_jump: bool = False,
+        apply_jump_one_tick_late: bool = False,
+    ) -> None:
         self.clock = clock
         self.sequence = 0
         self.movement_tick = 1
         self.airborne = False
         self.change_landing_on_jump = change_landing_on_jump
+        self.apply_jump_one_tick_late = apply_jump_one_tick_late
         self.landing_present = True
         self.actions: list[ActionSnapshotV1] = []
 
@@ -90,7 +95,9 @@ class _GapRuntimeBackend:
         self.clock[0] += 50_000_000
         active = action.movement != MovementV1()
         if active:
-            self.movement_tick += 1
+            self.movement_tick += (
+                2 if action.movement.jump and self.apply_jump_one_tick_late else 1
+            )
         if action.movement.jump:
             self.airborne = True
             if self.change_landing_on_jump:
@@ -146,10 +153,15 @@ class _AnchorInjectionSession(NavigationSession):
 
 
 class RuntimeVerifiedMotionHandoffTests(unittest.TestCase):
-    def _running_gap(self, *, change_landing_on_jump=False):
+    def _running_gap(
+        self, *, change_landing_on_jump=False,
+        apply_jump_one_tick_late=False,
+    ):
         clock = [100_000_000]
         backend = _GapRuntimeBackend(
-            clock, change_landing_on_jump=change_landing_on_jump,
+            clock,
+            change_landing_on_jump=change_landing_on_jump,
+            apply_jump_one_tick_late=apply_jump_one_tick_late,
         )
         runtime = PlayerRuntimeV1(backend, _RecordingTrace(), lambda: clock[0])
         reset = runtime.reset(ResetRequestV0(
@@ -218,6 +230,23 @@ class RuntimeVerifiedMotionHandoffTests(unittest.TestCase):
             "active_route_dependency_changed",
             "executing_safe_prefix_during_replan",
         })
+
+    def test_runtime_bridge_keeps_verified_two_tick_start_window(self):
+        clock, backend, runtime, session, driver = self._running_gap(
+            apply_jump_one_tick_late=True,
+        )
+        self.addCleanup(runtime.close)
+        self.addCleanup(session.close)
+
+        submitted = backend.actions[-1]
+        record = runtime.input_ledger.record(submitted.request_sequence_id)
+
+        self.assertIsNotNone(record)
+        self.assertIs(record.status, InputApplicationStatus.APPLIED)
+        self.assertEqual(
+            record.latest_allowed_first_tick,
+            record.requested_first_tick + 1,
+        )
 
 
 if __name__ == "__main__":

@@ -200,7 +200,7 @@ class ExternalMotionDetectorTests(unittest.TestCase):
             ExternalMotionSource.DAMAGE_WITH_UNVERIFIED_MOTION,
         )
 
-    def test_damage_waits_for_residual_that_still_covers_the_damage_tick(self):
+    def test_two_tick_deviation_after_missing_world_is_unverified_motion(self):
         detector = DamageKnockbackDetector()
         detector.observe(snapshot(seq=1, tick=20, hurt=0, health=20))
         unavailable = MotionResidualResult(
@@ -218,9 +218,69 @@ class ExternalMotionDetectorTests(unittest.TestCase):
         self.assertIsNone(pending.event)
         self.assertEqual(pending.reason, "motion_residual_unavailable")
         self.assertEqual(
-            found.event.source, ExternalMotionSource.DAMAGE_KNOCKBACK,
+            found.event.source,
+            ExternalMotionSource.DAMAGE_WITH_UNVERIFIED_MOTION,
         )
+        self.assertEqual(found.reason, "damage_motion_unverified_span")
         self.assertEqual(found.event.observation_sequence_id, 2)
+
+    def test_delayed_damage_fact_does_not_claim_long_residual_as_knockback(self):
+        detector = DamageKnockbackDetector()
+        detector.observe(snapshot(seq=1, tick=20, hurt=0, health=20))
+        pending = detector.observe(
+            snapshot(seq=2, tick=21, hurt=9, health=20),
+            MotionResidualResult(
+                MotionResidualStatus.NEEDS_WORLD, 20, 21,
+                missing_cells=((0, 62, 0),),
+            ),
+        )
+        found = detector.observe(
+            snapshot(seq=3, tick=22, hurt=8, health=17),
+            residual(deviation=True, first=20, last=22),
+        )
+
+        self.assertIsNone(pending.event)
+        self.assertEqual(pending.reason, "damage_amount_pending")
+        self.assertEqual(
+            found.event.source,
+            ExternalMotionSource.DAMAGE_WITH_UNVERIFIED_MOTION,
+        )
+        self.assertEqual(found.reason, "damage_motion_unverified_span")
+
+    def test_long_deviation_after_missing_world_is_not_labeled_knockback(self):
+        detector = DamageKnockbackDetector()
+        detector.observe(snapshot(seq=444, tick=447, hurt=0, health=20))
+        detector.observe(
+            snapshot(seq=445, tick=448, hurt=10, health=17),
+            residual(deviation=False, first=447, last=448),
+        )
+        for index, tick in enumerate(range(449, 455)):
+            detector.observe(
+                snapshot(seq=446 + index, tick=tick, hurt=9, health=17),
+                MotionResidualResult(
+                    MotionResidualStatus.NEEDS_WORLD,
+                    448,
+                    tick,
+                    missing_cells=((-1, 64, 0),),
+                ),
+            )
+
+        found = detector.observe(
+            snapshot(
+                seq=452,
+                tick=455,
+                hurt=2,
+                health=17,
+                velocity=(.3, 0.0, 0.0),
+            ),
+            residual(deviation=True, first=448, last=455),
+        )
+
+        self.assertEqual(
+            found.event.source,
+            ExternalMotionSource.DAMAGE_WITH_UNVERIFIED_MOTION,
+        )
+        self.assertEqual(found.reason, "damage_motion_unverified_span")
 
     def test_damage_residual_timeout_requests_conservative_recovery(self):
         detector = DamageKnockbackDetector()

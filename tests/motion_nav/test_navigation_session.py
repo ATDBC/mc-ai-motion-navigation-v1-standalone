@@ -820,6 +820,46 @@ class NavigationSessionTests(unittest.TestCase):
         finally:
             session.close()
 
+    def test_body_support_prefers_feet_height_over_nearer_lower_slab(self):
+        session, current, _ = _gap_session(
+            session_id="body-support-height-session",
+        )
+        try:
+            stamp = ObservationStamp(current.session, 1, 1, "test", 1)
+            knowledge = WorldKnowledge(current.session)
+            knowledge.confirm_air(stamp, tuple(
+                (x, y, z)
+                for x in range(-2, 4)
+                for y in range(60, 71)
+                for z in range(-2, 3)
+            ))
+            knowledge.observe_blocks(stamp, {
+                (0, 63, 0): BlockGeometry.full_cube("minecraft:grass_block"),
+                (1, 63, 0): BlockGeometry(
+                    "minecraft:smooth_stone_slab",
+                    "boxes",
+                    (Aabb(0, 0, 0, 1, .5, 1),),
+                ),
+            })
+            body_x = 1.2
+            body = replace(
+                current.body,
+                position=(body_x, 64.0, .5),
+                body_box=Aabb(body_x - .3, 64.0, .2, body_x + .3, 65.8, .8),
+                is_on_ground=True,
+            )
+            node, missing = NavigationSession._surface_for_body(replace(
+                current,
+                body=body,
+                world=knowledge.view(),
+            ))
+
+            self.assertEqual(missing, ())
+            self.assertIsNotNone(node)
+            self.assertEqual((node.column_x, node.vertical_band), (0, 64))
+        finally:
+            session.close()
+
 
 if __name__ == "__main__":
     unittest.main()

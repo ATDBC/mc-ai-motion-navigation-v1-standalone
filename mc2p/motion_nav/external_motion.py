@@ -351,6 +351,18 @@ class DamageKnockbackDetector:
                     None, "motion_residual_unavailable",
                     damage.fact, usable_residual,
                 )
+            if (
+                usable_residual.status is MotionResidualStatus.DEVIATION
+                and not self._deviation_is_adjacent_to_damage(
+                    usable_residual, damage.fact,
+                )
+            ):
+                self._pending_damage = None
+                event = self._unverified_damage_event(damage.fact)
+                return ExternalMotionDetection(
+                    event, "damage_motion_unverified_span",
+                    damage.fact, usable_residual,
+                )
             if usable_residual.status is MotionResidualStatus.MATCHED:
                 # The server can publish damage one movement tick before the
                 # resulting knockback appears in the player's motion.  Keep
@@ -374,6 +386,14 @@ class DamageKnockbackDetector:
             if self._residual_can_attribute_damage(usable_residual, pending):
                 self._pending_damage = None
                 if usable_residual.status is MotionResidualStatus.DEVIATION:
+                    if not self._deviation_is_adjacent_to_damage(
+                        usable_residual, pending,
+                    ):
+                        event = self._unverified_damage_event(pending)
+                        return ExternalMotionDetection(
+                            event, "damage_motion_unverified_span",
+                            pending, usable_residual,
+                        )
                     event = self._event_from_damage(pending, usable_residual)
                     return ExternalMotionDetection(
                         event, "damage_knockback_confirmed",
@@ -474,6 +494,22 @@ class DamageKnockbackDetector:
                 or residual.anchor_tick == damage.movement_tick_id
                 < residual.observed_tick
             )
+        )
+
+    @staticmethod
+    def _deviation_is_adjacent_to_damage(
+        residual: MotionResidualResult,
+        damage: DamageFactV1,
+    ) -> bool:
+        if residual.status is not MotionResidualStatus.DEVIATION:
+            return False
+        tick = damage.movement_tick_id
+        return (
+            residual.anchor_tick == tick - 1
+            and residual.observed_tick == tick
+        ) or (
+            residual.anchor_tick == tick
+            and residual.observed_tick == tick + 1
         )
 
     def _next_generation(self) -> int:

@@ -6,7 +6,9 @@ import threading
 import time
 from typing import Callable, TypeVar
 
-from mc2p.contracts.action_v1 import ActionIntentV1, ActionSnapshotV1
+from mc2p.contracts.action_v1 import (
+    ActionIntentV1, ActionSnapshotV1, MovementTickWindowV1,
+)
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.common import ContractViolation, require_nonnegative_int
 from mc2p.contracts.intent_source import (
@@ -379,18 +381,21 @@ class PlayerRuntimeV1:
                     decision = self._arbiter.resolve(self._clock(), obs.episode_id, obs.sequence_id,
                         self._request_sequence, deadline, controls_blocked=gui is None or gui.open,
                         forbidden_actions=task.forbidden_actions)
+                selected_execution_window = self._selected_execution_window(
+                    decision, input_execution_window,
+                )
                 action = decision.action
                 self._request_sequence += 1
                 phase_code = FailureCodeV0.TRACE_IO
                 self._trace.write("dispatch", {"decision": decision, "task": task, "profile": profile,
                                                 "observation_request": request})
                 phase_code = FailureCodeV0.BACKEND_IO
-                self._submit_input_record(action, input_execution_window)
+                self._submit_input_record(action, selected_execution_window)
                 backend_result = self._backend_step(action, action.deadline_monotonic_ns, request)
                 self._check_deadline(action.deadline_monotonic_ns)
                 self._validate_result(action, backend_result, request)
                 self._ensure_input_record(
-                    action, backend_result, input_execution_window,
+                    action, backend_result, selected_execution_window,
                 )
                 self._input_ledger.observe_receipt(backend_result.receipt)
                 self._observation = backend_result.observation
@@ -546,6 +551,24 @@ class PlayerRuntimeV1:
             requested_first_tick=requested_tick,
             latest_allowed_first_tick=latest_tick,
         )
+
+    @staticmethod
+    def _selected_execution_window(
+        decision: ArbitrationDecisionV1,
+        explicit: CandidateExecutionWindow | None,
+    ) -> CandidateExecutionWindow | None:
+        selected = decision.movement_tick_window
+        if selected is None:
+            return explicit
+        if type(selected) is not MovementTickWindowV1:
+            raise ContractViolation("selected movement tick window must be typed")
+        derived = CandidateExecutionWindow(
+            selected.earliest_tick,
+            selected.latest_tick,
+        )
+        if explicit is not None and explicit != derived:
+            raise ContractViolation("explicit and selected execution windows differ")
+        return derived
 
     def _ensure_input_record(
         self, action: ActionSnapshotV1, result: BackendStepResultV1,
