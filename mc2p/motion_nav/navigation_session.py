@@ -41,7 +41,7 @@ from mc2p.motion_nav.ground_modes import load_ground_mode_profiles
 from mc2p.motion_nav.ground_motion import GroundMotionProfile
 from mc2p.motion_nav.jump_up import JumpUpProfile, load_jump_up_profile
 from mc2p.motion_nav.known_map_planner import (
-    KnownMapBounds,
+    KnownMapBounds, KnownMapSnapshot,
     KnownMapSnapshotBuilder,
     PlanningRequest,
     PlanningStatus,
@@ -49,6 +49,10 @@ from mc2p.motion_nav.known_map_planner import (
     SurfacePlanningRequest,
     SurfacePlanningStatus,
     SurfaceRouteCandidate,
+)
+from mc2p.motion_nav.bridge_planner import (
+    BridgeInteractionPlan, BridgePlacementPolicy,
+    plan_next_bridge_interaction,
 )
 from mc2p.motion_nav.motion_coordination import MotionRouteCoordinator
 from mc2p.motion_nav.motion_solver import (
@@ -77,7 +81,7 @@ from mc2p.motion_nav.runtime_adapter import (
 )
 from mc2p.motion_nav.step_transition import StepProfile, load_step_profile
 from mc2p.motion_nav.support_surfaces import SurfaceNodeId, query_support_surfaces
-from mc2p.motion_nav.world_model import BlockPos
+from mc2p.motion_nav.world_model import BlockPos, CellKnowledge
 
 
 class NavigationSessionState(StrEnum):
@@ -85,6 +89,7 @@ class NavigationSessionState(StrEnum):
     NEEDS_INFORMATION = "needs_information"
     SNAPSHOTTING = "snapshotting"
     PLANNING = "planning"
+    REQUIRES_INTERACTION = "requires_interaction"
     EXECUTING = "executing"
     CANCELLING = "cancelling"
     COMPLETE = "complete"
@@ -187,6 +192,7 @@ class NavigationSessionReport:
     action_index: int | None
     missing_cells: tuple[BlockPos, ...]
     terminal: bool
+    required_interaction_id: str | None = None
     schema_version: str = "mc2p.navigation-session-report.v1"
 
 
@@ -256,6 +262,7 @@ class NavigationSession:
         clock_ns: Callable[[], int] = time.perf_counter_ns,
         snapshot_cells_per_step: int = 4096,
         planning_margin_cells: int = 1,
+        bridge_policy: BridgePlacementPolicy | None = None,
     ) -> None:
         require_identifier(session_id, "navigation session id")
         if type(profiles) is not NavigationSessionProfiles:
@@ -264,6 +271,8 @@ class NavigationSession:
             raise ContractViolation("snapshot step budget must be positive")
         if type(planning_margin_cells) is not int or not 0 <= planning_margin_cells <= 16:
             raise ContractViolation("planning margin must be within 0..16 cells")
+        if bridge_policy is not None and type(bridge_policy) is not BridgePlacementPolicy:
+            raise ContractViolation("navigation bridge policy must be typed")
         self.session_id = session_id
         self.profiles = profiles
         self._planner = planner_worker or PlannerWorker()
@@ -274,6 +283,10 @@ class NavigationSession:
         self._clock = clock_ns
         self._snapshot_cells_per_step = snapshot_cells_per_step
         self._planning_margin = planning_margin_cells
+        self._bridge_policy = bridge_policy
+        self._bridge_remaining = (
+            0 if bridge_policy is None else bridge_policy.maximum_blocks
+        )
         self._source: IntentSourceV1 | None = None
         self._intent_sequence = 0
         self._state = NavigationSessionState.READY
@@ -281,9 +294,13 @@ class NavigationSession:
         self._request: PlanningRequest | SurfacePlanningRequest | None = None
         self._frame: NavigationFrame | None = None
         self._snapshot_builder: KnownMapSnapshotBuilder | None = None
+        self._planning_snapshot: KnownMapSnapshot | None = None
+        self._planning_snapshot_request_id: str | None = None
         self._snapshot_missing: tuple[BlockPos, ...] = ()
         self._residual_missing: tuple[BlockPos, ...] = ()
         self._planning_changes: set[BlockPos] = set()
+        self._required_interaction: BridgeInteractionPlan | None = None
+        self._interaction_approach_pending = False
         self._active_route: ActiveRoute | None = None
         self._executor: ActionRouteExecutor | None = None
         self._coordinator: MotionRouteCoordinator | None = None
@@ -293,6 +310,25 @@ class NavigationSession:
         self._restart_after_active_terminal = False
         self._cancel_reason: str | None = None
         self._closed = False
+
+    @property
+    def required_interaction(self) -> BridgeInteractionPlan | None:
+        return self._required_interaction
+
+    @property
+    def bridge_remaining(self) -> int:
+        return self._bridge_remaining
+
+    def confirm_required_interaction(self, interaction_id: str) -> None:
+        """Consume one authorized placement after its transaction confirms it."""
+        require_identifier(interaction_id, "confirmed interaction id")
+        if (self._required_interaction is None
+                or self._required_interaction.requirement.interaction_id != interaction_id
+                or self._state is not NavigationSessionState.REQUIRES_INTERACTION):
+            raise ContractViolation("navigation has no matching required interaction")
+        if self._bridge_remaining < 1:
+            raise ContractViolation("navigation bridge budget is exhausted")
+        self._bridge_remaining -= 1
 
     @property
     def active_route(self) -> ActiveRoute | None:
@@ -322,6 +358,8 @@ class NavigationSession:
                 NavigationSessionState.FAILED,
                 NavigationSessionState.CLOSED,
             },
+            (None if self._required_interaction is None else
+             self._required_interaction.requirement.interaction_id),
         )
 
     def bind_source(self, source: IntentSourceV1) -> None:
@@ -475,6 +513,10 @@ class NavigationSession:
             raise ContractViolation("navigation request belongs to another world")
         if self._request is not None and request.sequence <= self._request.sequence:
             raise ContractViolation("navigation request generation did not advance")
+        if self._request is None:
+            self._bridge_remaining = (
+                0 if self._bridge_policy is None else self._bridge_policy.maximum_blocks
+            )
         self._pending_goal = None
         self._replace_request(request, frame, "request_started")
 
@@ -496,6 +538,9 @@ class NavigationSession:
             raise ContractViolation("navigation goal revision is invalid")
         if type(goal_state) is not GoalState or type(frame) is not NavigationFrame:
             raise ContractViolation("navigation goal requires typed state and frame")
+        self._bridge_remaining = (
+            0 if self._bridge_policy is None else self._bridge_policy.maximum_blocks
+        )
         goal_node, missing = self._surface_for_goal(frame, goal_state)
         if goal_node is None:
             self._frame = frame
@@ -562,6 +607,9 @@ class NavigationSession:
                 or goal_revision <= self._request.goal_revision
                 or type(goal_state) is not GoalState):
             raise ContractViolation("navigation goal identity or revision is invalid")
+        self._bridge_remaining = (
+            0 if self._bridge_policy is None else self._bridge_policy.maximum_blocks
+        )
         goal_node, missing = self._surface_for_goal(self._frame, goal_state)
         if goal_node is None:
             self._pending_goal = (goal_id, goal_revision, goal_state)
@@ -676,6 +724,22 @@ class NavigationSession:
             () if route is None else route.action_route.dependencies,
         )
         self._planning_changes.update(changed_cells)
+        interaction_invalid = False
+        if self._required_interaction is not None:
+            requirement = self._required_interaction.requirement
+            interaction_invalid = (
+                bool(set(changed_cells).intersection(requirement.dependencies))
+                or frame.world.cell(requirement.support).knowledge
+                    is not CellKnowledge.BLOCK
+                or frame.world.cell(requirement.destination).knowledge
+                    is not CellKnowledge.AIR
+            )
+        if interaction_invalid:
+            self._required_interaction = None
+            self._restart_request_from_current(
+                frame, "world_interaction_dependency_changed",
+            )
+            return
         if ((self._state is NavigationSessionState.NEEDS_INFORMATION
              or self._pending_goal is not None)
                 and set(changed_cells).intersection(self._snapshot_missing)):
@@ -806,6 +870,12 @@ class NavigationSession:
                 self._state = NavigationSessionState.EXECUTING
                 self._reason = "executing_safe_prefix_during_replan"
                 self._snapshot_missing = decision.missing_cells
+        elif (self._interaction_approach_pending
+                and decision.state is ActionRouteState.COMPLETE):
+            self._clear_active_execution()
+            self._interaction_approach_pending = False
+            self._state = NavigationSessionState.REQUIRES_INTERACTION
+            self._reason = "interaction_work_position_reached"
         else:
             self._apply_decision_state(decision)
         movement = decision.movement if decision.submit_input else MovementV1()
@@ -847,6 +917,8 @@ class NavigationSession:
         self._state = NavigationSessionState.CANCELLED
         self._cancel_reason = reason.strip()
         self._reason = self._cancel_reason
+        self._required_interaction = None
+        self._interaction_approach_pending = False
 
     def close(self) -> None:
         if self._closed:
@@ -878,6 +950,10 @@ class NavigationSession:
         self._frame = frame
         self._planning_changes.clear()
         self._snapshot_missing = ()
+        self._planning_snapshot = None
+        self._planning_snapshot_request_id = None
+        self._required_interaction = None
+        self._interaction_approach_pending = False
         self._snapshot_builder = KnownMapSnapshotBuilder(
             frame.world, self._bounds(request),
         )
@@ -1023,6 +1099,8 @@ class NavigationSession:
             # known facts already contain a route.  Missing facts only become
             # a blocker after the planner proves that no known route exists.
             self._snapshot_missing = progress.missing_cells
+            self._planning_snapshot = progress.snapshot
+            self._planning_snapshot_request_id = request.request_id
             if type(request) is SurfacePlanningRequest:
                 planning_mode = (
                     None if self.profiles.ground_modes is None
@@ -1057,11 +1135,20 @@ class NavigationSession:
         current = self._request
         if current is None:
             return
+        if (candidate.request_id != current.request_id
+                or candidate.goal_id != current.goal_id
+                or candidate.goal_revision != current.goal_revision):
+            return
         status = candidate.status
         no_known_route = (
             status is SurfacePlanningStatus.NO_KNOWN_ROUTE
             if type(candidate) is SurfaceRouteCandidate
             else status is PlanningStatus.NO_KNOWN_ROUTE
+        )
+        no_route_within_scope = (
+            status is SurfacePlanningStatus.NO_ROUTE_WITHIN_COMPLETE_SCOPE
+            if type(candidate) is SurfaceRouteCandidate
+            else status is PlanningStatus.NO_ROUTE_WITHIN_COMPLETE_SCOPE
         )
         if no_known_route:
             if self._snapshot_missing:
@@ -1073,8 +1160,61 @@ class NavigationSession:
                     self._state = NavigationSessionState.NEEDS_INFORMATION
                     self._reason = "no_known_route_requires_information"
                 return
+        if no_known_route or no_route_within_scope:
+            if self._interaction_approach_pending:
+                self._state = NavigationSessionState.FAILED
+                self._reason = "interaction_work_route_unavailable"
+                return
+            if (self._bridge_policy is not None
+                    and self._bridge_remaining > 0
+                    and type(current) is SurfacePlanningRequest
+                    and type(candidate) is SurfaceRouteCandidate
+                    and self._planning_snapshot is not None
+                    and self._planning_snapshot_request_id == current.request_id):
+                interaction = plan_next_bridge_interaction(
+                    self._planning_snapshot,
+                    current,
+                    replace(
+                        self._bridge_policy,
+                        maximum_blocks=min(
+                            self._bridge_policy.maximum_blocks,
+                            self._bridge_remaining,
+                        ),
+                    ),
+                )
+                if interaction is not None:
+                    self._required_interaction = interaction
+                    if interaction.work_node != current.start:
+                        approach = replace(
+                            current,
+                            goal=interaction.work_node,
+                            goal_state=None,
+                        )
+                        planning_mode = (
+                            None if self.profiles.ground_modes is None
+                            else self.profiles.ground_modes.require(MovementMode.WALK)
+                        )
+                        self._planner.submit_surface_snapshot(
+                            self._planning_snapshot,
+                            self.profiles.ground,
+                            self.profiles.step,
+                            approach,
+                            self.profiles.jump_up,
+                            air_profiles=self.profiles.air,
+                            ground_mode_profile=planning_mode,
+                        )
+                        self._interaction_approach_pending = True
+                        self._state = NavigationSessionState.PLANNING
+                        self._reason = "interaction_work_route_submitted"
+                        return
+                    self._state = NavigationSessionState.REQUIRES_INTERACTION
+                    self._reason = "world_interaction_required"
+                    return
             self._state = NavigationSessionState.FAILED
-            self._reason = "no_known_route_without_missing_cells"
+            self._reason = (
+                "no_known_route_without_missing_cells"
+                if no_known_route else "no_route_within_complete_scope"
+            )
             return
         complete = (
             status is SurfacePlanningStatus.COMPLETE

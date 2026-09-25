@@ -145,6 +145,15 @@ B10_GAP_SOLVER_SOURCES = (
     "mc2p/motion_nav/physics_adapter.py",
     "mc2p/motion_nav/physics_1_21.py",
 )
+B11_WORLD_CHANGE_SOURCES = (
+    "scripts/b11_world_change_runtime.py",
+    *NAVIGATION_SESSION_SOURCES,
+    "mc2p/motion_nav/bridge_planner.py",
+    "mc2p/motion_nav/world_interaction.py",
+    "mc2p/skills/block_placement_driver.py",
+    "mc2p/skills/navigation_session_driver.py",
+    "mc2p/skills/world_change_navigation_driver.py",
+)
 INPUT_BUFFER_IDLE_SOURCES = (
     "scripts/input_buffer_idle_runtime.py",
 )
@@ -217,6 +226,7 @@ def frozen_deployment_sources(*, b03_fixed_route_probe: bool,
                               b08_ground_modes_probe: bool = False,
                               b09_air_motion_probe: bool = False,
                               b10_gap_solver_probe: bool = False,
+                              b11_world_change_probe: bool = False,
                               input_buffer_idle_probe: bool = False,
                               c1_fixed_melee_probe: bool = False,
                               c1_moving_melee_probe: bool = False,
@@ -257,6 +267,11 @@ def frozen_deployment_sources(*, b03_fixed_route_probe: bool,
     if b10_gap_solver_probe:
         sources.update({name: _hash(ROOT / name) for name in (
             *B03_SOURCES, *B09_AIR_MOTION_SOURCES, *B10_GAP_SOLVER_SOURCES,
+        )})
+    if b11_world_change_probe:
+        sources.update({name: _hash(ROOT / name) for name in (
+            *B03_SOURCES, *B04_SOURCES, *B09_AIR_MOTION_SOURCES,
+            *B11_WORLD_CHANGE_SOURCES,
         )})
     if input_buffer_idle_probe:
         sources.update({name: _hash(ROOT / name) for name in INPUT_BUFFER_IDLE_SOURCES})
@@ -718,6 +733,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                b08_ground_modes_probe: bool = False,
                b09_air_motion_probe: bool = False,
                b10_gap_solver_probe: bool = False,
+               b11_world_change_probe: bool = False,
                input_buffer_idle_probe: bool = False,
                c1_fixed_melee_probe: bool = False,
                c1_moving_melee_probe: bool = False,
@@ -731,7 +747,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
             b05_jump_calibration_probe,b05_jump_route_probe,
             b05_jump_acceptance_probe,b06_ordinary_material_probe,
             b07_step_probe,b08_ground_modes_probe,b09_air_motion_probe,
-            b10_gap_solver_probe,input_buffer_idle_probe,c1_fixed_melee_probe,
+            b10_gap_solver_probe,b11_world_change_probe,input_buffer_idle_probe,c1_fixed_melee_probe,
             c1_moving_melee_probe,c1_external_motion_probe,
             c1r_control_frame_probe))>1:
         raise ValueError('probe scenarios are mutually exclusive')
@@ -750,6 +766,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
         b08_ground_modes_probe=b08_ground_modes_probe,
         b09_air_motion_probe=b09_air_motion_probe,
         b10_gap_solver_probe=b10_gap_solver_probe,
+        b11_world_change_probe=b11_world_change_probe,
         input_buffer_idle_probe=input_buffer_idle_probe,
         c1_fixed_melee_probe=c1_fixed_melee_probe,
         c1_moving_melee_probe=c1_moving_melee_probe,
@@ -809,6 +826,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                                   or b07_step_probe or b08_ground_modes_probe
                                   or b09_air_motion_probe
                                   or b10_gap_solver_probe
+                                  or b11_world_change_probe
                                   or input_buffer_idle_probe
                                   or c1_probe) else 2):
             directory = run_dir / f"client-{number}"
@@ -818,6 +836,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                     or b05_jump_acceptance_probe or b06_ordinary_material_probe
                     or b07_step_probe or b08_ground_modes_probe
                     or b09_air_motion_probe or b10_gap_solver_probe
+                    or b11_world_change_probe
                     or input_buffer_idle_probe or c1_probe):
                 options += "autoJump:false\n"
             (directory / "options.txt").write_text(options, encoding="utf-8")
@@ -1192,6 +1211,21 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                             fixture_writer=write_b10_fixture,
                             player_teleporter=teleport_b10_player,
                         )
+                    elif b11_world_change_probe:
+                        from scripts.b11_world_change_runtime import run_b11_world_change_runtime
+                        def write_b11_fixture(commands, trial):
+                            if server is None or server.stdin is None:
+                                raise RuntimeError("B11 fixture server command channel is unavailable")
+                            server.stdin.write(("\n".join(commands) + "\n").encode("utf-8"))
+                            server.stdin.flush()
+                            append_jsonl(directory / "b11-fixture-commands.jsonl", {
+                                "trial_id": trial["trial_id"],
+                                "commands": list(commands),
+                            })
+                        stages, rows, episode_checks = run_b11_world_change_runtime(
+                            runtime, backend, episode, directory, deadline,
+                            fixture_writer=write_b11_fixture,
+                        )
                     elif input_buffer_idle_probe:
                         from scripts.input_buffer_idle_runtime import run_input_buffer_idle_runtime
                         stages, rows, episode_checks = run_input_buffer_idle_runtime(
@@ -1273,7 +1307,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                             or b05_jump_route_probe or b05_jump_acceptance_probe
                             or b06_ordinary_material_probe or b07_step_probe
                             or b08_ground_modes_probe or b09_air_motion_probe
-                            or b10_gap_solver_probe or input_buffer_idle_probe
+                            or b10_gap_solver_probe or b11_world_change_probe
+                            or input_buffer_idle_probe
                             or c1_probe):
                         # Motion scenarios can produce large offline reports. Close
                         # the live control session before parsing and serializing
@@ -1370,7 +1405,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                           or b05_jump_acceptance_probe or b06_ordinary_material_probe
                           or b07_step_probe or b08_ground_modes_probe
                           or b09_air_motion_probe or b10_gap_solver_probe
-                          or input_buffer_idle_probe or c1_probe):
+                          or b11_world_change_probe or input_buffer_idle_probe
+                          or c1_probe):
                         pass
                     else:
                         episode_checks = (evaluate_container(stages, records) if container_probe else evaluate_stages(
@@ -1394,6 +1430,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                                                              or b08_ground_modes_probe
                                                              or b09_air_motion_probe
                                                              or b10_gap_solver_probe
+                                                             or b11_world_change_probe
                                                              or input_buffer_idle_probe) else 28,
                         require_gui_attempts=not (
                             b03_fixed_route_probe or b03_shape_probe or b04_known_map_probe
@@ -1401,7 +1438,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                             or b05_jump_acceptance_probe or b06_ordinary_material_probe
                             or b07_step_probe or b08_ground_modes_probe
                             or b09_air_motion_probe or b10_gap_solver_probe
-                            or input_buffer_idle_probe))
+                            or b11_world_change_probe or input_buffer_idle_probe))
                     checks.extend({**check, "name": f"client-{number}:" + check["name"]} for check in episode_checks)
                     sessions.append(dict(identity=asdict(identity), episode=episode, initial=trace_projection(initial),
                         final=trace_projection(final), stages=stages, proof=proof,
@@ -1420,6 +1457,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                         sessions[-1]["b09_air_motion"] = stages
                     if b10_gap_solver_probe:
                         sessions[-1]["b10_gap_solver"] = stages
+                    if b11_world_change_probe:
+                        sessions[-1]["b11_world_change"] = stages
                     if input_buffer_idle_probe:
                         sessions[-1]["input_buffer_idle"] = stages
                     if c1r_control_frame_probe:
@@ -1472,7 +1511,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                   or b05_jump_route_probe or b05_jump_acceptance_probe
                   or b06_ordinary_material_probe or b07_step_probe
                   or b08_ground_modes_probe or b09_air_motion_probe
-                  or b10_gap_solver_probe or input_buffer_idle_probe
+                  or b10_gap_solver_probe or b11_world_change_probe
+                  or input_buffer_idle_probe
                   or c1_probe):
             first, second = sessions
             if container_probe:
@@ -1494,7 +1534,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                 or b05_jump_route_probe or b05_jump_acceptance_probe
                 or b06_ordinary_material_probe or b07_step_probe
                 or b08_ground_modes_probe or b09_air_motion_probe
-                or b10_gap_solver_probe or input_buffer_idle_probe
+                or b10_gap_solver_probe or b11_world_change_probe
+                or input_buffer_idle_probe
                 or c1_probe):
             start, end = second["initial"], first["final"]
             checks += [dict(name="new_jvm_episode_and_client_clock", passed=first["identity"] != second["identity"]
@@ -1531,6 +1572,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
         b08_ground_modes_probe=b08_ground_modes_probe,
         b09_air_motion_probe=b09_air_motion_probe,
         b10_gap_solver_probe=b10_gap_solver_probe,
+        b11_world_change_probe=b11_world_change_probe,
         input_buffer_idle_probe=input_buffer_idle_probe,
         c1_fixed_melee_probe=c1_fixed_melee_probe,
         c1_moving_melee_probe=c1_moving_melee_probe,
@@ -1542,7 +1584,10 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
         failure = dict(type="DeploymentEvidenceFailure", message=str([c["name"] for c in checks if not c["passed"]]))
     result = dict(schema_version="mc2p.fabric-deployment-probe.v2", observation_schema_version="mc2p.observation.v3",
         knowledge_model="block_state_v1", default_field_profile="navigation_v1",
-        field_profiles=["navigation_v1", "interaction_v1"] if (mining_probe or container_probe or visibility_probe or c1_probe) else ["navigation_v1"],
+        field_profiles=["navigation_v1", "interaction_v1"] if (
+            mining_probe or container_probe or visibility_probe
+            or b11_world_change_probe or c1_probe
+        ) else ["navigation_v1"],
         seed=seed, provenance=provenance,
         scenario="visibility" if visibility_probe else "mining" if mining_probe else "container" if container_probe
             else "b02-air-query" if b02_air_probe else "b03-fixed-route" if b03_fixed_route_probe
@@ -1556,6 +1601,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
             else "b08-ground-modes" if b08_ground_modes_probe
             else "b09-air-motion" if b09_air_motion_probe
             else "b10-gap-solver" if b10_gap_solver_probe
+            else "b11-world-change" if b11_world_change_probe
             else "input-buffer-idle" if input_buffer_idle_probe
             else "c1r-control-frame" if c1r_control_frame_probe
             else "c1-fixed-melee" if c1_fixed_melee_probe
@@ -1610,6 +1656,8 @@ def main(argv=None) -> int:
                         help='calibrate and validate gap jumps and controlled drops')
     parser.add_argument('--b10-gap-solver-probe', action='store_true',
                         help='solve and validate one-cell gaps in a controlled session')
+    parser.add_argument('--b11-world-change-probe', action='store_true',
+                        help='place full blocks and cross one-to-three-cell gaps')
     parser.add_argument('--input-buffer-idle-probe', action='store_true',
                         help='idle past the 64-sample input ledger and resume control')
     parser.add_argument('--c1-fixed-melee-probe', action='store_true',
@@ -1629,6 +1677,7 @@ def main(argv=None) -> int:
             args.b05_jump_acceptance_probe,args.b06_ordinary_material_probe,
             args.b07_step_probe,args.b08_ground_modes_probe,
             args.b09_air_motion_probe,args.b10_gap_solver_probe,
+            args.b11_world_change_probe,
             args.input_buffer_idle_probe,args.c1_fixed_melee_probe,
             args.c1_moving_melee_probe,args.c1_external_motion_probe,
             args.c1r_control_frame_probe))>1:
@@ -1641,7 +1690,8 @@ def main(argv=None) -> int:
     maximum_timeout = 1200 if (args.c1_fixed_melee_probe
                                or args.c1_moving_melee_probe
                                or args.c1_external_motion_probe
-                               or args.c1r_control_frame_probe) else 600
+                               or args.c1r_control_frame_probe
+                               or args.b11_world_change_probe) else 600
     if (not math.isfinite(args.timeout_seconds) or not 120 <= args.timeout_seconds <= maximum_timeout
             or not 1 <= args.server_port <= 65535 or not 1 <= args.ipc_port <= 65535 or args.server_port == args.ipc_port):
         parser.error("invalid bounded probe configuration")
@@ -1658,6 +1708,7 @@ def main(argv=None) -> int:
                           args.b06_ordinary_material_probe,args.b07_step_probe,
                           args.b08_ground_modes_probe,args.b09_air_motion_probe,
                           args.b10_gap_solver_probe,
+                          args.b11_world_change_probe,
                           args.input_buffer_idle_probe,
                           args.c1_fixed_melee_probe,
                           args.c1_moving_melee_probe,
@@ -1708,6 +1759,7 @@ def main(argv=None) -> int:
     if args.b08_ground_modes_probe: command.append('--b08-ground-modes-probe')
     if args.b09_air_motion_probe: command.append('--b09-air-motion-probe')
     if args.b10_gap_solver_probe: command.append('--b10-gap-solver-probe')
+    if args.b11_world_change_probe: command.append('--b11-world-change-probe')
     if args.input_buffer_idle_probe: command.append('--input-buffer-idle-probe')
     if args.c1_fixed_melee_probe: command.append('--c1-fixed-melee-probe')
     if args.c1_moving_melee_probe: command.append('--c1-moving-melee-probe')

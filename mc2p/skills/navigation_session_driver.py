@@ -119,6 +119,12 @@ class RuntimeNavigationDriver:
                 or goal_revision <= self._goal_revision
                 or type(goal) is not GoalState):
             raise ContractViolation("runtime navigation goal update is stale")
+        # Runtime owns the live world projection and ingests the observation
+        # returned after every control frame.  The session may still refer to
+        # the frame used to produce that control frame, especially while it is
+        # waiting for a world interaction.  Re-anchor before querying support
+        # for the revised goal so an expired immutable view is never reused.
+        self.session.ingest(self.runtime.observation)
         self.session.update_goal(goal_id, goal_revision, goal)
         self._goal_revision, self._goal = goal_revision, goal
         self._sync_report()
@@ -132,6 +138,7 @@ class RuntimeNavigationDriver:
             raise ContractViolation("runtime navigation tick requires BehaviorProfileV0")
         if self.source is None or self.state in {
             "ready", "success", "failed", "cancelled", "stopped",
+            "interaction_required",
         }:
             raise ContractViolation("runtime navigation driver cannot tick")
         proposals = self.prepare_proposals(owner_deadline_ns)
@@ -156,6 +163,7 @@ class RuntimeNavigationDriver:
             raise ContractViolation("runtime navigation already has a prepared frame")
         if self.source is None or self.state in {
             "ready", "success", "failed", "cancelled", "stopped",
+            "interaction_required",
         }:
             raise ContractViolation("runtime navigation driver cannot prepare")
         now = self._clock()
@@ -173,7 +181,7 @@ class RuntimeNavigationDriver:
         proposals = tuple(item for item in (
             proposal.control_frame,
             ControlFrameProposalV1(
-                observation_request=self._observation_request,
+                observation_request=self._current_observation_request(),
             ),
         ) if item is not None)
         self._prepared_deadline_ns = deadline
@@ -298,6 +306,26 @@ class RuntimeNavigationDriver:
         self.state = "stopped"
         self.reason = reason
 
+    def suspend_for_interaction(self) -> None:
+        """Release movement input while preserving the final navigation goal."""
+        if (self.source is None
+                or self.session.report.state is not NavigationSessionState.REQUIRES_INTERACTION
+                or self._prepared_deadline_ns is not None):
+            raise ContractViolation("navigation has no ready world interaction")
+        self._release_source()
+        self.state = "interaction_suspended"
+        self.reason = "world_interaction_owns_input"
+
+    def resume_after_interaction(self) -> None:
+        """Rebind after the confirmed world change has reached Runtime's world owner."""
+        if self.source is not None or self.state != "interaction_suspended":
+            raise ContractViolation("navigation is not suspended for interaction")
+        source = self.runtime.register_ordered_source("navigation-session")
+        self.session.bind_source(source)
+        self.source = source
+        self.session.ingest(self.runtime.observation)
+        self._sync_report()
+
     def _release_source(self) -> None:
         source = self.source
         if source is None:
@@ -316,6 +344,7 @@ class RuntimeNavigationDriver:
             NavigationSessionState.CANCELLED: "cancelled",
             NavigationSessionState.FAILED: "failed",
             NavigationSessionState.CLOSED: "failed",
+            NavigationSessionState.REQUIRES_INTERACTION: "interaction_required",
         }
         self.state = mapping.get(report.state, "running")
         self.reason = report.reason
