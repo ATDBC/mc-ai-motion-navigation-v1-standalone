@@ -362,6 +362,9 @@ db8bf80b73536a7098b91b1c5069746056d5ac7c40c9c841d1fc64b453094a43  reviews/2026-0
 ce5796638d708ffe632e6dfa2442f7c6441af46f616ae1eaf7b00fab6d6f2c06  reviews/2026-09-25-final-repro/gap_session.py
 7e1fa213a718c4535c731490a5d61d49a378266bc0f89762af81bc42d531928a  reviews/2026-09-25-final-repro/start_surface_prefers_lower_slab.py
 10d529c1155ea84e7ace6a52597b62340b70ba41ce1320317eb3d53f8d8f1dda  reviews/2026-09-25-final-review.md
+73d10f6cc8fba2b6f6b183fc9fda18b94aa097b67a6c89550cf2ccd272819cb4  reviews/2026-09-26-air-visibility-design.md
+3fdab2f2319d7311733e83d91ac6138fed91c2d5a1d84b68947e78bd53ac45cd  reviews/2026-09-26-air-visibility-repro/air_probe_prototype.cpp
+2577e663b701e17fca60a75093d8cc74ac7a42d4d77334354178f64555d1ba3a  reviews/2026-09-26-air-visibility-repro/soundness.inc
 d27321a0c60af59e4fed2a7d97cc699497d501cd8d357f966ec43694a343133a  reviews/2026-09-26-b12-hardening-repro/UnregisteredDamageTargetsFillBuffer.java
 6ae7e786c3820a10b66d4724f938af141f2e35b884faf17118a88ef4b99c18d3  reviews/2026-09-26-b12-hardening-review.md
 f1e4d026e669eea72f79b69b71ca91b3dc75511e10102747d053f5e72b16938d  reviews/2026-09-26-b12-pursuit-repro/active_trial_reason_coverage.py
@@ -378,7 +381,7 @@ e5217be12b28945a50d85ea4853372bf93e95d2e32732a60dd92b73b8dbbd0db  reviews/2026-0
 285b8b404a3fca5dcb51f7ed0bf9f238c384e8fc36d09959bda8b93d4b09e8e5  reviews/2026-09-26-d035-plan-repro/com/mc2p/surface/EnclosedCullingProperty.java
 069c2ad551ea3d25dc23bb732fa7240c4d49770c6e5ee3377a3a0bdb47a44a2d  reviews/2026-09-26-d035-plan-repro/culling_capacity_estimate.py
 923b0de8edf3deff302c9982e5cd0549825407ec37660b27fcf0c09308cc0cb0  reviews/2026-09-26-d035-plan-repro/decode_cost_split.py
-42b575a052a32a5e8350e0e343ce018f900df499a0f22aa1a2fe8763b8d021eb  reviews/2026-09-26-d035-remediation-plan.md
+51c05d9a9b781a3f4df35f1985f9ded9046a7ff575c5e419db01ee8c3e155989  reviews/2026-09-26-d035-remediation-plan.md
 ec32cb5b09e10df99bd5cd858049e3133c5e2f13c795cdecfee534781078da8b  reviews/2026-09-26-d035-repro/com/mc2p/surface/FlatFloorHarness.java
 44bf3b803efca8ff80786e488decf75bebcb55454f2359fe7d410471edd0ba3d  reviews/2026-09-26-d035-repro/dangling_first_party_imports.py
 d5980917d15ed81dd4d1442d0cc9cf4eb398a1c94ea61321354b0b6a58bc3b50  reviews/2026-09-26-d035-repro/observation_payload_cost.py
