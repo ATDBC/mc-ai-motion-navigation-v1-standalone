@@ -382,6 +382,14 @@ class NavigationSessionTests(unittest.TestCase):
             proposal.control_frame.intents[0].intent.movement_observed_yaw_limit_degrees,
             5.0,
         )
+        self.assertEqual(len(proposal.control_frame.task_events), 1)
+        decision_event = proposal.control_frame.task_events[0]
+        self.assertEqual(decision_event.record_type, "navigation_route_decision")
+        self.assertEqual(
+            decision_event.payload["reason_code"],
+            proposal.route_decision.reason_code,
+        )
+        self.assertTrue(decision_event.payload["submit_input"])
         self.assertEqual(proposal.report.route_id, session.active_route.route_id)
 
         polls_after_admission = planner.polls
@@ -910,6 +918,14 @@ class NavigationSessionTests(unittest.TestCase):
             self.assertEqual(
                 proposal.route_decision.reason_code, "awaiting_application",
             )
+            self.assertIsNotNone(proposal.control_frame)
+            self.assertEqual(proposal.control_frame.intents, ())
+            self.assertEqual(len(proposal.control_frame.task_events), 1)
+            decision_event = proposal.control_frame.task_events[0]
+            self.assertEqual(
+                decision_event.payload["reason_code"], "awaiting_application",
+            )
+            self.assertFalse(decision_event.payload["submit_input"])
         finally:
             session.close()
 

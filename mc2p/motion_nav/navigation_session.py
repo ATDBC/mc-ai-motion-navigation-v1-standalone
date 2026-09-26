@@ -19,6 +19,7 @@ from mc2p.contracts.action_v1 import (
 )
 from mc2p.contracts.common import ContractViolation, require_identifier
 from mc2p.contracts.intent_source import (
+    ControlFrameEventV1,
     ControlFrameProposalV1,
     IntentSourceV1,
     OrderedIntentV1,
@@ -1365,10 +1366,17 @@ class NavigationSession:
             if self._frame is None:
                 raise ContractViolation("navigation intent has no current frame")
             observation_request = self.observation_request()
+            decision_events = (
+                (self._route_decision_event(
+                    route_decision, conditioned_look_intent_id,
+                ),)
+                if route_decision is not None else ()
+            )
             if route_decision is not None and not route_decision.submit_input:
                 return NavigationSessionProposal(
                     ControlFrameProposalV1(
                         observation_request=observation_request,
+                        task_events=decision_events,
                     ),
                     self.report,
                     route_decision,
@@ -1456,8 +1464,47 @@ class NavigationSession:
             control = ControlFrameProposalV1(
                 (OrderedIntentV1(self._source, self._intent_sequence, intent),),
                 observation_request,
+                decision_events,
             )
         return NavigationSessionProposal(control, self.report, route_decision)
+
+    def _route_decision_event(
+        self,
+        decision: ActionRouteDecision,
+        conditioned_look_intent_id: str | None,
+    ) -> ControlFrameEventV1:
+        if self._frame is None:
+            raise ContractViolation("navigation decision event has no current frame")
+        movement = decision.movement
+        return ControlFrameEventV1(
+            "navigation_route_decision",
+            {
+                "schema_version": "mc2p.navigation-route-decision.v1",
+                "episode_id": self._source.episode_id,
+                "session_id": self.session_id,
+                "request_id": self.report.request_id,
+                "goal_id": self.report.goal_id,
+                "goal_revision": self.report.goal_revision,
+                "route_id": self.report.route_id,
+                "observation_sequence_id": self._frame.body.sequence_id,
+                "state": decision.state.value,
+                "reason_code": decision.reason_code,
+                "submit_input": decision.submit_input,
+                "action_index": decision.action_index,
+                "input_lease_ticks": decision.input_lease_ticks,
+                "movement": {
+                    "forward": movement.forward,
+                    "strafe": movement.strafe,
+                    "jump": movement.jump,
+                    "sneak": movement.sneak,
+                    "sprint": movement.sprint,
+                },
+                "verified_command_index": decision.verified_command_index,
+                "expected_movement_tick": decision.expected_movement_tick,
+                "latest_movement_tick": decision.latest_movement_tick,
+                "conditioned_look_intent_id": conditioned_look_intent_id,
+            },
+        )
 
     def _bounds(
         self,

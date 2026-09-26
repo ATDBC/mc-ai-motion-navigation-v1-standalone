@@ -2,6 +2,7 @@ package com.mc2p.observation;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.IntFunction;
 
@@ -50,11 +51,19 @@ public final class ClientDamageEventBuffer {
         lastSnapshotGeneration = generation;
 
         ArrayList<DamageEvent> events = new ArrayList<>();
-        for (Pending event : pending) {
+        Iterator<Pending> iterator = pending.iterator();
+        while (iterator.hasNext()) {
+            Pending event = iterator.next();
             boolean targetIsSelf = event.targetEntityId == selfEntityId;
             String targetRef = targetIsSelf
                     ? null : trackIdLookup.apply(event.targetEntityId);
-            if (!targetIsSelf && targetRef == null) continue;
+            if (!targetIsSelf && targetRef == null) {
+                // The wire contract cannot identify this target. Keeping the
+                // event would only fill the bounded queue and later inflate
+                // droppedCount, which is reserved for real capacity loss.
+                iterator.remove();
+                continue;
+            }
             boolean sourcePresent = event.sourceEntityId >= 0;
             boolean sourceIsSelf = sourcePresent
                     && event.sourceEntityId == selfEntityId;

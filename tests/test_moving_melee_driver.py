@@ -679,6 +679,51 @@ class MovingMeleeDriverTests(unittest.TestCase):
         self.assertIn("look", dict(attack.decision.selected_intents))
         self.assertIsNotNone(driver.approach_driver)
 
+    def test_visible_pursuit_turns_toward_target_while_navigation_keeps_moving(self):
+        self.runtime.close()
+        self.backend = MeleeBackend(self.clock, distance=6.0)
+        self.runtime = PlayerRuntimeV1(
+            self.backend, self.trace, lambda: self.clock[0],
+        )
+        self.assertTrue(self.runtime.reset(
+            ResetRequestV0(
+                "reset-pursuit-look", "episode-1", "test", 1,
+                5_000_000_000,
+            )
+        ).succeeded)
+        session = FakeNavigationSession()
+        driver = MovingMeleeDriver(
+            self.runtime, session, clock_ns=lambda: self.clock[0],
+        )
+        driver.start(self.target, self.clock[0])
+
+        composed = None
+        with patch(
+            "mc2p.skills.moving_melee_driver.combat_aim_angles",
+            return_value=(15.0, 0.0),
+        ):
+            for _ in range(4):
+                result = self.tick(driver)
+                if (result is not None
+                        and abs(result.decision.action.look.yaw_delta_degrees)
+                            > 0.0):
+                    composed = result
+                    break
+
+        self.assertIsNotNone(composed)
+        self.assertEqual(
+            composed.decision.action.movement,
+            MovementV1(forward=1),
+        )
+        selected = dict(composed.decision.selected_intents)
+        self.assertIn("movement", selected)
+        self.assertIn("look", selected)
+        self.assertTrue(session.conditioned_look_requests)
+        self.assertEqual(
+            session.conditioned_look_requests[-1][0],
+            composed.decision.action.look.yaw_delta_degrees,
+        )
+
     def test_large_strike_turn_recomputes_and_keeps_same_frame_movement(self):
         self.runtime.close()
         self.backend = MeleeBackend(self.clock, distance=5.0)

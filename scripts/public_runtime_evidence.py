@@ -90,8 +90,8 @@ RUN_SPECS = (
         None, None, 8, None, None, 8, 8,
     ),
     RunSpec(
-        "20260926T063032338012Z-780e0386", "b12b", "pass", "passed",
-        None, None, 33, 24, 24, 8, 8,
+        "20260926T074601049372Z-1e50bcb7", "b12b", "pass", "passed",
+        None, None, 34, 24, 24, 8, 8,
     ),
 )
 
@@ -267,6 +267,39 @@ def _count_jsonl(path: Path) -> int:
     return count
 
 
+def _b12b_active_trials_are_complete(trials: object) -> bool:
+    if type(trials) is not list:
+        return False
+    active = [
+        row for row in trials
+        if type(row) is dict and row.get("classification") == "active_target"
+    ]
+    if {row.get("active_mode") for row in active} != {
+        "induced_turn", "sustained_chase",
+    }:
+        return False
+    sustained = next(
+        (row for row in active if row.get("active_mode") == "sustained_chase"),
+        None,
+    )
+    return (
+        type(sustained) is dict
+        and sustained.get("passed") is True
+        and isinstance(sustained.get("control_frame_count"), int)
+        and sustained["control_frame_count"] >= 30
+        and isinstance(sustained.get("elapsed_seconds"), (int, float))
+        and sustained["elapsed_seconds"] >= 1.5
+        and isinstance(sustained.get("target_displacement_blocks"), (int, float))
+        and sustained["target_displacement_blocks"] >= 0.25
+        and isinstance(sustained.get("turn_frame_count"), int)
+        and sustained["turn_frame_count"] > 0
+        and isinstance(sustained.get("moving_turn_ratio"), (int, float))
+        and sustained["moving_turn_ratio"] >= 0.5
+        and type(sustained.get("navigation_reason_counts")) is dict
+        and bool(sustained["navigation_reason_counts"])
+    )
+
+
 def _check_source_summary(run: Path, spec: RunSpec) -> None:
     client = run / "client-0"
     if spec.stage == "b12a":
@@ -318,7 +351,8 @@ def _check_source_summary(run: Path, spec: RunSpec) -> None:
             or type(positives) is not list
             or len(positives) != spec.trial_rows
             or positive_count != spec.positive_total
-            or active_count != 1
+            or active_count != 2
+            or not _b12b_active_trials_are_complete(positives)
             or any(type(row) is not dict or row.get("passed") is not True
                    for row in positives)
             or type(boundaries) is not list
@@ -507,7 +541,7 @@ def _write_archive(archive: Path, run: Path, spec: RunSpec, paths: Iterable[Path
 def _readme() -> str:
     return """# 代表性真实运行证据
 
-这里保留 B10-C 跨隙、C1-B 移动近战和 C1-C 外力恢复各一个完整通过批次、一个完整失败批次，并加入 B11 放置与有限搭桥、B12-A 伤害来源、B12-B 部分观察下战斗移动的最新通过批次。B10-C 通过批次保留 210 个协调控制帧、10 个协调试次、142 个求解试次和物理 tick 片段，可以直接核对输入是否晚于许可窗口。B12-A 批次保留玩家近战和环境伤害来源诊断。B12-B 批次保留 33 个 Fabric 场景、控制事件和分段 Runtime 轨迹，可以重新核对活动目标持续瞄准、真实墙体遮挡和控制时延。不复制普通日志、画面或缓存。
+这里保留 B10-C 跨隙、C1-B 移动近战和 C1-C 外力恢复各一个完整通过批次、一个完整失败批次，并加入 B11 放置与有限搭桥、B12-A 伤害来源、B12-B 部分观察下战斗移动的最新通过批次。B10-C 通过批次保留 210 个协调控制帧、10 个协调试次、142 个求解试次和物理 tick 片段，可以直接核对输入是否晚于许可窗口。B12-A 批次保留玩家近战和环境伤害来源诊断。B12-B 批次保留 34 个 Fabric 场景、控制事件和分段 Runtime 轨迹，其中包含不依赖目标瞬移的持续追击，可以重新核对活动目标持续瞄准、导航决定原因、真实墙体遮挡和控制时延。不复制普通日志、画面或缓存。
 
 运行：
 
@@ -829,7 +863,8 @@ def _verify_archive(root: Path, entry: Mapping[str, object], spec: RunSpec) -> N
                     or type(positives) is not list
                     or len(positives) != spec.trial_rows
                     or positive_count != spec.positive_total
-                    or active_count != 1
+                    or active_count != 2
+                    or not _b12b_active_trials_are_complete(positives)
                     or any(type(row) is not dict or row.get("passed") is not True
                            for row in positives)
                     or type(boundaries) is not list

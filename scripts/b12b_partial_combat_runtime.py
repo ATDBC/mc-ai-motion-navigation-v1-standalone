@@ -60,6 +60,7 @@ _CONFIG = _ROOT / "config/motion-navigation"
 _PLAYER_START = {"x": .5, "y": 100.0, "z": -2.5}
 _TARGET = {"x": .5, "y": 100.0, "z": -.25}
 _ACTIVE_TARGET = {"x": .5, "y": 100.0, "z": 4.5}
+_SUSTAINED_TARGET = {"x": 4.5, "y": 100.0, "z": 5.5}
 _TURN_TARGET = {"x": 2.091, "y": 100.0, "z": -.909}
 _ROUTE_OFFSETS = {
     "forward": (0.0, 2.0),
@@ -121,11 +122,27 @@ def b12b_trial_plan(world_seed: int) -> tuple[dict, ...]:
     rows.append({
         "trial_id": "active-target-conditioned-look-01",
         "classification": "active_target",
+        "active_mode": "induced_turn",
         "direction": "target_directed",
         "repeat": 1,
         "world_seed": world_seed,
         "scenario_seed": world_seed * 1000 + len(rows) + 1,
         "ai_seed": 51001,
+        "target_position": dict(_ACTIVE_TARGET),
+        "movement": None,
+        "injection": None,
+        "evidence_source": "fabric",
+    })
+    rows.append({
+        "trial_id": "sustained-active-target-01",
+        "classification": "active_target",
+        "active_mode": "sustained_chase",
+        "direction": "target_directed",
+        "repeat": 1,
+        "world_seed": world_seed,
+        "scenario_seed": world_seed * 1000 + len(rows) + 1,
+        "ai_seed": 51002,
+        "target_position": dict(_SUSTAINED_TARGET),
         "movement": None,
         "injection": None,
         "evidence_source": "fabric",
@@ -206,22 +223,27 @@ def evaluate_b12b_active_target_evidence(
     trace_records: Iterable[Mapping],
     control_events: Iterable[Mapping],
 ) -> tuple[list[dict], list[dict]]:
-    """Require one formally applied frame with both turning and ground travel."""
-    actions = _dispatch_actions(trace_records)
+    """Check the induced turn and a sustained, non-teleported live pursuit."""
+    trace = tuple(dict(record) for record in trace_records)
+    actions = _dispatch_actions(trace)
     events = tuple(dict(event) for event in control_events)
     evaluated = []
     for source in rows:
         row = dict(source)
         if row.get("classification") != "active_target":
             continue
-        proven: list[int] = []
-        for request in row.get("composed_request_sequences", ()):
+        turn_requests: list[int] = []
+        moving_turn_requests: list[int] = []
+        for request in row.get("control_request_sequences", row.get(
+                "composed_request_sequences", ())):
             action = actions.get(request)
             movement = action.get("movement") if isinstance(action, Mapping) else None
             look = action.get("look") if isinstance(action, Mapping) else None
-            if (not _raw_movement_nonempty(movement)
-                    or not isinstance(look, Mapping)
+            if (not isinstance(look, Mapping)
                     or abs(float(look.get("yaw_delta_degrees", 0.0))) <= 0.0):
+                continue
+            turn_requests.append(request)
+            if not _raw_movement_nonempty(movement):
                 continue
             inputs = tuple(
                 event for event in events
@@ -245,13 +267,52 @@ def evaluate_b12b_active_target_evidence(
                 ) <= 1
                 for input_event in inputs for look_event in looks
             ):
-                proven.append(request)
+                moving_turn_requests.append(request)
+        navigation_reasons: dict[str, int] = {}
+        neutral_navigation_reasons: dict[str, int] = {}
+        expected_session = "b12b-" + str(row.get("trial_id"))
+        for record in trace:
+            if record.get("record_type") != "navigation_route_decision":
+                continue
+            payload = record.get("payload")
+            if (not isinstance(payload, Mapping)
+                    or payload.get("session_id") != expected_session):
+                continue
+            reason = payload.get("reason_code")
+            if not isinstance(reason, str) or not reason:
+                reason = "missing_reason"
+            navigation_reasons[reason] = navigation_reasons.get(reason, 0) + 1
+            movement = payload.get("movement")
+            if (payload.get("submit_input") is not True
+                    or not _raw_movement_nonempty(movement)):
+                neutral_navigation_reasons[reason] = (
+                    neutral_navigation_reasons.get(reason, 0) + 1
+                )
         report = row.get("report")
         failures = []
         if row.get("seed_receipt_valid") is not True:
             failures.append("seed_receipt_invalid")
-        if not proven:
-            failures.append("no_applied_turn_and_movement_frame")
+        mode = row.get("active_mode")
+        if mode == "induced_turn":
+            if not moving_turn_requests:
+                failures.append("no_applied_turn_and_movement_frame")
+        elif mode == "sustained_chase":
+            if row.get("control_frame_count", 0) < 30:
+                failures.append("sustained_chase_too_short")
+            if float(row.get("elapsed_seconds", 0.0)) < 1.5:
+                failures.append("sustained_chase_elapsed_time_too_short")
+            if float(row.get("target_displacement_blocks", 0.0)) < .25:
+                failures.append("active_target_did_not_move")
+            if not turn_requests:
+                failures.append("sustained_chase_has_no_turn_frame")
+            elif len(moving_turn_requests) / len(turn_requests) < .5:
+                failures.append("too_many_turn_frames_without_movement")
+            if not navigation_reasons:
+                failures.append("navigation_decision_reasons_missing")
+            if "missing_reason" in navigation_reasons:
+                failures.append("navigation_decision_reason_blank")
+        else:
+            failures.append("unknown_active_target_mode")
         if (not isinstance(report, Mapping)
                 or report.get("confirmed_hits", 0) < 1):
             failures.append("active_target_not_hit")
@@ -259,14 +320,35 @@ def evaluate_b12b_active_target_evidence(
             failures.append("runtime_not_ready")
         evaluated.append({
             **row,
-            "applied_turn_and_movement_requests": proven,
+            "turn_frame_count": len(turn_requests),
+            "moving_turn_frame_count": len(moving_turn_requests),
+            "moving_turn_ratio": (
+                len(moving_turn_requests) / len(turn_requests)
+                if turn_requests else None
+            ),
+            "applied_turn_and_movement_requests": moving_turn_requests,
+            "navigation_reason_counts": navigation_reasons,
+            "neutral_navigation_reason_counts": neutral_navigation_reasons,
             "failures": failures,
             "passed": not failures,
         })
-    checks = [{
-        "name": "b12b_active_target_applies_conditioned_turn_and_movement",
-        "passed": len(evaluated) == 1 and evaluated[0]["passed"],
-    }]
+    by_mode = {row.get("active_mode"): row for row in evaluated}
+    checks = [
+        {
+            "name": "b12b_induced_turn_applies_look_and_movement",
+            "passed": (
+                set(by_mode) == {"induced_turn", "sustained_chase"}
+                and by_mode["induced_turn"]["passed"]
+            ),
+        },
+        {
+            "name": "b12b_sustained_live_target_chase_is_explained",
+            "passed": (
+                set(by_mode) == {"induced_turn", "sustained_chase"}
+                and by_mode["sustained_chase"]["passed"]
+            ),
+        },
+    ]
     return evaluated, checks
 
 
@@ -709,16 +791,19 @@ def _run_active_target(
     control_decision_ms: list[float],
     fixture_events: Path,
 ) -> dict:
+    target_position = trial["target_position"]
+    induced_turn = trial["active_mode"] == "induced_turn"
     # Scan first, then spawn the active entity so the scan cannot move it.
     fixture_writer(
-        _fixture_commands_at(_PLAYER_START, _ACTIVE_TARGET)[:-1], trial,
+        _fixture_commands_at(_PLAYER_START, target_position)[:-1], trial,
     )
     _scan_flat_ground(
         runtime, trial, deadline_ns, fixture_writer, control_decision_ms,
     )
     fixture_writer((
         f"mc2p_c1_spawn {trial['trial_id']} {trial['ai_seed']} "
-        f"{_ACTIVE_TARGET['x']} {_ACTIVE_TARGET['y']} {_ACTIVE_TARGET['z']} isolated",
+        f"{target_position['x']} {target_position['y']} "
+        f"{target_position['z']} isolated",
     ), trial)
     seed_receipt = _await_seed_receipt(fixture_events, trial, deadline_ns)
     seed_valid = validate_seed_receipt(trial, seed_receipt)
@@ -734,7 +819,11 @@ def _run_active_target(
     driver = MovingMeleeDriver(runtime, session)
     profile = BehaviorProfileV0()
     composed_requests: list[int] = []
+    control_requests: list[int] = []
+    target_positions: list[tuple[float, float, float]] = []
     target_shifted = False
+    control_frame_count = 0
+    started_at_ns = time.perf_counter_ns()
     driver.start(CombatTargetV1(
         "b12b-task-" + trial["trial_id"],
         "b12b-combat-goal-" + trial["trial_id"],
@@ -752,8 +841,20 @@ def _run_active_target(
                 ),
             )
             if result is not None and result.decision is not None:
+                control_frame_count += 1
                 action = result.decision.action
-                if (not target_shifted
+                control_requests.append(action.request_sequence_id)
+                observation = runtime.observation
+                own = None if observation is None else observation.self_state.value
+                tracked = None if observation is None else observation.tracked_entity.value
+                if (own is not None and tracked is not None
+                        and tracked.track_id == entity.track_id):
+                    target_positions.append((
+                        own.position.x + tracked.relative_position.x,
+                        own.position.y + tracked.relative_position.y,
+                        own.position.z + tracked.relative_position.z,
+                    ))
+                if (induced_turn and not target_shifted
                         and _nonneutral_movement(action.movement)):
                     fixture_writer((
                         ("tp @e[tag=mc2p-c1-fixture-"
@@ -763,19 +864,34 @@ def _run_active_target(
                 if (_nonneutral_movement(action.movement)
                         and abs(action.look.yaw_delta_degrees) > 0.0):
                     composed_requests.append(action.request_sequence_id)
-            if driver.report.confirmed_hits >= 1 and composed_requests:
-                break
+            if driver.report.confirmed_hits >= 1:
+                if not induced_turn or composed_requests:
+                    break
             if driver.report.terminal:
                 break
             if result is None:
                 time.sleep(.01)
+        target_displacement = 0.0
+        if len(target_positions) >= 2:
+            first = target_positions[0]
+            last = target_positions[-1]
+            target_displacement = math.sqrt(sum(
+                (last[index] - first[index]) ** 2 for index in (0, 1, 2)
+            ))
         return {
             **trial,
             "target_track_id": entity.track_id,
             "seed_receipt": seed_receipt,
             "seed_receipt_valid": seed_valid,
             "target_shifted_after_movement": target_shifted,
+            "control_request_sequences": control_requests,
             "composed_request_sequences": composed_requests,
+            "control_frame_count": control_frame_count,
+            "elapsed_seconds": (
+                time.perf_counter_ns() - started_at_ns
+            ) / 1_000_000_000,
+            "target_position_sample_count": len(target_positions),
+            "target_displacement_blocks": target_displacement,
             "report": asdict(driver.report),
             "runtime_ready": runtime.state is RuntimeStateV1.READY,
         }

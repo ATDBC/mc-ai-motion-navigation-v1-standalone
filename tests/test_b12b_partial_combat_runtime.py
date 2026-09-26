@@ -76,8 +76,11 @@ class B12BPartialCombatRuntimeTests(unittest.TestCase):
             {"forward": 8, "backward": 8, "left": 4, "right": 4},
         )
         self.assertEqual(len(boundaries), 12)
-        self.assertEqual(len(active), 1)
-        self.assertEqual(active[0]["ai_seed"], 51001)
+        self.assertEqual(len(active), 2)
+        self.assertEqual(
+            {(row["active_mode"], row["ai_seed"]) for row in active},
+            {("induced_turn", 51001), ("sustained_chase", 51002)},
+        )
         self.assertEqual(
             sum(row["evidence_source"] == "fabric" for row in boundaries), 8,
         )
@@ -86,7 +89,7 @@ class B12BPartialCombatRuntimeTests(unittest.TestCase):
              if row["evidence_source"] == "runtime"},
             set(B12B_RUNTIME_INJECTIONS),
         )
-        self.assertEqual(len({row["trial_id"] for row in rows}), 37)
+        self.assertEqual(len({row["trial_id"] for row in rows}), 38)
 
     def test_active_target_evaluator_requires_applied_turn_and_movement_same_tick(self):
         trial = next(
@@ -94,7 +97,7 @@ class B12BPartialCombatRuntimeTests(unittest.TestCase):
             if row["classification"] == "active_target"
         )
         request = 31
-        row = {
+        induced = {
             **trial,
             "target_track_id": "entity-active",
             "composed_request_sequences": [request],
@@ -102,16 +105,45 @@ class B12BPartialCombatRuntimeTests(unittest.TestCase):
             "report": {"state": "complete", "confirmed_hits": 1},
             "runtime_ready": True,
         }
-        trace = ({
-            "record_type": "dispatch",
-            "payload": {"decision": {"action": {
-                "request_sequence_id": request,
-                "movement": {"forward": 1, "strafe": 0, "jump": False,
-                             "sneak": False, "sprint": False},
-                "look": {"yaw_delta_degrees": 12.0,
-                         "pitch_delta_degrees": 0.0},
-            }}},
-        },)
+        sustained_trial = next(
+            row for row in b12b_trial_plan(21001)
+            if row.get("active_mode") == "sustained_chase"
+        )
+        sustained = {
+            **sustained_trial,
+            "target_track_id": "entity-active",
+            "control_request_sequences": [request],
+            "composed_request_sequences": [request],
+            "seed_receipt_valid": True,
+            "control_frame_count": 32,
+            "elapsed_seconds": 2.1,
+            "target_displacement_blocks": 1.25,
+            "report": {"state": "complete", "confirmed_hits": 1},
+            "runtime_ready": True,
+        }
+        trace = (
+            {
+                "record_type": "dispatch",
+                "payload": {"decision": {"action": {
+                    "request_sequence_id": request,
+                    "movement": {"forward": 1, "strafe": 0, "jump": False,
+                                 "sneak": False, "sprint": False},
+                    "look": {"yaw_delta_degrees": 12.0,
+                             "pitch_delta_degrees": 0.0},
+                }}},
+            },
+            {
+                "record_type": "navigation_route_decision",
+                "payload": {
+                    "session_id": "b12b-sustained-active-target-01",
+                    "reason_code": "walk_tracking",
+                    "submit_input": True,
+                    "movement": {"forward": 1, "strafe": 0,
+                                 "jump": False, "sneak": False,
+                                 "sprint": False},
+                },
+            },
+        )
         events = (
             {
                 "event": "input_consumed", "request_sequence_id": request,
@@ -130,15 +162,25 @@ class B12BPartialCombatRuntimeTests(unittest.TestCase):
         )
 
         evaluated, checks = evaluate_b12b_active_target_evidence(
-            (row,), trace, events,
+            (induced, sustained), trace, events,
         )
 
-        self.assertTrue(evaluated[0]["passed"])
+        self.assertTrue(all(row["passed"] for row in evaluated))
+        sustained_result = next(
+            row for row in evaluated
+            if row["active_mode"] == "sustained_chase"
+        )
+        self.assertEqual(sustained_result["turn_frame_count"], 1)
+        self.assertEqual(sustained_result["moving_turn_frame_count"], 1)
+        self.assertEqual(
+            sustained_result["navigation_reason_counts"],
+            {"walk_tracking": 1},
+        )
         self.assertTrue(all(check["passed"] for check in checks))
         failed, _ = evaluate_b12b_active_target_evidence(
-            (row,), trace, (events[0],),
+            (induced, sustained), trace, (events[0],),
         )
-        self.assertFalse(failed[0]["passed"])
+        self.assertFalse(all(row["passed"] for row in failed))
 
     def test_positive_evaluator_requires_same_tick_attack_and_bounded_walk_intent(self):
         trial = next(

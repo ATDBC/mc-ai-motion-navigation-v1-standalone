@@ -127,6 +127,9 @@ class MovingMeleeDriver:
         self._reacquire_sequence = 0
         self._reacquire_attempts = 0
         self._gaze = GazeController()
+        self._pursuit_look_source = None
+        self._pursuit_look_sequence = 0
+        self._pursuit_gaze = GazeController()
         self._pending_target: CombatTargetV1 | None = None
         self._pending_approach_handoff: _ApproachHandoff | None = None
         self._pending_approach_reason: str | None = None
@@ -278,6 +281,7 @@ class MovingMeleeDriver:
         assert self._target is not None
         if self._reacquire_source is not None:
             raise ContractViolation("reacquire look must be released before striking")
+        self._release_pursuit_look()
         self._attack_attempt_sequence += 1
         self.strike_driver = MeleeStrikeDriver(
             self.runtime, clock_ns=self._clock, task_deadline_ns=self._deadline_ns,
@@ -320,6 +324,114 @@ class MovingMeleeDriver:
             self.runtime.unregister_ordered_source(self._reacquire_source)
         self._reacquire_source = None
         self._gaze.clear("reacquire_released")
+
+    def _release_pursuit_look(self) -> None:
+        if self._pursuit_look_source is None:
+            return
+        if self.runtime.state is RuntimeStateV1.READY:
+            self.runtime.cancel_source(self._pursuit_look_source.source_id)
+            self.runtime.unregister_ordered_source(self._pursuit_look_source)
+        self._pursuit_look_source = None
+        self._pursuit_gaze.clear("pursuit_look_released")
+
+    def _pursuit_look_proposal(
+        self,
+        deadline_ns: int,
+    ) -> tuple[OrderedIntentV1, ControlFrameProposalV1] | None:
+        assert self._target is not None and self._fact is not None
+        observation = self.runtime.observation
+        own = observation.self_state.value
+        tracked = observation.tracked_entity.value
+        if (own is None or own.eye_height_blocks is None or tracked is None
+                or tracked.track_id != self._target.track_id):
+            return None
+        if self._pursuit_look_source is None:
+            self._pursuit_look_source = self.runtime.register_ordered_source(
+                "moving-melee-pursuit-look"
+            )
+            self._pursuit_look_sequence = 0
+        yaw, pitch = combat_aim_angles(
+            self._fact.relative_position,
+            tracked.bounding_box_size,
+            own.eye_height_blocks,
+        )
+        now = self._clock()
+        view = project_playground_view(
+            observation, now, observation.controller_clock_id,
+        )
+        look = self._pursuit_gaze.command(
+            view, yaw, pitch, now, precise=False,
+        )
+        self._pursuit_look_sequence += 1
+        source = self._pursuit_look_source
+        envelope = OrderedIntentV1(
+            source,
+            self._pursuit_look_sequence,
+            ActionIntentV1(
+                ordered_intent_id(source, self._pursuit_look_sequence),
+                source.source_id,
+                self._target.episode_id,
+                observation.sequence_id,
+                ActionPriorityV0.TASK,
+                now,
+                deadline_ns,
+                look=look,
+                valid_for_ticks=1,
+            ),
+        )
+        return envelope, ControlFrameProposalV1(
+            (envelope,),
+            ObservationRequestV3(
+                "navigation_v1", entity_track_id=self._target.track_id,
+            ),
+        )
+
+    def _tick_visible_approach(
+        self,
+        profile: BehaviorProfileV0,
+        owner_deadline_ns: int,
+    ) -> RuntimeStepResultV1:
+        assert self._target is not None and self.approach_driver is not None
+        now = self._clock()
+        deadline = min(
+            owner_deadline_ns, self._deadline_ns, now + 500_000_000,
+        )
+        if deadline <= now:
+            raise ContractViolation("moving melee pursuit window expired")
+        look = self._pursuit_look_proposal(deadline)
+        if look is None:
+            return self.approach_driver.tick(profile, owner_deadline_ns)
+        envelope, look_proposal = look
+        proposals = self.approach_driver.prepare_proposals(
+            deadline, conditioned_look=envelope,
+        )
+        task = TaskIntentV0(
+            self._target.task_id,
+            "moving_melee_pursuit",
+            json.dumps({
+                "goal_id": self._target.goal_id,
+                "target_revision": self._target.revision,
+                "track_id": self._target.track_id,
+            }, sort_keys=True, separators=(",", ":")),
+            (SuccessCriterionV0(
+                "target_reached", ComparisonOperatorV0.EQUAL, 1, "boolean",
+            ),),
+            100,
+            deadline,
+            True,
+            0.5,
+        )
+        try:
+            result = self.runtime.control_frame(
+                task, profile, deadline,
+                proposals=(look_proposal, *proposals),
+            )
+        except BaseException:
+            if self.approach_driver.has_prepared_frame:
+                self.approach_driver.discard_prepared()
+            raise
+        self.approach_driver.adopt_result(result)
+        return result
 
     def _reacquire_vision(self, profile: BehaviorProfileV0,
                           owner_deadline_ns: int) -> RuntimeStepResultV1:
@@ -504,6 +616,7 @@ class MovingMeleeDriver:
         handoff: _ApproachHandoff | None = None,
     ) -> RuntimeStepResultV1 | None:
         assert self.approach_driver is not None
+        self._release_pursuit_look()
         result = (
             self.approach_driver.stop(profile, reason)
             if advance_runtime
@@ -540,6 +653,7 @@ class MovingMeleeDriver:
             )
         else:
             self.approach_driver = None
+            self._release_pursuit_look()
         if (self._fact is not None and self._engagement is not None
                 and self._engagement.active
                 and self._reapproaches < MAX_REAPPROACHES):
@@ -786,9 +900,12 @@ class MovingMeleeDriver:
         retired_source_ids = tuple(source_id for source_id in (
             old_movement_source_id,
             None if self._reacquire_source is None else self._reacquire_source.source_id,
+            None if self._pursuit_look_source is None
+            else self._pursuit_look_source.source_id,
             None if self.strike_driver is None else self.strike_driver.control_source_id,
         ) if source_id is not None)
         self._release_reacquire()
+        self._release_pursuit_look()
         if self.strike_driver is not None:
             self.strike_driver.interrupt_for_external_motion(
                 profile, event.source.value,
@@ -1072,7 +1189,9 @@ class MovingMeleeDriver:
                     update.goal_state, self._clock(),
                 )
                 self._moving_goal = update
-            result = self.approach_driver.tick(profile, owner_deadline_ns)
+            result = self._tick_visible_approach(
+                profile, owner_deadline_ns,
+            )
             captured, capture_result = self._capture_external_motion(
                 profile, owner_deadline_ns,
             )
@@ -1166,6 +1285,7 @@ class MovingMeleeDriver:
             self._completed_attack_submissions += self.strike_driver.report.attack_submissions
             self.strike_driver = None
         self._release_reacquire()
+        self._release_pursuit_look()
         if self._engagement is not None:
             self._observe(EngagementEventKind.CANCELLED)
         if self.approach_driver is not None:

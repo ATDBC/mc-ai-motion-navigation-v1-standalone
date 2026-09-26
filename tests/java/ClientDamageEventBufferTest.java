@@ -38,6 +38,25 @@ public final class ClientDamageEventBufferTest {
         require(bounded.droppedCount() == 1, "oldest drop was not reported");
         require(bounded.events().getFirst().worldTick() == 21, "wrong event was dropped");
 
+        ClientDamageEventBuffer untracked = new ClientDamageEventBuffer();
+        Object longRunningWorld = new Object();
+        for (int generation = 1; generation <= 70; generation++) {
+            untracked.record(
+                    longRunningWorld, 100 + generation, 9000 + generation,
+                    "minecraft:on_fire", -1, -1);
+            untracked.record(
+                    longRunningWorld, 100 + generation, 1,
+                    "minecraft:player_attack", 1, 1);
+            var sample = untracked.snapshot(
+                    longRunningWorld, generation, 1, id -> null);
+            require(sample.events().size() == 1,
+                    "untracked target hid the self damage event");
+            require(sample.events().getFirst().targetIsSelf(),
+                    "wrong event survived untracked-target filtering");
+            require(sample.droppedCount() == 0,
+                    "untracked targets polluted the bounded-buffer drop count");
+        }
+
         System.out.println("CLIENT_DAMAGE_EVENT_BUFFER_OK");
     }
 }

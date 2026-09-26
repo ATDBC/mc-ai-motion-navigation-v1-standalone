@@ -44,7 +44,7 @@ RUNS = (
     ),
     ("20260925T120057978030Z-c17b889e", "b11", "pass", "passed", None),
     ("20260926T055043431485Z-e2dc4fff", "b12a", "pass", "passed", None),
-    ("20260926T063032338012Z-780e0386", "b12b", "pass", "passed", None),
+    ("20260926T074601049372Z-1e50bcb7", "b12b", "pass", "passed", None),
 )
 
 
@@ -143,10 +143,30 @@ def _make_sources(root: Path) -> None:
                  "passed": True}
                 for index in range(8)
             ]
+            active = [
+                {
+                    "trial_id": "active-target-conditioned-look-01",
+                    "classification": "active_target",
+                    "active_mode": "induced_turn",
+                    "passed": True,
+                },
+                {
+                    "trial_id": "sustained-active-target-01",
+                    "classification": "active_target",
+                    "active_mode": "sustained_chase",
+                    "control_frame_count": 43,
+                    "elapsed_seconds": 2.15,
+                    "target_displacement_blocks": 2.05,
+                    "turn_frame_count": 15,
+                    "moving_turn_ratio": 0.6,
+                    "navigation_reason_counts": {"tracking_fixed_route": 30},
+                    "passed": True,
+                },
+            ]
             _write_json(client / "b12b-partial-combat-runtime.json", {
                 "schema_version": "mc2p.b12b-partial-combat-runtime.v1",
-                "completed_trials": 33,
-                "planned_trials": 33,
+                "completed_trials": 34,
+                "planned_trials": 34,
                 "control_decision_ms": {
                     "count": 889, "p95": 5.0015, "p99": 6.2107,
                 },
@@ -154,10 +174,7 @@ def _make_sources(root: Path) -> None:
                 "trials": positives + boundaries,
             })
             _write_json(client / "b12b-partial-combat-evidence.json", {
-                "trials": positives
-                + [{"trial_id": "active-target", "classification": "active_target",
-                    "passed": True}]
-                + boundaries,
+                "trials": positives + active + boundaries,
                 "checks": [
                     {"name": "same_tick", "passed": True},
                     {"name": "right_target", "passed": True},
@@ -165,14 +182,12 @@ def _make_sources(root: Path) -> None:
             })
             _write_jsonl(
                 client / "b12b-partial-combat-trials.jsonl",
-                positives + [{"trial_id": "active-target", "passed": True}]
-                + boundaries,
+                positives + active + boundaries,
             )
             _write_jsonl(
                 client / "b12b-fixture-commands.jsonl",
                 [{"trial_id": row["trial_id"], "commands": []}
-                 for row in positives + [{"trial_id": "active-target"}]
-                 + boundaries],
+                 for row in positives + active + boundaries],
             )
             for directory in (
                 client / "runtime-trace" / "trace",
