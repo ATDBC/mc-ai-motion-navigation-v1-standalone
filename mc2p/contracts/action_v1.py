@@ -177,6 +177,7 @@ class ActionIntentV1:
     valid_for_ticks: int = 1
     movement_requires_look: bool = False  # Internal arbitration dependency; not a client wire field.
     movement_look_tolerance_degrees: float = 0.0
+    movement_observed_yaw_limit_degrees: float | None = None
     movement_tick_window: MovementTickWindowV1 | None = None
     schema_version: str = field(default="mc2p.action-intent.v1", init=False)
 
@@ -215,6 +216,20 @@ class ActionIntentV1:
             raise ContractViolation("movement look tolerance must be in [0,5] degrees")
         if not self.movement_requires_look and self.movement_look_tolerance_degrees != 0.0:
             raise ContractViolation("only heading-bound movement may tolerate another look")
+        if self.movement_observed_yaw_limit_degrees is not None:
+            require_finite(
+                self.movement_observed_yaw_limit_degrees,
+                "movement observed yaw limit",
+            )
+            if not 0.0 <= self.movement_observed_yaw_limit_degrees <= 5.0:
+                raise ContractViolation(
+                    "movement observed yaw limit must be in [0,5] degrees"
+                )
+            if (self.movement is None or self.movement == MovementV1()
+                    or self.valid_for_ticks != 1):
+                raise ContractViolation(
+                    "observed-yaw-bound movement requires nonneutral one-tick movement"
+                )
         if (self.movement_tick_window is not None
                 and type(self.movement_tick_window) is not MovementTickWindowV1):
             raise ContractViolation("movement tick window must be typed")

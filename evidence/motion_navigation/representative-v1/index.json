@@ -127,8 +127,26 @@
       "recorded_status": "passed",
       "run_id": "20260925T120057978030Z-c17b889e",
       "stage": "b11"
+    },
+    {
+      "archive": "archives/b12b-pass-20260926T025406298506Z-5bf010ce.tar.gz",
+      "archive_sha256": "4c8697a14d2917a48ce902ad778be74ca73710884fbd530089f8c49c5a6a3577",
+      "archive_size_bytes": 478283,
+      "expected": {
+        "failure_message": null,
+        "failure_type": null,
+        "negative_passed": 6,
+        "negative_total": 6,
+        "positive_passed": 24,
+        "positive_total": 24,
+        "trial_rows": 30
+      },
+      "recorded_outcome": "pass",
+      "recorded_status": "passed",
+      "run_id": "20260926T025406298506Z-5bf010ce",
+      "stage": "b12b"
     }
   ],
   "schema_version": "mc2p.public-runtime-evidence.v1",
-  "total_archive_bytes": 15071127
+  "total_archive_bytes": 15549410
 }

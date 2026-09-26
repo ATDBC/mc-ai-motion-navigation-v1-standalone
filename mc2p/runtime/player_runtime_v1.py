@@ -1,5 +1,5 @@
 """Single-writer formal Runtime. V0 key actions have no conversion or fallback here."""
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 import json
 import threading
@@ -7,7 +7,7 @@ import time
 from typing import Callable, TypeVar
 
 from mc2p.contracts.action_v1 import (
-    ActionIntentV1, ActionSnapshotV1, MovementTickWindowV1,
+    ActionIntentV1, ActionSnapshotV1, MovementTickWindowV1, MovementV1,
 )
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.common import ContractViolation, require_nonnegative_int
@@ -284,6 +284,9 @@ class PlayerRuntimeV1:
                    'combat_candidates':'mc2p.combat-candidates.v1',
                    'combat_selection':'mc2p.combat-selection.v1',
                    'combat_skill':'mc2p.combat-skill.v1',
+                   'combat_target_revision':'mc2p.combat-target-revision.v1',
+                   'combat_cancel':'mc2p.combat-cancel.v1',
+                   'attack_attempt':'mc2p.attack-attempt-event.v1',
                    'moving_engagement':'mc2p.moving-engagement.v1',
                    'moving_melee_decision':'mc2p.moving-melee-decision-event.v1',
                    'moving_goal_decision':'mc2p.moving-goal-decision-event.v1',
@@ -383,6 +386,11 @@ class PlayerRuntimeV1:
                         forbidden_actions=task.forbidden_actions)
                 selected_execution_window = self._selected_execution_window(
                     decision, input_execution_window,
+                )
+                decision, selected_execution_window = (
+                    self._guard_selected_execution_window(
+                        decision, selected_execution_window,
+                    )
                 )
                 action = decision.action
                 self._request_sequence += 1
@@ -551,6 +559,59 @@ class PlayerRuntimeV1:
             requested_first_tick=requested_tick,
             latest_allowed_first_tick=latest_tick,
         )
+
+    def _guard_selected_execution_window(
+        self,
+        decision: ArbitrationDecisionV1,
+        execution_window: CandidateExecutionWindow | None,
+    ) -> tuple[ArbitrationDecisionV1, CandidateExecutionWindow | None]:
+        """Narrow a still-valid window or suppress only an expired movement.
+
+        The motion owner normally rejects an expired proof before arbitration.
+        This Runtime check is the final isolation boundary: a stale movement
+        source must not turn one missed tick into a failed Runtime.
+        """
+        if execution_window is None:
+            return decision, None
+        observation = self._observation
+        if type(observation) is not ObservationSnapshotV3:
+            return decision, execution_window
+        own = observation.self_state.value
+        if own is None or own.movement_tick_id is None:
+            return decision, execution_window
+        requested_tick = own.movement_tick_id + 1
+        if requested_tick > execution_window.latest_start_tick:
+            movement_intent = dict(decision.selected_intents).get("movement")
+            suppressed = decision.suppressed_intents
+            if movement_intent is not None:
+                suppressed = tuple(sorted(set(
+                    suppressed
+                    + ((movement_intent, "movement_window_expired"),)
+                )))
+            return replace(
+                decision,
+                action=replace(decision.action, movement=MovementV1()),
+                selected_intents=tuple(
+                    item for item in decision.selected_intents
+                    if item[0] != "movement"
+                ),
+                suppressed_intents=suppressed,
+                movement_tick_window=None,
+            ), None
+        if requested_tick > execution_window.earliest_start_tick:
+            execution_window = CandidateExecutionWindow(
+                requested_tick,
+                execution_window.latest_start_tick,
+            )
+            if decision.movement_tick_window is not None:
+                decision = replace(
+                    decision,
+                    movement_tick_window=MovementTickWindowV1(
+                        requested_tick,
+                        execution_window.latest_start_tick,
+                    ),
+                )
+        return decision, execution_window
 
     @staticmethod
     def _selected_execution_window(

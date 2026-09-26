@@ -18,6 +18,9 @@ class FabricDeploymentProbeTests(unittest.TestCase):
         required = {
             "mc2p/skills/fixed_melee.py",
             "mc2p/skills/fixed_melee_driver.py",
+            "mc2p/skills/melee_strike_driver.py",
+            "mc2p/skills/attack_evidence.py",
+            "mc2p/skills/attack_evidence_replay.py",
             "mc2p/skills/navigation_session_driver.py",
             "mc2p/motion_nav/navigation_session.py",
             "mc2p/motion_nav/known_map_planner.py",
@@ -114,6 +117,60 @@ class FabricDeploymentProbeTests(unittest.TestCase):
         script = ROOT / "scripts/probe_fabric_deployment_observation.py"
         missing_diagnostics = subprocess.run(
             [sys.executable, str(script), "--c1r-control-frame-probe"],
+            cwd=ROOT, capture_output=True, text=True,
+        )
+        self.assertNotEqual(missing_diagnostics.returncode, 0)
+        self.assertIn("requires --time-diagnostics", missing_diagnostics.stderr)
+
+    def test_b12a_source_freeze_and_cli_are_independent(self):
+        from scripts.probe_fabric_deployment_observation import (
+            B12A_ATTACK_EVIDENCE_SOURCES, frozen_deployment_sources,
+        )
+        required = {
+            "scripts/b12_attack_evidence_runtime.py",
+            "scripts/b12a_fabric_runtime.py",
+            "mc2p/skills/attack_evidence.py",
+            "mc2p/skills/attack_evidence_replay.py",
+            "mc2p/skills/melee_strike_driver.py",
+        }
+        self.assertTrue(required <= set(B12A_ATTACK_EVIDENCE_SOURCES))
+        frozen = frozen_deployment_sources(
+            b03_fixed_route_probe=False,
+            b12a_attack_evidence_probe=True,
+        )
+        self.assertTrue(required <= set(frozen))
+        script = ROOT / "scripts/probe_fabric_deployment_observation.py"
+        invalid = subprocess.run(
+            [sys.executable, str(script), "--b12a-attack-evidence-probe",
+             "--c1-fixed-melee-probe"],
+            cwd=ROOT, capture_output=True, text=True,
+        )
+        self.assertNotEqual(invalid.returncode, 0)
+        self.assertIn("mutually exclusive", invalid.stderr)
+
+    def test_b12b_source_freeze_and_cli_require_control_diagnostics(self):
+        from scripts.probe_fabric_deployment_observation import (
+            B12B_PARTIAL_COMBAT_SOURCES, frozen_deployment_sources,
+        )
+        required = {
+            "scripts/b12b_partial_combat_runtime.py",
+            "mc2p/contracts/action_v1.py",
+            "mc2p/runtime/arbiter_v1.py",
+            "mc2p/motion_nav/navigation_session.py",
+            "mc2p/skills/navigation_session_driver.py",
+            "mc2p/skills/engagement_memory.py",
+            "mc2p/skills/moving_melee_driver.py",
+            "mc2p/skills/melee_strike_driver.py",
+        }
+        self.assertTrue(required <= set(B12B_PARTIAL_COMBAT_SOURCES))
+        frozen = frozen_deployment_sources(
+            b03_fixed_route_probe=False,
+            b12b_partial_combat_probe=True,
+        )
+        self.assertTrue(required <= set(frozen))
+        script = ROOT / "scripts/probe_fabric_deployment_observation.py"
+        missing_diagnostics = subprocess.run(
+            [sys.executable, str(script), "--b12b-partial-combat-probe"],
             cwd=ROOT, capture_output=True, text=True,
         )
         self.assertNotEqual(missing_diagnostics.returncode, 0)

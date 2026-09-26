@@ -2,17 +2,19 @@
 
 这个仓库是主项目按固定清单生成的源码快照。它包含当前正式实现、共享契约、配置、测试、Fabric 客户端代码和四类现行设计文档。`EXPORT-METADATA.json` 记录来源提交，`SHA256SUMS.txt` 覆盖导出的每个文件。
 
-当前已完成 B01 至 B10、C1-A 至 C1-C、C1-R 的 R0 至 R6，以及 B11 的固定放置与有限搭桥。最新整改让动作证明的生效窗口随获胜移动意图进入 Runtime，修正了边缘支撑面的高度选择，并把无法定位到相邻 tick 的伤害偏差转入保守恢复。正式 Fabric 结果与适用边界写在 `docs/motion_navigation/acceptance/`。
+当前已完成 B01 至 B10、C1-A 至 C1-C、C1-R 的 R0 至 R6、B11 固定放置与有限搭桥，以及 B12-A、B12-B。B12-A 固定了每次攻击的证据和分类重试。B12-B 让普通地面四方向移动可以在战斗视角稳定时与攻击同帧执行，并补齐遮挡后的导航、补看和权限撤销。动作证明的生效窗口修正和客户端额外推进一个 tick 时的局部安全恢复也已包含。正式 Fabric 结果与适用边界写在 `docs/motion_navigation/acceptance/`。
 
 ## 先读什么
 
 1. `AGENTS.md`
-2. `docs/motion_navigation/stages/B11-world-changing-actions.md`
-3. `docs/motion_navigation/acceptance/B11-world-changing-actions.md`
-4. `docs/motion_navigation/architecture/world-changing-actions-v1.md`
-5. `docs/motion_navigation/decisions/0026-b11-review-hardening-and-control-composition.md`
-6. `docs/motion_navigation/architecture/runtime-navigation-convergence-v1.md`
-7. `docs/motion_navigation/architecture/B10-motion-solving-continuous-execution-v1.md`
+2. `docs/motion_navigation/stages/B12-partial-observation-combat.md`
+3. `docs/motion_navigation/acceptance/B12B-partial-observation-combat-motion.md`
+4. `docs/motion_navigation/architecture/B12B-partial-observation-combat-motion-v1.md`
+5. `docs/motion_navigation/decisions/0031-bounded-ground-movement-under-combat-look.md`
+6. `docs/motion_navigation/acceptance/B12A-attack-evidence-retry.md`
+7. `docs/motion_navigation/architecture/B12-attack-evidence-v1.md`
+8. `docs/motion_navigation/architecture/runtime-navigation-convergence-v1.md`
+9. `docs/motion_navigation/decisions/0028-expired-motion-window-local-recovery.md`
 
 ## 环境
 
@@ -60,10 +62,10 @@ python -m unittest tests.test_c1_melee_evidence tests.test_c1_moving_melee_evide
 python -m unittest tests.test_action_arbiter_v1 tests.test_action_receipt tests.test_player_runtime_v1 tests.test_runtime_failure_disposition tests.test_engagement_memory tests.test_fixed_melee tests.test_fixed_melee_driver tests.test_melee_strike_driver tests.test_moving_melee tests.test_moving_melee_driver tests.test_external_motion_recovery_driver tests.test_c1_navigation_session -v
 ```
 
-运行 B10、B11 的正式探针契约与部署入口检查：
+运行 B10、B11、B12 的正式探针契约与部署入口检查：
 
 ```text
-python -m unittest tests.test_b10_runtime_probe tests.test_b11_world_change_runtime tests.test_fabric_deployment_probe -v
+python -m unittest tests.test_b10_runtime_probe tests.test_b11_world_change_runtime tests.test_b12_attack_evidence_runtime tests.test_b12a_fabric_runtime tests.test_b12a_runtime_injection_acceptance tests.test_b12b_partial_combat_runtime tests.test_b12b_runtime_injection_acceptance tests.test_fabric_deployment_probe -v
 ```
 
 运行不依赖 Minecraft 类库的 Java 控制门禁：
@@ -72,13 +74,13 @@ python -m unittest tests.test_b10_runtime_probe tests.test_b11_world_change_runt
 python -m unittest tests.test_standalone_java_gates -v
 ```
 
-核对七个代表性真实运行批次：
+核对八个代表性真实运行批次：
 
 ```text
 python scripts/public_runtime_evidence.py verify --root evidence/motion_navigation/representative-v1
 ```
 
-前六个批次分别覆盖 B10-C 跨隙、C1-B 移动近战和 C1-C 外力恢复，每类各有一个完整通过批次和一个完整失败批次。第七个批次是 B11 放置与有限搭桥的最新完整通过记录。验证器会检查归档哈希、安全边界、完整试次数量、汇总和失败分类。压缩归档合计不超过 30 MiB。
+前六个批次分别覆盖 B10-C 跨隙、C1-B 移动近战和 C1-C 外力恢复，每类各有一个完整通过批次和一个完整失败批次。第七个批次是 B11 放置与有限搭桥的最新完整通过记录。第八个批次是 B12-B 部分观察下战斗移动的最新完整通过记录，保留四方向移动攻击、遮挡边界、控制事件和分段 Runtime 轨迹。验证器会检查归档哈希、安全边界、完整试次数量、汇总、时延门槛和失败分类。压缩归档合计不超过 30 MiB。
 
 ## 能说明什么
 
@@ -88,11 +90,12 @@ python scripts/public_runtime_evidence.py verify --root evidence/motion_navigati
 - 带速度的一格同高跨隙已在三个入口速度带和四个正方向完成冻结验收；
 - C1 战斗纵切片已覆盖固定目标、移动目标和真实受击后的恢复；
 - B11 已覆盖单块放置、一至三格直桥和十二类边界与反例；
-- 公开仓库附带七个结构化真实运行批次，可以重新统计对应的通过和失败结果。
+- B12-A 已覆盖单次攻击证据和分类重试，B12-B 已覆盖普通地面四方向移动攻击与部分观察边界；
+- 公开仓库附带八个结构化真实运行批次，可以重新统计对应的通过和失败结果。
 
 ## 不能说明什么
 
-这个快照不包含世界存档、完整普通日志、画面、Gradle 缓存、Minecraft 依赖 JAR 或构建产物，因此不能只靠本仓库重跑游戏内正式实验。公开的七个真实批次是经过筛选的结构化轨迹，可以核对历史结果和读取链，但不能替代新的 Fabric 实机运行。其他原始证据仍由主项目保管。
+这个快照不包含世界存档、完整普通日志、画面、Gradle 缓存、Minecraft 依赖 JAR 或构建产物，因此不能只靠本仓库重跑游戏内正式实验。公开的八个真实批次是经过筛选的结构化轨迹，可以核对历史结果和读取链，但不能替代新的 Fabric 实机运行。其他原始证据仍由主项目保管。
 
 未知区域探索、攀爬、游泳、主动 Crawl、特殊地面、任意宽度跨隙和所有动作的带速衔接仍未完成。CraftGround 适配代码为历史兼容保留，后续正式实现与实机验收以独立 Fabric 为准。
 

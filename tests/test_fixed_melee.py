@@ -93,7 +93,7 @@ class FixedMeleePolicyTests(unittest.TestCase):
         )
         self.assertEqual(decision.selected_candidate_id, "wait_hurt_clear")
 
-    def test_later_target_health_loss_confirms_hit_when_hurt_timer_does_not_restart(self):
+    def test_later_health_loss_without_bound_hurt_does_not_confirm_hit(self):
         from mc2p.skills.fixed_melee import FixedMeleePhase
         observation = with_tracked_health(
             targeted_entity_snapshot(sequence=2, hurt=4), 18.0,
@@ -107,7 +107,7 @@ class FixedMeleePolicyTests(unittest.TestCase):
             confirmation_deadline_ns=200_000_000,
         )
 
-        self.assertEqual(decision.selected_candidate_id, "complete")
+        self.assertEqual(decision.selected_candidate_id, "wait_hit")
 
     def test_three_block_coarse_range_defers_to_exact_client_reach_guard(self):
         from mc2p.skills.fixed_melee import FixedMeleePhase

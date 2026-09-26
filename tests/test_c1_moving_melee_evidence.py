@@ -8,6 +8,8 @@ from mc2p.motion_nav.navigation_session import NavigationSessionState
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1
 from mc2p.runtime.trace import trace_projection
 from mc2p.skills.fixed_melee import CombatTargetV1
+from mc2p.skills.attack_evidence import AttackAttemptKeyV1, AttackAttemptOutcome
+from mc2p.skills.attack_evidence_replay import replay_attack_attempt
 from mc2p.skills.melee_strike_driver import MeleeStrikeOutcome
 from mc2p.skills.moving_melee import MovingMeleePhase, decide_moving_melee
 from mc2p.skills.moving_melee_driver import MovingMeleeDriver
@@ -96,8 +98,20 @@ class C1MovingMeleeEvidenceTests(unittest.TestCase):
         self.assertFalse(result["simulated_entity_ai"])
 
     def test_cancelled_engagement_can_replay_a_decision_without_a_position_fact(self):
-        result = _replay_rows(cancelled_after_attack_rows())
+        rows = cancelled_after_attack_rows()
+        result = _replay_rows(rows)
         self.assertTrue(result["passed"], result)
+        event = next(row["payload"] for row in rows
+                     if row["record_type"] == "attack_attempt")
+        key = AttackAttemptKeyV1(
+            event["episode_id"], event["task_id"], event["goal_id"],
+            event["target_revision"], event["track_id"],
+            event["attempt_sequence"],
+        )
+        self.assertIs(
+            replay_attack_attempt(rows, key).outcome,
+            AttackAttemptOutcome.COMMAND_CORRELATED_HIT,
+        )
 
     def test_tampered_moving_decision_is_attributed(self):
         rows = deepcopy(actual_rows())

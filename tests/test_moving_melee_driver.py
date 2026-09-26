@@ -10,8 +10,10 @@ from mc2p.contracts.reset import ResetRequestV0
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1
 from mc2p.runtime.player_runtime_v1 import RuntimeStateV1
 from mc2p.motion_nav.motion_residual import MotionResidualResult, MotionResidualStatus
+from mc2p.motion_nav.navigation_session import NavigationSessionState
 from mc2p.skills.fixed_melee import CombatTargetV1
 from mc2p.skills.engagement_memory import EngagementEventKind
+from mc2p.skills.attack_evidence import AttackTaskOutcome
 from mc2p.skills.melee_strike_driver import MeleeStrikeDriver, MeleeStrikeOutcome
 from mc2p.skills.moving_melee_driver import MAX_REAPPROACHES, MovingMeleeDriver
 from tests.navigation_session_fixtures import FakeNavigationSession
@@ -124,6 +126,34 @@ class MovingMeleeDriverTests(unittest.TestCase):
         self.assertFalse(driver._engagement.awaiting_continuity_reanchor)
         self.assertIsNotNone(driver._fact)
 
+    def test_approach_that_fails_during_start_is_retired_before_retry(self):
+        class StartFailedNavigationSession(FakeNavigationSession):
+            def start_goal(self, goal_id, revision, goal_state, frame, **kwargs):
+                super().start_goal(goal_id, revision, goal_state, frame, **kwargs)
+                self.state = NavigationSessionState.FAILED
+                self.reason = "goal_surface_unavailable"
+
+        self.runtime.close()
+        self.backend = MeleeBackend(self.clock, distance=5.0)
+        self.runtime = PlayerRuntimeV1(self.backend, self.trace, lambda: self.clock[0])
+        self.assertTrue(self.runtime.reset(
+            ResetRequestV0("reset-start-failed", "episode-1", "test", 1,
+                           5_000_000_000)
+        ).succeeded)
+        session = StartFailedNavigationSession()
+        driver = MovingMeleeDriver(
+            self.runtime, session, clock_ns=lambda: self.clock[0],
+        )
+        driver.start(self.target, self.clock[0])
+        failed_owner = driver.approach_driver
+
+        result = self.tick(driver)
+
+        self.assertIsNone(result)
+        self.assertIsNone(failed_owner.source)
+        self.assertIsNot(driver.approach_driver, failed_owner)
+        self.assertEqual(driver.report.state, "pursuing")
+
     def test_hidden_engaged_target_refreshes_before_starting_another_strike(self):
         driver = self.driver()
         driver.start(self.target, self.clock[0])
@@ -138,6 +168,37 @@ class MovingMeleeDriverTests(unittest.TestCase):
         self.backend.visible = True
         self.tick(driver)
         self.assertIsNone(driver._reacquire_source)
+
+    def test_hidden_engaged_target_that_moves_out_of_range_resumes_navigation(self):
+        class FailFirstApproachSession(FakeNavigationSession):
+            def start_goal(self, goal_id, revision, goal_state, frame, **kwargs):
+                super().start_goal(goal_id, revision, goal_state, frame, **kwargs)
+                if len(self.starts) == 1:
+                    self.state = NavigationSessionState.FAILED
+                    self.reason = "goal_surface_unavailable"
+
+        session = FailFirstApproachSession()
+        driver = MovingMeleeDriver(
+            self.runtime, session, clock_ns=lambda: self.clock[0],
+        )
+        driver.start(self.target, self.clock[0])
+        while driver.report.confirmed_hits < 1:
+            self.tick(driver)
+        self.backend.hurt = 0
+        self.backend.visible = False
+
+        self.tick(driver)
+        self.assertIsNotNone(driver._reacquire_source)
+
+        self.backend.distance = 6.0
+        self.tick(driver)
+        self.tick(driver)
+
+        self.assertIsNone(driver._reacquire_source)
+        self.assertIsNotNone(driver.approach_driver)
+        self.assertEqual(len(session.starts) + len(session.updates), 2)
+        self.assertEqual(session.state, NavigationSessionState.EXECUTING)
+        self.assertEqual(driver.report.state, "pursuing")
 
     def test_transient_target_gap_inside_strike_returns_to_reacquisition(self):
         driver = self.driver()
@@ -618,6 +679,54 @@ class MovingMeleeDriverTests(unittest.TestCase):
         self.assertIn("look", dict(attack.decision.selected_intents))
         self.assertIsNotNone(driver.approach_driver)
 
+    def test_stable_combat_look_keeps_each_ground_travel_axis(self):
+        for movement in (
+            MovementV1(forward=1),
+            MovementV1(strafe=1),
+            MovementV1(strafe=-1),
+            MovementV1(forward=-1),
+        ):
+            with self.subTest(movement=movement):
+                self.runtime.close()
+                self.backend = MeleeBackend(self.clock, distance=5.0)
+                self.runtime = PlayerRuntimeV1(
+                    self.backend, self.trace, lambda: self.clock[0],
+                )
+                self.assertTrue(self.runtime.reset(
+                    ResetRequestV0(
+                        "reset-combat-axis", "episode-1", "test", 1,
+                        5_000_000_000,
+                    )
+                ).succeeded)
+                session = FakeNavigationSession()
+                session.movement = movement
+                session.look = None
+                session.movement_observed_yaw_limit_degrees = 5.0
+                driver = MovingMeleeDriver(
+                    self.runtime, session, clock_ns=lambda: self.clock[0],
+                )
+                driver.start(self.target, self.clock[0])
+                self.backend.distance = 2.5
+
+                attack = None
+                for _ in range(8):
+                    if driver.report.terminal:
+                        break
+                    result = self.tick(driver)
+                    if (result is not None and isinstance(
+                            result.decision.action.operation, AttackEntityV1)):
+                        attack = result
+                        break
+
+                self.assertIsNotNone(attack)
+                self.assertEqual(attack.decision.action.movement, movement)
+                self.assertIn("movement", dict(attack.decision.selected_intents))
+                self.assertIsInstance(
+                    attack.decision.action.operation, AttackEntityV1,
+                )
+                self.assertEqual(attack.decision.action.look, LookV1())
+                self.assertEqual(self.runtime.state, RuntimeStateV1.READY)
+
     def test_target_leaving_range_during_composed_strike_reuses_active_approach(self):
         self.runtime.close()
         self.backend = MeleeBackend(self.clock, distance=5.0)
@@ -699,6 +808,10 @@ class MovingMeleeDriverTests(unittest.TestCase):
         self.assertEqual((driver.report.state, driver.report.reason),
                          ("needs_task_decision", "hit_confirmation_uncertain"))
         self.assertEqual(driver.report.attack_submissions, 2)
+        self.assertIs(
+            driver.report.task_outcome,
+            AttackTaskOutcome.CONFIRMATION_RETRY_EXHAUSTED,
+        )
 
     def test_operation_rejection_retries_once_then_returns_to_task_policy(self):
         driver = self.driver()
@@ -716,6 +829,80 @@ class MovingMeleeDriverTests(unittest.TestCase):
         )
         self.assertEqual(driver.report.attack_submissions, 2)
         self.assertEqual(self.runtime.state.value, "ready")
+        self.assertIs(
+            driver.report.task_outcome,
+            AttackTaskOutcome.GATE_RETRY_EXHAUSTED,
+        )
+
+    def test_gate_rejection_and_confirmation_timeout_do_not_share_budget(self):
+        driver = self.driver()
+        driver.start(self.target, self.clock[0])
+        self.backend.operation_reject_reason = "entity_target_mismatch"
+        for _ in range(30):
+            self.tick(driver)
+            if driver.report.attack_retry.gate_rejections_total == 1:
+                break
+
+        self.backend.operation_reject_reason = None
+        self.backend.confirm_hit = False
+        self.backend.hurt = 0
+        for _ in range(60):
+            self.tick(driver)
+            if driver.report.attack_retry.confirmation_timeouts_total == 1:
+                break
+
+        self.assertFalse(driver.report.terminal)
+        self.assertIsNone(driver.report.task_outcome)
+        self.assertEqual(
+            (driver.report.attack_retry.gate_rejections_total,
+             driver.report.attack_retry.confirmation_timeouts_total),
+            (1, 1),
+        )
+        self.assertEqual(
+            (driver.report.attack_retry.consecutive_gate_rejections,
+             driver.report.attack_retry.consecutive_confirmation_timeouts),
+            (0, 1),
+        )
+
+    def test_confirmed_hit_clears_streak_but_keeps_failure_history(self):
+        driver = self.driver()
+        driver.start(self.target, self.clock[0])
+        self.backend.operation_reject_reason = "entity_target_mismatch"
+        for _ in range(30):
+            self.tick(driver)
+            if driver.report.attack_retry.gate_rejections_total == 1:
+                break
+
+        self.backend.operation_reject_reason = None
+        self.backend.confirm_hit = True
+        self.backend.hurt = 0
+        for _ in range(30):
+            self.tick(driver)
+            if driver.report.confirmed_hits == 1:
+                break
+
+        retry = driver.report.attack_retry
+        self.assertEqual(retry.gate_rejections_total, 1)
+        self.assertEqual(retry.confirmed_hits_total, 1)
+        self.assertEqual(retry.consecutive_gate_rejections, 0)
+        self.assertIsNone(driver.report.task_outcome)
+
+    def test_input_failures_have_a_separate_typed_budget(self):
+        driver = self.driver()
+        driver.start(self.target, self.clock[0])
+        self.backend.reject_reason = "backend_rejected"
+        for _ in range(80):
+            if driver.report.terminal:
+                break
+            self.tick(driver)
+
+        self.assertEqual(driver.report.state, "needs_task_decision")
+        self.assertIs(
+            driver.report.task_outcome,
+            AttackTaskOutcome.INPUT_RETRY_EXHAUSTED,
+        )
+        self.assertEqual(driver.report.attack_retry.input_failures_total, 2)
+        self.assertEqual(self.runtime.state, RuntimeStateV1.READY)
 
 
 if __name__ == "__main__":

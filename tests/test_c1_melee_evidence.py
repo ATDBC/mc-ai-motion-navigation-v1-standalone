@@ -14,6 +14,8 @@ from mc2p.runtime.segmented_trace import (
     SegmentedJsonlWriter, SegmentedTraceWriter, iter_segmented_jsonl,
 )
 from mc2p.skills.fixed_melee import CombatTargetV1
+from mc2p.skills.attack_evidence import AttackAttemptKeyV1, AttackAttemptOutcome
+from mc2p.skills.attack_evidence_replay import replay_attack_attempt
 from mc2p.skills.fixed_melee_driver import FixedMeleeDriver
 from tests.navigation_session_fixtures import FakeNavigationSession
 from tests.test_fixed_melee_driver import MeleeBackend, TRACK
@@ -57,10 +59,23 @@ class C1MeleeEvidenceTests(unittest.TestCase):
     def test_complete_driver_trace_replays_the_shared_policy(self):
         from scripts.c1_melee_evidence import replay_c1_melee
         with TemporaryDirectory() as tmp:
-            result = replay_c1_melee(self.make_trace(Path(tmp)))
+            trace = self.make_trace(Path(tmp))
+            rows = list(iter_segmented_jsonl(trace))
+            result = replay_c1_melee(trace)
         self.assertTrue(result["passed"], result)
         self.assertEqual(result["replayed_decisions"], 2)
         self.assertIsNone(result["earliest_failure_layer"])
+        event = next(row["payload"] for row in rows
+                     if row["record_type"] == "attack_attempt")
+        key = AttackAttemptKeyV1(
+            event["episode_id"], event["task_id"], event["goal_id"],
+            event["target_revision"], event["track_id"],
+            event["attempt_sequence"],
+        )
+        self.assertIs(
+            replay_attack_attempt(rows, key).outcome,
+            AttackAttemptOutcome.COMMAND_CORRELATED_HIT,
+        )
 
     def test_each_tamper_is_attributed_to_its_earliest_layer(self):
         from scripts.c1_melee_evidence import replay_c1_melee

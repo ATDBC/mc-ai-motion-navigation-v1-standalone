@@ -36,6 +36,7 @@ class _GapRuntimeBackend:
     def __init__(
         self, clock, *, change_landing_on_jump: bool = False,
         apply_jump_one_tick_late: bool = False,
+        extra_tick_after_second_airborne_command: bool = False,
     ) -> None:
         self.clock = clock
         self.sequence = 0
@@ -43,6 +44,11 @@ class _GapRuntimeBackend:
         self.airborne = False
         self.change_landing_on_jump = change_landing_on_jump
         self.apply_jump_one_tick_late = apply_jump_one_tick_late
+        self.extra_tick_after_second_airborne_command = (
+            extra_tick_after_second_airborne_command
+        )
+        self.airborne_commands = 0
+        self.extra_tick_done = False
         self.landing_present = True
         self.actions: list[ActionSnapshotV1] = []
 
@@ -119,6 +125,32 @@ class _GapRuntimeBackend:
             "sneak": action.movement.sneak,
             "sprint": action.movement.sprint,
         }] if active else [])
+        if active and self.airborne:
+            self.airborne_commands += 1
+        if (
+            self.extra_tick_after_second_airborne_command
+            and self.airborne_commands == 2
+            and not self.extra_tick_done
+        ):
+            self.extra_tick_done = True
+            self.movement_tick += 1
+            observation = replace(
+                self.observation(request_sequence_id=action.request_sequence_id),
+                episode_id=action.episode_id,
+            )
+            applications.append({
+                "schema_version": "mc2p.input-application.v1",
+                "movement_tick_id": self.movement_tick,
+                "episode_id": action.episode_id,
+                "request_sequence_id": action.request_sequence_id,
+                "sampled_at_jvm_ns": self.movement_tick,
+                "state": "lease_exhausted",
+                "forward": 0.0,
+                "strafe": 0.0,
+                "jump": False,
+                "sneak": False,
+                "sprint": False,
+            })
         receipt = behavior_receipt_from_mapping({
             **receipt_value(
                 episode_id=action.episode_id,
@@ -156,12 +188,16 @@ class RuntimeVerifiedMotionHandoffTests(unittest.TestCase):
     def _running_gap(
         self, *, change_landing_on_jump=False,
         apply_jump_one_tick_late=False,
+        extra_tick_after_second_airborne_command=False,
     ):
         clock = [100_000_000]
         backend = _GapRuntimeBackend(
             clock,
             change_landing_on_jump=change_landing_on_jump,
             apply_jump_one_tick_late=apply_jump_one_tick_late,
+            extra_tick_after_second_airborne_command=(
+                extra_tick_after_second_airborne_command
+            ),
         )
         runtime = PlayerRuntimeV1(backend, _RecordingTrace(), lambda: clock[0])
         reset = runtime.reset(ResetRequestV0(
@@ -246,6 +282,31 @@ class RuntimeVerifiedMotionHandoffTests(unittest.TestCase):
         self.assertEqual(
             record.latest_allowed_first_tick,
             record.requested_first_tick + 1,
+        )
+
+    def test_extra_client_tick_during_jump_recovers_without_failing_runtime(self):
+        clock, backend, runtime, session, driver = self._running_gap(
+            extra_tick_after_second_airborne_command=True,
+        )
+        self.addCleanup(runtime.close)
+        self.addCleanup(session.close)
+
+        applied_then_skipped = driver.tick(
+            BehaviorProfileV0(), clock[0] + 500_000_000,
+        )
+        recovered = driver.tick(
+            BehaviorProfileV0(), clock[0] + 500_000_000,
+        )
+
+        self.assertIsNone(applied_then_skipped.report.failure)
+        self.assertIsNone(recovered.report.failure)
+        self.assertEqual(runtime.state.value, "ready")
+        self.assertNotEqual(driver.state, "failed")
+        self.assertIsNotNone(driver.source)
+        self.assertEqual(recovered.decision.action.movement, MovementV1())
+        self.assertEqual(
+            session.report.reason,
+            "verified_command_window_expired_retain_landing",
         )
 
 

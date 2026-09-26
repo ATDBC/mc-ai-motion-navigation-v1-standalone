@@ -78,6 +78,76 @@ class FormalArbiterTests(unittest.TestCase):
                 self.assertEqual(result.action.look, values.LookV1(combat_yaw, -3))
                 self.assertIsInstance(result.action.operation, values.AttackEntityV1)
 
+    def test_ground_movement_can_keep_observed_heading_under_an_alternate_look(self):
+        movements = (
+            values.MovementV1(forward=1),
+            values.MovementV1(strafe=1),
+            values.MovementV1(strafe=-1),
+            values.MovementV1(forward=-1),
+        )
+        for movement in movements:
+            with self.subTest(movement=movement):
+                self.arbiter.clear()
+                self.arbiter.submit(self.intent(
+                    "navigation", movement=movement,
+                    movement_observed_yaw_limit_degrees=5.0,
+                ))
+                self.arbiter.submit(self.intent(
+                    "combat", look=values.LookV1(2, -3),
+                    operation=values.AttackEntityV1("entity-session-7"),
+                    priority=ActionPriorityV0.PLAYER,
+                ))
+
+                result = self.resolve()
+
+                self.assertEqual(result.action.movement, movement)
+                self.assertEqual(result.action.look, values.LookV1(2, -3))
+                self.assertIsInstance(result.action.operation, values.AttackEntityV1)
+
+    def test_large_alternate_turn_still_suppresses_heading_bound_movement(self):
+        window = values.MovementTickWindowV1(11, 12)
+        self.arbiter.submit(self.intent(
+            "navigation", movement=values.MovementV1(strafe=1),
+            movement_observed_yaw_limit_degrees=5.0,
+            movement_tick_window=window,
+        ))
+        self.arbiter.submit(self.intent(
+            "combat", look=values.LookV1(5.1, 0),
+            priority=ActionPriorityV0.PLAYER,
+        ))
+
+        result = self.resolve()
+
+        self.assertEqual(result.action.movement, values.MovementV1())
+        self.assertEqual(result.action.look, values.LookV1(5.1, 0))
+        self.assertIsNone(result.movement_tick_window)
+        self.assertIn(
+            ("navigation", "observed_yaw_limit_exceeded"),
+            result.suppressed_intents,
+        )
+
+    def test_observed_yaw_bound_requires_fresh_one_tick_movement(self):
+        for kwargs in (
+            {"look": values.LookV1(), "movement_observed_yaw_limit_degrees": 5.0},
+            {"movement": values.MovementV1(forward=1), "valid_for_ticks": 2,
+             "movement_observed_yaw_limit_degrees": 5.0},
+            {"movement": values.MovementV1(forward=1),
+             "movement_observed_yaw_limit_degrees": 5.1},
+        ):
+            with self.subTest(kwargs=kwargs), self.assertRaises(ContractViolation):
+                self.intent("invalid-yaw-bound", **kwargs)
+
+        self.arbiter.submit(self.intent(
+            "stale-navigation", movement=values.MovementV1(forward=1),
+            movement_observed_yaw_limit_degrees=5.0,
+        ))
+        stale = self.resolve(observation=1)
+        self.assertEqual(stale.action.movement, values.MovementV1())
+        self.assertIn(
+            ("stale-navigation", "movement_observation_stale"),
+            stale.suppressed_intents,
+        )
+
     def test_heading_binding_requires_both_groups_and_one_tick(self):
         for kwargs in ({"movement": values.MovementV1()}, {"look": values.LookV1()},
                        {"movement": values.MovementV1(), "look": values.LookV1(), "valid_for_ticks": 2}):

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+import math
 from pathlib import Path
 import time
 import unittest
@@ -377,6 +378,10 @@ class NavigationSessionTests(unittest.TestCase):
         self.assertEqual(
             proposal.control_frame.intents[0].intent.movement.forward, 1,
         )
+        self.assertEqual(
+            proposal.control_frame.intents[0].intent.movement_observed_yaw_limit_degrees,
+            5.0,
+        )
         self.assertEqual(proposal.report.route_id, session.active_route.route_id)
 
         polls_after_admission = planner.polls
@@ -387,6 +392,48 @@ class NavigationSessionTests(unittest.TestCase):
             planner.polls, polls_after_admission,
             "an admitted route does not poll a planner with no pending request",
         )
+
+    def test_walk_recomputes_all_four_ground_axes_from_the_observed_yaw(self):
+        world = _known_world({
+            (-1, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+            (1, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        start, _, goal = _nodes(world, (-1, 0, 1))
+        expected_by_yaw = (
+            (0.0, MovementV1(strafe=1)),
+            (math.pi / 2, MovementV1(forward=-1)),
+            (math.pi, MovementV1(strafe=-1)),
+            (math.pi * 1.5, MovementV1(forward=1)),
+        )
+
+        for index, (yaw, expected) in enumerate(expected_by_yaw):
+            with self.subTest(yaw=yaw):
+                initial = frame(world, index, start.position, yaw=yaw)
+                request = SurfacePlanningRequest(
+                    index + 10, f"axis-request-{index}",
+                    f"axis-goal-{index}", 1, world.session.value,
+                    start.node_id, goal.node_id,
+                    goal_state=_goal(goal.position),
+                )
+                session = NavigationSession(
+                    f"axis-session-{index}", self.profiles(),
+                    planner_worker=_InlinePlanner(),
+                    clock_ns=lambda: 1_000_000_000,
+                )
+                session.bind_source(_source())
+                try:
+                    session.start(request, initial)
+                    proposal = session.propose(initial, None, 2_000_000_000)
+                    intent = proposal.control_frame.intents[0].intent
+
+                    self.assertEqual(intent.movement, expected)
+                    self.assertEqual(intent.valid_for_ticks, 1)
+                    self.assertEqual(
+                        intent.movement_observed_yaw_limit_degrees, 5.0,
+                    )
+                finally:
+                    session.close()
 
     def test_known_route_is_not_blocked_by_irrelevant_unknown_scope_cell(self):
         world, irrelevant_unknown = _known_corridor_with_one_irrelevant_unknown()
@@ -490,7 +537,9 @@ class NavigationSessionTests(unittest.TestCase):
         proposal = session.propose(initial, None, 2_000_000_000)
 
         self.assertIs(proposal.report.state, NavigationSessionState.EXECUTING)
-        self.assertTrue(proposal.control_frame.intents[0].intent.movement.forward)
+        step_intent = proposal.control_frame.intents[0].intent
+        self.assertTrue(step_intent.movement.forward)
+        self.assertIsNone(step_intent.movement_observed_yaw_limit_degrees)
         from mc2p.motion_nav.action_route import StepSegment
         self.assertIs(type(session.active_route.action_route.actions[0]), StepSegment)
 
@@ -711,6 +760,10 @@ class NavigationSessionTests(unittest.TestCase):
         self.assertTrue(saw_motion_wait)
         self.assertTrue(proposal.route_decision.submit_input)
         self.assertTrue(proposal.control_frame.intents[0].intent.movement.jump)
+        self.assertEqual(
+            proposal.control_frame.intents[0].intent.movement_observed_yaw_limit_degrees,
+            None,
+        )
         session.close()
 
     def test_verified_motion_without_current_anchor_keeps_landing_owner(self):

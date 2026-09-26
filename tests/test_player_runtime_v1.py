@@ -4,7 +4,7 @@ import unittest
 from mc2p.contracts.action import ActionPriorityV0, ActionSnapshotV0
 from mc2p.contracts.action_v1 import (
     ActionIntentV1, ActionSnapshotV1, AttackEntityV1, LookV1, MovementV1,
-    OpenInventoryV1,
+    MovementTickWindowV1, OpenInventoryV1,
 )
 from mc2p.contracts.action_receipt import (
     ClientBehaviorReceiptV2, behavior_receipt_from_mapping,
@@ -217,6 +217,47 @@ class RuntimeV1Tests(unittest.TestCase):
         self.assertIsNotNone(record)
         self.assertEqual(record.requested_first_tick, 2)
         self.assertEqual(record.latest_allowed_first_tick, 3)
+
+    def test_v3_runtime_suppresses_expired_movement_window_without_failing(self):
+        backend = V3WorldBackend()
+        runtime = PlayerRuntimeV1(
+            backend, legacy._RecordingTrace(), clock_ns=lambda: 10,
+        )
+        reset = runtime.reset(ResetRequestV0(
+            "reset-v3-stale-window", "episode-v3-world", "test", 1, 1_000,
+        ))
+        self.assertTrue(reset.succeeded)
+        self.addCleanup(runtime.close)
+        runtime.submit_intent(ActionIntentV1(
+            "stale-movement",
+            "navigation",
+            "episode-v3-world",
+            runtime.observation.sequence_id,
+            ActionPriorityV0.TASK,
+            10,
+            900,
+            movement=MovementV1(forward=1),
+            look=LookV1(5.0, 0.0),
+            movement_tick_window=MovementTickWindowV1(1, 1),
+        ))
+
+        result = runtime.step(
+            legacy._task(), BehaviorProfileV0(), 1_000,
+        )
+
+        self.assertIsNone(result.report.failure)
+        self.assertEqual(runtime.state.value, "ready")
+        self.assertEqual(result.decision.action.movement, MovementV1())
+        self.assertEqual(result.decision.action.look, LookV1(5.0, 0.0))
+        self.assertIn(
+            ("look", "stale-movement"),
+            result.decision.selected_intents,
+        )
+        self.assertIsNone(result.decision.movement_tick_window)
+        self.assertIn(
+            ("stale-movement", "movement_window_expired"),
+            result.decision.suppressed_intents,
+        )
 
     def test_async_evidence_failure_keeps_current_control_and_backend(self):
         self.runtime.submit_intent(self.intent(movement=MovementV1(forward=1)))
@@ -694,6 +735,8 @@ class RuntimeV1Tests(unittest.TestCase):
             ("combat_candidates", "mc2p.combat-candidates.v1"),
             ("combat_selection", "mc2p.combat-selection.v1"),
             ("combat_skill", "mc2p.combat-skill.v1"),
+            ("combat_target_revision", "mc2p.combat-target-revision.v1"),
+            ("combat_cancel", "mc2p.combat-cancel.v1"),
         ):
             with self.subTest(kind=kind):
                 self.runtime.record_task_event(kind, {
@@ -701,8 +744,11 @@ class RuntimeV1Tests(unittest.TestCase):
                     "episode_id": "episode-1",
                 })
         self.assertEqual(
-            [kind for kind, _ in self.trace.records[-4:]],
-            ["combat_assessment", "combat_candidates", "combat_selection", "combat_skill"],
+            [kind for kind, _ in self.trace.records[-6:]],
+            [
+                "combat_assessment", "combat_candidates", "combat_selection",
+                "combat_skill", "combat_target_revision", "combat_cancel",
+            ],
         )
 
     def test_system_interrupt_seals_inflight_step_reset_and_intent_trace(self):

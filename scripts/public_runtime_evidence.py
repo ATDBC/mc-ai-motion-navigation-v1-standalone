@@ -85,6 +85,10 @@ RUN_SPECS = (
         "20260925T120057978030Z-c17b889e", "b11", "pass", "passed",
         None, None, 84, 60, 60, 24, 24,
     ),
+    RunSpec(
+        "20260926T025406298506Z-5bf010ce", "b12b", "pass", "passed",
+        None, None, 30, 24, 24, 6, 6,
+    ),
 )
 
 _SENSITIVE_MARKERS = (
@@ -146,7 +150,24 @@ def _scan_public_bytes(path: Path) -> None:
 def _source_paths(run: Path, spec: RunSpec) -> tuple[Path, ...]:
     relative = [Path("result.json")]
     client = Path("client-0")
-    if spec.stage == "b11":
+    if spec.stage == "b12b":
+        relative.extend((
+            client / "b12b-partial-combat-manifest.json",
+            client / "b12b-partial-combat-runtime.json",
+            client / "b12b-partial-combat-evidence.json",
+            client / "b12b-partial-combat-trials.jsonl",
+            client / "b12b-fixture-commands.jsonl",
+        ))
+        for directory in (
+            run / client / "runtime-trace" / "trace",
+            run / client / "control-events",
+        ):
+            relative.extend(
+                path.relative_to(run)
+                for path in sorted(directory.glob("*"))
+                if path.is_file()
+            )
+    elif spec.stage == "b11":
         relative.extend((
             client / "trace.jsonl",
             client / "b11-summary.json",
@@ -231,6 +252,48 @@ def _count_jsonl(path: Path) -> int:
 
 def _check_source_summary(run: Path, spec: RunSpec) -> None:
     client = run / "client-0"
+    if spec.stage == "b12b":
+        summary = _load_json(
+            client / "b12b-partial-combat-runtime.json", "B12-B summary",
+        )
+        evidence = _load_json(
+            client / "b12b-partial-combat-evidence.json", "B12-B evidence",
+        )
+        positives = evidence.get("trials")
+        boundaries = summary.get("evaluated_boundaries")
+        timing = summary.get("control_decision_ms")
+        checks = evidence.get("checks")
+        if (
+            summary.get("completed_trials") != spec.trial_rows
+            or summary.get("planned_trials") != spec.trial_rows
+            or type(positives) is not list
+            or len(positives) != spec.positive_total
+            or any(type(row) is not dict or row.get("passed") is not True
+                   for row in positives)
+            or type(boundaries) is not list
+            or len(boundaries) != spec.negative_total
+            or any(type(row) is not dict or row.get("passed") is not True
+                   for row in boundaries)
+            or type(checks) is not list
+            or not checks
+            or any(type(check) is not dict or check.get("passed") is not True
+                   for check in checks)
+            or type(timing) is not dict
+            or not isinstance(timing.get("p95"), (int, float))
+            or not isinstance(timing.get("p99"), (int, float))
+            or timing["p95"] > 8.0
+            or timing["p99"] > 15.0
+        ):
+            raise EvidenceViolation(
+                f"run {spec.run_id} B12-B summary differs from frozen acceptance"
+            )
+        count = _count_jsonl(client / "b12b-partial-combat-trials.jsonl")
+        if count != spec.trial_rows:
+            raise EvidenceViolation(
+                f"run {spec.run_id} has {count} B12-B trials, "
+                f"expected {spec.trial_rows}"
+            )
+        return
     if spec.stage == "b11":
         summary = _load_json(client / "b11-summary.json", "B11 summary")
         expected = {
@@ -372,7 +435,7 @@ def _write_archive(archive: Path, run: Path, spec: RunSpec, paths: Iterable[Path
 def _readme() -> str:
     return """# 代表性真实运行证据
 
-这里保留 B10-C 跨隙、C1-B 移动近战和 C1-C 外力恢复各一个完整通过批次、一个完整失败批次，并加入 B11 放置与有限搭桥的最新完整通过批次。B10-C 通过批次保留 210 个协调控制帧、10 个协调试次、142 个求解试次和物理 tick 片段，可以直接核对输入是否晚于许可窗口；不复制近 500 MB 的完整 trace。归档只含结构化结果、试次清单和轨迹，不含 Minecraft/Fabric JAR、世界、普通日志、画面或缓存。
+这里保留 B10-C 跨隙、C1-B 移动近战和 C1-C 外力恢复各一个完整通过批次、一个完整失败批次，并加入 B11 放置与有限搭桥、B12-B 部分观察下战斗移动的最新完整通过批次。B10-C 通过批次保留 210 个协调控制帧、10 个协调试次、142 个求解试次和物理 tick 片段，可以直接核对输入是否晚于许可窗口。B12-B 批次保留 30 个 Fabric 试次、控制事件和分段 Runtime 轨迹，可以重新核对四方向移动攻击、遮挡边界和控制时延。不复制普通日志、画面或缓存。
 
 运行：
 
@@ -640,7 +703,52 @@ def _verify_archive(root: Path, entry: Mapping[str, object], spec: RunSpec) -> N
             if type(result) is not dict:
                 raise EvidenceViolation(f"run {spec.run_id} result.json is missing")
             _check_recorded_result(result, spec)
-            if spec.stage == "b11":
+            if spec.stage == "b12b":
+                summary = parsed.get(
+                    "client-0/b12b-partial-combat-runtime.json"
+                )
+                evidence = parsed.get(
+                    "client-0/b12b-partial-combat-evidence.json"
+                )
+                if type(summary) is not dict or type(evidence) is not dict:
+                    raise EvidenceViolation(
+                        f"run {spec.run_id} B12-B summary or evidence is missing"
+                    )
+                positives = evidence.get("trials")
+                boundaries = summary.get("evaluated_boundaries")
+                checks = evidence.get("checks")
+                timing = summary.get("control_decision_ms")
+                if (
+                    summary.get("completed_trials") != spec.trial_rows
+                    or summary.get("planned_trials") != spec.trial_rows
+                    or type(positives) is not list
+                    or len(positives) != spec.positive_total
+                    or any(type(row) is not dict or row.get("passed") is not True
+                           for row in positives)
+                    or type(boundaries) is not list
+                    or len(boundaries) != spec.negative_total
+                    or any(type(row) is not dict or row.get("passed") is not True
+                           for row in boundaries)
+                    or type(checks) is not list
+                    or not checks
+                    or any(type(check) is not dict or check.get("passed") is not True
+                           for check in checks)
+                    or type(timing) is not dict
+                    or not isinstance(timing.get("p95"), (int, float))
+                    or not isinstance(timing.get("p99"), (int, float))
+                    or timing["p95"] > 8.0
+                    or timing["p99"] > 15.0
+                ):
+                    raise EvidenceViolation(
+                        f"run {spec.run_id} B12-B evidence differs"
+                    )
+                if jsonl_counts.get(
+                    "client-0/b12b-partial-combat-trials.jsonl"
+                ) != spec.trial_rows:
+                    raise EvidenceViolation(
+                        f"run {spec.run_id} B12-B trial count differs"
+                    )
+            elif spec.stage == "b11":
                 summary = parsed.get("client-0/b11-summary.json")
                 if type(summary) is not dict:
                     raise EvidenceViolation(f"run {spec.run_id} summary is missing")

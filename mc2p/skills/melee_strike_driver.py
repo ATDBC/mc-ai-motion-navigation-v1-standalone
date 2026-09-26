@@ -20,6 +20,13 @@ from mc2p.contracts.observation_v3 import ObservationSnapshotV3
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.contracts.task import ComparisonOperatorV0, SuccessCriterionV0, TaskIntentV0
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1, RuntimeStateV1, RuntimeStepResultV1
+from mc2p.skills.attack_evidence import (
+    AttackAttemptKeyV1,
+    AttackAttemptOutcome,
+    AttackAttemptPhase,
+    AttackAttemptReportV1,
+    AttackEvidenceGrade,
+)
 from mc2p.skills.combat_aim import combat_aim_angles
 from mc2p.skills.fixed_melee import (
     CombatTargetV1, FixedMeleeDecisionV1, FixedMeleePhase,
@@ -63,13 +70,17 @@ class MeleeStrikeReportV1:
 class MeleeStrikeDriver:
     def __init__(self, runtime: PlayerRuntimeV1, *,
                  clock_ns: Callable[[], int] = time.perf_counter_ns,
-                 task_deadline_ns: int | None = None) -> None:
+                 task_deadline_ns: int | None = None,
+                 attempt_sequence: int = 1) -> None:
         if type(runtime) is not PlayerRuntimeV1:
             raise ContractViolation("melee strike driver requires formal Runtime")
         if runtime.state is not RuntimeStateV1.READY or type(runtime.observation) is not ObservationSnapshotV3:
             raise ContractViolation("melee strike driver requires ready V3 Runtime")
         if task_deadline_ns is not None:
             require_nonnegative_int(task_deadline_ns, "melee strike task deadline")
+        require_nonnegative_int(attempt_sequence, "melee strike attempt sequence")
+        if attempt_sequence == 0:
+            raise ContractViolation("melee strike attempt sequence must be positive")
         self.runtime = runtime
         self._clock = clock_ns
         self._fixed_deadline_ns = task_deadline_ns
@@ -94,6 +105,20 @@ class MeleeStrikeDriver:
         self._cancel_after_submit = False
         self._target_revised_after_submit = False
         self._external_motion_observation_only = False
+        self._attempt_sequence = attempt_sequence
+        self._attempt_key: AttackAttemptKeyV1 | None = None
+        self._attempt_phase = AttackAttemptPhase.PREPARING
+        self._attempt_outcome: AttackAttemptOutcome | None = None
+        self._attempt_evidence_grade = AttackEvidenceGrade.NONE
+        self._attempt_intent_id: str | None = None
+        self._attempt_action_request_sequence_id: int | None = None
+        self._attempt_receipt_status: str | None = None
+        self._attempt_latest_observation_sequence_id: int | None = None
+        self._attempt_latest_hurt: int | None = None
+        self._attempt_latest_health: float | None = None
+        self._attempt_target_damaged_unattributed = False
+        self._attempt_target_dead = False
+        self._attempt_event_recorded = False
 
     @property
     def report(self) -> MeleeStrikeReportV1:
@@ -122,6 +147,29 @@ class MeleeStrikeDriver:
             self._state in {
                 "complete", "unconfirmed", "operation_rejected", "failed", "cancelled",
             },
+        )
+
+    @property
+    def attempt_report(self) -> AttackAttemptReportV1:
+        if self._attempt_key is None:
+            raise ContractViolation("melee strike attempt has not started")
+        return AttackAttemptReportV1(
+            self._attempt_key,
+            self._attempt_phase,
+            self._attempt_outcome,
+            self._attempt_evidence_grade,
+            intent_id=self._attempt_intent_id,
+            action_request_sequence_id=self._attempt_action_request_sequence_id,
+            attack_observation_sequence_id=self._attack_observation_sequence_id,
+            confirmation_deadline_ns=self._confirmation_deadline_ns,
+            receipt_status=self._attempt_receipt_status,
+            latest_observation_sequence_id=self._attempt_latest_observation_sequence_id,
+            pre_attack_hurt_animation_ticks=self._pre_attack_hurt,
+            latest_hurt_animation_ticks=self._attempt_latest_hurt,
+            pre_attack_health_points=self._pre_attack_health,
+            latest_health_points=self._attempt_latest_health,
+            target_damaged_unattributed=self._attempt_target_damaged_unattributed,
+            target_dead=self._attempt_target_dead,
         )
 
     @property
@@ -182,6 +230,10 @@ class MeleeStrikeDriver:
         if deadline <= now_ns:
             raise ContractViolation("melee strike task deadline expired")
         self._target = target
+        self._attempt_key = AttackAttemptKeyV1(
+            target.episode_id, target.task_id, target.goal_id, target.revision,
+            target.track_id, self._attempt_sequence,
+        )
         self._clock_id = observation.controller_clock_id
         self._task_deadline_ns = deadline
         self._task = self._make_task(target)
@@ -206,11 +258,21 @@ class MeleeStrikeDriver:
             raise ContractViolation("melee strike replacement identity/revision mismatch")
         if self._attack_submitted:
             self._target_revised_after_submit = True
-            self._state, self._reason = "observing_after_submit", "target_revised_after_submit"
+            self._event(
+                "combat_target_revision", "mc2p.combat-target-revision.v1",
+                previous_target_revision=self._target.revision,
+                new_target_revision=target.revision,
+            )
+            self._finish_attempt(AttackAttemptOutcome.TARGET_REVISED)
+            self._finish("failed", "target_revised_after_submit")
             return
         self._drop_combat_source()
         self._gate.clear()
         self._target = target
+        self._attempt_key = AttackAttemptKeyV1(
+            target.episode_id, target.task_id, target.goal_id, target.revision,
+            target.track_id, self._attempt_sequence,
+        )
         self._task = self._make_task(target)
         self._phase = FixedMeleePhase.ALIGNING
         self._state, self._reason = "acquiring_interaction", "interaction_observation_required"
@@ -238,9 +300,79 @@ class MeleeStrikeDriver:
             "goal_id": self._target.goal_id,
             "target_revision": self._target.revision,
             "track_id": self._target.track_id,
+            "attempt_sequence": self._attempt_sequence,
             "decision_generation": self._generation,
             **values,
         })
+
+    def _observe_attempt_facts(self, observation: ObservationSnapshotV3) -> None:
+        if self._attempt_key is None:
+            return
+        self._attempt_latest_observation_sequence_id = observation.sequence_id
+        entity = self._visible_target(observation, self._attempt_key.track_id)
+        self._attempt_latest_hurt = (
+            None if entity is None else entity.hurt_animation_ticks
+        )
+        self._attempt_latest_health = self._tracked_health(
+            observation, self._attempt_key.track_id,
+        )
+        self._attempt_target_dead = self._explicitly_dead(
+            observation, self._attempt_key.track_id,
+        )
+        hurt_increased = (
+            self._attack_submitted
+            and self._pre_attack_hurt is not None
+            and self._attempt_latest_hurt is not None
+            and self._attempt_latest_hurt > self._pre_attack_hurt
+        )
+        health_decreased = (
+            self._attack_submitted
+            and self._pre_attack_health is not None
+            and self._attempt_latest_health is not None
+            and self._attempt_latest_health < self._pre_attack_health
+        )
+        if (health_decreased or self._attempt_target_dead) and not hurt_increased:
+            self._attempt_target_damaged_unattributed = True
+            if self._attempt_evidence_grade is AttackEvidenceGrade.NONE:
+                self._attempt_evidence_grade = AttackEvidenceGrade.TARGET_STATE_ONLY
+
+    def _command_correlated_hurt(self, observation: ObservationSnapshotV3) -> bool:
+        if (not self._attack_submitted
+                or self._attack_observation_sequence_id is None
+                or self._pre_attack_hurt is None
+                or self._confirmation_deadline_ns is None
+                or observation.sequence_id <= self._attack_observation_sequence_id
+                or observation.received_at_monotonic_ns > self._confirmation_deadline_ns):
+            return False
+        entity = self._visible_target(observation, self._attempt_key.track_id)
+        return bool(
+            entity is not None
+            and entity.hurt_animation_ticks is not None
+            and entity.hurt_animation_ticks > self._pre_attack_hurt
+        )
+
+    def _finish_attempt(
+        self,
+        outcome: AttackAttemptOutcome,
+        *,
+        evidence_grade: AttackEvidenceGrade | None = None,
+    ) -> None:
+        if self._attempt_phase is AttackAttemptPhase.TERMINAL:
+            return
+        self._attempt_phase = AttackAttemptPhase.TERMINAL
+        self._attempt_outcome = outcome
+        if evidence_grade is not None:
+            self._attempt_evidence_grade = evidence_grade
+        elif ((self._attempt_target_damaged_unattributed or self._attempt_target_dead)
+              and self._attempt_evidence_grade is AttackEvidenceGrade.NONE):
+            self._attempt_evidence_grade = AttackEvidenceGrade.TARGET_STATE_ONLY
+        if (not self._attempt_event_recorded
+                and self.runtime.state is RuntimeStateV1.READY):
+            self._attempt_event_recorded = True
+            self._event(
+                "attack_attempt", "mc2p.attack-attempt-event.v1",
+                attempt=self.attempt_report,
+            )
 
     def _record_decision(self, decision: FixedMeleeDecisionV1,
                          decision_time_ns: int) -> None:
@@ -337,16 +469,30 @@ class MeleeStrikeDriver:
         if type(observation) is not ObservationSnapshotV3:
             raise ContractViolation("external motion confirmation requires V3 observation")
         assert self._target is not None and self._clock_id is not None
+        self._observe_attempt_facts(observation)
         if (observation.episode_id != self._target.episode_id
                 or observation.controller_clock_id != self._clock_id):
+            self._finish_attempt(AttackAttemptOutcome.OBSERVATION_INTERRUPTED)
             self._finish("failed", "world_session_changed")
             return
         if self._explicitly_dead(observation, self._target.track_id):
+            if self._command_correlated_hurt(observation):
+                self._hit_observed = True
+                self._finish_attempt(
+                    AttackAttemptOutcome.COMMAND_CORRELATED_HIT,
+                    evidence_grade=AttackEvidenceGrade.COMMAND_CORRELATED,
+                )
+            else:
+                self._finish_attempt(
+                    AttackAttemptOutcome.TARGET_DEAD_UNATTRIBUTED,
+                    evidence_grade=AttackEvidenceGrade.TARGET_STATE_ONLY,
+                )
             self._finish("complete", "target_dead")
             return
         entity = self._visible_target(observation, self._target.track_id)
         if entity is None:
             if self._clock() >= self._confirmation_deadline_ns:
+                self._finish_attempt(AttackAttemptOutcome.CONFIRMATION_TIMEOUT)
                 self._finish("failed", "confirmation_deadline_reached")
             else:
                 self._state, self._reason = (
@@ -375,10 +521,16 @@ class MeleeStrikeDriver:
         )
         if selected == "complete":
             self._hit_observed = True
+            self._finish_attempt(
+                AttackAttemptOutcome.COMMAND_CORRELATED_HIT,
+                evidence_grade=AttackEvidenceGrade.COMMAND_CORRELATED,
+            )
             self._finish("complete", "hit_confirmed")
         elif selected == "fail_confirmation_timeout":
+            self._finish_attempt(AttackAttemptOutcome.CONFIRMATION_TIMEOUT)
             self._finish("unconfirmed", self._reason)
         elif selected.startswith("fail_"):
+            self._finish_attempt(AttackAttemptOutcome.OBSERVATION_INTERRUPTED)
             self._finish("failed", self._reason)
         else:
             self._state = "observing_after_submit"
@@ -401,11 +553,24 @@ class MeleeStrikeDriver:
             raise ContractViolation("melee strike driver is terminal")
         observation = self.runtime.observation
         assert type(observation) is ObservationSnapshotV3
+        self._observe_attempt_facts(observation)
         if (observation.episode_id != self._target.episode_id
                 or observation.controller_clock_id != self._clock_id):
+            self._finish_attempt(AttackAttemptOutcome.OBSERVATION_INTERRUPTED)
             self._finish("failed", "world_session_changed")
             return None
         if self._explicitly_dead(observation, self._target.track_id):
+            if self._command_correlated_hurt(observation):
+                self._hit_observed = True
+                self._finish_attempt(
+                    AttackAttemptOutcome.COMMAND_CORRELATED_HIT,
+                    evidence_grade=AttackEvidenceGrade.COMMAND_CORRELATED,
+                )
+            else:
+                self._finish_attempt(
+                    AttackAttemptOutcome.TARGET_DEAD_UNATTRIBUTED,
+                    evidence_grade=AttackEvidenceGrade.TARGET_STATE_ONLY,
+                )
             self._finish("complete", "target_dead")
             return None
         entity = self._visible_target(observation, self._target.track_id)
@@ -445,6 +610,10 @@ class MeleeStrikeDriver:
                             if item.candidate_id == selected)
         if selected == "complete":
             self._hit_observed = True
+            self._finish_attempt(
+                AttackAttemptOutcome.COMMAND_CORRELATED_HIT,
+                evidence_grade=AttackEvidenceGrade.COMMAND_CORRELATED,
+            )
             if self._cancel_after_submit:
                 self._finish("cancelled", "cancelled_after_submit")
             elif self._target_revised_after_submit:
@@ -453,12 +622,20 @@ class MeleeStrikeDriver:
                 self._finish("complete", "hit_confirmed")
             return None
         if selected == "fail_confirmation_timeout":
-            self._finish(
-                "cancelled" if self._cancel_after_submit else "unconfirmed",
-                "cancelled_after_submit" if self._cancel_after_submit else self._reason,
+            self._finish_attempt(
+                AttackAttemptOutcome.CANCELLED
+                if self._cancel_after_submit
+                else AttackAttemptOutcome.CONFIRMATION_TIMEOUT,
             )
+            if self._cancel_after_submit:
+                self._finish("cancelled", "cancelled_after_submit")
+            elif self._target_revised_after_submit:
+                self._finish("failed", "target_revised_after_submit")
+            else:
+                self._finish("unconfirmed", self._reason)
             return None
         if selected.startswith("fail_"):
+            self._finish_attempt(AttackAttemptOutcome.OBSERVATION_INTERRUPTED)
             self._finish("cancelled" if self._cancel_after_submit else "failed",
                          "cancelled_after_submit" if self._cancel_after_submit else self._reason)
             return None
@@ -498,6 +675,8 @@ class MeleeStrikeDriver:
             intent_id, envelope = self._submit(
                 operation=AttackEntityV1(self._target.track_id),
             )
+            self._attempt_phase = AttackAttemptPhase.PROPOSED
+            self._attempt_intent_id = intent_id
         elif selected == "wait_hurt_clear":
             self._phase = FixedMeleePhase.WAITING_HURT_CLEAR
         elif selected == "wait_cooldown":
@@ -508,7 +687,15 @@ class MeleeStrikeDriver:
             additional_proposals=additional_proposals,
             additional_proposal_supplier=additional_proposal_supplier,
         )
+        if result.decision is not None:
+            self._attempt_action_request_sequence_id = (
+                result.decision.action.request_sequence_id
+            )
+        if result.observation is not None:
+            self._observe_attempt_facts(result.observation)
         if result.backend_result is None and result.report.failure is not None:
+            if selected == "attack":
+                self._finish_attempt(AttackAttemptOutcome.INPUT_FAILED)
             self._finish("failed", "runtime_failure")
             return result
         receipt = None if result.backend_result is None else result.backend_result.receipt
@@ -525,11 +712,17 @@ class MeleeStrikeDriver:
                 receipt_reason=None if receipt is None else receipt.reason,
             )
             if not selected_by_arbiter:
+                if selected == "attack":
+                    self._finish_attempt(
+                        AttackAttemptOutcome.DEFERRED_BY_ARBITRATION,
+                    )
                 self._finish("failed", "arbitration_selected_other_or_filtered")
                 return result
         if selected == "attack":
             self._attack_submissions += 1
+            self._attempt_receipt_status = None if receipt is None else receipt.status
             if receipt is not None and receipt.status == "operation_rejected":
+                self._finish_attempt(AttackAttemptOutcome.GATE_REJECTED)
                 self._finish(
                     "operation_rejected",
                     "client_rejected/" + receipt.reason,
@@ -537,9 +730,11 @@ class MeleeStrikeDriver:
                 return result
             if receipt is None or receipt.status != "pending_confirmation":
                 reason = "missing_receipt" if receipt is None else receipt.reason
+                self._finish_attempt(AttackAttemptOutcome.INPUT_FAILED)
                 self._finish("failed", "client_rejected/" + reason)
                 return result
             self._attack_submitted = True
+            self._attempt_phase = AttackAttemptPhase.DISPATCHED_UNCONFIRMED
             self._phase = FixedMeleePhase.CONFIRMING_HIT
             self._state, self._reason = "confirming_hit", "attack_dispatched"
         elif selected == "aim":
@@ -561,15 +756,31 @@ class MeleeStrikeDriver:
         self._drop_combat_source()
         if not self._attack_submitted:
             result = self._runtime_step(profile, self._clock() + STEP_LEASE_NS)
+            if result.observation is not None:
+                self._observe_attempt_facts(result.observation)
+            self._finish_attempt(AttackAttemptOutcome.CANCELLED)
             self._state, self._reason = "cancelled", "cancelled_before_submit"
             return result
         self._cancel_after_submit = True
         result = self._runtime_step(profile, self._clock() + STEP_LEASE_NS)
         observation = result.observation
         if type(observation) is ObservationSnapshotV3:
+            self._observe_attempt_facts(observation)
             entity = self._visible_target(observation, self._target.track_id)
             self._hit_observed = bool(entity is not None
                                       and entity.hurt_animation_ticks is not None
                                       and entity.hurt_animation_ticks > 0)
+        self._event(
+            "combat_cancel", "mc2p.combat-cancel.v1",
+            cancel_reason=reason,
+        )
+        if (type(observation) is ObservationSnapshotV3
+                and self._command_correlated_hurt(observation)):
+            self._finish_attempt(
+                AttackAttemptOutcome.COMMAND_CORRELATED_HIT,
+                evidence_grade=AttackEvidenceGrade.COMMAND_CORRELATED,
+            )
+        else:
+            self._finish_attempt(AttackAttemptOutcome.CANCELLED)
         self._state, self._reason = "cancelled", "cancelled_after_submit"
         return result

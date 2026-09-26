@@ -53,6 +53,11 @@ class PublicRepositoryCompletenessTests(unittest.TestCase):
             "tests/test_c1_navigation_session.py",
             "tests/test_b10_runtime_probe.py",
             "tests/test_b11_world_change_runtime.py",
+            "tests/test_b12_attack_evidence_runtime.py",
+            "tests/test_b12a_fabric_runtime.py",
+            "tests/test_b12a_runtime_injection_acceptance.py",
+            "tests/test_b12b_partial_combat_runtime.py",
+            "tests/test_b12b_runtime_injection_acceptance.py",
             "tests/test_fabric_deployment_probe.py",
             "tests/observation_v2_fixtures.py",
             "tests/observation_v3_fixtures.py",
@@ -60,6 +65,9 @@ class PublicRepositoryCompletenessTests(unittest.TestCase):
             "mc2p/backends/deployment_transport.py",
             "scripts/export_motion_navigation_standalone.py",
             "scripts/b11_world_change_runtime.py",
+            "scripts/b12_attack_evidence_runtime.py",
+            "scripts/b12a_fabric_runtime.py",
+            "scripts/b12b_partial_combat_runtime.py",
             "scripts/java/FollowPlaygroundInitializer.java",
         )
         selected_paths = {item.as_posix() for item in selected}

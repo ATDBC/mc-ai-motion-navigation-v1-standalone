@@ -32,6 +32,7 @@ class FakeNavigationSession:
         self.movement = MovementV1(forward=1)
         self.look: LookV1 | None = None
         self.movement_look_tolerance_degrees = 0.0
+        self.movement_observed_yaw_limit_degrees = None
         self.proposal_sequence = 0
         self._motion_baseline = None
         self.request_positions = ()
@@ -166,6 +167,10 @@ class FakeNavigationSession:
                 self.movement_look_tolerance_degrees
                 if self.look is not None and self.movement != MovementV1()
                 else 0.0
+            ),
+            movement_observed_yaw_limit_degrees=(
+                self.movement_observed_yaw_limit_degrees
+                if self.movement != MovementV1() else None
             ),
         )
         return NavigationSessionProposal(

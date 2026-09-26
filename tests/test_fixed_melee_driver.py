@@ -362,7 +362,7 @@ class FixedMeleeDriverTests(unittest.TestCase):
         self.assertEqual((driver.report.state, driver.report.reason),
                          ("complete", "hit_confirmed"))
 
-    def test_health_loss_confirms_attack_when_hurt_timer_does_not_restart(self):
+    def test_health_loss_without_new_hurt_timer_does_not_confirm_attack(self):
         self.backend.confirm_hit = False
         driver = self.driver()
         driver.start(self.target(), self.clock[0])
@@ -370,13 +370,13 @@ class FixedMeleeDriverTests(unittest.TestCase):
             driver.tick(self.profile, self.clock[0] + 2_000_000_000)
 
         self.backend.health = 18.0
-        for _ in range(2):
+        for _ in range(30):
             if driver.report.terminal:
                 break
             driver.tick(self.profile, self.clock[0] + 2_000_000_000)
 
         self.assertEqual((driver.report.state, driver.report.reason),
-                         ("complete", "hit_confirmed"))
+                         ("unconfirmed", "confirmation_deadline_reached"))
 
     def test_unconfirmed_aim_is_bounded_instead_of_spinning_until_runtime_deadline(self):
         self.backend.targeted = False

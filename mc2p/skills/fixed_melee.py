@@ -245,17 +245,8 @@ def decide_fixed_melee(
         hurt_increased = (
             hurt is not None and hurt > pre_attack_hurt_animation_ticks
         )
-        health_decreased = (
-            pre_attack_health_points is not None
-            and target_health is not None
-            and target_health < pre_attack_health_points
-        )
-        if later and within_window and (hurt_increased or health_decreased):
-            selected, reason = (
-                ("complete", "target_health_decrease_confirmed")
-                if health_decreased and not hurt_increased
-                else ("complete", "new_hurt_animation_confirmed")
-            )
+        if later and within_window and hurt_increased:
+            selected, reason = "complete", "new_hurt_animation_confirmed"
         elif hurt is None and target_health is None:
             selected, reason = "fail_missing_hurt_observation", "hit_observation_unavailable"
         elif now_ns >= confirmation_deadline_ns:

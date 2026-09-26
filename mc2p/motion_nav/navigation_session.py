@@ -1336,6 +1336,25 @@ class NavigationSession:
                 raise ContractViolation("navigation intent window expired")
             self._intent_sequence += 1
             identity = ordered_intent_id(self._source, self._intent_sequence)
+            current_action = None
+            executor_route = (
+                getattr(self._executor, "route", None)
+                if self._executor is not None else None
+            )
+            if (route_decision is not None and executor_route is not None
+                    and 0 <= route_decision.action_index
+                        < len(executor_route.actions)):
+                current_action = executor_route.actions[
+                    route_decision.action_index
+                ]
+            ordinary_walk = (
+                type(current_action) is WalkSegment
+                and (
+                    current_action.transition is None
+                    or current_action.transition.mode is MovementMode.WALK
+                )
+            )
+            observed_yaw_bound = movement != MovementV1() and ordinary_walk
             intent = ActionIntentV1(
                 identity,
                 self._source.source_id,
@@ -1346,22 +1365,21 @@ class NavigationSession:
                 expires,
                 movement=movement,
                 look=look,
-                valid_for_ticks=max(1, min(20, lease_ticks)),
+                valid_for_ticks=(
+                    1 if observed_yaw_bound else max(1, min(20, lease_ticks))
+                ),
                 movement_requires_look=(look is not None and movement != MovementV1()),
                 movement_look_tolerance_degrees=(
                     5.0
                     if (
                         look is not None
                         and movement != MovementV1()
-                        and route_decision is not None
-                        and self._executor is not None
-                        and self._executor.route is not None
-                        and 0 <= route_decision.action_index
-                            < len(self._executor.route.actions)
-                        and type(self._executor.route.actions[route_decision.action_index])
-                            is WalkSegment
+                        and ordinary_walk
                     )
                     else 0.0
+                ),
+                movement_observed_yaw_limit_degrees=(
+                    5.0 if observed_yaw_bound else None
                 ),
                 movement_tick_window=(
                     MovementTickWindowV1(

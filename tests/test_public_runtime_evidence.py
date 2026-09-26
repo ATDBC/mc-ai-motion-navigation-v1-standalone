@@ -43,6 +43,7 @@ RUNS = (
         ("DeploymentEvidenceFailure", "['client-0:c1c_20_of_20_positive_tasks']"),
     ),
     ("20260925T120057978030Z-c17b889e", "b11", "pass", "passed", None),
+    ("20260926T025406298506Z-5bf010ce", "b12b", "pass", "passed", None),
 )
 
 
@@ -75,6 +76,57 @@ def _make_sources(root: Path) -> None:
             },
         )
         client = run / "client-0"
+        if stage == "b12b":
+            _write_json(client / "b12b-partial-combat-manifest.json", {
+                "schema_version": "mc2p.b12b-partial-combat-manifest.v1",
+                "world_seed": 21001,
+                "code_hashes": {"example.py": "0" * 64},
+                "trials": [],
+            })
+            positives = [
+                {"trial_id": f"positive-{index}", "classification": "positive",
+                 "passed": True}
+                for index in range(24)
+            ]
+            boundaries = [
+                {"trial_id": f"boundary-{index}", "classification": "boundary",
+                 "passed": True}
+                for index in range(6)
+            ]
+            _write_json(client / "b12b-partial-combat-runtime.json", {
+                "schema_version": "mc2p.b12b-partial-combat-runtime.v1",
+                "completed_trials": 30,
+                "planned_trials": 30,
+                "control_decision_ms": {
+                    "count": 889, "p95": 5.0015, "p99": 6.2107,
+                },
+                "evaluated_boundaries": boundaries,
+                "trials": positives + boundaries,
+            })
+            _write_json(client / "b12b-partial-combat-evidence.json", {
+                "trials": positives,
+                "checks": [
+                    {"name": "same_tick", "passed": True},
+                    {"name": "right_target", "passed": True},
+                ],
+            })
+            _write_jsonl(
+                client / "b12b-partial-combat-trials.jsonl",
+                positives + boundaries,
+            )
+            _write_jsonl(
+                client / "b12b-fixture-commands.jsonl",
+                [{"trial_id": row["trial_id"], "commands": []}
+                 for row in positives + boundaries],
+            )
+            for directory in (
+                client / "runtime-trace" / "trace",
+                client / "control-events",
+            ):
+                _write_jsonl(directory / "manifest.jsonl", [{"segment": 0}])
+                _write_json(directory / "complete.json", {"complete": True})
+                _write_jsonl(directory / "segment-00000000.jsonl", [{"tick": 1}])
+            continue
         if stage == "b11":
             _write_jsonl(client / "trace.jsonl", [{"event": "observation"}])
             _write_json(client / "b11-summary.json", {
@@ -211,20 +263,31 @@ class PublicRuntimeEvidenceTests(unittest.TestCase):
     def tearDown(self) -> None:
         shutil.rmtree(self.temp, ignore_errors=True)
 
-    def test_build_and_verify_seven_frozen_batches(self) -> None:
+    def test_build_and_verify_eight_frozen_batches(self) -> None:
         build_corpus(self.sources, self.corpus)
 
         report = verify_corpus(self.corpus)
 
-        self.assertEqual(report.archive_count, 7)
+        self.assertEqual(report.archive_count, 8)
         self.assertLessEqual(report.total_archive_bytes, 30 * 1024 * 1024)
-        self.assertEqual(report.stages, ("b10c", "b11", "c1b", "c1c"))
+        self.assertEqual(
+            report.stages, ("b10c", "b11", "b12b", "c1b", "c1c"),
+        )
 
         b10 = next((self.corpus / "archives").glob("b10c-pass-*.tar.gz"))
         with tarfile.open(b10, mode="r:gz") as archive:
             names = set(archive.getnames())
         self.assertIn("client-0/b10-coordinator-control-frames.jsonl", names)
         self.assertNotIn("client-0/trace.jsonl", names)
+
+        b12b = next((self.corpus / "archives").glob("b12b-pass-*.tar.gz"))
+        with tarfile.open(b12b, mode="r:gz") as archive:
+            names = set(archive.getnames())
+        self.assertIn("client-0/b12b-partial-combat-evidence.json", names)
+        self.assertIn("client-0/control-events/segment-00000000.jsonl", names)
+        self.assertIn(
+            "client-0/runtime-trace/trace/segment-00000000.jsonl", names,
+        )
 
     def test_build_is_byte_deterministic(self) -> None:
         second = self.temp / "corpus-second"

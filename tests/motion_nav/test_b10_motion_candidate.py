@@ -270,6 +270,44 @@ class VerifiedMotionExecutorTests(unittest.TestCase):
         self.assertEqual(second.expected_movement_tick, 13)
         self.assertEqual(second.latest_movement_tick, 13)
 
+    def test_missed_airborne_command_window_keeps_landing_responsibility(self):
+        anchor, candidate = self.admitted()
+        executor = VerifiedMotionExecutor()
+        executor.start(candidate)
+        ledger = InputApplicationLedger(max_records=64)
+        first = executor.decide(anchor, ledger)
+        executor.register_submission(
+            0,
+            control_sequence=20,
+            requested_movement_tick=first.expected_movement_tick,
+            requested_latest_movement_tick=first.latest_movement_tick,
+        )
+        self.applied(
+            ledger, anchor, 20, 11, candidate.proof.commands[0].movement,
+            requested_tick=first.expected_movement_tick,
+            requested_latest_tick=first.latest_movement_tick,
+        )
+        skipped = replace(
+            anchor,
+            observation_sequence_id=anchor.observation_sequence_id + 1,
+            movement_tick_id=12,
+            physics_state=replace(
+                candidate.proof.trajectory[1],
+                movement_tick_id=12,
+                on_ground=False,
+            ),
+        )
+
+        decision = executor.decide(skipped, ledger)
+
+        self.assertIs(decision.state, VerifiedMotionExecutorState.RECOVERING)
+        self.assertEqual(decision.movement, MovementV1())
+        self.assertEqual(
+            decision.reason,
+            "verified_command_window_expired_retain_landing",
+        )
+        self.assertFalse(decision.submittable_as_verified_command)
+
     def test_delayed_first_command_completes_against_its_verified_start_variant(self):
         anchor, candidate = self.admitted()
         delayed = candidate.proof.start_variant(12)
@@ -313,8 +351,8 @@ class VerifiedMotionExecutorTests(unittest.TestCase):
         executor.start(candidate)
         airborne = replace(
             anchor,
-            movement_tick_id=12,
-            physics_state=replace(candidate.proof.trajectory[2], on_ground=False),
+            movement_tick_id=11,
+            physics_state=replace(candidate.proof.trajectory[1], on_ground=False),
         )
 
         executor.cancel(airborne)

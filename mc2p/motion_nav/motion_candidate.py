@@ -434,6 +434,27 @@ class VerifiedMotionExecutor:
         self._pending = None
         return None
 
+    def _recover_from_expired_command_window(
+        self,
+        anchor: StateAnchor,
+    ) -> VerifiedMotionDecision | None:
+        """Stop issuing proof commands once their movement tick has passed."""
+        if anchor.movement_tick_id + 1 <= self._latest_tick():
+            return None
+        self._pending = None
+        self._recovery_uses_verified_remainder = False
+        self._terminal_after_recovery = VerifiedMotionExecutorState.INPUT_LOST
+        if anchor.physics_state.on_ground:
+            self.state = VerifiedMotionExecutorState.INPUT_LOST
+            return self._decision(
+                MovementV1(), None, "verified_command_window_expired",
+            )
+        self.state = VerifiedMotionExecutorState.RECOVERING
+        return self._decision(
+            MovementV1(), None,
+            "verified_command_window_expired_retain_landing",
+        )
+
     def decide(self, anchor: StateAnchor,
                ledger: InputApplicationLedger, *,
                changed_cells: tuple[BlockPos, ...] = ()) -> VerifiedMotionDecision:
@@ -491,6 +512,9 @@ class VerifiedMotionExecutor:
                         )
                     return self._decision(None, None, pending)
                 if self._command_index < len(self._candidate.proof.commands):
+                    expired = self._recover_from_expired_command_window(anchor)
+                    if expired is not None:
+                        return expired
                     command = self._candidate.proof.commands[self._command_index]
                     return self._decision(
                         command.movement,
@@ -537,6 +561,9 @@ class VerifiedMotionExecutor:
                 return self._decision(MovementV1(), None, "verified_exit_not_observed")
             self.state = VerifiedMotionExecutorState.COMPLETE
             return self._decision(MovementV1(), None, "verified_motion_complete")
+        expired = self._recover_from_expired_command_window(anchor)
+        if expired is not None:
+            return expired
         command = proof.commands[self._command_index]
         return self._decision(
             command.movement, command.required_movement_yaw_radians,

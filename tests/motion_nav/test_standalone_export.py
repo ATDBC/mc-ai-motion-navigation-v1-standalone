@@ -48,6 +48,9 @@ class StandaloneExportTests(unittest.TestCase):
             "tests/test_craftground_backend.py",
             "tests/test_craftground_runtime.py",
             "tests/test_visible_equipment_projection.py",
+            "scripts/b12b_partial_combat_runtime.py",
+            "tests/test_b12b_partial_combat_runtime.py",
+            "tests/test_b12b_runtime_injection_acceptance.py",
         )
 
         self.assertEqual(

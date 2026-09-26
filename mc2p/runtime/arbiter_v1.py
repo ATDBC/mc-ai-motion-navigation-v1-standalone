@@ -46,6 +46,28 @@ def _heading_compatible(
     return difference <= tolerance
 
 
+def _within_observed_yaw_limit(
+    movement: ActionIntentV1,
+    look: ActionIntentV1 | None,
+    observation_sequence_id: int,
+) -> tuple[bool, str | None]:
+    limit = movement.movement_observed_yaw_limit_degrees
+    if limit is None:
+        return True, None
+    if movement.observation_sequence_id != observation_sequence_id:
+        return False, "movement_observation_stale"
+    if look is None:
+        return True, None
+    if look.observation_sequence_id != movement.observation_sequence_id:
+        return False, "movement_observation_stale"
+    yaw_change = abs(
+        (look.look.yaw_delta_degrees + 180.0) % 360.0 - 180.0
+    )
+    if yaw_change > limit:
+        return False, "observed_yaw_limit_exceeded"
+    return True, None
+
+
 class ActionArbiterV1:
     def __init__(self) -> None:
         self._intents: dict[str, ActionIntentV1] = {}
@@ -166,6 +188,17 @@ class ActionArbiterV1:
             if (movement is not None and movement.movement_requires_look
                     and not _heading_compatible(movement, winners.get("look"))):
                 suppressed.append((winners.pop("movement").intent_id, "required_look_not_selected"))
+            movement = winners.get("movement")
+            if movement is not None:
+                compatible, reason = _within_observed_yaw_limit(
+                    movement, winners.get("look"), observation_sequence_id,
+                )
+                if not compatible:
+                    suppressed.append((
+                        winners.pop("movement").intent_id,
+                        reason or "observed_yaw_limit_exceeded",
+                    ))
+            movement = winners.get("movement")
             action = replace(neutral,
                 movement=winners["movement"].movement if "movement" in winners else MovementV1(),
                 look=winners["look"].look if "look" in winners else LookV1(),
@@ -175,6 +208,7 @@ class ActionArbiterV1:
             # Consume all current one-shot proposals, including losers: no delayed stale GUI click/look.
             for intent in active:
                 if (intent.movement is None or intent.movement_requires_look
+                        or intent.movement_observed_yaw_limit_degrees is not None
                         or intent.movement_tick_window is not None):
                     del self._intents[intent.intent_id]
                 elif intent.look is not None or intent.operation is not None:
