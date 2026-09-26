@@ -10,6 +10,7 @@ from scripts.b12b_partial_combat_runtime import (
     _latency_summary,
     b12b_trial_plan,
     evaluate_b12b_boundary_evidence,
+    evaluate_b12b_active_target_evidence,
     evaluate_b12b_positive_evidence,
 )
 
@@ -66,6 +67,7 @@ class B12BPartialCombatRuntimeTests(unittest.TestCase):
         rows = b12b_trial_plan(21001)
         positives = [row for row in rows if row["classification"] == "positive"]
         boundaries = [row for row in rows if row["classification"] == "boundary"]
+        active = [row for row in rows if row["classification"] == "active_target"]
 
         self.assertEqual(len(positives), 24)
         self.assertEqual(
@@ -74,15 +76,69 @@ class B12BPartialCombatRuntimeTests(unittest.TestCase):
             {"forward": 8, "backward": 8, "left": 4, "right": 4},
         )
         self.assertEqual(len(boundaries), 12)
+        self.assertEqual(len(active), 1)
+        self.assertEqual(active[0]["ai_seed"], 51001)
         self.assertEqual(
-            sum(row["evidence_source"] == "fabric" for row in boundaries), 6,
+            sum(row["evidence_source"] == "fabric" for row in boundaries), 8,
         )
         self.assertEqual(
             {row["injection"] for row in boundaries
              if row["evidence_source"] == "runtime"},
             set(B12B_RUNTIME_INJECTIONS),
         )
-        self.assertEqual(len({row["trial_id"] for row in rows}), 36)
+        self.assertEqual(len({row["trial_id"] for row in rows}), 37)
+
+    def test_active_target_evaluator_requires_applied_turn_and_movement_same_tick(self):
+        trial = next(
+            row for row in b12b_trial_plan(21001)
+            if row["classification"] == "active_target"
+        )
+        request = 31
+        row = {
+            **trial,
+            "target_track_id": "entity-active",
+            "composed_request_sequences": [request],
+            "seed_receipt_valid": True,
+            "report": {"state": "complete", "confirmed_hits": 1},
+            "runtime_ready": True,
+        }
+        trace = ({
+            "record_type": "dispatch",
+            "payload": {"decision": {"action": {
+                "request_sequence_id": request,
+                "movement": {"forward": 1, "strafe": 0, "jump": False,
+                             "sneak": False, "sprint": False},
+                "look": {"yaw_delta_degrees": 12.0,
+                         "pitch_delta_degrees": 0.0},
+            }}},
+        },)
+        events = (
+            {
+                "event": "input_consumed", "request_sequence_id": request,
+                "client_ticks": 51, "time_event_sequence": 44,
+                "input_state": "leased",
+                "actual_input": {"forward": 1.0, "strafe": 0.0,
+                                 "jump": False, "sneak": False,
+                                 "sprint": False},
+            },
+            {
+                "event": "look_applied", "request_sequence_id": request,
+                "client_ticks": 50, "time_event_sequence": 44,
+                "actual_look": {"yaw": 12.0,
+                                                        "pitch": 0.0},
+            },
+        )
+
+        evaluated, checks = evaluate_b12b_active_target_evidence(
+            (row,), trace, events,
+        )
+
+        self.assertTrue(evaluated[0]["passed"])
+        self.assertTrue(all(check["passed"] for check in checks))
+        failed, _ = evaluate_b12b_active_target_evidence(
+            (row,), trace, (events[0],),
+        )
+        self.assertFalse(failed[0]["passed"])
 
     def test_positive_evaluator_requires_same_tick_attack_and_bounded_walk_intent(self):
         trial = next(
@@ -162,8 +218,9 @@ class B12BPartialCombatRuntimeTests(unittest.TestCase):
         rows = (
             {
                 "trial_id": "large", "injection": "large_combat_turn",
-                "movement_suppressed_count": 1, "turn_selected_count": 1,
-                "resumed_movement_count": 1, "runtime_ready": True,
+                "movement_suppressed_count": 0, "turn_selected_count": 1,
+                "movement_during_turn_count": 1,
+                "resumed_movement_count": 0, "runtime_ready": True,
             },
             {
                 "trial_id": "hidden", "injection": "engaged_occlusion_navigation",
@@ -174,6 +231,15 @@ class B12BPartialCombatRuntimeTests(unittest.TestCase):
                 "trial_id": "reacquire", "injection": "occluded_attack_reacquire",
                 "engagement_position_uses": 1, "hidden_attack_submissions": 0,
                 "reacquire_look_count": 1, "post_reveal_confirmed_hit": True,
+                "runtime_ready": True,
+            },
+            {
+                "trial_id": "unengaged-hidden",
+                "injection": "hidden_without_engagement",
+                "hidden_observed": True,
+                "engagement_position_uses": 0,
+                "hidden_attack_submissions": 0,
+                "hidden_movement_events": 0,
                 "runtime_ready": True,
             },
         )

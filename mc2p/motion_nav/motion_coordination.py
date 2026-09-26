@@ -436,7 +436,8 @@ class MotionRouteCoordinator:
             self, frame: NavigationFrame, anchor: StateAnchor,
             ledger: InputApplicationLedger, world: PhysicsWorldView, *,
             changed_cells: tuple[BlockPos, ...],
-            input_confirmed: bool = True) -> ActionRouteDecision:
+            input_confirmed: bool = True,
+            movement_yaw_radians: float | None = None) -> ActionRouteDecision:
         if (type(frame) is not NavigationFrame
                 or type(anchor) is not StateAnchor
                 or type(ledger) is not InputApplicationLedger
@@ -467,6 +468,7 @@ class MotionRouteCoordinator:
         decision = self.executor.decide(
             frame, input_confirmed=input_confirmed,
             state_anchor=anchor, input_ledger=ledger,
+            movement_yaw_radians=movement_yaw_radians,
         )
         if (decision.reason_code == "awaiting_verified_motion"
                 and self._pending_connection is None and not installed

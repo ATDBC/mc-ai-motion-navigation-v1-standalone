@@ -32,6 +32,8 @@ class FabricDeploymentProbeTests(unittest.TestCase):
             "scripts/c1_fixed_melee_runtime.py",
             "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorExecutor.java",
             "mc2p/backends/runtime_overlays/mc121_observation/ClientEntityIndex.java",
+            "mc2p/backends/runtime_overlays/mc121_observation/ClientDamageEventBuffer.java",
+            "deployment/fabric-observation-probe/src/main/java/com/mc2p/deployment/mixin/ClientDamagePacketMixin.java",
         }
         self.assertTrue(required <= set(C1_FIXED_MELEE_SOURCES))
         frozen = frozen_deployment_sources(

@@ -165,6 +165,44 @@ class MeleeStrikeDriverTests(unittest.TestCase):
         self.assertIsNotNone(attempt.attack_observation_sequence_id)
         self.assertEqual(attempt.receipt_status, "pending_confirmation")
 
+    def test_self_sourced_damage_packet_upgrades_hit_evidence(self):
+        self.backend.damage_event_source = "self"
+        driver = self.driver()
+        driver.start(self.target, self.clock[0])
+        for _ in range(12):
+            if driver.report.terminal:
+                break
+            driver.tick(self.profile, self.clock[0] + 2_000_000_000)
+
+        attempt = driver.attempt_report
+        self.assertIs(
+            attempt.outcome, AttackAttemptOutcome.SOURCE_CONFIRMED_HIT,
+        )
+        self.assertIs(
+            attempt.evidence_grade, AttackEvidenceGrade.SOURCE_CONFIRMED,
+        )
+        self.assertIsNotNone(attempt.source_damage_event_sequence_id)
+        self.assertEqual(attempt.source_damage_type, "minecraft:player_attack")
+
+    def test_explicit_other_source_blocks_hurt_animation_attribution(self):
+        self.backend.damage_event_source = "other"
+        driver = self.driver()
+        driver.start(self.target, self.clock[0])
+        for _ in range(40):
+            if driver.report.terminal:
+                break
+            driver.tick(self.profile, self.clock[0] + 2_000_000_000)
+
+        self.assertIs(
+            driver.attempt_report.outcome,
+            AttackAttemptOutcome.CONFIRMATION_TIMEOUT,
+        )
+        self.assertIs(
+            driver.attempt_report.evidence_grade,
+            AttackEvidenceGrade.TARGET_STATE_ONLY,
+        )
+        self.assertFalse(driver.report.hit_observed)
+
     def test_health_decline_alone_stays_unattributed_until_timeout(self):
         self.backend.confirm_hit = False
         driver = self.driver()

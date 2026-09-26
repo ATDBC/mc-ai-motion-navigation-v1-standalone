@@ -435,6 +435,46 @@ class NavigationSessionTests(unittest.TestCase):
                 finally:
                     session.close()
 
+    def test_walk_recomputes_movement_from_the_conditioned_final_yaw(self):
+        world = _known_world({
+            (-1, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+            (1, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        start, _, goal = _nodes(world, (-1, 0, 1))
+        initial = frame(world, 0, start.position, yaw=0.0)
+        request = SurfacePlanningRequest(
+            25, "conditioned-yaw-request", "conditioned-yaw-goal", 1,
+            world.session.value, start.node_id, goal.node_id,
+            goal_state=_goal(goal.position),
+        )
+        session = NavigationSession(
+            "conditioned-yaw-session", self.profiles(),
+            planner_worker=_InlinePlanner(),
+            clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        try:
+            session.start(request, initial)
+            proposal = session.propose(
+                initial,
+                None,
+                2_000_000_000,
+                conditioned_yaw_delta_degrees=90.0,
+                conditioned_look_intent_id="combat-look",
+            )
+            intent = proposal.control_frame.intents[0].intent
+
+            self.assertEqual(intent.movement, MovementV1(forward=-1))
+            self.assertEqual(
+                intent.movement_conditioned_look_intent_id,
+                "combat-look",
+            )
+            self.assertIsNone(intent.movement_observed_yaw_limit_degrees)
+            self.assertEqual(intent.valid_for_ticks, 1)
+        finally:
+            session.close()
+
     def test_known_route_is_not_blocked_by_irrelevant_unknown_scope_cell(self):
         world, irrelevant_unknown = _known_corridor_with_one_irrelevant_unknown()
         start, _, goal = _nodes(world, (-1, 0, 1))

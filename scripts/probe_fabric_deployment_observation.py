@@ -157,8 +157,17 @@ B11_WORLD_CHANGE_SOURCES = (
 INPUT_BUFFER_IDLE_SOURCES = (
     "scripts/input_buffer_idle_runtime.py",
 )
+DAMAGE_SOURCE_SOURCES = (
+    "mc2p/contracts/observation_v3.py",
+    "mc2p/backends/client_observation_payload_v3.py",
+    "mc2p/backends/runtime_overlays/mc121_observation/ClientDamageEventBuffer.java",
+    "mc2p/backends/runtime_overlays/mc121_observation/ClientObservationCollector.java",
+    "deployment/fabric-observation-probe/src/main/java/com/mc2p/deployment/mixin/ClientDamagePacketMixin.java",
+    "deployment/fabric-observation-probe/src/main/resources/mc2p-deployment.mixins.json",
+)
 C1_FIXED_MELEE_SOURCES = (
     *NAVIGATION_SESSION_SOURCES,
+    *DAMAGE_SOURCE_SOURCES,
     "mc2p/skills/fixed_melee.py",
     "mc2p/skills/fixed_melee_driver.py",
     "mc2p/skills/melee_strike_driver.py",
@@ -815,7 +824,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
         provenance["launch"] = inspect_launch(launch)
         provenance["assets"] = verify_assets()
         c1_artifact = None
-        if c1_moving_melee_probe or c1_external_motion_probe:
+        if (c1_moving_melee_probe or c1_external_motion_probe
+                or b12b_partial_combat_probe):
             from scripts.build_fabric_c1_fixture import build_fixture
             c1_artifact = build_fixture()
         provenance.update(prepare_scenario(
@@ -1304,6 +1314,9 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                                 world_seed=seed,
                                 code_hashes=source_before,
                                 fixture_writer=write_b12b_fixture,
+                                fixture_events=(
+                                    run_dir / "server" / "c1-fixture-events.jsonl"
+                                ),
                             )
                         )
                     elif c1r_control_frame_probe:
@@ -1421,6 +1434,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                     elif b12b_partial_combat_probe:
                         from mc2p.runtime.segmented_trace import iter_segmented_jsonl
                         from scripts.b12b_partial_combat_runtime import (
+                            evaluate_b12b_active_target_evidence,
                             evaluate_b12b_positive_evidence,
                         )
                         records = list(iter_segmented_jsonl(
@@ -1429,18 +1443,35 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                         control_events = list(iter_segmented_jsonl(
                             directory / "control-events",
                         ))
-                        evaluated, b12b_checks = evaluate_b12b_positive_evidence(
+                        positive_evaluated, b12b_checks = evaluate_b12b_positive_evidence(
                             rows, records, control_events,
                         )
+                        active_evaluated, active_checks = (
+                            evaluate_b12b_active_target_evidence(
+                                rows, records, control_events,
+                            )
+                        )
+                        by_id = {
+                            row["trial_id"]: row
+                            for row in (
+                                *positive_evaluated,
+                                *active_evaluated,
+                                *stages["evaluated_boundaries"],
+                            )
+                        }
+                        evaluated = [
+                            by_id.get(row["trial_id"], row) for row in rows
+                        ]
                         rows[:] = evaluated
                         stages["trials"] = evaluated
                         stages["control_event_count"] = len(control_events)
                         stages["trace_stats"] = asdict(trace.stats)
                         write_json_atomic(
                             directory / "b12b-partial-combat-evidence.json",
-                            {"trials": evaluated, "checks": b12b_checks},
+                            {"trials": evaluated,
+                             "checks": b12b_checks + active_checks},
                         )
-                        episode_checks += b12b_checks + [{
+                        episode_checks += b12b_checks + active_checks + [{
                             "name": "b12b_trace_has_no_delivery_gap",
                             "passed": trace.stats.dropped_records == 0,
                         }]

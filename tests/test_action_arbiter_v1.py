@@ -126,6 +126,65 @@ class FormalArbiterTests(unittest.TestCase):
             result.suppressed_intents,
         )
 
+    def test_movement_conditioned_on_exact_winning_look_accepts_large_turn(self):
+        self.arbiter.submit(self.intent(
+            "navigation",
+            movement=values.MovementV1(strafe=1),
+            movement_conditioned_look_intent_id="combat-look",
+        ))
+        self.arbiter.submit(self.intent(
+            "combat-look",
+            look=values.LookV1(15.0, -3.0),
+            priority=ActionPriorityV0.PLAYER,
+        ))
+
+        result = self.resolve()
+
+        self.assertEqual(result.action.movement, values.MovementV1(strafe=1))
+        self.assertEqual(result.action.look, values.LookV1(15.0, -3.0))
+        self.assertEqual(
+            dict(result.selected_intents),
+            {"movement": "navigation", "look": "combat-look"},
+        )
+
+    def test_conditioned_movement_is_suppressed_when_another_look_wins(self):
+        self.arbiter.submit(self.intent(
+            "navigation",
+            movement=values.MovementV1(forward=1),
+            movement_conditioned_look_intent_id="combat-look",
+        ))
+        self.arbiter.submit(self.intent(
+            "combat-look",
+            look=values.LookV1(8.0, 0.0),
+        ))
+        self.arbiter.submit(self.intent(
+            "player-look",
+            look=values.LookV1(-20.0, 0.0),
+            priority=ActionPriorityV0.PLAYER,
+        ))
+
+        result = self.resolve()
+
+        self.assertEqual(result.action.movement, values.MovementV1())
+        self.assertEqual(result.action.look, values.LookV1(-20.0, 0.0))
+        self.assertIn(
+            ("navigation", "conditioned_look_not_selected"),
+            result.suppressed_intents,
+        )
+
+    def test_conditioned_movement_requires_nonempty_one_tick_movement(self):
+        for kwargs in (
+            {"look": values.LookV1()},
+            {"movement": values.MovementV1()},
+            {"movement": values.MovementV1(forward=1), "valid_for_ticks": 2},
+        ):
+            with self.subTest(kwargs=kwargs), self.assertRaises(ContractViolation):
+                self.intent(
+                    "invalid-conditioned-movement",
+                    movement_conditioned_look_intent_id="combat-look",
+                    **kwargs,
+                )
+
     def test_observed_yaw_bound_requires_fresh_one_tick_movement(self):
         for kwargs in (
             {"look": values.LookV1(), "movement_observed_yaw_limit_degrees": 5.0},

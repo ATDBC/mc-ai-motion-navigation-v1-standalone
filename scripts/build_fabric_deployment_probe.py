@@ -23,6 +23,7 @@ ADAPTER_ROOT = "deployment/fabric-observation-probe/src/main/java"
 MIXINS = {"BehaviorInputMixin", "BehaviorPlayerMixin", "BehaviorKeyboardMixin", "BehaviorMouseMixin",
           "WindowOffScreenMixin", "GameRendererMixin", "HandledScreenRenderMixin", "ScreenHandlerPropertiesMixin",
           "ScreenshotGuardMixin", "NativeImageGuardMixin", "ClientClockTickMixin", "ClientClockWorldMixin", "ClientClockPacketMixin"}
+MIXINS.add("ClientDamagePacketMixin")
 
 
 def inspect_classpath(entries: object, *, repository_root: Path = ROOT) -> int:

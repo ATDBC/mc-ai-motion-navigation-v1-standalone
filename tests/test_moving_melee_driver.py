@@ -679,6 +679,55 @@ class MovingMeleeDriverTests(unittest.TestCase):
         self.assertIn("look", dict(attack.decision.selected_intents))
         self.assertIsNotNone(driver.approach_driver)
 
+    def test_large_strike_turn_recomputes_and_keeps_same_frame_movement(self):
+        self.runtime.close()
+        self.backend = MeleeBackend(self.clock, distance=5.0)
+        self.runtime = PlayerRuntimeV1(
+            self.backend, self.trace, lambda: self.clock[0],
+        )
+        self.assertTrue(self.runtime.reset(
+            ResetRequestV0(
+                "reset-conditioned-combat-look", "episode-1", "test", 1,
+                5_000_000_000,
+            )
+        ).succeeded)
+        session = FakeNavigationSession()
+        driver = MovingMeleeDriver(
+            self.runtime, session, clock_ns=lambda: self.clock[0],
+        )
+        driver.start(self.target, self.clock[0])
+        self.backend.distance = 2.5
+        self.backend.targeted = False
+
+        composed = None
+        with patch(
+            "mc2p.skills.melee_strike_driver.combat_aim_angles",
+            return_value=(15.0, 0.0),
+        ):
+            for _ in range(8):
+                if driver.report.terminal:
+                    break
+                result = self.tick(driver)
+                if (result is not None
+                        and result.decision.action.look
+                           == LookV1(15.0, 0.0)):
+                    composed = result
+                    break
+
+        self.assertIsNotNone(composed)
+        self.assertEqual(
+            composed.decision.action.movement,
+            MovementV1(forward=1),
+        )
+        self.assertEqual(composed.decision.action.look, LookV1(15.0, 0.0))
+        self.assertTrue(session.conditioned_look_requests)
+        conditioned = session.conditioned_look_requests[-1]
+        self.assertEqual(conditioned[0], 15.0)
+        self.assertEqual(
+            conditioned[1],
+            dict(composed.decision.selected_intents)["look"],
+        )
+
     def test_stable_combat_look_keeps_each_ground_travel_axis(self):
         for movement in (
             MovementV1(forward=1),
@@ -862,6 +911,47 @@ class MovingMeleeDriverTests(unittest.TestCase):
             (driver.report.attack_retry.consecutive_gate_rejections,
              driver.report.attack_retry.consecutive_confirmation_timeouts),
             (0, 1),
+        )
+
+    def test_alternating_attack_failures_return_to_task_policy(self):
+        driver = self.driver()
+        driver.start(self.target, self.clock[0])
+        self.backend.confirm_hit = False
+        with patch(
+            "mc2p.skills.melee_strike_driver.CONFIRMATION_NS",
+            100_000_000,
+        ):
+            for failure_index in range(6):
+                before = (
+                    driver.report.attack_retry.gate_rejections_total
+                    + driver.report.attack_retry.confirmation_timeouts_total
+                )
+                self.backend.operation_reject_reason = (
+                    "entity_target_mismatch" if failure_index % 2 == 0 else None
+                )
+                self.backend.hurt = 0
+                for _ in range(30):
+                    if driver.report.terminal:
+                        break
+                    self.tick(driver)
+                    after = (
+                        driver.report.attack_retry.gate_rejections_total
+                        + driver.report.attack_retry.confirmation_timeouts_total
+                    )
+                    if after > before:
+                        break
+
+        self.assertEqual(
+            (driver.report.state, driver.report.reason),
+            ("needs_task_decision", "attack_progress_exhausted"),
+        )
+        self.assertIs(
+            driver.report.task_outcome,
+            AttackTaskOutcome.NO_PROGRESS_RETRY_EXHAUSTED,
+        )
+        self.assertEqual(
+            driver.report.attack_retry.failures_since_confirmed_hit,
+            6,
         )
 
     def test_confirmed_hit_clears_streak_but_keeps_failure_history(self):

@@ -5,6 +5,7 @@
   "refmap": "mc2p-deployment.refmap.json",
   "client": ["BehaviorInputMixin", "BehaviorPlayerMixin", "BehaviorKeyboardMixin", "BehaviorMouseMixin",
     "WindowOffScreenMixin", "GameRendererMixin", "HandledScreenRenderMixin", "ScreenHandlerPropertiesMixin",
-    "ScreenshotGuardMixin", "NativeImageGuardMixin", "ClientClockTickMixin", "ClientClockWorldMixin", "ClientClockPacketMixin"],
+    "ScreenshotGuardMixin", "NativeImageGuardMixin", "ClientClockTickMixin", "ClientClockWorldMixin", "ClientClockPacketMixin",
+    "ClientDamagePacketMixin"],
   "injectors": { "defaultRequire": 1 }
 }

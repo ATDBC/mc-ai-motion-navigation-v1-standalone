@@ -16,7 +16,8 @@ from mc2p.contracts.observation_v2 import (
     ClientSampleTimingV2, GuiStateV2, InventoryStateV2, ObservationGroupV2, SelfStateV2,
 )
 from mc2p.contracts.observation_v3 import (
-    MAX_BLOCKS_V3, AabbV3, CollisionShapeV3, ObservedBlockV3, ObservationSnapshotV3,
+    MAX_BLOCKS_V3, AabbV3, CollisionShapeV3, DamageEventV3,
+    ObservedBlockV3, ObservationSnapshotV3,
     PerceptionStateV3, TargetingStateV3, TrackedEntityStateV3, validate_v3_groups,
 )
 
@@ -36,6 +37,8 @@ class ClientObservationPayloadV3:
     field_profile: str
     targeting: ObservationGroupV2[TargetingStateV3]
     tracked_entity: ObservationGroupV2[TrackedEntityStateV3]
+    damage_events: tuple[DamageEventV3, ...]
+    damage_events_dropped: int
     schema_version: str = field(default="mc2p.client_observation.v3", init=False)
 
     def __post_init__(self) -> None:
@@ -45,6 +48,17 @@ class ClientObservationPayloadV3:
         validate_v3_groups(self.sample_world_tick, self.field_profile, self.self_state,
                            self.inventory, self.gui, self.perception, self.targeting,
                            self.tracked_entity)
+        if (type(self.damage_events) is not tuple
+                or len(self.damage_events) > 64
+                or any(type(event) is not DamageEventV3
+                       for event in self.damage_events)):
+            raise ContractViolation("damage events must be a bounded typed tuple")
+        event_ids = tuple(event.event_sequence_id for event in self.damage_events)
+        if event_ids != tuple(sorted(set(event_ids))):
+            raise ContractViolation("damage events must be ordered and unique")
+        require_nonnegative_int(
+            self.damage_events_dropped, "dropped damage event count",
+        )
 
 
 def _grid(value: Any) -> tuple[int, int, int]:
@@ -102,6 +116,30 @@ def _tracked_entity(value: Any) -> TrackedEntityStateV3:
     )
 
 
+def _damage_event(value: Any) -> DamageEventV3:
+    item = _v2._object(value, {
+        "event_sequence_id", "world_tick", "target_is_self",
+        "target_entity_ref", "damage_type", "source_entity_present",
+        "source_is_self", "source_entity_ref", "direct_entity_present",
+        "direct_source_is_self", "direct_source_entity_ref",
+    }, "damage event")
+    return DamageEventV3(
+        _v2._integer(item["event_sequence_id"], "damage event sequence"),
+        _v2._integer(item["world_tick"], "damage event world tick"),
+        _v2._boolean(item["target_is_self"], "damage target is self"),
+        _v2._optional_string(item["target_entity_ref"], "damage target reference"),
+        _v2._string(item["damage_type"], "damage type"),
+        _v2._boolean(item["source_entity_present"], "damage source present"),
+        _v2._boolean(item["source_is_self"], "damage source is self"),
+        _v2._optional_string(item["source_entity_ref"], "damage source reference"),
+        _v2._boolean(item["direct_entity_present"], "direct damage source present"),
+        _v2._boolean(item["direct_source_is_self"], "direct damage source is self"),
+        _v2._optional_string(
+            item["direct_source_entity_ref"], "direct damage source reference",
+        ),
+    )
+
+
 def _perception(value: Any) -> PerceptionStateV3:
     item = _v2._object(value, {"horizontal_fov_degrees", "vertical_fov_degrees", "ray_columns", "ray_rows",
         "max_block_distance", "body_expansion_blocks", "block_epsilon_blocks", "entity_max_distance",
@@ -135,7 +173,8 @@ be recovered from a dict. Every field is still checked and copied to typed value
     try:
         item = _v2._object(value, {"schema_version", "generation_id", "sample_world_tick", "client_sample",
             "self_state", "inventory", "gui", "perception", "field_profile", "targeting",
-            "tracked_entity"}, "V3 client payload")
+            "tracked_entity", "damage_events", "damage_events_dropped"},
+            "V3 client payload")
         if item["schema_version"] != "mc2p.client_observation.v3":
             raise ClientObservationPayloadError("invalid V3 client schema")
         timing = _v2._object(item["client_sample"], {"clock_id", "started_at_monotonic_ns", "completed_at_monotonic_ns"}, "client timing")
@@ -150,7 +189,14 @@ be recovered from a dict. Every field is still checked and copied to typed value
             field_profile=_v2._string(item["field_profile"], "field profile"),
             targeting=_v2._group(item["targeting"], "targeting", "client_perception_filtered", _targeting),
             tracked_entity=_v2._group(item["tracked_entity"], "tracked_entity",
-                                      "client_registered_entity", _tracked_entity))
+                                      "client_registered_entity", _tracked_entity),
+            damage_events=tuple(
+                _damage_event(event)
+                for event in _v2._array(item["damage_events"], "damage events")
+            ),
+            damage_events_dropped=_v2._integer(
+                item["damage_events_dropped"], "dropped damage events",
+            ))
     except ClientObservationPayloadError:
         raise
     except (ContractViolation, ValueError, TypeError, OverflowError, RecursionError) as error:
@@ -196,5 +242,7 @@ def snapshot_v3_from_payload(decoded: ClientObservationPayloadV3, *, episode_id:
         client_sample=decoded.client_sample, world_time_ticks=FieldValueV0.valid(decoded.sample_world_tick),
         self_state=decoded.self_state, inventory=decoded.inventory, gui=decoded.gui, perception=decoded.perception,
         targeting=decoded.targeting, tracked_entity=decoded.tracked_entity,
+        damage_events=decoded.damage_events,
+        damage_events_dropped=decoded.damage_events_dropped,
         field_profile=decoded.field_profile, source_backend=source_backend,
         privileged_fields_present=privileged_fields_present)

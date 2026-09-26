@@ -88,7 +88,8 @@ def _restore_v3_snapshot(raw):
         decode_client_observation_payload_v3, snapshot_v3_from_payload,
     )
     payload={k:raw[k] for k in ('client_sample','self_state','inventory','gui','perception',
-                                'field_profile','targeting','tracked_entity')}
+                                'field_profile','targeting','tracked_entity',
+                                'damage_events','damage_events_dropped')}
     payload=json.loads(json.dumps(payload,allow_nan=False))
     payload.update(schema_version='mc2p.client_observation.v3',generation_id=raw['sequence_id'],
                    sample_world_tick=raw['world_time_ticks']['value'])

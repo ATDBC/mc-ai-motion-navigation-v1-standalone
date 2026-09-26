@@ -659,6 +659,8 @@ class MovingMeleeDriver:
                         "attack_input_failure",
                     AttackTaskOutcome.CONFIRMATION_RETRY_EXHAUSTED:
                         "hit_confirmation_uncertain",
+                    AttackTaskOutcome.NO_PROGRESS_RETRY_EXHAUSTED:
+                        "attack_progress_exhausted",
                 }[retry_outcome]
             elif (attempt_outcome is AttackAttemptOutcome.INPUT_FAILED
                   and self.runtime.state is not RuntimeStateV1.READY):
@@ -728,7 +730,14 @@ class MovingMeleeDriver:
         supplier = (
             None
             if approach is None
-            else lambda: approach.prepare_proposals(owner_deadline_ns)
+            else lambda look: approach.prepare_proposals(
+                owner_deadline_ns,
+                conditioned_look=(
+                    look
+                    if look is not None and look.intent.look is not None
+                    else None
+                ),
+            )
         )
         try:
             result = self.strike_driver.tick(

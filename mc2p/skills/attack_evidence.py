@@ -26,6 +26,7 @@ class AttackAttemptOutcome(StrEnum):
     CONFIRMATION_TIMEOUT = "confirmation_timeout"
     OBSERVATION_INTERRUPTED = "observation_interrupted"
     COMMAND_CORRELATED_HIT = "command_correlated_hit"
+    SOURCE_CONFIRMED_HIT = "source_confirmed_hit"
     TARGET_DEAD_UNATTRIBUTED = "target_dead_unattributed"
     TARGET_REVISED = "target_revised"
     CANCELLED = "cancelled"
@@ -35,12 +36,14 @@ class AttackEvidenceGrade(StrEnum):
     NONE = "none"
     TARGET_STATE_ONLY = "target_state_only"
     COMMAND_CORRELATED = "command_correlated"
+    SOURCE_CONFIRMED = "source_confirmed"
 
 
 class AttackTaskOutcome(StrEnum):
     GATE_RETRY_EXHAUSTED = "gate_retry_exhausted"
     INPUT_RETRY_EXHAUSTED = "input_retry_exhausted"
     CONFIRMATION_RETRY_EXHAUSTED = "confirmation_retry_exhausted"
+    NO_PROGRESS_RETRY_EXHAUSTED = "no_progress_retry_exhausted"
 
 
 @dataclass(frozen=True, slots=True)
@@ -76,6 +79,8 @@ class AttackAttemptReportV1:
     intent_id: str | None = None
     action_request_sequence_id: int | None = None
     attack_observation_sequence_id: int | None = None
+    attack_world_tick: int | None = None
+    pre_attack_damage_event_sequence: int | None = None
     confirmation_deadline_ns: int | None = None
     receipt_status: str | None = None
     latest_observation_sequence_id: int | None = None
@@ -85,6 +90,8 @@ class AttackAttemptReportV1:
     latest_health_points: float | None = None
     target_damaged_unattributed: bool = False
     target_dead: bool = False
+    source_damage_event_sequence_id: int | None = None
+    source_damage_type: str | None = None
     schema_version: str = "mc2p.attack-attempt-report.v1"
 
     def __post_init__(self) -> None:
@@ -101,10 +108,15 @@ class AttackAttemptReportV1:
         for value, name in (
             (self.action_request_sequence_id, "attack action request sequence"),
             (self.attack_observation_sequence_id, "attack observation sequence"),
+            (self.attack_world_tick, "attack world tick"),
+            (self.pre_attack_damage_event_sequence,
+             "pre-attack damage event sequence"),
             (self.confirmation_deadline_ns, "attack confirmation deadline"),
             (self.latest_observation_sequence_id, "attack latest observation sequence"),
             (self.pre_attack_hurt_animation_ticks, "pre-attack hurt animation"),
             (self.latest_hurt_animation_ticks, "latest hurt animation"),
+            (self.source_damage_event_sequence_id,
+             "source damage event sequence"),
         ):
             if value is not None:
                 require_nonnegative_int(value, name)
@@ -120,11 +132,15 @@ class AttackAttemptReportV1:
             raise ContractViolation("attack target facts must be booleans")
         if self.receipt_status is not None:
             require_identifier(self.receipt_status, "attack receipt status")
+        if self.source_damage_type is not None:
+            require_identifier(self.source_damage_type, "source damage type")
         if self.outcome is AttackAttemptOutcome.COMMAND_CORRELATED_HIT:
             if (self.evidence_grade is not AttackEvidenceGrade.COMMAND_CORRELATED
                     or self.intent_id is None
                     or self.action_request_sequence_id is None
                     or self.attack_observation_sequence_id is None
+                    or self.attack_world_tick is None
+                    or self.pre_attack_damage_event_sequence is None
                     or self.confirmation_deadline_ns is None
                     or self.receipt_status != "pending_confirmation"):
                 raise ContractViolation(
@@ -132,6 +148,24 @@ class AttackAttemptReportV1:
                 )
         elif self.evidence_grade is AttackEvidenceGrade.COMMAND_CORRELATED:
             raise ContractViolation("only a correlated hit may carry correlated evidence")
+        if self.outcome is AttackAttemptOutcome.SOURCE_CONFIRMED_HIT:
+            if (self.evidence_grade is not AttackEvidenceGrade.SOURCE_CONFIRMED
+                    or self.intent_id is None
+                    or self.action_request_sequence_id is None
+                    or self.attack_observation_sequence_id is None
+                    or self.attack_world_tick is None
+                    or self.pre_attack_damage_event_sequence is None
+                    or self.confirmation_deadline_ns is None
+                    or self.receipt_status != "pending_confirmation"
+                    or self.source_damage_event_sequence_id is None
+                    or self.source_damage_type is None):
+                raise ContractViolation(
+                    "source-confirmed hit requires command and packet evidence"
+                )
+        elif self.evidence_grade is AttackEvidenceGrade.SOURCE_CONFIRMED:
+            raise ContractViolation(
+                "only a source-confirmed hit may carry source evidence"
+            )
         if (self.outcome is AttackAttemptOutcome.TARGET_DEAD_UNATTRIBUTED
                 and not self.target_dead):
             raise ContractViolation("unattributed target death requires a death fact")
@@ -151,6 +185,7 @@ class AttackRetryLedgerV1:
     consecutive_gate_rejections: int = 0
     consecutive_input_failures: int = 0
     consecutive_confirmation_timeouts: int = 0
+    failures_since_confirmed_hit: int = 0
     schema_version: str = "mc2p.attack-retry-ledger.v1"
 
     def __post_init__(self) -> None:
@@ -159,6 +194,7 @@ class AttackRetryLedgerV1:
             "confirmation_timeouts_total", "unattributed_target_damage_total",
             "confirmed_hits_total", "consecutive_gate_rejections",
             "consecutive_input_failures", "consecutive_confirmation_timeouts",
+            "failures_since_confirmed_hit",
         ):
             require_nonnegative_int(getattr(self, name), name.replace("_", " "))
 
@@ -170,6 +206,7 @@ def advance_attack_retry(
     gate_limit: int = 2,
     input_limit: int = 2,
     confirmation_limit: int = 2,
+    no_progress_limit: int = 6,
 ) -> tuple[AttackRetryLedgerV1, AttackTaskOutcome | None]:
     """Apply one terminal attempt without mixing independent failure classes."""
     if type(ledger) is not AttackRetryLedgerV1 or type(attempt) is not AttackAttemptReportV1:
@@ -180,6 +217,7 @@ def advance_attack_retry(
         (gate_limit, "gate retry limit"),
         (input_limit, "input retry limit"),
         (confirmation_limit, "confirmation retry limit"),
+        (no_progress_limit, "attack no-progress limit"),
     ):
         require_nonnegative_int(value, name)
         if value == 0:
@@ -204,6 +242,7 @@ def advance_attack_retry(
             consecutive_gate_rejections=streak,
             consecutive_input_failures=0,
             consecutive_confirmation_timeouts=0,
+            failures_since_confirmed_hit=ledger.failures_since_confirmed_hit + 1,
         )
         if streak >= gate_limit:
             task_outcome = AttackTaskOutcome.GATE_RETRY_EXHAUSTED
@@ -215,6 +254,7 @@ def advance_attack_retry(
             consecutive_gate_rejections=0,
             consecutive_input_failures=streak,
             consecutive_confirmation_timeouts=0,
+            failures_since_confirmed_hit=ledger.failures_since_confirmed_hit + 1,
         )
         if streak >= input_limit:
             task_outcome = AttackTaskOutcome.INPUT_RETRY_EXHAUSTED
@@ -226,15 +266,23 @@ def advance_attack_retry(
             consecutive_gate_rejections=0,
             consecutive_input_failures=0,
             consecutive_confirmation_timeouts=streak,
+            failures_since_confirmed_hit=ledger.failures_since_confirmed_hit + 1,
         )
         if streak >= confirmation_limit:
             task_outcome = AttackTaskOutcome.CONFIRMATION_RETRY_EXHAUSTED
-    elif attempt.outcome is AttackAttemptOutcome.COMMAND_CORRELATED_HIT:
+    elif attempt.outcome in {
+        AttackAttemptOutcome.COMMAND_CORRELATED_HIT,
+        AttackAttemptOutcome.SOURCE_CONFIRMED_HIT,
+    }:
         next_ledger = replace(
             next_ledger,
             confirmed_hits_total=ledger.confirmed_hits_total + 1,
             consecutive_gate_rejections=0,
             consecutive_input_failures=0,
             consecutive_confirmation_timeouts=0,
+            failures_since_confirmed_hit=0,
         )
+    if (task_outcome is None
+            and next_ledger.failures_since_confirmed_hit >= no_progress_limit):
+        task_outcome = AttackTaskOutcome.NO_PROGRESS_RETRY_EXHAUSTED
     return next_ledger, task_outcome

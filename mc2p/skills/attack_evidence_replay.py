@@ -91,6 +91,26 @@ def _target_facts_from_step(
     return sequence, received, hurt, health, dead
 
 
+def _damage_events_from_step(row: Mapping) -> tuple[int, int, tuple[Mapping, ...]] | None:
+    """Return one observation's ordered raw damage events for replay."""
+    if row.get("record_type") != "step":
+        return None
+    payload = row.get("payload")
+    backend = payload.get("backend_result") if isinstance(payload, Mapping) else None
+    observation = backend.get("observation") if isinstance(backend, Mapping) else None
+    if not isinstance(observation, Mapping):
+        return None
+    sequence = observation.get("sequence_id")
+    received = observation.get("received_at_monotonic_ns")
+    events = observation.get("damage_events")
+    if (not isinstance(sequence, int) or not isinstance(received, int)
+            or not isinstance(events, list)):
+        return None
+    if not all(isinstance(event, Mapping) for event in events):
+        return None
+    return sequence, received, tuple(events)
+
+
 def replay_attack_attempt(
     records: Iterable[Mapping],
     key: AttackAttemptKeyV1,
@@ -260,6 +280,9 @@ def replay_attack_attempt(
         online_hint.get("confirmation_deadline_ns")
         if isinstance(online_hint, Mapping) else None
     )
+    hint = online_hint if isinstance(online_hint, Mapping) else {}
+    attack_world_tick = hint.get("attack_world_tick")
+    pre_damage_event_sequence = hint.get("pre_attack_damage_event_sequence")
     pre_hurt = (
         pre_assessment.get("hurt_animation_ticks")
         if isinstance(pre_assessment, Mapping) else None
@@ -275,6 +298,38 @@ def replay_attack_attempt(
     target_dead = any(_target_dead_from_step(row, key) for row in rows)
     timed_out = False
     correlated = False
+    explicit_other_source = False
+    source_damage_event_sequence_id = None
+    source_damage_type = None
+    if (isinstance(attack_sequence, int) and isinstance(attack_world_tick, int)
+            and isinstance(pre_damage_event_sequence, int)
+            and isinstance(deadline, int)):
+        for row in rows:
+            event_batch = _damage_events_from_step(row)
+            if event_batch is None:
+                continue
+            observation_sequence, received, damage_events = event_batch
+            if observation_sequence <= attack_sequence or received > deadline:
+                continue
+            for event in damage_events:
+                event_sequence = event.get("event_sequence_id")
+                world_tick = event.get("world_tick")
+                if (not isinstance(event_sequence, int)
+                        or event_sequence <= pre_damage_event_sequence
+                        or not isinstance(world_tick, int)
+                        or world_tick < attack_world_tick
+                        or event.get("target_is_self") is not False
+                        or event.get("target_entity_ref") != key.track_id):
+                    continue
+                if (event.get("source_is_self") is True
+                        or event.get("direct_source_is_self") is True):
+                    damage_type = event.get("damage_type")
+                    if not isinstance(damage_type, str) or not damage_type:
+                        continue
+                    source_damage_event_sequence_id = event_sequence
+                    source_damage_type = damage_type
+                else:
+                    explicit_other_source = True
     if (isinstance(attack_sequence, int) and isinstance(deadline, int)
             and isinstance(pre_hurt, int)):
         for row in rows:
@@ -286,7 +341,8 @@ def replay_attack_attempt(
                 continue
             latest_sequence, latest_hurt, latest_health = sequence, hurt, health
             target_dead = target_dead or dead
-            if (received <= deadline and isinstance(hurt, int)
+            if (not explicit_other_source and received <= deadline
+                    and isinstance(hurt, int)
                     and hurt > pre_hurt):
                 correlated = True
                 break
@@ -320,7 +376,8 @@ def replay_attack_attempt(
         latest_hurt = hurt if isinstance(hurt, int) else None
         latest_health = health if isinstance(health, (int, float)) else None
         later = observation_sequence > attack_sequence
-        if (later and decision_time <= deadline and isinstance(hurt, int)
+        if (not explicit_other_source and later and decision_time <= deadline
+                and isinstance(hurt, int)
                 and hurt > pre_hurt):
             correlated = True
             break
@@ -335,6 +392,8 @@ def replay_attack_attempt(
         intent_id=intent_id,
         action_request_sequence_id=request_sequence,
         attack_observation_sequence_id=attack_sequence,
+        attack_world_tick=attack_world_tick,
+        pre_attack_damage_event_sequence=pre_damage_event_sequence,
         confirmation_deadline_ns=deadline,
         receipt_status=status,
         latest_observation_sequence_id=latest_sequence,
@@ -342,8 +401,22 @@ def replay_attack_attempt(
         latest_hurt_animation_ticks=latest_hurt,
         pre_attack_health_points=pre_health,
         latest_health_points=latest_health,
-        target_damaged_unattributed=target_damaged and not correlated,
+        target_damaged_unattributed=(
+            explicit_other_source or target_damaged and not correlated
+        ),
         target_dead=target_dead,
+        source_damage_event_sequence_id=source_damage_event_sequence_id,
+        source_damage_type=source_damage_type,
+    )
+    if source_damage_event_sequence_id is not None:
+        return AttackAttemptReportV1(
+            key, AttackAttemptPhase.TERMINAL,
+            AttackAttemptOutcome.SOURCE_CONFIRMED_HIT,
+            AttackEvidenceGrade.SOURCE_CONFIRMED,
+            **common,
+        )
+    target_state_evidence = bool(
+        explicit_other_source or target_damaged or target_dead
     )
     if correlated:
         return AttackAttemptReportV1(
@@ -357,7 +430,7 @@ def replay_attack_attempt(
             key, AttackAttemptPhase.TERMINAL,
             AttackAttemptOutcome.CANCELLED,
             (AttackEvidenceGrade.TARGET_STATE_ONLY
-             if target_damaged or target_dead else AttackEvidenceGrade.NONE),
+             if target_state_evidence else AttackEvidenceGrade.NONE),
             **common,
         )
     if target_dead:
@@ -372,13 +445,13 @@ def replay_attack_attempt(
             key, AttackAttemptPhase.TERMINAL,
             AttackAttemptOutcome.CONFIRMATION_TIMEOUT,
             (AttackEvidenceGrade.TARGET_STATE_ONLY
-             if target_damaged else AttackEvidenceGrade.NONE),
+             if target_state_evidence else AttackEvidenceGrade.NONE),
             **common,
         )
     return AttackAttemptReportV1(
         key, AttackAttemptPhase.TERMINAL,
         AttackAttemptOutcome.OBSERVATION_INTERRUPTED,
         (AttackEvidenceGrade.TARGET_STATE_ONLY
-         if target_damaged else AttackEvidenceGrade.NONE),
+         if target_state_evidence else AttackEvidenceGrade.NONE),
         **common,
     )

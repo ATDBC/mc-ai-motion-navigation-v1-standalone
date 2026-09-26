@@ -118,6 +118,11 @@ class MeleeStrikeDriver:
         self._attempt_latest_health: float | None = None
         self._attempt_target_damaged_unattributed = False
         self._attempt_target_dead = False
+        self._attack_world_tick: int | None = None
+        self._pre_attack_damage_event_sequence = 0
+        self._attempt_source_damage_event_sequence_id: int | None = None
+        self._attempt_source_damage_type: str | None = None
+        self._attempt_explicit_other_source = False
         self._attempt_event_recorded = False
 
     @property
@@ -161,6 +166,11 @@ class MeleeStrikeDriver:
             intent_id=self._attempt_intent_id,
             action_request_sequence_id=self._attempt_action_request_sequence_id,
             attack_observation_sequence_id=self._attack_observation_sequence_id,
+            attack_world_tick=self._attack_world_tick,
+            pre_attack_damage_event_sequence=(
+                self._pre_attack_damage_event_sequence
+                if self._attack_world_tick is not None else None
+            ),
             confirmation_deadline_ns=self._confirmation_deadline_ns,
             receipt_status=self._attempt_receipt_status,
             latest_observation_sequence_id=self._attempt_latest_observation_sequence_id,
@@ -170,6 +180,10 @@ class MeleeStrikeDriver:
             latest_health_points=self._attempt_latest_health,
             target_damaged_unattributed=self._attempt_target_damaged_unattributed,
             target_dead=self._attempt_target_dead,
+            source_damage_event_sequence_id=(
+                self._attempt_source_damage_event_sequence_id
+            ),
+            source_damage_type=self._attempt_source_damage_type,
         )
 
     @property
@@ -336,19 +350,64 @@ class MeleeStrikeDriver:
             if self._attempt_evidence_grade is AttackEvidenceGrade.NONE:
                 self._attempt_evidence_grade = AttackEvidenceGrade.TARGET_STATE_ONLY
 
-    def _command_correlated_hurt(self, observation: ObservationSnapshotV3) -> bool:
+        if self._attack_world_tick is None:
+            return
+        for event in observation.damage_events:
+            if (event.event_sequence_id
+                    <= self._pre_attack_damage_event_sequence
+                    or event.world_tick < self._attack_world_tick
+                    or event.target_is_self
+                    or event.target_entity_ref != self._attempt_key.track_id):
+                continue
+            if event.source_is_self or event.direct_source_is_self:
+                self._attempt_source_damage_event_sequence_id = (
+                    event.event_sequence_id
+                )
+                self._attempt_source_damage_type = event.damage_type
+                self._attempt_evidence_grade = AttackEvidenceGrade.SOURCE_CONFIRMED
+            else:
+                self._attempt_explicit_other_source = True
+                self._attempt_target_damaged_unattributed = True
+                if self._attempt_evidence_grade is AttackEvidenceGrade.NONE:
+                    self._attempt_evidence_grade = (
+                        AttackEvidenceGrade.TARGET_STATE_ONLY
+                    )
+
+    def _confirmed_hit_evidence(
+        self, observation: ObservationSnapshotV3,
+    ) -> AttackEvidenceGrade | None:
         if (not self._attack_submitted
                 or self._attack_observation_sequence_id is None
                 or self._pre_attack_hurt is None
                 or self._confirmation_deadline_ns is None
                 or observation.sequence_id <= self._attack_observation_sequence_id
                 or observation.received_at_monotonic_ns > self._confirmation_deadline_ns):
-            return False
+            return None
+        if self._attempt_source_damage_event_sequence_id is not None:
+            return AttackEvidenceGrade.SOURCE_CONFIRMED
+        if self._attempt_explicit_other_source:
+            return None
         entity = self._visible_target(observation, self._attempt_key.track_id)
-        return bool(
+        if (
             entity is not None
             and entity.hurt_animation_ticks is not None
             and entity.hurt_animation_ticks > self._pre_attack_hurt
+        ):
+            return AttackEvidenceGrade.COMMAND_CORRELATED
+        return None
+
+    @staticmethod
+    def _hit_outcome(evidence: AttackEvidenceGrade) -> AttackAttemptOutcome:
+        return (
+            AttackAttemptOutcome.SOURCE_CONFIRMED_HIT
+            if evidence is AttackEvidenceGrade.SOURCE_CONFIRMED
+            else AttackAttemptOutcome.COMMAND_CORRELATED_HIT
+        )
+
+    def _finish_confirmed_hit(self, evidence: AttackEvidenceGrade) -> None:
+        self._hit_observed = True
+        self._finish_attempt(
+            self._hit_outcome(evidence), evidence_grade=evidence,
         )
 
     def _finish_attempt(
@@ -396,14 +455,15 @@ class MeleeStrikeDriver:
         *,
         additional_proposals: tuple[ControlFrameProposalV1, ...] = (),
         additional_proposal_supplier: (
-            Callable[[], tuple[ControlFrameProposalV1, ...]] | None
+            Callable[[OrderedIntentV1 | None],
+                     tuple[ControlFrameProposalV1, ...]] | None
         ) = None,
     ) -> RuntimeStepResultV1:
         assert self._task is not None and self._target is not None
         if additional_proposal_supplier is not None:
             if not callable(additional_proposal_supplier) or additional_proposals:
                 raise ContractViolation("control proposal supplier is invalid")
-            additional_proposals = additional_proposal_supplier()
+            additional_proposals = additional_proposal_supplier(envelope)
         if (type(additional_proposals) is not tuple
                 or any(type(item) is not ControlFrameProposalV1
                        for item in additional_proposals)):
@@ -476,12 +536,9 @@ class MeleeStrikeDriver:
             self._finish("failed", "world_session_changed")
             return
         if self._explicitly_dead(observation, self._target.track_id):
-            if self._command_correlated_hurt(observation):
-                self._hit_observed = True
-                self._finish_attempt(
-                    AttackAttemptOutcome.COMMAND_CORRELATED_HIT,
-                    evidence_grade=AttackEvidenceGrade.COMMAND_CORRELATED,
-                )
+            evidence = self._confirmed_hit_evidence(observation)
+            if evidence is not None:
+                self._finish_confirmed_hit(evidence)
             else:
                 self._finish_attempt(
                     AttackAttemptOutcome.TARGET_DEAD_UNATTRIBUTED,
@@ -520,12 +577,18 @@ class MeleeStrikeDriver:
             if item.candidate_id == selected
         )
         if selected == "complete":
-            self._hit_observed = True
-            self._finish_attempt(
-                AttackAttemptOutcome.COMMAND_CORRELATED_HIT,
-                evidence_grade=AttackEvidenceGrade.COMMAND_CORRELATED,
-            )
-            self._finish("complete", "hit_confirmed")
+            evidence = self._confirmed_hit_evidence(observation)
+            if evidence is None:
+                if self._clock() >= self._confirmation_deadline_ns:
+                    self._finish_attempt(AttackAttemptOutcome.CONFIRMATION_TIMEOUT)
+                    self._finish("unconfirmed", "other_source_not_attack_evidence")
+                else:
+                    self._state, self._reason = (
+                        "observing_after_submit", "other_source_not_attack_evidence"
+                    )
+            else:
+                self._finish_confirmed_hit(evidence)
+                self._finish("complete", "hit_confirmed")
         elif selected == "fail_confirmation_timeout":
             self._finish_attempt(AttackAttemptOutcome.CONFIRMATION_TIMEOUT)
             self._finish("unconfirmed", self._reason)
@@ -542,7 +605,8 @@ class MeleeStrikeDriver:
         *,
         additional_proposals: tuple[ControlFrameProposalV1, ...] = (),
         additional_proposal_supplier: (
-            Callable[[], tuple[ControlFrameProposalV1, ...]] | None
+            Callable[[OrderedIntentV1 | None],
+                     tuple[ControlFrameProposalV1, ...]] | None
         ) = None,
     ) -> RuntimeStepResultV1 | None:
         if type(profile) is not BehaviorProfileV0:
@@ -560,12 +624,9 @@ class MeleeStrikeDriver:
             self._finish("failed", "world_session_changed")
             return None
         if self._explicitly_dead(observation, self._target.track_id):
-            if self._command_correlated_hurt(observation):
-                self._hit_observed = True
-                self._finish_attempt(
-                    AttackAttemptOutcome.COMMAND_CORRELATED_HIT,
-                    evidence_grade=AttackEvidenceGrade.COMMAND_CORRELATED,
-                )
+            evidence = self._confirmed_hit_evidence(observation)
+            if evidence is not None:
+                self._finish_confirmed_hit(evidence)
             else:
                 self._finish_attempt(
                     AttackAttemptOutcome.TARGET_DEAD_UNATTRIBUTED,
@@ -609,11 +670,25 @@ class MeleeStrikeDriver:
         self._reason = next(item.reason for item in decision.candidates
                             if item.candidate_id == selected)
         if selected == "complete":
-            self._hit_observed = True
-            self._finish_attempt(
-                AttackAttemptOutcome.COMMAND_CORRELATED_HIT,
-                evidence_grade=AttackEvidenceGrade.COMMAND_CORRELATED,
-            )
+            evidence = self._confirmed_hit_evidence(observation)
+            if evidence is None:
+                if self._clock() >= self._confirmation_deadline_ns:
+                    self._finish_attempt(AttackAttemptOutcome.CONFIRMATION_TIMEOUT)
+                    self._finish("unconfirmed", "other_source_not_attack_evidence")
+                else:
+                    result = self._runtime_step(
+                        profile, owner_deadline_ns,
+                        additional_proposals=additional_proposals,
+                        additional_proposal_supplier=additional_proposal_supplier,
+                    )
+                    if result.observation is not None:
+                        self._observe_attempt_facts(result.observation)
+                    self._state, self._reason = (
+                        "observing_after_submit", "other_source_not_attack_evidence"
+                    )
+                    return result
+                return None
+            self._finish_confirmed_hit(evidence)
             if self._cancel_after_submit:
                 self._finish("cancelled", "cancelled_after_submit")
             elif self._target_revised_after_submit:
@@ -667,6 +742,11 @@ class MeleeStrikeDriver:
             entity = self._visible_target(observation, self._target.track_id)
             assert entity is not None
             self._attack_observation_sequence_id = observation.sequence_id
+            self._attack_world_tick = observation.world_time_ticks.value
+            self._pre_attack_damage_event_sequence = max(
+                (event.event_sequence_id for event in observation.damage_events),
+                default=0,
+            )
             self._pre_attack_hurt = entity.hurt_animation_ticks
             self._pre_attack_health = self._tracked_health(
                 observation, self._target.track_id,
@@ -774,12 +854,12 @@ class MeleeStrikeDriver:
             "combat_cancel", "mc2p.combat-cancel.v1",
             cancel_reason=reason,
         )
-        if (type(observation) is ObservationSnapshotV3
-                and self._command_correlated_hurt(observation)):
-            self._finish_attempt(
-                AttackAttemptOutcome.COMMAND_CORRELATED_HIT,
-                evidence_grade=AttackEvidenceGrade.COMMAND_CORRELATED,
-            )
+        evidence = (
+            self._confirmed_hit_evidence(observation)
+            if type(observation) is ObservationSnapshotV3 else None
+        )
+        if evidence is not None:
+            self._finish_confirmed_hit(evidence)
         else:
             self._finish_attempt(AttackAttemptOutcome.CANCELLED)
         self._state, self._reason = "cancelled", "cancelled_after_submit"

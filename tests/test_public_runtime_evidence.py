@@ -43,7 +43,8 @@ RUNS = (
         ("DeploymentEvidenceFailure", "['client-0:c1c_20_of_20_positive_tasks']"),
     ),
     ("20260925T120057978030Z-c17b889e", "b11", "pass", "passed", None),
-    ("20260926T025406298506Z-5bf010ce", "b12b", "pass", "passed", None),
+    ("20260926T055043431485Z-e2dc4fff", "b12a", "pass", "passed", None),
+    ("20260926T063032338012Z-780e0386", "b12b", "pass", "passed", None),
 )
 
 
@@ -76,6 +77,55 @@ def _make_sources(root: Path) -> None:
             },
         )
         client = run / "client-0"
+        if stage == "b12a":
+            diagnostics = {
+                "schema_version": "mc2p.b12a-damage-source-diagnostics.v1",
+                "player_attack": {
+                    "damage_type": "minecraft:player_attack",
+                    "evidence_grade": "source_confirmed",
+                    "outcome": "source_confirmed_hit",
+                },
+                "environment_damage": {
+                    "damage_type": "minecraft:on_fire",
+                    "source_entity_present": False,
+                    "direct_entity_present": False,
+                    "source_is_self": False,
+                    "direct_source_is_self": False,
+                },
+            }
+            trials = [
+                {"trial_id": f"negative-{index}", "classification": "negative",
+                 "passed": True}
+                for index in range(8)
+            ]
+            _write_json(client / "b12a-fabric-manifest.json", {
+                "schema_version": "mc2p.b12a-fabric-manifest.v1",
+                "world_seed": 21001,
+                "code_hashes": {"example.py": "0" * 64},
+                "trials": trials,
+            })
+            _write_json(client / "b12a-fabric-online.json", {
+                "schema_version": "mc2p.b12a-fabric-evidence.v1",
+                "trial_count": 8,
+                "damage_source_diagnostics": diagnostics,
+                "trials": trials,
+            })
+            _write_json(client / "b12a-fabric-evidence.json", {
+                "schema_version": "mc2p.b12a-fabric-evidence.v1",
+                "trial_count": 8,
+                "damage_source_diagnostics": diagnostics,
+                "trace_stats": {"accepted_records": 10, "dropped_records": 0},
+                "trials": trials,
+            })
+            _write_jsonl(
+                client / "b12a-fixture-commands.jsonl",
+                [{"trial_id": row["trial_id"], "commands": []} for row in trials],
+            )
+            trace = client / "runtime-trace" / "trace"
+            _write_jsonl(trace / "manifest.jsonl", [{"segment": 0}])
+            _write_json(trace / "complete.json", {"complete": True})
+            _write_jsonl(trace / "segment-00000000.jsonl", [{"tick": 1}])
+            continue
         if stage == "b12b":
             _write_json(client / "b12b-partial-combat-manifest.json", {
                 "schema_version": "mc2p.b12b-partial-combat-manifest.v1",
@@ -91,12 +141,12 @@ def _make_sources(root: Path) -> None:
             boundaries = [
                 {"trial_id": f"boundary-{index}", "classification": "boundary",
                  "passed": True}
-                for index in range(6)
+                for index in range(8)
             ]
             _write_json(client / "b12b-partial-combat-runtime.json", {
                 "schema_version": "mc2p.b12b-partial-combat-runtime.v1",
-                "completed_trials": 30,
-                "planned_trials": 30,
+                "completed_trials": 33,
+                "planned_trials": 33,
                 "control_decision_ms": {
                     "count": 889, "p95": 5.0015, "p99": 6.2107,
                 },
@@ -104,7 +154,10 @@ def _make_sources(root: Path) -> None:
                 "trials": positives + boundaries,
             })
             _write_json(client / "b12b-partial-combat-evidence.json", {
-                "trials": positives,
+                "trials": positives
+                + [{"trial_id": "active-target", "classification": "active_target",
+                    "passed": True}]
+                + boundaries,
                 "checks": [
                     {"name": "same_tick", "passed": True},
                     {"name": "right_target", "passed": True},
@@ -112,12 +165,14 @@ def _make_sources(root: Path) -> None:
             })
             _write_jsonl(
                 client / "b12b-partial-combat-trials.jsonl",
-                positives + boundaries,
+                positives + [{"trial_id": "active-target", "passed": True}]
+                + boundaries,
             )
             _write_jsonl(
                 client / "b12b-fixture-commands.jsonl",
                 [{"trial_id": row["trial_id"], "commands": []}
-                 for row in positives + boundaries],
+                 for row in positives + [{"trial_id": "active-target"}]
+                 + boundaries],
             )
             for directory in (
                 client / "runtime-trace" / "trace",
@@ -263,15 +318,15 @@ class PublicRuntimeEvidenceTests(unittest.TestCase):
     def tearDown(self) -> None:
         shutil.rmtree(self.temp, ignore_errors=True)
 
-    def test_build_and_verify_eight_frozen_batches(self) -> None:
+    def test_build_and_verify_nine_frozen_batches(self) -> None:
         build_corpus(self.sources, self.corpus)
 
         report = verify_corpus(self.corpus)
 
-        self.assertEqual(report.archive_count, 8)
+        self.assertEqual(report.archive_count, 9)
         self.assertLessEqual(report.total_archive_bytes, 30 * 1024 * 1024)
         self.assertEqual(
-            report.stages, ("b10c", "b11", "b12b", "c1b", "c1c"),
+            report.stages, ("b10c", "b11", "b12a", "b12b", "c1b", "c1c"),
         )
 
         b10 = next((self.corpus / "archives").glob("b10c-pass-*.tar.gz"))
@@ -285,6 +340,14 @@ class PublicRuntimeEvidenceTests(unittest.TestCase):
             names = set(archive.getnames())
         self.assertIn("client-0/b12b-partial-combat-evidence.json", names)
         self.assertIn("client-0/control-events/segment-00000000.jsonl", names)
+        self.assertIn(
+            "client-0/runtime-trace/trace/segment-00000000.jsonl", names,
+        )
+
+        b12a = next((self.corpus / "archives").glob("b12a-pass-*.tar.gz"))
+        with tarfile.open(b12a, mode="r:gz") as archive:
+            names = set(archive.getnames())
+        self.assertIn("client-0/b12a-fabric-evidence.json", names)
         self.assertIn(
             "client-0/runtime-trace/trace/segment-00000000.jsonl", names,
         )

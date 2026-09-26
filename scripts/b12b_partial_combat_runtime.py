@@ -28,15 +28,18 @@ from mc2p.skills.melee_strike_driver import MeleeStrikeDriver
 from mc2p.skills.moving_melee_driver import MovingMeleeDriver
 from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
 from scripts.control_probe_core import append_jsonl, write_json_atomic
+from scripts.c1_moving_melee_runtime import (
+    _await_seed_receipt, validate_seed_receipt,
+)
 
 
 B12B_RUNTIME_INJECTIONS = (
     "observation_gap",
-    "hidden_without_engagement",
     "target_or_world_revision",
 )
 _FABRIC_BOUNDARIES = (
     "large_combat_turn",
+    "hidden_without_engagement",
     "engaged_occlusion_navigation",
     "occluded_attack_reacquire",
 )
@@ -56,6 +59,7 @@ _ROOT = Path(__file__).resolve().parents[1]
 _CONFIG = _ROOT / "config/motion-navigation"
 _PLAYER_START = {"x": .5, "y": 100.0, "z": -2.5}
 _TARGET = {"x": .5, "y": 100.0, "z": -.25}
+_ACTIVE_TARGET = {"x": .5, "y": 100.0, "z": 4.5}
 _TURN_TARGET = {"x": 2.091, "y": 100.0, "z": -.909}
 _ROUTE_OFFSETS = {
     "forward": (0.0, 2.0),
@@ -114,6 +118,18 @@ def b12b_trial_plan(world_seed: int) -> tuple[dict, ...]:
                 "injection": None,
                 "evidence_source": "fabric",
             })
+    rows.append({
+        "trial_id": "active-target-conditioned-look-01",
+        "classification": "active_target",
+        "direction": "target_directed",
+        "repeat": 1,
+        "world_seed": world_seed,
+        "scenario_seed": world_seed * 1000 + len(rows) + 1,
+        "ai_seed": 51001,
+        "movement": None,
+        "injection": None,
+        "evidence_source": "fabric",
+    })
     for evidence_source, injections in (
         ("fabric", _FABRIC_BOUNDARIES),
         ("runtime", B12B_RUNTIME_INJECTIONS),
@@ -157,6 +173,101 @@ def _ordered_intents(records: Iterable[Mapping]) -> dict[str, dict]:
         if type(intent) is dict and type(intent.get("intent_id")) is str:
             result[intent["intent_id"]] = intent
     return result
+
+
+def _dispatch_actions(records: Iterable[Mapping]) -> dict[int, Mapping]:
+    actions: dict[int, Mapping] = {}
+    for record in records:
+        if record.get("record_type") != "dispatch":
+            continue
+        payload = record.get("payload")
+        decision = payload.get("decision") if isinstance(payload, Mapping) else None
+        action = decision.get("action") if isinstance(decision, Mapping) else None
+        request = action.get("request_sequence_id") if isinstance(action, Mapping) else None
+        if isinstance(request, int):
+            actions[request] = action
+    return actions
+
+
+def _raw_movement_nonempty(value: object) -> bool:
+    return bool(
+        isinstance(value, Mapping)
+        and (
+            value.get("forward") in {-1, 1, -1.0, 1.0}
+            or value.get("strafe") in {-1, 1, -1.0, 1.0}
+        )
+        and value.get("jump") is False
+        and value.get("sneak") is False
+    )
+
+
+def evaluate_b12b_active_target_evidence(
+    rows: Iterable[Mapping],
+    trace_records: Iterable[Mapping],
+    control_events: Iterable[Mapping],
+) -> tuple[list[dict], list[dict]]:
+    """Require one formally applied frame with both turning and ground travel."""
+    actions = _dispatch_actions(trace_records)
+    events = tuple(dict(event) for event in control_events)
+    evaluated = []
+    for source in rows:
+        row = dict(source)
+        if row.get("classification") != "active_target":
+            continue
+        proven: list[int] = []
+        for request in row.get("composed_request_sequences", ()):
+            action = actions.get(request)
+            movement = action.get("movement") if isinstance(action, Mapping) else None
+            look = action.get("look") if isinstance(action, Mapping) else None
+            if (not _raw_movement_nonempty(movement)
+                    or not isinstance(look, Mapping)
+                    or abs(float(look.get("yaw_delta_degrees", 0.0))) <= 0.0):
+                continue
+            inputs = tuple(
+                event for event in events
+                if event.get("event") == "input_consumed"
+                and event.get("request_sequence_id") == request
+                and event.get("input_state") == "leased"
+                and _raw_movement_nonempty(event.get("actual_input"))
+            )
+            looks = tuple(
+                event for event in events
+                if event.get("event") == "look_applied"
+                and event.get("request_sequence_id") == request
+            )
+            if any(
+                input_event.get("time_event_sequence")
+                == look_event.get("time_event_sequence")
+                and isinstance(input_event.get("client_ticks"), int)
+                and isinstance(look_event.get("client_ticks"), int)
+                and 0 <= (
+                    input_event["client_ticks"] - look_event["client_ticks"]
+                ) <= 1
+                for input_event in inputs for look_event in looks
+            ):
+                proven.append(request)
+        report = row.get("report")
+        failures = []
+        if row.get("seed_receipt_valid") is not True:
+            failures.append("seed_receipt_invalid")
+        if not proven:
+            failures.append("no_applied_turn_and_movement_frame")
+        if (not isinstance(report, Mapping)
+                or report.get("confirmed_hits", 0) < 1):
+            failures.append("active_target_not_hit")
+        if row.get("runtime_ready") is not True:
+            failures.append("runtime_not_ready")
+        evaluated.append({
+            **row,
+            "applied_turn_and_movement_requests": proven,
+            "failures": failures,
+            "passed": not failures,
+        })
+    checks = [{
+        "name": "b12b_active_target_applies_conditioned_turn_and_movement",
+        "passed": len(evaluated) == 1 and evaluated[0]["passed"],
+    }]
+    return evaluated, checks
 
 
 def evaluate_b12b_positive_evidence(
@@ -244,12 +355,12 @@ def evaluate_b12b_boundary_evidence(
         injection = row.get("injection")
         if injection == "large_combat_turn":
             conditions = (
-                (row.get("movement_suppressed_count", 0) >= 1,
-                 "old_heading_movement_not_suppressed"),
                 (row.get("turn_selected_count", 0) >= 1,
                  "combat_turn_missing"),
-                (row.get("resumed_movement_count", 0) >= 1,
-                 "movement_did_not_resume"),
+                (row.get("movement_during_turn_count", 0) >= 1,
+                 "movement_missing_during_combat_turn"),
+                (row.get("movement_suppressed_count", 0) == 0,
+                 "final_look_conditioned_movement_suppressed"),
             )
         elif injection == "engaged_occlusion_navigation":
             conditions = (
@@ -259,6 +370,17 @@ def evaluate_b12b_boundary_evidence(
                  "attack_submitted_through_wall"),
                 (row.get("hidden_movement_events", 0) >= 1,
                  "hidden_target_navigation_missing"),
+            )
+        elif injection == "hidden_without_engagement":
+            conditions = (
+                (row.get("hidden_observed") is True,
+                 "real_occlusion_not_observed"),
+                (row.get("engagement_position_uses") == 0,
+                 "unengaged_hidden_position_used"),
+                (row.get("hidden_attack_submissions") == 0,
+                 "unengaged_hidden_target_attacked"),
+                (row.get("hidden_movement_events") == 0,
+                 "unengaged_hidden_target_followed"),
             )
         elif injection == "occluded_attack_reacquire":
             conditions = (
@@ -535,7 +657,13 @@ def _run_positive(
                     owner_deadline,
                     additional_proposal_supplier=(
                         None if navigation.source is None
-                        else lambda: navigation.prepare_proposals(owner_deadline)
+                        else lambda look: navigation.prepare_proposals(
+                            owner_deadline,
+                            conditioned_look=(
+                                look if look is not None
+                                and look.intent.look is not None else None
+                            ),
+                        )
                     ),
                 ),
             )
@@ -567,6 +695,94 @@ def _run_positive(
             strike.cancel(profile, "b12b_trial_cleanup")
         if runtime.state is RuntimeStateV1.READY:
             _cleanup_navigation(navigation, session, profile)
+        else:
+            session.close()
+
+
+def _run_active_target(
+    runtime: PlayerRuntimeV1,
+    episode: str,
+    trial: dict,
+    deadline_ns: int,
+    profiles: NavigationSessionProfiles,
+    fixture_writer: Callable[[tuple[str, ...], dict], None],
+    control_decision_ms: list[float],
+    fixture_events: Path,
+) -> dict:
+    # Scan first, then spawn the active entity so the scan cannot move it.
+    fixture_writer(
+        _fixture_commands_at(_PLAYER_START, _ACTIVE_TARGET)[:-1], trial,
+    )
+    _scan_flat_ground(
+        runtime, trial, deadline_ns, fixture_writer, control_decision_ms,
+    )
+    fixture_writer((
+        f"mc2p_c1_spawn {trial['trial_id']} {trial['ai_seed']} "
+        f"{_ACTIVE_TARGET['x']} {_ACTIVE_TARGET['y']} {_ACTIVE_TARGET['z']} isolated",
+    ), trial)
+    seed_receipt = _await_seed_receipt(fixture_events, trial, deadline_ns)
+    seed_valid = validate_seed_receipt(trial, seed_receipt)
+    if not seed_valid:
+        raise RuntimeError("B12-B active target seed receipt is invalid")
+    entity = _refresh_target(
+        runtime, trial, deadline_ns, control_decision_ms,
+    )
+    session = NavigationSession(
+        "b12b-" + trial["trial_id"], profiles,
+        observation_adapter=runtime.navigation_observation_adapter,
+    )
+    driver = MovingMeleeDriver(runtime, session)
+    profile = BehaviorProfileV0()
+    composed_requests: list[int] = []
+    target_shifted = False
+    driver.start(CombatTargetV1(
+        "b12b-task-" + trial["trial_id"],
+        "b12b-combat-goal-" + trial["trial_id"],
+        1, episode, entity.track_id,
+    ), time.perf_counter_ns())
+    try:
+        for _ in range(300):
+            if time.perf_counter_ns() >= deadline_ns:
+                raise TimeoutError("B12-B active target deadline expired")
+            result = _timed_control(
+                runtime, control_decision_ms,
+                lambda: driver.tick(
+                    profile,
+                    min(deadline_ns, time.perf_counter_ns() + 3_000_000_000),
+                ),
+            )
+            if result is not None and result.decision is not None:
+                action = result.decision.action
+                if (not target_shifted
+                        and _nonneutral_movement(action.movement)):
+                    fixture_writer((
+                        ("tp @e[tag=mc2p-c1-fixture-"
+                         f"{trial['trial_id']},limit=1] 3.5 100 3.5"),
+                    ), trial)
+                    target_shifted = True
+                if (_nonneutral_movement(action.movement)
+                        and abs(action.look.yaw_delta_degrees) > 0.0):
+                    composed_requests.append(action.request_sequence_id)
+            if driver.report.confirmed_hits >= 1 and composed_requests:
+                break
+            if driver.report.terminal:
+                break
+            if result is None:
+                time.sleep(.01)
+        return {
+            **trial,
+            "target_track_id": entity.track_id,
+            "seed_receipt": seed_receipt,
+            "seed_receipt_valid": seed_valid,
+            "target_shifted_after_movement": target_shifted,
+            "composed_request_sequences": composed_requests,
+            "report": asdict(driver.report),
+            "runtime_ready": runtime.state is RuntimeStateV1.READY,
+        }
+    finally:
+        if runtime.state is RuntimeStateV1.READY:
+            _cleanup_moving_melee(driver, profile)
+            fixture_writer((f"mc2p_c1_remove {trial['trial_id']}",), trial)
         else:
             session.close()
 
@@ -628,7 +844,7 @@ def _run_large_turn_boundary(
     navigation = RuntimeNavigationDriver(runtime, session)
     strike = None
     profile = BehaviorProfileV0()
-    suppressed = turns = resumed = 0
+    suppressed = turns = resumed = movement_during_turn = 0
     try:
         navigation.start(
             "b12b-route-" + trial["trial_id"], 1,
@@ -644,13 +860,21 @@ def _run_large_turn_boundary(
             1, episode, entity.track_id,
         ), time.perf_counter_ns())
         for _ in range(30):
+            if strike.report.terminal:
+                break
             owner_deadline = min(
                 deadline_ns, time.perf_counter_ns() + 3_000_000_000,
             )
             captured: list[ControlFrameProposalV1] = []
 
-            def proposals():
-                prepared = navigation.prepare_proposals(owner_deadline)
+            def proposals(look):
+                prepared = navigation.prepare_proposals(
+                    owner_deadline,
+                    conditioned_look=(
+                        look if look is not None
+                        and look.intent.look is not None else None
+                    ),
+                )
                 captured.extend(prepared)
                 return prepared
 
@@ -664,7 +888,15 @@ def _run_large_turn_boundary(
                 ),
             )
             if navigation.has_prepared_frame:
-                navigation.adopt_result(result)
+                if result is None:
+                    navigation.discard_prepared()
+                else:
+                    navigation.adopt_result(result)
+            if result is None:
+                if strike.report.terminal:
+                    break
+                time.sleep(.01)
+                continue
             decision = result.decision
             if decision is None:
                 continue
@@ -677,6 +909,8 @@ def _run_large_turn_boundary(
             if (navigation_ids
                     and decision.action.look.yaw_delta_degrees != 0.0):
                 turns += 1
+                if _nonneutral_movement(decision.action.movement):
+                    movement_during_turn += 1
             if any(
                 intent_id in navigation_ids
                 and reason == "observed_yaw_limit_exceeded"
@@ -686,11 +920,30 @@ def _run_large_turn_boundary(
             if suppressed and _nonneutral_movement(decision.action.movement):
                 resumed += 1
                 break
+        if suppressed and not resumed and strike.report.terminal:
+            for _ in range(10):
+                result = _timed_control(
+                    runtime, control_decision_ms,
+                    lambda: navigation.tick(
+                        profile,
+                        min(
+                            deadline_ns,
+                            time.perf_counter_ns() + 500_000_000,
+                        ),
+                    ),
+                )
+                if (result.decision is not None
+                        and _nonneutral_movement(
+                            result.decision.action.movement,
+                        )):
+                    resumed += 1
+                    break
         return {
             **trial,
             "target_track_id": entity.track_id,
             "movement_suppressed_count": suppressed,
             "turn_selected_count": turns,
+            "movement_during_turn_count": movement_during_turn,
             "resumed_movement_count": resumed,
             "runtime_ready": runtime.state is RuntimeStateV1.READY,
         }
@@ -839,6 +1092,102 @@ def _run_occlusion_boundary(
             session.close()
 
 
+def _run_hidden_without_engagement_boundary(
+    runtime: PlayerRuntimeV1,
+    episode: str,
+    trial: dict,
+    deadline_ns: int,
+    profiles: NavigationSessionProfiles,
+    fixture_writer: Callable[[tuple[str, ...], dict], None],
+    control_decision_ms: list[float],
+) -> dict:
+    fixture_writer(_fixture_commands(trial), trial)
+    _scan_flat_ground(
+        runtime, trial, deadline_ns, fixture_writer, control_decision_ms,
+    )
+    entity = _refresh_target(
+        runtime, trial, deadline_ns, control_decision_ms,
+    )
+    fixture_writer((
+        "fill 0 100 -1 0 102 -1 minecraft:stone replace",
+    ), trial)
+    profile = BehaviorProfileV0()
+    hidden_observed = False
+    tracked_target_present_when_hidden = False
+    for _ in range(20):
+        result = _timed_control(
+            runtime, control_decision_ms,
+            lambda: runtime.control_frame(
+                _task(str(trial["trial_id"]) + "-hide", deadline_ns),
+                profile,
+                min(deadline_ns, time.perf_counter_ns() + 500_000_000),
+                proposals=(ControlFrameProposalV1(
+                    observation_request=ObservationRequestV3(
+                        "interaction_v1", entity_track_id=entity.track_id,
+                    ),
+                ),),
+            ),
+        )
+        if result.report.failure is not None:
+            raise RuntimeError(
+                "B12-B hidden-target observation failed: "
+                + result.report.failure.reason
+            )
+        tracked = runtime.observation.tracked_entity.value
+        if not any(item.track_id == entity.track_id
+                   for item in _visible_zombies(runtime)):
+            hidden_observed = True
+            tracked_target_present_when_hidden = bool(
+                tracked is not None and tracked.track_id == entity.track_id
+            )
+            break
+    session = NavigationSession(
+        "b12b-" + trial["trial_id"], profiles,
+        observation_adapter=runtime.navigation_observation_adapter,
+    )
+    driver = MovingMeleeDriver(runtime, session)
+    hidden_movement = 0
+    driver.start(CombatTargetV1(
+        "b12b-task-" + trial["trial_id"],
+        "b12b-combat-goal-" + trial["trial_id"],
+        1, episode, entity.track_id,
+    ), time.perf_counter_ns())
+    try:
+        for _ in range(12):
+            if driver.report.terminal:
+                break
+            result = _timed_control(
+                runtime, control_decision_ms,
+                lambda: driver.tick(
+                    profile,
+                    min(deadline_ns, time.perf_counter_ns() + 500_000_000),
+                ),
+            )
+            if (result is not None and result.decision is not None
+                    and _nonneutral_movement(
+                        result.decision.action.movement,
+                    )):
+                hidden_movement += 1
+        return {
+            **trial,
+            "target_track_id": entity.track_id,
+            "hidden_observed": hidden_observed,
+            "tracked_target_present_when_hidden": (
+                tracked_target_present_when_hidden
+            ),
+            "engagement_position_uses": driver.report.engagement_position_uses,
+            "hidden_attack_submissions": driver.report.attack_submissions,
+            "hidden_movement_events": hidden_movement,
+            "report": asdict(driver.report),
+            "runtime_ready": runtime.state is RuntimeStateV1.READY,
+        }
+    finally:
+        if runtime.state is RuntimeStateV1.READY:
+            _cleanup_moving_melee(driver, profile)
+        else:
+            session.close()
+
+
 def _run_fabric_boundary(
     runtime: PlayerRuntimeV1,
     episode: str,
@@ -850,6 +1199,11 @@ def _run_fabric_boundary(
 ) -> dict:
     if trial["injection"] == "large_combat_turn":
         return _run_large_turn_boundary(
+            runtime, episode, trial, deadline_ns, profiles, fixture_writer,
+            control_decision_ms,
+        )
+    if trial["injection"] == "hidden_without_engagement":
+        return _run_hidden_without_engagement_boundary(
             runtime, episode, trial, deadline_ns, profiles, fixture_writer,
             control_decision_ms,
         )
@@ -868,6 +1222,7 @@ def run_b12b_partial_combat_runtime(
     world_seed: int,
     code_hashes: dict[str, str],
     fixture_writer: Callable[[tuple[str, ...], dict], None],
+    fixture_events: Path,
 ) -> tuple[dict, list[dict], list[dict]]:
     if type(runtime) is not PlayerRuntimeV1 or runtime.state is not RuntimeStateV1.READY:
         raise ValueError("B12-B runtime requires ready PlayerRuntimeV1")
@@ -875,7 +1230,7 @@ def run_b12b_partial_combat_runtime(
     full_plan = b12b_trial_plan(world_seed)
     plan = tuple(
         row for row in full_plan
-        if (row["classification"] == "positive"
+        if (row["classification"] in {"positive", "active_target"}
             or row["evidence_source"] == "fabric")
     )
     write_json_atomic(directory / "b12b-partial-combat-manifest.json", {
@@ -888,12 +1243,21 @@ def run_b12b_partial_combat_runtime(
     rows = []
     control_decision_ms: list[float] = []
     for trial in plan:
-        runner = (_run_positive if trial["classification"] == "positive"
-                  else _run_fabric_boundary)
-        row = runner(
-            runtime, episode, dict(trial), deadline_ns, profiles,
-            fixture_writer, control_decision_ms,
-        )
+        if trial["classification"] == "positive":
+            row = _run_positive(
+                runtime, episode, dict(trial), deadline_ns, profiles,
+                fixture_writer, control_decision_ms,
+            )
+        elif trial["classification"] == "active_target":
+            row = _run_active_target(
+                runtime, episode, dict(trial), deadline_ns, profiles,
+                fixture_writer, control_decision_ms, Path(fixture_events),
+            )
+        else:
+            row = _run_fabric_boundary(
+                runtime, episode, dict(trial), deadline_ns, profiles,
+                fixture_writer, control_decision_ms,
+            )
         rows.append(row)
         append_jsonl(directory / "b12b-partial-combat-trials.jsonl", row)
     stages = {
@@ -921,8 +1285,8 @@ def run_b12b_partial_combat_runtime(
             for row in positive_rows
         ),
     }, {
-        "name": "b12b_six_fabric_boundaries_completed",
-        "passed": len(boundary_rows) == 6
+        "name": "b12b_eight_fabric_boundaries_completed",
+        "passed": len(boundary_rows) == 8
         and all(row["passed"] for row in evaluated_boundaries),
     }, {
         "name": "b12b_control_frame_budget",

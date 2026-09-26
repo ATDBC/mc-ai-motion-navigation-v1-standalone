@@ -61,6 +61,7 @@ CLIENT_GUI_SESSION_RELATIVE_PATH = "src/main/java/com/mc2p/observation/ClientGui
 CLIENT_SAMPLE_CLOCK_RELATIVE_PATH = "src/main/java/com/mc2p/observation/ClientSampleClock.java"
 CLIENT_ENTITY_NAME_RELATIVE_PATH = "src/main/java/com/mc2p/observation/ClientEntityName.java"
 CLIENT_ENTITY_INDEX_RELATIVE_PATH = "src/main/java/com/mc2p/observation/ClientEntityIndex.java"
+CLIENT_DAMAGE_EVENT_BUFFER_RELATIVE_PATH = "src/main/java/com/mc2p/observation/ClientDamageEventBuffer.java"
 CLIENT_CROSSHAIR_ACCESS_RELATIVE_PATH = "src/main/java/com/mc2p/observation/ClientCrosshairAccess.java"
 CLIENT_BLOCK_OBSERVATION_V3_RELATIVE_PATH = "src/main/java/com/mc2p/observation/ClientBlockObservationV3.java"
 CLIENT_BLOCK_PARITY_DIAGNOSTICS_RELATIVE_PATH = "src/main/java/com/mc2p/observation/ClientBlockParityDiagnostics.java"
@@ -684,6 +685,7 @@ def _patch_structured_runtime(sandbox_root: Path, clock_mode: CraftGroundClockMo
         CLIENT_SAMPLE_CLOCK_RELATIVE_PATH: OBSERVATION_OVERLAY_ROOT / "ClientSampleClock.java",
         CLIENT_ENTITY_NAME_RELATIVE_PATH: OBSERVATION_OVERLAY_ROOT / "ClientEntityName.java",
         CLIENT_ENTITY_INDEX_RELATIVE_PATH: OBSERVATION_OVERLAY_ROOT / "ClientEntityIndex.java",
+        CLIENT_DAMAGE_EVENT_BUFFER_RELATIVE_PATH: OBSERVATION_OVERLAY_ROOT / "ClientDamageEventBuffer.java",
         CLIENT_CROSSHAIR_ACCESS_RELATIVE_PATH: OBSERVATION_OVERLAY_ROOT / "ClientCrosshairAccess.java",
         CLIENT_BLOCK_OBSERVATION_V3_RELATIVE_PATH: OBSERVATION_OVERLAY_ROOT / "ClientBlockObservationV3.java",
         CLIENT_BLOCK_PARITY_DIAGNOSTICS_RELATIVE_PATH: OBSERVATION_OVERLAY_ROOT / "ClientBlockParityDiagnostics.java",
@@ -1068,6 +1070,7 @@ def _current_patch_recipe_fingerprint(
                 "ClientSampleClock.java",
                 "ClientEntityName.java", "ClientCrosshairAccess.java",
                 "ClientEntityIndex.java",
+                "ClientDamageEventBuffer.java",
                 "ClientObservationJson.java",
                 "ClientGuiSession.java",
                 "ClientGuiProperties.java", "ClientGuiPropertyAccess.java",

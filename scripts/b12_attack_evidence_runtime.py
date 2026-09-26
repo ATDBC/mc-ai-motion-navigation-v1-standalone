@@ -170,8 +170,12 @@ def evaluate_b12a_trial(trial: Mapping, evidence: Mapping) -> tuple[str, ...]:
     classification = trial.get("classification")
     if classification == "positive":
         required_hits = 1 if trial.get("scenario") == "fixed_visible" else 2
-        if online.count("command_correlated_hit") < required_hits:
-            failures.append("missing_command_correlated_hit")
+        confirmed_hits = sum(
+            outcome in {"command_correlated_hit", "source_confirmed_hit"}
+            for outcome in online
+        )
+        if confirmed_hits < required_hits:
+            failures.append("missing_confirmed_hit")
         if evidence.get("engagement_grants", 0) < required_hits:
             failures.append("missing_correlated_engagement_grant")
         if evidence.get("task_outcome") is not None:

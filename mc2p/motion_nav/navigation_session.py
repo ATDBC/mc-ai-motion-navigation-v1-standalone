@@ -242,6 +242,8 @@ class NavigationSessionPort(Protocol):
     def propose(
         self, frame: NavigationFrame, state_anchor: StateAnchor | None,
         deadline_ns: int, *, input_ledger: InputApplicationLedger | None = None,
+        conditioned_yaw_delta_degrees: float | None = None,
+        conditioned_look_intent_id: str | None = None,
     ) -> NavigationSessionProposal: ...
     def register_verified_submission(
         self, proposal: NavigationSessionProposal, *, control_sequence: int,
@@ -792,11 +794,26 @@ class NavigationSession:
         deadline_ns: int,
         *,
         input_ledger: InputApplicationLedger | None = None,
+        conditioned_yaw_delta_degrees: float | None = None,
+        conditioned_look_intent_id: str | None = None,
     ) -> NavigationSessionProposal:
         if type(frame) is not NavigationFrame:
             raise ContractViolation("navigation proposal requires a frame")
         if type(deadline_ns) is not int or deadline_ns <= self._clock():
             raise ContractViolation("navigation proposal deadline must be in the future")
+        if ((conditioned_yaw_delta_degrees is None)
+                != (conditioned_look_intent_id is None)):
+            raise ContractViolation(
+                "conditioned navigation requires both look identity and yaw"
+            )
+        if conditioned_yaw_delta_degrees is not None:
+            if (type(conditioned_yaw_delta_degrees) not in (int, float)
+                    or not math.isfinite(conditioned_yaw_delta_degrees)):
+                raise ContractViolation("conditioned navigation yaw must be finite")
+            require_identifier(
+                conditioned_look_intent_id,
+                "conditioned navigation look intent id",
+            )
         self.observe(frame, frame.changed_cells)
         if self._state in {
             NavigationSessionState.CLOSED,
@@ -814,16 +831,37 @@ class NavigationSession:
             return self._proposal(MovementV1(), None, 1, deadline_ns)
 
         assert self._executor is not None
+        current_action = None
+        executor_route = getattr(self._executor, "route", None)
+        if (executor_route is not None
+                and 0 <= self._executor.action_index < len(executor_route.actions)):
+            current_action = executor_route.actions[self._executor.action_index]
+        conditioned_ordinary_walk = (
+            conditioned_yaw_delta_degrees is not None
+            and type(current_action) is WalkSegment
+            and (
+                current_action.transition is None
+                or current_action.transition.mode is MovementMode.WALK
+            )
+        )
+        movement_yaw_radians = None
+        if conditioned_ordinary_walk:
+            yaw = frame.body.yaw_radians + math.radians(
+                float(conditioned_yaw_delta_degrees)
+            )
+            movement_yaw_radians = math.atan2(math.sin(yaw), math.cos(yaw))
         if (self._coordinator is not None and state_anchor is not None
                 and input_ledger is not None):
             decision = self._coordinator.decide(
                 frame, state_anchor, input_ledger,
                 PhysicsWorldView(frame.world, JAVA_1_21_RULESET),
                 changed_cells=frame.changed_cells,
+                movement_yaw_radians=movement_yaw_radians,
             )
         else:
             decision = self._executor.decide(
                 frame, state_anchor=state_anchor, input_ledger=input_ledger,
+                movement_yaw_radians=movement_yaw_radians,
             )
         self._last_decision = decision
         active_request_id = self._active_route.source_request_id
@@ -882,6 +920,10 @@ class NavigationSession:
         return self._proposal(
             movement, decision.look, decision.input_lease_ticks,
             deadline_ns, route_decision=decision,
+            conditioned_look_intent_id=(
+                conditioned_look_intent_id
+                if conditioned_ordinary_walk else None
+            ),
         )
 
     def register_verified_submission(
@@ -1316,6 +1358,7 @@ class NavigationSession:
         deadline_ns: int,
         *,
         route_decision: ActionRouteDecision | None = None,
+        conditioned_look_intent_id: str | None = None,
     ) -> NavigationSessionProposal:
         control = None
         if self._source is not None:
@@ -1354,7 +1397,17 @@ class NavigationSession:
                     or current_action.transition.mode is MovementMode.WALK
                 )
             )
-            observed_yaw_bound = movement != MovementV1() and ordinary_walk
+            look_conditioned = (
+                movement != MovementV1()
+                and ordinary_walk
+                and look is None
+                and conditioned_look_intent_id is not None
+            )
+            observed_yaw_bound = (
+                movement != MovementV1()
+                and ordinary_walk
+                and not look_conditioned
+            )
             intent = ActionIntentV1(
                 identity,
                 self._source.source_id,
@@ -1366,7 +1419,9 @@ class NavigationSession:
                 movement=movement,
                 look=look,
                 valid_for_ticks=(
-                    1 if observed_yaw_bound else max(1, min(20, lease_ticks))
+                    1
+                    if (observed_yaw_bound or look_conditioned)
+                    else max(1, min(20, lease_ticks))
                 ),
                 movement_requires_look=(look is not None and movement != MovementV1()),
                 movement_look_tolerance_degrees=(
@@ -1380,6 +1435,9 @@ class NavigationSession:
                 ),
                 movement_observed_yaw_limit_degrees=(
                     5.0 if observed_yaw_bound else None
+                ),
+                movement_conditioned_look_intent_id=(
+                    conditioned_look_intent_id if look_conditioned else None
                 ),
                 movement_tick_window=(
                     MovementTickWindowV1(

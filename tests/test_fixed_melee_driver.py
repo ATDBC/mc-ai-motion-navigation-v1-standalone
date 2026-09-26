@@ -8,7 +8,7 @@ from mc2p.contracts.action_v1 import ActionSnapshotV1, AttackEntityV1
 from mc2p.contracts.action_receipt import ClientBehaviorReceiptV2
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.observation import Vec3V0
-from mc2p.contracts.observation_v3 import TargetingStateV3
+from mc2p.contracts.observation_v3 import DamageEventV3, TargetingStateV3
 from mc2p.contracts.observation_v2 import ObservationGroupV2
 from mc2p.contracts.observation_v3 import TrackedEntityStateV3
 from mc2p.contracts.reset import ResetRequestV0, ResetResultV0
@@ -54,6 +54,7 @@ class MeleeBackend:
         self.own_velocity = (0.0, 0.0, 0.0)
         self.own_pose = "standing"
         self.own_eye_height = 1.62
+        self.damage_event_source = None
         self.actions = []
         self.closed = False
 
@@ -95,6 +96,26 @@ class MeleeBackend:
             observation = replace(observation, tracked_entity=ObservationGroupV2.valid(
                 tick, "client_registered_entity", tracked,
             ))
+        if self.hurt > 0 and self.damage_event_source is not None:
+            source_present = self.damage_event_source in {"self", "other"}
+            source_is_self = self.damage_event_source == "self"
+            observation = replace(
+                observation,
+                damage_events=(DamageEventV3(
+                    max(1, self.sequence),
+                    observation.world_time_ticks.value,
+                    False,
+                    self.track,
+                    "minecraft:player_attack"
+                    if source_present else "minecraft:on_fire",
+                    source_present,
+                    source_is_self,
+                    "entity-other" if self.damage_event_source == "other" else None,
+                    source_present,
+                    source_is_self,
+                    "entity-other" if self.damage_event_source == "other" else None,
+                ),),
+            )
         return observation
 
     def reset(self, request):

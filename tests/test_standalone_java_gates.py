@@ -47,6 +47,35 @@ class StandaloneJavaGateTests(unittest.TestCase):
                 )
                 self.assertIn(marker, executed.stdout)
 
+    def test_damage_event_buffer_is_bounded_and_acknowledges_next_generation(self):
+        tools = discover_java_tools()
+        source = ROOT / (
+            "mc2p/backends/runtime_overlays/mc121_observation/"
+            "ClientDamageEventBuffer.java"
+        )
+        harness = ROOT / "tests/java/ClientDamageEventBufferTest.java"
+        with TemporaryDirectory(prefix="mc2p-standalone-damage-") as directory:
+            compiled = subprocess.run(
+                [
+                    str(tools.javac), "-J-Duser.language=en",
+                    "-encoding", "UTF-8", "-d", directory,
+                    str(source), str(harness),
+                ],
+                capture_output=True, text=True, timeout=30,
+            )
+            self.assertEqual(
+                compiled.returncode, 0, compiled.stdout + compiled.stderr,
+            )
+            executed = subprocess.run(
+                [str(tools.java), "-cp", directory,
+                 "ClientDamageEventBufferTest"],
+                capture_output=True, text=True, timeout=30,
+            )
+            self.assertEqual(
+                executed.returncode, 0, executed.stdout + executed.stderr,
+            )
+            self.assertIn("CLIENT_DAMAGE_EVENT_BUFFER_OK", executed.stdout)
+
     def test_behavior_input_compiles_and_runs_with_minimal_minecraft_stub(self):
         tools = discover_java_tools()
         source_root = ROOT / "mc2p/backends/runtime_overlays/mc121_actions"

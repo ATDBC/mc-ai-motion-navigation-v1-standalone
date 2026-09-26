@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Callable, Iterable, Mapping
 
 from mc2p.contracts.behavior import BehaviorProfileV0
+from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1, RuntimeStateV1
 from mc2p.skills.attack_evidence import AttackAttemptKeyV1
 from mc2p.skills.attack_evidence_replay import replay_attack_attempt
@@ -16,7 +17,7 @@ from scripts.b12_attack_evidence_runtime import (
     b12a_trial_plan, evaluate_b12a_trial,
 )
 from scripts.c1_fixed_melee_runtime import (
-    TARGET, _fixture_commands, _refresh_navigation,
+    TARGET, _fixture_commands, _observation_task, _refresh_navigation,
 )
 from scripts.control_probe_core import write_json_atomic
 
@@ -76,6 +77,133 @@ def _attempt_key_json(key: AttackAttemptKeyV1) -> dict:
         "target_revision": key.target_revision,
         "track_id": key.track_id,
         "attempt_sequence": key.attempt_sequence,
+    }
+
+
+def evaluate_damage_source_diagnostics(value: Mapping) -> tuple[dict, ...]:
+    """Check the two Fabric-only source semantics without inferring policy."""
+    player = value.get("player_attack")
+    environment = value.get("environment_damage")
+    return (
+        {
+            "name": "b12a_player_attack_has_self_source",
+            "passed": bool(
+                isinstance(player, Mapping)
+                and player.get("outcome") == "source_confirmed_hit"
+                and player.get("evidence_grade") == "source_confirmed"
+                and isinstance(player.get("event_sequence_id"), int)
+                and isinstance(player.get("damage_type"), str)
+            ),
+        },
+        {
+            "name": "b12a_environment_damage_has_no_self_source",
+            "passed": bool(
+                isinstance(environment, Mapping)
+                and environment.get("target_matched") is True
+                and environment.get("source_is_self") is False
+                and environment.get("direct_source_is_self") is False
+                and environment.get("source_entity_present") is False
+                and environment.get("direct_entity_present") is False
+                and environment.get("damage_type") == "minecraft:on_fire"
+            ),
+        },
+    )
+
+
+def _run_damage_source_diagnostics(
+    runtime: PlayerRuntimeV1,
+    episode: str,
+    deadline_ns: int,
+    fixture_writer: Callable[[tuple[str, ...], dict], None],
+) -> dict:
+    player_trial = {
+        "trial_id": "damage-source-player-attack",
+        "start_position": {"x": 0.5, "y": 100.0, "z": -2.5},
+        "target_position": dict(TARGET),
+        "yaw_degrees": 0.0,
+        "pitch_degrees": 0.0,
+        "equipment": "minecraft:stone_sword",
+        "injection": None,
+    }
+    fixture_writer(_fixture_commands(player_trial), player_trial)
+    entity = _refresh_navigation(runtime, player_trial, deadline_ns)
+    target = CombatTargetV1(
+        "b12a-source-task", "b12a-source-goal", 1, episode,
+        entity.track_id,
+    )
+    driver = MeleeStrikeDriver(runtime, clock_ns=time.perf_counter_ns)
+    driver.start(target, time.perf_counter_ns())
+    profile = BehaviorProfileV0()
+    for _ in range(80):
+        if time.perf_counter_ns() >= deadline_ns:
+            raise TimeoutError("B12-A damage-source attack deadline expired")
+        if driver.report.terminal:
+            break
+        now = time.perf_counter_ns()
+        driver.tick(profile, min(deadline_ns, now + 3_000_000_000))
+        if not driver.report.terminal:
+            time.sleep(0.01)
+    if not driver.report.terminal:
+        raise TimeoutError("B12-A damage-source attack did not terminate")
+    attempt = driver.attempt_report
+
+    environment_trial = {
+        **player_trial,
+        "trial_id": "damage-source-environment",
+    }
+    fixture_writer(_fixture_commands(environment_trial), environment_trial)
+    environment_target = _refresh_navigation(
+        runtime, environment_trial, deadline_ns,
+    )
+    fixture_writer((
+        "damage @e[type=minecraft:zombie,tag=mc2p_c1,limit=1] 1 minecraft:on_fire",
+    ), environment_trial)
+    task = _observation_task(environment_trial["trial_id"], deadline_ns)
+    environment_event = None
+    for _ in range(40):
+        now = time.perf_counter_ns()
+        if now >= deadline_ns:
+            raise TimeoutError("B12-A environment damage deadline expired")
+        result = runtime.step(
+            task, profile, min(deadline_ns, now + 500_000_000),
+            observation_request=ObservationRequestV3(
+                "navigation_v1", entity_track_id=environment_target.track_id,
+            ),
+        )
+        if result.report.failure is not None:
+            raise RuntimeError(
+                "B12-A environment damage observation failed: "
+                + result.report.failure.reason
+            )
+        environment_event = next((
+            event for event in runtime.observation.damage_events
+            if not event.target_is_self
+            and event.target_entity_ref == environment_target.track_id
+        ), None)
+        if environment_event is not None:
+            break
+        time.sleep(0.01)
+
+    return {
+        "schema_version": "mc2p.b12a-damage-source-diagnostics.v1",
+        "player_attack": {
+            "outcome": None if attempt.outcome is None else attempt.outcome.value,
+            "evidence_grade": attempt.evidence_grade.value,
+            "event_sequence_id": attempt.source_damage_event_sequence_id,
+            "damage_type": attempt.source_damage_type,
+        },
+        "environment_damage": (
+            {"target_matched": False}
+            if environment_event is None else {
+                "target_matched": True,
+                "event_sequence_id": environment_event.event_sequence_id,
+                "damage_type": environment_event.damage_type,
+                "source_entity_present": environment_event.source_entity_present,
+                "source_is_self": environment_event.source_is_self,
+                "direct_entity_present": environment_event.direct_entity_present,
+                "direct_source_is_self": environment_event.direct_source_is_self,
+            }
+        ),
     }
 
 
@@ -204,16 +332,20 @@ def run_b12a_fabric_runtime(
         _run_trial(runtime, episode, dict(trial), deadline_ns, fixture_writer)
         for trial in trials
     ]
+    damage_sources = _run_damage_source_diagnostics(
+        runtime, episode, deadline_ns, fixture_writer,
+    )
     stages = {
         "schema_version": "mc2p.b12a-fabric-evidence.v1",
         "world_seed": world_seed,
         "manifest": manifest.name,
         "trial_count": len(rows),
         "trials": rows,
+        "damage_source_diagnostics": damage_sources,
     }
     checks = [{
         "name": "b12a_fabric_plan_complete",
         "passed": len(rows) == 8,
-    }]
+    }, *evaluate_damage_source_diagnostics(damage_sources)]
     write_json_atomic(directory / "b12a-fabric-online.json", stages)
     return stages, rows, checks

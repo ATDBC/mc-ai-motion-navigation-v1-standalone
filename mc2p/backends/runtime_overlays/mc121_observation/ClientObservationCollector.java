@@ -14,6 +14,7 @@ import java.util.Set;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.network.packet.s2c.play.EntityDamageS2CPacket;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -73,6 +74,8 @@ public final class ClientObservationCollector {
     private static final double ENTITY_OCCLUSION_EPSILON = 0.05;
     private static final int ENTITY_VISIBILITY_SAMPLE_COUNT = 5;
     private static final ClientEntityIndex ENTITY_INDEX = new ClientEntityIndex();
+    private static final ClientDamageEventBuffer DAMAGE_EVENTS =
+            new ClientDamageEventBuffer();
     private static final ClientGuiSession GUI_SESSION = new ClientGuiSession();
     private static Object guiWorld;
     private static final ClientSampleClock SAMPLE_CLOCK = new ClientSampleClock();
@@ -86,6 +89,19 @@ public final class ClientObservationCollector {
     /** Resolve only an identity already assigned by the latest formal entity frame. */
     public static String currentTrackId(Entity entity) {
         return entity == null ? null : ENTITY_INDEX.trackId(entity);
+    }
+
+    /** Capture one main-thread packet fact without assigning new entity identities. */
+    public static void recordDamage(
+            MinecraftClient client, EntityDamageS2CPacket packet) {
+        if (client == null || packet == null || client.world == null
+                || !client.isOnThread()) return;
+        String damageType = packet.sourceType().getKey()
+                .map(key -> key.getValue().toString())
+                .orElseGet(() -> "minecraft:" + packet.sourceType().value().msgId());
+        DAMAGE_EVENTS.record(
+                client.world, client.world.getTime(), packet.entityId(), damageType,
+                packet.sourceCauseId(), packet.sourceDirectId());
     }
 
     public static byte[] collect(MinecraftClient client, long generationId) {
@@ -120,6 +136,7 @@ public final class ClientObservationCollector {
         root.addProperty("sample_world_tick", worldTick);
         if (player == null || client.world == null) {
             ENTITY_INDEX.clear();
+            DAMAGE_EVENTS.clear();
             root.add("self_state", missingGroup(worldTick, "client_player", "player_or_world_missing"));
             root.add("inventory", missingGroup(worldTick, "client_inventory", "player_or_world_missing"));
             root.add("gui", missingGroup(worldTick, "client_screen_handler", "player_or_world_missing"));
@@ -128,6 +145,10 @@ public final class ClientObservationCollector {
                 request.needsTargeting() ? "player_or_world_missing" : "not_requested"));
             if (request!=null) root.add("tracked_entity",missingGroup(worldTick,"client_registered_entity",
                 request.entityTrackId()==null ? "not_requested" : "player_or_world_missing"));
+            if (request!=null) {
+                root.add("damage_events", ClientObservationJson.array());
+                root.addProperty("damage_events_dropped", 0);
+            }
             return root;
         }
         root.add("self_state", validGroup(worldTick, "client_player", collectSelf(client, player)));
@@ -139,6 +160,13 @@ public final class ClientObservationCollector {
             root.add("targeting",groups.get("targeting"));
             root.add("tracked_entity",trackedEntityGroup(worldTick,request,ENTITY_INDEX,
                     player.getPos(),player.getVelocity(),player.getYaw()));
+            ClientDamageEventBuffer.Snapshot damage = DAMAGE_EVENTS.snapshot(
+                    client.world, generationId, player.getId(), entityId -> {
+                        Entity entity = client.world.getEntityById(entityId);
+                        return entity == null ? null : ENTITY_INDEX.trackId(entity);
+                    });
+            root.add("damage_events", damageEvents(damage));
+            root.addProperty("damage_events_dropped", damage.droppedCount());
         } else root.add(
                 "perception",
                 validGroup(
@@ -146,6 +174,32 @@ public final class ClientObservationCollector {
                         "client_perception_filtered",
                         collectPerception(client, player, generationId)));
         return root;
+    }
+
+    static JsonArray damageEvents(ClientDamageEventBuffer.Snapshot snapshot) {
+        JsonArray values = ClientObservationJson.array();
+        for (ClientDamageEventBuffer.DamageEvent event : snapshot.events()) {
+            JsonObject value = ClientObservationJson.object();
+            value.addProperty("event_sequence_id", event.eventSequenceId());
+            value.addProperty("world_tick", event.worldTick());
+            value.addProperty("target_is_self", event.targetIsSelf());
+            nullableString(value, "target_entity_ref", event.targetEntityRef());
+            value.addProperty("damage_type", event.damageType());
+            value.addProperty("source_entity_present", event.sourceEntityPresent());
+            value.addProperty("source_is_self", event.sourceIsSelf());
+            nullableString(value, "source_entity_ref", event.sourceEntityRef());
+            value.addProperty("direct_entity_present", event.directEntityPresent());
+            value.addProperty("direct_source_is_self", event.directSourceIsSelf());
+            nullableString(value, "direct_source_entity_ref",
+                    event.directSourceEntityRef());
+            values.add(value);
+        }
+        return values;
+    }
+
+    private static void nullableString(JsonObject target, String name, String value) {
+        if (value == null) target.add(name, JsonNull.INSTANCE);
+        else target.addProperty(name, value);
     }
 
     static JsonObject trackedEntityGroup(long tick, ClientObservationRequestV3 request,

@@ -171,6 +171,57 @@ class TrackedEntityStateV3:
 
 
 @dataclass(frozen=True, slots=True)
+class DamageEventV3:
+    """One bounded client packet fact; policy is deliberately outside this type."""
+
+    event_sequence_id: int
+    world_tick: int
+    target_is_self: bool
+    target_entity_ref: str | None
+    damage_type: str
+    source_entity_present: bool
+    source_is_self: bool
+    source_entity_ref: str | None
+    direct_entity_present: bool
+    direct_source_is_self: bool
+    direct_source_entity_ref: str | None
+
+    def __post_init__(self) -> None:
+        require_nonnegative_int(self.event_sequence_id, "damage event sequence")
+        if self.event_sequence_id == 0:
+            raise ContractViolation("damage event sequence must be positive")
+        require_nonnegative_int(self.world_tick, "damage event world tick")
+        require_identifier(self.damage_type, "damage type")
+        for name in (
+            "target_is_self", "source_entity_present", "source_is_self",
+            "direct_entity_present", "direct_source_is_self",
+        ):
+            if type(getattr(self, name)) is not bool:
+                raise ContractViolation(f"{name.replace('_', ' ')} must be boolean")
+        for value, name in (
+            (self.target_entity_ref, "damage target entity reference"),
+            (self.source_entity_ref, "damage source entity reference"),
+            (self.direct_source_entity_ref, "direct damage source entity reference"),
+        ):
+            if value is not None:
+                require_identifier(value, name)
+        if self.target_is_self == (self.target_entity_ref is not None):
+            raise ContractViolation(
+                "damage target must be either self or one registered entity"
+            )
+        for present, is_self, reference, name in (
+            (self.source_entity_present, self.source_is_self,
+             self.source_entity_ref, "damage source"),
+            (self.direct_entity_present, self.direct_source_is_self,
+             self.direct_source_entity_ref, "direct damage source"),
+        ):
+            if is_self and (not present or reference is not None):
+                raise ContractViolation(f"{name} self identity is inconsistent")
+            if not present and (is_self or reference is not None):
+                raise ContractViolation(f"absent {name} cannot carry identity")
+
+
+@dataclass(frozen=True, slots=True)
 class PerceptionStateV3:
     horizontal_fov_degrees: float
     vertical_fov_degrees: float
@@ -294,6 +345,8 @@ class ObservationSnapshotV3:
     field_profile: str
     targeting: ObservationGroupV2[TargetingStateV3]
     tracked_entity: ObservationGroupV2[TrackedEntityStateV3]
+    damage_events: tuple[DamageEventV3, ...] = ()
+    damage_events_dropped: int = 0
     server_state_age_ns: FieldValueV0[int] = field(default_factory=lambda: FieldValueV0.missing("server_state_age_unknown"))
     privileged_fields_present: tuple[str, ...] = ()
     schema_version: str = field(default="mc2p.observation.v3", init=False)
@@ -320,6 +373,17 @@ class ObservationSnapshotV3:
         validate_v3_groups(self.world_time_ticks.value, self.field_profile, self.self_state,
                            self.inventory, self.gui, self.perception, self.targeting,
                            self.tracked_entity)
+        if (type(self.damage_events) is not tuple
+                or len(self.damage_events) > 64
+                or any(type(event) is not DamageEventV3
+                       for event in self.damage_events)):
+            raise ContractViolation("damage events must be a bounded typed tuple")
+        event_ids = tuple(event.event_sequence_id for event in self.damage_events)
+        if event_ids != tuple(sorted(set(event_ids))):
+            raise ContractViolation("damage events must be ordered and unique")
+        require_nonnegative_int(
+            self.damage_events_dropped, "dropped damage event count",
+        )
         own = self.self_state.value
         for name, expected_type in (("position", Vec3V0), ("yaw_degrees", (int, float)),
                 ("pitch_degrees", (int, float)), ("is_on_ground", bool), ("is_dead", bool),

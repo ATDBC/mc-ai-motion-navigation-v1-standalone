@@ -189,6 +189,18 @@ class ActionArbiterV1:
                     and not _heading_compatible(movement, winners.get("look"))):
                 suppressed.append((winners.pop("movement").intent_id, "required_look_not_selected"))
             movement = winners.get("movement")
+            if movement is not None and movement.movement_conditioned_look_intent_id is not None:
+                selected_look = winners.get("look")
+                if (selected_look is None
+                        or selected_look.intent_id
+                           != movement.movement_conditioned_look_intent_id
+                        or selected_look.observation_sequence_id
+                           != movement.observation_sequence_id):
+                    suppressed.append((
+                        winners.pop("movement").intent_id,
+                        "conditioned_look_not_selected",
+                    ))
+            movement = winners.get("movement")
             if movement is not None:
                 compatible, reason = _within_observed_yaw_limit(
                     movement, winners.get("look"), observation_sequence_id,
@@ -209,6 +221,7 @@ class ActionArbiterV1:
             for intent in active:
                 if (intent.movement is None or intent.movement_requires_look
                         or intent.movement_observed_yaw_limit_degrees is not None
+                        or intent.movement_conditioned_look_intent_id is not None
                         or intent.movement_tick_window is not None):
                     del self._intents[intent.intent_id]
                 elif intent.look is not None or intent.operation is not None:

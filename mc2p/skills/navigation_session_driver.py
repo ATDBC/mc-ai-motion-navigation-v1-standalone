@@ -12,7 +12,9 @@ from typing import Callable
 
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.common import ContractViolation, require_nonnegative_int
-from mc2p.contracts.intent_source import ControlFrameProposalV1, IntentSourceV1
+from mc2p.contracts.intent_source import (
+    ControlFrameProposalV1, IntentSourceV1, OrderedIntentV1,
+)
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.contracts.observation_request_v3 import merge_observation_requests
 from mc2p.contracts.observation_v3 import ObservationSnapshotV3
@@ -165,6 +167,8 @@ class RuntimeNavigationDriver:
     def prepare_proposals(
         self,
         owner_deadline_ns: int,
+        *,
+        conditioned_look: OrderedIntentV1 | None = None,
     ) -> tuple[ControlFrameProposalV1, ...]:
         """Prepare navigation for a parent-owned shared Runtime control frame."""
         if self._prepared_deadline_ns is not None:
@@ -183,8 +187,22 @@ class RuntimeNavigationDriver:
         frame = self.session.ingest(observation)
         ledger = self.runtime.input_ledger
         anchor = self.session.execution_anchor(observation, ledger)
+        conditioned_yaw_delta = None
+        conditioned_look_intent_id = None
+        if conditioned_look is not None:
+            if (type(conditioned_look) is not OrderedIntentV1
+                    or conditioned_look.intent.look is None):
+                raise ContractViolation(
+                    "navigation conditioning requires a typed look intent"
+                )
+            conditioned_yaw_delta = (
+                conditioned_look.intent.look.yaw_delta_degrees
+            )
+            conditioned_look_intent_id = conditioned_look.intent.intent_id
         proposal = self.session.propose(
             frame, anchor, deadline, input_ledger=ledger,
+            conditioned_yaw_delta_degrees=conditioned_yaw_delta,
+            conditioned_look_intent_id=conditioned_look_intent_id,
         )
         proposals = tuple(item for item in (
             proposal.control_frame,

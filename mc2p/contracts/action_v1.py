@@ -178,6 +178,7 @@ class ActionIntentV1:
     movement_requires_look: bool = False  # Internal arbitration dependency; not a client wire field.
     movement_look_tolerance_degrees: float = 0.0
     movement_observed_yaw_limit_degrees: float | None = None
+    movement_conditioned_look_intent_id: str | None = None
     movement_tick_window: MovementTickWindowV1 | None = None
     schema_version: str = field(default="mc2p.action-intent.v1", init=False)
 
@@ -229,6 +230,24 @@ class ActionIntentV1:
                     or self.valid_for_ticks != 1):
                 raise ContractViolation(
                     "observed-yaw-bound movement requires nonneutral one-tick movement"
+                )
+        if self.movement_conditioned_look_intent_id is not None:
+            require_identifier(
+                self.movement_conditioned_look_intent_id,
+                "conditioned look intent id",
+            )
+            if len(self.movement_conditioned_look_intent_id) > 128:
+                raise ContractViolation("conditioned look intent id exceeds 128 characters")
+            if (self.movement is None or self.movement == MovementV1()
+                    or self.look is not None or self.valid_for_ticks != 1):
+                raise ContractViolation(
+                    "look-conditioned movement requires external look, "
+                    "nonneutral movement and one tick"
+                )
+            if (self.movement_requires_look
+                    or self.movement_observed_yaw_limit_degrees is not None):
+                raise ContractViolation(
+                    "look-conditioned movement cannot use another heading binding"
                 )
         if (self.movement_tick_window is not None
                 and type(self.movement_tick_window) is not MovementTickWindowV1):

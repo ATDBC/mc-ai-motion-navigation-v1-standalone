@@ -393,10 +393,15 @@ class ActionRouteExecutor:
 
     def decide(self, frame: NavigationFrame, *, input_confirmed: bool = True,
                state_anchor: StateAnchor | None = None,
-               input_ledger: InputApplicationLedger | None = None) -> ActionRouteDecision:
+               input_ledger: InputApplicationLedger | None = None,
+               movement_yaw_radians: float | None = None) -> ActionRouteDecision:
         started = time.perf_counter_ns()
         if type(frame) is not NavigationFrame:
             raise ContractViolation("action route decision requires a navigation frame")
+        if (movement_yaw_radians is not None
+                and (type(movement_yaw_radians) not in (int, float)
+                     or not math.isfinite(movement_yaw_radians))):
+            raise ContractViolation("movement yaw must be finite")
         if self.route is None:
             self.state = ActionRouteState.IDLE
             return self._result(started, MovementV1(), 1, "not_started")
@@ -490,7 +495,18 @@ class ActionRouteExecutor:
                 ),
             )
         if type(action) is WalkSegment:
-            decision = self._controller.decide(frame, input_confirmed=input_confirmed)
+            movement_frame = frame
+            if movement_yaw_radians is not None:
+                movement_frame = replace(
+                    frame,
+                    body=replace(
+                        frame.body,
+                        yaw_radians=float(movement_yaw_radians),
+                    ),
+                )
+            decision = self._controller.decide(
+                movement_frame, input_confirmed=input_confirmed,
+            )
             assert hasattr(decision, "state")
             if decision.state is FixedRouteState.SUCCEEDED:
                 if self._cancel_requested:
@@ -499,6 +515,7 @@ class ActionRouteExecutor:
                 return self._advance(
                     frame, started, state_anchor=state_anchor,
                     input_ledger=input_ledger,
+                    movement_yaw_radians=movement_yaw_radians,
                 )
             mapping = {
                 FixedRouteState.BLOCKED: ActionRouteState.BLOCKED,
@@ -584,7 +601,8 @@ class ActionRouteExecutor:
 
     def _advance(self, frame: NavigationFrame, started: int, *,
                  state_anchor: StateAnchor | None = None,
-                 input_ledger: InputApplicationLedger | None = None) -> ActionRouteDecision:
+                 input_ledger: InputApplicationLedger | None = None,
+                 movement_yaw_radians: float | None = None) -> ActionRouteDecision:
         assert self.route is not None
         self.action_index += 1
         if self.action_index >= len(self.route.actions):
@@ -597,6 +615,7 @@ class ActionRouteExecutor:
         # an artificial neutral-input frame.
         return self.decide(
             frame, state_anchor=state_anchor, input_ledger=input_ledger,
+            movement_yaw_radians=movement_yaw_radians,
         )
 
     def _finish_goal(self, frame: NavigationFrame, started: int) -> ActionRouteDecision:

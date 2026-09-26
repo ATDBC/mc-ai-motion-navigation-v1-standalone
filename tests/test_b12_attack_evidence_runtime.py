@@ -14,9 +14,39 @@ from scripts.b12_attack_evidence_runtime import (
     summarize_b12a_trials,
     write_b12a_manifest,
 )
+from scripts.b12a_fabric_runtime import evaluate_damage_source_diagnostics
 
 
 class B12AttackEvidenceRuntimeTests(unittest.TestCase):
+    def test_damage_source_diagnostics_separate_self_attack_from_environment(self):
+        diagnostics = {
+            "player_attack": {
+                "outcome": "source_confirmed_hit",
+                "evidence_grade": "source_confirmed",
+                "event_sequence_id": 4,
+                "damage_type": "minecraft:player_attack",
+            },
+            "environment_damage": {
+                "target_matched": True,
+                "event_sequence_id": 5,
+                "damage_type": "minecraft:on_fire",
+                "source_entity_present": False,
+                "source_is_self": False,
+                "direct_entity_present": False,
+                "direct_source_is_self": False,
+            },
+        }
+
+        self.assertTrue(all(
+            check["passed"]
+            for check in evaluate_damage_source_diagnostics(diagnostics)
+        ))
+        diagnostics["environment_damage"]["source_is_self"] = True
+        self.assertFalse(all(
+            check["passed"]
+            for check in evaluate_damage_source_diagnostics(diagnostics)
+        ))
+
     def test_plan_freezes_positive_and_boundary_groups_with_unique_seeds(self):
         trials = b12a_trial_plan(21001)
         positives = [row for row in trials if row["classification"] == "positive"]
@@ -85,13 +115,20 @@ class B12AttackEvidenceRuntimeTests(unittest.TestCase):
         }
         self.assertEqual(evaluate_b12a_trial(trial, evidence), ())
 
+        source_confirmed = dict(
+            evidence,
+            online_outcomes=["source_confirmed_hit"],
+            replayed_outcomes=["source_confirmed_hit"],
+        )
+        self.assertEqual(evaluate_b12a_trial(trial, source_confirmed), ())
+
         health_only = dict(
             evidence,
             online_outcomes=["confirmation_timeout"],
             replayed_outcomes=["confirmation_timeout"],
         )
         self.assertIn(
-            "missing_command_correlated_hit",
+            "missing_confirmed_hit",
             evaluate_b12a_trial(trial, health_only),
         )
         mismatch = dict(evidence, replayed_outcomes=["observation_interrupted"])

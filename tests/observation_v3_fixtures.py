@@ -50,7 +50,8 @@ def valid_payload_value(profile="navigation_v1"):
                 self_state=shared["self_state"], inventory=shared["inventory"], gui=shared["gui"],
                 field_profile=profile, perception=group(perception), targeting=targeting,
                 tracked_entity=dict(status="missing", sample_world_tick=100,
-                    source_kind="client_registered_entity", reason_code="not_requested", value=None))
+                    source_kind="client_registered_entity", reason_code="not_requested", value=None),
+                damage_events=[], damage_events_dropped=0)
 
 
 def encoded(value):

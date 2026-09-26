@@ -40,6 +40,7 @@ class FakeNavigationSession:
         self.execution_anchor_requests = []
         self.proposal_anchors = []
         self.proposal_ledgers = []
+        self.conditioned_look_requests = []
         self.route_decision = None
         self.verified_submissions = []
         self.cancel_steps = cancel_steps
@@ -145,15 +146,29 @@ class FakeNavigationSession:
         self.updates.append((goal_id, revision, goal_state))
         self.state, self.reason = NavigationSessionState.EXECUTING, "goal_revised"
 
-    def propose(self, frame, anchor, deadline_ns, *, input_ledger=None):
+    def propose(
+        self, frame, anchor, deadline_ns, *, input_ledger=None,
+        conditioned_yaw_delta_degrees=None,
+        conditioned_look_intent_id=None,
+    ):
         source = self.source
         self.proposal_anchors.append(anchor)
         self.proposal_ledgers.append(input_ledger)
+        if conditioned_yaw_delta_degrees is not None:
+            self.conditioned_look_requests.append((
+                conditioned_yaw_delta_degrees,
+                conditioned_look_intent_id,
+            ))
         self.proposal_sequence += 1
         if self.state is NavigationSessionState.CANCELLING:
             self.cancel_remaining -= 1
             if self.cancel_remaining <= 0:
                 self.state = NavigationSessionState.CANCELLED
+        look_conditioned = (
+            conditioned_look_intent_id is not None
+            and self.look is None
+            and self.movement != MovementV1()
+        )
         intent = ActionIntentV1(
             ordered_intent_id(source, self.proposal_sequence),
             source.source_id, source.episode_id,
@@ -170,7 +185,11 @@ class FakeNavigationSession:
             ),
             movement_observed_yaw_limit_degrees=(
                 self.movement_observed_yaw_limit_degrees
-                if self.movement != MovementV1() else None
+                if self.movement != MovementV1() and not look_conditioned
+                else None
+            ),
+            movement_conditioned_look_intent_id=(
+                conditioned_look_intent_id if look_conditioned else None
             ),
         )
         return NavigationSessionProposal(
