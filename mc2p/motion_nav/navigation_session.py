@@ -232,6 +232,7 @@ class NavigationSessionPort(Protocol):
     def observation_request(
         self, *, max_positions: int = 128,
     ) -> ObservationRequestV3: ...
+    def current_action_requires_route_look(self) -> bool: ...
     def start_goal(
         self, goal_id: str, goal_revision: int, goal_state: GoalState,
         frame: NavigationFrame, *, maximum_expansions: int = 100_000,
@@ -346,6 +347,23 @@ class NavigationSession:
     @property
     def active_route(self) -> ActiveRoute | None:
         return self._active_route
+
+    def current_action_requires_route_look(self) -> bool:
+        """Keep combat gaze out of actions whose proof owns body orientation."""
+        if self._executor is None:
+            return False
+        route = getattr(self._executor, "route", None)
+        action_index = getattr(self._executor, "action_index", -1)
+        if (route is None or not 0 <= action_index < len(route.actions)):
+            return False
+        action = route.actions[action_index]
+        return not (
+            type(action) is WalkSegment
+            and (
+                action.transition is None
+                or action.transition.mode is MovementMode.WALK
+            )
+        )
 
     @property
     def report(self) -> NavigationSessionReport:
@@ -1366,12 +1384,11 @@ class NavigationSession:
             if self._frame is None:
                 raise ContractViolation("navigation intent has no current frame")
             observation_request = self.observation_request()
-            decision_events = (
-                (self._route_decision_event(
+            decision_events = (self._session_decision_event(route_decision),)
+            if route_decision is not None:
+                decision_events += (self._route_decision_event(
                     route_decision, conditioned_look_intent_id,
                 ),)
-                if route_decision is not None else ()
-            )
             if route_decision is not None and not route_decision.submit_input:
                 return NavigationSessionProposal(
                     ControlFrameProposalV1(
@@ -1467,6 +1484,41 @@ class NavigationSession:
                 decision_events,
             )
         return NavigationSessionProposal(control, self.report, route_decision)
+
+    def _session_decision_event(
+        self,
+        decision: ActionRouteDecision | None,
+    ) -> ControlFrameEventV1:
+        if self._frame is None:
+            raise ContractViolation("navigation session event has no current frame")
+        movement = MovementV1() if decision is None else decision.movement
+        return ControlFrameEventV1(
+            "navigation_session_decision",
+            {
+                "schema_version": "mc2p.navigation-session-decision.v1",
+                "episode_id": self._source.episode_id,
+                "session_id": self.session_id,
+                "request_id": self.report.request_id,
+                "goal_id": self.report.goal_id,
+                "goal_revision": self.report.goal_revision,
+                "route_id": self.report.route_id,
+                "observation_sequence_id": self._frame.body.sequence_id,
+                "state": self.report.state.value,
+                "reason_code": self.report.reason,
+                "active_route": self._active_route is not None,
+                "route_decision_present": decision is not None,
+                "submit_input": (
+                    decision is not None and decision.submit_input
+                ),
+                "movement": {
+                    "forward": movement.forward,
+                    "strafe": movement.strafe,
+                    "jump": movement.jump,
+                    "sneak": movement.sneak,
+                    "sprint": movement.sprint,
+                },
+            },
+        )
 
     def _route_decision_event(
         self,

@@ -56,7 +56,7 @@ class VerificationReport:
 
 RUN_SPECS = (
     RunSpec(
-        "20260925T123521898324Z-5d0a66dc", "b10c", "pass", "passed",
+        "20260926T091031597407Z-f7f68346", "b10c", "pass", "passed",
         None, None, 142, control_frame_rows=210,
     ),
     RunSpec(
@@ -64,7 +64,7 @@ RUN_SPECS = (
         "ContractViolation", "verified executor already has an in-flight command", 82,
     ),
     RunSpec(
-        "20260925T015540321761Z-d008bbc3", "c1b", "pass", "passed",
+        "20260926T090526982665Z-de19f7bc", "c1b", "pass", "passed",
         None, None, 30, 20, 20, 10, 10,
     ),
     RunSpec(
@@ -90,7 +90,7 @@ RUN_SPECS = (
         None, None, 8, None, None, 8, 8,
     ),
     RunSpec(
-        "20260926T074601049372Z-1e50bcb7", "b12b", "pass", "passed",
+        "20260926T091904725912Z-deb6726e", "b12b", "pass", "passed",
         None, None, 34, 24, 24, 8, 8,
     ),
 )
@@ -283,6 +283,25 @@ def _b12b_active_trials_are_complete(trials: object) -> bool:
         None,
     )
     return (
+        all(
+            row.get("passed") is True
+            and isinstance(
+                row.get("time_to_first_non_neutral_command_seconds"),
+                (int, float),
+            )
+            and row.get("first_movement_response_origin") in {
+                "target_acquired", "navigation_information_ready",
+            }
+            and isinstance(
+                row.get("first_movement_response_control_frames"), int,
+            )
+            and row["first_movement_response_control_frames"] <= 10
+            and type(row.get("pre_movement_navigation_reason_counts")) is dict
+            and type(row.get("navigation_reason_counts")) is dict
+            and bool(row["navigation_reason_counts"])
+            for row in active
+        )
+        and
         type(sustained) is dict
         and sustained.get("passed") is True
         and isinstance(sustained.get("control_frame_count"), int)
@@ -541,7 +560,7 @@ def _write_archive(archive: Path, run: Path, spec: RunSpec, paths: Iterable[Path
 def _readme() -> str:
     return """# 代表性真实运行证据
 
-这里保留 B10-C 跨隙、C1-B 移动近战和 C1-C 外力恢复各一个完整通过批次、一个完整失败批次，并加入 B11 放置与有限搭桥、B12-A 伤害来源、B12-B 部分观察下战斗移动的最新通过批次。B10-C 通过批次保留 210 个协调控制帧、10 个协调试次、142 个求解试次和物理 tick 片段，可以直接核对输入是否晚于许可窗口。B12-A 批次保留玩家近战和环境伤害来源诊断。B12-B 批次保留 34 个 Fabric 场景、控制事件和分段 Runtime 轨迹，其中包含不依赖目标瞬移的持续追击，可以重新核对活动目标持续瞄准、导航决定原因、真实墙体遮挡和控制时延。不复制普通日志、画面或缓存。
+这里保留 B10-C 跨隙、C1-B 移动近战和 C1-C 外力恢复各一个完整通过批次、一个完整失败批次，并加入 B11 放置与有限搭桥、B12-A 伤害来源、B12-B 部分观察下战斗移动的最新通过批次。B10-C 通过批次保留 210 个协调控制帧、10 个协调试次、142 个求解试次和物理 tick 片段，可以直接核对输入是否晚于许可窗口。B12-A 批次保留玩家近战和环境伤害来源诊断。B12-B 批次保留 34 个 Fabric 场景、控制事件和分段 Runtime 轨迹，可以重新核对活动目标持续瞄准、无路线等待原因、原始首动时间、信息齐备后的首动帧数、真实墙体遮挡和控制时延。不复制普通日志、画面或缓存。
 
 运行：
 

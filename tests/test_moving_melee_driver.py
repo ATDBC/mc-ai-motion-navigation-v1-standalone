@@ -319,6 +319,34 @@ class MovingMeleeDriverTests(unittest.TestCase):
         self.assertEqual(driver.report.state, "cancelled")
         self.assertIsNone(driver.approach_driver)
 
+    def test_pursuit_deadline_hands_control_to_task_layer_after_safe_stop(self):
+        self.runtime.close()
+        self.backend = MeleeBackend(self.clock, distance=5.0)
+        self.runtime = PlayerRuntimeV1(self.backend, self.trace, lambda: self.clock[0])
+        self.assertTrue(self.runtime.reset(
+            ResetRequestV0("reset-pursuit-timeout", "episode-1", "test", 1,
+                           60_000_000_000)
+        ).succeeded)
+        session = FakeNavigationSession(cancel_steps=2)
+        driver = MovingMeleeDriver(
+            self.runtime, session, clock_ns=lambda: self.clock[0],
+        )
+        driver.start(self.target, self.clock[0])
+        self.clock[0] = driver._deadline_ns
+
+        result = driver.tick(self.profile, self.clock[0] + 2_000_000_000)
+
+        self.assertIsNotNone(result)
+        self.assertEqual(driver.report.state, "cancelling")
+        self.assertEqual(driver.report.reason, "pursuit_deadline_exhausted")
+        self.assertIsNotNone(driver.approach_driver)
+
+        driver.tick(self.profile, self.clock[0] + 2_000_000_000)
+
+        self.assertEqual(driver.report.state, "needs_task_decision")
+        self.assertEqual(driver.report.reason, "pursuit_deadline_exhausted")
+        self.assertIsNone(driver.approach_driver)
+
     def test_damage_knockback_releases_approach_then_recovers_from_latest_body(self):
         self.runtime.close()
         self.backend = MeleeBackend(self.clock, distance=5.0)
@@ -656,6 +684,28 @@ class MovingMeleeDriverTests(unittest.TestCase):
         )
         driver.start(self.target, self.clock[0])
         self.assertIsNotNone(driver.approach_driver)
+
+    def test_nonwalk_navigation_action_keeps_its_route_look(self):
+        self.runtime.close()
+        self.backend = MeleeBackend(self.clock, distance=5.0)
+        self.runtime = PlayerRuntimeV1(self.backend, self.trace, lambda: self.clock[0])
+        self.assertTrue(self.runtime.reset(
+            ResetRequestV0("reset-route-look", "episode-1", "test", 1,
+                           5_000_000_000)
+        ).succeeded)
+        session = FakeNavigationSession()
+        session.route_look_required = True
+        session.look = LookV1(yaw_delta_degrees=7.0)
+        driver = MovingMeleeDriver(
+            self.runtime, session, clock_ns=lambda: self.clock[0],
+        )
+        driver.start(self.target, self.clock[0])
+
+        result = self.tick(driver)
+
+        self.assertEqual(result.decision.action.look.yaw_delta_degrees, 7.0)
+        self.assertEqual(session.conditioned_look_requests, [])
+        self.assertIsNone(driver._pursuit_look_source)
         self.backend.distance = 2.5
 
         results = []

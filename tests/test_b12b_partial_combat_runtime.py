@@ -101,9 +101,12 @@ class B12BPartialCombatRuntimeTests(unittest.TestCase):
             **trial,
             "target_track_id": "entity-active",
             "composed_request_sequences": [request],
+            "control_observation_sequence_ids": [43, 44],
             "seed_receipt_valid": True,
             "report": {"state": "complete", "confirmed_hits": 1},
             "runtime_ready": True,
+            "time_to_first_non_neutral_command_seconds": 1.2,
+            "first_movement_observation_sequence_id": 44,
         }
         sustained_trial = next(
             row for row in b12b_trial_plan(21001)
@@ -113,6 +116,7 @@ class B12BPartialCombatRuntimeTests(unittest.TestCase):
             **sustained_trial,
             "target_track_id": "entity-active",
             "control_request_sequences": [request],
+            "control_observation_sequence_ids": [44],
             "composed_request_sequences": [request],
             "seed_receipt_valid": True,
             "control_frame_count": 32,
@@ -120,12 +124,15 @@ class B12BPartialCombatRuntimeTests(unittest.TestCase):
             "target_displacement_blocks": 1.25,
             "report": {"state": "complete", "confirmed_hits": 1},
             "runtime_ready": True,
+            "time_to_first_non_neutral_command_seconds": .18,
+            "first_movement_observation_sequence_id": 44,
         }
         trace = (
             {
                 "record_type": "dispatch",
                 "payload": {"decision": {"action": {
                     "request_sequence_id": request,
+                    "observation_sequence_id": 44,
                     "movement": {"forward": 1, "strafe": 0, "jump": False,
                                  "sneak": False, "sprint": False},
                     "look": {"yaw_delta_degrees": 12.0,
@@ -133,12 +140,49 @@ class B12BPartialCombatRuntimeTests(unittest.TestCase):
                 }}},
             },
             {
-                "record_type": "navigation_route_decision",
+                "record_type": "navigation_session_decision",
+                "payload": {
+                    "session_id": "b12b-active-target-conditioned-look-01",
+                    "observation_sequence_id": 43,
+                    "reason_code": "goal_surface_requires_information",
+                    "submit_input": False,
+                    "movement": {"forward": 0, "strafe": 0,
+                                 "jump": False, "sneak": False,
+                                 "sprint": False},
+                },
+            },
+            {
+                "record_type": "navigation_session_decision",
+                "payload": {
+                    "session_id": "b12b-active-target-conditioned-look-01",
+                    "observation_sequence_id": 44,
+                    "reason_code": "tracking_fixed_route",
+                    "submit_input": True,
+                    "movement": {"forward": 1, "strafe": 0,
+                                 "jump": False, "sneak": False,
+                                 "sprint": False},
+                },
+            },
+            {
+                "record_type": "navigation_session_decision",
                 "payload": {
                     "session_id": "b12b-sustained-active-target-01",
+                    "observation_sequence_id": 44,
                     "reason_code": "walk_tracking",
                     "submit_input": True,
                     "movement": {"forward": 1, "strafe": 0,
+                                 "jump": False, "sneak": False,
+                                 "sprint": False},
+                },
+            },
+            {
+                "record_type": "navigation_session_decision",
+                "payload": {
+                    "session_id": "b12b-sustained-active-target-01",
+                    "observation_sequence_id": 45,
+                    "reason_code": "cancelled_after_trial",
+                    "submit_input": False,
+                    "movement": {"forward": 0, "strafe": 0,
                                  "jump": False, "sneak": False,
                                  "sprint": False},
                 },
@@ -175,6 +219,20 @@ class B12BPartialCombatRuntimeTests(unittest.TestCase):
         self.assertEqual(
             sustained_result["navigation_reason_counts"],
             {"walk_tracking": 1},
+        )
+        induced_result = next(
+            row for row in evaluated if row["active_mode"] == "induced_turn"
+        )
+        self.assertEqual(
+            induced_result["first_movement_response_origin"],
+            "navigation_information_ready",
+        )
+        self.assertEqual(
+            induced_result["first_movement_response_control_frames"], 0,
+        )
+        self.assertEqual(
+            induced_result["pre_movement_navigation_reason_counts"],
+            {"goal_surface_requires_information": 1},
         )
         self.assertTrue(all(check["passed"] for check in checks))
         failed, _ = evaluate_b12b_active_target_evidence(

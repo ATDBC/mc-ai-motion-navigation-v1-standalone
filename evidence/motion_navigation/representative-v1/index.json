@@ -3,9 +3,9 @@
   "max_total_archive_bytes": 31457280,
   "runs": [
     {
-      "archive": "archives/b10c-pass-20260925T123521898324Z-5d0a66dc.tar.gz",
-      "archive_sha256": "9cda2ba2bb6a043ba6b4e346dcca5010f367480f75b687fa7356288ac2457ebb",
-      "archive_size_bytes": 394025,
+      "archive": "archives/b10c-pass-20260926T091031597407Z-f7f68346.tar.gz",
+      "archive_sha256": "572b55d3ca6d51511ab0602c11daa1d736a22df64421463432fd78b4d7d9544a",
+      "archive_size_bytes": 393622,
       "expected": {
         "failure_message": null,
         "failure_type": null,
@@ -17,7 +17,7 @@
       },
       "recorded_outcome": "pass",
       "recorded_status": "passed",
-      "run_id": "20260925T123521898324Z-5d0a66dc",
+      "run_id": "20260926T091031597407Z-f7f68346",
       "stage": "b10c"
     },
     {
@@ -39,9 +39,9 @@
       "stage": "b10c"
     },
     {
-      "archive": "archives/c1b-pass-20260925T015540321761Z-d008bbc3.tar.gz",
-      "archive_sha256": "a95533220e9c6769728702000d56cb922e5e2bec05210e3209d8abac12c70b84",
-      "archive_size_bytes": 1812201,
+      "archive": "archives/c1b-pass-20260926T090526982665Z-de19f7bc.tar.gz",
+      "archive_sha256": "9eba3aa10b59486c64f3e014460cb58f79160a53cbf3b94b05f2e1f11367411f",
+      "archive_size_bytes": 1954251,
       "expected": {
         "failure_message": null,
         "failure_type": null,
@@ -53,7 +53,7 @@
       },
       "recorded_outcome": "pass",
       "recorded_status": "passed",
-      "run_id": "20260925T015540321761Z-d008bbc3",
+      "run_id": "20260926T090526982665Z-de19f7bc",
       "stage": "c1b"
     },
     {
@@ -147,9 +147,9 @@
       "stage": "b12a"
     },
     {
-      "archive": "archives/b12b-pass-20260926T074601049372Z-1e50bcb7.tar.gz",
-      "archive_sha256": "4c3252f4399b9dfd6686c494e65ee5334c5b4eecb53180fd40428da87d5f9c2d",
-      "archive_size_bytes": 615700,
+      "archive": "archives/b12b-pass-20260926T091904725912Z-deb6726e.tar.gz",
+      "archive_sha256": "65217f7c69e8ebcce9e4534cbf12ed89ed70ebb362e6cc29e27190334dffd29b",
+      "archive_size_bytes": 575811,
       "expected": {
         "failure_message": null,
         "failure_type": null,
@@ -161,10 +161,10 @@
       },
       "recorded_outcome": "pass",
       "recorded_status": "passed",
-      "run_id": "20260926T074601049372Z-1e50bcb7",
+      "run_id": "20260926T091904725912Z-deb6726e",
       "stage": "b12b"
     }
   ],
   "schema_version": "mc2p.public-runtime-evidence.v1",
-  "total_archive_bytes": 15832636
+  "total_archive_bytes": 15934394
 }

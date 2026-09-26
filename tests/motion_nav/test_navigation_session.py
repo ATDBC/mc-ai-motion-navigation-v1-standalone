@@ -382,8 +382,11 @@ class NavigationSessionTests(unittest.TestCase):
             proposal.control_frame.intents[0].intent.movement_observed_yaw_limit_degrees,
             5.0,
         )
-        self.assertEqual(len(proposal.control_frame.task_events), 1)
-        decision_event = proposal.control_frame.task_events[0]
+        self.assertEqual(len(proposal.control_frame.task_events), 2)
+        session_event, decision_event = proposal.control_frame.task_events
+        self.assertEqual(session_event.record_type, "navigation_session_decision")
+        self.assertTrue(session_event.payload["active_route"])
+        self.assertTrue(session_event.payload["route_decision_present"])
         self.assertEqual(decision_event.record_type, "navigation_route_decision")
         self.assertEqual(
             decision_event.payload["reason_code"],
@@ -611,6 +614,17 @@ class NavigationSessionTests(unittest.TestCase):
         ), initial)
         waiting = session.propose(initial, None, 2_000_000_000)
         self.assertIs(waiting.report.state, NavigationSessionState.PLANNING)
+        self.assertIsNotNone(waiting.control_frame)
+        self.assertEqual(
+            [event.record_type for event in waiting.control_frame.task_events],
+            ["navigation_session_decision"],
+        )
+        waiting_event = waiting.control_frame.task_events[0]
+        self.assertEqual(waiting_event.payload["state"], "planning")
+        self.assertEqual(waiting_event.payload["reason_code"], "planning_submitted")
+        self.assertFalse(waiting_event.payload["active_route"])
+        self.assertFalse(waiting_event.payload["route_decision_present"])
+        self.assertFalse(waiting_event.payload["submit_input"])
 
         session.update_goal("combat-goal", 2, _goal(new_goal.position))
         # Let the old result arrive first. It must be discarded by request and
@@ -920,8 +934,11 @@ class NavigationSessionTests(unittest.TestCase):
             )
             self.assertIsNotNone(proposal.control_frame)
             self.assertEqual(proposal.control_frame.intents, ())
-            self.assertEqual(len(proposal.control_frame.task_events), 1)
-            decision_event = proposal.control_frame.task_events[0]
+            self.assertEqual(len(proposal.control_frame.task_events), 2)
+            decision_event = next(
+                event for event in proposal.control_frame.task_events
+                if event.record_type == "navigation_route_decision"
+            )
             self.assertEqual(
                 decision_event.payload["reason_code"], "awaiting_application",
             )

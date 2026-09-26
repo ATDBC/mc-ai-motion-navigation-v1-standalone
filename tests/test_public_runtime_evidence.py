@@ -18,7 +18,7 @@ from scripts.public_runtime_evidence import (
 
 
 RUNS = (
-    ("20260925T123521898324Z-5d0a66dc", "b10c", "pass", "passed", None),
+    ("20260926T091031597407Z-f7f68346", "b10c", "pass", "passed", None),
     (
         "20260923T083302580358Z-a019b110",
         "b10c",
@@ -26,7 +26,7 @@ RUNS = (
         "failed",
         ("ContractViolation", "verified executor already has an in-flight command"),
     ),
-    ("20260925T015540321761Z-d008bbc3", "c1b", "pass", "passed", None),
+    ("20260926T090526982665Z-de19f7bc", "c1b", "pass", "passed", None),
     (
         "20260925T014651611158Z-8fbbd0bb",
         "c1b",
@@ -44,7 +44,7 @@ RUNS = (
     ),
     ("20260925T120057978030Z-c17b889e", "b11", "pass", "passed", None),
     ("20260926T055043431485Z-e2dc4fff", "b12a", "pass", "passed", None),
-    ("20260926T074601049372Z-1e50bcb7", "b12b", "pass", "passed", None),
+    ("20260926T091904725912Z-deb6726e", "b12b", "pass", "passed", None),
 )
 
 
@@ -148,6 +148,18 @@ def _make_sources(root: Path) -> None:
                     "trial_id": "active-target-conditioned-look-01",
                     "classification": "active_target",
                     "active_mode": "induced_turn",
+                    "time_to_first_non_neutral_command_seconds": 1.5,
+                    "first_movement_response_origin": (
+                        "navigation_information_ready"
+                    ),
+                    "first_movement_response_control_frames": 2,
+                    "pre_movement_navigation_reason_counts": {
+                        "goal_surface_requires_information": 10,
+                    },
+                    "navigation_reason_counts": {
+                        "goal_surface_requires_information": 10,
+                        "tracking_fixed_route": 8,
+                    },
                     "passed": True,
                 },
                 {
@@ -159,6 +171,14 @@ def _make_sources(root: Path) -> None:
                     "target_displacement_blocks": 2.05,
                     "turn_frame_count": 15,
                     "moving_turn_ratio": 0.6,
+                    "time_to_first_non_neutral_command_seconds": .25,
+                    "first_movement_response_origin": (
+                        "navigation_information_ready"
+                    ),
+                    "first_movement_response_control_frames": 2,
+                    "pre_movement_navigation_reason_counts": {
+                        "goal_surface_requires_information": 2,
+                    },
                     "navigation_reason_counts": {"tracking_fixed_route": 30},
                     "passed": True,
                 },

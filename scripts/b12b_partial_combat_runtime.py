@@ -21,6 +21,7 @@ from mc2p.motion_nav.movement_transition import (
 from mc2p.motion_nav.navigation_session import (
     NavigationSession, NavigationSessionProfiles,
 )
+from mc2p.motion_nav.planner_worker import PlannerWorker
 from mc2p.motion_nav.world_model import Aabb
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1, RuntimeStateV1
 from mc2p.skills.fixed_melee import CombatTargetV1
@@ -270,13 +271,27 @@ def evaluate_b12b_active_target_evidence(
                 moving_turn_requests.append(request)
         navigation_reasons: dict[str, int] = {}
         neutral_navigation_reasons: dict[str, int] = {}
+        pre_movement_navigation_reasons: dict[str, int] = {}
+        pre_movement_navigation_events: list[str] = []
         expected_session = "b12b-" + str(row.get("trial_id"))
+        first_movement_observation = row.get(
+            "first_movement_observation_sequence_id"
+        )
+        trial_observations = frozenset(
+            value for value in row.get("control_observation_sequence_ids", ())
+            if isinstance(value, int)
+        )
         for record in trace:
-            if record.get("record_type") != "navigation_route_decision":
+            if record.get("record_type") != "navigation_session_decision":
                 continue
             payload = record.get("payload")
             if (not isinstance(payload, Mapping)
-                    or payload.get("session_id") != expected_session):
+                    or payload.get("session_id") != expected_session
+                    or (
+                        trial_observations
+                        and payload.get("observation_sequence_id")
+                            not in trial_observations
+                    )):
                 continue
             reason = payload.get("reason_code")
             if not isinstance(reason, str) or not reason:
@@ -288,10 +303,48 @@ def evaluate_b12b_active_target_evidence(
                 neutral_navigation_reasons[reason] = (
                     neutral_navigation_reasons.get(reason, 0) + 1
                 )
+                observation_sequence = payload.get("observation_sequence_id")
+                if (type(first_movement_observation) is int
+                        and type(observation_sequence) is int
+                        and observation_sequence < first_movement_observation):
+                    pre_movement_navigation_reasons[reason] = (
+                        pre_movement_navigation_reasons.get(reason, 0) + 1
+                    )
+                    pre_movement_navigation_events.append(reason)
         report = row.get("report")
         failures = []
         if row.get("seed_receipt_valid") is not True:
             failures.append("seed_receipt_invalid")
+        first_movement_seconds = row.get(
+            "time_to_first_non_neutral_command_seconds"
+        )
+        if (type(first_movement_seconds) not in (int, float)
+                or not math.isfinite(float(first_movement_seconds))):
+            failures.append("first_movement_latency_missing")
+        information_limited_before_first_movement = any(
+            reason.endswith("_requires_information")
+            for reason in pre_movement_navigation_reasons
+        )
+        if information_limited_before_first_movement:
+            last_information_wait = max(
+                index for index, reason in enumerate(
+                    pre_movement_navigation_events
+                ) if reason.endswith("_requires_information")
+            )
+            response_control_frames = (
+                len(pre_movement_navigation_events) - last_information_wait - 1
+            )
+            response_origin = "navigation_information_ready"
+        else:
+            response_control_frames = len(pre_movement_navigation_events)
+            response_origin = "target_acquired"
+        if (type(first_movement_seconds) in (int, float)
+                and math.isfinite(float(first_movement_seconds))
+                and first_movement_seconds > .5
+                and not information_limited_before_first_movement):
+            failures.append("first_movement_latency_exceeded")
+        if response_control_frames > 10:
+            failures.append("first_movement_ready_frame_budget_exceeded")
         mode = row.get("active_mode")
         if mode == "induced_turn":
             if not moving_turn_requests:
@@ -307,12 +360,12 @@ def evaluate_b12b_active_target_evidence(
                 failures.append("sustained_chase_has_no_turn_frame")
             elif len(moving_turn_requests) / len(turn_requests) < .5:
                 failures.append("too_many_turn_frames_without_movement")
-            if not navigation_reasons:
-                failures.append("navigation_decision_reasons_missing")
-            if "missing_reason" in navigation_reasons:
-                failures.append("navigation_decision_reason_blank")
         else:
             failures.append("unknown_active_target_mode")
+        if not navigation_reasons:
+            failures.append("navigation_decision_reasons_missing")
+        if "missing_reason" in navigation_reasons:
+            failures.append("navigation_decision_reason_blank")
         if (not isinstance(report, Mapping)
                 or report.get("confirmed_hits", 0) < 1):
             failures.append("active_target_not_hit")
@@ -329,6 +382,11 @@ def evaluate_b12b_active_target_evidence(
             "applied_turn_and_movement_requests": moving_turn_requests,
             "navigation_reason_counts": navigation_reasons,
             "neutral_navigation_reason_counts": neutral_navigation_reasons,
+            "pre_movement_navigation_reason_counts": (
+                pre_movement_navigation_reasons
+            ),
+            "first_movement_response_origin": response_origin,
+            "first_movement_response_control_frames": response_control_frames,
             "failures": failures,
             "passed": not failures,
         })
@@ -662,6 +720,21 @@ def _cleanup_navigation(
         session.close()
 
 
+def _shared_planner_session(
+    runtime: PlayerRuntimeV1,
+    session_id: str,
+    profiles: NavigationSessionProfiles,
+    planner_worker: PlannerWorker,
+) -> NavigationSession:
+    return NavigationSession(
+        session_id,
+        profiles,
+        planner_worker=planner_worker,
+        owns_planner_worker=False,
+        observation_adapter=runtime.navigation_observation_adapter,
+    )
+
+
 def _run_positive(
     runtime: PlayerRuntimeV1,
     episode: str,
@@ -670,6 +743,7 @@ def _run_positive(
     profiles: NavigationSessionProfiles,
     fixture_writer: Callable[[tuple[str, ...], dict], None],
     control_decision_ms: list[float],
+    planner_worker: PlannerWorker,
 ) -> dict:
     fixture_writer(_fixture_commands(trial), trial)
     _scan_flat_ground(
@@ -678,10 +752,8 @@ def _run_positive(
     entity = _refresh_target(
         runtime, trial, deadline_ns, control_decision_ms,
     )
-    session = NavigationSession(
-        "b12b-" + trial["trial_id"],
-        profiles,
-        observation_adapter=runtime.navigation_observation_adapter,
+    session = _shared_planner_session(
+        runtime, "b12b-" + trial["trial_id"], profiles, planner_worker,
     )
     navigation = RuntimeNavigationDriver(runtime, session)
     profile = BehaviorProfileV0()
@@ -790,6 +862,7 @@ def _run_active_target(
     fixture_writer: Callable[[tuple[str, ...], dict], None],
     control_decision_ms: list[float],
     fixture_events: Path,
+    planner_worker: PlannerWorker,
 ) -> dict:
     target_position = trial["target_position"]
     induced_turn = trial["active_mode"] == "induced_turn"
@@ -812,18 +885,21 @@ def _run_active_target(
     entity = _refresh_target(
         runtime, trial, deadline_ns, control_decision_ms,
     )
-    session = NavigationSession(
-        "b12b-" + trial["trial_id"], profiles,
-        observation_adapter=runtime.navigation_observation_adapter,
+    session = _shared_planner_session(
+        runtime, "b12b-" + trial["trial_id"], profiles, planner_worker,
     )
     driver = MovingMeleeDriver(runtime, session)
     profile = BehaviorProfileV0()
     composed_requests: list[int] = []
     control_requests: list[int] = []
+    control_observations: list[int] = []
     target_positions: list[tuple[float, float, float]] = []
     target_shifted = False
     control_frame_count = 0
     started_at_ns = time.perf_counter_ns()
+    first_movement_at_ns = None
+    first_movement_observation = None
+    frames_before_first_movement = 0
     driver.start(CombatTargetV1(
         "b12b-task-" + trial["trial_id"],
         "b12b-combat-goal-" + trial["trial_id"],
@@ -844,6 +920,15 @@ def _run_active_target(
                 control_frame_count += 1
                 action = result.decision.action
                 control_requests.append(action.request_sequence_id)
+                control_observations.append(action.observation_sequence_id)
+                if first_movement_at_ns is None:
+                    if _nonneutral_movement(action.movement):
+                        first_movement_at_ns = time.perf_counter_ns()
+                        first_movement_observation = (
+                            action.observation_sequence_id
+                        )
+                    else:
+                        frames_before_first_movement += 1
                 observation = runtime.observation
                 own = None if observation is None else observation.self_state.value
                 tracked = None if observation is None else observation.tracked_entity.value
@@ -885,11 +970,20 @@ def _run_active_target(
             "seed_receipt_valid": seed_valid,
             "target_shifted_after_movement": target_shifted,
             "control_request_sequences": control_requests,
+            "control_observation_sequence_ids": control_observations,
             "composed_request_sequences": composed_requests,
             "control_frame_count": control_frame_count,
             "elapsed_seconds": (
                 time.perf_counter_ns() - started_at_ns
             ) / 1_000_000_000,
+            "time_to_first_non_neutral_command_seconds": (
+                None if first_movement_at_ns is None
+                else (first_movement_at_ns - started_at_ns) / 1_000_000_000
+            ),
+            "first_movement_observation_sequence_id": (
+                first_movement_observation
+            ),
+            "control_frames_before_first_movement": frames_before_first_movement,
             "target_position_sample_count": len(target_positions),
             "target_displacement_blocks": target_displacement,
             "report": asdict(driver.report),
@@ -943,6 +1037,7 @@ def _run_large_turn_boundary(
     profiles: NavigationSessionProfiles,
     fixture_writer: Callable[[tuple[str, ...], dict], None],
     control_decision_ms: list[float],
+    planner_worker: PlannerWorker,
 ) -> dict:
     fixture_writer(
         _fixture_commands_at(_PLAYER_START, _TURN_TARGET), trial,
@@ -953,9 +1048,8 @@ def _run_large_turn_boundary(
     entity = _refresh_target(
         runtime, trial, deadline_ns, control_decision_ms,
     )
-    session = NavigationSession(
-        "b12b-" + trial["trial_id"], profiles,
-        observation_adapter=runtime.navigation_observation_adapter,
+    session = _shared_planner_session(
+        runtime, "b12b-" + trial["trial_id"], profiles, planner_worker,
     )
     navigation = RuntimeNavigationDriver(runtime, session)
     strike = None
@@ -1102,6 +1196,7 @@ def _run_occlusion_boundary(
     profiles: NavigationSessionProfiles,
     fixture_writer: Callable[[tuple[str, ...], dict], None],
     control_decision_ms: list[float],
+    planner_worker: PlannerWorker,
 ) -> dict:
     fixture_writer(_fixture_commands(trial), trial)
     _scan_flat_ground(
@@ -1110,9 +1205,8 @@ def _run_occlusion_boundary(
     entity = _refresh_target(
         runtime, trial, deadline_ns, control_decision_ms,
     )
-    session = NavigationSession(
-        "b12b-" + trial["trial_id"], profiles,
-        observation_adapter=runtime.navigation_observation_adapter,
+    session = _shared_planner_session(
+        runtime, "b12b-" + trial["trial_id"], profiles, planner_worker,
     )
     driver = MovingMeleeDriver(runtime, session)
     profile = BehaviorProfileV0()
@@ -1216,6 +1310,7 @@ def _run_hidden_without_engagement_boundary(
     profiles: NavigationSessionProfiles,
     fixture_writer: Callable[[tuple[str, ...], dict], None],
     control_decision_ms: list[float],
+    planner_worker: PlannerWorker,
 ) -> dict:
     fixture_writer(_fixture_commands(trial), trial)
     _scan_flat_ground(
@@ -1257,9 +1352,8 @@ def _run_hidden_without_engagement_boundary(
                 tracked is not None and tracked.track_id == entity.track_id
             )
             break
-    session = NavigationSession(
-        "b12b-" + trial["trial_id"], profiles,
-        observation_adapter=runtime.navigation_observation_adapter,
+    session = _shared_planner_session(
+        runtime, "b12b-" + trial["trial_id"], profiles, planner_worker,
     )
     driver = MovingMeleeDriver(runtime, session)
     hidden_movement = 0
@@ -1312,20 +1406,21 @@ def _run_fabric_boundary(
     profiles: NavigationSessionProfiles,
     fixture_writer: Callable[[tuple[str, ...], dict], None],
     control_decision_ms: list[float],
+    planner_worker: PlannerWorker,
 ) -> dict:
     if trial["injection"] == "large_combat_turn":
         return _run_large_turn_boundary(
             runtime, episode, trial, deadline_ns, profiles, fixture_writer,
-            control_decision_ms,
+            control_decision_ms, planner_worker,
         )
     if trial["injection"] == "hidden_without_engagement":
         return _run_hidden_without_engagement_boundary(
             runtime, episode, trial, deadline_ns, profiles, fixture_writer,
-            control_decision_ms,
+            control_decision_ms, planner_worker,
         )
     return _run_occlusion_boundary(
         runtime, episode, trial, deadline_ns, profiles, fixture_writer,
-        control_decision_ms,
+        control_decision_ms, planner_worker,
     )
 
 
@@ -1358,24 +1453,26 @@ def run_b12b_partial_combat_runtime(
     profiles = NavigationSessionProfiles.load(_CONFIG)
     rows = []
     control_decision_ms: list[float] = []
-    for trial in plan:
-        if trial["classification"] == "positive":
-            row = _run_positive(
-                runtime, episode, dict(trial), deadline_ns, profiles,
-                fixture_writer, control_decision_ms,
-            )
-        elif trial["classification"] == "active_target":
-            row = _run_active_target(
-                runtime, episode, dict(trial), deadline_ns, profiles,
-                fixture_writer, control_decision_ms, Path(fixture_events),
-            )
-        else:
-            row = _run_fabric_boundary(
-                runtime, episode, dict(trial), deadline_ns, profiles,
-                fixture_writer, control_decision_ms,
-            )
-        rows.append(row)
-        append_jsonl(directory / "b12b-partial-combat-trials.jsonl", row)
+    with PlannerWorker() as planner_worker:
+        for trial in plan:
+            if trial["classification"] == "positive":
+                row = _run_positive(
+                    runtime, episode, dict(trial), deadline_ns, profiles,
+                    fixture_writer, control_decision_ms, planner_worker,
+                )
+            elif trial["classification"] == "active_target":
+                row = _run_active_target(
+                    runtime, episode, dict(trial), deadline_ns, profiles,
+                    fixture_writer, control_decision_ms, Path(fixture_events),
+                    planner_worker,
+                )
+            else:
+                row = _run_fabric_boundary(
+                    runtime, episode, dict(trial), deadline_ns, profiles,
+                    fixture_writer, control_decision_ms, planner_worker,
+                )
+            rows.append(row)
+            append_jsonl(directory / "b12b-partial-combat-trials.jsonl", row)
     stages = {
         "schema_version": "mc2p.b12b-partial-combat-runtime.v1",
         "planned_trials": len(plan),

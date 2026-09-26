@@ -392,6 +392,9 @@ class MovingMeleeDriver:
         owner_deadline_ns: int,
     ) -> RuntimeStepResultV1:
         assert self._target is not None and self.approach_driver is not None
+        if self.navigation_session.current_action_requires_route_look():
+            self._release_pursuit_look()
+            return self.approach_driver.tick(profile, owner_deadline_ns)
         now = self._clock()
         deadline = min(
             owner_deadline_ns, self._deadline_ns, now + 500_000_000,
@@ -1123,6 +1126,22 @@ class MovingMeleeDriver:
                 if self.approach_driver.source is None:
                     self.approach_driver = None
                     self._finish_approach_handoff()
+                return result
+            if self._clock() >= self._deadline_ns:
+                reason = "pursuit_deadline_exhausted"
+                result = self._release_approach(
+                    profile, reason,
+                    handoff=_ApproachHandoff.NEEDS_TASK_DECISION,
+                )
+                if self.approach_driver is None:
+                    self._pending_approach_handoff = (
+                        _ApproachHandoff.NEEDS_TASK_DECISION
+                    )
+                    self._pending_approach_reason = reason
+                    self._finish_approach_handoff()
+                else:
+                    self._phase = MovingMeleePhase.CANCELLING
+                    self._reason = reason
                 return result
             self._observe()
             if self._retire_failed_approach(profile):

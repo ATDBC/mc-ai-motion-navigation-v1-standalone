@@ -737,6 +737,7 @@ class RuntimeV1Tests(unittest.TestCase):
             ("combat_skill", "mc2p.combat-skill.v1"),
             ("combat_target_revision", "mc2p.combat-target-revision.v1"),
             ("combat_cancel", "mc2p.combat-cancel.v1"),
+            ("navigation_session_decision", "mc2p.navigation-session-decision.v1"),
             ("navigation_route_decision", "mc2p.navigation-route-decision.v1"),
         ):
             with self.subTest(kind=kind):
@@ -745,10 +746,11 @@ class RuntimeV1Tests(unittest.TestCase):
                     "episode_id": "episode-1",
                 })
         self.assertEqual(
-            [kind for kind, _ in self.trace.records[-7:]],
+            [kind for kind, _ in self.trace.records[-8:]],
             [
                 "combat_assessment", "combat_candidates", "combat_selection",
                 "combat_skill", "combat_target_revision", "combat_cancel",
+                "navigation_session_decision",
                 "navigation_route_decision",
             ],
         )

@@ -290,6 +290,7 @@ class PlayerRuntimeV1:
                    'moving_engagement':'mc2p.moving-engagement.v1',
                    'moving_melee_decision':'mc2p.moving-melee-decision-event.v1',
                    'moving_goal_decision':'mc2p.moving-goal-decision-event.v1',
+                   'navigation_session_decision':'mc2p.navigation-session-decision.v1',
                    'navigation_route_decision':'mc2p.navigation-route-decision.v1',
                    'external_motion_detection':'mc2p.external-motion-detection-event.v1',
                    'external_motion_recovery':'mc2p.external-motion-recovery-event.v1'}
