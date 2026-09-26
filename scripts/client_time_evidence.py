@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from mc2p.runtime.segmented_trace import MAX_RECORD_BYTES, _decode, _lines, _positive, _safe_path
 from scripts.control_probe_core import write_json_atomic
 
 
@@ -13,6 +14,13 @@ def _read_jsonl(path: Path) -> list[dict]:
     if len(raw) > 128 * 1024 * 1024:
         raise ValueError("time evidence input exceeds 128 MiB")
     return [json.loads(line) for line in raw.decode("utf-8").splitlines()]
+
+
+def _iter_bounded_jsonl(path: Path, max_record_bytes: int = MAX_RECORD_BYTES):
+    maximum = min(_positive(max_record_bytes, "max_record_bytes"), MAX_RECORD_BYTES)
+    with _safe_path(path).open("rb") as stream:
+        for line in _lines(stream, maximum):
+            yield _decode(line)
 
 
 def export_time_evidence(source: Path, offset: int, run: Path, *, observations: list[dict] | None = None) -> dict:
@@ -38,15 +46,13 @@ def export_time_evidence(source: Path, offset: int, run: Path, *, observations: 
 def export_runtime_time_evidence(directory: Path) -> dict:
     """Export after client cleanup; attribution cannot replace the owning probe's result."""
     try:
-        from scripts.streaming_time_evidence import iter_bounded_jsonl
-
         trace_path = directory / "trace.jsonl"
         if trace_path.is_file():
-            records = iter_bounded_jsonl(trace_path)
+            records = _iter_bounded_jsonl(trace_path)
         else:
             from mc2p.runtime.segmented_trace import iter_segmented_jsonl
             records = iter_segmented_jsonl(directory / "runtime-trace" / "trace")
-        diagnostics = iter(iter_bounded_jsonl(directory / "diagnostics.jsonl"))
+        diagnostics = iter(_iter_bounded_jsonl(directory / "diagnostics.jsonl"))
 
         def observations():
             expected_sequence = 0

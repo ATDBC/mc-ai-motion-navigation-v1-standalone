@@ -49,7 +49,7 @@ public class ClientBlockObservationV3Test {
 
         var table = new HashMap<BlockPos, EnumSet<ClientBlockObservationV3.Source>>();
         var p = new BlockPos(0, 63, 0);
-        for (int i=0; i<318; i++) ClientBlockObservationV3.authorize(table, p, ClientBlockObservationV3.Source.FIRST_HIT_RAY);
+        for (int i=0; i<318; i++) ClientBlockObservationV3.authorize(table, p, ClientBlockObservationV3.Source.SURFACE_DEPTH);
         ClientBlockObservationV3.authorize(table, p, ClientBlockObservationV3.Source.BODY_CONTACT);
         require(table.size()==1 && table.get(p).size()==2, "duplicate block knowledge");
         var world = new TestBlocks(); world.states.put(p, Blocks.STONE.getDefaultState());
@@ -60,11 +60,11 @@ public class ClientBlockObservationV3Test {
         require(block.keySet().equals(Set.of("position","block_id","collision","fluid_id","sources")), "non-minimal fields");
         require(block.getAsJsonObject("collision").get("kind").getAsString().equals("full_cube"), "wrong full shape");
         var one = new HashMap<BlockPos, EnumSet<ClientBlockObservationV3.Source>>();
-        ClientBlockObservationV3.authorize(one,p,ClientBlockObservationV3.Source.FIRST_HIT_RAY);
+        ClientBlockObservationV3.authorize(one,p,ClientBlockObservationV3.Source.SURFACE_DEPTH);
         var repeated = ClientBlockObservationV3.readBlocks(world, ShapeContext.absent(), one);
-        require(repeated.get(0).getAsJsonObject().get("collision").equals(block.get("collision")), "ray count affects shape");
+        require(repeated.get(0).getAsJsonObject().get("collision").equals(block.get("collision")), "surface source count affects shape");
         var mutable = new BlockPos.Mutable(2,63,0);
-        ClientBlockObservationV3.authorize(one,mutable,ClientBlockObservationV3.Source.FIRST_HIT_RAY);
+        ClientBlockObservationV3.authorize(one,mutable,ClientBlockObservationV3.Source.SURFACE_DEPTH);
         mutable.set(99,99,99);
         require(ClientBlockObservationV3.orderedPositions(one).equals(List.of(p,new BlockPos(2,63,0))), "mutable coordinate or unstable order");
 
@@ -90,21 +90,11 @@ public class ClientBlockObservationV3Test {
             "air query did not export its positive result");
 
         world = new TestBlocks();
-        world.states.put(new BlockPos(0,64,3), Blocks.STONE.getDefaultState());
-        world.states.put(new BlockPos(0,64,4), Blocks.DIAMOND_ORE.getDefaultState());
         world.states.put(p, Blocks.STONE.getDefaultState());
         world.states.put(new BlockPos(0,62,0), Blocks.DIAMOND_ORE.getDefaultState());
         var observer = new ArmorStandEntity(EntityType.ARMOR_STAND,new DetachedTestWorld());
-        var seen = ClientBlockObservationV3.discover(world,observer,new Vec3d(.5,65.62,.5),new Box(.2,64,.2,.8,65.8,.8),0f,0f);
-        require(world.rays==1431,"physical sensor ray count changed");
-        var legacyMethod = ClientObservationCollector.class.getDeclaredMethod("legacyFirstHitPositions",
-            BlockView.class,net.minecraft.entity.Entity.class,Vec3d.class,float.class,float.class);
-        legacyMethod.setAccessible(true);
-        @SuppressWarnings("unchecked")
-        var legacyFirstHits = (Set<BlockPos>)legacyMethod.invoke(null,world,observer,new Vec3d(.5,65.62,.5),0f,0f);
-        var v3FirstHits = new HashSet<BlockPos>();
-        seen.forEach((position,sources) -> { if (sources.contains(ClientBlockObservationV3.Source.FIRST_HIT_RAY)) v3FirstHits.add(position); });
-        require(world.rays==2862 && legacyFirstHits.equals(v3FirstHits),"legacy set-only scan differs from V3 first hits");
+        var seen = ClientBlockObservationV3.discoverBodyContacts(
+            world,observer,new Box(.2,64,.2,.8,65.8,.8));
         require(seen.containsKey(p) && seen.get(p).contains(ClientBlockObservationV3.Source.BODY_CONTACT), "underfoot permission omitted");
         require(seen.containsKey(new BlockPos(0,64,0))
                 && seen.get(new BlockPos(0,64,0)).contains(ClientBlockObservationV3.Source.BODY_CONTACT)
@@ -121,18 +111,13 @@ public class ClientBlockObservationV3Test {
             "body occupancy did not export air facts");
         world.allowed=null;
         require(!seen.containsKey(new BlockPos(0,62,0)), "underground permission leaked");
-        require(seen.containsKey(new BlockPos(0,64,3)), "front side not discovered");
-        require(!seen.containsKey(new BlockPos(0,64,4)), "occluded block leaked");
-        var backward = ClientBlockObservationV3.discover(world,observer,new Vec3d(.5,65.62,.5),new Box(.2,64,.2,.8,65.8,.8),180f,0f);
-        require(!backward.containsKey(new BlockPos(0,64,3)), "behind-head wall leaked");
-        require(backward.containsKey(p), "foot permission incorrectly depends on view");
 
         var feetWorld = new TestBlocks();
         for (BlockPos support : List.of(new BlockPos(0,63,0),new BlockPos(1,63,0),new BlockPos(0,63,1),new BlockPos(1,63,1)))
             feetWorld.states.put(support,Blocks.STONE.getDefaultState());
         feetWorld.states.put(new BlockPos(0,62,0),Blocks.DIAMOND_ORE.getDefaultState());
-        var feet = ClientBlockObservationV3.discover(feetWorld,observer,new Vec3d(1,65.62,1),
-            new Box(.7,64,.7,1.3,65.8,1.3),0f,-90f);
+        var feet = ClientBlockObservationV3.discoverBodyContacts(feetWorld,observer,
+            new Box(.7,64,.7,1.3,65.8,1.3));
         var bodyAndSupport = new HashSet<BlockPos>();
         for (int x=0; x<=1; x++) for (int z=0; z<=1; z++) {
             bodyAndSupport.add(new BlockPos(x,63,z));
@@ -148,23 +133,19 @@ public class ClientBlockObservationV3Test {
         var actor = new ArmorStandEntity(EntityType.ARMOR_STAND,new DetachedTestWorld());
         actor.setPosition(.5,64,.5);
         contextual.states.put(p,Blocks.SCAFFOLDING.getDefaultState());
-        var support = ClientBlockObservationV3.discover(contextual,actor,new Vec3d(.5,65.62,.5),
-            actor.getBoundingBox(),0f,-90f);
+        var support = ClientBlockObservationV3.discoverBodyContacts(contextual,actor,actor.getBoundingBox());
         require(support.containsKey(p), "standing scaffold support missing");
         actor.setSneaking(true);
         require(contextual.states.get(p).getCollisionShape(contextual,p,ShapeContext.of(actor)).isEmpty(),
             "fixture must descend through scaffold");
-        var descending = ClientBlockObservationV3.discover(contextual,actor,new Vec3d(.5,65.62,.5),
-            actor.getBoundingBox(),0f,-90f);
+        var descending = ClientBlockObservationV3.discoverBodyContacts(contextual,actor,actor.getBoundingBox());
         require(!descending.containsKey(p), "context-free scaffold shape granted false contact");
         actor.setSneaking(false);
         contextual.states.put(p,Blocks.POWDER_SNOW.getDefaultState());
-        var bare = ClientBlockObservationV3.discover(contextual,actor,new Vec3d(.5,65.62,.5),
-            actor.getBoundingBox(),0f,-90f);
+        var bare = ClientBlockObservationV3.discoverBodyContacts(contextual,actor,actor.getBoundingBox());
         require(!bare.containsKey(p), "bare feet granted solid snow contact");
         actor.equipStack(net.minecraft.entity.EquipmentSlot.FEET,new net.minecraft.item.ItemStack(net.minecraft.item.Items.LEATHER_BOOTS));
-        var booted = ClientBlockObservationV3.discover(contextual,actor,new Vec3d(.5,65.62,.5),
-            actor.getBoundingBox(),0f,-90f);
+        var booted = ClientBlockObservationV3.discoverBodyContacts(contextual,actor,actor.getBoundingBox());
         require(booted.containsKey(p), "leather-boot snow support omitted by absent context");
 
         var index = new ClientEntityIndex();

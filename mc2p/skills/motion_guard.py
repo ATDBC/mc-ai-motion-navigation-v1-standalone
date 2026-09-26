@@ -4,7 +4,7 @@ import math
 
 from mc2p.contracts.common import ContractViolation, require_identifier, require_nonnegative_int
 from mc2p.skills.follow_types import MOVEMENT_FRESHNESS_NS
-from mc2p.skills.follow_playground_types import PlaygroundView
+from mc2p.skills.navigation_views import PlaygroundView
 from mc2p.skills.local_navigation import BODY_MARGIN, _support, _intersects, collision_obstructs
 from mc2p.skills.local_navigation import prepare_obstacles as _sweep_obstacles
 from mc2p.contracts.observation_v3 import AabbV3

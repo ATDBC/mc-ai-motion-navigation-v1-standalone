@@ -6,7 +6,7 @@ import json
 from tests.observation_v2_fixtures import valid_payload_value as legacy_payload
 
 
-def block_value(position=(0, 63, 0), block_id="minecraft:stone", sources=("first_hit_ray",)):
+def block_value(position=(0, 63, 0), block_id="minecraft:stone", sources=("surface_depth",)):
     return dict(position=list(position), block_id=block_id,
                 collision=dict(kind="full_cube", boxes=[], reason=None),
                 fluid_id=None, sources=list(sources))
@@ -34,7 +34,7 @@ def valid_payload_value(profile="navigation_v1"):
     shared = legacy_payload()
     shared["self_state"]["value"]["position"] = dict(x=.5, y=64., z=.5)
     perception = dict(horizontal_fov_degrees=120., vertical_fov_degrees=120.,
-        ray_columns=159, ray_rows=9, sensor_profile_revision=3, max_block_distance=16.,
+        ray_columns=0, ray_rows=0, sensor_profile_revision=4, max_block_distance=16.,
         body_expansion_blocks=.05, block_epsilon_blocks=.001, entity_max_distance=32.,
         entity_occlusion_epsilon_blocks=.05, knowledge_model="block_state_v1", blocks=[],
         visible_entities=[], entities_truncated=False, truncated_entity_count=0)
@@ -52,6 +52,21 @@ def valid_payload_value(profile="navigation_v1"):
                 tracked_entity=dict(status="missing", sample_world_tick=100,
                     source_kind="client_registered_entity", reason_code="not_requested", value=None),
                 damage_events=[], damage_events_dropped=0)
+
+
+def surface_payload_value(profile="navigation_v1"):
+    return valid_payload_value(profile)
+
+
+def legacy_ray_payload_value(profile="navigation_v1"):
+    """Historical decoder fixture. It must never be fed to a current actor."""
+    value = valid_payload_value(profile)
+    value["perception"]["value"].update(
+        sensor_profile_revision=3,
+        ray_columns=159,
+        ray_rows=9,
+    )
+    return value
 
 
 def encoded(value):

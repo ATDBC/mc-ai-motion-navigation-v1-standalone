@@ -367,6 +367,11 @@ class VerifiedMotionExecutor:
             return self._candidate.proof.execution_window.latest_start_tick
         return self._expected_tick()
 
+    def _proof_exit_tick(self) -> int:
+        assert self._candidate is not None
+        assert self._start_tick is not None
+        return self._start_tick + len(self._candidate.proof.commands) - 1
+
     def _decision(self, movement: MovementV1 | None,
                   yaw: float | None, reason: str, *,
                   submittable_as_verified_command: bool = False,
@@ -453,6 +458,16 @@ class VerifiedMotionExecutor:
         return self._decision(
             MovementV1(), None,
             "verified_command_window_expired_retain_landing",
+        )
+
+    def _remaining_commands_are_neutral(self) -> bool:
+        """Whether the proof only waits for the already-caused motion to land."""
+        assert self._candidate is not None
+        commands = self._candidate.proof.commands
+        return (
+            self._command_index < len(commands)
+            and all(command.movement == MovementV1()
+                    for command in commands[self._command_index:])
         )
 
     def decide(self, anchor: StateAnchor,
@@ -550,10 +565,27 @@ class VerifiedMotionExecutor:
                         if self.state is VerifiedMotionExecutorState.INPUT_LOST
                         else None)
             return self._decision(movement, None, pending)
+        # A jump proof commonly has two active inputs followed by many neutral
+        # simulation ticks. Requiring a separately identified request for every
+        # neutral tick adds no physical guarantee: the client sample already
+        # reports neutral input, and the observed landing state is checked below.
+        # Keep body ownership and coast instead of turning a scheduler skip into
+        # input loss.
+        if self._remaining_commands_are_neutral():
+            self._command_index = len(proof.commands)
         if self._command_index >= len(proof.commands):
+            # The neutral suffix includes both free fall and the on-ground
+            # settling frames used by the solver to define its exit state.
+            # Landing early is therefore not completion: keep neutral control
+            # until the proved horizon, then compare the observed final state.
+            if anchor.movement_tick_id < self._proof_exit_tick():
+                return self._decision(
+                    MovementV1(), None, "coast_to_verified_landing",
+                )
             if not anchor.physics_state.on_ground:
-                self.state = VerifiedMotionExecutorState.RECOVERING
-                return self._decision(MovementV1(), None, "awaiting_verified_landing")
+                return self._decision(
+                    MovementV1(), None, "coast_to_verified_landing",
+                )
             assert self._start_variant is not None
             if not _state_fits_entry(
                     anchor.physics_state, self._start_variant.exit_state):

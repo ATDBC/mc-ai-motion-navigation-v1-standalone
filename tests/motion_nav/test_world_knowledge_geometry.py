@@ -7,7 +7,7 @@ from mc2p.motion_nav.legacy.air_confirmation import (
     AirConfirmationBatch, AirConfirmationService,
 )
 from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
-from mc2p.motion_nav.pre_floating_adapter import apply_visible_blocks
+from mc2p.motion_nav.observed_block_adapter import apply_observed_blocks
 from mc2p.motion_nav.world_model import (
     Aabb, BlockGeometry, CellKnowledge, ObservationStamp, WorldKnowledge,
     WorldSessionId, WorldUpdateStatus, elapsed_seconds,
@@ -197,14 +197,14 @@ class WorldKnowledgeTests(unittest.TestCase):
         world.confirm_air(stamp(session, 7, 3), changed)
         self.assertIs(world.view().cell(changed[0]).knowledge, CellKnowledge.UNKNOWN)
 
-    def test_pre_floating_adapter_preserves_visible_collision_geometry(self):
+    def test_observed_block_adapter_preserves_visible_collision_geometry(self):
         session = WorldSessionId("world-a")
         world = WorldKnowledge(session)
         block = ObservedBlockV3(
             (3, 4, 5), "minecraft:stone", CollisionShapeV3("full_cube"), None,
             ("surface_depth",),
         )
-        apply_visible_blocks(world, stamp(session, 1, 1), (block,))
+        apply_observed_blocks(world, stamp(session, 1, 1), (block,))
         fact = world.view().cell((3, 4, 5))
         self.assertIs(fact.knowledge, CellKnowledge.BLOCK)
         self.assertEqual(fact.block.material_key, "minecraft:stone")

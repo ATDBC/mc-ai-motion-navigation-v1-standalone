@@ -61,7 +61,7 @@ class _GapRuntimeBackend:
                 (x, y, z),
                 "minecraft:grass_block" if (x, y, z) in support else "minecraft:air",
                 kind="full_cube" if (x, y, z) in support else "empty",
-                sources=("first_hit_ray",) if (x, y, z) in support else ("air_query",),
+                sources=("surface_depth",) if (x, y, z) in support else ("air_query",),
             )
             for x in range(-2, 3)
             for y in range(60, 71)
@@ -306,7 +306,7 @@ class RuntimeVerifiedMotionHandoffTests(unittest.TestCase):
         self.assertEqual(recovered.decision.action.movement, MovementV1())
         self.assertEqual(
             session.report.reason,
-            "verified_command_window_expired_retain_landing",
+            "coast_to_verified_landing",
         )
 
 

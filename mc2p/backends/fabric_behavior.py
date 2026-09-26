@@ -14,7 +14,11 @@ from mc2p.backends.client_observation_payload import (
     ClientObservationPayloadError, decode_client_observation_payload, snapshot_v2_from_payload,
 )
 from mc2p.backends.deployment_transport import ClientProcessIdentity, DeploymentTransport
-from mc2p.backends.client_observation_payload_v3 import decode_client_observation_value_v3, snapshot_v3_from_payload
+from mc2p.backends.client_observation_payload_v3 import (
+    decode_client_observation_value_v3,
+    require_formal_surface_perception,
+    snapshot_v3_from_payload,
+)
 from mc2p.contracts.observation_request_v3 import (
     OBSERVATION_V2, OBSERVATION_V3, ObservationRequestV3, validate_observation_schema, resolve_observation_request,
 )
@@ -61,7 +65,7 @@ class FabricBehaviorBackendV1:
 
     def __init__(self, *, transport: DeploymentTransport, client_identity: ClientProcessIdentity,
                  token: str, server_port: int, clock_ns: Callable[[], int] = time.perf_counter_ns,
-                 observation_schema_version: str = OBSERVATION_V2):
+                 observation_schema_version: str = OBSERVATION_V3):
         self._observation_schema_version = validate_observation_schema(observation_schema_version)
         if (type(transport) is not DeploymentTransport or type(client_identity) is not ClientProcessIdentity
                 or type(token) is not str or re.fullmatch("[0-9a-f]{64}", token) is None
@@ -175,6 +179,8 @@ class FabricBehaviorBackendV1:
             raise ContractViolation("deployment observation violated the declared contract") from error
         if decoded.generation_id != sequence:
             raise ContractViolation("deployment observation generation mismatch")
+        if v3:
+            require_formal_surface_perception(decoded)
         if v3 and decoded.field_profile != observation_request.field_profile:
             raise ContractViolation("observation_profile_mismatch")
         if v3:

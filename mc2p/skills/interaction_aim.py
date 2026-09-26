@@ -11,7 +11,7 @@ from mc2p.contracts.common import ContractViolation,require_identifier,require_n
 from mc2p.contracts.observation import Vec3V0
 from mc2p.skills.active_perception import ActivePerceptionCoordinator
 from mc2p.skills.block_geometry import world_boxes
-from mc2p.skills.follow_playground_types import PlaygroundView
+from mc2p.skills.navigation_views import PlaygroundView
 from mc2p.skills.navigation_evidence import EvidenceStamp,NavigationEvidence
 from mc2p.skills.navigation_memory import MemorySnapshot
 from mc2p.skills.perception_needs import (

@@ -8,11 +8,16 @@ from mc2p.motion_nav.online_motion import InputApplicationLedger
 
 from scripts import b10_gap_solver_runtime as probe
 from scripts.b10_gap_solver_runtime import (
+    _manual_executor_submission_window,
     _input_window_diagnostics,
+    _pending_air_request,
     _runtime_input_ledger,
     _runtime_navigation_frame,
     _verified_submission_window,
 )
+from mc2p.contracts.action_v1 import MovementV1
+from mc2p.contracts.observation_request_v3 import ObservationRequestV3
+from mc2p.motion_nav.world_model import CellKnowledge
 
 
 class _Adapter:
@@ -26,6 +31,29 @@ class _Adapter:
 
 
 class B10RuntimeProbeTests(unittest.TestCase):
+    def test_air_request_rechecks_only_unknown_or_previously_blocked_cells(self):
+        knowledge = {
+            (1, 64, 0): CellKnowledge.AIR,
+            (2, 64, 0): CellKnowledge.UNKNOWN,
+            (3, 64, 0): CellKnowledge.BLOCK,
+        }
+        frame = SimpleNamespace(world=SimpleNamespace(
+            cell=lambda position: SimpleNamespace(knowledge=knowledge[position]),
+        ))
+        request = ObservationRequestV3(
+            "navigation_v1",
+            ((1, 64, 0), (2, 64, 0), (3, 64, 0)),
+        )
+
+        pending = _pending_air_request(frame, request)
+
+        self.assertEqual(
+            pending,
+            ObservationRequestV3(
+                "navigation_v1", ((2, 64, 0), (3, 64, 0)),
+            ),
+        )
+
     def test_live_probe_reuses_one_planner_and_motion_worker(self):
         planner = unittest.mock.MagicMock()
         motion = unittest.mock.MagicMock()
@@ -95,6 +123,31 @@ class B10RuntimeProbeTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(RuntimeError, "incomplete verified command identity"):
             _verified_submission_window(incomplete)
+
+    def test_manual_executor_coasts_without_registering_a_verified_command(self):
+        coasting = SimpleNamespace(
+            submittable_as_verified_command=False,
+            reason="coast_to_verified_landing",
+            movement=MovementV1(),
+            command_index=20,
+            expected_movement_tick=51,
+            latest_movement_tick=51,
+        )
+
+        self.assertIsNone(_manual_executor_submission_window(coasting))
+
+    def test_manual_executor_rejects_unverified_active_movement(self):
+        invalid = SimpleNamespace(
+            submittable_as_verified_command=False,
+            reason="unexpected",
+            movement=MovementV1(forward=1),
+            command_index=2,
+            expected_movement_tick=33,
+            latest_movement_tick=33,
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "unverified active movement"):
+            _manual_executor_submission_window(invalid)
 
     def test_input_timing_keeps_actual_tick_and_window_distance(self):
         applications = (

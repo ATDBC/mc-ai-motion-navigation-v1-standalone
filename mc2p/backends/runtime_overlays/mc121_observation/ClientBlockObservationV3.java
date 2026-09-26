@@ -22,16 +22,14 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
-import net.minecraft.world.RaycastContext;
 
 /** Same-tick authorization and compact block fields. No world cache, images or surface permissions. */
 public final class ClientBlockObservationV3 {
-    public enum Source { FIRST_HIT_RAY, BODY_CONTACT, CURRENT_TARGET, SURFACE_DEPTH, AIR_QUERY }
+    public enum Source { BODY_CONTACT, CURRENT_TARGET, SURFACE_DEPTH, AIR_QUERY }
     public interface SurfaceProvider { List<BlockPos> visible(MinecraftClient client, Vec3d eye, float yaw, float pitch); }
     private static SurfaceProvider surfaceProvider;
-    public static boolean surfaceEnabled() { return "1".equals(System.getenv("MC2P_SURFACE_PERCEPTION")); }
     public static void installSurfaceProvider(SurfaceProvider provider) {
-        if (!surfaceEnabled() || provider==null || surfaceProvider!=null) throw new IllegalStateException("surface provider installation refused");
+        if (provider==null || surfaceProvider!=null) throw new IllegalStateException("surface provider installation refused");
         surfaceProvider=provider;
     }
     private ClientBlockObservationV3() {}
@@ -39,27 +37,11 @@ public final class ClientBlockObservationV3 {
     public static void authorize(Map<BlockPos,EnumSet<Source>> table, BlockPos position, Source source) {
         if (table==null || position==null || source==null) throw new IllegalArgumentException("missing block authorization");
         table.computeIfAbsent(position.toImmutable(), key -> EnumSet.noneOf(Source.class)).add(source);
-        if (table.size()>(surfaceEnabled()?26025:2456)) throw new IllegalStateException("block authorization budget exceeded");
+        if (table.size()>26025) throw new IllegalStateException("block authorization budget exceeded");
     }
     public static List<BlockPos> orderedPositions(Map<BlockPos,EnumSet<Source>> table) {
         return table.keySet().stream().sorted(Comparator.comparingInt(BlockPos::getX)
             .thenComparingInt(BlockPos::getY).thenComparingInt(BlockPos::getZ)).toList();
-    }
-
-    public static Map<BlockPos,EnumSet<Source>> discover(BlockView world, Entity observer, Vec3d camera,
-                                                         Box body, float yaw, float pitch) {
-        var table = new HashMap<BlockPos,EnumSet<Source>>();
-        for (int row=0; row<ClientObservationCollector.RAY_ROWS; row++) {
-            for (int col=0; col<ClientObservationCollector.RAY_COLUMNS; col++) {
-                Vec3d end = camera.add(ClientObservationCollector.rayDirection(yaw,pitch,row,col)
-                    .multiply(ClientObservationCollector.BLOCK_MAX_DISTANCE));
-                BlockHitResult hit = world.raycast(new RaycastContext(camera,end,
-                    RaycastContext.ShapeType.OUTLINE,RaycastContext.FluidHandling.ANY,observer));
-                if (hit.getType()==HitResult.Type.BLOCK) authorize(table,hit.getBlockPos(),Source.FIRST_HIT_RAY);
-            }
-        }
-        discoverContacts(world,observer,body,table);
-        return table;
     }
 
     private static void discoverContacts(BlockView world, Entity observer, Box body, Map<BlockPos,EnumSet<Source>> table) {
@@ -86,6 +68,14 @@ public final class ClientBlockObservationV3 {
         }
     }
 
+    /** Direct body knowledge is tested separately from the surface provider. */
+    public static Map<BlockPos,EnumSet<Source>> discoverBodyContacts(
+            BlockView world, Entity observer, Box body) {
+        var table = new HashMap<BlockPos,EnumSet<Source>>();
+        discoverContacts(world, observer, body, table);
+        return table;
+    }
+
     public static void discoverRequestedAir(BlockView world, Vec3d origin, ClientObservationRequestV3 request,
                                             Map<BlockPos,EnumSet<Source>> table) {
         if (world==null || origin==null || request==null || table==null)
@@ -99,10 +89,9 @@ public final class ClientBlockObservationV3 {
     }
 
     public static JsonArray readBlocks(BlockView world, ShapeContext context, Map<BlockPos,EnumSet<Source>> table) {
-        boolean surface=surfaceEnabled();
-        if (table.size()>(surface?26025:2456)) throw new IllegalStateException("block export budget exceeded");
+        if (table.size()>26025) throw new IllegalStateException("block export budget exceeded");
         for (Source source : Source.values()) {
-            int limit = source==Source.SURFACE_DEPTH ? (surface?25000:0) : source==Source.FIRST_HIT_RAY ? (surface?0:1431)
+            int limit = source==Source.SURFACE_DEPTH ? 25000
                 : source==Source.BODY_CONTACT || source==Source.AIR_QUERY ? 512 : 1;
             if (table.values().stream().anyMatch(s -> s==null || s.isEmpty())
                     || table.values().stream().filter(s -> s.contains(source)).count()>limit)
@@ -180,30 +169,21 @@ public final class ClientBlockObservationV3 {
                                      ClientEntityIndex index, long generationId) {
         var player = client.player;
         var world = client.world;
-        long tickBefore = world.getTime();
         Vec3d camera = player.getCameraPosVec(1.0f);
         float yaw = player.getYaw(), pitch = player.getPitch();
-        Map<BlockPos,EnumSet<Source>> table;
-        if (surfaceEnabled()) {
-            if (surfaceProvider==null) throw new IllegalStateException("surface sensor selected but provider unavailable");
-            table=new HashMap<>();
-            for (BlockPos position : surfaceProvider.visible(client,camera,yaw,pitch)) authorize(table,position,Source.SURFACE_DEPTH);
-            discoverContacts(world,player,player.getBoundingBox(),table);
-        } else table = discover(world,player,camera,player.getBoundingBox(),yaw,pitch);
+        if (surfaceProvider==null) throw new IllegalStateException("formal surface sensor unavailable");
+        Map<BlockPos,EnumSet<Source>> table=new HashMap<>();
+        for (BlockPos position : surfaceProvider.visible(client,camera,yaw,pitch))
+            authorize(table,position,Source.SURFACE_DEPTH);
+        discoverContacts(world,player,player.getBoundingBox(),table);
         discoverRequestedAir(world,player.getPos(),request,table);
         // Entity label legality already requires this query in V2. Reuse it for interaction.
         HitResult hit = ClientObservationCollector.currentTarget(client,player);
         var entities = ClientObservationCollector.collectVisibleEntities(client,player,camera,generationId,index,hit);
         if (request.needsTargeting() && hit instanceof BlockHitResult b && hit.getType()==HitResult.Type.BLOCK)
             authorize(table,b.getBlockPos(),Source.CURRENT_TARGET);
-        ClientBlockParityDiagnostics.recordIfEnabled(ClientBlockParityDiagnostics.enabled(), generationId,
-            request.fieldProfile(), tickBefore, table,
-            () -> ClientObservationCollector.legacyFirstHitPositions(world,player,camera,yaw,pitch), world::getTime);
         JsonObject perception = ClientObservationCollector.perceptionMetadata();
-        if (surfaceEnabled()) {
-            if (ClientBlockParityDiagnostics.enabled()) throw new IllegalStateException("ray parity diagnostics cannot describe surface sensor");
-            perception.addProperty("sensor_profile_revision",4);perception.addProperty("ray_columns",0);perception.addProperty("ray_rows",0);
-        }
+        perception.addProperty("sensor_profile_revision",4);perception.addProperty("ray_columns",0);perception.addProperty("ray_rows",0);
         perception.addProperty("knowledge_model","block_state_v1");
         perception.add("blocks",readBlocks(world,ShapeContext.of(player),table));
         perception.add("visible_entities",entities.values());

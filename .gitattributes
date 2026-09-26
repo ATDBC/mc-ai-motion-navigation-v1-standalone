@@ -1,2 +1,5 @@
 # This repository is a byte-exact generated snapshot.
 * -text whitespace=cr-at-eol,-blank-at-eof
+
+# Clipper2 is vendored byte-for-byte from upstream.
+deployment/surface-depth-diagnostic/native/vendor/** -whitespace

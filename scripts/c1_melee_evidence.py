@@ -6,7 +6,7 @@ from pathlib import Path
 from mc2p.runtime.segmented_trace import iter_segmented_jsonl
 from mc2p.runtime.trace import trace_projection
 from mc2p.skills.fixed_melee import CombatTargetV1, FixedMeleePhase, decide_fixed_melee
-from scripts.navigation_motion_evidence import restore_snapshot
+from scripts.formal_observation_v3_trace import restore_observation_v3_trace
 
 
 MAX_TRACE_RECORDS = 100_000
@@ -59,7 +59,7 @@ def _observation_from_record(row: dict):
         raw = result.get("observation") if type(result) is dict else None
     else:
         return None
-    return restore_snapshot(raw) if type(raw) is dict else None
+    return restore_observation_v3_trace(raw) if type(raw) is dict else None
 
 
 def _event_key(payload: dict) -> tuple[str, int, int]:

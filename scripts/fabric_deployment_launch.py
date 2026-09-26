@@ -124,7 +124,7 @@ def verify_assets() -> dict:
 
 
 def export_launch(*, timeout_seconds: float = 180) -> Path:
-    from scripts.probe_craftground_timing_parallel import run_bounded_process
+    from scripts.bounded_process import run_bounded_process
     from scripts.control_probe_core import write_json_atomic
     from mc2p.runtime.trace import trace_projection
     build_probe(timeout_seconds=timeout_seconds)

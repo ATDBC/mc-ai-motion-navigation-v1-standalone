@@ -37,16 +37,18 @@ class StandaloneExportTests(unittest.TestCase):
         self.assertEqual(report.changed_files, ())
         self.assertTrue((self.root / "README.md").is_file())
         self.assertTrue((self.root / "requirements.txt").is_file())
-        self.assertEqual(
-            (self.root / ".gitattributes").read_text("utf-8").splitlines()[-1],
-            "* -text whitespace=cr-at-eol,-blank-at-eof",
+        attributes = set(
+            (self.root / ".gitattributes").read_text("utf-8").splitlines()
+        )
+        self.assertIn("* -text whitespace=cr-at-eol,-blank-at-eof", attributes)
+        self.assertIn(
+            "deployment/surface-depth-diagnostic/native/vendor/** -whitespace",
+            attributes,
         )
 
     def test_reviewed_missing_dependencies_are_real_export_files(self) -> None:
         required = (
             "tests/test_navigation_motion.py",
-            "tests/test_craftground_backend.py",
-            "tests/test_craftground_runtime.py",
             "tests/test_visible_equipment_projection.py",
             "scripts/b12b_partial_combat_runtime.py",
             "tests/test_b12b_partial_combat_runtime.py",

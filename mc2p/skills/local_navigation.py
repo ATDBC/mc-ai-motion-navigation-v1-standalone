@@ -1,7 +1,7 @@
 """Bounded candidates from observed blocks, not a complete occupancy map.
 
-Allowing a short step means the declared checks passed, not that sparse rays have
-proved an arbitrary body volume empty. New collision observations stop/replan.
+Allowing a short step means the declared checks passed, not that partial local
+observation proved an arbitrary body volume empty. New collisions stop/replan.
 """
 from __future__ import annotations
 

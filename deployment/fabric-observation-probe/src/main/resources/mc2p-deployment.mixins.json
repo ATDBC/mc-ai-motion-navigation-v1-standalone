@@ -6,6 +6,6 @@
   "client": ["BehaviorInputMixin", "BehaviorPlayerMixin", "BehaviorKeyboardMixin", "BehaviorMouseMixin",
     "WindowOffScreenMixin", "GameRendererMixin", "HandledScreenRenderMixin", "ScreenHandlerPropertiesMixin",
     "ScreenshotGuardMixin", "NativeImageGuardMixin", "ClientClockTickMixin", "ClientClockWorldMixin", "ClientClockPacketMixin",
-    "ClientDamagePacketMixin"],
+    "ClientDamagePacketMixin", "SurfaceChunkStateMixin"],
   "injectors": { "defaultRequire": 1 }
 }

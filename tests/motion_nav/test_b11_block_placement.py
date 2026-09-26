@@ -49,7 +49,7 @@ def observation(
     profile: str = "interaction_v1",
     sneaking: bool = False,
 ):
-    blocks = [observed_block(SUPPORT, "minecraft:stone", sources=("first_hit_ray",))]
+    blocks = [observed_block(SUPPORT, "minecraft:stone", sources=("surface_depth",))]
     if destination == "air":
         blocks.append(observed_block(
             DESTINATION, "minecraft:air", kind="empty", sources=("air_query",),
@@ -79,7 +79,7 @@ def observation(
         "block", SUPPORT, None, "east", Vec3V0(1.0, 63.5, 0.5), 2.0,
     ) if targeted else TargetingStateV3("miss", None, None, None, None, None)
     if targeted:
-        current = replace(blocks[0], sources=("current_target", "first_hit_ray"))
+        current = replace(blocks[0], sources=("current_target", "surface_depth"))
         perceived = (current,) + tuple(blocks[1:])
     else:
         perceived = tuple(blocks)

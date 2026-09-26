@@ -11,7 +11,7 @@ import math
 
 from mc2p.contracts.common import ContractViolation, require_nonnegative_int
 from mc2p.contracts.observation import Vec3V0
-from mc2p.skills.follow_playground_types import PlaygroundView
+from mc2p.skills.navigation_views import PlaygroundView
 from mc2p.skills.follow_types import FollowEntity
 from mc2p.skills.navigation_evidence import ObservationCoverage
 from mc2p.skills.navigation_memory import MemorySnapshot
@@ -272,25 +272,26 @@ def _target_region(
                        max(pitches) - pitch_half, min(pitches) + pitch_half)
 
 
-def _gap_regions(own: Vec3V0, point: Vec3V0, reference_yaw: float,
-                 coverage: ObservationCoverage) -> tuple[AngleRegion, ...]:
-    # V3's validated physical profile is fixed at 159 columns / 9 rows.
-    # A point inside the FOV can sit BETWEEN every ray. Predict directions for
-    # actual rays, not permission: only the new block sample resolves the guard.
+def _surface_gap_region(
+    own: Vec3V0,
+    point: Vec3V0,
+    coverage: ObservationCoverage,
+) -> AngleRegion | None:
+    """Aim once at missing route evidence without reproducing a sensor grid.
+
+    Surface depth has no gaps between discrete rays. Keeping the needed cell
+    inside the declared field of view therefore gives one continuous candidate
+    region. Occlusion and empty/unknown state are still resolved only by the
+    later filtered observation.
+    """
+    if (coverage.sensor_profile_revision != 4
+            or coverage.block_visibility_model != "surface_depth"):
+        raise ContractViolation("surface candidate requires current surface-depth evidence")
     distance=math.sqrt((point.x-own.x)**2+(point.z-own.z)**2+
                        (point.y-own.y-EYE_HEIGHT_BLOCKS)**2)
     if distance>coverage.max_block_distance:
-        return ()
-    yaw,pitch=_angles(own,point)
-    column_step=coverage.horizontal_fov_degrees/158.
-    column=max(0,min(158,round((_wrap(yaw-reference_yaw)+coverage.horizontal_fov_degrees/2)/column_step)))
-    camera_yaw=_wrap(yaw-(-coverage.horizontal_fov_degrees/2+column*column_step))
-    result=[]
-    for row in range(9):
-        camera_pitch=pitch-(-coverage.vertical_fov_degrees/2+row*coverage.vertical_fov_degrees/8.)
-        if -90<=camera_pitch<=90:
-            result.append(AngleRegion(camera_yaw,camera_yaw,camera_pitch,camera_pitch))
-    return tuple(result)
+        return None
+    return _center_region(own, point, coverage)
 
 
 def _nearest_region(regions, yaw, pitch):
@@ -423,8 +424,9 @@ def generate_candidates(
             if (target_region.yaw_min>target_region.yaw_max
                     or target_region.pitch_min>target_region.pitch_max):
                 target_region=None
-    gap_regions = (_gap_regions(own.position, gap_need.point, own.yaw, latest.coverage)
-                   if gap_need is not None else ())
+    surface_gap = (_surface_gap_region(own.position, gap_need.point, latest.coverage)
+                   if gap_need is not None else None)
+    gap_regions = () if surface_gap is None else (surface_gap,)
     gap_region = _nearest_region(gap_regions,own.yaw,own.pitch)
     center_region=(_center_region(own.position,target_need.point,latest.coverage)
                    if target_need is not None else None)

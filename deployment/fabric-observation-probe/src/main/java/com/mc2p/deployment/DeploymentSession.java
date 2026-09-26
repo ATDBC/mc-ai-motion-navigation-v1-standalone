@@ -13,9 +13,7 @@ import java.util.Set;
 
 /** Credentials are consumed here and never retained in the decoded session or error messages. */
 public record DeploymentSession(String episode, String observationSchemaVersion) {
-    private static final String SESSION_V1 = "mc2p.deployment_session.v1";
     private static final String SESSION_V2 = "mc2p.deployment_session.v2";
-    private static final String OBSERVATION_V2 = "mc2p.client_observation.v2";
     private static final String OBSERVATION_V3 = "mc2p.client_observation.v3";
 
     public static DeploymentSession decode(byte[] payload, String expectedToken) {
@@ -40,10 +38,7 @@ public record DeploymentSession(String episode, String observationSchemaVersion)
                     throw new IllegalArgumentException("invalid session authentication/schema");
                 String schema = fields.get("schema_version");
                 String observationSchema;
-                if (SESSION_V1.equals(schema)
-                        && fields.keySet().equals(Set.of("schema_version", "episode_id", "token"))) {
-                    observationSchema = OBSERVATION_V2;
-                } else if (SESSION_V2.equals(schema)
+                if (SESSION_V2.equals(schema)
                         && fields.keySet().equals(Set.of("schema_version", "episode_id", "token",
                                                         "observation_schema_version"))
                         && OBSERVATION_V3.equals(fields.get("observation_schema_version"))) {

@@ -21,7 +21,7 @@ from mc2p.motion_nav.navigation_session import (
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1, RuntimeStateV1
 from mc2p.skills.fixed_melee import CombatTargetV1
 from mc2p.skills.fixed_melee_driver import FixedMeleeDriver, FixedMeleeReportV1
-from mc2p.skills.normal_control_capabilities import ControlCapabilities, SCHEMA
+from mc2p.skills.control_capabilities import ControlCapabilities, SCHEMA
 from scripts.control_probe_core import append_jsonl, write_json_atomic
 
 

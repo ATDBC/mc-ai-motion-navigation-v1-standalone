@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import hashlib
+import importlib
 from functools import lru_cache
 import re
 from typing import Callable, Iterable, Iterator
@@ -10,9 +11,13 @@ from typing import Callable, Iterable, Iterator
 from mc2p.runtime.segmented_trace import MAX_RECORD_BYTES, _decode, _lines, _positive, _safe_path
 
 
+_IMAGE_KEY_TOKENS = (
+    "pov", "rgb", "image", "frame", "pixel", "texture", "screenshot",
+)
+
+
 @lru_cache(maxsize=512)
 def _image_key(key: str) -> bool:
-    from scripts.smoke_test_player_runtime import _IMAGE_KEY_TOKENS
     normalized=re.sub(r'[^a-z0-9]+','_',key.casefold())
     return any(token in normalized for token in _IMAGE_KEY_TOKENS)
 
@@ -182,8 +187,7 @@ def _parse_action(raw: dict):
 def _validated_observations(directory: Path, errors: _Errors) -> Iterator[dict]:
     from mc2p.contracts.action_receipt import ClientBehaviorReceiptV2
     from mc2p.runtime.segmented_trace import iter_segmented_jsonl
-    from scripts.smoke_test_player_runtime import _parse_observation_v2
-    from scripts.navigation_motion_evidence import restore_snapshot
+    from scripts.formal_observation_v3_trace import restore_observation_v3_trace
 
     diagnostics = iter(iter_segmented_jsonl(directory / 'diagnostics'))
     previous = None
@@ -205,11 +209,19 @@ def _validated_observations(directory: Path, errors: _Errors) -> Iterator[dict]:
                 # never changes their knowledge model and never permits mixing.
                 version=observation.get('schema_version')
                 if version=='mc2p.observation.v3':
-                    restored=restore_snapshot(observation)
+                    restored=restore_observation_v3_trace(observation)
                     if restored.privileged_fields_present:
                         raise ValueError('privileged V3 runtime timing observation')
                 elif version=='mc2p.observation.v2':
-                    _parse_observation_v2(observation)
+                    try:
+                        parser = importlib.import_module(
+                            'scripts.smoke_test_player_runtime'
+                        )._parse_observation_v2
+                    except (ModuleNotFoundError, AttributeError) as error:
+                        raise ValueError(
+                            'historical V2 timing parser is not included in the current Fabric package'
+                        ) from error
+                    parser(observation)
                 else:
                     raise ValueError('unsupported runtime timing observation schema')
                 if schema_version is not None and version!=schema_version:

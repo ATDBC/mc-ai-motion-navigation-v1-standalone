@@ -40,21 +40,43 @@ from scripts.client_time_evidence import export_runtime_time_evidence
 from scripts.fabric_deployment_launch import export_launch, inspect_launch, verify_assets, _hash
 from scripts.fabric_deployment_sandbox import JAVA, SERVER_SHA1, prepare_server, write_argument_file, client_environment
 from scripts.fabric_container_scenario import run_container_scenario, evaluate_container, evaluate_container_reconnect
-from scripts.probe_craftground_timing_parallel import run_bounded_process, make_run_id
-from scripts.formal_observation_v3_evidence import validate_formal_observations_v3
-from scripts.block_parity_evidence import parity_file_check,formal_samples_from_records,frozen_probe_sources
-from scripts.smoke_test_player_runtime import _formal_observation_violations
-from scripts.smoke_test_player_runtime_v1 import STAGES as RUNTIME_STAGES, evaluate_stages
-from scripts.timing_parallel_probe_core import ProcessIdentityV0, terminate_registered_tree
+from scripts.bounded_process import run_bounded_process, make_run_id
+from scripts.formal_observation_v3_evidence import (
+    formal_observation_violations,
+    validate_formal_observations_v3,
+)
+from scripts.fabric_runtime_smoke_evidence import (
+    STAGES as RUNTIME_STAGES,
+    evaluate_stages,
+)
+from scripts.process_tree import ProcessIdentityV0, terminate_registered_tree
 from scripts.visibility_fixture_world import _no_links, build_visibility_fixture, install_visibility_fixture
 
 PROXY_ARGS = ["-Dhttp.proxyHost=127.0.0.1", "-Dhttp.proxyPort=7897", "-Dhttps.proxyHost=127.0.0.1",
               "-Dhttps.proxyPort=7897", "-Dhttp.nonProxyHosts=localhost|127.*|[::1]|repo.huaweicloud.com"]
+DEPLOYMENT_BASE_SOURCES = (
+    "scripts/probe_fabric_deployment_observation.py",
+    "scripts/bounded_process.py",
+    "scripts/process_tree.py",
+    "scripts/formal_observation_v3_evidence.py",
+    "scripts/formal_observation_v3_trace.py",
+    "scripts/fabric_runtime_smoke_evidence.py",
+    "scripts/build_fabric_deployment_probe.py",
+    "scripts/fabric_deployment_launch.py",
+    "scripts/fabric_deployment_sandbox.py",
+    "mc2p/backends/deployment_transport.py",
+    "mc2p/backends/fabric_behavior.py",
+    "mc2p/backends/client_behavior_payload.py",
+    "mc2p/backends/client_observation_payload_v3.py",
+    "mc2p/runtime/player_runtime_v1.py",
+    "mc2p/contracts/observation_v3.py",
+)
 B03_SOURCES = (
     "mc2p/motion_nav/fixed_route.py",
     "mc2p/motion_nav/geometry.py",
     "mc2p/motion_nav/ground_motion.py",
     "mc2p/motion_nav/runtime_adapter.py",
+    "mc2p/motion_nav/observed_block_adapter.py",
     "scripts/fixed_route_runtime_core.py",
     "config/motion-navigation/ordinary-ground-v1.json",
 )
@@ -174,7 +196,7 @@ C1_FIXED_MELEE_SOURCES = (
     "mc2p/skills/attack_evidence.py",
     "mc2p/skills/attack_evidence_replay.py",
     "mc2p/skills/targeting.py",
-    "mc2p/skills/normal_control_capabilities.py",
+    "mc2p/skills/control_capabilities.py",
     "mc2p/contracts/action_v1.py",
     "mc2p/contracts/observation_v2.py",
     "mc2p/runtime/async_trace.py",
@@ -262,7 +284,7 @@ def frozen_deployment_sources(*, b03_fixed_route_probe: bool,
                               c1r_control_frame_probe: bool = False,
                               b12a_attack_evidence_probe: bool = False,
                               b12b_partial_combat_probe: bool = False) -> dict[str, str]:
-    sources = frozen_probe_sources()
+    sources = {name: _hash(ROOT / name) for name in DEPLOYMENT_BASE_SOURCES}
     if b03_fixed_route_probe or b03_shape_probe:
         sources.update({name: _hash(ROOT / name) for name in B03_SOURCES})
     if b03_shape_probe:
@@ -383,7 +405,7 @@ def evaluate_trace(records: list[dict], rows: list[dict], *, server_port: int,
                 for i, p in enumerate(steps)),
             normal_input_ticks_continue=bool(receipts) and receipts[0].input_samples >= 1
                 and all(a.input_samples < b.input_samples for a, b in zip(receipts, receipts[1:])),
-            no_image_fields_or_binary_projection=not _formal_observation_violations(records, path="trace"),
+            no_image_fields_or_binary_projection=not formal_observation_violations(records, path="trace"),
             continuous_zero_image_diagnostics=len(rows) == len(obs) == expected_steps + 1 and all(
                 row["episode_id"] == obs[i]["episode_id"] and row["observation_sequence_id"] == i
                 and row["diagnostics"]["schema_version"] == "mc2p.deployment_diagnostics.v1"
@@ -789,7 +811,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
             c1r_control_frame_probe,b12a_attack_evidence_probe,
             b12b_partial_combat_probe))>1:
         raise ValueError('probe scenarios are mutually exclusive')
-    if block_parity and not visibility_probe: raise ValueError('block parity requires visibility scenario')
+    if block_parity:
+        raise ValueError('first-hit block parity was retired with sensor profile 3')
     if (c1r_control_frame_probe or b12b_partial_combat_probe) and not time_diagnostics:
         raise ValueError('control-frame combat probe requires --time-diagnostics')
     source_before = frozen_deployment_sources(
@@ -936,8 +959,10 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                     initial = runtime.observation
                     air_evidence = None
                     if visibility_probe and number==0:
-                        from scripts.fabric_visibility_scenario import run_visibility_runtime
-                        from scripts.probe_observation_v2_visibility import evaluate_visibility_stages
+                        from scripts.fabric_visibility_scenario import (
+                            evaluate_visibility_stages,
+                            run_visibility_runtime,
+                        )
                         stages,rows,episode_checks=run_visibility_runtime(runtime,backend,episode,directory,deadline)
                         episode_checks+=evaluate_visibility_stages(stages)
                     elif mining_probe:
@@ -1639,16 +1664,10 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                     checks.append({**time_check, "name": f"client-{number}:" + time_check["name"]})
                     if diagnostic_failure is not None:
                         diagnostic_failures.append(dict(client=number, **diagnostic_failure))
-                    try:
-                        if c1_probe:
-                            parity_check = dict(name='block_parity_evidence', passed=not block_parity)
-                        else:
-                            closed_records=[json.loads(line) for line in (directory/'trace.jsonl').read_text('utf-8').splitlines()]
-                            parity_check=parity_file_check(directory/'mc2p-block-parity.jsonl',
-                                formal_samples_from_records(closed_records),enabled=block_parity,
-                                require_profile_cycle=visibility_probe and number==0)
-                    except (OSError,ValueError,KeyError,TypeError) as error:
-                        parity_check=dict(name='block_parity_evidence',passed=False,error=str(error))
+                    parity_check = dict(
+                        name="legacy_block_parity_disabled",
+                        passed=not block_parity,
+                    )
                     checks.append(dict(parity_check,name=f'client-{number}:'+parity_check['name']))
             _live(server_identity)
             if not port_free(ipc_port):
@@ -1792,7 +1811,7 @@ def main(argv=None) -> int:
     parser.add_argument("--physics-tick-diagnostics", action="store_true",
                         help="join pre-state, sampled input and post-state for each actor movement tick")
     parser.add_argument('--visibility-probe',action='store_true',help='run the shared original-speed visibility scene')
-    parser.add_argument('--block-parity',action='store_true',help='test-only same-tick first-hit comparison, not a speed benchmark')
+    parser.add_argument('--block-parity', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--b02-air-probe',action='store_true',help='measure bounded positive-only air confirmation')
     parser.add_argument('--b03-fixed-route-probe',action='store_true',help='run B03 fixed-route walking, cancellation and lease checks')
     parser.add_argument('--b03-shape-probe',action='store_true',
@@ -1846,7 +1865,8 @@ def main(argv=None) -> int:
             args.c1r_control_frame_probe,args.b12a_attack_evidence_probe,
             args.b12b_partial_combat_probe))>1:
         parser.error('probe scenarios are mutually exclusive')
-    if args.block_parity and not args.visibility_probe: parser.error('block parity requires visibility scenario')
+    if args.block_parity:
+        parser.error('first-hit block parity was retired with sensor profile 3')
     if args.physics_tick_diagnostics and not args.time_diagnostics:
         parser.error('physics tick diagnostics require --time-diagnostics')
     if (args.c1r_control_frame_probe or args.b12b_partial_combat_probe) \

@@ -6,18 +6,14 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.network.packet.s2c.play.EntityDamageS2CPacket;
 import net.minecraft.component.DataComponentTypes;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
@@ -28,7 +24,6 @@ import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.CraftingResultInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
-import net.minecraft.state.property.Property;
 import net.minecraft.screen.AbstractFurnaceScreenHandler;
 import net.minecraft.screen.AnvilScreenHandler;
 import net.minecraft.screen.BeaconScreenHandler;
@@ -56,16 +51,10 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.world.LightType;
-import net.minecraft.world.BlockView;
 import net.minecraft.world.RaycastContext;
 
 /** Reads only state available to a normal Minecraft client at one client-tick boundary. */
 public final class ClientObservationCollector {
-    private static final String SCHEMA = "mc2p.client_observation.v2";
-    static final int RAY_COLUMNS = 159;
-    static final int RAY_ROWS = 9;
-    private static final int SENSOR_PROFILE_REVISION = 3;
     private static final double HORIZONTAL_FOV = 120.0;
     private static final double VERTICAL_FOV = 120.0;
     static final double BLOCK_MAX_DISTANCE = 16.0;
@@ -104,18 +93,6 @@ public final class ClientObservationCollector {
                 packet.sourceCauseId(), packet.sourceDirectId());
     }
 
-    public static byte[] collect(MinecraftClient client, long generationId) {
-        if (client == null || generationId < 0L) {
-            throw new IllegalArgumentException("invalid client observation request");
-        }
-        if (!client.isOnThread()) throw new IllegalStateException("observation requires client thread");
-        return ClientObservationJson.encode(SAMPLE_CLOCK.sample(() -> collectState(client, generationId)));
-    }
-
-    private static JsonObject collectState(MinecraftClient client, long generationId) {
-        return collectState(client, generationId, null);
-    }
-
     public static byte[] collectV3(MinecraftClient client, long generationId, ClientObservationRequestV3 request) {
         if (client==null || request==null || generationId<0L) throw new IllegalArgumentException("invalid V3 observation request");
         if (!client.isOnThread()) throw new IllegalStateException("observation requires client thread");
@@ -130,8 +107,8 @@ public final class ClientObservationCollector {
         ClientPlayerEntity player = client.player;
         long worldTick = client.world == null ? 0L : client.world.getTime();
         JsonObject root = ClientObservationJson.object();
-        root.addProperty("schema_version", request==null ? SCHEMA : "mc2p.client_observation.v3");
-        if (request!=null) root.addProperty("field_profile",request.fieldProfile());
+        root.addProperty("schema_version", "mc2p.client_observation.v3");
+        root.addProperty("field_profile",request.fieldProfile());
         root.addProperty("generation_id", generationId);
         root.addProperty("sample_world_tick", worldTick);
         if (player == null || client.world == null) {
@@ -141,38 +118,29 @@ public final class ClientObservationCollector {
             root.add("inventory", missingGroup(worldTick, "client_inventory", "player_or_world_missing"));
             root.add("gui", missingGroup(worldTick, "client_screen_handler", "player_or_world_missing"));
             root.add("perception", missingGroup(worldTick, "client_perception_filtered", "player_or_world_missing"));
-            if (request!=null) root.add("targeting",missingGroup(worldTick,"client_perception_filtered",
+            root.add("targeting",missingGroup(worldTick,"client_perception_filtered",
                 request.needsTargeting() ? "player_or_world_missing" : "not_requested"));
-            if (request!=null) root.add("tracked_entity",missingGroup(worldTick,"client_registered_entity",
+            root.add("tracked_entity",missingGroup(worldTick,"client_registered_entity",
                 request.entityTrackId()==null ? "not_requested" : "player_or_world_missing"));
-            if (request!=null) {
-                root.add("damage_events", ClientObservationJson.array());
-                root.addProperty("damage_events_dropped", 0);
-            }
+            root.add("damage_events", ClientObservationJson.array());
+            root.addProperty("damage_events_dropped", 0);
             return root;
         }
         root.add("self_state", validGroup(worldTick, "client_player", collectSelf(client, player)));
         root.add("inventory", validGroup(worldTick, "client_inventory", collectInventory(player)));
         root.add("gui", collectGuiGroup(client, player, worldTick));
-        if (request!=null) {
-            JsonObject groups = ClientBlockObservationV3.collect(client,request,ENTITY_INDEX,generationId);
-            root.add("perception",groups.get("perception"));
-            root.add("targeting",groups.get("targeting"));
-            root.add("tracked_entity",trackedEntityGroup(worldTick,request,ENTITY_INDEX,
-                    player.getPos(),player.getVelocity(),player.getYaw()));
-            ClientDamageEventBuffer.Snapshot damage = DAMAGE_EVENTS.snapshot(
-                    client.world, generationId, player.getId(), entityId -> {
-                        Entity entity = client.world.getEntityById(entityId);
-                        return entity == null ? null : ENTITY_INDEX.trackId(entity);
-                    });
-            root.add("damage_events", damageEvents(damage));
-            root.addProperty("damage_events_dropped", damage.droppedCount());
-        } else root.add(
-                "perception",
-                validGroup(
-                        worldTick,
-                        "client_perception_filtered",
-                        collectPerception(client, player, generationId)));
+        JsonObject groups = ClientBlockObservationV3.collect(client,request,ENTITY_INDEX,generationId);
+        root.add("perception",groups.get("perception"));
+        root.add("targeting",groups.get("targeting"));
+        root.add("tracked_entity",trackedEntityGroup(worldTick,request,ENTITY_INDEX,
+                player.getPos(),player.getVelocity(),player.getYaw()));
+        ClientDamageEventBuffer.Snapshot damage = DAMAGE_EVENTS.snapshot(
+                client.world, generationId, player.getId(), entityId -> {
+                    Entity entity = client.world.getEntityById(entityId);
+                    return entity == null ? null : ENTITY_INDEX.trackId(entity);
+                });
+        root.add("damage_events", damageEvents(damage));
+        root.addProperty("damage_events_dropped", damage.droppedCount());
         return root;
     }
 
@@ -499,11 +467,11 @@ public final class ClientObservationCollector {
 
     static JsonObject perceptionMetadata() {
         JsonObject value = ClientObservationJson.object();
-        value.addProperty("sensor_profile_revision", SENSOR_PROFILE_REVISION);
+        value.addProperty("sensor_profile_revision", 4);
         value.addProperty("horizontal_fov_degrees", HORIZONTAL_FOV);
         value.addProperty("vertical_fov_degrees", VERTICAL_FOV);
-        value.addProperty("ray_columns", RAY_COLUMNS);
-        value.addProperty("ray_rows", RAY_ROWS);
+        value.addProperty("ray_columns", 0);
+        value.addProperty("ray_rows", 0);
         value.addProperty("max_block_distance", BLOCK_MAX_DISTANCE);
         value.addProperty("body_expansion_blocks", BODY_EXPANSION);
         value.addProperty("block_epsilon_blocks", 0.001);
@@ -512,147 +480,8 @@ public final class ClientObservationCollector {
         return value;
     }
 
-    private static double rayYawOffset(int column) {
-        return -HORIZONTAL_FOV / 2.0 + column * (HORIZONTAL_FOV / (RAY_COLUMNS - 1));
-    }
-
-    private static double rayPitchOffset(int row) {
-        return -VERTICAL_FOV / 2.0 + row * (VERTICAL_FOV / (RAY_ROWS - 1));
-    }
-
-    static Vec3d rayDirection(float yaw, float pitch, int row, int column) {
-        return Vec3d.fromPolar(pitch + (float) rayPitchOffset(row), yaw + (float) rayYawOffset(column));
-    }
-
-    private static int rayId(int row, int column) {
-        return row * RAY_COLUMNS + column;
-    }
-
     private static boolean withinEntityFov(double yawOffset, double pitchOffset) {
         return Math.abs(yawOffset) <= HORIZONTAL_FOV / 2.0 && Math.abs(pitchOffset) <= VERTICAL_FOV / 2.0;
-    }
-
-    private static JsonObject collectPerception(
-            MinecraftClient client,
-            ClientPlayerEntity player,
-            long generationId) {
-        JsonObject value = perceptionMetadata();
-        Vec3d camera = player.getCameraPosVec(1.0f);
-        JsonArray rays = ClientObservationJson.array();
-        for (int row = 0; row < RAY_ROWS; row++) {
-            for (int column = 0; column < RAY_COLUMNS; column++) {
-                rays.add(collectBlockRay(client, player, camera, row, column));
-            }
-        }
-        value.add("block_rays", rays);
-        value.add("body_contacts", collectBodyContacts(client, player));
-        VisibleEntityResult entities = collectVisibleEntities(client, player, camera, generationId);
-        value.add("visible_entities", entities.values());
-        value.addProperty("entities_truncated", entities.truncatedCount() > 0);
-        value.addProperty("truncated_entity_count", entities.truncatedCount());
-        return value;
-    }
-
-    private static JsonObject collectBlockRay(
-            MinecraftClient client,
-            ClientPlayerEntity player,
-            Vec3d camera,
-            int row,
-            int column) {
-        double yawOffset = rayYawOffset(column);
-        double pitchOffset = rayPitchOffset(row);
-        BlockHitResult hit = legacyBlockHit(client.world, player, camera,
-                player.getYaw(), player.getPitch(), row, column);
-        JsonObject ray = ClientObservationJson.object();
-        ray.addProperty("ray_id", rayId(row, column));
-        ray.addProperty("row", row);
-        ray.addProperty("column", column);
-        ray.addProperty("yaw_offset_degrees", yawOffset);
-        ray.addProperty("pitch_offset_degrees", pitchOffset);
-        if (hit.getType() != HitResult.Type.BLOCK) {
-            addMissRayFields(ray);
-            return ray;
-        }
-        BlockPos position = hit.getBlockPos();
-        BlockState state = client.world.getBlockState(position);
-        ray.addProperty("hit_kind", "block");
-        ray.addProperty("distance_blocks", Math.min(BLOCK_MAX_DISTANCE, camera.distanceTo(hit.getPos())));
-        ray.add("relative_block_position", relativeBlockPosition(position, player.getPos()));
-        ray.add("relative_hit_position", vector(hit.getPos().subtract(player.getPos())));
-        ray.addProperty("face", hit.getSide().asString());
-        ray.addProperty("block_id", Registries.BLOCK.getId(state.getBlock()).toString());
-        if (state.getFluidState().isEmpty()) {
-            ray.add("fluid_id", JsonNull.INSTANCE);
-        } else {
-            ray.addProperty(
-                    "fluid_id",
-                    Registries.FLUID.getId(state.getFluidState().getFluid()).toString());
-        }
-        ray.add("state_properties", stateProperties(state));
-        ray.addProperty("collision_shape", collisionSummary(state.getCollisionShape(client.world, position)));
-        ray.addProperty("block_light", client.world.getLightLevel(LightType.BLOCK, position));
-        ray.addProperty("sky_light", client.world.getLightLevel(LightType.SKY, position));
-        return ray;
-    }
-
-    /** Exact V2 first-hit calculation shared with the opt-in set-only parity scan. */
-    static BlockHitResult legacyBlockHit(BlockView world, Entity observer, Vec3d camera,
-            float yaw, float pitch, int row, int column) {
-        Vec3d direction = rayDirection(yaw, pitch, row, column);
-        Vec3d end = camera.add(direction.multiply(BLOCK_MAX_DISTANCE));
-        return world.raycast(new RaycastContext(camera, end,
-            RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.ANY, observer));
-    }
-
-    /** Test-only second scan: positions only, never the historical 1431-ray JSON shell. */
-    static Set<BlockPos> legacyFirstHitPositions(BlockView world, Entity observer, Vec3d camera,
-            float yaw, float pitch) {
-        var result = new HashSet<BlockPos>();
-        for (int row=0; row<RAY_ROWS; row++) {
-            for (int column=0; column<RAY_COLUMNS; column++) {
-                BlockHitResult hit = legacyBlockHit(world, observer, camera, yaw, pitch, row, column);
-                if (hit.getType()==HitResult.Type.BLOCK) result.add(hit.getBlockPos().toImmutable());
-            }
-        }
-        if (result.size()>RAY_COLUMNS*RAY_ROWS) throw new IllegalStateException("legacy first-hit set exceeds ray budget");
-        return result;
-    }
-
-    private static void addMissRayFields(JsonObject ray) {
-        ray.addProperty("hit_kind", "miss");
-        ray.addProperty("distance_blocks", BLOCK_MAX_DISTANCE);
-        ray.add("relative_block_position", JsonNull.INSTANCE);
-        ray.add("relative_hit_position", JsonNull.INSTANCE);
-        ray.add("face", JsonNull.INSTANCE);
-        ray.add("block_id", JsonNull.INSTANCE);
-        ray.add("fluid_id", JsonNull.INSTANCE);
-        ray.add("state_properties", ClientObservationJson.array());
-        ray.add("collision_shape", JsonNull.INSTANCE);
-        ray.add("block_light", JsonNull.INSTANCE);
-        ray.add("sky_light", JsonNull.INSTANCE);
-    }
-
-    private static JsonArray stateProperties(BlockState state) {
-        List<Property<?>> properties = new ArrayList<>(state.getProperties());
-        properties.sort(Comparator.comparing(Property::getName));
-        JsonArray values = ClientObservationJson.array();
-        for (Property<?> property : properties) {
-            JsonObject value = ClientObservationJson.object();
-            value.addProperty("name", property.getName());
-            value.addProperty("value", propertyValue(state, property));
-            values.add(value);
-        }
-        return values;
-    }
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private static String propertyValue(BlockState state, Property property) {
-        return property.name(state.get(property));
-    }
-
-    private static String collisionSummary(VoxelShape shape) {
-        if (shape.isEmpty()) return "empty";
-        return Block.isShapeFullCube(shape) ? "solid" : "partial";
     }
 
     static boolean intersectsCollisionShape(
@@ -664,56 +493,6 @@ public final class ClientObservationCollector {
             if (part.offset(position).intersects(body)) return true;
         }
         return false;
-    }
-
-    private static JsonArray collectBodyContacts(
-            MinecraftClient client,
-            ClientPlayerEntity player) {
-        JsonArray result = ClientObservationJson.array();
-        Box body = player.getBoundingBox().expand(BODY_EXPANSION);
-        BlockPos minimum = BlockPos.ofFloored(body.minX, body.minY, body.minZ);
-        BlockPos maximum = BlockPos.ofFloored(body.maxX, body.maxY, body.maxZ);
-        for (BlockPos mutable : BlockPos.iterate(minimum, maximum)) {
-            BlockPos position = mutable.toImmutable();
-            BlockState state = client.world.getBlockState(position);
-            VoxelShape collision = state.getCollisionShape(client.world, position);
-            boolean collisionContact = intersectsCollisionShape(body, position, collision);
-            boolean fluidContact = false;
-            if (!state.getFluidState().isEmpty()) {
-                double height = state.getFluidState().getHeight(client.world, position);
-                fluidContact = new Box(
-                                position.getX(),
-                                position.getY(),
-                                position.getZ(),
-                                position.getX() + 1.0,
-                                position.getY() + height,
-                                position.getZ() + 1.0)
-                        .intersects(body);
-            }
-            if (!collisionContact && !fluidContact) continue;
-            JsonObject contact = ClientObservationJson.object();
-            contact.add("relative_block_position", relativeBlockPosition(position, player.getPos()));
-            contact.addProperty("block_id", Registries.BLOCK.getId(state.getBlock()).toString());
-            if (state.getFluidState().isEmpty()) {
-                contact.add("fluid_id", JsonNull.INSTANCE);
-            } else {
-                contact.addProperty(
-                        "fluid_id",
-                        Registries.FLUID.getId(state.getFluidState().getFluid()).toString());
-            }
-            contact.addProperty("collision_shape", collisionSummary(collision));
-            result.add(contact);
-        }
-        return result;
-    }
-
-    private static VisibleEntityResult collectVisibleEntities(
-            MinecraftClient client,
-            ClientPlayerEntity player,
-            Vec3d camera,
-            long generationId) {
-        ENTITY_INDEX.beginFrame(client.world, generationId, client.world.getEntities());
-        return visibleEntitiesInFrame(client,player,camera,ENTITY_INDEX,currentTarget(client,player));
     }
 
     static HitResult currentTarget(MinecraftClient client, ClientPlayerEntity player) {
@@ -779,6 +558,8 @@ public final class ClientObservationCollector {
             throw new IllegalStateException("entity visibility sample count changed");
         }
         for (Vec3d sample : samples) {
+            // This raycast only checks whether terrain occludes an entity sample. It never
+            // produces block-map evidence or authorizes navigation through unseen space.
             BlockHitResult hit = client.world.raycast(new RaycastContext(
                     camera,
                     sample,
@@ -865,13 +646,6 @@ public final class ClientObservationCollector {
             case FEET -> "feet";
             default -> throw new IllegalArgumentException("unsupported public equipment slot");
         };
-    }
-
-    private static JsonObject relativeBlockPosition(BlockPos block, Vec3d origin) {
-        return vector(new Vec3d(
-                block.getX() - origin.x,
-                block.getY() - origin.y,
-                block.getZ() - origin.z));
     }
 
     record VisibleEntityResult(JsonArray values, int truncatedCount) {}

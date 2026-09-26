@@ -5,7 +5,6 @@ from scripts.export_motion_navigation_standalone import (
     collect_export_files,
     load_manifest,
 )
-from scripts.follow_playground_session import CORE_SOURCES
 from scripts import probe_fabric_deployment_observation as deployment_probe
 
 
@@ -41,8 +40,6 @@ class PublicRepositoryCompletenessTests(unittest.TestCase):
         selected = collect_export_files(load_manifest())
         required = (
             "tests/test_navigation_motion.py",
-            "tests/test_craftground_backend.py",
-            "tests/test_craftground_runtime.py",
             "tests/test_visible_equipment_projection.py",
             "tests/test_action_arbiter_v1.py",
             "tests/test_player_runtime_v1.py",
@@ -77,11 +74,11 @@ class PublicRepositoryCompletenessTests(unittest.TestCase):
             (),
         )
 
-    def test_standalone_manifest_contains_every_frozen_probe_source(self):
+    def test_standalone_manifest_contains_formal_probe_sources_not_old_ray_evidence(self):
         selected_paths = {
             item.as_posix() for item in collect_export_files(load_manifest())
         }
-        frozen_sources = set(CORE_SOURCES)
+        frozen_sources = set()
         for name, value in vars(deployment_probe).items():
             if (name.endswith("_SOURCES") and isinstance(value, tuple)
                     and all(isinstance(item, str) for item in value)):
@@ -91,6 +88,47 @@ class PublicRepositoryCompletenessTests(unittest.TestCase):
             tuple(sorted(frozen_sources - selected_paths)),
             (),
         )
+        retired = {
+            "scripts/active_perception_diagnostics.py",
+            "scripts/active_perception_evidence.py",
+            "scripts/active_perception_metrics.py",
+            "scripts/active_perception_world_change.py",
+            "scripts/active_perception_world_change_evidence.py",
+            "scripts/block_observation_v3_sources.py",
+            "scripts/block_parity_evidence.py",
+            "scripts/follow_playground_evidence.py",
+            "scripts/follow_playground_long.py",
+            "scripts/follow_playground_session.py",
+            "scripts/normal_navigation_evidence.py",
+            "scripts/probe_follow_playground.py",
+            "scripts/probe_normal_navigation.py",
+            "scripts/probe_observation_v2_visibility.py",
+            "scripts/smoke_test_craftground_structured.py",
+        }
+        self.assertFalse(retired.intersection(selected_paths))
+        self.assertFalse(any(
+            path.startswith("mc2p/backends/legacy_ray_profile3/")
+            for path in selected_paths
+        ))
+        self.assertFalse(any(
+            path.startswith("tests/java/legacy_ray_profile3/")
+            for path in selected_paths
+        ))
+        self.assertFalse(any(
+            path.startswith("mc2p/backends/craftground")
+            or path.startswith("mc2p/backends/runtime_overlays/mc121_structured/")
+            or path.startswith("tests/java/legacy_craftground/")
+            for path in selected_paths
+        ))
+        self.assertFalse(any(
+            path.startswith("mc2p/skills/follow_playground")
+            or path in {
+                "mc2p/skills/normal_control_capabilities.py",
+                "scripts/navigation_motion_evidence.py",
+                "scripts/target_search_evidence.py",
+            }
+            for path in selected_paths
+        ))
 
 
 if __name__ == "__main__":

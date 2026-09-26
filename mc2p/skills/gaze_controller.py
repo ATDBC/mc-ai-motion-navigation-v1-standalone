@@ -6,7 +6,7 @@ import struct
 
 from mc2p.contracts.action_v1 import LookV1
 from mc2p.contracts.common import ContractViolation, require_finite, require_identifier, require_nonnegative_int
-from mc2p.skills.follow_playground_types import PlaygroundView
+from mc2p.skills.navigation_views import PlaygroundView
 
 
 def limited_velocity(previous: float, desired: float, acceleration: float, seconds: float) -> float:

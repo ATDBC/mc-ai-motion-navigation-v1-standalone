@@ -18,12 +18,14 @@ if __package__ in {None, ""}:
 
 PROJECT = ROOT / "deployment/fabric-observation-probe"
 SHARED_ROOTS = ("mc2p/backends/runtime_overlays/mc121_actions", "mc2p/backends/runtime_overlays/mc121_observation",
+                "mc2p/backends/runtime_overlays/mc121_surface",
                 "mc2p/backends/runtime_overlays/mc121_diagnostics")
 ADAPTER_ROOT = "deployment/fabric-observation-probe/src/main/java"
 MIXINS = {"BehaviorInputMixin", "BehaviorPlayerMixin", "BehaviorKeyboardMixin", "BehaviorMouseMixin",
           "WindowOffScreenMixin", "GameRendererMixin", "HandledScreenRenderMixin", "ScreenHandlerPropertiesMixin",
           "ScreenshotGuardMixin", "NativeImageGuardMixin", "ClientClockTickMixin", "ClientClockWorldMixin", "ClientClockPacketMixin"}
 MIXINS.add("ClientDamagePacketMixin")
+MIXINS.add("SurfaceChunkStateMixin")
 
 
 def inspect_classpath(entries: object, *, repository_root: Path = ROOT) -> int:
@@ -105,6 +107,11 @@ def inspect_probe(jar: Path) -> dict[str, object]:
         dependencies = provenance["classpath"]
         no_craftground = (bool(dependencies) and not any("craftground" in dep.lower() for dep in dependencies)
                          and not any(name.startswith("com/kyhsgeekcode/") for name in names))
+        legacy_ray_absent = (
+            not any("legacy_ray_profile3" in source.casefold()
+                    for source in provenance["sources"])
+            and "com/mc2p/observation/LegacyRayProfile3ObservationCollector.class" not in names
+        )
         shared_names = {"com/mc2p/" + directory.rsplit("mc121_", 1)[1]
                         + "/" + path.stem + ".class"
                         for directory in SHARED_ROOTS for path in (ROOT / directory).glob("*.java")}
@@ -118,10 +125,12 @@ def inspect_probe(jar: Path) -> dict[str, object]:
                            and "mc2p-deployment.refmap.json" in names
                            and all("com/mc2p/deployment/mixin/" + name + ".class" in names for name in MIXINS))
         evidence = dict(client_only=client_only, shared_sources_match=shared_sources_match,
-                        no_craftground_dependency=no_craftground, shared_class_count=shared_count,
+                        no_craftground_dependency=no_craftground,
+                        legacy_ray_profile3_absent=legacy_ray_absent,
+                        shared_class_count=shared_count,
                         required_mixins_present=required_mixins,
                         verified_classpath_file_count=verified_classpath_files)
-        if not all((client_only, shared_sources_match, no_craftground, required_mixins,
+        if not all((client_only, shared_sources_match, no_craftground, legacy_ray_absent, required_mixins,
                     shared_names <= names, shared_count == len(shared_names))):
             raise ValueError(f"independent artifact provenance/manifest validation failed: {evidence}")
         return evidence
@@ -129,12 +138,20 @@ def inspect_probe(jar: Path) -> dict[str, object]:
 
 def build_probe(*, timeout_seconds: float = 180) -> Path:
     # Reuse the existing exact PID/create_time build supervisor, not its CraftGround launcher.
-    from scripts.probe_craftground_timing_parallel import run_bounded_process
+    from scripts.surface_depth_probe.build import build_native
+    from scripts.bounded_process import run_bounded_process
     from scripts.control_probe_core import write_json_atomic
+    from scripts.export_motion_navigation_standalone import discover_java_tools
     from mc2p.runtime.trace import trace_projection
 
+    build_native()
+    java_tools = discover_java_tools()
     gradle, = (ROOT / ".gradle/wrapper/dists/gradle-8.8-bin").glob("*/gradle-8.8/bin/gradle.bat")
-    environment = dict(os.environ, JAVA_HOME=str(ROOT / ".venv/Library"), GRADLE_USER_HOME=str(ROOT / ".gradle"))
+    environment = dict(
+        os.environ,
+        JAVA_HOME=str(java_tools.java.parent.parent),
+        GRADLE_USER_HOME=str(ROOT / ".gradle"),
+    )
     log_dir = ROOT / "artifacts/fabric-deployment-build" / (
         datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ") + "-" + uuid.uuid4().hex[:8])
     log_dir.mkdir(parents=True, exist_ok=False)

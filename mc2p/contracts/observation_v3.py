@@ -21,6 +21,8 @@ from mc2p.contracts.observation_v2 import (
 
 
 MAX_BLOCKS_V3 = 25000 + 512 + 512 + 1
+# ``first_hit_ray`` remains decodable only for sealed historical profile-3
+# evidence. Formal backends and navigation evidence reject it before use.
 _SOURCES = ("air_query", "body_contact", "current_target", "first_hit_ray", "surface_depth")
 _FACES = ("down", "up", "north", "south", "west", "east")
 
@@ -236,7 +238,9 @@ class PerceptionStateV3:
     visible_entities: tuple[VisibleEntityV2, ...]
     entities_truncated: bool
     truncated_entity_count: int
-    sensor_profile_revision: int = 3
+    # New V3 values default to the formal surface-depth profile. Revision 3 is
+    # accepted only so frozen historical traces can still be decoded.
+    sensor_profile_revision: int = 4
     knowledge_model: str = "block_state_v1"
 
     def __post_init__(self) -> None:

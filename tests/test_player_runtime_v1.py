@@ -74,11 +74,11 @@ class V3WorldBackend:
         self.close_calls = 0
         self.first = ObservedBlockV3(
             (1, 63, 0), "minecraft:stone",
-            CollisionShapeV3("full_cube"), None, ("first_hit_ray",),
+            CollisionShapeV3("full_cube"), None, ("surface_depth",),
         )
         self.second = ObservedBlockV3(
             (2, 63, 0), "minecraft:dirt",
-            CollisionShapeV3("full_cube"), None, ("first_hit_ray",),
+            CollisionShapeV3("full_cube"), None, ("surface_depth",),
         )
 
     def _observation(self, *, request_sequence_id):

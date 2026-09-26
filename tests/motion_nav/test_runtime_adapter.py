@@ -94,7 +94,7 @@ class B02RuntimeAdapterTests(unittest.TestCase):
         occupied_air = ObservedBlockV3((0, 64, 0), "minecraft:air", CollisionShapeV3("empty"),
                                        None, ("body_contact",))
         wall = ObservedBlockV3((2, 64, 0), "minecraft:stone", CollisionShapeV3("full_cube"),
-                               None, ("first_hit_ray",))
+                               None, ("surface_depth",))
         adapter = NavigationObservationAdapter()
         frame = adapter.ingest(valid_snapshot_v3(blocks=(occupied_air, air, wall), sequence=4))
         self.assertIs(frame.world.cell((0, 64, 0)).knowledge, CellKnowledge.AIR)
@@ -134,7 +134,7 @@ class B02RuntimeAdapterTests(unittest.TestCase):
         air=ObservedBlockV3(position,"minecraft:air",CollisionShapeV3("empty"),
                             None,("air_query",))
         wall=ObservedBlockV3(position,"minecraft:stone",CollisionShapeV3("full_cube"),
-                             None,("first_hit_ray",))
+                             None,("surface_depth",))
         adapter=NavigationObservationAdapter()
         first=adapter.ingest(valid_snapshot_v3(blocks=(air,),sequence=1))
         second=adapter.ingest(valid_snapshot_v3(blocks=(wall,),sequence=2))

@@ -4,6 +4,10 @@
 
 当前已完成 B01 至 B10、C1-A 至 C1-C、C1-R 的 R0 至 R6、B11 固定放置与有限搭桥，以及 B12-A、B12-B。B12-A 固定了每次攻击的证据和分类重试，并接入 Minecraft 1.21 伤害来源事实。B12-B 让战斗先确定本帧视角，导航再按最终视角计算普通地面移动；追逐阶段会持续给出目标视角，导航同时记录每帧的移动决定原因。活动目标和真实墙体场景补齐了持续瞄准、遮挡后的导航、补看和权限撤销。动作证明的生效窗口修正和客户端额外推进一个 tick 时的局部安全恢复也已包含。正式 Fabric 结果与适用边界写在 `docs/motion_navigation/acceptance/`。
 
+2026-09-26 起，正式 Fabric 方块视觉只接受 profile 4 表面深度。旧 profile 3 稀疏射线只能读取历史记录，不能启动正式会话，也不能形成新的验收结论。`evidence/motion_navigation/representative-v1` 中现有归档均带有 `historical_legacy_ray_profile3` 标签；当前公开的历史实机归档尚未全部用 profile 4 重跑。具体边界见 `docs/motion_navigation/decisions/0035-formal-surface-depth-only.md`。
+
+主仓库仍保留 CraftGround、`legacy_ray_profile3` 和旧轨迹读取代码，以便复现历史结果。它们的采集器、运行入口、导航审计和测试不会进入这个当前实现仓库。V3 仍复用少量早期版本中已经冻结的通用数据类型和 JSON 校验函数；正式后端随后强制检查 profile 4，不能因此启动旧射线。正式 Fabric 构建门禁还会检查旧采集器没有进入客户端 JAR。
+
 ## 先读什么
 
 1. `AGENTS.md`
@@ -35,6 +39,12 @@ Java 可以由 `JAVA_HOME` 指向 JDK 21，也可以把 JDK 21 的 `java` 与 `j
 
 ```text
 python scripts/export_motion_navigation_standalone.py check-java
+```
+
+正式 Fabric 客户端还需要 CMake、C++ 构建器和 JDK 21。下面的命令会先从仓库内固定源码构建表面深度原生库，执行正式 JNI 冒烟检查，再离线构建 Fabric 模组。当前阶段只验收 Windows。离线 Fabric 构建还要求仓库根目录已经有固定的 Gradle 8.8 与 Minecraft 依赖缓存；公开快照不上传这部分缓存。没有缓存时仍可运行下面的源码、Python 和纯 Java 检查，但不能据此声称已经重建 Fabric 模组。
+
+```text
+python scripts/build_fabric_deployment_probe.py
 ```
 
 ## 可重复检查
@@ -98,6 +108,6 @@ python scripts/public_runtime_evidence.py verify --root evidence/motion_navigati
 
 这个快照不包含世界存档、完整普通日志、画面、Gradle 缓存、Minecraft 依赖 JAR 或构建产物，因此不能只靠本仓库重跑游戏内正式实验。公开的九个真实批次是经过筛选的结构化轨迹，可以核对历史结果和读取链，但不能替代新的 Fabric 实机运行。其他原始证据仍由主项目保管。
 
-未知区域探索、攀爬、游泳、主动 Crawl、特殊地面、任意宽度跨隙和所有动作的带速衔接仍未完成。CraftGround 适配代码为历史兼容保留，后续正式实现与实机验收以独立 Fabric 为准。
+未知区域探索、攀爬、游泳、主动 Crawl、特殊地面、任意宽度跨隙和所有动作的带速衔接仍未完成。当前独立仓库只包含正式 Fabric 路径；CraftGround 适配和旧射线兼容代码只在主仓库保留。
 
 公开快照能够复现其声明的源码检查，不代表项目已经没有剩余问题。

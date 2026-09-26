@@ -240,6 +240,39 @@ class FabricDeploymentProbeTests(unittest.TestCase):
         self.assertIn("observationRequest = ClientObservationRequestV3.navigation()", source)
         self.assertIn("if (!executor.receiptReady()) return;", source)
 
+    def test_formal_probe_has_one_surface_depth_sensor_path(self):
+        from scripts.probe_fabric_deployment_observation import (
+            B03_SOURCES,
+            DEPLOYMENT_BASE_SOURCES,
+        )
+        block_source = (ROOT / (
+            "mc2p/backends/runtime_overlays/mc121_observation/"
+            "ClientBlockObservationV3.java"
+        )).read_text("utf-8")
+        entry_source = (ROOT / (
+            "deployment/fabric-observation-probe/src/main/java/"
+            "com/mc2p/deployment/DeploymentObservationProbe.java"
+        )).read_text("utf-8")
+        build_source = (ROOT / "deployment/fabric-observation-probe/build.gradle").read_text("utf-8")
+        collector_source = (ROOT / (
+            "mc2p/backends/runtime_overlays/mc121_observation/"
+            "ClientObservationCollector.java"
+        )).read_text("utf-8")
+        self.assertNotIn("MC2P_SURFACE_PERCEPTION", block_source)
+        self.assertNotIn("FIRST_HIT_RAY", block_source)
+        self.assertNotIn("legacyFirstHitPositions", block_source)
+        self.assertIn("SurfacePerception.install()", entry_source)
+        self.assertIn("mc121_surface", build_source)
+        for retired in ("LEGACY_RAY", "collectBlockRay", "legacyFirstHitPositions", "block_rays"):
+            self.assertNotIn(retired, collector_source)
+        self.assertTrue({
+            "scripts/process_tree.py",
+            "scripts/formal_observation_v3_evidence.py",
+            "scripts/formal_observation_v3_trace.py",
+            "scripts/fabric_runtime_smoke_evidence.py",
+        } <= set(DEPLOYMENT_BASE_SOURCES))
+        self.assertIn("mc2p/motion_nav/observed_block_adapter.py", B03_SOURCES)
+
     def test_python_probe_constructs_fabric_backend_in_explicit_v3_mode(self):
         from mc2p.contracts.observation_request_v3 import OBSERVATION_V3
         from scripts.probe_fabric_deployment_observation import create_deployment_backend
@@ -501,7 +534,7 @@ class FabricDeploymentProbeTests(unittest.TestCase):
 
     def test_parent_failure_or_missing_worker_evidence_cannot_be_promoted(self):
         from scripts.probe_fabric_deployment_observation import finalize_result
-        from scripts.probe_craftground_timing_parallel import BoundedProcessResultV0
+        from scripts.bounded_process import BoundedProcessResultV0
         supervision = BoundedProcessResultV0(0, None, (), True, ())
         worker = dict(status="passed", primary_failure=None, cleanup_failures=[],
                       checks=[{"name": "fixture", "passed": True}])
@@ -520,7 +553,7 @@ class FabricDeploymentProbeTests(unittest.TestCase):
 
     def test_formal_trace_requires_real_association_and_zero_image_diagnostics(self):
         from scripts.probe_fabric_deployment_observation import evaluate_trace
-        from tests.test_player_runtime_v1_smoke import trace_evidence
+        from tests.fabric_runtime_fixtures import trace_evidence
         from tests.deployment_fixtures import sample_value
         records, _ = trace_evidence()
         for record in records:

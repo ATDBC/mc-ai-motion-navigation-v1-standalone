@@ -3,7 +3,7 @@ from dataclasses import replace
 from mc2p.contracts.common import ContractViolation, require_nonnegative_int
 from mc2p.contracts.observation_v3 import ObservationSnapshotV3
 from mc2p.skills.follow_types import MOVEMENT_FRESHNESS_NS, TARGET_TTL_NS
-from mc2p.skills.follow_playground_types import PlaygroundView, TrackedTarget
+from mc2p.skills.navigation_views import PlaygroundView, TrackedTarget
 from mc2p.skills.local_perception import project_follow_view
 
 

@@ -9,6 +9,7 @@ import com.mc2p.actions.ClientBehaviorExecutor;
 import com.mc2p.observation.ClientObservationCollector;
 import com.mc2p.observation.ClientObservationRequestV3;
 import com.mc2p.diagnostics.ClientTimeDiagnostics;
+import com.mc2p.surface.SurfacePerception;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import net.fabricmc.api.ClientModInitializer;
@@ -40,6 +41,7 @@ public final class DeploymentObservationProbe implements ClientModInitializer {
     }
 
     @Override public void onInitializeClient() {
+        SurfacePerception.install();
         ClientTimeDiagnostics.initialize();
         token = System.getenv("MC2P_SESSION_TOKEN");
         if (token == null || !token.matches("[0-9a-f]{64}")) throw new IllegalArgumentException("missing session credential");
@@ -111,17 +113,13 @@ public final class DeploymentObservationProbe implements ClientModInitializer {
             }
             byte[] frame = transport.poll();
             if (frame != null) {
-                byte[] actionPayload = frame;
+                byte[] actionPayload;
                 ClientActionRequest action;
                 ClientObservationRequestV3 nextRequest = ClientObservationRequestV3.navigation();
-                if (v3()) {
-                    DeploymentStepV3 step = DeploymentStepV3.decode(frame);
-                    actionPayload = step.actionPayload();
-                    action = step.action();
-                    nextRequest = step.observationRequest();
-                } else {
-                    action = ClientActionRequest.decode(frame);
-                }
+                DeploymentStepV3 step = DeploymentStepV3.decode(frame);
+                actionPayload = step.actionPayload();
+                action = step.action();
+                nextRequest = step.observationRequest();
                 if (!action.episode().equals(episode))
                     throw new IllegalArgumentException("wrong deployment episode");
                 executor.execute(client, actionPayload);
@@ -146,26 +144,17 @@ public final class DeploymentObservationProbe implements ClientModInitializer {
             throw new IllegalStateException("deployment world/player/connection changed");
     }
 
-    private boolean v3() {
-        return "mc2p.client_observation.v3".equals(observationSchemaVersion);
-    }
-
     private void endTick(MinecraftClient client) {
         if (failed || !pending) return;
         try {
             requireWorld(client);
             if (!executor.receiptReady()) return;
-            byte[] payload;
-            if (v3()) {
-                ClientObservationRequestV3 request = observationRequest;
-                observationRequest = ClientObservationRequestV3.navigation();
-                payload = ClientObservationCollector.collectV3(client, generation, request);
-            } else {
-                payload = ClientObservationCollector.collect(client, generation);
-            }
+            ClientObservationRequestV3 request = observationRequest;
+            observationRequest = ClientObservationRequestV3.navigation();
+            byte[] payload = ClientObservationCollector.collectV3(client, generation, request);
             ClientTimeDiagnostics.observation(client, generation);
             var sample = new JsonObject();
-            sample.addProperty("schema_version", v3() ? "mc2p.deployment_sample.v2" : "mc2p.deployment_sample.v1");
+            sample.addProperty("schema_version", "mc2p.deployment_sample.v2");
             sample.addProperty("episode_id", episode);
             sample.add("observation", JsonParser.parseString(new String(payload, StandardCharsets.UTF_8)));
             sample.add("receipt", executor.observe(client, generation));

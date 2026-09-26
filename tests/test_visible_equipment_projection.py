@@ -42,16 +42,22 @@ class VisibleEquipmentProjectionTests(unittest.TestCase):
         classpath = ";".join(map(str, jars))
         java = ROOT / ".venv/Library/bin"
         sources = list((ROOT / "mc2p/backends/runtime_overlays/mc121_observation").glob("*.java"))
+        sources.extend((
+            ROOT / "mc2p/backends/runtime_overlays/mc121_actions/ClientRequestGate.java",
+            ROOT / "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorInput.java",
+        ))
+        harness_path = Path(harness)
+        harness_class = harness_path.name
         with TemporaryDirectory(prefix="mc2p-visible-equipment-") as directory:
             compiled = subprocess.run([str(java / "javac.exe"), "-J-Duser.language=en", "-encoding", "UTF-8", "-proc:none",
                 "-cp", classpath, "-d", directory, *map(str, sources),
-                str(ROOT / f"tests/java/{harness}.java"),
+                str(ROOT / "tests/java" / harness_path.with_suffix(".java")),
                 str(ROOT / "tests/java/DetachedTestWorld.java"),
                 str(ROOT / "tests/java/VanillaObjectTestHost.java"), *map(str, extra_sources)],
                 cwd=directory, capture_output=True, text=True, timeout=45)
             self.assertEqual(compiled.returncode, 0, compiled.stdout + compiled.stderr)
             result = subprocess.run([str(java / "java.exe"), "-cp", directory + ";" + classpath,
-                "VanillaObjectTestHost", harness, *args],
+                "VanillaObjectTestHost", harness_class, *args],
                 cwd=directory, capture_output=True, text=True, timeout=45)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertIn(marker, result.stdout)

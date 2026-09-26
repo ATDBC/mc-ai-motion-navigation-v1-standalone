@@ -109,8 +109,8 @@ def run_jump_up_acceptance_runtime(
                 return
         raise RuntimeError("B05 acceptance teleport did not settle on the start cell")
 
-    # Establish the solid facts through ordinary first-hit visibility. Air is
-    # requested through the bounded positive-only navigation query.
+    # Establish support facts through the formal surface-depth observation.
+    # Air is requested through the bounded positive-only navigation query.
     for x, y, z in floor + platforms:
         target_yaw = math.degrees(math.atan2(-(x + .5 - center_x), z + .5 - center_z))
         for _ in range(5):

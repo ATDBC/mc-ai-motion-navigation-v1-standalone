@@ -316,7 +316,12 @@ class VerifiedMotionExecutorTests(unittest.TestCase):
         executor.start(candidate)
         ledger = InputApplicationLedger(max_records=64)
 
-        for index, command in enumerate(candidate.proof.commands):
+        tail_start = next(
+            index for index in range(len(candidate.proof.commands))
+            if all(command.movement == MovementV1()
+                   for command in candidate.proof.commands[index:])
+        )
+        for index, command in enumerate(candidate.proof.commands[:tail_start]):
             decision = executor.decide(anchor, ledger)
             self.assertEqual(decision.command_index, index)
             tick = 12 + index
@@ -339,11 +344,95 @@ class VerifiedMotionExecutorTests(unittest.TestCase):
                 physics_state=state,
             )
 
+        coasting = executor.decide(anchor, ledger)
+        self.assertEqual(coasting.reason, "coast_to_verified_landing")
+        landed_tick = 12 + len(candidate.proof.commands) - 1
+        anchor = replace(
+            anchor,
+            observation_sequence_id=anchor.observation_sequence_id + 1,
+            movement_tick_id=landed_tick,
+            physics_state=replace(
+                delayed.exit_state, movement_tick_id=landed_tick,
+            ),
+        )
         completed = executor.decide(anchor, ledger)
 
         self.assertIs(completed.state, VerifiedMotionExecutorState.COMPLETE)
         self.assertEqual(completed.reason, "verified_motion_complete")
         self.assertFalse(completed.submittable_as_verified_command)
+
+    def test_trailing_neutral_commands_coast_until_observed_landing(self):
+        anchor, candidate = self.admitted()
+        executor = VerifiedMotionExecutor()
+        executor.start(candidate)
+        ledger = InputApplicationLedger(max_records=64)
+        proof = candidate.proof
+        neutral = MovementV1()
+        tail_start = next(
+            index for index in range(len(proof.commands))
+            if all(command.movement == neutral
+                   for command in proof.commands[index:])
+        )
+
+        for index in range(tail_start):
+            decision = executor.decide(anchor, ledger)
+            self.assertTrue(decision.submittable_as_verified_command)
+            tick = 11 + index
+            executor.register_submission(
+                index,
+                control_sequence=300 + index,
+                requested_movement_tick=decision.expected_movement_tick,
+                requested_latest_movement_tick=decision.latest_movement_tick,
+            )
+            self.applied(
+                ledger, anchor, 300 + index, tick,
+                proof.commands[index].movement,
+                requested_tick=decision.expected_movement_tick,
+                requested_latest_tick=decision.latest_movement_tick,
+            )
+            anchor = replace(
+                anchor,
+                observation_sequence_id=anchor.observation_sequence_id + 1,
+                movement_tick_id=tick,
+                physics_state=proof.trajectory[index + 1],
+            )
+
+        coasting = executor.decide(anchor, ledger)
+        self.assertIs(coasting.state, VerifiedMotionExecutorState.RUNNING)
+        self.assertEqual(coasting.movement, neutral)
+        self.assertEqual(coasting.reason, "coast_to_verified_landing")
+        self.assertFalse(coasting.submittable_as_verified_command)
+        self.assertEqual(coasting.command_index, len(proof.commands))
+
+        landed_tick = 11 + len(proof.commands) - 1
+        early_landing = replace(
+            anchor,
+            observation_sequence_id=anchor.observation_sequence_id + 1,
+            movement_tick_id=landed_tick - 1,
+            physics_state=replace(
+                proof.start_variant(11).exit_state,
+                movement_tick_id=landed_tick - 1,
+            ),
+        )
+        still_coasting = executor.decide(early_landing, ledger)
+        self.assertIs(
+            still_coasting.state, VerifiedMotionExecutorState.RUNNING,
+        )
+        self.assertEqual(
+            still_coasting.reason, "coast_to_verified_landing",
+        )
+        landed = replace(
+            early_landing,
+            observation_sequence_id=early_landing.observation_sequence_id + 1,
+            movement_tick_id=landed_tick,
+            physics_state=replace(
+                proof.start_variant(11).exit_state,
+                movement_tick_id=landed_tick,
+            ),
+        )
+        completed = executor.decide(landed, ledger)
+        self.assertIs(completed.state, VerifiedMotionExecutorState.COMPLETE)
+        self.assertEqual(completed.reason, "verified_motion_complete")
 
     def test_cancel_in_air_retains_landing_responsibility(self):
         anchor, candidate = self.admitted()
@@ -493,7 +582,12 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
         ledger = InputApplicationLedger(max_records=64)
         current_anchor = anchor
         final = None
-        for index, command in enumerate(admitted.proof.commands):
+        tail_start = next(
+            index for index in range(len(admitted.proof.commands))
+            if all(command.movement == MovementV1()
+                   for command in admitted.proof.commands[index:])
+        )
+        for index, command in enumerate(admitted.proof.commands[:tail_start]):
             decision = executor.decide(
                 self.frame(world, current_anchor.physics_state, index + 2),
                 state_anchor=current_anchor, input_ledger=ledger,
@@ -525,6 +619,23 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
                 self.frame(world, next_state, index + 100),
                 state_anchor=current_anchor, input_ledger=ledger,
             )
+        self.assertEqual(final.reason_code, "coast_to_verified_landing")
+        self.assertIsNone(final.verified_command_index)
+        landed_tick = admitted.intended_start_tick + len(admitted.proof.commands) - 1
+        exit_state = replace(
+            admitted.proof.start_variant(admitted.intended_start_tick).exit_state,
+            movement_tick_id=landed_tick,
+        )
+        current_anchor = replace(
+            current_anchor,
+            observation_sequence_id=current_anchor.observation_sequence_id + 1,
+            movement_tick_id=landed_tick,
+            physics_state=exit_state,
+        )
+        final = executor.decide(
+            self.frame(world, exit_state, 200),
+            state_anchor=current_anchor, input_ledger=ledger,
+        )
         self.assertIs(final.state, ActionRouteState.COMPLETE)
         self.assertEqual(final.reason_code, "action_route_complete")
 

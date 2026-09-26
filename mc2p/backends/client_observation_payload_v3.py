@@ -61,6 +61,28 @@ class ClientObservationPayloadV3:
         )
 
 
+def require_formal_surface_perception(
+        decoded: ClientObservationPayloadV3) -> None:
+    """Reject legacy ray observations at a live actor boundary.
+
+    The generic V3 decoder still accepts profile 3 so frozen historical traces
+    remain readable.  A live backend must call this after decoding and before
+    constructing an actor snapshot; otherwise an old client can silently put
+    sparse first-hit rays back into the current navigation system.
+    """
+    if type(decoded) is not ClientObservationPayloadV3:
+        raise ContractViolation("formal perception gate requires a V3 payload")
+    perception = decoded.perception.value
+    if perception is None:
+        raise ContractViolation("formal surface perception is unavailable")
+    if (perception.sensor_profile_revision != 4
+            or perception.ray_columns != 0
+            or perception.ray_rows != 0
+            or any("first_hit_ray" in block.sources
+                   for block in perception.blocks)):
+        raise ContractViolation("legacy_block_sensor_profile")
+
+
 def _grid(value: Any) -> tuple[int, int, int]:
     if type(value) is not list or len(value) != 3:
         raise ClientObservationPayloadError("block position must be an integer triple")

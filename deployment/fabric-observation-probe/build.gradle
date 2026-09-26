@@ -18,6 +18,7 @@ def repositoryRoot = projectDir.toPath().resolve('../..').normalize().toFile()
 sourceSets.main.java.srcDirs += [
     new File(repositoryRoot, 'mc2p/backends/runtime_overlays/mc121_actions'),
     new File(repositoryRoot, 'mc2p/backends/runtime_overlays/mc121_observation'),
+    new File(repositoryRoot, 'mc2p/backends/runtime_overlays/mc121_surface'),
     new File(repositoryRoot, 'mc2p/backends/runtime_overlays/mc121_diagnostics')
 ]
 def provenanceDir = layout.buildDirectory.dir('provenance')

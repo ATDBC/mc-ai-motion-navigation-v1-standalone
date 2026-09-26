@@ -13,6 +13,9 @@ from scripts.fabric_deployment_launch import ROOT, _hash
 from scripts.visibility_fixture_world import _no_links
 
 JAVA = ROOT / ".venv/Library/lib/jvm/bin/java.exe"
+SURFACE_NATIVE_LIBRARY = (
+    ROOT / "artifacts/surface-cache/native-build/Release/surface_cache.dll"
+)
 SERVER_SHA1 = "450698d1863ab5180c25d7c804ef0fe6369dd1ba"
 
 
@@ -114,22 +117,29 @@ def client_environment(base: dict[str, str], *, token: str, server_port: int, ip
         raise ValueError("time diagnostics selection must be boolean")
     if type(block_parity_diagnostics) is not bool:
         raise ValueError('block parity diagnostics selection must be boolean')
+    if block_parity_diagnostics:
+        raise ValueError(
+            'first-hit block parity diagnostics were retired with sensor profile 3'
+        )
     if type(physics_tick_diagnostics) is not bool:
         raise ValueError('physics tick diagnostics selection must be boolean')
     if type(control_diagnostics) is not bool:
         raise ValueError('control diagnostics selection must be boolean')
     if (physics_tick_diagnostics or control_diagnostics) and not time_diagnostics:
         raise ValueError('physics and control diagnostics require time diagnostics')
+    if not SURFACE_NATIVE_LIBRARY.is_file():
+        raise FileNotFoundError(
+            "formal surface perception native library has not been built"
+        )
     blocked = {"JAVA_TOOL_OPTIONS", "_JAVA_OPTIONS", "JDK_JAVA_OPTIONS", "CLASSPATH"}
     result = {key: value for key, value in base.items()
               if key.upper() not in blocked and not key.upper().startswith(("FABRIC_", "MC2P_"))}
     result.update(MC2P_SESSION_TOKEN=token, MC2P_SERVER_PORT=str(server_port), MC2P_IPC_PORT=str(ipc_port),
+        MC2P_SURFACE_NATIVE_LIBRARY=str(SURFACE_NATIVE_LIBRARY.resolve()),
         HTTP_PROXY="http://127.0.0.1:7897", HTTPS_PROXY="http://127.0.0.1:7897", ALL_PROXY="http://127.0.0.1:7897",
         NO_PROXY="localhost,127.0.0.1,::1,repo.huaweicloud.com")
     if time_diagnostics:
         result["MC2P_TIME_DIAGNOSTICS"] = "1"
-    if block_parity_diagnostics:
-        result['MC2P_BLOCK_PARITY_DIAGNOSTICS']='1'
     if physics_tick_diagnostics:
         result['MC2P_PHYSICS_TICK_DIAGNOSTICS']='1'
     if control_diagnostics:

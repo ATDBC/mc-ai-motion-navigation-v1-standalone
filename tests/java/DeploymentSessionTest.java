@@ -12,9 +12,7 @@ public class DeploymentSessionTest {
     }
     public static void main(String[] args) {
         String legacy = "{\"schema_version\":\"mc2p.deployment_session.v1\",\"episode_id\":\"deployment:1\",\"token\":\"" + TOKEN + "\"}";
-        DeploymentSession v1 = DeploymentSession.decode(bytes(legacy), TOKEN);
-        if (!v1.episode().equals("deployment:1") || !v1.observationSchemaVersion().equals("mc2p.client_observation.v2"))
-            throw new AssertionError("legacy session changed");
+        reject(bytes(legacy));
         String good = "{\"schema_version\":\"mc2p.deployment_session.v2\",\"episode_id\":\"deployment:1\",\"token\":\"" + TOKEN
                 + "\",\"observation_schema_version\":\"mc2p.client_observation.v3\"}";
         DeploymentSession v2 = DeploymentSession.decode(bytes(good), TOKEN);

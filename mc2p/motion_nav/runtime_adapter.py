@@ -10,7 +10,7 @@ from mc2p.contracts.observation_request_v3 import (
 )
 from mc2p.contracts.observation_v3 import ObservationSnapshotV3
 from mc2p.contracts.observation_v2 import StatusEffectV2
-from mc2p.motion_nav.pre_floating_adapter import apply_visible_blocks
+from mc2p.motion_nav.observed_block_adapter import apply_observed_blocks
 from mc2p.motion_nav.world_model import (
     Aabb, BlockPos, CellKnowledge, ObservationStamp, WorldKnowledge, WorldSessionId, WorldView,
 )
@@ -198,7 +198,7 @@ class NavigationObservationAdapter:
             positions = tuple(sorted({block.position for block in blocks}))
             before_view = self._world.view()
             before = {position: before_view.cell(position) for position in positions}
-            apply_visible_blocks(self._world, stamp, blocks)
+            apply_observed_blocks(self._world, stamp, blocks)
             after_view = self._world.view()
             changed_cells = tuple(position for position in positions if
                                   (before[position].knowledge, before[position].block)

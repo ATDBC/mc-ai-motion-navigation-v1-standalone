@@ -10,6 +10,7 @@ import time
 import psutil
 from tests.observation_v2_fixtures import valid_payload_value
 from tests.test_action_receipt import receipt_value
+from mc2p.contracts.observation_request_v3 import OBSERVATION_V2
 
 
 TOKEN = "0123456789abcdef" * 4
@@ -50,7 +51,9 @@ def recv_exact(peer, count):
 
 
 @contextmanager
-def backend_peer(samples, *, delay=None, clock_ns=time.perf_counter_ns, **backend_options):
+def backend_peer(samples, *, delay=None, clock_ns=time.perf_counter_ns,
+                 observation_schema_version=OBSERVATION_V2, **backend_options):
+    """Loopback fixture; legacy V2 must now be selected explicitly here."""
     from mc2p.backends.deployment_transport import ClientProcessIdentity, DeploymentTransport
     from mc2p.backends.fabric_behavior import FabricBehaviorBackendV1
     transport = DeploymentTransport(clock_ns=clock_ns)
@@ -58,7 +61,8 @@ def backend_peer(samples, *, delay=None, clock_ns=time.perf_counter_ns, **backen
     try:
         backend = FabricBehaviorBackendV1(transport=transport,
             client_identity=ClientProcessIdentity(os.getpid(), psutil.Process().create_time()),
-            token=TOKEN, server_port=25599, clock_ns=clock_ns, **backend_options)
+            token=TOKEN, server_port=25599, clock_ns=clock_ns,
+            observation_schema_version=observation_schema_version, **backend_options)
     except BaseException:
         peer.close()
         transport.close()

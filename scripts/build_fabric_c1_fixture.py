@@ -117,7 +117,7 @@ def inspect_server_launch(value: object) -> dict[str, object]:
 
 
 def build_fixture(*, timeout_seconds: float = 180) -> C1FixtureArtifact:
-    from scripts.probe_craftground_timing_parallel import run_bounded_process
+    from scripts.bounded_process import run_bounded_process
     from scripts.control_probe_core import write_json_atomic
     from mc2p.runtime.trace import trace_projection
 

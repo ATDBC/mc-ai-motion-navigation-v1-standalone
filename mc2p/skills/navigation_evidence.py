@@ -63,6 +63,8 @@ class ObservationCoverage:
     entities_truncated: bool
     truncated_entity_count: int
     source_kind: str = "client_perception_filtered"
+    sensor_profile_revision: int = 4
+    block_visibility_model: str = "surface_depth"
 
 
 @dataclass(frozen=True, slots=True)
@@ -105,6 +107,10 @@ def project_navigation_evidence(observation: ObservationSnapshotV3, *, now_ns: i
             raise ContractViolation(name + "_invalid_source")
     own, perception = obs.self_state.value, obs.perception.value
     assert own is not None and perception is not None
+    if perception.sensor_profile_revision != 4:
+        raise ContractViolation("legacy_ray_profile_cannot_enter_current_navigation")
+    if any("first_hit_ray" in block.sources for block in perception.blocks):
+        raise ContractViolation("legacy_ray_profile_cannot_enter_current_navigation")
     pose = ObservationPose(own.position, own.yaw_degrees, own.pitch_degrees, own.pose,
                            own.is_on_ground, own.horizontal_collision)
     entities = tuple(FollowEntity(item.track_id, item.entity_type,
@@ -116,7 +122,9 @@ def project_navigation_evidence(observation: ObservationSnapshotV3, *, now_ns: i
                  perception.max_block_distance, perception.entity_max_distance,
                  perception.body_expansion_blocks, perception.block_epsilon_blocks,
                  perception.entity_occlusion_epsilon_blocks, perception.entities_truncated,
-                 perception.truncated_entity_count)
+                 perception.truncated_entity_count,
+                 sensor_profile_revision=perception.sensor_profile_revision,
+                 block_visibility_model="surface_depth")
     return NavigationEvidence(stamp, True, pose=pose, coverage=coverage,
                               blocks=perception.blocks, entities=entities,
                               field_profile=obs.field_profile,targeting=obs.targeting)

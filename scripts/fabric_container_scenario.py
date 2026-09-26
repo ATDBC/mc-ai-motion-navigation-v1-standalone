@@ -10,11 +10,11 @@ import time
 from mc2p.contracts.action import ActionPriorityV0
 from mc2p.contracts.action_v1 import ActionIntentV1, MovementV1, LookV1, InteractBlockV1, ClickSlotV1, CloseScreenV1, SelectHotbarV1
 from mc2p.contracts.behavior import BehaviorProfileV0
+from mc2p.contracts.common import ContractViolation, FieldStatusV0, require_identifier
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
+from mc2p.contracts.observation_v3 import ObservationSnapshotV3
 from mc2p.contracts.task import TaskIntentV0, SuccessCriterionV0, ComparisonOperatorV0
 from mc2p.skills.targeting import confirmed_block_target
-from scripts.client_behavior_container_probe import evaluate_transfer
-from scripts.client_behavior_container_probe import nearest_observed_block
 from scripts.control_probe_core import append_jsonl
 
 LABELS = ("start", "seen_chest", "aimed", "wrong_target", "open_dispatched", "opened",
@@ -22,6 +22,75 @@ LABELS = ("start", "seen_chest", "aimed", "wrong_target", "open_dispatched", "op
     "stale_rejected", "recovered", "hotbar", "cancelled")
 NAVIGATION = ObservationRequestV3()
 INTERACTION = ObservationRequestV3("interaction_v1")
+
+
+def nearest_observed_block(observation: ObservationSnapshotV3, block_id: str):
+    if type(observation) is not ObservationSnapshotV3:
+        raise ContractViolation(
+            "container discovery requires exact ObservationSnapshotV3",
+        )
+    require_identifier(block_id, "container block id")
+    if (observation.privileged_fields_present
+            or observation.perception.status is not FieldStatusV0.VALID
+            or observation.perception.value is None
+            or observation.position.value is None):
+        raise ContractViolation(
+            "container discovery requires available non-privileged V3 state",
+        )
+    position = observation.position.value
+    candidates = [
+        block for block in observation.perception.value.blocks
+        if block.block_id == block_id
+    ]
+
+    def distance_squared(block):
+        dx = block.position[0] + .5 - position.x
+        dy = block.position[1] + .5 - position.y
+        dz = block.position[2] + .5 - position.z
+        return dx * dx + dy * dy + dz * dz
+
+    return min(candidates, default=None, key=distance_squared)
+
+
+def _counts(gui: dict, *, container: bool) -> Counter:
+    return sum((
+        Counter({slot["item"]["item_id"]: slot["item"]["count"]})
+        for slot in gui["slots"]
+        if (slot["source_kind"] == "container") == container
+        and not slot["item"]["empty"]
+    ), Counter())
+
+
+def evaluate_transfer(
+    before: dict, after: dict, reopened: dict, moved: dict,
+) -> list[dict]:
+    delta = Counter({moved["item_id"]: moved["count"]}) \
+        if not moved["empty"] else Counter()
+    values = {
+        "nonempty_stack_selected": bool(delta) and moved["count"] > 0,
+        "ordinary_container_handlers": all(
+            gui["open"] and gui["screen_kind"] == "generic_container"
+            and gui["sync_id"] > 0
+            for gui in (before, after, reopened)
+        ),
+        "stack_removed_from_container": _counts(before, container=True)
+            == _counts(after, container=True) + delta,
+        "stack_added_to_player": _counts(after, container=False)
+            == _counts(before, container=False) + delta,
+        "no_cursor_item": all(
+            gui["cursor_stack"]["empty"]
+            for gui in (before, after, reopened)
+        ),
+        "new_server_handler_after_reopen":
+            before["gui_session_id"] != reopened["gui_session_id"]
+            and before["sync_id"] != reopened["sync_id"],
+        "reopened_server_contents_match_transfer":
+            after["slots"] == reopened["slots"],
+    }
+    return [
+        {"name": name, "passed": passed}
+        for name, passed in values.items()
+    ]
 
 
 def evaluate_container_reconnect(first_stages: dict, first: list[dict], second_stages: dict, second: list[dict]) -> list[dict]:

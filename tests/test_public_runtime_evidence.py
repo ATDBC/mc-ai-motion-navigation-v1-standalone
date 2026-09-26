@@ -363,12 +363,22 @@ class PublicRuntimeEvidenceTests(unittest.TestCase):
         self.assertEqual(
             report.stages, ("b10c", "b11", "b12a", "b12b", "c1b", "c1c"),
         )
+        index = json.loads((self.corpus / "index.json").read_text("utf-8"))
+        self.assertTrue(index["runs"])
+        self.assertTrue(all(
+            row["perception_status"] == "historical_legacy_ray_profile3"
+            and row["current_acceptance_eligible"] is False
+            for row in index["runs"]
+        ))
 
         b10 = next((self.corpus / "archives").glob("b10c-pass-*.tar.gz"))
         with tarfile.open(b10, mode="r:gz") as archive:
             names = set(archive.getnames())
+            public_run = json.load(archive.extractfile("public-run.json"))
         self.assertIn("client-0/b10-coordinator-control-frames.jsonl", names)
         self.assertNotIn("client-0/trace.jsonl", names)
+        self.assertEqual(public_run["perception_status"], "historical_legacy_ray_profile3")
+        self.assertIs(public_run["current_acceptance_eligible"], False)
 
         b12b = next((self.corpus / "archives").glob("b12b-pass-*.tar.gz"))
         with tarfile.open(b12b, mode="r:gz") as archive:

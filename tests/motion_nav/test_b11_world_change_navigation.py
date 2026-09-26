@@ -72,7 +72,7 @@ class _WorldChangeBackend:
                         )
                     elif z != 0 and y in (64, 65):
                         block_id = "minecraft:stone"
-                    sources = ("first_hit_ray",) if block_id else ("air_query",)
+                    sources = ("surface_depth",) if block_id else ("air_query",)
                     if interaction and (x, y, z) == current:
                         sources = tuple(sorted(set(sources) | {"current_target"}))
                     values.append(observed_block(

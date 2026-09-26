@@ -5,7 +5,7 @@ from types import MappingProxyType
 from mc2p.contracts.common import require_nonnegative_int
 from mc2p.skills.local_navigation import BlockRecord, RADIUS
 from mc2p.skills.navigation_memory import MemorySnapshot
-from mc2p.skills.follow_playground_types import PlaygroundView
+from mc2p.skills.navigation_views import PlaygroundView
 from mc2p.skills.motion_guard import GuardGap, GuardReport, _inspect_motion
 from mc2p.skills.perception_needs import MotionEvidenceReport
 

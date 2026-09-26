@@ -1,4 +1,8 @@
-"""Handwritten follow scenes decoded through the strict V3 payload boundary."""
+"""Current profile-4 V3 fixtures plus an explicit profile-3 rejection fixture.
+
+The default path is surface depth. ``sensor_profile_revision=3`` exists only so
+compatibility gates can prove that current navigation rejects archived rays.
+"""
 from __future__ import annotations
 
 from dataclasses import astuple
@@ -17,7 +21,7 @@ from tests.observation_v3_fixtures import valid_payload_value
 
 
 def observed_block(position, block_id="minecraft:stone", *, kind="full_cube", boxes=(),
-                   fluid_id=None, sources=("first_hit_ray",)) -> ObservedBlockV3:
+                   fluid_id=None, sources=("surface_depth",)) -> ObservedBlockV3:
     """Construct one explicitly observed V3 block without any ray/face fiction."""
     typed_boxes = tuple(box if type(box) is AabbV3 else AabbV3(*box) for box in boxes)
     reason = "fixture_collision_unsupported" if kind == "unsupported" else None
@@ -43,7 +47,7 @@ def _block_value(block: ObservedBlockV3) -> dict:
 def follow_snapshot(*, sequence=0, received=100_000_000, position=(-1, 64, -2),
                     entities=None, blocks=(), truncated=False, yaw=0, pitch=0,
                     episode="episode-1", self_changes=None, gui_changes=None,
-                    profile="navigation_v1"):
+                    profile="navigation_v1", sensor_profile_revision=4):
     """Build a real V3 snapshot while preserving the established follow literals."""
     payload = valid_payload_value(profile)
     payload["generation_id"] = sequence
@@ -66,6 +70,10 @@ def follow_snapshot(*, sequence=0, received=100_000_000, position=(-1, 64, -2),
     own.update(self_changes or {})
     payload["gui"]["value"].update(gui_changes or {})
     perception = payload["perception"]["value"]
+    if sensor_profile_revision == 3:
+        perception.update(sensor_profile_revision=3, ray_columns=159, ray_rows=9)
+    elif sensor_profile_revision != 4:
+        raise ValueError("fixture sensor profile must be 3 or 4")
     perception.update(
         blocks=[_block_value(block) for block in sorted(blocks, key=lambda item: item.position)],
         visible_entities=[player_value()] if entities is None else list(entities),

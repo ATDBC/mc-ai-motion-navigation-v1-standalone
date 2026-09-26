@@ -92,6 +92,29 @@ def _runtime_navigation_frame(runtime):
     return frame
 
 
+def _pending_air_request(frame, request: ObservationRequestV3 | None):
+    """Avoid retransmitting air already retained by the Runtime world model.
+
+    A cell remembered as a block is queried again because the fixture may have
+    removed it.  UNKNOWN cells still need a positive air answer.  Known AIR is
+    already sufficient for the current route and does not need to be serialized
+    in every 20 Hz control frame.
+    """
+    if request is None or not request.air_positions:
+        return request
+    pending = tuple(
+        position for position in request.air_positions
+        if frame.world.cell(position).knowledge is not CellKnowledge.AIR
+    )
+    if pending == request.air_positions:
+        return request
+    return ObservationRequestV3(
+        request.field_profile,
+        pending,
+        request.entity_track_id,
+    )
+
+
 def _runtime_input_ledger(runtime) -> InputApplicationLedger:
     """Use the ledger owned by Runtime's sole input output path."""
     ledger = runtime.input_ledger
@@ -111,6 +134,35 @@ def _verified_submission_window(decision) -> tuple[int, int, int] | None:
         return None
     if any(value is None for value in values):
         raise RuntimeError("B10 session returned incomplete verified command identity")
+    return values
+
+
+def _manual_executor_submission_window(
+    decision,
+) -> tuple[int, int, int] | None:
+    """Separate proof commands from neutral coasting in the direct probe.
+
+    The solver proves the complete trajectory, but only its active input prefix
+    needs a command identity and an application window.  Once that prefix has
+    been observed, neutral free fall is carried by ordinary neutral input until
+    a later observation confirms the proved landing state.
+    """
+    if not decision.submittable_as_verified_command:
+        if (decision.reason == "coast_to_verified_landing"
+                and decision.movement == MovementV1()):
+            return None
+        raise RuntimeError(
+            "B10 manual executor returned unverified active movement"
+        )
+    values = (
+        decision.command_index,
+        decision.expected_movement_tick,
+        decision.latest_movement_tick,
+    )
+    if any(value is None for value in values):
+        raise RuntimeError(
+            "B10 manual executor returned an incomplete submission window"
+        )
     return values
 
 
@@ -221,9 +273,10 @@ def _run_b10_gap_solver_runtime(
         runtime.submit_ordered_intent(
             OrderedIntentV1(manual_source, counter, intent)
         )
+        active_request = _pending_air_request(frame, request)
         result = runtime.step(
             task, behavior, min(deadline_ns, now + 5_000_000_000),
-            observation_request=request,
+            observation_request=active_request,
         )
         if result.observation is None or result.backend_result is None:
             raise RuntimeError(f"B10 Fabric step failed: {result.report}")
@@ -417,9 +470,9 @@ def _run_b10_gap_solver_runtime(
             if decision.state is VerifiedMotionExecutorState.COMPLETE:
                 break
             if (decision.state is not VerifiedMotionExecutorState.RUNNING
-                    or decision.movement is None
-                    or decision.expected_movement_tick is None):
+                    or decision.movement is None):
                 raise RuntimeError(f"B10 verified executor stopped: {decision}")
+            submission_window = _manual_executor_submission_window(decision)
             look = None
             if decision.movement_yaw_radians is not None:
                 yaw_delta = math.degrees(math.atan2(
@@ -434,16 +487,6 @@ def _run_b10_gap_solver_runtime(
                 decision.movement, look=look, request=active_request,
             )
             action = result.decision.action
-            ledger.submit(
-                anchor.session, action,
-                requested_first_tick=decision.expected_movement_tick,
-                latest_allowed_first_tick=decision.latest_movement_tick,
-            )
-            executor.register_submission(
-                decision.command_index,
-                control_sequence=action.request_sequence_id,
-                requested_movement_tick=decision.expected_movement_tick,
-            )
             receipt = result.backend_result.receipt
             owned_applications = tuple(
                 application
@@ -454,8 +497,21 @@ def _run_b10_gap_solver_runtime(
                 raise RuntimeError(
                     "B10 verified input had no formal application sample"
                 )
-            for application in owned_applications:
-                ledger.observe_sample(application)
+            if submission_window is not None:
+                _, expected_tick, latest_tick = submission_window
+                ledger.submit(
+                    anchor.session, action,
+                    requested_first_tick=expected_tick,
+                    latest_allowed_first_tick=latest_tick,
+                )
+                executor.register_submission(
+                    decision.command_index,
+                    control_sequence=action.request_sequence_id,
+                    requested_movement_tick=expected_tick,
+                    requested_latest_movement_tick=latest_tick,
+                )
+                for application in owned_applications:
+                    ledger.observe_sample(application)
             if latest_application is None:
                 raise RuntimeError("B10 execution lost the movement-tick receipt")
             built_after = build_physics_state(
@@ -487,6 +543,7 @@ def _run_b10_gap_solver_runtime(
                 on_ground=frame.body.is_on_ground,
                 horizontal_collision=frame.body.horizontal_collision,
                 receipt_status=result.backend_result.receipt.status,
+                verified_submission=submission_window is not None,
             ))
         else:
             raise RuntimeError("B10 verified executor exceeded its proof horizon")
@@ -727,7 +784,9 @@ def _run_b10_gap_solver_runtime(
                     min(deadline_ns, now + 5_000_000_000),
                     proposals=(
                         proposal.control_frame,
-                        ControlFrameProposalV1(observation_request=request),
+                        ControlFrameProposalV1(
+                            observation_request=_pending_air_request(frame, request),
+                        ),
                     ),
                     input_execution_window=(
                         None if verified_window is None
