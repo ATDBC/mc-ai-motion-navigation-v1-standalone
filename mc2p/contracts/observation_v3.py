@@ -26,7 +26,7 @@ MAX_BLOCKS_V3 = 25000 + 512 + 512 + 1
 _SOURCES = ("air_query", "body_contact", "current_target", "first_hit_ray", "surface_depth")
 _FACES = ("down", "up", "north", "south", "west", "east")
 _AIR_QUERY_STATUSES = (
-    "outside_view", "out_of_range", "occluded", "unavailable",
+    "visible_air", "outside_view", "out_of_range", "occluded", "unavailable",
 )
 
 
@@ -62,11 +62,22 @@ class AabbV3:
 class AirQueryResultV3:
     position: tuple[int, int, int]
     status: str
+    observer_distance_blocks: float | None = None
+    lower_region_visible: bool | None = None
 
     def __post_init__(self) -> None:
         _grid(self.position)
         if type(self.status) is not str or self.status not in _AIR_QUERY_STATUSES:
             raise ContractViolation("invalid visual-air query status")
+        if self.status == "visible_air":
+            _finite(self.observer_distance_blocks, "visual-air observer distance")
+            if self.observer_distance_blocks < 0:
+                raise ContractViolation("visual-air observer distance must be nonnegative")
+            if type(self.lower_region_visible) is not bool:
+                raise ContractViolation("visual-air lower-region evidence must be explicit")
+        elif (self.observer_distance_blocks is not None
+              or self.lower_region_visible is not None):
+            raise ContractViolation("failed visual-air query cannot carry success evidence")
 
 
 def _box_key(box: AabbV3) -> tuple[float, ...]:
@@ -307,8 +318,22 @@ class PerceptionStateV3:
         result_positions = tuple(result.position for result in self.air_query_results)
         if result_positions != tuple(sorted(set(result_positions))):
             raise ContractViolation("visual-air query results must be sorted and unique")
-        if set(result_positions) & set(positions):
+        failed_positions = {
+            result.position for result in self.air_query_results
+            if result.status != "visible_air"
+        }
+        if failed_positions & set(positions):
             raise ContractViolation("resolved block cannot also be an air query failure")
+        visible_result_positions = {
+            result.position for result in self.air_query_results
+            if result.status == "visible_air"
+        }
+        resolved_visual_air = {
+            block.position for block in self.blocks
+            if "air_query" in block.sources
+        }
+        if not visible_result_positions.issubset(resolved_visual_air):
+            raise ContractViolation("visual-air success evidence must match resolved air")
         if (type(self.visible_entities) is not tuple or len(self.visible_entities) > 64
                 or any(type(e) is not VisibleEntityV2 for e in self.visible_entities)):
             raise ContractViolation("invalid or excessive visible entities")

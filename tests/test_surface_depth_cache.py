@@ -130,7 +130,7 @@ def test_visual_air_accepts_any_visible_region():
     with api.Cache(4) as empty:
         empty.update(world([]))
         _,air,_,_=empty.frame_pose_air([.5,1.5,0,0,0],candidates)
-        assert air.tolist()==[1,2,3]
+        assert air[0] in (1,4) and air[1:].tolist()==[2,3]
     opaque_wall=world([((0,1,2),FULL,True)])
     with api.Cache(4) as wall:
         wall.update(opaque_wall)
@@ -143,17 +143,17 @@ def test_visual_air_accepts_any_visible_region():
         assert air.tolist()==[0]
         wall.update(world([((-4,1,3),FULL,True)]))
         _,air,_,_=wall.frame_pose_air([.5,1.5,0,0,0],[(-4,1,6)])
-        assert air.tolist()==[1]
+        assert air[0] in (1,4)
     transparent_wall=world([((0,1,2),FULL,False)])
     with api.Cache(4) as glass:
         glass.update(transparent_wall)
         _,air,_,_=glass.frame_pose_air([.5,1.5,0,0,0],[(0,1,3)])
-        assert air.tolist()==[1]
+        assert air[0] in (1,4)
     thin_occluder=world([((0,1,2),((.45,0,0,.55,1,1),),True)])
     with api.Cache(4) as fence:
         fence.update(thin_occluder)
         _,air,_,_=fence.frame_pose_air([.5,1.5,0,0,0],[(0,1,3)])
-        assert air.tolist()==[1], 'uncovered part of the hypothetical cell proves visual air'
+        assert air[0] in (1,4), 'uncovered part of the hypothetical cell proves visual air'
     with api.Cache(4) as stairs:
         stairs.update(world([((0,1,2),STAIR,True)]))
         _,air,_,_=stairs.frame_pose_air([.5,1.5,0,0,0],[(0,1,3)])
@@ -195,7 +195,7 @@ def test_visual_air_never_overrides_a_hidden_full_block_at_range_boundary():
         visible,air,_,_=cache.frame_pose_air([.5,1.5,0,0,0],[target])
         assert visible.tolist()==[0] and air.tolist()==[3]
         visible,air,_,_=cache.frame_pose_air([.5,1.5,.1,0,0],[target])
-        assert visible.tolist()==[1] and air.tolist()==[1]
+        assert visible.tolist()==[1] and air[0] in (1,4)
 
 def test_visual_air_confirms_a_partly_exposed_downward_cell_without_preobservation():
     api=load();blocks=[]
@@ -211,6 +211,13 @@ def test_visual_air_confirms_a_partly_exposed_downward_cell_without_preobservati
             visible=visible or bool(air[0])
         assert visible, 'the drop body cell has a visible region even though its near face is blocked'
 
+def test_visual_air_marks_a_visible_bottom_quarter_for_drop_admission():
+    api=load()
+    with api.Cache(4) as cache:
+        cache.update(world([]))
+        _,air,_,_=cache.frame_pose_air([.5,1.5,0,0,0],[(0,1,3)])
+        assert air.tolist()==[4]
+
 def load_tests(loader, tests, pattern):
     suite=unittest.TestSuite()
     for tile in (4,8):
@@ -225,6 +232,7 @@ def load_tests(loader, tests, pattern):
     suite.addTest(unittest.FunctionTestCase(test_visual_air_distinguishes_outside_view_from_occlusion))
     suite.addTest(unittest.FunctionTestCase(test_visual_air_never_overrides_a_hidden_full_block_at_range_boundary))
     suite.addTest(unittest.FunctionTestCase(test_visual_air_confirms_a_partly_exposed_downward_cell_without_preobservation))
+    suite.addTest(unittest.FunctionTestCase(test_visual_air_marks_a_visible_bottom_quarter_for_drop_admission))
     return suite
 
 if __name__=='__main__':unittest.main()

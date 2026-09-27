@@ -27,7 +27,9 @@ from mc2p.motion_nav.motion_candidate import (
     AdmittedMotionCandidate, VerifiedMotionExecutor,
     VerifiedMotionExecutorState,
 )
-from mc2p.motion_nav.motion_risk import TaskDamageBudget
+from mc2p.motion_nav.motion_risk import (
+    TaskDamageBudget, conservative_plain_fall_damage_points,
+)
 from mc2p.motion_nav.motion_solver import (
     DEFAULT_AIR_TRANSITION_POLICIES, DEFAULT_GAP_SOLVER_POLICY,
     AirTransitionSolverPolicy, GapSolverPolicy, MotionSolveKind,
@@ -49,6 +51,7 @@ class ActionRouteState(StrEnum):
     NEEDS_INFORMATION = "needs_information"
     UNSUPPORTED = "unsupported"
     INPUT_LOST = "input_lost"
+    NEEDS_REPLAN = "needs_replan"
 
 
 @dataclass(frozen=True, slots=True)
@@ -118,6 +121,11 @@ class ActionRouteExecutor:
         self._verified_motion: dict[int, AdmittedMotionCandidate] = {}
         self._require_verified_gap_motion = False
         self._required_verified_motion: frozenset[int] = frozenset()
+        self._completed_movement_damage_points = 0.0
+
+    @property
+    def completed_movement_damage_points(self) -> float:
+        return self._completed_movement_damage_points
 
     def _activate(self, frame: NavigationFrame) -> None:
         assert self.route is not None
@@ -351,6 +359,7 @@ class ActionRouteExecutor:
               if require_verified_gap_motion
               and type(action) is JumpGapSegment),
         })
+        self._completed_movement_damage_points = 0.0
         for candidate in verified_motion:
             self._validate_verified_motion(route, candidate, damage_budget)
             index = candidate.context.action_index
@@ -591,6 +600,13 @@ class ActionRouteExecutor:
                 )
             decision = self._controller.decide(
                 movement_frame, input_confirmed=input_confirmed,
+                physics_state=(
+                    None if state_anchor is None else replace(
+                        state_anchor.physics_state,
+                        yaw_radians=movement_frame.body.yaw_radians,
+                        pitch_radians=movement_frame.body.pitch_radians,
+                    )
+                ),
             )
             assert hasattr(decision, "state")
             if decision.state is FixedRouteState.SUCCEEDED:
@@ -609,6 +625,7 @@ class ActionRouteExecutor:
                 FixedRouteState.INPUT_LOST: ActionRouteState.INPUT_LOST,
                 FixedRouteState.FAILED: ActionRouteState.FAILED,
                 FixedRouteState.CANCELLED: ActionRouteState.CANCELLED,
+                FixedRouteState.NEEDS_REPLAN: ActionRouteState.NEEDS_REPLAN,
             }
             if decision.state in mapping:
                 self.state = mapping[decision.state]
@@ -689,6 +706,15 @@ class ActionRouteExecutor:
                  input_ledger: InputApplicationLedger | None = None,
                  movement_yaw_radians: float | None = None) -> ActionRouteDecision:
         assert self.route is not None
+        completed = self.route.actions[self.action_index]
+        if type(completed) is ControlledDropSegment:
+            self._completed_movement_damage_points += (
+                conservative_plain_fall_damage_points(max(
+                    0.0,
+                    completed.start_surface.position[1]
+                    - completed.end_surface.position[1],
+                ))
+            )
         self.action_index += 1
         if self.action_index >= len(self.route.actions):
             self.action_index = len(self.route.actions) - 1

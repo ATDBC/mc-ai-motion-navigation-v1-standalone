@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 from mc2p.contracts.common import ContractViolation
-from mc2p.contracts.observation_v3 import ObservedBlockV3
+from mc2p.contracts.observation_v3 import AirQueryResultV3, ObservedBlockV3
 from mc2p.motion_nav.world_model import (
     Aabb,
     BlockGeometry,
     CellKnowledge,
     ObservationStamp,
+    VisualAirEvidence,
     WorldKnowledge,
 )
 
@@ -47,6 +48,7 @@ def apply_observed_blocks(
     stamp: ObservationStamp,
     blocks: tuple[ObservedBlockV3, ...],
     shared_geometries: dict[tuple[object, ...], BlockGeometry] | None = None,
+    air_query_results: tuple[AirQueryResultV3, ...] = (),
 ) -> tuple[tuple[int, int, int], ...]:
     """Apply explicit block or air evidence; absence never means air."""
     if type(world) is not WorldKnowledge or type(stamp) is not ObservationStamp:
@@ -56,6 +58,19 @@ def apply_observed_blocks(
         or any(type(block) is not ObservedBlockV3 for block in blocks)
     ):
         raise ContractViolation("observed block adapter requires exact V3 blocks")
+    if (type(air_query_results) is not tuple
+            or any(type(result) is not AirQueryResultV3
+                   for result in air_query_results)):
+        raise ContractViolation("observed block adapter requires typed air results")
+    visual_evidence = {
+        result.position: VisualAirEvidence(
+            stamp,
+            result.observer_distance_blocks,
+            result.lower_region_visible,
+        )
+        for result in air_query_results
+        if result.status == "visible_air"
+    }
     requested_air = tuple(
         block.position for block in blocks if block.block_id in _AIR_IDS
     )
@@ -94,5 +109,9 @@ def apply_observed_blocks(
         for position in air:
             if before.cell(position).knowledge is not CellKnowledge.AIR:
                 changed.add(position)
-        rejected.update(world.confirm_air(stamp, air).rejected_positions)
+        rejected.update(world.confirm_air(
+            stamp, air,
+            {position: visual_evidence[position]
+             for position in air if position in visual_evidence},
+        ).rejected_positions)
     return tuple(sorted(changed - rejected))

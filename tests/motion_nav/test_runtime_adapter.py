@@ -4,10 +4,27 @@ from dataclasses import replace
 
 from mc2p.contracts.common import ContractViolation
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
-from mc2p.contracts.observation_v3 import AabbV3, CollisionShapeV3, ObservedBlockV3
+from mc2p.contracts.observation_v3 import (
+    AabbV3, AirQueryResultV3, CollisionShapeV3, ObservedBlockV3,
+)
 from mc2p.motion_nav.runtime_adapter import NavigationObservationAdapter
 from mc2p.motion_nav.world_model import CellKnowledge
 from tests.observation_v3_fixtures import valid_snapshot_v3
+
+
+def _with_world_tick(snapshot, tick):
+    groups = {
+        name: replace(getattr(snapshot, name), sample_world_tick=tick)
+        for name in (
+            "self_state", "inventory", "gui", "perception", "targeting",
+            "tracked_entity",
+        )
+    }
+    return replace(
+        snapshot,
+        world_time_ticks=replace(snapshot.world_time_ticks, value=tick),
+        **groups,
+    )
 
 
 class B02RuntimeAdapterTests(unittest.TestCase):
@@ -82,6 +99,26 @@ class B02RuntimeAdapterTests(unittest.TestCase):
         self.assertIs(second, first)
         self.assertIs(second.world, first.world)
 
+    def test_sequence_order_survives_server_world_time_rollback(self):
+        adapter = NavigationObservationAdapter()
+        first = _with_world_tick(valid_snapshot_v3(sequence=1), 200)
+        second = _with_world_tick(valid_snapshot_v3(sequence=2), 190)
+
+        adapter.ingest(first)
+        frame = adapter.ingest(second)
+
+        self.assertEqual(frame.body.sequence_id, 2)
+        self.assertEqual(frame.body.stamp.world_tick, 190)
+
+    def test_older_sequence_is_rejected_even_when_world_time_is_later(self):
+        adapter = NavigationObservationAdapter()
+        current = _with_world_tick(valid_snapshot_v3(sequence=2), 190)
+        stale = _with_world_tick(valid_snapshot_v3(sequence=1), 200)
+
+        adapter.ingest(current)
+        with self.assertRaisesRegex(ContractViolation, "order moved backward"):
+            adapter.ingest(stale)
+
     def test_air_request_is_bounded_sorted_and_positive_only(self):
         positions = tuple((x, 64, 0) for x in range(3))
         request = ObservationRequestV3("navigation_v1", tuple(reversed(positions)))
@@ -101,6 +138,31 @@ class B02RuntimeAdapterTests(unittest.TestCase):
         self.assertIs(frame.world.cell((1, 64, 0)).knowledge, CellKnowledge.AIR)
         self.assertIs(frame.world.cell((2, 64, 0)).knowledge, CellKnowledge.BLOCK)
         self.assertIs(frame.world.cell((0, 65, 0)).knowledge, CellKnowledge.UNKNOWN)
+
+    def test_visual_air_evidence_is_kept_with_the_confirmed_air_cell(self):
+        position = (1, 64, 0)
+        air = ObservedBlockV3(
+            position, "minecraft:air", CollisionShapeV3("empty"),
+            None, ("air_query",),
+        )
+        snapshot = valid_snapshot_v3(blocks=(air,), sequence=4)
+        perception = replace(
+            snapshot.perception.value,
+            air_query_results=(AirQueryResultV3(
+                position, "visible_air", 3.5, True,
+            ),),
+        )
+
+        frame = NavigationObservationAdapter().ingest(replace(
+            snapshot,
+            perception=replace(snapshot.perception, value=perception),
+        ))
+
+        evidence = frame.world.cell(position).visual_air_evidence
+        self.assertIsNotNone(evidence)
+        self.assertEqual(evidence.observer_distance_blocks, 3.5)
+        self.assertTrue(evidence.lower_region_visible)
+        self.assertEqual(evidence.stamp.world_tick, frame.body.stamp.world_tick)
 
     def test_request_builder_preserves_unknown_and_limits_one_frame(self):
         cells = tuple((index, 64, 0) for index in range(700))

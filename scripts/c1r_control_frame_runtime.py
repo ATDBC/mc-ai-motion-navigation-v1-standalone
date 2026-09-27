@@ -196,7 +196,7 @@ def _refresh_target(runtime: PlayerRuntimeV1, trial: dict, deadline_ns: int):
             ),),
         )
         if result.report.failure is not None:
-            raise RuntimeError("R1 target observation failed: " + result.report.failure.reason)
+            raise RuntimeError("R1 target observation failed: " + result.report.failure.message)
         own = runtime.observation.self_state.value
         zombies = _visible_zombies(runtime)
         candidate = _trial_attack_ready(own, zombies)

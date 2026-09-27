@@ -173,7 +173,7 @@ def _run_damage_source_diagnostics(
         if result.report.failure is not None:
             raise RuntimeError(
                 "B12-A environment damage observation failed: "
-                + result.report.failure.reason
+                + result.report.failure.message
             )
         environment_event = next((
             event for event in runtime.observation.damage_events

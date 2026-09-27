@@ -188,7 +188,7 @@ def _ready_fixture(runtime, trial: dict, deadline_ns: int,
         )
         diagnostic()
         if result.report.failure is not None:
-            raise RuntimeError("B11 fixture observation failed: " + result.report.failure.reason)
+            raise RuntimeError("B11 fixture observation failed: " + result.report.failure.message)
         frame = runtime.navigation_observation_adapter.latest_frame
         observation = runtime.observation
         inventory = observation.inventory

@@ -55,13 +55,14 @@ public final class SurfaceVisibilityRules {
         if (opaqueFullCube) return new Decision(true, true);
         boolean glass = blockId.endsWith("_stained_glass")
                 || blockId.endsWith("_stained_glass_pane");
-        boolean plant = blockId.endsWith("_sapling")
+        boolean potted = blockId.startsWith("minecraft:potted_");
+        boolean plant = !potted && (blockId.endsWith("_sapling")
                 || blockId.endsWith("_tulip")
                 || blockId.endsWith("_mushroom")
                 || blockId.endsWith("_roots")
                 || blockId.endsWith("_fungus")
                 || blockId.endsWith("_flower")
-                || blockId.endsWith("_bush");
+                || blockId.endsWith("_bush"));
         boolean seeThrough = SEE_THROUGH.contains(blockId)
                 || SEE_THROUGH_EXACT.contains(blockId) || glass || plant;
         return new Decision(true, !seeThrough);

@@ -168,7 +168,7 @@ class BlockPlacementTransaction:
         self._attempts = 0
         self._last_proposed_sequence: int | None = None
         self._submitted_observation_sequence: int | None = None
-        self._submitted_world_tick: int | None = None
+        self._submitted_observation_sequence: int | None = None
         self._submitted_item_count: int | None = None
         self._submitted_slot: int | None = None
         self._submitted_control_sequence: int | None = None
@@ -343,7 +343,7 @@ class BlockPlacementTransaction:
             return "target_not_aligned", None
         self._submitted_item_count = held.count
         self._submitted_slot = inventory.selected_hotbar_slot
-        self._submitted_world_tick = frame.body.stamp.world_tick
+        self._submitted_observation_sequence = frame.body.stamp.sequence_id
         return None
 
     def _observe_confirmation(
@@ -352,7 +352,7 @@ class BlockPlacementTransaction:
         frame: NavigationFrame,
     ) -> None:
         if (self._submitted_observation_sequence is None
-                or self._submitted_world_tick is None
+                or self._submitted_observation_sequence is None
                 or self._submitted_item_count is None
                 or self._submitted_slot is None):
             raise ContractViolation("placement confirmation lost its submission evidence")
@@ -384,7 +384,9 @@ class BlockPlacementTransaction:
             self._state = PlacementState.COMPLETE
             self._reason = "placement_confirmed"
             return
-        elapsed = frame.body.stamp.world_tick - self._submitted_world_tick
+        elapsed = (
+            frame.body.stamp.sequence_id - self._submitted_observation_sequence
+        )
         if elapsed >= self.requirement.confirmation_timeout_ticks:
             if self._attempts < self.requirement.maximum_attempts:
                 self._state = PlacementState.READY
@@ -404,7 +406,7 @@ class BlockPlacementTransaction:
 
     def _clear_submission(self) -> None:
         self._submitted_observation_sequence = None
-        self._submitted_world_tick = None
+        self._submitted_observation_sequence = None
         self._submitted_item_count = None
         self._submitted_slot = None
         self._submitted_control_sequence = None

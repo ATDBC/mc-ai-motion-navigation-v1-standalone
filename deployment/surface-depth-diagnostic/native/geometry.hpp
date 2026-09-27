@@ -65,20 +65,20 @@ static bool in_range(const Paths64& paths,const Projected& pf,const Face& f,cons
  return winding!=0&&sqdist(foot,v.eye)<limitSquared-1e-10;
 }
 // 0: the candidate intersects the current view but is fully occluded;
-// 1: at least one useful projected region is visible inside the range;
-// 2: outside view; 3: outside range.
+// 1: a useful projected region is visible inside the range;
+// 2: outside view; 3: outside range; 4: visible and the bottom quarter is exposed.
 static unsigned char cell_visibility_status(const Scene& scene,const View& view,int x,int y,int z,double maxDistance){
  Box box={double(x),double(y),double(z),double(x+1),double(y+1),double(z+1)};V nearest;
  for(int axis=0;axis<3;++axis)nearest[axis]=std::clamp(view.eye[axis],box[axis],box[axis+3]);
  double limitSquared=maxDistance*maxDistance;if(sqdist(nearest,view.eye)>limitSquared+EPS)return 3;
- bool intersectsView=false,visibleBeyondRange=false;
+ bool intersectsView=false,visibleBeyondRange=false,visibleInsideRange=false,lowerRegionVisible=false;
  for(int axis=0;axis<3;++axis)for(int sign:{-1,1}){int u=(axis+1)%3,w=(axis+2)%3;
   Face face={-1,axis,sign,box[axis+(sign>0?3:0)],{box[u],box[w],box[u+3],box[w+3]}};Poly p=project_face(face,view);if(area(p)<=EPS)continue;intersectsView=true;
   Projected query={-1,-1,p,quantize(p),bounds(p),coefficients(face,view)};Paths64 cutters;
   for(const auto& blocker:view.faces){if(!scene.opaque[blocker.owner]||!overlaps(query.rect,blocker.rect))continue;V d={blocker.inv[0]-query.inv[0],blocker.inv[1]-query.inv[1],blocker.inv[2]-query.inv[2]};if(std::abs(d[0])+std::abs(d[1])+std::abs(d[2])<1e-12)continue;Poly closer=halfplane(blocker.p,d[0],d[1],d[2]);if(area(closer)>EPS)cutters.push_back(quantize(closer));}
-  Paths64 result=cutters.empty()?Paths64{query.path}:boolean_op({query.path},cutters,ClipType::Difference);double visible=0;for(auto& path:result)visible+=Area(path)/(SCALE*SCALE);if(visible>AIR_VISIBLE_AREA){if(in_range(result,query,face,view,limitSquared))return 1;visibleBeyondRange=true;}
+  Paths64 result=cutters.empty()?Paths64{query.path}:boolean_op({query.path},cutters,ClipType::Difference);double visible=0;for(auto& path:result)visible+=Area(path)/(SCALE*SCALE);if(visible>AIR_VISIBLE_AREA){if(in_range(result,query,face,view,limitSquared)){visibleInsideRange=true;for(const auto& path:result)for(const auto& point:path)if(unproject({point.x/SCALE,point.y/SCALE},query,view)[1]<=double(y)+.25+EPS)lowerRegionVisible=true;}else visibleBeyondRange=true;}
  }
- return visibleBeyondRange?3:(intersectsView?0:2);
+ return visibleInsideRange?(lowerRegionVisible?4:1):(visibleBeyondRange?3:(intersectsView?0:2));
 }
 extern "C" {
 __declspec(dllexport) void* center_create(const double* boxes,const int* owners,int nb,const double* centers,const unsigned char* opaque,const int* query,int no,int trim,double* stats){

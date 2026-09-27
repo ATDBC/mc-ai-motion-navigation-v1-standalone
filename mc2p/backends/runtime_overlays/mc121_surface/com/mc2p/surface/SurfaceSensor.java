@@ -177,12 +177,24 @@ public final class SurfaceSensor implements ClientBlockObservationV3.SurfaceProv
             var position = geometry.positions.get(index);
             visible.add(new BlockPos(position[0], position[1], position[2]));
         }
+        var visibleSet = new java.util.HashSet<BlockPos>(visible);
         var visualAir = new ArrayList<BlockPos>();
         for (int index=0;index<eligibleAirCandidates.size();index++) {
+            BlockPos position=eligibleAirCandidates.get(index);
+            // A real surface from this frame resolves the request as a block.
+            // The hypothetical-cube projection must not also call it air.
+            if (visibleSet.contains(position)) continue;
             byte status=airVisible.get(index);
-            if (status==1) visualAir.add(eligibleAirCandidates.get(index));
+            if (status==1 || status==4) {
+                visualAir.add(position);
+                double dx=Math.max(Math.max(position.getX()-eye.x,eye.x-position.getX()-1),0);
+                double dy=Math.max(Math.max(position.getY()-eye.y,eye.y-position.getY()-1),0);
+                double dz=Math.max(Math.max(position.getZ()-eye.z,eye.z-position.getZ()-1),0);
+                airResults.add(new AirResult(
+                        position,AirStatus.VISIBLE,Math.sqrt(dx*dx+dy*dy+dz*dz),status==4));
+            }
             else airResults.add(new AirResult(
-                    eligibleAirCandidates.get(index),
+                    position,
                     status==2 ? AirStatus.OUTSIDE_VIEW
                             : status==3 ? AirStatus.OUT_OF_RANGE
                             : AirStatus.OCCLUDED));

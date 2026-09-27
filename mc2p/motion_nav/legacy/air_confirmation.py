@@ -69,7 +69,7 @@ class AirConfirmationService:
             state = view.cell(position).knowledge
             last = self._last_attempt_tick.get(position)
             if (state is CellKnowledge.UNKNOWN
-                    and (last is None or request_stamp.world_tick - last >= self._retry_after_ticks)):
+                    and (last is None or request_stamp.sequence_id - last >= self._retry_after_ticks)):
                 candidates.append(position)
         requested = tuple(candidates)
         confirmed: tuple[BlockPos, ...] = ()
@@ -77,12 +77,12 @@ class AirConfirmationService:
             batch = self._probe.confirm_air(self._world.session, requested, request_stamp)
             if type(batch) is not AirConfirmationBatch or batch.stamp.session != self._world.session:
                 raise ContractViolation("air probe returned another world session")
-            if batch.stamp.world_order < request_stamp.world_order:
+            if batch.stamp.causal_order < request_stamp.causal_order:
                 raise ContractViolation("air probe returned an older sample")
             if not set(batch.confirmed_air).issubset(requested):
                 raise ContractViolation("air probe confirmed an unrequested position")
             for position in requested:
-                self._last_attempt_tick[position] = request_stamp.world_tick
+                self._last_attempt_tick[position] = request_stamp.sequence_id
             self._world.confirm_air(batch.stamp, batch.confirmed_air)
             confirmed = batch.confirmed_air
         final = self._world.view()

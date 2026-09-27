@@ -183,7 +183,7 @@ def _refresh_navigation(runtime: PlayerRuntimeV1, trial: dict,
             observation_request=ObservationRequestV3("navigation_v1"),
         )
         if result.report.failure is not None:
-            raise RuntimeError("C1 fixture observation failed: " + result.report.failure.reason)
+            raise RuntimeError("C1 fixture observation failed: " + result.report.failure.message)
         zombies = _zombies(runtime)
         observation = runtime.observation
         own = (None if observation is None
@@ -204,7 +204,7 @@ def _refresh_navigation(runtime: PlayerRuntimeV1, trial: dict,
             )
             if checked.report.failure is not None:
                 raise RuntimeError(
-                    "C1 fixture identity check failed: " + checked.report.failure.reason
+                    "C1 fixture identity check failed: " + checked.report.failure.message
                 )
             tracked = runtime.observation.tracked_entity.value
             refreshed = _zombies(runtime)
@@ -277,7 +277,7 @@ def _run_guard_negative(runtime: PlayerRuntimeV1, trial: dict, target: CombatTar
             observation_request=ObservationRequestV3("interaction_v1"),
         )
         if observed.report.failure is not None:
-            raise RuntimeError("C1 guard observation failed: " + observed.report.failure.reason)
+            raise RuntimeError("C1 guard observation failed: " + observed.report.failure.message)
         observation = runtime.observation
         targeting = None if observation is None else observation.targeting.value
         if _guard_target_ready(trial["injection"], targeting, target.track_id):

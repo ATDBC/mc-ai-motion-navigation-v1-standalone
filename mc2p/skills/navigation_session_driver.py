@@ -301,6 +301,7 @@ class RuntimeNavigationDriver:
             NavigationSessionState.FAILED,
             NavigationSessionState.CLOSED,
         }:
+            self.session.ingest(self.runtime.observation)
             self.session.cancel(reason)
         self._sync_report()
         if self.state == "stopping":
@@ -337,6 +338,7 @@ class RuntimeNavigationDriver:
             NavigationSessionState.FAILED,
             NavigationSessionState.CLOSED,
         }:
+            self.session.ingest(self.runtime.observation)
             self.session.cancel(reason)
         self._sync_report()
         if self.state == "stopping":
@@ -354,6 +356,7 @@ class RuntimeNavigationDriver:
         if self._prepared_deadline_ns is not None:
             raise ContractViolation("prepared navigation must be adopted or discarded")
         if not self.session.report.terminal:
+            self.session.ingest(self.runtime.observation)
             self.session.cancel(reason)
         self._release_source()
         self.state = "stopped"

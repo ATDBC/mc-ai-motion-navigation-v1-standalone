@@ -61,7 +61,7 @@ class ClientBlockObservationV3Tests(unittest.TestCase):
             "mc2p/backends/runtime_overlays/mc121_observation/"
             "ClientBlockObservationV3.java"
         )).read_text("utf-8")
-        self.assertIn("classifiedAir.addAll(surface.visualAir())", source)
+        self.assertIn("successfulAir.equals(java.util.Set.copyOf(surface.visualAir()))", source)
         self.assertIn("classifiedAir.equals(requestedAir)", source)
 
     def test_native_discovery_dedup_shape_targeting_and_python_parity(self):

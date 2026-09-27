@@ -27,16 +27,27 @@ import net.minecraft.world.BlockView;
 public final class ClientBlockObservationV3 {
     public enum Source { BODY_CONTACT, CURRENT_TARGET, SURFACE_DEPTH, AIR_QUERY }
     public enum AirStatus {
-        OUTSIDE_VIEW("outside_view"), OUT_OF_RANGE("out_of_range"),
+        VISIBLE("visible_air"), OUTSIDE_VIEW("outside_view"), OUT_OF_RANGE("out_of_range"),
         OCCLUDED("occluded"), UNAVAILABLE("unavailable");
         public final String wireName;
         AirStatus(String wireName) { this.wireName=wireName; }
     }
-    public record AirResult(BlockPos position, AirStatus status) {
+    public record AirResult(
+            BlockPos position, AirStatus status,
+            Double observerDistanceBlocks, Boolean lowerRegionVisible) {
         public AirResult {
             if (position==null || status==null)
                 throw new IllegalArgumentException("missing air query result");
+            if (status==AirStatus.VISIBLE) {
+                if (observerDistanceBlocks==null || !Double.isFinite(observerDistanceBlocks)
+                        || observerDistanceBlocks<0 || lowerRegionVisible==null)
+                    throw new IllegalArgumentException("missing visible-air evidence");
+            } else if (observerDistanceBlocks!=null || lowerRegionVisible!=null)
+                throw new IllegalArgumentException("failed air query carries success evidence");
             position=position.toImmutable();
+        }
+        public AirResult(BlockPos position, AirStatus status) {
+            this(position,status,null,null);
         }
     }
     public record SurfaceFrame(
@@ -68,6 +79,43 @@ public final class ClientBlockObservationV3 {
     public static void installSurfaceProvider(SurfaceProvider provider) {
         if (provider==null || surfaceProvider!=null) throw new IllegalStateException("surface provider installation refused");
         surfaceProvider=provider;
+    }
+    private static void validateSurfaceFrame(
+            List<BlockPos> airCandidates, SurfaceFrame surface) {
+        var requestedAir=java.util.Set.copyOf(airCandidates);
+        var visibleRequested=surface.visibleBlocks().stream()
+                .filter(requestedAir::contains)
+                .collect(java.util.stream.Collectors.toSet());
+        var classifiedAir=new java.util.HashSet<BlockPos>(visibleRequested);
+        boolean duplicateClassification=surface.airResults().stream()
+                .map(AirResult::position).anyMatch(position -> !classifiedAir.add(position));
+        var successfulAir=surface.airResults().stream()
+                .filter(result->result.status()==AirStatus.VISIBLE)
+                .map(AirResult::position).collect(java.util.stream.Collectors.toSet());
+        boolean duplicateVisible=surface.visibleBlocks().stream().distinct().count()!=surface.visibleBlocks().size();
+        boolean duplicateVisualAir=surface.visualAir().stream().distinct().count()!=surface.visualAir().size();
+        boolean duplicateAirResult=surface.airResults().stream().map(AirResult::position).distinct().count()!=surface.airResults().size();
+        boolean mismatchedSuccess=!successfulAir.equals(java.util.Set.copyOf(surface.visualAir()));
+        boolean visibleAirOverlap=!java.util.Collections.disjoint(visibleRequested,surface.visualAir());
+        boolean unrequestedVisualAir=!requestedAir.containsAll(surface.visualAir());
+        boolean unrequestedResult=!requestedAir.containsAll(surface.airResults().stream().map(AirResult::position).toList());
+        boolean incompleteClassification=!classifiedAir.equals(requestedAir);
+        if (duplicateVisible || duplicateVisualAir || duplicateAirResult || duplicateClassification
+                || mismatchedSuccess || visibleAirOverlap || unrequestedVisualAir
+                || unrequestedResult || incompleteClassification)
+            throw new IllegalStateException("invalid surface frame result: duplicateVisible="+duplicateVisible
+                    +", duplicateVisualAir="+duplicateVisualAir+", duplicateAirResult="+duplicateAirResult
+                    +", duplicateClassification="+duplicateClassification+", mismatchedSuccess="+mismatchedSuccess
+                    +", visibleAirOverlap="+visibleAirOverlap+", unrequestedVisualAir="+unrequestedVisualAir
+                    +", unrequestedResult="+unrequestedResult+", incompleteClassification="+incompleteClassification);
+    }
+    private static List<AirResult> unresolvedAirResults(
+            SurfaceFrame surface, Map<BlockPos,EnumSet<Source>> resolvedBlocks) {
+        if (surface==null || resolvedBlocks==null)
+            throw new IllegalArgumentException("missing air-query resolution state");
+        return surface.airResults().stream()
+                .filter(result -> !resolvedBlocks.containsKey(result.position()))
+                .toList();
     }
     static boolean[] surfaceVisibleBoxes(
             MinecraftClient client, Vec3d eye, float yaw, float pitch, List<Box> boxes) {
@@ -214,19 +262,7 @@ public final class ClientBlockObservationV3 {
         List<BlockPos> airCandidates=request.airPositions().stream()
                 .map(grid -> new BlockPos(grid.x(),grid.y(),grid.z())).toList();
         SurfaceFrame surface=surfaceProvider.sample(client,camera,yaw,pitch,airCandidates);
-        var requestedAir=java.util.Set.copyOf(airCandidates);
-        var classifiedAir=new java.util.HashSet<BlockPos>();
-        classifiedAir.addAll(surface.visualAir());
-        boolean duplicateClassification=surface.airResults().stream()
-                .map(AirResult::position).anyMatch(position -> !classifiedAir.add(position));
-        if (surface.visibleBlocks().stream().distinct().count()!=surface.visibleBlocks().size()
-                || surface.visualAir().stream().distinct().count()!=surface.visualAir().size()
-                || surface.airResults().stream().map(AirResult::position).distinct().count()!=surface.airResults().size()
-                || duplicateClassification
-                || !requestedAir.containsAll(surface.visualAir())
-                || !requestedAir.containsAll(surface.airResults().stream().map(AirResult::position).toList())
-                || !classifiedAir.equals(requestedAir))
-            throw new IllegalStateException("invalid surface frame result");
+        validateSurfaceFrame(airCandidates,surface);
         Map<BlockPos,EnumSet<Source>> table=new HashMap<>();
         for (BlockPos position : surface.visibleBlocks())
             authorize(table,position,Source.SURFACE_DEPTH);
@@ -236,6 +272,9 @@ public final class ClientBlockObservationV3 {
         var entities = ClientObservationCollector.collectVisibleEntities(client,player,camera,generationId,index,hit);
         if (request.needsTargeting() && hit instanceof BlockHitResult b && hit.getType()==HitResult.Type.BLOCK)
             authorize(table,b.getBlockPos(),Source.CURRENT_TARGET);
+        // Contact, targeting and surface knowledge already resolve a requested
+        // cell. Do not publish a second, conflicting air-query classification.
+        List<AirResult> unresolvedAir=unresolvedAirResults(surface,table);
         for (BlockPos position : surface.visualAir()) if (!table.containsKey(position))
             authorize(table,position,Source.AIR_QUERY);
         JsonObject perception = ClientObservationCollector.perceptionMetadata();
@@ -243,10 +282,14 @@ public final class ClientBlockObservationV3 {
         perception.addProperty("knowledge_model","block_state_v1");
         perception.add("blocks",readBlocks(world,ShapeContext.of(player),table));
         JsonArray airQueryResults = new JsonArray();
-        for (AirResult result : surface.airResults()) if (!table.containsKey(result.position())) {
+        for (AirResult result : unresolvedAir) {
             JsonObject value = new JsonObject();
             value.add("position",grid(result.position()));
             value.addProperty("status",result.status().wireName);
+            if (result.status()==AirStatus.VISIBLE) {
+                value.addProperty("observer_distance_blocks",result.observerDistanceBlocks());
+                value.addProperty("lower_region_visible",result.lowerRegionVisible());
+            }
             airQueryResults.add(value);
         }
         perception.add("air_query_results",airQueryResults);

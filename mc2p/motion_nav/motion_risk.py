@@ -7,6 +7,9 @@ import math
 from mc2p.contracts.common import ContractViolation, require_identifier
 
 
+MOVEMENT_DAMAGE_BUDGET_RESOURCE = "movement_damage_budget_points"
+
+
 def _finite_nonnegative(value: float, label: str) -> float:
     if (type(value) not in (int, float)
             or not math.isfinite(float(value))

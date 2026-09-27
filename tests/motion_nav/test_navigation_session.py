@@ -31,10 +31,13 @@ from mc2p.motion_nav.navigation_session import (
     NavigationSession,
     NavigationSessionProfiles,
     NavigationSessionState,
+    information_look_for_missing_cells,
+    information_probe_movement,
 )
 from mc2p.motion_nav.action_route_executor import (
     ActionRouteDecision, ActionRouteState,
 )
+from mc2p.motion_nav.route_admission import AdmissionReason
 from mc2p.motion_nav.support_surfaces import query_support_surfaces
 from mc2p.motion_nav.world_model import (
     Aabb, BlockGeometry, ObservationStamp, WorldKnowledge, WorldSessionId,
@@ -299,6 +302,26 @@ class NavigationSessionTests(unittest.TestCase):
         self.assertEqual(session._request.damage_budget, budget)
         self.assertEqual(session._request.goal_state.risk_policy_id,
                          "allow_one_point")
+
+    def test_replanning_keeps_damage_already_spent_by_the_same_task(self):
+        session = NavigationSession(
+            "cumulative-damage-session", self.profiles(),
+            planner_worker=_InlinePlanner(),
+        )
+        session._task_damage_budget = TaskDamageBudget(
+            "task-total-four", 4.0,
+        )
+        session._executor = Mock(completed_movement_damage_points=2.0)
+
+        session._record_completed_movement_damage()
+        session._clear_active_execution()
+        session._executor = Mock(completed_movement_damage_points=1.0)
+        session._record_completed_movement_damage()
+
+        self.assertEqual(
+            session._remaining_damage_budget(),
+            TaskDamageBudget("task-total-four", 1.0),
+        )
 
     def test_started_session_cannot_replace_its_world_owner(self):
         from mc2p.motion_nav.runtime_adapter import NavigationObservationAdapter
@@ -657,6 +680,127 @@ class NavigationSessionTests(unittest.TestCase):
             ordered.intent.look is not None
             for ordered in proposal.control_frame.intents
         ))
+
+    def test_visible_landing_cell_without_lower_evidence_looks_below_center(self):
+        world, missing = _known_endpoints_with_unknown_gap()
+        start, _ = _nodes(world, (-1, 1))
+        current = frame(world, 0, start.position)
+        eye_y = current.body.body_box.max_y - .18
+        horizontal = math.hypot(
+            missing[0] + .5 - current.body.position[0],
+            missing[2] + .5 - current.body.position[2],
+        )
+        center_pitch = -math.degrees(math.atan2(
+            missing[1] + .5 - eye_y, max(horizontal, 1.0e-9),
+        ))
+        current = replace(
+            current,
+            body=replace(
+                current.body, pitch_radians=math.radians(center_pitch),
+            ),
+        )
+
+        centered = information_look_for_missing_cells(
+            current, (missing,), {missing: "visible_air"},
+        )
+        lower = information_look_for_missing_cells(
+            current, (missing,), {missing: "visible_air"},
+            lower_region_positions=frozenset({missing}),
+        )
+
+        self.assertIsNone(centered)
+        self.assertIsNotNone(lower)
+        self.assertGreater(lower.pitch_delta_degrees, 1.0)
+
+    def test_lower_landing_evidence_uses_bounded_sneak_edge_probe(self):
+        world = _known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+            (0, -3, 1): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        current = frame(world, 0, (.5, 1.0, .5), yaw=0.0)
+        landing_body_cell = (0, -2, 1)
+
+        movement = information_probe_movement(
+            current, frozenset({landing_body_cell}),
+        )
+
+        self.assertEqual(movement, MovementV1(forward=1, sneak=True))
+        edge = frame(world, 1, (.5, 1.0, 1.15), yaw=0.0)
+        self.assertEqual(
+            information_probe_movement(
+                edge, frozenset({landing_body_cell}),
+            ),
+            MovementV1(sneak=True),
+        )
+        self.assertEqual(
+            information_probe_movement(
+                replace(current, body=replace(current.body, is_on_ground=False)),
+                frozenset({landing_body_cell}),
+            ),
+            MovementV1(),
+        )
+
+    def test_occluded_landing_evidence_uses_edge_probe_only_for_drop_admission(self):
+        world = _known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+            (0, -5, 1): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        landing_body_cell = (0, -4, 1)
+        current = replace(
+            frame(world, 0, (.5, 1.0, .5), yaw=0.0),
+            air_query_results=(
+                AirQueryResultV3(landing_body_cell, "occluded"),
+            ),
+        )
+        session = NavigationSession(
+            "occluded-drop-edge-probe", self.profiles(),
+            planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        session._state = NavigationSessionState.NEEDS_INFORMATION
+        session._reason = AdmissionReason.LANDING_VISUAL_EVIDENCE_MISSING
+        session._snapshot_missing = (landing_body_cell,)
+
+        self.assertIsNone(session._information_look(current))
+        self.assertEqual(
+            information_probe_movement(
+                current, frozenset(session._information_lower_required),
+            ),
+            MovementV1(forward=1, sneak=True),
+        )
+
+        session._reason = "no_known_route_requires_information"
+        session._information_lower_required.clear()
+        session._information_look(current)
+        self.assertEqual(session._information_lower_required, set())
+
+    def test_edge_probe_hold_keeps_sneak_while_verified_motion_is_pending(self):
+        world = _known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        current = frame(world, 0, (.5, 1.0, .5), yaw=0.0)
+        session = NavigationSession(
+            "edge-hold-session", self.profiles(),
+            planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        session._frame = current
+        session._information_edge_hold = True
+        waiting = ActionRouteDecision(
+            ActionRouteState.RUNNING, MovementV1(), None,
+            1, 0, "awaiting_verified_motion", (), 0,
+            submit_input=False,
+        )
+
+        proposal = session._proposal(
+            MovementV1(sneak=True), None, 1, 2_000_000_000,
+            route_decision=waiting,
+        )
+
+        self.assertEqual(
+            proposal.control_frame.intents[0].intent.movement,
+            MovementV1(sneak=True),
+        )
 
     def test_structurally_occluded_information_wait_is_bounded(self):
         world, unknown_gap = _known_endpoints_with_unknown_gap()

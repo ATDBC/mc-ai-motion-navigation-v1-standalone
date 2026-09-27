@@ -266,16 +266,28 @@ def _perception(
         entity_visibility_near_model=entity_visibility_near_model,
         entity_visibility_far_model=entity_visibility_far_model,
         blocks=tuple(_cached_block(b, block_cache) for b in raw_blocks),
-        air_query_results=tuple(AirQueryResultV3(
-            _grid(result["position"]),
-            _v2._string(result["status"], "air query status"),
-        ) for result in (
-            _v2._object(raw, {"position", "status"}, "air query result")
-            for raw in raw_air_results
-        )),
+        air_query_results=tuple(_air_query_result(raw) for raw in raw_air_results),
         visible_entities=tuple(_v2._visible_entity(e, i) for i, e in enumerate(raw_entities)),
         entities_truncated=_v2._boolean(item["entities_truncated"], "entities truncated"),
         truncated_entity_count=_v2._integer(item["truncated_entity_count"], "truncated entity count"))
+
+
+def _air_query_result(raw: Any) -> AirQueryResultV3:
+    if not isinstance(raw, dict):
+        raise ClientObservationPayloadError("air query result must be an object")
+    status = _v2._string(raw.get("status"), "air query status")
+    fields = (
+        {"position", "status", "observer_distance_blocks", "lower_region_visible"}
+        if status == "visible_air" else {"position", "status"}
+    )
+    value = _v2._object(raw, fields, "air query result")
+    return AirQueryResultV3(
+        _grid(value["position"]), status,
+        (_v2._number(value["observer_distance_blocks"], "visual-air observer distance")
+         if status == "visible_air" else None),
+        (_v2._boolean(value["lower_region_visible"], "visual-air lower-region evidence")
+         if status == "visible_air" else None),
+    )
 
 
 def decode_client_observation_value_v3(

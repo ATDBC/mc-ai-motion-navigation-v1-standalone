@@ -18,6 +18,7 @@ from mc2p.motion_nav.physics_types import (
     CalculationStatus, JAVA_1_21_RULESET, PhysicsState, TickInput,
 )
 from mc2p.motion_nav.segment_entry import SegmentEntryWindow
+from mc2p.motion_nav.support_surfaces import SurfaceNodeId
 from mc2p.motion_nav.world_model import Aabb, BlockPos
 
 
@@ -44,6 +45,7 @@ class GroundTraversalPlan:
     input_projection_version: str
     profile_id: str
     maximum_cross_track_blocks: float
+    surface_node_path: tuple[SurfaceNodeId, ...] = ()
 
     def __post_init__(self) -> None:
         if (type(self.route) is not FixedRoute
@@ -62,6 +64,14 @@ class GroundTraversalPlan:
             raise ContractViolation("ground traversal dependencies must be immutable")
         if type(self.estimated_ticks) is not int or self.estimated_ticks != len(self.inputs):
             raise ContractViolation("ground traversal tick estimate must match its proof")
+        if (type(self.surface_node_path) is not tuple
+                or any(type(node) is not SurfaceNodeId
+                       for node in self.surface_node_path)
+                or (self.surface_node_path
+                    and len(self.surface_node_path) != len(self.route.points))):
+            raise ContractViolation(
+                "ground traversal surface path must match its canonical route"
+            )
 
 
 @dataclass(frozen=True, slots=True)
@@ -191,12 +201,17 @@ def verify_ground_traversal(
     profile: GroundMotionProfile,
     *,
     maximum_ticks: int,
+    surface_node_path: tuple[SurfaceNodeId, ...] = (),
 ) -> GroundTraversalResult:
     if (type(entry_state) is not PhysicsState or type(route) is not FixedRoute
             or type(world) is not PhysicsWorldView
             or type(profile) is not GroundMotionProfile
             or type(maximum_ticks) is not int or maximum_ticks < 1):
         raise ContractViolation("ground traversal verification requires typed bounded inputs")
+    if (type(surface_node_path) is not tuple
+            or any(type(node) is not SurfaceNodeId for node in surface_node_path)
+            or (surface_node_path and len(surface_node_path) != len(route.points))):
+        raise ContractViolation("ground traversal surface path is invalid")
     if entry_state.session != world.session:
         raise ContractViolation("ground traversal world belongs to another session")
     if (entry_state.ruleset_id != JAVA_1_21_RULESET.ruleset_id
@@ -229,8 +244,15 @@ def verify_ground_traversal(
             GroundTraversalStatus.UNSUPPORTED,
             reasons=("ground_traversal_requires_cardinal_segments",),
         )
-    if any(abs(second.y - first.y) > entry_state.step_height_blocks + 1.0e-9
-           for first, second in zip(route.points, route.points[1:])):
+    height_changes = tuple(
+        second.y - first.y
+        for first, second in zip(route.points, route.points[1:])
+    )
+    if any(
+        delta_y > entry_state.step_height_blocks + 1.0e-9
+        or delta_y < -1.0 - 1.0e-9
+        for delta_y in height_changes
+    ):
         return GroundTraversalResult(
             GroundTraversalStatus.UNSUPPORTED,
             reasons=("support_height_change_exceeds_step_rule",),
@@ -279,6 +301,7 @@ def verify_ground_traversal(
                 tuple(sorted(dependencies)), len(inputs),
                 JAVA_1_21_RULESET.ruleset_id,
                 "mc2p.input-projection.v1", profile.profile_id, radius,
+                surface_node_path,
             )
             return GroundTraversalResult(
                 GroundTraversalStatus.VERIFIED, plan,

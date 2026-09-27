@@ -67,6 +67,26 @@ class ClientObservationPayloadV3Tests(unittest.TestCase):
         with self.assertRaises(ClientObservationPayloadError):
             self.decode(duplicate)
 
+    def test_visual_air_success_carries_distance_and_lower_region_evidence(self):
+        value = valid_payload_value()
+        value["perception"]["value"]["blocks"] = [
+            block_value(
+                (0, 63, 1), "minecraft:air", sources=("air_query",),
+            ) | {"collision": {"kind": "empty", "boxes": [], "reason": None}}
+        ]
+        value["perception"]["value"]["air_query_results"] = [{
+            "position": [0, 63, 1],
+            "status": "visible_air",
+            "observer_distance_blocks": 3.25,
+            "lower_region_visible": True,
+        }]
+
+        result = self.decode(value).perception.value.air_query_results[0]
+
+        self.assertEqual(result.status, "visible_air")
+        self.assertEqual(result.observer_distance_blocks, 3.25)
+        self.assertTrue(result.lower_region_visible)
+
     def test_bounded_block_cache_reuses_only_identical_valid_wire_facts(self):
         value = valid_payload_value()
         value["perception"]["value"]["blocks"] = [block_value()]

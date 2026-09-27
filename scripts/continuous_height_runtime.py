@@ -300,7 +300,7 @@ def run_continuous_height_runtime(
                 if result.report.failure is not None:
                     raise RuntimeError(
                         f"{trial_id} fixture observation failed: "
-                        f"{result.report.failure.reason}"
+                        f"{result.report.failure.message}"
                     )
                 frame = runtime.navigation_observation_adapter.latest_frame
                 known_supports = (

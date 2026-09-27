@@ -1,7 +1,7 @@
 """B03 fixed-route walking over the shared world and ground-motion contracts."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 import math
 import time
@@ -23,6 +23,12 @@ from mc2p.motion_nav.ground_modes import (
     observed_ground_mode,
 )
 from mc2p.motion_nav.movement_transition import MovementMode
+from mc2p.motion_nav.online_motion import ProjectionStatus, project_movement_command
+from mc2p.motion_nav.physics_1_21 import step as physics_step
+from mc2p.motion_nav.physics_adapter import PhysicsWorldView, build_physics_state
+from mc2p.motion_nav.physics_types import (
+    CalculationStatus, JAVA_1_21_RULESET, PhysicsState, StateBuildStatus,
+)
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.segment_entry import (
     SegmentEntryWindow, body_fits_segment_entry,
@@ -137,6 +143,7 @@ class FixedRouteState(StrEnum):
     INPUT_LOST = "input_lost"
     FAILED = "failed"
     UNSUPPORTED = "unsupported"
+    NEEDS_REPLAN = "needs_replan"
 
 
 @dataclass(frozen=True, slots=True)
@@ -321,6 +328,7 @@ class FixedRouteController:
         self._geometric_support_frames = 0
         self._traversal_plan: GroundTraversalPlan | None = None
         self._traversal_tick_index = 0
+        self._traversal_replan_pending = False
 
     def start(
         self, route: FixedRoute, frame: NavigationFrame, *,
@@ -339,7 +347,9 @@ class FixedRouteController:
             )
         if (traversal_plan is not None
                 and (type(traversal_plan) is not GroundTraversalPlan
-                     or traversal_plan.route.points != route.points)):
+                     or (not traversal_plan.surface_node_path
+                         and route.points[-len(traversal_plan.route.points):]
+                         != traversal_plan.route.points))):
             raise ContractViolation(
                 "fixed route traversal proof does not match the route"
             )
@@ -364,6 +374,7 @@ class FixedRouteController:
         self._geometric_support_frames = 0
         self._traversal_plan = traversal_plan
         self._traversal_tick_index = 0
+        self._traversal_replan_pending = False
         self.state = FixedRouteState.RUNNING
 
     def cancel(self) -> None:
@@ -425,43 +436,138 @@ class FixedRouteController:
             sprint=sampled.sprint,
         )
 
+    def _traversal_physics_state(
+        self, frame: NavigationFrame, provided: PhysicsState | None,
+    ) -> PhysicsState | None:
+        assert self._traversal_plan is not None
+        if provided is not None:
+            if (type(provided) is not PhysicsState
+                    or provided.session != frame.session):
+                raise ContractViolation(
+                    "ground traversal physics state belongs to another frame"
+                )
+            return provided
+        template = self._traversal_plan.trajectory[0]
+        built = build_physics_state(
+            frame, JAVA_1_21_RULESET, {
+                "jumping_cooldown_ticks": template.jumping_cooldown_ticks,
+                "movement_speed_attribute": template.movement_speed_attribute,
+                "step_height_blocks": template.step_height_blocks,
+                "gravity_attribute": template.gravity_attribute,
+                "jump_strength_attribute": template.jump_strength_attribute,
+            },
+        )
+        return built.state if built.status is StateBuildStatus.READY else None
+
+    @staticmethod
+    def _inside_traversal_corridor(
+        state: PhysicsState, corridor: tuple[Aabb, ...],
+    ) -> bool:
+        x, y, z = state.position
+        return any(
+            box.min_x <= x <= box.max_x
+            and box.min_y <= y <= box.max_y
+            and box.min_z <= z <= box.max_z
+            for box in corridor
+        )
+
+    def _verified_traversal_movement(
+        self,
+        frame: NavigationFrame,
+        state: PhysicsState,
+        target: tuple[float, float],
+        *,
+        braking: bool,
+    ) -> tuple[MovementV1 | None, tuple[BlockPos, ...], bool]:
+        """Choose one command from the current state inside the proven corridor."""
+        assert self._traversal_plan is not None
+        body = self._planar(frame)
+        rollouts = sorted(
+            (self._prepare_candidate_rollout(
+                body, movement, target, braking=braking,
+            ) for movement in _MOVEMENTS),
+            key=self._rollout_key,
+        )
+        missing: set[BlockPos] = set()
+        saw_unsupported = False
+        world = PhysicsWorldView(frame.world, JAVA_1_21_RULESET)
+        for rollout in rollouts:
+            if rollout.unsupported or rollout.cross_track_blocked:
+                continue
+            simulated = state
+            safe = True
+            commands = (
+                (rollout.movement,) * self.config.input_lease_ticks
+                + (MovementV1(),) * self.config.maximum_recovery_ticks
+            )
+            for command_index, command in enumerate(commands):
+                speed = math.hypot(
+                    simulated.velocity_blocks_per_tick[0],
+                    simulated.velocity_blocks_per_tick[2],
+                ) * 20.0
+                if (command_index >= self.config.input_lease_ticks
+                        and speed <= self.config.stopped_speed_blocks_per_second):
+                    break
+                projected = project_movement_command(simulated, command)
+                if projected.status is not ProjectionStatus.READY:
+                    saw_unsupported = True
+                    safe = False
+                    break
+                assert projected.tick_input is not None
+                calculated = physics_step(
+                    simulated, projected.tick_input, world, JAVA_1_21_RULESET,
+                )
+                if calculated.status is CalculationStatus.NEEDS_WORLD:
+                    missing.update(calculated.missing_cells)
+                    safe = False
+                    break
+                if calculated.status is not CalculationStatus.OK:
+                    saw_unsupported = (
+                        saw_unsupported
+                        or calculated.status is CalculationStatus.UNSUPPORTED
+                    )
+                    safe = False
+                    break
+                assert calculated.next_state is not None
+                simulated = calculated.next_state
+                if not self._inside_traversal_corridor(
+                        simulated, self._traversal_plan.corridor):
+                    safe = False
+                    break
+            if safe:
+                return rollout.movement, tuple(sorted(missing)), saw_unsupported
+        return None, tuple(sorted(missing)), saw_unsupported
+
     def _decide_traversal(
         self, frame: NavigationFrame, started: int,
+        physics_state: PhysicsState | None,
     ) -> FixedRouteDecision:
         assert self._traversal_plan is not None
         assert self._geometry is not None
         plan = self._traversal_plan
         if set(frame.changed_cells).intersection(plan.dependencies):
-            self.state = FixedRouteState.BLOCKED
+            if not frame.body.is_on_ground:
+                self._traversal_replan_pending = True
+                self.state = FixedRouteState.RUNNING
+                return self._decision(
+                    started, MovementV1(),
+                    "ground_traversal_dependency_changed_awaiting_landing",
+                )
+            self.state = FixedRouteState.NEEDS_REPLAN
             return self._decision(
                 started, MovementV1(), "ground_traversal_dependency_changed",
             )
-        start = max(0, self._traversal_tick_index - 1)
-        stop = min(len(plan.trajectory), self._traversal_tick_index + 4)
-        candidates = []
-        for index in range(start, stop):
-            expected = plan.trajectory[index]
-            position_error = math.dist(frame.body.position, expected.position)
-            velocity_error = math.dist(
-                frame.body.velocity_blocks_per_second,
-                tuple(value * 20.0 for value in expected.velocity_blocks_per_tick),
-            )
-            contact_penalty = 0.0 if (
-                frame.body.is_on_ground == expected.on_ground
-            ) else 0.15
-            candidates.append((
-                position_error + 0.05 * velocity_error + contact_penalty,
-                position_error, velocity_error, index,
-            ))
-        _, position_error, velocity_error, index = min(candidates)
-        if (position_error > plan.maximum_cross_track_blocks
-                or velocity_error > 2.0
-                or frame.body.pose != "standing"):
-            self.state = FixedRouteState.UNSUPPORTED
+        if self._traversal_replan_pending and frame.body.is_on_ground:
+            self.state = FixedRouteState.NEEDS_REPLAN
             return self._decision(
-                started, MovementV1(), "ground_traversal_left_verified_envelope",
+                started, MovementV1(), "ground_traversal_replan_after_landing",
             )
-        self._traversal_tick_index = max(self._traversal_tick_index, index)
+        state = self._traversal_physics_state(frame, physics_state)
+        if state is None or frame.body.pose != "standing":
+            self.state = FixedRouteState.NEEDS_REPLAN
+            return self._decision(
+                started, MovementV1(), "ground_traversal_state_unavailable",
+            )
         projection = self._geometry.project(
             frame.body.position[0], frame.body.position[2],
             self._progress, self._segment_index,
@@ -470,6 +576,30 @@ class FixedRouteController:
         self._progress = max(self._progress, projection.progress)
         self._segment_index = max(self._segment_index, projection.segment_index)
         self._cross_track = projection.distance
+        if (projection.distance > plan.maximum_cross_track_blocks
+                or not self._inside_traversal_corridor(state, plan.corridor)):
+            if frame.body.is_on_ground:
+                self.state = FixedRouteState.NEEDS_REPLAN
+                return self._decision(
+                    started, MovementV1(),
+                    "ground_traversal_left_verified_envelope",
+                )
+            self._traversal_replan_pending = True
+            self.state = FixedRouteState.RUNNING
+            return self._decision(
+                started, MovementV1(),
+                "ground_traversal_left_envelope_awaiting_landing",
+            )
+        if self._progress >= self._progress_anchor + 0.10:
+            self._progress_anchor = self._progress
+            self._no_progress_frames = 0
+        elif self._previous_movement != MovementV1():
+            self._no_progress_frames += 1
+        if self._no_progress_frames >= 20 and frame.body.is_on_ground:
+            self.state = FixedRouteState.NEEDS_REPLAN
+            return self._decision(
+                started, MovementV1(), "ground_traversal_stalled",
+            )
         speed = math.hypot(
             frame.body.velocity_blocks_per_second[0],
             frame.body.velocity_blocks_per_second[2],
@@ -484,49 +614,82 @@ class FixedRouteController:
             return self._decision(
                 started, MovementV1(), "traversal_cancel_release",
             )
-        if self._traversal_tick_index >= len(plan.inputs):
-            goal = self._geometry.goal
-            goal_distance = math.hypot(
-                frame.body.position[0] - goal.x,
-                frame.body.position[2] - goal.z,
+        goal = self._geometry.goal
+        goal_distance = math.hypot(
+            frame.body.position[0] - goal.x,
+            frame.body.position[2] - goal.z,
+        )
+        entry_matches = (
+            body_fits_segment_entry(
+                self.config.handoff_entry_window, frame.body,
+                observed_ground_mode(frame.body),
             )
-            entry_matches = (
-                body_fits_segment_entry(
-                    self.config.handoff_entry_window, frame.body,
-                    observed_ground_mode(frame.body),
-                )
-                if self.config.handoff_entry_window is not None else None
+            if self.config.handoff_entry_window is not None else None
+        )
+        completion_speed = (
+            self.config.handoff_entry_window.maximum_speed_blocks_per_second
+            if self.config.handoff_entry_window is not None
+            else self.config.handoff_speed_blocks_per_second
+            if self.config.handoff_speed_blocks_per_second is not None
+            else self.config.stopped_speed_blocks_per_second
+        )
+        route_complete = (
+            self._progress >= self._geometry.total_length
+            - self.config.endpoint_tolerance_blocks
+        )
+        at_goal = (
+            frame.body.is_on_ground and route_complete
+            and (entry_matches if entry_matches is not None else
+                 goal_distance <= max(
+                     self.config.endpoint_tolerance_blocks, 0.35,
+                 ))
+            and abs(frame.body.position[1] - goal.y) <= 0.10
+        )
+        if at_goal and speed <= completion_speed:
+            self.state = FixedRouteState.SUCCEEDED
+            self._progress = self._geometry.total_length
+            return self._decision(
+                started, MovementV1(), "verified_ground_traversal_complete",
             )
-            completion_speed = (
-                self.config.handoff_entry_window.maximum_speed_blocks_per_second
-                if self.config.handoff_entry_window is not None
-                else self.config.handoff_speed_blocks_per_second
-                if self.config.handoff_speed_blocks_per_second is not None
-                else self.config.stopped_speed_blocks_per_second
-            )
-            at_goal = (
-                frame.body.is_on_ground
-                and (entry_matches if entry_matches is not None else
-                     goal_distance <= max(
-                         self.config.endpoint_tolerance_blocks, 0.35,
-                     ))
-                and abs(frame.body.position[1] - goal.y) <= 0.10
-            )
-            if at_goal and speed <= completion_speed:
-                self.state = FixedRouteState.SUCCEEDED
-                self._progress = self._geometry.total_length
-                return self._decision(
-                    started, MovementV1(), "verified_ground_traversal_complete",
-                )
-            if at_goal:
-                self.state = FixedRouteState.BRAKING
+        body = self._planar(frame)
+        remaining = max(0.0, self._geometry.total_length - self._progress)
+        braking = (
+            at_goal
+            or (speed > completion_speed
+                and remaining <= self._release_distance(body, completion_speed)
+                + self.config.endpoint_tolerance_blocks * 0.65)
+        )
+        lookahead = min(
+            self.config.lookahead_max_blocks,
+            max(self.config.lookahead_min_blocks,
+                self.config.lookahead_min_blocks + speed * 0.18),
+        )
+        target = (
+            (goal.x, goal.z) if braking
+            else self._geometry.point_at(self._progress + lookahead)
+        )
+        movement, missing, unsupported = self._verified_traversal_movement(
+            frame, state, target, braking=braking,
+        )
+        if movement is None:
+            if missing:
+                self.state = FixedRouteState.NEEDS_INFORMATION
                 return self._decision(
                     started, MovementV1(),
-                    "verified_ground_traversal_release",
+                    "ground_traversal_requires_information", missing,
                 )
-            self.state = FixedRouteState.UNSUPPORTED
+            if not frame.body.is_on_ground:
+                self._traversal_replan_pending = True
+                self.state = FixedRouteState.RUNNING
+                return self._decision(
+                    started, MovementV1(),
+                    "ground_traversal_no_candidate_awaiting_landing",
+                )
+            self.state = FixedRouteState.NEEDS_REPLAN
             return self._decision(
-                started, MovementV1(), "ground_traversal_terminal_mismatch",
+                started, MovementV1(),
+                ("ground_traversal_model_unsupported"
+                 if unsupported else "ground_traversal_no_safe_candidate"),
             )
         self.state = (
             FixedRouteState.CANCELLING
@@ -534,11 +697,13 @@ class FixedRouteController:
         )
         return self._decision(
             started,
-            self._traversal_movement(frame, self._traversal_tick_index),
-            "tracking_verified_ground_traversal",
+            movement,
+            ("braking_verified_ground_traversal"
+             if braking else "tracking_verified_ground_traversal"),
         )
 
-    def decide(self, frame: NavigationFrame, *, input_confirmed: bool = True) -> FixedRouteDecision:
+    def decide(self, frame: NavigationFrame, *, input_confirmed: bool = True,
+               physics_state: PhysicsState | None = None) -> FixedRouteDecision:
         started = time.perf_counter_ns()
         if type(frame) is not NavigationFrame or type(input_confirmed) is not bool:
             raise ContractViolation("fixed route decision requires a navigation frame and confirmation")
@@ -559,7 +724,7 @@ class FixedRouteController:
             self.state = FixedRouteState.INPUT_LOST
             return self._decision(started, MovementV1(), "input_application_unconfirmed")
         if self._traversal_plan is not None:
-            return self._decide_traversal(frame, started)
+            return self._decide_traversal(frame, started, physics_state)
         query_cache = WorldQueryCache(frame.world)
         route_level = self._geometry.points[0].y
         current_support = query_support(

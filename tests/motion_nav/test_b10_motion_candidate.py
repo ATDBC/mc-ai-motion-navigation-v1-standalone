@@ -14,6 +14,7 @@ from mc2p.motion_nav.online_motion import InputApplicationLedger
 from mc2p.motion_nav.motion_candidate import (
     MotionCandidateAdmitter, MotionCandidateContext, MotionCandidateStatus,
     VerifiedMotionCandidate, VerifiedMotionExecutor, VerifiedMotionExecutorState,
+    _state_satisfies_verified_exit,
 )
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.motion_solver import SolveResult, SolveStatus, solve_one_cell_gap
@@ -169,6 +170,48 @@ class MotionCandidateAdmissionTests(unittest.TestCase):
 
 
 class VerifiedMotionExecutorTests(unittest.TestCase):
+    def test_verified_exit_accepts_any_safe_point_in_the_proved_landing_region(self):
+        _, candidate = solved_candidate()
+        proof = candidate.proof
+        variant = proof.start_variant(proof.execution_window.earliest_start_tick)
+        self.assertIsNotNone(variant)
+        expected = variant.exit_state
+        inside = replace(
+            expected,
+            position=(
+                proof.landing.min_x + .02,
+                proof.landing.surface_y,
+                proof.landing.min_z + .02,
+            ),
+            velocity_blocks_per_tick=(
+                0.0, expected.velocity_blocks_per_tick[1], 0.0,
+            ),
+        )
+        outside = replace(
+            inside,
+            position=(
+                proof.landing.min_x - .02,
+                proof.landing.surface_y,
+                proof.landing.min_z + .02,
+            ),
+        )
+        moving_too_fast = replace(
+            inside,
+            velocity_blocks_per_tick=(
+                .3, expected.velocity_blocks_per_tick[1], 0.0,
+            ),
+        )
+
+        self.assertTrue(_state_satisfies_verified_exit(
+            inside, proof, variant,
+        ))
+        self.assertFalse(_state_satisfies_verified_exit(
+            outside, proof, variant,
+        ))
+        self.assertFalse(_state_satisfies_verified_exit(
+            moving_too_fast, proof, variant,
+        ))
+
     def admitted(self):
         anchor, candidate = solved_candidate()
         admitted = MotionCandidateAdmitter().admit(
@@ -238,7 +281,7 @@ class VerifiedMotionExecutorTests(unittest.TestCase):
         self.assertEqual(second.command_index, 1)
         self.assertEqual(second.movement, candidate.proof.commands[1].movement)
 
-    def test_late_application_is_not_treated_as_verified_progress(self):
+    def test_late_application_recovers_until_a_later_stable_ground_frame(self):
         anchor, candidate = self.admitted()
         executor = VerifiedMotionExecutor()
         executor.start(candidate)
@@ -250,8 +293,36 @@ class VerifiedMotionExecutorTests(unittest.TestCase):
 
         decision = executor.decide(anchor, ledger)
 
-        self.assertIs(decision.state, VerifiedMotionExecutorState.INPUT_LOST)
-        self.assertEqual(decision.reason, "input_applied_outside_window")
+        self.assertIs(decision.state, VerifiedMotionExecutorState.RECOVERING)
+        self.assertEqual(decision.reason, "retain_landing_after_input_loss")
+        moving_ground = replace(
+            anchor,
+            observation_sequence_id=anchor.observation_sequence_id + 1,
+            movement_tick_id=anchor.movement_tick_id + 1,
+            physics_state=replace(
+                anchor.physics_state,
+                movement_tick_id=anchor.movement_tick_id + 1,
+                velocity_blocks_per_tick=(.05, 0.0, 0.0),
+            ),
+        )
+        retaining = executor.decide(moving_ground, ledger)
+        self.assertIs(
+            retaining.state, VerifiedMotionExecutorState.RECOVERING,
+        )
+        settled = replace(
+            moving_ground,
+            observation_sequence_id=moving_ground.observation_sequence_id + 1,
+            movement_tick_id=moving_ground.movement_tick_id + 1,
+            physics_state=replace(
+                moving_ground.physics_state,
+                movement_tick_id=moving_ground.movement_tick_id + 1,
+                velocity_blocks_per_tick=(0.0, 0.0, 0.0),
+            ),
+        )
+        terminal = executor.decide(settled, ledger)
+        self.assertIs(
+            terminal.state, VerifiedMotionExecutorState.INPUT_LOST,
+        )
 
     def test_first_command_rebases_to_actual_tick_within_start_window(self):
         anchor, candidate = self.admitted()
@@ -594,7 +665,17 @@ class VerifiedMotionExecutorTests(unittest.TestCase):
         self.assertEqual(decision.state, VerifiedMotionExecutorState.RECOVERING)
         self.assertEqual(decision.movement, MovementV1())
         self.assertEqual(decision.reason, "world_dependency_changed_retain_landing")
-        landed = replace(airborne, physics_state=replace(airborne.physics_state, on_ground=True))
+        landed = replace(
+            airborne,
+            observation_sequence_id=airborne.observation_sequence_id + 1,
+            movement_tick_id=airborne.movement_tick_id + 1,
+            physics_state=replace(
+                airborne.physics_state,
+                movement_tick_id=airborne.movement_tick_id + 1,
+                velocity_blocks_per_tick=(0.0, 0.0, 0.0),
+                on_ground=True,
+            ),
+        )
         terminal = executor.decide(landed, ledger)
         self.assertEqual(terminal.state, VerifiedMotionExecutorState.FAILED)
         self.assertEqual(decision.movement, MovementV1())

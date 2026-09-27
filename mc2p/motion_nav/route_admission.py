@@ -14,6 +14,7 @@ from mc2p.motion_nav.action_route import (
 )
 from mc2p.motion_nav.fixed_route import FixedRoute, RoutePoint
 from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
+from mc2p.motion_nav.ground_modes import observed_ground_mode
 from mc2p.motion_nav.jump_up import JumpUpEdge
 from mc2p.motion_nav.movement_transition import compose_movement_transitions
 from mc2p.motion_nav.movement_transition import GoalState, ResourceState
@@ -28,6 +29,7 @@ from mc2p.motion_nav.motion_solver import (
     revalidate_air_transition,
 )
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
+from mc2p.motion_nav.motion_risk import MOVEMENT_DAMAGE_BUDGET_RESOURCE
 from mc2p.motion_nav.online_motion import CandidateExecutionWindow, StateAnchor
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView
 from mc2p.motion_nav.known_map_planner import (
@@ -38,8 +40,10 @@ from mc2p.motion_nav.known_map_planner import (
 from mc2p.motion_nav.step_transition import StepEdge
 from mc2p.motion_nav.support_surfaces import SurfaceNodeId
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
-from mc2p.motion_nav.segment_entry import SegmentEntryWindow
-from mc2p.motion_nav.world_model import BlockPos
+from mc2p.motion_nav.segment_entry import (
+    SegmentEntryWindow, body_fits_segment_entry,
+)
+from mc2p.motion_nav.world_model import BlockPos, CellKnowledge
 
 
 class AdmissionStatus(StrEnum):
@@ -61,6 +65,7 @@ class AdmissionReason(StrEnum):
     ROUTE_ENTRY_RESOURCES_UNAVAILABLE = "route_entry_resources_unavailable"
     ROUTE_RESOURCES_UNAVAILABLE = "route_resources_unavailable"
     GROUND_TRAVERSAL_PROOF_MISSING = "ground_traversal_proof_missing"
+    LANDING_VISUAL_EVIDENCE_MISSING = "landing_visual_evidence_missing"
     CANDIDATE_ADMITTED = "candidate_admitted"
 
 
@@ -98,11 +103,77 @@ class AdmissionResult:
     status: AdmissionStatus
     reason: AdmissionReason
     route: ActiveRoute | None = None
+    missing_cells: tuple[BlockPos, ...] = ()
 
     def __post_init__(self) -> None:
         if type(self.status) is not AdmissionStatus \
                 or type(self.reason) is not AdmissionReason:
             raise ContractViolation("route admission result must be typed")
+        if (type(self.missing_cells) is not tuple
+                or self.missing_cells != tuple(sorted(set(self.missing_cells)))):
+            raise ContractViolation("route admission missing cells must be sorted and unique")
+
+
+DIRECT_DROP_EVIDENCE_DISTANCE_BLOCKS = 4.5
+DIRECT_DROP_EVIDENCE_MAX_AGE_TICKS = 5
+DIRECT_DROP_EDGE_PROBE_HORIZONTAL_BLOCKS = .35
+
+
+def direct_drop_visual_evidence_sufficient(
+    frame: NavigationFrame,
+    landing_cell: BlockPos,
+) -> bool:
+    """Accept either exposed lower volume or a fresh sneak observation at the edge."""
+    fact = frame.world.cell(landing_cell)
+    evidence = fact.visual_air_evidence
+    if fact.knowledge is not CellKnowledge.AIR or evidence is None:
+        return False
+    age = frame.body.stamp.sequence_id - evidence.stamp.sequence_id
+    if age < 0 or age > DIRECT_DROP_EVIDENCE_MAX_AGE_TICKS:
+        return False
+    lower_volume_seen = (
+        evidence.lower_region_visible
+        and evidence.observer_distance_blocks
+            <= DIRECT_DROP_EVIDENCE_DISTANCE_BLOCKS + 1.0e-9
+    )
+    horizontal = math.hypot(
+        landing_cell[0] + .5 - frame.body.position[0],
+        landing_cell[2] + .5 - frame.body.position[2],
+    )
+    fresh_edge_probe = (
+        frame.body.is_on_ground
+        and frame.body.is_sneaking
+        and horizontal <= DIRECT_DROP_EDGE_PROBE_HORIZONTAL_BLOCKS + 1.0e-9
+    )
+    return lower_volume_seen or fresh_edge_probe
+
+
+def _direct_drop_missing_visual_evidence(
+    candidate: SurfaceRouteCandidate,
+    frame: NavigationFrame,
+) -> tuple[BlockPos, ...]:
+    nodes = {node.node_id: node for node in candidate.path}
+    missing = set()
+    for edge in candidate.segments:
+        if type(edge) is not SurfaceControlledDropEdge:
+            continue
+        start = nodes[edge.start]
+        end = nodes[edge.end]
+        if start.position[1] - end.position[1] <= 1.0 + 1.0e-6:
+            continue
+        landing_cell = (
+            edge.end.column_x,
+            math.floor(end.position[1]),
+            edge.end.column_z,
+        )
+        fact = frame.world.cell(landing_cell)
+        # A partial support can share its voxel with the player's lower body.
+        # Its explicit collision and fluid facts replace visual-air evidence.
+        if fact.knowledge is CellKnowledge.BLOCK:
+            continue
+        if not direct_drop_visual_evidence_sufficient(frame, landing_cell):
+            missing.add(landing_cell)
+    return tuple(sorted(missing))
 
 
 class CorridorStatus(StrEnum):
@@ -516,7 +587,8 @@ class RouteAdmitter:
                 )
                 traversal_plan = next((
                     plan for plan in candidate.ground_traversal_plans
-                    if plan.route.points == fixed_route.points
+                    if plan.surface_node_path
+                    == tuple(node.node_id for node in pending_nodes)
                 ), None)
                 actions.append(WalkSegment(
                     fixed_route,
@@ -614,6 +686,15 @@ class RouteAdmitter:
             return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.WORLD_DELTA_MISSING)
         if set(candidate.dependencies).intersection(changed_cells):
             return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.ROUTE_DEPENDENCIES_CHANGED)
+        missing_landing_evidence = _direct_drop_missing_visual_evidence(
+            candidate, frame,
+        )
+        if missing_landing_evidence:
+            return AdmissionResult(
+                AdmissionStatus.REJECTED,
+                AdmissionReason.LANDING_VISUAL_EVIDENCE_MISSING,
+                missing_cells=missing_landing_evidence,
+            )
         resource_names = {
             name for name, _ in candidate.initial_resources.values
         } | {
@@ -626,6 +707,11 @@ class RouteAdmitter:
         }
         observed_values = []
         for name in sorted(resource_names):
+            if name == MOVEMENT_DAMAGE_BUDGET_RESOURCE:
+                observed_values.append((
+                    name, candidate.initial_resources.as_dict()[name],
+                ))
+                continue
             if name != "food_points":
                 return AdmissionResult(
                     AdmissionStatus.REJECTED, AdmissionReason.ROUTE_RESOURCE_UNOBSERVABLE,
@@ -652,9 +738,22 @@ class RouteAdmitter:
                     AdmissionStatus.REJECTED, AdmissionReason.ROUTE_RESOURCES_UNAVAILABLE,
                 )
             resources = updated
-        connected, connection_length, connection_dependencies = self._connection(
-            candidate, frame,
+        first_edge = candidate.segments[0] if candidate.segments else None
+        body_mode = observed_ground_mode(frame.body)
+        starts_at_first_action = (
+            type(first_edge) is SurfaceControlledDropEdge
+            and first_edge.entry_window is not None
+            and body_mode is not None
+            and body_fits_segment_entry(
+                first_edge.entry_window, frame.body, body_mode,
+            )
         )
+        if starts_at_first_action:
+            connected, connection_length, connection_dependencies = True, 0.0, ()
+        else:
+            connected, connection_length, connection_dependencies = self._connection(
+                candidate, frame,
+            )
         if not connected:
             return AdmissionResult(AdmissionStatus.REJECTED,
                                    AdmissionReason.CURRENT_BODY_CANNOT_CONNECT)

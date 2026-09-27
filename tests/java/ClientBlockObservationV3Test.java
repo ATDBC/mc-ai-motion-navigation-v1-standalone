@@ -64,6 +64,46 @@ public class ClientBlockObservationV3Test {
         rejected(() -> ClientObservationRequestV3.decode(new byte[16385]));
         rejected(() -> new ClientObservationRequestV3(null));
 
+        var validateSurface = ClientBlockObservationV3.class.getDeclaredMethod(
+            "validateSurfaceFrame", List.class,
+            ClientBlockObservationV3.SurfaceFrame.class);
+        validateSurface.setAccessible(true);
+        var visibleCandidate = new BlockPos(4,64,4);
+        invokeSurfaceValidation(validateSurface,List.of(visibleCandidate),
+            new ClientBlockObservationV3.SurfaceFrame(
+                List.of(visibleCandidate),List.of(),List.of()));
+        var emptyCandidate = new BlockPos(5,64,4);
+        var visualResult = new ClientBlockObservationV3.AirResult(
+            emptyCandidate,ClientBlockObservationV3.AirStatus.VISIBLE,2.0,true);
+        invokeSurfaceValidation(validateSurface,List.of(emptyCandidate),
+            new ClientBlockObservationV3.SurfaceFrame(
+                List.of(),List.of(emptyCandidate),List.of(visualResult)));
+        rejected(() -> invokeSurfaceValidation(validateSurface,List.of(visibleCandidate),
+            new ClientBlockObservationV3.SurfaceFrame(
+                List.of(visibleCandidate),List.of(visibleCandidate),List.of(
+                    new ClientBlockObservationV3.AirResult(
+                        visibleCandidate,ClientBlockObservationV3.AirStatus.VISIBLE,1.0,true)))));
+
+        var unresolvedAirResults = ClientBlockObservationV3.class.getDeclaredMethod(
+            "unresolvedAirResults", ClientBlockObservationV3.SurfaceFrame.class, Map.class);
+        unresolvedAirResults.setAccessible(true);
+        var contactResolved = new BlockPos(6,64,4);
+        var unresolved = new BlockPos(7,64,4);
+        var contactFrame = new ClientBlockObservationV3.SurfaceFrame(
+            List.of(),List.of(unresolved),List.of(
+                new ClientBlockObservationV3.AirResult(
+                    contactResolved,ClientBlockObservationV3.AirStatus.OCCLUDED),
+                new ClientBlockObservationV3.AirResult(
+                    unresolved,ClientBlockObservationV3.AirStatus.VISIBLE,3.0,true)));
+        var contactTable = new HashMap<BlockPos,EnumSet<ClientBlockObservationV3.Source>>();
+        ClientBlockObservationV3.authorize(
+            contactTable,contactResolved,ClientBlockObservationV3.Source.BODY_CONTACT);
+        @SuppressWarnings("unchecked")
+        var filtered = (List<ClientBlockObservationV3.AirResult>)unresolvedAirResults.invoke(
+            null,contactFrame,contactTable);
+        require(filtered.equals(List.of(contactFrame.airResults().get(1))),
+            "contact-resolved cell retained a conflicting air-query result");
+
         var table = new HashMap<BlockPos, EnumSet<ClientBlockObservationV3.Source>>();
         var p = new BlockPos(0, 63, 0);
         for (int i=0; i<318; i++) ClientBlockObservationV3.authorize(table, p, ClientBlockObservationV3.Source.SURFACE_DEPTH);
@@ -183,6 +223,16 @@ public class ClientBlockObservationV3Test {
         result.add("missing_frame",verifyMissingClient(nav,interaction));
         Files.write(Path.of(args[0]),ClientObservationJson.encode(result));
         System.out.println("CLIENT_BLOCK_OBSERVATION_V3_OK");
+    }
+    private static void invokeSurfaceValidation(
+            java.lang.reflect.Method method, List<BlockPos> requested,
+            ClientBlockObservationV3.SurfaceFrame frame) {
+        try { method.invoke(null,requested,frame); }
+        catch (java.lang.reflect.InvocationTargetException error) {
+            if (error.getCause() instanceof RuntimeException runtime) throw runtime;
+            throw new RuntimeException(error.getCause());
+        }
+        catch (ReflectiveOperationException error) { throw new RuntimeException(error); }
     }
     private static JsonObject verifyMissingClient(ClientObservationRequestV3 nav, ClientObservationRequestV3 interaction) throws Exception {
         rejected(() -> ClientObservationCollector.collectV3(null,0,nav));

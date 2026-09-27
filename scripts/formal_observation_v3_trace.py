@@ -64,6 +64,14 @@ def _restore(raw: dict, *, require_surface: bool):
                     ]
                     for box in block["collision"]["boxes"]
                 ]
+            # Dataclass trace projection keeps optional fields as explicit
+            # nulls.  The client wire contract omits them for non-success
+            # query results, so restore that wire shape before strict decode.
+            for result in payload["perception"]["value"].get(
+                    "air_query_results", []):
+                if result.get("status") != "visible_air":
+                    result.pop("observer_distance_blocks", None)
+                    result.pop("lower_region_visible", None)
             for entity in payload["perception"]["value"]["visible_entities"]:
                 entity["equipment"] = [
                     {"slot": slot, "item": item}

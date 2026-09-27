@@ -72,11 +72,40 @@ class ObservationStamp:
         require_nonnegative_int(self.received_monotonic_ns, "receipt time")
 
     @property
+    def causal_order(self) -> tuple[int, int]:
+        """Order facts inside one world session by controller observation order.
+
+        Minecraft world time can move backward after sleep, server correction or
+        an administrator command.  The observation sequence remains monotonic
+        for the lifetime of the world session, so it must lead this ordering.
+        """
+        return self.sequence_id, self.world_tick
+
+    @property
     def world_order(self) -> tuple[int, int]:
-        return self.world_tick, self.sequence_id
+        """Compatibility name for the causal observation order."""
+        return self.causal_order
 
     def elapsed_seconds(self, earlier: ObservationStamp) -> float:
         return elapsed_seconds(self, earlier)
+
+
+@dataclass(frozen=True, slots=True)
+class VisualAirEvidence:
+    """What part of one visually empty cell was actually exposed."""
+
+    stamp: ObservationStamp
+    observer_distance_blocks: float
+    lower_region_visible: bool
+
+    def __post_init__(self) -> None:
+        if type(self.stamp) is not ObservationStamp:
+            raise ContractViolation("visual-air evidence requires an observation stamp")
+        _finite(self.observer_distance_blocks, "visual-air observer distance")
+        if self.observer_distance_blocks < 0:
+            raise ContractViolation("visual-air observer distance must be nonnegative")
+        if type(self.lower_region_visible) is not bool:
+            raise ContractViolation("visual-air lower-region evidence must be explicit")
 
 
 def elapsed_seconds(later: ObservationStamp, earlier: ObservationStamp) -> float:
@@ -182,12 +211,14 @@ class CellFact:
     knowledge: CellKnowledge
     stamp: ObservationStamp | None = None
     block: BlockGeometry | None = None
+    visual_air_evidence: VisualAirEvidence | None = None
 
     def __post_init__(self) -> None:
         if type(self.knowledge) is not CellKnowledge:
             raise ContractViolation("invalid cell knowledge")
         if self.knowledge is CellKnowledge.UNKNOWN:
-            if self.stamp is not None or self.block is not None:
+            if (self.stamp is not None or self.block is not None
+                    or self.visual_air_evidence is not None):
                 raise ContractViolation("unknown cell cannot carry a fact")
         elif type(self.stamp) is not ObservationStamp:
             raise ContractViolation("known cell requires an observation stamp")
@@ -195,6 +226,12 @@ class CellFact:
             raise ContractViolation("known air cannot carry block geometry")
         elif self.knowledge is CellKnowledge.BLOCK and type(self.block) is not BlockGeometry:
             raise ContractViolation("known block requires block geometry")
+        if (self.visual_air_evidence is not None
+                and self.knowledge is not CellKnowledge.AIR):
+            raise ContractViolation("only known air can carry visual evidence")
+        if (self.visual_air_evidence is not None
+                and self.visual_air_evidence.stamp.session != self.stamp.session):
+            raise ContractViolation("visual-air evidence belongs to another session")
 
 
 UNKNOWN_CELL = CellFact(CellKnowledge.UNKNOWN)
@@ -487,16 +524,36 @@ class WorldKnowledge:
 
     def confirm_air(
         self, stamp: ObservationStamp, positions: tuple[BlockPos, ...],
+        visual_evidence: Mapping[BlockPos, VisualAirEvidence] | None = None,
     ) -> WorldUpdateResult:
         self._stamp(stamp)
         if type(positions) is not tuple:
             raise ContractViolation("confirmed air must be an immutable position tuple")
+        if visual_evidence is None:
+            visual_evidence = {}
+        if not isinstance(visual_evidence, Mapping):
+            raise ContractViolation("visual-air evidence must be a mapping")
+        for position, evidence in visual_evidence.items():
+            _position(position)
+            if (position not in positions
+                    or type(evidence) is not VisualAirEvidence
+                    or evidence.stamp.session != self.session):
+                raise ContractViolation("visual-air evidence does not match confirmed air")
         results = []
         evicted: set[BlockPos] = set()
         for position in sorted(set(positions)):
             _position(position)
+            evidence = visual_evidence.get(position)
+            if evidence is None:
+                existing = self._cell(position)
+                if (existing.knowledge is CellKnowledge.AIR
+                        and existing.visual_air_evidence is not None):
+                    evidence = existing.visual_air_evidence
             outcome, removed = self._apply(
-                position, CellFact(CellKnowledge.AIR, stamp),
+                position, CellFact(
+                    CellKnowledge.AIR, stamp,
+                    visual_air_evidence=evidence,
+                ),
             )
             results.append((position, outcome))
             evicted.update(removed)
@@ -539,20 +596,20 @@ class WorldKnowledge:
             existing = self._cell(position)
         invalidated = self._invalidated_at.get(position)
         if invalidated is not None:
-            if incoming.stamp.world_order <= invalidated.world_order:
+            if incoming.stamp.causal_order <= invalidated.causal_order:
                 return "unchanged", ()
             del self._invalidated_at[position]
         if existing is UNKNOWN_CELL:
             existing = None
         if existing is not None:
             assert existing.stamp is not None
-            if incoming.stamp.world_order < existing.stamp.world_order:
+            if incoming.stamp.causal_order < existing.stamp.causal_order:
                 return "unchanged", ()
-            if (incoming.stamp.world_order == existing.stamp.world_order
+            if (incoming.stamp.causal_order == existing.stamp.causal_order
                     and existing.knowledge is CellKnowledge.BLOCK
                     and incoming.knowledge is CellKnowledge.AIR):
                 return "unchanged", ()
-            if incoming.stamp.world_order == existing.stamp.world_order and existing == incoming:
+            if incoming.stamp.causal_order == existing.stamp.causal_order and existing == incoming:
                 return "unchanged", ()
         evicted: tuple[BlockPos, ...] = ()
         if existing is None and self._known_cell_count >= self._max_known_cells:
@@ -570,8 +627,8 @@ class WorldKnowledge:
         if existing is None:
             self._known_cell_count += 1
         previous_order = self._section_last_order.get(section_position)
-        if previous_order is None or incoming.stamp.world_order > previous_order:
-            self._section_last_order[section_position] = incoming.stamp.world_order
+        if previous_order is None or incoming.stamp.causal_order > previous_order:
+            self._section_last_order[section_position] = incoming.stamp.causal_order
         self._evidence_revision += 1
         self._section_evidence_revisions[section_position] = self._evidence_revision
         if semantic_changed:
@@ -628,19 +685,19 @@ class WorldKnowledge:
         for position in sorted(set(positions)):
             _position(position)
             tombstone = self._invalidated_at.get(position)
-            if tombstone is not None and tombstone.world_order >= stamp.world_order:
+            if tombstone is not None and tombstone.causal_order >= stamp.causal_order:
                 continue
             existing = self._cell(position)
             if existing is UNKNOWN_CELL:
                 existing = None
             if (existing is not None and existing.stamp is not None
-                    and existing.stamp.world_order > stamp.world_order):
+                    and existing.stamp.causal_order > stamp.causal_order):
                 continue
             self._invalidated_at[position] = stamp
             section_position = block_section(position)
             previous_order = self._section_last_order.get(section_position)
-            if previous_order is None or stamp.world_order > previous_order:
-                self._section_last_order[section_position] = stamp.world_order
+            if previous_order is None or stamp.causal_order > previous_order:
+                self._section_last_order[section_position] = stamp.causal_order
             if existing is not None:
                 section = self._sections[section_position]
                 del section[position]
@@ -662,7 +719,7 @@ class WorldKnowledge:
                 self._invalidated_at,
                 key=lambda position: (
                     self._section_is_protected(block_section(position)),
-                    self._invalidated_at[position].world_order,
+                    self._invalidated_at[position].causal_order,
                     position,
                 ),
             )

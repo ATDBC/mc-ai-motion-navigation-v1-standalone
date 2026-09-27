@@ -156,6 +156,21 @@ class WorldKnowledgeTests(unittest.TestCase):
         with self.assertRaises(ContractViolation):
             world.confirm_air(stamp(WorldSessionId("world-b"), 3, 3), ((0, 2, 0),))
 
+    def test_fact_order_uses_sequence_when_world_time_moves_backward(self):
+        session = WorldSessionId("world-a")
+        world = WorldKnowledge(session)
+        position = (0, 0, 0)
+        world.observe_blocks(stamp(session, 1, 200), {
+            position: BlockGeometry.full_cube("minecraft:stone"),
+        })
+
+        world.confirm_air(stamp(session, 2, 190), (position,))
+        world.observe_blocks(stamp(session, 1, 210), {
+            position: BlockGeometry.full_cube("minecraft:stone"),
+        })
+
+        self.assertIs(world.view().cell(position).knowledge, CellKnowledge.AIR)
+
     def test_air_confirmation_is_batched_positive_only_and_cached(self):
         session = WorldSessionId("world-a")
         world = WorldKnowledge(session)
@@ -173,7 +188,7 @@ class WorldKnowledgeTests(unittest.TestCase):
         second = service.ensure_air(requested, stamp(session, 4, 3))
         self.assertEqual(len(probe.calls), 1)
         self.assertEqual(second.cached_air, ((0, 1, 0),))
-        service.ensure_air(requested, stamp(session, 5, 7))
+        service.ensure_air(requested, stamp(session, 7, 5))
         self.assertEqual(probe.calls[-1], ((1, 1, 0),))
 
     def test_large_air_volume_uses_one_probe_call_and_world_change_invalidates_it(self):

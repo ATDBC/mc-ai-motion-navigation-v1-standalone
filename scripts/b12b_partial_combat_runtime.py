@@ -701,7 +701,7 @@ def _refresh_target(
         )
         if result.report.failure is not None:
             raise RuntimeError(
-                "B12-B target observation failed: " + result.report.failure.reason
+                "B12-B target observation failed: " + result.report.failure.message
             )
         zombies = _visible_zombies(runtime)
         own = runtime.observation.self_state.value
@@ -771,7 +771,7 @@ def _scan_flat_ground(
             if settled.report.failure is not None:
                 raise RuntimeError(
                     "B12-B scan pose wait failed: "
-                    + settled.report.failure.reason
+                    + settled.report.failure.message
                 )
             own = runtime.observation.self_state.value
             if (own is not None and own.is_on_ground
@@ -809,7 +809,7 @@ def _scan_flat_ground(
         )
         if result.report.failure is not None:
             raise RuntimeError(
-                "B12-B ground scan failed: " + result.report.failure.reason
+                "B12-B ground scan failed: " + result.report.failure.message
             )
     fixture_writer((
         f"tp MC2PProbe {start['x']} {start['y']} {start['z']} 0 0",
@@ -1466,7 +1466,7 @@ def _run_hidden_without_engagement_boundary(
         if result.report.failure is not None:
             raise RuntimeError(
                 "B12-B hidden-target observation failed: "
-                + result.report.failure.reason
+                + result.report.failure.message
             )
         tracked = runtime.observation.tracked_entity.value
         if not any(item.track_id == entity.track_id

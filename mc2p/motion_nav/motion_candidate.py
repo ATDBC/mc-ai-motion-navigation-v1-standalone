@@ -23,6 +23,7 @@ from mc2p.motion_nav.world_model import BlockPos
 _ENTRY_POSITION_TOLERANCE = 0.05
 _ENTRY_VELOCITY_TOLERANCE_PER_TICK = 0.01
 _ENTRY_YAW_TOLERANCE_RADIANS = math.radians(1.0)
+_RECOVERY_GROUND_SPEED_TOLERANCE_PER_TICK = 0.01
 
 
 @dataclass(frozen=True, slots=True)
@@ -138,6 +139,46 @@ def _state_fits_entry(actual: PhysicsState, expected: PhysicsState) -> bool:
         return False
     return _angle_error(actual.yaw_radians, expected.yaw_radians) \
         <= _ENTRY_YAW_TOLERANCE_RADIANS
+
+
+def _state_satisfies_verified_exit(
+        actual: PhysicsState,
+        proof: VerifiedMotionResult,
+        variant: VerifiedMotionStartVariant,
+) -> bool:
+    """Check the proved landing envelope instead of one simulated point.
+
+    The calculator proves a safe landing region and an exit-speed bound.  The
+    game may settle at another point inside that region, especially after a
+    sneak-edge release.  Requiring the exact simulated position would reject a
+    safe, observed landing even though the proof's real postcondition holds.
+    """
+    expected = variant.exit_state
+    if (actual.session != expected.session
+            or actual.ruleset_id != expected.ruleset_id
+            or actual.state_schema != expected.state_schema
+            or actual.pose != expected.pose
+            or not actual.on_ground
+            or actual.swimming != expected.swimming
+            or actual.climbing != expected.climbing
+            or actual.fall_flying != expected.fall_flying
+            or actual.flying != expected.flying
+            or actual.is_using_item != expected.is_using_item
+            or not proof.landing.contains(actual, epsilon=1.0e-6)):
+        return False
+    horizontal_speed = math.hypot(
+        actual.velocity_blocks_per_tick[0],
+        actual.velocity_blocks_per_tick[2],
+    )
+    maximum_speed = (
+        _RECOVERY_GROUND_SPEED_TOLERANCE_PER_TICK
+        if proof.exit_direction is None else .22
+    )
+    return (
+        horizontal_speed <= maximum_speed + 1.0e-9
+        and _angle_error(actual.yaw_radians, expected.yaw_radians)
+            <= _ENTRY_YAW_TOLERANCE_RADIANS
+    )
 
 
 class MotionCandidateAdmitter:
@@ -280,7 +321,7 @@ class VerifiedMotionExecutor:
         self._command_index = 0
         self._pending: _PendingSubmission | None = None
         self._cancel_requested = False
-        self._cancel_requested_at_tick: int | None = None
+        self._recovery_started_at_tick: int | None = None
         self._recovery_uses_verified_remainder = False
         self._terminal_after_recovery = VerifiedMotionExecutorState.INPUT_LOST
         self._coast_checked_through_tick: int | None = None
@@ -303,7 +344,7 @@ class VerifiedMotionExecutor:
         self._command_index = 0
         self._pending = None
         self._cancel_requested = False
-        self._cancel_requested_at_tick = None
+        self._recovery_started_at_tick = None
         self._recovery_uses_verified_remainder = False
         self._terminal_after_recovery = VerifiedMotionExecutorState.INPUT_LOST
         self._coast_checked_through_tick = None
@@ -355,7 +396,7 @@ class VerifiedMotionExecutor:
         if self.state is not VerifiedMotionExecutorState.RUNNING:
             return
         self._cancel_requested = True
-        self._cancel_requested_at_tick = anchor.movement_tick_id
+        self._recovery_started_at_tick = anchor.movement_tick_id
         self.state = VerifiedMotionExecutorState.RECOVERING
         self._recovery_uses_verified_remainder = (
             self._pending is not None or not anchor.physics_state.on_ground
@@ -483,6 +524,7 @@ class VerifiedMotionExecutor:
                 MovementV1(), None, "verified_command_window_expired",
             )
         self.state = VerifiedMotionExecutorState.RECOVERING
+        self._recovery_started_at_tick = anchor.movement_tick_id
         return self._decision(
             MovementV1(), None,
             "verified_command_window_expired_retain_landing",
@@ -541,7 +583,7 @@ class VerifiedMotionExecutor:
             # The changed dependency supersedes an earlier cancellation.
             # Landing now terminates as a failed proof, so it must not wait
             # for the cancellation's next-observation gate.
-            self._cancel_requested_at_tick = None
+            self._recovery_started_at_tick = None
             if anchor.physics_state.on_ground:
                 self.state = VerifiedMotionExecutorState.FAILED
                 return self._decision(
@@ -556,12 +598,21 @@ class VerifiedMotionExecutor:
                 "world_dependency_changed_retain_landing",
             )
         if self.state is VerifiedMotionExecutorState.RECOVERING:
-            cancel_observation_advanced = (
-                self._cancel_requested_at_tick is None
-                or anchor.movement_tick_id > self._cancel_requested_at_tick
+            recovery_observation_advanced = (
+                self._recovery_started_at_tick is None
+                or anchor.movement_tick_id > self._recovery_started_at_tick
             )
-            if (anchor.physics_state.on_ground and self._pending is None
-                    and cancel_observation_advanced):
+            horizontal_speed = math.hypot(
+                anchor.physics_state.velocity_blocks_per_tick[0],
+                anchor.physics_state.velocity_blocks_per_tick[2],
+            )
+            stable_ground = (
+                anchor.physics_state.on_ground
+                and horizontal_speed
+                    <= _RECOVERY_GROUND_SPEED_TOLERANCE_PER_TICK
+            )
+            if (stable_ground and self._pending is None
+                    and recovery_observation_advanced):
                 self.state = self._terminal_after_recovery
                 return self._decision(MovementV1(), None, self.state.value)
             if self._recovery_uses_verified_remainder:
@@ -589,8 +640,8 @@ class VerifiedMotionExecutor:
                         "complete_verified_landing_after_cancel",
                         submittable_as_verified_command=True,
                     )
-            if anchor.physics_state.on_ground:
-                if not cancel_observation_advanced:
+            if stable_ground:
+                if not recovery_observation_advanced:
                     return self._decision(
                         MovementV1(), None, "awaiting_cancel_observation",
                     )
@@ -604,11 +655,11 @@ class VerifiedMotionExecutor:
             return self._decision(MovementV1(), None, "world_session_changed")
         pending = self._consume_pending(ledger)
         if pending is not None:
-            if (self.state is VerifiedMotionExecutorState.INPUT_LOST
-                    and not anchor.physics_state.on_ground):
+            if self.state is VerifiedMotionExecutorState.INPUT_LOST:
                 self.state = VerifiedMotionExecutorState.RECOVERING
                 self._recovery_uses_verified_remainder = False
                 self._terminal_after_recovery = VerifiedMotionExecutorState.INPUT_LOST
+                self._recovery_started_at_tick = anchor.movement_tick_id
                 self._pending = None
                 return self._decision(
                     MovementV1(), None, "retain_landing_after_input_loss",
@@ -672,8 +723,8 @@ class VerifiedMotionExecutor:
                     MovementV1(), None, "coast_to_verified_landing",
                 )
             assert self._start_variant is not None
-            if not _state_fits_entry(
-                    anchor.physics_state, self._start_variant.exit_state):
+            if not _state_satisfies_verified_exit(
+                    anchor.physics_state, proof, self._start_variant):
                 self.state = VerifiedMotionExecutorState.FAILED
                 return self._decision(MovementV1(), None, "verified_exit_not_observed")
             self.state = VerifiedMotionExecutorState.COMPLETE

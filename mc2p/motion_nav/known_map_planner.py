@@ -32,7 +32,8 @@ from mc2p.motion_nav.world_model import (
     WORLD_SECTION_SIZE, WorldView,
 )
 from mc2p.motion_nav.motion_risk import (
-    TaskDamageBudget, conservative_plain_fall_damage_points,
+    MOVEMENT_DAMAGE_BUDGET_RESOURCE, TaskDamageBudget,
+    conservative_plain_fall_damage_points,
 )
 from mc2p.motion_nav.step_transition import StepEdge, StepProfile, query_step
 from mc2p.motion_nav.segment_entry import SegmentEntryWindow
@@ -1085,6 +1086,7 @@ class SurfaceControlledDropEdge:
     end: SurfaceNodeId
     air_edge: ControlledDropEdge
     entry_window: SegmentEntryWindow
+    predicted_damage_points: float = 0.0
 
     def __post_init__(self) -> None:
         if type(self.start) is not SurfaceNodeId or type(self.end) is not SurfaceNodeId:
@@ -1093,6 +1095,12 @@ class SurfaceControlledDropEdge:
             raise ContractViolation("surface controlled drop requires a calibrated edge")
         if type(self.entry_window) is not SegmentEntryWindow:
             raise ContractViolation("surface controlled drop requires its calibrated entry")
+        if (type(self.predicted_damage_points) not in (int, float)
+                or not math.isfinite(float(self.predicted_damage_points))
+                or self.predicted_damage_points < 0):
+            raise ContractViolation(
+                "surface controlled drop damage must be finite and nonnegative"
+            )
 
     @property
     def cost_seconds(self) -> float:
@@ -1108,7 +1116,13 @@ class SurfaceControlledDropEdge:
 
     @property
     def resource_change(self) -> ResourceChange:
-        return self.air_edge.resource_change
+        values = dict(self.air_edge.resource_change.deltas)
+        if self.predicted_damage_points > 0:
+            values[MOVEMENT_DAMAGE_BUDGET_RESOURCE] = (
+                values.get(MOVEMENT_DAMAGE_BUDGET_RESOURCE, 0.0)
+                - float(self.predicted_damage_points)
+            )
+        return ResourceChange(tuple(sorted(values.items())))
 
 
 SurfaceEdge = (
@@ -1256,6 +1270,25 @@ class SurfacePlanningRequest:
             raise ContractViolation("surface planning initial resources are below the minimum")
         if type(self.damage_budget) is not TaskDamageBudget:
             raise ContractViolation("surface planning damage budget must be typed")
+        reserved = MOVEMENT_DAMAGE_BUDGET_RESOURCE
+        initial_values = tuple(
+            item for item in self.initial_resources.values if item[0] != reserved
+        )
+        minimum_values = tuple(
+            item for item in self.minimum_resources.values if item[0] != reserved
+        )
+        if self.damage_budget.maximum_expected_damage_points > 0:
+            object.__setattr__(self, "initial_resources", ResourceState(tuple(sorted((
+                *initial_values,
+                (reserved, self.damage_budget.maximum_expected_damage_points),
+            )))))
+            object.__setattr__(self, "minimum_resources", ResourceState(tuple(sorted((
+                *minimum_values,
+                (reserved, 0.0),
+            )))))
+        else:
+            object.__setattr__(self, "initial_resources", ResourceState(initial_values))
+            object.__setattr__(self, "minimum_resources", ResourceState(minimum_values))
         if (self.entry_physics_state is not None
                 and type(self.entry_physics_state) is not PhysicsState):
             raise ContractViolation("surface planning entry state must be typed")
@@ -1719,28 +1752,10 @@ class _SurfaceExpander:
                     )
                     found.append(SurfaceControlledDropEdge(
                         start.node_id, end.node_id, air_edge,
-                        _action_entry_window(
-                            start, end, profile_id=profile.profile_id,
-                            minimum_speed=(
-                                profile.minimum_entry_speed_blocks_per_second
-                            ),
-                            maximum_speed=(
-                                profile.maximum_entry_speed_blocks_per_second
-                            ),
-                            center_tolerance=profile.entry_center_tolerance_blocks,
-                            maximum_forward_offset=(
-                                profile.maximum_forward_offset_blocks
-                            ),
-                            maximum_backward_offset=(
-                                profile.maximum_backward_offset_blocks
-                            ),
-                            maximum_lateral_offset=(
-                                profile.maximum_lateral_offset_blocks
-                            ),
-                            maximum_yaw_error_degrees=(
-                                profile.maximum_yaw_error_degrees
-                            ),
+                        _controlled_drop_entry_window(
+                            start, end, profile=profile,
                         ),
+                        predicted_damage,
                     ))
         if (abs(delta_y) <= 1.0e-6
                 and MovementMode.JUMP_GAP in self.air_by_mode):
@@ -1986,6 +2001,36 @@ def _action_entry_window(
         required_yaw_radians=math.atan2(-direction[0], direction[1]),
         maximum_yaw_error_radians=math.radians(maximum_yaw_error_degrees),
         profile_id=profile_id,
+    )
+
+
+def _controlled_drop_entry_window(
+        start: SurfaceNode, end: SurfaceNode, *, profile: AirMotionProfile,
+) -> SegmentEntryWindow:
+    """Allow both the normal centre entry and a verified sneak-edge entry.
+
+    A lower landing may only become visually confirmable after the player has
+    sneaked to the supporting block's edge.  The actual stance is still sent
+    through the motion solver, so this extra entry does not authorize an
+    unverified fall.
+    """
+    normal = _action_entry_window(
+        start, end, profile_id=profile.profile_id,
+        minimum_speed=profile.minimum_entry_speed_blocks_per_second,
+        maximum_speed=profile.maximum_entry_speed_blocks_per_second,
+        center_tolerance=profile.entry_center_tolerance_blocks,
+        maximum_forward_offset=profile.maximum_forward_offset_blocks,
+        maximum_backward_offset=profile.maximum_backward_offset_blocks,
+        maximum_lateral_offset=profile.maximum_lateral_offset_blocks,
+        maximum_yaw_error_degrees=profile.maximum_yaw_error_degrees,
+    )
+    return replace(
+        normal,
+        maximum_longitudinal_offset_blocks=max(
+            normal.maximum_longitudinal_offset_blocks, .80,
+        ),
+        allowed_poses=frozenset({"standing", "crouching"}),
+        allowed_modes=frozenset({MovementMode.WALK, MovementMode.CROUCH}),
     )
 
 
@@ -2283,63 +2328,212 @@ def plan_known_surface_snapshot(
             edge_cost=_surface_edge_cost_ticks,
         )
 
-    search = run_search()
-    traversal_plans: tuple[GroundTraversalPlan, ...] = ()
-    proof_edges = tuple(
-        edge for edge in search.segments
-        if (type(edge) is SurfaceWalkEdge
-            and edge.requires_ground_traversal_proof)
-    )
-    if proof_edges:
-        can_verify_one_ground_run = (
-            request.entry_physics_state is not None
-            and request.entry_physics_state.session == snapshot.world.session
-            and all(type(edge) is SurfaceWalkEdge for edge in search.segments)
-        )
-        verified = None
-        if can_verify_one_ground_run:
-            points = tuple(
-                RoutePoint(*expander.nodes[state.node_id].position)
-                for state in search.path
-            )
-            route = FixedRoute(
-                f"{request.request_id}-ground-traversal", points,
-            )
-            dependencies = tuple(sorted({
-                cell for edge in search.segments for cell in edge.dependencies
-            }))
-            key = _ground_traversal_cache_key(
-                snapshot, ground_profile, request.entry_physics_state,
-                route, dependencies,
-            )
-            verified = _GROUND_TRAVERSAL_PROOF_CACHE.get(key)
-            if verified is None:
-                verified = verify_ground_traversal(
-                    request.entry_physics_state, route,
-                    PhysicsWorldView(snapshot.world, JAVA_1_21_RULESET),
-                    ground_profile, maximum_ticks=200,
+    disabled_continuous_descent_walk_edges: set[
+        tuple[SurfaceNodeId, SurfaceNodeId]
+    ] = set()
+
+    def continuous_descent_walk(value: _SearchResult) -> _SearchResult:
+        """Promote the first continuous stair descent to one proved Walk run.
+
+        A lone ledge remains a ControlledDrop.  Two or more consecutive
+        one-block descents in the same direction model Minecraft's normal
+        keep-moving stair descent and are executable only after the 1.21
+        calculator proves the whole run from the concrete entry state.
+        """
+        if not value.path or value.cost_seconds is None:
+            return value
+        index = 0
+        while (index < len(value.segments)
+               and type(value.segments[index]) is SurfaceWalkEdge):
+            index += 1
+        first = index
+        direction = None
+        while index < len(value.segments):
+            edge = value.segments[index]
+            if type(edge) is not SurfaceControlledDropEdge:
+                break
+            start_node = expander.nodes[edge.start]
+            end_node = expander.nodes[edge.end]
+            dx = edge.end.column_x - edge.start.column_x
+            dz = edge.end.column_z - edge.start.column_z
+            step_direction = (dx, dz)
+            if (
+                abs(dx) + abs(dz) != 1
+                or not math.isclose(
+                    start_node.position[1] - end_node.position[1],
+                    1.0,
+                    abs_tol=1.0e-6,
                 )
-                _GROUND_TRAVERSAL_PROOF_CACHE.put(key, verified)
-        if (verified is not None
-                and verified.status is GroundTraversalStatus.VERIFIED):
-            assert verified.plan is not None
-            formal_ticks = verified.plan.estimated_ticks
-            disabled = {
-                (edge.start, edge.end) for edge in proof_edges
-            }
-            expander.disabled_ground_walk_edges.update(disabled)
-            alternative = run_search()
-            if (alternative.path and alternative.cost_seconds is not None
-                    and int(alternative.cost_seconds) < formal_ticks):
-                search = alternative
-            else:
-                search = replace(search, cost_seconds=float(formal_ticks))
-                traversal_plans = (verified.plan,)
-        else:
-            expander.disabled_ground_walk_edges.update(
-                (edge.start, edge.end) for edge in proof_edges
+                or edge.predicted_damage_points > 1.0e-9
+                or (edge.start, edge.end)
+                    in disabled_continuous_descent_walk_edges
+                or (direction is not None and step_direction != direction)
+            ):
+                break
+            direction = step_direction
+            index += 1
+        if index - first < 2:
+            return value
+
+        converted = list(value.segments)
+        old_ticks = 0
+        new_ticks = 0
+        cost_seconds = (
+            1.0 / ground_profile.maximum_speed_blocks_per_second
+        )
+        for edge_index in range(first, index):
+            edge = value.segments[edge_index]
+            assert type(edge) is SurfaceControlledDropEdge
+            old_ticks += _surface_edge_cost_ticks(edge)
+            walk = SurfaceWalkEdge(
+                edge.start,
+                edge.end,
+                cost_seconds,
+                edge.dependencies,
+                _walk_transition(
+                    ground_profile,
+                    cost_seconds,
+                    edge.dependencies,
+                    mode_profile=ground_mode_profile,
+                ),
+                True,
             )
-            search = run_search()
+            converted[edge_index] = walk
+            new_ticks += _surface_edge_cost_ticks(walk)
+        return replace(
+            value,
+            segments=tuple(converted),
+            cost_seconds=float(int(value.cost_seconds) - old_ticks + new_ticks),
+        )
+
+    search = continuous_descent_walk(run_search())
+    traversal_plans: tuple[GroundTraversalPlan, ...] = ()
+
+    def proof_runs(value: _SearchResult) -> tuple[tuple[int, int], ...]:
+        """Return maximal Walk runs that contain at least one proof edge."""
+        runs = []
+        start_index = 0
+        while start_index < len(value.segments):
+            if type(value.segments[start_index]) is not SurfaceWalkEdge:
+                start_index += 1
+                continue
+            end_index = start_index
+            while (end_index + 1 < len(value.segments)
+                   and type(value.segments[end_index + 1]) is SurfaceWalkEdge):
+                end_index += 1
+            if any(
+                value.segments[index].requires_ground_traversal_proof
+                for index in range(start_index, end_index + 1)
+            ):
+                runs.append((start_index, end_index))
+            start_index = end_index + 1
+        return tuple(runs)
+
+    # Only the first continuous ground run has the request's concrete entry
+    # state.  Later runs need an exit state from the preceding action; until
+    # that proof chain exists, remove their proof-only edges and search again.
+    # Recheck every replacement route instead of assuming one fallback is safe.
+    for _ in range(16):
+        runs = proof_runs(search)
+        if not runs or not search.path:
+            break
+        later = tuple(run for run in runs if run[0] != 0)
+        if later:
+            for first, last in later:
+                expander.disabled_ground_walk_edges.update(
+                    (search.segments[index].start, search.segments[index].end)
+                    for index in range(first, last + 1)
+                    if search.segments[index].requires_ground_traversal_proof
+                )
+            search = continuous_descent_walk(run_search())
+            continue
+        if (request.entry_physics_state is None
+                or request.entry_physics_state.session != snapshot.world.session):
+            first, last = runs[0]
+            disabled_continuous_descent_walk_edges.update(
+                (edge.start, edge.end)
+                for edge in search.segments[first:last + 1]
+                if (
+                    type(edge) is SurfaceWalkEdge
+                    and abs(
+                        expander.nodes[edge.start].position[1]
+                        - expander.nodes[edge.end].position[1]
+                    ) > .6 + 1.0e-9
+                )
+            )
+            expander.disabled_ground_walk_edges.update(
+                (search.segments[index].start, search.segments[index].end)
+                for index in range(first, last + 1)
+                if search.segments[index].requires_ground_traversal_proof
+            )
+            search = continuous_descent_walk(run_search())
+            continue
+
+        first, last = runs[0]
+        states = search.path[first:last + 2]
+        node_path = tuple(state.node_id for state in states)
+        route = FixedRoute(
+            f"{request.request_id}-ground-traversal-{first}",
+            tuple(RoutePoint(*expander.nodes[node].position) for node in node_path),
+        )
+        run_edges = search.segments[first:last + 1]
+        dependencies = tuple(sorted({
+            cell for edge in run_edges for cell in edge.dependencies
+        }))
+        key = _ground_traversal_cache_key(
+            snapshot, ground_profile, request.entry_physics_state,
+            route, dependencies,
+        )
+        verified = _GROUND_TRAVERSAL_PROOF_CACHE.get(key)
+        if verified is None:
+            verified = verify_ground_traversal(
+                request.entry_physics_state, route,
+                PhysicsWorldView(snapshot.world, JAVA_1_21_RULESET),
+                ground_profile, maximum_ticks=200,
+                surface_node_path=node_path,
+            )
+            _GROUND_TRAVERSAL_PROOF_CACHE.put(key, verified)
+        disabled = {
+            (edge.start, edge.end) for edge in run_edges
+            if edge.requires_ground_traversal_proof
+        }
+        if verified.status is not GroundTraversalStatus.VERIFIED:
+            disabled_continuous_descent_walk_edges.update(
+                (edge.start, edge.end)
+                for edge in run_edges
+                if (
+                    type(edge) is SurfaceWalkEdge
+                    and abs(
+                        expander.nodes[edge.start].position[1]
+                        - expander.nodes[edge.end].position[1]
+                    ) > .6 + 1.0e-9
+                )
+            )
+            expander.disabled_ground_walk_edges.update(disabled)
+            search = continuous_descent_walk(run_search())
+            continue
+
+        assert verified.plan is not None
+        estimated_run_ticks = sum(
+            _surface_edge_cost_ticks(edge) for edge in run_edges
+        )
+        formal_total = (
+            int(search.cost_seconds)
+            - estimated_run_ticks
+            + verified.plan.estimated_ticks
+        )
+        expander.disabled_ground_walk_edges.update(disabled)
+        alternative = run_search()
+        if (alternative.path and alternative.cost_seconds is not None
+                and int(alternative.cost_seconds) < formal_total):
+            search = alternative
+            continue
+        expander.disabled_ground_walk_edges.difference_update(disabled)
+        search = replace(search, cost_seconds=float(formal_total))
+        traversal_plans = (verified.plan,)
+        break
+    else:
+        search = replace(search, path=(), segments=(), cost_seconds=None)
     graph = discovered_graph()
     if search.timed_out:
         return _surface_candidate(

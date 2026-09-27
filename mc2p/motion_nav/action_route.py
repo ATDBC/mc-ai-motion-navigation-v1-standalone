@@ -38,8 +38,13 @@ class WalkSegment:
             raise ContractViolation("walk segment transition must be typed")
         if (self.traversal_plan is not None
                 and (type(self.traversal_plan) is not GroundTraversalPlan
-                     or self.traversal_plan.route.points
-                     != self.fixed_route.points)):
+                     or (self.traversal_plan.surface_node_path
+                         and self.traversal_plan.surface_node_path
+                         != self.node_ids)
+                     or (not self.traversal_plan.surface_node_path
+                         and self.fixed_route.points[
+                             -len(self.traversal_plan.route.points):
+                         ] != self.traversal_plan.route.points))):
             raise ContractViolation("walk segment traversal proof must match its route")
 
 

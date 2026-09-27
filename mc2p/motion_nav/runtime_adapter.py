@@ -198,11 +198,11 @@ class NavigationObservationAdapter:
             controller_clock_id=snapshot.controller_clock_id,
             received_monotonic_ns=snapshot.received_at_monotonic_ns,
         )
-        if self._latest_order is not None and stamp.world_order == self._latest_order:
+        if self._latest_order is not None and stamp.causal_order == self._latest_order:
             if self._latest_frame is None:
                 raise ContractViolation("navigation adapter lost its latest frame")
             return self._latest_frame
-        if self._latest_order is not None and stamp.world_order < self._latest_order:
+        if self._latest_order is not None and stamp.causal_order < self._latest_order:
             raise ContractViolation("navigation observation order moved backward")
         changed_cells: tuple[BlockPos, ...] = ()
         air_query_results: tuple[AirQueryResultV3, ...] = ()
@@ -212,10 +212,11 @@ class NavigationObservationAdapter:
             air_query_results = snapshot.perception.value.air_query_results
             changed_cells = apply_observed_blocks(
                 self._world, stamp, blocks, self._shared_geometries,
+                air_query_results,
             )
             for block in blocks:
                 self._air_last_attempt.pop(block.position, None)
-        self._latest_order = stamp.world_order
+        self._latest_order = stamp.causal_order
         body = _body(snapshot, session, stamp)
         self._world.set_protection_center(body.position)
         frame = NavigationFrame(

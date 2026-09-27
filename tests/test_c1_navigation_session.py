@@ -291,6 +291,26 @@ class C1NavigationSessionTests(unittest.TestCase):
         self.assertIsNone(driver.source)
         self.assertEqual(self.runtime.ordered_source_stats["active_sources"], 0)
 
+    def test_stop_reanchors_session_to_latest_runtime_observation_before_cancel(self):
+        session = FakeNavigationSession()
+        driver = RuntimeNavigationDriver(
+            self.runtime, session, clock_ns=lambda: self.clock[0],
+        )
+        from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, MovementMode
+        from mc2p.motion_nav.world_model import Aabb
+        goal = GoalState(
+            Aabb(0, 64, 1, 1, 64.2, 2), GoalSupport.SOLID,
+            frozenset({MovementMode.WALK}), frozenset({"standing"}), .6,
+        )
+        driver.start("combat-goal", 1, goal, self.clock[0])
+        driver.tick(BehaviorProfileV0(), self.clock[0] + 500_000_000)
+        latest_sequence = self.runtime.observation.sequence_id
+        self.assertNotEqual(session.frames[-1], latest_sequence)
+
+        driver.stop(BehaviorProfileV0(), "cancelled")
+
+        self.assertEqual(session.frames[-1], latest_sequence)
+
     def test_formal_c1_modules_do_not_import_legacy_navigation(self):
         root = Path(__file__).resolve().parents[1]
         names = (

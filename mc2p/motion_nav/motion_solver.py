@@ -625,15 +625,23 @@ def _entry_check(anchor: StateAnchor, world: PhysicsWorldView,
     if state.is_using_item:
         return SolveResult(SolveStatus.UNSUPPORTED,
                            reasons=("item_slowdown_not_supported",))
-    if (state.pose != "standing" or state.swimming or state.climbing
+    kind = (MotionSolveKind.JUMP_GAP if type(request) is GapSolveRequest
+            else request.kind)
+    supported_pose = (
+        state.pose == "standing"
+        or (
+            kind is MotionSolveKind.CONTROLLED_DROP
+            and state.pose == "crouching"
+            and state.sneaking
+        )
+    )
+    if (not supported_pose or state.swimming or state.climbing
             or state.fall_flying or state.flying):
         return SolveResult(SolveStatus.UNSUPPORTED,
                            reasons=("entry_movement_mode",))
     if not state.on_ground or state.jumping_cooldown_ticks != 0:
         return SolveResult(SolveStatus.NEEDS_STATE,
                            reasons=("grounded_jump_ready",))
-    kind = (MotionSolveKind.JUMP_GAP if type(request) is GapSolveRequest
-            else request.kind)
     if kind in {MotionSolveKind.JUMP_GAP, MotionSolveKind.JUMP_UP} \
             and state.food_points < 7:
         return SolveResult(SolveStatus.NEEDS_STATE,
