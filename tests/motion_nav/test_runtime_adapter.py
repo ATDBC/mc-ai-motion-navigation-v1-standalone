@@ -129,6 +129,22 @@ class B02RuntimeAdapterTests(unittest.TestCase):
         request, _ = adapter.air_request((position,))
         self.assertEqual(request.air_positions, (position,))
 
+    def test_known_route_dependencies_can_be_rechecked_without_reopening_all_known_cells(self):
+        adapter = NavigationObservationAdapter()
+        position = (0, 63, 0)
+        adapter.ingest(valid_snapshot_v3(
+            blocks=(ObservedBlockV3(
+                position, "minecraft:stone", CollisionShapeV3("full_cube"),
+                None, ("surface_depth",),
+            ),),
+        ))
+
+        ordinary, _ = adapter.air_request((position,))
+        recheck, _ = adapter.air_request((position,), include_known=True)
+
+        self.assertEqual(ordinary.air_positions, ())
+        self.assertEqual(recheck.air_positions, (position,))
+
     def test_frame_reports_only_cells_whose_navigation_geometry_changed(self):
         position=(4,64,0)
         air=ObservedBlockV3(position,"minecraft:air",CollisionShapeV3("empty"),

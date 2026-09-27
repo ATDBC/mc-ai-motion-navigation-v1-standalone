@@ -144,13 +144,20 @@ def run_step_transition_runtime(
     fixture_writer(clear, "minecraft:air")
     fixture_writer((slab,), "minecraft:smooth_stone_slab[type=bottom]")
     air_request = ObservationRequestV3("navigation_v1", volume)
+    # This gate only establishes the two body volumes used by the immediate
+    # up/down trials. Requiring every cell in the larger planning volume to be
+    # known from one pose would turn legal occlusion into a fixture failure.
+    initial_clear = (
+        (x, feet_y, z), (x, feet_y + 1, z),
+        (x, feet_y + 1, z + 1), (x, feet_y + 2, z + 1),
+    )
 
     for _ in range(10):
-        look_at(0.0, 65.0, air_request)
+        look_at(0.0, 45.0, air_request)
         if (frame.world.cell(floor).knowledge is CellKnowledge.BLOCK
                 and frame.world.cell(slab).knowledge is CellKnowledge.BLOCK
                 and all(frame.world.cell(position).knowledge is CellKnowledge.AIR
-                        for position in clear)):
+                        for position in initial_clear)):
             break
     else:
         raise RuntimeError("B07 step fixture was not legally observed")

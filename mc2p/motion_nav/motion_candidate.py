@@ -476,20 +476,25 @@ class VerifiedMotionExecutor:
         self,
         anchor: StateAnchor,
         ledger: InputApplicationLedger,
-    ) -> bool:
+    ) -> str | None:
         if self._coast_checked_through_tick is None:
-            return False
+            return None
         first_tick = self._coast_checked_through_tick + 1
         if first_tick > anchor.movement_tick_id:
-            return False
-        samples = ledger.samples_between(first_tick, anchor.movement_tick_id)
+            return None
+        samples = tuple(
+            ledger.sample(tick)
+            for tick in range(first_tick, anchor.movement_tick_id + 1)
+        )
+        if any(sample is None for sample in samples):
+            return "missing"
         self._coast_checked_through_tick = anchor.movement_tick_id
-        return any(
+        return "changed" if any(
             abs(float(sample.forward)) > 1.0e-9
             or abs(float(sample.strafe)) > 1.0e-9
             or sample.jump or sample.sneak or sample.sprint
-            for sample in samples
-        )
+            for sample in samples if sample is not None
+        ) else None
 
     def decide(self, anchor: StateAnchor,
                ledger: InputApplicationLedger, *,
@@ -596,7 +601,8 @@ class VerifiedMotionExecutor:
             self._coast_checked_through_tick = self._expected_tick() - 1
             self._command_index = len(proof.commands)
         if self._command_index >= len(proof.commands):
-            if self._coast_input_changed(anchor, ledger):
+            coast_input = self._coast_input_changed(anchor, ledger)
+            if coast_input is not None:
                 self._pending = None
                 self.state = VerifiedMotionExecutorState.RECOVERING
                 self._recovery_uses_verified_remainder = False
@@ -605,7 +611,9 @@ class VerifiedMotionExecutor:
                 )
                 return self._decision(
                     MovementV1(), None,
-                    "coast_input_not_neutral_retain_landing",
+                    ("coast_input_unobserved_retain_landing"
+                     if coast_input == "missing"
+                     else "coast_input_not_neutral_retain_landing"),
                 )
             # The neutral suffix includes both free fall and the on-ground
             # settling frames used by the solver to define its exit state.

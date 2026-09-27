@@ -23,7 +23,8 @@ public final class SurfaceWorldSource implements TileGeometryStore.Source {
   String id=old!=null&&old.token==state?old.id:Registries.BLOCK.getId(state.getBlock()).toString();
   String fluidId=fluid.isEmpty()?null:Registries.FLUID.getId(fluid.getFluid()).toString();
   var visibility=SurfaceVisibilityRules.classify(
-      id,state.getRenderType()==BlockRenderType.INVISIBLE,parts.isEmpty(),fluidId);
+      id,state.getRenderType()==BlockRenderType.INVISIBLE,parts.isEmpty(),
+      state.isOpaqueFullCube(client.world,cursor),fluidId);
   if(!visibility.included())return null;
   boolean same=old!=null&&old.token==state&&old.boxes.length==parts.size()*6;int j=0;
   if(same)for(Box b:parts){if(old.boxes[j++]!=x+b.minX||old.boxes[j++]!=y+b.minY||old.boxes[j++]!=z+b.minZ||old.boxes[j++]!=x+b.maxX||old.boxes[j++]!=y+b.maxY||old.boxes[j++]!=z+b.maxZ){same=false;break;}}

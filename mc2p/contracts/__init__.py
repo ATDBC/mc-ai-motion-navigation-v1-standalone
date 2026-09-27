@@ -41,7 +41,7 @@ from mc2p.contracts.report import (
 )
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.contracts.observation_v3 import (
-    AabbV3, CollisionShapeV3, DamageEventV3, ObservedBlockV3, ObservationSnapshotV3,
+    AabbV3, AirQueryResultV3, CollisionShapeV3, DamageEventV3, ObservedBlockV3, ObservationSnapshotV3,
     PerceptionStateV3, TargetingStateV3,
 )
 from mc2p.contracts.reset import ResetRequestV0, ResetResultV0
@@ -73,6 +73,7 @@ __all__ = [
     "ObservationRequestV3",
     "ObservationSnapshotV3",
     "AabbV3",
+    "AirQueryResultV3",
     "CollisionShapeV3",
     "DamageEventV3",
     "ObservedBlockV3",

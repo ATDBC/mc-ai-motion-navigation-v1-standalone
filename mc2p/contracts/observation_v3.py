@@ -25,6 +25,7 @@ MAX_BLOCKS_V3 = 25000 + 512 + 512 + 1
 # evidence. Formal backends and navigation evidence reject it before use.
 _SOURCES = ("air_query", "body_contact", "current_target", "first_hit_ray", "surface_depth")
 _FACES = ("down", "up", "north", "south", "west", "east")
+_AIR_QUERY_STATUSES = ("outside_view", "occluded", "unavailable")
 
 
 def _finite(value: float, name: str) -> None:
@@ -53,6 +54,17 @@ class AabbV3:
             _finite(n, "collision coordinate")
         if not (self.min_x < self.max_x and self.min_y < self.max_y and self.min_z < self.max_z):
             raise ContractViolation("collision box must have positive volume")
+
+
+@dataclass(frozen=True, slots=True)
+class AirQueryResultV3:
+    position: tuple[int, int, int]
+    status: str
+
+    def __post_init__(self) -> None:
+        _grid(self.position)
+        if type(self.status) is not str or self.status not in _AIR_QUERY_STATUSES:
+            raise ContractViolation("invalid visual-air query status")
 
 
 def _box_key(box: AabbV3) -> tuple[float, ...]:
@@ -238,6 +250,7 @@ class PerceptionStateV3:
     visible_entities: tuple[VisibleEntityV2, ...]
     entities_truncated: bool
     truncated_entity_count: int
+    air_query_results: tuple[AirQueryResultV3, ...] = ()
     # New V3 values default to the formal surface-depth profile. Revision 3 is
     # accepted only so frozen historical traces can still be decoded.
     sensor_profile_revision: int = 4
@@ -284,6 +297,16 @@ class PerceptionStateV3:
                               ("air_query", 512), ("body_contact", 512), ("current_target", 1)):
             if sum(source in b.sources for b in self.blocks) > limit:
                 raise ContractViolation("block source budget exceeded")
+        if (type(self.air_query_results) is not tuple
+                or len(self.air_query_results) > 512
+                or any(type(result) is not AirQueryResultV3
+                       for result in self.air_query_results)):
+            raise ContractViolation("invalid visual-air query results")
+        result_positions = tuple(result.position for result in self.air_query_results)
+        if result_positions != tuple(sorted(set(result_positions))):
+            raise ContractViolation("visual-air query results must be sorted and unique")
+        if set(result_positions) & set(positions):
+            raise ContractViolation("resolved block cannot also be an air query failure")
         if (type(self.visible_entities) is not tuple or len(self.visible_entities) > 64
                 or any(type(e) is not VisibleEntityV2 for e in self.visible_entities)):
             raise ContractViolation("invalid or excessive visible entities")

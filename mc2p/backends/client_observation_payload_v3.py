@@ -16,7 +16,7 @@ from mc2p.contracts.observation_v2 import (
     ClientSampleTimingV2, GuiStateV2, InventoryStateV2, ObservationGroupV2, SelfStateV2,
 )
 from mc2p.contracts.observation_v3 import (
-    MAX_BLOCKS_V3, AabbV3, CollisionShapeV3, DamageEventV3,
+    MAX_BLOCKS_V3, AabbV3, AirQueryResultV3, CollisionShapeV3, DamageEventV3,
     ObservedBlockV3, ObservationSnapshotV3,
     PerceptionStateV3, TargetingStateV3, TrackedEntityStateV3, validate_v3_groups,
 )
@@ -152,10 +152,16 @@ def _cached_block(
     except (TypeError, ValueError):
         return _block(value)
     if cached is not None:
+        # Plain dictionaries preserve insertion order. Reinsert a hit so the
+        # bounded cache behaves as LRU without imposing a special cache type
+        # on transport callers.
+        cache.pop(key)
+        cache[key] = cached
         return cached
     decoded = _block(value)
-    if len(cache) < MAX_CACHED_BLOCK_FACTS_V3:
-        cache[key] = decoded
+    if len(cache) >= MAX_CACHED_BLOCK_FACTS_V3:
+        cache.pop(next(iter(cache)))
+    cache[key] = decoded
     return decoded
 
 
@@ -223,7 +229,7 @@ def _perception(
         "entity_occlusion_epsilon_blocks", "blocks", "visible_entities", "entities_truncated",
         "truncated_entity_count", "sensor_profile_revision", "knowledge_model"}
     optional = {"visibility_rules_id", "entity_visibility_near_model",
-        "entity_visibility_far_model"}
+        "entity_visibility_far_model", "air_query_results"}
     if not isinstance(value, dict):
         item = _v2._object(value, keys, "perception")
     else:
@@ -244,6 +250,7 @@ def _perception(
         if "entity_visibility_far_model" in item else "legacy_five_point_raycast_0_32"
     )
     raw_blocks = _v2._array(item["blocks"], "blocks")
+    raw_air_results = _v2._array(item.get("air_query_results", []), "air query results")
     raw_entities = _v2._array(item["visible_entities"], "visible entities")
     if len(raw_blocks) > MAX_BLOCKS_V3 or len(raw_entities) > 64:
         raise ClientObservationPayloadError("observation collection budget exceeded")
@@ -259,6 +266,13 @@ def _perception(
         entity_visibility_near_model=entity_visibility_near_model,
         entity_visibility_far_model=entity_visibility_far_model,
         blocks=tuple(_cached_block(b, block_cache) for b in raw_blocks),
+        air_query_results=tuple(AirQueryResultV3(
+            _grid(result["position"]),
+            _v2._string(result["status"], "air query status"),
+        ) for result in (
+            _v2._object(raw, {"position", "status"}, "air query result")
+            for raw in raw_air_results
+        )),
         visible_entities=tuple(_v2._visible_entity(e, i) for i, e in enumerate(raw_entities)),
         entities_truncated=_v2._boolean(item["entities_truncated"], "entities truncated"),
         truncated_entity_count=_v2._integer(item["truncated_entity_count"], "truncated entity count"))

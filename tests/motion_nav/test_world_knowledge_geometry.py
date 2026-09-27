@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 
 from mc2p.contracts.common import ContractViolation
-from mc2p.contracts.observation_v3 import CollisionShapeV3, ObservedBlockV3
+from mc2p.contracts.observation_v3 import AabbV3, CollisionShapeV3, ObservedBlockV3
 from mc2p.motion_nav.legacy.air_confirmation import (
     AirConfirmationBatch, AirConfirmationService,
 )
@@ -211,6 +211,30 @@ class WorldKnowledgeTests(unittest.TestCase):
         self.assertIs(fact.knowledge, CellKnowledge.BLOCK)
         self.assertEqual(fact.block.material_key, "minecraft:stone")
         self.assertEqual(fact.block.collision_kind, "full_cube")
+
+    def test_weak_visual_air_does_not_erase_known_partial_or_hidden_contact_block(self):
+        session = WorldSessionId("visual-air-precedence")
+        world = WorldKnowledge(session)
+        partial = ObservedBlockV3(
+            (0, 0, 0), "minecraft:oak_slab",
+            CollisionShapeV3("boxes", (AabbV3(0, 0, 0, 1, .5, 1),)),
+            None, ("surface_depth",),
+        )
+        barrier = ObservedBlockV3(
+            (1, 0, 0), "minecraft:barrier",
+            CollisionShapeV3("full_cube"), None, ("body_contact",),
+        )
+        apply_observed_blocks(world, stamp(session, 1, 1), (partial, barrier))
+        visual_air = (
+            ObservedBlockV3((0, 0, 0), "minecraft:air", CollisionShapeV3("empty"), None, ("air_query",)),
+            ObservedBlockV3((1, 0, 0), "minecraft:air", CollisionShapeV3("empty"), None, ("air_query",)),
+        )
+
+        changed = apply_observed_blocks(world, stamp(session, 2, 2), visual_air)
+
+        self.assertEqual(changed, ())
+        self.assertEqual(world.view().cell((0, 0, 0)).block.material_key, "minecraft:oak_slab")
+        self.assertEqual(world.view().cell((1, 0, 0)).block.material_key, "minecraft:barrier")
 
     def test_batch_block_observation_reports_only_semantic_changes(self):
         session = WorldSessionId("classified-block-refresh")

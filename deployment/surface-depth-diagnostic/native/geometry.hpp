@@ -61,28 +61,20 @@ static bool in_range(const Paths64& paths,const Projected& pf,const Scene& s,con
  for(auto& poly:paths){auto loc=PointInPolygon(p,poly);if(loc==PointInPolygonResult::IsOn)return sqdist(foot,v.eye)<256.-1e-10;if(loc==PointInPolygonResult::IsInside)winding+=Area(poly)>0?1:-1;}
  return winding!=0&&sqdist(foot,v.eye)<256.-1e-10;
 }
-static bool point_inside_view(V point,const View& view,double squaredLimit){
- if(sqdist(point,view.eye)>squaredLimit+EPS)return false;V q=camera(point,view);if(q[2]<.01)return false;
- double x=q[0]*S/q[2],y=q[1]*S/q[2];return std::abs(x)<=1.+EPS&&std::abs(y)<=1.+EPS;
-}
-static bool cell_fully_visible(const Scene& scene,const View& view,int x,int y,int z,double maxDistance){
- double limit=maxDistance*maxDistance;
- // Nine points reject cheap failures only. Exact corners and projected faces below
- // still decide the result; samples can never confirm visual air by themselves.
- for(double dx:{.001,.5,.999})for(double dy:{.001,.5,.999})for(double dz:{.001,.5,.999})
-  if((dx==.5)+(dy==.5)+(dz==.5)==0||dx==.5&&dy==.5&&dz==.5){
-   if(!point_inside_view({x+dx,y+dy,z+dz},view,limit))return false;
-  }
- for(int dx:{0,1})for(int dy:{0,1})for(int dz:{0,1})
-  if(!point_inside_view({double(x+dx),double(y+dy),double(z+dz)},view,limit))return false;
- bool projected=false;
- for(int axis=0;axis<3;++axis)for(int sign:{-1,1}){int u=(axis+1)%3,w=(axis+2)%3;double low[3]={double(x),double(y),double(z)},high[3]={double(x+1),double(y+1),double(z+1)};
-  Face face={-1,axis,sign,sign>0?high[axis]:low[axis],{low[u],low[w],high[u],high[w]}};Poly p=project_face(face,view);double original=area(p);if(original<=EPS)continue;projected=true;
+// 0: the candidate intersects the current view but is fully occluded;
+// 1: at least one stable projected region is visible; 2: outside view/range.
+static unsigned char cell_visibility_status(const Scene& scene,const View& view,int x,int y,int z,double maxDistance){
+ Box box={double(x),double(y),double(z),double(x+1),double(y+1),double(z+1)};V nearest;
+ for(int axis=0;axis<3;++axis)nearest[axis]=std::clamp(view.eye[axis],box[axis],box[axis+3]);
+ if(sqdist(nearest,view.eye)>maxDistance*maxDistance+EPS)return 2;
+ bool intersectsView=false;
+ for(int axis=0;axis<3;++axis)for(int sign:{-1,1}){int u=(axis+1)%3,w=(axis+2)%3;
+  Face face={-1,axis,sign,box[axis+(sign>0?3:0)],{box[u],box[w],box[u+3],box[w+3]}};Poly p=project_face(face,view);if(area(p)<=EPS)continue;intersectsView=true;
   Projected query={-1,-1,p,quantize(p),bounds(p),coefficients(face,view)};Paths64 cutters;
   for(const auto& blocker:view.faces){if(!scene.opaque[blocker.owner]||!overlaps(query.rect,blocker.rect))continue;V d={blocker.inv[0]-query.inv[0],blocker.inv[1]-query.inv[1],blocker.inv[2]-query.inv[2]};if(std::abs(d[0])+std::abs(d[1])+std::abs(d[2])<1e-12)continue;Poly closer=halfplane(blocker.p,d[0],d[1],d[2]);if(area(closer)>EPS)cutters.push_back(quantize(closer));}
-  if(!cutters.empty()){Paths64 result=boolean_op({query.path},cutters,ClipType::Difference);double visible=0;for(auto& path:result)visible+=Area(path)/(SCALE*SCALE);if(visible+1e-10<original)return false;}
+  Paths64 result=cutters.empty()?Paths64{query.path}:boolean_op({query.path},cutters,ClipType::Difference);double visible=0;for(auto& path:result)visible+=Area(path)/(SCALE*SCALE);if(visible>EPS)return 1;
  }
- return projected;
+ return intersectsView?0:2;
 }
 extern "C" {
 __declspec(dllexport) void* center_create(const double* boxes,const int* owners,int nb,const double* centers,const unsigned char* opaque,const int* query,int no,int trim,double* stats){
@@ -131,7 +123,7 @@ static int center_frame_pose_impl(void* ptr,const double* cam,int mode,unsigned 
   double a=0;for(auto& p:result){a+=Area(p)/(SCALE*SCALE);++stats[6];stats[7]+=p.size();}areas[owner]+=a;
   if(a>EPS&&in_range(result,q,s,v))output[owner]=1;
  }
- auto t2=Clock::now();if(airCount>128)throw std::invalid_argument("visual-air capacity exceeded");if(airCount>0){if(!airPositions||!airOutput||!std::isfinite(airDistance)||airDistance<=0)throw std::invalid_argument("invalid visual-air query");std::fill(airOutput,airOutput+airCount,static_cast<unsigned char>(0));for(int i=0;i<airCount;++i){int x=airPositions[3*i],y=airPositions[3*i+1],z=airPositions[3*i+2];if(std::abs(double(x))>30000000||std::abs(double(y))>30000000||std::abs(double(z))>30000000)throw std::invalid_argument("visual-air position outside world coordinate range");airOutput[i]=cell_fully_visible(s,v,x,y,z,airDistance)?1:0;}}
+ auto t2=Clock::now();if(airCount>128)throw std::invalid_argument("visual-air capacity exceeded");if(airCount>0){if(!airPositions||!airOutput||!std::isfinite(airDistance)||airDistance<=0)throw std::invalid_argument("invalid visual-air query");std::fill(airOutput,airOutput+airCount,static_cast<unsigned char>(0));for(int i=0;i<airCount;++i){int x=airPositions[3*i],y=airPositions[3*i+1],z=airPositions[3*i+2];if(std::abs(double(x))>30000000||std::abs(double(y))>30000000||std::abs(double(z))>30000000)throw std::invalid_argument("visual-air position outside world coordinate range");airOutput[i]=cell_visibility_status(s,v,x,y,z,airDistance);}}
  auto t3=Clock::now();times[0]=ms(t0,t1);times[1]=ms(t1,t2);if(airCount>=0)times[2]=ms(t2,t3);int count=0;for(int i=0;i<no;++i)count+=output[i];return count;
 }
 extern "C" {

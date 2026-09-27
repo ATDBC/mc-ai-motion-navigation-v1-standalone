@@ -8,13 +8,15 @@ class VisualAirRuntimeTests(unittest.TestCase):
         by_name = {case.name: case for case in FIXED_CASES}
         self.assertEqual(
             {name for name, case in by_name.items() if case.expected_air},
-            {"front_open", "behind_glass", "barrier_visual_air"},
+            {
+                "front_open", "behind_glass", "barrier_visual_air",
+                "behind_fence", "view_edge_partial", "downward_gap_partial",
+            },
         )
         self.assertEqual(
             {name for name, case in by_name.items() if not case.expected_air},
             {
-                "behind_stone", "behind_lava", "behind_fence",
-                "behind_camera", "beyond_16", "view_edge_partial",
+                "behind_stone", "behind_lava", "behind_camera", "beyond_16",
             },
         )
 

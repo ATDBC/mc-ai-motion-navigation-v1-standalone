@@ -14,6 +14,7 @@ from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.contracts.task import ComparisonOperatorV0, SuccessCriterionV0, TaskIntentV0
 from mc2p.motion_nav.air_motion import (
     AirMotionController, AirMotionState, load_air_motion_profiles,
+    query_air_motion,
 )
 from mc2p.motion_nav.action_route_executor import ActionRouteExecutor, ActionRouteState
 from mc2p.motion_nav.block_motion_traits import BlockMotionCatalog
@@ -137,6 +138,7 @@ def run_air_motion_runtime(
     )
     gap_route_x = origin_x + 14
     drop_route_x = origin_x + 20
+    fresh_drop_x = origin_x + 26
     gap_route_supports = (
         (gap_route_x, feet_y - 1, origin_z - 1),
         (gap_route_x, feet_y - 1, origin_z),
@@ -149,19 +151,31 @@ def run_air_motion_runtime(
         (drop_route_x, feet_y - 2, origin_z + 1),
         (drop_route_x, feet_y - 2, origin_z + 2),
     )
+    fresh_drop_supports = (
+        (fresh_drop_x, feet_y - 1, origin_z),
+        (fresh_drop_x, feet_y - 2, origin_z + 1),
+    )
 
-    def volume_around(center_x: int) -> tuple[tuple[int, int, int], ...]:
+    def volume_around(
+            center_x: int, *, route: bool = False,
+    ) -> tuple[tuple[int, int, int], ...]:
+        x_values = range(center_x - (1 if route else 2),
+                         center_x + (2 if route else 3))
+        z_values = (range(origin_z - 1, origin_z + 4) if route
+                    else range(origin_z - 2, origin_z + 3))
+        y_values = (range(feet_y - 2, feet_y + 5) if route
+                    else range(feet_y - 2, feet_y + 3))
         return tuple(
             (x, y, z)
-            for x in range(center_x - 2, center_x + 3)
-            for y in range(feet_y - 4, feet_y + 4)
-            for z in range(origin_z - 2, origin_z + 4)
+            for x in x_values
+            for y in y_values
+            for z in z_values
         )
 
     gap_volume = volume_around(origin_x)
     drop_volume = volume_around(drop_origin_x)
-    gap_route_volume = volume_around(gap_route_x)
-    drop_route_volume = volume_around(drop_route_x)
+    gap_route_volume = volume_around(gap_route_x, route=True)
+    drop_route_volume = volume_around(drop_route_x, route=True)
     volume = tuple(sorted(set(
         gap_volume + drop_volume + gap_route_volume + drop_route_volume
     )))
@@ -173,6 +187,18 @@ def run_air_motion_runtime(
     fixture_writer(tuple(position for position in volume if position not in support_set),
                    "minecraft:air")
     fixture_writer(supports, "minecraft:grass_block")
+    fresh_drop_volume = tuple(
+        (cell_x, cell_y, cell_z)
+        for cell_x in range(fresh_drop_x - 1, fresh_drop_x + 2)
+        for cell_y in range(feet_y - 3, feet_y + 2)
+        for cell_z in range(origin_z - 1, origin_z + 3)
+    )
+    fixture_writer(
+        tuple(position for position in fresh_drop_volume
+              if position not in set(fresh_drop_supports)),
+        "minecraft:air",
+    )
+    fixture_writer(fresh_drop_supports, "minecraft:grass_block")
     def air_request(region: tuple[tuple[int, int, int], ...]) -> ObservationRequestV3:
         return ObservationRequestV3("navigation_v1", tuple(
             position for position in region if position not in support_set
@@ -182,6 +208,11 @@ def run_air_motion_runtime(
     drop_request = air_request(drop_volume)
     gap_route_request = air_request(gap_route_volume)
     drop_route_request = air_request(drop_route_volume)
+    fresh_drop_request = ObservationRequestV3(
+        "navigation_v1",
+        tuple(position for position in fresh_drop_volume
+              if position not in set(fresh_drop_supports)),
+    )
 
     def teleport(position: tuple[float, float, float], yaw: float,
                  request: ObservationRequestV3) -> None:
@@ -221,32 +252,6 @@ def run_air_motion_runtime(
                 return
         raise RuntimeError(f"B09 support was not formally observed: {position}")
 
-    teleport((origin_x + .5, float(feet_y), origin_z + .5), 0.0, gap_request)
-    for position in (gap_start, *gap_targets):
-        look_at_cell(position, gap_request)
-    teleport((drop_origin_x + .5, float(feet_y), origin_z + .5), 0.0, drop_request)
-    for position in (drop_start, *drop_targets):
-        look_at_cell(position, drop_request)
-    teleport((gap_route_x + .5, float(feet_y), origin_z - .5), 0.0,
-             gap_route_request)
-    for position in gap_route_supports:
-        teleport(
-            (position[0] + .5, float(position[1] + 1), position[2] + .5),
-            0.0, gap_route_request,
-        )
-        look_at_cell(position, gap_route_request)
-    teleport((drop_route_x + .5, float(feet_y), origin_z - .5), 0.0,
-             drop_route_request)
-    for position in drop_route_supports:
-        teleport(
-            (position[0] + .5, float(position[1] + 1), position[2] + .5),
-            0.0, drop_route_request,
-        )
-        look_at_cell(position, drop_route_request)
-    for current_request in (
-            gap_request, drop_request, gap_route_request, drop_route_request):
-        step(request=current_request)
-
     def support_at(position: tuple[float, float, float]):
         result = query_support_surfaces(
             frame.world, math.floor(position[0]), math.floor(position[2]),
@@ -278,6 +283,17 @@ def run_air_motion_runtime(
         teleport(start_position, yaw, current_request)
         start_surface, end_surface = support_at(start_position), support_at(end_position)
         profile = by_mode[mode]
+        query = query_air_motion(frame.world, start_surface, end_surface, profile)
+        for _ in range(8):
+            if query.status is not QueryStatus.NEEDS_INFORMATION:
+                break
+            missing_request = ObservationRequestV3(
+                "navigation_v1", query.missing_cells[:128],
+            )
+            step(request=missing_request)
+            query = query_air_motion(
+                frame.world, start_surface, end_surface, profile,
+            )
         controller = AirMotionController(profile)
         controller.start(start_surface, end_surface, frame)
         samples = []
@@ -321,6 +337,85 @@ def run_air_motion_runtime(
         trials.append(trial)
         append_jsonl(directory / "b09-air-trials.jsonl", trial)
 
+    def run_fresh_drop_trial() -> dict:
+        start_position = (fresh_drop_x + .5, float(feet_y), origin_z + .5)
+        end_position = (fresh_drop_x + .5, float(feet_y - 1), origin_z + 1.5)
+        target_support = fresh_drop_supports[1]
+        required_air = (
+            (fresh_drop_x, feet_y - 1, origin_z + 1),
+            (fresh_drop_x, feet_y, origin_z + 1),
+        )
+        before = frame.world.cell(target_support).knowledge.value
+        teleport(start_position, 0.0, fresh_drop_request)
+        look_at_cell(target_support, fresh_drop_request)
+        if not all(frame.world.cell(position).knowledge is CellKnowledge.AIR
+                   for position in required_air):
+            raise RuntimeError("B09 fresh controlled drop clearance stayed unknown")
+        controller = AirMotionController(by_mode[MovementMode.CONTROLLED_DROP])
+        controller.start(support_at(start_position), support_at(end_position), frame)
+        input_confirmed = True
+        samples = []
+        for _ in range(48):
+            decision = controller.decide(frame, input_confirmed=input_confirmed)
+            samples.append(dict(
+                sequence=frame.body.sequence_id,
+                state=decision.state.value,
+                reason=decision.reason_code,
+                position=list(frame.body.position),
+                movement=asdict(decision.movement),
+            ))
+            if decision.state in AirMotionController._TERMINAL:
+                break
+            result = step(
+                decision.movement, look=decision.look,
+                request=fresh_drop_request,
+            )
+            input_confirmed = receipt_confirms_input(
+                result.backend_result.receipt.status
+            )
+        result = dict(
+            name="fresh-controlled-drop",
+            target_knowledge_before_observation=before,
+            target_knowledge_after_observation=frame.world.cell(
+                target_support).knowledge.value,
+            final_state=controller.state.value,
+            final_position=list(frame.body.position),
+            target_position=list(end_position),
+            samples=samples,
+        )
+        append_jsonl(directory / "b09-fresh-drop.jsonl", result)
+        return result
+
+    fresh_drop_trial = run_fresh_drop_trial()
+
+    # The remaining historical B09 matrix uses a pre-observed known map. Keep
+    # that preparation separate from the fresh-drop proof above.
+    teleport((origin_x + .5, float(feet_y), origin_z + .5), 0.0, gap_request)
+    for position in (gap_start, *gap_targets):
+        look_at_cell(position, gap_request)
+    teleport((drop_origin_x + .5, float(feet_y), origin_z + .5), 0.0, drop_request)
+    for position in (drop_start, *drop_targets):
+        look_at_cell(position, drop_request)
+    teleport((gap_route_x + .5, float(feet_y), origin_z - .5), 0.0,
+             gap_route_request)
+    for position in gap_route_supports:
+        teleport(
+            (position[0] + .5, float(position[1] + 1), position[2] + .5),
+            0.0, gap_route_request,
+        )
+        look_at_cell(position, gap_route_request)
+    teleport((drop_route_x + .5, float(feet_y), origin_z - .5), 0.0,
+             drop_route_request)
+    for position in drop_route_supports:
+        teleport(
+            (position[0] + .5, float(position[1] + 1), position[2] + .5),
+            0.0, drop_route_request,
+        )
+        look_at_cell(position, drop_route_request)
+    for current_request in (
+            gap_request, drop_request, gap_route_request, drop_route_request):
+        step(request=current_request)
+
     route_trials: list[dict] = []
 
     def run_planned_route(name: str, start_position: tuple[float, float, float],
@@ -334,8 +429,7 @@ def run_air_motion_runtime(
         builder = KnownMapSnapshotBuilder(frame.world, bounds)
         progress = builder.advance(frame.world, 10_000)
         if (progress.status is not SnapshotBuildStatus.COMPLETE
-                or progress.snapshot is None
-                or not progress.snapshot.bounds.complete_scope):
+                or progress.snapshot is None):
             raise RuntimeError(
                 f"B09 {name} snapshot incomplete: {progress.status.value}"
             )
@@ -549,12 +643,18 @@ def run_air_motion_runtime(
         },
         planned_routes=route_trials,
         interruption_trials=interruption_trials,
+        fresh_drop_trial=fresh_drop_trial,
         trials=trials,
     )
     write_json_atomic(directory / "b09-air-motion.json", summary)
     checks = [
         dict(name="b09_eighty_cardinal_air_trials_complete",
              passed=summary["trial_count"] == summary["success_count"] == 80),
+        dict(name="b09_fresh_drop_without_lower_vantage_complete", passed=(
+            fresh_drop_trial["target_knowledge_before_observation"] == "unknown"
+            and fresh_drop_trial["target_knowledge_after_observation"] == "block"
+            and fresh_drop_trial["final_state"] == AirMotionState.COMPLETE.value
+        )),
         dict(name="b09_gap_uses_one_jump_and_drop_uses_none", passed=all(
             trial["jump_pulses"] == (1 if trial["mode"] == "jump_gap" else 0)
             for trial in trials

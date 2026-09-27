@@ -347,6 +347,8 @@ class VerifiedMotionExecutorTests(unittest.TestCase):
         coasting = executor.decide(anchor, ledger)
         self.assertEqual(coasting.reason, "coast_to_verified_landing")
         landed_tick = 12 + len(candidate.proof.commands) - 1
+        for tick in range(anchor.movement_tick_id + 1, landed_tick + 1):
+            self.applied(ledger, anchor, 700 + tick, tick, MovementV1())
         anchor = replace(
             anchor,
             observation_sequence_id=anchor.observation_sequence_id + 1,
@@ -414,6 +416,8 @@ class VerifiedMotionExecutorTests(unittest.TestCase):
                 movement_tick_id=landed_tick - 1,
             ),
         )
+        for tick in range(anchor.movement_tick_id + 1, landed_tick):
+            self.applied(ledger, anchor, 800 + tick, tick, MovementV1())
         still_coasting = executor.decide(early_landing, ledger)
         self.assertIs(
             still_coasting.state, VerifiedMotionExecutorState.RUNNING,
@@ -430,6 +434,7 @@ class VerifiedMotionExecutorTests(unittest.TestCase):
                 movement_tick_id=landed_tick,
             ),
         )
+        self.applied(ledger, early_landing, 900 + landed_tick, landed_tick, MovementV1())
         completed = executor.decide(landed, ledger)
         self.assertIs(completed.state, VerifiedMotionExecutorState.COMPLETE)
         self.assertEqual(completed.reason, "verified_motion_complete")
@@ -695,6 +700,11 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
             movement_tick_id=landed_tick,
             physics_state=exit_state,
         )
+        for tick in range(
+                admitted.intended_start_tick + tail_start, landed_tick + 1):
+            VerifiedMotionExecutorTests.applied(
+                ledger, current_anchor, 900 + tick, tick, MovementV1(),
+            )
         final = executor.decide(
             self.frame(world, exit_state, 200),
             state_anchor=current_anchor, input_ledger=ledger,

@@ -8,7 +8,7 @@ from mc2p.contracts.common import ContractViolation, FieldStatusV0
 from mc2p.contracts.observation_request_v3 import (
     MAX_AIR_QUERY_POSITIONS, ObservationRequestV3,
 )
-from mc2p.contracts.observation_v3 import ObservationSnapshotV3
+from mc2p.contracts.observation_v3 import AirQueryResultV3, ObservationSnapshotV3
 from mc2p.contracts.observation_v2 import StatusEffectV2
 from mc2p.motion_nav.observed_block_adapter import apply_observed_blocks
 from mc2p.motion_nav.world_model import (
@@ -66,6 +66,7 @@ class NavigationFrame:
     world: WorldView
     source_backend: str
     changed_cells: tuple[BlockPos, ...] = ()
+    air_query_results: tuple[AirQueryResultV3, ...] = ()
 
 
 def world_session_from_observation(snapshot: ObservationSnapshotV3) -> WorldSessionId:
@@ -133,6 +134,8 @@ class NavigationObservationAdapter:
         self._retired: set[WorldSessionId] = set()
         self._air_retry_after_ticks = air_retry_after_ticks
         self._air_last_attempt: dict[BlockPos, int] = {}
+        self._known_recheck_after_ticks = 20
+        self._known_last_attempt: dict[BlockPos, int] = {}
         self._shared_geometries: dict[tuple[object, ...], BlockGeometry] = {}
 
     @property
@@ -146,7 +149,8 @@ class NavigationObservationAdapter:
         return self._latest_frame
 
     def air_request(self, positions: tuple[BlockPos, ...], *, max_positions: int = 128,
-                    field_profile: str = "navigation_v1") -> tuple[ObservationRequestV3, tuple[BlockPos, ...]]:
+                    field_profile: str = "navigation_v1",
+                    include_known: bool = False) -> tuple[ObservationRequestV3, tuple[BlockPos, ...]]:
         if type(positions) is not tuple:
             raise ContractViolation("air request positions must be immutable")
         if type(max_positions) is not int or not 1 <= max_positions <= MAX_AIR_QUERY_POSITIONS:
@@ -155,14 +159,19 @@ class NavigationObservationAdapter:
             raise ContractViolation("air request requires an ingested navigation frame")
         tick = self._latest_order[0]
         view = self._world.view()
+        attempts = self._known_last_attempt if include_known else self._air_last_attempt
+        retry_ticks = (
+            self._known_recheck_after_ticks if include_known
+            else self._air_retry_after_ticks
+        )
         candidates = tuple(position for position in sorted(set(positions))
-                           if view.cell(position).knowledge is CellKnowledge.UNKNOWN
-                           and (position not in self._air_last_attempt
-                                or tick - self._air_last_attempt[position]
-                                   >= self._air_retry_after_ticks))
+                           if (include_known
+                               or view.cell(position).knowledge is CellKnowledge.UNKNOWN)
+                           and (position not in attempts
+                                or tick - attempts[position] >= retry_ticks))
         requested, deferred = candidates[:max_positions], candidates[max_positions:]
         for position in requested:
-            self._air_last_attempt[position] = tick
+            attempts[position] = tick
         return ObservationRequestV3(field_profile, requested), deferred
 
     def ingest(self, snapshot: ObservationSnapshotV3) -> NavigationFrame:
@@ -179,6 +188,7 @@ class NavigationObservationAdapter:
             self._latest_order = None
             self._latest_frame = None
             self._air_last_attempt.clear()
+            self._known_last_attempt.clear()
             self._shared_geometries.clear()
         assert self._world is not None
         stamp = ObservationStamp(
@@ -195,9 +205,11 @@ class NavigationObservationAdapter:
         if self._latest_order is not None and stamp.world_order < self._latest_order:
             raise ContractViolation("navigation observation order moved backward")
         changed_cells: tuple[BlockPos, ...] = ()
+        air_query_results: tuple[AirQueryResultV3, ...] = ()
         if snapshot.perception.status is FieldStatusV0.VALID:
             assert snapshot.perception.value is not None
             blocks = snapshot.perception.value.blocks
+            air_query_results = snapshot.perception.value.air_query_results
             changed_cells = apply_observed_blocks(
                 self._world, stamp, blocks, self._shared_geometries,
             )
@@ -207,7 +219,8 @@ class NavigationObservationAdapter:
         body = _body(snapshot, session, stamp)
         self._world.set_protection_center(body.position)
         frame = NavigationFrame(
-            session, body, self._world.view(), snapshot.source_backend, changed_cells,
+            session, body, self._world.view(), snapshot.source_backend,
+            changed_cells, air_query_results,
         )
         self._latest_frame = frame
         return frame

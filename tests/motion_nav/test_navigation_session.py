@@ -11,6 +11,7 @@ from mc2p.contracts.action import ActionPriorityV0
 from mc2p.contracts.common import ContractViolation
 from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.intent_source import IntentSourceV1
+from mc2p.contracts.observation_v3 import AirQueryResultV3
 from mc2p.motion_nav.known_map_planner import (
     SurfacePlanningRequest,
     plan_known_surface_snapshot,
@@ -571,6 +572,7 @@ class NavigationSessionTests(unittest.TestCase):
         initial = replace(
             initial,
             body=replace(initial.body, yaw_radians=math.radians(90.0)),
+            air_query_results=(AirQueryResultV3(unknown_gap, "outside_view"),),
         )
         session = NavigationSession(
             "unknown-gap-look-session", self.profiles(),
@@ -601,7 +603,7 @@ class NavigationSessionTests(unittest.TestCase):
         self.assertLessEqual(abs(looks[0].look.yaw_delta_degrees), 36.0)
 
     def test_missing_cell_already_in_view_does_not_turn_in_place(self):
-        world, _ = _known_endpoints_with_unknown_gap()
+        world, unknown_gap = _known_endpoints_with_unknown_gap()
         start, goal = _nodes(world, (-1, 1))
         initial = frame(world, 0, start.position)
         initial = replace(
@@ -611,6 +613,7 @@ class NavigationSessionTests(unittest.TestCase):
                 yaw_radians=math.radians(-90.0),
                 pitch_radians=math.radians(77.0),
             ),
+            air_query_results=(AirQueryResultV3(unknown_gap, "occluded"),),
         )
         session = NavigationSession(
             "unknown-gap-occluded-session", self.profiles(),
@@ -630,6 +633,39 @@ class NavigationSessionTests(unittest.TestCase):
             ordered.intent.look is not None
             for ordered in proposal.control_frame.intents
         ))
+
+    def test_structurally_occluded_information_wait_is_bounded(self):
+        world, unknown_gap = _known_endpoints_with_unknown_gap()
+        start, goal = _nodes(world, (-1, 1))
+        initial = frame(world, 0, start.position)
+        initial = replace(
+            initial,
+            air_query_results=(AirQueryResultV3(unknown_gap, "occluded"),),
+        )
+        session = NavigationSession(
+            "bounded-occluded-information", self.profiles(),
+            planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        session.start(SurfacePlanningRequest(
+            1, "bounded-occluded-request", "bounded-occluded-goal", 1,
+            world.session.value, start.node_id, goal.node_id,
+            goal_state=_goal(goal.position),
+        ), initial)
+        session.propose(initial, None, 2_000_000_000)
+
+        for sequence in range(1, 41):
+            current = replace(
+                initial,
+                body=replace(initial.body, sequence_id=sequence),
+            )
+            session._information_look(current)
+
+        self.assertIs(session.report.state, NavigationSessionState.FAILED)
+        self.assertEqual(
+            session.report.reason,
+            "information_occluded_requires_observation_position",
+        )
 
     def test_conditioned_task_look_suppresses_information_look(self):
         world, _ = _known_endpoints_with_unknown_gap()

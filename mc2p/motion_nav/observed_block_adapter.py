@@ -13,6 +13,9 @@ from mc2p.motion_nav.world_model import (
 
 
 _AIR_IDS = frozenset({"minecraft:air", "minecraft:cave_air", "minecraft:void_air"})
+_VISUALLY_HIDDEN_CONTACT_IDS = frozenset({
+    "minecraft:barrier", "minecraft:light", "minecraft:structure_void",
+})
 _MAX_SHARED_GEOMETRIES = 4096
 
 
@@ -53,7 +56,9 @@ def apply_observed_blocks(
         or any(type(block) is not ObservedBlockV3 for block in blocks)
     ):
         raise ContractViolation("observed block adapter requires exact V3 blocks")
-    air = tuple(block.position for block in blocks if block.block_id in _AIR_IDS)
+    requested_air = tuple(
+        block.position for block in blocks if block.block_id in _AIR_IDS
+    )
     changed = set()
     solids = {}
     for block in blocks:
@@ -72,8 +77,20 @@ def apply_observed_blocks(
         result, solid_changes = world.observe_blocks_with_changes(stamp, solids)
         rejected.update(result.rejected_positions)
         changed.update(solid_changes)
-    if air:
+    if requested_air:
         before = world.view()
+        air = tuple(
+            position for position in requested_air
+            if (
+                before.cell(position).knowledge is not CellKnowledge.BLOCK
+                or (
+                    before.cell(position).block is not None
+                    and before.cell(position).block.collision_kind == "full_cube"
+                    and before.cell(position).block.material_key
+                    not in _VISUALLY_HIDDEN_CONTACT_IDS
+                )
+            )
+        )
         for position in air:
             if before.cell(position).knowledge is not CellKnowledge.AIR:
                 changed.add(position)

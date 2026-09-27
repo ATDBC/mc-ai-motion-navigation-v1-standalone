@@ -1,6 +1,8 @@
 package com.mc2p.surface;
 
 import com.mc2p.observation.ClientBlockObservationV3;
+import com.mc2p.observation.ClientBlockObservationV3.AirResult;
+import com.mc2p.observation.ClientBlockObservationV3.AirStatus;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -153,12 +155,22 @@ public final class SurfaceSensor implements ClientBlockObservationV3.SurfaceProv
         }
         if (airCandidates.size()>128)
             throw new IllegalStateException("surface visual-air candidate budget exceeded");
+        var eligibleAirCandidates = new ArrayList<BlockPos>();
+        var airResults = new ArrayList<AirResult>();
+        for (BlockPos position : airCandidates) {
+            if (position.getY() >= client.world.getBottomY()
+                    && position.getY() < client.world.getTopY()
+                    && client.world.isChunkLoaded(position))
+                eligibleAirCandidates.add(position);
+            else
+                airResults.add(new AirResult(position,AirStatus.UNAVAILABLE));
+        }
         airPositions.clear();
-        for (BlockPos position : airCandidates)
+        for (BlockPos position : eligibleAirCandidates)
             airPositions.putInt(position.getX()).putInt(position.getY()).putInt(position.getZ());
         long surfaceStarted = System.nanoTime();
         CacheBridge.framePoseAir(scene,camera,query,count,output,areas,times,stats,
-                airPositions,airCandidates.size(),16.0,airVisible);
+                airPositions,eligibleAirCandidates.size(),16.0,airVisible);
         long surfaceFinished = System.nanoTime();
         var visible = new ArrayList<BlockPos>();
         for (int index = 0; index < count; index++) if (output.get(index) != 0) {
@@ -166,8 +178,13 @@ public final class SurfaceSensor implements ClientBlockObservationV3.SurfaceProv
             visible.add(new BlockPos(position[0], position[1], position[2]));
         }
         var visualAir = new ArrayList<BlockPos>();
-        for (int index=0;index<airCandidates.size();index++)
-            if (airVisible.get(index)!=0) visualAir.add(airCandidates.get(index));
+        for (int index=0;index<eligibleAirCandidates.size();index++) {
+            byte status=airVisible.get(index);
+            if (status==1) visualAir.add(eligibleAirCandidates.get(index));
+            else airResults.add(new AirResult(
+                    eligibleAirCandidates.get(index),
+                    status==2 ? AirStatus.OUTSIDE_VIEW : AirStatus.OCCLUDED));
+        }
         latestDiagnostics = new Diagnostics(
                 Math.max(0L, blockReadFinished - blockReadStarted),
                 Math.max(0L, packFinished - packStarted),
@@ -180,7 +197,10 @@ public final class SurfaceSensor implements ClientBlockObservationV3.SurfaceProv
                 geometry.culledBlockCount,
                 store.haloReads,
                 rebuilt);
-        return new ClientBlockObservationV3.SurfaceFrame(visible,visualAir);
+        airResults.sort(java.util.Comparator.comparingInt((AirResult result)->result.position().getX())
+                .thenComparingInt(result->result.position().getY())
+                .thenComparingInt(result->result.position().getZ()));
+        return new ClientBlockObservationV3.SurfaceFrame(visible,visualAir,airResults);
     }
 
     @Override

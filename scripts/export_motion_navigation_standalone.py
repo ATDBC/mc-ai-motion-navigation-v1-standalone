@@ -349,6 +349,8 @@ def verify_tree(root: Path, *,
     requirements = (target / "requirements.txt").read_text("utf-8")
     if re.search(r"(?m)^psutil(?:==|>=|~=)", requirements) is None:
         raise ExportViolation("standalone requirements do not declare psutil")
+    if re.search(r"(?m)^numpy==2\.4\.6$", requirements) is None:
+        raise ExportViolation("standalone requirements do not pin NumPy 2.4.6")
     return report
 
 

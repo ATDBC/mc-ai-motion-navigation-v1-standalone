@@ -32,10 +32,11 @@ FIXED_CASES = (
     VisualAirCase("behind_glass", (398, 65, 406), True),
     VisualAirCase("barrier_visual_air", (400, 65, 406), True),
     VisualAirCase("behind_lava", (402, 65, 406), False),
-    VisualAirCase("behind_fence", (404, 65, 406), False),
+    VisualAirCase("behind_fence", (404, 65, 406), True),
     VisualAirCase("behind_camera", (400, 65, 397), False),
     VisualAirCase("beyond_16", (400, 65, 417), False),
-    VisualAirCase("view_edge_partial", (410, 65, 406), False),
+    VisualAirCase("view_edge_partial", (410, 65, 406), True),
+    VisualAirCase("downward_gap_partial", (400, 64, 403), True),
 )
 
 
@@ -130,6 +131,8 @@ FIXED_OBSTACLES = {
 def _case_commands(case: VisualAirCase, revision: int) -> tuple[tuple[str, ...], tuple[int, int, int], str]:
     material = "minecraft:gold_block" if revision % 2 else "minecraft:diamond_block"
     commands, _ = FIXED_OBSTACLES.get(case.name, ((), None))
+    if case.name == "downward_gap_partial":
+        commands = (*commands, "setblock 400 64 403 minecraft:air replace")
     sync = (400, 69, 403)
     return (
         (

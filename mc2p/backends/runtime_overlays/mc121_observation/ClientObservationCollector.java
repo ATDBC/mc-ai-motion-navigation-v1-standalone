@@ -628,7 +628,8 @@ public final class ClientObservationCollector {
             String blockId=Registries.BLOCK.getId(state.getBlock()).toString();
             String fluidId=fluid.isEmpty()?null:Registries.FLUID.getId(fluid.getFluid()).toString();
             var decision=SurfaceVisibilityRules.classify(
-                    blockId,state.getRenderType()==BlockRenderType.INVISIBLE,shape.isEmpty(),fluidId);
+                    blockId,state.getRenderType()==BlockRenderType.INVISIBLE,shape.isEmpty(),
+                    state.isOpaqueFullCube(world,position),fluidId);
             if (!decision.occludes()) return null;
             if (shape.isEmpty()&&!fluid.isEmpty())
                 shape=VoxelShapes.cuboid(0,0,0,1,Math.max(fluid.getHeight(world,position),.001),1);

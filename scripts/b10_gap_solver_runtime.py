@@ -315,6 +315,14 @@ def _input_window_diagnostics(
             None if actual_tick is None or latest_tick is None
             else actual_tick - latest_tick
         ),
+        "remaining_to_latest_ticks": (
+            None if actual_tick is None or latest_tick is None
+            else latest_tick - actual_tick
+        ),
+        "remaining_to_latest_milliseconds": (
+            None if actual_tick is None or latest_tick is None
+            else (latest_tick - actual_tick) * 50.0
+        ),
     }
 
 
@@ -768,8 +776,23 @@ def _run_b10_gap_solver_runtime(
                     requested_movement_tick=expected_tick,
                     requested_latest_movement_tick=latest_tick,
                 )
-                for application in owned_applications:
-                    ledger.observe_sample(application)
+            else:
+                # The gateway still applied a real neutral control request.
+                # Record it in the ledger without presenting it to the motion
+                # executor as a verified action command.
+                observed_first_tick = min(
+                    application.movement_tick_id
+                    for application in owned_applications
+                )
+                ledger.submit(
+                    anchor.session, action,
+                    requested_first_tick=observed_first_tick,
+                    latest_allowed_first_tick=observed_first_tick,
+                )
+            # Coast and landing frames still carry authoritative applied-input
+            # samples even though they are not new verified commands.
+            for application in owned_applications:
+                ledger.observe_sample(application)
             if latest_application is None:
                 raise RuntimeError("B10 execution lost the movement-tick receipt")
             built_after = build_physics_state(

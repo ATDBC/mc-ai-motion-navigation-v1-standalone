@@ -89,6 +89,7 @@ from mc2p.motion_nav.world_model import BlockPos, CellKnowledge
 
 _FORMAL_HALF_FOV_DEGREES = 60.0
 _INFORMATION_LOOK_MAX_DELTA_DEGREES = 36.0
+_INFORMATION_WAIT_LIMIT_FRAMES = 40
 
 
 class NavigationSessionState(StrEnum):
@@ -316,6 +317,9 @@ class NavigationSession:
         self._planning_snapshot_request_id: str | None = None
         self._snapshot_missing: tuple[BlockPos, ...] = ()
         self._residual_missing: tuple[BlockPos, ...] = ()
+        self._information_wait_key: tuple[tuple[BlockPos, str], ...] = ()
+        self._information_wait_last_sequence: int | None = None
+        self._information_wait_frames = 0
         self._planning_changes: set[BlockPos] = set()
         self._required_interaction: BridgeInteractionPlan | None = None
         self._interaction_approach_pending = False
@@ -512,7 +516,11 @@ class NavigationSession:
             set(self._snapshot_missing) - set(residual_missing)
         ))
         missing = residual_missing + planning_missing
-        if not missing:
+        route_dependencies = (
+            () if self._active_route is None
+            else self._active_route.action_route.dependencies
+        )
+        if not missing and not route_dependencies:
             return ObservationRequestV3("navigation_v1")
         if not self._adapter.has_frame:
             return ObservationRequestV3(
@@ -529,8 +537,16 @@ class NavigationSession:
             planning_request, _ = self._adapter.air_request(
                 planning_missing, max_positions=remaining,
             )
+        remaining -= len(planning_request.air_positions)
+        dependency_request = ObservationRequestV3("navigation_v1")
+        if route_dependencies and remaining:
+            dependency_request, _ = self._adapter.air_request(
+                route_dependencies,
+                max_positions=min(16, remaining),
+                include_known=True,
+            )
         return merge_observation_requests((
-            residual_request, planning_request,
+            residual_request, planning_request, dependency_request,
         ))
 
     def start(
@@ -1021,6 +1037,9 @@ class NavigationSession:
         self._frame = frame
         self._planning_changes.clear()
         self._snapshot_missing = ()
+        self._information_wait_key = ()
+        self._information_wait_last_sequence = None
+        self._information_wait_frames = 0
         self._planning_snapshot = None
         self._planning_snapshot_request_id = None
         self._required_interaction = None
@@ -1520,7 +1539,7 @@ class NavigationSession:
         return NavigationSessionProposal(control, self.report, route_decision)
 
     def _information_look(self, frame: NavigationFrame) -> LookV1 | None:
-        """Aim once at the nearest missing cell that is outside the current view."""
+        """Aim only at cells the formal surface sensor classified outside view."""
         if (self._state is not NavigationSessionState.NEEDS_INFORMATION
                 or not self._snapshot_missing):
             return None
@@ -1529,8 +1548,15 @@ class NavigationSession:
         eye_z = frame.body.position[2]
         current_yaw = math.degrees(frame.body.yaw_radians)
         current_pitch = math.degrees(frame.body.pitch_radians)
+        statuses = {
+            result.position: result.status
+            for result in frame.air_query_results
+        }
         candidates: list[tuple[float, float, float]] = []
         for x, y, z in self._snapshot_missing:
+            status = statuses.get((x, y, z))
+            if status in {"occluded", "unavailable"}:
+                continue
             dx = x + 0.5 - eye_x
             dy = y + 0.5 - eye_y
             dz = z + 0.5 - eye_z
@@ -1547,7 +1573,8 @@ class NavigationSession:
                 desired_yaw - current_yaw + 180.0
             ) % 360.0 - 180.0
             pitch_error = desired_pitch - current_pitch
-            if (abs(yaw_error) <= _FORMAL_HALF_FOV_DEGREES
+            if status is None and (
+                    abs(yaw_error) <= _FORMAL_HALF_FOV_DEGREES
                     and abs(pitch_error) <= _FORMAL_HALF_FOV_DEGREES):
                 continue
             candidates.append((
@@ -1555,6 +1582,30 @@ class NavigationSession:
                 yaw_error,
                 pitch_error,
             ))
+        unresolved = tuple(sorted(
+            (position, statuses[position])
+            for position in self._snapshot_missing
+            if position in statuses
+        ))
+        if candidates:
+            self._information_wait_key = ()
+            self._information_wait_last_sequence = None
+            self._information_wait_frames = 0
+        elif unresolved:
+            if unresolved != self._information_wait_key:
+                self._information_wait_key = unresolved
+                self._information_wait_frames = 0
+                self._information_wait_last_sequence = None
+            if frame.body.sequence_id != self._information_wait_last_sequence:
+                self._information_wait_last_sequence = frame.body.sequence_id
+                self._information_wait_frames += 1
+            if self._information_wait_frames >= _INFORMATION_WAIT_LIMIT_FRAMES:
+                self._state = NavigationSessionState.FAILED
+                self._reason = (
+                    "information_occluded_requires_observation_position"
+                    if all(status == "occluded" for _, status in unresolved)
+                    else "information_unavailable_timeout"
+                )
         if not candidates:
             return None
         _, yaw_error, pitch_error = min(candidates)

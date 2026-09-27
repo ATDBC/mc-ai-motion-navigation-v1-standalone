@@ -31,6 +31,38 @@ class ClientBlockObservationV3Tests(unittest.TestCase):
         self.assertNotIn("getBlockState(position).isAir", source)
         self.assertIn("SurfaceFrame surface=surfaceProvider.sample", source)
 
+    def test_surface_sensor_refuses_unloaded_air_candidates(self):
+        source = (ROOT / (
+            "mc2p/backends/runtime_overlays/mc121_surface/com/mc2p/surface/"
+            "SurfaceSensor.java"
+        )).read_text("utf-8")
+        self.assertIn("client.world.isChunkLoaded(position)", source)
+        self.assertIn("position.getY() >= client.world.getBottomY()", source)
+        self.assertIn("position.getY() < client.world.getTopY()", source)
+
+    def test_surface_air_failures_are_reported_with_typed_statuses(self):
+        observation = (ROOT / (
+            "mc2p/backends/runtime_overlays/mc121_observation/"
+            "ClientBlockObservationV3.java"
+        )).read_text("utf-8")
+        sensor = (ROOT / (
+            "mc2p/backends/runtime_overlays/mc121_surface/com/mc2p/surface/"
+            "SurfaceSensor.java"
+        )).read_text("utf-8")
+        self.assertIn("enum AirStatus", observation)
+        self.assertIn('addProperty("status",result.status().wireName)', observation)
+        self.assertIn("AirStatus.OUTSIDE_VIEW", sensor)
+        self.assertIn("AirStatus.OCCLUDED", sensor)
+        self.assertIn("AirStatus.UNAVAILABLE", sensor)
+
+    def test_surface_provider_must_classify_every_requested_air_cell_once(self):
+        source = (ROOT / (
+            "mc2p/backends/runtime_overlays/mc121_observation/"
+            "ClientBlockObservationV3.java"
+        )).read_text("utf-8")
+        self.assertIn("classifiedAir.addAll(surface.visualAir())", source)
+        self.assertIn("classifiedAir.equals(requestedAir)", source)
+
     def test_native_discovery_dedup_shape_targeting_and_python_parity(self):
         from tests.test_visible_equipment_projection import VisibleEquipmentProjectionTests
         source = ROOT / "mc2p/backends/runtime_overlays/mc121_observation/ClientBlockObservationV3.java"

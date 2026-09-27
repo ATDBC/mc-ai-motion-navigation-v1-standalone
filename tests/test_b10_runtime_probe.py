@@ -307,12 +307,16 @@ class B10RuntimeProbeTests(unittest.TestCase):
             "application_states": ["leased"],
             "actual_minus_expected_ticks": 2,
             "actual_minus_latest_ticks": 1,
+            "remaining_to_latest_ticks": -1,
+            "remaining_to_latest_milliseconds": -50.0,
         })
 
         neutral = _input_window_diagnostics(applications, None)
         self.assertIsNone(neutral["verified_command_index"])
         self.assertIsNone(neutral["actual_minus_latest_ticks"])
         self.assertEqual(neutral["actual_movement_ticks"], [13])
+        self.assertIsNone(neutral["remaining_to_latest_ticks"])
+        self.assertIsNone(neutral["remaining_to_latest_milliseconds"])
 
 
 if __name__ == "__main__":

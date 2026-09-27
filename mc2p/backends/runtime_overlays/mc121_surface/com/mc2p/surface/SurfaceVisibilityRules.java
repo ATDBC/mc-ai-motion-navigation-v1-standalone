@@ -28,13 +28,19 @@ public final class SurfaceVisibilityRules {
         "minecraft:kelp_plant",
         "minecraft:sugar_cane"
     );
-
+    private static final Set<String> SEE_THROUGH_EXACT = Set.of(
+        "minecraft:ice", "minecraft:packed_ice", "minecraft:blue_ice",
+        "minecraft:frosted_ice", "minecraft:wheat", "minecraft:carrots",
+        "minecraft:potatoes", "minecraft:beetroots", "minecraft:nether_wart",
+        "minecraft:cocoa"
+    );
     private SurfaceVisibilityRules() {}
 
     public static Decision classify(
             String blockId,
             boolean renderInvisible,
             boolean blockShapeEmpty,
+            boolean opaqueFullCube,
             String fluidId) {
         if (blockId == null || blockId.isBlank()) {
             throw new IllegalArgumentException("missing block id");
@@ -45,16 +51,21 @@ public final class SurfaceVisibilityRules {
             return new Decision(true, lava);
         }
         if (renderInvisible) return new Decision(false, false);
+        // Minecraft owns this state-sensitive fact. It covers ordinary opaque
+        // materials without growing a hand-maintained block-name table.
+        if (opaqueFullCube) return new Decision(true, true);
         boolean glass = blockId.endsWith("_stained_glass")
                 || blockId.endsWith("_stained_glass_pane");
-        boolean plant = blockId.endsWith("_sapling")
+        boolean plant = blockId.startsWith("minecraft:potted_")
+                || blockId.endsWith("_sapling")
                 || blockId.endsWith("_tulip")
                 || blockId.endsWith("_mushroom")
                 || blockId.endsWith("_roots")
                 || blockId.endsWith("_fungus")
                 || blockId.endsWith("_flower")
                 || blockId.endsWith("_bush");
-        boolean seeThrough = SEE_THROUGH.contains(blockId) || glass || plant;
+        boolean seeThrough = SEE_THROUGH.contains(blockId)
+                || SEE_THROUGH_EXACT.contains(blockId) || glass || plant;
         return new Decision(true, !seeThrough);
     }
 }

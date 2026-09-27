@@ -26,11 +26,27 @@ import net.minecraft.world.BlockView;
 /** Same-tick authorization and compact block fields. No world cache, images or surface permissions. */
 public final class ClientBlockObservationV3 {
     public enum Source { BODY_CONTACT, CURRENT_TARGET, SURFACE_DEPTH, AIR_QUERY }
-    public record SurfaceFrame(List<BlockPos> visibleBlocks, List<BlockPos> visualAir) {
+    public enum AirStatus {
+        OUTSIDE_VIEW("outside_view"), OCCLUDED("occluded"), UNAVAILABLE("unavailable");
+        public final String wireName;
+        AirStatus(String wireName) { this.wireName=wireName; }
+    }
+    public record AirResult(BlockPos position, AirStatus status) {
+        public AirResult {
+            if (position==null || status==null)
+                throw new IllegalArgumentException("missing air query result");
+            position=position.toImmutable();
+        }
+    }
+    public record SurfaceFrame(
+            List<BlockPos> visibleBlocks,
+            List<BlockPos> visualAir,
+            List<AirResult> airResults) {
         public SurfaceFrame {
-            if (visibleBlocks==null || visualAir==null)
+            if (visibleBlocks==null || visualAir==null || airResults==null)
                 throw new IllegalArgumentException("missing surface frame result");
             visibleBlocks=List.copyOf(visibleBlocks); visualAir=List.copyOf(visualAir);
+            airResults=List.copyOf(airResults);
         }
     }
     public interface SurfaceProvider {
@@ -40,7 +56,7 @@ public final class ClientBlockObservationV3 {
                 List<BlockPos> airCandidates) {
             if (!airCandidates.isEmpty())
                 throw new IllegalStateException("visual-air query unavailable");
-            return new SurfaceFrame(visible(client,eye,yaw,pitch),List.of());
+            return new SurfaceFrame(visible(client,eye,yaw,pitch),List.of(),List.of());
         }
         default boolean[] visibleBoxes(
                 MinecraftClient client, Vec3d eye, float yaw, float pitch, List<Box> boxes) {
@@ -198,9 +214,17 @@ public final class ClientBlockObservationV3 {
                 .map(grid -> new BlockPos(grid.x(),grid.y(),grid.z())).toList();
         SurfaceFrame surface=surfaceProvider.sample(client,camera,yaw,pitch,airCandidates);
         var requestedAir=java.util.Set.copyOf(airCandidates);
+        var classifiedAir=new java.util.HashSet<BlockPos>();
+        classifiedAir.addAll(surface.visualAir());
+        boolean duplicateClassification=surface.airResults().stream()
+                .map(AirResult::position).anyMatch(position -> !classifiedAir.add(position));
         if (surface.visibleBlocks().stream().distinct().count()!=surface.visibleBlocks().size()
                 || surface.visualAir().stream().distinct().count()!=surface.visualAir().size()
-                || !requestedAir.containsAll(surface.visualAir()))
+                || surface.airResults().stream().map(AirResult::position).distinct().count()!=surface.airResults().size()
+                || duplicateClassification
+                || !requestedAir.containsAll(surface.visualAir())
+                || !requestedAir.containsAll(surface.airResults().stream().map(AirResult::position).toList())
+                || !classifiedAir.equals(requestedAir))
             throw new IllegalStateException("invalid surface frame result");
         Map<BlockPos,EnumSet<Source>> table=new HashMap<>();
         for (BlockPos position : surface.visibleBlocks())
@@ -217,6 +241,14 @@ public final class ClientBlockObservationV3 {
         perception.addProperty("sensor_profile_revision",4);perception.addProperty("ray_columns",0);perception.addProperty("ray_rows",0);
         perception.addProperty("knowledge_model","block_state_v1");
         perception.add("blocks",readBlocks(world,ShapeContext.of(player),table));
+        JsonArray airQueryResults = new JsonArray();
+        for (AirResult result : surface.airResults()) if (!table.containsKey(result.position())) {
+            JsonObject value = new JsonObject();
+            value.add("position",grid(result.position()));
+            value.addProperty("status",result.status().wireName);
+            airQueryResults.add(value);
+        }
+        perception.add("air_query_results",airQueryResults);
         perception.add("visible_entities",entities.values());
         perception.addProperty("entities_truncated",entities.truncatedCount()>0);
         perception.addProperty("truncated_entity_count",entities.truncatedCount());

@@ -124,13 +124,13 @@ def test_entity_boxes_reuse_surface_occlusion():
         visible=cache.visible_boxes([.5,1.62,0,0,0],[boxes[0]],16.)
         assert visible.tolist()==[1]
 
-def test_visual_air_requires_the_whole_cell_to_be_visible():
+def test_visual_air_accepts_any_visible_region():
     api=load()
     candidates=[(0,1,3),(0,1,-3),(0,1,17)]
     with api.Cache(4) as empty:
         empty.update(world([]))
         _,air,_,_=empty.frame_pose_air([.5,1.5,0,0,0],candidates)
-        assert air.tolist()==[1,0,0]
+        assert air.tolist()==[1,2,2]
     opaque_wall=world([((0,1,2),FULL,True)])
     with api.Cache(4) as wall:
         wall.update(opaque_wall)
@@ -153,17 +153,17 @@ def test_visual_air_requires_the_whole_cell_to_be_visible():
     with api.Cache(4) as fence:
         fence.update(thin_occluder)
         _,air,_,_=fence.frame_pose_air([.5,1.5,0,0,0],[(0,1,3)])
-        assert air.tolist()==[0]
+        assert air.tolist()==[1], 'uncovered part of the hypothetical cell proves visual air'
     with api.Cache(4) as stairs:
         stairs.update(world([((0,1,2),STAIR,True)]))
         _,air,_,_=stairs.frame_pose_air([.5,1.5,0,0,0],[(0,1,3)])
-        assert air.tolist()==[0], 'multiple-box stair must block whole-cell confirmation'
+        assert air.tolist()==[0], 'this stair silhouette fully covers the target from the fixed pose'
     with api.Cache(4) as camera_face:
         camera_face.update(world([]))
         _,air,_,_=camera_face.frame_pose_air([.5,1.5,-.001,0,0],[(0,1,0)])
-        assert air.tolist()==[0], 'a cell crossing the near plane is only partially visible'
+        assert air.tolist()==[2], 'a cell crossing the camera near plane is not a stable view candidate'
 
-def test_visual_air_matches_full_projected_area_in_random_worlds():
+def test_visual_air_matches_any_visible_projected_area_in_random_worlds():
     api=load();rng=random.Random(260927);camera=[.5,1.5,0,0,0]
     shapes=(FULL,HALF,STAIR,((.4,0,0,.6,1,1),))
     with api.Cache(4) as cache:
@@ -174,12 +174,33 @@ def test_visual_air_matches_full_projected_area_in_random_worlds():
                 if position in used:continue
                 used.add(position);blocks.append((position,rng.choice(shapes),rng.random()<.8))
             query=(candidate,FULL,False)
-            baseline=api.reference(world([query]),camera[:4],2)[1][0]
             visible=api.reference(world([*blocks,query]),camera[:4],2)[1][-1]
-            expected=abs(visible-baseline)<=1e-9
+            expected=visible>1e-12
             cache.update(world(blocks))
             actual=bool(cache.frame_pose_air(camera,[candidate])[1][0])
-            assert actual==expected,(candidate,baseline,visible,blocks)
+            assert actual==expected,(candidate,visible,blocks)
+
+def test_visual_air_distinguishes_outside_view_from_occlusion():
+    api=load()
+    with api.Cache(4) as cache:
+        cache.update(world([((0,1,2),FULL,True)]))
+        _,status,_,_=cache.frame_pose_air(
+            [.5,1.5,0,0,0],[(0,1,3),(0,1,-3),(0,1,17)])
+        assert status.tolist()==[0,2,2]
+
+def test_visual_air_confirms_a_partly_exposed_downward_cell_without_preobservation():
+    api=load();blocks=[]
+    for x in range(-4,5):
+        for z in range(-4,5):
+            blocks.append(((x,-1,z),FULL,True))
+            if x<0:blocks.append(((x,0,z),FULL,True))
+    with api.Cache(4) as cache:
+        cache.update(world(blocks))
+        visible=False
+        for pitch in range(-90,91,5):
+            _,air,_,_=cache.frame_pose_air([-.31,2.62,.5,90,pitch],[(0,0,0)])
+            visible=visible or bool(air[0])
+        assert visible, 'the drop body cell has a visible region even though its near face is blocked'
 
 def load_tests(loader, tests, pattern):
     suite=unittest.TestSuite()
@@ -190,8 +211,10 @@ def load_tests(loader, tests, pattern):
     suite.addTest(unittest.FunctionTestCase(test_ctypes_rejects_incomplete_arrays_before_native_call))
     suite.addTest(unittest.FunctionTestCase(test_enclosed_full_cube_culling_preserves_visible_positions))
     suite.addTest(unittest.FunctionTestCase(test_entity_boxes_reuse_surface_occlusion))
-    suite.addTest(unittest.FunctionTestCase(test_visual_air_requires_the_whole_cell_to_be_visible))
-    suite.addTest(unittest.FunctionTestCase(test_visual_air_matches_full_projected_area_in_random_worlds))
+    suite.addTest(unittest.FunctionTestCase(test_visual_air_accepts_any_visible_region))
+    suite.addTest(unittest.FunctionTestCase(test_visual_air_matches_any_visible_projected_area_in_random_worlds))
+    suite.addTest(unittest.FunctionTestCase(test_visual_air_distinguishes_outside_view_from_occlusion))
+    suite.addTest(unittest.FunctionTestCase(test_visual_air_confirms_a_partly_exposed_downward_cell_without_preobservation))
     return suite
 
 if __name__=='__main__':unittest.main()

@@ -37,7 +37,7 @@ def valid_payload_value(profile="navigation_v1"):
         ray_columns=0, ray_rows=0, sensor_profile_revision=4, max_block_distance=16.,
         body_expansion_blocks=.05, block_epsilon_blocks=.001, entity_max_distance=32.,
         entity_occlusion_epsilon_blocks=.05, knowledge_model="block_state_v1",
-        visibility_rules_id="surface_visibility_1_21_v1", blocks=[],
+        visibility_rules_id="surface_visibility_1_21_v1", blocks=[], air_query_results=[],
         entity_visibility_near_model="surface_bbox_exact_16",
         entity_visibility_far_model="surface_rules_five_point_16_32",
         visible_entities=[], entities_truncated=False, truncated_entity_count=0)
