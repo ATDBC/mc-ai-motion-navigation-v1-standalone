@@ -17,14 +17,17 @@ from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
 from mc2p.motion_nav.jump_up import JumpUpEdge
 from mc2p.motion_nav.movement_transition import compose_movement_transitions
 from mc2p.motion_nav.movement_transition import GoalState, ResourceState
+from mc2p.motion_nav.movement_transition import MovementTransition
 from mc2p.motion_nav.motion_candidate import (
     MotionCandidateAdmission, MotionCandidateAdmitter, MotionCandidateContext,
     MotionCandidateStatus,
     VerifiedMotionCandidate,
 )
 from mc2p.motion_nav.motion_solver import (
-    SolveStatus, VerifiedMotionResult, revalidate_gap_motion,
+    MotionSolveKind, SolveStatus, VerifiedMotionResult,
+    revalidate_air_transition,
 )
+from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.online_motion import CandidateExecutionWindow, StateAnchor
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView
 from mc2p.motion_nav.known_map_planner import (
@@ -35,6 +38,7 @@ from mc2p.motion_nav.known_map_planner import (
 from mc2p.motion_nav.step_transition import StepEdge
 from mc2p.motion_nav.support_surfaces import SurfaceNodeId
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
+from mc2p.motion_nav.segment_entry import SegmentEntryWindow
 from mc2p.motion_nav.world_model import BlockPos
 
 
@@ -56,6 +60,7 @@ class AdmissionReason(StrEnum):
     ROUTE_RESOURCES_BELOW_MINIMUM = "route_resources_below_minimum"
     ROUTE_ENTRY_RESOURCES_UNAVAILABLE = "route_entry_resources_unavailable"
     ROUTE_RESOURCES_UNAVAILABLE = "route_resources_unavailable"
+    GROUND_TRAVERSAL_PROOF_MISSING = "ground_traversal_proof_missing"
     CANDIDATE_ADMITTED = "candidate_admitted"
 
 
@@ -127,7 +132,7 @@ class RouteAdmitter:
     def bind_verified_motion(
             route: ActiveRoute, proof: VerifiedMotionResult, *,
             action_index: int, candidate_revision: int,
-            risk_policy_id: str = "no_expected_damage",
+            damage_budget: TaskDamageBudget = TaskDamageBudget(),
             accepted_resource_incomplete_reasons: tuple[str, ...] = (),
     ) -> VerifiedMotionCandidate:
         if type(route) is not ActiveRoute or type(proof) is not VerifiedMotionResult:
@@ -135,15 +140,23 @@ class RouteAdmitter:
         if type(action_index) is not int or not 0 <= action_index < len(
                 route.action_route.actions):
             raise ContractViolation("verified motion action index is outside the route")
-        if type(route.action_route.actions[action_index]) is not JumpGapSegment:
-            raise ContractViolation("B10 verified motion currently binds JumpGap only")
+        action = route.action_route.actions[action_index]
+        expected_kind = {
+            JumpGapSegment: MotionSolveKind.JUMP_GAP,
+            JumpUpSegment: MotionSolveKind.JUMP_UP,
+            ControlledDropSegment: MotionSolveKind.CONTROLLED_DROP,
+        }.get(type(action))
+        if expected_kind is None or proof.kind is not expected_kind:
+            raise ContractViolation(
+                "verified motion kind does not match its route action"
+            )
         return VerifiedMotionCandidate(
             proof,
             MotionCandidateContext(
                 route.source_request_id, route.planning_generation,
                 route.goal_id, route.goal_revision,
                 route.route_id, route.route_revision, action_index,
-                candidate_revision, risk_policy_id,
+                candidate_revision, damage_budget,
                 accepted_resource_incomplete_reasons,
             ),
         )
@@ -153,7 +166,7 @@ class RouteAdmitter:
             anchor: StateAnchor, *, candidate_revision: int,
             intended_start_tick: int,
             changed_cells: tuple[BlockPos, ...],
-            risk_policy_id: str = "no_expected_damage",
+            damage_budget: TaskDamageBudget = TaskDamageBudget(),
             world: PhysicsWorldView | None = None,
     ) -> MotionCandidateAdmission:
         if type(route) is not ActiveRoute:
@@ -166,7 +179,7 @@ class RouteAdmitter:
             route_id=route.route_id, route_revision=route.route_revision,
             action_index=candidate.context.action_index,
             candidate_revision=candidate_revision,
-            risk_policy_id=risk_policy_id,
+            damage_budget=damage_budget,
             intended_start_tick=intended_start_tick,
             changed_cells=changed_cells,
         )
@@ -180,7 +193,7 @@ class RouteAdmitter:
             return MotionCandidateAdmission(
                 MotionCandidateStatus.REJECTED, "world_dependency_changed",
             )
-        refreshed = revalidate_gap_motion(
+        refreshed = revalidate_air_transition(
             candidate.proof, anchor, world,
             CandidateExecutionWindow(intended_start_tick, intended_start_tick + 1),
         )
@@ -198,7 +211,7 @@ class RouteAdmitter:
             route_id=route.route_id, route_revision=route.route_revision,
             action_index=candidate.context.action_index,
             candidate_revision=candidate_revision,
-            risk_policy_id=risk_policy_id,
+            damage_budget=damage_budget,
             intended_start_tick=intended_start_tick,
             changed_cells=changed_cells,
         )
@@ -445,6 +458,44 @@ class RouteAdmitter:
         connection_dependencies: tuple[BlockPos, ...],
         route_id: str,
     ) -> ActionRoute | None:
+        def entry_window(previous, next_node, transition) -> SegmentEntryWindow:
+            if type(transition) is not MovementTransition:
+                raise ContractViolation(
+                    "formal height transition requires an entry transition"
+                )
+            dx = next_node.position[0] - previous.position[0]
+            dz = next_node.position[2] - previous.position[2]
+            length = math.hypot(dx, dz)
+            if length <= 1.0e-9:
+                raise ContractViolation(
+                    "height transition entry requires a horizontal direction"
+                )
+            entry = transition.entry
+            return SegmentEntryWindow(
+                reference_point=previous.position,
+                horizontal_approach_direction=(dx / length, dz / length),
+                minimum_longitudinal_offset_blocks=-0.25,
+                maximum_longitudinal_offset_blocks=0.05,
+                maximum_lateral_offset_blocks=0.25,
+                minimum_feet_y=previous.position[1] - 0.10,
+                maximum_feet_y=previous.position[1] + 0.10,
+                minimum_speed_blocks_per_second=(
+                    entry.minimum_speed_blocks_per_second
+                ),
+                maximum_speed_blocks_per_second=(
+                    entry.maximum_speed_blocks_per_second
+                ),
+                maximum_velocity_direction_error_radians=math.radians(30.0),
+                allowed_poses=frozenset({entry.pose}),
+                allowed_modes=frozenset({entry.mode}),
+                required_yaw_radians=None,
+                maximum_yaw_error_radians=None,
+                profile_id=(
+                    transition.trajectory_profile_id
+                    or transition.transition_id
+                ),
+            )
+
         actions = []
         pending_nodes = [candidate.path[0]]
         pending_points = []
@@ -460,8 +511,15 @@ class RouteAdmitter:
         def flush_walk() -> None:
             nonlocal pending_nodes, pending_points, pending_dependencies, pending_transitions
             if len(pending_points) >= 2:
+                fixed_route = FixedRoute(
+                    f"{route_id}-walk-{len(actions)}", tuple(pending_points)
+                )
+                traversal_plan = next((
+                    plan for plan in candidate.ground_traversal_plans
+                    if plan.route.points == fixed_route.points
+                ), None)
                 actions.append(WalkSegment(
-                    FixedRoute(f"{route_id}-walk-{len(actions)}", tuple(pending_points)),
+                    fixed_route,
                     tuple(node.node_id for node in pending_nodes),
                     tuple(sorted(pending_dependencies)),
                     ((pending_transitions[0] if len(pending_transitions) == 1
@@ -470,6 +528,7 @@ class RouteAdmitter:
                       )) if pending_transitions
                      and len(pending_transitions) == len(pending_nodes) - 1
                      else None),
+                    traversal_plan,
                 ))
             pending_nodes = []
             pending_points = []
@@ -498,21 +557,25 @@ class RouteAdmitter:
                     actions.append(StepSegment(
                         edge, previous.surface, next_node.surface,
                         edge.dependencies, edge.transition,
+                        entry_window(previous, next_node, edge.transition),
                     ))
                 elif type(edge) is SurfaceJumpUpEdge:
                     actions.append(JumpUpSegment(
                         edge.jump_edge, edge.dependencies, edge.transition,
+                        edge.entry_window,
                     ))
                 elif type(edge) is SurfaceJumpGapEdge:
                     actions.append(JumpGapSegment(
                         edge.air_edge, previous.surface, next_node.surface,
                         edge.dependencies, edge.transition,
+                        edge.entry_window,
                     ))
                 else:
                     assert type(edge) is SurfaceControlledDropEdge
                     actions.append(ControlledDropSegment(
                         edge.air_edge, previous.surface, next_node.surface,
                         edge.dependencies, edge.transition,
+                        edge.entry_window,
                     ))
                 pending_nodes = [next_node]
                 pending_points = [RoutePoint(*next_node.position)]
@@ -595,12 +658,31 @@ class RouteAdmitter:
         if not connected:
             return AdmissionResult(AdmissionStatus.REJECTED,
                                    AdmissionReason.CURRENT_BODY_CANNOT_CONNECT)
+        if (any(
+                type(edge) is SurfaceWalkEdge
+                and edge.requires_ground_traversal_proof
+                for edge in candidate.segments)
+                and not candidate.ground_traversal_plans):
+            return AdmissionResult(
+                AdmissionStatus.REJECTED,
+                AdmissionReason.GROUND_TRAVERSAL_PROOF_MISSING,
+            )
         route_id = self._surface_route_id(candidate)
         action_route = self._surface_action_route(
             candidate, frame, connection_length, connection_dependencies, route_id,
         )
         if action_route is None:
             return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.CANDIDATE_HAS_NO_ACTIONS)
+        if any(
+            type(action) is WalkSegment
+            and len({point.y for point in action.fixed_route.points}) > 1
+            and action.traversal_plan is None
+            for action in action_route.actions
+        ):
+            return AdmissionResult(
+                AdmissionStatus.REJECTED,
+                AdmissionReason.GROUND_TRAVERSAL_PROOF_MISSING,
+            )
 
         length = 0.0
         corridor_nodes = [candidate.path[0]]

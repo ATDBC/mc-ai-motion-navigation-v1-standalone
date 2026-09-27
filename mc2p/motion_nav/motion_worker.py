@@ -10,7 +10,8 @@ from mc2p.contracts.common import (
     ContractViolation, require_identifier, require_nonnegative_int,
 )
 from mc2p.motion_nav.motion_solver import (
-    GapSolveRequest, SolveResult, SolveStatus, solve_one_cell_gap,
+    AirTransitionSolveRequest, GapSolveRequest, SolveResult, SolveStatus,
+    solve_air_transition, solve_one_cell_gap,
 )
 from mc2p.motion_nav.online_motion import StateAnchor
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView
@@ -22,15 +23,16 @@ class GapMotionSolveJob:
     candidate_revision: int
     anchor: StateAnchor
     world: PhysicsWorldView
-    request: GapSolveRequest
+    request: GapSolveRequest | AirTransitionSolveRequest
 
     def __post_init__(self) -> None:
         require_identifier(self.connection_id, "motion connection id")
         require_nonnegative_int(self.candidate_revision, "candidate revision")
         if (type(self.anchor) is not StateAnchor
                 or type(self.world) is not PhysicsWorldView
-                or type(self.request) is not GapSolveRequest):
-            raise ContractViolation("gap motion job requires typed solve inputs")
+                or type(self.request) not in {
+                    GapSolveRequest, AirTransitionSolveRequest}):
+            raise ContractViolation("motion job requires typed solve inputs")
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,7 +57,11 @@ def _execute_job(job: GapMotionSolveJob) -> GapMotionSolveResult:
         raise ContractViolation("motion worker requires a typed job")
     started = time.perf_counter_ns()
     try:
-        solved = solve_one_cell_gap(job.anchor, job.world, job.request)
+        solved = (
+            solve_one_cell_gap(job.anchor, job.world, job.request)
+            if type(job.request) is GapSolveRequest else
+            solve_air_transition(job.anchor, job.world, job.request)
+        )
     except Exception as error:
         solved = SolveResult(
             SolveStatus.INTERNAL_ERROR,

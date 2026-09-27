@@ -36,6 +36,7 @@ from mc2p.motion_nav.planner_worker import PlannerWorker
 from mc2p.motion_nav.environment_identity import load_frozen_environment
 from mc2p.motion_nav.runtime_adapter import BodyState, NavigationFrame
 from mc2p.motion_nav.route_admission import AdmissionStatus, RouteAdmitter
+from mc2p.motion_nav.segment_entry import body_fits_segment_entry
 from mc2p.motion_nav.support_surfaces import SurfaceNodeId, query_support_surfaces
 from mc2p.motion_nav.world_model import (
     Aabb, BlockGeometry, ObservationStamp, WorldKnowledge, WorldSessionId,
@@ -146,6 +147,110 @@ def frame(world: WorldKnowledge, sequence: int, position: tuple[float, float, fl
 
 
 class B09AirTransitionTests(unittest.TestCase):
+    def test_formal_gap_route_keeps_the_calibrated_directional_entry_region(self):
+        world = known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:grass_block"),
+            (0, 0, 1): BlockGeometry.full_cube("minecraft:grass_block"),
+            (0, 0, 3): BlockGeometry.full_cube("minecraft:grass_block"),
+        })
+        graph = build_surface_graph(
+            world.view(), KnownMapBounds(0, 0, 0, 1, 0, 3, True),
+            ground_profile(), step_profile(),
+            air_profiles=(air_profile(MovementMode.JUMP_GAP),),
+        )
+        start = next(node.node_id for node in graph.nodes
+                     if node.node_id.column_z == 0)
+        goal = next(node.node_id for node in graph.nodes
+                    if node.node_id.column_z == 3)
+        request = SurfacePlanningRequest(
+            1, "walk-gap-entry", "goal", 1, graph.world_session,
+            start, goal,
+            initial_resources=ResourceState((("food_points", 20.0),)),
+        )
+        candidate = astar_surface_plan(graph, request)
+        initial = frame(
+            world, 1, candidate.path[0].position, (0, 0, 0), on_ground=True,
+        )
+        admitted = RouteAdmitter().admit_surface(
+            candidate, initial, expected_request_id=request.request_id,
+            goal_id=request.goal_id, goal_revision=request.goal_revision,
+            changed_cells=(),
+        )
+        self.assertIs(admitted.status, AdmissionStatus.ACCEPTED)
+        assert admitted.route is not None
+        action = next(
+            value for value in admitted.route.action_route.actions
+            if type(value) is JumpGapSegment
+        )
+        self.assertIsNotNone(action.entry_window)
+        body = frame(
+            world, 2, (0.5, 1.0, 1.5 + .073),
+            (0.0, 0.0, .059), on_ground=True,
+        ).body
+
+        self.assertTrue(body_fits_segment_entry(
+            action.entry_window, body, MovementMode.WALK,
+        ))
+        self.assertAlmostEqual(
+            action.entry_window.maximum_longitudinal_offset_blocks, .12,
+        )
+
+    def test_verified_gap_handoff_uses_the_solver_entry_speed_without_widening_b09(self):
+        world = known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:grass_block"),
+            (0, 0, 1): BlockGeometry.full_cube("minecraft:grass_block"),
+            (0, 0, 3): BlockGeometry.full_cube("minecraft:grass_block"),
+        })
+        graph = build_surface_graph(
+            world.view(), KnownMapBounds(0, 0, 0, 1, 0, 3, True),
+            ground_profile(), step_profile(),
+            air_profiles=(air_profile(MovementMode.JUMP_GAP),),
+        )
+        start = next(node.node_id for node in graph.nodes
+                     if node.node_id.column_z == 0)
+        goal = next(node.node_id for node in graph.nodes
+                    if node.node_id.column_z == 3)
+        request = SurfacePlanningRequest(
+            1, "verified-walk-gap-entry", "goal", 1, graph.world_session,
+            start, goal,
+            initial_resources=ResourceState((("food_points", 20.0),)),
+        )
+        candidate = astar_surface_plan(graph, request)
+        initial = frame(
+            world, 1, candidate.path[0].position, (0, 0, 0), on_ground=True,
+        )
+        admitted = RouteAdmitter().admit_surface(
+            candidate, initial, expected_request_id=request.request_id,
+            goal_id=request.goal_id, goal_revision=request.goal_revision,
+            changed_cells=(),
+        )
+        self.assertIs(admitted.status, AdmissionStatus.ACCEPTED)
+        assert admitted.route is not None
+        actions = admitted.route.action_route.actions
+        gap_index = next(
+            index for index, value in enumerate(actions)
+            if type(value) is JumpGapSegment
+        )
+        self.assertEqual(actions[gap_index].entry_window.maximum_speed_blocks_per_second,
+                         .1)
+
+        executor = ActionRouteExecutor(
+            ground_profile(), jump_profile(), step_profile(),
+            air_profiles=(air_profile(MovementMode.JUMP_GAP),),
+        )
+        executor.start(
+            admitted.route.action_route, initial,
+            require_verified_motion_actions=frozenset({gap_index}),
+        )
+        self.assertIsInstance(executor._controller, motion_nav.FixedRouteController)
+        effective = executor._controller.config.handoff_entry_window
+        self.assertIsNotNone(effective)
+        self.assertAlmostEqual(effective.maximum_speed_blocks_per_second, 3.0)
+        self.assertAlmostEqual(
+            actions[gap_index].entry_window.maximum_speed_blocks_per_second,
+            .1,
+        )
+
     def test_prepare_releases_input_when_the_previous_input_was_not_confirmed(self):
         world = known_world({
             (0, 0, 0): BlockGeometry.full_cube("minecraft:grass_block"),

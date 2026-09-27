@@ -50,14 +50,21 @@ class FlatFixture:
             (x, y, z) for x in range(-16, 17) for y in (1, 2, 3) for z in range(-16, 17)
         ))
 
-    def frame(self, sequence: int, body: PlanarBodyState, *, body_y: float = 1.0) -> NavigationFrame:
+    def frame(
+        self,
+        sequence: int,
+        body: PlanarBodyState,
+        *,
+        body_y: float = 1.0,
+        on_ground: bool = True,
+    ) -> NavigationFrame:
         stamp = ObservationStamp(self.session, sequence, sequence, "test-clock", sequence * 50_000_000)
         x, z = body.x, body.z
         box = Aabb(x - 0.3, body_y, z - 0.3, x + 0.3, body_y + 1.8, z + 0.3)
         value = BodyState(
             self.session, sequence, stamp, (x, body_y, z),
             (body.velocity_x, 0.0, body.velocity_z), body.yaw_radians, 0.0,
-            "standing", box, True, False, False,
+            "standing", box, on_ground, False, on_ground,
         )
         return NavigationFrame(self.session, value, self.world.view(), "fabric")
 
@@ -68,6 +75,52 @@ def apply(body: PlanarBodyState, movement: MovementV1, motion: GroundMotionProfi
 
 
 class FixedRouteWalkTests(unittest.TestCase):
+    def test_one_false_ground_flag_over_full_support_keeps_tracking(self) -> None:
+        fixture, motion = FlatFixture(), profile()
+        body = PlanarBodyState(0.5, 0.5, 0.0, 0.0, 0.0)
+        controller = FixedRouteController(motion)
+        controller.start(FixedRoute("transient-ground-flag", (
+            RoutePoint(0.5, 1.0, 0.5), RoutePoint(0.5, 1.0, 3.5),
+        )), fixture.frame(0, body))
+
+        decision = controller.decide(fixture.frame(1, body, on_ground=False))
+
+        self.assertIs(decision.state, FixedRouteState.RUNNING)
+        self.assertEqual(decision.reason, "tracking_fixed_route_geometric_support")
+        self.assertNotEqual(decision.movement, MovementV1())
+
+    def test_repeated_false_ground_flag_is_not_hidden_by_geometry(self) -> None:
+        fixture, motion = FlatFixture(), profile()
+        body = PlanarBodyState(0.5, 0.5, 0.0, 0.0, 0.0)
+        controller = FixedRouteController(motion)
+        controller.start(FixedRoute("bounded-ground-flag", (
+            RoutePoint(0.5, 1.0, 0.5), RoutePoint(0.5, 1.0, 3.5),
+        )), fixture.frame(0, body))
+
+        first = controller.decide(fixture.frame(1, body, on_ground=False))
+        second = controller.decide(fixture.frame(2, body, on_ground=False))
+
+        self.assertIs(first.state, FixedRouteState.RUNNING)
+        self.assertIs(second.state, FixedRouteState.UNSUPPORTED)
+        self.assertEqual(second.reason, "ordinary_ground_state_lost")
+        self.assertEqual(second.movement, MovementV1())
+
+    def test_false_ground_flag_without_full_support_still_fails_closed(self) -> None:
+        fixture, motion = FlatFixture(), profile()
+        stamp = ObservationStamp(fixture.session, 1, 1, "test-clock", 50_000_000)
+        fixture.world.confirm_air(stamp, ((0, 0, 0),))
+        body = PlanarBodyState(0.5, 0.5, 0.0, 0.0, 0.0)
+        controller = FixedRouteController(motion)
+        controller.start(FixedRoute("lost-ground", (
+            RoutePoint(0.5, 1.0, 0.5), RoutePoint(0.5, 1.0, 3.5),
+        )), fixture.frame(0, body))
+
+        decision = controller.decide(fixture.frame(2, body, on_ground=False))
+
+        self.assertIs(decision.state, FixedRouteState.UNSUPPORTED)
+        self.assertEqual(decision.reason, "ordinary_ground_state_lost")
+        self.assertEqual(decision.movement, MovementV1())
+
     def test_physical_l_corridor_has_two_high_walls_and_open_centerline(self) -> None:
         walls = set(l_corridor_wall_positions(.5, 1.0, .5, 1))
         self.assertTrue(walls)
@@ -330,6 +383,94 @@ class FixedRouteWalkTests(unittest.TestCase):
                     exhaustive = ExhaustiveController(motion)
                     ranked.start(route, fixture.frame(0, body))
                     exhaustive.start(route, fixture.frame(0, body))
+
+                    actual = ranked.decide(fixture.frame(1, body))
+                    expected = exhaustive.decide(fixture.frame(1, body))
+
+                    self.assertEqual(actual.state, expected.state)
+                    self.assertEqual(actual.movement, expected.movement)
+                    self.assertEqual(actual.reason, expected.reason)
+                    self.assertEqual(actual.missing_cells, expected.missing_cells)
+
+    def test_open_braking_does_not_fully_validate_every_inferior_candidate(self) -> None:
+        class CountingController(FixedRouteController):
+            def __init__(self, *args, **kwargs) -> None:
+                super().__init__(*args, **kwargs)
+                self.full_candidate_validations = 0
+
+            def _evaluate_candidate(self, *args, **kwargs):
+                self.full_candidate_validations += 1
+                return super()._evaluate_candidate(*args, **kwargs)
+
+        fixture, motion = FlatFixture(), profile()
+        body = PlanarBodyState(0, 0, 0, 1.5, 0)
+        controller = CountingController(motion)
+        controller.start(FixedRoute("ranked-open-brake", (
+            RoutePoint(0, 1, 0), RoutePoint(0, 1, 8),
+        )), fixture.frame(0, body))
+        controller.cancel()
+
+        decision = controller.decide(fixture.frame(1, body))
+
+        self.assertIs(decision.state, FixedRouteState.CANCELLING)
+        self.assertLess(
+            controller.full_candidate_validations, len(tuple(
+                MovementV1(forward=forward, strafe=strafe)
+                for forward in (-1, 0, 1)
+                for strafe in (-1, 0, 1)
+            )),
+            "a safe braking winner should prune candidates that cannot beat it",
+        )
+
+    def test_ranked_braking_matches_exhaustive_reference(self) -> None:
+        class ExhaustiveController(FixedRouteController):
+            def _ranked_braking_candidates(
+                self, frame, body, target, query_cache,
+            ):
+                return [
+                    self._evaluate_candidate(
+                        frame, body, MovementV1(forward=forward, strafe=strafe),
+                        target, braking=True, query_cache=query_cache,
+                    )
+                    for forward in (-1, 0, 1)
+                    for strafe in (-1, 0, 1)
+                ]
+
+        motion = profile()
+        route = FixedRoute("ranked-braking-equivalence", (
+            RoutePoint(0, 1, 0), RoutePoint(0, 1, 8),
+        ))
+        body_cases = tuple(
+            PlanarBodyState(x, 0.2, velocity_x, velocity_z, yaw)
+            for x in (-0.35, 0.0, 0.35)
+            for velocity_x, velocity_z in ((0.0, 0.8), (0.4, 1.2))
+            for yaw in (-math.pi / 2, 0.0, math.pi / 2)
+        )
+        for terrain in ("open", "wall", "pit", "unknown"):
+            fixture = FlatFixture()
+            stamp = ObservationStamp(fixture.session, 1, 1, "test-clock", 50_000_000)
+            if terrain == "wall":
+                fixture.world.observe_blocks(stamp, {
+                    (1, y, z): BlockGeometry.full_cube("minecraft:stone")
+                    for y in (1, 2) for z in range(-1, 4)
+                })
+            elif terrain == "pit":
+                fixture.world.confirm_air(stamp, tuple(
+                    (x, 0, z) for x in (-1, 0, 1) for z in (1, 2)
+                ))
+            elif terrain == "unknown":
+                fixture.world.invalidate(stamp, tuple(
+                    (x, y, z)
+                    for x in (-1, 0, 1) for y in (0, 1, 2) for z in (1, 2)
+                ))
+            for index, body in enumerate(body_cases):
+                with self.subTest(terrain=terrain, body=index):
+                    ranked = FixedRouteController(motion)
+                    exhaustive = ExhaustiveController(motion)
+                    ranked.start(route, fixture.frame(0, body))
+                    exhaustive.start(route, fixture.frame(0, body))
+                    ranked.cancel()
+                    exhaustive.cancel()
 
                     actual = ranked.decide(fixture.frame(1, body))
                     expected = exhaustive.decide(fixture.frame(1, body))

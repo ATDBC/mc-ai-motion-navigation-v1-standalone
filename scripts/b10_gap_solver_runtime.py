@@ -29,6 +29,7 @@ from mc2p.motion_nav.motion_solver import (
     load_gap_solver_policy, solve_one_cell_gap,
 )
 from mc2p.motion_nav.motion_coordination import _gap_physics_snapshot
+from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.motion_worker import MotionSolverWorker
 from mc2p.motion_nav.motion_candidate import (
     MotionCandidateAdmitter, MotionCandidateContext, MotionCandidateStatus,
@@ -700,13 +701,14 @@ def _run_b10_gap_solver_runtime(
             )
         if frame.body.sequence_id != anchor.observation_sequence_id:
             raise RuntimeError("B10 world or body changed before candidate execution")
+        damage_budget = TaskDamageBudget()
         reusable = VerifiedMotionCandidate(
             solved.proof,
             MotionCandidateContext(
                 f"{episode}-{group}-{direction_index}-{repetition}",
                 repetition, "b10-gap-goal", direction_index,
                 f"b10-gap-route-{group}-{direction_index}", 1, 0, 1,
-                "no_expected_damage",
+                damage_budget,
                 ("server_hunger_clock_not_in_physics_state",),
             ),
         )
@@ -719,7 +721,7 @@ def _run_b10_gap_solver_runtime(
             route_id=reusable.context.route_id,
             route_revision=reusable.context.route_revision,
             action_index=0, candidate_revision=1,
-            risk_policy_id="no_expected_damage",
+            damage_budget=damage_budget,
             intended_start_tick=movement_tick + 1,
             changed_cells=(),
         )

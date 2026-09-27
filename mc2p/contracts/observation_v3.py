@@ -25,7 +25,9 @@ MAX_BLOCKS_V3 = 25000 + 512 + 512 + 1
 # evidence. Formal backends and navigation evidence reject it before use.
 _SOURCES = ("air_query", "body_contact", "current_target", "first_hit_ray", "surface_depth")
 _FACES = ("down", "up", "north", "south", "west", "east")
-_AIR_QUERY_STATUSES = ("outside_view", "occluded", "unavailable")
+_AIR_QUERY_STATUSES = (
+    "outside_view", "out_of_range", "occluded", "unavailable",
+)
 
 
 def _finite(value: float, name: str) -> None:

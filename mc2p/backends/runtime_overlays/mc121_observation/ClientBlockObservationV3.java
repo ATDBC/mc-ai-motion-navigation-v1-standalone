@@ -27,7 +27,8 @@ import net.minecraft.world.BlockView;
 public final class ClientBlockObservationV3 {
     public enum Source { BODY_CONTACT, CURRENT_TARGET, SURFACE_DEPTH, AIR_QUERY }
     public enum AirStatus {
-        OUTSIDE_VIEW("outside_view"), OCCLUDED("occluded"), UNAVAILABLE("unavailable");
+        OUTSIDE_VIEW("outside_view"), OUT_OF_RANGE("out_of_range"),
+        OCCLUDED("occluded"), UNAVAILABLE("unavailable");
         public final String wireName;
         AirStatus(String wireName) { this.wireName=wireName; }
     }

@@ -29,8 +29,7 @@ public final class SurfaceVisibilityRules {
         "minecraft:sugar_cane"
     );
     private static final Set<String> SEE_THROUGH_EXACT = Set.of(
-        "minecraft:ice", "minecraft:packed_ice", "minecraft:blue_ice",
-        "minecraft:frosted_ice", "minecraft:wheat", "minecraft:carrots",
+        "minecraft:ice", "minecraft:frosted_ice", "minecraft:wheat", "minecraft:carrots",
         "minecraft:potatoes", "minecraft:beetroots", "minecraft:nether_wart",
         "minecraft:cocoa"
     );
@@ -56,8 +55,7 @@ public final class SurfaceVisibilityRules {
         if (opaqueFullCube) return new Decision(true, true);
         boolean glass = blockId.endsWith("_stained_glass")
                 || blockId.endsWith("_stained_glass_pane");
-        boolean plant = blockId.startsWith("minecraft:potted_")
-                || blockId.endsWith("_sapling")
+        boolean plant = blockId.endsWith("_sapling")
                 || blockId.endsWith("_tulip")
                 || blockId.endsWith("_mushroom")
                 || blockId.endsWith("_roots")

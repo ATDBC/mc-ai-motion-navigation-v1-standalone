@@ -306,10 +306,13 @@ class StateAnchorTests(unittest.TestCase):
             session=SESSION, observation_sequence_id=10,
             movement_tick_id=9, phase=MotionTickPhase.AFTER_MOVEMENT,
             physics_state=state(), ledger=ledger,
+            health_points=17.0, absorption_points=2.0,
         )
         self.assertIs(result.status, AnchorBuildStatus.READY)
         self.assertEqual(result.anchor.physics_state.movement_tick_id, 9)
         self.assertEqual(result.anchor.confirmed_control_sequence, 4)
+        self.assertEqual(result.anchor.health_points, 17.0)
+        self.assertEqual(result.anchor.absorption_points, 2.0)
 
     def test_rejects_duplicate_observation_and_waits_for_relevant_in_flight_input(self):
         ledger = InputApplicationLedger(max_records=4)

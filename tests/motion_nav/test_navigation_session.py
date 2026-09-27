@@ -25,6 +25,7 @@ from mc2p.motion_nav.online_motion import InputApplicationLedger
 from mc2p.motion_nav.motion_residual import (
     MotionResidualResult, MotionResidualStatus,
 )
+from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.runtime_adapter import BodyState, NavigationFrame
 from mc2p.motion_nav.navigation_session import (
     NavigationSession,
@@ -275,6 +276,29 @@ class NavigationSessionTests(unittest.TestCase):
         return NavigationSessionProfiles(
             ordinary_profile(), jump_profile(), step_profile(),
         )
+
+    def test_goal_start_binds_the_callers_task_damage_budget(self):
+        world = _known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+            (1, -4, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        current = frame(world, 0, (.5, 1.0, .5))
+        session = NavigationSession(
+            "damage-budget-session", self.profiles(),
+            planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
+        )
+        budget = TaskDamageBudget("allow_one_point", 1.0)
+
+        session.start_goal(
+            "drop-goal", 1,
+            replace(_goal((1.5, -3.0, .5)),
+                    risk_policy_id="allow_one_point"), current,
+            damage_budget=budget,
+        )
+
+        self.assertEqual(session._request.damage_budget, budget)
+        self.assertEqual(session._request.goal_state.risk_policy_id,
+                         "allow_one_point")
 
     def test_started_session_cannot_replace_its_world_owner(self):
         from mc2p.motion_nav.runtime_adapter import NavigationObservationAdapter
@@ -666,6 +690,36 @@ class NavigationSessionTests(unittest.TestCase):
             session.report.reason,
             "information_occluded_requires_observation_position",
         )
+
+    def test_out_of_range_information_wait_is_bounded_without_turning(self):
+        world, unknown_gap = _known_endpoints_with_unknown_gap()
+        start, goal = _nodes(world, (-1, 1))
+        initial = replace(
+            frame(world, 0, start.position),
+            air_query_results=(AirQueryResultV3(unknown_gap, "out_of_range"),),
+        )
+        session = NavigationSession(
+            "bounded-out-of-range-information", self.profiles(),
+            planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        session.start(SurfacePlanningRequest(
+            1, "bounded-range-request", "bounded-range-goal", 1,
+            world.session.value, start.node_id, goal.node_id,
+            goal_state=_goal(goal.position),
+        ), initial)
+        session.propose(initial, None, 2_000_000_000)
+
+        for sequence in range(1, 41):
+            current = replace(
+                initial,
+                body=replace(initial.body, sequence_id=sequence),
+                air_query_results=(),
+            )
+            self.assertIsNone(session._information_look(current))
+
+        self.assertIs(session.report.state, NavigationSessionState.FAILED)
+        self.assertEqual(session.report.reason, "information_out_of_range")
 
     def test_conditioned_task_look_suppresses_information_look(self):
         world, _ = _known_endpoints_with_unknown_gap()

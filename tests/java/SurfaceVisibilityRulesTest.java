@@ -20,10 +20,10 @@ public final class SurfaceVisibilityRulesTest {
         expect("minecraft:iron_bars", false, false, false, null, true, true);
         expect("minecraft:oak_fence", false, false, false, null, true, true);
         expect("minecraft:oak_trapdoor", false, false, false, null, true, true);
-        expect("minecraft:blue_ice", false, false, false, null, true, false);
+        expect("minecraft:blue_ice", false, false, false, null, true, true);
         expect("minecraft:frosted_ice", false, false, false, null, true, false);
         expect("minecraft:muddy_mangrove_roots", false, false, true, null, true, true);
-        expect("minecraft:potted_dandelion", false, false, false, null, true, false);
+        expect("minecraft:potted_dandelion", false, false, false, null, true, true);
         expect("minecraft:wheat", false, false, false, null, true, false);
         expect("minecraft:oak_leaves", false, false, false, null, true, true);
         expect("minecraft:barrier", true, false, true, null, false, false);

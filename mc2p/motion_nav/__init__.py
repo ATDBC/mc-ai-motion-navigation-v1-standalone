@@ -15,6 +15,7 @@ from mc2p.motion_nav.known_map_planner import (
     PlanningStatus, RouteCandidate, SnapshotBuildProgress, SnapshotBuildStatus,
     WalkEdge, WalkGraph, WalkNode, astar_plan, build_walk_graph,
     plan_known_snapshot, plan_known_surface_snapshot,
+    seconds_to_planning_ticks,
     PlannerStateKey, SurfaceGraph, SurfaceNode, SurfacePlanningRequest,
     SurfacePlanningStatus,
     SurfaceControlledDropEdge, SurfaceJumpGapEdge, SurfaceJumpUpEdge,
@@ -76,12 +77,16 @@ from mc2p.motion_nav.online_motion import (
     StateAnchor, StateAnchorBuilder, project_movement_command,
 )
 from mc2p.motion_nav.motion_solver import (
-    DEFAULT_GAP_SOLVER_POLICY, GapCommandTemplate, GapSolveRequest,
-    GapSolverPolicy, LandingRegion, MotionCommandTick, SolveResult,
+    DEFAULT_AIR_TRANSITION_POLICIES, DEFAULT_GAP_SOLVER_POLICY,
+    AirTransitionCommandTemplate, AirTransitionSolveRequest,
+    AirTransitionSolverPolicy, GapCommandTemplate, GapSolveRequest,
+    GapSolverPolicy, LandingRegion, MotionCommandTick, MotionSolveKind, SolveResult,
     SolveStatus, TrajectoryValidation, VerifiedMotionResult,
     VerifiedMotionStartVariant,
-    load_gap_solver_policy,
-    revalidate_gap_motion, solve_one_cell_gap, validate_gap_trajectory,
+    load_air_transition_solver_policies, load_gap_solver_policy,
+    revalidate_air_transition, revalidate_gap_motion,
+    solve_air_transition, solve_one_cell_gap,
+    validate_gap_trajectory,
 )
 from mc2p.motion_nav.motion_candidate import (
     AdmittedMotionCandidate, MotionCandidateAdmission, MotionCandidateAdmitter,
@@ -90,7 +95,7 @@ from mc2p.motion_nav.motion_candidate import (
 )
 from mc2p.motion_nav.motion_coordination import (
     GapPreparationResult, GapPreparationStatus, MotionRouteCoordinator,
-    prepare_planned_gap_motion,
+    prepare_planned_air_transition, prepare_planned_gap_motion,
 )
 from mc2p.motion_nav.motion_worker import (
     GapMotionSolveJob, GapMotionSolveResult, MotionSolverWorker,
@@ -110,6 +115,18 @@ from mc2p.motion_nav.motion_residual import (
     MotionResidualStatus, MotionResidualThresholds, MotionResidualTracker,
     calculate_motion_residual,
 )
+from mc2p.motion_nav.motion_risk import (
+    TaskDamageBudget, conservative_plain_fall_damage_points,
+)
+from mc2p.motion_nav.segment_entry import (
+    SegmentEntryWindow, body_fits_segment_entry,
+    physics_fits_segment_entry,
+)
+from mc2p.motion_nav.ground_traversal import (
+    GroundTraversalPlan, GroundTraversalProofCache, GroundTraversalResult,
+    GroundTraversalStatus,
+    verify_ground_traversal,
+)
 from mc2p.motion_nav.external_motion_recovery import (
     ExternalMotionRecoveryConfig, ExternalMotionRecoveryController,
     ExternalMotionRecoveryDecision, RecoveryDirective,
@@ -126,7 +143,7 @@ __all__ = (
     "PlanningRequest", "PlanningStatus", "RouteCandidate",
     "SnapshotBuildProgress", "SnapshotBuildStatus", "WalkEdge", "WalkGraph",
     "WalkNode", "astar_plan", "build_walk_graph", "plan_known_snapshot",
-    "plan_known_surface_snapshot",
+    "plan_known_surface_snapshot", "seconds_to_planning_ticks",
     "PlannerStateKey", "SurfaceGraph", "SurfaceNode", "SurfacePlanningRequest",
     "SurfacePlanningStatus", "SurfaceControlledDropEdge", "SurfaceJumpGapEdge",
     "SurfaceJumpUpEdge", "SurfaceRouteCandidate", "SurfaceWalkEdge",
@@ -157,19 +174,24 @@ __all__ = (
     "InputApplicationLedger", "InputApplicationRecord", "InputApplicationStatus",
     "MotionTickPhase", "PredictionValidity", "ProjectionResult", "ProjectionStatus",
     "StateAnchor", "StateAnchorBuilder", "project_movement_command",
-    "DEFAULT_GAP_SOLVER_POLICY", "GapCommandTemplate", "GapSolveRequest",
+    "DEFAULT_AIR_TRANSITION_POLICIES", "DEFAULT_GAP_SOLVER_POLICY",
+    "AirTransitionCommandTemplate", "AirTransitionSolveRequest",
+    "AirTransitionSolverPolicy", "GapCommandTemplate", "GapSolveRequest",
     "GapSolverPolicy", "LandingRegion", "MotionCommandTick", "SolveResult",
-    "SolveStatus", "TrajectoryValidation", "VerifiedMotionResult",
+    "MotionSolveKind", "SolveStatus", "TrajectoryValidation", "VerifiedMotionResult",
     "VerifiedMotionStartVariant",
-    "load_gap_solver_policy",
-    "revalidate_gap_motion", "solve_one_cell_gap", "validate_gap_trajectory",
+    "load_air_transition_solver_policies", "load_gap_solver_policy",
+    "revalidate_air_transition", "revalidate_gap_motion",
+    "solve_air_transition", "solve_one_cell_gap",
+    "validate_gap_trajectory",
     "AdmittedMotionCandidate", "MotionCandidateAdmission",
     "MotionCandidateAdmitter", "MotionCandidateContext",
     "MotionCandidateStatus", "VerifiedMotionCandidate",
     "VerifiedMotionDecision", "VerifiedMotionExecutor",
     "VerifiedMotionExecutorState",
     "GapPreparationResult", "GapPreparationStatus",
-    "MotionRouteCoordinator", "prepare_planned_gap_motion",
+    "MotionRouteCoordinator", "prepare_planned_air_transition",
+    "prepare_planned_gap_motion",
     "GapMotionSolveJob", "GapMotionSolveResult", "MotionSolverWorker",
     "ExternalMotionReentryDecision", "ExternalMotionReentryStatus",
     "NavigationSession", "NavigationSessionPort", "NavigationSessionProfiles",
@@ -181,6 +203,12 @@ __all__ = (
     "DEFAULT_MOTION_RESIDUAL_THRESHOLDS", "MotionResidualResult",
     "MotionResidualStatus", "MotionResidualThresholds",
     "MotionResidualTracker", "calculate_motion_residual",
+    "TaskDamageBudget", "conservative_plain_fall_damage_points",
+    "SegmentEntryWindow", "body_fits_segment_entry",
+    "physics_fits_segment_entry",
+    "GroundTraversalPlan", "GroundTraversalProofCache",
+    "GroundTraversalResult", "GroundTraversalStatus",
+    "verify_ground_traversal",
     "ExternalMotionRecoveryConfig", "ExternalMotionRecoveryController",
     "ExternalMotionRecoveryDecision", "RecoveryDirective",
 )

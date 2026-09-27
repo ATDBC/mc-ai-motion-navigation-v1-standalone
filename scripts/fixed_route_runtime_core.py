@@ -17,6 +17,7 @@ from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.contracts.task import ComparisonOperatorV0, SuccessCriterionV0, TaskIntentV0
 from mc2p.motion_nav.fixed_route import FixedRoute, FixedRouteController, FixedRouteState, RoutePoint
 from mc2p.motion_nav.ground_motion import GroundMotionProfile
+from mc2p.motion_nav.navigation_session import information_look_for_missing_cells
 from mc2p.motion_nav.runtime_adapter import NavigationObservationAdapter
 from mc2p.motion_nav.world_model import BlockPos, CellKnowledge
 from scripts.control_probe_core import append_jsonl, write_json_atomic
@@ -142,8 +143,23 @@ def run_fixed_route_runtime(runtime, backend, episode: str, directory: Path,
         fixture_writer(positions, material)
         expected = CellKnowledge.AIR if material == "minecraft:air" else CellKnowledge.BLOCK
         request = ObservationRequestV3("navigation_v1", positions)
-        for _ in range(5):
-            step(valid_for_ticks=1, observation_request=request)
+        for _ in range(40):
+            pending = tuple(
+                position for position in positions
+                if frame.world.cell(position).knowledge is not expected
+            )
+            statuses = {
+                result.position: result.status
+                for result in frame.air_query_results
+            }
+            look = information_look_for_missing_cells(
+                frame, pending, statuses,
+            )
+            step(
+                look=look,
+                valid_for_ticks=1,
+                observation_request=request,
+            )
             matched = sum(
                 frame.world.cell(position).knowledge is expected for position in positions
             )
@@ -156,7 +172,9 @@ def run_fixed_route_runtime(runtime, backend, episode: str, directory: Path,
             if ((expected is CellKnowledge.BLOCK and matched > 0)
                     or (expected is CellKnowledge.AIR and matched == len(positions))):
                 return matched
-        raise RuntimeError(f"B03 fixture did not become {expected.value} within five observations")
+        raise RuntimeError(
+            f"B03 fixture did not become {expected.value} within 40 observations"
+        )
 
     # Each JVM runs every deterministic scenario five times. The independent
     # second JVM brings every scenario to ten real runs without sharing client state.
@@ -225,6 +243,18 @@ def run_fixed_route_runtime(runtime, backend, episode: str, directory: Path,
         start_sequence = frame.body.sequence_id
         for _ in range(180):
             decision = controller.decide(frame, input_confirmed=input_confirmed)
+            append_jsonl(directory / "b03-control-frames.jsonl", {
+                "route_index": trial_index,
+                "observation_sequence_id": frame.body.sequence_id,
+                "state": decision.state.value,
+                "reason": decision.reason,
+                "position": list(frame.body.position),
+                "velocity_blocks_per_second": list(
+                    frame.body.velocity_blocks_per_second
+                ),
+                "movement": asdict(decision.movement),
+                "missing_cells": [list(cell) for cell in decision.missing_cells],
+            })
             control_times.append(decision.control_time_ns)
             goal = route.points[-1]
             speed = math.hypot(frame.body.velocity_blocks_per_second[0],
@@ -240,9 +270,17 @@ def run_fixed_route_runtime(runtime, backend, episode: str, directory: Path,
             else:
                 low_run = 0
             request = None
+            information_look = None
             if decision.missing_cells:
                 information_frames += 1
                 request, _ = adapter.air_request(decision.missing_cells)
+                statuses = {
+                    result.position: result.status
+                    for result in frame.air_query_results
+                }
+                information_look = information_look_for_missing_cells(
+                    frame, decision.missing_cells, statuses,
+                )
             if decision.state is FixedRouteState.SUCCEEDED:
                 break
             if decision.state is FixedRouteState.INPUT_LOST:
@@ -255,8 +293,12 @@ def run_fixed_route_runtime(runtime, backend, episode: str, directory: Path,
                 FixedRouteState.BLOCKED, FixedRouteState.FAILED, FixedRouteState.UNSUPPORTED,
             }:
                 raise RuntimeError(f"B03 route {trial_index} ended as {decision.state}: {decision.reason}")
-            result = step(decision.movement, valid_for_ticks=decision.input_lease_ticks,
-                          observation_request=request)
+            result = step(
+                decision.movement,
+                look=information_look,
+                valid_for_ticks=decision.input_lease_ticks,
+                observation_request=request,
+            )
             input_confirmed = receipt_confirms_input(result.backend_result.receipt.status)
         else:
             raise TimeoutError(f"B03 route {trial_index} exceeded 180 control frames")

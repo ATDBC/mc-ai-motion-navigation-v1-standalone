@@ -51,6 +51,7 @@ class B07StepRouteTests(unittest.TestCase):
         self.assertIsNotNone(result.route)
         self.assertEqual(len(result.route.action_route.actions), 1)
         self.assertIs(type(result.route.action_route.actions[0]), StepSegment)
+        self.assertIsNotNone(result.route.action_route.actions[0].entry_window)
 
     def test_changed_step_dependency_is_rejected_before_execution(self):
         world, candidate, request = self.candidate()

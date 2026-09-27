@@ -1,7 +1,7 @@
 """Known ordinary-ground graph construction and deterministic B04 planning."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 import heapq
 import math
@@ -14,6 +14,13 @@ from mc2p.motion_nav.controlled_drop import ControlledDropEdge, query_controlled
 from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
 from mc2p.motion_nav.ground_motion import GroundMotionProfile
 from mc2p.motion_nav.ground_modes import GroundModeProfile
+from mc2p.motion_nav.ground_traversal import (
+    GroundTraversalPlan, GroundTraversalProofCache, GroundTraversalStatus,
+    verify_ground_traversal,
+)
+from mc2p.motion_nav.fixed_route import FixedRoute, RoutePoint
+from mc2p.motion_nav.physics_adapter import PhysicsWorldView
+from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET, PhysicsState
 from mc2p.motion_nav.jump_gap import JumpGapEdge, query_jump_gap
 from mc2p.motion_nav.jump_up import JumpUpEdge, JumpUpProfile, query_jump_up
 from mc2p.motion_nav.movement_transition import (
@@ -24,7 +31,11 @@ from mc2p.motion_nav.world_model import (
     Aabb, BlockPos, COLLISION_OWNER_BELOW_REACH_CELLS, CellFact, CellKnowledge,
     WORLD_SECTION_SIZE, WorldView,
 )
+from mc2p.motion_nav.motion_risk import (
+    TaskDamageBudget, conservative_plain_fall_damage_points,
+)
 from mc2p.motion_nav.step_transition import StepEdge, StepProfile, query_step
+from mc2p.motion_nav.segment_entry import SegmentEntryWindow
 from mc2p.motion_nav.support_surfaces import (
     SupportSurface, SurfaceNodeId, query_support_surfaces,
 )
@@ -32,6 +43,15 @@ from mc2p.motion_nav.support_surfaces import (
 
 WalkNodeId = tuple[int, int, int]
 _DIRECTIONS = ((-1, 0), (0, -1), (0, 1), (1, 0))
+_PLANNING_TICK_SECONDS = 0.05
+
+
+def seconds_to_planning_ticks(seconds: float) -> int:
+    """Convert a positive duration to the 20 Hz integer planning lattice."""
+    if (type(seconds) not in (int, float)
+            or not math.isfinite(float(seconds)) or seconds <= 0):
+        raise ContractViolation("planning duration must be positive and finite")
+    return max(1, math.ceil(float(seconds) / _PLANNING_TICK_SECONDS - 1.0e-12))
 
 
 def _node_id(value: WalkNodeId, name: str = "walk node") -> None:
@@ -409,6 +429,7 @@ def _resource_aware_search(
     *,
     goal_test=None,
     next_states=None,
+    edge_cost=None,
 ) -> _SearchResult:
     """A* over nondominated (node, remaining-resources) labels."""
     deadline_ns = time.perf_counter_ns() + int(maximum_planning_seconds * 1e9)
@@ -457,7 +478,9 @@ def _resource_aware_search(
             )
             if updated is None:
                 continue
-            candidate = cost + segment.cost_seconds
+            candidate = cost + (
+                segment.cost_seconds if edge_cost is None else edge_cost(segment)
+            )
             successors = (
                 next_states(current, segment) if next_states is not None
                 else (segment.end,)
@@ -498,6 +521,7 @@ def _plain_search(
     *,
     goal_test=None,
     next_states=None,
+    edge_cost=None,
 ) -> _SearchResult:
     """A* for paths whose transitions neither require nor change resources."""
     deadline_ns = time.perf_counter_ns() + int(maximum_planning_seconds * 1e9)
@@ -528,7 +552,9 @@ def _plain_search(
         if expanded > maximum_expansions:
             return _SearchResult((), (), None, None, expanded, True)
         for segment in outgoing(current):
-            candidate = cost + segment.cost_seconds
+            candidate = cost + (
+                segment.cost_seconds if edge_cost is None else edge_cost(segment)
+            )
             successors = (
                 next_states(current, segment) if next_states is not None
                 else (segment.end,)
@@ -970,6 +996,7 @@ class SurfaceWalkEdge:
     cost_seconds: float
     dependencies: tuple[BlockPos, ...]
     transition: MovementTransition
+    requires_ground_traversal_proof: bool = False
 
     def __post_init__(self) -> None:
         if type(self.start) is not SurfaceNodeId or type(self.end) is not SurfaceNodeId:
@@ -980,6 +1007,8 @@ class SurfaceWalkEdge:
             raise ContractViolation("surface walk edge cost must be positive")
         if type(self.dependencies) is not tuple or type(self.transition) is not MovementTransition:
             raise ContractViolation("surface walk edge requires immutable typed facts")
+        if type(self.requires_ground_traversal_proof) is not bool:
+            raise ContractViolation("surface walk proof requirement must be explicit")
 
     @property
     def resource_change(self) -> ResourceChange:
@@ -991,12 +1020,15 @@ class SurfaceJumpUpEdge:
     start: SurfaceNodeId
     end: SurfaceNodeId
     jump_edge: JumpUpEdge
+    entry_window: SegmentEntryWindow
 
     def __post_init__(self) -> None:
         if type(self.start) is not SurfaceNodeId or type(self.end) is not SurfaceNodeId:
             raise ContractViolation("surface JumpUp edge requires surface node ids")
         if type(self.jump_edge) is not JumpUpEdge:
             raise ContractViolation("surface JumpUp edge requires a calibrated JumpUp edge")
+        if type(self.entry_window) is not SegmentEntryWindow:
+            raise ContractViolation("surface JumpUp edge requires its calibrated entry")
 
     @property
     def cost_seconds(self) -> float:
@@ -1020,12 +1052,15 @@ class SurfaceJumpGapEdge:
     start: SurfaceNodeId
     end: SurfaceNodeId
     air_edge: JumpGapEdge
+    entry_window: SegmentEntryWindow
 
     def __post_init__(self) -> None:
         if type(self.start) is not SurfaceNodeId or type(self.end) is not SurfaceNodeId:
             raise ContractViolation("surface gap jump edge requires surface node ids")
         if type(self.air_edge) is not JumpGapEdge:
             raise ContractViolation("surface gap jump requires a calibrated edge")
+        if type(self.entry_window) is not SegmentEntryWindow:
+            raise ContractViolation("surface gap jump requires its calibrated entry")
 
     @property
     def cost_seconds(self) -> float:
@@ -1049,12 +1084,15 @@ class SurfaceControlledDropEdge:
     start: SurfaceNodeId
     end: SurfaceNodeId
     air_edge: ControlledDropEdge
+    entry_window: SegmentEntryWindow
 
     def __post_init__(self) -> None:
         if type(self.start) is not SurfaceNodeId or type(self.end) is not SurfaceNodeId:
             raise ContractViolation("surface controlled drop edge requires surface node ids")
         if type(self.air_edge) is not ControlledDropEdge:
             raise ContractViolation("surface controlled drop requires a calibrated edge")
+        if type(self.entry_window) is not SegmentEntryWindow:
+            raise ContractViolation("surface controlled drop requires its calibrated entry")
 
     @property
     def cost_seconds(self) -> float:
@@ -1192,6 +1230,8 @@ class SurfacePlanningRequest:
     minimum_resources: ResourceState = ResourceState()
     goal_state: GoalState | None = None
     maximum_planning_seconds: float = .5
+    damage_budget: TaskDamageBudget = TaskDamageBudget()
+    entry_physics_state: PhysicsState | None = None
 
     def __post_init__(self) -> None:
         require_nonnegative_int(self.sequence, "surface planning request sequence")
@@ -1214,11 +1254,20 @@ class SurfacePlanningRequest:
             raise ContractViolation("surface planning resources must use resource states")
         if not self.initial_resources.at_least(self.minimum_resources):
             raise ContractViolation("surface planning initial resources are below the minimum")
+        if type(self.damage_budget) is not TaskDamageBudget:
+            raise ContractViolation("surface planning damage budget must be typed")
+        if (self.entry_physics_state is not None
+                and type(self.entry_physics_state) is not PhysicsState):
+            raise ContractViolation("surface planning entry state must be typed")
         if self.goal_state is not None:
             if type(self.goal_state) is not GoalState:
                 raise ContractViolation("surface planning goal state must be typed")
             if not self.minimum_resources.at_least(self.goal_state.minimum_resources):
                 raise ContractViolation("surface planning minimum omits the goal requirement")
+            if self.goal_state.risk_policy_id != self.damage_budget.risk_policy_id:
+                raise ContractViolation(
+                    "surface planning goal and damage budget use different policies"
+                )
 
 
 @dataclass(frozen=True, slots=True)
@@ -1243,6 +1292,25 @@ class SurfaceRouteCandidate:
     minimum_resources: ResourceState = ResourceState()
     planner_states: tuple[PlannerStateKey, ...] = ()
     reasons: tuple[str, ...] = ()
+    total_cost_ticks: int | None = None
+    ground_traversal_plans: tuple[GroundTraversalPlan, ...] = ()
+
+    def __post_init__(self) -> None:
+        if (self.total_cost_ticks is not None
+                and (type(self.total_cost_ticks) is not int
+                     or self.total_cost_ticks < 1)):
+            raise ContractViolation("surface route tick cost must be positive")
+        if ((self.total_cost_seconds is None)
+                != (self.total_cost_ticks is None)):
+            raise ContractViolation("surface route cost units must be present together")
+        if (type(self.ground_traversal_plans) is not tuple
+                or any(type(plan) is not GroundTraversalPlan
+                       for plan in self.ground_traversal_plans)):
+            raise ContractViolation("surface route traversal proofs must be immutable")
+
+
+def _surface_edge_cost_ticks(edge: SurfaceEdge) -> int:
+    return seconds_to_planning_ticks(edge.cost_seconds)
 
 
 def _surface_walk_query(
@@ -1273,6 +1341,43 @@ def _surface_walk_query(
         if support.support_fraction < .5:
             return QueryStatus.BLOCKED, tuple(sorted(dependencies))
     return QueryStatus.FEASIBLE, tuple(sorted(dependencies))
+
+
+def _provisional_direct_drop_query(
+        world: WorldView, start: SupportSurface, end: SupportSurface, *,
+        body_height_blocks: float,
+) -> tuple[QueryStatus, tuple[BlockPos, ...]]:
+    """Check only facts needed before the physics solver proves a direct fall."""
+    min_x = math.floor(min(start.position[0], end.position[0]) - .3)
+    max_x = math.floor(max(start.position[0], end.position[0]) + .3)
+    min_z = math.floor(min(start.position[2], end.position[2]) - .3)
+    max_z = math.floor(max(start.position[2], end.position[2]) + .3)
+    min_y = math.floor(end.position[1])
+    max_y = math.ceil(start.position[1] + body_height_blocks) - 1
+    dependencies = set(start.dependencies) | set(end.dependencies)
+    blocked = False
+    for x in range(min_x, max_x + 1):
+        for y in range(min_y, max_y + 1):
+            for z in range(min_z, max_z + 1):
+                position = (x, y, z)
+                fact = world.cell(position)
+                dependencies.add(position)
+                if fact.knowledge is CellKnowledge.UNKNOWN:
+                    return QueryStatus.NEEDS_INFORMATION, tuple(sorted(dependencies))
+                if fact.knowledge is CellKnowledge.BLOCK:
+                    if (x == math.floor(start.position[0])
+                            and z == math.floor(start.position[2])
+                            and y < start.position[1]):
+                        continue
+                    if (x == math.floor(end.position[0])
+                            and z == math.floor(end.position[2])
+                            and y < end.position[1]):
+                        continue
+                    blocked = True
+    return (
+        QueryStatus.BLOCKED if blocked else QueryStatus.FEASIBLE,
+        tuple(sorted(dependencies)),
+    )
 
 
 def _step_transition(profile: StepProfile,
@@ -1332,11 +1437,14 @@ class _SurfaceExpander:
         *,
         air_profiles: tuple[AirMotionProfile, ...] = (),
         ground_mode_profile: GroundModeProfile | None = None,
+        damage_budget: TaskDamageBudget = TaskDamageBudget(),
     ) -> None:
         if (type(world) is not WorldView or type(bounds) is not KnownMapBounds
                 or type(ground_profile) is not GroundMotionProfile
                 or type(step_profile) is not StepProfile):
             raise ContractViolation("surface expansion requires typed inputs")
+        if type(damage_budget) is not TaskDamageBudget:
+            raise ContractViolation("surface expansion damage budget must be typed")
         if jump_profile is not None and type(jump_profile) is not JumpUpProfile:
             raise ContractViolation("surface expansion JumpUp profile must be typed")
         if ground_mode_profile is not None:
@@ -1358,6 +1466,7 @@ class _SurfaceExpander:
         self.air_profiles = air_profiles
         self.air_by_mode = {profile.mode: profile for profile in air_profiles}
         self.ground_mode_profile = ground_mode_profile
+        self.damage_budget = damage_budget
         self.movement_mode = (
             ground_mode_profile.mode
             if ground_mode_profile is not None else MovementMode.WALK
@@ -1386,6 +1495,9 @@ class _SurfaceExpander:
             tuple[SurfaceNodeId, SurfaceNodeId], tuple[SurfaceEdge, ...]
         ] = {}
         self.outgoing_cache: dict[SurfaceNodeId, tuple[SurfaceEdge, ...]] = {}
+        self.disabled_ground_walk_edges: set[
+            tuple[SurfaceNodeId, SurfaceNodeId]
+        ] = set()
         self.complete = bounds.complete_scope
         self.has_unsupported = False
 
@@ -1456,11 +1568,21 @@ class _SurfaceExpander:
         dz = end.node_id.column_z - start.node_id.column_z
         delta_y = end.position[1] - start.position[1]
         distance = abs(dx) + abs(dz)
-        if abs(delta_y) <= 1.0e-6 and distance == 1:
-            status, dependencies = _surface_walk_query(
-                self.world, start.surface, end.surface,
-                body_height_blocks=self.body_height,
-            )
+        if abs(delta_y) <= .6 + 1.0e-9 and distance == 1:
+            if abs(delta_y) <= 1.0e-6:
+                status, dependencies = _surface_walk_query(
+                    self.world, start.surface, end.surface,
+                    body_height_blocks=self.body_height,
+                )
+            else:
+                # Surface discovery has already proved the support and body
+                # clearance at both ends.  The space swept while Minecraft
+                # performs its automatic step remains a provisional fact and
+                # must be checked by the 1.21 calculator before admission.
+                status = QueryStatus.FEASIBLE
+                dependencies = tuple(sorted(
+                    set(start.dependencies) | set(end.dependencies)
+                ))
             self._remember_status(status)
             if status is QueryStatus.FEASIBLE:
                 cost = distance / (
@@ -1472,6 +1594,7 @@ class _SurfaceExpander:
                         self.ground_profile, cost, dependencies,
                         mode_profile=self.ground_mode_profile,
                     ),
+                    abs(delta_y) > 1.0e-6,
                 ))
         if (self.movement_mode is MovementMode.WALK
                 and abs(delta_y) > 1.0e-6 and distance <= 1):
@@ -1516,22 +1639,108 @@ class _SurfaceExpander:
                     )
                     found.append(SurfaceJumpUpEdge(
                         start.node_id, end.node_id, jump_edge,
+                        _action_entry_window(
+                            start, end,
+                            profile_id=self.jump_profile.profile_id,
+                            minimum_speed=0.0,
+                            maximum_speed=(
+                                self.jump_profile
+                                .maximum_entry_speed_blocks_per_second
+                            ),
+                            center_tolerance=(
+                                self.jump_profile.entry_center_tolerance_blocks
+                            ),
+                            maximum_forward_offset=(
+                                self.jump_profile.maximum_forward_offset_blocks
+                            ),
+                            maximum_backward_offset=(
+                                self.jump_profile.maximum_backward_offset_blocks
+                            ),
+                            maximum_lateral_offset=(
+                                self.jump_profile.maximum_lateral_offset_blocks
+                            ),
+                            maximum_yaw_error_degrees=(
+                                self.jump_profile.maximum_yaw_error_degrees
+                            ),
+                        ),
                     ))
             if (delta_y < -1.0e-6
                     and MovementMode.CONTROLLED_DROP in self.air_by_mode):
                 profile = self.air_by_mode[MovementMode.CONTROLLED_DROP]
-                drop = query_controlled_drop(
-                    self.world, start.surface, end.surface, profile,
+                direct_height = -delta_y
+                predicted_damage = conservative_plain_fall_damage_points(
+                    direct_height
                 )
-                self._remember_status(drop.status)
-                if drop.status is QueryStatus.FEASIBLE:
-                    transition = _air_transition(profile, drop.dependencies)
+                relation_is_supported = (
+                    distance == 1
+                    and direct_height <= 16.0 + 1.0e-6
+                    and math.isclose(
+                        direct_height, round(direct_height), abs_tol=1.0e-6,
+                    )
+                    and self.damage_budget.maximum_expected_damage_points
+                       + 1.0e-9 >= predicted_damage
+                )
+                intermediate_support = any(
+                    end.position[1] + 1.0e-6 < node.position[1]
+                    < start.position[1] - 1.0e-6
+                    for node in self.column(
+                        end.node_id.column_x, end.node_id.column_z,
+                    )
+                )
+                if relation_is_supported and not intermediate_support:
+                    if math.isclose(direct_height, 1.0, abs_tol=1.0e-6):
+                        drop = query_controlled_drop(
+                            self.world, start.surface, end.surface, profile,
+                        )
+                        drop_status = drop.status
+                        drop_dependencies = drop.dependencies
+                    else:
+                        drop_status, drop_dependencies = \
+                            _provisional_direct_drop_query(
+                                self.world, start.surface, end.surface,
+                                body_height_blocks=self.body_height,
+                            )
+                    self._remember_status(drop_status)
+                else:
+                    drop_status = QueryStatus.UNSUPPORTED
+                    drop_dependencies = tuple(sorted(
+                        set(start.dependencies) | set(end.dependencies)
+                    ))
+                if drop_status is QueryStatus.FEASIBLE:
+                    estimated_ticks = max(
+                        seconds_to_planning_ticks(profile.cost_seconds),
+                        5 + math.ceil(math.sqrt(direct_height / .04)),
+                    )
+                    transition = _air_transition(profile, drop_dependencies)
                     air_edge = ControlledDropEdge(
                         start.node_id, end.node_id, profile.profile_id,
-                        profile.cost_seconds, drop.dependencies, transition,
+                        estimated_ticks * _PLANNING_TICK_SECONDS,
+                        drop_dependencies, transition,
                     )
                     found.append(SurfaceControlledDropEdge(
                         start.node_id, end.node_id, air_edge,
+                        _action_entry_window(
+                            start, end, profile_id=profile.profile_id,
+                            minimum_speed=(
+                                profile.minimum_entry_speed_blocks_per_second
+                            ),
+                            maximum_speed=(
+                                profile.maximum_entry_speed_blocks_per_second
+                            ),
+                            center_tolerance=profile.entry_center_tolerance_blocks,
+                            maximum_forward_offset=(
+                                profile.maximum_forward_offset_blocks
+                            ),
+                            maximum_backward_offset=(
+                                profile.maximum_backward_offset_blocks
+                            ),
+                            maximum_lateral_offset=(
+                                profile.maximum_lateral_offset_blocks
+                            ),
+                            maximum_yaw_error_degrees=(
+                                profile.maximum_yaw_error_degrees
+                            ),
+                        ),
                     ))
         if (abs(delta_y) <= 1.0e-6
                 and MovementMode.JUMP_GAP in self.air_by_mode):
@@ -1567,6 +1776,30 @@ class _SurfaceExpander:
                         )
                         found.append(SurfaceJumpGapEdge(
                             start.node_id, end.node_id, air_edge,
+                            _action_entry_window(
+                                start, end, profile_id=profile.profile_id,
+                                minimum_speed=(
+                                    profile.minimum_entry_speed_blocks_per_second
+                                ),
+                                maximum_speed=(
+                                    profile.maximum_entry_speed_blocks_per_second
+                                ),
+                                center_tolerance=(
+                                    profile.entry_center_tolerance_blocks
+                                ),
+                                maximum_forward_offset=(
+                                    profile.maximum_forward_offset_blocks
+                                ),
+                                maximum_backward_offset=(
+                                    profile.maximum_backward_offset_blocks
+                                ),
+                                maximum_lateral_offset=(
+                                    profile.maximum_lateral_offset_blocks
+                                ),
+                                maximum_yaw_error_degrees=(
+                                    profile.maximum_yaw_error_degrees
+                                ),
+                            ),
                         ))
         value = tuple(sorted(found, key=_surface_edge_identity))
         self.edge_cache[key] = value
@@ -1580,7 +1813,14 @@ class _SurfaceExpander:
 
     def outgoing(self, node_id: SurfaceNodeId) -> tuple[SurfaceEdge, ...]:
         if node_id in self.outgoing_cache:
-            return self.outgoing_cache[node_id]
+            return tuple(
+                edge for edge in self.outgoing_cache[node_id]
+                if not (
+                    type(edge) is SurfaceWalkEdge
+                    and edge.requires_ground_traversal_proof
+                    and (edge.start, edge.end) in self.disabled_ground_walk_edges
+                )
+            )
         start = self.node(node_id)
         if start is None:
             self.outgoing_cache[node_id] = ()
@@ -1595,7 +1835,14 @@ class _SurfaceExpander:
                 found.extend(self._build_edges(start, end))
         value = tuple(sorted(found, key=_surface_edge_identity))
         self.outgoing_cache[node_id] = value
-        return value
+        return tuple(
+            edge for edge in value
+            if not (
+                type(edge) is SurfaceWalkEdge
+                and edge.requires_ground_traversal_proof
+                and (edge.start, edge.end) in self.disabled_ground_walk_edges
+            )
+        )
 
     def actual_bounds(self) -> KnownMapBounds:
         return KnownMapBounds(
@@ -1613,6 +1860,20 @@ class _SurfaceExpander:
         for profile in self.air_profiles:
             horizontal = max(1, profile.horizontal_cells)
             candidates.append(profile.cost_seconds / horizontal)
+        return min(candidates)
+
+    def horizontal_cost_lower_bound_ticks(self) -> int:
+        candidates = [seconds_to_planning_ticks(
+            1.0 / self.ground_profile.maximum_speed_blocks_per_second
+        )]
+        candidates.append(seconds_to_planning_ticks(self.step_profile.cost_seconds))
+        if self.jump_profile is not None:
+            candidates.append(seconds_to_planning_ticks(self.jump_profile.cost_seconds))
+        for profile in self.air_profiles:
+            horizontal = max(1, profile.horizontal_cells)
+            candidates.append(max(
+                1, seconds_to_planning_ticks(profile.cost_seconds) // horizontal,
+            ))
         return min(candidates)
 
     def resource_neutral(self, request: SurfacePlanningRequest) -> bool:
@@ -1662,16 +1923,20 @@ def _surface_candidate(request: SurfacePlanningRequest, graph: SurfaceGraph,
                        path_ids: tuple[SurfaceNodeId, ...] = (),
                        segments: tuple[SurfaceEdge, ...] = (),
                        cost: float | None = None,
+                       cost_ticks: int | None = None,
                        expanded: int = 0,
                        final_resources: ResourceState | None = None,
                        planner_states: tuple[PlannerStateKey, ...] = (),
                        reasons: tuple[str, ...] = (),
+                       ground_traversal_plans: tuple[GroundTraversalPlan, ...] = (),
                        ) -> SurfaceRouteCandidate:
     by_id = {node.node_id: node for node in graph.nodes}
     path = tuple(by_id[node_id] for node_id in path_ids)
     dependencies = tuple(sorted(
         {cell for node in path for cell in node.dependencies}
         | {cell for edge in segments for cell in edge.dependencies}
+        | {cell for plan in ground_traversal_plans
+           for cell in plan.dependencies}
     ))
     return SurfaceRouteCandidate(
         request.sequence, request.request_id, request.goal_id,
@@ -1679,7 +1944,48 @@ def _surface_candidate(request: SurfacePlanningRequest, graph: SurfaceGraph,
         request.start, request.goal, status, path, segments, cost,
         dependencies, expanded, final_resources, request.goal_state,
         request.initial_resources, request.minimum_resources,
-        planner_states, reasons,
+        planner_states, reasons, cost_ticks, ground_traversal_plans,
+    )
+
+
+def _action_entry_window(
+        start: SurfaceNode, end: SurfaceNode, *, profile_id: str,
+        minimum_speed: float, maximum_speed: float,
+        center_tolerance: float, maximum_forward_offset: float,
+        maximum_backward_offset: float, maximum_lateral_offset: float,
+        maximum_yaw_error_degrees: float,
+) -> SegmentEntryWindow:
+    """Freeze the calibrated ground state from which one action may start."""
+    dx = end.position[0] - start.position[0]
+    dz = end.position[2] - start.position[2]
+    length = math.hypot(dx, dz)
+    if length <= 1.0e-9:
+        raise ContractViolation("action entry requires a horizontal direction")
+    direction = (dx / length, dz / length)
+    return SegmentEntryWindow(
+        reference_point=start.position,
+        horizontal_approach_direction=direction,
+        minimum_longitudinal_offset_blocks=-min(
+            center_tolerance, maximum_backward_offset,
+        ),
+        maximum_longitudinal_offset_blocks=min(
+            center_tolerance, maximum_forward_offset,
+        ),
+        maximum_lateral_offset_blocks=min(
+            center_tolerance, maximum_lateral_offset,
+        ),
+        minimum_feet_y=start.position[1] - .10,
+        maximum_feet_y=start.position[1] + .10,
+        minimum_speed_blocks_per_second=minimum_speed,
+        maximum_speed_blocks_per_second=maximum_speed,
+        maximum_velocity_direction_error_radians=math.radians(
+            maximum_yaw_error_degrees,
+        ),
+        allowed_poses=frozenset({"standing"}),
+        allowed_modes=frozenset({MovementMode.WALK}),
+        required_yaw_radians=math.atan2(-direction[0], direction[1]),
+        maximum_yaw_error_radians=math.radians(maximum_yaw_error_degrees),
+        profile_id=profile_id,
     )
 
 
@@ -1732,17 +2038,33 @@ def astar_surface_plan(graph: SurfaceGraph,
         node_id: [] for node_id in positions
     }
     for edge in graph.edges:
-        adjacency[edge.start].append(edge)
-    maximum_edge_speed = max((
-        math.dist(positions[edge.start], positions[edge.end]) / edge.cost_seconds
+        # Materialized graphs are a diagnostic/reference entry and carry no
+        # calculator anchor.  Keep provisional small-height walk edges in the
+        # graph for inspection, but only the snapshot planner may prove and
+        # execute them.
+        if not (
+            type(edge) is SurfaceWalkEdge
+            and edge.requires_ground_traversal_proof
+        ):
+            adjacency[edge.start].append(edge)
+    horizontal_tick_lower_bound = min((
+        _surface_edge_cost_ticks(edge) / max(
+            1,
+            abs(edge.start.column_x - edge.end.column_x)
+            + abs(edge.start.column_z - edge.end.column_z),
+        )
         for edge in graph.edges
+        if (edge.start.column_x != edge.end.column_x
+            or edge.start.column_z != edge.end.column_z)
     ), default=1.0)
     start_state = PlannerStateKey(request.start, None, None)
 
     def heuristic(state: PlannerStateKey) -> float:
-        return math.dist(
-            positions[state.node_id], positions[request.goal],
-        ) / max(1.0e-12, maximum_edge_speed)
+        horizontal = (
+            abs(state.node_id.column_x - request.goal.column_x)
+            + abs(state.node_id.column_z - request.goal.column_z)
+        )
+        return math.floor(horizontal * horizontal_tick_lower_bound)
 
     def goal_test(state: PlannerStateKey) -> bool:
         return state.node_id == request.goal
@@ -1767,6 +2089,7 @@ def astar_surface_plan(graph: SurfaceGraph,
             outgoing,
             request.maximum_planning_seconds,
             goal_test=goal_test, next_states=_surface_successor_states,
+            edge_cost=_surface_edge_cost_ticks,
         )
     else:
         search = _resource_aware_search(
@@ -1776,6 +2099,7 @@ def astar_surface_plan(graph: SurfaceGraph,
             outgoing,
             request.maximum_planning_seconds,
             goal_test=goal_test, next_states=_surface_successor_states,
+            edge_cost=_surface_edge_cost_ticks,
         )
     if search.timed_out:
         return _surface_candidate(
@@ -1796,7 +2120,9 @@ def astar_surface_plan(graph: SurfaceGraph,
         return _surface_candidate(
             request, graph, SurfacePlanningStatus.COMPLETE,
             tuple(state.node_id for state in search.path),
-            search.segments, search.cost_seconds,
+            search.segments,
+            int(search.cost_seconds) * _PLANNING_TICK_SECONDS,
+            int(search.cost_seconds),
             search.expanded, search.final_resources,
             tuple(search.path),
         )
@@ -1804,6 +2130,44 @@ def astar_surface_plan(graph: SurfaceGraph,
               SurfacePlanningStatus.NO_ROUTE_WITHIN_COMPLETE_SCOPE
               if graph.complete_scope else SurfacePlanningStatus.NO_KNOWN_ROUTE)
     return _surface_candidate(request, graph, status, expanded=search.expanded)
+
+
+_GROUND_TRAVERSAL_PROOF_CACHE = GroundTraversalProofCache(128)
+
+
+def _ground_traversal_cache_key(
+    snapshot: KnownMapSnapshot,
+    profile: GroundMotionProfile,
+    state: PhysicsState,
+    route: FixedRoute,
+    dependencies: tuple[BlockPos, ...],
+) -> tuple:
+    speed = math.hypot(
+        state.velocity_blocks_per_tick[0], state.velocity_blocks_per_tick[2]
+    ) * 20.0
+    direction = (
+        round(route.points[1].x - route.points[0].x, 6),
+        round(route.points[1].z - route.points[0].z, 6),
+    )
+    origin = route.points[0]
+    base_x, base_y, base_z = (
+        math.floor(origin.x), math.floor(origin.y), math.floor(origin.z)
+    )
+    return (
+        JAVA_1_21_RULESET.ruleset_id,
+        profile.profile_id,
+        math.floor(speed * 10.0),
+        direction,
+        tuple((round(point.x - origin.x, 6),
+               round(point.y - origin.y, 6),
+               round(point.z - origin.z, 6))
+              for point in route.points),
+        (round(origin.x, 6), round(origin.y, 6), round(origin.z, 6)),
+        snapshot.world.session.value,
+        snapshot.world.geometry_revision,
+        tuple((x - base_x, y - base_y, z - base_z)
+              for x, y, z in dependencies),
+    )
 
 
 def plan_known_surface_snapshot(
@@ -1833,6 +2197,7 @@ def plan_known_surface_snapshot(
         snapshot.world, snapshot.bounds, ground_profile, step_profile,
         jump_profile, air_profiles=air_profiles,
         ground_mode_profile=ground_mode_profile,
+        damage_budget=request.damage_budget,
     )
 
     def discovered_graph() -> SurfaceGraph:
@@ -1884,7 +2249,7 @@ def plan_known_surface_snapshot(
                 request, discovered_graph(), SurfacePlanningStatus.UNSUPPORTED,
             )
 
-    unit_cost = expander.horizontal_cost_lower_bound()
+    unit_cost_ticks = expander.horizontal_cost_lower_bound_ticks()
 
     start_state = PlannerStateKey(request.start, None, None)
 
@@ -1892,7 +2257,7 @@ def plan_known_surface_snapshot(
         return (
             abs(state.node_id.column_x - request.goal.column_x)
             + abs(state.node_id.column_z - request.goal.column_z)
-        ) * unit_cost
+        ) * unit_cost_ticks
 
     def goal_test(state: PlannerStateKey) -> bool:
         return state.node_id == request.goal
@@ -1900,21 +2265,81 @@ def plan_known_surface_snapshot(
     def outgoing(state: PlannerStateKey) -> tuple[SurfaceEdge, ...]:
         return expander.outgoing(state.node_id)
 
-    if expander.resource_neutral(request):
-        search = _plain_search(
-            start_state, request.goal, request.initial_resources,
-            request.maximum_expansions, heuristic, outgoing,
-            request.maximum_planning_seconds,
-            goal_test=goal_test, next_states=_surface_successor_states,
-        )
-    else:
-        search = _resource_aware_search(
+    def run_search() -> _SearchResult:
+        if expander.resource_neutral(request):
+            return _plain_search(
+                start_state, request.goal, request.initial_resources,
+                request.maximum_expansions, heuristic, outgoing,
+                request.maximum_planning_seconds,
+                goal_test=goal_test, next_states=_surface_successor_states,
+                edge_cost=_surface_edge_cost_ticks,
+            )
+        return _resource_aware_search(
             start_state, request.goal,
             request.initial_resources, request.minimum_resources,
             request.maximum_expansions, heuristic, outgoing,
             request.maximum_planning_seconds,
             goal_test=goal_test, next_states=_surface_successor_states,
+            edge_cost=_surface_edge_cost_ticks,
         )
+
+    search = run_search()
+    traversal_plans: tuple[GroundTraversalPlan, ...] = ()
+    proof_edges = tuple(
+        edge for edge in search.segments
+        if (type(edge) is SurfaceWalkEdge
+            and edge.requires_ground_traversal_proof)
+    )
+    if proof_edges:
+        can_verify_one_ground_run = (
+            request.entry_physics_state is not None
+            and request.entry_physics_state.session == snapshot.world.session
+            and all(type(edge) is SurfaceWalkEdge for edge in search.segments)
+        )
+        verified = None
+        if can_verify_one_ground_run:
+            points = tuple(
+                RoutePoint(*expander.nodes[state.node_id].position)
+                for state in search.path
+            )
+            route = FixedRoute(
+                f"{request.request_id}-ground-traversal", points,
+            )
+            dependencies = tuple(sorted({
+                cell for edge in search.segments for cell in edge.dependencies
+            }))
+            key = _ground_traversal_cache_key(
+                snapshot, ground_profile, request.entry_physics_state,
+                route, dependencies,
+            )
+            verified = _GROUND_TRAVERSAL_PROOF_CACHE.get(key)
+            if verified is None:
+                verified = verify_ground_traversal(
+                    request.entry_physics_state, route,
+                    PhysicsWorldView(snapshot.world, JAVA_1_21_RULESET),
+                    ground_profile, maximum_ticks=200,
+                )
+                _GROUND_TRAVERSAL_PROOF_CACHE.put(key, verified)
+        if (verified is not None
+                and verified.status is GroundTraversalStatus.VERIFIED):
+            assert verified.plan is not None
+            formal_ticks = verified.plan.estimated_ticks
+            disabled = {
+                (edge.start, edge.end) for edge in proof_edges
+            }
+            expander.disabled_ground_walk_edges.update(disabled)
+            alternative = run_search()
+            if (alternative.path and alternative.cost_seconds is not None
+                    and int(alternative.cost_seconds) < formal_ticks):
+                search = alternative
+            else:
+                search = replace(search, cost_seconds=float(formal_ticks))
+                traversal_plans = (verified.plan,)
+        else:
+            expander.disabled_ground_walk_edges.update(
+                (edge.start, edge.end) for edge in proof_edges
+            )
+            search = run_search()
     graph = discovered_graph()
     if search.timed_out:
         return _surface_candidate(
@@ -1935,9 +2360,12 @@ def plan_known_surface_snapshot(
         return _surface_candidate(
             request, graph, SurfacePlanningStatus.COMPLETE,
             tuple(state.node_id for state in search.path),
-            search.segments, search.cost_seconds,
+            search.segments,
+            int(search.cost_seconds) * _PLANNING_TICK_SECONDS,
+            int(search.cost_seconds),
             search.expanded, search.final_resources,
             tuple(search.path),
+            ground_traversal_plans=traversal_plans,
         )
     status = (
         SurfacePlanningStatus.UNSUPPORTED if graph.has_unsupported else
@@ -1957,17 +2385,21 @@ def dijkstra_surface_reference(graph: SurfaceGraph, start: SurfaceNodeId,
         return None
     adjacency: dict[SurfaceNodeId, list[SurfaceEdge]] = {node: [] for node in nodes}
     for edge in graph.edges:
-        adjacency[edge.start].append(edge)
-    queue = [(0.0, start)]
-    costs = {start: 0.0}
+        if not (
+            type(edge) is SurfaceWalkEdge
+            and edge.requires_ground_traversal_proof
+        ):
+            adjacency[edge.start].append(edge)
+    queue = [(0, start)]
+    costs = {start: 0}
     while queue:
         cost, current = heapq.heappop(queue)
         if cost != costs.get(current):
             continue
         if current == goal:
-            return cost
+            return cost * _PLANNING_TICK_SECONDS
         for edge in adjacency[current]:
-            candidate = cost + edge.cost_seconds
+            candidate = cost + _surface_edge_cost_ticks(edge)
             if candidate < costs.get(edge.end, math.inf):
                 costs[edge.end] = candidate
                 heapq.heappush(queue, (candidate, edge.end))

@@ -18,7 +18,7 @@ from mc2p.motion_nav.known_map_planner import (
     SnapshotBuildStatus,
     SurfacePlanningRequest, SurfacePlanningStatus, SurfaceWalkEdge,
     WalkEdge, WalkGraph, WalkNode, astar_plan, astar_surface_plan,
-    build_surface_graph,
+    build_surface_graph, seconds_to_planning_ticks,
 )
 from mc2p.motion_nav.planner_worker import PlannerWorker
 from mc2p.motion_nav.fixed_route import (
@@ -137,7 +137,9 @@ class B08GroundModeTests(unittest.TestCase):
         )
         self.assertAlmostEqual(
             fed.total_cost_seconds,
-            1.0 / sprint.motion.maximum_speed_blocks_per_second,
+            seconds_to_planning_ticks(
+                1.0 / sprint.motion.maximum_speed_blocks_per_second,
+            ) * sprint.motion.tick_seconds,
         )
         end = graph.nodes[-1].position
         incompatible_goal = GoalState(

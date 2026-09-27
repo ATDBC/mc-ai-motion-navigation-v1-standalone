@@ -183,7 +183,9 @@ public final class SurfaceSensor implements ClientBlockObservationV3.SurfaceProv
             if (status==1) visualAir.add(eligibleAirCandidates.get(index));
             else airResults.add(new AirResult(
                     eligibleAirCandidates.get(index),
-                    status==2 ? AirStatus.OUTSIDE_VIEW : AirStatus.OCCLUDED));
+                    status==2 ? AirStatus.OUTSIDE_VIEW
+                            : status==3 ? AirStatus.OUT_OF_RANGE
+                            : AirStatus.OCCLUDED));
         }
         latestDiagnostics = new Diagnostics(
                 Math.max(0L, blockReadFinished - blockReadStarted),

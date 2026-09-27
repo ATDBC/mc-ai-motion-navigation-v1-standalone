@@ -15,6 +15,11 @@ from mc2p.motion_nav.known_map_planner import (
 from mc2p.motion_nav.block_motion_traits import BlockMotionCatalog
 from mc2p.motion_nav.environment_identity import load_frozen_environment
 from mc2p.motion_nav.ground_motion import load_ground_motion_profile
+from mc2p.motion_nav.motion_risk import TaskDamageBudget
+from mc2p.motion_nav.movement_transition import (
+    GoalState, GoalSupport, MovementMode,
+)
+from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.geometry import QueryStatus
 from mc2p.motion_nav.step_transition import StepEdge
 from mc2p.motion_nav.planner_worker import PlannerWorker
@@ -68,6 +73,23 @@ def flat_surface_world(size: int) -> WorldKnowledge:
 
 
 class B07SurfacePlanningTests(unittest.TestCase):
+    def test_goal_and_task_damage_policy_must_match(self):
+        node = SurfaceNodeId(0, 0, 1, 0)
+        goal = GoalState(
+            region=Aabb(0.0, 1.0, 0.0, 1.0, 2.0, 1.0),
+            support=GoalSupport.SOLID,
+            allowed_modes=frozenset({MovementMode.WALK}),
+            allowed_poses=frozenset({"standing"}),
+            maximum_terminal_speed_blocks_per_second=0.1,
+        )
+
+        with self.assertRaises(ContractViolation):
+            SurfacePlanningRequest(
+                1, "damage-policy-request", "damage-policy-goal", 1,
+                "world", node, node, goal_state=goal,
+                damage_budget=TaskDamageBudget("allow-damage", 1.0),
+            )
+
     def test_parallel_motion_edges_keep_distinct_planner_states(self):
         world = mixed_height_world()
         base = build_surface_graph(

@@ -5,6 +5,10 @@ from dataclasses import dataclass
 from enum import StrEnum
 import math
 import time
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from mc2p.motion_nav.ground_traversal import GroundTraversalPlan
 
 from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.common import ContractViolation, require_identifier
@@ -12,6 +16,7 @@ from mc2p.motion_nav.block_motion_traits import unsupported_motion_cells
 from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
 from mc2p.motion_nav.ground_motion import (
     GroundControl, GroundMotionProfile, PlanarBodyState, predict_ground,
+    world_direction_control,
 )
 from mc2p.motion_nav.ground_modes import (
     GroundModeProfile, ModeReadiness, evaluate_ground_mode, movement_for_ground_mode,
@@ -19,6 +24,9 @@ from mc2p.motion_nav.ground_modes import (
 )
 from mc2p.motion_nav.movement_transition import MovementMode
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
+from mc2p.motion_nav.segment_entry import (
+    SegmentEntryWindow, body_fits_segment_entry,
+)
 from mc2p.motion_nav.world_model import Aabb, BlockPos, WorldQueryCache, WorldView
 
 
@@ -57,9 +65,6 @@ class FixedRoute:
         if type(self.points) is not tuple or not self.points or any(
                 type(point) is not RoutePoint for point in self.points):
             raise ContractViolation("fixed route requires immutable typed points")
-        levels = [point.y for point in self.points]
-        if max(levels) - min(levels) > 0.05:
-            raise ContractViolation("B03 fixed routes cannot change support height")
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,6 +85,7 @@ class FixedRouteConfig:
     maximum_recovery_ticks: int = 30
     input_lease_ticks: int = 2
     handoff_speed_blocks_per_second: float | None = None
+    handoff_entry_window: SegmentEntryWindow | None = None
 
     def __post_init__(self) -> None:
         for name in (
@@ -114,6 +120,9 @@ class FixedRouteConfig:
                 raise ContractViolation(
                     "handoff speed cannot be below the stopped threshold"
                 )
+        if (self.handoff_entry_window is not None
+                and type(self.handoff_entry_window) is not SegmentEntryWindow):
+            raise ContractViolation("handoff entry window must be typed")
 
 
 class FixedRouteState(StrEnum):
@@ -309,10 +318,31 @@ class FixedRouteController:
         self._stall_detected = False
         self._segment_index = 0
         self._mode_pending_frames = 0
+        self._geometric_support_frames = 0
+        self._traversal_plan: GroundTraversalPlan | None = None
+        self._traversal_tick_index = 0
 
-    def start(self, route: FixedRoute, frame: NavigationFrame) -> None:
+    def start(
+        self, route: FixedRoute, frame: NavigationFrame, *,
+        traversal_plan: GroundTraversalPlan | None = None,
+    ) -> None:
+        from mc2p.motion_nav.ground_traversal import GroundTraversalPlan
         if type(route) is not FixedRoute or type(frame) is not NavigationFrame:
             raise ContractViolation("starting fixed route requires a route and navigation frame")
+        varying_height = (
+            max(point.y for point in route.points)
+            - min(point.y for point in route.points) > 0.05
+        )
+        if varying_height and traversal_plan is None:
+            raise ContractViolation(
+                "varying-height fixed route requires a traversal proof"
+            )
+        if (traversal_plan is not None
+                and (type(traversal_plan) is not GroundTraversalPlan
+                     or traversal_plan.route.points != route.points)):
+            raise ContractViolation(
+                "fixed route traversal proof does not match the route"
+            )
         if self.state not in {
             FixedRouteState.IDLE, FixedRouteState.CANCELLED, FixedRouteState.SUCCEEDED,
             FixedRouteState.INPUT_LOST, FixedRouteState.FAILED, FixedRouteState.UNSUPPORTED,
@@ -331,6 +361,9 @@ class FixedRouteController:
         self._stall_detected = False
         self._segment_index = 0
         self._mode_pending_frames = 0
+        self._geometric_support_frames = 0
+        self._traversal_plan = traversal_plan
+        self._traversal_tick_index = 0
         self.state = FixedRouteState.RUNNING
 
     def cancel(self) -> None:
@@ -368,6 +401,143 @@ class FixedRouteController:
             self.config.input_lease_ticks, reason,
         )
 
+    @staticmethod
+    def _axis(value: float) -> int:
+        if abs(value) < 0.35:
+            return 0
+        return 1 if value > 0 else -1
+
+    def _traversal_movement(self, frame: NavigationFrame, index: int) -> MovementV1:
+        assert self._traversal_plan is not None
+        sampled = self._traversal_plan.inputs[index]
+        sine = math.sin(sampled.movement_yaw_radians)
+        cosine = math.cos(sampled.movement_yaw_radians)
+        direction_x = sampled.strafe * cosine - sampled.forward * sine
+        direction_z = sampled.forward * cosine + sampled.strafe * sine
+        control = world_direction_control(
+            direction_x, direction_z, frame.body.yaw_radians,
+        )
+        return MovementV1(
+            forward=self._axis(control.forward),
+            strafe=self._axis(-control.strafe),
+            jump=sampled.jump,
+            sneak=sampled.sneak,
+            sprint=sampled.sprint,
+        )
+
+    def _decide_traversal(
+        self, frame: NavigationFrame, started: int,
+    ) -> FixedRouteDecision:
+        assert self._traversal_plan is not None
+        assert self._geometry is not None
+        plan = self._traversal_plan
+        if set(frame.changed_cells).intersection(plan.dependencies):
+            self.state = FixedRouteState.BLOCKED
+            return self._decision(
+                started, MovementV1(), "ground_traversal_dependency_changed",
+            )
+        start = max(0, self._traversal_tick_index - 1)
+        stop = min(len(plan.trajectory), self._traversal_tick_index + 4)
+        candidates = []
+        for index in range(start, stop):
+            expected = plan.trajectory[index]
+            position_error = math.dist(frame.body.position, expected.position)
+            velocity_error = math.dist(
+                frame.body.velocity_blocks_per_second,
+                tuple(value * 20.0 for value in expected.velocity_blocks_per_tick),
+            )
+            contact_penalty = 0.0 if (
+                frame.body.is_on_ground == expected.on_ground
+            ) else 0.15
+            candidates.append((
+                position_error + 0.05 * velocity_error + contact_penalty,
+                position_error, velocity_error, index,
+            ))
+        _, position_error, velocity_error, index = min(candidates)
+        if (position_error > plan.maximum_cross_track_blocks
+                or velocity_error > 2.0
+                or frame.body.pose != "standing"):
+            self.state = FixedRouteState.UNSUPPORTED
+            return self._decision(
+                started, MovementV1(), "ground_traversal_left_verified_envelope",
+            )
+        self._traversal_tick_index = max(self._traversal_tick_index, index)
+        projection = self._geometry.project(
+            frame.body.position[0], frame.body.position[2],
+            self._progress, self._segment_index,
+            self.config.maximum_cross_track_blocks,
+        )
+        self._progress = max(self._progress, projection.progress)
+        self._segment_index = max(self._segment_index, projection.segment_index)
+        self._cross_track = projection.distance
+        speed = math.hypot(
+            frame.body.velocity_blocks_per_second[0],
+            frame.body.velocity_blocks_per_second[2],
+        )
+        if self._cancel_requested and frame.body.is_on_ground:
+            if speed <= self.config.stopped_speed_blocks_per_second:
+                self.state = FixedRouteState.CANCELLED
+                return self._decision(
+                    started, MovementV1(), "cancelled_after_traversal_stop",
+                )
+            self.state = FixedRouteState.CANCELLING
+            return self._decision(
+                started, MovementV1(), "traversal_cancel_release",
+            )
+        if self._traversal_tick_index >= len(plan.inputs):
+            goal = self._geometry.goal
+            goal_distance = math.hypot(
+                frame.body.position[0] - goal.x,
+                frame.body.position[2] - goal.z,
+            )
+            entry_matches = (
+                body_fits_segment_entry(
+                    self.config.handoff_entry_window, frame.body,
+                    observed_ground_mode(frame.body),
+                )
+                if self.config.handoff_entry_window is not None else None
+            )
+            completion_speed = (
+                self.config.handoff_entry_window.maximum_speed_blocks_per_second
+                if self.config.handoff_entry_window is not None
+                else self.config.handoff_speed_blocks_per_second
+                if self.config.handoff_speed_blocks_per_second is not None
+                else self.config.stopped_speed_blocks_per_second
+            )
+            at_goal = (
+                frame.body.is_on_ground
+                and (entry_matches if entry_matches is not None else
+                     goal_distance <= max(
+                         self.config.endpoint_tolerance_blocks, 0.35,
+                     ))
+                and abs(frame.body.position[1] - goal.y) <= 0.10
+            )
+            if at_goal and speed <= completion_speed:
+                self.state = FixedRouteState.SUCCEEDED
+                self._progress = self._geometry.total_length
+                return self._decision(
+                    started, MovementV1(), "verified_ground_traversal_complete",
+                )
+            if at_goal:
+                self.state = FixedRouteState.BRAKING
+                return self._decision(
+                    started, MovementV1(),
+                    "verified_ground_traversal_release",
+                )
+            self.state = FixedRouteState.UNSUPPORTED
+            return self._decision(
+                started, MovementV1(), "ground_traversal_terminal_mismatch",
+            )
+        self.state = (
+            FixedRouteState.CANCELLING
+            if self._cancel_requested else FixedRouteState.RUNNING
+        )
+        return self._decision(
+            started,
+            self._traversal_movement(frame, self._traversal_tick_index),
+            "tracking_verified_ground_traversal",
+        )
+
     def decide(self, frame: NavigationFrame, *, input_confirmed: bool = True) -> FixedRouteDecision:
         started = time.perf_counter_ns()
         if type(frame) is not NavigationFrame or type(input_confirmed) is not bool:
@@ -388,12 +558,36 @@ class FixedRouteController:
         if not input_confirmed:
             self.state = FixedRouteState.INPUT_LOST
             return self._decision(started, MovementV1(), "input_application_unconfirmed")
+        if self._traversal_plan is not None:
+            return self._decide_traversal(frame, started)
         query_cache = WorldQueryCache(frame.world)
+        route_level = self._geometry.points[0].y
+        current_support = query_support(
+            frame.body.body_box, frame.world, query_cache=query_cache,
+        )
         mode_pending = False
+        geometric_ground_support = False
         if self.mode_profile is None:
-            if frame.body.pose != "standing" or not frame.body.is_on_ground:
+            if frame.body.pose != "standing":
                 self.state = FixedRouteState.UNSUPPORTED
                 return self._decision(started, MovementV1(), "ordinary_ground_state_lost")
+            if not frame.body.is_on_ground:
+                geometric_ground_support = (
+                    abs(frame.body.position[1] - route_level) <= 0.10
+                    and frame.body.velocity_blocks_per_second[1] <= 0.0
+                    and current_support.status is QueryStatus.FEASIBLE
+                    and current_support.support_fraction
+                    >= self.config.preferred_support_fraction
+                    and self._geometric_support_frames == 0
+                )
+                if not geometric_ground_support:
+                    self.state = FixedRouteState.UNSUPPORTED
+                    return self._decision(
+                        started, MovementV1(), "ordinary_ground_state_lost",
+                    )
+                self._geometric_support_frames = 1
+            else:
+                self._geometric_support_frames = 0
         else:
             readiness = evaluate_ground_mode(self.mode_profile, frame.body)
             if readiness is ModeReadiness.GROUND_STATE_LOST:
@@ -453,7 +647,6 @@ class FixedRouteController:
                                           "ground_mode_confirmation_pending")
             else:
                 self._mode_pending_frames = 0
-        route_level = self._geometry.points[0].y
         if abs(frame.body.position[1] - route_level) > 0.10:
             self.state = FixedRouteState.UNSUPPORTED
             return self._decision(started, MovementV1(), "fixed_route_level_mismatch")
@@ -464,9 +657,6 @@ class FixedRouteController:
                     + self.config.speed_model_tolerance_blocks_per_second):
             self.state = FixedRouteState.UNSUPPORTED
             return self._decision(started, MovementV1(), "ordinary_ground_speed_outside_model")
-        current_support = query_support(
-            frame.body.body_box, frame.world, query_cache=query_cache,
-        )
         current_clearance = sweep(
             frame.body.body_box, (0.0, 0.0, 0.0), frame.world,
             query_cache=query_cache,
@@ -523,13 +713,26 @@ class FixedRouteController:
         route_complete = (self._geometry.total_length <= _EPSILON
                           or self._progress >= self._geometry.total_length
                              - self.config.endpoint_tolerance_blocks)
-        at_goal = (route_complete
-                   and goal_distance <= self.config.endpoint_tolerance_blocks
-                   and abs(frame.body.position[1] - goal.y) <= 0.10
-                   and goal_support.status is QueryStatus.FEASIBLE
-                   and goal_support.support_fraction >= self.config.minimum_support_fraction)
+        entry_matches = None
+        if self.config.handoff_entry_window is not None:
+            entry_matches = body_fits_segment_entry(
+                self.config.handoff_entry_window,
+                frame.body,
+                observed_ground_mode(frame.body),
+            )
+        at_goal = (
+            route_complete
+            and (entry_matches if entry_matches is not None else (
+                goal_distance <= self.config.endpoint_tolerance_blocks
+                and abs(frame.body.position[1] - goal.y) <= 0.10
+            ))
+            and goal_support.status is QueryStatus.FEASIBLE
+            and goal_support.support_fraction >= self.config.minimum_support_fraction
+        )
         completion_speed = (
-            self.config.handoff_speed_blocks_per_second
+            self.config.handoff_entry_window.maximum_speed_blocks_per_second
+            if self.config.handoff_entry_window is not None
+            else self.config.handoff_speed_blocks_per_second
             if self.config.handoff_speed_blocks_per_second is not None
             else self.config.stopped_speed_blocks_per_second
         )
@@ -539,7 +742,8 @@ class FixedRouteController:
             return self._decision(
                 started, MovementV1(),
                 ("goal_reached_for_handoff"
-                 if self.config.handoff_speed_blocks_per_second is not None
+                 if (self.config.handoff_entry_window is not None
+                     or self.config.handoff_speed_blocks_per_second is not None)
                  else "goal_reached_and_stopped"),
             )
 
@@ -636,7 +840,9 @@ class FixedRouteController:
             self.state = FixedRouteState.RUNNING
             return self._decision(started, selected.movement,
                                   ("ground_mode_confirmation_pending" if mode_pending
-                                   else "tracking_fixed_route"),
+                                   else ("tracking_fixed_route_geometric_support"
+                                         if geometric_ground_support
+                                         else "tracking_fixed_route")),
                                   preview_missing)
         missing = tuple(cell for candidate in candidates for cell in candidate.missing)
         if missing:
@@ -762,11 +968,9 @@ class FixedRouteController:
                *, hold_position: bool, reason: str,
                query_cache: WorldQueryCache) -> FixedRouteDecision:
         target = (body.x, body.z) if hold_position else (self._geometry.goal.x, self._geometry.goal.z)  # type: ignore[union-attr]
-        candidates = [self._evaluate_candidate(
-                          frame, body, movement, target, braking=True,
-                          query_cache=query_cache,
-                      )
-                      for movement in _MOVEMENTS]
+        candidates = self._ranked_braking_candidates(
+            frame, body, target, query_cache,
+        )
         feasible = [candidate for candidate in candidates
                     if not candidate.blocked and not candidate.unsupported and not candidate.missing]
         if feasible:
@@ -781,6 +985,50 @@ class FixedRouteController:
             self.state = FixedRouteState.UNSUPPORTED
             return self._decision(started, MovementV1(), "braking_release_unsupported_geometry")
         return self._decision(started, MovementV1(), "braking_release_no_safe_reverse")
+
+    def _ranked_braking_candidates(
+        self,
+        frame: NavigationFrame,
+        body: PlanarBodyState,
+        target: tuple[float, float],
+        query_cache: WorldQueryCache,
+    ) -> list[_Candidate]:
+        """Validate only braking controls that can still win the safe ranking."""
+        rollouts = tuple(
+            self._prepare_candidate_rollout(body, movement, target, braking=True)
+            for movement in _MOVEMENTS
+        )
+        ordered = tuple(sorted(rollouts, key=self._rollout_key))
+        evaluated: list[_Candidate] = []
+        selected: _Candidate | None = None
+        for rollout in ordered:
+            if (selected is not None
+                    and self._rollout_key(rollout) >= self._candidate_key(selected)):
+                break
+            candidate = self._evaluate_candidate(
+                frame, body, rollout.movement, target, braking=True,
+                query_cache=query_cache, rollout=rollout,
+            )
+            evaluated.append(candidate)
+            if (not candidate.blocked and not candidate.unsupported
+                    and not candidate.missing
+                    and (selected is None
+                         or self._candidate_key(candidate)
+                         < self._candidate_key(selected))):
+                selected = candidate
+        if selected is None:
+            evaluated_movements = {
+                (candidate.movement.forward, candidate.movement.strafe)
+                for candidate in evaluated
+            }
+            for rollout in ordered:
+                key = (rollout.movement.forward, rollout.movement.strafe)
+                if key not in evaluated_movements:
+                    evaluated.append(self._evaluate_candidate(
+                        frame, body, rollout.movement, target, braking=True,
+                        query_cache=query_cache, rollout=rollout,
+                    ))
+        return evaluated
 
     def _prepare_candidate_rollout(
         self,

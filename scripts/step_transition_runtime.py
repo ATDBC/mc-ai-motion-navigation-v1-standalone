@@ -25,6 +25,7 @@ from mc2p.motion_nav.known_map_planner import (
     KnownMapBounds, KnownMapSnapshotBuilder, SnapshotBuildStatus,
     SurfacePlanningRequest, SurfacePlanningStatus,
 )
+from mc2p.motion_nav.navigation_session import information_look_for_missing_cells
 from mc2p.motion_nav.planning_reference import (
     astar_surface_plan, build_surface_graph,
 )
@@ -213,6 +214,58 @@ def run_step_transition_runtime(
 
     def run_step_trial(label, start_surface, end_surface, yaw=0.0) -> None:
         teleport(start_surface.position, yaw)
+        geometry = query_step(frame.world, start_surface, end_surface, profile)
+        information_checks = []
+        for _ in range(8):
+            if geometry.status is not QueryStatus.NEEDS_INFORMATION:
+                break
+            request = ObservationRequestV3(
+                "navigation_v1", geometry.missing_cells[:128],
+            )
+            step(request=request)
+            statuses = {
+                result.position: result.status
+                for result in frame.air_query_results
+            }
+            information_checks.append({
+                "sequence": frame.body.sequence_id,
+                "missing": [list(position) for position in geometry.missing_cells],
+                "statuses": [{
+                    "position": list(position),
+                    "status": (
+                        "confirmed_air"
+                        if frame.world.cell(position).knowledge is CellKnowledge.AIR
+                        else statuses.get(position, "not_reported")
+                    ),
+                } for position in geometry.missing_cells],
+            })
+            look = information_look_for_missing_cells(
+                frame, geometry.missing_cells, statuses,
+            )
+            if look is not None:
+                step(look=look, request=request)
+            geometry = query_step(frame.world, start_surface, end_surface, profile)
+        if geometry.status is not QueryStatus.FEASIBLE:
+            trials.append({
+                "name": label,
+                "final_state": "preflight_failed",
+                "preflight_status": geometry.status.value,
+                "remaining_missing": [list(position) for position in geometry.missing_cells],
+                "information_checks": information_checks,
+                "final_position": list(frame.body.position),
+                "target_position": list(end_surface.position),
+                "level_error_blocks": abs(
+                    frame.body.position[1] - end_surface.position[1]
+                ),
+                "horizontal_error_blocks": math.hypot(
+                    frame.body.position[0] - end_surface.position[0],
+                    frame.body.position[2] - end_surface.position[2],
+                ),
+                "jump_pulses": 0,
+                "horizontal_collisions": 0,
+                "sample_count": 0,
+            })
+            return
         controller = StepController(profile)
         controller.start(start_surface, end_surface, frame)
         samples = []
@@ -255,6 +308,7 @@ def run_step_transition_runtime(
             "jump_pulses": sum(bool(row["movement"]["jump"]) for row in samples),
             "horizontal_collisions": sum(bool(row["horizontal_collision"]) for row in samples),
             "sample_count": len(samples),
+            "information_checks": information_checks,
         })
 
     def run_walk_trial(label, start_position, end_position, yaw=0.0) -> None:
@@ -358,17 +412,33 @@ def run_step_transition_runtime(
         executor = ActionRouteExecutor(ground, jump_profile, profile)
         executor.start(continuity_admission.route.action_route, frame)
         input_confirmed = True
+        last_input_applications: list[dict] = []
         samples = []
         for _ in range(120):
             decision = executor.decide(frame, input_confirmed=input_confirmed)
-            samples.append({
+            sample = {
                 "sequence": frame.body.sequence_id,
+                "world_tick": frame.body.stamp.world_tick,
                 "state": decision.state.value,
                 "reason": decision.reason_code,
                 "action_index": decision.action_index,
                 "movement": asdict(decision.movement),
                 "position": list(frame.body.position),
-            })
+                "velocity_blocks_per_second": list(
+                    frame.body.velocity_blocks_per_second
+                ),
+                "pose": frame.body.pose,
+                "is_on_ground": frame.body.is_on_ground,
+                "horizontal_collision": frame.body.horizontal_collision,
+                "vertical_collision": frame.body.vertical_collision,
+                "previous_input_applications": last_input_applications,
+            }
+            samples.append(sample)
+            # Persist before evaluating the terminal state, so a failing frame
+            # survives even when the outer acceptance run aborts immediately.
+            append_jsonl(
+                directory / "b10-step-continuity-frames.jsonl", sample,
+            )
             if decision.state is ActionRouteState.COMPLETE:
                 break
             if decision.state in {
@@ -380,6 +450,10 @@ def run_step_transition_runtime(
                     f"{decision.state.value}/{decision.reason_code}"
                 )
             result = step(decision.movement, request=air_request)
+            last_input_applications = [
+                asdict(application)
+                for application in result.backend_result.receipt.input_applications
+            ]
             input_confirmed = receipt_confirms_input(
                 result.backend_result.receipt.status
             )
@@ -399,8 +473,8 @@ def run_step_transition_runtime(
     # of truth for Minecraft block-state geometry.
     shape_cases = (
         ("lower_slab", ((slab, "minecraft:smooth_stone_slab[type=bottom]"),)),
-        ("upper_slab", (((x, feet_y - 1, z + 1),
-                         "minecraft:smooth_stone_slab[type=top]"),)),
+        ("upper_slab", (((x + 1, feet_y - 1, z),
+                          "minecraft:smooth_stone_slab[type=top]"),)),
         ("straight_stair", ((slab,
                              "minecraft:oak_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]"),)),
         ("corner_stair", (((x, feet_y, z + 2),
@@ -417,7 +491,7 @@ def run_step_transition_runtime(
                     (slab, "minecraft:snow[layers=5]"))),
         ("snow_6", (((x, feet_y - 1, z + 1), "minecraft:grass_block"),
                     (slab, "minecraft:snow[layers=6]"))),
-        ("dirt_path", (((x, feet_y - 1, z + 1), "minecraft:dirt_path"),)),
+        ("dirt_path", (((x - 1, feet_y - 1, z), "minecraft:dirt_path"),)),
         ("fence", ((slab, "minecraft:oak_fence"),)),
         ("wall", ((slab, "minecraft:cobblestone_wall"),)),
         ("bars", ((slab, "minecraft:iron_bars"),)),
@@ -425,7 +499,8 @@ def run_step_transition_runtime(
                               "minecraft:oak_trapdoor[facing=north,half=bottom,open=false,powered=false,waterlogged=false]"),)),
         ("trapdoor_open", ((slab,
                             "minecraft:oak_trapdoor[facing=north,half=bottom,open=true,powered=false,waterlogged=false]"),)),
-        ("farmland", (((x, feet_y - 1, z + 1), "minecraft:farmland[moisture=0]"),)),
+        ("farmland", (((x + 1, feet_y - 1, z + 1),
+                       "minecraft:farmland[moisture=0]"),)),
     )
     mutable = tuple(position for position in volume if position != floor)
     shape_observations = []
@@ -445,8 +520,40 @@ def run_step_transition_runtime(
                 or fact.block.material_key != expected_state.split("[", 1)[0]):
             raise RuntimeError(f"B07 shape was not formally observed: {name}/{owner}")
         surfaces = query_support_surfaces(
-            frame.world, x, z + 1, feet_y - .25, feet_y + 2.1,
+            frame.world, owner[0], owner[2], feet_y - .25, feet_y + 2.1,
         )
+        information_checks = []
+        for _ in range(8):
+            if surfaces.status is not QueryStatus.NEEDS_INFORMATION:
+                break
+            request = ObservationRequestV3(
+                "navigation_v1", surfaces.missing_cells[:128],
+            )
+            step(request=request)
+            statuses = {
+                result.position: result.status
+                for result in frame.air_query_results
+            }
+            information_checks.append({
+                "sequence": frame.body.sequence_id,
+                "missing": [list(position) for position in surfaces.missing_cells],
+                "statuses": [{
+                    "position": list(position),
+                    "status": (
+                        "confirmed_air"
+                        if frame.world.cell(position).knowledge is CellKnowledge.AIR
+                        else statuses.get(position, "not_reported")
+                    ),
+                } for position in surfaces.missing_cells],
+            })
+            look = information_look_for_missing_cells(
+                frame, surfaces.missing_cells, statuses,
+            )
+            if look is not None:
+                step(look=look, request=request)
+            surfaces = query_support_surfaces(
+                frame.world, owner[0], owner[2], feet_y - .25, feet_y + 2.1,
+            )
         row = {
             "name": name,
             "owner": list(owner),
@@ -456,6 +563,7 @@ def run_step_transition_runtime(
             "surface_status": surfaces.status.value,
             "surface_heights": [surface.position[1] for surface in surfaces.surfaces],
             "surface_positions": [list(surface.position) for surface in surfaces.surfaces],
+            "information_checks": information_checks,
         }
         classification = catalog.classify(fact.block)
         row["trait_status"] = classification.status.value
@@ -510,7 +618,7 @@ def run_step_transition_runtime(
     # into a stop-and-transition action.
     fixture_writer(mutable, "minecraft:air")
     fixture_writer((floor,), "minecraft:grass_block")
-    lower_lane = ((x + 1, feet_y, z), (x + 1, feet_y, z + 1))
+    lower_lane = ((x - 1, feet_y, z + 2), (x - 1, feet_y, z + 3))
     fixture_writer(lower_lane, "minecraft:smooth_stone_slab[type=bottom]")
     teleport(floor_center, 0.0)
     for yaw in (0.0, -90.0, 90.0, 180.0):

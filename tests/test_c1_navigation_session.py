@@ -8,6 +8,7 @@ from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.motion_nav.navigation_session import NavigationSessionState
+from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.action_route_executor import (
     ActionRouteDecision, ActionRouteState,
 )
@@ -63,6 +64,50 @@ class C1NavigationSessionTests(unittest.TestCase):
         self.assertEqual(result.decision.action.movement, MovementV1(forward=1))
         self.assertEqual(self.backend.query_track, "entity-zombie-1")
         self.assertEqual(session.starts[0][:2], ("combat-goal", 1))
+
+    def test_bridge_forwards_the_task_damage_budget_at_goal_start(self):
+        session = FakeNavigationSession()
+        driver = RuntimeNavigationDriver(
+            self.runtime, session, clock_ns=lambda: self.clock[0],
+        )
+        from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, MovementMode
+        from mc2p.motion_nav.world_model import Aabb
+        goal = GoalState(
+            Aabb(0, 60, 1, 1, 60.2, 2), GoalSupport.SOLID,
+            frozenset({MovementMode.WALK}), frozenset({"standing"}), .6,
+            risk_policy_id="allow_one_point",
+        )
+        budget = TaskDamageBudget("allow_one_point", 1.0)
+
+        driver.start(
+            "drop-goal", 1, goal, self.clock[0], damage_budget=budget,
+        )
+
+        self.assertEqual(
+            session.start_options[0]["damage_budget"], budget,
+        )
+
+    def test_bridge_forwards_damage_budget_when_reusing_a_session(self):
+        session = FakeNavigationSession()
+        session.goal_id = "drop-goal"
+        session.goal_revision = 1
+        driver = RuntimeNavigationDriver(
+            self.runtime, session, clock_ns=lambda: self.clock[0],
+        )
+        from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, MovementMode
+        from mc2p.motion_nav.world_model import Aabb
+        goal = GoalState(
+            Aabb(0, 60, 1, 1, 60.2, 2), GoalSupport.SOLID,
+            frozenset({MovementMode.WALK}), frozenset({"standing"}), .6,
+            risk_policy_id="allow_one_point",
+        )
+        budget = TaskDamageBudget("allow_one_point", 1.0)
+
+        driver.start(
+            "drop-goal", 2, goal, self.clock[0], damage_budget=budget,
+        )
+
+        self.assertEqual(session.update_options[0]["damage_budget"], budget)
 
     def test_bridge_passes_current_anchor_and_runtime_owned_input_ledger(self):
         session = FakeNavigationSession()

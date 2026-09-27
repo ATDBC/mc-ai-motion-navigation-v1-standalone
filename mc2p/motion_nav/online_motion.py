@@ -398,6 +398,19 @@ class StateAnchor:
     state_schema: str
     input_projection_version: str
     physics_state: PhysicsState
+    health_points: float | None = None
+    absorption_points: float | None = None
+
+    def __post_init__(self) -> None:
+        for value, name in (
+            (self.health_points, "anchor health points"),
+            (self.absorption_points, "anchor absorption points"),
+        ):
+            if (value is not None
+                    and (type(value) not in (int, float)
+                         or not math.isfinite(float(value))
+                         or float(value) < 0.0)):
+                raise ContractViolation(f"{name} must be finite and nonnegative")
 
 
 @dataclass(frozen=True, slots=True)
@@ -420,7 +433,9 @@ class StateAnchorBuilder:
     def build(self, *, session: WorldSessionId, observation_sequence_id: int,
               movement_tick_id: int, phase: MotionTickPhase,
               physics_state: PhysicsState,
-              ledger: InputApplicationLedger) -> AnchorBuildResult:
+              ledger: InputApplicationLedger,
+              health_points: float | None = None,
+              absorption_points: float | None = None) -> AnchorBuildResult:
         if (type(session) is not WorldSessionId or type(physics_state) is not PhysicsState
                 or type(ledger) is not InputApplicationLedger or type(phase) is not MotionTickPhase):
             raise ContractViolation("invalid state anchor inputs")
@@ -477,6 +492,7 @@ class StateAnchorBuilder:
             if latest is not None else None,
             self._ruleset.ruleset_id,
             self._ruleset.state_schema, self._projection, state_at_tick,
+            health_points, absorption_points,
         )
         self._latest_accepted[session] = observation_sequence_id
         return AnchorBuildResult(AnchorBuildStatus.READY, anchor=anchor)

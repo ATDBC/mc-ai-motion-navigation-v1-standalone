@@ -15,6 +15,9 @@ from mc2p.motion_nav.online_motion import (
     CandidateExecutionWindow, ProjectionStatus, StateAnchor,
     project_movement_command,
 )
+from mc2p.motion_nav.motion_risk import (
+    TaskDamageBudget, conservative_plain_fall_damage_points,
+)
 from mc2p.motion_nav.physics_1_21 import step
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView
 from mc2p.motion_nav.physics_types import (
@@ -28,6 +31,73 @@ _PROJECTION_ID = "mc2p.input-projection.v1"
 _CARDINAL_DIRECTIONS = frozenset({(0, 1), (1, 0), (0, -1), (-1, 0)})
 _STABLE_SPEED_LIMIT_PER_TICK = 0.01
 _HEADING_TOLERANCE_RADIANS = math.radians(1.0)
+
+
+class MotionSolveKind(StrEnum):
+    JUMP_GAP = "jump_gap"
+    JUMP_UP = "jump_up"
+    CONTROLLED_DROP = "controlled_drop"
+
+
+@dataclass(frozen=True, slots=True)
+class AirTransitionCommandTemplate:
+    pre_action_forward_ticks: int
+    action_forward_axis: int
+    jump: bool
+    sprint: bool
+    post_action_axis: int
+    post_action_ticks: int
+
+    def __post_init__(self) -> None:
+        if (type(self.pre_action_forward_ticks) is not int
+                or not 0 <= self.pre_action_forward_ticks <= 6):
+            raise ContractViolation("air transition pre-action ticks are invalid")
+        if (type(self.action_forward_axis) is not int
+                or self.action_forward_axis not in {-1, 0, 1}):
+            raise ContractViolation("air transition action axis is invalid")
+        if type(self.jump) is not bool or type(self.sprint) is not bool:
+            raise ContractViolation("air transition action flags must be boolean")
+        if (type(self.post_action_axis) is not int
+                or self.post_action_axis not in {-1, 0, 1}
+                or type(self.post_action_ticks) is not int
+                or not 0 <= self.post_action_ticks <= 10
+                or (self.post_action_axis == 0) != (self.post_action_ticks == 0)):
+            raise ContractViolation("air transition post-action command is invalid")
+
+
+@dataclass(frozen=True, slots=True)
+class AirTransitionSolverPolicy:
+    kind: MotionSolveKind
+    solver_id: str
+    maximum_entry_speed_blocks_per_second: float
+    direction_check_minimum_speed_blocks_per_second: float
+    maximum_velocity_heading_error_degrees: float
+    templates: tuple[AirTransitionCommandTemplate, ...]
+
+    def __post_init__(self) -> None:
+        if type(self.kind) is not MotionSolveKind:
+            raise ContractViolation("air transition policy requires a solve kind")
+        require_identifier(self.solver_id, "air transition solver policy id")
+        values = (
+            self.maximum_entry_speed_blocks_per_second,
+            self.direction_check_minimum_speed_blocks_per_second,
+            self.maximum_velocity_heading_error_degrees,
+        )
+        if any(type(value) not in (int, float) or not math.isfinite(float(value))
+               for value in values):
+            raise ContractViolation("air transition policy values must be finite")
+        if (self.maximum_entry_speed_blocks_per_second <= 0
+                or self.direction_check_minimum_speed_blocks_per_second < 0
+                or self.direction_check_minimum_speed_blocks_per_second
+                   > self.maximum_entry_speed_blocks_per_second
+                or not 0 < self.maximum_velocity_heading_error_degrees <= 45):
+            raise ContractViolation("air transition speed or direction range is invalid")
+        if (type(self.templates) is not tuple or not self.templates
+                or len(self.templates) > 64
+                or any(type(value) is not AirTransitionCommandTemplate
+                       for value in self.templates)
+                or len(set(self.templates)) != len(self.templates)):
+            raise ContractViolation("air transition templates must be bounded and unique")
 
 
 @dataclass(frozen=True, slots=True)
@@ -123,6 +193,50 @@ def load_gap_solver_policy(path: Path) -> GapSolverPolicy:
         raise ContractViolation("gap solver policy document is invalid") from error
 
 
+def load_air_transition_solver_policies(
+        path: Path) -> dict[MotionSolveKind, AirTransitionSolverPolicy]:
+    if not isinstance(path, Path):
+        raise ContractViolation("air transition policy path must be a Path")
+    try:
+        root = json.loads(path.read_text("utf-8"))
+        if root["schema"] != "mc2p.verified-height-transitions.v1":
+            raise ContractViolation("unsupported air transition policy schema")
+        policies: dict[MotionSolveKind, AirTransitionSolverPolicy] = {}
+        for raw_kind, value in root["air_transition_solvers"].items():
+            kind = MotionSolveKind(raw_kind)
+            policy = AirTransitionSolverPolicy(
+                kind,
+                value["solver_id"],
+                value["maximum_entry_speed_blocks_per_second"],
+                value["direction_check_minimum_speed_blocks_per_second"],
+                value["maximum_velocity_heading_error_degrees"],
+                tuple(AirTransitionCommandTemplate(
+                    item["pre_action_forward_ticks"],
+                    item["action_forward_axis"],
+                    item["jump"],
+                    item["sprint"],
+                    item["post_action_axis"],
+                    item["post_action_ticks"],
+                ) for item in value["templates"]),
+            )
+            if kind in policies:
+                raise ContractViolation("duplicate air transition solve kind")
+            policies[kind] = policy
+        if set(policies) != set(MotionSolveKind):
+            raise ContractViolation("air transition policies must cover all solve kinds")
+        return policies
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+        if isinstance(error, ContractViolation):
+            raise
+        raise ContractViolation("air transition policy document is invalid") from error
+
+
+DEFAULT_AIR_TRANSITION_POLICIES = load_air_transition_solver_policies(
+    Path(__file__).parents[2]
+    / "config" / "motion-navigation" / "verified-height-transitions-v1.json"
+)
+
+
 class SolveStatus(StrEnum):
     SOLVED = "solved"
     HARD_CONFLICT = "hard_conflict"
@@ -197,6 +311,78 @@ class GapSolveRequest:
                 "moving gap exit requires a cardinal direction and 1..4 ticks"
             )
 
+    def as_air_transition(self) -> AirTransitionSolveRequest:
+        policy = AirTransitionSolverPolicy(
+            MotionSolveKind.JUMP_GAP,
+            self.policy.solver_id,
+            self.policy.maximum_entry_speed_blocks_per_second,
+            self.policy.direction_check_minimum_speed_blocks_per_second,
+            self.policy.maximum_velocity_heading_error_degrees,
+            tuple(AirTransitionCommandTemplate(
+                value.pre_jump_forward_ticks,
+                1,
+                True,
+                True,
+                value.post_jump_axis,
+                value.post_jump_ticks,
+            ) for value in self.policy.templates),
+        )
+        return AirTransitionSolveRequest(
+            MotionSolveKind.JUMP_GAP,
+            self.direction,
+            self.landing,
+            self.execution_window,
+            TaskDamageBudget(),
+            self.max_candidates,
+            self.max_ticks,
+            self.exit_direction,
+            self.exit_motion_ticks,
+            policy,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class AirTransitionSolveRequest:
+    kind: MotionSolveKind
+    direction: tuple[int, int]
+    landing: LandingRegion
+    execution_window: CandidateExecutionWindow
+    damage_budget: TaskDamageBudget = TaskDamageBudget()
+    max_candidates: int = 64
+    max_ticks: int = 40
+    exit_direction: tuple[int, int] | None = None
+    exit_motion_ticks: int = 0
+    policy: AirTransitionSolverPolicy | None = None
+
+    def __post_init__(self) -> None:
+        if type(self.kind) is not MotionSolveKind:
+            raise ContractViolation("air transition request requires a solve kind")
+        if self.direction not in _CARDINAL_DIRECTIONS:
+            raise ContractViolation("air transition requires a cardinal direction")
+        if type(self.landing) is not LandingRegion:
+            raise ContractViolation("air transition requires a landing region")
+        if type(self.execution_window) is not CandidateExecutionWindow:
+            raise ContractViolation("air transition requires an execution window")
+        if (self.execution_window.latest_start_tick
+                - self.execution_window.earliest_start_tick > 1):
+            raise ContractViolation("air transition window covers at most two ticks")
+        if type(self.damage_budget) is not TaskDamageBudget:
+            raise ContractViolation("air transition damage budget must be typed")
+        if (type(self.policy) is not AirTransitionSolverPolicy
+                or self.policy.kind is not self.kind):
+            raise ContractViolation("air transition request policy is detached")
+        if type(self.max_candidates) is not int or not 1 <= self.max_candidates <= 64:
+            raise ContractViolation("air transition candidate budget is invalid")
+        if type(self.max_ticks) is not int or not 12 <= self.max_ticks <= 80:
+            raise ContractViolation("air transition tick budget is invalid")
+        if self.exit_direction is None:
+            if self.exit_motion_ticks != 0:
+                raise ContractViolation("stable air transition cannot carry exit ticks")
+        elif (self.exit_direction not in _CARDINAL_DIRECTIONS
+              or type(self.exit_motion_ticks) is not int
+              or not 1 <= self.exit_motion_ticks <= 4):
+            raise ContractViolation("moving air transition exit is invalid")
+
 
 @dataclass(frozen=True, slots=True)
 class MotionCommandTick:
@@ -263,7 +449,7 @@ class TrajectoryValidation:
 @dataclass(frozen=True, slots=True)
 class VerifiedMotionResult:
     solver_id: str
-    solver_policy: GapSolverPolicy
+    solver_policy: GapSolverPolicy | AirTransitionSolverPolicy
     ruleset_id: str
     input_projection_version: str
     anchor_observation_sequence_id: int
@@ -283,12 +469,29 @@ class VerifiedMotionResult:
     exit_direction: tuple[int, int] | None
     exit_motion_ticks: int
     delayed_start_variants: tuple[VerifiedMotionStartVariant, ...] = ()
+    kind: MotionSolveKind = MotionSolveKind.JUMP_GAP
+    maximum_expected_damage_points: float = 0.0
+    damage_budget: TaskDamageBudget = TaskDamageBudget()
 
     def __post_init__(self) -> None:
         require_identifier(self.solver_id, "solver id")
-        if (type(self.solver_policy) is not GapSolverPolicy
+        if (type(self.solver_policy) not in {
+                GapSolverPolicy, AirTransitionSolverPolicy}
                 or self.solver_policy.solver_id != self.solver_id):
             raise ContractViolation("verified motion solver policy is detached")
+        if type(self.kind) is not MotionSolveKind:
+            raise ContractViolation("verified motion kind must be typed")
+        if (type(self.solver_policy) is AirTransitionSolverPolicy
+                and self.solver_policy.kind is not self.kind):
+            raise ContractViolation("verified motion kind and policy disagree")
+        if (type(self.maximum_expected_damage_points) not in (int, float)
+                or not math.isfinite(float(self.maximum_expected_damage_points))
+                or self.maximum_expected_damage_points < 0.0
+                or type(self.damage_budget) is not TaskDamageBudget):
+            raise ContractViolation("verified motion damage evidence is invalid")
+        if (self.maximum_expected_damage_points
+                > self.damage_budget.maximum_expected_damage_points + 1.0e-9):
+            raise ContractViolation("verified motion exceeds its damage budget")
         require_identifier(self.ruleset_id, "ruleset id")
         require_identifier(self.input_projection_version, "input projection version")
         count = len(self.commands)
@@ -405,10 +608,11 @@ def gap_entry_heading_is_aligned(
 
 
 def _entry_check(anchor: StateAnchor, world: PhysicsWorldView,
-                 request: GapSolveRequest) -> SolveResult | None:
+                 request: GapSolveRequest | AirTransitionSolveRequest
+                 ) -> SolveResult | None:
     if (type(anchor) is not StateAnchor or type(world) is not PhysicsWorldView
-            or type(request) is not GapSolveRequest):
-        raise ContractViolation("gap solving requires an anchor, world and request")
+            or type(request) not in {GapSolveRequest, AirTransitionSolveRequest}):
+        raise ContractViolation("motion solving requires an anchor, world and request")
     state = anchor.physics_state
     if (world.session != anchor.session or state.session != anchor.session
             or anchor.ruleset_id != JAVA_1_21_RULESET.ruleset_id
@@ -428,7 +632,10 @@ def _entry_check(anchor: StateAnchor, world: PhysicsWorldView,
     if not state.on_ground or state.jumping_cooldown_ticks != 0:
         return SolveResult(SolveStatus.NEEDS_STATE,
                            reasons=("grounded_jump_ready",))
-    if state.food_points < 7:
+    kind = (MotionSolveKind.JUMP_GAP if type(request) is GapSolveRequest
+            else request.kind)
+    if kind in {MotionSolveKind.JUMP_GAP, MotionSolveKind.JUMP_UP} \
+            and state.food_points < 7:
         return SolveResult(SolveStatus.NEEDS_STATE,
                            reasons=("sprint_eligibility",))
     horizontal_speed = math.hypot(
@@ -456,7 +663,17 @@ def _entry_check(anchor: StateAnchor, world: PhysicsWorldView,
             state.yaw_radians, request.direction):
         return SolveResult(SolveStatus.NEEDS_STATE,
                            reasons=("heading_alignment",))
-    if not math.isclose(state.position[1], request.landing.surface_y, abs_tol=1.0e-7):
+    landing_delta = request.landing.surface_y - state.position[1]
+    landing_level_valid = (
+        math.isclose(landing_delta, 0.0, abs_tol=1.0e-7)
+        if kind is MotionSolveKind.JUMP_GAP else
+        math.isclose(landing_delta, 1.0, abs_tol=1.0e-7)
+        if kind is MotionSolveKind.JUMP_UP else
+        landing_delta <= -1.0 + 1.0e-7
+        and landing_delta >= -16.0 - 1.0e-7
+        and math.isclose(landing_delta, round(landing_delta), abs_tol=1.0e-7)
+    )
+    if not landing_level_valid:
         return SolveResult(SolveStatus.HARD_CONFLICT,
                            reasons=("landing_level",))
     return None
@@ -465,21 +682,28 @@ def _entry_check(anchor: StateAnchor, world: PhysicsWorldView,
 def validate_gap_trajectory(
         trajectory: tuple[PhysicsState, ...],
         step_events: tuple[tuple[str, ...], ...],
-        request: GapSolveRequest) -> TrajectoryValidation:
+        request: GapSolveRequest | AirTransitionSolveRequest,
+        ) -> TrajectoryValidation:
     if (type(trajectory) is not tuple or not trajectory
             or any(type(state) is not PhysicsState for state in trajectory)
             or type(step_events) is not tuple
             or any(type(events) is not tuple for events in step_events)
             or len(step_events) != len(trajectory) - 1
-            or type(request) is not GapSolveRequest):
+            or type(request) not in {GapSolveRequest, AirTransitionSolveRequest}):
         raise ContractViolation("invalid trajectory validation input")
     reasons: list[str] = []
     flattened = tuple(event for events in step_events for event in events)
-    if "takeoff" not in flattened or "left_ground" not in flattened:
+    kind = (MotionSolveKind.JUMP_GAP if type(request) is GapSolveRequest
+            else request.kind)
+    if (kind in {MotionSolveKind.JUMP_GAP, MotionSolveKind.JUMP_UP}
+            and "takeoff" not in flattened):
         reasons.append("no_observed_takeoff")
+    if "left_ground" not in flattened:
+        reasons.append("no_observed_left_ground")
     if "landed" not in flattened:
         reasons.append("no_observed_landing")
-    if any(state.horizontal_collision for state in trajectory[1:]):
+    if (kind is not MotionSolveKind.JUMP_UP
+            and any(state.horizontal_collision for state in trajectory[1:])):
         reasons.append("horizontal_collision")
     if any(
         "vertical_collision" in events
@@ -512,7 +736,7 @@ def validate_gap_trajectory(
 
 def _release_recovery_evidence(
         trajectory: tuple[PhysicsState, ...], world: PhysicsWorldView,
-        request: GapSolveRequest,
+        request: GapSolveRequest | AirTransitionSolveRequest,
 ) -> tuple[
         tuple[int, ...], tuple[BlockPos, ...], tuple[str, ...],
         SolveStatus | None, tuple[BlockPos, ...], tuple[str, ...],
@@ -527,10 +751,6 @@ def _release_recovery_evidence(
             release_state.velocity_blocks_per_tick[2],
         )
         if (release_state.on_ground
-                and math.isclose(
-                    release_state.position[1], request.landing.surface_y,
-                    abs_tol=1.0e-7,
-                )
                 and release_speed <= _STABLE_SPEED_LIMIT_PER_TICK + 1.0e-9):
             safe.append(index)
             continue
@@ -568,21 +788,15 @@ def _release_recovery_evidence(
                 calculated.resource_update.incomplete_reasons
             )
             current = calculated.next_state
-            if current.horizontal_collision:
-                break
             current_speed = math.hypot(
                 current.velocity_blocks_per_tick[0],
                 current.velocity_blocks_per_tick[2],
             )
             if (current.on_ground
                     and current_speed <= _STABLE_SPEED_LIMIT_PER_TICK + 1.0e-9):
-                # Interruption safety is weaker than successful completion:
-                # the body may stop near the landing edge, but it must regain
-                # known support at the trial's original level without impact.
-                recovered = math.isclose(
-                    current.position[1], request.landing.surface_y,
-                    abs_tol=1.0e-7,
-                )
+                # Interruption may safely stop on the entry support or the
+                # landing support. Successful completion is checked separately.
+                recovered = True
                 break
         if recovered:
             safe.append(index)
@@ -596,7 +810,7 @@ def _replay_verified_commands(
         entry_state: PhysicsState,
         commands: tuple[MotionCommandTick, ...],
         world: PhysicsWorldView,
-        request: GapSolveRequest,
+        request: GapSolveRequest | AirTransitionSolveRequest,
         *, start_tick: int,
         inherited_dependencies: tuple[BlockPos, ...] = (),
         inherited_resource_reasons: tuple[str, ...] = (),
@@ -682,7 +896,7 @@ def _prove_delayed_starts(
         anchor: StateAnchor,
         commands: tuple[MotionCommandTick, ...],
         world: PhysicsWorldView,
-        request: GapSolveRequest,
+        request: GapSolveRequest | AirTransitionSolveRequest,
 ) -> tuple[
         tuple[VerifiedMotionStartVariant, ...],
         tuple[BlockPos, ...], tuple[str, ...], SolveResult | None,
@@ -739,7 +953,7 @@ def _prove_delayed_starts(
             current = calculated.next_state
             if (not current.on_ground or current.horizontal_collision
                     or not math.isclose(
-                        current.position[1], request.landing.surface_y,
+                        current.position[1], anchor.physics_state.position[1],
                         abs_tol=1.0e-7,
                     )):
                 return (), (), (), SolveResult(
@@ -769,15 +983,23 @@ def _prove_delayed_starts(
     return tuple(variants), dependencies, resource_reasons, None
 
 
-def _candidate_templates(request: GapSolveRequest):
+def _candidate_templates(
+        request: GapSolveRequest | AirTransitionSolveRequest):
     yield from request.policy.templates
+
+
+def _trajectory_damage_points(
+        trajectory: tuple[PhysicsState, ...]) -> float:
+    return conservative_plain_fall_damage_points(max(
+        state.fall_distance_blocks for state in trajectory
+    ))
 
 
 def revalidate_gap_motion(
         proof: VerifiedMotionResult, anchor: StateAnchor,
         world: PhysicsWorldView,
         execution_window: CandidateExecutionWindow) -> SolveResult:
-    """Replay one old command sequence from a fresh anchor without searching.
+    """Replay one old verified air command sequence without searching.
 
     This is the bounded control-side check used when a background result arrives
     after its source observation.  It never changes the command sequence and it
@@ -796,13 +1018,24 @@ def revalidate_gap_motion(
             SolveStatus.INVALID_INPUT,
             reasons=("revalidation_identity_changed",),
         )
-    request = GapSolveRequest(
-        proof.direction, proof.landing, execution_window,
-        max_candidates=1, max_ticks=max(12, len(proof.commands)),
-        exit_direction=proof.exit_direction,
-        exit_motion_ticks=proof.exit_motion_ticks,
-        policy=proof.solver_policy,
-    )
+    if type(proof.solver_policy) is AirTransitionSolverPolicy:
+        request: GapSolveRequest | AirTransitionSolveRequest = \
+            AirTransitionSolveRequest(
+                proof.kind, proof.direction, proof.landing, execution_window,
+                proof.damage_budget,
+                max_candidates=1, max_ticks=max(12, len(proof.commands)),
+                exit_direction=proof.exit_direction,
+                exit_motion_ticks=proof.exit_motion_ticks,
+                policy=proof.solver_policy,
+            )
+    else:
+        request = GapSolveRequest(
+            proof.direction, proof.landing, execution_window,
+            max_candidates=1, max_ticks=max(12, len(proof.commands)),
+            exit_direction=proof.exit_direction,
+            exit_motion_ticks=proof.exit_motion_ticks,
+            policy=proof.solver_policy,
+        )
     rejected = _entry_check(anchor, world, request)
     if rejected is not None:
         return rejected
@@ -847,19 +1080,36 @@ def revalidate_gap_motion(
         proof.landing, primary.release_safe_command_indices,
         tuple(sorted(dependencies)), tuple(sorted(resource_reasons)),
         execution_window, proof.direction, proof.exit_direction,
-        proof.exit_motion_ticks, delayed_variants,
+        proof.exit_motion_ticks, delayed_variants, proof.kind,
+        max(
+            _trajectory_damage_points(primary.trajectory),
+            *(_trajectory_damage_points(variant.trajectory)
+              for variant in delayed_variants),
+        ), proof.damage_budget,
     )
     return SolveResult(SolveStatus.SOLVED, refreshed, candidates_evaluated=0)
 
 
-def solve_one_cell_gap(anchor: StateAnchor, world: PhysicsWorldView,
-                       request: GapSolveRequest) -> SolveResult:
+def revalidate_air_transition(
+        proof: VerifiedMotionResult, anchor: StateAnchor,
+        world: PhysicsWorldView,
+        execution_window: CandidateExecutionWindow) -> SolveResult:
+    return revalidate_gap_motion(proof, anchor, world, execution_window)
+
+
+def solve_air_transition(
+        anchor: StateAnchor, world: PhysicsWorldView,
+        request: AirTransitionSolveRequest) -> SolveResult:
+    if type(request) is not AirTransitionSolveRequest:
+        raise ContractViolation("air transition solver requires a typed request")
     rejected = _entry_check(anchor, world, request)
     if rejected is not None:
         return rejected
     evaluated = 0
     saw_validation_failure = False
     saw_release_recovery_failure = False
+    saw_damage_budget_failure = False
+    saw_missing_cells: set[BlockPos] = set()
     for template in _candidate_templates(request):
         if evaluated >= request.max_candidates:
             return SolveResult(
@@ -887,15 +1137,19 @@ def solve_one_cell_gap(anchor: StateAnchor, world: PhysicsWorldView,
                 )
                 exit_motion_applied += 1
             else:
-                if tick < template.pre_jump_forward_ticks:
-                    movement = MovementV1(forward=1, sprint=True)
-                elif tick == template.pre_jump_forward_ticks:
-                    movement = MovementV1(forward=1, jump=True, sprint=True)
-                elif (tick <= template.pre_jump_forward_ticks
-                              + template.post_jump_ticks):
+                if tick < template.pre_action_forward_ticks:
+                    movement = MovementV1(forward=1, sprint=template.sprint)
+                elif tick == template.pre_action_forward_ticks:
                     movement = MovementV1(
-                        forward=template.post_jump_axis,
-                        sprint=template.post_jump_axis == 1,
+                        forward=template.action_forward_axis,
+                        jump=template.jump,
+                        sprint=template.sprint,
+                    )
+                elif (tick <= template.pre_action_forward_ticks
+                              + template.post_action_ticks):
+                    movement = MovementV1(
+                        forward=template.post_action_axis,
+                        sprint=template.sprint and template.post_action_axis == 1,
                     )
                 else:
                     movement = MovementV1()
@@ -947,13 +1201,30 @@ def solve_one_cell_gap(anchor: StateAnchor, world: PhysicsWorldView,
             if (observed_landing and request.exit_direction is not None
                     and exit_motion_applied >= request.exit_motion_ticks):
                 break
+            if observed_landing and request.exit_direction is None:
+                horizontal_speed = math.hypot(
+                    current.velocity_blocks_per_tick[0],
+                    current.velocity_blocks_per_tick[2],
+                )
+                if horizontal_speed <= _STABLE_SPEED_LIMIT_PER_TICK + 1.0e-9:
+                    break
         if incomplete is not None:
+            if incomplete.status is SolveStatus.NEEDS_WORLD:
+                saw_missing_cells.update(incomplete.missing_cells)
+                continue
             return incomplete
         trajectory = tuple(states)
         step_events = tuple(events)
         validation = validate_gap_trajectory(trajectory, step_events, request)
         if not validation.accepted:
             saw_validation_failure = True
+            continue
+        maximum_expected_damage = _trajectory_damage_points(trajectory)
+        if not request.damage_budget.allows(
+                maximum_expected_damage,
+                health_points=anchor.health_points,
+                absorption_points=anchor.absorption_points):
+            saw_damage_budget_failure = True
             continue
         (release_safe, release_dependencies, release_resource_reasons,
          release_status, release_missing, release_reasons) = \
@@ -986,6 +1257,17 @@ def solve_one_cell_gap(anchor: StateAnchor, world: PhysicsWorldView,
             )
         dependencies.update(delayed_dependencies)
         resource_reasons.update(delayed_resource_reasons)
+        maximum_expected_damage = max(
+            maximum_expected_damage,
+            *(_trajectory_damage_points(variant.trajectory)
+              for variant in delayed_variants),
+        )
+        if not request.damage_budget.allows(
+                maximum_expected_damage,
+                health_points=anchor.health_points,
+                absorption_points=anchor.absorption_points):
+            saw_damage_budget_failure = True
+            continue
         proof = VerifiedMotionResult(
             request.policy.solver_id, request.policy,
             JAVA_1_21_RULESET.ruleset_id, _PROJECTION_ID,
@@ -996,10 +1278,24 @@ def solve_one_cell_gap(anchor: StateAnchor, world: PhysicsWorldView,
             tuple(sorted(dependencies)), tuple(sorted(resource_reasons)),
             request.execution_window, request.direction,
             request.exit_direction, request.exit_motion_ticks,
-            delayed_variants,
+            delayed_variants, request.kind, maximum_expected_damage,
+            request.damage_budget,
         )
         return SolveResult(
             SolveStatus.SOLVED, proof=proof, candidates_evaluated=evaluated,
+        )
+    if saw_damage_budget_failure:
+        return SolveResult(
+            SolveStatus.NO_SOLUTION_WITHIN_SEARCH,
+            candidates_evaluated=evaluated,
+            reasons=("damage_budget_exceeded",),
+        )
+    if saw_missing_cells:
+        return SolveResult(
+            SolveStatus.NEEDS_WORLD,
+            candidates_evaluated=evaluated,
+            missing_cells=tuple(sorted(saw_missing_cells)),
+            reasons=("trajectory_world_incomplete",),
         )
     return SolveResult(
         SolveStatus.NO_SOLUTION_WITHIN_SEARCH,
@@ -1011,3 +1307,10 @@ def solve_one_cell_gap(anchor: StateAnchor, world: PhysicsWorldView,
             if saw_validation_failure else ("empty_candidate_space",)
         ),
     )
+
+
+def solve_one_cell_gap(anchor: StateAnchor, world: PhysicsWorldView,
+                       request: GapSolveRequest) -> SolveResult:
+    if type(request) is not GapSolveRequest:
+        raise ContractViolation("gap solver requires a GapSolveRequest")
+    return solve_air_transition(anchor, world, request.as_air_transition())

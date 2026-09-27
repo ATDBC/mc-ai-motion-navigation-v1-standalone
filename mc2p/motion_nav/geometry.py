@@ -42,7 +42,7 @@ class SupportResult:
 
 def unknown_shape_owner_is_fully_covered(
         world: WorldView, position: BlockPos) -> bool:
-    """Whether a known full cube contains every supported shape from below."""
+    """Whether known collision above prevents a hidden owner reaching higher."""
     if type(world) is not WorldView:
         raise ContractViolation("shape-owner coverage requires a world view")
     if (type(position) is not tuple or len(position) != 3
@@ -53,11 +53,22 @@ def unknown_shape_owner_is_fully_covered(
         return False
     above = (position[0], position[1] + 1, position[2])
     cover = world.cell(above)
-    return (
-        cover.knowledge is CellKnowledge.BLOCK
-        and cover.block is not None
-        and not cover.block.fluid
-        and cover.block.collision_kind == "full_cube"
+    if (cover.knowledge is not CellKnowledge.BLOCK
+            or cover.block is None or cover.block.fluid
+            or cover.block.collision_kind == "unsupported"):
+        return False
+    if cover.block.collision_kind == "full_cube":
+        return True
+    # The locked 1.21 geometry contract lets a shape owned by ``position``
+    # reach into the cell above, but not beyond that cell's top.  A known box
+    # that spans the whole horizontal cell and reaches that top therefore
+    # fixes the highest possible collision surface.  A top slab qualifies;
+    # a bottom slab does not.
+    return any(
+        box.min_x <= _EPSILON and box.max_x >= 1.0 - _EPSILON
+        and box.min_z <= _EPSILON and box.max_z >= 1.0 - _EPSILON
+        and box.max_y >= 1.0 - _EPSILON
+        for box in cover.block.boxes
     )
 
 

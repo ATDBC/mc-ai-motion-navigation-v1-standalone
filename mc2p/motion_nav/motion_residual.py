@@ -337,5 +337,9 @@ class MotionResidualTracker:
             MotionTickPhase.AFTER_MOVEMENT, None, None,
             self._ruleset.ruleset_id, self._ruleset.state_schema,
             "mc2p.input-projection.v1", state,
+            (None if snapshot.self_state.value is None
+             else snapshot.self_state.value.health_points),
+            (None if snapshot.self_state.value is None
+             else snapshot.self_state.value.absorption_points),
         )
         self._last_sequence_id = snapshot.sequence_id

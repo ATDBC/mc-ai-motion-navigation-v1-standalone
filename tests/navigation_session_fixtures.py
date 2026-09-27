@@ -27,7 +27,9 @@ class FakeNavigationSession:
         self.state = NavigationSessionState.READY
         self.reason = "not_started"
         self.starts = []
+        self.start_options = []
         self.updates = []
+        self.update_options = []
         self.frames = []
         self.movement = MovementV1(forward=1)
         self.look: LookV1 | None = None
@@ -139,16 +141,18 @@ class FakeNavigationSession:
     def current_action_requires_route_look(self):
         return self.route_look_required
 
-    def start_goal(self, goal_id, revision, goal_state, frame, **_):
+    def start_goal(self, goal_id, revision, goal_state, frame, **options):
         self.goal_id, self.goal_revision = goal_id, revision
         self.starts.append((goal_id, revision, goal_state))
+        self.start_options.append(options)
         self.state, self.reason = NavigationSessionState.EXECUTING, "route_admitted"
 
-    def update_goal(self, goal_id, revision, goal_state):
+    def update_goal(self, goal_id, revision, goal_state, **options):
         if goal_id != self.goal_id or revision <= self.goal_revision:
             raise AssertionError("stale goal update")
         self.goal_revision = revision
         self.updates.append((goal_id, revision, goal_state))
+        self.update_options.append(options)
         self.state, self.reason = NavigationSessionState.EXECUTING, "goal_revised"
 
     def propose(

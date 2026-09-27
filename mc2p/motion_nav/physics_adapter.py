@@ -187,11 +187,10 @@ class PhysicsWorldView:
             fact = self._world.cell(position)
             if fact.knowledge is CellKnowledge.UNKNOWN:
                 # Shapes owned by the cell below may reach one block upward.
-                # A known full cube immediately above contains every such
-                # supported vanilla shape, so the hidden owner cannot add any
-                # collision outside geometry we already have.  Keep both cells
-                # as dependencies while avoiding an impossible underground
-                # information requirement.
+                # A known full-width collision surface at the top of the cell
+                # above fixes the highest possible surface of every supported
+                # vanilla shape below.  Keep both cells as dependencies while
+                # avoiding an impossible underground information requirement.
                 above = (position[0], position[1] + 1, position[2])
                 complete_dependencies.add(above)
                 if unknown_shape_owner_is_fully_covered(

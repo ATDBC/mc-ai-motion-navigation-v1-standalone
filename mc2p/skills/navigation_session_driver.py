@@ -25,6 +25,7 @@ from mc2p.motion_nav.movement_transition import GoalState
 from mc2p.motion_nav.navigation_session import (
     NavigationSessionPort, NavigationSessionProposal, NavigationSessionState,
 )
+from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.runtime.player_runtime_v1 import (
     PlayerRuntimeV1, RuntimeStateV1, RuntimeStepResultV1,
 )
@@ -91,6 +92,8 @@ class RuntimeNavigationDriver:
         goal_revision: int,
         goal: GoalState,
         now_ns: int,
+        *,
+        damage_budget: TaskDamageBudget = TaskDamageBudget(),
     ) -> None:
         require_nonnegative_int(now_ns, "runtime navigation start time")
         if self.source is not None or self.state not in {"ready", "stopped"}:
@@ -103,9 +106,15 @@ class RuntimeNavigationDriver:
         report = self.session.report
         try:
             if report.goal_id is None:
-                self.session.start_goal(goal_id, goal_revision, goal, frame)
+                self.session.start_goal(
+                    goal_id, goal_revision, goal, frame,
+                    damage_budget=damage_budget,
+                )
             else:
-                self.session.update_goal(goal_id, goal_revision, goal)
+                self.session.update_goal(
+                    goal_id, goal_revision, goal,
+                    damage_budget=damage_budget,
+                )
         except BaseException:
             self._release_source()
             raise
@@ -120,6 +129,8 @@ class RuntimeNavigationDriver:
         goal_revision: int,
         goal: GoalState,
         now_ns: int,
+        *,
+        damage_budget: TaskDamageBudget | None = None,
     ) -> None:
         require_nonnegative_int(now_ns, "runtime navigation goal update time")
         if self.source is None or self._goal_id is None:
@@ -135,7 +146,9 @@ class RuntimeNavigationDriver:
         # waiting for a world interaction.  Re-anchor before querying support
         # for the revised goal so an expired immutable view is never reused.
         self.session.ingest(self.runtime.observation)
-        self.session.update_goal(goal_id, goal_revision, goal)
+        self.session.update_goal(
+            goal_id, goal_revision, goal, damage_budget=damage_budget,
+        )
         self._goal_revision, self._goal = goal_revision, goal
         self._sync_report()
 

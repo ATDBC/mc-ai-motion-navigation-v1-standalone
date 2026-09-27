@@ -15,6 +15,7 @@ from mc2p.motion_nav.motion_candidate import (
     MotionCandidateAdmitter, MotionCandidateContext, MotionCandidateStatus,
     VerifiedMotionCandidate, VerifiedMotionExecutor, VerifiedMotionExecutorState,
 )
+from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.motion_solver import SolveResult, SolveStatus, solve_one_cell_gap
 from mc2p.motion_nav.motion_coordination import (
     GapPreparationResult, GapPreparationStatus, MotionRouteCoordinator,
@@ -59,7 +60,7 @@ def solved_candidate():
             route_revision=3,
             action_index=1,
             candidate_revision=5,
-            risk_policy_id="no_expected_damage",
+            damage_budget=TaskDamageBudget(),
             accepted_resource_incomplete_reasons=(
                 "server_hunger_clock_not_in_physics_state",
             ),
@@ -79,7 +80,7 @@ class MotionCandidateAdmissionTests(unittest.TestCase):
             route_revision=3,
             action_index=1,
             candidate_revision=5,
-            risk_policy_id="no_expected_damage",
+            damage_budget=TaskDamageBudget(),
             intended_start_tick=11,
             changed_cells=(),
         )
@@ -101,6 +102,20 @@ class MotionCandidateAdmissionTests(unittest.TestCase):
 
         self.assertIs(result.status, MotionCandidateStatus.REJECTED)
         self.assertEqual(result.reason, "goal_replaced")
+
+    def test_damage_budget_change_invalidates_candidate_even_with_same_policy_id(self):
+        anchor, candidate = solved_candidate()
+
+        result = self.admit(
+            anchor,
+            candidate,
+            damage_budget=TaskDamageBudget(
+                "no_expected_damage", 1.0,
+            ),
+        )
+
+        self.assertIs(result.status, MotionCandidateStatus.REJECTED)
+        self.assertEqual(result.reason, "risk_policy_changed")
 
     def test_request_route_revision_window_and_world_changes_are_checked(self):
         anchor, candidate = solved_candidate()
@@ -162,7 +177,7 @@ class VerifiedMotionExecutorTests(unittest.TestCase):
             goal_id="goal-1", goal_revision=2,
             route_id="route-1", route_revision=3,
             action_index=1, candidate_revision=5,
-            risk_policy_id="no_expected_damage", intended_start_tick=11,
+            damage_budget=TaskDamageBudget(), intended_start_tick=11,
             changed_cells=(),
         )
         self.assertIs(admitted.status, MotionCandidateStatus.ACCEPTED)
@@ -617,7 +632,7 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
             goal_id="goal-1", goal_revision=2,
             route_id="route-1", route_revision=3,
             action_index=0, candidate_revision=5,
-            risk_policy_id="no_expected_damage", intended_start_tick=11,
+            damage_budget=TaskDamageBudget(), intended_start_tick=11,
             changed_cells=(),
         )
         self.assertIs(admitted_result.status, MotionCandidateStatus.ACCEPTED)

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from mc2p.contracts.common import ContractViolation, require_identifier
 from mc2p.motion_nav.controlled_drop import ControlledDropEdge
 from mc2p.motion_nav.fixed_route import FixedRoute
+from mc2p.motion_nav.ground_traversal import GroundTraversalPlan
 from mc2p.motion_nav.jump_gap import JumpGapEdge
 from mc2p.motion_nav.jump_up import JumpUpEdge
 from mc2p.motion_nav.known_map_planner import WalkNodeId
@@ -14,6 +15,7 @@ from mc2p.motion_nav.movement_transition import (
 )
 from mc2p.motion_nav.world_model import BlockPos
 from mc2p.motion_nav.step_transition import StepEdge
+from mc2p.motion_nav.segment_entry import SegmentEntryWindow
 from mc2p.motion_nav.support_surfaces import SupportSurface, SurfaceNodeId
 
 
@@ -23,6 +25,7 @@ class WalkSegment:
     node_ids: tuple[WalkNodeId, ...]
     dependencies: tuple[BlockPos, ...]
     transition: MovementTransition | None = None
+    traversal_plan: GroundTraversalPlan | None = None
 
     def __post_init__(self) -> None:
         if type(self.fixed_route) is not FixedRoute:
@@ -33,6 +36,11 @@ class WalkSegment:
             raise ContractViolation("walk segment dependencies must be immutable")
         if self.transition is not None and type(self.transition) is not MovementTransition:
             raise ContractViolation("walk segment transition must be typed")
+        if (self.traversal_plan is not None
+                and (type(self.traversal_plan) is not GroundTraversalPlan
+                     or self.traversal_plan.route.points
+                     != self.fixed_route.points)):
+            raise ContractViolation("walk segment traversal proof must match its route")
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,6 +48,7 @@ class JumpUpSegment:
     edge: JumpUpEdge
     dependencies: tuple[BlockPos, ...]
     transition: MovementTransition | None = None
+    entry_window: SegmentEntryWindow | None = None
 
     def __post_init__(self) -> None:
         if type(self.edge) is not JumpUpEdge:
@@ -48,6 +57,8 @@ class JumpUpSegment:
             raise ContractViolation("JumpUp segment dependencies must be immutable")
         if self.transition is not None and type(self.transition) is not MovementTransition:
             raise ContractViolation("JumpUp segment transition must be typed")
+        if self.entry_window is not None and type(self.entry_window) is not SegmentEntryWindow:
+            raise ContractViolation("JumpUp segment entry window must be typed")
 
 
 @dataclass(frozen=True, slots=True)
@@ -57,6 +68,7 @@ class StepSegment:
     end_surface: SupportSurface
     dependencies: tuple[BlockPos, ...]
     transition: MovementTransition | None = None
+    entry_window: SegmentEntryWindow | None = None
 
     def __post_init__(self) -> None:
         if type(self.edge) is not StepEdge:
@@ -71,6 +83,8 @@ class StepSegment:
             raise ContractViolation("Step segment dependencies must be immutable")
         if self.transition is not None and type(self.transition) is not MovementTransition:
             raise ContractViolation("Step segment transition must be typed")
+        if self.entry_window is not None and type(self.entry_window) is not SegmentEntryWindow:
+            raise ContractViolation("Step segment entry window must be typed")
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,6 +94,7 @@ class JumpGapSegment:
     end_surface: SupportSurface
     dependencies: tuple[BlockPos, ...]
     transition: MovementTransition | None = None
+    entry_window: SegmentEntryWindow | None = None
 
     def __post_init__(self) -> None:
         if type(self.edge) is not JumpGapEdge:
@@ -93,6 +108,8 @@ class JumpGapSegment:
             raise ContractViolation("gap jump segment dependencies must be immutable")
         if self.transition is not None and type(self.transition) is not MovementTransition:
             raise ContractViolation("gap jump segment transition must be typed")
+        if self.entry_window is not None and type(self.entry_window) is not SegmentEntryWindow:
+            raise ContractViolation("gap jump segment entry window must be typed")
 
 
 @dataclass(frozen=True, slots=True)
@@ -102,6 +119,7 @@ class ControlledDropSegment:
     end_surface: SupportSurface
     dependencies: tuple[BlockPos, ...]
     transition: MovementTransition | None = None
+    entry_window: SegmentEntryWindow | None = None
 
     def __post_init__(self) -> None:
         if type(self.edge) is not ControlledDropEdge:
@@ -115,6 +133,8 @@ class ControlledDropSegment:
             raise ContractViolation("controlled drop segment dependencies must be immutable")
         if self.transition is not None and type(self.transition) is not MovementTransition:
             raise ContractViolation("controlled drop segment transition must be typed")
+        if self.entry_window is not None and type(self.entry_window) is not SegmentEntryWindow:
+            raise ContractViolation("controlled drop segment entry window must be typed")
 
 
 RouteAction = (

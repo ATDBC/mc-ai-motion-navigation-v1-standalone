@@ -7,7 +7,9 @@ import math
 
 from mc2p.contracts.action_v1 import LookV1, MovementV1
 from mc2p.contracts.common import ContractViolation, require_nonnegative_int
-from mc2p.motion_nav.action_route import JumpGapSegment, WalkSegment
+from mc2p.motion_nav.action_route import (
+    ControlledDropSegment, JumpGapSegment, JumpUpSegment, WalkSegment,
+)
 from mc2p.motion_nav.action_route_executor import (
     ActionRouteDecision, ActionRouteExecutor,
 )
@@ -15,11 +17,14 @@ from mc2p.motion_nav.motion_candidate import (
     AdmittedMotionCandidate, MotionCandidateStatus,
 )
 from mc2p.motion_nav.motion_solver import (
-    DEFAULT_GAP_SOLVER_POLICY, GapSolveRequest, GapSolverPolicy,
-    LandingRegion, SolveResult, SolveStatus,
+    DEFAULT_AIR_TRANSITION_POLICIES, DEFAULT_GAP_SOLVER_POLICY,
+    AirTransitionSolveRequest, AirTransitionSolverPolicy,
+    GapSolveRequest, GapSolverPolicy, LandingRegion, MotionSolveKind,
+    SolveResult, SolveStatus,
     gap_entry_heading_delta_radians, gap_entry_heading_is_aligned,
-    solve_one_cell_gap,
+    solve_air_transition, solve_one_cell_gap,
 )
+from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.motion_worker import (
     GapMotionSolveJob, GapMotionSolveResult, MotionSolverWorker,
 )
@@ -42,11 +47,12 @@ _MAX_ENTRY_ALIGNMENT_DEGREES_PER_TICK = 36.0
 
 def _gap_physics_snapshot(
         world: PhysicsWorldView, anchor: StateAnchor,
-        request: GapSolveRequest) -> PhysicsWorldView:
+        request: GapSolveRequest | AirTransitionSolveRequest) -> PhysicsWorldView:
     """Copy only the collision volume one bounded gap solve can reach."""
     if (type(world) is not PhysicsWorldView or type(anchor) is not StateAnchor
-            or type(request) is not GapSolveRequest):
-        raise ContractViolation("gap physics snapshot requires typed inputs")
+            or type(request) not in {
+                GapSolveRequest, AirTransitionSolveRequest}):
+        raise ContractViolation("motion physics snapshot requires typed inputs")
     state = anchor.physics_state
     x, y, z = state.position
     half = state.body_width / 2.0
@@ -88,28 +94,71 @@ class GapPreparationResult:
             raise ContractViolation("ready gap preparation requires admitted motion")
 
 
-def _cardinal_direction(action: JumpGapSegment) -> tuple[int, int] | None:
+def _air_action_kind(action) -> MotionSolveKind | None:
+    return {
+        JumpGapSegment: MotionSolveKind.JUMP_GAP,
+        JumpUpSegment: MotionSolveKind.JUMP_UP,
+        ControlledDropSegment: MotionSolveKind.CONTROLLED_DROP,
+    }.get(type(action))
+
+
+def _air_action_direction(action) -> tuple[int, int] | None:
+    if type(action) is JumpUpSegment:
+        return action.edge.direction
+    if type(action) not in (JumpGapSegment, ControlledDropSegment):
+        return None
     dx = action.end_surface.position[0] - action.start_surface.position[0]
     dz = action.end_surface.position[2] - action.start_surface.position[2]
-    if math.isclose(abs(dx), 2.0, abs_tol=1.0e-7) and math.isclose(
+    expected_distance = 2.0 if type(action) is JumpGapSegment else 1.0
+    if math.isclose(abs(dx), expected_distance, abs_tol=1.0e-7) and math.isclose(
             dz, 0.0, abs_tol=1.0e-7):
         return (1 if dx > 0 else -1, 0)
-    if math.isclose(abs(dz), 2.0, abs_tol=1.0e-7) and math.isclose(
+    if math.isclose(abs(dz), expected_distance, abs_tol=1.0e-7) and math.isclose(
             dx, 0.0, abs_tol=1.0e-7):
         return (0, 1 if dz > 0 else -1)
     return None
 
 
-def _following_walk_direction(
-        route: ActiveRoute, action_index: int,
-        action: JumpGapSegment) -> tuple[int, int] | None:
+def _air_action_landing(action, anchor: StateAnchor) -> LandingRegion | None:
+    half_width = anchor.physics_state.body_width / 2.0
+    if type(action) is JumpUpSegment:
+        x, y, z = action.edge.end
+        return LandingRegion(
+            x + half_width, x + 1.0 - half_width,
+            z + half_width, z + 1.0 - half_width,
+            float(y),
+        )
+    if type(action) not in (JumpGapSegment, ControlledDropSegment):
+        return None
+    region = action.end_surface.region
+    min_x, max_x = region.min_x + half_width, region.max_x - half_width
+    min_z, max_z = region.min_z + half_width, region.max_z - half_width
+    if max_x <= min_x or max_z <= min_z:
+        return None
+    return LandingRegion(
+        min_x, max_x, min_z, max_z, action.end_surface.position[1],
+    )
+
+
+def _following_motion_direction(
+        route: ActiveRoute, action_index: int, action) -> tuple[int, int] | None:
     next_index = action_index + 1
     if next_index >= len(route.action_route.actions):
         return None
     following = route.action_route.actions[next_index]
+    following_air_direction = _air_action_direction(following)
+    if following_air_direction is not None:
+        return following_air_direction
     if type(following) is not WalkSegment:
         return None
-    start_x, _, start_z = action.end_surface.position
+    if type(action) is JumpUpSegment:
+        start_x, _, start_z = (
+            action.edge.end[0] + .5,
+            float(action.edge.end[1]),
+            action.edge.end[2] + .5,
+        )
+    else:
+        start_x, _, start_z = action.end_surface.position
     for point in following.fixed_route.points:
         dx, dz = point.x - start_x, point.z - start_z
         if math.hypot(dx, dz) <= 1.0e-7:
@@ -131,7 +180,7 @@ def _planned_gap_request(
     action = route.action_route.actions[action_index]
     if type(action) is not JumpGapSegment:
         return None, "route_action_is_not_jump_gap"
-    direction = _cardinal_direction(action)
+    direction = _air_action_direction(action)
     if direction is None:
         return None, "jump_gap_is_outside_b10b_trial"
     region = action.end_surface.region
@@ -143,10 +192,42 @@ def _planned_gap_request(
     landing = LandingRegion(
         min_x, max_x, min_z, max_z, action.end_surface.position[1],
     )
-    exit_direction = _following_walk_direction(route, action_index, action)
+    exit_direction = _following_motion_direction(route, action_index, action)
     return GapSolveRequest(
         direction, landing, execution_window,
         max_candidates=12, max_ticks=20,
+        exit_direction=exit_direction,
+        exit_motion_ticks=1 if exit_direction is not None else 0,
+        policy=policy,
+    ), "ready"
+
+
+def _planned_air_transition_request(
+        route: ActiveRoute, action_index: int, anchor: StateAnchor,
+        execution_window: CandidateExecutionWindow,
+        damage_budget: TaskDamageBudget,
+        policies: dict[MotionSolveKind, AirTransitionSolverPolicy],
+) -> tuple[AirTransitionSolveRequest | None, str]:
+    if not 0 <= action_index < len(route.action_route.actions):
+        return None, "action_index_outside_route"
+    action = route.action_route.actions[action_index]
+    kind = _air_action_kind(action)
+    if kind is None:
+        return None, "route_action_is_not_air_transition"
+    direction = _air_action_direction(action)
+    if direction is None:
+        return None, "air_transition_relation_is_unsupported"
+    landing = _air_action_landing(action, anchor)
+    if landing is None:
+        return None, "landing_region_narrower_than_body"
+    policy = policies.get(kind)
+    if policy is None:
+        return None, "air_transition_policy_missing"
+    exit_direction = _following_motion_direction(route, action_index, action)
+    return AirTransitionSolveRequest(
+        kind, direction, landing, execution_window, damage_budget,
+        max_candidates=min(64, len(policy.templates)),
+        max_ticks=(80 if kind is MotionSolveKind.CONTROLLED_DROP else 40),
         exit_direction=exit_direction,
         exit_motion_ticks=1 if exit_direction is not None else 0,
         policy=policy,
@@ -158,7 +239,7 @@ def prepare_planned_gap_motion(
         world: PhysicsWorldView, *, candidate_revision: int,
         intended_start_tick: int,
         changed_cells: tuple[BlockPos, ...] = (),
-        risk_policy_id: str = "no_expected_damage",
+        damage_budget: TaskDamageBudget = TaskDamageBudget(),
         admitter: RouteAdmitter | None = None,
         precomputed: SolveResult | None = None,
         policy: GapSolverPolicy = DEFAULT_GAP_SOLVER_POLICY,
@@ -202,14 +283,84 @@ def prepare_planned_gap_motion(
     reusable = route_admitter.bind_verified_motion(
         route, solved.proof, action_index=action_index,
         candidate_revision=candidate_revision,
-        risk_policy_id=risk_policy_id,
+        damage_budget=damage_budget,
         accepted_resource_incomplete_reasons=_RESOURCE_ASSUMPTIONS,
     )
     admitted = route_admitter.admit_verified_motion(
         reusable, route, anchor, candidate_revision=candidate_revision,
         intended_start_tick=intended_start_tick,
-        changed_cells=changed_cells, risk_policy_id=risk_policy_id,
+        changed_cells=changed_cells, damage_budget=damage_budget,
         world=world,
+    )
+    if admitted.status is not MotionCandidateStatus.ACCEPTED:
+        return GapPreparationResult(
+            GapPreparationStatus.ADMISSION_REJECTED,
+            solve_result=solved, reason=admitted.reason,
+        )
+    return GapPreparationResult(
+        GapPreparationStatus.READY, admitted.candidate, solved, "ready",
+    )
+
+
+def prepare_planned_air_transition(
+        route: ActiveRoute, action_index: int, anchor: StateAnchor,
+        world: PhysicsWorldView, *, candidate_revision: int,
+        intended_start_tick: int,
+        changed_cells: tuple[BlockPos, ...] = (),
+        damage_budget: TaskDamageBudget = TaskDamageBudget(),
+        admitter: RouteAdmitter | None = None,
+        precomputed: SolveResult | None = None,
+        policies: dict[MotionSolveKind, AirTransitionSolverPolicy]
+        = DEFAULT_AIR_TRANSITION_POLICIES,
+) -> GapPreparationResult:
+    if (type(route) is not ActiveRoute or type(anchor) is not StateAnchor
+            or type(world) is not PhysicsWorldView
+            or type(changed_cells) is not tuple
+            or type(damage_budget) is not TaskDamageBudget
+            or type(policies) is not dict
+            or (precomputed is not None and type(precomputed) is not SolveResult)):
+        raise ContractViolation("air transition preparation requires typed inputs")
+    require_nonnegative_int(action_index, "action index")
+    require_nonnegative_int(candidate_revision, "candidate revision")
+    require_nonnegative_int(intended_start_tick, "intended start tick")
+    request, request_reason = _planned_air_transition_request(
+        route, action_index, anchor,
+        CandidateExecutionWindow(intended_start_tick, intended_start_tick + 1),
+        damage_budget, policies,
+    )
+    if request is None:
+        return GapPreparationResult(
+            GapPreparationStatus.UNSUPPORTED_ROUTE_ACTION,
+            reason=request_reason,
+        )
+    solved = precomputed or solve_air_transition(anchor, world, request)
+    if solved.status is not SolveStatus.SOLVED or solved.proof is None:
+        return GapPreparationResult(
+            GapPreparationStatus.SOLVE_FAILED,
+            solve_result=solved, reason=solved.status.value,
+        )
+    proof = solved.proof
+    if (proof.kind is not request.kind
+            or proof.direction != request.direction
+            or proof.landing != request.landing
+            or proof.exit_direction != request.exit_direction
+            or proof.exit_motion_ticks != request.exit_motion_ticks
+            or proof.damage_budget != damage_budget):
+        return GapPreparationResult(
+            GapPreparationStatus.SOLVE_FAILED,
+            solve_result=solved, reason="precomputed_connection_mismatch",
+        )
+    route_admitter = admitter or RouteAdmitter()
+    reusable = route_admitter.bind_verified_motion(
+        route, proof, action_index=action_index,
+        candidate_revision=candidate_revision,
+        damage_budget=damage_budget,
+        accepted_resource_incomplete_reasons=_RESOURCE_ASSUMPTIONS,
+    )
+    admitted = route_admitter.admit_verified_motion(
+        reusable, route, anchor, candidate_revision=candidate_revision,
+        intended_start_tick=intended_start_tick,
+        changed_cells=changed_cells, damage_budget=damage_budget, world=world,
     )
     if admitted.status is not MotionCandidateStatus.ACCEPTED:
         return GapPreparationResult(
@@ -226,19 +377,32 @@ class MotionRouteCoordinator:
 
     def __init__(self, route: ActiveRoute, executor: ActionRouteExecutor,
                  worker: MotionSolverWorker, *,
-                 gap_solver_policy: GapSolverPolicy = DEFAULT_GAP_SOLVER_POLICY) -> None:
+                 damage_budget: TaskDamageBudget = TaskDamageBudget(),
+                 gap_solver_policy: GapSolverPolicy = DEFAULT_GAP_SOLVER_POLICY,
+                 air_transition_policies: dict[
+                     MotionSolveKind, AirTransitionSolverPolicy
+                 ] = DEFAULT_AIR_TRANSITION_POLICIES) -> None:
         if (type(route) is not ActiveRoute
                 or type(executor) is not ActionRouteExecutor
                 or type(worker) is not MotionSolverWorker
-                or type(gap_solver_policy) is not GapSolverPolicy):
+                or type(damage_budget) is not TaskDamageBudget
+                or type(gap_solver_policy) is not GapSolverPolicy
+                or type(air_transition_policies) is not dict
+                or any(type(kind) is not MotionSolveKind
+                       or type(policy) is not AirTransitionSolverPolicy
+                       or policy.kind is not kind
+                       for kind, policy in air_transition_policies.items())):
             raise ContractViolation("motion route coordination requires typed owners")
         self.route = route
         self.executor = executor
         self.worker = worker
         self.gap_solver_policy = gap_solver_policy
+        self.air_transition_policies = dict(air_transition_policies)
+        self.damage_budget = damage_budget
         self._pending_connection: str | None = None
         self._pending_action_index: int | None = None
         self._pending_submitted_tick: int | None = None
+        self._pending_preparation_anchor: StateAnchor | None = None
         self._candidate_revision = 0
         self._retry_signature: tuple | None = None
         self._retry_failures = 0
@@ -250,13 +414,20 @@ class MotionRouteCoordinator:
         self._pending_connection = None
         self._pending_action_index = None
         self._pending_submitted_tick = None
+        self._pending_preparation_anchor = None
         self._candidate_revision = 0
         self._retry_signature = None
         self._retry_failures = 0
         self.last_failure_reason = ""
         self.executor.start(
             self.route.action_route, frame,
+            damage_budget=self.damage_budget,
             require_verified_gap_motion=True,
+            require_verified_motion_actions=frozenset(
+                index for index, action in enumerate(
+                    self.route.action_route.actions
+                ) if _air_action_kind(action) is not None
+            ),
         )
 
     def _connection_id(self, action_index: int) -> str:
@@ -303,17 +474,32 @@ class MotionRouteCoordinator:
             if self._pending_action_index is not None
             else self.executor.action_index
         )
+        preparation_anchor = self._pending_preparation_anchor or anchor
         self._pending_connection = None
         self._pending_action_index = None
         self._pending_submitted_tick = None
-        prepared = prepare_planned_gap_motion(
-            self.route, action_index, anchor, world,
-            candidate_revision=result.candidate_revision,
-            intended_start_tick=anchor.movement_tick_id + 1,
-            changed_cells=changed_cells,
-            precomputed=result.solve_result,
-            policy=self.gap_solver_policy,
-        )
+        self._pending_preparation_anchor = None
+        action = self.route.action_route.actions[action_index]
+        if type(action) is JumpGapSegment:
+            prepared = prepare_planned_gap_motion(
+                self.route, action_index, preparation_anchor, world,
+                candidate_revision=result.candidate_revision,
+                intended_start_tick=preparation_anchor.movement_tick_id + 1,
+                changed_cells=changed_cells,
+                damage_budget=self.damage_budget,
+                precomputed=result.solve_result,
+                policy=self.gap_solver_policy,
+            )
+        else:
+            prepared = prepare_planned_air_transition(
+                self.route, action_index, preparation_anchor, world,
+                candidate_revision=result.candidate_revision,
+                intended_start_tick=preparation_anchor.movement_tick_id + 1,
+                changed_cells=changed_cells,
+                damage_budget=self.damage_budget,
+                precomputed=result.solve_result,
+                policies=self.air_transition_policies,
+            )
         if prepared.status is not GapPreparationStatus.READY:
             self.last_failure_reason = prepared.reason
             if action_index > self.executor.action_index:
@@ -343,15 +529,23 @@ class MotionRouteCoordinator:
 
     def _submit_action(
             self, index: int, anchor: StateAnchor,
-            world: PhysicsWorldView) -> None:
+            world: PhysicsWorldView, *,
+            preparation_anchor: StateAnchor | None = None) -> None:
         connection = self._connection_id(index)
         window = CandidateExecutionWindow(
             anchor.movement_tick_id + 1,
             anchor.movement_tick_id + 2,
         )
-        request, reason = _planned_gap_request(
-            self.route, index, anchor, window, self.gap_solver_policy,
-        )
+        action = self.route.action_route.actions[index]
+        if type(action) is JumpGapSegment:
+            request, reason = _planned_gap_request(
+                self.route, index, anchor, window, self.gap_solver_policy,
+            )
+        else:
+            request, reason = _planned_air_transition_request(
+                self.route, index, anchor, window, self.damage_budget,
+                self.air_transition_policies,
+            )
         if request is None:
             self.last_failure_reason = reason
             self.executor.cancel()
@@ -365,6 +559,7 @@ class MotionRouteCoordinator:
             self._pending_connection = connection
             self._pending_action_index = index
             self._pending_submitted_tick = anchor.movement_tick_id
+            self._pending_preparation_anchor = preparation_anchor
             self.last_failure_reason = ""
         else:
             self._candidate_revision -= 1
@@ -382,9 +577,9 @@ class MotionRouteCoordinator:
         if not 0 <= index < len(actions):
             return None
         action = actions[index]
-        if type(action) is not JumpGapSegment:
+        if _air_action_kind(action) is None:
             return None
-        direction = _cardinal_direction(action)
+        direction = _air_action_direction(action)
         if (direction is None or gap_entry_heading_is_aligned(
                 anchor.physics_state.yaw_radians, direction)):
             return None
@@ -445,7 +640,18 @@ class MotionRouteCoordinator:
         if (not 0 <= index < len(actions)
                 or type(actions[index]) is not WalkSegment
                 or index + 1 >= len(actions)
-                or type(actions[index + 1]) is not JumpGapSegment
+                or _air_action_kind(actions[index + 1]) is None
+                or self.executor.has_verified_motion(index + 1)):
+            return None
+        return index + 1
+
+    def _upcoming_air_index(self) -> int | None:
+        index = self.executor.action_index
+        actions = self.route.action_route.actions
+        if (not 0 <= index < len(actions)
+                or _air_action_kind(actions[index]) is None
+                or index + 1 >= len(actions)
+                or _air_action_kind(actions[index + 1]) is None
                 or self.executor.has_verified_motion(index + 1)):
             return None
         return index + 1
@@ -455,14 +661,39 @@ class MotionRouteCoordinator:
             world: PhysicsWorldView) -> None:
         action_index = self._upcoming_gap_index()
         if action_index is None:
+            action_index = self._upcoming_air_index()
+            if action_index is None:
+                return
+            exit_state = self.executor.active_verified_exit_state()
+            if exit_state is None:
+                return
+            predicted = replace(
+                anchor,
+                observation_sequence_id=anchor.observation_sequence_id + 1,
+                movement_tick_id=exit_state.movement_tick_id,
+                confirmed_control_sequence=None,
+                confirmed_control_tick_range=None,
+                physics_state=exit_state,
+            )
+            self._submit_action(
+                action_index, predicted, world,
+                preparation_anchor=predicted,
+            )
             return
         predicted = self._predict_applied_walk_state(decision, anchor, world)
         if predicted is None or not predicted.physics_state.on_ground:
             return
         action = self.route.action_route.actions[action_index]
-        assert type(action) is JumpGapSegment
+        assert _air_action_kind(action) is not None
         px, py, pz = predicted.physics_state.position
-        sx, sy, sz = action.start_surface.position
+        if type(action) is JumpUpSegment:
+            sx, sy, sz = (
+                action.edge.start[0] + .5,
+                float(action.edge.start[1]),
+                action.edge.start[2] + .5,
+            )
+        else:
+            sx, sy, sz = action.start_surface.position
         if (math.hypot(px - sx, pz - sz) > .20
                 or abs(py - sy) > .10):
             return
@@ -487,6 +718,7 @@ class MotionRouteCoordinator:
             self._pending_connection = None
             self._pending_action_index = None
             self._pending_submitted_tick = None
+            self._pending_preparation_anchor = None
             self.last_failure_reason = "motion_solver_worker_died"
             self.executor.cancel()
         elif (self._pending_connection is not None
@@ -495,6 +727,7 @@ class MotionRouteCoordinator:
             self._pending_connection = None
             self._pending_action_index = None
             self._pending_submitted_tick = None
+            self._pending_preparation_anchor = None
             self.last_failure_reason = "motion_solver_request_expired"
             self.executor.cancel()
         for result in self.worker.poll_available():

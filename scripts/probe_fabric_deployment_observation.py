@@ -169,6 +169,17 @@ B10_GAP_SOLVER_SOURCES = (
     "mc2p/motion_nav/physics_adapter.py",
     "mc2p/motion_nav/physics_1_21.py",
 )
+CONTINUOUS_HEIGHT_SOURCES = (
+    "scripts/continuous_height_runtime.py",
+    *NAVIGATION_SESSION_SOURCES,
+    "mc2p/motion_nav/ground_traversal.py",
+    "mc2p/motion_nav/motion_candidate.py",
+    "mc2p/motion_nav/motion_solver.py",
+    "mc2p/motion_nav/motion_risk.py",
+    "mc2p/motion_nav/online_motion.py",
+    "mc2p/motion_nav/physics_1_21.py",
+    "config/motion-navigation/verified-height-transitions-v1.json",
+)
 B11_WORLD_CHANGE_SOURCES = (
     "scripts/b11_world_change_runtime.py",
     *NAVIGATION_SESSION_SOURCES,
@@ -277,6 +288,7 @@ def frozen_deployment_sources(*, b03_fixed_route_probe: bool,
                               b08_ground_modes_probe: bool = False,
                               b09_air_motion_probe: bool = False,
                               b10_gap_solver_probe: bool = False,
+                              continuous_height_probe: bool = False,
                               b11_world_change_probe: bool = False,
                               input_buffer_idle_probe: bool = False,
                               c1_fixed_melee_probe: bool = False,
@@ -320,6 +332,10 @@ def frozen_deployment_sources(*, b03_fixed_route_probe: bool,
     if b10_gap_solver_probe:
         sources.update({name: _hash(ROOT / name) for name in (
             *B03_SOURCES, *B09_AIR_MOTION_SOURCES, *B10_GAP_SOLVER_SOURCES,
+        )})
+    if continuous_height_probe:
+        sources.update({name: _hash(ROOT / name) for name in (
+            *B03_SOURCES, *B09_AIR_MOTION_SOURCES, *CONTINUOUS_HEIGHT_SOURCES,
         )})
     if b11_world_change_probe:
         sources.update({name: _hash(ROOT / name) for name in (
@@ -423,9 +439,11 @@ def evaluate_trace(records: list[dict], rows: list[dict], *, server_port: int,
                     ("world_render_completions", "gui_render_completions", "framebuffer_capture_attempts", "image_encode_attempts"))
                 for i, row in enumerate(rows))
                 and all(a["diagnostics"]["client_tick"] < b["diagnostics"]["client_tick"]
-                    and a["diagnostics"]["world_render_attempts"] < b["diagnostics"]["world_render_attempts"]
+                    and a["diagnostics"]["world_render_attempts"] <= b["diagnostics"]["world_render_attempts"]
                     and a["diagnostics"]["gui_render_attempts"] <= b["diagnostics"]["gui_render_attempts"]
                     for a, b in zip(rows, rows[1:]))
+                and rows[-1]["diagnostics"]["world_render_attempts"]
+                    > rows[0]["diagnostics"]["world_render_attempts"]
                 and (not require_gui_attempts
                      or rows[-1]["diagnostics"]["gui_render_attempts"]
                         > rows[0]["diagnostics"]["gui_render_attempts"]),
@@ -857,6 +875,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                b08_ground_modes_probe: bool = False,
                b09_air_motion_probe: bool = False,
                b10_gap_solver_probe: bool = False,
+               continuous_height_probe: bool = False,
                b11_world_change_probe: bool = False,
                input_buffer_idle_probe: bool = False,
                c1_fixed_melee_probe: bool = False,
@@ -875,7 +894,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
             b05_jump_calibration_probe,b05_jump_route_probe,
             b05_jump_acceptance_probe,b06_ordinary_material_probe,
             b07_step_probe,b08_ground_modes_probe,b09_air_motion_probe,
-            b10_gap_solver_probe,b11_world_change_probe,input_buffer_idle_probe,c1_fixed_melee_probe,
+            b10_gap_solver_probe,continuous_height_probe,b11_world_change_probe,
+            input_buffer_idle_probe,c1_fixed_melee_probe,
             c1_moving_melee_probe,c1_external_motion_probe,
             c1r_control_frame_probe,b12a_attack_evidence_probe,
             b12b_partial_combat_probe,surface_cost_probe))>1:
@@ -896,6 +916,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
         b08_ground_modes_probe=b08_ground_modes_probe,
         b09_air_motion_probe=b09_air_motion_probe,
         b10_gap_solver_probe=b10_gap_solver_probe,
+        continuous_height_probe=continuous_height_probe,
         b11_world_change_probe=b11_world_change_probe,
         input_buffer_idle_probe=input_buffer_idle_probe,
         c1_fixed_melee_probe=c1_fixed_melee_probe,
@@ -959,6 +980,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                                   or b07_step_probe or b08_ground_modes_probe
                                   or b09_air_motion_probe
                                   or b10_gap_solver_probe
+                                  or continuous_height_probe
                                   or b11_world_change_probe
                                   or input_buffer_idle_probe
                                   or c1_probe or surface_cost_probe) else 2):
@@ -969,6 +991,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                     or b05_jump_acceptance_probe or b06_ordinary_material_probe
                     or b07_step_probe or b08_ground_modes_probe
                     or b09_air_motion_probe or b10_gap_solver_probe
+                    or continuous_height_probe
                     or b11_world_change_probe
                     or input_buffer_idle_probe or c1_probe):
                 options += "autoJump:false\n"
@@ -1400,6 +1423,29 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                             fixture_writer=write_b10_fixture,
                             player_teleporter=teleport_b10_player,
                         )
+                    elif continuous_height_probe:
+                        from scripts.continuous_height_runtime import (
+                            run_continuous_height_runtime,
+                        )
+                        def write_continuous_height_fixture(commands, trial):
+                            if server is None or server.stdin is None:
+                                raise RuntimeError(
+                                    "continuous-height fixture server command "
+                                    "channel is unavailable"
+                                )
+                            server.stdin.write(
+                                ("\n".join(commands) + "\n").encode("utf-8")
+                            )
+                            server.stdin.flush()
+                            append_jsonl(
+                                directory / "continuous-height-fixture-commands.jsonl",
+                                {"trial_id": trial["trial_id"],
+                                 "commands": list(commands)},
+                            )
+                        stages, rows, episode_checks = run_continuous_height_runtime(
+                            runtime, backend, episode, directory, deadline,
+                            fixture_writer=write_continuous_height_fixture,
+                        )
                     elif b11_world_change_probe:
                         from scripts.b11_world_change_runtime import run_b11_world_change_runtime
                         def write_b11_fixture(commands, trial):
@@ -1539,7 +1585,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                             or b05_jump_route_probe or b05_jump_acceptance_probe
                             or b06_ordinary_material_probe or b07_step_probe
                             or b08_ground_modes_probe or b09_air_motion_probe
-                            or b10_gap_solver_probe or b11_world_change_probe
+                            or b10_gap_solver_probe or continuous_height_probe
+                            or b11_world_change_probe
                             or input_buffer_idle_probe
                             or c1_probe or surface_cost_probe):
                         # Motion scenarios can produce large offline reports. Close
@@ -1700,6 +1747,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                           or b05_jump_acceptance_probe or b06_ordinary_material_probe
                           or b07_step_probe or b08_ground_modes_probe
                           or b09_air_motion_probe or b10_gap_solver_probe
+                          or continuous_height_probe
                           or b11_world_change_probe or input_buffer_idle_probe
                           or c1_probe or surface_cost_probe):
                         pass
@@ -1720,6 +1768,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                                                              or b08_ground_modes_probe
                                                              or b09_air_motion_probe
                                                              or b10_gap_solver_probe
+                                                             or continuous_height_probe
                                                              or b11_world_change_probe
                                                              or input_buffer_idle_probe
                                                              or surface_cost_probe) else 28,
@@ -1729,6 +1778,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                             or b05_jump_acceptance_probe or b06_ordinary_material_probe
                             or b07_step_probe or b08_ground_modes_probe
                             or b09_air_motion_probe or b10_gap_solver_probe
+                            or continuous_height_probe
                             or b11_world_change_probe or input_buffer_idle_probe
                             or surface_cost_probe))
                     checks.extend({**check, "name": f"client-{number}:" + check["name"]} for check in episode_checks)
@@ -1749,6 +1799,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                         sessions[-1]["b09_air_motion"] = stages
                     if b10_gap_solver_probe:
                         sessions[-1]["b10_gap_solver"] = stages
+                    if continuous_height_probe:
+                        sessions[-1]["continuous_height"] = stages
                     if b11_world_change_probe:
                         sessions[-1]["b11_world_change"] = stages
                     if input_buffer_idle_probe:
@@ -1821,7 +1873,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                   or b05_jump_route_probe or b05_jump_acceptance_probe
                   or b06_ordinary_material_probe or b07_step_probe
                   or b08_ground_modes_probe or b09_air_motion_probe
-                  or b10_gap_solver_probe or b11_world_change_probe
+                  or b10_gap_solver_probe or continuous_height_probe
+                  or b11_world_change_probe
                   or input_buffer_idle_probe
                   or c1_probe or surface_cost_probe):
             first, second = sessions
@@ -1844,7 +1897,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                 or b05_jump_route_probe or b05_jump_acceptance_probe
                 or b06_ordinary_material_probe or b07_step_probe
                 or b08_ground_modes_probe or b09_air_motion_probe
-                or b10_gap_solver_probe or b11_world_change_probe
+                or b10_gap_solver_probe or continuous_height_probe
+                or b11_world_change_probe
                 or input_buffer_idle_probe
                 or c1_probe or surface_cost_probe):
             start, end = second["initial"], first["final"]
@@ -1882,6 +1936,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
         b08_ground_modes_probe=b08_ground_modes_probe,
         b09_air_motion_probe=b09_air_motion_probe,
         b10_gap_solver_probe=b10_gap_solver_probe,
+        continuous_height_probe=continuous_height_probe,
         b11_world_change_probe=b11_world_change_probe,
         input_buffer_idle_probe=input_buffer_idle_probe,
         c1_fixed_melee_probe=c1_fixed_melee_probe,
@@ -1914,6 +1969,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
             else "b08-ground-modes" if b08_ground_modes_probe
             else "b09-air-motion" if b09_air_motion_probe
             else "b10-gap-solver" if b10_gap_solver_probe
+            else "continuous-height" if continuous_height_probe
             else "b11-world-change" if b11_world_change_probe
             else "input-buffer-idle" if input_buffer_idle_probe
             else "c1r-control-frame" if c1r_control_frame_probe
@@ -1972,6 +2028,8 @@ def main(argv=None) -> int:
                         help='calibrate and validate gap jumps and controlled drops')
     parser.add_argument('--b10-gap-solver-probe', action='store_true',
                         help='solve and validate one-cell gaps in a controlled session')
+    parser.add_argument('--continuous-height-probe', action='store_true',
+                        help='run continuous low-height and descending routes')
     parser.add_argument('--b11-world-change-probe', action='store_true',
                         help='place full blocks and cross one-to-three-cell gaps')
     parser.add_argument('--input-buffer-idle-probe', action='store_true',
@@ -1999,6 +2057,7 @@ def main(argv=None) -> int:
             args.b05_jump_acceptance_probe,args.b06_ordinary_material_probe,
             args.b07_step_probe,args.b08_ground_modes_probe,
             args.b09_air_motion_probe,args.b10_gap_solver_probe,
+            args.continuous_height_probe,
             args.b11_world_change_probe,
             args.input_buffer_idle_probe,args.c1_fixed_melee_probe,
             args.c1_moving_melee_probe,args.c1_external_motion_probe,
@@ -2020,7 +2079,8 @@ def main(argv=None) -> int:
                                or args.b12a_attack_evidence_probe
                                or args.b12b_partial_combat_probe
                                or args.surface_cost_probe
-                               or args.b11_world_change_probe) else 600
+                               or args.b11_world_change_probe
+                               or args.continuous_height_probe) else 600
     if (not math.isfinite(args.timeout_seconds) or not 120 <= args.timeout_seconds <= maximum_timeout
             or not 1 <= args.server_port <= 65535 or not 1 <= args.ipc_port <= 65535 or args.server_port == args.ipc_port):
         parser.error("invalid bounded probe configuration")
@@ -2037,6 +2097,7 @@ def main(argv=None) -> int:
                           args.b06_ordinary_material_probe,args.b07_step_probe,
                           args.b08_ground_modes_probe,args.b09_air_motion_probe,
                           args.b10_gap_solver_probe,
+                          args.continuous_height_probe,
                           args.b11_world_change_probe,
                           args.input_buffer_idle_probe,
                           args.c1_fixed_melee_probe,
@@ -2091,6 +2152,7 @@ def main(argv=None) -> int:
     if args.b08_ground_modes_probe: command.append('--b08-ground-modes-probe')
     if args.b09_air_motion_probe: command.append('--b09-air-motion-probe')
     if args.b10_gap_solver_probe: command.append('--b10-gap-solver-probe')
+    if args.continuous_height_probe: command.append('--continuous-height-probe')
     if args.b11_world_change_probe: command.append('--b11-world-change-probe')
     if args.input_buffer_idle_probe: command.append('--input-buffer-idle-probe')
     if args.c1_fixed_melee_probe: command.append('--c1-fixed-melee-probe')

@@ -13,6 +13,9 @@
 using Clipper2Lib::Paths64; using Clipper2Lib::Path64; using Clipper2Lib::Point64; using Clipper2Lib::Clipper64; using Clipper2Lib::ClipType; using Clipper2Lib::FillRule; using Clipper2Lib::Area; using Clipper2Lib::PointInPolygon; using Clipper2Lib::PointInPolygonResult;
 using Clock=std::chrono::steady_clock;using V=std::array<double,3>;using P=std::array<double,2>;using Box=std::array<double,6>;using Rect=std::array<double,4>;using Poly=std::vector<P>;
 constexpr double SCALE=1e12,S=0.5773502691896257645,EPS=1e-12;
+// Roughly one pixel in the normalized 854x480 diagnostic viewport.  EPS is
+// only for numerical stability; it is too small to prove useful visibility.
+constexpr double AIR_VISIBLE_AREA=1e-5;
 static double ms(Clock::time_point a,Clock::time_point b){return std::chrono::duration<double,std::milli>(b-a).count();}
 [[maybe_unused]] static double cross(P a,P b,P c){return (b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);}
 static double area(const Poly& p){double a=0;for(size_t i=0;i<p.size();++i){auto x=p[i],y=p[(i+1)%p.size()];a+=x[0]*y[1]-x[1]*y[0];}return a*.5;}
@@ -51,30 +54,31 @@ static V coefficients(const Face& f,const View& v){double d=f.coord-v.eye[f.axis
 static V unproject(P p,const Projected& f,const View& v){double z=1/(f.inv[0]*p[0]+f.inv[1]*p[1]+f.inv[2]),x=p[0]*z/S,y=p[1]*z/S;V out=v.eye;for(int i=0;i<3;i++)out[i]+=v.right[i]*x+v.up[i]*y+v.forward[i]*z;return out;}
 static double sqdist(V a,V b){double d=0;for(int k=0;k<3;++k)d+=(a[k]-b[k])*(a[k]-b[k]);return d;}
 static double segdist(V p,V a,V b){double num=0,den=0;for(int k=0;k<3;++k){num+=(p[k]-a[k])*(b[k]-a[k]);den+=(b[k]-a[k])*(b[k]-a[k]);}double t=den>0?std::clamp(num/den,0.,1.):0.;V q;for(int k=0;k<3;++k)q[k]=a[k]+t*(b[k]-a[k]);return sqdist(p,q);}
-static bool in_range(const Paths64& paths,const Projected& pf,const Scene& s,const View& v){
+static bool in_range(const Paths64& paths,const Projected& pf,const Face& f,const View& v,double limitSquared){
  double total=0;for(auto& p:paths)total+=Area(p)/(SCALE*SCALE);if(total<=EPS)return false;
- for(auto& p:paths)for(size_t i=0;i<p.size();++i){auto a=p[i],b=p[(i+1)%p.size()];if(segdist(v.eye,unproject({a.x/SCALE,a.y/SCALE},pf,v),unproject({b.x/SCALE,b.y/SCALE},pf,v))<256.-1e-10)return true;}
+ for(auto& p:paths)for(size_t i=0;i<p.size();++i){auto a=p[i],b=p[(i+1)%p.size()];if(segdist(v.eye,unproject({a.x/SCALE,a.y/SCALE},pf,v),unproject({b.x/SCALE,b.y/SCALE},pf,v))<limitSquared-1e-10)return true;}
  // If the perpendicular foot is inside the filled region, it can be closer than
  // every boundary segment. Hole orientation is preserved by Clipper NonZero.
- const Face& f=s.faces[pf.face];V foot=v.eye;foot[f.axis]=f.coord;V c=camera(foot,v);if(c[2]<=.01)return false;
+ V foot=v.eye;foot[f.axis]=f.coord;V c=camera(foot,v);if(c[2]<=.01)return false;
  Point64 p(int64_t(std::llround(c[0]*S/c[2]*SCALE)),int64_t(std::llround(c[1]*S/c[2]*SCALE)));int winding=0;
- for(auto& poly:paths){auto loc=PointInPolygon(p,poly);if(loc==PointInPolygonResult::IsOn)return sqdist(foot,v.eye)<256.-1e-10;if(loc==PointInPolygonResult::IsInside)winding+=Area(poly)>0?1:-1;}
- return winding!=0&&sqdist(foot,v.eye)<256.-1e-10;
+ for(auto& poly:paths){auto loc=PointInPolygon(p,poly);if(loc==PointInPolygonResult::IsOn)return sqdist(foot,v.eye)<limitSquared-1e-10;if(loc==PointInPolygonResult::IsInside)winding+=Area(poly)>0?1:-1;}
+ return winding!=0&&sqdist(foot,v.eye)<limitSquared-1e-10;
 }
 // 0: the candidate intersects the current view but is fully occluded;
-// 1: at least one stable projected region is visible; 2: outside view/range.
+// 1: at least one useful projected region is visible inside the range;
+// 2: outside view; 3: outside range.
 static unsigned char cell_visibility_status(const Scene& scene,const View& view,int x,int y,int z,double maxDistance){
  Box box={double(x),double(y),double(z),double(x+1),double(y+1),double(z+1)};V nearest;
  for(int axis=0;axis<3;++axis)nearest[axis]=std::clamp(view.eye[axis],box[axis],box[axis+3]);
- if(sqdist(nearest,view.eye)>maxDistance*maxDistance+EPS)return 2;
- bool intersectsView=false;
+ double limitSquared=maxDistance*maxDistance;if(sqdist(nearest,view.eye)>limitSquared+EPS)return 3;
+ bool intersectsView=false,visibleBeyondRange=false;
  for(int axis=0;axis<3;++axis)for(int sign:{-1,1}){int u=(axis+1)%3,w=(axis+2)%3;
   Face face={-1,axis,sign,box[axis+(sign>0?3:0)],{box[u],box[w],box[u+3],box[w+3]}};Poly p=project_face(face,view);if(area(p)<=EPS)continue;intersectsView=true;
   Projected query={-1,-1,p,quantize(p),bounds(p),coefficients(face,view)};Paths64 cutters;
   for(const auto& blocker:view.faces){if(!scene.opaque[blocker.owner]||!overlaps(query.rect,blocker.rect))continue;V d={blocker.inv[0]-query.inv[0],blocker.inv[1]-query.inv[1],blocker.inv[2]-query.inv[2]};if(std::abs(d[0])+std::abs(d[1])+std::abs(d[2])<1e-12)continue;Poly closer=halfplane(blocker.p,d[0],d[1],d[2]);if(area(closer)>EPS)cutters.push_back(quantize(closer));}
-  Paths64 result=cutters.empty()?Paths64{query.path}:boolean_op({query.path},cutters,ClipType::Difference);double visible=0;for(auto& path:result)visible+=Area(path)/(SCALE*SCALE);if(visible>EPS)return 1;
+  Paths64 result=cutters.empty()?Paths64{query.path}:boolean_op({query.path},cutters,ClipType::Difference);double visible=0;for(auto& path:result)visible+=Area(path)/(SCALE*SCALE);if(visible>AIR_VISIBLE_AREA){if(in_range(result,query,face,view,limitSquared))return 1;visibleBeyondRange=true;}
  }
- return intersectsView?0:2;
+ return visibleBeyondRange?3:(intersectsView?0:2);
 }
 extern "C" {
 __declspec(dllexport) void* center_create(const double* boxes,const int* owners,int nb,const double* centers,const unsigned char* opaque,const int* query,int no,int trim,double* stats){
@@ -121,7 +125,7 @@ static int center_frame_pose_impl(void* ptr,const double* cam,int mode,unsigned 
   else{for(const auto& b:v.faces){if(b.owner==owner||!s.opaque[b.owner])continue;++stats[5];if(!overlaps(q.rect,b.rect))continue;V d={b.inv[0]-q.inv[0],b.inv[1]-q.inv[1],b.inv[2]-q.inv[2]};if(std::abs(d[0])+std::abs(d[1])+std::abs(d[2])<1e-12)continue;Poly closer=halfplane(b.p,d[0],d[1],d[2]);if(area(closer)>EPS)cutters.push_back(quantize(closer));}}
   Paths64 result;if(cutters.empty())result={q.path};else{++stats[4];result=boolean_op({q.path},cutters,ClipType::Difference);}
   double a=0;for(auto& p:result){a+=Area(p)/(SCALE*SCALE);++stats[6];stats[7]+=p.size();}areas[owner]+=a;
-  if(a>EPS&&in_range(result,q,s,v))output[owner]=1;
+  if(a>EPS&&in_range(result,q,s.faces[q.face],v,256.))output[owner]=1;
  }
  auto t2=Clock::now();if(airCount>128)throw std::invalid_argument("visual-air capacity exceeded");if(airCount>0){if(!airPositions||!airOutput||!std::isfinite(airDistance)||airDistance<=0)throw std::invalid_argument("invalid visual-air query");std::fill(airOutput,airOutput+airCount,static_cast<unsigned char>(0));for(int i=0;i<airCount;++i){int x=airPositions[3*i],y=airPositions[3*i+1],z=airPositions[3*i+2];if(std::abs(double(x))>30000000||std::abs(double(y))>30000000||std::abs(double(z))>30000000)throw std::invalid_argument("visual-air position outside world coordinate range");airOutput[i]=cell_visibility_status(s,v,x,y,z,airDistance);}}
  auto t3=Clock::now();times[0]=ms(t0,t1);times[1]=ms(t1,t2);if(airCount>=0)times[2]=ms(t2,t3);int count=0;for(int i=0;i<no;++i)count+=output[i];return count;

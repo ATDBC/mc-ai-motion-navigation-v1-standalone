@@ -52,6 +52,7 @@ class ClientBlockObservationV3Tests(unittest.TestCase):
         self.assertIn("enum AirStatus", observation)
         self.assertIn('addProperty("status",result.status().wireName)', observation)
         self.assertIn("AirStatus.OUTSIDE_VIEW", sensor)
+        self.assertIn("AirStatus.OUT_OF_RANGE", sensor)
         self.assertIn("AirStatus.OCCLUDED", sensor)
         self.assertIn("AirStatus.UNAVAILABLE", sensor)
 

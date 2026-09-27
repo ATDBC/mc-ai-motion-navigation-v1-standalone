@@ -15,6 +15,7 @@ from mc2p.motion_nav.motion_solver import (
 from mc2p.motion_nav.online_motion import (
     InputApplicationLedger, InputApplicationStatus, StateAnchor,
 )
+from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.physics_types import PhysicsState
 from mc2p.motion_nav.world_model import BlockPos
 
@@ -34,13 +35,14 @@ class MotionCandidateContext:
     route_revision: int
     action_index: int
     candidate_revision: int
-    risk_policy_id: str
+    damage_budget: TaskDamageBudget
     accepted_resource_incomplete_reasons: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
-        for name in ("planning_request_id", "goal_id", "route_id",
-                     "risk_policy_id"):
+        for name in ("planning_request_id", "goal_id", "route_id"):
             require_identifier(getattr(self, name), name.replace("_", " "))
+        if type(self.damage_budget) is not TaskDamageBudget:
+            raise ContractViolation("motion candidate damage budget must be typed")
         for name in ("planning_generation", "goal_revision", "route_revision",
                      "action_index", "candidate_revision"):
             require_nonnegative_int(getattr(self, name), name.replace("_", " "))
@@ -50,6 +52,10 @@ class MotionCandidateContext:
                 or any(type(reason) is not str or not reason
                        for reason in self.accepted_resource_incomplete_reasons)):
             raise ContractViolation("resource assumptions must be sorted and unique")
+
+    @property
+    def risk_policy_id(self) -> str:
+        return self.damage_budget.risk_policy_id
 
 
 @dataclass(frozen=True, slots=True)
@@ -142,7 +148,7 @@ class MotionCandidateAdmitter:
             planning_request_id: str, planning_generation: int,
             goal_id: str, goal_revision: int,
             route_id: str, route_revision: int, action_index: int,
-            candidate_revision: int, risk_policy_id: str,
+            candidate_revision: int, damage_budget: TaskDamageBudget,
             intended_start_tick: int,
             changed_cells: tuple[BlockPos, ...],
     ) -> MotionCandidateAdmission:
@@ -154,7 +160,7 @@ class MotionCandidateAdmitter:
         current = MotionCandidateContext(
             planning_request_id, planning_generation, goal_id, goal_revision,
             route_id, route_revision, action_index, candidate_revision,
-            risk_policy_id, candidate.context.accepted_resource_incomplete_reasons,
+            damage_budget, candidate.context.accepted_resource_incomplete_reasons,
         )
         expected = candidate.context
         if (current.planning_request_id != expected.planning_request_id
@@ -177,11 +183,20 @@ class MotionCandidateAdmitter:
             return MotionCandidateAdmission(
                 MotionCandidateStatus.REJECTED, "candidate_replaced",
             )
-        if current.risk_policy_id != expected.risk_policy_id:
+        if current.damage_budget != expected.damage_budget:
             return MotionCandidateAdmission(
                 MotionCandidateStatus.REJECTED, "risk_policy_changed",
             )
         proof = candidate.proof
+        if (proof.damage_budget != current.damage_budget
+                or not current.damage_budget.allows(
+                    proof.maximum_expected_damage_points,
+                    health_points=anchor.health_points,
+                    absorption_points=anchor.absorption_points,
+                )):
+            return MotionCandidateAdmission(
+                MotionCandidateStatus.REJECTED, "damage_budget_or_vitality_changed",
+            )
         if (anchor.session != proof.entry_state.session
                 or anchor.ruleset_id != proof.ruleset_id
                 or anchor.state_schema != proof.entry_state.state_schema
@@ -322,6 +337,17 @@ class VerifiedMotionExecutor:
             command_index, control_sequence, requested_movement_tick,
             requested_latest_movement_tick,
         )
+
+    def predicted_exit_state(self) -> PhysicsState | None:
+        """Return the chosen start variant's exit after its first receipt.
+
+        Before the first command is observed the execution window can still
+        select either delayed-start variant, so no single exit is authoritative.
+        """
+        if (self.state is not VerifiedMotionExecutorState.RUNNING
+                or self._command_index < 1 or self._start_variant is None):
+            return None
+        return self._start_variant.exit_state
 
     def cancel(self, anchor: StateAnchor) -> None:
         if type(anchor) is not StateAnchor:
@@ -591,6 +617,24 @@ class VerifiedMotionExecutor:
                         if self.state is VerifiedMotionExecutorState.INPUT_LOST
                         else None)
             return self._decision(movement, None, pending)
+        if (self._command_index == 0 and self._pending is None
+                and self._start_variant is not None
+                and not _state_fits_entry(
+                    anchor.physics_state, self._start_variant.entry_state,
+                )):
+            self.state = (
+                VerifiedMotionExecutorState.INPUT_LOST
+                if anchor.physics_state.on_ground else
+                VerifiedMotionExecutorState.RECOVERING
+            )
+            self._recovery_uses_verified_remainder = False
+            self._terminal_after_recovery = VerifiedMotionExecutorState.INPUT_LOST
+            return self._decision(
+                MovementV1(), None,
+                ("verified_entry_not_observed"
+                 if anchor.physics_state.on_ground else
+                 "verified_entry_not_observed_retain_landing"),
+            )
         # A jump proof commonly has two active inputs followed by many neutral
         # simulation ticks. Requiring a separately identified request for every
         # neutral tick adds no physical guarantee: the client sample already

@@ -40,6 +40,41 @@ class B07SupportSurfaceTests(unittest.TestCase):
         self.assertIn((0, -2, 0), result.dependencies)
         self.assertIn((0, -1, 0), result.dependencies)
 
+    def test_top_slab_shields_bounded_unknown_collision_owner_below_it(self):
+        session = WorldSessionId("b07-top-slab-covered-unknown")
+        world = WorldKnowledge(session)
+        observed = ObservationStamp(session, 1, 1, "test-clock", 50_000_000)
+        world.confirm_air(observed, ((0, 0, 0), (0, 1, 0)))
+        world.observe_blocks(observed, {
+            (0, -1, 0): BlockGeometry(
+                "minecraft:smooth_stone_slab", "boxes",
+                (Aabb(0, .5, 0, 1, 1, 1),),
+            ),
+        })
+
+        result = query_support_surfaces(world.view(), 0, 0, 0.0, 0.0)
+
+        self.assertIs(result.status, QueryStatus.FEASIBLE)
+        self.assertEqual(result.surfaces[0].position, (.5, 0.0, .5))
+        self.assertIn((0, -2, 0), result.dependencies)
+
+    def test_bottom_slab_does_not_hide_unknown_collision_owner_below_it(self):
+        session = WorldSessionId("b07-bottom-slab-open-unknown")
+        world = WorldKnowledge(session)
+        observed = ObservationStamp(session, 1, 1, "test-clock", 50_000_000)
+        world.confirm_air(observed, ((0, 0, 0), (0, 1, 0)))
+        world.observe_blocks(observed, {
+            (0, -1, 0): BlockGeometry(
+                "minecraft:smooth_stone_slab", "boxes",
+                (Aabb(0, 0, 0, 1, .5, 1),),
+            ),
+        })
+
+        result = query_support_surfaces(world.view(), 0, 0, -.5, .5)
+
+        self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+        self.assertIn((0, -2, 0), result.missing_cells)
+
     def test_current_surface_query_does_not_require_an_owner_two_cells_below(self):
         session = WorldSessionId("b07-current-surface-owner-reach")
         world = WorldKnowledge(session)

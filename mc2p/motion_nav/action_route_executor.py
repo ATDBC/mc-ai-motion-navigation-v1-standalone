@@ -27,10 +27,13 @@ from mc2p.motion_nav.motion_candidate import (
     AdmittedMotionCandidate, VerifiedMotionExecutor,
     VerifiedMotionExecutorState,
 )
+from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.motion_solver import (
-    DEFAULT_GAP_SOLVER_POLICY, GapSolverPolicy,
+    DEFAULT_AIR_TRANSITION_POLICIES, DEFAULT_GAP_SOLVER_POLICY,
+    AirTransitionSolverPolicy, GapSolverPolicy, MotionSolveKind,
 )
 from mc2p.motion_nav.online_motion import InputApplicationLedger, StateAnchor
+from mc2p.motion_nav.physics_types import PhysicsState
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.world_model import BlockPos
 
@@ -72,7 +75,10 @@ class ActionRouteExecutor:
                  step_profile: StepProfile | None = None,
                  ground_modes: GroundModeProfiles | None = None,
                  air_profiles: tuple[AirMotionProfile, ...] = (), *,
-                 gap_solver_policy: GapSolverPolicy = DEFAULT_GAP_SOLVER_POLICY) -> None:
+                 gap_solver_policy: GapSolverPolicy = DEFAULT_GAP_SOLVER_POLICY,
+                 air_transition_policies: dict[
+                     MotionSolveKind, AirTransitionSolverPolicy
+                 ] = DEFAULT_AIR_TRANSITION_POLICIES) -> None:
         if type(ground_profile) is not GroundMotionProfile or type(jump_profile) is not JumpUpProfile:
             raise ContractViolation("action route executor requires calibrated profiles")
         self.ground_profile = ground_profile
@@ -91,6 +97,13 @@ class ActionRouteExecutor:
         if type(gap_solver_policy) is not GapSolverPolicy:
             raise ContractViolation("action route gap solver policy must be typed")
         self.gap_solver_policy = gap_solver_policy
+        if (type(air_transition_policies) is not dict
+                or any(type(kind) is not MotionSolveKind
+                       or type(policy) is not AirTransitionSolverPolicy
+                       or policy.kind is not kind
+                       for kind, policy in air_transition_policies.items())):
+            raise ContractViolation("action route air policies must be typed")
+        self.air_transition_policies = dict(air_transition_policies)
         self.route: ActionRoute | None = None
         self.state = ActionRouteState.IDLE
         self.action_index = 0
@@ -100,10 +113,11 @@ class ActionRouteExecutor:
         ) = None
         self._cancel_requested = False
         self._actions_finished = False
-        self._applied_risk_policy_id = "no_expected_damage"
+        self._damage_budget = TaskDamageBudget()
         self._session = None
         self._verified_motion: dict[int, AdmittedMotionCandidate] = {}
         self._require_verified_gap_motion = False
+        self._required_verified_motion: frozenset[int] = frozenset()
 
     def _activate(self, frame: NavigationFrame) -> None:
         assert self.route is not None
@@ -170,17 +184,46 @@ class ActionRouteExecutor:
                         config.endpoint_tolerance_blocks,
                         entry_tolerance,
                     ),
+                    handoff_entry_window=next_action.entry_window,
                 )
-                if (type(next_action) is JumpGapSegment
-                        and self._require_verified_gap_motion):
+                verified_kind = {
+                    JumpGapSegment: MotionSolveKind.JUMP_GAP,
+                    JumpUpSegment: MotionSolveKind.JUMP_UP,
+                    ControlledDropSegment: MotionSolveKind.CONTROLLED_DROP,
+                }.get(type(next_action))
+                if (next_index in self._required_verified_motion
+                        and verified_kind is not None):
                     # The R4 solver validates the continuous entry state.  The
                     # approach controller therefore preserves eligible motion
                     # and leaves only one tick of input ownership at the edge.
+                    policy = self.air_transition_policies[verified_kind]
+                    effective_window = (
+                        replace(
+                            next_action.entry_window,
+                            minimum_speed_blocks_per_second=0.0,
+                            maximum_speed_blocks_per_second=(
+                                policy.maximum_entry_speed_blocks_per_second
+                            ),
+                            maximum_velocity_direction_error_radians=math.radians(
+                                policy.maximum_velocity_heading_error_degrees
+                            ),
+                            maximum_yaw_error_radians=(
+                                math.radians(
+                                    policy.maximum_velocity_heading_error_degrees
+                                )
+                                if next_action.entry_window.required_yaw_radians
+                                   is not None else None
+                            ),
+                        )
+                        if next_action.entry_window is not None else None
+                    )
                     config = replace(
-                        config, **common,
+                        config, **{
+                            **common,
+                            "handoff_entry_window": effective_window,
+                        },
                         handoff_speed_blocks_per_second=(
-                            self.gap_solver_policy
-                            .maximum_entry_speed_blocks_per_second
+                            policy.maximum_entry_speed_blocks_per_second
                         ),
                         input_lease_ticks=1,
                     )
@@ -217,21 +260,32 @@ class ActionRouteExecutor:
             controller = FixedRouteController(
                 motion_profile, config, mode_profile=mode_profile,
             )
-            controller.start(action.fixed_route, frame)
+            controller.start(
+                action.fixed_route, frame,
+                traversal_plan=action.traversal_plan,
+            )
         elif type(action) is JumpUpSegment:
+            admitted = self._verified_motion.get(self.action_index)
+            if admitted is not None:
+                controller = VerifiedMotionExecutor()
+                controller.start(admitted)
+                self._controller = controller
+                return
+            if self.action_index in self._required_verified_motion:
+                self._controller = None
+                return
             if action.edge.profile_id != self.jump_profile.profile_id:
                 raise ContractViolation("JumpUp segment uses another calibrated profile")
             controller = JumpUpController(self.jump_profile)
             controller.start(action.edge.start, action.edge.end, frame)
         elif type(action) in (JumpGapSegment, ControlledDropSegment):
             admitted = self._verified_motion.get(self.action_index)
-            if type(action) is JumpGapSegment and admitted is not None:
+            if admitted is not None:
                 controller = VerifiedMotionExecutor()
                 controller.start(admitted)
                 self._controller = controller
                 return
-            if (type(action) is JumpGapSegment
-                    and self._require_verified_gap_motion):
+            if self.action_index in self._required_verified_motion:
                 self._controller = None
                 return
             profile = self.air_profiles.get(action.edge.profile_id)
@@ -253,9 +307,11 @@ class ActionRouteExecutor:
         self._controller = controller
 
     def start(self, route: ActionRoute, frame: NavigationFrame, *,
-              applied_risk_policy_id: str = "no_expected_damage",
+              damage_budget: TaskDamageBudget = TaskDamageBudget(),
               verified_motion: tuple[AdmittedMotionCandidate, ...] = (),
-              require_verified_gap_motion: bool = True) -> None:
+              require_verified_gap_motion: bool = True,
+              require_verified_motion_actions: frozenset[int] = frozenset(),
+              ) -> None:
         """Start one route under the current B10 execution contract.
 
         Setting ``require_verified_gap_motion`` to ``False`` is a bounded B09
@@ -263,14 +319,21 @@ class ActionRouteExecutor:
         """
         if type(route) is not ActionRoute or type(frame) is not NavigationFrame:
             raise ContractViolation("action route start requires a route and frame")
-        if type(applied_risk_policy_id) is not str or not applied_risk_policy_id:
-            raise ContractViolation("action route risk policy id is required")
+        if type(damage_budget) is not TaskDamageBudget:
+            raise ContractViolation("action route damage budget must be typed")
         if (type(verified_motion) is not tuple
                 or any(type(candidate) is not AdmittedMotionCandidate
                        for candidate in verified_motion)):
             raise ContractViolation("verified route motion must be immutable and admitted")
         if type(require_verified_gap_motion) is not bool:
             raise ContractViolation("verified gap requirement must be boolean")
+        if (type(require_verified_motion_actions) is not frozenset
+                or any(type(index) is not int
+                       or not 0 <= index < len(route.actions)
+                       or type(route.actions[index]) not in {
+                           JumpGapSegment, JumpUpSegment, ControlledDropSegment}
+                       for index in require_verified_motion_actions)):
+            raise ContractViolation("required verified motion indices are invalid")
         if self.state in {ActionRouteState.RUNNING, ActionRouteState.CANCELLING}:
             raise ContractViolation("action route executor is already active")
         self.route = route
@@ -278,12 +341,18 @@ class ActionRouteExecutor:
         self.action_index = 0
         self._cancel_requested = False
         self._actions_finished = False
-        self._applied_risk_policy_id = applied_risk_policy_id
+        self._damage_budget = damage_budget
         self._session = frame.session
         self._verified_motion = {}
         self._require_verified_gap_motion = require_verified_gap_motion
+        self._required_verified_motion = frozenset({
+            *require_verified_motion_actions,
+            *(index for index, action in enumerate(route.actions)
+              if require_verified_gap_motion
+              and type(action) is JumpGapSegment),
+        })
         for candidate in verified_motion:
-            self._validate_verified_motion(route, candidate, applied_risk_policy_id)
+            self._validate_verified_motion(route, candidate, damage_budget)
             index = candidate.context.action_index
             if index in self._verified_motion:
                 raise ContractViolation("duplicate verified motion for one route action")
@@ -293,29 +362,36 @@ class ActionRouteExecutor:
     @staticmethod
     def _validate_verified_motion(
             route: ActionRoute, candidate: AdmittedMotionCandidate,
-            risk_policy_id: str) -> None:
+            damage_budget: TaskDamageBudget) -> None:
         context = candidate.context
         if context.route_id != route.route_id:
             raise ContractViolation("verified motion belongs to another route")
         if not 0 <= context.action_index < len(route.actions):
             raise ContractViolation("verified motion action is outside the route")
-        if type(route.actions[context.action_index]) is not JumpGapSegment:
-            raise ContractViolation("verified motion can only replace JumpGap")
-        if context.risk_policy_id != risk_policy_id:
+        action = route.actions[context.action_index]
+        expected_kind = {
+            JumpGapSegment: MotionSolveKind.JUMP_GAP,
+            JumpUpSegment: MotionSolveKind.JUMP_UP,
+            ControlledDropSegment: MotionSolveKind.CONTROLLED_DROP,
+        }.get(type(action))
+        if expected_kind is None or candidate.proof.kind is not expected_kind:
+            raise ContractViolation(
+                "verified motion kind does not match its route action"
+            )
+        if context.damage_budget != damage_budget:
             raise ContractViolation("verified motion uses another risk policy")
 
     def install_verified_motion(self, candidate: AdmittedMotionCandidate) -> None:
         if type(candidate) is not AdmittedMotionCandidate or self.route is None:
             raise ContractViolation("installing verified motion requires an active route")
         self._validate_verified_motion(
-            self.route, candidate, self._applied_risk_policy_id,
+            self.route, candidate, self._damage_budget,
         )
         index = candidate.context.action_index
         activating_current = (
             index == self.action_index
             and self._controller is None
-            and type(self.route.actions[index]) is JumpGapSegment
-            and self._require_verified_gap_motion
+            and index in self._required_verified_motion
         )
         if index < self.action_index or (index == self.action_index
                                          and not activating_current):
@@ -335,6 +411,12 @@ class ActionRouteExecutor:
         if type(action_index) is not int or action_index < 0:
             raise ContractViolation("verified motion lookup requires an action index")
         return action_index in self._verified_motion
+
+    def active_verified_exit_state(self) -> PhysicsState | None:
+        """Expose one already-selected proof exit for bounded look-ahead."""
+        if type(self._controller) is not VerifiedMotionExecutor:
+            return None
+        return self._controller.predicted_exit_state()
 
     def requires_safe_handoff(self, frame: NavigationFrame) -> bool:
         """Return whether another route must wait for this action to finish."""
@@ -420,9 +502,7 @@ class ActionRouteExecutor:
                 submit_input=False,
             )
         if self._controller is None:
-            action = self.route.actions[self.action_index]
-            if (type(action) is JumpGapSegment
-                    and self._require_verified_gap_motion):
+            if self.action_index in self._required_verified_motion:
                 self.state = ActionRouteState.RUNNING
                 return self._result(
                     started, MovementV1(), 1, "awaiting_verified_motion",
@@ -658,7 +738,7 @@ class ActionRouteExecutor:
             pose=frame.body.pose,
             speed_blocks_per_second=speed,
             resources=self.route.final_resources,
-            applied_risk_policy_id=self._applied_risk_policy_id,
+            applied_risk_policy_id=self._damage_budget.risk_policy_id,
         )
         if observed_support is not None and goal.accepts(
                 **common, yaw_radians=frame.body.yaw_radians):

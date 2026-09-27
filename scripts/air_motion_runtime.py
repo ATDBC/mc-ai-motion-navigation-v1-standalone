@@ -13,7 +13,7 @@ from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.contracts.task import ComparisonOperatorV0, SuccessCriterionV0, TaskIntentV0
 from mc2p.motion_nav.air_motion import (
-    AirMotionController, AirMotionState, load_air_motion_profiles,
+    AirMotionController, AirMotionQuery, AirMotionState, load_air_motion_profiles,
     query_air_motion,
 )
 from mc2p.motion_nav.action_route_executor import ActionRouteExecutor, ActionRouteState
@@ -29,6 +29,7 @@ from mc2p.motion_nav.known_map_planner import (
 from mc2p.motion_nav.planning_reference import build_surface_graph
 from mc2p.motion_nav.movement_transition import MovementMode, ResourceState
 from mc2p.motion_nav.planner_worker import PlannerWorker
+from mc2p.motion_nav.navigation_session import information_look_for_missing_cells
 from mc2p.motion_nav.route_admission import AdmissionStatus, RouteAdmitter
 from mc2p.motion_nav.runtime_adapter import NavigationObservationAdapter
 from mc2p.motion_nav.step_transition import load_step_profile
@@ -265,6 +266,46 @@ def run_air_motion_runtime(
     trials: list[dict] = []
     control_times: list[int] = []
 
+    def resolve_air_motion_query(
+        start_surface,
+        end_surface,
+        profile,
+    ) -> tuple[AirMotionQuery, list[dict]]:
+        query = query_air_motion(frame.world, start_surface, end_surface, profile)
+        information_checks: list[dict] = []
+        for _ in range(8):
+            if query.status is not QueryStatus.NEEDS_INFORMATION:
+                break
+            missing_request = ObservationRequestV3(
+                "navigation_v1", query.missing_cells[:128],
+            )
+            step(request=missing_request)
+            statuses = {
+                result.position: result.status
+                for result in frame.air_query_results
+            }
+            information_checks.append(dict(
+                sequence=frame.body.sequence_id,
+                missing=[list(position) for position in query.missing_cells],
+                statuses=[dict(
+                    position=list(position),
+                    status=(
+                        "confirmed_air"
+                        if frame.world.cell(position).knowledge is CellKnowledge.AIR
+                        else statuses.get(position, "not_reported")
+                    ),
+                ) for position in query.missing_cells],
+            ))
+            look = information_look_for_missing_cells(
+                frame, query.missing_cells, statuses,
+            )
+            if look is not None:
+                step(look=look, request=missing_request)
+            query = query_air_motion(
+                frame.world, start_surface, end_surface, profile,
+            )
+        return query, information_checks
+
     def run_trial(mode: MovementMode, direction_index: int, repetition: int) -> None:
         dx, dz, yaw = _DIRECTIONS[direction_index]
         if mode is MovementMode.JUMP_GAP:
@@ -283,16 +324,25 @@ def run_air_motion_runtime(
         teleport(start_position, yaw, current_request)
         start_surface, end_surface = support_at(start_position), support_at(end_position)
         profile = by_mode[mode]
-        query = query_air_motion(frame.world, start_surface, end_surface, profile)
-        for _ in range(8):
-            if query.status is not QueryStatus.NEEDS_INFORMATION:
-                break
-            missing_request = ObservationRequestV3(
-                "navigation_v1", query.missing_cells[:128],
+        query, information_checks = resolve_air_motion_query(
+            start_surface, end_surface, profile,
+        )
+        if query.status is not QueryStatus.FEASIBLE:
+            trial = dict(
+                name=f"{mode.value}-{direction_index}-{repetition}",
+                mode=mode.value,
+                direction_index=direction_index,
+                repetition=repetition,
+                final_state="preflight_failed",
+                preflight_status=query.status.value,
+                remaining_missing=[list(position) for position in query.missing_cells],
+                information_checks=information_checks,
             )
-            step(request=missing_request)
-            query = query_air_motion(
-                frame.world, start_surface, end_surface, profile,
+            trials.append(trial)
+            append_jsonl(directory / "b09-air-trials.jsonl", trial)
+            raise RuntimeError(
+                f"B09 {mode.value} clearance stayed {query.status.value}: "
+                f"{query.missing_cells}"
             )
         controller = AirMotionController(profile)
         controller.start(start_surface, end_surface, frame)
@@ -332,6 +382,7 @@ def run_air_motion_runtime(
             level_error_blocks=abs(frame.body.position[1] - end_position[1]),
             jump_pulses=sum(int(row["movement"]["jump"]) for row in samples),
             horizontal_collisions=sum(int(row["horizontal_collision"]) for row in samples),
+            information_checks=information_checks,
             samples=samples,
         )
         trials.append(trial)
@@ -570,7 +621,25 @@ def run_air_motion_runtime(
         end_position = (origin_x + .5, float(feet_y), origin_z + 2.5)
         teleport(start_position, 0.0, gap_request)
         controller = AirMotionController(by_mode[MovementMode.JUMP_GAP])
-        controller.start(support_at(start_position), support_at(end_position), frame)
+        start_surface, end_surface = support_at(start_position), support_at(end_position)
+        query, information_checks = resolve_air_motion_query(
+            start_surface, end_surface, by_mode[MovementMode.JUMP_GAP],
+        )
+        if query.status is not QueryStatus.FEASIBLE:
+            interruption_trials.append(dict(
+                name=name, interrupted=False,
+                final_state="preflight_failed",
+                expected_state=(
+                    AirMotionState.INPUT_LOST.value
+                    if lose_input else AirMotionState.CANCELLED.value
+                ),
+                final_position=list(frame.body.position), samples=[],
+                preflight_status=query.status.value,
+                remaining_missing=[list(position) for position in query.missing_cells],
+                information_checks=information_checks,
+            ))
+            return
+        controller.start(start_surface, end_surface, frame)
         input_confirmed = True
         interrupted = False
         samples = []
@@ -604,6 +673,7 @@ def run_air_motion_runtime(
             final_state=controller.state.value,
             expected_state=expected.value,
             final_position=list(frame.body.position), samples=samples,
+            information_checks=information_checks,
         ))
 
     run_airborne_interruption("cancel-after-takeoff", lose_input=False)

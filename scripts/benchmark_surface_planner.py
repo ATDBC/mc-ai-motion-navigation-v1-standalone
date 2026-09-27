@@ -116,6 +116,7 @@ def run_benchmark(*, size: int = 100, runs: int = 20,
             planning_max_ms=max(case_ms),
             expanded_nodes=result.expanded_nodes,
             path_nodes=len(result.path),
+            total_cost_ticks=result.total_cost_ticks,
         ))
     maze_size = min(size, 20)
     if maze_size >= 8:
@@ -183,6 +184,7 @@ def run_benchmark(*, size: int = 100, runs: int = 20,
             planning_max_ms=max(maze_ms),
             expanded_nodes=maze_result.expanded_nodes,
             path_nodes=len(maze_result.path),
+            total_cost_ticks=maze_result.total_cost_ticks,
         ))
     assert result is not None
     diagonal = cases[0]

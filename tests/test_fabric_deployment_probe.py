@@ -195,6 +195,32 @@ class FabricDeploymentProbeTests(unittest.TestCase):
         self.assertIn("mc2p/skills/navigation_session_driver.py",
                       B10_GAP_SOLVER_SOURCES)
 
+    def test_continuous_height_probe_freezes_formal_chain_and_is_exclusive(self):
+        from scripts.probe_fabric_deployment_observation import (
+            CONTINUOUS_HEIGHT_SOURCES, frozen_deployment_sources,
+        )
+        required = {
+            "scripts/continuous_height_runtime.py",
+            "mc2p/motion_nav/ground_traversal.py",
+            "mc2p/motion_nav/motion_solver.py",
+            "mc2p/motion_nav/motion_risk.py",
+            "config/motion-navigation/verified-height-transitions-v1.json",
+        }
+        self.assertTrue(required <= set(CONTINUOUS_HEIGHT_SOURCES))
+        frozen = frozen_deployment_sources(
+            b03_fixed_route_probe=False,
+            continuous_height_probe=True,
+        )
+        self.assertTrue(required <= set(frozen))
+        script = ROOT / "scripts/probe_fabric_deployment_observation.py"
+        invalid = subprocess.run(
+            [sys.executable, str(script), "--continuous-height-probe",
+             "--b10-gap-solver-probe"],
+            cwd=ROOT, capture_output=True, text=True,
+        )
+        self.assertNotEqual(invalid.returncode, 0)
+        self.assertIn("mutually exclusive", invalid.stderr)
+
     def test_b11_source_freeze_includes_world_change_chain(self):
         from scripts.probe_fabric_deployment_observation import (
             B11_WORLD_CHANGE_SOURCES, frozen_deployment_sources,
@@ -666,6 +692,13 @@ class FabricDeploymentProbeTests(unittest.TestCase):
         for i, row in enumerate(rows):
             row["diagnostics"]["gui_render_attempts"] = 0 if i < 20 else 3
         self.assertTrue(all(item["passed"] for item in evaluate_trace(records, rows, server_port=25599)))
+        shared_render_attempt = deepcopy(rows)
+        shared_render_attempt[10]["diagnostics"]["world_render_attempts"] = (
+            shared_render_attempt[9]["diagnostics"]["world_render_attempts"]
+        )
+        self.assertTrue(all(item["passed"] for item in evaluate_trace(
+            records, shared_render_attempt, server_port=25599,
+        )))
         v3_records = deepcopy(records)
         for record in v3_records:
             if record["record_type"] != "step":

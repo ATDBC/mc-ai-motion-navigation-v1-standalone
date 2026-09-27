@@ -229,6 +229,8 @@ class MotionResidualTests(unittest.TestCase):
 
         self.assertEqual(calculate.call_args_list[1].args[0].movement_tick_id, 20)
         self.assertEqual(tracker.anchor.movement_tick_id, 22)
+        self.assertEqual(tracker.anchor.health_points, 20.0)
+        self.assertEqual(tracker.anchor.absorption_points, 0.0)
 
 
 if __name__ == "__main__":

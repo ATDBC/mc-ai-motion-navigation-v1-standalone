@@ -1,0 +1,1038 @@
+{
+  "schema": "mc2p.verified-height-transitions.v1",
+  "minecraft_version": "1.21",
+  "air_transition_solvers": {
+    "jump_gap": {
+      "solver_id": "r4-moving-one-cell-gap-command-search-v1",
+      "maximum_entry_speed_blocks_per_second": 3.0,
+      "direction_check_minimum_speed_blocks_per_second": 0.5,
+      "maximum_velocity_heading_error_degrees": 5.0,
+      "templates": [
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 1
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 0,
+          "post_action_ticks": 0
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": -1,
+          "post_action_ticks": 1
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": -1,
+          "post_action_ticks": 2
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": -1,
+          "post_action_ticks": 3
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": -1,
+          "post_action_ticks": 4
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": -1,
+          "post_action_ticks": 5
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 0,
+          "post_action_ticks": 0
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": -1,
+          "post_action_ticks": 1
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": -1,
+          "post_action_ticks": 2
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": -1,
+          "post_action_ticks": 3
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": -1,
+          "post_action_ticks": 4
+        }
+      ]
+    },
+    "jump_up": {
+      "solver_id": "r1-moving-one-cell-jump-up-command-search-v1",
+      "maximum_entry_speed_blocks_per_second": 3.0,
+      "direction_check_minimum_speed_blocks_per_second": 0.5,
+      "maximum_velocity_heading_error_degrees": 5.0,
+      "templates": [
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 0,
+          "post_action_ticks": 0
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 1
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 2
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 3
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 4
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 5
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 6
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 7
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 8
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": -1,
+          "post_action_ticks": 1
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": -1,
+          "post_action_ticks": 2
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": -1,
+          "post_action_ticks": 3
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 0,
+          "post_action_ticks": 0
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 1
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 2
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 3
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 4
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 5
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 6
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 7
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 8
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": -1,
+          "post_action_ticks": 1
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": -1,
+          "post_action_ticks": 2
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": -1,
+          "post_action_ticks": 3
+        },
+        {
+          "pre_action_forward_ticks": 2,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 0,
+          "post_action_ticks": 0
+        },
+        {
+          "pre_action_forward_ticks": 2,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 1
+        },
+        {
+          "pre_action_forward_ticks": 2,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 2
+        },
+        {
+          "pre_action_forward_ticks": 2,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 3
+        },
+        {
+          "pre_action_forward_ticks": 2,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 4
+        },
+        {
+          "pre_action_forward_ticks": 2,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 5
+        },
+        {
+          "pre_action_forward_ticks": 2,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 6
+        },
+        {
+          "pre_action_forward_ticks": 2,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 7
+        },
+        {
+          "pre_action_forward_ticks": 2,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 8
+        },
+        {
+          "pre_action_forward_ticks": 2,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": -1,
+          "post_action_ticks": 1
+        },
+        {
+          "pre_action_forward_ticks": 2,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": -1,
+          "post_action_ticks": 2
+        },
+        {
+          "pre_action_forward_ticks": 2,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": -1,
+          "post_action_ticks": 3
+        },
+        {
+          "pre_action_forward_ticks": 3,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 0,
+          "post_action_ticks": 0
+        },
+        {
+          "pre_action_forward_ticks": 3,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 1
+        },
+        {
+          "pre_action_forward_ticks": 3,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 2
+        },
+        {
+          "pre_action_forward_ticks": 3,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 3
+        },
+        {
+          "pre_action_forward_ticks": 3,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 4
+        },
+        {
+          "pre_action_forward_ticks": 3,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 5
+        },
+        {
+          "pre_action_forward_ticks": 3,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 6
+        },
+        {
+          "pre_action_forward_ticks": 3,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 7
+        },
+        {
+          "pre_action_forward_ticks": 3,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 8
+        },
+        {
+          "pre_action_forward_ticks": 3,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": -1,
+          "post_action_ticks": 1
+        },
+        {
+          "pre_action_forward_ticks": 3,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": -1,
+          "post_action_ticks": 2
+        },
+        {
+          "pre_action_forward_ticks": 3,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": -1,
+          "post_action_ticks": 3
+        },
+        {
+          "pre_action_forward_ticks": 4,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 0,
+          "post_action_ticks": 0
+        },
+        {
+          "pre_action_forward_ticks": 4,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 1
+        },
+        {
+          "pre_action_forward_ticks": 4,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 2
+        },
+        {
+          "pre_action_forward_ticks": 4,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 3
+        },
+        {
+          "pre_action_forward_ticks": 4,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 4
+        },
+        {
+          "pre_action_forward_ticks": 4,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 5
+        },
+        {
+          "pre_action_forward_ticks": 4,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 6
+        },
+        {
+          "pre_action_forward_ticks": 4,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 7
+        },
+        {
+          "pre_action_forward_ticks": 4,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": 1,
+          "post_action_ticks": 8
+        },
+        {
+          "pre_action_forward_ticks": 4,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": -1,
+          "post_action_ticks": 1
+        },
+        {
+          "pre_action_forward_ticks": 4,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": -1,
+          "post_action_ticks": 2
+        },
+        {
+          "pre_action_forward_ticks": 4,
+          "action_forward_axis": 1,
+          "jump": true,
+          "sprint": true,
+          "post_action_axis": -1,
+          "post_action_ticks": 3
+        }
+      ]
+    },
+    "controlled_drop": {
+      "solver_id": "r1-moving-one-cell-controlled-drop-command-search-v1",
+      "maximum_entry_speed_blocks_per_second": 3.0,
+      "direction_check_minimum_speed_blocks_per_second": 0.5,
+      "maximum_velocity_heading_error_degrees": 5.0,
+      "templates": [
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": 0,
+          "post_action_ticks": 0
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 1
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 2
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 3
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 4
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 5
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 6
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 7
+        },
+        {
+          "pre_action_forward_ticks": 0,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 8
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": 0,
+          "post_action_ticks": 0
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 1
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 2
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 3
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 4
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 5
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 6
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 7
+        },
+        {
+          "pre_action_forward_ticks": 1,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 8
+        },
+        {
+          "pre_action_forward_ticks": 2,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": 0,
+          "post_action_ticks": 0
+        },
+        {
+          "pre_action_forward_ticks": 2,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 1
+        },
+        {
+          "pre_action_forward_ticks": 2,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 2
+        },
+        {
+          "pre_action_forward_ticks": 2,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 3
+        },
+        {
+          "pre_action_forward_ticks": 2,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 4
+        },
+        {
+          "pre_action_forward_ticks": 2,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 5
+        },
+        {
+          "pre_action_forward_ticks": 2,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 6
+        },
+        {
+          "pre_action_forward_ticks": 2,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 7
+        },
+        {
+          "pre_action_forward_ticks": 2,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 8
+        },
+        {
+          "pre_action_forward_ticks": 3,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": 0,
+          "post_action_ticks": 0
+        },
+        {
+          "pre_action_forward_ticks": 3,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 1
+        },
+        {
+          "pre_action_forward_ticks": 3,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 2
+        },
+        {
+          "pre_action_forward_ticks": 3,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 3
+        },
+        {
+          "pre_action_forward_ticks": 3,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 4
+        },
+        {
+          "pre_action_forward_ticks": 3,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 5
+        },
+        {
+          "pre_action_forward_ticks": 3,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 6
+        },
+        {
+          "pre_action_forward_ticks": 3,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 7
+        },
+        {
+          "pre_action_forward_ticks": 3,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 8
+        },
+        {
+          "pre_action_forward_ticks": 4,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": 0,
+          "post_action_ticks": 0
+        },
+        {
+          "pre_action_forward_ticks": 4,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 1
+        },
+        {
+          "pre_action_forward_ticks": 4,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 2
+        },
+        {
+          "pre_action_forward_ticks": 4,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 3
+        },
+        {
+          "pre_action_forward_ticks": 4,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 4
+        },
+        {
+          "pre_action_forward_ticks": 4,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 5
+        },
+        {
+          "pre_action_forward_ticks": 4,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 6
+        },
+        {
+          "pre_action_forward_ticks": 4,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 7
+        },
+        {
+          "pre_action_forward_ticks": 4,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 8
+        },
+        {
+          "pre_action_forward_ticks": 5,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": 0,
+          "post_action_ticks": 0
+        },
+        {
+          "pre_action_forward_ticks": 5,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 1
+        },
+        {
+          "pre_action_forward_ticks": 5,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 2
+        },
+        {
+          "pre_action_forward_ticks": 5,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 3
+        },
+        {
+          "pre_action_forward_ticks": 5,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 4
+        },
+        {
+          "pre_action_forward_ticks": 5,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 5
+        },
+        {
+          "pre_action_forward_ticks": 5,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 6
+        },
+        {
+          "pre_action_forward_ticks": 5,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 7
+        },
+        {
+          "pre_action_forward_ticks": 5,
+          "action_forward_axis": 1,
+          "jump": false,
+          "sprint": false,
+          "post_action_axis": -1,
+          "post_action_ticks": 8
+        }
+      ]
+    }
+  }
+}

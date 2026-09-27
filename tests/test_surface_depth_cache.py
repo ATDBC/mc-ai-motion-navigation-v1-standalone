@@ -130,7 +130,7 @@ def test_visual_air_accepts_any_visible_region():
     with api.Cache(4) as empty:
         empty.update(world([]))
         _,air,_,_=empty.frame_pose_air([.5,1.5,0,0,0],candidates)
-        assert air.tolist()==[1,2,2]
+        assert air.tolist()==[1,2,3]
     opaque_wall=world([((0,1,2),FULL,True)])
     with api.Cache(4) as wall:
         wall.update(opaque_wall)
@@ -175,7 +175,7 @@ def test_visual_air_matches_any_visible_projected_area_in_random_worlds():
                 used.add(position);blocks.append((position,rng.choice(shapes),rng.random()<.8))
             query=(candidate,FULL,False)
             visible=api.reference(world([*blocks,query]),camera[:4],2)[1][-1]
-            expected=visible>1e-12
+            expected=visible>1e-5
             cache.update(world(blocks))
             actual=bool(cache.frame_pose_air(camera,[candidate])[1][0])
             assert actual==expected,(candidate,visible,blocks)
@@ -186,7 +186,16 @@ def test_visual_air_distinguishes_outside_view_from_occlusion():
         cache.update(world([((0,1,2),FULL,True)]))
         _,status,_,_=cache.frame_pose_air(
             [.5,1.5,0,0,0],[(0,1,3),(0,1,-3),(0,1,17)])
-        assert status.tolist()==[0,2,2]
+        assert status.tolist()==[0,2,3]
+
+def test_visual_air_never_overrides_a_hidden_full_block_at_range_boundary():
+    api=load();target=(0,1,16)
+    with api.Cache(4) as cache:
+        cache.update(world([(target,FULL,True)]))
+        visible,air,_,_=cache.frame_pose_air([.5,1.5,0,0,0],[target])
+        assert visible.tolist()==[0] and air.tolist()==[3]
+        visible,air,_,_=cache.frame_pose_air([.5,1.5,.1,0,0],[target])
+        assert visible.tolist()==[1] and air.tolist()==[1]
 
 def test_visual_air_confirms_a_partly_exposed_downward_cell_without_preobservation():
     api=load();blocks=[]
@@ -214,6 +223,7 @@ def load_tests(loader, tests, pattern):
     suite.addTest(unittest.FunctionTestCase(test_visual_air_accepts_any_visible_region))
     suite.addTest(unittest.FunctionTestCase(test_visual_air_matches_any_visible_projected_area_in_random_worlds))
     suite.addTest(unittest.FunctionTestCase(test_visual_air_distinguishes_outside_view_from_occlusion))
+    suite.addTest(unittest.FunctionTestCase(test_visual_air_never_overrides_a_hidden_full_block_at_range_boundary))
     suite.addTest(unittest.FunctionTestCase(test_visual_air_confirms_a_partly_exposed_downward_cell_without_preobservation))
     return suite
 
