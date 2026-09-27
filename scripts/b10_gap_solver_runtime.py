@@ -1,7 +1,7 @@
 """Controlled Fabric acceptance for the B10-B one-cell-gap command solver."""
 from __future__ import annotations
 
-from dataclasses import asdict, replace
+from dataclasses import asdict, dataclass, replace
 import math
 from pathlib import Path
 import time
@@ -14,7 +14,10 @@ from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.intent_source import (
     ControlFrameProposalV1, OrderedIntentV1, ordered_intent_id,
 )
-from mc2p.contracts.observation_request_v3 import ObservationRequestV3
+from mc2p.contracts.observation_request_v3 import (
+    MAX_AIR_QUERY_POSITIONS,
+    ObservationRequestV3,
+)
 from mc2p.contracts.task import ComparisonOperatorV0, SuccessCriterionV0, TaskIntentV0
 from mc2p.motion_nav.air_motion import load_air_motion_profiles
 from mc2p.motion_nav.block_motion_traits import BlockMotionCatalog
@@ -25,6 +28,7 @@ from mc2p.motion_nav.motion_solver import (
     SOLVER_ID, GapSolveRequest, LandingRegion, SolveStatus,
     load_gap_solver_policy, solve_one_cell_gap,
 )
+from mc2p.motion_nav.motion_coordination import _gap_physics_snapshot
 from mc2p.motion_nav.motion_worker import MotionSolverWorker
 from mc2p.motion_nav.motion_candidate import (
     MotionCandidateAdmitter, MotionCandidateContext, MotionCandidateStatus,
@@ -53,6 +57,18 @@ from scripts.control_probe_core import append_jsonl, write_json_atomic
 
 
 _SOURCE = "b10-gap-solver"
+
+
+@dataclass(frozen=True, slots=True)
+class _AirRequestPlan:
+    """Complete fixture scope; each transport frame sends one bounded slice."""
+
+    field_profile: str
+    air_positions: tuple[tuple[int, int, int], ...]
+    entity_track_id: str | None = None
+
+
+_AirRequestSource = ObservationRequestV3 | _AirRequestPlan
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "config/motion-navigation"
 _DIRECTIONS = ((0, 1, 0.0), (1, 0, -90.0), (0, -1, 180.0), (-1, 0, 90.0))
@@ -63,6 +79,59 @@ _STATE_ASSUMPTIONS = dict(
     gravity_attribute=.08,
     jump_strength_attribute=.42,
 )
+
+
+def _bounded_fixture_feet_y(observed_y: float) -> int:
+    """Keep the isolated B10 pit far enough above the Java world floor."""
+    if not math.isfinite(observed_y):
+        raise RuntimeError("B10 fixture received a nonfinite player height")
+    return max(0, math.floor(observed_y + 1.0e-6))
+
+
+def _inspection_support(position: tuple[int, int, int]) -> tuple[int, int, int]:
+    """Return a lateral support from which a hidden pit cell is fully visible."""
+    return position[0] + 2, position[1] - 1, position[2]
+
+
+def _inspection_supports(
+        position: tuple[int, int, int],
+        *,
+        excluded_columns: frozenset[tuple[int, int]] = frozenset(),
+) -> tuple[tuple[int, int, int], ...]:
+    x, y, z = position
+    candidates = (
+        _inspection_support(position),
+        (x - 2, y - 1, z),
+        (x, y - 1, z + 2),
+        (x, y - 1, z - 2),
+    )
+    available = tuple(
+        support for support in candidates
+        if (support[0], support[2]) not in excluded_columns
+    )
+    if available:
+        return available
+    fallback = (
+        (x + 3, y - 1, z),
+        (x - 3, y - 1, z),
+        (x, y - 1, z + 3),
+        (x, y - 1, z - 3),
+    )
+    return tuple(
+        support for support in fallback
+        if (support[0], support[2]) not in excluded_columns
+    )
+
+
+def _information_retry_allowed(
+        missing_cells: tuple[tuple[int, int, int], ...],
+        seen_cells: set[tuple[int, int, int]], *,
+        completed_rounds: int, max_rounds: int) -> bool:
+    """Keep acquiring newly revealed facts within the rollout's finite horizon."""
+    return (
+        completed_rounds < max_rounds
+        and any(position not in seen_cells for position in missing_cells)
+    )
 
 
 def _percentile(values: list[int], fraction: float) -> int:
@@ -92,7 +161,7 @@ def _runtime_navigation_frame(runtime):
     return frame
 
 
-def _pending_air_request(frame, request: ObservationRequestV3 | None):
+def _pending_air_request(frame, request: _AirRequestSource | None):
     """Avoid retransmitting air already retained by the Runtime world model.
 
     A cell remembered as a block is queried again because the fixture may have
@@ -105,13 +174,69 @@ def _pending_air_request(frame, request: ObservationRequestV3 | None):
     pending = tuple(
         position for position in request.air_positions
         if frame.world.cell(position).knowledge is not CellKnowledge.AIR
-    )
+    )[:MAX_AIR_QUERY_POSITIONS]
     if pending == request.air_positions:
         return request
     return ObservationRequestV3(
         request.field_profile,
         pending,
         request.entity_track_id,
+    )
+
+
+def _waiting_control_proposals(proposal, frame, request):
+    """Advance any bounded wait that needs a new observation or look."""
+    if proposal.control_frame is None:
+        return ()
+    decision = getattr(proposal, "route_decision", None)
+    if (decision is not None
+            and decision.reason_code == "awaiting_verified_motion"):
+        return (proposal.control_frame,)
+    return (
+        proposal.control_frame,
+        ControlFrameProposalV1(
+            observation_request=_pending_air_request(frame, request),
+        ),
+    )
+
+
+def _targeted_information_request(frame, positions):
+    """Request only the unknown cells that currently block one calculation."""
+    pending = tuple(sorted({
+        position for position in positions
+        if frame.world.cell(position).knowledge is CellKnowledge.UNKNOWN
+    }))[:MAX_AIR_QUERY_POSITIONS]
+    return ObservationRequestV3("navigation_v1", pending)
+
+
+def _observation_vantage(
+        position: tuple[int, int, int],
+        supports: tuple[tuple[int, int, int], ...],
+) -> tuple[int, int, int]:
+    """Choose a grounded fixture position far enough to see one whole cell."""
+    below_support = bool(supports) and position[1] < max(
+        support[1] for support in supports
+    )
+    minimum_distance = .9 if below_support else 1.5
+    candidates = tuple(
+        support for support in supports
+        if minimum_distance <= math.hypot(
+            support[0] + .5 - (position[0] + .5),
+            support[2] + .5 - (position[2] + .5),
+        ) <= 14.0
+    )
+    if not candidates:
+        raise RuntimeError(f"B10 has no safe observation vantage for {position}")
+    ranked = lambda support: (
+        math.hypot(
+            support[0] + .5 - (position[0] + .5),
+            support[2] + .5 - (position[2] + .5),
+        ),
+        support,
+    )
+    return (min if below_support else max)(
+        candidates,
+        key=ranked,
     )
 
 
@@ -297,7 +422,7 @@ def _run_b10_gap_solver_runtime(
         return result
 
     diagnostic()
-    feet_y = math.floor(frame.body.position[1] + 1.0e-6)
+    feet_y = _bounded_fixture_feet_y(frame.body.position[1])
     origin_x = math.floor(frame.body.position[0])
     origin_z = math.floor(frame.body.position[2])
     start_support = (origin_x, feet_y - 1, origin_z)
@@ -323,15 +448,19 @@ def _run_b10_gap_solver_runtime(
         "minecraft:air",
     )
     fixture_writer(supports, "minecraft:grass_block")
-    request = ObservationRequestV3(
+    request = _AirRequestPlan(
         "navigation_v1",
         tuple(position for position in volume if position not in support_set),
     )
 
     def teleport(
             yaw: float, *, position: tuple[float, float, float] | None = None,
-            observation_request: ObservationRequestV3 | None = None) -> None:
+            observation_request: _AirRequestSource | None = None,
+            position_tolerance: float = .03) -> None:
         nonlocal frame
+        if (not math.isfinite(position_tolerance)
+                or not .0 < position_tolerance <= .45):
+            raise RuntimeError("B10 teleport tolerance is invalid")
         target_position = position or (
             origin_x + .5, float(feet_y), origin_z + .5,
         )
@@ -344,15 +473,20 @@ def _run_b10_gap_solver_runtime(
                 frame.body.velocity_blocks_per_second[0],
                 frame.body.velocity_blocks_per_second[2],
             )
-            if (math.dist(frame.body.position, target_position) <= .03
+            if (math.dist(frame.body.position, target_position) <= position_tolerance
                     and frame.body.is_on_ground and speed <= .03
                     and yaw_error <= 1.0):
                 return
-        raise RuntimeError("B10 teleport did not settle")
+        raise RuntimeError(
+            "B10 teleport did not settle: "
+            f"target={target_position}, actual={frame.body.position}, "
+            f"on_ground={frame.body.is_on_ground}, speed={speed}, "
+            f"yaw_error={yaw_error}"
+        )
 
     def look_at_cell(
             position: tuple[int, int, int], *,
-            observation_request: ObservationRequestV3 | None = None) -> None:
+            observation_request: _AirRequestSource | None = None) -> None:
         active_request = observation_request or request
         for _ in range(8):
             dx = position[0] + .5 - frame.body.position[0]
@@ -373,65 +507,189 @@ def _run_b10_gap_solver_runtime(
                 return
         raise RuntimeError(f"B10 support was not formally observed: {position}")
 
+    def observe_missing_cells(
+            positions: tuple[tuple[int, int, int], ...]) -> None:
+        """Acquire only the facts that blocked the previous solver attempt.
+
+        The test fixture may move the player between safe known supports while
+        preparing a trial.  This is observation setup, not part of the actor's
+        executed motion.  A cell remains unknown unless profile 4 can actually
+        expose its full visual-air volume or its block surface.
+        """
+        nonlocal frame
+        for position in positions:
+            if frame.world.cell(position).knowledge is not CellKnowledge.UNKNOWN:
+                continue
+            if position[1] <= feet_y - 1:
+                vantages = _inspection_supports(
+                    position,
+                    excluded_columns=frozenset(
+                        (support[0], support[2]) for support in supports
+                    ),
+                )
+            else:
+                vantages = (_observation_vantage(position, supports),)
+            tried = []
+            for vantage in vantages:
+                if frame.world.cell(position).knowledge is not CellKnowledge.UNKNOWN:
+                    break
+                tried.append(vantage)
+                request_for_cell = _targeted_information_request(frame, (position,))
+                if position[1] <= feet_y - 1:
+                    fixture_writer((
+                        (vantage[0], position[1], vantage[2]),
+                        (vantage[0], position[1] + 1, vantage[2]),
+                    ), "minecraft:air")
+                    fixture_writer((vantage,), "minecraft:grass_block")
+                    # The RCON commands and the player teleport are separate
+                    # server events.  Let one observed tick confirm the new
+                    # platform before putting the body on it; otherwise the
+                    # old block can push the player away during teleport.
+                    step(request=request_for_cell)
+                target_position = (
+                    vantage[0] + .5,
+                    float(vantage[1] + 1),
+                    vantage[2] + .5,
+                )
+                dx = position[0] + .5 - target_position[0]
+                dz = position[2] + .5 - target_position[2]
+                yaw = math.degrees(math.atan2(-dx, dz))
+                teleport(
+                    yaw,
+                    position=target_position,
+                    observation_request=request_for_cell,
+                    # A one-block support can leave the vanilla server's safe
+                    # teleport correction a few centimetres off centre.  This
+                    # remains a stable observation stance; it is not an actor
+                    # motion or a landing acceptance tolerance.
+                    position_tolerance=.45,
+                )
+                for _ in range(12):
+                    if (frame.world.cell(position).knowledge
+                            is not CellKnowledge.UNKNOWN):
+                        break
+                    dx = position[0] + .5 - frame.body.position[0]
+                    dy = position[1] + .5 - (frame.body.position[1] + 1.62)
+                    dz = position[2] + .5 - frame.body.position[2]
+                    target_yaw = math.degrees(math.atan2(-dx, dz))
+                    target_pitch = -math.degrees(
+                        math.atan2(dy, max(1.0e-6, math.hypot(dx, dz)))
+                    )
+                    step(
+                        look=LookV1(
+                            (target_yaw
+                             - math.degrees(frame.body.yaw_radians) + 180)
+                            % 360 - 180,
+                            target_pitch - math.degrees(frame.body.pitch_radians),
+                        ),
+                        request=request_for_cell,
+                    )
+            if frame.world.cell(position).knowledge is CellKnowledge.UNKNOWN:
+                raise RuntimeError(
+                    "B10 profile-4 observation could not resolve required cell: "
+                    f"{position} from supports {tuple(tried)}"
+                )
+
     teleport(0.0)
     for position in supports:
         look_at_cell(position)
 
     trials: list[dict] = []
     solve_times: list[int] = []
+    physics_snapshot_times: list[int] = []
 
     def run_trial(
             direction_index: int, repetition: int, group: str, *,
             moving_exit: bool = False, prepared_entry: bool = False,
-            observation_request: ObservationRequestV3 | None = None,
-            speed_band: tuple[float, float] | None = None) -> None:
+            observation_request: _AirRequestSource | None = None,
+            speed_band: tuple[float, float] | None = None,
+            reprepare_entry: Callable[[], None] | None = None) -> None:
         nonlocal frame
         dx, dz, yaw = _DIRECTIONS[direction_index]
         active_request = observation_request or request
         if not prepared_entry:
             teleport(yaw, observation_request=active_request)
-        if latest_application is None:
-            raise RuntimeError("B10 has no movement-tick evidence for its anchor")
-        built = build_physics_state(frame, JAVA_1_21_RULESET, _STATE_ASSUMPTIONS)
-        if built.status is not StateBuildStatus.READY or built.state is None:
-            raise RuntimeError(f"B10 entry state is incomplete: {built}")
-        movement_tick = latest_application.movement_tick_id
-        entry_state = replace(built.state, movement_tick_id=movement_tick)
-        entry_speed = math.hypot(
-            frame.body.velocity_blocks_per_second[0],
-            frame.body.velocity_blocks_per_second[2],
-        )
-        anchor = StateAnchor(
-            frame.session, frame.body.sequence_id, movement_tick,
-            MotionTickPhase.AFTER_MOVEMENT,
-            latest_application.request_sequence_id,
-            (movement_tick, movement_tick),
-            JAVA_1_21_RULESET.ruleset_id,
-            JAVA_1_21_RULESET.state_schema,
-            "mc2p.input-projection.v1", entry_state,
-        )
         target = targets[direction_index]
-        solve_request = GapSolveRequest(
-            (dx, dz),
-            LandingRegion(
-                target[0] + .3, target[0] + .7,
-                target[2] + .3, target[2] + .7,
-                float(target[1] + 1),
-            ),
-            CandidateExecutionWindow(movement_tick + 1, movement_tick + 2),
-            max_candidates=12, max_ticks=20,
-            exit_direction=(turn_directions[direction_index]
-                            if moving_exit else None),
-            exit_motion_ticks=1 if moving_exit else 0,
-        )
-        started = time.perf_counter_ns()
-        solved = solve_one_cell_gap(
-            anchor, PhysicsWorldView(frame.world, JAVA_1_21_RULESET), solve_request,
-        )
-        solve_ns = time.perf_counter_ns() - started
+        information_rounds = 0
+        information_cells_seen: set[tuple[int, int, int]] = set()
+        information_attempts: list[tuple[tuple[int, int, int], ...]] = []
+        while True:
+            if latest_application is None:
+                raise RuntimeError("B10 has no movement-tick evidence for its anchor")
+            built = build_physics_state(
+                frame, JAVA_1_21_RULESET, _STATE_ASSUMPTIONS,
+            )
+            if built.status is not StateBuildStatus.READY or built.state is None:
+                raise RuntimeError(f"B10 entry state is incomplete: {built}")
+            movement_tick = latest_application.movement_tick_id
+            entry_state = replace(built.state, movement_tick_id=movement_tick)
+            entry_speed = math.hypot(
+                frame.body.velocity_blocks_per_second[0],
+                frame.body.velocity_blocks_per_second[2],
+            )
+            anchor = StateAnchor(
+                frame.session, frame.body.sequence_id, movement_tick,
+                MotionTickPhase.AFTER_MOVEMENT,
+                latest_application.request_sequence_id,
+                (movement_tick, movement_tick),
+                JAVA_1_21_RULESET.ruleset_id,
+                JAVA_1_21_RULESET.state_schema,
+                "mc2p.input-projection.v1", entry_state,
+            )
+            solve_request = GapSolveRequest(
+                (dx, dz),
+                LandingRegion(
+                    target[0] + .3, target[0] + .7,
+                    target[2] + .3, target[2] + .7,
+                    float(target[1] + 1),
+                ),
+                CandidateExecutionWindow(movement_tick + 1, movement_tick + 2),
+                max_candidates=12, max_ticks=20,
+                exit_direction=(turn_directions[direction_index]
+                                if moving_exit else None),
+                exit_motion_ticks=1 if moving_exit else 0,
+            )
+            live_physics_world = PhysicsWorldView(
+                frame.world, JAVA_1_21_RULESET,
+            )
+            snapshot_started = time.perf_counter_ns()
+            solve_world = _gap_physics_snapshot(
+                live_physics_world, anchor, solve_request,
+            )
+            snapshot_ns = time.perf_counter_ns() - snapshot_started
+            started = time.perf_counter_ns()
+            solved = solve_one_cell_gap(
+                anchor,
+                solve_world,
+                solve_request,
+            )
+            solve_ns = time.perf_counter_ns() - started
+            if (solved.status is not SolveStatus.NEEDS_WORLD
+                    or not solved.missing_cells):
+                break
+            if not _information_retry_allowed(
+                    solved.missing_cells,
+                    information_cells_seen,
+                    completed_rounds=information_rounds,
+                    max_rounds=solve_request.max_ticks):
+                break
+            information_attempts.append(solved.missing_cells)
+            information_cells_seen.update(solved.missing_cells)
+            observe_missing_cells(solved.missing_cells)
+            information_rounds += 1
+            if reprepare_entry is not None:
+                reprepare_entry()
+            else:
+                teleport(yaw, observation_request=active_request)
         solve_times.append(solve_ns)
+        physics_snapshot_times.append(snapshot_ns)
         if solved.status is not SolveStatus.SOLVED or solved.proof is None:
-            raise RuntimeError(f"B10 solver returned {solved.status.value}: {solved.reasons}")
+            raise RuntimeError(
+                "B10 solver returned "
+                f"{solved.status.value}: {solved.reasons}; "
+                f"missing_cells={solved.missing_cells}; "
+                f"information_attempts={information_attempts}"
+            )
         if frame.body.sequence_id != anchor.observation_sequence_id:
             raise RuntimeError("B10 world or body changed before candidate execution")
         reusable = VerifiedMotionCandidate(
@@ -563,6 +821,8 @@ def _run_b10_gap_solver_runtime(
             entry_position=list(anchor.physics_state.position),
             start_observation_sequence_id=anchor.observation_sequence_id,
             anchor_movement_tick_id=anchor.movement_tick_id,
+            information_rounds=information_rounds,
+            information_attempts=[list(attempt) for attempt in information_attempts],
             solve_time_ns=solve_ns,
             candidates_evaluated=solved.candidates_evaluated,
             command_count=len(solved.proof.commands),
@@ -683,7 +943,10 @@ def _run_b10_gap_solver_runtime(
             current_anchor = anchor
             samples: list[dict] = []
             poll_deadline = time.perf_counter() + 5.0
-            while len(samples) < 22:
+            # The verified gap proof itself is bounded to 20 ticks.  A route
+            # may need at most five 36-degree look frames to undo an earlier
+            # information look before that proof can be solved and started.
+            while len(samples) < 28:
                 proposal_started_ns = time.perf_counter_ns()
                 observation_age_ns = max(
                     0,
@@ -703,18 +966,24 @@ def _run_b10_gap_solver_runtime(
                 if decision is None or not decision.submit_input:
                     waiting_polls += 1
                     if proposal.report.terminal:
+                        coordinator_reason = (
+                            "" if session._coordinator is None
+                            else session._coordinator.last_failure_reason
+                        )
                         raise RuntimeError(
                             "B10 navigation session stopped before completion: "
-                            f"{proposal.report.reason}"
+                            f"{proposal.report.reason}; "
+                            f"coordinator={coordinator_reason or 'none'}"
                         )
                     if time.perf_counter() >= poll_deadline:
                         raise RuntimeError(
                             "B10 navigation session did not deliver motion in time: "
                             f"{proposal.report.reason}"
                         )
-                    if (decision is not None
-                            and decision.reason_code == "awaiting_verified_motion"
-                            and proposal.control_frame is not None):
+                    waiting_controls = _waiting_control_proposals(
+                        proposal, frame, request,
+                    )
+                    if waiting_controls:
                         control_started_ns = time.perf_counter_ns()
                         backend_started_ns = runtime.backend_elapsed_ns_total
                         blocking_started_ns = runtime.backend_blocking_io_ns_total
@@ -722,7 +991,7 @@ def _run_b10_gap_solver_runtime(
                             task,
                             behavior,
                             min(deadline_ns, time.perf_counter_ns() + 5_000_000_000),
-                            proposals=(proposal.control_frame,),
+                            proposals=waiting_controls,
                         )
                         control_wall_ns = time.perf_counter_ns() - control_started_ns
                         backend_elapsed_ns = (
@@ -756,9 +1025,18 @@ def _run_b10_gap_solver_runtime(
                                 "trial": f"default-session-{direction_index}-{repetition}",
                                 "observation_sequence_id": frame.body.sequence_id,
                                 "session_state": proposal.report.state.value,
-                                "decision_state": decision.state.value,
-                                "reason_code": decision.reason_code,
-                                "submit_input": decision.submit_input,
+                                "decision_state": (
+                                    None if decision is None
+                                    else decision.state.value
+                                ),
+                                "reason_code": (
+                                    proposal.report.reason if decision is None
+                                    else decision.reason_code
+                                ),
+                                "submit_input": (
+                                    False if decision is None
+                                    else decision.submit_input
+                                ),
                                 "observation_age_ns": observation_age_ns,
                                 "proposal_elapsed_ns": proposal_elapsed_ns,
                                 "control_wall_ns": control_wall_ns,
@@ -878,6 +1156,10 @@ def _run_b10_gap_solver_runtime(
                 direction_index=direction_index,
                 repetition=repetition,
                 waiting_polls=waiting_polls,
+                entry_alignment_frames=sum(
+                    sample["reason_code"] == "aligning_verified_motion_heading"
+                    for sample in samples
+                ),
                 command_count=len(samples),
                 final_position=list(frame.body.position),
                 horizontal_error_blocks=math.hypot(
@@ -904,7 +1186,7 @@ def _run_b10_gap_solver_runtime(
     speed_bands = ((.5, 1.0), (1.0, 2.0), (2.0, 3.0))
     speed_targets = (.75, 1.5, 2.5)
 
-    def configure_moving_lane(direction_index: int) -> ObservationRequestV3:
+    def configure_moving_lane(direction_index: int) -> _AirRequestPlan:
         dx, dz, _ = _DIRECTIONS[direction_index]
         lane_supports = tuple(dict.fromkeys((
             *( (origin_x - dx * distance, feet_y - 1,
@@ -938,12 +1220,12 @@ def _run_b10_gap_solver_runtime(
         ))
         fixture_writer(air, "minecraft:air")
         fixture_writer(lane_supports, "minecraft:grass_block")
-        return ObservationRequestV3("navigation_v1", air)
+        return _AirRequestPlan("navigation_v1", air)
 
     def prepare_moving_entry(
             direction_index: int, speed_band: tuple[float, float],
             target_speed: float,
-            observation_request: ObservationRequestV3, *,
+            observation_request: _AirRequestSource, *,
             look_position: tuple[int, int, int] | None = None) -> None:
         nonlocal frame
         dx, dz, yaw = _DIRECTIONS[direction_index]
@@ -1045,7 +1327,7 @@ def _run_b10_gap_solver_runtime(
                 if repetition == 0:
                     low_ceiling = (target[0], feet_y + 1, target[2])
                     fixture_writer((low_ceiling,), "minecraft:stone")
-                    blocked_request = ObservationRequestV3(
+                    blocked_request = _AirRequestPlan(
                         "navigation_v1",
                         tuple(
                             position for position in moving_request.air_positions
@@ -1059,34 +1341,65 @@ def _run_b10_gap_solver_runtime(
                         blocked_request,
                         look_position=low_ceiling,
                     )
-                    negative_anchor = anchor_now()
                     landing = LandingRegion(
                         target[0] + .3, target[0] + .7,
                         target[2] + .3, target[2] + .7,
                         float(target[1] + 1),
                     )
-                    reverse = solve_one_cell_gap(
-                        negative_anchor,
-                        PhysicsWorldView(frame.world, JAVA_1_21_RULESET),
-                        GapSolveRequest(
-                            (-dx, -dz), landing,
-                            CandidateExecutionWindow(
-                                negative_anchor.movement_tick_id + 1,
-                                negative_anchor.movement_tick_id + 2,
+
+                    def solve_negative_pair():
+                        current_anchor = anchor_now()
+                        window = CandidateExecutionWindow(
+                            current_anchor.movement_tick_id + 1,
+                            current_anchor.movement_tick_id + 2,
+                        )
+                        current_world = PhysicsWorldView(
+                            frame.world, JAVA_1_21_RULESET,
+                        )
+                        forward_request = GapSolveRequest(
+                            (dx, dz), landing, window,
+                        )
+                        reverse_request = GapSolveRequest(
+                            (-dx, -dz), landing, window,
+                        )
+                        return (
+                            current_anchor,
+                            solve_one_cell_gap(
+                                current_anchor, current_world,
+                                reverse_request,
                             ),
-                        ),
-                    )
-                    insufficient = solve_one_cell_gap(
-                        negative_anchor,
-                        PhysicsWorldView(frame.world, JAVA_1_21_RULESET),
-                        GapSolveRequest(
-                            (dx, dz), landing,
-                            CandidateExecutionWindow(
-                                negative_anchor.movement_tick_id + 1,
-                                negative_anchor.movement_tick_id + 2,
+                            solve_one_cell_gap(
+                                current_anchor, current_world,
+                                forward_request,
                             ),
-                        ),
-                    )
+                        )
+
+                    negative_anchor, reverse, insufficient = solve_negative_pair()
+                    negative_information: set[tuple[int, int, int]] = set()
+                    negative_information_rounds = 0
+                    for _ in range(20):
+                        if (insufficient.status is not SolveStatus.NEEDS_WORLD
+                                or not insufficient.missing_cells):
+                            break
+                        if not _information_retry_allowed(
+                                insufficient.missing_cells,
+                                negative_information,
+                                completed_rounds=negative_information_rounds,
+                                max_rounds=20):
+                            break
+                        negative_information.update(insufficient.missing_cells)
+                        negative_information_rounds += 1
+                        observe_missing_cells(insufficient.missing_cells)
+                        prepare_moving_entry(
+                            direction_index,
+                            speed_band,
+                            target_speed,
+                            blocked_request,
+                            look_position=low_ceiling,
+                        )
+                        negative_anchor, reverse, insufficient = (
+                            solve_negative_pair()
+                        )
                     negative = dict(
                         direction_index=direction_index,
                         speed_band_index=band_index,
@@ -1125,6 +1438,14 @@ def _run_b10_gap_solver_runtime(
                     prepared_entry=True,
                     observation_request=moving_request,
                     speed_band=speed_band,
+                    reprepare_entry=lambda direction_index=direction_index,
+                    speed_band=speed_band, target_speed=target_speed,
+                    moving_request=moving_request: prepare_moving_entry(
+                        direction_index,
+                        speed_band,
+                        target_speed,
+                        moving_request,
+                    ),
                 )
 
     validation = [trial for trial in trials if trial["group"] == "validation"]
@@ -1186,6 +1507,12 @@ def _run_b10_gap_solver_runtime(
             p99=_percentile(solve_times, .99),
             maximum=max(solve_times),
         ),
+        physics_snapshot_time_ns=dict(
+            samples=len(physics_snapshot_times),
+            p95=_percentile(physics_snapshot_times, .95),
+            p99=_percentile(physics_snapshot_times, .99),
+            maximum=max(physics_snapshot_times),
+        ),
         trials=trials,
         coordinator_trials=coordinator_trials,
     )
@@ -1213,6 +1540,10 @@ def _run_b10_gap_solver_runtime(
         dict(name="b10c_default_coordinator_ten_fabric_runs", passed=(
             summary["coordinator_validation_count"] == 10
             and summary["coordinator_validation_success_count"] == 10
+            and all(
+                trial["entry_alignment_frames"] <= 5
+                for trial in coordinator_trials
+            )
         )),
         dict(name="r4_three_speed_bands_four_directions_five_runs_each",
              passed=(

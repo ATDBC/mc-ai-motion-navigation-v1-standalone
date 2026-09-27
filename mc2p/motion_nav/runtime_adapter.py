@@ -12,7 +12,8 @@ from mc2p.contracts.observation_v3 import ObservationSnapshotV3
 from mc2p.contracts.observation_v2 import StatusEffectV2
 from mc2p.motion_nav.observed_block_adapter import apply_observed_blocks
 from mc2p.motion_nav.world_model import (
-    Aabb, BlockPos, CellKnowledge, ObservationStamp, WorldKnowledge, WorldSessionId, WorldView,
+    Aabb, BlockGeometry, BlockPos, CellKnowledge, ObservationStamp, WorldKnowledge,
+    WorldSessionId, WorldView,
 )
 
 
@@ -132,6 +133,7 @@ class NavigationObservationAdapter:
         self._retired: set[WorldSessionId] = set()
         self._air_retry_after_ticks = air_retry_after_ticks
         self._air_last_attempt: dict[BlockPos, int] = {}
+        self._shared_geometries: dict[tuple[object, ...], BlockGeometry] = {}
 
     @property
     def has_frame(self) -> bool:
@@ -177,6 +179,7 @@ class NavigationObservationAdapter:
             self._latest_order = None
             self._latest_frame = None
             self._air_last_attempt.clear()
+            self._shared_geometries.clear()
         assert self._world is not None
         stamp = ObservationStamp(
             session=session,
@@ -195,15 +198,9 @@ class NavigationObservationAdapter:
         if snapshot.perception.status is FieldStatusV0.VALID:
             assert snapshot.perception.value is not None
             blocks = snapshot.perception.value.blocks
-            positions = tuple(sorted({block.position for block in blocks}))
-            before_view = self._world.view()
-            before = {position: before_view.cell(position) for position in positions}
-            apply_observed_blocks(self._world, stamp, blocks)
-            after_view = self._world.view()
-            changed_cells = tuple(position for position in positions if
-                                  (before[position].knowledge, before[position].block)
-                                  != (after_view.cell(position).knowledge,
-                                      after_view.cell(position).block))
+            changed_cells = apply_observed_blocks(
+                self._world, stamp, blocks, self._shared_geometries,
+            )
             for block in blocks:
                 self._air_last_attempt.pop(block.position, None)
         self._latest_order = stamp.world_order

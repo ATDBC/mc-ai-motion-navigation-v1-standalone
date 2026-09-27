@@ -368,7 +368,12 @@ class ActionRouteExecutor:
         )
 
     def cancel(self) -> None:
-        if self.state is ActionRouteState.RUNNING:
+        if self.state in {
+            ActionRouteState.RUNNING,
+            ActionRouteState.NEEDS_INFORMATION,
+            ActionRouteState.BLOCKED,
+            ActionRouteState.CANCELLING,
+        }:
             self._cancel_requested = True
             self.state = ActionRouteState.CANCELLING
             if self._controller is None:

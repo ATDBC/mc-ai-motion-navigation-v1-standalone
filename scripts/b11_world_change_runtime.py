@@ -31,6 +31,20 @@ CONFIG = ROOT / "config/motion-navigation"
 FEET_Y = 100
 
 
+def _diagnostic_row(
+    episode: str,
+    observation_sequence_id: int,
+    diagnostics: dict,
+    observation_pipeline: dict,
+) -> dict:
+    return {
+        "episode_id": episode,
+        "observation_sequence_id": observation_sequence_id,
+        "diagnostics": diagnostics,
+        "observation_pipeline": observation_pipeline,
+    }
+
+
 def b11_trial_plan() -> tuple[dict, ...]:
     rows: list[dict] = []
     for index in range(20):
@@ -93,6 +107,7 @@ def b11_negative_trial_plan() -> tuple[dict, ...]:
 def _fixture_commands(trial: dict) -> tuple[str, ...]:
     gap_count = trial["gap_count"]
     goal_x = gap_count + 1
+    observer_column = gap_count // 2 + 1
     commands = [
         "difficulty peaceful",
         "time set midnight",
@@ -104,16 +119,27 @@ def _fixture_commands(trial: dict) -> tuple[str, ...]:
         "kill @e[type=minecraft:item]",
         "gamemode survival MC2PProbe",
         "clear MC2PProbe",
-        f"fill -2 {FEET_Y - 2} -2 {goal_x + 2} {FEET_Y + 3} 2 minecraft:air replace",
+        f"fill -2 {FEET_Y - 2} -7 {goal_x + 2} {FEET_Y + 3} 2 minecraft:air replace",
         f"setblock 0 {FEET_Y - 1} 0 minecraft:stone replace",
         f"setblock {goal_x} {FEET_Y - 1} 0 minecraft:stone replace",
+        f"setblock {observer_column} {FEET_Y - 1} -6 minecraft:stone replace",
         ("item replace entity MC2PProbe weapon.mainhand with "
          f"{trial.get('item_id', 'minecraft:dirt')} {trial['initial_items']}"),
-        f"tp MC2PProbe 0.5 {FEET_Y:.1f} 0.5 -90.0 28.0",
+        # The staged viewpoint exposes the complete gap volume to profile 4.
+        # No test oracle writes air facts into the actor's world knowledge.
+        f"tp MC2PProbe {observer_column + 0.5:.1f} {FEET_Y:.1f} -5.5 0.0 20.0",
     ]
     if trial.get("case") == "destination_occupied":
         commands.insert(-2, f"setblock 1 {FEET_Y - 1} 0 minecraft:stone replace")
     return tuple(commands)
+
+
+def _start_commands(trial: dict) -> tuple[str, ...]:
+    observer_column = trial["gap_count"] // 2 + 1
+    return (
+        f"setblock {observer_column} {FEET_Y - 1} -6 minecraft:air replace",
+        f"tp MC2PProbe 0.5 {FEET_Y:.1f} 0.5 -90.0 70.0",
+    )
 
 
 def _task(trial_id: str, deadline_ns: int) -> TaskIntentV0:
@@ -145,14 +171,16 @@ def _air_positions(gap_count: int) -> tuple[tuple[int, int, int], ...]:
 
 
 def _ready_fixture(runtime, trial: dict, deadline_ns: int,
-                   diagnostic: Callable[[], None]):
+                   diagnostic: Callable[[], None],
+                   fixture_writer: Callable[[tuple[str, ...], dict], None]):
     request = ObservationRequestV3(
         "interaction_v1", _air_positions(trial["gap_count"]),
     )
     task = _task(trial["trial_id"], deadline_ns)
     profile = BehaviorProfileV0()
     goal_x = trial["gap_count"] + 1
-    for _ in range(40):
+    moved_to_start = False
+    for _ in range(80):
         now = time.perf_counter_ns()
         result = runtime.step(
             task, profile, min(deadline_ns, now + 500_000_000),
@@ -171,7 +199,11 @@ def _ready_fixture(runtime, trial: dict, deadline_ns: int,
                 is (CellKnowledge.BLOCK if occupied and x == 1 else CellKnowledge.AIR)
             for x in range(1, goal_x)
         ) if frame is not None else False
-        if (frame is not None
+        if gap_ready and not moved_to_start:
+            fixture_writer(_start_commands(trial), trial)
+            moved_to_start = True
+            continue
+        if (moved_to_start and frame is not None
                 and math.dist(frame.body.position, (0.5, float(FEET_Y), 0.5)) <= 0.04
                 and frame.body.is_on_ground
                 and math.hypot(
@@ -637,6 +669,7 @@ def run_b11_world_change_runtime(
     directory: Path,
     deadline_ns: int,
     fixture_writer: Callable[[tuple[str, ...], dict], None],
+    pipeline_diagnostic: Callable[[], dict],
 ) -> tuple[dict, list[dict], list[dict]]:
     """Run the 60 frozen positive B11 trials against one real Fabric client."""
     profiles = replace(NavigationSessionProfiles.load(CONFIG), air=())
@@ -649,11 +682,12 @@ def run_b11_world_change_runtime(
         observation = runtime.observation
         if observation.sequence_id == last_diagnostic_sequence:
             return
-        row = {
-            "episode_id": episode,
-            "observation_sequence_id": observation.sequence_id,
-            "diagnostics": backend.last_diagnostics,
-        }
+        row = _diagnostic_row(
+            episode,
+            observation.sequence_id,
+            backend.last_diagnostics,
+            pipeline_diagnostic(),
+        )
         diagnostic_rows.append(row)
         append_jsonl(directory / "diagnostics.jsonl", row)
         last_diagnostic_sequence = observation.sequence_id
@@ -663,7 +697,7 @@ def run_b11_world_change_runtime(
     for trial in trials:
         fixture_writer(_fixture_commands(trial), trial)
         _, profile, frame = _ready_fixture(
-            runtime, trial, deadline_ns, diagnostic,
+            runtime, trial, deadline_ns, diagnostic, fixture_writer,
         )
         started = time.perf_counter_ns()
         if trial["kind"] == "fixed_placement":
@@ -703,7 +737,7 @@ def run_b11_world_change_runtime(
     for trial in b11_negative_trial_plan():
         fixture_writer(_fixture_commands(trial), trial)
         _, profile, frame = _ready_fixture(
-            runtime, trial, deadline_ns, diagnostic,
+            runtime, trial, deadline_ns, diagnostic, fixture_writer,
         )
         started = time.perf_counter_ns()
         result = _run_negative(

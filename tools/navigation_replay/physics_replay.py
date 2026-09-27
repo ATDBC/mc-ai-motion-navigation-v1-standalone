@@ -16,7 +16,7 @@ from mc2p.motion_nav.physics_1_21 import step
 from mc2p.motion_nav.physics_types import (
     CalculationStatus, JAVA_1_21_RULESET, PhysicsState, TickInput,
 )
-from mc2p.motion_nav.physics_validation import (
+from mc2p.motion_nav.evidence.physics_validation import (
     declared_fixture_validation_world, input_from_tick_evidence,
     ordinary_flat_validation_world, sequence_evidence_rows,
     state_from_tick_evidence,

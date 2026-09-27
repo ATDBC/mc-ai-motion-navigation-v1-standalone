@@ -56,6 +56,8 @@ PROXY_ARGS = ["-Dhttp.proxyHost=127.0.0.1", "-Dhttp.proxyPort=7897", "-Dhttps.pr
               "-Dhttps.proxyPort=7897", "-Dhttp.nonProxyHosts=localhost|127.*|[::1]|repo.huaweicloud.com"]
 DEPLOYMENT_BASE_SOURCES = (
     "scripts/probe_fabric_deployment_observation.py",
+    "scripts/surface_perception_cost_runtime.py",
+    "scripts/visual_air_runtime.py",
     "scripts/bounded_process.py",
     "scripts/process_tree.py",
     "scripts/formal_observation_v3_evidence.py",
@@ -217,7 +219,6 @@ C1_MOVING_MELEE_SOURCES = (
     "mc2p/skills/melee_strike_driver.py",
     "mc2p/skills/moving_melee.py",
     "mc2p/skills/moving_melee_driver.py",
-    "mc2p/skills/point_goal_driver.py",
     "scripts/c1_moving_melee_runtime.py",
     "scripts/c1_moving_melee_evidence.py",
     "scripts/build_fabric_c1_fixture.py",
@@ -408,7 +409,10 @@ def evaluate_trace(records: list[dict], rows: list[dict], *, server_port: int,
             no_image_fields_or_binary_projection=not formal_observation_violations(records, path="trace"),
             continuous_zero_image_diagnostics=len(rows) == len(obs) == expected_steps + 1 and all(
                 row["episode_id"] == obs[i]["episode_id"] and row["observation_sequence_id"] == i
-                and row["diagnostics"]["schema_version"] == "mc2p.deployment_diagnostics.v1"
+                and row["diagnostics"]["schema_version"] in {
+                    "mc2p.deployment_diagnostics.v1",
+                    "mc2p.deployment_diagnostics.v2",
+                }
                 and row["diagnostics"]["remote_address"] == f"127.0.0.1:{server_port}"
                 and row["diagnostics"]["has_integrated_server"] is False
                 and row["diagnostics"]["window_recorded"] is True
@@ -601,6 +605,10 @@ class _RuntimeDiagnosticsTrace:
         self.backend = backend
         self.delegate = delegate
         self._diagnostics = None
+        self.runtime = None
+
+    def bind_runtime(self, runtime) -> None:
+        self.runtime = runtime
 
     @property
     def stats(self):
@@ -618,11 +626,16 @@ class _RuntimeDiagnosticsTrace:
             self._diagnostics = BoundedAsyncTraceWriter(
                 _DiagnosticsJsonlSink(self.directory), capacity=2048,
             )
-        self._diagnostics.write("diagnostics", dict(
+        row = dict(
             episode_id=observation.episode_id,
             observation_sequence_id=observation.sequence_id,
             diagnostics=self.backend.last_diagnostics,
-        ))
+        )
+        if getattr(self.backend, "last_observation_timing", None) is not None:
+            row["observation_pipeline"] = observation_pipeline_diagnostics(
+                self.runtime, self.backend,
+            )
+        self._diagnostics.write("diagnostics", row)
 
     def close(self):
         error = None
@@ -642,7 +655,93 @@ class _RuntimeDiagnosticsTrace:
             raise error
 
 
-def _scenario(runtime, backend, episode, directory, deadline, previous_gui=None, *, b02_air_probe=False):
+def observation_pipeline_diagnostics(runtime, backend) -> dict:
+    """Join measurements without moving ownership of any pipeline stage."""
+    python = getattr(backend, "last_observation_timing", None) or {}
+    diagnostics = getattr(backend, "last_diagnostics", None) or {}
+    jvm = diagnostics.get("observation_pipeline") or {}
+    observation = None if runtime is None else getattr(runtime, "observation", None)
+    perception = None if observation is None else getattr(observation, "perception", None)
+    perception_value = None if perception is None else getattr(perception, "value", None)
+    visible_blocks = None if perception_value is None else getattr(perception_value, "blocks", None)
+    return {
+        "schema_version": "mc2p.observation-pipeline-diagnostics.v1",
+        "payload_bytes": jvm.get(
+            "observation_payload_bytes", python.get("transport_payload_bytes", 0),
+        ),
+        "transport_payload_bytes": python.get("transport_payload_bytes", 0),
+        "json_decode_ns": python.get("json_decode_ns", 0),
+        "typed_decode_ns": python.get("typed_decode_ns", 0),
+        "snapshot_build_ns": python.get("snapshot_build_ns", 0),
+        "navigation_ingest_ns": (
+            None if runtime is None
+            else getattr(runtime, "last_navigation_ingest_ns", None)
+        ),
+        "visible_block_count": (
+            None if visible_blocks is None else len(visible_blocks)
+        ),
+        "jvm": jvm,
+    }
+
+
+def summarize_observation_pipeline(rows: list[dict]) -> dict:
+    """Summarize same-unit stage samples without mixing clocks together."""
+    samples = [row.get("observation_pipeline") for row in rows]
+    samples = [sample for sample in samples if type(sample) is dict]
+    metric_names = (
+        "payload_bytes", "transport_payload_bytes", "json_decode_ns",
+        "typed_decode_ns", "snapshot_build_ns", "navigation_ingest_ns",
+        "visible_block_count",
+        "block_read_ns", "surface_pack_ns", "surface_compute_ns", "air_query_ns",
+        "block_read_count", "store_record_count", "packed_block_count",
+        "packed_box_count", "culled_block_count", "halo_read_count",
+    )
+
+    def values(name: str) -> list[int]:
+        result = []
+        for sample in samples:
+            value = (sample.get("jvm") or {}).get(name, sample.get(name))
+            if type(value) is int and value >= 0:
+                result.append(value)
+        return sorted(result)
+
+    def percentile(numbers: list[int], percent: int) -> int:
+        if not numbers:
+            raise ValueError("empty observation metric")
+        index = max(0, math.ceil(len(numbers) * percent / 100) - 1)
+        return numbers[index]
+
+    metrics = {}
+    for name in metric_names:
+        numbers = values(name)
+        if numbers:
+            metrics[name] = {
+                "p50": percentile(numbers, 50),
+                "p95": percentile(numbers, 95),
+                "p99": percentile(numbers, 99),
+                "maximum": numbers[-1],
+            }
+    return {
+        "schema_version": "mc2p.observation-pipeline-report.v1",
+        "frame_count": len(samples),
+        "metrics": metrics,
+    }
+
+
+def export_observation_pipeline_evidence(directory: Path) -> dict:
+    path = Path(directory) / "diagnostics.jsonl"
+    rows = []
+    if path.is_file():
+        with path.open("r", encoding="utf-8") as stream:
+            for line in stream:
+                if line.strip():
+                    rows.append(json.loads(line))
+    report = summarize_observation_pipeline(rows)
+    write_json_atomic(Path(directory) / "observation-pipeline-report.json", report)
+    return report
+
+
+def _scenario(runtime, backend, episode, directory, deadline, previous_gui=None):
     task = TaskIntentV0("deployment-probe", "control-gui-probe", "{}",
         (SuccessCriterionV0("horizontal_displacement", ComparisonOperatorV0.GREATER_THAN, .1, "blocks"),),
         200, deadline, True, 0.0)
@@ -650,7 +749,12 @@ def _scenario(runtime, backend, episode, directory, deadline, previous_gui=None,
     last, counter = None, 0
     def diagnostic():
         obs = runtime.observation
-        row = dict(episode_id=episode, observation_sequence_id=obs.sequence_id, diagnostics=backend.last_diagnostics)
+        row = dict(
+            episode_id=episode,
+            observation_sequence_id=obs.sequence_id,
+            diagnostics=backend.last_diagnostics,
+            observation_pipeline=observation_pipeline_diagnostics(runtime, backend),
+        )
         rows.append(row)
         append_jsonl(directory / "diagnostics.jsonl", row)
     def submit(source, **kwargs):
@@ -683,48 +787,14 @@ def _scenario(runtime, backend, episode, directory, deadline, previous_gui=None,
     mark("start")
     submit("movement", movement=MovementV1(forward=1))
     submit("camera", look=LookV1(12, 0))
-    air_evidence = None
     for index in range(11):
-        if index == 0 and b02_air_probe:
-            own = runtime.observation.self_state.value
-            base_x, base_y, base_z = math.floor(own.position.x), math.floor(own.position.y), math.floor(own.position.z)
-            expected_air = tuple(sorted((base_x + x, base_y + 1, base_z + z)
-                                        for x in range(-4, 4) for z in range(-8, 8)))
-            requested_solid = (base_x, base_y - 1, base_z)
-            request = ObservationRequestV3("navigation_v1", tuple(sorted((*expected_air, requested_solid))))
-            baseline_ns = (runtime.observation.client_sample.completed_at_monotonic_ns
-                           - runtime.observation.client_sample.started_at_monotonic_ns)
-            step(observation_request=request)
-            observed = runtime.observation.perception.value.blocks
-            positives = tuple(sorted(block.position for block in observed if "air_query" in block.sources))
-            query_ns = (runtime.observation.client_sample.completed_at_monotonic_ns
-                        - runtime.observation.client_sample.started_at_monotonic_ns)
-            air_evidence = dict(requested_count=len(request.air_positions), expected_air_count=len(expected_air),
-                confirmed_air_count=len(positives), positive_positions_match=positives == expected_air,
-                non_air_not_confirmed=requested_solid not in positives, baseline_collection_ns=baseline_ns,
-                query_collection_ns=query_ns, within_one_tick_budget=query_ns <= 50_000_000)
-            write_json_atomic(directory / "b02-air-query.json", air_evidence)
-        else:
-            step()
+        step()
     submit("camera", look=LookV1(90, 0))
     runtime.cancel_source("camera")
     step(); mark("moving")
     runtime.cancel_source("movement")
     for _ in range(6): step()
     mark("released")
-    if b02_air_probe:
-        for label, movement in (
-            ("strafe", MovementV1(strafe=1)),
-            ("diagonal", MovementV1(forward=1, strafe=1)),
-        ):
-            submit("movement", movement=movement)
-            for _ in range(8):
-                step()
-            mark(label + "_moving")
-            runtime.cancel_source("movement")
-            for _ in range(6):
-                step()
-            mark(label + "_released")
     step(OpenInventoryV1()); mark("open")
     old_gui = runtime.observation.gui.value
     step(OpenInventoryV1()); mark("open_again")
@@ -738,8 +808,6 @@ def _scenario(runtime, backend, episode, directory, deadline, previous_gui=None,
     step(); mark("no_repeat")
     runtime.cancel("player_stop")
     step(expected="cancelled"); mark("cancelled")
-    if b02_air_probe:
-        return stages, rows, old_gui, air_evidence
     return stages, rows, old_gui
 
 
@@ -797,6 +865,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                c1r_control_frame_probe: bool = False,
                b12a_attack_evidence_probe: bool = False,
                b12b_partial_combat_probe: bool = False,
+               surface_cost_probe: bool = False,
                physics_tick_diagnostics: bool = False) -> int:
     c1_probe = (c1_fixed_melee_probe or c1_moving_melee_probe
                 or c1_external_motion_probe or c1r_control_frame_probe
@@ -809,12 +878,12 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
             b10_gap_solver_probe,b11_world_change_probe,input_buffer_idle_probe,c1_fixed_melee_probe,
             c1_moving_melee_probe,c1_external_motion_probe,
             c1r_control_frame_probe,b12a_attack_evidence_probe,
-            b12b_partial_combat_probe))>1:
+            b12b_partial_combat_probe,surface_cost_probe))>1:
         raise ValueError('probe scenarios are mutually exclusive')
     if block_parity:
         raise ValueError('first-hit block parity was retired with sensor profile 3')
-    if (c1r_control_frame_probe or b12b_partial_combat_probe) and not time_diagnostics:
-        raise ValueError('control-frame combat probe requires --time-diagnostics')
+    if (c1r_control_frame_probe or b12b_partial_combat_probe or surface_cost_probe) and not time_diagnostics:
+        raise ValueError('selected probe requires --time-diagnostics')
     source_before = frozen_deployment_sources(
         b03_fixed_route_probe=b03_fixed_route_probe,
         b03_shape_probe=b03_shape_probe,
@@ -892,7 +961,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                                   or b10_gap_solver_probe
                                   or b11_world_change_probe
                                   or input_buffer_idle_probe
-                                  or c1_probe) else 2):
+                                  or c1_probe or surface_cost_probe) else 2):
             directory = run_dir / f"client-{number}"
             directory.mkdir(exist_ok=False)
             options = "pauseOnLostFocus:false\nrenderDistance:2\nsimulationDistance:5\nmaxFps:60\nenableVsync:false\ntutorialStep:none\njoinedFirstServer:true\nskipMultiplayerWarning:true\nsoundCategory_master:0.0\n"
@@ -938,15 +1007,20 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                             # non-blocking while retaining the bounded evidence.
                             capacity=2048,
                         )
-                        if time_diagnostics:
-                            trace = _RuntimeDiagnosticsTrace(directory, backend, trace)
                     else:
                         trace = _runtime_trace(
                             directory,
                             backend,
-                            capture_close_diagnostics=visibility_probe or time_diagnostics,
+                            capture_close_diagnostics=(
+                                visibility_probe or surface_cost_probe
+                                or (b11_world_change_probe and time_diagnostics)
+                            ),
                         )
+                    if c1_probe and time_diagnostics:
+                        trace = _RuntimeDiagnosticsTrace(directory, backend, trace)
                     runtime = PlayerRuntimeV1(backend,trace)
+                    if isinstance(trace, _RuntimeDiagnosticsTrace):
+                        trace.bind_runtime(runtime)
                     episode = f"fabric-{seed}-{number}"
                     reset = runtime.reset(ResetRequestV0(f"reset-{number}", episode, "remote-session", 0,
                         min(deadline, time.perf_counter_ns() + 90_000_000_000)))
@@ -958,7 +1032,54 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                         raise RuntimeError("independent OS connection proof failed")
                     initial = runtime.observation
                     air_evidence = None
-                    if visibility_probe and number==0:
+                    if b02_air_probe:
+                        from scripts.visual_air_runtime import run_visual_air_runtime
+
+                        def write_visual_air_fixture(commands, label):
+                            if server is None or server.stdin is None:
+                                raise RuntimeError("visual air fixture command channel is unavailable")
+                            server.stdin.write(("\n".join(commands) + "\n").encode("utf-8"))
+                            server.stdin.flush()
+                            append_jsonl(directory / "visual-air-fixture-commands.jsonl", {
+                                "label": label,
+                                "commands": list(commands),
+                            })
+
+                        stages, rows, episode_checks = run_visual_air_runtime(
+                            runtime, backend, episode, directory, deadline,
+                            fixture_writer=write_visual_air_fixture,
+                            diagnostics_builder=observation_pipeline_diagnostics,
+                        )
+                        air_evidence = stages["fixed_cases"]
+                    elif surface_cost_probe:
+                        from scripts.surface_perception_cost_runtime import run_surface_cost_runtime
+
+                        def write_surface_cost_fixture(scene):
+                            if server is None or server.stdin is None:
+                                raise RuntimeError("surface cost fixture command channel is unavailable")
+                            commands = [
+                                "difficulty peaceful",
+                                "gamerule doDaylightCycle false",
+                                "time set noon",
+                                "weather clear",
+                                "gamemode creative MC2PProbe",
+                                *scene.commands,
+                                (f"tp MC2PProbe {scene.x + .5} {scene.y} {scene.z + .5} "
+                                 f"{scene.yaw} {scene.pitch}"),
+                            ]
+                            server.stdin.write(("\n".join(commands) + "\n").encode("utf-8"))
+                            server.stdin.flush()
+                            append_jsonl(directory / "surface-cost-fixture-commands.jsonl", {
+                                "scene": scene.name,
+                                "commands": commands,
+                            })
+
+                        stages, rows, episode_checks = run_surface_cost_runtime(
+                            runtime, backend, episode, directory, deadline,
+                            fixture_writer=write_surface_cost_fixture,
+                            diagnostics_builder=observation_pipeline_diagnostics,
+                        )
+                    elif visibility_probe and number==0:
                         from scripts.fabric_visibility_scenario import (
                             evaluate_visibility_stages,
                             run_visibility_runtime,
@@ -1293,6 +1414,9 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                         stages, rows, episode_checks = run_b11_world_change_runtime(
                             runtime, backend, episode, directory, deadline,
                             fixture_writer=write_b11_fixture,
+                            pipeline_diagnostic=lambda: observation_pipeline_diagnostics(
+                                runtime, backend,
+                            ),
                         )
                     elif input_buffer_idle_probe:
                         from scripts.input_buffer_idle_runtime import run_input_buffer_idle_runtime
@@ -1407,13 +1531,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                         )
                     else:
                         scenario = run_container_scenario if container_probe else _scenario
-                        if b02_air_probe:
-                            stages, rows, previous_gui, air_evidence = _scenario(
-                                runtime, backend, episode, directory, deadline, previous_gui,
-                                b02_air_probe=True)
-                        else:
-                            stages, rows, previous_gui = scenario(runtime, backend, episode, directory, deadline, previous_gui)
-                            air_evidence = None
+                        stages, rows, previous_gui = scenario(runtime, backend, episode, directory, deadline, previous_gui)
+                        air_evidence = None
                     final = runtime.observation
                     if (b03_fixed_route_probe or b03_shape_probe
                             or b04_known_map_probe or b05_jump_calibration_probe
@@ -1422,7 +1541,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                             or b08_ground_modes_probe or b09_air_motion_probe
                             or b10_gap_solver_probe or b11_world_change_probe
                             or input_buffer_idle_probe
-                            or c1_probe):
+                            or c1_probe or surface_cost_probe):
                         # Motion scenarios can produce large offline reports. Close
                         # the live control session before parsing and serializing
                         # them, otherwise the fixed client input-sample ledger can
@@ -1576,23 +1695,18 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                         pass  # Shared visibility stages already evaluated above.
                     elif mining_probe:
                         if number == 0: episode_checks = evaluate_mining(records, stages)
-                    elif (b03_fixed_route_probe or b03_shape_probe or b04_known_map_probe
+                    elif (b02_air_probe or b03_fixed_route_probe or b03_shape_probe or b04_known_map_probe
                           or b05_jump_calibration_probe or b05_jump_route_probe
                           or b05_jump_acceptance_probe or b06_ordinary_material_probe
                           or b07_step_probe or b08_ground_modes_probe
                           or b09_air_motion_probe or b10_gap_solver_probe
                           or b11_world_change_probe or input_buffer_idle_probe
-                          or c1_probe):
+                          or c1_probe or surface_cost_probe):
                         pass
                     else:
                         episode_checks = (evaluate_container(stages, records) if container_probe else evaluate_stages(
                             {name: stages[name] for name in RUNTIME_STAGES if name in stages}
                         ))
-                        if b02_air_probe:
-                            episode_checks.append({"name": "b02_positive_only_bounded_air_query", "passed":
-                                air_evidence is not None and air_evidence["positive_positions_match"]
-                                and air_evidence["non_air_not_confirmed"]
-                                and air_evidence["within_one_tick_budget"]})
                     if not c1_probe:
                         episode_checks += evaluate_trace(records, rows, server_port=server_port,
                         expected_steps=final.sequence_id if (container_probe or mining_probe or visibility_probe
@@ -1607,14 +1721,16 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                                                              or b09_air_motion_probe
                                                              or b10_gap_solver_probe
                                                              or b11_world_change_probe
-                                                             or input_buffer_idle_probe) else 28,
+                                                             or input_buffer_idle_probe
+                                                             or surface_cost_probe) else 28,
                         require_gui_attempts=not (
-                            b03_fixed_route_probe or b03_shape_probe or b04_known_map_probe
+                            b02_air_probe or b03_fixed_route_probe or b03_shape_probe or b04_known_map_probe
                             or b05_jump_calibration_probe or b05_jump_route_probe
                             or b05_jump_acceptance_probe or b06_ordinary_material_probe
                             or b07_step_probe or b08_ground_modes_probe
                             or b09_air_motion_probe or b10_gap_solver_probe
-                            or b11_world_change_probe or input_buffer_idle_probe))
+                            or b11_world_change_probe or input_buffer_idle_probe
+                            or surface_cost_probe))
                     checks.extend({**check, "name": f"client-{number}:" + check["name"]} for check in episode_checks)
                     sessions.append(dict(identity=asdict(identity), episode=episode, initial=trace_projection(initial),
                         final=trace_projection(final), stages=stages, proof=proof,
@@ -1643,6 +1759,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                         sessions[-1]["b12a_attack_evidence"] = stages
                     if b12b_partial_combat_probe:
                         sessions[-1]["b12b_partial_combat"] = stages
+                    if surface_cost_probe:
+                        sessions[-1]["surface_cost"] = stages
                     if c1_fixed_melee_probe:
                         sessions[-1]["c1_fixed_melee"] = stages
                     if c1_moving_melee_probe:
@@ -1664,6 +1782,24 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                     checks.append({**time_check, "name": f"client-{number}:" + time_check["name"]})
                     if diagnostic_failure is not None:
                         diagnostic_failures.append(dict(client=number, **diagnostic_failure))
+                    if time_diagnostics:
+                        try:
+                            pipeline_report = export_observation_pipeline_evidence(directory)
+                            checks.append({
+                                "name": f"client-{number}:observation_pipeline_frames_recorded",
+                                "passed": pipeline_report["frame_count"] > 0,
+                            })
+                        except BaseException as error:
+                            checks.append({
+                                "name": f"client-{number}:observation_pipeline_frames_recorded",
+                                "passed": False,
+                            })
+                            diagnostic_failures.append({
+                                "client": number,
+                                "stage": "observation_pipeline_export",
+                                "type": type(error).__name__,
+                                "message": str(error),
+                            })
                     parity_check = dict(
                         name="legacy_block_parity_disabled",
                         passed=not block_parity,
@@ -1687,7 +1823,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                   or b08_ground_modes_probe or b09_air_motion_probe
                   or b10_gap_solver_probe or b11_world_change_probe
                   or input_buffer_idle_probe
-                  or c1_probe):
+                  or c1_probe or surface_cost_probe):
             first, second = sessions
             if container_probe:
                 checks += evaluate_container_reconnect(first["stages"], session_records[0], second["stages"], session_records[1])
@@ -1710,7 +1846,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                 or b08_ground_modes_probe or b09_air_motion_probe
                 or b10_gap_solver_probe or b11_world_change_probe
                 or input_buffer_idle_probe
-                or c1_probe):
+                or c1_probe or surface_cost_probe):
             start, end = second["initial"], first["final"]
             checks += [dict(name="new_jvm_episode_and_client_clock", passed=first["identity"] != second["identity"]
                 and first["episode"] != second["episode"] and end["client_sample"]["clock_id"] != start["client_sample"]["clock_id"]),
@@ -1759,10 +1895,11 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
     if failure is None and (not checks or not all(check["passed"] for check in checks)):
         failure = dict(type="DeploymentEvidenceFailure", message=str([c["name"] for c in checks if not c["passed"]]))
     result = dict(schema_version="mc2p.fabric-deployment-probe.v2", observation_schema_version="mc2p.observation.v3",
-        knowledge_model="block_state_v1", default_field_profile="navigation_v1",
+        knowledge_model="block_state_v1", sensor_profile_revision=4,
+        visibility_rules_id="surface_visibility_1_21_v1", default_field_profile="navigation_v1",
         field_profiles=["navigation_v1", "interaction_v1"] if (
             mining_probe or container_probe or visibility_probe
-            or b11_world_change_probe or c1_probe
+            or b11_world_change_probe or c1_probe or surface_cost_probe
         ) else ["navigation_v1"],
         seed=seed, provenance=provenance,
         scenario="visibility" if visibility_probe else "mining" if mining_probe else "container" if container_probe
@@ -1782,6 +1919,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
             else "c1r-control-frame" if c1r_control_frame_probe
             else "b12a-attack-evidence" if b12a_attack_evidence_probe
             else "b12b-partial-combat" if b12b_partial_combat_probe
+            else "surface-perception-cost" if surface_cost_probe
             else "c1-fixed-melee" if c1_fixed_melee_probe
             else "c1-moving-melee" if c1_moving_melee_probe
             else "c1-external-motion" if c1_external_motion_probe else "runtime-controls-gui",
@@ -1850,6 +1988,8 @@ def main(argv=None) -> int:
                         help='run B12-A game-dependent attack evidence negatives')
     parser.add_argument('--b12b-partial-combat-probe', action='store_true',
                         help='run B12-B bounded ground movement with melee')
+    parser.add_argument('--surface-cost-probe', action='store_true',
+                        help='measure 200 stationary profile-4 frames in seven fixed scene classes')
     parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--run-dir", type=Path, help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
@@ -1863,21 +2003,23 @@ def main(argv=None) -> int:
             args.input_buffer_idle_probe,args.c1_fixed_melee_probe,
             args.c1_moving_melee_probe,args.c1_external_motion_probe,
             args.c1r_control_frame_probe,args.b12a_attack_evidence_probe,
-            args.b12b_partial_combat_probe))>1:
+            args.b12b_partial_combat_probe,args.surface_cost_probe))>1:
         parser.error('probe scenarios are mutually exclusive')
     if args.block_parity:
         parser.error('first-hit block parity was retired with sensor profile 3')
     if args.physics_tick_diagnostics and not args.time_diagnostics:
         parser.error('physics tick diagnostics require --time-diagnostics')
-    if (args.c1r_control_frame_probe or args.b12b_partial_combat_probe) \
+    if (args.c1r_control_frame_probe or args.b12b_partial_combat_probe
+            or args.surface_cost_probe) \
             and not args.time_diagnostics:
-        parser.error('control-frame combat probe requires --time-diagnostics')
+        parser.error('selected probe requires --time-diagnostics')
     maximum_timeout = 1200 if (args.c1_fixed_melee_probe
                                or args.c1_moving_melee_probe
                                or args.c1_external_motion_probe
                                or args.c1r_control_frame_probe
                                or args.b12a_attack_evidence_probe
                                or args.b12b_partial_combat_probe
+                               or args.surface_cost_probe
                                or args.b11_world_change_probe) else 600
     if (not math.isfinite(args.timeout_seconds) or not 120 <= args.timeout_seconds <= maximum_timeout
             or not 1 <= args.server_port <= 65535 or not 1 <= args.ipc_port <= 65535 or args.server_port == args.ipc_port):
@@ -1903,6 +2045,7 @@ def main(argv=None) -> int:
                           args.c1r_control_frame_probe,
                           args.b12a_attack_evidence_probe,
                           args.b12b_partial_combat_probe,
+                          args.surface_cost_probe,
                           args.physics_tick_diagnostics)
 
     if not port_free(args.server_port) or not port_free(args.ipc_port):
@@ -1956,6 +2099,7 @@ def main(argv=None) -> int:
     if args.c1r_control_frame_probe: command.append('--c1r-control-frame-probe')
     if args.b12a_attack_evidence_probe: command.append('--b12a-attack-evidence-probe')
     if args.b12b_partial_combat_probe: command.append('--b12b-partial-combat-probe')
+    if args.surface_cost_probe: command.append('--surface-cost-probe')
     supervision = run_bounded_process(command, cwd=ROOT, environment=dict(os.environ), log_path=run_dir / "worker.log",
                                       timeout_seconds=args.timeout_seconds)
     write_json_atomic(run_dir / "supervision.json", trace_projection(supervision))

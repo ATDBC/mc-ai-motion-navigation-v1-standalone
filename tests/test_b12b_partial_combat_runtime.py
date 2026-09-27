@@ -1,3 +1,4 @@
+import math
 import unittest
 
 from scripts.b12b_partial_combat_runtime import (
@@ -5,6 +6,9 @@ from scripts.b12b_partial_combat_runtime import (
     _PLAYER_START,
     _ROUTE_OFFSETS,
     _TARGET,
+    _flat_ground_air_scan_positions,
+    _flat_ground_scan_pose,
+    _scan_pose_matches,
     _goal,
     _hidden_target_z,
     _latency_summary,
@@ -16,6 +20,69 @@ from scripts.b12b_partial_combat_runtime import (
 
 
 class B12BPartialCombatRuntimeTests(unittest.TestCase):
+    def test_flat_ground_scan_requests_only_the_corridor_facing_the_camera(self):
+        expected_axes = {
+            "forward": {(0, step) for step in (1, 2, 3)},
+            "backward": {(0, -step) for step in (1, 2, 3)},
+            "left": {(step, 0) for step in (1, 2, 3)},
+            "right": {(-step, 0) for step in (1, 2, 3)},
+        }
+        start_x = math.floor(_PLAYER_START["x"])
+        start_y = math.floor(_PLAYER_START["y"])
+        start_z = math.floor(_PLAYER_START["z"])
+
+        for direction, forward_offsets in expected_axes.items():
+            positions = _flat_ground_air_scan_positions(direction)
+            self.assertEqual(len(positions), 36, direction)
+            self.assertEqual(len(set(positions)), len(positions), direction)
+            self.assertLessEqual(len(positions), 128, direction)
+            self.assertEqual(
+                {y for _, y, _ in positions},
+                {start_y, start_y + 1, start_y + 2, start_y + 3},
+                direction,
+            )
+            if direction in {"forward", "backward"}:
+                self.assertEqual(
+                    {(0, z - start_z) for x, _, z in positions
+                     if x == start_x},
+                    forward_offsets,
+                    direction,
+                )
+                self.assertEqual(
+                    {x - start_x for x, _, _ in positions},
+                    {-1, 0, 1},
+                    direction,
+                )
+            else:
+                self.assertEqual(
+                    {(x - start_x, 0) for x, _, z in positions
+                     if z == start_z},
+                    forward_offsets,
+                    direction,
+                )
+                self.assertEqual(
+                    {z - start_z for _, _, z in positions},
+                    {-1, 0, 1},
+                    direction,
+                )
+
+    def test_flat_ground_scan_steps_back_before_confirming_near_air(self):
+        self.assertEqual(
+            {direction: _flat_ground_scan_pose(direction)
+             for direction in _ROUTE_OFFSETS},
+            {
+                "forward": (.5, 100.0, -5.5, 0),
+                "backward": (.5, 100.0, .5, 180),
+                "left": (-2.5, 100.0, -2.5, -90),
+                "right": (3.5, 100.0, -2.5, 90),
+            },
+        )
+
+    def test_scan_waits_for_server_pose_and_accepts_wrapped_yaw(self):
+        backward = _flat_ground_scan_pose("backward")
+        self.assertTrue(_scan_pose_matches((.501, 100.0, .501, -180.0), backward))
+        self.assertFalse(_scan_pose_matches((.5, 100.0, -2.5, 0.0), backward))
+
     def test_latency_summary_uses_nearest_rank_percentiles(self):
         summary = _latency_summary(range(1, 101))
 
@@ -116,7 +183,7 @@ class B12BPartialCombatRuntimeTests(unittest.TestCase):
             **sustained_trial,
             "target_track_id": "entity-active",
             "control_request_sequences": [request],
-            "control_observation_sequence_ids": [44],
+            "control_observation_sequence_ids": [43, 44],
             "composed_request_sequences": [request],
             "seed_receipt_valid": True,
             "control_frame_count": 32,
@@ -159,6 +226,31 @@ class B12BPartialCombatRuntimeTests(unittest.TestCase):
                     "reason_code": "tracking_fixed_route",
                     "submit_input": True,
                     "movement": {"forward": 1, "strafe": 0,
+                                 "jump": False, "sneak": False,
+                                 "sprint": False},
+                },
+            },
+            {
+                "record_type": "navigation_session_decision",
+                "payload": {
+                    "session_id": "b12b-sustained-active-target-01",
+                    "observation_sequence_id": 43,
+                    "reason_code": "executing_safe_prefix_during_replan",
+                    "route_decision_present": True,
+                    "submit_input": True,
+                    "movement": {"forward": 0, "strafe": 0,
+                                 "jump": False, "sneak": False,
+                                 "sprint": False},
+                },
+            },
+            {
+                "record_type": "navigation_route_decision",
+                "payload": {
+                    "session_id": "b12b-sustained-active-target-01",
+                    "observation_sequence_id": 43,
+                    "reason_code": "corner_speed_control",
+                    "submit_input": True,
+                    "movement": {"forward": 0, "strafe": 0,
                                  "jump": False, "sneak": False,
                                  "sprint": False},
                 },
@@ -218,7 +310,11 @@ class B12BPartialCombatRuntimeTests(unittest.TestCase):
         self.assertEqual(sustained_result["moving_turn_frame_count"], 1)
         self.assertEqual(
             sustained_result["navigation_reason_counts"],
-            {"walk_tracking": 1},
+            {"corner_speed_control": 1, "walk_tracking": 1},
+        )
+        self.assertEqual(
+            sustained_result["neutral_navigation_reason_counts"],
+            {"corner_speed_control": 1},
         )
         induced_result = next(
             row for row in evaluated if row["active_mode"] == "induced_turn"

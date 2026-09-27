@@ -162,6 +162,45 @@ class C1NavigationSessionTests(unittest.TestCase):
         self.assertEqual(self.backend.query_track, "entity-zombie-1")
         self.assertEqual(self.backend.query_air, ((0, 62, 0),))
 
+    def test_bridge_does_not_fetch_a_second_changed_world_query_for_one_frame(self):
+        class ChangingRequestSession(FakeNavigationSession):
+            def __init__(inner):
+                super().__init__()
+                inner.request_calls = 0
+
+            def observation_request(inner, *, max_positions=128):
+                start = inner.request_calls * max_positions
+                inner.request_calls += 1
+                return ObservationRequestV3(
+                    "navigation_v1",
+                    tuple((index, 62, 0)
+                          for index in range(start, start + max_positions)),
+                )
+
+        session = ChangingRequestSession()
+        driver = RuntimeNavigationDriver(
+            self.runtime, session, clock_ns=lambda: self.clock[0],
+            observation_request=ObservationRequestV3(
+                "navigation_v1", entity_track_id="entity-zombie-1",
+            ),
+        )
+        from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, MovementMode
+        from mc2p.motion_nav.world_model import Aabb
+        goal = GoalState(
+            Aabb(0, 64, 1, 1, 64.2, 2), GoalSupport.SOLID,
+            frozenset({MovementMode.WALK}), frozenset({"standing"}), .6,
+        )
+
+        driver.start("combat-goal", 1, goal, self.clock[0])
+        driver.tick(BehaviorProfileV0(), self.clock[0] + 500_000_000)
+
+        self.assertEqual(session.request_calls, 1)
+        self.assertEqual(
+            self.backend.query_air,
+            tuple((index, 62, 0) for index in range(128)),
+        )
+        self.assertEqual(self.backend.query_track, "entity-zombie-1")
+
     def test_same_goal_uses_a_new_revision_and_cancel_releases_owner(self):
         session = FakeNavigationSession()
         driver = RuntimeNavigationDriver(

@@ -33,6 +33,23 @@ public class ClientBlockObservationV3Test {
     }
     public static void main(String[] args) throws Exception {
         SharedConstants.createGameVersion(); Bootstrap.initialize();
+        var visibilityRaycast = ClientObservationCollector.class.getDeclaredMethod(
+            "visibilityRaycast", BlockView.class, net.minecraft.entity.Entity.class,
+            Vec3d.class, Vec3d.class);
+        visibilityRaycast.setAccessible(true);
+        var rayWorld = new TestBlocks();
+        var rayObserver = new ArmorStandEntity(EntityType.ARMOR_STAND,new DetachedTestWorld());
+        var rayStart = new Vec3d(.5,1.6,.5); var rayEnd = new Vec3d(.5,1.6,20.5);
+        var rayCell = new BlockPos(0,1,3);
+        rayWorld.states.put(rayCell,Blocks.GLASS.getDefaultState());
+        require(visibilityRaycast.invoke(null,rayWorld,rayObserver,rayStart,rayEnd)==null,
+            "glass incorrectly occluded far entity approximation");
+        rayWorld.states.put(rayCell,Blocks.STONE.getDefaultState());
+        require(visibilityRaycast.invoke(null,rayWorld,rayObserver,rayStart,rayEnd) instanceof BlockHitResult,
+            "stone failed to occlude far entity approximation");
+        rayWorld.states.put(rayCell,Blocks.LAVA.getDefaultState());
+        require(visibilityRaycast.invoke(null,rayWorld,rayObserver,rayStart,rayEnd) instanceof BlockHitResult,
+            "lava failed to occlude far entity approximation");
         var nav = ClientObservationRequestV3.navigation();
         var interaction = new ClientObservationRequestV3("interaction_v1");
         require(!nav.needsTargeting() && interaction.needsTargeting(), "profile selection");
@@ -75,19 +92,12 @@ public class ClientBlockObservationV3Test {
 
         var airTable = new HashMap<BlockPos, EnumSet<ClientBlockObservationV3.Source>>();
         var airPos = new BlockPos(1,64,1);
-        var solidPos = new BlockPos(2,64,1);
-        world.states.put(solidPos,Blocks.STONE.getDefaultState());
-        world.allowed=Set.of(airPos,solidPos);
-        var airRequest = new ClientObservationRequestV3("navigation_v1",List.of(
-            new ClientObservationRequestV3.Grid(1,64,1),new ClientObservationRequestV3.Grid(2,64,1)));
-        ClientBlockObservationV3.discoverRequestedAir(world,new Vec3d(.5,64,.5),airRequest,airTable);
-        require(airTable.keySet().equals(Set.of(airPos))
-            && airTable.get(airPos).equals(EnumSet.of(ClientBlockObservationV3.Source.AIR_QUERY)),
-            "air query leaked a non-air block or omitted air");
-        world.allowed=Set.of(airPos);
+        world.states.put(airPos,Blocks.BARRIER.getDefaultState());
+        ClientBlockObservationV3.authorize(airTable,airPos,ClientBlockObservationV3.Source.AIR_QUERY);
+        world.allowed=Set.of();
         var airBlocks=ClientBlockObservationV3.readBlocks(world,ShapeContext.absent(),airTable);
         require(airBlocks.size()==1 && airBlocks.get(0).getAsJsonObject().get("block_id").getAsString().equals("minecraft:air"),
-            "air query did not export its positive result");
+            "visual-air result leaked a hidden block state");
 
         world = new TestBlocks();
         world.states.put(p, Blocks.STONE.getDefaultState());

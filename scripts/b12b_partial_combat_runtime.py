@@ -71,6 +71,62 @@ _ROUTE_OFFSETS = {
 }
 
 
+def _flat_ground_air_scan_positions(
+    direction: str,
+) -> tuple[tuple[int, int, int], ...]:
+    """Return the small, facing corridor that the fixture asks vision to verify."""
+    if direction not in _ROUTE_OFFSETS:
+        raise ValueError("unsupported B12-B scan direction")
+    dx, dz = _ROUTE_OFFSETS[direction]
+    step_x = 0 if dx == 0 else (1 if dx > 0 else -1)
+    step_z = 0 if dz == 0 else (1 if dz > 0 else -1)
+    start_x = math.floor(_PLAYER_START["x"])
+    start_y = math.floor(_PLAYER_START["y"])
+    start_z = math.floor(_PLAYER_START["z"])
+    positions: list[tuple[int, int, int]] = []
+    for forward_step in (1, 2, 3):
+        center_x = start_x + step_x * forward_step
+        center_z = start_z + step_z * forward_step
+        for side_step in (-1, 0, 1):
+            x = center_x + step_z * side_step
+            z = center_z + step_x * side_step
+            for y in range(start_y, start_y + 4):
+                positions.append((x, y, z))
+    return tuple(sorted(positions))
+
+
+def _flat_ground_scan_pose(direction: str) -> tuple[float, float, float, int]:
+    """Place the camera behind the route so its nearest cells fit in view."""
+    if direction not in _ROUTE_OFFSETS:
+        raise ValueError("unsupported B12-B scan direction")
+    dx, dz = _ROUTE_OFFSETS[direction]
+    yaw = {
+        "forward": 0,
+        "backward": 180,
+        "left": -90,
+        "right": 90,
+    }[direction]
+    return (
+        _PLAYER_START["x"] - 1.5 * dx,
+        _PLAYER_START["y"],
+        _PLAYER_START["z"] - 1.5 * dz,
+        yaw,
+    )
+
+
+def _scan_pose_matches(
+    actual: tuple[float, float, float, float],
+    expected: tuple[float, float, float, int],
+) -> bool:
+    position_error = max(
+        abs(actual[0] - expected[0]),
+        abs(actual[1] - expected[1]),
+        abs(actual[2] - expected[2]),
+    )
+    yaw_error = abs((actual[3] - expected[3] + 180.0) % 360.0 - 180.0)
+    return position_error <= .05 and yaw_error <= .5
+
+
 def _latency_summary(samples: Iterable[float]) -> dict:
     ordered = tuple(sorted(float(sample) for sample in samples))
     if not ordered:
@@ -274,6 +330,20 @@ def evaluate_b12b_active_target_evidence(
         pre_movement_navigation_reasons: dict[str, int] = {}
         pre_movement_navigation_events: list[str] = []
         expected_session = "b12b-" + str(row.get("trial_id"))
+        route_reasons = {}
+        for record in trace:
+            if record.get("record_type") != "navigation_route_decision":
+                continue
+            payload = record.get("payload")
+            if not isinstance(payload, Mapping):
+                continue
+            session_id = payload.get("session_id")
+            observation_sequence = payload.get("observation_sequence_id")
+            reason = payload.get("reason_code")
+            if (isinstance(session_id, str)
+                    and type(observation_sequence) is int
+                    and isinstance(reason, str) and reason):
+                route_reasons[(session_id, observation_sequence)] = reason
         first_movement_observation = row.get(
             "first_movement_observation_sequence_id"
         )
@@ -294,6 +364,11 @@ def evaluate_b12b_active_target_evidence(
                     )):
                 continue
             reason = payload.get("reason_code")
+            if payload.get("route_decision_present") is True:
+                reason = route_reasons.get((
+                    expected_session,
+                    payload.get("observation_sequence_id"),
+                ), reason)
             if not isinstance(reason, str) or not reason:
                 reason = "missing_reason"
             navigation_reasons[reason] = navigation_reasons.get(reason, 0) + 1
@@ -669,20 +744,66 @@ def _scan_flat_ground(
 ) -> None:
     profile = BehaviorProfileV0()
     start = _PLAYER_START
-    for yaw in (0, 90, 180, -90, 0):
+    for direction in ("forward", "right", "backward", "left"):
+        scan_x, scan_y, scan_z, scan_yaw = _flat_ground_scan_pose(direction)
         fixture_writer((
-            f"tp MC2PProbe {start['x']} {start['y']} {start['z']} {yaw} 0",
+            f"tp MC2PProbe {scan_x} {scan_y} {scan_z} {scan_yaw} 0",
         ), dict(trial))
-        time.sleep(.06)
+        for _ in range(20):
+            time.sleep(.01)
+            now = time.perf_counter_ns()
+            settled = _timed_control(
+                runtime, control_decision_ms,
+                lambda: runtime.control_frame(
+                    _task(
+                        str(trial["trial_id"]) + f"-settle-{direction}",
+                        deadline_ns,
+                    ),
+                    profile,
+                    min(deadline_ns, now + 500_000_000),
+                    proposals=(ControlFrameProposalV1(
+                        observation_request=ObservationRequestV3(
+                            "navigation_v1",
+                        ),
+                    ),),
+                ),
+            )
+            if settled.report.failure is not None:
+                raise RuntimeError(
+                    "B12-B scan pose wait failed: "
+                    + settled.report.failure.reason
+                )
+            own = runtime.observation.self_state.value
+            if (own is not None and own.is_on_ground
+                    and _scan_pose_matches(
+                        (
+                            own.position.x,
+                            own.position.y,
+                            own.position.z,
+                            own.yaw_degrees,
+                        ),
+                        (scan_x, scan_y, scan_z, scan_yaw),
+                    )):
+                break
+        else:
+            raise RuntimeError(
+                f"B12-B scan pose did not settle for {direction}"
+            )
         now = time.perf_counter_ns()
         result = _timed_control(
             runtime, control_decision_ms,
             lambda: runtime.control_frame(
-                _task(str(trial["trial_id"]) + f"-scan-{yaw}", deadline_ns),
+                _task(
+                    str(trial["trial_id"]) + f"-scan-{direction}",
+                    deadline_ns,
+                ),
                 profile,
                 min(deadline_ns, now + 500_000_000),
                 proposals=(ControlFrameProposalV1(
-                    observation_request=ObservationRequestV3("navigation_v1"),
+                    observation_request=ObservationRequestV3(
+                        "navigation_v1",
+                        _flat_ground_air_scan_positions(direction),
+                    ),
                 ),),
             ),
         )
@@ -690,6 +811,9 @@ def _scan_flat_ground(
             raise RuntimeError(
                 "B12-B ground scan failed: " + result.report.failure.reason
             )
+    fixture_writer((
+        f"tp MC2PProbe {start['x']} {start['y']} {start['z']} 0 0",
+    ), dict(trial))
 
 
 def _goal(direction: str) -> GoalState:

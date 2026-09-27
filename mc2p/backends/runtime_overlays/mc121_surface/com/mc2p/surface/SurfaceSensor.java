@@ -7,17 +7,38 @@ import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 
 /** Incremental same-call surface visibility for the formal Fabric observer. */
 public final class SurfaceSensor implements ClientBlockObservationV3.SurfaceProvider, AutoCloseable {
     private static final int MAX_BLOCKS = 25_000;
     private static final int MAX_BOXES = 100_000;
+    private static final int MAX_STORE_RECORDS = 100_000;
+    private static final int MAX_ENTITY_BOXES = 256;
     private Object world;
     private SurfaceWorldSource source;
     private TileGeometryStore store;
     private long scene;
     private Geometry geometry;
+    private Diagnostics latestDiagnostics = Diagnostics.empty();
+
+    public record Diagnostics(
+            long block_read_ns,
+            long surface_pack_ns,
+            long surface_compute_ns,
+            long air_query_ns,
+            long block_read_count,
+            int store_record_count,
+            int packed_block_count,
+            int packed_box_count,
+            int culled_block_count,
+            long halo_read_count,
+            boolean cache_rebuilt) {
+        static Diagnostics empty() {
+            return new Diagnostics(0L, 0L, 0L, 0L, 0L, 0, 0, 0, 0, 0L, false);
+        }
+    }
 
     private final ByteBuffer boxes = CacheBridge.direct(MAX_BOXES * 48);
     private final ByteBuffer owners = CacheBridge.direct(MAX_BOXES * 4);
@@ -28,13 +49,21 @@ public final class SurfaceSensor implements ClientBlockObservationV3.SurfaceProv
     private final ByteBuffer camera = CacheBridge.direct(40);
     private final ByteBuffer output = CacheBridge.direct(MAX_BLOCKS);
     private final ByteBuffer areas = CacheBridge.direct(MAX_BLOCKS * 8);
-    private final ByteBuffer times = CacheBridge.direct(16);
+    private final ByteBuffer times = CacheBridge.direct(24);
     private final ByteBuffer stats = CacheBridge.direct(64);
     private final ByteBuffer preparation = CacheBridge.direct(64);
+    private final ByteBuffer entityBoxes = CacheBridge.direct(MAX_ENTITY_BOXES * 48);
+    private final ByteBuffer entityVisible = CacheBridge.direct(MAX_ENTITY_BOXES);
+    private final ByteBuffer airPositions = CacheBridge.direct(128 * 12);
+    private final ByteBuffer airVisible = CacheBridge.direct(128);
 
     private static final class Geometry {
         final ArrayList<int[]> positions = new ArrayList<>();
+        int boxCount;
+        int culledBlockCount;
     }
+
+    public Diagnostics diagnostics() { return latestDiagnostics; }
 
     @Override
     public void close() {
@@ -53,12 +82,18 @@ public final class SurfaceSensor implements ClientBlockObservationV3.SurfaceProv
         var result = new Geometry();
         boxes.clear(); owners.clear(); centers.clear(); opaque.clear();
         int boxCount = 0;
-        for (var block : store.records()) {
+        store.beginSurfaceSelection();
+        var selected = SurfaceGeometryCuller.select(
+                store.records(), store::occludingFullCubeAt);
+        result.culledBlockCount = store.records().size() - selected.size();
+        for (var block : selected) {
             if (block.boxes.length == 0) continue;
             int owner = result.positions.size();
             int addedBoxes = block.boxes.length / 6;
-            if (owner >= MAX_BLOCKS || boxCount + addedBoxes > MAX_BOXES)
-                throw new IllegalStateException("surface geometry capacity exceeded");
+            if (owner >= MAX_BLOCKS)
+                throw new IllegalStateException("surface packed block capacity exceeded");
+            if (boxCount + addedBoxes > MAX_BOXES)
+                throw new IllegalStateException("surface packed box capacity exceeded");
             result.positions.add(new int[]{block.x, block.y, block.z});
             centers.putDouble(block.x + .5).putDouble(block.y + .5).putDouble(block.z + .5);
             opaque.put((byte)(block.opaque ? 1 : 0));
@@ -70,11 +105,19 @@ public final class SurfaceSensor implements ClientBlockObservationV3.SurfaceProv
         }
         CacheBridge.update(scene, boxes, owners, boxCount, centers, opaque,
                 result.positions.size(), identities, preparation);
+        result.boxCount = boxCount;
         return result;
     }
 
     @Override
     public List<BlockPos> visible(MinecraftClient client, Vec3d eye, float yaw, float pitch) {
+        return sample(client,eye,yaw,pitch,List.of()).visibleBlocks();
+    }
+
+    @Override
+    public ClientBlockObservationV3.SurfaceFrame sample(
+            MinecraftClient client, Vec3d eye, float yaw, float pitch,
+            List<BlockPos> airCandidates) {
         if (!client.isOnThread() || client.world == null || client.player == null)
             throw new IllegalStateException("surface sampling requires client thread and body");
         if (world != client.world) {
@@ -88,9 +131,16 @@ public final class SurfaceSensor implements ClientBlockObservationV3.SurfaceProv
                 public void chunk(int x, int z) { store.chunkChanged(x, z); }
             });
         }
+        long blockReadStarted = System.nanoTime();
         source.begin();
         store.refresh(eye.x, eye.y, eye.z);
-        if (geometry == null || store.changed) geometry = pack();
+        if (store.records().size() > MAX_STORE_RECORDS)
+            throw new IllegalStateException("surface store record capacity exceeded");
+        long blockReadFinished = System.nanoTime();
+        boolean rebuilt = geometry == null || store.changed;
+        long packStarted = System.nanoTime();
+        if (rebuilt) geometry = pack();
+        long packFinished = System.nanoTime();
         int count = geometry.positions.size();
         camera.putDouble(0, eye.x).putDouble(8, eye.y).putDouble(16, eye.z)
                 .putDouble(24, -yaw).putDouble(32, pitch);
@@ -101,12 +151,59 @@ public final class SurfaceSensor implements ClientBlockObservationV3.SurfaceProv
             double dz = Math.max(Math.max(position[2] - eye.z, eye.z - position[2] - 1), 0);
             query.put((byte)(dx * dx + dy * dy + dz * dz <= 256 ? 1 : 0));
         }
-        CacheBridge.framePose(scene, camera, query, count, output, areas, times, stats);
+        if (airCandidates.size()>128)
+            throw new IllegalStateException("surface visual-air candidate budget exceeded");
+        airPositions.clear();
+        for (BlockPos position : airCandidates)
+            airPositions.putInt(position.getX()).putInt(position.getY()).putInt(position.getZ());
+        long surfaceStarted = System.nanoTime();
+        CacheBridge.framePoseAir(scene,camera,query,count,output,areas,times,stats,
+                airPositions,airCandidates.size(),16.0,airVisible);
+        long surfaceFinished = System.nanoTime();
         var visible = new ArrayList<BlockPos>();
         for (int index = 0; index < count; index++) if (output.get(index) != 0) {
             var position = geometry.positions.get(index);
             visible.add(new BlockPos(position[0], position[1], position[2]));
         }
-        return List.copyOf(visible);
+        var visualAir = new ArrayList<BlockPos>();
+        for (int index=0;index<airCandidates.size();index++)
+            if (airVisible.get(index)!=0) visualAir.add(airCandidates.get(index));
+        latestDiagnostics = new Diagnostics(
+                Math.max(0L, blockReadFinished - blockReadStarted),
+                Math.max(0L, packFinished - packStarted),
+                Math.max(0L, surfaceFinished - surfaceStarted),
+                Math.max(0L,Math.round(times.getDouble(16)*1_000_000.0)),
+                store.reads,
+                store.records().size(),
+                geometry.positions.size(),
+                geometry.boxCount,
+                geometry.culledBlockCount,
+                store.haloReads,
+                rebuilt);
+        return new ClientBlockObservationV3.SurfaceFrame(visible,visualAir);
+    }
+
+    @Override
+    public boolean[] visibleBoxes(
+            MinecraftClient client, Vec3d eye, float yaw, float pitch, List<Box> candidates) {
+        if (!client.isOnThread() || client.world == null || client.player == null)
+            throw new IllegalStateException("surface entity sampling requires client thread and body");
+        if (world != client.world || scene == 0 || geometry == null)
+            throw new IllegalStateException("surface block frame must precede entity sampling");
+        if (candidates.size() > MAX_ENTITY_BOXES)
+            throw new IllegalStateException("surface entity candidate budget exceeded");
+        camera.putDouble(0, eye.x).putDouble(8, eye.y).putDouble(16, eye.z)
+                .putDouble(24, -yaw).putDouble(32, pitch);
+        entityBoxes.clear();
+        for (Box box : candidates) {
+            entityBoxes.putDouble(box.minX).putDouble(box.minY).putDouble(box.minZ)
+                    .putDouble(box.maxX).putDouble(box.maxY).putDouble(box.maxZ);
+        }
+        CacheBridge.visibleBoxes(
+                scene,camera,entityBoxes,candidates.size(),16.0,entityVisible);
+        boolean[] result = new boolean[candidates.size()];
+        for (int index = 0; index < result.length; index++)
+            result[index] = entityVisible.get(index) != 0;
+        return result;
     }
 }

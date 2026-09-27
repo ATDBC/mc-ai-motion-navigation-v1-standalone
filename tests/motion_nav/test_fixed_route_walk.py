@@ -207,7 +207,7 @@ class FixedRouteWalkTests(unittest.TestCase):
         calls: Counter[tuple[int, int, int]] = Counter()
         cell_calls: Counter[tuple[int, int, int]] = Counter()
         original = BlockGeometry.world_boxes
-        original_cell = WorldView.cell
+        original_cell = WorldView._cell_at_valid_position
 
         def counted(block, position):
             calls[position] += 1
@@ -218,7 +218,7 @@ class FixedRouteWalkTests(unittest.TestCase):
             return original_cell(view, position)
 
         with patch.object(BlockGeometry, "world_boxes", new=counted), \
-                patch.object(WorldView, "cell", new=counted_cell):
+                patch.object(WorldView, "_cell_at_valid_position", new=counted_cell):
             decision = controller.decide(fixture.frame(1, body))
 
         self.assertEqual(decision.reason, "tracking_fixed_route")
@@ -231,6 +231,28 @@ class FixedRouteWalkTests(unittest.TestCase):
             max(cell_calls.values()), 1,
             "cell facts are immutable within one navigation frame",
         )
+
+    def test_one_control_decision_reuses_current_body_support(self) -> None:
+        fixture, motion = FlatFixture(), profile()
+        body = PlanarBodyState(0, 0, 0, 1.5, 0)
+        frame = fixture.frame(0, body)
+        controller = FixedRouteController(motion)
+        controller.start(FixedRoute("support-cache", (
+            RoutePoint(0, 1, 0), RoutePoint(0, 1, 8),
+        )), frame)
+        current_box = frame.body.body_box.as_tuple()
+        calls: Counter[tuple[float, ...]] = Counter()
+        original = query_support
+
+        def counted(box, *args, **kwargs):
+            calls[box.as_tuple()] += 1
+            return original(box, *args, **kwargs)
+
+        with patch("mc2p.motion_nav.fixed_route.query_support", new=counted):
+            decision = controller.decide(fixture.frame(1, body))
+
+        self.assertEqual(decision.reason, "tracking_fixed_route")
+        self.assertEqual(calls[current_box], 1)
 
     def test_open_route_does_not_fully_validate_every_inferior_candidate(self) -> None:
         class CountingController(FixedRouteController):

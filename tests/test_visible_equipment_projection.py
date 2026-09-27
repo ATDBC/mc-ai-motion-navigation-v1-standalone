@@ -45,6 +45,7 @@ class VisibleEquipmentProjectionTests(unittest.TestCase):
         sources.extend((
             ROOT / "mc2p/backends/runtime_overlays/mc121_actions/ClientRequestGate.java",
             ROOT / "mc2p/backends/runtime_overlays/mc121_actions/ClientBehaviorInput.java",
+            ROOT / "mc2p/backends/runtime_overlays/mc121_surface/com/mc2p/surface/SurfaceVisibilityRules.java",
         ))
         harness_path = Path(harness)
         harness_class = harness_path.name

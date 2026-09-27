@@ -4,7 +4,7 @@ from dataclasses import replace
 
 from mc2p.contracts.common import ContractViolation
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
-from mc2p.contracts.observation_v3 import CollisionShapeV3, ObservedBlockV3
+from mc2p.contracts.observation_v3 import AabbV3, CollisionShapeV3, ObservedBlockV3
 from mc2p.motion_nav.runtime_adapter import NavigationObservationAdapter
 from mc2p.motion_nav.world_model import CellKnowledge
 from tests.observation_v3_fixtures import valid_snapshot_v3
@@ -142,6 +142,32 @@ class B02RuntimeAdapterTests(unittest.TestCase):
         self.assertIn(position,first.changed_cells)
         self.assertEqual(second.changed_cells,(position,))
         self.assertEqual(third.changed_cells,())
+
+    def test_reobservation_reuses_equal_geometry_but_refreshes_its_evidence(self):
+        position = (4, 64, 0)
+        shape = CollisionShapeV3("boxes", (
+            AabbV3(0.0, 0.0, 0.0, 1.0, 0.5, 1.0),
+        ))
+        first_block = ObservedBlockV3(
+            position, "minecraft:stone_slab", shape,
+            None, ("surface_depth",),
+        )
+        second_block = ObservedBlockV3(
+            position, "minecraft:stone_slab", shape,
+            None, ("body_contact",),
+        )
+        adapter = NavigationObservationAdapter()
+
+        first = adapter.ingest(valid_snapshot_v3(blocks=(first_block,), sequence=1))
+        first_fact = first.world.cell(position)
+        second = adapter.ingest(valid_snapshot_v3(blocks=(second_block,), sequence=2))
+        second_fact = second.world.cell(position)
+
+        self.assertIs(second_fact.block, first_fact.block)
+        self.assertEqual(second_fact.stamp.sequence_id, 2)
+        self.assertEqual(second.world.geometry_revision, first.world.geometry_revision)
+        self.assertGreater(second.world.evidence_revision, first.world.evidence_revision)
+        self.assertEqual(second.changed_cells, ())
 
 
 if __name__ == "__main__":

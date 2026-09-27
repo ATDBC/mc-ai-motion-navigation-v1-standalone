@@ -50,6 +50,14 @@ def _encode(record: dict) -> bytes:
                        sort_keys=True, separators=(',', ':')) + '\n').encode('utf-8')
 
 
+def _encode_projected(record: dict) -> bytes:
+    """Encode a record already checked and copied by ``trace_projection``."""
+    if type(record) is not dict:
+        raise TypeError('evidence records must be objects')
+    return (json.dumps(record, ensure_ascii=False, allow_nan=False,
+                       sort_keys=True, separators=(',', ':')) + '\n').encode('utf-8')
+
+
 def _object(pairs):
     result = {}
     for key, value in pairs:
@@ -128,7 +136,13 @@ class SegmentedJsonlWriter:
                     self.cleanup_failures.append(cleanup)
 
     def write(self, record: dict) -> None:
-        data = _encode(record)
+        self._write_data(_encode(record))
+
+    def write_projected(self, record: dict) -> None:
+        """Write one payload that an upstream trace worker already projected."""
+        self._write_data(_encode_projected(record))
+
+    def _write_data(self, data: bytes) -> None:
         if len(data) > min(self.max_record_bytes, self.max_segment_bytes):
             raise ValueError('evidence record exceeds byte limit')
         with self._lock:
@@ -277,6 +291,16 @@ class SegmentedTraceWriter:
             raise ValueError('record_type must be non-empty')
         self._writer.write({'schema_version': 'mc2p.trace-record.v0', 'record_type': record_type,
                             'payload': trace_projection(payload)})
+
+    def write_projected(self, record_type: str, payload: object) -> None:
+        """Accept a payload already projected by ``BoundedAsyncTraceWriter``."""
+        if not isinstance(record_type, str) or not record_type:
+            raise ValueError('record_type must be non-empty')
+        self._writer.write_projected({
+            'schema_version': 'mc2p.trace-record.v0',
+            'record_type': record_type,
+            'payload': payload,
+        })
 
     def close(self) -> None:
         self._writer.close()

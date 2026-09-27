@@ -5,8 +5,13 @@ from dataclasses import dataclass
 import math
 
 from mc2p.contracts.common import ContractViolation
-from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
-from mc2p.motion_nav.world_model import Aabb, BlockPos, CellKnowledge, WorldView
+from mc2p.motion_nav.geometry import (
+    QueryStatus, query_support, sweep, unknown_shape_owner_is_fully_covered,
+)
+from mc2p.motion_nav.world_model import (
+    Aabb, BlockPos, COLLISION_OWNER_BELOW_REACH_CELLS, CellKnowledge,
+    WorldView,
+)
 
 
 _EPSILON = 1.0e-9
@@ -79,7 +84,7 @@ class SupportSurfaceResult:
 
 def _candidate_owner_cells(column_x: int, column_z: int,
                            minimum_y: float, maximum_y: float) -> tuple[BlockPos, ...]:
-    low = math.floor(minimum_y) - 2
+    low = math.floor(minimum_y) - COLLISION_OWNER_BELOW_REACH_CELLS
     high = math.ceil(maximum_y) - 1
     return tuple((column_x, y, column_z) for y in range(low, high + 1))
 
@@ -168,8 +173,11 @@ def query_support_surfaces(
     owner_cells = _candidate_owner_cells(
         column_x, column_z, minimum_feet_y, maximum_feet_y,
     )
-    missing = tuple(position for position in owner_cells
-                    if world.cell(position).knowledge is CellKnowledge.UNKNOWN)
+    missing = tuple(
+        position for position in owner_cells
+        if (world.cell(position).knowledge is CellKnowledge.UNKNOWN
+            and not unknown_shape_owner_is_fully_covered(world, position))
+    )
     if missing:
         return SupportSurfaceResult(
             QueryStatus.NEEDS_INFORMATION, (), owner_cells, missing,

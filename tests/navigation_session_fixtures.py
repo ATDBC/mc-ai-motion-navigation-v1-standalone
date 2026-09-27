@@ -46,6 +46,7 @@ class FakeNavigationSession:
         self.cancel_steps = cancel_steps
         self.cancel_remaining = 0
         self.route_look_required = False
+        self.route_look_after_propose = False
 
     def attach_observation_adapter(self, adapter):
         if self.frames and adapter is not self.observation_adapter:
@@ -163,6 +164,8 @@ class FakeNavigationSession:
                 conditioned_yaw_delta_degrees,
                 conditioned_look_intent_id,
             ))
+        if self.route_look_after_propose:
+            self.route_look_required = True
         self.proposal_sequence += 1
         if self.state is NavigationSessionState.CANCELLING:
             self.cancel_remaining -= 1
@@ -170,6 +173,7 @@ class FakeNavigationSession:
                 self.state = NavigationSessionState.CANCELLED
         look_conditioned = (
             conditioned_look_intent_id is not None
+            and not self.route_look_required
             and self.look is None
             and self.movement != MovementV1()
         )

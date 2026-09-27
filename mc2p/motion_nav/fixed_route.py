@@ -519,9 +519,7 @@ class FixedRouteController:
 
         goal = self._geometry.goal
         goal_distance = math.hypot(body.x - goal.x, body.z - goal.z)
-        goal_support = query_support(
-            frame.body.body_box, frame.world, query_cache=query_cache,
-        )
+        goal_support = current_support
         route_complete = (self._geometry.total_length <= _EPSILON
                           or self._progress >= self._geometry.total_length
                              - self.config.endpoint_tolerance_blocks)

@@ -181,8 +181,28 @@
       "recorded_status": "passed",
       "run_id": "20260926T091904725912Z-deb6726e",
       "stage": "b12b"
+    },
+    {
+      "archive": "archives/b12b-pass-20260926T221605915054Z-01f7cd73.tar.gz",
+      "archive_sha256": "08fb68e86d02e85fd02d8236288430c5228dc25c2ae81fc8e03bb08d3abd95c3",
+      "archive_size_bytes": 4256239,
+      "current_acceptance_eligible": true,
+      "expected": {
+        "failure_message": null,
+        "failure_type": null,
+        "negative_passed": 8,
+        "negative_total": 8,
+        "positive_passed": 24,
+        "positive_total": 24,
+        "trial_rows": 34
+      },
+      "perception_status": "current_surface_depth_profile4",
+      "recorded_outcome": "pass",
+      "recorded_status": "passed",
+      "run_id": "20260926T221605915054Z-01f7cd73",
+      "stage": "b12b"
     }
   ],
   "schema_version": "mc2p.public-runtime-evidence.v1",
-  "total_archive_bytes": 15934908
+  "total_archive_bytes": 20191147
 }

@@ -36,7 +36,10 @@ def valid_payload_value(profile="navigation_v1"):
     perception = dict(horizontal_fov_degrees=120., vertical_fov_degrees=120.,
         ray_columns=0, ray_rows=0, sensor_profile_revision=4, max_block_distance=16.,
         body_expansion_blocks=.05, block_epsilon_blocks=.001, entity_max_distance=32.,
-        entity_occlusion_epsilon_blocks=.05, knowledge_model="block_state_v1", blocks=[],
+        entity_occlusion_epsilon_blocks=.05, knowledge_model="block_state_v1",
+        visibility_rules_id="surface_visibility_1_21_v1", blocks=[],
+        entity_visibility_near_model="surface_bbox_exact_16",
+        entity_visibility_far_model="surface_rules_five_point_16_32",
         visible_entities=[], entities_truncated=False, truncated_entity_count=0)
     def group(value):
         return dict(status="valid", sample_world_tick=100, source_kind="client_perception_filtered",
@@ -65,6 +68,9 @@ def legacy_ray_payload_value(profile="navigation_v1"):
         sensor_profile_revision=3,
         ray_columns=159,
         ray_rows=9,
+        visibility_rules_id="legacy_ray_visibility_v3",
+        entity_visibility_near_model="legacy_five_point_raycast_0_32",
+        entity_visibility_far_model="legacy_five_point_raycast_0_32",
     )
     return value
 

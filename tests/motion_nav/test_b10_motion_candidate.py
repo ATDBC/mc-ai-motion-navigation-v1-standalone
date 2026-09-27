@@ -434,6 +434,69 @@ class VerifiedMotionExecutorTests(unittest.TestCase):
         self.assertIs(completed.state, VerifiedMotionExecutorState.COMPLETE)
         self.assertEqual(completed.reason, "verified_motion_complete")
 
+    def test_non_neutral_sample_during_coast_enters_local_landing_recovery(self):
+        anchor, candidate = self.admitted()
+        executor = VerifiedMotionExecutor()
+        executor.start(candidate)
+        ledger = InputApplicationLedger(max_records=64)
+        proof = candidate.proof
+        neutral = MovementV1()
+        tail_start = next(
+            index for index in range(len(proof.commands))
+            if all(command.movement == neutral
+                   for command in proof.commands[index:])
+        )
+        for index in range(tail_start):
+            decision = executor.decide(anchor, ledger)
+            tick = 11 + index
+            executor.register_submission(
+                index,
+                control_sequence=500 + index,
+                requested_movement_tick=decision.expected_movement_tick,
+                requested_latest_movement_tick=decision.latest_movement_tick,
+            )
+            self.applied(
+                ledger, anchor, 500 + index, tick,
+                proof.commands[index].movement,
+                requested_tick=decision.expected_movement_tick,
+                requested_latest_tick=decision.latest_movement_tick,
+            )
+            anchor = replace(
+                anchor,
+                observation_sequence_id=anchor.observation_sequence_id + 1,
+                movement_tick_id=tick,
+                physics_state=proof.trajectory[index + 1],
+            )
+
+        coasting = executor.decide(anchor, ledger)
+        self.assertEqual(coasting.reason, "coast_to_verified_landing")
+        disturbed_tick = anchor.movement_tick_id + 1
+        self.applied(
+            ledger, anchor, 900, disturbed_tick, MovementV1(strafe=1),
+        )
+        disturbed = replace(
+            anchor,
+            observation_sequence_id=anchor.observation_sequence_id + 1,
+            movement_tick_id=disturbed_tick,
+            physics_state=replace(
+                anchor.physics_state,
+                movement_tick_id=disturbed_tick,
+                on_ground=False,
+            ),
+        )
+
+        recovering = executor.decide(disturbed, ledger)
+
+        self.assertIs(
+            recovering.state, VerifiedMotionExecutorState.RECOVERING,
+        )
+        self.assertEqual(recovering.movement, MovementV1())
+        self.assertEqual(
+            recovering.reason,
+            "coast_input_not_neutral_retain_landing",
+        )
+        self.assertFalse(recovering.submittable_as_verified_command)
+
     def test_cancel_in_air_retains_landing_responsibility(self):
         anchor, candidate = self.admitted()
         executor = VerifiedMotionExecutor()
@@ -859,6 +922,81 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
             decision.expected_movement_tick,
         )
         self.assertEqual(executor.action_index, 0)
+
+    def test_coordinator_aligns_a_safe_gap_entry_before_background_solving(self):
+        import time
+        anchor, physics_world, _, _ = fixture()
+        misaligned_state = replace(
+            anchor.physics_state,
+            yaw_radians=-math.pi / 4,
+        )
+        anchor = replace(anchor, physics_state=misaligned_state)
+        start_id = SurfaceNodeId(0, 0, 64, 0)
+        end_id = SurfaceNodeId(0, 2, 64, 0)
+        start_surface = SupportSurface(
+            start_id, (.5, 64.0, .5), HorizontalRegion(0, 0, 1, 1),
+            1.0, ("minecraft:grass_block",), (),
+        )
+        end_surface = SupportSurface(
+            end_id, (.5, 64.0, 2.5), HorizontalRegion(0, 2, 1, 3),
+            1.0, ("minecraft:grass_block",), (),
+        )
+        action_route = ActionRoute(
+            "align-before-gap",
+            (JumpGapSegment(
+                JumpGapEdge(start_id, end_id, "test-jump-gap", .9, ()),
+                start_surface, end_surface, (),
+            ),),
+        )
+        active = ActiveRoute(
+            "align-before-gap", 1, "request", "goal", 1,
+            anchor.session.value, None, 2.0, 0.0, (),
+            ExecutableCorridor((start_id, end_id), (), 2.0, end_id),
+            action_route, planning_generation=2,
+        )
+        executor = ActionRouteExecutor(
+            ground_profile(), jump_profile(), step_profile(),
+            air_profiles=(air_profile(MovementMode.JUMP_GAP),),
+        )
+        frame = self.frame(physics_world._world, misaligned_state, 1)
+        ledger = InputApplicationLedger(max_records=64)
+        with MotionSolverWorker(max_pending=4) as worker:
+            coordinator = MotionRouteCoordinator(active, executor, worker)
+            coordinator.start(frame)
+
+            aligning = coordinator.decide(
+                frame, anchor, ledger, physics_world, changed_cells=(),
+            )
+
+            self.assertTrue(aligning.submit_input)
+            self.assertEqual(
+                aligning.reason_code, "aligning_verified_motion_heading",
+            )
+            self.assertEqual(aligning.movement, MovementV1())
+            self.assertIsNotNone(aligning.look)
+            self.assertAlmostEqual(aligning.look.yaw_delta_degrees, 36.0)
+            self.assertIsNone(coordinator._pending_connection)
+
+            aligned_state = replace(misaligned_state, yaw_radians=0.0)
+            aligned_anchor = replace(anchor, physics_state=aligned_state)
+            aligned_frame = self.frame(
+                physics_world._world, aligned_state, 2,
+            )
+            decision = coordinator.decide(
+                aligned_frame, aligned_anchor, ledger, physics_world,
+                changed_cells=(),
+            )
+            deadline = time.perf_counter() + 5.0
+            while not decision.submit_input and time.perf_counter() < deadline:
+                time.sleep(.01)
+                decision = coordinator.decide(
+                    aligned_frame, aligned_anchor, ledger, physics_world,
+                    changed_cells=(),
+                )
+
+        self.assertTrue(decision.submit_input)
+        self.assertTrue(decision.movement.jump)
+        self.assertEqual(decision.verified_command_index, 0)
 
     def test_coordinator_prepares_next_gap_from_the_next_applied_walk_state(self):
         anchor, physics_world, _, _ = fixture()

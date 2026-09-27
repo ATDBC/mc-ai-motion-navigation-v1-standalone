@@ -28,4 +28,8 @@ public final class SurfacePerception {
                 DirtyTracker.chunk(world, chunk.getPos().x, chunk.getPos().z, false));
         ClientLifecycleEvents.CLIENT_STOPPING.register(client -> sensor.close());
     }
+
+    public static SurfaceSensor.Diagnostics diagnostics() {
+        return sensor == null ? null : sensor.diagnostics();
+    }
 }

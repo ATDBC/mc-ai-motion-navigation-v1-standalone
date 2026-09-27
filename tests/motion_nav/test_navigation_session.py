@@ -7,6 +7,7 @@ import time
 import unittest
 from unittest.mock import Mock
 
+from mc2p.contracts.action import ActionPriorityV0
 from mc2p.contracts.common import ContractViolation
 from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.intent_source import IntentSourceV1
@@ -562,6 +563,104 @@ class NavigationSessionTests(unittest.TestCase):
         )
         self.assertIn(unknown_gap, proposal.report.missing_cells)
         self.assertIsNone(session.active_route)
+
+    def test_missing_cell_outside_view_adds_low_priority_information_look(self):
+        world, unknown_gap = _known_endpoints_with_unknown_gap()
+        start, goal = _nodes(world, (-1, 1))
+        initial = frame(world, 0, start.position)
+        initial = replace(
+            initial,
+            body=replace(initial.body, yaw_radians=math.radians(90.0)),
+        )
+        session = NavigationSession(
+            "unknown-gap-look-session", self.profiles(),
+            planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        session.start(SurfacePlanningRequest(
+            1, "unknown-gap-look-request", "unknown-gap-look-goal", 1,
+            world.session.value, start.node_id, goal.node_id,
+            goal_state=_goal(goal.position),
+        ), initial)
+
+        proposal = session.propose(initial, None, 2_000_000_000)
+
+        self.assertIs(
+            proposal.report.state, NavigationSessionState.NEEDS_INFORMATION,
+        )
+        self.assertIn(unknown_gap, proposal.report.missing_cells)
+        self.assertIsNotNone(proposal.control_frame)
+        looks = tuple(
+            ordered.intent
+            for ordered in proposal.control_frame.intents
+            if ordered.intent.look is not None
+        )
+        self.assertEqual(len(looks), 1)
+        self.assertIs(looks[0].priority, ActionPriorityV0.BEHAVIOR)
+        self.assertIsNone(looks[0].movement)
+        self.assertLessEqual(abs(looks[0].look.yaw_delta_degrees), 36.0)
+
+    def test_missing_cell_already_in_view_does_not_turn_in_place(self):
+        world, _ = _known_endpoints_with_unknown_gap()
+        start, goal = _nodes(world, (-1, 1))
+        initial = frame(world, 0, start.position)
+        initial = replace(
+            initial,
+            body=replace(
+                initial.body,
+                yaw_radians=math.radians(-90.0),
+                pitch_radians=math.radians(77.0),
+            ),
+        )
+        session = NavigationSession(
+            "unknown-gap-occluded-session", self.profiles(),
+            planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        session.start(SurfacePlanningRequest(
+            1, "unknown-gap-occluded-request", "unknown-gap-occluded-goal", 1,
+            world.session.value, start.node_id, goal.node_id,
+            goal_state=_goal(goal.position),
+        ), initial)
+
+        proposal = session.propose(initial, None, 2_000_000_000)
+
+        self.assertIsNotNone(proposal.control_frame)
+        self.assertFalse(any(
+            ordered.intent.look is not None
+            for ordered in proposal.control_frame.intents
+        ))
+
+    def test_conditioned_task_look_suppresses_information_look(self):
+        world, _ = _known_endpoints_with_unknown_gap()
+        start, goal = _nodes(world, (-1, 1))
+        initial = frame(world, 0, start.position)
+        initial = replace(
+            initial,
+            body=replace(initial.body, yaw_radians=math.radians(90.0)),
+        )
+        session = NavigationSession(
+            "unknown-gap-task-look-session", self.profiles(),
+            planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        session.start(SurfacePlanningRequest(
+            1, "unknown-gap-task-look-request", "unknown-gap-task-look-goal", 1,
+            world.session.value, start.node_id, goal.node_id,
+            goal_state=_goal(goal.position),
+        ), initial)
+
+        proposal = session.propose(
+            initial, None, 2_000_000_000,
+            conditioned_yaw_delta_degrees=15.0,
+            conditioned_look_intent_id="combat-look/1",
+        )
+
+        self.assertIsNotNone(proposal.control_frame)
+        self.assertFalse(any(
+            ordered.intent.look is not None
+            for ordered in proposal.control_frame.intents
+        ))
 
     def test_step_route_uses_the_same_session_instead_of_a_script_only_path(self):
         world = _known_world({

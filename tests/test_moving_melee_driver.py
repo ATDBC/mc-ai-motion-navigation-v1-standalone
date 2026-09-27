@@ -347,6 +347,44 @@ class MovingMeleeDriverTests(unittest.TestCase):
         self.assertEqual(driver.report.reason, "pursuit_deadline_exhausted")
         self.assertIsNone(driver.approach_driver)
 
+    def test_deadline_crossed_during_goal_decision_uses_safe_handoff(self):
+        self.runtime.close()
+        self.clock[0] = 10_000_000_000
+        self.backend = MeleeBackend(self.clock, distance=6.0)
+        self.runtime = PlayerRuntimeV1(
+            self.backend, self.trace, lambda: self.clock[0],
+        )
+        self.assertTrue(self.runtime.reset(
+            ResetRequestV0(
+                "reset-pursuit-race", "episode-1", "test", 1,
+                120_000_000_000,
+            )
+        ).succeeded)
+        session = FakeNavigationSession()
+        driver = MovingMeleeDriver(
+            self.runtime, session, clock_ns=lambda: self.clock[0],
+        )
+        driver.start(self.target, self.clock[0])
+        for _ in range(3):
+            self.clock[0] += 50_000_000
+            self.tick(driver)
+        self.clock[0] += 50_000_000
+        driver._deadline_ns = self.clock[0] + 500_000
+        from mc2p.skills import moving_melee_driver as moving
+        original = moving.decide_moving_goal
+
+        def slow_goal_decision(*args, **kwargs):
+            self.clock[0] += 1_000_000
+            return original(*args, **kwargs)
+
+        with patch.object(moving, "decide_moving_goal", slow_goal_decision):
+            result = self.tick(driver)
+
+        self.assertIsNotNone(result)
+        self.assertEqual(driver.report.state, "needs_task_decision")
+        self.assertEqual(driver.report.reason, "pursuit_deadline_exhausted")
+        self.assertIsNone(driver.approach_driver)
+
     def test_damage_knockback_releases_approach_then_recovers_from_latest_body(self):
         self.runtime.close()
         self.backend = MeleeBackend(self.clock, distance=5.0)
@@ -383,6 +421,34 @@ class MovingMeleeDriverTests(unittest.TestCase):
         self.assertEqual(driver.report.external_recoveries_completed, 1)
         self.assertIsNotNone(driver.approach_driver)
         self.assertEqual(driver.report.state, "pursuing")
+
+    def test_external_motion_detection_processes_each_observation_once(self):
+        session = FakeNavigationSession()
+        calls = 0
+        original = session.motion_residual
+
+        def counted(snapshot, ledger):
+            nonlocal calls
+            calls += 1
+            return original(snapshot, ledger)
+
+        session.motion_residual = counted
+        driver = MovingMeleeDriver(
+            self.runtime, session, clock_ns=lambda: self.clock[0],
+        )
+        driver.start(self.target, self.clock[0])
+
+        first = driver._detect_external_motion(self.runtime.observation)
+        duplicate = driver._detect_external_motion(self.runtime.observation)
+
+        self.assertEqual(calls, 1)
+        self.assertEqual(first.reason, "duplicate_observation")
+        self.assertEqual(duplicate.reason, "duplicate_observation")
+        self.assertEqual(
+            sum(kind == "external_motion_detection"
+                for kind, _ in self.trace.records),
+            1,
+        )
 
     def test_damage_on_unsupported_surface_still_invalidates_navigation_and_recovers(self):
         self.runtime.close()
@@ -728,6 +794,43 @@ class MovingMeleeDriverTests(unittest.TestCase):
         self.assertIn("movement", dict(attack.decision.selected_intents))
         self.assertIn("look", dict(attack.decision.selected_intents))
         self.assertIsNotNone(driver.approach_driver)
+
+    def test_walk_to_nonwalk_handoff_drops_prepared_combat_look(self):
+        self.runtime.close()
+        self.backend = MeleeBackend(self.clock, distance=6.0)
+        self.runtime = PlayerRuntimeV1(
+            self.backend, self.trace, lambda: self.clock[0],
+        )
+        self.assertTrue(self.runtime.reset(
+            ResetRequestV0(
+                "reset-route-look-handoff", "episode-1", "test", 1,
+                5_000_000_000,
+            )
+        ).succeeded)
+        session = FakeNavigationSession()
+        session.route_look_after_propose = True
+        driver = MovingMeleeDriver(
+            self.runtime, session, clock_ns=lambda: self.clock[0],
+        )
+        driver.start(self.target, self.clock[0])
+
+        with patch(
+            "mc2p.skills.moving_melee_driver.combat_aim_angles",
+            return_value=(15.0, 0.0),
+        ):
+            result = None
+            for _ in range(4):
+                session.route_look_required = False
+                result = self.tick(driver)
+                if session.conditioned_look_requests:
+                    break
+
+        self.assertTrue(session.conditioned_look_requests)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.decision.action.movement, MovementV1(forward=1))
+        self.assertEqual(result.decision.action.look, LookV1())
+        self.assertNotIn("look", dict(result.decision.selected_intents))
+        self.assertIsNone(driver._pursuit_look_source)
 
     def test_visible_pursuit_turns_toward_target_while_navigation_keeps_moving(self):
         self.runtime.close()

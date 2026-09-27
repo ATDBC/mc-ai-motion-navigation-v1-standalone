@@ -56,6 +56,11 @@ class PublicRepositoryCompletenessTests(unittest.TestCase):
             "tests/test_b12b_partial_combat_runtime.py",
             "tests/test_b12b_runtime_injection_acceptance.py",
             "tests/test_fabric_deployment_probe.py",
+            "tests/test_surface_depth_tiles.py",
+            "tests/test_surface_depth_cache.py",
+            "tests/test_surface_observation_v3.py",
+            "tests/test_client_block_observation_v3.py",
+            "tests/test_visual_air_runtime.py",
             "tests/observation_v2_fixtures.py",
             "tests/observation_v3_fixtures.py",
             "mc2p/runtime/player_runtime_v1.py",
@@ -66,6 +71,8 @@ class PublicRepositoryCompletenessTests(unittest.TestCase):
             "scripts/b12a_fabric_runtime.py",
             "scripts/b12b_partial_combat_runtime.py",
             "scripts/java/FollowPlaygroundInitializer.java",
+            "scripts/surface_depth_probe/build.py",
+            "scripts/surface_depth_probe/native.py",
         )
         selected_paths = {item.as_posix() for item in selected}
 

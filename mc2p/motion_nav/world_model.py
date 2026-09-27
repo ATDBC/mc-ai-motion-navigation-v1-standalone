@@ -28,6 +28,11 @@ def _position(value: BlockPos) -> None:
 def block_section(position: BlockPos) -> SectionPos:
     """Return the 16x16x16 section that owns one block position."""
     _position(position)
+    return _block_section_from_valid_position(position)
+
+
+def _block_section_from_valid_position(position: BlockPos) -> SectionPos:
+    """Return a section after the caller has validated the block position."""
     return tuple(part // WORLD_SECTION_SIZE for part in position)  # type: ignore[return-value]
 
 
@@ -259,8 +264,12 @@ class WorldView:
 
     def cell(self, position: BlockPos) -> CellFact:
         _position(position)
+        return self._cell_at_valid_position(position)
+
+    def _cell_at_valid_position(self, position: BlockPos) -> CellFact:
+        """Read one already validated position for a per-decision query cache."""
         if self._owner is not None:
-            section = block_section(position)
+            section = _block_section_from_valid_position(position)
             geometry = 0 if self._section_geometry_revisions is None \
                 else self._section_geometry_revisions.get(section, 0)
             evidence = 0 if self._section_evidence_revisions is None \
@@ -268,7 +277,8 @@ class WorldView:
             if (self._owner.section_geometry_revision(section) != geometry
                     or self._owner.section_evidence_revision(section) != evidence):
                 raise ContractViolation("world view expired after section changed")
-            return self._owner._cell(position)
+            facts = self._owner._sections.get(section)
+            return UNKNOWN_CELL if facts is None else facts.get(position, UNKNOWN_CELL)
         assert self._snapshot_facts is not None
         return self._snapshot_facts.get(position, UNKNOWN_CELL)
 
@@ -325,7 +335,8 @@ class WorldQueryCache:
         cached = self._facts.get(position)
         if cached is not None:
             return cached
-        fact = self.world.cell(position)
+        _position(position)
+        fact = self.world._cell_at_valid_position(position)
         self._facts[position] = fact
         return fact
 
@@ -433,22 +444,46 @@ class WorldKnowledge:
 
     def observe_blocks(self, stamp: ObservationStamp,
                        blocks: Mapping[BlockPos, BlockGeometry]) -> WorldUpdateResult:
+        result, _ = self.observe_blocks_with_changes(stamp, blocks)
+        return result
+
+    def observe_blocks_with_changes(
+        self,
+        stamp: ObservationStamp,
+        blocks: Mapping[BlockPos, BlockGeometry],
+    ) -> tuple[WorldUpdateResult, tuple[BlockPos, ...]]:
+        """Apply one block batch and report cells whose geometry changed."""
         self._stamp(stamp)
         if not isinstance(blocks, Mapping):
             raise ContractViolation("visible blocks must be a mapping")
         results = []
+        changed = []
         evicted: set[BlockPos] = set()
         for position in sorted(blocks):
             _position(position)
+            section_position = block_section(position)
             geometry = blocks[position]
             if type(geometry) is not BlockGeometry:
                 raise ContractViolation("visible block requires geometry")
+            section = self._sections.get(section_position)
+            existing = (
+                UNKNOWN_CELL if section is None
+                else section.get(position, UNKNOWN_CELL)
+            )
+            semantic_changed = (
+                existing is UNKNOWN_CELL
+                or existing.knowledge is not CellKnowledge.BLOCK
+                or (existing.block is not geometry and existing.block != geometry)
+            )
             outcome, removed = self._apply(
                 position, CellFact(CellKnowledge.BLOCK, stamp, geometry),
+                existing=existing, section_position=section_position,
             )
             results.append((position, outcome))
+            if outcome == "applied" and semantic_changed:
+                changed.append(position)
             evicted.update(removed)
-        return self._update_result(results, evicted)
+        return self._update_result(results, evicted), tuple(changed)
 
     def confirm_air(
         self, stamp: ObservationStamp, positions: tuple[BlockPos, ...],
@@ -490,15 +525,23 @@ class WorldKnowledge:
         return UNKNOWN_CELL if section is None else section.get(position, UNKNOWN_CELL)
 
     def _apply(
-        self, position: BlockPos, incoming: CellFact,
+        self,
+        position: BlockPos,
+        incoming: CellFact,
+        *,
+        existing: CellFact | None = None,
+        section_position: SectionPos | None = None,
     ) -> tuple[str, tuple[BlockPos, ...]]:
         assert incoming.stamp is not None
+        if section_position is None:
+            section_position = block_section(position)
+        if existing is None:
+            existing = self._cell(position)
         invalidated = self._invalidated_at.get(position)
         if invalidated is not None:
             if incoming.stamp.world_order <= invalidated.world_order:
                 return "unchanged", ()
             del self._invalidated_at[position]
-        existing = self._cell(position)
         if existing is UNKNOWN_CELL:
             existing = None
         if existing is not None:
@@ -516,9 +559,12 @@ class WorldKnowledge:
             evicted = self._evict_one_section()
             if not evicted:
                 return "rejected", ()
-        semantic_changed = existing is None or (existing.knowledge, existing.block) != (
-            incoming.knowledge, incoming.block)
-        section_position = block_section(position)
+        semantic_changed = (
+            existing is None
+            or existing.knowledge is not incoming.knowledge
+            or (existing.block is not incoming.block
+                and existing.block != incoming.block)
+        )
         section = self._sections.setdefault(section_position, {})
         section[position] = incoming
         if existing is None:

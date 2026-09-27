@@ -7,7 +7,7 @@ from mc2p.contracts.common import ContractViolation, require_identifier
 
 OBSERVATION_V2 = "mc2p.client_observation.v2"
 OBSERVATION_V3 = "mc2p.client_observation.v3"
-MAX_AIR_QUERY_POSITIONS = 512
+MAX_AIR_QUERY_POSITIONS = 128
 MAX_OBSERVATION_REQUEST_BYTES = 16384
 
 

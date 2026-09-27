@@ -242,6 +242,9 @@ class PerceptionStateV3:
     # accepted only so frozen historical traces can still be decoded.
     sensor_profile_revision: int = 4
     knowledge_model: str = "block_state_v1"
+    visibility_rules_id: str = "surface_visibility_1_21_v1"
+    entity_visibility_near_model: str = "surface_bbox_exact_16"
+    entity_visibility_far_model: str = "surface_rules_five_point_16_32"
 
     def __post_init__(self) -> None:
         if type(self.sensor_profile_revision) is not int or self.sensor_profile_revision not in (3, 4):
@@ -259,6 +262,18 @@ class PerceptionStateV3:
                 raise ContractViolation("invalid V3 sensor geometry")
         if type(self.knowledge_model) is not str or self.knowledge_model != "block_state_v1":
             raise ContractViolation("invalid V3 knowledge model")
+        expected_visibility = (
+            "surface_visibility_1_21_v1" if surface else "legacy_ray_visibility_v3"
+        )
+        if self.visibility_rules_id != expected_visibility:
+            raise ContractViolation("invalid V3 visibility rules")
+        expected_entity_models = (
+            ("surface_bbox_exact_16", "surface_rules_five_point_16_32")
+            if surface else
+            ("legacy_five_point_raycast_0_32", "legacy_five_point_raycast_0_32")
+        )
+        if (self.entity_visibility_near_model, self.entity_visibility_far_model) != expected_entity_models:
+            raise ContractViolation("invalid V3 entity visibility models")
         if (type(self.blocks) is not tuple or len(self.blocks) > (MAX_BLOCKS_V3 if surface else 2456)
                 or any(type(b) is not ObservedBlockV3 for b in self.blocks)):
             raise ContractViolation("invalid or excessive V3 blocks")

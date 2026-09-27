@@ -23,9 +23,11 @@ public final class DeploymentDiagnostics {
         encodeAttempts.incrementAndGet();
         throw new IllegalStateException("structured_only image encoding forbidden");
     }
-    public static JsonObject sample(MinecraftClient client, String remoteAddress) {
+    public static JsonObject sample(
+            MinecraftClient client, String remoteAddress,
+            JsonObject observationPipeline) {
         var result = new JsonObject();
-        result.addProperty("schema_version", "mc2p.deployment_diagnostics.v1");
+        result.addProperty("schema_version", "mc2p.deployment_diagnostics.v2");
         result.addProperty("client_tick", clientTicks);
         result.addProperty("remote_address", remoteAddress);
         result.addProperty("has_integrated_server", client.getServer() != null);
@@ -38,6 +40,7 @@ public final class DeploymentDiagnostics {
         result.addProperty("gui_render_completions", guiCompletions);
         result.addProperty("framebuffer_capture_attempts", captureAttempts.get());
         result.addProperty("image_encode_attempts", encodeAttempts.get());
+        result.add("observation_pipeline", observationPipeline);
         return result;
     }
 }

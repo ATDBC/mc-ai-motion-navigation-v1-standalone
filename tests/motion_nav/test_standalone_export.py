@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 import shutil
+import subprocess
+import sys
 import unittest
 import uuid
 
@@ -61,6 +63,39 @@ class StandaloneExportTests(unittest.TestCase):
         )
         requirements = (self.root / "requirements.txt").read_text("utf-8")
         self.assertIn("psutil", requirements)
+        self.assertIn("numpy", requirements)
+
+    def test_exported_first_party_modules_all_import(self) -> None:
+        script = """
+import importlib
+from pathlib import Path
+
+root = Path.cwd()
+modules = []
+for prefix in ("mc2p", "scripts", "tools"):
+    for path in sorted((root / prefix).rglob("*.py")):
+        relative = path.relative_to(root).with_suffix("")
+        parts = list(relative.parts)
+        if parts[-1] == "__init__":
+            parts.pop()
+        if parts:
+            modules.append(".".join(parts))
+for module in modules:
+    importlib.import_module(module)
+print(f"IMPORTED_FIRST_PARTY_MODULES={len(modules)}")
+"""
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            cwd=self.root,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+
+        self.assertEqual(
+            result.returncode, 0, result.stdout + result.stderr,
+        )
+        self.assertIn("IMPORTED_FIRST_PARTY_MODULES=", result.stdout)
 
     def test_verifier_rejects_changed_and_extra_files(self) -> None:
         target = self.root / "README.md"

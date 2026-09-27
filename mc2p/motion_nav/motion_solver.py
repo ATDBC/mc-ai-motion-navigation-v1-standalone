@@ -384,6 +384,26 @@ def _required_yaw(direction: tuple[int, int]) -> float:
     return math.atan2(-dx, dz)
 
 
+def gap_entry_heading_delta_radians(
+        yaw_radians: float, direction: tuple[int, int]) -> float:
+    """Return the shortest turn needed before a verified gap solve."""
+    if (type(yaw_radians) not in (int, float)
+            or not math.isfinite(yaw_radians)
+            or type(direction) is not tuple
+            or direction not in _CARDINAL_DIRECTIONS):
+        raise ContractViolation("gap entry heading requires a finite yaw and direction")
+    delta = _required_yaw(direction) - float(yaw_radians)
+    return math.atan2(math.sin(delta), math.cos(delta))
+
+
+def gap_entry_heading_is_aligned(
+        yaw_radians: float, direction: tuple[int, int]) -> bool:
+    """Use the same heading rule for entry preparation and the solver."""
+    return abs(gap_entry_heading_delta_radians(
+        yaw_radians, direction,
+    )) <= _HEADING_TOLERANCE_RADIANS
+
+
 def _entry_check(anchor: StateAnchor, world: PhysicsWorldView,
                  request: GapSolveRequest) -> SolveResult | None:
     if (type(anchor) is not StateAnchor or type(world) is not PhysicsWorldView
@@ -432,8 +452,8 @@ def _entry_check(anchor: StateAnchor, world: PhysicsWorldView,
                 ) + 1.0e-9):
             return SolveResult(SolveStatus.NEEDS_STATE,
                                reasons=("entry_velocity_direction",))
-    if _angle_error(state.yaw_radians, _required_yaw(request.direction)) \
-            > _HEADING_TOLERANCE_RADIANS:
+    if not gap_entry_heading_is_aligned(
+            state.yaw_radians, request.direction):
         return SolveResult(SolveStatus.NEEDS_STATE,
                            reasons=("heading_alignment",))
     if not math.isclose(state.position[1], request.landing.surface_y, abs_tol=1.0e-7):

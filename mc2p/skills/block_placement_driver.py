@@ -16,6 +16,11 @@ from mc2p.contracts.intent_source import (
     OrderedIntentV1,
     ordered_intent_id,
 )
+from mc2p.contracts.observation_request_v3 import (
+    MAX_AIR_QUERY_POSITIONS,
+    ObservationRequestV3,
+    merge_observation_requests,
+)
 from mc2p.contracts.task import (
     ComparisonOperatorV0,
     SuccessCriterionV0,
@@ -87,6 +92,8 @@ class RuntimeBlockPlacementDriver:
         self._clock = clock_ns
         self._approach_mode = approach_mode
         self._approach: FixedRouteController | None = None
+        self._approach_missing_cells: tuple[tuple[int, int, int], ...] = ()
+        self._approach_waiting_for_information = False
         self._last_movement_confirmed = True
         self.source: IntentSourceV1 | None = None
         self._sequence = 0
@@ -149,11 +156,18 @@ class RuntimeBlockPlacementDriver:
         intents: tuple[OrderedIntentV1, ...] = ()
         intent_id = None
         movement = self._movement_for(placement, frame)
+        observation_request = self._observation_request(
+            placement.observation_request,
+        )
         look = (
             self._aim_command()
             if placement.operation is None
             and placement.reason == "target_not_aligned"
-            else None
+            else (
+                self._look_toward_cell(self._approach_missing_cells[0])
+                if (self._approach_missing_cells
+                    and self._approach_waiting_for_information) else None
+            )
         )
         if (placement.operation is not None or look is not None
                 or movement != MovementV1()):
@@ -178,14 +192,36 @@ class RuntimeBlockPlacementDriver:
         self._prepared_deadline_ns = deadline
         return ControlFrameProposalV1(
             intents=intents,
-            observation_request=placement.observation_request,
+            observation_request=observation_request,
         )
+
+    def _observation_request(
+        self,
+        placement_request: ObservationRequestV3,
+    ) -> ObservationRequestV3:
+        if not self._approach_missing_cells:
+            return placement_request
+        existing = set(placement_request.air_positions)
+        available = MAX_AIR_QUERY_POSITIONS - len(existing)
+        additions = tuple(
+            position
+            for position in self._approach_missing_cells
+            if position not in existing
+        )[:available]
+        if not additions:
+            return placement_request
+        return merge_observation_requests((
+            placement_request,
+            ObservationRequestV3("interaction_v1", additions),
+        ))
 
     def _movement_for(
         self,
         placement: PlacementProposal,
         frame: NavigationFrame,
     ) -> MovementV1:
+        self._approach_missing_cells = ()
+        self._approach_waiting_for_information = False
         requirement = self.transaction.requirement
         if not requirement.requires_sneak:
             return MovementV1()
@@ -214,6 +250,10 @@ class RuntimeBlockPlacementDriver:
             decision = self._approach.decide(
                 frame, input_confirmed=self._last_movement_confirmed,
             )
+            self._approach_missing_cells = decision.missing_cells
+            self._approach_waiting_for_information = (
+                decision.state is FixedRouteState.NEEDS_INFORMATION
+            )
             if decision.state in {
                 FixedRouteState.BLOCKED,
                 FixedRouteState.INPUT_LOST,
@@ -226,10 +266,6 @@ class RuntimeBlockPlacementDriver:
         return MovementV1(sneak=True)
 
     def _aim_command(self) -> LookV1:
-        observation = self.runtime.observation
-        own = observation.self_state.value
-        if own is None:
-            return LookV1()
         requirement = self.transaction.requirement
         x, y, z = requirement.support
         face_point = {
@@ -240,10 +276,21 @@ class RuntimeBlockPlacementDriver:
             "west": (x, y + 0.5, z + 0.5),
             "east": (x + 1.0, y + 0.5, z + 0.5),
         }[requirement.face]
+        return self._look_toward_point(face_point)
+
+    def _look_toward_cell(self, position: tuple[int, int, int]) -> LookV1:
+        return self._look_toward_point(tuple(axis + 0.5 for axis in position))
+
+    def _look_toward_point(self, point: tuple[float, float, float]) -> LookV1:
+        observation = self.runtime.observation
+        own = observation.self_state.value
+        if own is None:
+            return LookV1()
+        x, y, z = point
         eye_height = own.eye_height_blocks or 1.62
-        dx = face_point[0] - own.position.x
-        dy = face_point[1] - (own.position.y + eye_height)
-        dz = face_point[2] - own.position.z
+        dx = x - own.position.x
+        dy = y - (own.position.y + eye_height)
+        dz = z - own.position.z
         horizontal = math.hypot(dx, dz)
         if horizontal <= 1.0e-9:
             desired_yaw = own.yaw_degrees

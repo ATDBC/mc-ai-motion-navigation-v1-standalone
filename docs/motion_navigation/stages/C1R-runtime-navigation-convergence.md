@@ -446,10 +446,13 @@ git diff --check
 ```powershell
 D:\Miniforge3\Scripts\conda.exe run --prefix D:\My_project\mc_ai\.venv --no-capture-output python scripts/export_motion_navigation_standalone.py export --root .tmp\standalone-export-check --clean
 D:\Miniforge3\Scripts\conda.exe run --prefix D:\My_project\mc_ai\.venv --no-capture-output python scripts/export_motion_navigation_standalone.py verify --root .tmp\standalone-export-check
-D:\Miniforge3\Scripts\conda.exe run --prefix D:\My_project\mc_ai\.venv --no-capture-output python -m unittest discover -s .tmp\standalone-export-check\tests\motion_nav -p 'test_*.py' -v
+Push-Location .tmp\standalone-export-check
+D:\Miniforge3\Scripts\conda.exe run --prefix D:\My_project\mc_ai\.venv --no-capture-output python -m unittest discover -s tests\motion_nav -p 'test_*.py' -v
+Pop-Location
 ```
 
 `.tmp\standalone-export-check` 必须由脚本解析为当前工作区内的固定临时目录；`--clean` 只能清理这个精确目录，不能接受工作区根目录或其父目录。干净克隆远端仓库到另一个固定临时目录后，对克隆目录重复 `verify` 和测试命令。
+独立包测试必须从独立包根目录启动，避免 Python 优先导入主仓库中同名的 `scripts` 或 `mc2p` 模块。
 
 ## 相关文档
 

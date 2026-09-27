@@ -16,7 +16,7 @@ import java.util.Set;
 /** Fixed field selection plus bounded air and registered-entity queries. */
 public record ClientObservationRequestV3(String fieldProfile, List<Grid> airPositions,
                                          String entityTrackId) {
-    public static final int MAX_AIR_POSITIONS = 512;
+    public static final int MAX_AIR_POSITIONS = 128;
     public record Grid(int x, int y, int z) {}
 
     public ClientObservationRequestV3 {

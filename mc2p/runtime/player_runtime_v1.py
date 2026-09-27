@@ -84,6 +84,7 @@ class PlayerRuntimeV1:
         self._failure_policy = FailureDispositionPolicy()
         self._last_failure_disposition: FailureDispositionDecision | None = None
         self._force_neutral_reason: str | None = None
+        self._last_navigation_ingest_ns: int | None = None
 
     @property
     def state(self) -> RuntimeStateV1:
@@ -110,6 +111,10 @@ class PlayerRuntimeV1:
     @property
     def last_failure_disposition(self) -> FailureDispositionDecision | None:
         return self._last_failure_disposition
+
+    @property
+    def last_navigation_ingest_ns(self) -> int | None:
+        return self._last_navigation_ingest_ns
 
     def apply_failure(self, failure: FailureV0) -> FailureDispositionDecision:
         """Execute one typed lifecycle decision at a Runtime frame boundary."""
@@ -159,7 +164,11 @@ class PlayerRuntimeV1:
                     if type(obs) is ObservationSnapshotV3 and obs.field_profile != "navigation_v1":
                         raise ContractViolation("reset requires navigation observation")
                     if type(obs) is ObservationSnapshotV3:
+                        ingest_started = time.perf_counter_ns()
                         self._navigation_observation_adapter.ingest(obs)
+                        self._last_navigation_ingest_ns = max(
+                            0, time.perf_counter_ns() - ingest_started,
+                        )
                 code = FailureCodeV0.TRACE_IO
                 self._trace.write("reset", {"request": request, "result": result})
             except Exception as error:
@@ -410,7 +419,11 @@ class PlayerRuntimeV1:
                 self._input_ledger.observe_receipt(backend_result.receipt)
                 self._observation = backend_result.observation
                 if type(self._observation) is ObservationSnapshotV3:
+                    ingest_started = time.perf_counter_ns()
                     self._navigation_observation_adapter.ingest(self._observation)
+                    self._last_navigation_ingest_ns = max(
+                        0, time.perf_counter_ns() - ingest_started,
+                    )
                 receipt = backend_result.receipt
                 failure = None
                 status = ExecutionStatusV0.RUNNING

@@ -9,6 +9,7 @@ from mc2p.motion_nav.physics_types import (
     PhysicsEffect, PhysicsRuleset, PhysicsState, StateBuildResult, StateBuildStatus,
     WorldShapeQuery,
 )
+from mc2p.motion_nav.geometry import unknown_shape_owner_is_fully_covered
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.world_model import (
     BlockPos, CellKnowledge, WorldSessionId, WorldView, block_section,
@@ -175,15 +176,27 @@ class PhysicsWorldView:
             # dependency section changes. Check section revisions in one
             # batch without rebuilding boxes or rereading cell facts.
             self._world.validate_sections(
-                block_section(position) for position in dependencies
+                block_section(position) for position in cached.dependencies
             )
             return cached
         boxes = []
         missing = []
         unsupported = []
+        complete_dependencies = set(dependencies)
         for position in dependencies:
             fact = self._world.cell(position)
             if fact.knowledge is CellKnowledge.UNKNOWN:
+                # Shapes owned by the cell below may reach one block upward.
+                # A known full cube immediately above contains every such
+                # supported vanilla shape, so the hidden owner cannot add any
+                # collision outside geometry we already have.  Keep both cells
+                # as dependencies while avoiding an impossible underground
+                # information requirement.
+                above = (position[0], position[1] + 1, position[2])
+                complete_dependencies.add(above)
+                if unknown_shape_owner_is_fully_covered(
+                        self._world, position):
+                    continue
                 missing.append(position)
             elif fact.knowledge is CellKnowledge.BLOCK:
                 assert fact.block is not None
@@ -192,7 +205,8 @@ class PhysicsWorldView:
                 else:
                     boxes.extend(fact.block.world_boxes(position))
         result = WorldShapeQuery(
-            tuple(boxes), dependencies, tuple(missing), tuple(unsupported),
+            tuple(boxes), tuple(sorted(complete_dependencies)),
+            tuple(missing), tuple(unsupported),
         )
         if len(self._shape_cache) >= self._MAX_SHAPE_CACHE_ENTRIES:
             self._shape_cache.clear()

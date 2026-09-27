@@ -1,5 +1,6 @@
 from copy import deepcopy
 from pathlib import Path
+import json
 import subprocess
 import sys
 import unittest
@@ -11,6 +12,11 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class FabricDeploymentProbeTests(unittest.TestCase):
+    def test_formal_run_manifest_names_surface_visibility_contract(self):
+        source = (ROOT / "scripts/probe_fabric_deployment_observation.py").read_text("utf-8")
+        self.assertIn('sensor_profile_revision=4', source)
+        self.assertIn('visibility_rules_id="surface_visibility_1_21_v1"', source)
+
     def test_c1_source_freeze_includes_full_control_and_replay_chain(self):
         from scripts.probe_fabric_deployment_observation import (
             C1_FIXED_MELEE_SOURCES, frozen_deployment_sources,
@@ -236,9 +242,98 @@ class FabricDeploymentProbeTests(unittest.TestCase):
         source = (ROOT / "deployment/fabric-observation-probe/src/main/java/com/mc2p/deployment/DeploymentObservationProbe.java").read_text("utf-8")
         self.assertIn("DeploymentStepV3.decode(frame)", source)
         self.assertIn("ClientObservationCollector.collectV3", source)
-        self.assertIn('"mc2p.deployment_sample.v2"', source)
+        self.assertIn("DeploymentSampleEncoder.encode", source)
+        encoder = (ROOT / "deployment/fabric-observation-probe/src/main/java/"
+                   "com/mc2p/deployment/DeploymentSampleEncoder.java").read_text("utf-8")
+        self.assertIn('mc2p.deployment_sample.v2', encoder)
         self.assertIn("observationRequest = ClientObservationRequestV3.navigation()", source)
         self.assertIn("if (!executor.receiptReady()) return;", source)
+
+    def test_observation_pipeline_diagnostics_keep_stage_owners_separate(self):
+        from types import SimpleNamespace
+        from scripts.probe_fabric_deployment_observation import observation_pipeline_diagnostics
+        from tests.deployment_fixtures import backend_peer, sample_value
+        from mc2p.contracts.reset import ResetRequestV0
+        from tests.test_deployment_python_transport import deadline
+
+        java = (ROOT / (
+            "deployment/fabric-observation-probe/src/main/java/com/mc2p/deployment/"
+            "DeploymentObservationProbe.java"
+        )).read_text("utf-8")
+        surface = (ROOT / (
+            "mc2p/backends/runtime_overlays/mc121_surface/com/mc2p/surface/"
+            "SurfaceSensor.java"
+        )).read_text("utf-8")
+        self.assertIn("collectV3Diagnostic", java)
+        self.assertIn("SurfacePerception.diagnostics()", java)
+        for name in ("block_read_ns", "surface_pack_ns", "surface_compute_ns", "air_query_ns"):
+            self.assertIn(name, surface)
+        from mc2p.backends.fabric_behavior import _JVM_PIPELINE_COUNTERS
+        self.assertIn("air_query_ns", _JVM_PIPELINE_COUNTERS)
+
+        with backend_peer([sample_value()]) as (backend, _, _):
+            reset = backend.reset(ResetRequestV0(
+                "reset", "ep", "remote-session", 0, deadline(),
+            ))
+            self.assertTrue(reset.succeeded, reset.failure)
+            row = observation_pipeline_diagnostics(None, backend)
+
+            runtime = SimpleNamespace(
+                last_navigation_ingest_ns=17,
+                observation=SimpleNamespace(
+                    perception=SimpleNamespace(
+                        value=SimpleNamespace(blocks=(object(), object(), object())),
+                    ),
+                ),
+            )
+            runtime_row = observation_pipeline_diagnostics(runtime, backend)
+
+        self.assertEqual(row["schema_version"], "mc2p.observation-pipeline-diagnostics.v1")
+        self.assertEqual(row["payload_bytes"], len(json.dumps(
+            sample_value(), allow_nan=False, separators=(",", ":"),
+        ).encode("utf-8")))
+        self.assertGreaterEqual(row["json_decode_ns"], 0)
+        self.assertGreaterEqual(row["typed_decode_ns"], 0)
+        self.assertGreaterEqual(row["snapshot_build_ns"], 0)
+        self.assertIsNone(row["navigation_ingest_ns"])
+        self.assertEqual(runtime_row["visible_block_count"], 3)
+        self.assertEqual(runtime_row["navigation_ingest_ns"], 17)
+        script = (ROOT / "scripts/probe_fabric_deployment_observation.py").read_text("utf-8")
+        self.assertIn("if c1_probe and time_diagnostics:\n                        trace = _RuntimeDiagnosticsTrace", script)
+        self.assertIn("observation_pipeline=observation_pipeline_diagnostics(runtime, backend)", script)
+
+    def test_observation_pipeline_summary_keeps_counts_and_percentiles(self):
+        from scripts.probe_fabric_deployment_observation import summarize_observation_pipeline
+
+        rows = [{
+            "observation_pipeline": {
+                "schema_version": "mc2p.observation-pipeline-diagnostics.v1",
+                "payload_bytes": value * 100,
+                "transport_payload_bytes": value * 110,
+                "json_decode_ns": value * 10,
+                "typed_decode_ns": value * 20,
+                "snapshot_build_ns": value * 30,
+                "navigation_ingest_ns": value * 40,
+                "visible_block_count": value * 8,
+                "jvm": {
+                    "block_read_ns": value,
+                    "surface_pack_ns": value * 2,
+                    "surface_compute_ns": value * 3,
+                    "block_read_count": value * 4,
+                    "store_record_count": value * 5,
+                    "packed_block_count": value * 6,
+                    "packed_box_count": value * 7,
+                },
+            },
+        } for value in range(1, 101)]
+        summary = summarize_observation_pipeline(rows)
+        self.assertEqual(summary["schema_version"], "mc2p.observation-pipeline-report.v1")
+        self.assertEqual(summary["frame_count"], 100)
+        self.assertEqual(summary["metrics"]["block_read_ns"], {
+            "p50": 50, "p95": 95, "p99": 99, "maximum": 100,
+        })
+        self.assertEqual(summary["metrics"]["packed_block_count"]["maximum"], 600)
+        self.assertEqual(summary["metrics"]["visible_block_count"]["p95"], 760)
 
     def test_formal_probe_has_one_surface_depth_sensor_path(self):
         from scripts.probe_fabric_deployment_observation import (

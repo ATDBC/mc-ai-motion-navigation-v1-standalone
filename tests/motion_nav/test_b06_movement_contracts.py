@@ -515,6 +515,55 @@ class B06MovementContractTests(unittest.TestCase):
         self.assertIs(changed.state, ActionRouteState.FAILED)
         self.assertEqual(changed.reason_code, "world_session_changed")
 
+    def test_action_route_can_cancel_while_waiting_for_missing_ground_information(self):
+        environment = load_frozen_environment(CONFIG / "environment-v1.json")
+        catalog = BlockMotionCatalog.load(
+            CONFIG / "block-motion-traits-v1.json",
+            CONFIG / "vanilla-block-registry-1_21.json",
+        )
+        ground = load_ground_motion_profile(
+            CONFIG / "ordinary-ground-b06-v1.json",
+            environment=environment,
+            catalog=catalog,
+        )
+        jump = load_jump_up_profile(
+            CONFIG / "jump-up-b06-v1.json",
+            environment=environment,
+            catalog=catalog,
+        )
+        fixture = FlatFixture("minecraft:stone")
+        route = ActionRoute(
+            "cancel-missing-ground",
+            (WalkSegment(
+                FixedRoute("cancel-missing-ground-walk", (
+                    RoutePoint(.5, 1.0, 16.5),
+                    RoutePoint(.5, 1.0, 20.0),
+                )),
+                ((0, 1, 16),), (),
+            ),),
+            GoalState(
+                region=Aabb(.4, 1.0, 19.9, .6, 2.0, 20.1),
+                support=GoalSupport.SOLID,
+                allowed_modes=frozenset({MovementMode.WALK}),
+                allowed_poses=frozenset({"standing"}),
+                maximum_terminal_speed_blocks_per_second=.1,
+            ),
+            ResourceState(),
+        )
+        executor = ActionRouteExecutor(ground, jump)
+        body = PlanarBodyState(.5, 16.5, 0.0, 0.0, 0.0)
+        initial = fixture.frame(0, body)
+        executor.start(route, initial)
+
+        waiting = executor.decide(initial)
+        self.assertIs(waiting.state, ActionRouteState.NEEDS_INFORMATION)
+
+        executor.cancel()
+        cancelled = executor.decide(fixture.frame(1, body))
+
+        self.assertIs(cancelled.state, ActionRouteState.CANCELLED)
+        self.assertEqual(cancelled.reason_code, "cancelled_after_stop")
+
 
 if __name__ == "__main__":
     unittest.main()

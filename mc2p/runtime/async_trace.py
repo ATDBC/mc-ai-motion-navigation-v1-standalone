@@ -111,7 +111,11 @@ class BoundedAsyncTraceWriter:
                         self._projection_total += elapsed
                         self._projection_max = max(self._projection_max, elapsed)
                         self._projection_samples.append(elapsed)
-                    self._sink.write(record_type, projected)
+                    write_projected = getattr(self._sink, "write_projected", None)
+                    if callable(write_projected):
+                        write_projected(record_type, projected)
+                    else:
+                        self._sink.write(record_type, projected)
                 except BaseException as error:
                     with self._lock:
                         if self._worker_error is None:

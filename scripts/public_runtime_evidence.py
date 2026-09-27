@@ -41,6 +41,7 @@ class RunSpec:
     negative_total: int | None = None
     control_frame_rows: int | None = None
     perception_status: str = "historical_legacy_ray_profile3"
+    current_acceptance_eligible: bool = False
 
     @property
     def archive_name(self) -> str:
@@ -93,6 +94,12 @@ RUN_SPECS = (
     RunSpec(
         "20260926T091904725912Z-deb6726e", "b12b", "pass", "passed",
         None, None, 34, 24, 24, 8, 8,
+    ),
+    RunSpec(
+        "20260926T221605915054Z-01f7cd73", "b12b", "pass", "passed",
+        None, None, 34, 24, 24, 8, 8,
+        perception_status="current_surface_depth_profile4",
+        current_acceptance_eligible=True,
     ),
 )
 
@@ -250,6 +257,13 @@ def _check_recorded_result(result: Mapping[str, object], spec: RunSpec) -> None:
     if (failure_type, message) != (spec.failure_type, spec.failure_message):
         raise EvidenceViolation(
             f"run {spec.run_id} recorded failure differs from the frozen result"
+        )
+    if spec.current_acceptance_eligible and (
+        result.get("sensor_profile_revision") != 4
+        or result.get("visibility_rules_id") != "surface_visibility_1_21_v1"
+    ):
+        raise EvidenceViolation(
+            f"run {spec.run_id} is not current profile 4 surface-depth evidence"
         )
 
 
@@ -537,7 +551,7 @@ def _write_archive(archive: Path, run: Path, spec: RunSpec, paths: Iterable[Path
         "recorded_outcome": spec.outcome,
         "recorded_status": spec.status,
         "perception_status": spec.perception_status,
-        "current_acceptance_eligible": False,
+        "current_acceptance_eligible": spec.current_acceptance_eligible,
         "recorded_failure": (
             None if spec.failure_type is None else {
                 "type": spec.failure_type,
@@ -563,7 +577,7 @@ def _write_archive(archive: Path, run: Path, spec: RunSpec, paths: Iterable[Path
 def _readme() -> str:
     return """# 代表性真实运行证据
 
-这里保留 B10-C 跨隙、C1-B 移动近战和 C1-C 外力恢复各一个完整通过批次、一个完整失败批次，并加入 B11 放置与有限搭桥、B12-A 伤害来源、B12-B 部分观察下战斗移动的历史批次。它们全部使用已经退出正式主线的 profile 3 稀疏射线，只用于核对当时的运行结论和复现旧问题，不能证明当前 profile 4 表面深度主线已经通过对应阶段。
+这里保留九份 profile 3 历史批次，以及一份当前 profile 4 的 B12-B 部分观察战斗移动批次。历史批次覆盖 B10-C 跨隙、C1-B 移动近战、C1-C 外力恢复、B11 放置、B12-A 伤害来源和旧 B12-B；它们只用于核对当时结论和复现旧问题。当前 B12-B 批次使用 profile 4 表面深度，可用于核对本轮现行验收。
 
 B10-C 通过批次保留 210 个协调控制帧、10 个协调试次、142 个求解试次和物理 tick 片段。B12-A 批次保留玩家近战和环境伤害来源诊断。B12-B 批次保留 34 个 Fabric 场景、控制事件和分段 Runtime 轨迹。不复制普通日志、画面或缓存。
 
@@ -575,7 +589,7 @@ python scripts/public_runtime_evidence.py verify --root evidence/motion_navigati
 
 验证器会检查总清单、SHA-256、归档成员边界、JSON/JSONL 可读性、完整批次数量、通过汇总和失败分类。失败归档仍表示当时真实运行失败；当前代码后来能够重放或已修复，不会改变历史结论。
 
-这些样本能让审查者核对文档引用的真实数据和证据读取链。索引和每个归档中的 `public-run.json` 都把它们标成 `historical_legacy_ray_profile3`，并明确写出 `current_acceptance_eligible=false`。
+这些样本能让审查者核对文档引用的真实数据和证据读取链。索引和每个归档中的 `public-run.json` 会分别标记 `historical_legacy_ray_profile3` 或 `current_surface_depth_profile4`；只有后一类可以设置 `current_acceptance_eligible=true`。
 """
 
 
@@ -605,7 +619,7 @@ def _prepare_output(root: Path) -> None:
 
 
 def build_corpus(artifact_root: Path, output_root: Path) -> VerificationReport:
-    """Build the frozen six-run corpus from local Fabric deployment artifacts."""
+    """Build the frozen historical corpus plus current profile 4 evidence."""
     artifacts = Path(artifact_root).resolve()
     output = Path(output_root).resolve()
     if not artifacts.is_dir():
@@ -627,7 +641,7 @@ def build_corpus(artifact_root: Path, output_root: Path) -> VerificationReport:
                 "recorded_outcome": spec.outcome,
                 "recorded_status": spec.status,
                 "perception_status": spec.perception_status,
-                "current_acceptance_eligible": False,
+                "current_acceptance_eligible": spec.current_acceptance_eligible,
                 "archive": archive.relative_to(output).as_posix(),
                 "archive_sha256": _sha256_file(archive),
                 "archive_size_bytes": archive.stat().st_size,
@@ -774,7 +788,7 @@ def _verify_archive(root: Path, entry: Mapping[str, object], spec: RunSpec) -> N
                 "recorded_outcome": spec.outcome,
                 "recorded_status": spec.status,
                 "perception_status": spec.perception_status,
-                "current_acceptance_eligible": False,
+                "current_acceptance_eligible": spec.current_acceptance_eligible,
             }
             for key, value in expected_meta.items():
                 if manifest.get(key) != value:
@@ -1047,7 +1061,8 @@ def verify_corpus(root: Path) -> VerificationReport:
             or entry.get("recorded_outcome") != spec.outcome
             or entry.get("recorded_status") != spec.status
             or entry.get("perception_status") != spec.perception_status
-            or entry.get("current_acceptance_eligible") is not False
+            or entry.get("current_acceptance_eligible")
+                is not spec.current_acceptance_eligible
         ):
             raise EvidenceViolation(f"run {spec.run_id} index metadata differs")
         expected = entry.get("expected")

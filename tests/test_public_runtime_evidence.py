@@ -45,7 +45,10 @@ RUNS = (
     ("20260925T120057978030Z-c17b889e", "b11", "pass", "passed", None),
     ("20260926T055043431485Z-e2dc4fff", "b12a", "pass", "passed", None),
     ("20260926T091904725912Z-deb6726e", "b12b", "pass", "passed", None),
+    ("20260926T221605915054Z-01f7cd73", "b12b", "pass", "passed", None),
 )
+
+CURRENT_PROFILE4_RUN_ID = "20260926T221605915054Z-01f7cd73"
 
 
 def _write_json(path: Path, value: object) -> None:
@@ -74,6 +77,13 @@ def _make_sources(root: Path) -> None:
                 "status": status,
                 "primary_failure": primary_failure,
                 "seed": 21000,
+                **(
+                    {
+                        "sensor_profile_revision": 4,
+                        "visibility_rules_id": "surface_visibility_1_21_v1",
+                    }
+                    if run_id == CURRENT_PROFILE4_RUN_ID else {}
+                ),
             },
         )
         client = run / "client-0"
@@ -353,22 +363,32 @@ class PublicRuntimeEvidenceTests(unittest.TestCase):
     def tearDown(self) -> None:
         shutil.rmtree(self.temp, ignore_errors=True)
 
-    def test_build_and_verify_nine_frozen_batches(self) -> None:
+    def test_build_and_verify_nine_historical_and_one_current_batch(self) -> None:
         build_corpus(self.sources, self.corpus)
 
         report = verify_corpus(self.corpus)
 
-        self.assertEqual(report.archive_count, 9)
+        self.assertEqual(report.archive_count, 10)
         self.assertLessEqual(report.total_archive_bytes, 30 * 1024 * 1024)
         self.assertEqual(
             report.stages, ("b10c", "b11", "b12a", "b12b", "c1b", "c1c"),
         )
         index = json.loads((self.corpus / "index.json").read_text("utf-8"))
         self.assertTrue(index["runs"])
+        current = next(
+            row for row in index["runs"]
+            if row["run_id"] == CURRENT_PROFILE4_RUN_ID
+        )
+        historical = [
+            row for row in index["runs"]
+            if row["run_id"] != CURRENT_PROFILE4_RUN_ID
+        ]
+        self.assertEqual(current["perception_status"], "current_surface_depth_profile4")
+        self.assertIs(current["current_acceptance_eligible"], True)
         self.assertTrue(all(
             row["perception_status"] == "historical_legacy_ray_profile3"
             and row["current_acceptance_eligible"] is False
-            for row in index["runs"]
+            for row in historical
         ))
 
         b10 = next((self.corpus / "archives").glob("b10c-pass-*.tar.gz"))
@@ -379,6 +399,17 @@ class PublicRuntimeEvidenceTests(unittest.TestCase):
         self.assertNotIn("client-0/trace.jsonl", names)
         self.assertEqual(public_run["perception_status"], "historical_legacy_ray_profile3")
         self.assertIs(public_run["current_acceptance_eligible"], False)
+
+        current_b12b = self.corpus / "archives" / (
+            f"b12b-pass-{CURRENT_PROFILE4_RUN_ID}.tar.gz"
+        )
+        with tarfile.open(current_b12b, mode="r:gz") as archive:
+            current_public_run = json.load(archive.extractfile("public-run.json"))
+        self.assertEqual(
+            current_public_run["perception_status"],
+            "current_surface_depth_profile4",
+        )
+        self.assertIs(current_public_run["current_acceptance_eligible"], True)
 
         b12b = next((self.corpus / "archives").glob("b12b-pass-*.tar.gz"))
         with tarfile.open(b12b, mode="r:gz") as archive:

@@ -63,14 +63,19 @@ struct Cache{
   for(int i=0;i<no;++i){ids[2*i]=denseSlots[i];ids[2*i+1]=generation[denseSlots[i]];}
   auto end=Clock::now();double s[8]={double(added),double(removed),double(changed),double(dirty.size()),double(tiles.size()),double(scene.faces.size()),ms(start,compared),ms(compared,end)};std::copy(s,s+8,stats);
  }
- int frame(const double* cam,const unsigned char* query,int no,int fast,unsigned char* output,double* areas,double* times,int64_t* stats,bool posed=false){
+ int frame(const double* cam,const unsigned char* query,int no,int fast,unsigned char* output,double* areas,double* times,int64_t* stats,bool posed=false,const int* airPositions=nullptr,int airCount=-1,double airDistance=0,unsigned char* airOutput=nullptr){
   if(!valid||no!=int(denseSlots.size()))throw std::invalid_argument("invalid cache or output count");
   for(int i=0;i<(posed?5:4);++i)if(!std::isfinite(cam[i]))throw std::invalid_argument("nonfinite camera");
   double pose[5]={cam[0],cam[1],cam[2],cam[3],posed?cam[4]:0};if(std::abs(pose[4])>90)throw std::invalid_argument("pitch outside -90..90");
   std::fill(scene.query.begin(),scene.query.end(),-1);for(int i=0;i<no;++i)scene.query[denseSlots[i]]=query[i]?i:-1;
   scratchOut.resize(scene.centers.size());scratchArea.resize(scene.centers.size());
-  center_frame_pose(&scene,pose,fast?3:4,scratchOut.data(),scratchArea.data(),times,stats);int count=0;
+  if(airCount<0)center_frame_pose(&scene,pose,fast?3:4,scratchOut.data(),scratchArea.data(),times,stats);
+  else center_frame_pose_air(&scene,pose,fast?3:4,scratchOut.data(),scratchArea.data(),times,stats,airPositions,airCount,airDistance,airOutput);int count=0;
   for(int i=0;i<no;++i){output[i]=scratchOut[denseSlots[i]];areas[i]=fast?0.:scratchArea[denseSlots[i]];count+=output[i];}return count;
+ }
+ int visibleBoxes(const double* cam,const double* boxes,int count,double maxDistance,unsigned char* output){
+  if(!valid)throw std::runtime_error("cache invalid after previous failure");
+  return center_visible_boxes(&scene,cam,boxes,count,maxDistance,output);
  }
 };
 extern "C" {
@@ -83,4 +88,8 @@ __declspec(dllexport) int cache_frame(void* ptr,const double* cam,const unsigned
  try{if(!ptr)throw std::invalid_argument("null cache");return static_cast<Cache*>(ptr)->frame(cam,query,no,fast,output,areas,times,stats);}catch(const std::exception& e){error=e.what();return -1;}}
 __declspec(dllexport) int cache_frame_pose(void* ptr,const double* cam,const unsigned char* query,int no,int fast,unsigned char* output,double* areas,double* times,int64_t* stats){
  try{if(!ptr)throw std::invalid_argument("null cache");return static_cast<Cache*>(ptr)->frame(cam,query,no,fast,output,areas,times,stats,true);}catch(const std::exception& e){error=e.what();return -1;}}
+__declspec(dllexport) int cache_frame_pose_air(void* ptr,const double* cam,const unsigned char* query,int no,int fast,unsigned char* output,double* areas,double* times,int64_t* stats,const int* airPositions,int airCount,double airDistance,unsigned char* airOutput){
+ try{if(!ptr)throw std::invalid_argument("null cache");return static_cast<Cache*>(ptr)->frame(cam,query,no,fast,output,areas,times,stats,true,airPositions,airCount,airDistance,airOutput);}catch(const std::exception& e){error=e.what();return -1;}}
+__declspec(dllexport) int cache_visible_boxes(void* ptr,const double* cam,const double* boxes,int count,double maxDistance,unsigned char* output){
+ try{if(!ptr)throw std::invalid_argument("null cache");return static_cast<Cache*>(ptr)->visibleBoxes(cam,boxes,count,maxDistance,output);}catch(const std::exception& e){error=e.what();return -1;}}
 }

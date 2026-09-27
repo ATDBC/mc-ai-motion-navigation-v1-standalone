@@ -24,6 +24,36 @@ def surface_world(blocks, *, known_y=range(-2, 6)):
 
 
 class B07SupportSurfaceTests(unittest.TestCase):
+    def test_full_cube_support_shields_unknown_collision_owner_below_it(self):
+        session = WorldSessionId("b07-surface-covered-unknown")
+        world = WorldKnowledge(session)
+        observed = ObservationStamp(session, 1, 1, "test-clock", 50_000_000)
+        world.confirm_air(observed, ((0, 0, 0), (0, 1, 0)))
+        world.observe_blocks(observed, {
+            (0, -1, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+
+        result = query_support_surfaces(world.view(), 0, 0, 0.0, 0.0)
+
+        self.assertIs(result.status, QueryStatus.FEASIBLE)
+        self.assertEqual(result.surfaces[0].position, (.5, 0.0, .5))
+        self.assertIn((0, -2, 0), result.dependencies)
+        self.assertIn((0, -1, 0), result.dependencies)
+
+    def test_current_surface_query_does_not_require_an_owner_two_cells_below(self):
+        session = WorldSessionId("b07-current-surface-owner-reach")
+        world = WorldKnowledge(session)
+        observed = ObservationStamp(session, 1, 1, "test-clock", 50_000_000)
+        world.confirm_air(observed, ((0, 0, 0), (0, 1, 0)))
+        world.observe_blocks(observed, {
+            (0, -1, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+
+        result = query_support_surfaces(world.view(), 0, 0, -1.0, 1.0)
+
+        self.assertIs(result.status, QueryStatus.FEASIBLE)
+        self.assertNotIn((0, -3, 0), result.dependencies)
+
     def test_bottom_and_top_slabs_keep_their_actual_surface_height(self):
         bottom = surface_world({
             (0, 0, 0): BlockGeometry(

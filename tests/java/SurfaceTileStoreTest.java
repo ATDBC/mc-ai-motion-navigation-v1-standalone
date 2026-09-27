@@ -1,7 +1,8 @@
+package com.mc2p.surface;
+
 import java.util.*;
-import mc2p.surface.DirtyTracker;
 public class SurfaceTileStoreTest {
- static TileGeometryStore.Record cube(int x,int y,int z,boolean stable){return new TileGeometryStore.Record(x,y,z,"stone","stone",true,stable,new double[]{x,y,z,x+1,y+1,z+1});}
+ static TileGeometryStore.Record cube(int x,int y,int z,boolean stable){return new TileGeometryStore.Record(x,y,z,"stone","stone",true,stable,true,new double[]{x,y,z,x+1,y+1,z+1});}
  public static void main(String[] args){
   Map<TileGeometryStore.Pos,TileGeometryStore.Record> world=new HashMap<>();
   world.put(new TileGeometryStore.Pos(0,0,0),cube(0,0,0,true));
@@ -13,9 +14,9 @@ public class SurfaceTileStoreTest {
   world.put(new TileGeometryStore.Pos(4,0,0),cube(4,0,0,true));s.blockChanged(4,0,0);s.refresh(.5,2,.5);assert s.records().size()==2;
   world.remove(new TileGeometryStore.Pos(0,0,0));s.blockChanged(0,0,0);s.refresh(.5,2,.5);assert s.records().size()==1;
   world.put(new TileGeometryStore.Pos(3,0,0),cube(3,0,0,false));s.blockChanged(3,0,0);s.refresh(.5,2,.5);
-  world.put(new TileGeometryStore.Pos(3,0,0),new TileGeometryStore.Record(3,0,0,"dynamic","dynamic",true,false,new double[]{3,0,0,4,.5,1}));
+  world.put(new TileGeometryStore.Pos(3,0,0),new TileGeometryStore.Record(3,0,0,"dynamic","dynamic",true,false,false,new double[]{3,0,0,4,.5,1}));
   s.refresh(.5,2,.5);assert s.changed;assert s.records().stream().anyMatch(r->r.x==3&&r.boxes[4]==.5):"dynamic shapes must refresh without state event";
-  world.put(new TileGeometryStore.Pos(3,0,0),new TileGeometryStore.Record(3,0,0,"dynamic","dynamic",true,false,new double[]{}));
+  world.put(new TileGeometryStore.Pos(3,0,0),new TileGeometryStore.Record(3,0,0,"dynamic","dynamic",true,false,false,new double[]{}));
   s.refresh(.5,2,.5);assert s.changed;assert s.records().stream().anyMatch(r->r.x==3&&r.boxes.length==0);
   world.put(new TileGeometryStore.Pos(3,0,0),cube(3,0,0,false));s.refresh(.5,2,.5);assert s.changed:"empty dynamic shapes must remain tracked";
   world.clear();s.chunkChanged(0,0);s.refresh(.5,2,.5);assert s.records().isEmpty():"chunk invalidation must clear old contents";

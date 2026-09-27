@@ -204,12 +204,26 @@ class RuntimeNavigationDriver:
             conditioned_yaw_delta_degrees=conditioned_yaw_delta,
             conditioned_look_intent_id=conditioned_look_intent_id,
         )
-        proposals = tuple(item for item in (
-            proposal.control_frame,
-            ControlFrameProposalV1(
-                observation_request=self._current_observation_request(),
-            ),
-        ) if item is not None)
+        control = proposal.control_frame
+        if control is None:
+            control = ControlFrameProposalV1(
+                observation_request=self._observation_request,
+            )
+        else:
+            # The session binds its world query to the decision it just made.
+            # Fetching the session request again here can observe a different
+            # planning state and combine two individually valid 128-cell
+            # batches into one invalid frame.  Add only the bridge-owned needs
+            # (for example entity tracking) to that already-bound request.
+            control = ControlFrameProposalV1(
+                control.intents,
+                merge_observation_requests((
+                    control.observation_request,
+                    self._observation_request,
+                )),
+                control.task_events,
+            )
+        proposals = (control,)
         self._prepared_deadline_ns = deadline
         self._prepared_proposal = proposal
         return proposals

@@ -268,6 +268,7 @@ class VerifiedMotionExecutor:
         self._cancel_requested_at_tick: int | None = None
         self._recovery_uses_verified_remainder = False
         self._terminal_after_recovery = VerifiedMotionExecutorState.INPUT_LOST
+        self._coast_checked_through_tick: int | None = None
 
     def start(self, candidate: AdmittedMotionCandidate) -> None:
         if type(candidate) is not AdmittedMotionCandidate:
@@ -290,6 +291,7 @@ class VerifiedMotionExecutor:
         self._cancel_requested_at_tick = None
         self._recovery_uses_verified_remainder = False
         self._terminal_after_recovery = VerifiedMotionExecutorState.INPUT_LOST
+        self._coast_checked_through_tick = None
         self.state = VerifiedMotionExecutorState.RUNNING
 
     def register_submission(self, command_index: int, *, control_sequence: int,
@@ -470,6 +472,25 @@ class VerifiedMotionExecutor:
                     for command in commands[self._command_index:])
         )
 
+    def _coast_input_changed(
+        self,
+        anchor: StateAnchor,
+        ledger: InputApplicationLedger,
+    ) -> bool:
+        if self._coast_checked_through_tick is None:
+            return False
+        first_tick = self._coast_checked_through_tick + 1
+        if first_tick > anchor.movement_tick_id:
+            return False
+        samples = ledger.samples_between(first_tick, anchor.movement_tick_id)
+        self._coast_checked_through_tick = anchor.movement_tick_id
+        return any(
+            abs(float(sample.forward)) > 1.0e-9
+            or abs(float(sample.strafe)) > 1.0e-9
+            or sample.jump or sample.sneak or sample.sprint
+            for sample in samples
+        )
+
     def decide(self, anchor: StateAnchor,
                ledger: InputApplicationLedger, *,
                changed_cells: tuple[BlockPos, ...] = ()) -> VerifiedMotionDecision:
@@ -572,8 +593,20 @@ class VerifiedMotionExecutor:
         # Keep body ownership and coast instead of turning a scheduler skip into
         # input loss.
         if self._remaining_commands_are_neutral():
+            self._coast_checked_through_tick = self._expected_tick() - 1
             self._command_index = len(proof.commands)
         if self._command_index >= len(proof.commands):
+            if self._coast_input_changed(anchor, ledger):
+                self._pending = None
+                self.state = VerifiedMotionExecutorState.RECOVERING
+                self._recovery_uses_verified_remainder = False
+                self._terminal_after_recovery = (
+                    VerifiedMotionExecutorState.INPUT_LOST
+                )
+                return self._decision(
+                    MovementV1(), None,
+                    "coast_input_not_neutral_retain_landing",
+                )
             # The neutral suffix includes both free fall and the on-ground
             # settling frames used by the solver to define its exit state.
             # Landing early is therefore not completion: keep neutral control

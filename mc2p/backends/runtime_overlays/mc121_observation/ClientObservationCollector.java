@@ -12,6 +12,8 @@ import java.util.Map;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.block.BlockRenderType;
+import net.minecraft.block.ShapeContext;
 import net.minecraft.network.packet.s2c.play.EntityDamageS2CPacket;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.Entity;
@@ -51,15 +53,20 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.util.shape.VoxelShapes;
+import net.minecraft.world.BlockView;
+import com.mc2p.surface.SurfaceVisibilityRules;
 
 /** Reads only state available to a normal Minecraft client at one client-tick boundary. */
 public final class ClientObservationCollector {
+    public record DiagnosticCollection(
+            byte[] payload, long stateBuildNs, long jsonBuildNs) {}
     private static final double HORIZONTAL_FOV = 120.0;
     private static final double VERTICAL_FOV = 120.0;
     static final double BLOCK_MAX_DISTANCE = 16.0;
     static final double BODY_EXPANSION = 0.05;
     private static final double ENTITY_MAX_DISTANCE = 32.0;
+    private static final double ENTITY_SURFACE_DISTANCE = 16.0;
     private static final double ENTITY_OCCLUSION_EPSILON = 0.05;
     private static final int ENTITY_VISIBILITY_SAMPLE_COUNT = 5;
     private static final ClientEntityIndex ENTITY_INDEX = new ClientEntityIndex();
@@ -94,9 +101,24 @@ public final class ClientObservationCollector {
     }
 
     public static byte[] collectV3(MinecraftClient client, long generationId, ClientObservationRequestV3 request) {
+        return collectV3Diagnostic(client, generationId, request).payload();
+    }
+
+    public static DiagnosticCollection collectV3Diagnostic(
+            MinecraftClient client, long generationId,
+            ClientObservationRequestV3 request) {
         if (client==null || request==null || generationId<0L) throw new IllegalArgumentException("invalid V3 observation request");
         if (!client.isOnThread()) throw new IllegalStateException("observation requires client thread");
-        return ClientObservationJson.encode(SAMPLE_CLOCK.sample(() -> collectState(client,generationId,request)));
+        long stateStarted = System.nanoTime();
+        JsonObject state = SAMPLE_CLOCK.sample(
+                () -> collectState(client,generationId,request));
+        long stateFinished = System.nanoTime();
+        byte[] payload = ClientObservationJson.encode(state);
+        long jsonFinished = System.nanoTime();
+        return new DiagnosticCollection(
+                payload,
+                Math.max(0L, stateFinished - stateStarted),
+                Math.max(0L, jsonFinished - stateFinished));
     }
 
     private static JsonObject collectState(MinecraftClient client, long generationId, ClientObservationRequestV3 request) {
@@ -468,6 +490,7 @@ public final class ClientObservationCollector {
     static JsonObject perceptionMetadata() {
         JsonObject value = ClientObservationJson.object();
         value.addProperty("sensor_profile_revision", 4);
+        value.addProperty("visibility_rules_id", SurfaceVisibilityRules.ID);
         value.addProperty("horizontal_fov_degrees", HORIZONTAL_FOV);
         value.addProperty("vertical_fov_degrees", VERTICAL_FOV);
         value.addProperty("ray_columns", 0);
@@ -477,6 +500,8 @@ public final class ClientObservationCollector {
         value.addProperty("block_epsilon_blocks", 0.001);
         value.addProperty("entity_max_distance", ENTITY_MAX_DISTANCE);
         value.addProperty("entity_occlusion_epsilon_blocks", ENTITY_OCCLUSION_EPSILON);
+        value.addProperty("entity_visibility_near_model", "surface_bbox_exact_16");
+        value.addProperty("entity_visibility_far_model", "surface_rules_five_point_16_32");
         return value;
     }
 
@@ -514,21 +539,39 @@ public final class ClientObservationCollector {
             Vec3d camera, ClientEntityIndex index, HitResult crosshair) {
         Entity cameraEntity = client.getCameraEntity();
         Entity targetedEntity = crosshair instanceof EntityHitResult hit ? hit.getEntity() : null;
+        var near = new ArrayList<EntityVisibilityCandidate>();
         for (Entity entity : client.world.getEntities()) {
             if (entity == player || entity.isRemoved() || entity.isInvisibleTo(player)) continue;
             Vec3d relative = entity.getPos().subtract(player.getPos());
-            double distanceSquared = relative.lengthSquared();
+            Box box = entity.getBoundingBox();
+            double distanceSquared = squaredDistanceToBox(camera,box);
             if (distanceSquared > ENTITY_MAX_DISTANCE * ENTITY_MAX_DISTANCE) continue;
-            Vec3d aim = entity.getBoundingBox().getCenter().subtract(camera);
+            String type = Registries.ENTITY_TYPE.getId(entity.getType()).toString();
+            if (distanceSquared <= ENTITY_SURFACE_DISTANCE * ENTITY_SURFACE_DISTANCE) {
+                near.add(new EntityVisibilityCandidate(entity,relative,type,box));
+                continue;
+            }
+            Vec3d aim = box.getCenter().subtract(camera);
             double horizontal = Math.sqrt(aim.x * aim.x + aim.z * aim.z);
             double bearingYaw = Math.toDegrees(Math.atan2(-aim.x, aim.z));
             double bearingPitch = -Math.toDegrees(Math.atan2(aim.y, horizontal));
             double yawOffset = MathHelper.wrapDegrees(bearingYaw - player.getYaw());
             double pitchOffset = bearingPitch - player.getPitch();
             if (!withinEntityFov(yawOffset, pitchOffset)) continue;
-            if (!isEntityVisible(client, player, camera, entity.getBoundingBox())) continue;
-            String type = Registries.ENTITY_TYPE.getId(entity.getType()).toString();
+            if (!isEntityVisibleApprox(client, player, camera, box)) continue;
             index.offer(entity, relative, type);
+        }
+        for (int start = 0; start < near.size(); start += 256) {
+            var batch = near.subList(start,Math.min(start+256,near.size()));
+            boolean[] visible = ClientBlockObservationV3.surfaceVisibleBoxes(
+                    client,camera,player.getYaw(),player.getPitch(),
+                    batch.stream().map(EntityVisibilityCandidate::box).toList());
+            if (visible.length != batch.size())
+                throw new IllegalStateException("surface entity result size mismatch");
+            for (int offset = 0; offset < visible.length; offset++) if (visible[offset]) {
+                var candidate = batch.get(offset);
+                index.offer(candidate.entity(),candidate.relative(),candidate.entityType());
+            }
         }
         JsonArray values = ClientObservationJson.array();
         for (ClientEntityIndex.Candidate candidate : index.selected()) {
@@ -539,7 +582,14 @@ public final class ClientObservationCollector {
         return new VisibleEntityResult(values, index.truncatedCount());
     }
 
-    private static boolean isEntityVisible(
+    private static double squaredDistanceToBox(Vec3d point, Box box) {
+        double dx=Math.max(Math.max(box.minX-point.x,point.x-box.maxX),0.);
+        double dy=Math.max(Math.max(box.minY-point.y,point.y-box.maxY),0.);
+        double dz=Math.max(Math.max(box.minZ-point.z,point.z-box.maxZ),0.);
+        return dx*dx+dy*dy+dz*dz;
+    }
+
+    private static boolean isEntityVisibleApprox(
             MinecraftClient client,
             ClientPlayerEntity player,
             Vec3d camera,
@@ -558,15 +608,8 @@ public final class ClientObservationCollector {
             throw new IllegalStateException("entity visibility sample count changed");
         }
         for (Vec3d sample : samples) {
-            // This raycast only checks whether terrain occludes an entity sample. It never
-            // produces block-map evidence or authorizes navigation through unseen space.
-            BlockHitResult hit = client.world.raycast(new RaycastContext(
-                    camera,
-                    sample,
-                    RaycastContext.ShapeType.OUTLINE,
-                    RaycastContext.FluidHandling.NONE,
-                    player));
-            if (hit.getType() == HitResult.Type.MISS
+            BlockHitResult hit = visibilityRaycast(client.world,player,camera,sample);
+            if (hit == null
                     || camera.distanceTo(hit.getPos()) + ENTITY_OCCLUSION_EPSILON
                             >= camera.distanceTo(sample)) {
                 return true;
@@ -574,6 +617,27 @@ public final class ClientObservationCollector {
         }
         return false;
     }
+
+    private static BlockHitResult visibilityRaycast(
+            BlockView worldView, Entity observer, Vec3d start, Vec3d end) {
+        ShapeContext shapeContext = ShapeContext.of(observer);
+        return BlockView.raycast(start,end,worldView,(world,position) -> {
+            var state=world.getBlockState(position);
+            var fluid=state.getFluidState();
+            VoxelShape shape=state.getOutlineShape(world,position,shapeContext);
+            String blockId=Registries.BLOCK.getId(state.getBlock()).toString();
+            String fluidId=fluid.isEmpty()?null:Registries.FLUID.getId(fluid.getFluid()).toString();
+            var decision=SurfaceVisibilityRules.classify(
+                    blockId,state.getRenderType()==BlockRenderType.INVISIBLE,shape.isEmpty(),fluidId);
+            if (!decision.occludes()) return null;
+            if (shape.isEmpty()&&!fluid.isEmpty())
+                shape=VoxelShapes.cuboid(0,0,0,1,Math.max(fluid.getHeight(world,position),.001),1);
+            return world.raycastBlock(start,end,position,shape,state);
+        },world -> null);
+    }
+
+    private record EntityVisibilityCandidate(
+            Entity entity, Vec3d relative, String entityType, Box box) {}
 
     private static JsonObject visibleEntity(
             ClientPlayerEntity player,

@@ -9,7 +9,8 @@ from mc2p.motion_nav.physics_types import (
 )
 from mc2p.motion_nav.runtime_adapter import NavigationObservationAdapter
 from mc2p.motion_nav.world_model import (
-    ObservationStamp, WorldKnowledge, WorldSessionId, WorldView,
+    BlockGeometry, CellFact, CellKnowledge, ObservationStamp, WorldKnowledge,
+    WorldSessionId, WorldView,
 )
 from tests.observation_v3_fixtures import valid_snapshot_v3
 
@@ -98,6 +99,31 @@ class B09RPhysicsContractsTests(unittest.TestCase):
         other = WorldView.detached(WorldSessionId("other"), 0, 0, {})
         with self.assertRaises(ValueError):
             PhysicsWorldView(other, JAVA_1_21_RULESET, expected_session=self.frame.session)
+
+    def test_full_cube_shields_unknown_collision_owner_below_it(self):
+        support = (0, 63, 0)
+        hidden_owner = (0, 62, 0)
+        view = WorldView.detached(
+            self.frame.session,
+            0,
+            0,
+            {
+                support: CellFact(
+                    CellKnowledge.BLOCK,
+                    stamp=self.frame.body.stamp,
+                    block=BlockGeometry.full_cube("minecraft:stone"),
+                ),
+            },
+        )
+
+        query = PhysicsWorldView(view, JAVA_1_21_RULESET).shapes(
+            (hidden_owner, support),
+        )
+
+        self.assertEqual(query.missing_cells, ())
+        self.assertEqual(len(query.boxes), 1)
+        self.assertIn(hidden_owner, query.dependencies)
+        self.assertIn(support, query.dependencies)
 
     def test_physics_world_reuses_an_identical_shape_query(self):
         known = WorldKnowledge(self.frame.session)

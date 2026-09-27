@@ -5,6 +5,7 @@ from dataclasses import dataclass, replace
 from enum import StrEnum
 import math
 
+from mc2p.contracts.action_v1 import LookV1, MovementV1
 from mc2p.contracts.common import ContractViolation, require_nonnegative_int
 from mc2p.motion_nav.action_route import JumpGapSegment, WalkSegment
 from mc2p.motion_nav.action_route_executor import (
@@ -16,6 +17,7 @@ from mc2p.motion_nav.motion_candidate import (
 from mc2p.motion_nav.motion_solver import (
     DEFAULT_GAP_SOLVER_POLICY, GapSolveRequest, GapSolverPolicy,
     LandingRegion, SolveResult, SolveStatus,
+    gap_entry_heading_delta_radians, gap_entry_heading_is_aligned,
     solve_one_cell_gap,
 )
 from mc2p.motion_nav.motion_worker import (
@@ -35,6 +37,7 @@ from mc2p.motion_nav.world_model import BlockPos
 
 _RESOURCE_ASSUMPTIONS = ("server_hunger_clock_not_in_physics_state",)
 _MAX_IDENTICAL_REVALIDATION_RETRIES = 2
+_MAX_ENTRY_ALIGNMENT_DEGREES_PER_TICK = 36.0
 
 
 def _gap_physics_snapshot(
@@ -371,6 +374,39 @@ class MotionRouteCoordinator:
             self, anchor: StateAnchor, world: PhysicsWorldView) -> None:
         self._submit_action(self.executor.action_index, anchor, world)
 
+    def _align_current_gap_entry(
+            self, decision: ActionRouteDecision,
+            anchor: StateAnchor) -> ActionRouteDecision | None:
+        index = self.executor.action_index
+        actions = self.route.action_route.actions
+        if not 0 <= index < len(actions):
+            return None
+        action = actions[index]
+        if type(action) is not JumpGapSegment:
+            return None
+        direction = _cardinal_direction(action)
+        if (direction is None or gap_entry_heading_is_aligned(
+                anchor.physics_state.yaw_radians, direction)):
+            return None
+        delta_degrees = math.degrees(gap_entry_heading_delta_radians(
+            anchor.physics_state.yaw_radians, direction,
+        ))
+        bounded_delta = max(
+            -_MAX_ENTRY_ALIGNMENT_DEGREES_PER_TICK,
+            min(_MAX_ENTRY_ALIGNMENT_DEGREES_PER_TICK, delta_degrees),
+        )
+        return replace(
+            decision,
+            movement=MovementV1(),
+            look=LookV1(bounded_delta, 0.0),
+            input_lease_ticks=1,
+            reason_code="aligning_verified_motion_heading",
+            submit_input=True,
+            verified_command_index=None,
+            expected_movement_tick=None,
+            latest_movement_tick=None,
+        )
+
     @staticmethod
     def _predict_applied_walk_state(
             decision: ActionRouteDecision, anchor: StateAnchor,
@@ -473,6 +509,9 @@ class MotionRouteCoordinator:
         if (decision.reason_code == "awaiting_verified_motion"
                 and self._pending_connection is None and not installed
                 and worker_available):
+            alignment = self._align_current_gap_entry(decision, anchor)
+            if alignment is not None:
+                return alignment
             self._submit_current(anchor, world)
         elif (self._pending_connection is None and not installed
               and worker_available):

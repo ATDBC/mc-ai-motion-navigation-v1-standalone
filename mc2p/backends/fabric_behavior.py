@@ -33,6 +33,12 @@ from mc2p.runtime.backend_v1 import BackendStepResultV1
 _DIAGNOSTIC_COUNTERS = {"client_tick", "world_render_attempts", "world_render_completions",
     "gui_render_attempts", "gui_render_completions", "framebuffer_capture_attempts", "image_encode_attempts"}
 _DIAGNOSTIC_FLAGS = {"has_integrated_server", "window_recorded", "window_visible_at_creation", "window_visible"}
+_JVM_PIPELINE_COUNTERS = {
+    "observation_state_build_ns", "json_build_ns", "observation_payload_bytes",
+    "block_read_ns", "surface_pack_ns", "surface_compute_ns", "air_query_ns",
+    "block_read_count", "store_record_count", "packed_block_count",
+    "packed_box_count", "culled_block_count", "halo_read_count",
+}
 
 
 def _json_bytes(value: object) -> bytes:
@@ -80,6 +86,8 @@ class FabricBehaviorBackendV1:
         self._last_request = -1
         self._observation = None
         self._diagnostics = self._receipt = self._peer_proof = None
+        self._last_observation_timing = None
+        self._block_decode_cache = {}
 
     @property
     def observation_schema_version(self) -> str:
@@ -88,6 +96,10 @@ class FabricBehaviorBackendV1:
     @property
     def last_diagnostics(self) -> dict | None:
         return deepcopy(self._diagnostics)
+
+    @property
+    def last_observation_timing(self) -> dict | None:
+        return deepcopy(self._last_observation_timing)
 
     @property
     def last_behavior_receipt(self) -> dict | None:
@@ -164,19 +176,25 @@ class FabricBehaviorBackendV1:
     def _read_sample(self, episode, sequence, request_sequence, started, deadline_ns, observation_request=None):
         v3 = self.observation_schema_version == OBSERVATION_V3
         frame = self._transport.receive(deadline_ns)
+        json_started = time.perf_counter_ns()
         envelope = _strict_sample(frame,
                                  schema="mc2p.deployment_sample.v2" if v3 else "mc2p.deployment_sample.v1")
+        json_finished = time.perf_counter_ns()
         if envelope["episode_id"] != episode:
             raise ContractViolation("deployment episode mismatch")
         # The transport bounds the complete envelope to 1 MiB, which is
         # stricter than separately serializing and bounding its observation
         # member. Avoid a second encoding of every V3 observation here.
         payload = None if v3 else _json_bytes(envelope["observation"])
+        typed_started = time.perf_counter_ns()
         try:
-            decoded = (decode_client_observation_value_v3(envelope["observation"])
+            decoded = (decode_client_observation_value_v3(
+                envelope["observation"], block_cache=self._block_decode_cache,
+            )
                        if v3 else decode_client_observation_payload(payload, expected_generation_id=sequence))
         except ClientObservationPayloadError as error:
             raise ContractViolation("deployment observation violated the declared contract") from error
+        typed_finished = time.perf_counter_ns()
         if decoded.generation_id != sequence:
             raise ContractViolation("deployment observation generation mismatch")
         if v3:
@@ -217,17 +235,28 @@ class FabricBehaviorBackendV1:
         if received >= deadline_ns:
             raise TimeoutError("deployment sample validation exceeded deadline")
         projector = snapshot_v3_from_payload if v3 else snapshot_v2_from_payload
+        snapshot_started = time.perf_counter_ns()
         observation = projector(decoded, episode_id=episode, request_sequence_id=request_sequence,
             request_started_at_monotonic_ns=started, received_at_monotonic_ns=received,
             controller_clock_id=self._controller_clock_id, source_backend="fabric")
+        snapshot_finished = time.perf_counter_ns()
         if self._clock_ns() >= deadline_ns:
             raise TimeoutError("deployment snapshot construction exceeded deadline")
         self._diagnostics, self._receipt = envelope["diagnostics"], receipt
+        self._last_observation_timing = {
+            "transport_payload_bytes": len(frame),
+            "json_decode_ns": max(0, json_finished - json_started),
+            "typed_decode_ns": max(0, typed_finished - typed_started),
+            "snapshot_build_ns": max(0, snapshot_finished - snapshot_started),
+        }
         return observation, immutable_receipt
 
     def _validate_diagnostics(self, value):
-        if (type(value) is not dict or set(value) != _DIAGNOSTIC_COUNTERS | _DIAGNOSTIC_FLAGS | {"schema_version", "remote_address"}
-                or value["schema_version"] != "mc2p.deployment_diagnostics.v1"
+        base = _DIAGNOSTIC_COUNTERS | _DIAGNOSTIC_FLAGS | {"schema_version", "remote_address"}
+        schema = value.get("schema_version") if type(value) is dict else None
+        expected = base if schema == "mc2p.deployment_diagnostics.v1" else base | {"observation_pipeline"}
+        if (type(value) is not dict or set(value) != expected
+                or schema not in {"mc2p.deployment_diagnostics.v1", "mc2p.deployment_diagnostics.v2"}
                 or value["remote_address"] != f"127.0.0.1:{self._server_port}"):
             raise ContractViolation("invalid deployment diagnostics")
         for key in _DIAGNOSTIC_COUNTERS:
@@ -235,6 +264,15 @@ class FabricBehaviorBackendV1:
         for key in _DIAGNOSTIC_FLAGS:
             if type(value[key]) is not bool:
                 raise ContractViolation("non-boolean deployment flag")
+        if schema == "mc2p.deployment_diagnostics.v2":
+            pipeline = value["observation_pipeline"]
+            if (type(pipeline) is not dict
+                    or set(pipeline) != _JVM_PIPELINE_COUNTERS | {"schema_version", "cache_rebuilt"}
+                    or pipeline["schema_version"] != "mc2p.jvm-observation-pipeline.v1"
+                    or type(pipeline["cache_rebuilt"]) is not bool):
+                raise ContractViolation("invalid JVM observation diagnostics")
+            for key in _JVM_PIPELINE_COUNTERS:
+                require_nonnegative_int(pipeline[key], key)
         if (value["window_recorded"] is not True or value["has_integrated_server"]
                 or value["window_visible_at_creation"] or value["window_visible"]
                 or any(value[name] != 0 for name in ("framebuffer_capture_attempts", "image_encode_attempts",
@@ -280,4 +318,5 @@ class FabricBehaviorBackendV1:
         self._closed = True
         self._token = None
         self._receipt = self._diagnostics = None
+        self._block_decode_cache.clear()
         self._transport.close()

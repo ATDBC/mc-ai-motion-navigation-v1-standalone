@@ -23,6 +23,11 @@ from mc2p.contracts.observation_v3 import (
 
 
 MAX_CLIENT_OBSERVATION_BYTES_V3 = 1_048_576
+MAX_CACHED_BLOCK_FACTS_V3 = 4096
+_BLOCK_WIRE_FIELDS = frozenset({
+    "position", "block_id", "collision", "fluid_id", "sources",
+})
+_COLLISION_WIRE_FIELDS = frozenset({"kind", "boxes", "reason"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -107,6 +112,53 @@ def _block(value: Any) -> ObservedBlockV3:
         tuple(_v2._string(s, "block source") for s in _v2._array(item["sources"], "block sources")))
 
 
+def _block_wire_key(value: Any) -> object:
+    """Build the fixed block-wire key without a recursive generic walk."""
+    if type(value) is not dict or value.keys() != _BLOCK_WIRE_FIELDS:
+        raise TypeError("block wire shape is not cacheable")
+    position = value["position"]
+    collision = value["collision"]
+    sources = value["sources"]
+    if (type(position) is not list or len(position) != 3
+            or type(collision) is not dict
+            or collision.keys() != _COLLISION_WIRE_FIELDS
+            or type(collision["boxes"]) is not list
+            or type(sources) is not list):
+        raise TypeError("block wire shape is not cacheable")
+    boxes = collision["boxes"]
+    if any(type(box) is not list or len(box) != 6 for box in boxes):
+        raise TypeError("block wire shape is not cacheable")
+    typed = lambda item: (type(item), item)
+    return (
+        tuple(typed(axis) for axis in position),
+        typed(value["block_id"]),
+        typed(collision["kind"]),
+        tuple(tuple(typed(axis) for axis in box) for box in boxes),
+        typed(collision["reason"]),
+        typed(value["fluid_id"]),
+        tuple(typed(source) for source in sources),
+    )
+
+
+def _cached_block(
+    value: Any,
+    cache: dict[object, ObservedBlockV3] | None,
+) -> ObservedBlockV3:
+    if cache is None:
+        return _block(value)
+    try:
+        key = _block_wire_key(value)
+        cached = cache.get(key)
+    except (TypeError, ValueError):
+        return _block(value)
+    if cached is not None:
+        return cached
+    decoded = _block(value)
+    if len(cache) < MAX_CACHED_BLOCK_FACTS_V3:
+        cache[key] = decoded
+    return decoded
+
+
 def _targeting(value: Any) -> TargetingStateV3:
     item = _v2._object(value, {"hit_kind", "block_position", "entity_ref", "face", "hit_position", "distance_blocks"}, "targeting")
     return TargetingStateV3(_v2._string(item["hit_kind"], "targeting hit kind"),
@@ -162,11 +214,35 @@ def _damage_event(value: Any) -> DamageEventV3:
     )
 
 
-def _perception(value: Any) -> PerceptionStateV3:
-    item = _v2._object(value, {"horizontal_fov_degrees", "vertical_fov_degrees", "ray_columns", "ray_rows",
+def _perception(
+    value: Any,
+    block_cache: dict[object, ObservedBlockV3] | None = None,
+) -> PerceptionStateV3:
+    keys = {"horizontal_fov_degrees", "vertical_fov_degrees", "ray_columns", "ray_rows",
         "max_block_distance", "body_expansion_blocks", "block_epsilon_blocks", "entity_max_distance",
         "entity_occlusion_epsilon_blocks", "blocks", "visible_entities", "entities_truncated",
-        "truncated_entity_count", "sensor_profile_revision", "knowledge_model"}, "perception")
+        "truncated_entity_count", "sensor_profile_revision", "knowledge_model"}
+    optional = {"visibility_rules_id", "entity_visibility_near_model",
+        "entity_visibility_far_model"}
+    if not isinstance(value, dict):
+        item = _v2._object(value, keys, "perception")
+    else:
+        item = _v2._object(value, keys | (optional & value.keys()), "perception")
+    revision = _v2._integer(item["sensor_profile_revision"], "sensor profile")
+    if revision == 4 and not optional.issubset(item):
+        raise ClientObservationPayloadError("surface profile requires visibility metadata")
+    visibility_rules_id = (
+        _v2._string(item["visibility_rules_id"], "visibility rules")
+        if "visibility_rules_id" in item else "legacy_ray_visibility_v3"
+    )
+    entity_visibility_near_model = (
+        _v2._string(item["entity_visibility_near_model"], "near entity visibility model")
+        if "entity_visibility_near_model" in item else "legacy_five_point_raycast_0_32"
+    )
+    entity_visibility_far_model = (
+        _v2._string(item["entity_visibility_far_model"], "far entity visibility model")
+        if "entity_visibility_far_model" in item else "legacy_five_point_raycast_0_32"
+    )
     raw_blocks = _v2._array(item["blocks"], "blocks")
     raw_entities = _v2._array(item["visible_entities"], "visible entities")
     if len(raw_blocks) > MAX_BLOCKS_V3 or len(raw_entities) > 64:
@@ -177,15 +253,22 @@ def _perception(value: Any) -> PerceptionStateV3:
     return PerceptionStateV3(**numbers,
         ray_columns=_v2._integer(item["ray_columns"], "ray columns"),
         ray_rows=_v2._integer(item["ray_rows"], "ray rows"),
-        sensor_profile_revision=_v2._integer(item["sensor_profile_revision"], "sensor profile"),
+        sensor_profile_revision=revision,
         knowledge_model=_v2._string(item["knowledge_model"], "knowledge model"),
-        blocks=tuple(_block(b) for b in raw_blocks),
+        visibility_rules_id=visibility_rules_id,
+        entity_visibility_near_model=entity_visibility_near_model,
+        entity_visibility_far_model=entity_visibility_far_model,
+        blocks=tuple(_cached_block(b, block_cache) for b in raw_blocks),
         visible_entities=tuple(_v2._visible_entity(e, i) for i, e in enumerate(raw_entities)),
         entities_truncated=_v2._boolean(item["entities_truncated"], "entities truncated"),
         truncated_entity_count=_v2._integer(item["truncated_entity_count"], "truncated entity count"))
 
 
-def decode_client_observation_value_v3(value: dict) -> ClientObservationPayloadV3:
+def decode_client_observation_value_v3(
+    value: dict,
+    *,
+    block_cache: dict[object, ObservedBlockV3] | None = None,
+) -> ClientObservationPayloadV3:
     """Validate an already strictly parsed JSON object without re-encoding it.
 
 The enclosing transport MUST enforce its byte budget and reject duplicate JSON
@@ -207,7 +290,10 @@ be recovered from a dict. Every field is still checked and copied to typed value
             self_state=_v2._group(item["self_state"], "self_state", "client_player", _v2._self_state),
             inventory=_v2._group(item["inventory"], "inventory", "client_inventory", _v2._inventory),
             gui=_v2._group(item["gui"], "gui", "client_screen_handler", _v2._gui),
-            perception=_v2._group(item["perception"], "perception", "client_perception_filtered", _perception),
+            perception=_v2._group(
+                item["perception"], "perception", "client_perception_filtered",
+                lambda raw: _perception(raw, block_cache),
+            ),
             field_profile=_v2._string(item["field_profile"], "field profile"),
             targeting=_v2._group(item["targeting"], "targeting", "client_perception_filtered", _targeting),
             tracked_entity=_v2._group(item["tracked_entity"], "tracked_entity",

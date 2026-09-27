@@ -13,9 +13,14 @@ import threading
 import time
 from urllib.parse import urlparse
 
-from catalog import discover, inside
-from known_map import normalize_known_map_scenario
-from physics_replay import PhysicsReplayStore
+try:
+    from .catalog import discover, inside
+    from .known_map import normalize_known_map_scenario
+    from .physics_replay import PhysicsReplayStore
+except ImportError:  # Direct ``python tools/navigation_replay/server.py`` entry.
+    from catalog import discover, inside
+    from known_map import normalize_known_map_scenario
+    from physics_replay import PhysicsReplayStore
 
 HERE=Path(__file__).resolve().parent
 ROOT=HERE.parents[1]

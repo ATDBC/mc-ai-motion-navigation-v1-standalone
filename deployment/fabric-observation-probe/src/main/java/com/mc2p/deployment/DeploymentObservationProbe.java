@@ -1,9 +1,6 @@
 package com.mc2p.deployment;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.mc2p.actions.ClientActionRequest;
 import com.mc2p.actions.ClientBehaviorExecutor;
 import com.mc2p.observation.ClientObservationCollector;
@@ -11,7 +8,6 @@ import com.mc2p.observation.ClientObservationRequestV3;
 import com.mc2p.diagnostics.ClientTimeDiagnostics;
 import com.mc2p.surface.SurfacePerception;
 import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
@@ -19,7 +15,6 @@ import net.minecraft.client.MinecraftClient;
 
 /** Deployment-only lifecycle bridge. Shared actor logic cannot access the transport or server. */
 public final class DeploymentObservationProbe implements ClientModInitializer {
-    private static final Gson JSON = new GsonBuilder().serializeNulls().disableHtmlEscaping().create();
     private static ClientBehaviorExecutor executor;
     private ProbeTransport transport;
     private String token, episode, observationSchemaVersion, remoteAddress, bootstrapPhase;
@@ -151,15 +146,32 @@ public final class DeploymentObservationProbe implements ClientModInitializer {
             if (!executor.receiptReady()) return;
             ClientObservationRequestV3 request = observationRequest;
             observationRequest = ClientObservationRequestV3.navigation();
-            byte[] payload = ClientObservationCollector.collectV3(client, generation, request);
+            var collected = ClientObservationCollector.collectV3Diagnostic(
+                    client, generation, request);
+            byte[] payload = collected.payload();
             ClientTimeDiagnostics.observation(client, generation);
-            var sample = new JsonObject();
-            sample.addProperty("schema_version", "mc2p.deployment_sample.v2");
-            sample.addProperty("episode_id", episode);
-            sample.add("observation", JsonParser.parseString(new String(payload, StandardCharsets.UTF_8)));
-            sample.add("receipt", executor.observe(client, generation));
-            sample.add("diagnostics", DeploymentDiagnostics.sample(client, remoteAddress));
-            transport.offer(JSON.toJson(sample).getBytes(StandardCharsets.UTF_8));
+            var receipt = executor.observe(client, generation);
+            var pipeline = new JsonObject();
+            pipeline.addProperty("schema_version", "mc2p.jvm-observation-pipeline.v1");
+            pipeline.addProperty("observation_state_build_ns", collected.stateBuildNs());
+            pipeline.addProperty("json_build_ns", collected.jsonBuildNs());
+            pipeline.addProperty("observation_payload_bytes", payload.length);
+            var surface = SurfacePerception.diagnostics();
+            if (surface == null) throw new IllegalStateException("surface diagnostics unavailable");
+            pipeline.addProperty("block_read_ns", surface.block_read_ns());
+            pipeline.addProperty("surface_pack_ns", surface.surface_pack_ns());
+            pipeline.addProperty("surface_compute_ns", surface.surface_compute_ns());
+            pipeline.addProperty("air_query_ns", surface.air_query_ns());
+            pipeline.addProperty("block_read_count", surface.block_read_count());
+            pipeline.addProperty("store_record_count", surface.store_record_count());
+            pipeline.addProperty("packed_block_count", surface.packed_block_count());
+            pipeline.addProperty("packed_box_count", surface.packed_box_count());
+            pipeline.addProperty("culled_block_count", surface.culled_block_count());
+            pipeline.addProperty("halo_read_count", surface.halo_read_count());
+            pipeline.addProperty("cache_rebuilt", surface.cache_rebuilt());
+            var diagnostics = DeploymentDiagnostics.sample(client, remoteAddress, pipeline);
+            transport.offer(DeploymentSampleEncoder.encode(
+                    episode, payload, receipt, diagnostics));
             pending = false;
             deadline = System.nanoTime() + 30_000_000_000L;
         } catch (RuntimeException error) { fail(client, error); }

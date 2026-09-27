@@ -40,6 +40,27 @@ class SupportResult:
     support_materials: tuple[str, ...] = ()
 
 
+def unknown_shape_owner_is_fully_covered(
+        world: WorldView, position: BlockPos) -> bool:
+    """Whether a known full cube contains every supported shape from below."""
+    if type(world) is not WorldView:
+        raise ContractViolation("shape-owner coverage requires a world view")
+    if (type(position) is not tuple or len(position) != 3
+            or any(type(value) is not int for value in position)):
+        raise ContractViolation("shape-owner coverage requires an integer cell")
+    fact = world.cell(position)
+    if fact.knowledge is not CellKnowledge.UNKNOWN:
+        return False
+    above = (position[0], position[1] + 1, position[2])
+    cover = world.cell(above)
+    return (
+        cover.knowledge is CellKnowledge.BLOCK
+        and cover.block is not None
+        and not cover.block.fluid
+        and cover.block.collision_kind == "full_cube"
+    )
+
+
 def _axis_cells(minimum: float, maximum: float) -> range:
     return range(math.floor(minimum + _EPSILON), math.floor(maximum - _EPSILON) + 1)
 
@@ -133,6 +154,8 @@ def sweep(
     for position in cells:
         fact = world.cell(position) if query_cache is None else query_cache.cell(position)
         if fact.knowledge is CellKnowledge.UNKNOWN:
+            if unknown_shape_owner_is_fully_covered(world, position):
+                continue
             missing.append(position)
             continue
         if fact.knowledge is CellKnowledge.AIR:
@@ -214,6 +237,8 @@ def query_support(
     for position in cells:
         fact = world.cell(position) if query_cache is None else query_cache.cell(position)
         if fact.knowledge is CellKnowledge.UNKNOWN:
+            if unknown_shape_owner_is_fully_covered(world, position):
+                continue
             missing.append(position)
             continue
         if fact.knowledge is CellKnowledge.AIR:

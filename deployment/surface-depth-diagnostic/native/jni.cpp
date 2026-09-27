@@ -6,6 +6,8 @@ void* cache_create(int);void cache_destroy(void*);const char* cache_error();
 int cache_update(void*,const double*,const int*,int,const double*,const unsigned char*,int,int64_t*,double*);
 int cache_frame(void*,const double*,const unsigned char*,int,int,unsigned char*,double*,double*,int64_t*);
 int cache_frame_pose(void*,const double*,const unsigned char*,int,int,unsigned char*,double*,double*,int64_t*);
+int cache_frame_pose_air(void*,const double*,const unsigned char*,int,int,unsigned char*,double*,double*,int64_t*,const int*,int,double,unsigned char*);
+int cache_visible_boxes(void*,const double*,const double*,int,double,unsigned char*);
 }
 static void* addr(JNIEnv* e,jobject b,jlong n){if(!b||n<0||e->GetDirectBufferCapacity(b)<n)throw std::invalid_argument("direct buffer capacity");auto p=e->GetDirectBufferAddress(b);if(!p)throw std::invalid_argument("direct buffer required");return p;}
 static void fail(JNIEnv* e,const char* s){e->ThrowNew(e->FindClass("java/lang/IllegalStateException"),s);}
@@ -22,9 +24,17 @@ JNIEXPORT jint JNICALL Java_CacheBridge_frame(JNIEnv* e,jclass,jlong ptr,jobject
 JNIEXPORT jint JNICALL Java_CacheBridge_framePose(JNIEnv* e,jclass,jlong ptr,jobject camera,jobject query,jint no,jobject out,jobject areas,jobject times,jobject stats){
  try{if(no<0||no>25000)throw std::invalid_argument("capacity exceeded");int n=cache_frame_pose(reinterpret_cast<void*>(ptr),(double*)addr(e,camera,40),(unsigned char*)addr(e,query,no),no,1,(unsigned char*)addr(e,out,no),(double*)addr(e,areas,no*8LL),(double*)addr(e,times,16),(int64_t*)addr(e,stats,64));if(n<0)fail(e,cache_error());return n;
  }catch(const std::exception& x){fail(e,x.what());return -1;}}
+JNIEXPORT jint JNICALL Java_CacheBridge_framePoseAir(JNIEnv* e,jclass,jlong ptr,jobject camera,jobject query,jint no,jobject out,jobject areas,jobject times,jobject stats,jobject airPositions,jint airCount,jdouble airDistance,jobject airOut){
+ try{if(no<0||no>25000||airCount<0||airCount>128)throw std::invalid_argument("capacity exceeded");int n=cache_frame_pose_air(reinterpret_cast<void*>(ptr),(double*)addr(e,camera,40),(unsigned char*)addr(e,query,no),no,1,(unsigned char*)addr(e,out,no),(double*)addr(e,areas,no*8LL),(double*)addr(e,times,24),(int64_t*)addr(e,stats,64),(int*)addr(e,airPositions,airCount*12LL),airCount,airDistance,(unsigned char*)addr(e,airOut,airCount));if(n<0)fail(e,cache_error());return n;
+ }catch(const std::exception& x){fail(e,x.what());return -1;}}
+JNIEXPORT jint JNICALL Java_CacheBridge_visibleBoxes(JNIEnv* e,jclass,jlong ptr,jobject camera,jobject boxes,jint count,jdouble maxDistance,jobject out){
+ try{if(count<0||count>256)throw std::invalid_argument("capacity exceeded");int n=cache_visible_boxes(reinterpret_cast<void*>(ptr),(double*)addr(e,camera,40),(double*)addr(e,boxes,count*48LL),count,maxDistance,(unsigned char*)addr(e,out,count));if(n<0)fail(e,cache_error());return n;
+ }catch(const std::exception& x){fail(e,x.what());return -1;}}
 JNIEXPORT jlong JNICALL Java_com_mc2p_surface_CacheBridge_create(JNIEnv* e,jclass c,jint edge){return Java_CacheBridge_create(e,c,edge);}
 JNIEXPORT void JNICALL Java_com_mc2p_surface_CacheBridge_destroy(JNIEnv* e,jclass c,jlong ptr){Java_CacheBridge_destroy(e,c,ptr);}
 JNIEXPORT void JNICALL Java_com_mc2p_surface_CacheBridge_update(JNIEnv* e,jclass c,jlong ptr,jobject boxes,jobject owners,jint nb,jobject centers,jobject opaque,jint no,jobject ids,jobject stats){Java_CacheBridge_update(e,c,ptr,boxes,owners,nb,centers,opaque,no,ids,stats);}
 JNIEXPORT jint JNICALL Java_com_mc2p_surface_CacheBridge_frame(JNIEnv* e,jclass c,jlong ptr,jobject camera,jobject query,jint no,jobject out,jobject areas,jobject times,jobject stats){return Java_CacheBridge_frame(e,c,ptr,camera,query,no,out,areas,times,stats);}
 JNIEXPORT jint JNICALL Java_com_mc2p_surface_CacheBridge_framePose(JNIEnv* e,jclass c,jlong ptr,jobject camera,jobject query,jint no,jobject out,jobject areas,jobject times,jobject stats){return Java_CacheBridge_framePose(e,c,ptr,camera,query,no,out,areas,times,stats);}
+JNIEXPORT jint JNICALL Java_com_mc2p_surface_CacheBridge_framePoseAir(JNIEnv* e,jclass c,jlong ptr,jobject camera,jobject query,jint no,jobject out,jobject areas,jobject times,jobject stats,jobject airPositions,jint airCount,jdouble airDistance,jobject airOut){return Java_CacheBridge_framePoseAir(e,c,ptr,camera,query,no,out,areas,times,stats,airPositions,airCount,airDistance,airOut);}
+JNIEXPORT jint JNICALL Java_com_mc2p_surface_CacheBridge_visibleBoxes(JNIEnv* e,jclass c,jlong ptr,jobject camera,jobject boxes,jint count,jdouble maxDistance,jobject out){return Java_CacheBridge_visibleBoxes(e,c,ptr,camera,boxes,count,maxDistance,out);}
 }

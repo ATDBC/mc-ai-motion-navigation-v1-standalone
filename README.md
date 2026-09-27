@@ -4,7 +4,7 @@
 
 当前已完成 B01 至 B10、C1-A 至 C1-C、C1-R 的 R0 至 R6、B11 固定放置与有限搭桥，以及 B12-A、B12-B。B12-A 固定了每次攻击的证据和分类重试，并接入 Minecraft 1.21 伤害来源事实。B12-B 让战斗先确定本帧视角，导航再按最终视角计算普通地面移动；追逐阶段会持续给出目标视角，导航同时记录每帧的移动决定原因。活动目标和真实墙体场景补齐了持续瞄准、遮挡后的导航、补看和权限撤销。动作证明的生效窗口修正和客户端额外推进一个 tick 时的局部安全恢复也已包含。正式 Fabric 结果与适用边界写在 `docs/motion_navigation/acceptance/`。
 
-2026-09-26 起，正式 Fabric 方块视觉只接受 profile 4 表面深度。旧 profile 3 稀疏射线只能读取历史记录，不能启动正式会话，也不能形成新的验收结论。`evidence/motion_navigation/representative-v1` 中现有归档均带有 `historical_legacy_ray_profile3` 标签；当前公开的历史实机归档尚未全部用 profile 4 重跑。具体边界见 `docs/motion_navigation/decisions/0035-formal-surface-depth-only.md`。
+2026-09-26 起，正式 Fabric 方块视觉只接受 profile 4 表面深度。旧 profile 3 稀疏射线只能读取历史记录，不能启动正式会话，也不能形成新的验收结论。`evidence/motion_navigation/representative-v1` 保留九份带有 `historical_legacy_ray_profile3` 标签的旧归档，并加入一份 `current_surface_depth_profile4` 的 B12-B 当前代表批次。具体边界见 `docs/motion_navigation/decisions/0035-formal-surface-depth-only.md`。
 
 主仓库仍保留 CraftGround、`legacy_ray_profile3` 和旧轨迹读取代码，以便复现历史结果。它们的采集器、运行入口、导航审计和测试不会进入这个当前实现仓库。V3 仍复用少量早期版本中已经冻结的通用数据类型和 JSON 校验函数；正式后端随后强制检查 profile 4，不能因此启动旧射线。正式 Fabric 构建门禁还会检查旧采集器没有进入客户端 JAR。
 
@@ -85,13 +85,30 @@ python -m unittest tests.test_b10_runtime_probe tests.test_b11_world_change_runt
 python -m unittest tests.test_standalone_java_gates -v
 ```
 
-核对九个代表性真实运行批次：
+不依赖 Minecraft／Gradle 缓存的表面 Java、协议和空气候选门禁：
+
+```text
+python -m unittest tests.test_surface_depth_tiles tests.test_surface_observation_v3 tests.test_visual_air_runtime -v
+```
+
+当前阶段的原生表面核心只在 Windows 验收。先构建固定源码，再运行容量剔除、遮挡和 500 个随机世界空气零误判检查：
+
+```text
+python -c "from scripts.surface_depth_probe.build import build_native; print(build_native())"
+python -m unittest tests.test_surface_depth_cache -v
+```
+
+`tests.test_client_block_observation_v3` 会编译接入 Minecraft 1.21 类型的观察类，因此和完整 Fabric 构建一样，需要仓库根目录已有固定 Gradle 与 Minecraft 依赖缓存；具备缓存时把它作为正式门禁一并运行。缺少缓存时可以运行上面的源码、协议和原生核心检查，但不能声称已经重建 Fabric 观察入口。
+
+这些检查直接覆盖当前 profile 4 实现。旧射线采集器和退役诊断入口不在公开清单中；公开包中的第一方 Python 模块还会由 `tests/motion_nav/test_standalone_export.py` 逐个导入，避免留下缺少依赖的失效入口。
+
+核对十个代表性真实运行批次：
 
 ```text
 python scripts/public_runtime_evidence.py verify --root evidence/motion_navigation/representative-v1
 ```
 
-前六个批次分别覆盖 B10-C 跨隙、C1-B 移动近战和 C1-C 外力恢复，每类各有一个完整通过批次和一个完整失败批次。第七个批次是 B11 放置与有限搭桥的最新完整通过记录。第八个批次保存 B12-A 的玩家近战和环境伤害来源诊断。第九个批次是 B12-B 的最新完整通过记录，保留 34 个场景、两种活动目标试次、导航决定原因、真实墙体遮挡、控制事件和分段 Runtime 轨迹。验证器会检查归档哈希、安全边界、完整试次数量、持续追击指标、汇总、时延门槛和失败分类。压缩归档合计不超过 30 MiB。
+前六个批次分别覆盖 B10-C 跨隙、C1-B 移动近战和 C1-C 外力恢复，每类各有一个完整通过批次和一个完整失败批次。第七至第九个批次分别保存 B11、B12-A 和旧 B12-B 的历史结果。第十个批次是当前 profile 4 的 B12-B 完整通过记录，保留 34 个场景、两种活动目标试次、导航决定原因、真实墙体遮挡、控制事件和分段 Runtime 轨迹。验证器会检查归档哈希、安全边界、视觉版本、完整试次数量、持续追击指标、汇总、时延门槛和失败分类。压缩归档合计不超过 30 MiB。
 
 ## 能说明什么
 
@@ -102,11 +119,11 @@ python scripts/public_runtime_evidence.py verify --root evidence/motion_navigati
 - C1 战斗纵切片已覆盖固定目标、移动目标和真实受击后的恢复；
 - B11 已覆盖单块放置、一至三格直桥和十二类边界与反例；
 - B12-A 已覆盖单次攻击证据、分类重试和伤害来源，B12-B 已覆盖按最终战斗视角计算的普通地面移动、活动目标持续瞄准和部分观察边界；
-- 公开仓库附带九个结构化真实运行批次，可以重新统计对应的通过和失败结果。
+- 公开仓库附带十个结构化真实运行批次，可以重新统计历史结果，并核对 B12-B 当前 profile 4 结果。
 
 ## 不能说明什么
 
-这个快照不包含世界存档、完整普通日志、画面、Gradle 缓存、Minecraft 依赖 JAR 或构建产物，因此不能只靠本仓库重跑游戏内正式实验。公开的九个真实批次是经过筛选的结构化轨迹，可以核对历史结果和读取链，但不能替代新的 Fabric 实机运行。其他原始证据仍由主项目保管。
+这个快照不包含世界存档、完整普通日志、画面、Gradle 缓存、Minecraft 依赖 JAR 或构建产物，因此不能只靠本仓库重跑游戏内正式实验。公开的十个真实批次是经过筛选的结构化轨迹，可以核对历史结果、当前 B12-B 结果和读取链，但不能替代新的 Fabric 实机运行。其他原始证据仍由主项目保管。
 
 未知区域探索、攀爬、游泳、主动 Crawl、特殊地面、任意宽度跨隙和所有动作的带速衔接仍未完成。当前独立仓库只包含正式 Fabric 路径；CraftGround 适配和旧射线兼容代码只在主仓库保留。
 

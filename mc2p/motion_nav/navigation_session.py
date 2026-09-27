@@ -87,6 +87,10 @@ from mc2p.motion_nav.support_surfaces import SurfaceNodeId, query_support_surfac
 from mc2p.motion_nav.world_model import BlockPos, CellKnowledge
 
 
+_FORMAL_HALF_FOV_DEGREES = 60.0
+_INFORMATION_LOOK_MAX_DELTA_DEGREES = 36.0
+
+
 class NavigationSessionState(StrEnum):
     READY = "ready"
     NEEDS_INFORMATION = "needs_information"
@@ -847,7 +851,13 @@ class NavigationSession:
             if self._state is NavigationSessionState.CANCELLING:
                 self._state = NavigationSessionState.CANCELLED
                 self._reason = self._cancel_reason or "cancelled"
-            return self._proposal(MovementV1(), None, 1, deadline_ns)
+            information_look = None
+            if conditioned_look_intent_id is None:
+                information_look = self._information_look(frame)
+            return self._proposal(
+                MovementV1(), None, 1, deadline_ns,
+                information_look=information_look,
+            )
 
         assert self._executor is not None
         current_action = None
@@ -1378,6 +1388,7 @@ class NavigationSession:
         *,
         route_decision: ActionRouteDecision | None = None,
         conditioned_look_intent_id: str | None = None,
+        information_look: LookV1 | None = None,
     ) -> NavigationSessionProposal:
         control = None
         if self._source is not None:
@@ -1478,12 +1489,80 @@ class NavigationSession:
                     else None
                 ),
             )
+            intents = [
+                OrderedIntentV1(self._source, self._intent_sequence, intent),
+            ]
+            if information_look is not None:
+                self._intent_sequence += 1
+                information_identity = ordered_intent_id(
+                    self._source, self._intent_sequence,
+                )
+                intents.append(OrderedIntentV1(
+                    self._source,
+                    self._intent_sequence,
+                    ActionIntentV1(
+                        information_identity,
+                        self._source.source_id,
+                        self._source.episode_id,
+                        self._frame.body.sequence_id,
+                        ActionPriorityV0.BEHAVIOR,
+                        now,
+                        expires,
+                        look=information_look,
+                        valid_for_ticks=1,
+                    ),
+                ))
             control = ControlFrameProposalV1(
-                (OrderedIntentV1(self._source, self._intent_sequence, intent),),
+                tuple(intents),
                 observation_request,
                 decision_events,
             )
         return NavigationSessionProposal(control, self.report, route_decision)
+
+    def _information_look(self, frame: NavigationFrame) -> LookV1 | None:
+        """Aim once at the nearest missing cell that is outside the current view."""
+        if (self._state is not NavigationSessionState.NEEDS_INFORMATION
+                or not self._snapshot_missing):
+            return None
+        eye_x = frame.body.position[0]
+        eye_y = frame.body.body_box.max_y - 0.18
+        eye_z = frame.body.position[2]
+        current_yaw = math.degrees(frame.body.yaw_radians)
+        current_pitch = math.degrees(frame.body.pitch_radians)
+        candidates: list[tuple[float, float, float]] = []
+        for x, y, z in self._snapshot_missing:
+            dx = x + 0.5 - eye_x
+            dy = y + 0.5 - eye_y
+            dz = z + 0.5 - eye_z
+            horizontal = math.hypot(dx, dz)
+            desired_yaw = (
+                current_yaw
+                if horizontal <= 1.0e-9
+                else math.degrees(math.atan2(-dx, dz))
+            )
+            desired_pitch = -math.degrees(
+                math.atan2(dy, max(horizontal, 1.0e-9))
+            )
+            yaw_error = (
+                desired_yaw - current_yaw + 180.0
+            ) % 360.0 - 180.0
+            pitch_error = desired_pitch - current_pitch
+            if (abs(yaw_error) <= _FORMAL_HALF_FOV_DEGREES
+                    and abs(pitch_error) <= _FORMAL_HALF_FOV_DEGREES):
+                continue
+            candidates.append((
+                yaw_error * yaw_error + pitch_error * pitch_error,
+                yaw_error,
+                pitch_error,
+            ))
+        if not candidates:
+            return None
+        _, yaw_error, pitch_error = min(candidates)
+        limit = _INFORMATION_LOOK_MAX_DELTA_DEGREES
+        return LookV1(
+            max(-limit, min(limit, yaw_error)),
+            max(-limit, min(limit, pitch_error)),
+        )
 
     def _session_decision_event(
         self,

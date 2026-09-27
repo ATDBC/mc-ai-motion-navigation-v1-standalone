@@ -19,7 +19,8 @@ from mc2p.contracts.intent_source import (
 )
 from mc2p.contracts.task import ComparisonOperatorV0, SuccessCriterionV0, TaskIntentV0
 from mc2p.motion_nav.external_motion import (
-    DamageKnockbackDetector, ExternalMotionEventV1, ExternalMotionSource,
+    DamageKnockbackDetector, ExternalMotionDetection, ExternalMotionEventV1,
+    ExternalMotionSource,
 )
 from mc2p.motion_nav.navigation_session import ExternalMotionReentryStatus
 from mc2p.motion_nav.external_motion_recovery import ExternalMotionRecoveryController
@@ -121,6 +122,7 @@ class MovingMeleeDriver:
         self._external_recovery_control = ExternalMotionRecoveryController()
         self._external_motion_events = 0
         self._external_recoveries_completed = 0
+        self._last_external_motion_detection_sample: tuple[str, int] | None = None
         self._last_external_motion_observation: ObservationSnapshotV3 | None = None
         self._last_external_motion_detected_at_ns: int | None = None
         self._reacquire_source = None
@@ -210,10 +212,14 @@ class MovingMeleeDriver:
 
     def _detect_external_motion(self, observation: ObservationSnapshotV3):
         assert self._target is not None
+        sample = observation.episode_id, observation.sequence_id
+        if sample == self._last_external_motion_detection_sample:
+            return ExternalMotionDetection(None, "duplicate_observation")
         residual = self.navigation_session.motion_residual(
             observation, self.runtime.input_ledger,
         )
         detection = self._external_detector.observe(observation, residual)
+        self._last_external_motion_detection_sample = sample
         self.runtime.record_task_event("external_motion_detection", {
             "schema_version": "mc2p.external-motion-detection-event.v1",
             "episode_id": observation.episode_id,
@@ -400,7 +406,9 @@ class MovingMeleeDriver:
             owner_deadline_ns, self._deadline_ns, now + 500_000_000,
         )
         if deadline <= now:
-            raise ContractViolation("moving melee pursuit window expired")
+            result = self._finish_expired_approach(profile)
+            assert result is not None
+            return result
         look = self._pursuit_look_proposal(deadline)
         if look is None:
             return self.approach_driver.tick(profile, owner_deadline_ns)
@@ -408,6 +416,11 @@ class MovingMeleeDriver:
         proposals = self.approach_driver.prepare_proposals(
             deadline, conditioned_look=envelope,
         )
+        route_owns_look = (
+            self.navigation_session.current_action_requires_route_look()
+        )
+        if route_owns_look:
+            self._release_pursuit_look()
         task = TaskIntentV0(
             self._target.task_id,
             "moving_melee_pursuit",
@@ -427,13 +440,36 @@ class MovingMeleeDriver:
         try:
             result = self.runtime.control_frame(
                 task, profile, deadline,
-                proposals=(look_proposal, *proposals),
+                proposals=(
+                    proposals if route_owns_look
+                    else (look_proposal, *proposals)
+                ),
             )
         except BaseException:
             if self.approach_driver.has_prepared_frame:
                 self.approach_driver.discard_prepared()
             raise
         self.approach_driver.adopt_result(result)
+        return result
+
+    def _finish_expired_approach(
+        self,
+        profile: BehaviorProfileV0,
+    ) -> RuntimeStepResultV1 | None:
+        reason = "pursuit_deadline_exhausted"
+        result = self._release_approach(
+            profile, reason,
+            handoff=_ApproachHandoff.NEEDS_TASK_DECISION,
+        )
+        if self.approach_driver is None:
+            self._pending_approach_handoff = (
+                _ApproachHandoff.NEEDS_TASK_DECISION
+            )
+            self._pending_approach_reason = reason
+            self._finish_approach_handoff()
+        else:
+            self._phase = MovingMeleePhase.CANCELLING
+            self._reason = reason
         return result
 
     def _reacquire_vision(self, profile: BehaviorProfileV0,
@@ -1128,21 +1164,7 @@ class MovingMeleeDriver:
                     self._finish_approach_handoff()
                 return result
             if self._clock() >= self._deadline_ns:
-                reason = "pursuit_deadline_exhausted"
-                result = self._release_approach(
-                    profile, reason,
-                    handoff=_ApproachHandoff.NEEDS_TASK_DECISION,
-                )
-                if self.approach_driver is None:
-                    self._pending_approach_handoff = (
-                        _ApproachHandoff.NEEDS_TASK_DECISION
-                    )
-                    self._pending_approach_reason = reason
-                    self._finish_approach_handoff()
-                else:
-                    self._phase = MovingMeleePhase.CANCELLING
-                    self._reason = reason
-                return result
+                return self._finish_expired_approach(profile)
             self._observe()
             if self._retire_failed_approach(profile):
                 return None
@@ -1211,6 +1233,8 @@ class MovingMeleeDriver:
             result = self._tick_visible_approach(
                 profile, owner_deadline_ns,
             )
+            if self.approach_driver is None:
+                return result
             captured, capture_result = self._capture_external_motion(
                 profile, owner_deadline_ns,
             )

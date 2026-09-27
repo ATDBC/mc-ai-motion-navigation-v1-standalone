@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from pathlib import Path
 import unittest
 
 from mc2p.contracts.action_v1 import InteractBlockV1
@@ -12,6 +13,8 @@ from mc2p.contracts.observation_v2 import ItemStackV2
 from mc2p.contracts.observation_v3 import TargetingStateV3
 from mc2p.contracts.reset import ResetRequestV0, ResetResultV0
 from mc2p.motion_nav.runtime_adapter import NavigationObservationAdapter
+from mc2p.motion_nav.navigation_session import NavigationSessionProfiles
+from mc2p.motion_nav.movement_transition import MovementMode
 from mc2p.motion_nav.world_interaction import (
     BlockPlacementTransaction,
     InteractionKind,
@@ -329,6 +332,87 @@ class _PlacementBackend:
 
 
 class RuntimeBlockPlacementDriverTests(unittest.TestCase):
+    def test_edge_approach_requests_and_looks_at_missing_headroom(self):
+        class _EdgeBackend(_PlacementBackend):
+            def _observation(
+                self, *, placed: bool, request_sequence_id,
+                profile="interaction_v1",
+            ):
+                value = observation(
+                    self.sequence,
+                    destination="minecraft:dirt" if placed else "air",
+                    count=2 if placed else 3,
+                    targeted=profile == "interaction_v1",
+                    position=(0.625, 64.0, 0.5),
+                    profile=profile,
+                    sneaking=True,
+                )
+                value = replace(
+                    value,
+                    self_state=replace(
+                        value.self_state,
+                        value=replace(value.self_state.value, pose="crouching"),
+                    ),
+                    perception=replace(
+                        value.perception,
+                        value=replace(
+                            value.perception.value,
+                            blocks=tuple(sorted((
+                                *value.perception.value.blocks,
+                                observed_block(
+                                    (0, 64, 0), "minecraft:air", kind="empty",
+                                    sources=("body_contact",),
+                                ),
+                                observed_block(
+                                    (0, 65, 0), "minecraft:air", kind="empty",
+                                    sources=("body_contact",),
+                                ),
+                            ), key=lambda block: block.position)),
+                        ),
+                    ),
+                )
+                return replace(
+                    value,
+                    episode_id="episode-1",
+                    request_sequence_id=request_sequence_id,
+                    received_at_monotonic_ns=self.clock[0],
+                )
+
+        clock = [200_000_000]
+        backend = _EdgeBackend(clock)
+        runtime = PlayerRuntimeV1(backend, _RecordingTrace(), lambda: clock[0])
+        reset = runtime.reset(ResetRequestV0(
+            "reset-edge-information", "episode-1", "test", 1,
+            5_000_000_000,
+        ))
+        self.assertTrue(reset.succeeded, reset)
+        self.addCleanup(runtime.close)
+        edge = requirement(
+            work_position=(1.12, 64.0, 0.5),
+            work_position_tolerance=0.08,
+            requires_sneak=True,
+        )
+        profiles = NavigationSessionProfiles.load(
+            Path(__file__).resolve().parents[2] / "config" / "motion-navigation",
+        )
+        driver = RuntimeBlockPlacementDriver(
+            runtime,
+            BlockPlacementTransaction(edge),
+            approach_mode=profiles.ground_modes.require(MovementMode.CROUCH),
+            clock_ns=lambda: clock[0],
+        )
+        driver.start()
+
+        proposal = driver.prepare_proposal(clock[0] + 500_000_000)
+
+        self.assertIn(
+            (1, 65, 0),
+            proposal.observation_request.air_positions,
+            "edge approach must preserve the missing headroom returned by its route",
+        )
+        self.assertEqual(len(proposal.intents), 1)
+        self.assertIsNotNone(proposal.intents[0].intent.look)
+
     def test_runtime_dispatches_once_and_only_later_observation_completes(self):
         clock = [200_000_000]
         backend = _PlacementBackend(clock)

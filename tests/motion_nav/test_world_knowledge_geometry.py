@@ -1,5 +1,6 @@
 import math
 import unittest
+from unittest.mock import patch
 
 from mc2p.contracts.common import ContractViolation
 from mc2p.contracts.observation_v3 import CollisionShapeV3, ObservedBlockV3
@@ -10,8 +11,9 @@ from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
 from mc2p.motion_nav.observed_block_adapter import apply_observed_blocks
 from mc2p.motion_nav.world_model import (
     Aabb, BlockGeometry, CellKnowledge, ObservationStamp, WorldKnowledge,
-    WorldSessionId, WorldUpdateStatus, elapsed_seconds,
+    WorldQueryCache, WorldSessionId, WorldUpdateStatus, elapsed_seconds,
 )
+import mc2p.motion_nav.world_model as world_model
 
 
 def stamp(session, sequence, tick, received_ns=None):
@@ -210,8 +212,50 @@ class WorldKnowledgeTests(unittest.TestCase):
         self.assertEqual(fact.block.material_key, "minecraft:stone")
         self.assertEqual(fact.block.collision_kind, "full_cube")
 
+    def test_batch_block_observation_reports_only_semantic_changes(self):
+        session = WorldSessionId("classified-block-refresh")
+        world = WorldKnowledge(session)
+        stone = BlockGeometry.full_cube("minecraft:stone")
+        dirt = BlockGeometry.full_cube("minecraft:dirt")
+
+        first, first_changes = world.observe_blocks_with_changes(
+            stamp(session, 1, 1), {(0, 0, 0): stone, (1, 0, 0): stone},
+        )
+        first_view = world.view()
+        second, second_changes = world.observe_blocks_with_changes(
+            stamp(session, 2, 2), {(0, 0, 0): stone, (1, 0, 0): stone},
+        )
+        second_view = world.view()
+        third, third_changes = world.observe_blocks_with_changes(
+            stamp(session, 3, 3), {(0, 0, 0): dirt, (1, 0, 0): stone},
+        )
+
+        self.assertEqual(first.applied_count, 2)
+        self.assertEqual(first_changes, ((0, 0, 0), (1, 0, 0)))
+        self.assertEqual(second.applied_count, 2)
+        self.assertEqual(second_changes, ())
+        self.assertEqual(second_view.geometry_revision, first_view.geometry_revision)
+        self.assertGreater(second_view.evidence_revision, first_view.evidence_revision)
+        self.assertEqual(third.applied_count, 2)
+        self.assertEqual(third_changes, ((0, 0, 0),))
+
 
 class GeometryTests(unittest.TestCase):
+    def test_query_cache_validates_each_new_position_only_once(self):
+        session = WorldSessionId("query-cache-validation")
+        world = WorldKnowledge(session)
+        world.observe_blocks(stamp(session, 1, 1), {
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        cache = WorldQueryCache(world.view())
+
+        with patch.object(world_model, "_position", wraps=world_model._position) as validate:
+            first = cache.cell((0, 0, 0))
+            second = cache.cell((0, 0, 0))
+
+        self.assertIs(first, second)
+        self.assertEqual(validate.call_count, 1)
+
     def test_cross_cell_collision_box_is_owned_by_and_depends_on_source_cell(self):
         session = WorldSessionId("cross-cell-owner")
         world = WorldKnowledge(session)

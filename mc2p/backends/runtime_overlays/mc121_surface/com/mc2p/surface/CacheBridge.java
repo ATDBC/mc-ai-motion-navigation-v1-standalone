@@ -8,6 +8,8 @@ public final class CacheBridge {
  static native void update(long scene,ByteBuffer boxes,ByteBuffer owners,int nb,ByteBuffer centers,ByteBuffer opaque,int no,ByteBuffer identities,ByteBuffer stats);
  static native int frame(long scene,ByteBuffer camera,ByteBuffer query,int n,ByteBuffer out,ByteBuffer areas,ByteBuffer times,ByteBuffer stats);
  static native int framePose(long scene,ByteBuffer camera,ByteBuffer query,int n,ByteBuffer out,ByteBuffer areas,ByteBuffer times,ByteBuffer stats);
+ static native int framePoseAir(long scene,ByteBuffer camera,ByteBuffer query,int n,ByteBuffer out,ByteBuffer areas,ByteBuffer times,ByteBuffer stats,ByteBuffer airPositions,int airCount,double airDistance,ByteBuffer airOut);
+ static native int visibleBoxes(long scene,ByteBuffer camera,ByteBuffer boxes,int n,double maxDistance,ByteBuffer out);
  public static void main(String[] args){
   System.load(args[0]);long s=create(4);
   try{ByteBuffer b=direct(48),o=direct(4),c=direct(24),op=direct(1),ids=direct(16),st=direct(64);

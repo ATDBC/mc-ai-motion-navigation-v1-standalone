@@ -8,15 +8,23 @@ ROOT = Path(__file__).resolve().parents[2]
 
 class MotionNavigationPackageBoundaryTests(unittest.TestCase):
     def test_runtime_owned_drivers_do_not_advance_or_submit_outside_control_frame(self):
-        paths = (
-            "mc2p/skills/point_goal_driver.py",
+        required_paths = (
             "mc2p/skills/melee_strike_driver.py",
             "mc2p/skills/moving_melee_driver.py",
             "mc2p/skills/external_motion_recovery_driver.py",
         )
+        optional_history_paths = ("mc2p/skills/point_goal_driver.py",)
+        for relative in required_paths:
+            self.assertTrue((ROOT / relative).is_file(), relative)
         forbidden = []
-        for relative in paths:
-            tree = ast.parse((ROOT / relative).read_text(encoding="utf-8"))
+        for relative in required_paths + optional_history_paths:
+            source = ROOT / relative
+            # 主仓库还保留旧 point-goal 代码供历史参照；独立包只导出
+            # 当前 Runtime 主线实际使用的驱动。共享测试只检查当前树中
+            # 存在的文件，不能为了凑齐历史文件而重新带入旧射线依赖。
+            if not source.is_file():
+                continue
+            tree = ast.parse(source.read_text(encoding="utf-8"))
             for node in ast.walk(tree):
                 if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
                     continue

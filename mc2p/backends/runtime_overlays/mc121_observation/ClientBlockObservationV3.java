@@ -26,11 +26,36 @@ import net.minecraft.world.BlockView;
 /** Same-tick authorization and compact block fields. No world cache, images or surface permissions. */
 public final class ClientBlockObservationV3 {
     public enum Source { BODY_CONTACT, CURRENT_TARGET, SURFACE_DEPTH, AIR_QUERY }
-    public interface SurfaceProvider { List<BlockPos> visible(MinecraftClient client, Vec3d eye, float yaw, float pitch); }
+    public record SurfaceFrame(List<BlockPos> visibleBlocks, List<BlockPos> visualAir) {
+        public SurfaceFrame {
+            if (visibleBlocks==null || visualAir==null)
+                throw new IllegalArgumentException("missing surface frame result");
+            visibleBlocks=List.copyOf(visibleBlocks); visualAir=List.copyOf(visualAir);
+        }
+    }
+    public interface SurfaceProvider {
+        List<BlockPos> visible(MinecraftClient client, Vec3d eye, float yaw, float pitch);
+        default SurfaceFrame sample(
+                MinecraftClient client, Vec3d eye, float yaw, float pitch,
+                List<BlockPos> airCandidates) {
+            if (!airCandidates.isEmpty())
+                throw new IllegalStateException("visual-air query unavailable");
+            return new SurfaceFrame(visible(client,eye,yaw,pitch),List.of());
+        }
+        default boolean[] visibleBoxes(
+                MinecraftClient client, Vec3d eye, float yaw, float pitch, List<Box> boxes) {
+            throw new IllegalStateException("surface entity visibility unavailable");
+        }
+    }
     private static SurfaceProvider surfaceProvider;
     public static void installSurfaceProvider(SurfaceProvider provider) {
         if (provider==null || surfaceProvider!=null) throw new IllegalStateException("surface provider installation refused");
         surfaceProvider=provider;
+    }
+    static boolean[] surfaceVisibleBoxes(
+            MinecraftClient client, Vec3d eye, float yaw, float pitch, List<Box> boxes) {
+        if (surfaceProvider==null) throw new IllegalStateException("formal surface sensor unavailable");
+        return surfaceProvider.visibleBoxes(client,eye,yaw,pitch,boxes);
     }
     private ClientBlockObservationV3() {}
 
@@ -76,18 +101,6 @@ public final class ClientBlockObservationV3 {
         return table;
     }
 
-    public static void discoverRequestedAir(BlockView world, Vec3d origin, ClientObservationRequestV3 request,
-                                            Map<BlockPos,EnumSet<Source>> table) {
-        if (world==null || origin==null || request==null || table==null)
-            throw new IllegalArgumentException("missing air query input");
-        for (ClientObservationRequestV3.Grid grid : request.airPositions()) {
-            BlockPos position = new BlockPos(grid.x(),grid.y(),grid.z());
-            double dx=position.getX()+.5-origin.x, dy=position.getY()+.5-origin.y, dz=position.getZ()+.5-origin.z;
-            if (dx*dx+dy*dy+dz*dz>32.*32.) continue;
-            if (world.getBlockState(position).isAir()) authorize(table,position,Source.AIR_QUERY);
-        }
-    }
-
     public static JsonArray readBlocks(BlockView world, ShapeContext context, Map<BlockPos,EnumSet<Source>> table) {
         if (table.size()>26025) throw new IllegalStateException("block export budget exceeded");
         for (Source source : Source.values()) {
@@ -99,16 +112,23 @@ public final class ClientBlockObservationV3 {
         }
         JsonArray blocks = new JsonArray();
         for (BlockPos position : orderedPositions(table)) {
-            var state = world.getBlockState(position);
             JsonObject block = new JsonObject();
             block.add("position",grid(position));
-            block.addProperty("block_id",Registries.BLOCK.getId(state.getBlock()).toString());
-            block.add("collision",encodeCollision(state.getCollisionShape(world,position,context)));
-            var fluid = state.getFluidState();
-            if (fluid.isEmpty()) block.add("fluid_id",JsonNull.INSTANCE);
-            else block.addProperty("fluid_id",Registries.FLUID.getId(fluid.getFluid()).toString());
+            EnumSet<Source> sourceSet=table.get(position);
+            if (sourceSet.equals(EnumSet.of(Source.AIR_QUERY))) {
+                block.addProperty("block_id","minecraft:air");
+                block.add("collision",encodeCollision(net.minecraft.util.shape.VoxelShapes.empty()));
+                block.add("fluid_id",JsonNull.INSTANCE);
+            } else {
+                var state = world.getBlockState(position);
+                block.addProperty("block_id",Registries.BLOCK.getId(state.getBlock()).toString());
+                block.add("collision",encodeCollision(state.getCollisionShape(world,position,context)));
+                var fluid = state.getFluidState();
+                if (fluid.isEmpty()) block.add("fluid_id",JsonNull.INSTANCE);
+                else block.addProperty("fluid_id",Registries.FLUID.getId(fluid.getFluid()).toString());
+            }
             JsonArray sources = new JsonArray();
-            table.get(position).stream().map(s -> s.name().toLowerCase(Locale.ROOT)).sorted().forEach(sources::add);
+            sourceSet.stream().map(s -> s.name().toLowerCase(Locale.ROOT)).sorted().forEach(sources::add);
             block.add("sources",sources);
             blocks.add(block);
         }
@@ -172,16 +192,27 @@ public final class ClientBlockObservationV3 {
         Vec3d camera = player.getCameraPosVec(1.0f);
         float yaw = player.getYaw(), pitch = player.getPitch();
         if (surfaceProvider==null) throw new IllegalStateException("formal surface sensor unavailable");
+        if (request.airPositions().size()>128)
+            throw new IllegalStateException("formal visual-air frame budget exceeded");
+        List<BlockPos> airCandidates=request.airPositions().stream()
+                .map(grid -> new BlockPos(grid.x(),grid.y(),grid.z())).toList();
+        SurfaceFrame surface=surfaceProvider.sample(client,camera,yaw,pitch,airCandidates);
+        var requestedAir=java.util.Set.copyOf(airCandidates);
+        if (surface.visibleBlocks().stream().distinct().count()!=surface.visibleBlocks().size()
+                || surface.visualAir().stream().distinct().count()!=surface.visualAir().size()
+                || !requestedAir.containsAll(surface.visualAir()))
+            throw new IllegalStateException("invalid surface frame result");
         Map<BlockPos,EnumSet<Source>> table=new HashMap<>();
-        for (BlockPos position : surfaceProvider.visible(client,camera,yaw,pitch))
+        for (BlockPos position : surface.visibleBlocks())
             authorize(table,position,Source.SURFACE_DEPTH);
         discoverContacts(world,player,player.getBoundingBox(),table);
-        discoverRequestedAir(world,player.getPos(),request,table);
         // Entity label legality already requires this query in V2. Reuse it for interaction.
         HitResult hit = ClientObservationCollector.currentTarget(client,player);
         var entities = ClientObservationCollector.collectVisibleEntities(client,player,camera,generationId,index,hit);
         if (request.needsTargeting() && hit instanceof BlockHitResult b && hit.getType()==HitResult.Type.BLOCK)
             authorize(table,b.getBlockPos(),Source.CURRENT_TARGET);
+        for (BlockPos position : surface.visualAir()) if (!table.containsKey(position))
+            authorize(table,position,Source.AIR_QUERY);
         JsonObject perception = ClientObservationCollector.perceptionMetadata();
         perception.addProperty("sensor_profile_revision",4);perception.addProperty("ray_columns",0);perception.addProperty("ray_rows",0);
         perception.addProperty("knowledge_model","block_state_v1");
