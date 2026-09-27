@@ -1,0 +1,30 @@
+up two half-blocks
+  nominal proof                 : proof ends 0.064 from the goal (completion radius 0.35, margin 0.286)
+  nominal                       : complete in 16 ticks
+  every command 1 tick late     : complete in 18 ticks
+  20% commands 1 tick late      : 100/100 complete; failures: []
+  yaw held 10 deg off route    : complete in 16 ticks
+  yaw held 20 deg off route    : unsupported/ground_traversal_left_verified_envelope at tick 8
+  yaw held 30 deg off route    : unsupported/ground_traversal_left_verified_envelope at tick 11
+  yaw held 45 deg off route    : complete in 16 ticks
+  yaw held 60 deg off route    : unsupported/ground_traversal_left_verified_envelope at tick 11
+  yaw held 90 deg off route    : complete in 16 ticks
+  proof from 0 b/s, start at 1 b/s: timeout
+  proof from 0 b/s, start at 2 b/s: complete in 15 ticks
+  proof from 0 b/s, start at 3 b/s: unsupported/ground_traversal_left_verified_envelope at tick 1
+  proof from 2 b/s, start at 0 b/s: complete in 17 ticks
+down two half-blocks
+  nominal proof                 : proof ends 0.334 from the goal (completion radius 0.35, margin 0.016)
+  nominal                       : complete in 21 ticks
+  every command 1 tick late     : unsupported/ground_traversal_terminal_mismatch at tick 19
+  20% commands 1 tick late      : 41/100 complete; failures: ['timeout', 'unsupported/ground_traversal_terminal_mismatch']
+  yaw held 10 deg off route    : unsupported/ground_traversal_terminal_mismatch at tick 21
+  yaw held 20 deg off route    : unsupported/ground_traversal_left_verified_envelope at tick 8
+  yaw held 30 deg off route    : unsupported/ground_traversal_left_verified_envelope at tick 13
+  yaw held 45 deg off route    : unsupported/ground_traversal_terminal_mismatch at tick 19
+  yaw held 60 deg off route    : unsupported/ground_traversal_left_verified_envelope at tick 13
+  yaw held 90 deg off route    : complete in 21 ticks
+  proof from 0 b/s, start at 1 b/s: unsupported/ground_traversal_terminal_mismatch at tick 18
+  proof from 0 b/s, start at 2 b/s: complete in 20 ticks
+  proof from 0 b/s, start at 3 b/s: unsupported/ground_traversal_left_verified_envelope at tick 1
+  proof from 2 b/s, start at 0 b/s: timeout
