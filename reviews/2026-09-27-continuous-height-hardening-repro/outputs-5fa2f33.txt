@@ -1,0 +1,176 @@
+===== 2026-09-27-continuous-height-repro/off_center_start.py
+start offset (0.0, 0.0): plan complete, proofs 1; admission accepted candidate_admitted
+start offset (0.05, 0.0): plan complete, proofs 1; admission accepted candidate_admitted
+start offset (0.12, -0.09): plan complete, proofs 1; admission accepted candidate_admitted
+exit 0
+===== 2026-09-27-continuous-height-repro/mixed_route_fallback.py
+rises only (control): complete; edges ['Walk', 'Walk', 'Walk', 'Walk', 'Walk']; ground traversal proofs 1; reasons ()
+    SurfaceWalkEdge            -> column (0,1) y=64.00 proof_required=False
+    SurfaceWalkEdge            -> column (0,2) y=64.50 proof_required=True
+    SurfaceWalkEdge            -> column (0,3) y=65.00 proof_required=True
+    SurfaceWalkEdge            -> column (0,4) y=65.00 proof_required=False
+    SurfaceWalkEdge            -> column (0,5) y=65.00 proof_required=False
+rises then a one-block drop: complete; edges ['Walk', 'Walk', 'Walk', 'ControlledDrop', 'Walk']; ground traversal proofs 1; reasons ()
+    SurfaceWalkEdge            -> column (0,1) y=64.00 proof_required=False
+    SurfaceWalkEdge            -> column (0,2) y=64.50 proof_required=True
+    SurfaceWalkEdge            -> column (0,3) y=65.00 proof_required=True
+    SurfaceControlledDropEdge  -> column (0,4) y=64.00 proof_required=-
+    SurfaceWalkEdge            -> column (0,5) y=64.00 proof_required=False
+admission of the mixed route: accepted candidate_admitted
+  actions: ['WalkSegment', 'ControlledDropSegment', 'WalkSegment']
+  executor start: ok
+exit 0
+===== 2026-09-27-continuous-height-repro/damage_budget_accumulation.py
+budget 0: unsupported; drops []; sum of per-drop conservative damage 0
+budget 2: unsupported; drops []; sum of per-drop conservative damage 0
+budget 4: complete; drops ['74->69', '69->64']; sum of per-drop conservative damage 4
+exit 0
+===== 2026-09-27-continuous-height-repro/traversal_robustness.py
+up two half-blocks
+  nominal proof                 : proof ends 0.064 from the goal (completion radius 0.35, margin 0.286)
+  nominal                       : complete in 16 ticks
+  every command 1 tick late     : complete in 18 ticks
+  20% commands 1 tick late      : 100/100 complete; failures: []
+  yaw held 10 deg off route    : complete in 16 ticks
+  yaw held 20 deg off route    : complete in 17 ticks
+  yaw held 30 deg off route    : complete in 17 ticks
+  yaw held 45 deg off route    : complete in 16 ticks
+  yaw held 60 deg off route    : complete in 17 ticks
+  yaw held 90 deg off route    : complete in 16 ticks
+  proof from 0 b/s, start at 1 b/s: complete in 16 ticks
+  proof from 0 b/s, start at 2 b/s: complete in 15 ticks
+  proof from 0 b/s, start at 3 b/s: complete in 15 ticks
+  proof from 2 b/s, start at 0 b/s: complete in 16 ticks
+down two half-blocks
+  nominal proof                 : proof ends 0.334 from the goal (completion radius 0.35, margin 0.016)
+  nominal                       : complete in 19 ticks
+  every command 1 tick late     : complete in 24 ticks
+  20% commands 1 tick late      : 100/100 complete; failures: []
+  yaw held 10 deg off route    : complete in 19 ticks
+  yaw held 20 deg off route    : complete in 19 ticks
+  yaw held 30 deg off route    : complete in 19 ticks
+  yaw held 45 deg off route    : complete in 19 ticks
+  yaw held 60 deg off route    : complete in 19 ticks
+  yaw held 90 deg off route    : complete in 19 ticks
+  proof from 0 b/s, start at 1 b/s: complete in 18 ticks
+  proof from 0 b/s, start at 2 b/s: complete in 18 ticks
+  proof from 0 b/s, start at 3 b/s: complete in 18 ticks
+  proof from 2 b/s, start at 0 b/s: complete in 19 ticks
+exit 0
+===== 2026-09-27-continuous-height-hardening-repro/edge_hold_persists.py
+drop task frame  1: needs_information landing_visual_evidence_missing    route wants None
+                   submitted MovementV1(forward=1, strafe=0, jump=False, sneak=True, sprint=False)  hold=True
+drop task frame  2: needs_information landing_visual_evidence_missing    route wants None
+                   submitted MovementV1(forward=1, strafe=0, jump=False, sneak=True, sprint=False)  hold=True
+drop task frame  3: needs_information landing_visual_evidence_missing    route wants None
+                   submitted MovementV1(forward=1, strafe=0, jump=False, sneak=True, sprint=False)  hold=True
+walk goal frame  4: executing         tracking_fixed_route               route wants MovementV1(forward=0, strafe=1, jump=False, sneak=False, sprint=False)
+                   submitted MovementV1(forward=0, strafe=0, jump=False, sneak=True, sprint=False)  hold=True
+walk goal frame  5: executing         tracking_fixed_route               route wants MovementV1(forward=0, strafe=1, jump=False, sneak=False, sprint=False)
+                   submitted MovementV1(forward=0, strafe=0, jump=False, sneak=True, sprint=False)  hold=True
+walk goal frame  6: executing         tracking_fixed_route               route wants MovementV1(forward=0, strafe=1, jump=False, sneak=False, sprint=False)
+                   submitted MovementV1(forward=0, strafe=0, jump=False, sneak=True, sprint=False)  hold=True
+walk goal frame  7: executing         tracking_fixed_route               route wants MovementV1(forward=0, strafe=1, jump=False, sneak=False, sprint=False)
+                   submitted MovementV1(forward=0, strafe=0, jump=False, sneak=True, sprint=False)  hold=True
+walk goal frame  8: executing         tracking_fixed_route               route wants MovementV1(forward=0, strafe=1, jump=False, sneak=False, sprint=False)
+                   submitted MovementV1(forward=0, strafe=0, jump=False, sneak=True, sprint=False)  hold=True
+walk goal frame  9: executing         tracking_fixed_route               route wants MovementV1(forward=0, strafe=1, jump=False, sneak=False, sprint=False)
+                   submitted MovementV1(forward=0, strafe=0, jump=False, sneak=True, sprint=False)  hold=True
+exit 0
+===== 2026-09-27-continuous-height-hardening-repro/input_lost_replans.py
+input_lost
+  frame  1: executing    tracking_fixed_route           request sequence 1
+  frame  2: snapshotting input_application_unconfirmed  request sequence 2
+  frame  3: executing    tracking_fixed_route           request sequence 2
+  frame  4: snapshotting input_application_unconfirmed  request sequence 3
+  frame  5: executing    tracking_fixed_route           request sequence 3
+  frame  6: snapshotting input_application_unconfirmed  request sequence 4
+  frame  7: executing    tracking_fixed_route           request sequence 4
+  frame  8: snapshotting input_application_unconfirmed  request sequence 5
+  frame  9: executing    tracking_fixed_route           request sequence 5
+  frame 10: snapshotting input_application_unconfirmed  request sequence 6
+  frame 11: executing    tracking_fixed_route           request sequence 6
+  frame 12: snapshotting input_application_unconfirmed  request sequence 7
+  planning requests issued after input_application_unconfirmed: 6; final state snapshotting
+needs_replan
+  frame  1: executing    tracking_fixed_route           request sequence 1
+  frame  2: snapshotting ground_traversal_stalled       request sequence 2
+  frame  3: executing    tracking_fixed_route           request sequence 2
+  frame  4: snapshotting ground_traversal_stalled       request sequence 3
+  frame  5: executing    tracking_fixed_route           request sequence 3
+  frame  6: snapshotting ground_traversal_stalled       request sequence 4
+  frame  7: executing    tracking_fixed_route           request sequence 4
+  frame  8: snapshotting ground_traversal_stalled       request sequence 5
+  frame  9: executing    tracking_fixed_route           request sequence 5
+  frame 10: snapshotting ground_traversal_stalled       request sequence 6
+  frame 11: executing    tracking_fixed_route           request sequence 6
+  frame 12: snapshotting ground_traversal_stalled       request sequence 7
+  planning requests issued after ground_traversal_stalled: 6; final state snapshotting
+exit 0
+===== 2026-09-27-continuous-height-hardening-repro/landing_gate_edge_branch.py
+part 1: upper-only evidence seen 9 blocks away, standing at centre  : False
+part 1: upper-only evidence seen 9 blocks away, standing at edge    : False
+part 1: upper-only evidence seen 9 blocks away, sneaking at edge    : True
+
+part 2: nearest-point distance from the eye to the landing body cell, body at the edge (gate limit 4.5)
+  drop 2 (standing): 2.62  within the limit
+  drop 2 (sneaking): 2.27  within the limit
+  drop 3 (standing): 3.62  within the limit
+  drop 3 (sneaking): 3.27  within the limit
+  drop 4 (standing): 4.62  beyond the limit
+  drop 4 (sneaking): 4.27  within the limit
+  drop 5 (standing): 5.62  beyond the limit
+  drop 5 (sneaking): 5.27  beyond the limit
+  drop 8 (standing): 8.62  beyond the limit
+  drop 8 (sneaking): 8.27  beyond the limit
+exit 0
+===== 2026-09-27-continuous-height-hardening-repro/later_run_research.py
+width  7, 2 half-step rows, no drop   : complete  A* searches  2       24 ms  steps 0  lateral jogs 0
+width  7, 2 half-step rows, drop first: complete  A* searches  6      136 ms  steps 2  lateral jogs 0
+width  7, 4 half-step rows, no drop   : complete  A* searches  2       30 ms  steps 0  lateral jogs 0
+width  7, 4 half-step rows, drop first: complete  A* searches  8      152 ms  steps 4  lateral jogs 0
+width  7, 6 half-step rows, no drop   : complete  A* searches  2       36 ms  steps 0  lateral jogs 0
+width  7, 6 half-step rows, drop first: complete  A* searches  8      169 ms  steps 6  lateral jogs 0
+width  7, 8 half-step rows, no drop   : complete  A* searches  2       45 ms  steps 0  lateral jogs 0
+width  7, 8 half-step rows, drop first: complete  A* searches  8      186 ms  steps 8  lateral jogs 0
+width 21, 2 half-step rows, no drop   : complete  A* searches  2       23 ms  steps 0  lateral jogs 0
+width 21, 2 half-step rows, drop first: complete  A* searches  6      125 ms  steps 2  lateral jogs 0
+width 21, 4 half-step rows, no drop   : complete  A* searches  2       28 ms  steps 0  lateral jogs 0
+width 21, 4 half-step rows, drop first: complete  A* searches 10      252 ms  steps 4  lateral jogs 0
+width 21, 6 half-step rows, no drop   : complete  A* searches  2       35 ms  steps 0  lateral jogs 0
+width 21, 6 half-step rows, drop first: complete  A* searches 14      429 ms  steps 6  lateral jogs 0
+width 21, 8 half-step rows, no drop   : complete  A* searches  2       42 ms  steps 0  lateral jogs 0
+width 21, 8 half-step rows, drop first: unsupported A* searches 17      545 ms  steps 0  lateral jogs 0
+exit 0
+===== 2026-09-27-continuous-height-hardening-repro/stair_descent_robustness.py
+planned edges: ['Walk', 'Walk', 'Walk', 'Walk', 'Walk', 'Walk'] proofs 1
+nominal                   : complete in 39 ticks
+every command 1 tick late : complete in 40 ticks
+20% commands 1 tick late  : 100/100 []
+yaw held 30 deg off      : complete in 40 ticks
+yaw held 60 deg off      : complete in 40 ticks
+start offset (0.3, -0.3)  : complete in 41 ticks
+exit 0
+===== 2026-09-27-continuous-height-hardening-repro/stale_request_budget.py
+request budget when issued      : 2.0
+remaining task budget now       : 0.0
+session after next propose      : executing awaiting_verified_motion
+admitted actions                : ['ControlledDropSegment']
+  drop of 5 blocks, conservative damage 2
+budget bound to the new executor: 2.0
+exit 0
+===== 2026-09-27-continuous-height-hardening-repro/start_offset_closed_loop.py
+start offset (0.0, 0.0)   : admitted, proofs 1; execution complete in 30 ticks
+start offset (0.12, 0.0)  : admitted, proofs 1; execution complete in 30 ticks
+start offset (0.3, 0.0)   : admitted, proofs 1; execution complete in 30 ticks
+start offset (0.0, -0.3)  : admitted, proofs 1; execution complete in 31 ticks
+start offset (0.35, 0.35) : admitted, proofs 1; execution complete in 30 ticks
+start offset (0.45, -0.45): admitted, proofs 1; execution complete in 33 ticks
+start offset (-0.45, 0.45): admitted, proofs 1; execution complete in 32 ticks
+exit 0
+===== 2026-09-27-continuous-height-hardening-repro/traversal_control_cost.py
+up    yaw+ 0: frames  320  P50   1.40 ms  P95   1.83 ms  max   2.50 ms  calculator steps/frame median 7 max 8
+up    yaw+30: frames  340  P50   1.43 ms  P95   2.24 ms  max   3.12 ms  calculator steps/frame median 7 max 8
+down  yaw+ 0: frames  380  P50   1.33 ms  P95   1.75 ms  max   1.92 ms  calculator steps/frame median 7 max 10
+down  yaw+30: frames  380  P50   1.38 ms  P95   2.04 ms  max   3.35 ms  calculator steps/frame median 7 max 10
+exit 0
