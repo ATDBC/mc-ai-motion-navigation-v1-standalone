@@ -1,0 +1,17 @@
+# origin/main 8898cf9, run from the repository root: PYTHONPATH=.:<harness> python -B <harness>/scenarios.py
+scenario                                   verdict expect    outcome            reason                                       ticks  damage  violations
+flat_walk                                  PASS    success   success            goal_state_satisfied                            64       0  -  [0.3s]
+flat_walk_offset_start                     PASS    success   success            goal_state_satisfied                            67       0  -  [0.5s]
+goal_on_current_support                    FAIL    success   failed             planning_internal_error                         21       0  -  [0.1s]
+half_steps_up_down                         PASS    success   success            goal_state_satisfied                            62       0  -  [0.4s]
+half_steps_20pct_late                      PASS    success   success            goal_state_satisfied                            63       0  -  [0.3s]
+stair_descent_4                            PASS    success   success            goal_state_satisfied                            60       0  -  [0.5s]
+direct_drop_2                              PASS    success   success            goal_state_satisfied                            76       0  -  [0.4s]
+direct_drop_5_budget_2                     PASS    success   success            goal_state_satisfied                            81       2  -  [0.5s]
+direct_drop_2_goal_revised_during_probe    FAIL    success   failed             planning_internal_error                         22       0  -  events revise_goal_back@2  [0.0s]
+direct_drop_2_cancel_in_air                PASS    cancelled cancelled          harness_cancel                                  70       0  -  events cancel_in_air@40  [0.3s]
+direct_drop_2_20pct_late                   PASS    success   success            goal_state_satisfied                            80       0  -  [0.4s]
+far_landing_L_walkway                      FAIL    success   failed             landing_edge_probe_timed_out                    61       8  unowned_airborne@42: session failed/landing_edge_probe_timed_out, owner None, released=True, y 63.92; unowned_fall@59: fell 11.0 blocks, landed at (1.77, 53.00, 4.73); damage_over_budget@59: took 8, budget 0  [0.7s]
+far_landing_L_goal_revised_at_30           FAIL    success   failed             current_body_cannot_connect                     50       8  unowned_airborne@31: session failed/current_body_cannot_connect, owner None, released=True, y 63.92; unowned_fall@48: fell 11.0 blocks, landed at (1.74, 53.00, 3.93); damage_over_budget@48: took 8, budget 0  events revise_goal_back@30  [0.5s]
+terrace_two_ledges                         FAIL    success   failed             information_occluded_requires_observation_po    61       0  -  [0.1s]
+# total wall time 5.5 s
