@@ -129,7 +129,7 @@ S4 的目的是让每个状态只能按表转移。现在：
 
    它们本应是转移表里的状态或事件。
 5. **提交粒度。**
-   - 公开仓库只有一个提交：73 个文件，+10432/−589，其中会话文件 +1859 行。
+   - 公开仓库只有一个提交：73 个文件，+10432/−589，其中会话文件 +1590/−269 行，占新增源码行的 42%。
    - 阶段文档第 164 行自己写着"代码提交按可验收行为拆分；不能一次提交所有机制后再寻找回归来源"。
    - 验收文档也记载 S2 是在"未提交源码的脏状态"上运行的。
    - 如果私有仓库有分步提交，请在公开版附上每一步的提交号和对应矩阵结果。
@@ -476,6 +476,10 @@ bash <复现目录>/run_all.sh > <复现目录>/outputs-d34a674.txt 2>&1
 
 - 除 `lost_arbitration_at_drop.py` 读取驱动当前准备好的提案用于注入竞争者外，其余脚本只通过 `tests/sim` 的公开入口运行，并读取诊断或轨迹。
 - 诊断根因的几个脚本会临时包装内部函数：`_state` 写入、`_accept_result`、`_state_fits_entry`、`input_responsibility_status`。它们只打印，不改变返回值。
+
+## 七、后续
+
+据本轮结论制定的下一阶段验收门槛见 [验收门槛](2026-09-28-next-stage-gates.md)。
 
 [base]: https://github.com/ATDBC/mc-ai-motion-navigation-v1-standalone/tree/d34a67473538cca2f69c2c0fce1e55b07a8692fd
 [lifecycle]: https://github.com/ATDBC/mc-ai-motion-navigation-v1-standalone/blob/d34a67473538cca2f69c2c0fce1e55b07a8692fd/mc2p/motion_nav/navigation_lifecycle.py#L81-L103

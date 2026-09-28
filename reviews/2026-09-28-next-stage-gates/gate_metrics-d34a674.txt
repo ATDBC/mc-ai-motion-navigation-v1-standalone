@@ -1,0 +1,16 @@
+# gate_metrics.py on d34a674 (base 8898cf9)
+G1 structure of the current checkout
+  mc2p/motion_nav/navigation_session.py: 3488 lines; NavigationSession 3076 lines, 92 methods, 54 __init__ fields
+  [FAIL] G1-1 methods that assign self._state: 20 methods, 75 assignments (_accept_goal_request, _activate_local_route, _advance_planning, _apply_decision_state, _begin_action_acquisition, _finalize_close, _information_look, _reissue_request_from_current, _replace_request, _request_probe_stop, _resolve_pending_retry, _risk_checked_decision, _wait_for_active_terminal, cancel, close, observe, propose, register_verified_submission, start_goal, update_goal)
+  [FAIL] G1-2 lifecycle record() results discarded: 6 of 6 calls
+  [FAIL] G1-3 supervisor imports concrete controller modules: mc2p.motion_nav.action_route_executor, mc2p.motion_nav.landing_edge_probe, mc2p.motion_nav.motion_coordination
+  review item: monitor state/reason string comparisons (each must be a detection, not an exemption):
+    tests/sim/monitor.py:167: e.state == "stopping" and e.reason == "recovery_unresolved"
+    tests/sim/monitor.py:220: if e.state == "complete" and not self._completion_checked:
+    tests/sim/monitor.py:241: if e.reason == "planning_internal_error":
+G1 change since 8898cf9
+  [FAIL] G1-4 new NavigationSession fields: 27 (_close_requested, _control_anchor, _control_ledger, _goal_requests, _information, _last_retry_action_index, _last_retry_body_cell, _last_retry_route_id, _lifecycle, _local_goal_request_id, _local_input_floor, _local_mode_wait_frames, _pending_probe_stop_cause, _pending_probe_terminal, _pending_probe_terminal_reason, _pending_retry, _planning_pipeline, _probe_mode_exit_pending, _recovery_wait_capacity_exhausted, _recovery_wait_status, _retry_ledger, _risk_action_id, _risk_action_key, _risk_failure_reason, _risk_ledger, _risk_submission_capacity_exhausted, _supervisor)
+  [FAIL] G1-5 new methods that assign self._state: 9 (_accept_goal_request, _activate_local_route, _begin_action_acquisition, _finalize_close, _reissue_request_from_current, _request_probe_stop, _resolve_pending_retry, _risk_checked_decision, register_verified_submission)
+  [WARN] G1-6 share of added source lines in the session: 1590/3828 = 42% (limit 10%; above the limit the delivery record must explain why the work belongs to the session)
+hard criteria failed: G1-1 methods that assign self._state, G1-2 lifecycle record() results discarded, G1-3 supervisor imports concrete controller modules, G1-4 new NavigationSession fields, G1-5 new methods that assign self._state
+exit=1

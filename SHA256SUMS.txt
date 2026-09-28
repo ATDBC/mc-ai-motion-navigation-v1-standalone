@@ -459,7 +459,10 @@ fa6e9162325480928a5b7a902f8137039362e3bbf2e39dbbd5735d9ccb69d8bb  reviews/2026-0
 43ebf3613db51246feab2d02fb5381a46bc7c7798ec4ae915fb76c6d68cd1b44  reviews/2026-09-28-coordination-refactor-review-repro/trace_revise_in_drop.py
 b1e17f973ac7f657694ab48e37c2b685cdafb632cf910acf8b9c1df1f64b270d  reviews/2026-09-28-coordination-refactor-review-repro/who_cancels_executor.py
 54b507c54b9cedc0f715c085bab60955db568b8cb9c512d1c9dfa01e24ddabaa  reviews/2026-09-28-coordination-refactor-review-repro/why_not_clear.py
-597796081d09095b26aa5698359b112db2f8d63860e01aeba31aa4bc5a7ce8b1  reviews/2026-09-28-coordination-refactor-review.md
+c2ba9f18531cf035d96fed42f7430535a0b03dce9a8a439bde774742b15555c0  reviews/2026-09-28-coordination-refactor-review.md
+5fffe647481748adf356c19d9b89bd3e2e580cf0d6cafd79fc2ce33598702dc7  reviews/2026-09-28-next-stage-gates.md
+634638d61ac0851e38cdbc7e42dbe1d24595081523ccc8aaf3ebab32fbf0e0bc  reviews/2026-09-28-next-stage-gates/gate_metrics-d34a674.txt
+de8ee44f710f12208510f62b9ddfb97dda48b1c5c76690bf2eecb3ae4ecc79d6  reviews/2026-09-28-next-stage-gates/gate_metrics.py
 5aaaea0f9a3099150ab0e300cac84417cf0404c6308df045fdabf699064cee8a  reviews/2026-09-28-recurring-defects-analysis.md
 ba3ef8c193b1b39dea3d089a8270df5c9759c03f8a636deb476118e3e35a386a  reviews/2026-09-28-recurring-defects-data/code_metrics-8898cf9.txt
 29187e3a9d945fb2093dbc7b73073db4a88785937fe7adab2c5f44a5da9a2f08  reviews/2026-09-28-recurring-defects-data/code_metrics.py
