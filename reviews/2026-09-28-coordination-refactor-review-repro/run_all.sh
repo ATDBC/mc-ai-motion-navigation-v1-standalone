@@ -12,16 +12,18 @@ py() { timeout 3000 python3 -B "$@"; }
 section "P1-1 isolated one-block step down after a walking approach"
 py "$D/fabric_twin_drop.py"
 py "$D/isolated_step_down.py"
+section "P1-1 which entry field fails"
+py "$D/step_down_entry_mismatch.py"
 
 section "P1-2 goal revision around the drop start (budget fits one drop)"
 py "$D/risk_revision_sweep.py"
 py "$D/risk_revision_sweep.py" late
 section "P1-2 trace, revision at tick 37"
-py "$D/trace_revise_in_drop.py" 37 | head -12
+py "$D/trace_revise_in_drop.py" 37 | sed -n '1,12p'
 section "P1-2 planner jobs"
 py "$D/trace_planner_results.py" | grep -v '^[0-9]'
 section "P1-2 same case with budget 4"
-py "$D/trace_revise_in_drop.py" 37 1.5,59,4.5 4 | head -1
+py "$D/trace_revise_in_drop.py" 37 1.5,59,4.5 4 | sed -n '1,1p'
 
 section "P1-3 risk records per drop"
 py "$D/risk_record_growth.py"
@@ -43,7 +45,7 @@ py "$D/landing_removed_timing.py"
 section "P2-1 corner landing column and single late tick sweep"
 py "$D/corner_and_late.py"
 section "P2-1 trace corner landing"
-py "$D/trace_corner.py" 2 | head -16
+py "$D/trace_corner.py" 2 | sed -n '1,16p'
 section "P2-1 preparation failure behind 'cancelled'"
 py "$D/corner_reason.py" 2 | grep -v '^[0-9]'
 py "$D/who_cancels_executor.py" | grep 'cancel:'
@@ -52,8 +54,8 @@ section "P2-2 outcome distribution of the frozen seed families"
 py "$D/late_success_rate.py" direct_drop_2,half_steps_up_down,direct_drop_5_budget_2 0.2,0.05,0.02
 section "P2-2 one lost movement frame at the drop start"
 py "$D/lost_arbitration_at_drop.py" 2
-py "$D/lost_arbitration_at_drop.py" 5 | head -1
-py "$D/lost_arbitration_at_drop.py" 8 | head -1
+py "$D/lost_arbitration_at_drop.py" 5 | sed -n '1,1p'
+py "$D/lost_arbitration_at_drop.py" 8 | sed -n '1,1p'
 
 section "S4 evidence: terminal or stopping state overwritten"
 py "$D/terminal_resurrection.py"
