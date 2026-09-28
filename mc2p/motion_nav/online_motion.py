@@ -9,7 +9,7 @@ from mc2p.contracts.action_receipt import (
     ClientBehaviorReceipt, ClientBehaviorReceiptV2, ClientBehaviorReceiptV3,
     ClientInputApplicationV1,
 )
-from mc2p.contracts.action_v1 import ActionSnapshotV1, MovementV1
+from mc2p.contracts.action_v1 import ActionSnapshotV1, LookV1, MovementV1
 from mc2p.contracts.common import ContractViolation, require_identifier, require_nonnegative_int
 from mc2p.motion_nav.physics_types import PhysicsRuleset, PhysicsState, TickInput
 from mc2p.motion_nav.world_model import WorldSessionId
@@ -24,6 +24,53 @@ class InputApplicationStatus(StrEnum):
     REJECTED = "rejected"
     AMBIGUOUS = "ambiguous"
     SUPERSEDED = "superseded"
+
+
+class InputResponsibilityStatus(StrEnum):
+    CLEAR = "clear"
+    IN_FLIGHT = "in_flight"
+    AMBIGUOUS = "ambiguous"
+
+
+def input_responsibility_status(
+    ledger: InputApplicationLedger | None,
+    anchor: StateAnchor | None = None,
+    *, previous_sequence_floor: int = 0,
+) -> InputResponsibilityStatus:
+    """Old ambiguous input is cleared only by a later verified body anchor."""
+    if ledger is None:
+        return InputResponsibilityStatus.CLEAR
+    ambiguous = False
+    for record in ledger.snapshot():
+        if record.action.movement == MovementV1() and record.action.look == LookV1():
+            continue
+        if record.status in {
+                InputApplicationStatus.IN_FLIGHT,
+                InputApplicationStatus.PARTIALLY_APPLIED,
+        }:
+            return InputResponsibilityStatus.IN_FLIGHT
+        if record.status is InputApplicationStatus.AMBIGUOUS:
+            later_applied = any(
+                later.session == record.session
+                and later.control_sequence > record.control_sequence
+                and later.applied_ticks
+                and later.applied_ticks[-1] > record.resolved_at_tick
+                and anchor is not None
+                and later.applied_ticks[-1] <= anchor.movement_tick_id
+                for later in ledger.snapshot()
+            ) if record.resolved_at_tick is not None else False
+            reanchored_old_input = (
+                record.control_sequence <= previous_sequence_floor
+                and anchor is not None
+                and anchor.session == record.session
+                and record.resolved_at_tick is not None
+                and anchor.movement_tick_id > record.resolved_at_tick
+                and later_applied
+            )
+            if not reanchored_old_input:
+                ambiguous = True
+    return (InputResponsibilityStatus.AMBIGUOUS if ambiguous
+            else InputResponsibilityStatus.CLEAR)
 
 
 _TERMINAL_INPUT_STATES = frozenset({
@@ -522,9 +569,13 @@ def project_movement_command(state: PhysicsState, command: MovementV1, *,
             ProjectionStatus.UNSUPPORTED,
             reasons=("item_slowdown_not_supported",),
         )
+    # ClientBehaviorInput samples the discrete keys after applying the
+    # vanilla crouch slowdown. The physics calculator consumes sampled axes.
+    sampled_factor = .3 if command.sneak else 1.0
     return ProjectionResult(
         ProjectionStatus.READY,
-        TickInput(float(command.forward), float(command.strafe), command.jump,
+        TickInput(float(command.forward) * sampled_factor,
+                  float(command.strafe) * sampled_factor, command.jump,
                   command.sneak, command.sprint, float(yaw)),
     )
 

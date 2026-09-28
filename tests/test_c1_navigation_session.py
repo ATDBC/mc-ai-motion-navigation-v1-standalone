@@ -14,7 +14,7 @@ from mc2p.motion_nav.action_route_executor import (
 )
 from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
 from tests.test_fixed_melee_driver import MeleeBackend
-from tests.test_player_runtime import _RecordingTrace
+from tests.test_player_runtime import _RecordingTrace, _task
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1
 from mc2p.contracts.reset import ResetRequestV0
 from tests.navigation_session_fixtures import FakeNavigationSession
@@ -290,6 +290,150 @@ class C1NavigationSessionTests(unittest.TestCase):
         self.assertEqual(driver.state, "cancelled")
         self.assertIsNone(driver.source)
         self.assertEqual(self.runtime.ordered_source_stats["active_sources"], 0)
+
+    def test_stop_with_terminal_task_waits_for_current_body_evidence(self):
+        from mc2p.motion_nav.movement_transition import (
+            GoalState, GoalSupport, MovementMode,
+        )
+        from mc2p.motion_nav.world_model import Aabb
+        session = FakeNavigationSession()
+        driver = RuntimeNavigationDriver(
+            self.runtime, session, clock_ns=lambda: self.clock[0],
+        )
+        goal = GoalState(
+            Aabb(0, 64, 1, 1, 64.2, 2), GoalSupport.SOLID,
+            frozenset({MovementMode.WALK}), frozenset({"standing"}), .6,
+        )
+        driver.start("combat-goal", 1, goal, self.clock[0])
+        session.state = NavigationSessionState.CANCELLED
+        session.movement = MovementV1()
+        session.handoff_ready = False
+
+        driver.stop(BehaviorProfileV0(), "cancelled")
+        self.assertEqual(driver.state, "stopping")
+        self.assertIsNotNone(driver.source)
+
+        session.handoff_ready = True
+        driver.tick(BehaviorProfileV0(), self.clock[0] + 500_000_000)
+        self.assertIsNone(driver.source)
+        self.assertEqual(self.runtime.ordered_source_stats["active_sources"], 0)
+
+    def test_stop_reports_control_unavailable_without_claiming_release(self):
+        from mc2p.motion_nav.movement_transition import (
+            GoalState, GoalSupport, MovementMode,
+        )
+        from mc2p.motion_nav.world_model import Aabb
+        from mc2p.contracts.common import ContractViolation
+        session = FakeNavigationSession()
+        driver = RuntimeNavigationDriver(
+            self.runtime, session, clock_ns=lambda: self.clock[0],
+        )
+        goal = GoalState(
+            Aabb(0, 64, 1, 1, 64.2, 2), GoalSupport.SOLID,
+            frozenset({MovementMode.WALK}), frozenset({"standing"}), .6,
+        )
+        driver.start("combat-goal", 1, goal, self.clock[0])
+        session.state = NavigationSessionState.CANCELLED
+        session.handoff_ready = False
+        self.runtime.close()
+
+        with self.assertRaisesRegex(ContractViolation, "CONTROL_UNAVAILABLE"):
+            driver.stop(BehaviorProfileV0(), "cancelled")
+        self.assertEqual(driver.reason, "control_unavailable")
+        self.assertIsNotNone(driver.source)
+
+    def test_duplicate_adoption_cannot_repeat_a_route_handoff(self):
+        from mc2p.motion_nav.movement_transition import (
+            GoalState, GoalSupport, MovementMode,
+        )
+        from mc2p.motion_nav.world_model import Aabb
+        from mc2p.contracts.common import ContractViolation
+        session = FakeNavigationSession()
+        driver = RuntimeNavigationDriver(
+            self.runtime, session, clock_ns=lambda: self.clock[0],
+        )
+        goal = GoalState(
+            Aabb(0, 64, 1, 1, 64.2, 2), GoalSupport.SOLID,
+            frozenset({MovementMode.WALK}), frozenset({"standing"}), .6,
+        )
+        driver.start("combat-goal", 1, goal, self.clock[0])
+        deadline = self.clock[0] + 500_000_000
+        proposals = driver.prepare_proposals(deadline)
+        result = self.runtime.control_frame(
+            _task(deadline), BehaviorProfileV0(), deadline,
+            proposals=proposals,
+        )
+        driver.adopt_result(result)
+        submissions = len(session.verified_submissions)
+
+        with self.assertRaises(ContractViolation):
+            driver.adopt_result(result)
+        with self.assertRaises(ContractViolation):
+            driver.discard_prepared()
+        self.assertEqual(len(session.verified_submissions), submissions)
+
+    def test_external_transfer_requires_started_registered_successor(self):
+        from mc2p.motion_nav.movement_transition import (
+            GoalState, GoalSupport, MovementMode,
+        )
+        from mc2p.motion_nav.world_model import Aabb
+        from mc2p.contracts.common import ContractViolation
+        from mc2p.skills.external_motion_recovery_driver import (
+            ExternalMotionRecoveryDriver,
+        )
+        from tests.test_external_motion_recovery_driver import damage_event
+        session = FakeNavigationSession()
+        driver = RuntimeNavigationDriver(
+            self.runtime, session, clock_ns=lambda: self.clock[0],
+        )
+        goal = GoalState(
+            Aabb(0, 64, 1, 1, 64.2, 2), GoalSupport.SOLID,
+            frozenset({MovementMode.WALK}), frozenset({"standing"}), .6,
+        )
+        driver.start("combat-goal", 1, goal, self.clock[0])
+        recovery = ExternalMotionRecoveryDriver(
+            self.runtime, task_deadline_ns=10_000_000_000,
+            clock_ns=lambda: self.clock[0],
+        )
+        with self.assertRaises(ContractViolation):
+            driver.transfer_to_successor(recovery, "external_recovery")
+        self.assertIsNotNone(driver.source)
+
+        recovery.start(damage_event())
+        self.assertTrue(self.runtime.has_ordered_source(recovery.source))
+        driver.transfer_to_successor(recovery, "external_recovery")
+        self.assertIsNone(driver.source)
+        self.assertTrue(self.runtime.has_ordered_source(recovery.source))
+
+    def test_external_transfer_rejects_unregistered_successor(self):
+        from mc2p.motion_nav.movement_transition import (
+            GoalState, GoalSupport, MovementMode,
+        )
+        from mc2p.motion_nav.world_model import Aabb
+        from mc2p.contracts.common import ContractViolation
+        from mc2p.skills.external_motion_recovery_driver import (
+            ExternalMotionRecoveryDriver,
+        )
+        from tests.test_external_motion_recovery_driver import damage_event
+        session = FakeNavigationSession()
+        driver = RuntimeNavigationDriver(
+            self.runtime, session, clock_ns=lambda: self.clock[0],
+        )
+        goal = GoalState(
+            Aabb(0, 64, 1, 1, 64.2, 2), GoalSupport.SOLID,
+            frozenset({MovementMode.WALK}), frozenset({"standing"}), .6,
+        )
+        driver.start("combat-goal", 1, goal, self.clock[0])
+        recovery = ExternalMotionRecoveryDriver(
+            self.runtime, task_deadline_ns=10_000_000_000,
+            clock_ns=lambda: self.clock[0],
+        )
+        recovery.start(damage_event())
+        self.runtime.unregister_ordered_source(recovery.source)
+
+        with self.assertRaises(ContractViolation):
+            driver.transfer_to_successor(recovery, "external_recovery")
+        self.assertIsNotNone(driver.source)
 
     def test_stop_reanchors_session_to_latest_runtime_observation_before_cancel(self):
         session = FakeNavigationSession()

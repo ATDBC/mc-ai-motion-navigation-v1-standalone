@@ -6,6 +6,7 @@ from queue import Empty, Full
 import math
 import multiprocessing
 import time
+from typing import Protocol, runtime_checkable
 
 from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.known_map_planner import (
@@ -143,6 +144,22 @@ def _worker(requests, results, delay_seconds: float) -> None:
         if delay_seconds:time.sleep(delay_seconds)
         candidate = _execute_job(job)
         _publish_latest(results,candidate)
+
+
+@runtime_checkable
+class PlannerWorkerPort(Protocol):
+    """Formal surface-planning interface used by process and inline workers."""
+
+    def submit_surface_snapshot(
+        self, snapshot: KnownMapSnapshot, ground_profile: GroundMotionProfile,
+        step_profile: StepProfile, request: SurfacePlanningRequest,
+        jump_profile: JumpUpProfile | None = None, *,
+        air_profiles: tuple[AirMotionProfile, ...] = (),
+        ground_mode_profile: GroundModeProfile | None = None,
+    ) -> bool: ...
+    def poll_latest(self) -> RouteCandidate | SurfaceRouteCandidate | None: ...
+    def close(self) -> None: ...
+    def is_alive(self) -> bool: ...
 
 
 class PlannerWorker:

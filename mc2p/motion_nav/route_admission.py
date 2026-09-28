@@ -150,37 +150,6 @@ def direct_drop_visual_evidence_sufficient(
     return lower_volume_seen
 
 
-def _direct_drop_missing_visual_evidence(
-    candidate: SurfaceRouteCandidate,
-    frame: NavigationFrame,
-    *,
-    edge_probe: LandingEdgeProbe | None = None,
-) -> tuple[BlockPos, ...]:
-    nodes = {node.node_id: node for node in candidate.path}
-    missing = set()
-    for edge in candidate.segments:
-        if type(edge) is not SurfaceControlledDropEdge:
-            continue
-        start = nodes[edge.start]
-        end = nodes[edge.end]
-        if start.position[1] - end.position[1] <= 1.0 + 1.0e-6:
-            continue
-        landing_cell = (
-            edge.end.column_x,
-            math.floor(end.position[1]),
-            edge.end.column_z,
-        )
-        fact = frame.world.cell(landing_cell)
-        # A partial support can share its voxel with the player's lower body.
-        # Its explicit collision and fluid facts replace visual-air evidence.
-        if fact.knowledge is CellKnowledge.BLOCK:
-            continue
-        if not direct_drop_visual_evidence_sufficient(
-                frame, landing_cell, edge_probe=edge_probe):
-            missing.add(landing_cell)
-    return tuple(sorted(missing))
-
-
 class CorridorStatus(StrEnum):
     READY = "ready"
     BLOCKED_BY_CHANGE = "blocked_by_change"
@@ -692,15 +661,6 @@ class RouteAdmitter:
             return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.WORLD_DELTA_MISSING)
         if set(candidate.dependencies).intersection(changed_cells):
             return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.ROUTE_DEPENDENCIES_CHANGED)
-        missing_landing_evidence = _direct_drop_missing_visual_evidence(
-            candidate, frame, edge_probe=edge_probe,
-        )
-        if missing_landing_evidence:
-            return AdmissionResult(
-                AdmissionStatus.REJECTED,
-                AdmissionReason.LANDING_VISUAL_EVIDENCE_MISSING,
-                missing_cells=missing_landing_evidence,
-            )
         resource_names = {
             name for name, _ in candidate.initial_resources.values
         } | {

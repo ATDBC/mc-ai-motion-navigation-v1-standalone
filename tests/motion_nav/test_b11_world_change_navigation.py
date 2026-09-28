@@ -13,6 +13,7 @@ from mc2p.contracts.observation_v2 import ItemStackV2
 from mc2p.contracts.observation_v3 import TargetingStateV3
 from mc2p.contracts.reset import ResetRequestV0, ResetResultV0
 from mc2p.motion_nav.bridge_planner import BridgePlacementPolicy
+from mc2p.motion_nav.body_control import HandoffDisposition, HandoffEvidence
 from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, MovementMode
 from mc2p.motion_nav.navigation_session import NavigationSession, NavigationSessionProfiles
 from mc2p.motion_nav.world_model import Aabb
@@ -106,7 +107,7 @@ class _WorldChangeBackend:
             profile="interaction_v1" if interaction else "navigation_v1",
             self_changes={
                 "movement_tick_id": self.movement_tick,
-                "velocity": {"x": 0.0, "y": 0.0, "z": 0.0},
+                "velocity": {"x": 0.0, "y": -0.0784000015258789, "z": 0.0},
                 "is_sneaking": self.sneaking,
                 "pose": "crouching" if self.sneaking else "standing",
             },
@@ -179,8 +180,7 @@ class _WorldChangeBackend:
                 min(self.goal_x + 0.5,
                     self.position_x + math.copysign(0.13, direction_x)),
             )
-        if active:
-            self.movement_tick += 1
+        self.movement_tick += 1
         self.sequence += 1
         self.clock[0] += 50_000_000
         interaction = observation_request is not None and observation_request.field_profile == "interaction_v1"
@@ -188,7 +188,7 @@ class _WorldChangeBackend:
             request_sequence_id=action.request_sequence_id,
             interaction=interaction,
         )
-        applications = ([{
+        applications = [{
             "schema_version": "mc2p.input-application.v1",
             "movement_tick_id": self.movement_tick,
             "episode_id": action.episode_id,
@@ -200,7 +200,7 @@ class _WorldChangeBackend:
             "jump": action.movement.jump,
             "sneak": action.movement.sneak,
             "sprint": action.movement.sprint,
-        }] if active else [])
+        }]
         dispatched = operation is not None
         receipt = behavior_receipt_from_mapping({
             **receipt_value(
@@ -209,7 +209,7 @@ class _WorldChangeBackend:
                 request_sequence_id=action.request_sequence_id,
                 world_tick=observed.world_time_ticks.value,
                 input_samples=self.movement_tick,
-                leased_input_samples=1 if active else 0,
+                leased_input_samples=1,
                 status="pending_confirmation" if dispatched else "executed",
                 reason="block_use_dispatched" if dispatched else "controls_applied",
             ),
@@ -225,6 +225,24 @@ class _WorldChangeBackend:
 
 
 class WorldChangeNavigationIntegrationTests(unittest.TestCase):
+    @staticmethod
+    def _delay_one_body_handoff(driver):
+        original = driver.session.body_handoff
+        delayed = [False]
+
+        def body_handoff(snapshot, ledger):
+            if not delayed[0]:
+                delayed[0] = True
+                frame = driver.session.ingest(snapshot)
+                return HandoffEvidence(
+                    "test-delayed-body", frame.session,
+                    HandoffDisposition.RETAIN, snapshot.sequence_id,
+                    None, MovementV1(), "new_anchor_pending",
+                )
+            return original(snapshot, ledger)
+
+        driver.session.body_handoff = body_handoff
+
     def _fixture(self, *, gap_count=1, item_count=3, maximum_blocks=3):
         clock = [100_000_000]
         backend = _WorldChangeBackend(
@@ -328,6 +346,54 @@ class WorldChangeNavigationIntegrationTests(unittest.TestCase):
             action.operation is not None for action in backend.actions
         ))
         driver.release()
+
+    def test_inventory_failure_waits_for_body_handoff_before_terminal(self):
+        clock, backend, driver = self._fixture(
+            gap_count=2, item_count=1, maximum_blocks=2,
+        )
+        for _ in range(30):
+            driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
+            if driver.navigation.state == "interaction_required":
+                break
+        self.assertEqual(driver.navigation.state, "interaction_required")
+        self._delay_one_body_handoff(driver)
+
+        driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
+        self.assertEqual(driver.report.state, "stopping")
+        self.assertIsNotNone(driver.navigation.source)
+        self._run(driver, clock)
+        self.assertEqual(driver.report.state, "failed")
+        self.assertEqual(driver.report.reason, "insufficient_bridge_materials")
+        self.assertIsNone(driver.navigation.source)
+        self.assertEqual(backend.placed_cells, set())
+
+    def test_cancel_waits_for_body_handoff_before_terminal(self):
+        clock, _, driver = self._fixture(maximum_blocks=1)
+        self._delay_one_body_handoff(driver)
+
+        driver.cancel("user_cancel")
+        self.assertEqual(driver.report.state, "stopping")
+        self.assertIsNotNone(driver.navigation.source)
+        self._run(driver, clock)
+        self.assertEqual(driver.report.state, "cancelled")
+        self.assertIsNone(driver.navigation.source)
+
+    def test_interaction_waits_one_observation_for_safe_source_release(self):
+        clock, _, driver = self._fixture(maximum_blocks=1)
+        for _ in range(30):
+            driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
+            if driver.navigation.state == "interaction_required":
+                break
+        self.assertEqual(driver.navigation.state, "interaction_required")
+        self._delay_one_body_handoff(driver)
+
+        driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
+        self.assertIsNone(driver.placement)
+        self.assertIsNotNone(driver.navigation.source)
+        self.assertFalse(driver.report.terminal)
+        driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
+        self.assertIsNotNone(driver.placement)
+        self.assertIsNone(driver.navigation.source)
 
     def test_external_block_claiming_the_bridge_cell_replans_without_clicking(self):
         clock, backend, driver = self._fixture(maximum_blocks=1)

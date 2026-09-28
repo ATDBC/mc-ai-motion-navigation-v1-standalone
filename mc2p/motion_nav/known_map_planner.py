@@ -1226,6 +1226,7 @@ class SurfaceGraph:
 
 class SurfacePlanningStatus(StrEnum):
     COMPLETE = "complete"
+    NO_GRAPH_SEARCH_NEEDED = "no_graph_search_needed"
     NO_KNOWN_ROUTE = "no_known_route"
     NO_ROUTE_WITHIN_COMPLETE_SCOPE = "no_route_within_complete_scope"
     TIMEOUT = "timeout"
@@ -1304,6 +1305,19 @@ class SurfacePlanningRequest:
                 raise ContractViolation(
                     "surface planning goal and damage budget use different policies"
                 )
+
+
+class SurfaceSearchNeed(StrEnum):
+    GRAPH_SEARCH = "graph_search"
+    SAME_SUPPORT_LOCAL_GOAL = "same_support_local_goal"
+
+
+def surface_search_need(request: SurfacePlanningRequest) -> SurfaceSearchNeed:
+    """A matching support node needs a local goal check, not an empty graph route."""
+    if type(request) is not SurfacePlanningRequest:
+        raise ContractViolation("surface search need requires a typed request")
+    return (SurfaceSearchNeed.SAME_SUPPORT_LOCAL_GOAL
+            if request.start == request.goal else SurfaceSearchNeed.GRAPH_SEARCH)
 
 
 @dataclass(frozen=True, slots=True)
@@ -2085,6 +2099,11 @@ def astar_surface_plan(graph: SurfaceGraph,
             return _surface_candidate(
                 request, graph, SurfacePlanningStatus.UNSUPPORTED,
             )
+    if surface_search_need(request) is SurfaceSearchNeed.SAME_SUPPORT_LOCAL_GOAL:
+        return _surface_candidate(
+            request, graph, SurfacePlanningStatus.NO_GRAPH_SEARCH_NEEDED,
+            path_ids=(request.start,), final_resources=request.initial_resources,
+        )
     adjacency: dict[SurfaceNodeId, list[SurfaceEdge]] = {
         node_id: [] for node_id in positions
     }
@@ -2299,6 +2318,12 @@ def plan_known_surface_snapshot(
             return _surface_candidate(
                 request, discovered_graph(), SurfacePlanningStatus.UNSUPPORTED,
             )
+    if surface_search_need(request) is SurfaceSearchNeed.SAME_SUPPORT_LOCAL_GOAL:
+        return _surface_candidate(
+            request, discovered_graph(),
+            SurfacePlanningStatus.NO_GRAPH_SEARCH_NEEDED,
+            path_ids=(request.start,), final_resources=request.initial_resources,
+        )
 
     unit_cost_ticks = expander.horizontal_cost_lower_bound_ticks()
 

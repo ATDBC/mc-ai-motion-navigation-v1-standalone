@@ -111,6 +111,13 @@ class MotionCandidateAdmission:
                 type(self.candidate) is AdmittedMotionCandidate):
             raise ContractViolation("accepted admission must carry its candidate")
 
+    @property
+    def retryable(self) -> bool:
+        """Whether a fresh candidate may repair this admission failure."""
+        return self.reason in {
+            "candidate_revalidation_failed", "world_dependency_changed",
+        }
+
 
 def _angle_error(first: float, second: float) -> float:
     return abs((first - second + math.pi) % (2.0 * math.pi) - math.pi)
@@ -365,12 +372,24 @@ class VerifiedMotionExecutor:
         require_nonnegative_int(
             requested_latest_movement_tick, "requested latest movement tick",
         )
-        if self._pending is not None:
-            raise ContractViolation("verified executor already has an in-flight command")
+        replacing_pending = self._pending is not None
+        if replacing_pending:
+            can_replace = (
+                command_index == self._pending.command_index
+                and self._pending.requested_movement_tick
+                    < requested_movement_tick
+                    <= self._pending.requested_latest_movement_tick
+                and requested_latest_movement_tick
+                    == self._pending.requested_latest_movement_tick
+            )
+            if not can_replace:
+                raise ContractViolation(
+                    "verified executor already has an in-flight command"
+                )
         if command_index != self._command_index:
             raise ContractViolation("submitted command is not the current proof command")
         expected_tick = self._expected_tick()
-        if requested_movement_tick != expected_tick:
+        if not replacing_pending and requested_movement_tick != expected_tick:
             raise ContractViolation("submitted command targets another movement tick")
         if requested_latest_movement_tick != self._latest_tick():
             raise ContractViolation("submitted command uses another movement window")
@@ -389,6 +408,15 @@ class VerifiedMotionExecutor:
                 or self._command_index < 1 or self._start_variant is None):
             return None
         return self._start_variant.exit_state
+
+    def has_started(self) -> bool:
+        """Return whether this proof has already taken body responsibility.
+
+        Registering the first command is the action boundary.  From then on,
+        missing or late observations belong to execution recovery; callers
+        must not send the same action back through its entry preconditions.
+        """
+        return self._pending is not None or self._command_index > 0
 
     def cancel(self, anchor: StateAnchor) -> None:
         if type(anchor) is not StateAnchor:
@@ -444,6 +472,8 @@ class VerifiedMotionExecutor:
     def _decision(self, movement: MovementV1 | None,
                   yaw: float | None, reason: str, *,
                   submittable_as_verified_command: bool = False,
+                  expected_movement_tick: int | None = None,
+                  latest_movement_tick: int | None = None,
                   ) -> VerifiedMotionDecision:
         expected = (self._expected_tick()
                     if self.state in {
@@ -455,6 +485,10 @@ class VerifiedMotionExecutor:
                       VerifiedMotionExecutorState.RUNNING,
                       VerifiedMotionExecutorState.RECOVERING,
                   } else None)
+        if expected_movement_tick is not None:
+            expected = expected_movement_tick
+        if latest_movement_tick is not None:
+            latest = latest_movement_tick
         return VerifiedMotionDecision(
             self.state, movement, yaw, self._command_index, expected, latest,
             1 if movement is not None else 0, reason,
@@ -664,6 +698,30 @@ class VerifiedMotionExecutor:
                 return self._decision(
                     MovementV1(), None, "retain_landing_after_input_loss",
                 )
+            if (pending == "awaiting_application"
+                    and self._pending is not None
+                    and anchor.movement_tick_id + 1
+                        > self._pending.requested_movement_tick
+                    and anchor.movement_tick_id + 1
+                        <= self._pending.requested_latest_movement_tick):
+                command = proof.commands[self._pending.command_index]
+                return self._decision(
+                    command.movement,
+                    command.required_movement_yaw_radians,
+                    "resubmit_verified_command_within_window",
+                    submittable_as_verified_command=True,
+                    expected_movement_tick=anchor.movement_tick_id + 1,
+                    latest_movement_tick=(
+                        self._pending.requested_latest_movement_tick
+                    ),
+                )
+            if (pending == "awaiting_application"
+                    and self._pending is not None
+                    and anchor.movement_tick_id
+                        >= self._pending.requested_latest_movement_tick):
+                expired = self._recover_from_expired_command_window(anchor)
+                if expired is not None:
+                    return expired
             movement = (MovementV1()
                         if self.state is VerifiedMotionExecutorState.INPUT_LOST
                         else None)

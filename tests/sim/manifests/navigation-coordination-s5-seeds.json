@@ -1,0 +1,27 @@
+{
+  "schema_version": "mc2p.navigation-seed-scan.v1",
+  "seed_start": 280001,
+  "seed_end": 280100,
+  "families": [
+    {
+      "scenario": "half_steps_up_down",
+      "late_probability": 0.2,
+      "allowed_results": [["success", "goal_state_satisfied"]]
+    },
+    {
+      "scenario": "direct_drop_2",
+      "late_probability": 0.2,
+      "allowed_results": [
+        ["success", "goal_state_satisfied"],
+        ["failed", "input_lost"],
+        ["failed", "verified_command_window_expired"],
+        ["failed", "edge_probe_acquisition_timeout"],
+        ["stopping", "recovery_unresolved"]
+      ]
+    }
+  ],
+  "fixed_matrix_only": [
+    "goal revision and cancellation have deterministic trigger ticks",
+    "world edits, omitted receipts, missing anchors and worker death use dedicated bounded tests"
+  ]
+}

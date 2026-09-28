@@ -1,0 +1,518 @@
+"""S0 formal-path matrix and intentional invariant failures."""
+from __future__ import annotations
+
+from dataclasses import replace
+import json
+import math
+from pathlib import Path
+import tempfile
+import time
+import unittest
+
+from mc2p.contracts.action_v1 import ActionSnapshotV1, LookV1, MovementV1
+from mc2p.contracts.behavior import BehaviorProfileV0
+from mc2p.contracts.common import ContractViolation
+from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, MovementMode, ResourceState
+from mc2p.motion_nav.online_motion import InputApplicationLedger
+from mc2p.motion_nav.body_control import HandoffDisposition, HandoffEvidence
+from mc2p.motion_nav.motion_risk import (
+    RiskCommitEvidence, RiskCommitKind, RiskReservationStatus,
+    TaskDamageBudget, TaskRiskLedger,
+)
+from mc2p.motion_nav.retry_ledger import (
+    ProgressEvidence, ProgressKind, RetryCause, RetryLedger, RetryVerdict,
+)
+from mc2p.motion_nav.world_model import WorldSessionId
+from mc2p.motion_nav.runtime_adapter import NavigationObservationAdapter, TEST_ORACLE
+from mc2p.motion_nav.world_model import Aabb
+from tests.sim.backend import CalculatorBackend, Scene
+from tests.sim.monitor import InvariantMonitor, TickEvidence
+from tests.sim.runner import Event, late_ticks, run
+from tests.sim.scenarios import SCENARIOS
+from tests.sim.scenarios import airborne_in_drop, revise_goal_back
+from tests.sim.run_navigation_matrix import read_manifest, run_matrix
+
+
+ROOT = Path(__file__).resolve().parents[2]
+MANIFEST = ROOT / "tests/sim/manifests/navigation-coordination-smoke.json"
+
+
+def evidence(**changes) -> TickEvidence:
+    goal = GoalState(Aabb(.3, 63.92, .3, .7, 64.08, .7), GoalSupport.SOLID,
+                     frozenset({MovementMode.WALK}), frozenset({"standing"}), .6)
+    base = TickEvidence(
+        tick=2, now_ns=150_000_000, position=(.5, 64.0, .5), on_ground=True,
+        controller_ids=("route_executor",), source_bound=True, state="executing",
+        reason="tracking", damage=0.0, damage_limit=0.0, committed_damage=0.0,
+        request_generation=1, goal_revision=1, wait_frames=0,
+        applied_request=None, applied_movement=MovementV1(), issued_commands=(),
+        proposed_movement_intents=(), selected_intents=(), action_movement=None,
+        goal_position=(.5, 64.0, .5), goal_state=goal,
+        velocity=(0.0, 0.0, 0.0), pose="standing", yaw_radians=0.0,
+        risk_policy_id="no_expected_damage",
+    )
+    return replace(base, **changes)
+
+
+class InvariantNegativeTests(unittest.TestCase):
+    def check_code(self, code: str, *samples: TickEvidence) -> None:
+        monitor = InvariantMonitor()
+        for sample in samples:
+            monitor.check(sample)
+        self.assertIn(code, {item[1] for item in monitor.violations})
+
+    def test_i1_owner_lost_in_air(self):
+        self.check_code("I1", evidence(on_ground=False, controller_ids=()))
+
+    def test_i1_i6_transfer_requires_selected_successor_and_sequence(self):
+        handoff = HandoffEvidence(
+            "route/old", WorldSessionId("test-world"),
+            HandoffDisposition.TRANSFERABLE, 1, None,
+            MovementV1(forward=1), "selected_successor_route_command",
+            "route/new", 9, 1, 0,
+        )
+        self.check_code(
+            "I1", evidence(
+                observation_sequence=2, route_id="route/new",
+                submitted_request=10, handoff=handoff,
+                proposed_movement_intents=("nav-candidate",),
+                selected_intents=(("movement", "other-intent"),),
+                action_movement=MovementV1(forward=1),
+            ),
+        )
+        self.check_code(
+            "I6", evidence(
+                observation_sequence=2, route_id="route/new",
+                submitted_request=10, handoff=handoff,
+                proposed_movement_intents=("nav-candidate",),
+                selected_intents=(("movement", "other-intent"),),
+                action_movement=MovementV1(forward=1),
+            ),
+        )
+
+    def test_i2_unowned_fall_after_release(self):
+        self.check_code("I2", evidence(),
+                        evidence(tick=3, position=(.5, 63.5, .5), on_ground=False,
+                                 controller_ids=(), source_bound=False),
+                        evidence(tick=4, position=(.5, 62.0, .5)))
+
+    def test_i3_damage_exceeds_authority(self):
+        self.check_code("I3", evidence(damage=1.0))
+
+    def test_i3_policy_cut_keeps_prior_commit_and_allows_zero_risk(self):
+        ledger = TaskRiskLedger("task", TaskDamageBudget("two", 2))
+        ledger.reserve("old", 2, policy_revision=0)
+        ledger.commit("old", RiskCommitEvidence(
+            RiskCommitKind.OBSERVED_DEPARTURE, observation_sequence=2,
+        ))
+        ledger.update_policy(TaskDamageBudget("zero", 0), revision=1)
+        ledger.reserve("zero", 0, policy_revision=1)
+        ledger.commit("zero", RiskCommitEvidence(
+            RiskCommitKind.OBSERVED_DEPARTURE, observation_sequence=3,
+        ))
+        monitor = InvariantMonitor()
+        monitor.check(evidence(damage=2, damage_limit=0,
+                               risk_actions=ledger.snapshot_actions()))
+        self.assertNotIn("I3", {item[1] for item in monitor.violations})
+        invalid = replace(ledger.action("zero"),
+                          expected_damage_points=1)
+        self.check_code("I3", evidence(
+            damage=2, damage_limit=0,
+            risk_actions=(ledger.action("old"), invalid),
+        ))
+
+    def test_i4_wait_has_no_bound(self):
+        self.check_code("I4", evidence(wait_frames=41, state="needs_information"))
+
+    def test_i4_explicit_unresolved_recovery_is_not_an_authorized_wait(self):
+        monitor = InvariantMonitor()
+        for tick in range(2, 140):
+            monitor.check(evidence(
+                tick=tick,
+                state="stopping",
+                reason="recovery_unresolved",
+            ))
+        self.assertNotIn("I4", {item[1] for item in monitor.violations})
+
+    def test_i5_distinct_failures_without_progress(self):
+        samples = [evidence(tick=i + 2, retry_attempt_id=f"attempt-{i}")
+                   for i in range(7)]
+        self.check_code("I5", *samples)
+
+    def test_i5_denied_failure_is_not_an_approved_retry(self):
+        ledger = RetryLedger("task")
+        monitor = InvariantMonitor()
+        for index in range(3):
+            result = ledger.record_failure(
+                f"attempt-{index}", RetryCause.EXECUTION,
+            )
+            monitor.check(evidence(
+                tick=index + 2,
+                state="failed" if index == 2 else "executing",
+                retry_attempt_id=ledger.last_failure_attempt_id,
+                retry_round_failures=ledger.round_failures,
+                retry_total_failures=ledger.total_failures,
+                retry_cause_counts=tuple(
+                    (cause.value, count) for cause, count
+                    in ledger.cause_counts
+                ),
+                retry_approved_round=ledger.approved_round_retries,
+                retry_approved_total=ledger.approved_total_retries,
+                retry_approved_cause_counts=tuple(
+                    (cause.value, count) for cause, count
+                    in ledger.approved_cause_counts
+                ),
+            ))
+        self.assertIs(result.verdict, RetryVerdict.CAUSE_EXHAUSTED)
+        self.assertEqual((ledger.total_failures,
+                          ledger.approved_total_retries), (3, 2))
+        self.assertNotIn("I5", {item[1] for item in monitor.violations})
+        self.check_code("I5", evidence(
+            retry_round_failures=3, retry_total_failures=3,
+            retry_approved_round=3, retry_approved_total=3,
+            retry_approved_cause_counts=(("execution", 3),),
+        ))
+
+    def test_i5_six_and_twelve_approved_boundaries(self):
+        ledger = RetryLedger("task")
+        monitor = InvariantMonitor()
+        tick = 2
+        causes = (RetryCause.EXECUTION, RetryCause.INFORMATION,
+                  RetryCause.DEPENDENCY)
+        for round_index in range(2):
+            for cause in causes:
+                for item in range(2):
+                    verdict = ledger.record_failure(
+                        f"{round_index}/{cause.value}/{item}", cause,
+                    )
+                    self.assertIs(verdict.verdict, RetryVerdict.RETRY)
+                    monitor.check(evidence(
+                        tick=tick,
+                        retry_attempt_id=ledger.last_failure_attempt_id,
+                        retry_round_failures=ledger.round_failures,
+                        retry_total_failures=ledger.total_failures,
+                        retry_approved_round=ledger.approved_round_retries,
+                        retry_approved_total=ledger.approved_total_retries,
+                        retry_approved_cause_counts=tuple(
+                            (name.value, count) for name, count
+                            in ledger.approved_cause_counts
+                        ),
+                        retry_progress_version=ledger.progress_version,
+                        retry_progress_evidence=ledger.last_progress_evidence,
+                    ))
+                    tick += 1
+            if round_index == 0:
+                self.assertTrue(ledger.record_progress(ProgressEvidence(
+                    ProgressKind.ACTION_COMPLETED, tick,
+                    action_id="completed-first-action",
+                )))
+                monitor.check(evidence(
+                    tick=tick,
+                    retry_round_failures=ledger.round_failures,
+                    retry_total_failures=ledger.total_failures,
+                    retry_approved_round=ledger.approved_round_retries,
+                    retry_approved_total=ledger.approved_total_retries,
+                    retry_progress_version=ledger.progress_version,
+                    retry_progress_evidence=ledger.last_progress_evidence,
+                ))
+                tick += 1
+        self.assertEqual(ledger.approved_total_retries, 12)
+        denied = ledger.record_failure("thirteenth", RetryCause.PLANNING)
+        self.assertIs(denied.verdict, RetryVerdict.TASK_EXHAUSTED)
+        monitor.check(evidence(
+            tick=tick, state="failed",
+            retry_attempt_id=ledger.last_failure_attempt_id,
+            retry_round_failures=ledger.round_failures,
+            retry_total_failures=ledger.total_failures,
+            retry_approved_round=ledger.approved_round_retries,
+            retry_approved_total=ledger.approved_total_retries,
+            retry_progress_version=ledger.progress_version,
+            retry_progress_evidence=ledger.last_progress_evidence,
+        ))
+        self.assertNotIn("I5", {item[1] for item in monitor.violations})
+        self.check_code("I5", evidence(
+            retry_round_failures=7, retry_total_failures=13,
+            retry_approved_round=7, retry_approved_total=13,
+        ))
+
+    def test_i6_applied_identity_must_match_issued_command(self):
+        self.check_code("I6", evidence(applied_request=9,
+                         applied_movement=MovementV1(forward=1),
+                         issued_commands=((9, MovementV1(strafe=1), 2, 500_000_000),)))
+        self.check_code("I6", evidence(
+            proposed_movement_intents=("navigation-intent",),
+            selected_intents=(), action_movement=MovementV1(forward=1)))
+
+    def test_i7_proof_must_be_current(self):
+        self.check_code("I7", evidence(entry_proof_valid=False))
+
+    def test_i8_no_route_requires_exhaustive_evidence(self):
+        self.check_code("I8", evidence(planning_failure_kind="no_route",
+                                       search_exhaustive=False))
+
+    def test_i9_complete_requires_full_goal_state(self):
+        self.check_code("I9", evidence(state="complete", position=(1.1, 64.0, .5)))
+        self.check_code("I9", evidence(state="complete", velocity=(.1, 0.0, 0.0)))
+        self.check_code("I9", evidence(state="complete", pose="crouching"))
+
+    def test_goal_monitor_rejects_unsupported_resource_contract(self):
+        goal = replace(evidence().goal_state,
+                       minimum_resources=ResourceState((("blocks", 1.0),)))
+        with self.assertRaises(ValueError):
+            InvariantMonitor().check(evidence(goal_state=goal))
+
+
+class ClosedLoopToolTests(unittest.TestCase):
+    def test_probe_release_stage_keeps_its_acquisition_deadline(self):
+        configured = replace(
+            next(item for item in SCENARIOS if item.name == "direct_drop_2"),
+            name="direct_drop_probe_release_deadline",
+            perturbations=replace(
+                next(item for item in SCENARIOS if item.name == "direct_drop_2").perturbations,
+                late_ticks=late_ticks(.2, 280001),
+            ),
+            max_ticks=120,
+        )
+
+        result = run(configured)
+
+        self.assertNotEqual(
+            (result.outcome, result.reason),
+            ("needs_information", "landing_lower_evidence_required"),
+        )
+        self.assertNotIn("I4", {item[1] for item in result.violations})
+
+    def test_sneak_samples_float_axes_and_moves_slower_than_walk(self):
+        scene = Scene({(x, 63, z): "minecraft:stone"
+                       for x in range(-1, 2) for z in range(5)},
+                      ((-2, 2), (60, 68), (-2, 6))).with_floor()
+        velocities = []
+        for sneak, expected in ((False, 1.0), (True, .3)):
+            backend = CalculatorBackend([100_000_000], scene, (.5, 64.0, .5))
+            action = ActionSnapshotV1(
+                "episode-sim", 1, 0, 600_000_000,
+                movement=MovementV1(forward=1, sneak=sneak),
+                valid_for_ticks=1,
+            )
+            result = backend.step(action, 600_000_000)
+            self.assertEqual(backend.applied[-1].forward, 1)
+            self.assertAlmostEqual(result.receipt.input_applications[0].forward,
+                                   expected)
+            self.assertAlmostEqual(backend.sampled_inputs[-1].forward, expected)
+            velocities.append(backend.state.velocity_blocks_per_tick[2])
+        self.assertLess(velocities[1], velocities[0])
+
+    def test_exhausted_lease_records_neutral_samples_in_ledger(self):
+        scene = Scene({(0, 63, z): "minecraft:stone" for z in range(5)},
+                      ((-2, 2), (60, 68), (-2, 6))).with_floor()
+        backend = CalculatorBackend([100_000_000], scene, (.5, 64.0, .5))
+        first = ActionSnapshotV1(
+            "episode-sim", 1, 0, 600_000_000,
+            movement=MovementV1(forward=1), valid_for_ticks=1,
+        )
+        ledger = InputApplicationLedger()
+        ledger.submit(WorldSessionId("sim-truth"), first, requested_first_tick=2)
+        first_receipt = backend.step(first, 600_000_000).receipt
+        ledger.observe_receipt(first_receipt)
+        backend.free_tick()
+        backend.free_tick()
+        second = ActionSnapshotV1(
+            "episode-sim", 2, 0, 900_000_000,
+            movement=MovementV1(), valid_for_ticks=1,
+        )
+        ledger.submit(WorldSessionId("sim-truth"), second, requested_first_tick=5)
+        second_receipt = backend.step(second, 900_000_000).receipt
+        ledger.observe_receipt(second_receipt)
+        self.assertEqual(ledger.sample(3).state, "lease_exhausted")
+        self.assertEqual(ledger.sample(4).state, "lease_exhausted")
+        self.assertEqual(ledger.sample(3).request_sequence_id, 1)
+        self.assertEqual(ledger.sample(3).forward, 0.0)
+        self.assertIsNone(backend.applied_commands[1][1])
+
+    def test_same_support_different_position_uses_local_walk(self):
+        scenario = replace(SCENARIOS[2], name="same_support_position_offset",
+                           start=(.15, 64.0, .5), goal=(.6, 64.0, .5))
+        result = run(scenario)
+        self.assertEqual(result.verdict, "PASS", result.reason)
+        self.assertTrue(any(row["action_kind"] == "WalkSegment"
+                            for row in result.trace))
+
+    def test_selected_drop_reserves_then_commits_only_after_application(self):
+        scenario = replace(
+            SCENARIOS[7], name="near_edge_risk_receipt",
+            start=(.5, 64.0, 2.5),
+        )
+        result = run(scenario)
+        self.assertEqual(result.verdict, "PASS", result.reason)
+        records = [row["risk_actions"][0] for row in result.trace
+                   if row["risk_actions"]]
+        self.assertEqual({record["action_id"] for record in records},
+                         {records[0]["action_id"]})
+        self.assertEqual(records[0]["state"], "reserved")
+        self.assertTrue(records[0]["submitted_sequences"])
+        self.assertIsNone(records[0]["commit_kind"])
+        self.assertTrue(any(record["state"] == "committed"
+                            and record["commit_kind"] == "applied_command"
+                            for record in records))
+        self.assertEqual(result.damage, 2.0)
+
+    def test_old_air_input_loss_during_revised_goal_keeps_landing_owner(self):
+        scenario = replace(
+            SCENARIOS[7], name="air_input_loss_during_goal_revision",
+            start=(.5, 64.0, 2.5),
+            perturbations=replace(
+                SCENARIOS[7].perturbations,
+                omitted_receipt_ticks=frozenset({29}),
+            ),
+            events=[Event("revise_in_air", airborne_in_drop,
+                          revise_goal_back)],
+        )
+        result = run(scenario)
+        self.assertEqual(result.events, ["revise_in_air@31"])
+        self.assertEqual(result.violations, [])
+        self.assertEqual((result.outcome, result.reason),
+                         ("failed", "input_lost"))
+        airborne = [row for row in result.trace
+                    if row["goal_revision"] == 2 and not row["on_ground"]]
+        self.assertTrue(airborne)
+        self.assertTrue(all(row["source_bound"] and
+                            row["driver_state"] not in {"failed", "cancelled"}
+                            for row in airborne))
+        self.assertTrue(any(row["recovery_wait_status"] == "exhausted_ticks"
+                            and row["source_bound"]
+                            for row in result.trace))
+
+    def test_observed_health_overrun_locks_future_risk_on_formal_path(self):
+        ledger = TaskRiskLedger("goal", TaskDamageBudget("sim-budget", 4))
+        injected = False
+
+        def controlled_hit(context):
+            nonlocal injected
+            if (not injected and ledger.committed_points >= 2
+                    and not context.backend.state.on_ground):
+                # The game side applies a concurrent, unattributed hit. The
+                # navigator sees only formal health samples and charges the
+                # full observed decline conservatively to the active drop.
+                context.backend.health -= 3
+                context.backend.damage_taken += 3
+                injected = True
+            context.driver.tick(
+                BehaviorProfileV0(), context.clock[0] + 500_000_000,
+            )
+
+        scenario = replace(
+            SCENARIOS[7], name="observed_health_overrun",
+            start=(.5, 64.0, 2.5), damage_points=4,
+        )
+        result = run(scenario, control_step=controlled_hit,
+                     risk_ledger=ledger)
+        self.assertTrue(injected)
+        self.assertTrue(ledger.risk_overrun)
+        self.assertGreaterEqual(
+            ledger.snapshot_actions()[0].observed_damage_lower_bound_points,
+            3,
+        )
+        self.assertIs(ledger.reserve("later", 1, policy_revision=0).status,
+                      RiskReservationStatus.RISK_OVERRUN)
+        self.assertIn("I3", {code for _, code, _ in result.violations})
+
+    def test_same_support_inside_region_but_moving_must_brake(self):
+        scenario = replace(
+            SCENARIOS[2], name="same_support_moving_in_region",
+            start_velocity_blocks_per_tick=(.04, 0.0, 0.0),
+        )
+        result = run(scenario)
+        self.assertEqual(result.verdict, "PASS", result.reason)
+        self.assertTrue(any(row["session_reason"] == "same_support_local_route_started"
+                            or row["action_kind"] == "WalkSegment"
+                            for row in result.trace))
+
+    def test_same_support_heading_must_align_before_complete(self):
+        scenario = replace(SCENARIOS[2], name="same_support_heading",
+                           goal_yaw_degrees=90.0)
+        result = run(scenario)
+        self.assertEqual(result.verdict, "PASS", result.reason)
+        self.assertTrue(any(row["session_reason"] == "aligning_goal_heading"
+                            for row in result.trace))
+        self.assertAlmostEqual(result.trace[-1]["yaw_radians"], math.pi / 2,
+                               delta=math.radians(2.0))
+
+    def test_legal_event_exception_keeps_prior_tick_trace(self):
+        def fail(_context):
+            raise RuntimeError("injected_event_failure")
+
+        scenario = replace(SCENARIOS[0], events=[Event(
+            "injected_failure", lambda context: context.tick == 4, fail)])
+        rows = []
+        with self.assertRaisesRegex(RuntimeError, "injected_event_failure"):
+            run(scenario, trace_sink=rows.append)
+        self.assertEqual([row["loop_tick"] for row in rows], [1, 2, 3])
+        self.assertTrue(all("applied_request" in row for row in rows))
+
+    def test_test_oracle_is_explicit_and_absent_from_formal_actor(self):
+        with self.assertRaises(ContractViolation):
+            NavigationObservationAdapter().seed_test_oracle_memory(object(), {}, ())
+        for directory in (ROOT / "mc2p/runtime", ROOT / "mc2p/skills"):
+            for path in directory.rglob("*.py"):
+                self.assertNotIn("seed_test_oracle_memory", path.read_text(encoding="utf-8"))
+                self.assertNotIn("TEST_ORACLE", path.read_text(encoding="utf-8"))
+        self.assertIsNotNone(TEST_ORACLE)
+
+    def test_late_one_sample_lease_applies_once_then_exhausts(self):
+        scene = Scene({(0, 63, 0): "minecraft:stone",
+                       (0, 63, 1): "minecraft:stone"}, ((-2, 2), (60, 68), (-2, 3))).with_floor()
+        from tests.sim.backend import Perturbations
+        backend = CalculatorBackend([100_000_000], scene, (.5, 64.0, .5),
+                                    perturbations=Perturbations(late_ticks=frozenset({2})))
+        action = ActionSnapshotV1("episode-sim", 1, 0, 600_000_000,
+                                  movement=MovementV1(forward=1), valid_for_ticks=1)
+        backend.step(action, 600_000_000)
+        self.assertEqual(backend.command_events[-1]["sample_state"], "no_accepted_command")
+        self.assertIsNone(backend.command_events[-1]["applied_request"])
+        backend.free_tick()
+        self.assertEqual(backend.command_events[-1]["applied_request"], 1)
+        self.assertEqual(backend.command_events[-1]["sample_state"], "leased")
+        backend.free_tick()
+        self.assertEqual(backend.command_events[-1]["sample_state"], "lease_exhausted")
+        self.assertIsNone(backend.command_events[-1]["applied_request"])
+
+    def test_multi_tick_lease_does_not_repeat_look_delta(self):
+        scene = Scene({(0, 63, z): "minecraft:stone" for z in range(4)},
+                      ((-2, 2), (60, 68), (-2, 5))).with_floor()
+        backend = CalculatorBackend([100_000_000], scene, (.5, 64.0, .5))
+        action = ActionSnapshotV1("episode-sim", 1, 0, 600_000_000,
+                                  movement=MovementV1(forward=1),
+                                  look=LookV1(15.0, 0.0), valid_for_ticks=3)
+        backend.step(action, 600_000_000)
+        backend.free_tick()
+        backend.free_tick()
+        self.assertAlmostEqual(backend.state.yaw_radians, math.radians(15), places=6)
+        self.assertEqual([event["sample_state"] for event in backend.command_events],
+                         ["leased", "leased", "leased"])
+
+    def test_manifest_is_discovered_and_matches_frozen_fourteen(self):
+        document, _ = read_manifest(MANIFEST)
+        self.assertEqual(len(document["cases"]), 14)
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "matrix"
+            summary = run_matrix(MANIFEST, output)
+            self.assertEqual(summary["counts"], {
+                "positive_pass": 14, "known_failure": 0,
+                "formal_receipt_new_failure": 0,
+                "calibrated_input_new_failure": 0, "unexpected": 0,
+            })
+            identity = summary["source_identity"]
+            self.assertGreater(identity["python_files"], 0)
+            self.assertEqual(len(identity["sha256"]), 64)
+            self.assertTrue(all(char in "0123456789abcdef"
+                                for char in identity["sha256"]))
+            self.assertIn(identity["git_dirty"], (True, False, None))
+            self.assertTrue((output / "summary.json").is_file())
+            self.assertEqual(len(json.loads((output / "summary.json").read_text())[
+                "cases"]), 14)
+            with self.assertRaises(FileExistsError):
+                run_matrix(MANIFEST, output)
+
+
+if __name__ == "__main__":
+    unittest.main()

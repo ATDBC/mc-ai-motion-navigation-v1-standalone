@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import multiprocessing
 from queue import Empty, Full
 import time
+from typing import Protocol, runtime_checkable
 
 from mc2p.contracts.common import (
     ContractViolation, require_identifier, require_nonnegative_int,
@@ -49,6 +50,16 @@ class GapMotionSolveResult:
             raise ContractViolation("motion worker result requires a solve result")
         if type(self.elapsed_ns) is not int or self.elapsed_ns < 0:
             raise ContractViolation("motion worker elapsed time must be nonnegative")
+
+
+@runtime_checkable
+class MotionWorkerPort(Protocol):
+    """Non-blocking motion worker contract shared by process and inline tests."""
+
+    def submit(self, job: GapMotionSolveJob) -> bool: ...
+    def poll_available(self) -> tuple[GapMotionSolveResult, ...]: ...
+    def close(self) -> None: ...
+    def is_alive(self) -> bool: ...
 
 
 def _execute_job(job: GapMotionSolveJob) -> GapMotionSolveResult:

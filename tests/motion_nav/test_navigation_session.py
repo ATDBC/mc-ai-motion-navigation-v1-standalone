@@ -9,11 +9,13 @@ from unittest.mock import Mock
 
 from mc2p.contracts.action import ActionPriorityV0
 from mc2p.contracts.common import ContractViolation
-from mc2p.contracts.action_v1 import LookV1, MovementV1
+from mc2p.contracts.action_v1 import ActionSnapshotV1, LookV1, MovementV1
 from mc2p.contracts.intent_source import IntentSourceV1
 from mc2p.contracts.observation_v3 import AirQueryResultV3
 from mc2p.motion_nav.known_map_planner import (
+    KnownMapBounds, KnownMapSnapshotBuilder, SnapshotBuildStatus,
     SurfacePlanningRequest,
+    SurfacePlanningStatus, SurfaceSearchNeed, surface_search_need,
     plan_known_surface_snapshot,
 )
 from mc2p.motion_nav.movement_transition import (
@@ -21,11 +23,18 @@ from mc2p.motion_nav.movement_transition import (
     GoalSupport,
     MovementMode,
 )
-from mc2p.motion_nav.online_motion import InputApplicationLedger
+from mc2p.motion_nav.online_motion import (
+    InputApplicationLedger, MotionTickPhase, StateAnchor,
+)
+from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET
+from mc2p.motion_nav.goal_observation import (
+    ObservedGoalStatus, evaluate_observed_goal,
+)
 from mc2p.motion_nav.motion_residual import (
     MotionResidualResult, MotionResidualStatus,
 )
-from mc2p.motion_nav.motion_risk import TaskDamageBudget
+from mc2p.motion_nav.motion_risk import TaskDamageBudget, TaskRiskLedger
+from mc2p.motion_nav.motion_risk import RiskCommitEvidence, RiskCommitKind
 from mc2p.motion_nav.runtime_adapter import BodyState, NavigationFrame
 from mc2p.motion_nav.navigation_session import (
     NavigationSession,
@@ -38,7 +47,7 @@ from mc2p.motion_nav.landing_edge_probe import (
     LandingEdgeProbe, LandingEdgeProbeState,
 )
 from mc2p.motion_nav.action_route_executor import (
-    ActionRouteDecision, ActionRouteState,
+    ActionRouteDecision, ActionRouteExecutor, ActionRouteState,
 )
 from mc2p.motion_nav.route_admission import AdmissionReason
 from mc2p.motion_nav.support_surfaces import query_support_surfaces
@@ -55,6 +64,7 @@ from tests.motion_nav.test_b07_surface_planning import ordinary_profile
 from tests.motion_nav.test_jump_up import jump_profile
 from tests.motion_nav.test_b09_air_transitions import air_profile
 from tests.motion_nav.test_b10_gap_solver import fixture as gap_fixture
+from tests.motion_nav.test_b10_online_motion import state as physics_state
 from tests.observation_v3_fixtures import valid_snapshot_v3
 
 
@@ -101,12 +111,13 @@ class _InlinePlanner:
         self.closed = True
 
 
-class _DelayedCancelExecutor:
+class _DelayedCancelExecutor(ActionRouteExecutor):
     """Models an airborne owner that needs one more frame to land."""
 
     def __init__(self) -> None:
         self.cancel_requested = False
         self.decisions = 0
+        self.state = ActionRouteState.RUNNING
 
     def cancel(self) -> None:
         self.cancel_requested = True
@@ -114,17 +125,19 @@ class _DelayedCancelExecutor:
     def decide(self, frame, **_):
         self.decisions += 1
         if self.decisions == 1:
+            self.state = ActionRouteState.CANCELLING
             return ActionRouteDecision(
                 ActionRouteState.CANCELLING, MovementV1(forward=1), None,
                 1, 0, "landing_after_cancel", (), 0,
             )
+        self.state = ActionRouteState.CANCELLED
         return ActionRouteDecision(
             ActionRouteState.CANCELLED, MovementV1(), None,
             1, 0, "cancelled_after_landing", (), 0,
         )
 
 
-class _RepeatingRecoveryExecutor:
+class _RepeatingRecoveryExecutor(ActionRouteExecutor):
     def __init__(self, state: ActionRouteState, reason: str) -> None:
         self.state = state
         self.reason = reason
@@ -140,6 +153,42 @@ class _RepeatingRecoveryExecutor:
             self.state, MovementV1(), None,
             1, 0, self.reason, (), 0,
         )
+
+
+def _replace_route_executor(session: NavigationSession,
+                            executor: ActionRouteExecutor) -> None:
+    control = session._supervisor.incumbent_route
+    assert control is not None
+    session._supervisor._route = replace(control, executor=executor)
+
+
+def _ground_anchor(current: NavigationFrame) -> StateAnchor:
+    tick = current.body.sequence_id
+    state = replace(
+        physics_state(movement_tick_id=tick),
+        session=current.session,
+        position=current.body.position,
+        velocity_blocks_per_tick=(
+            current.body.velocity_blocks_per_second[0] / 20.0,
+            -.0784000015258789 if current.body.is_on_ground else
+            current.body.velocity_blocks_per_second[1] / 20.0,
+            current.body.velocity_blocks_per_second[2] / 20.0,
+        ),
+        # A grounded 1.21 sample still carries gravity's small downward
+        # velocity. Zero would make the calculator falsely infer airborne.
+        vertical_collision=True,
+        yaw_radians=current.body.yaw_radians,
+        pitch_radians=current.body.pitch_radians,
+        pose=current.body.pose,
+        on_ground=current.body.is_on_ground,
+        sneaking=current.body.is_sneaking,
+    )
+    return StateAnchor(
+        current.session, tick, tick, MotionTickPhase.AFTER_MOVEMENT,
+        None, None, JAVA_1_21_RULESET.ruleset_id,
+        JAVA_1_21_RULESET.state_schema,
+        "mc2p.input-projection.v1", state,
+    )
 
 
 def _goal(position: tuple[float, float, float]) -> GoalState:
@@ -302,6 +351,136 @@ class NavigationSessionTests(unittest.TestCase):
             ordinary_profile(), jump_profile(), step_profile(),
         )
 
+    def test_same_support_planner_has_typed_no_search_result(self):
+        world = _known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        node = _nodes(world, (0,))[0]
+        request = SurfacePlanningRequest(
+            1, "same-support-request", "same-support-goal", 1,
+            world.session.value, node.node_id, node.node_id,
+            goal_state=_goal(node.position),
+        )
+        bounds = KnownMapBounds(0, 0, 1, 1, 0, 0, True)
+        progress = KnownMapSnapshotBuilder(world.view(), bounds).advance(
+            world.view(), 1000,
+        )
+        self.assertIs(progress.status, SnapshotBuildStatus.COMPLETE)
+        self.assertIs(surface_search_need(request),
+                      SurfaceSearchNeed.SAME_SUPPORT_LOCAL_GOAL)
+        result = plan_known_surface_snapshot(
+            progress.snapshot, ordinary_profile(), step_profile(), request,
+        )
+        self.assertIs(result.status,
+                      SurfacePlanningStatus.NO_GRAPH_SEARCH_NEEDED)
+        self.assertEqual(result.segments, ())
+        self.assertIsNone(result.total_cost_seconds)
+
+    def test_same_support_goal_waits_for_previous_input_receipt(self):
+        world = _known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        node = _nodes(world, (0,))[0]
+        initial = frame(world, 0, node.position)
+        session = NavigationSession(
+            "same-support-pending", self.profiles(),
+            planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        session.start_goal("goal", 1, _goal(node.position), initial)
+        ledger = InputApplicationLedger()
+        ledger.submit(world.session, ActionSnapshotV1(
+            "episode", 1, 0, 2_000_000_000,
+            movement=MovementV1(forward=1), valid_for_ticks=1,
+        ), requested_first_tick=1)
+        pending = session.propose(
+            initial, None, 2_000_000_000, input_ledger=ledger,
+        )
+        self.assertIs(pending.report.state, NavigationSessionState.EXECUTING)
+        self.assertEqual(pending.report.reason, "waiting_for_previous_input")
+        self.assertIsNone(session.active_route)
+        ledger.expire(1, at_tick=2)
+        complete = session.propose(
+            frame(world, 1, node.position), None, 2_000_000_000,
+            input_ledger=ledger,
+        )
+        self.assertIs(complete.report.state, NavigationSessionState.COMPLETE)
+
+    def test_replan_after_reaching_goal_support_skips_graph_search(self):
+        world = _known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+            (1, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        start, goal = _nodes(world, (0, 1))
+        initial = frame(world, 0, start.position)
+        planner = _InlinePlanner()
+        session = NavigationSession(
+            "replan-on-goal", self.profiles(), planner_worker=planner,
+            clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        session.start(SurfacePlanningRequest(
+            1, "far-request", "goal", 1, world.session.value,
+            start.node_id, goal.node_id, goal_state=_goal(goal.position),
+        ), initial)
+        arrived = frame(world, 1, goal.position)
+        session.observe(arrived, ())
+        session._reissue_request_from_current(arrived, "arrived_and_replanned")
+        result = session.propose(arrived, None, 2_000_000_000)
+        self.assertIs(result.report.state, NavigationSessionState.COMPLETE)
+        self.assertFalse(planner.jobs)
+
+    def test_cancelled_planner_result_cannot_restore_old_route(self):
+        world = _known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+            (1, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        start, goal = _nodes(world, (0, 1))
+        initial = frame(world, 0, start.position)
+        planner = _InlinePlanner(hold_first=True)
+        session = NavigationSession(
+            "cancel-old-worker", self.profiles(), planner_worker=planner,
+            clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        session.start(SurfacePlanningRequest(
+            1, "old-request", "goal", 1, world.session.value,
+            start.node_id, goal.node_id, goal_state=_goal(goal.position),
+        ), initial)
+        session.propose(initial, None, 2_000_000_000)
+        self.assertTrue(planner.jobs)
+        session.cancel("cancel_before_result")
+        planner.hold_first = False
+        cancelled = session.propose(
+            frame(world, 1, start.position), None, 2_000_000_000,
+        )
+        self.assertIs(cancelled.report.state, NavigationSessionState.CANCELLED)
+        self.assertIsNone(session.active_route)
+
+    def test_unknown_support_cannot_complete_even_with_any_goal_support(self):
+        session_id = WorldSessionId("unknown-direct-support")
+        world = WorldKnowledge(session_id)
+        stamp = ObservationStamp(session_id, 1, 1, "test-clock", 1)
+        world.confirm_air(stamp, tuple(
+            (x, y, z) for x in range(-1, 2)
+            for y in range(-1, 4) for z in range(-1, 2)
+            if (x, y, z) != (0, 0, 0)
+        ))
+        initial = frame(world, 0, (.5, 1.0, .5))
+        goal = replace(_goal((.5, 1.0, .5)), support=GoalSupport.ANY)
+        observed = evaluate_observed_goal(
+            initial, goal, "no_expected_damage",
+        )
+        self.assertIs(observed.status, ObservedGoalStatus.NEEDS_INFORMATION)
+        navigation = NavigationSession(
+            "unknown-goal-support", self.profiles(),
+            planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
+        )
+        navigation.start_goal("goal", 1, goal, initial)
+        self.assertIs(navigation.report.state,
+                      NavigationSessionState.NEEDS_INFORMATION)
+
+
     def test_goal_start_binds_the_callers_task_damage_budget(self):
         world = _known_world({
             (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
@@ -333,16 +512,19 @@ class NavigationSessionTests(unittest.TestCase):
         session._task_damage_budget = TaskDamageBudget(
             "task-total-four", 4.0,
         )
-        session._executor = Mock(completed_movement_damage_points=2.0)
-
-        session._record_completed_movement_damage()
+        session._risk_ledger = TaskRiskLedger(
+            "cumulative-damage-task", session._task_damage_budget,
+        )
+        session._risk_ledger.reserve("earlier-drop", 2, policy_revision=0)
+        session._risk_ledger.commit("earlier-drop", RiskCommitEvidence(
+            RiskCommitKind.OBSERVED_DEPARTURE, observation_sequence=1,
+        ))
         session._clear_active_execution()
-        session._executor = Mock(completed_movement_damage_points=1.0)
-        session._record_completed_movement_damage()
+        session._record_completed_movement_damage(1.0)
 
         self.assertEqual(
             session._remaining_damage_budget(),
-            TaskDamageBudget("task-total-four", 1.0),
+            TaskDamageBudget("task-total-four", 2.0),
         )
 
     def test_admission_rechecks_damage_spent_after_request_was_issued(self):
@@ -379,8 +561,10 @@ class NavigationSessionTests(unittest.TestCase):
             frame(world, 1, body),
             damage_budget=TaskDamageBudget("two", 2.0),
         )
-        session._executor = Mock(completed_movement_damage_points=2.0)
-        session._record_completed_movement_damage()
+        session._risk_ledger.reserve("earlier-drop", 2, policy_revision=0)
+        session._risk_ledger.commit("earlier-drop", RiskCommitEvidence(
+            RiskCommitKind.OBSERVED_DEPARTURE, observation_sequence=1,
+        ))
         session._clear_active_execution()
 
         proposal = session.propose(
@@ -837,7 +1021,7 @@ class NavigationSessionTests(unittest.TestCase):
             MovementV1(),
         )
 
-    def test_occluded_landing_evidence_uses_edge_probe_only_for_drop_admission(self):
+    def test_admission_reason_text_does_not_start_edge_probe(self):
         world = _known_world({
             (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
             (0, -5, 1): BlockGeometry.full_cube("minecraft:stone"),
@@ -863,7 +1047,7 @@ class NavigationSessionTests(unittest.TestCase):
             information_probe_movement(
                 current, frozenset(session._information_lower_required),
             ),
-            MovementV1(forward=1, strafe=1, sneak=True),
+            MovementV1(),
         )
 
         session._reason = "no_known_route_requires_information"
@@ -934,11 +1118,11 @@ class NavigationSessionTests(unittest.TestCase):
                 ),
             ),
         )
-        session._restart_request_from_current = Mock()
+        session._reissue_request_from_current = Mock()
 
         session.observe(observed, (landing,))
 
-        session._restart_request_from_current.assert_not_called()
+        session._reissue_request_from_current.assert_not_called()
         self.assertIs(session._state, NavigationSessionState.NEEDS_INFORMATION)
         self.assertIs(
             session._edge_probe.state, LandingEdgeProbeState.APPROACHING,
@@ -1079,21 +1263,17 @@ class NavigationSessionTests(unittest.TestCase):
             "task", 2,
             replace(_goal((.5, 64.0, -3.5)), risk_policy_id="one"),
         )
-        compared = False
         for sequence in range(4, 10):
             proposal = session.propose(
                 frame(world, sequence, body), None, 2_000_000_000,
             )
-            decision = proposal.route_decision
-            if decision is None or decision.movement == MovementV1():
-                continue
-            compared = True
-            self.assertEqual(
-                proposal.control_frame.intents[0].intent.movement,
-                decision.movement,
+            self.assertIs(proposal.report.state,
+                          NavigationSessionState.CANCELLING)
+            self.assertIsNone(proposal.route_decision)
+            self.assertTrue(
+                proposal.control_frame.intents[0].intent.movement.sneak,
+                "missing Runtime input evidence cannot release the old probe",
             )
-            break
-        self.assertTrue(compared, "revised walk route never produced movement")
 
     def test_input_lost_returns_a_terminal_result_without_replanning(self):
         world = _known_world({
@@ -1112,17 +1292,48 @@ class NavigationSessionTests(unittest.TestCase):
         session.propose(frame(world, 1, start.position), None, 2_000_000_000)
         self.assertIsNotNone(session._executor)
         request_sequence = session._request.sequence
-        session._executor = _RepeatingRecoveryExecutor(
+        _replace_route_executor(session, _RepeatingRecoveryExecutor(
             ActionRouteState.INPUT_LOST, "input_application_unconfirmed",
-        )
+        ))
 
+        current = frame(world, 2, start.position)
         proposal = session.propose(
-            frame(world, 2, start.position), None, 2_000_000_000,
+            current, _ground_anchor(current), 2_000_000_000,
+            input_ledger=InputApplicationLedger(),
         )
 
         self.assertIs(proposal.report.state, NavigationSessionState.FAILED)
         self.assertEqual(proposal.report.reason, "input_application_unconfirmed")
         self.assertEqual(session._request.sequence, request_sequence)
+
+    def test_old_route_input_lost_during_goal_revision_is_not_replaced(self):
+        world = _known_world({
+            (x, 0, 0): BlockGeometry.full_cube("minecraft:stone")
+            for x in range(4)
+        })
+        start, goal = _nodes(world, (0, 3))
+        session = NavigationSession(
+            "revision-input-lost", self.profiles(),
+            planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        session.start_goal(
+            "task", 1, _goal(goal.position), frame(world, 0, start.position),
+        )
+        session.propose(frame(world, 1, start.position), None, 2_000_000_000)
+        old_request = session.active_route.source_request_id
+        session.update_goal("task", 2, _goal(start.position))
+        self.assertNotEqual(session._request.request_id, old_request)
+        _replace_route_executor(session, _RepeatingRecoveryExecutor(
+            ActionRouteState.INPUT_LOST, "old_air_input_unconfirmed",
+        ))
+        current = frame(world, 2, start.position)
+        proposal = session.propose(
+            current, _ground_anchor(current), 2_000_000_000,
+            input_ledger=InputApplicationLedger(),
+        )
+        self.assertIs(proposal.report.state, NavigationSessionState.FAILED)
+        self.assertEqual(proposal.report.reason, "old_air_input_unconfirmed")
 
     def test_same_replan_cause_is_bounded_to_two_retries(self):
         world = _known_world({
@@ -1139,20 +1350,24 @@ class NavigationSessionTests(unittest.TestCase):
             "task", 1, _goal(goal.position), frame(world, 0, start.position),
         )
         terminal = None
+        ledger = InputApplicationLedger()
         for sequence in range(1, 10):
             if session._executor is not None:
-                session._executor = _RepeatingRecoveryExecutor(
+                _replace_route_executor(session, _RepeatingRecoveryExecutor(
                     ActionRouteState.NEEDS_REPLAN,
                     "ground_traversal_stalled",
-                )
+                ))
+            current = frame(world, sequence, start.position)
             terminal = session.propose(
-                frame(world, sequence, start.position), None, 2_000_000_000,
+                current, _ground_anchor(current), 2_000_000_000,
+                input_ledger=ledger,
             )
             if terminal.report.terminal:
                 break
 
         self.assertIsNotNone(terminal)
-        self.assertIs(terminal.report.state, NavigationSessionState.FAILED)
+        self.assertIs(terminal.report.state, NavigationSessionState.FAILED,
+                      session._supervisor.last_handoff)
         self.assertEqual(terminal.report.reason, "replan_retry_exhausted")
         self.assertEqual(session._request.sequence, 3)
 
@@ -1218,6 +1433,62 @@ class NavigationSessionTests(unittest.TestCase):
 
         self.assertIs(session.report.state, NavigationSessionState.FAILED)
         self.assertEqual(session.report.reason, "information_out_of_range")
+
+    def test_information_wait_bounds_missing_query_responses(self):
+        world, missing = _known_endpoints_with_unknown_gap()
+        start, goal = _nodes(world, (-1, 1))
+        initial = frame(world, 0, start.position)
+        session = NavigationSession(
+            "missing-query-response-wait", self.profiles(),
+            planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        session.start(SurfacePlanningRequest(
+            1, "missing-query-request", "missing-query-goal", 1,
+            world.session.value, start.node_id, goal.node_id,
+            goal_state=_goal(goal.position),
+        ), initial)
+        session.propose(initial, None, 2_000_000_000)
+        self.assertIn(missing, session.report.missing_cells)
+        for sequence in range(1, 41):
+            current = replace(initial, body=replace(
+                initial.body, sequence_id=sequence,
+            ), air_query_results=())
+            session._information_look(current)
+        self.assertIs(session.report.state, NavigationSessionState.FAILED)
+        self.assertEqual(session.report.reason,
+                         "information_unavailable_timeout")
+
+    def test_repeated_partial_query_cannot_reset_another_missing_cell_wait(self):
+        world, first = _known_endpoints_with_unknown_gap()
+        start, goal = _nodes(world, (-1, 1))
+        second = (first[0] + 1, first[1], first[2])
+        initial = frame(world, 0, start.position)
+        session = NavigationSession(
+            "partial-query-response-wait", self.profiles(),
+            planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        session.start(SurfacePlanningRequest(
+            1, "partial-query-request", "partial-query-goal", 1,
+            world.session.value, start.node_id, goal.node_id,
+            goal_state=_goal(goal.position),
+        ), initial)
+        session.propose(initial, None, 2_000_000_000)
+        session._snapshot_missing = (first, second)
+        session._reissue_request_from_current = Mock()
+        session._information_look(initial)
+        for sequence in range(1, 42):
+            current = replace(initial, body=replace(
+                initial.body, sequence_id=sequence,
+            ), air_query_results=(AirQueryResultV3(
+                first, "visible_air", 1.0, True,
+            ),))
+            session.observe(current, ())
+            session._information_look(current)
+        self.assertIs(session.report.state, NavigationSessionState.FAILED)
+        self.assertEqual(session.report.reason,
+                         "information_unavailable_timeout")
 
     def test_conditioned_task_look_suppresses_information_look(self):
         world, _ = _known_endpoints_with_unknown_gap()
@@ -1432,12 +1703,15 @@ class NavigationSessionTests(unittest.TestCase):
         session.propose(initial, None, 2_000_000_000)
 
         session.cancel("task_cancelled")
+        current = frame(world, 1, start.position)
         cancelled = session.propose(
-            frame(world, 1, start.position), None, 2_000_000_000,
+            current, _ground_anchor(current), 2_000_000_000,
+            input_ledger=InputApplicationLedger(),
         )
         session.close()
 
-        self.assertIs(cancelled.report.state, NavigationSessionState.CANCELLED)
+        self.assertIs(cancelled.report.state, NavigationSessionState.CANCELLED,
+                      session._supervisor.last_handoff)
         self.assertEqual(
             cancelled.control_frame.intents[0].intent.movement.forward, 0,
         )
@@ -1462,14 +1736,16 @@ class NavigationSessionTests(unittest.TestCase):
         ), initial)
         session.propose(initial, None, 2_000_000_000)
         owner = _DelayedCancelExecutor()
-        session._executor = owner
+        _replace_route_executor(session, owner)
 
         session.cancel("task_cancelled")
         landing = session.propose(
             frame(world, 1, start.position), None, 2_000_000_000,
         )
+        current = frame(world, 2, start.position)
         finished = session.propose(
-            frame(world, 2, start.position), None, 2_000_000_000,
+            current, _ground_anchor(current), 2_000_000_000,
+            input_ledger=InputApplicationLedger(),
         )
 
         self.assertTrue(owner.cancel_requested)

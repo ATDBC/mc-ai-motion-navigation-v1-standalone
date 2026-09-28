@@ -225,6 +225,11 @@ class PlayerRuntimeV1:
         with self._io_lock:
             return self._arbiter.ordered_source_stats
 
+    def has_ordered_source(self, source: IntentSourceV1) -> bool:
+        """Read-only check for a registered, current-generation input owner."""
+        with self._io_lock:
+            return self._arbiter.has_ordered_source(source)
+
     def register_ordered_source(self, label: str) -> IntentSourceV1:
         with self._io_lock:
             self._require_ready()

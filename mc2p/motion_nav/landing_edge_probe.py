@@ -7,7 +7,12 @@ import math
 
 from mc2p.contracts.action_v1 import LookV1, MovementV1
 from mc2p.contracts.common import ContractViolation, require_identifier
+from mc2p.motion_nav.body_control import StopCause
+from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
+from mc2p.motion_nav.physics_types import PhysicsState
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
+from mc2p.motion_nav.safe_ground_control import verified_ground_rollout
+from mc2p.motion_nav.support_surfaces import query_support_surfaces
 from mc2p.motion_nav.world_model import BlockPos, CellKnowledge
 
 
@@ -29,6 +34,7 @@ class LandingEdgeProbeState(StrEnum):
     POSITIONING_ENTRY = "positioning_entry"
     RELEASING = "releasing"
     READY = "ready"
+    STOPPING = "stopping"
     TIMED_OUT = "timed_out"
     ENDED = "ended"
 
@@ -41,6 +47,13 @@ class LandingEdgeProbe:
     goal_revision: int
     landing_cell: BlockPos
     started_sequence_id: int
+    acquisition_id: str | None = None
+    route_id: str | None = None
+    route_revision: int | None = None
+    action_index: int | None = None
+    world_session: str | None = None
+    geometry_revision: int | None = None
+    dependencies: tuple[BlockPos, ...] = ()
     state: LandingEdgeProbeState = LandingEdgeProbeState.APPROACHING
     edge_sequence_id: int | None = None
     ended_reason: str | None = None
@@ -49,6 +62,8 @@ class LandingEdgeProbe:
     vantage_position: tuple[float, float] | None = None
     entry_position: tuple[float, float] | None = None
     evidence_sequence_id: int | None = None
+    stop_cause: StopCause | None = None
+    stop_target: tuple[float, float] | None = None
 
     def __post_init__(self) -> None:
         require_identifier(self.goal_id, "landing edge probe goal id")
@@ -60,6 +75,38 @@ class LandingEdgeProbe:
             raise ContractViolation("landing edge probe cell must be an integer position")
         if type(self.started_sequence_id) is not int or self.started_sequence_id < 0:
             raise ContractViolation("landing edge probe start sequence is invalid")
+        optional_ids = (
+            (self.acquisition_id, "landing edge probe acquisition id"),
+            (self.route_id, "landing edge probe route id"),
+            (self.world_session, "landing edge probe world session"),
+        )
+        for value, label in optional_ids:
+            if value is not None:
+                require_identifier(value, label)
+        if ((self.route_id is None) != (self.action_index is None)
+                or (self.route_id is None) != (self.route_revision is None)):
+            raise ContractViolation(
+                "landing edge probe action identity must be complete"
+            )
+        if (self.route_revision is not None
+                and (type(self.route_revision) is not int
+                     or self.route_revision < 0)):
+            raise ContractViolation("landing edge probe route revision is invalid")
+        if (self.action_index is not None
+                and (type(self.action_index) is not int
+                     or self.action_index < 0)):
+            raise ContractViolation("landing edge probe action index is invalid")
+        if (self.geometry_revision is not None
+                and (type(self.geometry_revision) is not int
+                     or self.geometry_revision < 0)):
+            raise ContractViolation(
+                "landing edge probe geometry revision is invalid"
+            )
+        if (type(self.dependencies) is not tuple
+                or self.dependencies != tuple(sorted(set(self.dependencies)))):
+            raise ContractViolation(
+                "landing edge probe dependencies must be sorted and unique"
+            )
         if type(self.state) is not LandingEdgeProbeState:
             raise ContractViolation("landing edge probe state must be typed")
 
@@ -84,11 +131,113 @@ class LandingEdgeProbe:
             and self.goal_revision == goal_revision
         )
 
+    def belongs_to_action(
+        self, route_id: str, route_revision: int, action_index: int,
+    ) -> bool:
+        return (
+            self.owned
+            and self.route_id == route_id
+            and self.route_revision == route_revision
+            and self.action_index == action_index
+        )
+
     def end(self, reason: str) -> None:
         if type(reason) is not str or not reason.strip():
             raise ContractViolation("landing edge probe end reason is required")
         self.state = LandingEdgeProbeState.ENDED
         self.ended_reason = reason.strip()
+
+    def request_stop(self, cause: StopCause) -> None:
+        if type(cause) is not StopCause:
+            raise ContractViolation("edge probe stop cause must be typed")
+        if self.state is LandingEdgeProbeState.ENDED:
+            return
+        if self.state is not LandingEdgeProbeState.STOPPING:
+            self.stop_target = None
+        self.stop_cause = cause
+        self.state = LandingEdgeProbeState.STOPPING
+
+    def stop_ready(self, frame: NavigationFrame,
+                   state: PhysicsState | None = None) -> bool:
+        if (self.state is not LandingEdgeProbeState.STOPPING
+                or not frame.body.is_on_ground
+                or self.stop_target is None):
+            return False
+        speed = math.hypot(
+            frame.body.velocity_blocks_per_second[0],
+            frame.body.velocity_blocks_per_second[2],
+        )
+        distance = math.hypot(
+            self.stop_target[0] - frame.body.position[0],
+            self.stop_target[1] - frame.body.position[2],
+        )
+        if speed > .10 or distance > .20:
+            return False
+        support = query_support(frame.body.body_box, frame.world)
+        if (support.status is not QueryStatus.FEASIBLE
+                or support.support_fraction < .80):
+            return False
+        # The calculator must prove the entire released-input tail on known
+        # ordinary ground. Unknown material or a missing anchor retains owner.
+        return verified_ground_rollout(
+            frame, state, MovementV1(), control_ticks=0,
+            tail_ticks=8, minimum_support=.80,
+        ) is not None
+
+    def _choose_stop_target(self, frame: NavigationFrame) -> tuple[float, float] | None:
+        body = frame.body
+        feet_y = body.position[1]
+        candidates: list[tuple[float, float, float]] = []
+        for x in range(math.floor(body.position[0]) - 2,
+                       math.floor(body.position[0]) + 3):
+            for z in range(math.floor(body.position[2]) - 2,
+                           math.floor(body.position[2]) + 3):
+                result = query_support_surfaces(
+                    frame.world, x, z, feet_y - .1, feet_y + .1,
+                )
+                for surface in result.surfaces:
+                    tx, ty, tz = surface.position
+                    if abs(ty - feet_y) > .10:
+                        continue
+                    dx, dz = tx - body.position[0], tz - body.position[2]
+                    if (sweep(body.body_box, (dx, 0.0, dz), frame.world).status
+                            is not QueryStatus.FEASIBLE):
+                        continue
+                    safe = query_support(
+                        body.body_box.moved(dx, 0.0, dz), frame.world,
+                    )
+                    if (safe.status is QueryStatus.FEASIBLE
+                            and safe.support_fraction >= .80):
+                        candidates.append((math.hypot(dx, dz), tx, tz))
+        return None if not candidates else min(candidates)[1:]
+
+    def _stopping_movement(self, frame: NavigationFrame,
+                           state: PhysicsState | None) -> MovementV1:
+        if self.stop_target is None:
+            self.stop_target = self._choose_stop_target(frame)
+        if self.stop_target is None or not frame.body.is_on_ground:
+            return MovementV1(sneak=True)
+        # Keep the edge guard until the supervisor also confirms that all
+        # issued input is resolved. A safe pose alone cannot release sneak.
+        dx = self.stop_target[0] - frame.body.position[0]
+        dz = self.stop_target[1] - frame.body.position[2]
+        candidates = [MovementV1(sneak=True)]
+        if math.hypot(dx, dz) > .12:
+            candidates.insert(0, _movement_toward(dx, dz,
+                                                   frame.body.yaw_radians))
+        best = None
+        for movement in candidates:
+            predicted = verified_ground_rollout(
+                frame, state, movement, control_ticks=1, tail_ticks=4,
+                minimum_support=.01,
+            )
+            if predicted is None:
+                continue
+            distance = math.hypot(self.stop_target[0] - predicted.position[0],
+                                  self.stop_target[1] - predicted.position[2])
+            if best is None or distance < best[0]:
+                best = (distance, movement)
+        return MovementV1(sneak=True) if best is None else best[1]
 
     @property
     def releasing(self) -> bool:
@@ -181,7 +330,9 @@ class LandingEdgeProbe:
             ) <= tolerance
         )
 
-    def movement(self, frame: NavigationFrame) -> MovementV1:
+    def movement(self, frame: NavigationFrame,
+                 state: PhysicsState | None = None, *,
+                 acquisition_expired: bool | None = None) -> MovementV1:
         """Sneak to one side of the ledge, then hold for lower-cell evidence.
 
         Looking straight over an edge is insufficient: before the camera
@@ -192,12 +343,17 @@ class LandingEdgeProbe:
         """
         if type(frame) is not NavigationFrame or not self.owned:
             return MovementV1()
-        if (not self.ready
-                and frame.body.sequence_id - self.started_sequence_id
-                    >= DIRECT_DROP_EDGE_PROBE_MAX_FRAMES):
-            self.state = LandingEdgeProbeState.TIMED_OUT
+        if self.state is LandingEdgeProbeState.STOPPING:
+            return self._stopping_movement(frame, state)
+        expired = (
+            frame.body.sequence_id - self.started_sequence_id
+                >= DIRECT_DROP_EDGE_PROBE_MAX_FRAMES
+            if acquisition_expired is None else acquisition_expired
+        )
+        if not self.ready and expired:
+            self.request_stop(StopCause.ACQUISITION_TIMED_OUT)
             self.ended_reason = "landing_edge_probe_timed_out"
-            return MovementV1()
+            return self._stopping_movement(frame, state)
         if self.ready or self.releasing:
             return MovementV1()
         if (not frame.body.is_on_ground

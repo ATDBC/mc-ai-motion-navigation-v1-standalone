@@ -2,6 +2,8 @@
 
 本仓库是由主项目生成的只读源码快照。先读最新的 `docs/motion_navigation/stages/` 和对应的 `acceptance/`，再读取相关 `architecture/` 与 `decisions/`。
 
+当前[导航协调重构计划](docs/motion_navigation/stages/navigation-coordination-refactor-plan.md)已完成 S0 至 S5。固定矩阵、冻结种子扫描、真实后台进程门禁和代表性 Fabric 回归均已通过；完整连续高度速度带、形状和随机迟到矩阵仍按原验收单独关闭。结果和适用边界见[验收记录](docs/motion_navigation/acceptance/navigation-coordination-refactor.md)。
+
 项目方只通过默认分支 `main` 发布由固定导出清单生成、校验通过的公开快照。不得把主项目的完整开发分支或提交历史直接推入本仓库。三方审查分支可以保留，但只保存审查者自己的报告和复现材料，不代表正式发布状态。
 
 ## 工程边界

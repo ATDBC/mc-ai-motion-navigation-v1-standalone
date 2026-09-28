@@ -99,6 +99,14 @@ class ActionArbiterV1:
         with self._lock:
             return self._ordered_sources.register(label, episode_id)
 
+    def has_ordered_source(self, source: IntentSourceV1) -> bool:
+        with self._lock:
+            try:
+                self._ordered_sources.validate_source(source)
+            except ContractViolation:
+                return False
+            return True
+
     def submit_ordered_intent(self, envelope: OrderedIntentV1) -> None:
         with self._lock:
             slot = self._ordered_sources.validate_submission(envelope)

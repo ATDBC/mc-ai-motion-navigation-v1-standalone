@@ -8,9 +8,11 @@ from __future__ import annotations
 
 import json
 import time
+from dataclasses import dataclass
 from typing import Callable
 
 from mc2p.contracts.behavior import BehaviorProfileV0
+from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.common import ContractViolation, require_nonnegative_int
 from mc2p.contracts.intent_source import (
     ControlFrameProposalV1, IntentSourceV1, OrderedIntentV1,
@@ -22,6 +24,7 @@ from mc2p.contracts.task import (
     ComparisonOperatorV0, SuccessCriterionV0, TaskIntentV0,
 )
 from mc2p.motion_nav.movement_transition import GoalState
+from mc2p.motion_nav.body_control import HandoffDisposition
 from mc2p.motion_nav.navigation_session import (
     NavigationSessionPort, NavigationSessionProposal, NavigationSessionState,
 )
@@ -32,6 +35,18 @@ from mc2p.runtime.player_runtime_v1 import (
 
 
 _STEP_WINDOW_NS = 500_000_000
+
+
+@dataclass(frozen=True, slots=True)
+class NavigationFrameDiagnostics:
+    proposed_intents: tuple[str, ...]
+    proposed_movement_intents: tuple[str, ...]
+    selected_intents: tuple[tuple[str, str], ...]
+    candidate_intents: tuple[str, ...]
+    suppressed_intents: tuple[tuple[str, str], ...]
+    action_request_sequence: int | None
+    action_movement: MovementV1 | None
+    action_deadline_ns: int | None
 
 
 class RuntimeNavigationDriver:
@@ -73,6 +88,16 @@ class RuntimeNavigationDriver:
         self._goal: GoalState | None = None
         self._prepared_deadline_ns: int | None = None
         self._prepared_proposal: NavigationSessionProposal | None = None
+        self._last_frame_diagnostics: NavigationFrameDiagnostics | None = None
+        self._last_runtime_failure: str | None = None
+
+    @property
+    def last_frame_diagnostics(self) -> NavigationFrameDiagnostics | None:
+        return self._last_frame_diagnostics
+
+    @property
+    def last_runtime_failure(self) -> str | None:
+        return self._last_runtime_failure
 
     @property
     def has_prepared_frame(self) -> bool:
@@ -93,7 +118,8 @@ class RuntimeNavigationDriver:
         goal: GoalState,
         now_ns: int,
         *,
-        damage_budget: TaskDamageBudget = TaskDamageBudget(),
+        damage_budget: TaskDamageBudget | None = None,
+        task_id: str | None = None,
     ) -> None:
         require_nonnegative_int(now_ns, "runtime navigation start time")
         if self.source is not None or self.state not in {"ready", "stopped"}:
@@ -109,11 +135,13 @@ class RuntimeNavigationDriver:
                 self.session.start_goal(
                     goal_id, goal_revision, goal, frame,
                     damage_budget=damage_budget,
+                    task_id=task_id,
                 )
             else:
                 self.session.update_goal(
                     goal_id, goal_revision, goal,
                     damage_budget=damage_budget,
+                    task_id=task_id,
                 )
         except BaseException:
             self._release_source()
@@ -250,11 +278,28 @@ class RuntimeNavigationDriver:
         proposal = self._prepared_proposal
         self._prepared_deadline_ns = None
         self._prepared_proposal = None
+        intents = (() if proposal is None or proposal.control_frame is None
+                   else proposal.control_frame.intents)
+        decision = result.decision
+        self._last_frame_diagnostics = NavigationFrameDiagnostics(
+            tuple(item.intent.intent_id for item in intents),
+            tuple(item.intent.intent_id for item in intents
+                  if item.intent.movement is not None),
+            () if decision is None else decision.selected_intents,
+            () if decision is None else decision.candidate_intent_ids,
+            () if decision is None else decision.suppressed_intents,
+            None if decision is None else decision.action.request_sequence_id,
+            None if decision is None else decision.action.movement,
+            None if decision is None else decision.action.deadline_monotonic_ns,
+        )
         if result.report.failure is not None:
+            self._last_runtime_failure = (
+                f"{result.report.failure.code.value}:"
+                f"{result.report.failure.message}"
+            )
             self.state, self.reason = "failed", "runtime_failure"
         else:
             if (proposal is not None and proposal.route_decision is not None
-                    and proposal.route_decision.verified_command_index is not None
                     and proposal.control_frame is not None
                     and result.decision is not None):
                 navigation_intents = {
@@ -272,15 +317,27 @@ class RuntimeNavigationDriver:
                         control_sequence=(
                             result.decision.action.request_sequence_id
                         ),
+                        actual_movement=result.decision.action.movement,
+                    )
+                elif type(result.observation) is ObservationSnapshotV3:
+                    self.session.reject_unselected_route_proposal(
+                        proposal, self.session.ingest(result.observation),
                     )
             self._sync_report()
         if self.state in {"failed", "cancelled"}:
-            self._release_source()
+            if not self._release_if_quiescent():
+                self.state = "stopping"
+                self.reason = "body_handoff_waiting_for_evidence"
 
     def discard_prepared(self) -> None:
         """Forget a proposal when the parent did not advance Runtime."""
         if self._prepared_deadline_ns is None:
             raise ContractViolation("runtime navigation has no prepared frame")
+        proposal = self._prepared_proposal
+        if proposal is not None:
+            self.session.discard_prepared_proposal(
+                proposal, self.session.ingest(self.runtime.observation),
+            )
         self._prepared_deadline_ns = None
         self._prepared_proposal = None
 
@@ -304,9 +361,15 @@ class RuntimeNavigationDriver:
             self.session.ingest(self.runtime.observation)
             self.session.cancel(reason)
         self._sync_report()
-        if self.state == "stopping":
+        if self.state == "stopping" or not self._release_if_quiescent():
+            if self.runtime.state is not RuntimeStateV1.READY:
+                self.state, self.reason = "failed", "control_unavailable"
+                raise ContractViolation(
+                    "CONTROL_UNAVAILABLE: navigation cannot continue safe stop"
+                )
+            self.state = "stopping"
+            self.reason = "body_handoff_waiting_for_evidence"
             return self.tick(profile, self._clock() + _STEP_WINDOW_NS)
-        self._release_source()
         now = self._clock()
         deadline = now + _STEP_WINDOW_NS
         result = self.runtime.control_frame(
@@ -343,12 +406,40 @@ class RuntimeNavigationDriver:
         self._sync_report()
         if self.state == "stopping":
             return False
-        self._release_source()
+        if not self._release_if_quiescent():
+            self.state = "stopping"
+            self.reason = "body_handoff_waiting_for_evidence"
+            return False
         self.reason = reason
         return True
 
-    def transfer_to_successor(self, reason: str) -> None:
-        """Relinquish input only after the caller has installed a body successor."""
+    def _release_if_quiescent(self) -> bool:
+        if self.runtime.state is not RuntimeStateV1.READY:
+            self.state, self.reason = "failed", "control_unavailable"
+            return False
+        evidence = self.session.body_handoff(
+            self.runtime.observation, self.runtime.input_ledger,
+        )
+        if evidence.disposition is not HandoffDisposition.QUIESCENT:
+            return False
+        self._release_source()
+        return True
+
+    def transfer_to_successor(
+        self, successor: "ExternalMotionRecoveryDriver", reason: str,
+    ) -> None:
+        """Transfer to an active recovery controller registered in this Runtime."""
+        from mc2p.skills.external_motion_recovery_driver import (
+            ExternalMotionRecoveryDriver,
+        )
+        if (type(successor) is not ExternalMotionRecoveryDriver
+                or successor.runtime is not self.runtime
+                or successor.source is None
+                or successor.report.state not in {"running", "braking"}
+                or not self.runtime.has_ordered_source(successor.source)
+                or successor.source.episode_id
+                    != self.runtime.observation.episode_id):
+            raise ContractViolation("navigation successor has no active body owner")
         if not isinstance(reason, str) or not reason.strip():
             raise ContractViolation("runtime navigation transfer requires reason")
         if self.source is None:
@@ -362,15 +453,23 @@ class RuntimeNavigationDriver:
         self.state = "stopped"
         self.reason = reason
 
-    def suspend_for_interaction(self) -> None:
+    def suspend_for_interaction(self) -> bool:
         """Release movement input while preserving the final navigation goal."""
         if (self.source is None
                 or self.session.report.state is not NavigationSessionState.REQUIRES_INTERACTION
                 or self._prepared_deadline_ns is not None):
             raise ContractViolation("navigation has no ready world interaction")
+        evidence = self.session.body_handoff(
+            self.runtime.observation, self.runtime.input_ledger,
+        )
+        if evidence.disposition is not HandoffDisposition.QUIESCENT:
+            self.state = "stopping"
+            self.reason = "interaction_body_handoff_pending"
+            return False
         self._release_source()
         self.state = "interaction_suspended"
         self.reason = "world_interaction_owns_input"
+        return True
 
     def resume_after_interaction(self) -> None:
         """Rebind after the confirmed world change has reached Runtime's world owner."""

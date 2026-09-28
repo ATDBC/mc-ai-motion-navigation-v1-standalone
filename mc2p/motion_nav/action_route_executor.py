@@ -18,11 +18,13 @@ from mc2p.motion_nav.fixed_route import (
     FixedRouteConfig, FixedRouteController, FixedRouteState,
 )
 from mc2p.motion_nav.ground_motion import GroundMotionProfile
-from mc2p.motion_nav.ground_modes import GroundModeProfiles, observed_ground_mode
+from mc2p.motion_nav.ground_modes import GroundModeProfiles
 from mc2p.motion_nav.jump_up import JumpUpController, JumpUpProfile, JumpUpState
 from mc2p.motion_nav.step_transition import StepController, StepProfile, StepState
-from mc2p.motion_nav.geometry import QueryStatus, query_support
-from mc2p.motion_nav.movement_transition import GoalSupport, MovementMode
+from mc2p.motion_nav.goal_observation import (
+    ObservedGoalStatus, evaluate_observed_goal,
+)
+from mc2p.motion_nav.movement_transition import MovementMode
 from mc2p.motion_nav.motion_candidate import (
     AdmittedMotionCandidate, VerifiedMotionExecutor,
     VerifiedMotionExecutorState,
@@ -34,7 +36,10 @@ from mc2p.motion_nav.motion_solver import (
     DEFAULT_AIR_TRANSITION_POLICIES, DEFAULT_GAP_SOLVER_POLICY,
     AirTransitionSolverPolicy, GapSolverPolicy, MotionSolveKind,
 )
-from mc2p.motion_nav.online_motion import InputApplicationLedger, StateAnchor
+from mc2p.motion_nav.online_motion import (
+    InputApplicationLedger, InputResponsibilityStatus, StateAnchor,
+    input_responsibility_status,
+)
 from mc2p.motion_nav.physics_types import PhysicsState
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.world_model import BlockPos
@@ -68,6 +73,7 @@ class ActionRouteDecision:
     verified_command_index: int | None = None
     expected_movement_tick: int | None = None
     latest_movement_tick: int | None = None
+    requires_verified_motion: bool = False
 
 
 class ActionRouteExecutor:
@@ -123,10 +129,38 @@ class ActionRouteExecutor:
         self._required_verified_motion: frozenset[int] = frozenset()
         self._completed_movement_damage_points = 0.0
         self._committed_damage_actions: set[int] = set()
+        self._input_scope_floor: int | None = None
 
     @property
     def completed_movement_damage_points(self) -> float:
         return self._completed_movement_damage_points
+
+    def enter_upcoming_action_boundary(
+        self, next_index: int, frame: NavigationFrame,
+    ) -> bool:
+        """Finish a Walk once the body is already on the next action support."""
+        if (self.route is None
+                or type(next_index) is not int
+                or next_index != self.action_index + 1
+                or next_index >= len(self.route.actions)
+                or type(self.route.actions[self.action_index]) is not WalkSegment
+                or type(self.route.actions[next_index]) is not
+                    ControlledDropSegment
+                or not frame.body.is_on_ground):
+            return False
+        upcoming = self.route.actions[next_index]
+        region = upcoming.start_surface.region
+        x, y, z = frame.body.position
+        if (abs(y - upcoming.start_surface.position[1]) > .10
+                or x < region.min_x + .05
+                or x > region.max_x - .05
+                or z < region.min_z + .05
+                or z > region.max_z - .05):
+            return False
+        self.action_index = next_index
+        self._controller = None
+        self.state = ActionRouteState.RUNNING
+        return True
 
     def _activate(self, frame: NavigationFrame) -> None:
         assert self.route is not None
@@ -362,6 +396,7 @@ class ActionRouteExecutor:
         })
         self._completed_movement_damage_points = 0.0
         self._committed_damage_actions.clear()
+        self._input_scope_floor = None
         for candidate in verified_motion:
             self._validate_verified_motion(route, candidate, damage_budget)
             index = candidate.context.action_index
@@ -429,6 +464,13 @@ class ActionRouteExecutor:
             return None
         return self._controller.predicted_exit_state()
 
+    def current_verified_action_started(self) -> bool:
+        """Return whether the current verified action owns the body already."""
+        return (
+            type(getattr(self, "_controller", None)) is VerifiedMotionExecutor
+            and self._controller.has_started()
+        )
+
     def requires_safe_handoff(self, frame: NavigationFrame) -> bool:
         """Return whether another route must wait for this action to finish."""
         if type(frame) is not NavigationFrame:
@@ -481,12 +523,13 @@ class ActionRouteExecutor:
                 submit_input: bool = True,
                 verified_command_index: int | None = None,
                 expected_movement_tick: int | None = None,
-                latest_movement_tick: int | None = None) -> ActionRouteDecision:
+                latest_movement_tick: int | None = None,
+                requires_verified_motion: bool = False) -> ActionRouteDecision:
         return ActionRouteDecision(
             self.state, movement, look, lease, self.action_index, reason, missing,
             time.perf_counter_ns() - started, submit_input,
             verified_command_index, expected_movement_tick,
-            latest_movement_tick,
+            latest_movement_tick, requires_verified_motion,
         )
 
     def decide(self, frame: NavigationFrame, *, input_confirmed: bool = True,
@@ -503,6 +546,11 @@ class ActionRouteExecutor:
         if self.route is None:
             self.state = ActionRouteState.IDLE
             return self._result(started, MovementV1(), 1, "not_started")
+        if input_ledger is not None and self._input_scope_floor is None:
+            self._input_scope_floor = max(
+                (record.control_sequence for record in input_ledger.snapshot()),
+                default=0,
+            )
         if self.state in {
             ActionRouteState.COMPLETE, ActionRouteState.CANCELLED,
             ActionRouteState.FAILED, ActionRouteState.UNSUPPORTED,
@@ -517,7 +565,7 @@ class ActionRouteExecutor:
                 self.state = ActionRouteState.RUNNING
                 return self._result(
                     started, MovementV1(), 1, "awaiting_verified_motion",
-                    submit_input=False,
+                    submit_input=False, requires_verified_motion=True,
                 )
             self.state = ActionRouteState.IDLE
             return self._result(started, MovementV1(), 1, "not_started")
@@ -534,7 +582,7 @@ class ActionRouteExecutor:
                 self.state = ActionRouteState.INPUT_LOST
                 return self._result(started, MovementV1(), 1,
                                     "input_application_unconfirmed")
-            return self._finish_goal(frame, started)
+            return self._finish_goal(frame, started, input_ledger, state_anchor)
         action = self.route.actions[self.action_index]
         self._commit_drop_damage_if_started(action, frame)
         if type(self._controller) is VerifiedMotionExecutor:
@@ -715,7 +763,7 @@ class ActionRouteExecutor:
         if self.action_index >= len(self.route.actions):
             self.action_index = len(self.route.actions) - 1
             self._actions_finished = True
-            return self._finish_goal(frame, started)
+            return self._finish_goal(frame, started, input_ledger, state_anchor)
         self._activate(frame)
         self.state = ActionRouteState.RUNNING
         # Run the new controller immediately so a hand-off does not introduce
@@ -746,57 +794,54 @@ class ActionRouteExecutor:
         )
         self._committed_damage_actions.add(self.action_index)
 
-    def _finish_goal(self, frame: NavigationFrame, started: int) -> ActionRouteDecision:
+    def _finish_goal(
+        self, frame: NavigationFrame, started: int,
+        input_ledger: InputApplicationLedger | None = None,
+        state_anchor: StateAnchor | None = None,
+    ) -> ActionRouteDecision:
         assert self.route is not None
+        responsibility = input_responsibility_status(
+            input_ledger, state_anchor,
+            previous_sequence_floor=self._input_scope_floor or 0,
+        )
+        if responsibility is InputResponsibilityStatus.IN_FLIGHT:
+            self.state = ActionRouteState.RUNNING
+            return self._result(
+                started, MovementV1(), 1,
+                "waiting_for_previous_input_application",
+            )
+        if responsibility is InputResponsibilityStatus.AMBIGUOUS:
+            self.state = ActionRouteState.INPUT_LOST
+            return self._result(
+                started, MovementV1(), 1,
+                "previous_input_application_ambiguous",
+            )
         goal = self.route.goal_state
         if goal is None:
             self.state = ActionRouteState.COMPLETE
             return self._result(started, MovementV1(), 1, "action_route_complete")
-        support_query = query_support(frame.body.body_box, frame.world)
-        if support_query.status is QueryStatus.NEEDS_INFORMATION:
+        observed = evaluate_observed_goal(
+            frame, goal, self._damage_budget.risk_policy_id,
+        )
+        if observed.status is ObservedGoalStatus.NEEDS_INFORMATION:
             self.state = ActionRouteState.NEEDS_INFORMATION
             return self._result(
                 started, MovementV1(), 1, "goal_support_requires_information",
-                support_query.missing_cells,
+                observed.missing_cells,
             )
-        observed_support = (
-            GoalSupport.SOLID
-            if (support_query.status is QueryStatus.FEASIBLE
-                and frame.body.is_on_ground)
-            else None
-        )
-        # Minecraft keeps a small downward velocity while an entity is resting
-        # on a block.  Ground movement completion therefore uses planar speed,
-        # matching FixedRouteController, rather than treating gravity bookkeeping
-        # as a real fall.
-        speed = math.hypot(
-            frame.body.velocity_blocks_per_second[0],
-            frame.body.velocity_blocks_per_second[2],
-        )
-        actual_mode = observed_ground_mode(frame.body)
-        common = dict(
-            position=frame.body.position,
-            support=observed_support,
-            mode=actual_mode,
-            pose=frame.body.pose,
-            speed_blocks_per_second=speed,
-            resources=self.route.final_resources,
-            applied_risk_policy_id=self._damage_budget.risk_policy_id,
-        )
-        if observed_support is not None and goal.accepts(
-                **common, yaw_radians=frame.body.yaw_radians):
+        if observed.status is ObservedGoalStatus.SATISFIED:
             self.state = ActionRouteState.COMPLETE
             return self._result(started, MovementV1(), 1, "goal_state_satisfied")
-        if (observed_support is not None and goal.required_yaw_radians is not None
-                and goal.accepts(**common, yaw_radians=goal.required_yaw_radians)):
-            delta = math.atan2(
-                math.sin(goal.required_yaw_radians - frame.body.yaw_radians),
-                math.cos(goal.required_yaw_radians - frame.body.yaw_radians),
-            )
+        if observed.status is ObservedGoalStatus.HEADING_ONLY:
             self.state = ActionRouteState.RUNNING
             return self._result(
                 started, MovementV1(), 1, "aligning_goal_heading",
-                look=LookV1(math.degrees(delta), 0.0),
+                look=LookV1(observed.heading_delta_degrees, 0.0),
             )
         self.state = ActionRouteState.FAILED
-        return self._result(started, MovementV1(), 1, "goal_state_not_satisfied")
+        return self._result(
+            started, MovementV1(), 1,
+            ("goal_resource_unobservable" if observed.status is
+             ObservedGoalStatus.RESOURCE_UNOBSERVABLE else
+             "goal_state_not_satisfied"),
+        )

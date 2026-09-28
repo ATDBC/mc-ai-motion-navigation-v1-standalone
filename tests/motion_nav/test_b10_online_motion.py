@@ -366,14 +366,14 @@ class StateAnchorTests(unittest.TestCase):
 
 
 class InputProjectionTests(unittest.TestCase):
-    def test_projects_real_command_once_without_rescaling_crouch_axes(self):
+    def test_projects_client_sampled_crouch_axes_once(self):
         command = MovementV1(forward=1, strafe=-1, sneak=True)
         projected = project_movement_command(state(yaw=math.pi / 3), command)
         again = project_movement_command(state(yaw=math.pi / 3), command)
         self.assertIs(projected.status, ProjectionStatus.READY)
         self.assertEqual(projected.tick_input, again.tick_input)
-        self.assertEqual(projected.tick_input.forward, 1.0)
-        self.assertEqual(projected.tick_input.strafe, -1.0)
+        self.assertEqual(projected.tick_input.forward, 0.3)
+        self.assertEqual(projected.tick_input.strafe, -0.3)
         self.assertTrue(projected.tick_input.sneak)
         self.assertEqual(projected.tick_input.movement_yaw_radians, math.pi / 3)
 

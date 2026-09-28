@@ -273,15 +273,17 @@ class ContinuousDescentTests(unittest.TestCase):
         self.assertEqual(len(candidate.segments), 1)
         self.assertIs(type(candidate.segments[0]), SurfaceControlledDropEdge)
 
-    def test_multi_block_drop_rejects_upper_only_edge_evidence(self):
-        from mc2p.motion_nav.action_route import ControlledDropSegment
+    def test_multi_block_drop_defers_visual_evidence_to_action_boundary(self):
+        from mc2p.motion_nav.action_preconditions import (
+            ActionPreconditionStatus, check_action_precondition,
+        )
         from mc2p.motion_nav.known_map_planner import (
             KnownMapBounds, KnownMapSnapshotBuilder, SurfacePlanningRequest,
             plan_known_surface_snapshot,
         )
         from mc2p.motion_nav.movement_transition import MovementMode
         from mc2p.motion_nav.route_admission import (
-            AdmissionReason, AdmissionStatus, RouteAdmitter,
+            AdmissionStatus, RouteAdmitter,
         )
         from mc2p.motion_nav.support_surfaces import SurfaceNodeId
         from tests.motion_nav.test_b07_surface_planning import (
@@ -312,15 +314,19 @@ class ContinuousDescentTests(unittest.TestCase):
         )
         initial = frame(owner, 2, (.5, 64., .5), (0., 0., 1.5), on_ground=True)
 
-        missing = RouteAdmitter().admit_surface(
+        admitted = RouteAdmitter().admit_surface(
             candidate, initial, expected_request_id=request.request_id,
             goal_id=request.goal_id, goal_revision=request.goal_revision,
             changed_cells=(),
         )
 
-        self.assertIs(missing.status, AdmissionStatus.REJECTED)
+        self.assertIs(admitted.status, AdmissionStatus.ACCEPTED)
+        self.assertIsNotNone(admitted.route)
+        missing = check_action_precondition(
+            admitted.route, 0, initial, task_id="drop-evidence-task",
+        )
         self.assertIs(
-            missing.reason, AdmissionReason.LANDING_VISUAL_EVIDENCE_MISSING,
+            missing.status, ActionPreconditionStatus.NEEDS_ACQUISITION,
         )
         self.assertEqual(missing.missing_cells, ((0, 58, 1),))
 
@@ -333,14 +339,14 @@ class ContinuousDescentTests(unittest.TestCase):
                 evidence_stamp, 6.0, False,
             )},
         )
-        still_missing = RouteAdmitter().admit_surface(
-            candidate,
+        still_missing = check_action_precondition(
+            admitted.route, 0,
             frame(owner, 3, (.5, 64., .5), (0., 0., 1.5), on_ground=True),
-            expected_request_id=request.request_id,
-            goal_id=request.goal_id, goal_revision=request.goal_revision,
-            changed_cells=(),
+            task_id="drop-evidence-task",
         )
-        self.assertIs(still_missing.status, AdmissionStatus.REJECTED)
+        self.assertIs(
+            still_missing.status, ActionPreconditionStatus.NEEDS_ACQUISITION,
+        )
 
         edge_frame = frame(
             owner, 3, (.5, 64., 1.29), (0., 0., 0.), on_ground=True,
@@ -351,16 +357,12 @@ class ContinuousDescentTests(unittest.TestCase):
                 edge_frame.body, pose="crouching", is_sneaking=True,
             ),
         )
-        upper_only_at_edge = RouteAdmitter().admit_surface(
-            candidate, edge_frame,
-            expected_request_id=request.request_id,
-            goal_id=request.goal_id, goal_revision=request.goal_revision,
-            changed_cells=(),
+        upper_only_at_edge = check_action_precondition(
+            admitted.route, 0, edge_frame, task_id="drop-evidence-task",
         )
-        self.assertIs(upper_only_at_edge.status, AdmissionStatus.REJECTED)
         self.assertIs(
-            upper_only_at_edge.reason,
-            AdmissionReason.LANDING_VISUAL_EVIDENCE_MISSING,
+            upper_only_at_edge.status,
+            ActionPreconditionStatus.NEEDS_ACQUISITION,
         )
 
         edge_bottom_stamp = ObservationStamp(
@@ -381,15 +383,15 @@ class ContinuousDescentTests(unittest.TestCase):
                 unowned_edge_frame.body, pose="crouching", is_sneaking=True,
             ),
         )
-        unowned_edge_evidence = RouteAdmitter().admit_surface(
-            candidate,
+        unowned_edge_evidence = check_action_precondition(
+            admitted.route, 0,
             unowned_edge_frame,
-            expected_request_id=request.request_id,
-            goal_id=request.goal_id,
-            goal_revision=request.goal_revision,
-            changed_cells=(),
+            task_id="drop-evidence-task",
         )
-        self.assertIs(unowned_edge_evidence.status, AdmissionStatus.REJECTED)
+        self.assertIs(
+            unowned_edge_evidence.status,
+            ActionPreconditionStatus.NEEDS_ACQUISITION,
+        )
 
         edge_probe = LandingEdgeProbe(
             request.goal_id, request.goal_revision, (0, 58, 1), 3,
@@ -401,16 +403,16 @@ class ContinuousDescentTests(unittest.TestCase):
         self.assertEqual(
             edge_probe.movement(unowned_edge_frame), MovementV1(sneak=True),
         )
-        edge_not_ready = RouteAdmitter().admit_surface(
-            candidate,
+        edge_not_ready = check_action_precondition(
+            admitted.route, 0,
             unowned_edge_frame,
-            expected_request_id=request.request_id,
-            goal_id=request.goal_id,
-            goal_revision=request.goal_revision,
-            changed_cells=(),
             edge_probe=edge_probe,
+            task_id="drop-evidence-task",
         )
-        self.assertIs(edge_not_ready.status, AdmissionStatus.REJECTED)
+        self.assertIs(
+            edge_not_ready.status,
+            ActionPreconditionStatus.NEEDS_ACQUISITION,
+        )
 
         edge_probe.begin_entry_alignment(unowned_edge_frame)
         entry_frame = frame(
@@ -430,20 +432,14 @@ class ContinuousDescentTests(unittest.TestCase):
             ),
         )
         self.assertTrue(edge_probe.finish_release(standing_entry))
-        owned_edge_evidence = RouteAdmitter().admit_surface(
-            candidate,
+        owned_edge_evidence = check_action_precondition(
+            admitted.route, 0,
             standing_entry,
-            expected_request_id=request.request_id,
-            goal_id=request.goal_id,
-            goal_revision=request.goal_revision,
-            changed_cells=(),
             edge_probe=edge_probe,
+            task_id="drop-evidence-task",
         )
-        self.assertIs(owned_edge_evidence.status, AdmissionStatus.ACCEPTED)
-        self.assertEqual(
-            [type(action).__name__
-             for action in owned_edge_evidence.route.action_route.actions],
-            ["ControlledDropSegment"],
+        self.assertIs(
+            owned_edge_evidence.status, ActionPreconditionStatus.READY,
         )
 
         bottom_stamp = ObservationStamp(
@@ -455,14 +451,12 @@ class ContinuousDescentTests(unittest.TestCase):
                 bottom_stamp, 4.0, True,
             )},
         )
-        bottom_admitted = RouteAdmitter().admit_surface(
-            candidate,
+        bottom_ready = check_action_precondition(
+            admitted.route, 0,
             frame(owner, 5, (.5, 64., .5), (0., 0., 1.5), on_ground=True),
-            expected_request_id=request.request_id,
-            goal_id=request.goal_id, goal_revision=request.goal_revision,
-            changed_cells=(),
+            task_id="drop-evidence-task",
         )
-        self.assertIs(bottom_admitted.status, AdmissionStatus.ACCEPTED)
+        self.assertIs(bottom_ready.status, ActionPreconditionStatus.READY)
 
     def test_drop_damage_is_committed_when_the_body_leaves_support(self):
         from mc2p.motion_nav.action_route_executor import ActionRouteExecutor

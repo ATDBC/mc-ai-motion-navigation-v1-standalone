@@ -567,6 +567,7 @@ class MovingMeleeDriver:
         self.approach_driver.start(
             self._target.goal_id, self._navigation_goal_revision,
             decision.goal_state, self._clock(),
+            task_id=self._target.task_id,
         )
         self._reapproaches += 1
         self._phase, self._reason = MovingMeleePhase.PURSUING, decision.reason
@@ -964,7 +965,8 @@ class MovingMeleeDriver:
             # The recovery source now owns landing/braking. Only after that
             # successor exists may navigation relinquish its body responsibility.
             self.approach_driver.transfer_to_successor(
-                "external_motion_recovery_owns_body"
+                self.recovery_driver,
+                "external_motion_recovery_owns_body",
             )
             self.approach_driver = None
         self.runtime.record_task_event("external_motion_recovery", {

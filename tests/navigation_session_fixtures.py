@@ -13,6 +13,9 @@ from mc2p.motion_nav.navigation_session import (
 from mc2p.motion_nav.motion_residual import (
     MotionResidualResult, MotionResidualStatus,
 )
+from mc2p.motion_nav.body_control import (
+    HandoffDisposition, HandoffEvidence,
+)
 from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET, PhysicsState
 from mc2p.motion_nav.world_model import WorldSessionId
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
@@ -49,6 +52,7 @@ class FakeNavigationSession:
         self.cancel_remaining = 0
         self.route_look_required = False
         self.route_look_after_propose = False
+        self.handoff_ready = True
 
     def attach_observation_adapter(self, adapter):
         if self.frames and adapter is not self.observation_adapter:
@@ -120,6 +124,29 @@ class FakeNavigationSession:
     def execution_anchor(self, snapshot, ledger):
         self.execution_anchor_requests.append((snapshot.sequence_id, ledger))
         return self.execution_anchor_token
+
+    def body_handoff(self, snapshot, ledger):
+        terminal = self.handoff_ready and self.state in {
+            NavigationSessionState.COMPLETE,
+            NavigationSessionState.CANCELLED,
+            NavigationSessionState.FAILED,
+        }
+        own = snapshot.self_state.value
+        return HandoffEvidence(
+            "fake-navigation-session", WorldSessionId("fake:episode:clock"),
+            HandoffDisposition.QUIESCENT if terminal
+            else HandoffDisposition.RETAIN,
+            snapshot.sequence_id,
+            None if own is None else own.movement_tick_id,
+            MovementV1(), "fake_terminal_body" if terminal else "fake_active_body",
+        )
+
+    def reject_unselected_route_proposal(self, proposal, frame):
+        # This fake never creates a pending route owner.
+        return None
+
+    def discard_prepared_proposal(self, proposal, frame):
+        return None
 
     def external_motion_reentry(self, snapshot):
         own = snapshot.self_state.value
@@ -212,7 +239,9 @@ class FakeNavigationSession:
             self.route_decision,
         )
 
-    def register_verified_submission(self, proposal, *, control_sequence):
+    def register_verified_submission(
+        self, proposal, *, control_sequence, actual_movement=None,
+    ):
         self.verified_submissions.append((proposal, control_sequence))
 
     def cancel(self, reason):

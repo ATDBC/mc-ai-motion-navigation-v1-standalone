@@ -1,0 +1,195 @@
+# 导航协调与正式路径验证架构 V1
+
+日期：2026-09-28
+
+状态：S0 至 S5 已实施并通过本轮门槛。替换的是协调职责及其检查入口，不改变运动计算器、正式视觉或 Runtime 的输入权限。
+
+相关文档：[D039](../decisions/0039-shared-navigation-coordination-and-closed-loop-gates.md)、[阶段计划](../stages/navigation-coordination-refactor-plan.md)、[验收及不变量](../acceptance/navigation-coordination-refactor.md)。
+
+## 1. 状态由谁拥有
+
+| 所有者 | 唯一拥有的状态 | 对外提供 |
+|---|---|---|
+| Runtime | 世界知识、输入应用账本、全局来源、仲裁和真实输入出口 | 正式帧、只读账本、仲裁及应用结果 |
+| GoalRequestLedger | 当前任务、目标修订、请求代次、待定目标 | 有身份的规划请求和失效事件 |
+| PlanningPipeline | 快照构建、规划请求和结果、动作求解后台服务 | 有界计算结果；不提交输入 |
+| ExecutionSupervisor | 当前身体控制者、唯一待接替者、停止请求、交接结论 | 本帧唯一导航移动提案、身体责任状态 |
+| 路线控制者 | 路线、当前动作、动作求解协调、已接纳动作证明、被暂停动作 | 动作推进与收尾；不拥有后台进程生命周期 |
+| InformationAcquisition | 缺失事实、请求优先级、观察状态、取证结果 | 观察请求和获取动作说明；不直接按键 |
+| RetryLedger | 重试次数、等待期限、进度证据及任务总次数 | 允许重试、继续等待或耗尽 |
+| TaskRiskLedger | 任务风险策略修订、额度保留、已承诺消耗、实测核对 | 当前余额、风险授权及差异 |
+| WorldInteraction | 放置事务、确认状态、搭桥额度 | 交互要求、事务结果；库存来自 Runtime |
+| NavigationSession | 对上述所有者的引用、显式任务状态与事件路由 | 现有 NavigationSessionPort 及只读诊断 |
+
+对象按迁移步骤创建，不提前生成空壳。来源句柄和意图序号继续通过现有正式桥接层使用；任务请求账本不能变成第二个输入来源登记器。外力检测仍读取 Runtime 正式观察，原控制者与恢复控制者的边界通过已有 Runtime 仲裁接入。
+
+## 2. 身体控制权与结果是两件事
+
+任务可以已经请求取消，身体仍在下落。控制器也可以已经发现错误，仍需保持潜行、回退或落地。因此 `COMPLETE / FAILED / CANCELLED` 的任务结论不能直接清空身体控制者。
+
+S1 已新增 `body_control.py`、`execution_supervisor.py`，复用现有帧、移动和已验证命令类型。下面的通用接口仍是后续迁移目标；当前正式实现通过 `ExecutionSupervisor.offer_route`、`decide_probe`、`adopt_route_selection` 和 `evaluate_quiescence` 接入现有会话，尚未把全部控制者改成同一个 `BodyController` 协议。
+
+```python
+class BodyController(Protocol):
+    controller_id: str
+    def request_stop(self, cause: StopCause) -> None: ...
+    def decide(self, context: ControlContext) -> ControlDecision: ...
+
+class ExecutionSupervisor:
+    def offer(self, replacement: ControllerSpec) -> None: ...
+    def request_stop(self, cause: StopCause) -> None: ...
+    def decide(self, context: ControlContext) -> SupervisorDecision: ...
+```
+
+`ControlContext` 绑定世界会话、观察序号、运动 tick 和相位，包含当前帧、可缺失的状态锚点、只读输入账本、风险快照，以及获胜视角的条件。`ControlDecision` 同时返回本帧输入、类型化执行状态、结果、缺失事实和交接证据。交接证据是同一次计算得到的结果，不能在另一帧单独读取 `safe_to_release` 布尔值。
+
+交接证据有三个结果：
+
+- `RETAIN`：仍需原控制者承担责任，包括在途已验证命令、空中恢复、边缘潜行和不可解释输入。
+- `QUIESCENT`：当前状态允许无人继续移动控制；已检查稳定支撑、松键后的身体范围、姿态、速度和在途命令。着地标志本身不够。
+- `TRANSFERABLE`：允许某个明确接替者从当前状态继续；绑定接替者身份、动作修订、入口范围和输入窗口。允许带速接管，不要求停稳。
+
+监督者用当前状态核验接替者的入口和适用性；旧控制者声称可交接不等于下一控制者能接。判断失效就保留原控制者。一次控制帧最多一次控制者切换，不通过循环反复推进多个控制器。
+
+| 事件 | 原控制者 | 接替者及最终结果 |
+|---|---|---|
+| 目标修订 | 普通路线可继续仍有效的前段；与旧目标绑定的探边请求停止 | 新规划后台进行；准备好且同帧可交接才替换 |
+| 新路线接纳 | 尝试 `TRANSFERABLE`；不成立再请求收尾 | 不因后台已算完就越过在途命令 |
+| 世界依赖变化 | 禁止继续旧证明中的危险输入；执行声明过的恢复 | 安全后重规划；恢复仍无法验证则报告受限状态 |
+| 取消、超时、INPUT_LOST | 请求停止，继续收尾 | 失联完成收尾后为终态，不自动重规划 |
+| 缺锚点或观察样本 | 不产生新证明；使用已有动作的受限恢复 | 缺证据不冒充中性输入，也不导致 Runtime 重建 |
+| 收尾结束且无接替者 | `QUIESCENT` | 才允许桥接驱动释放导航来源 |
+| 重复停止、旧代次结果 | 幂等处理或丢弃旧结果 | 不复活旧控制者，不重复扣额度 |
+
+监督者仅产生导航提案，不能调用后端或推进 Runtime。普通 Walk 按本帧获胜视角重新投影按键；台阶、探边和已验证空中动作带自己的视角约束。生效窗口与控制者、命令身份随意图提交，仅在仲裁胜出且实际提交后登记；被压下的提案不能当作已执行。
+
+## 3. 探边、停止与关闭
+
+探边说明绑定 `task_id / goal_revision / route_revision / action_index / acquisition_id`、起始支撑和落点依赖。开始前确认身体已经抵达该动作起始支撑及允许入口。不得根据远处落点坐标从路线起点直接生成探边移动。
+
+探边请求停止后进入 `STOPPING`。保持潜行，根据共享几何和计算器选择已验证的回退或制动输入，回到稳定支撑后才能松开潜行。不能把“远离落点”当作安全方向，因为身后也可能是坑。0.1 格／秒和支撑重叠余量只能是候选门槛，必须验证剩余惯性和身体扫掠。
+
+取证超时是任务结果，不是释放身体的依据。取证和收尾使用不同期限；收尾超过期限时向上层报告 `RECOVERY_UNRESOLVED`，停止新探索和新求解，保留仍合法的保护输入与所有者。请求人工或上层决策不能被计为成功或安全结束。
+
+正常关闭采用两阶段：请求停止并继续由 Runtime 推进，确认可释放后才关闭工作进程和来源。最终资源清理方法不暗中推进游戏。连接断开、进程退出或租约失效时可能无法继续按键，必须报告 `CONTROL_UNAVAILABLE`，使用客户端既有失联处置；不能宣称断线后仍能保证潜行或安全落地。模拟必须覆盖真正的来源撤销，而不只模拟取消意图。
+
+## 4. 动作前置条件
+
+路线接纳只授予沿路线推进到动作边界的资格。每个动作在首条执行命令前仍需通过即时检查。
+
+```python
+class ActionPrecondition(Protocol):
+    def check(self, context: ActionEntryContext) -> PreconditionResult: ...
+```
+
+| 结果 | 含义 | 后续操作 |
+|---|---|---|
+| `READY` | 当前入口、资源、证明、时序、世界依赖和所需证据成立 | 返回绑定本次动作及当前状态的许可 |
+| `NEEDS_ACQUISITION` | 可由限定动作取得缺失证据 | 返回不可变 `AcquisitionSpec`，不创建或运行控制器 |
+| `NEEDS_INFORMATION` | 缺少可查询事实，当前没有可执行获取动作 | 请求信息，按期限等待，保留身体责任 |
+| `REJECTED` | 当前动作已不成立 | 有类型地重规划、拒绝或交任务层决策 |
+
+监督者按 `acquisition_id` 只创建一个获取动作控制者。被暂停的路线保存继续位置，不提交移动；探边结束后重新检查原动作，不能直接沿用探边前的求解结果。恢复路线是一次有身份的接管，同样核验入口、在途输入和额度。
+
+首版只允许一条暂停路线和一个获取动作，不允许获取动作递归创建另一个获取动作。取消、目标替换和世界变化同时通知这两个对象，旧路线不得在探边结束后自动复活。去重键包含动作和依赖修订，仅替换尚未开始的说明，正在控制身体的获取动作仍经过停止交接。
+
+| 检查 | 规划及路线接纳 | 动作开始前 |
+|---|---|---|
+| 已知支撑、碰撞、所需证明、目标身份 | 必须成立；后续证明的获取按原有求解契约表达 | 重查相关变化 |
+| 整条路线预计伤害 | 按当前余额核验，不使用旧请求余额放行 | 复核并保留本次动作额度 |
+| 入口姿态、方向、速度及输入窗口 | 保存要求，不假设未来状态已满足 | 以当前正式状态检查 |
+| 下落落点最新下部观察 | 保存该动作必须取得的条件 | 两条现有证据分支都要求下部可见；探边只对绑定动作有效 |
+
+现有普通证据的 4.5 格／5 tick、D038 探边证据范围继续适用，不借移动检查位置来放宽证据。证据过期、世界更新或探边使入口变化时，应使用同一验证器复核受影响的剩余动作。下一道坎在下一动作边界自行取证。
+
+## 5. 重试、等待与真实进度
+
+`RetryLedger` 由每项任务拥有；暴露失败登记、进度登记和期限查询，不参与路径评分。
+
+```python
+record_failure(attempt_id, cause: RetryCause) -> FailureRegistration
+record_progress(evidence: ProgressEvidence) -> bool
+begin_wait(wait_id, policy: WaitPolicy, started_tick, started_ns) -> WaitToken
+check_wait(wait_id, now_tick, now_ns) -> WaitVerdict
+```
+
+同一次失败按 `attempt_id` 幂等登记。首版每原因允许重试 2 次，无进展期间跨原因允许重试 6 次；第 3 次同原因或第 7 次跨原因失败均不能继续重试。整项任务最多 12 次失败驱动的重试，另受原有任务总期限约束。这些是冻结测试配置，后续改值需记录决定。
+
+新进度清空本轮原因次数及无进展总次数，但不清空任务总次数。进度证据包括已确认完成下一动作、沿有效路线推进到此前未达到的区间、取得当前阻塞所需的新事实。简单换格、左右来回、目标修订、重新创建探边、原因变化、无关几何修订都不是进度。相关地形改变可以使旧候选失效，但不会自动补回重试额度。
+
+S2 实现将“失败事件数”和“获准重试数”分别保存。拒绝的第三次同原因失败仍计为一次已观察失败，但不会变成第三次执行许可。动作求解的候选修订号构成失败身份；它与会话共享同一任务账本，不再用全局几何版本或身体浮点值重置计数。同一观测中的多项新事实最多清空一次本轮次数。
+
+等待以运动 tick 和单调墙钟到期，不以“本次被调用几次”计时。首版信息等待和一次探边获取期限均为 40 个运动 tick，并以 2 秒墙钟兜底，取先到者；时钟分别来源明确，不跨未对齐进程相减。收尾期限单独处理，不能把取证期限届满变成松键。输入没有新观察时，墙钟期限仍会结束授权等待。调整视角不会重置等待起点。
+
+攻击计数、搭桥额度首轮保持原拥有者，只增加同类回归；后续迁移须有各自证据。攻击成功可作为战斗任务进度，不能补回已消耗的导航伤害或搭桥库存。
+
+## 6. 风险账本
+
+`TaskRiskLedger` 使用任务身份，不以目标修订或路线身份作为新账本边界。预计消耗使用现有伤害上界规则。
+
+任务身份由调用方显式建立并传入，不从变化的目标 ID 推断。导航重建、同一追击任务的新目标、恢复后的新路线继续引用同一账本；只有上层明确结束旧任务并创建新任务才建立新额度。首版可以复用当前任务契约里的身份字段，不增加第二套任务管理器。
+
+```python
+reserve(action_id, expected_damage, policy_revision) -> ReservationResult
+commit(action_id, applied_evidence) -> None
+settle(action_id, observed_outcome) -> None
+release_unstarted(action_id, non_application_evidence) -> None
+```
+
+余额 = 当前任务上限 − 已承诺扣账 − 尚未承诺的保留额。每次动作使用稳定且唯一的 `action_id`，重复观察、回执、取消和重规划不能重复扣减。
+
+- 路线接纳不预扣整条路线，只核对预计总额；动作即将产生不可逆输入时保留本次额度。
+- 仲裁压下且确定未提交的动作可以释放保留。命令在途或是否应用不明时继续保留。
+- 观察到离边或账本证明已开始不可逆动作时转为承诺，不能等成功落地才扣账。
+- INPUT_LOST、目标变化和恢复失败不能返还已承诺部分；实测低于保守值首版也不返还。实测超过上界则记录违规并停止新增风险动作，不能篡改历史上限。
+- 降低额度后若余额不足，拒绝新动作，已在空中的动作继续负责落地。生命、状态效果或其他伤害变化仍参与动作资格检查；来源未知的伤害必须保守核对，不可伪装成精确运动伤害。
+
+S2 的正式伤害观察只使用客户端已有生命值。风险动作首次保留时建立观察窗口；真实命令应用或离边后才可承诺。窗口累计相邻有效样本的生命下降，生命恢复不会抵消此前下降。缺样本时仍保存前一个有效生命值，因此跨缺口的净下降也是已知损失下界；完整实测值标为未知，承诺不退。已知下界超出预计便锁住新增风险。落地或动作安全结束关闭窗口，后续伤害不能重复归入旧动作。`DamageEventV3` 当前没有伤害点数；混合来源时保守计入这段下降，不把它写成精确的坠落伤害。
+
+## 7. 会话状态转移与目标完成
+
+会话对外保留任务状态；后台规划和执行监督者各自保存内部状态，因此重新规划可以与旧路线执行同时进行，无需制造所有组合的全局状态。
+
+目标状态集合固定为 `READY / PLANNING / NEEDS_INFORMATION / EXECUTING / HANDOFF / STOPPING / REQUIRES_INTERACTION / COMPLETE / CANCELLED / FAILED / CLOSED`。原 `SNAPSHOTTING` 归入 PlanningPipeline 的内部阶段；原 `CANCELLING` 归入 STOPPING，并保留类型化停止原因。迁移时同步驱动和诊断消费者，不静默改变旧报告含义。
+
+事件集合为 `StartGoal / ReviseGoal / Cancel / Close / PlannerResult / AdmissionResult / ControllerReport / InformationArrived / InformationTimedOut / DependencyChanged / InteractionConfirmed / RetryExhausted`。INPUT_LOST、取证超时和无法安全收尾作为类型化 ControllerReport 内容，不能藏在 reason 中。
+
+STOPPING 带待发布的任务结果，例如取消、失败或关闭。`RECOVERY_UNRESOLVED` 是此时监督者报告的受限收尾状态，不是已经释放来源的终态。其后只能由新的有效观察、已授权恢复、上层接管或控制链不可用事件推进。
+
+| 当前状态与事件 | 下一状态及动作 |
+|---|---|
+| READY + StartGoal | 完整 GoalState 且可释放则 COMPLETE；否则按条件进入 EXECUTING 对齐、NEEDS_INFORMATION 或 PLANNING |
+| 任意活动状态 + ReviseGoal | 保留有效控制者时保持 EXECUTING；仅需图搜索时 PLANNING；不能为了检查新目标直接清空旧责任 |
+| 位置满足但速度或姿态不符 | EXECUTING，执行局部目标对齐／停止；不构造零代价移动边，也不直接成功 |
+| PLANNING + PlannerResult(同支撑面) | 执行完整 GoalState 检查，决定 COMPLETE 或 EXECUTING 对齐 |
+| 任意活动状态 + AdmissionResult(当前代次接纳) | 有原控制者则 HANDOFF；无原控制者且入口成立则 EXECUTING |
+| HANDOFF + ControllerReport(TRANSFERABLE) | 同帧检查并换入接替者，进入 EXECUTING；失效时保持旧控制者 |
+| 任意非终态 + Cancel / Close / 不可重试失败 | STOPPING，结果待定；无人负责且已可释放时可以立即发布对应终态 |
+| STOPPING + ControllerReport(QUIESCENT) | 依待发布结果进入 CANCELLED、FAILED 或 CLOSED，然后释放来源 |
+| EXECUTING + ControllerReport(NEEDS_REPLAN) | 登记失败；安全可释放且允许重试时 PLANNING，否则先 STOPPING；耗尽则安全收尾后 FAILED |
+| NEEDS_INFORMATION + InformationArrived / TimedOut | 重查对应前置条件后 EXECUTING、PLANNING 或进入失败收尾；不重置任务账本 |
+| 任意活动状态 + DependencyChanged | 仅失效受影响证明，保留负责人；按同一恢复／重试入口处理 |
+| REQUIRES_INTERACTION + InteractionConfirmed | 更新正式世界和交互额度后 PLANNING；未确认时不构造假地形 |
+| 任意状态 + 旧代次或重复事件 | 丢弃或幂等确认；终态中的非法新事件类型化拒绝，不复活任务 |
+
+实施时为每个状态 × 事件建立明确处理表。`reason` 和诊断文本只用于展示；控制流读取执行状态、失败类别及前置条件结果。检查范围是现行正式链路，隔离旧实现和报告格式不为形式上的“零字符串”重写。
+
+## 8. 正式路径模拟的边界
+
+`tests/sim/` 的后端只替换游戏，通过 V3 观察、真实解码、Runtime 输入出口和回执推动状态。同步规划及求解替身调用相同任务函数，使用最小 worker 协议；另有实际进程测试覆盖异步行为。
+
+测试世界真值与 Runtime 所知世界必须是两个对象。预置记忆通过 `TEST_ORACLE` 测试入口载入，不可借正式 adapter 私有字段灌入；正式 actor 不能调用该入口。只读 `NavigationDiagnostics` 提供状态快照、控制者身份、动作阶段、请求代次、账本摘要和交接原因，不暴露可变控制器。
+
+不变量读取实际仲裁、应用回执和身体轨迹，不能仅凭类名认定有落地责任。每个不变量至少有一个故意违反的测试来证明监视器能报错。任务结束后继续推进至少 20 tick，并持续到稳定或达到明示的收尾观察上限，捕捉松键后的迟发坠落。
+
+固定种子只保证声明的随机输入可复现。同步模拟不提供真实调度性能结论；简化观察不能证明深度传感器正确。模拟与 Fabric 不一致时分别审查输入、观察、物理和计时，不预先认定哪一方有错。
+
+## 9. 当前实现落点
+
+S3 把“此刻能否开始动作”的判断集中到 `action_preconditions.py`。路线可以包含尚未取得近距离证据的未来下降；执行到动作边界时，检查器返回 `READY`、`ACQUIRE`、`WAIT` 或 `UNSATISFIED`。取证结果绑定动作、路线、目标修订和世界会话，不能交给另一道坎复用。
+
+S4 把会话长期状态归到 `navigation_owners.py` 的六个所有者，并由 `navigation_lifecycle.py` 定义对外状态和事件。`ExecutionSupervisor` 只管理当前路线、当前探边和一个待接替路线。新目标可以更新尚未获仲裁的候选；一旦候选已发出命令或承担落地责任，只能请求停止或等待安全交接。
+
+探边安全退回后，会话必须同时处理挂起路线。取消和关闭让挂起路线收到相同终态；取证超时让路线结束并返回 `edge_probe_acquisition_timeout`。缺锚点导致恢复期限耗尽时报告 `recovery_unresolved`，但仍保留身体来源；这不是可无限等待的成功状态，也不能被监视器误报为已释放。
+
+当前结构没有把外力恢复、攻击重试和方块库存迁入导航内部。它们仍由原所有者管理，通过 Runtime 仲裁和正式调用路径测试边界。完整连续高度能力矩阵也仍属于原阶段验收。

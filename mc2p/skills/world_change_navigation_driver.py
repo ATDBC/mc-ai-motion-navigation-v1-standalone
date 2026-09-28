@@ -53,6 +53,7 @@ class RuntimeWorldChangeNavigationDriver:
         self._active_interaction_id: str | None = None
         self._confirmed_placements = 0
         self._pending_goal_update: tuple[str, int, GoalState] | None = None
+        self._pending_terminal: tuple[str, str] | None = None
         self._state = "ready"
         self._reason = "not_started"
 
@@ -127,6 +128,19 @@ class RuntimeWorldChangeNavigationDriver:
         require_nonnegative_int(owner_deadline_ns, "world-change owner deadline")
         if self.report.terminal or self._state == "ready":
             raise ContractViolation("world-change navigation cannot tick")
+        if self._pending_terminal is not None and self.placement is None:
+            terminal_state, terminal_reason = self._pending_terminal
+            result = None
+            if self.navigation.source is not None:
+                if self.navigation.state in {"running", "stopping"}:
+                    result = self.navigation.tick(profile, owner_deadline_ns)
+                if self.navigation.source is not None:
+                    self._state = "stopping"
+                    self._reason = "navigation_body_handoff_pending"
+                    return result
+            self._pending_terminal = None
+            self._state, self._reason = terminal_state, terminal_reason
+            return result
         if self.placement is not None:
             return self._tick_placement(profile, owner_deadline_ns)
         if self.navigation.state == "interaction_required":
@@ -138,11 +152,18 @@ class RuntimeWorldChangeNavigationDriver:
                 interaction.requirement.expected_item_id,
             )
             if inventory_reason is not None:
-                self.navigation.release(inventory_reason)
-                self._state = "failed"
-                self._reason = inventory_reason
+                if self.navigation.release(inventory_reason):
+                    self._state = "failed"
+                    self._reason = inventory_reason
+                else:
+                    self._pending_terminal = ("failed", inventory_reason)
+                    self._state = "stopping"
+                    self._reason = "navigation_body_handoff_pending"
                 return None
-            self.navigation.suspend_for_interaction()
+            if not self.navigation.suspend_for_interaction():
+                self._state = "navigating"
+                self._reason = "interaction_body_handoff_pending"
+                return self.navigation.tick(profile, owner_deadline_ns)
             transaction = BlockPlacementTransaction(interaction.requirement)
             modes = self.session.profiles.ground_modes
             approach_mode = (
@@ -170,8 +191,14 @@ class RuntimeWorldChangeNavigationDriver:
         self._pending_goal_update = None
         if not self.session.report.terminal:
             self.session.cancel(reason)
-        self._state = "cancelled"
-        self._reason = reason.strip()
+        if (self.navigation.source is not None
+                and not self.navigation.release(reason)):
+            self._pending_terminal = ("cancelled", reason.strip())
+            self._state = "stopping"
+            self._reason = "navigation_body_handoff_pending"
+        else:
+            self._state = "cancelled"
+            self._reason = reason.strip()
 
     def release(self) -> None:
         """Release any remaining Runtime source after a terminal result."""

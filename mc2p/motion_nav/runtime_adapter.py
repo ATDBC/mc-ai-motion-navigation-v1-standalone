@@ -1,7 +1,7 @@
 """Backend-neutral B02 projection from formal V3 observations."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import math
 
 from mc2p.contracts.common import ContractViolation, FieldStatusV0
@@ -18,6 +18,7 @@ from mc2p.motion_nav.world_model import (
 
 
 _PLAYER_WIDTH = 0.6
+TEST_ORACLE = object()
 _POSE_HEIGHTS = {
     "standing": 1.8,
     "crouching": 1.5,
@@ -57,6 +58,8 @@ class BodyState:
     is_flying: bool = False
     allow_flying: bool = False
     is_using_item: bool = False
+    movement_tick_id: int | None = None
+    health_points: float | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -114,6 +117,11 @@ def _body(snapshot: ObservationSnapshotV3, session: WorldSessionId,
         is_flying=own.is_flying,
         allow_flying=own.allow_flying,
         is_using_item=own.is_using_item,
+        movement_tick_id=own.movement_tick_id,
+        health_points=(float(snapshot.health_points.value)
+                       if snapshot.health_points.status is FieldStatusV0.VALID
+                       and snapshot.health_points.value is not None
+                       else None),
         body_box=Aabb(x - half, y, z - half, x + half, y + height, z + half),
         is_on_ground=own.is_on_ground,
         horizontal_collision=own.horizontal_collision,
@@ -146,6 +154,29 @@ class NavigationObservationAdapter:
     @property
     def latest_frame(self) -> NavigationFrame | None:
         """Return the current immutable projection without ingesting again."""
+        return self._latest_frame
+
+    def seed_test_oracle_memory(
+        self, authority: object, blocks: dict[BlockPos, BlockGeometry],
+        air: tuple[BlockPos, ...],
+    ) -> NavigationFrame:
+        """Load historical map facts for an isolated simulation, never live sensing.
+
+        The test must explicitly present TEST_ORACLE. This entry cannot create a
+        frame and cannot be used before the Runtime has ingested an observation.
+        """
+        if authority is not TEST_ORACLE:
+            raise ContractViolation("historical memory requires TEST_ORACLE")
+        if self._world is None or self._latest_frame is None:
+            raise ContractViolation("historical memory requires an observed frame")
+        if type(blocks) is not dict or type(air) is not tuple:
+            raise ContractViolation("historical memory must be frozen test facts")
+        if set(blocks).intersection(air):
+            raise ContractViolation("historical block and air facts conflict")
+        stamp = self._latest_frame.body.stamp
+        self._world.observe_blocks(stamp, blocks)
+        self._world.confirm_air(stamp, air)
+        self._latest_frame = replace(self._latest_frame, world=self._world.view())
         return self._latest_frame
 
     def air_request(self, positions: tuple[BlockPos, ...], *, max_positions: int = 128,

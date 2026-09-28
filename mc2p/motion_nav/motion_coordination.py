@@ -25,8 +25,9 @@ from mc2p.motion_nav.motion_solver import (
     solve_air_transition, solve_one_cell_gap,
 )
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
+from mc2p.motion_nav.retry_ledger import RetryCause, RetryLedger, RetryVerdict
 from mc2p.motion_nav.motion_worker import (
-    GapMotionSolveJob, GapMotionSolveResult, MotionSolverWorker,
+    GapMotionSolveJob, GapMotionSolveResult, MotionWorkerPort,
 )
 from mc2p.motion_nav.online_motion import (
     CandidateExecutionWindow, InputApplicationLedger, ProjectionStatus,
@@ -41,7 +42,6 @@ from mc2p.motion_nav.world_model import BlockPos
 
 
 _RESOURCE_ASSUMPTIONS = ("server_hunger_clock_not_in_physics_state",)
-_MAX_IDENTICAL_REVALIDATION_RETRIES = 2
 _MAX_ENTRY_ALIGNMENT_DEGREES_PER_TICK = 36.0
 
 
@@ -85,6 +85,7 @@ class GapPreparationResult:
     candidate: AdmittedMotionCandidate | None = None
     solve_result: SolveResult | None = None
     reason: str = ""
+    retryable: bool = False
 
     def __post_init__(self) -> None:
         if type(self.status) is not GapPreparationStatus:
@@ -296,6 +297,7 @@ def prepare_planned_gap_motion(
         return GapPreparationResult(
             GapPreparationStatus.ADMISSION_REJECTED,
             solve_result=solved, reason=admitted.reason,
+            retryable=admitted.retryable,
         )
     return GapPreparationResult(
         GapPreparationStatus.READY, admitted.candidate, solved, "ready",
@@ -366,6 +368,7 @@ def prepare_planned_air_transition(
         return GapPreparationResult(
             GapPreparationStatus.ADMISSION_REJECTED,
             solve_result=solved, reason=admitted.reason,
+            retryable=admitted.retryable,
         )
     return GapPreparationResult(
         GapPreparationStatus.READY, admitted.candidate, solved, "ready",
@@ -376,16 +379,19 @@ class MotionRouteCoordinator:
     """Connect one active route to bounded background motion solving."""
 
     def __init__(self, route: ActiveRoute, executor: ActionRouteExecutor,
-                 worker: MotionSolverWorker, *,
+                 worker: MotionWorkerPort, *,
                  damage_budget: TaskDamageBudget = TaskDamageBudget(),
+                 retry_ledger: RetryLedger | None = None,
                  gap_solver_policy: GapSolverPolicy = DEFAULT_GAP_SOLVER_POLICY,
                  air_transition_policies: dict[
                      MotionSolveKind, AirTransitionSolverPolicy
                  ] = DEFAULT_AIR_TRANSITION_POLICIES) -> None:
         if (type(route) is not ActiveRoute
                 or type(executor) is not ActionRouteExecutor
-                or type(worker) is not MotionSolverWorker
+                or not isinstance(worker, MotionWorkerPort)
                 or type(damage_budget) is not TaskDamageBudget
+                or (retry_ledger is not None
+                    and type(retry_ledger) is not RetryLedger)
                 or type(gap_solver_policy) is not GapSolverPolicy
                 or type(air_transition_policies) is not dict
                 or any(type(kind) is not MotionSolveKind
@@ -399,13 +405,14 @@ class MotionRouteCoordinator:
         self.gap_solver_policy = gap_solver_policy
         self.air_transition_policies = dict(air_transition_policies)
         self.damage_budget = damage_budget
+        self.retry_ledger = (retry_ledger if retry_ledger is not None else
+                             RetryLedger(route.goal_id))
         self._pending_connection: str | None = None
         self._pending_action_index: int | None = None
         self._pending_submitted_tick: int | None = None
         self._pending_preparation_anchor: StateAnchor | None = None
         self._candidate_revision = 0
-        self._retry_signature: tuple | None = None
-        self._retry_failures = 0
+        self.last_failure_attempt_id: str | None = None
         self.last_failure_reason = ""
 
     def start(self, frame: NavigationFrame) -> None:
@@ -416,8 +423,7 @@ class MotionRouteCoordinator:
         self._pending_submitted_tick = None
         self._pending_preparation_anchor = None
         self._candidate_revision = 0
-        self._retry_signature = None
-        self._retry_failures = 0
+        self.last_failure_attempt_id = None
         self.last_failure_reason = ""
         self.executor.start(
             self.route.action_route, frame,
@@ -432,36 +438,6 @@ class MotionRouteCoordinator:
 
     def _connection_id(self, action_index: int) -> str:
         return f"{self.route.route_id}/action-{action_index}"
-
-    @staticmethod
-    def _revalidation_signature(
-            connection: str, reason: str, anchor: StateAnchor,
-            world: PhysicsWorldView,
-            changed_cells: tuple[BlockPos, ...]) -> tuple:
-        state = anchor.physics_state
-        return (
-            connection, reason, world.geometry_revision, changed_cells,
-            state.position, state.velocity_blocks_per_tick,
-            state.yaw_radians, state.pitch_radians, state.pose,
-            state.on_ground, state.horizontal_collision,
-            state.vertical_collision, state.sprinting, state.sneaking,
-            state.jumping_cooldown_ticks, state.food_points,
-            state.saturation_points, state.is_using_item,
-        )
-
-    def _record_retryable_failure(
-            self, connection: str, reason: str, anchor: StateAnchor,
-            world: PhysicsWorldView,
-            changed_cells: tuple[BlockPos, ...]) -> bool:
-        signature = self._revalidation_signature(
-            connection, reason, anchor, world, changed_cells,
-        )
-        if signature == self._retry_signature:
-            self._retry_failures += 1
-        else:
-            self._retry_signature = signature
-            self._retry_failures = 1
-        return self._retry_failures > _MAX_IDENTICAL_REVALIDATION_RETRIES
 
     def _accept_result(
             self, result: GapMotionSolveResult, anchor: StateAnchor,
@@ -507,23 +483,24 @@ class MotionRouteCoordinator:
                 # Keep the still-valid ground segment and try again from the
                 # next applied state instead of cancelling the whole route.
                 return False
-            retryable = prepared.reason in {
-                "candidate_revalidation_failed", "world_dependency_changed",
-            }
-            if retryable and self._record_retryable_failure(
-                    connection, prepared.reason, anchor, world, changed_cells):
-                self.last_failure_reason = (
-                    f"motion_retry_exhausted:{prepared.reason}"
+            if prepared.retryable:
+                attempt_id = (f"{connection}/candidate-"
+                              f"{result.candidate_revision}/{prepared.reason}")
+                registration = self.retry_ledger.record_failure(
+                    attempt_id, RetryCause.EXECUTION,
                 )
-                self.executor.cancel()
-            elif not retryable:
-                self._retry_signature = None
-                self._retry_failures = 0
+                self.last_failure_attempt_id = attempt_id
+                if (registration.verdict is not RetryVerdict.RETRY
+                        or not registration.first_seen):
+                    self.last_failure_reason = (
+                        f"motion_retry_exhausted:{prepared.reason}"
+                    )
+                    self.executor.cancel()
+            else:
                 self.executor.cancel()
             return False
         self.executor.install_verified_motion(prepared.candidate)
-        self._retry_signature = None
-        self._retry_failures = 0
+        self.last_failure_attempt_id = None
         self.last_failure_reason = ""
         return True
 
@@ -680,10 +657,19 @@ class MotionRouteCoordinator:
                 preparation_anchor=predicted,
             )
             return
+        upcoming = self.route.action_route.actions[action_index]
+        if (type(upcoming) is ControlledDropSegment
+                and upcoming.start_surface.position[1]
+                    - upcoming.end_surface.position[1] > 1.0 + 1.0e-6):
+            # A multi-block drop needs fresh lower-volume evidence at its
+            # actual entry.  Solving it while the preceding segment is still
+            # moving would allow an already-installed proof to bypass that
+            # action-boundary check.
+            return
         predicted = self._predict_applied_walk_state(decision, anchor, world)
         if predicted is None or not predicted.physics_state.on_ground:
             return
-        action = self.route.action_route.actions[action_index]
+        action = upcoming
         assert _air_action_kind(action) is not None
         px, py, pz = predicted.physics_state.position
         if type(action) is JumpUpSegment:
@@ -713,6 +699,7 @@ class MotionRouteCoordinator:
             raise ContractViolation("motion route decision requires current typed state")
         installed = False
         worker_available = True
+        starting_action_index = self.executor.action_index
         if not self.worker.is_alive():
             worker_available = False
             self._pending_connection = None
@@ -739,9 +726,20 @@ class MotionRouteCoordinator:
             state_anchor=anchor, input_ledger=ledger,
             movement_yaw_radians=movement_yaw_radians,
         )
-        if (decision.reason_code == "awaiting_verified_motion"
+        if (decision.requires_verified_motion
                 and self._pending_connection is None and not installed
                 and worker_available):
+            current = self.route.action_route.actions[
+                self.executor.action_index
+            ]
+            if (self.executor.action_index != starting_action_index
+                    and type(current) is ControlledDropSegment
+                    and current.start_surface.position[1]
+                        - current.end_surface.position[1] > 1.0 + 1.0e-6):
+                # The executor crossed the action boundary in this call.
+                # Give the session one frame to run the immediate landing
+                # evidence check before any proof is solved or installed.
+                return decision
             alignment = self._align_current_gap_entry(decision, anchor)
             if alignment is not None:
                 return alignment

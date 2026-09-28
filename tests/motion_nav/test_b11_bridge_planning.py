@@ -33,7 +33,8 @@ from mc2p.motion_nav.world_model import (
 from tests.motion_nav.test_b07_step_route import step_profile
 from tests.motion_nav.test_b07_surface_planning import ordinary_profile
 from tests.motion_nav.test_jump_up import jump_profile
-from tests.motion_nav.test_navigation_session import _InlinePlanner
+from tests.motion_nav.test_navigation_session import _InlinePlanner, _ground_anchor
+from mc2p.motion_nav.online_motion import InputApplicationLedger
 
 
 SESSION = WorldSessionId("b11-bridge-world")
@@ -234,7 +235,10 @@ class BridgePlanningTests(unittest.TestCase):
             SESSION, self._body(1.5, sequence=2), world.view(), "fixture",
         )
         for _ in range(4):
-            session.propose(arrived, None, 1_000_000)
+            session.propose(
+                arrived, _ground_anchor(arrived), 1_000_000,
+                input_ledger=InputApplicationLedger(),
+            )
             if session.report.state is NavigationSessionState.REQUIRES_INTERACTION:
                 break
         self.assertEqual(

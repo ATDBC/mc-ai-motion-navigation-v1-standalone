@@ -356,6 +356,52 @@ class VerifiedMotionExecutorTests(unittest.TestCase):
         self.assertEqual(second.expected_movement_tick, 13)
         self.assertEqual(second.latest_movement_tick, 13)
 
+    def test_first_command_is_reissued_when_next_tick_is_still_in_start_window(self):
+        anchor, candidate = self.admitted()
+        executor = VerifiedMotionExecutor()
+        executor.start(candidate)
+        ledger = InputApplicationLedger(max_records=64)
+        first = executor.decide(anchor, ledger)
+        executor.register_submission(
+            0, control_sequence=20,
+            requested_movement_tick=first.expected_movement_tick,
+            requested_latest_movement_tick=first.latest_movement_tick,
+        )
+        next_observation = replace(
+            anchor,
+            observation_sequence_id=anchor.observation_sequence_id + 1,
+            movement_tick_id=anchor.movement_tick_id + 1,
+            physics_state=replace(
+                anchor.physics_state,
+                movement_tick_id=anchor.movement_tick_id + 1,
+            ),
+        )
+
+        retry = executor.decide(next_observation, ledger)
+
+        self.assertEqual(retry.movement, first.movement)
+        self.assertEqual(retry.command_index, 0)
+        self.assertEqual(retry.expected_movement_tick, 12)
+        self.assertEqual(retry.latest_movement_tick, 12)
+        self.assertTrue(retry.submittable_as_verified_command)
+        executor.register_submission(
+            0, control_sequence=21,
+            requested_movement_tick=12,
+            requested_latest_movement_tick=12,
+        )
+        self.applied(
+            ledger, anchor, 21, 12, candidate.proof.commands[0].movement,
+            requested_tick=12, requested_latest_tick=12,
+        )
+        observed = replace(
+            next_observation,
+            observation_sequence_id=next_observation.observation_sequence_id + 1,
+            movement_tick_id=12,
+            physics_state=replace(candidate.proof.trajectory[1], movement_tick_id=12),
+        )
+        second = executor.decide(observed, ledger)
+        self.assertEqual(second.command_index, 1)
+
     def test_missed_airborne_command_window_keeps_landing_responsibility(self):
         anchor, candidate = self.admitted()
         executor = VerifiedMotionExecutor()
@@ -1291,6 +1337,7 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
                 GapPreparationStatus.ADMISSION_REJECTED,
                 solve_result=failure,
                 reason="candidate_revalidation_failed",
+                retryable=True,
             )
             with patch(
                 "mc2p.motion_nav.motion_coordination.prepare_planned_gap_motion",
