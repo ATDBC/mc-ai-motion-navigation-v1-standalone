@@ -1,0 +1,7 @@
+-- executor timeline (observation sequence, (route state, controller, controller state, on_ground, decision reason)) --
+(0, ('running', 'FixedRouteController', 'running', True, 'tracking_fixed_route'))
+(9, ('running', None, None, True, None))
+(33, ('running', None, None, True, 'awaiting_verified_motion'))
+(34, ('running', 'VerifiedMotionExecutor', 'running', True, 'submit_verified_command'))
+(35, ('cancelling', 'VerifiedMotionExecutor', 'recovering', True, 'complete_verified_landing_after_cancel'))
+(36, ('cancelling', 'VerifiedMotionExecutor', 'recovering', True, 'awaiting_application'))

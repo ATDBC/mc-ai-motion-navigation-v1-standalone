@@ -214,3 +214,7 @@ python -B reviews/2026-09-28-next-stage-gates/gate_metrics.py --base <上一次�
 | [`terminal_resurrection.py`](2026-09-28-coordination-refactor-review-repro/terminal_resurrection.py) | G2 在 d34a674 上的外部写入探针；S4 完成后由代码自身的强制取代 |
 
 [owners]: https://github.com/ATDBC/mc-ai-motion-navigation-v1-standalone/blob/d34a67473538cca2f69c2c0fce1e55b07a8692fd/docs/motion_navigation/architecture/navigation-coordination-v1.md#1-状态由谁拥有
+
+## 后续
+
+按本门槛对 `eb4653c` 的复核见 [第二十轮评审](2026-09-28-coordination-hardening-review.md)。

@@ -1,0 +1,6 @@
+executing executing_safe_prefix_during_replan 300 (0.48, 64.0, 3.07) [(139, 'I4', 'unbounded wait in executing/executing_safe_prefix_during_replan')]
+2 (0.5, 64.0, 0.6) executing tracking_fixed_route ('route_executor',) running WalkSegment gen 1 ground driver running
+11 (0.53, 64.0, 2.33) needs_information landing_lower_evidence_required ('landing_edge_probe', 'route_executor') overlap ControlledDropSegment gen 1 ground driver running sneak
+35 (0.48, 64.0, 2.86) executing awaiting_verified_motion ('landing_edge_probe', 'route_executor') overlap ControlledDropSegment gen 1 ground driver running
+36 (0.48, 64.0, 2.96) executing submit_verified_command ('route_executor',) running ControlledDropSegment gen 1 ground driver running
+37 (0.48, 64.0, 3.01) executing executing_safe_prefix_during_replan ('route_executor',) cancelling ControlledDropSegment gen 2 ground driver running

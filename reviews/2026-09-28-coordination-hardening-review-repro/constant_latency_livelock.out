@@ -1,0 +1,14 @@
+executing recovering_grounded_verified_entry violations []
+289 (0.521, 65.0, 2.658) recovering_grounded_verified_entry retries 2 fwd -1 sneak True
+290 (0.482, 65.0, 2.619) settling_grounded_verified_entry retries 2 fwd -1 sneak True
+291 (0.461, 65.0, 2.598) recovering_grounded_verified_entry retries 2 fwd 0 sneak True
+292 (0.479, 65.0, 2.616) recovering_grounded_verified_entry retries 2 fwd 1 sneak True
+293 (0.518, 65.0, 2.655) settling_grounded_verified_entry retries 2 fwd 1 sneak True
+294 (0.539, 65.0, 2.676) recovering_grounded_verified_entry retries 2 fwd 0 sneak True
+295 (0.521, 65.0, 2.658) recovering_grounded_verified_entry retries 2 fwd -1 sneak True
+296 (0.482, 65.0, 2.619) settling_grounded_verified_entry retries 2 fwd -1 sneak True
+297 (0.461, 65.0, 2.598) recovering_grounded_verified_entry retries 2 fwd 0 sneak True
+298 (0.479, 65.0, 2.616) recovering_grounded_verified_entry retries 2 fwd 1 sneak True
+299 (0.518, 65.0, 2.655) settling_grounded_verified_entry retries 2 fwd 1 sneak True
+300 (0.539, 65.0, 2.676) recovering_grounded_verified_entry retries 2 fwd 0 sneak True
+301 (0.521, 65.0, 2.658) recovering_grounded_verified_entry retries 2 fwd -1 sneak True

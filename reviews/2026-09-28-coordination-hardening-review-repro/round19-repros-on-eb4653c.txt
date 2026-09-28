@@ -1,0 +1,253 @@
+
+==================== P1-1 isolated one-block step down after a walking approach ====================
+drop 1 approach 1 Fabric twin -> success   goal_state_satisfied               ticks=34   damage=0 violations=[]
+drop 1 approach 2             -> success   goal_state_satisfied               ticks=41   damage=0 violations=[]
+drop 1 approach 3             -> success   goal_state_satisfied               ticks=48   damage=0 violations=[]
+drop 1 approach 5             -> success   goal_state_satisfied               ticks=55   damage=0 violations=[]
+drop 2 approach 1 Fabric twin -> success   goal_state_satisfied               ticks=58   damage=0 violations=[]
+drop 2 approach 2             -> success   goal_state_satisfied               ticks=63   damage=0 violations=[]
+drop 2 approach 3             -> success   goal_state_satisfied               ticks=67   damage=0 violations=[]
+drop 2 approach 5             -> success   goal_state_satisfied               ticks=76   damage=0 violations=[]
+drop 3 approach 1 Fabric twin -> success   goal_state_satisfied               ticks=60   damage=0 violations=[]
+drop 3 approach 2             -> success   goal_state_satisfied               ticks=65   damage=0 violations=[]
+drop 3 approach 3             -> success   goal_state_satisfied               ticks=69   damage=0 violations=[]
+drop 3 approach 5             -> success   goal_state_satisfied               ticks=78   damage=0 violations=[]
+drop 5 approach 1 Fabric twin -> success   goal_state_satisfied               ticks=63   damage=2 violations=[]
+drop 5 approach 2             -> success   goal_state_satisfied               ticks=68   damage=2 violations=[]
+drop 5 approach 3             -> success   goal_state_satisfied               ticks=72   damage=2 violations=[]
+drop 5 approach 5             -> success   goal_state_satisfied               ticks=81   damage=2 violations=[]
+down1_a2_w1_s0.5,0.5       clean    OK   success   goal_state_satisfied               ticks=49   pos=(0.5, 64.0, 3.39) violations=[]
+down1_a2_w1_s0.5,0.5       fixed+1  FAIL failed    input_lost                         ticks=80   pos=(0.5, 65.0, 2.06) violations=[]
+down1_a2_w1_s0.3,0.5       clean    OK   success   goal_state_satisfied               ticks=49   pos=(0.51, 64.0, 3.39) violations=[]
+down1_a2_w1_s0.3,0.5       fixed+1  FAIL executing recovering_grounded_verified_entry ticks=300  pos=(0.39, 65.0, 1.66) violations=[]
+down1_a2_w1_s0.5,0.8       clean    OK   success   goal_state_satisfied               ticks=49   pos=(0.5, 64.0, 3.47) violations=[]
+down1_a2_w1_s0.5,0.8       fixed+1  FAIL failed    input_lost                         ticks=57   pos=(0.5, 65.0, 2.07) violations=[]
+down1_a2_w3_s0.5,0.5       clean    OK   success   goal_state_satisfied               ticks=49   pos=(0.5, 64.0, 3.39) violations=[]
+down1_a2_w3_s0.5,0.5       fixed+1  FAIL failed    input_lost                         ticks=80   pos=(0.5, 65.0, 2.06) violations=[]
+down1_a2_w3_s0.3,0.5       clean    OK   success   goal_state_satisfied               ticks=49   pos=(0.51, 64.0, 3.39) violations=[]
+down1_a2_w3_s0.3,0.5       fixed+1  FAIL executing recovering_grounded_verified_entry ticks=300  pos=(0.39, 65.0, 1.66) violations=[]
+down1_a2_w3_s0.5,0.8       clean    OK   success   goal_state_satisfied               ticks=49   pos=(0.5, 64.0, 3.47) violations=[]
+down1_a2_w3_s0.5,0.8       fixed+1  FAIL failed    input_lost                         ticks=57   pos=(0.5, 65.0, 2.07) violations=[]
+down1_a3_w1_s0.5,0.5       clean    OK   success   goal_state_satisfied               ticks=56   pos=(0.5, 64.0, 4.47) violations=[]
+down1_a3_w1_s0.5,0.5       fixed+1  FAIL executing recovering_grounded_verified_entry ticks=300  pos=(0.48, 65.0, 2.62) violations=[]
+down1_a3_w1_s0.3,0.5       clean    OK   success   goal_state_satisfied               ticks=57   pos=(0.51, 64.0, 4.47) violations=[]
+down1_a3_w1_s0.3,0.5       fixed+1  FAIL executing goal_braking                       ticks=300  pos=(0.52, 65.0, 2.61) violations=[]
+down1_a3_w1_s0.5,0.8       clean    OK   success   goal_state_satisfied               ticks=54   pos=(0.5, 64.0, 4.51) violations=[]
+down1_a3_w1_s0.5,0.8       fixed+1  FAIL executing settling_grounded_verified_entry   ticks=300  pos=(0.46, 65.0, 2.68) violations=[]
+down1_a3_w3_s0.5,0.5       clean    OK   success   goal_state_satisfied               ticks=56   pos=(0.5, 64.0, 4.47) violations=[]
+down1_a3_w3_s0.5,0.5       fixed+1  FAIL executing recovering_grounded_verified_entry ticks=300  pos=(0.48, 65.0, 2.62) violations=[]
+down1_a3_w3_s0.3,0.5       clean    OK   success   goal_state_satisfied               ticks=57   pos=(0.51, 64.0, 4.47) violations=[]
+down1_a3_w3_s0.3,0.5       fixed+1  FAIL executing goal_braking                       ticks=300  pos=(0.52, 65.0, 2.61) violations=[]
+down1_a3_w3_s0.5,0.8       clean    OK   success   goal_state_satisfied               ticks=54   pos=(0.5, 64.0, 4.51) violations=[]
+down1_a3_w3_s0.5,0.8       fixed+1  FAIL executing settling_grounded_verified_entry   ticks=300  pos=(0.46, 65.0, 2.68) violations=[]
+down1_a5_w1_s0.5,0.5       clean    OK   success   goal_state_satisfied               ticks=63   pos=(0.5, 64.0, 6.41) violations=[]
+down1_a5_w1_s0.5,0.5       fixed+1  FAIL failed    input_lost                         ticks=94   pos=(0.5, 65.0, 5.08) violations=[]
+down1_a5_w1_s0.3,0.5       clean    OK   success   goal_state_satisfied               ticks=64   pos=(0.51, 64.0, 6.41) violations=[]
+down1_a5_w1_s0.3,0.5       fixed+1  FAIL failed    motion_unsolvable:precomputed_connection_mismatch ticks=57   pos=(0.43, 65.0, 4.71) violations=[]
+down1_a5_w1_s0.5,0.8       clean    OK   success   goal_state_satisfied               ticks=67   pos=(0.5, 64.0, 6.42) violations=[]
+down1_a5_w1_s0.5,0.8       fixed+1  FAIL executing settling_grounded_verified_entry   ticks=300  pos=(0.54, 65.0, 4.7) violations=[]
+down1_a5_w3_s0.5,0.5       clean    OK   success   goal_state_satisfied               ticks=63   pos=(0.5, 64.0, 6.41) violations=[]
+down1_a5_w3_s0.5,0.5       fixed+1  FAIL failed    input_lost                         ticks=94   pos=(0.5, 65.0, 5.08) violations=[]
+down1_a5_w3_s0.3,0.5       clean    OK   success   goal_state_satisfied               ticks=64   pos=(0.51, 64.0, 6.41) violations=[]
+down1_a5_w3_s0.3,0.5       fixed+1  FAIL failed    motion_unsolvable:precomputed_connection_mismatch ticks=57   pos=(0.43, 65.0, 4.71) violations=[]
+down1_a5_w3_s0.5,0.8       clean    OK   success   goal_state_satisfied               ticks=67   pos=(0.5, 64.0, 6.42) violations=[]
+down1_a5_w3_s0.5,0.8       fixed+1  FAIL executing settling_grounded_verified_entry   ticks=300  pos=(0.54, 65.0, 4.7) violations=[]
+passed 18/36
+
+==================== P1-1 which entry field fails ====================
+success goal_state_satisfied 41 (0.5, 63.0, 2.53)
+
+==================== P1-2 goal revision around the drop start (budget fits one drop) ====================
+revise@30  late=False outcome=failed     reason=edge_probe_acquisition_timeout           damage=0 pos=(1.52, 64.0, 2.52) risk=[] violations=[]
+revise@31  late=False outcome=failed     reason=edge_probe_acquisition_timeout           damage=0 pos=(1.52, 64.0, 2.52) risk=[] violations=[]
+revise@32  late=False outcome=failed     reason=edge_probe_acquisition_timeout           damage=0 pos=(1.52, 64.0, 2.53) risk=[] violations=[]
+revise@33  late=False outcome=failed     reason=edge_probe_acquisition_timeout           damage=0 pos=(1.52, 64.0, 2.53) risk=[] violations=[]
+revise@34  late=False outcome=failed     reason=edge_probe_acquisition_timeout           damage=0 pos=(1.51, 64.0, 2.47) risk=[] violations=[]
+revise@35  late=False outcome=failed     reason=edge_probe_acquisition_timeout           damage=0 pos=(1.51, 64.0, 2.47) risk=[] violations=[]
+revise@36  late=False outcome=success    reason=goal_state_satisfied                     damage=2 pos=(1.43, 59.0, 4.47) risk=[('risk-1', 'settled', 2.0, 1)] violations=[]
+revise@37  late=False outcome=success    reason=goal_state_satisfied                     damage=2 pos=(1.43, 59.0, 4.47) risk=[('risk-1', 'settled', 2.0, 1)] violations=[]
+revise@38  late=False outcome=success    reason=goal_state_satisfied                     damage=2 pos=(1.43, 59.0, 4.47) risk=[('risk-1', 'settled', 2.0, 1)] violations=[]
+revise@39  late=False outcome=success    reason=goal_state_satisfied                     damage=2 pos=(1.43, 59.0, 4.47) risk=[('risk-1', 'settled', 2.0, 1)] violations=[]
+revise@40  late=False outcome=success    reason=goal_state_satisfied                     damage=2 pos=(1.43, 59.0, 4.47) risk=[('risk-1', 'settled', 2.0, 1)] violations=[]
+revise@41  late=False outcome=success    reason=goal_state_satisfied                     damage=2 pos=(1.43, 59.0, 4.47) risk=[('risk-1', 'settled', 2.0, 1)] violations=[]
+revise@30  late=True  outcome=failed     reason=edge_probe_acquisition_timeout           damage=0 pos=(1.52, 64.0, 2.52) risk=[] violations=[]
+revise@31  late=True  outcome=failed     reason=edge_probe_acquisition_timeout           damage=0 pos=(1.52, 64.0, 2.53) risk=[] violations=[]
+revise@32  late=True  outcome=failed     reason=edge_probe_acquisition_timeout           damage=0 pos=(1.52, 64.0, 2.53) risk=[] violations=[]
+revise@33  late=True  outcome=failed     reason=edge_probe_acquisition_timeout           damage=0 pos=(1.52, 64.0, 2.53) risk=[] violations=[]
+revise@34  late=True  outcome=failed     reason=edge_probe_acquisition_timeout           damage=0 pos=(1.51, 64.0, 2.47) risk=[] violations=[]
+revise@35  late=True  outcome=failed     reason=edge_probe_acquisition_timeout           damage=0 pos=(1.51, 64.0, 2.47) risk=[] violations=[]
+revise@36  late=True  outcome=executing  reason=executing_safe_prefix_during_replan      damage=0 pos=(0.48, 64.0, 3.07) risk=[('risk-1', 'committed', 2.0, 1)] violations=['I4']
+revise@37  late=True  outcome=executing  reason=executing_safe_prefix_during_replan      damage=0 pos=(0.48, 64.0, 3.29) risk=[('risk-1', 'committed', 2.0, 1)] violations=['I4']
+revise@38  late=True  outcome=executing  reason=executing_safe_prefix_during_replan      damage=2 pos=(0.48, 59.0, 3.67) risk=[('risk-1', 'settled', 2.0, 1)] violations=['I4']
+revise@39  late=True  outcome=executing  reason=executing_safe_prefix_during_replan      damage=2 pos=(0.48, 59.0, 4.06) risk=[('risk-1', 'settled', 2.0, 1)] violations=['I4']
+revise@40  late=True  outcome=executing  reason=executing_safe_prefix_during_replan      damage=2 pos=(0.48, 59.0, 3.52) risk=[('risk-1', 'settled', 2.0, 1)] violations=['I4']
+revise@41  late=True  outcome=executing  reason=executing_safe_prefix_during_replan      damage=2 pos=(0.48, 59.0, 3.52) risk=[('risk-1', 'settled', 2.0, 1)] violations=['I4']
+
+==================== P1-2 trace, revision at tick 37 ====================
+success goal_state_satisfied 90 2.0 (1.43, 59.0, 4.47) []
+2 (0.5, 64.0, 0.6) executing tracking_fixed_route ('route_executor',) WalkSegment 67b92e13 gen 1 ground avail 2.0
+11 (0.53, 64.0, 2.33) needs_information landing_lower_evidence_required ('landing_edge_probe', 'route_executor') ControlledDropSegment 67b92e13 gen 1 ground avail 2.0
+35 (0.48, 64.0, 2.86) executing awaiting_verified_motion ('landing_edge_probe', 'route_executor') ControlledDropSegment 67b92e13 gen 1 ground avail 2.0
+36 (0.48, 64.0, 2.96) executing submit_verified_command ('route_executor',) ControlledDropSegment 67b92e13 gen 1 ground avail 0.0
+38 (0.48, 64.0, 3.29) executing executing_safe_prefix_during_replan ('route_executor',) ControlledDropSegment 67b92e13 gen 2 ground avail 0.0
+40 (0.48, 63.92, 3.49) executing executing_safe_prefix_during_replan ('route_executor',) ControlledDropSegment 67b92e13 gen 2 air avail 0.0
+51 (0.48, 59.0, 3.52) executing executing_safe_prefix_during_replan ('route_executor',) ControlledDropSegment 67b92e13 gen 2 ground avail 0.0
+56 (0.48, 59.0, 3.72) planning route_handoff_reanchored () None  gen 3 ground avail 0.0
+57 (0.55, 59.0, 3.8) executing tracking_fixed_route ('route_executor',) WalkSegment e622dd94 gen 3 ground avail 0.0
+59 (0.61, 59.0, 4.02) executing corner_speed_control ('route_executor',) WalkSegment e622dd94 gen 3 ground avail 0.0
+60 (0.69, 59.0, 4.13) executing tracking_fixed_route ('route_executor',) WalkSegment e622dd94 gen 3 ground avail 0.0
+
+==================== P1-2 planner jobs ====================
+planner job gen 1 goal_rev 1 budget 2.0 -> SurfaceRouteCandidate complete None None
+planner job gen 3 goal_rev 2 budget 0.0 -> SurfaceRouteCandidate complete None None
+success goal_state_satisfied 90 2.0 (1.43, 59.0, 4.47) []
+
+==================== P1-2 same case with budget 4 ====================
+success goal_state_satisfied 90 2.0 (1.43, 59.0, 4.47) []
+
+==================== P1-3 risk records per drop ====================
+start at edge facing   0 deg -> success  goal_state_satisfied           risk_records=1 {'settled': 1}
+start at edge facing  90 deg -> success  goal_state_satisfied           risk_records=1 {'settled': 1}
+start at edge facing 180 deg -> success  goal_state_satisfied           risk_records=1 {'settled': 1}
+4 consecutive 2-block drops -> success  goal_state_satisfied           ticks=170 risk_records=3 {'settled': 3} records/drop=0.8
+8 consecutive 2-block drops -> success  goal_state_satisfied           ticks=362 risk_records=7 {'settled': 7} records/drop=0.9
+
+==================== P1-3 one task ledger, repeated drops ====================
+leg  1: success  goal_state_satisfied               damage=0 ledger_records=1
+leg  2: success  goal_state_satisfied               damage=0 ledger_records=2
+leg  3: success  goal_state_satisfied               damage=0 ledger_records=3
+leg  4: success  goal_state_satisfied               damage=0 ledger_records=4
+leg  5: success  goal_state_satisfied               damage=0 ledger_records=5
+leg  6: success  goal_state_satisfied               damage=0 ledger_records=6
+leg  7: success  goal_state_satisfied               damage=0 ledger_records=7
+leg  8: success  goal_state_satisfied               damage=0 ledger_records=8
+leg  9: success  goal_state_satisfied               damage=0 ledger_records=9
+leg 10: success  goal_state_satisfied               damage=0 ledger_records=10
+leg 11: success  goal_state_satisfied               damage=0 ledger_records=11
+leg 12: success  goal_state_satisfied               damage=0 ledger_records=12
+leg 13: success  goal_state_satisfied               damage=0 ledger_records=13
+leg 14: success  goal_state_satisfied               damage=0 ledger_records=14
+leg 15: success  goal_state_satisfied               damage=0 ledger_records=15
+
+==================== P1-3 trace at capacity ====================
+2 (0.53, 64.0, 2.53) needs_information landing_lower_evidence_required ('landing_edge_probe', 'route_executor') driver running landing_lower_evidence_required sneak records 10
+23 (0.45, 64.0, 2.8) needs_information landing_lower_evidence_required ('landing_edge_probe', 'route_executor') driver running landing_lower_evidence_required  records 10
+25 (0.45, 64.0, 2.8) executing aligning_verified_motion_heading ('landing_edge_probe', 'route_executor') driver running aligning_verified_motion_heading  records 10
+30 (0.45, 64.0, 2.8) executing awaiting_verified_motion ('landing_edge_probe', 'route_executor') driver running awaiting_verified_motion  records 10
+31 (0.45, 64.0, 2.9) executing submit_verified_command ('route_executor',) driver running submit_verified_command  records 11
+43 (0.45, 62.0, 3.8) executing tracking_fixed_route ('route_executor',) driver running tracking_fixed_route  records 11
+46 (0.45, 62.0, 4.29) executing goal_braking ('route_executor',) driver running goal_braking  records 11
+52 (0.45, 62.0, 4.42) complete goal_state_satisfied () driver success goal_state_satisfied  records 11
+
+==================== P1-4 constant one-tick latency ====================
+flat_walk                    fixed+1 -> success    goal_state_satisfied                     ticks=77   damage=0 violations=[]
+flat_walk_offset_start       fixed+1 -> success    goal_state_satisfied                     ticks=91   damage=0 violations=[]
+goal_on_current_support      fixed+1 -> success    goal_state_satisfied                     ticks=21   damage=0 violations=[]
+half_steps_up_down           fixed+1 -> success    goal_state_satisfied                     ticks=77   damage=0 violations=[]
+stair_descent_4              fixed+1 -> success    goal_state_satisfied                     ticks=61   damage=0 violations=[]
+direct_drop_2                fixed+1 -> failed     edge_probe_acquisition_timeout           ticks=88   damage=0 violations=[]
+direct_drop_5_budget_2       fixed+1 -> failed     edge_probe_acquisition_timeout           ticks=88   damage=0 violations=[]
+far_landing_L_walkway        fixed+1 -> failed     edge_probe_acquisition_timeout           ticks=134  damage=0 violations=[]
+terrace_two_ledges           fixed+1 -> failed     edge_probe_acquisition_timeout           ticks=88   damage=0 violations=[]
+terrace_three_ledges         fixed+1 -> failed     edge_probe_acquisition_timeout           ticks=88   damage=0 violations=[]
+drop_1_full_block            fixed+1 -> failed     input_lost                               ticks=80   damage=0 violations=[]
+drop_3_direct                fixed+1 -> failed     edge_probe_acquisition_timeout           ticks=88   damage=0 violations=[]
+
+==================== P1-4 trace direct_drop_2 under constant latency ====================
+failed edge_probe_acquisition_timeout 88 (0.47, 64.0, 2.5) []
+2 (0.5, 64.0, 0.5) executing tracking_fixed_route ('route_executor',) running WalkSegment driver running tracking_fixed_route ground  bound {'forward': 0, 'strafe': 0, 'jump': False, 'sneak': False, 'sprint': False}
+12 (0.5, 64.0, 2.4) needs_information landing_lower_evidence_required ('landing_edge_probe', 'route_executor') overlap ControlledDropSegment driver running landing_lower_evidence_required ground  bound {'forward': 1, 'strafe': 0, 'jump': False, 'sneak': False, 'sprint': False}
+13 (0.53, 64.0, 2.55) needs_information landing_lower_evidence_required ('landing_edge_probe', 'route_executor') overlap ControlledDropSegment driver running landing_lower_evidence_required ground sneak bound {'forward': 1, 'strafe': 1, 'jump': False, 'sneak': True, 'sprint': False}
+51 (0.49, 64.0, 2.92) needs_information landing_lower_evidence_required ('landing_edge_probe', 'route_executor') overlap ControlledDropSegment driver running landing_lower_evidence_required ground  bound {'forward': 0, 'strafe': 0, 'jump': False, 'sneak': False, 'sprint': False}
+52 (0.49, 64.0, 2.92) stopping edge_probe_stopping ('landing_edge_probe', 'route_executor') overlap ControlledDropSegment driver stopping edge_probe_stopping ground  bound {'forward': 0, 'strafe': 0, 'jump': False, 'sneak': False, 'sprint': False}
+53 (0.49, 64.0, 2.92) stopping edge_probe_stopping ('landing_edge_probe', 'route_executor') overlap ControlledDropSegment driver stopping edge_probe_stopping ground sneak bound {'forward': 0, 'strafe': 0, 'jump': False, 'sneak': True, 'sprint': False}
+69 (0.47, 64.0, 2.5) failed edge_probe_acquisition_timeout () None None driver failed edge_probe_acquisition_timeout ground  unbound {'forward': 0, 'strafe': 0, 'jump': False, 'sneak': False, 'sprint': False}
+
+==================== P1-4 input responsibility while stopping ====================
+responsibility ('in_flight', (('applied_outside_window', False, 0), ('applied_outside_window', False, 1), ('applied_outside_window', True, -1), ('applied_outside_window', True, 0), ('applied_outside_window', True, 1), ('in_flight', True, 0))) 9
+responsibility ('in_flight', (('applied_outside_window', False, 0), ('applied_outside_window', False, 1), ('applied_outside_window', True, -1), ('applied_outside_window', True, 0), ('applied_outside_window', True, 1), ('in_flight', True, -1))) 6
+responsibility ('clear', (('applied_outside_window', False, 0), ('applied_outside_window', False, 1), ('applied_outside_window', True, -1), ('applied_outside_window', True, 0), ('applied_outside_window', True, 1), ('in_flight', False, 0))) 2
+responsibility ('in_flight', (('applied_outside_window', False, 0), ('applied_outside_window', False, 1), ('applied_outside_window', True, -1), ('applied_outside_window', True, 0), ('applied_outside_window', True, 1), ('in_flight', True, 1))) 1
+
+==================== P1-5 landing support removed before departure ====================
+clean run: drop controller from tick 36, first airborne tick 40
+edit  1 ticks before departure -> failed   verified_exit_not_observed               pos=(0.48, 53.0, 3.87) damage=8 violations=[(57, 'I3')]
+edit  2 ticks before departure -> failed   verified_exit_not_observed               pos=(0.48, 53.0, 3.87) damage=8 violations=[(57, 'I3')]
+edit  3 ticks before departure -> failed   verified_exit_not_observed               pos=(0.48, 53.0, 3.87) damage=8 violations=[(57, 'I3')]
+edit  4 ticks before departure -> failed   verified_exit_not_observed               pos=(0.48, 53.0, 3.87) damage=8 violations=[(57, 'I3')]
+edit  6 ticks before departure -> failed   landing_support_missing                  pos=(0.47, 64.0, 2.54) damage=0 violations=[]
+edit  8 ticks before departure -> failed   landing_support_missing                  pos=(0.47, 64.0, 2.54) damage=0 violations=[]
+edit 12 ticks before departure -> failed   landing_support_missing                  pos=(0.47, 64.0, 2.54) damage=0 violations=[]
+
+==================== P2-1 corner landing column and single late tick sweep ====================
+== landing column sweep (drop_ledge, no revision) ==
+drop2 goal_x=-0.5  success    goal_state_satisfied                 ticks=86   pos=(-0.54, 62.0, 4.39) damage=0 violations=[]
+drop2 goal_x=0.5   success    goal_state_satisfied                 ticks=76   pos=(0.48, 62.0, 4.48) damage=0 violations=[]
+drop2 goal_x=1.5   failed     motion_unsolvable:no_solution_within_search ticks=74   pos=(1.54, 64.0, 2.53) damage=0 violations=[]
+drop5 goal_x=-0.5  success    goal_state_satisfied                 ticks=91   pos=(-0.54, 59.0, 4.39) damage=2 violations=[]
+drop5 goal_x=0.5   success    goal_state_satisfied                 ticks=81   pos=(0.48, 59.0, 4.38) damage=2 violations=[]
+drop5 goal_x=1.5   failed     motion_unsolvable:no_solution_within_search ticks=76   pos=(1.53, 64.0, 2.5) damage=0 violations=[]
+== single late tick sweep ==
+direct_drop_2                clean=success@76   single-late failures 0/74:
+direct_drop_5_budget_2       clean=success@81   single-late failures 0/79:
+far_landing_L_walkway        clean=success@122  single-late failures 0/120:
+stair_descent_4              clean=success@60   single-late failures 0/58:
+half_steps_up_down           clean=success@62   single-late failures 0/60:
+
+==================== P2-1 trace corner landing ====================
+failed motion_unsolvable:no_solution_within_search 74 (1.54, 64.0, 2.53) [] ('I7: action-entry proof event unavailable before S3', 'I8: typed planner result unavailable in tick diagnostics')
+2 (0.5, 64.0, 0.6) executing tracking_fixed_route ('route_executor',) running WalkSegment d8f574cb gen 1 driver running tracking_fixed_route
+8 (0.5, 64.0, 1.66) executing corner_speed_control ('route_executor',) running WalkSegment d8f574cb gen 1 driver running corner_speed_control
+10 (0.5, 64.0, 1.85) executing tracking_fixed_route ('route_executor',) running WalkSegment d8f574cb gen 1 driver running tracking_fixed_route
+11 (0.5, 64.0, 1.92) executing corner_speed_control ('route_executor',) running WalkSegment d8f574cb gen 1 driver running corner_speed_control
+12 (0.5, 64.0, 2.06) executing tracking_fixed_route ('route_executor',) running WalkSegment d8f574cb gen 1 driver running tracking_fixed_route
+13 (0.5, 64.0, 2.14) executing corner_speed_control ('route_executor',) running WalkSegment d8f574cb gen 1 driver running corner_speed_control
+14 (0.5, 64.0, 2.28) executing tracking_fixed_route ('route_executor',) running WalkSegment d8f574cb gen 1 driver running tracking_fixed_route
+15 (0.5, 64.0, 2.35) executing corner_speed_control ('route_executor',) running WalkSegment d8f574cb gen 1 driver running corner_speed_control
+16 (0.57, 64.0, 2.46) executing tracking_fixed_route ('route_executor',) running WalkSegment d8f574cb gen 1 driver running tracking_fixed_route
+21 (1.36, 64.0, 2.49) needs_information landing_lower_evidence_required ('landing_edge_probe', 'route_executor') overlap ControlledDropSegment d8f574cb gen 1 driver running landing_lower_evidence_required sneak
+43 (1.29, 64.0, 2.92) executing awaiting_verified_motion ('landing_edge_probe', 'route_executor') overlap ControlledDropSegment d8f574cb gen 1 driver running awaiting_verified_motion
+44 (1.29, 64.0, 2.92) stopping edge_probe_stopping ('landing_edge_probe',) stopping None d8f574cb gen 1 driver stopping edge_probe_stopping
+55 (1.54, 64.0, 2.53) failed motion_unsolvable:no_solution_within_search () None None d8f574cb gen 1 driver failed motion_unsolvable:no_solution_within_search
+
+==================== P2-1 preparation failure behind 'cancelled' ====================
+motion preparation failed: no_solution_within_search attempt None anchor pos (1.286, 64.0, 2.919)
+failed motion_unsolvable:no_solution_within_search 74 (1.54, 64.0, 2.53) [] ('I7: action-entry proof event unavailable before S3', 'I8: typed planner result unavailable in tick diagnostics')
+ActionRouteExecutor.cancel: motion_coordination.py:_accept_result:509 <- motion_coordination.py:decide:732 <- navigation_session.py:propose:2170 <- navigation_session_driver.py:prepare_proposals:243 <- navigation_session_driver.py:tick:195 <- runner.py:run:265
+ActionRouteExecutor.cancel: navigation_session.py:propose:1911 <- navigation_session_driver.py:prepare_proposals:243 <- navigation_session_driver.py:tick:195 <- runner.py:run:265 <- trace_corner.py:<module>:7 <- <frozen runpy>:_run_code:88
+
+==================== P2-2 outcome distribution of the frozen seed families ====================
+direct_drop_2            p_late=0.2   success=98/100  success/goal_state_satisfied=98  failed/edge_probe_acquisition_timeout=2
+direct_drop_2            p_late=0.05  success=100/100  success/goal_state_satisfied=100
+direct_drop_2            p_late=0.02  success=100/100  success/goal_state_satisfied=100
+half_steps_up_down       p_late=0.2   success=100/100  success/goal_state_satisfied=100
+half_steps_up_down       p_late=0.05  success=100/100  success/goal_state_satisfied=100
+half_steps_up_down       p_late=0.02  success=100/100  success/goal_state_satisfied=100
+direct_drop_5_budget_2   p_late=0.2   success=98/100  success/goal_state_satisfied=98  failed/edge_probe_acquisition_timeout=2
+direct_drop_5_budget_2   p_late=0.05  success=100/100  success/goal_state_satisfied=100
+direct_drop_5_budget_2   p_late=0.02  success=100/100  success/goal_state_satisfied=100
+
+==================== P2-2 one lost movement frame at the drop start ====================
+drop 2 budget 0: lost movement frames=1 -> success / goal_state_satisfied  final=(0.48, 62.0, 4.47) damage=0 violations=[]
+34 (0.48, 64.0, 2.86) needs_information landing_lower_evidence_required ('landing_edge_probe', 'route_executor') ground fwd 0 sneak False source_bound True
+35 (0.48, 64.0, 2.86) executing awaiting_verified_motion ('landing_edge_probe', 'route_executor') ground fwd 0 sneak False source_bound True
+36 (0.48, 64.0, 2.96) executing submit_verified_command ('route_executor',) ground fwd 1 sneak False source_bound True
+37 (0.48, 64.0, 3.11) executing submit_verified_command ('route_executor',) ground fwd 1 sneak False source_bound True
+38 (0.48, 64.0, 3.19) executing submit_verified_command ('route_executor',) ground fwd 0 sneak False source_bound True
+39 (0.48, 64.0, 3.24) executing settling_grounded_verified_entry () ground fwd 0 sneak True source_bound True
+40 (0.48, 64.0, 3.23) executing recovering_grounded_verified_entry () ground fwd -1 sneak True source_bound True
+41 (0.48, 64.0, 3.2) executing recovering_grounded_verified_entry () ground fwd -1 sneak True source_bound True
+42 (0.48, 64.0, 3.16) executing recovering_grounded_verified_entry () ground fwd -1 sneak True source_bound True
+drop 5 budget 2: lost movement frames=1 -> success / goal_state_satisfied  final=(0.48, 59.0, 4.59) damage=2 violations=[]
+drop 8 budget 5: lost movement frames=1 -> success / goal_state_satisfied  final=(0.48, 56.0, 4.59) damage=5 violations=[]
+
+==================== S4 evidence: terminal or stopping state overwritten ====================
+runs=38 runs_with_terminal_left=0 total_writes=0
+transitions: {}
+write sites: {}
+writes made by close() on an already terminal session (not counted above): {}
+
+==================== Supplementary probe interruptions ====================
+cancel_while_holding_edge              expect=cancelled -> cancelled  harness_cancel                           ticks=48   pos=(0.5, 64.0, 2.45) damage=0 risk_records=0 driver_end=cancelled/harness_cancel violations=[] events=['cancel@17']
+knockback_toward_edge_while_holding    expect=success   -> failed     edge_probe_acquisition_timeout           ticks=79   pos=(0.57, 64.0, 2.51) damage=0 risk_records=0 driver_end=failed/edge_probe_acquisition_timeout violations=[] events=[]
+landing_removed_after_evidence         expect=failed    -> failed     verified_exit_not_observed               ticks=77   pos=(0.48, 53.0, 3.87) damage=8 risk_records=1 driver_end=failed/verified_exit_not_observed violations=[(57, 'I3')] events=[]

@@ -1,0 +1,3 @@
+approach 2: clean=success@49; single-late failures 0/47 ; every-command-late -> failed/input_lost@80 violations=[]
+approach 3: clean=success@56; single-late failures 0/54 ; every-command-late -> executing/recovering_grounded_verified_entry@300 violations=[]
+approach 5: clean=success@63; single-late failures 0/61 ; every-command-late -> failed/input_lost@94 violations=[]

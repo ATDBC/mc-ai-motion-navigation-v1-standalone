@@ -1,0 +1,9 @@
+stopping recovery_unresolved 300 (0.48, 62.0, 3.61) [(147, 'I4')]
+(9, ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>, 'running', None, None, True))
+(33, ('executing', 'awaiting_verified_motion', 'running', None, 'awaiting_verified_motion', True))
+(34, ('executing', 'submit_verified_command', 'running', 'running', 'submit_verified_command', True))
+(37, ('stopping', 'complete_verified_landing_after_cancel', 'cancelling', 'recovering', 'complete_verified_landing_after_cancel', True))
+(38, ('stopping', 'awaiting_application', 'cancelling', 'recovering', 'awaiting_application', True))
+(39, ('stopping', 'awaiting_application', 'cancelling', 'recovering', 'awaiting_application', False))
+(45, ('stopping', 'awaiting_application', 'cancelling', 'recovering', 'awaiting_application', True))
+(77, ('stopping', 'recovery_unresolved', 'cancelling', 'recovering', 'awaiting_application', True))
