@@ -122,6 +122,7 @@ class ActionRouteExecutor:
         self._require_verified_gap_motion = False
         self._required_verified_motion: frozenset[int] = frozenset()
         self._completed_movement_damage_points = 0.0
+        self._committed_damage_actions: set[int] = set()
 
     @property
     def completed_movement_damage_points(self) -> float:
@@ -360,6 +361,7 @@ class ActionRouteExecutor:
               and type(action) is JumpGapSegment),
         })
         self._completed_movement_damage_points = 0.0
+        self._committed_damage_actions.clear()
         for candidate in verified_motion:
             self._validate_verified_motion(route, candidate, damage_budget)
             index = candidate.context.action_index
@@ -534,6 +536,7 @@ class ActionRouteExecutor:
                                     "input_application_unconfirmed")
             return self._finish_goal(frame, started)
         action = self.route.actions[self.action_index]
+        self._commit_drop_damage_if_started(action, frame)
         if type(self._controller) is VerifiedMotionExecutor:
             if (type(state_anchor) is not StateAnchor
                     or type(input_ledger) is not InputApplicationLedger):
@@ -707,14 +710,7 @@ class ActionRouteExecutor:
                  movement_yaw_radians: float | None = None) -> ActionRouteDecision:
         assert self.route is not None
         completed = self.route.actions[self.action_index]
-        if type(completed) is ControlledDropSegment:
-            self._completed_movement_damage_points += (
-                conservative_plain_fall_damage_points(max(
-                    0.0,
-                    completed.start_surface.position[1]
-                    - completed.end_surface.position[1],
-                ))
-            )
+        self._commit_drop_damage_if_started(completed, frame, force=True)
         self.action_index += 1
         if self.action_index >= len(self.route.actions):
             self.action_index = len(self.route.actions) - 1
@@ -728,6 +724,27 @@ class ActionRouteExecutor:
             frame, state_anchor=state_anchor, input_ledger=input_ledger,
             movement_yaw_radians=movement_yaw_radians,
         )
+
+    def _commit_drop_damage_if_started(
+        self,
+        action,
+        frame: NavigationFrame,
+        *,
+        force: bool = False,
+    ) -> None:
+        """Book a fall once leaving support makes its risk unavoidable."""
+        if (type(action) is not ControlledDropSegment
+                or self.action_index in self._committed_damage_actions
+                or (not force and frame.body.is_on_ground)):
+            return
+        self._completed_movement_damage_points += (
+            conservative_plain_fall_damage_points(max(
+                0.0,
+                action.start_surface.position[1]
+                - action.end_surface.position[1],
+            ))
+        )
+        self._committed_damage_actions.add(self.action_index)
 
     def _finish_goal(self, frame: NavigationFrame, started: int) -> ActionRouteDecision:
         assert self.route is not None

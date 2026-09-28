@@ -16,6 +16,11 @@ from mc2p.motion_nav.fixed_route import FixedRoute, RoutePoint
 from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
 from mc2p.motion_nav.ground_modes import observed_ground_mode
 from mc2p.motion_nav.jump_up import JumpUpEdge
+from mc2p.motion_nav.landing_edge_probe import (
+    DIRECT_DROP_EVIDENCE_DISTANCE_BLOCKS,
+    DIRECT_DROP_EVIDENCE_MAX_AGE_TICKS,
+    LandingEdgeProbe,
+)
 from mc2p.motion_nav.movement_transition import compose_movement_transitions
 from mc2p.motion_nav.movement_transition import GoalState, ResourceState
 from mc2p.motion_nav.movement_transition import MovementTransition
@@ -114,19 +119,25 @@ class AdmissionResult:
             raise ContractViolation("route admission missing cells must be sorted and unique")
 
 
-DIRECT_DROP_EVIDENCE_DISTANCE_BLOCKS = 4.5
-DIRECT_DROP_EVIDENCE_MAX_AGE_TICKS = 5
-DIRECT_DROP_EDGE_PROBE_HORIZONTAL_BLOCKS = .35
-
-
 def direct_drop_visual_evidence_sufficient(
     frame: NavigationFrame,
     landing_cell: BlockPos,
+    *,
+    edge_probe: LandingEdgeProbe | None = None,
 ) -> bool:
-    """Accept either exposed lower volume or a fresh sneak observation at the edge."""
+    """Accept nearby lower evidence or evidence owned by the active edge probe."""
     fact = frame.world.cell(landing_cell)
+    if fact.knowledge is not CellKnowledge.AIR:
+        return False
+    if (edge_probe is not None
+            and edge_probe.owned
+            and edge_probe.landing_cell == landing_cell):
+        # Once an edge probe owns this landing check, fresh air that becomes
+        # visible during its approach must not bypass the probe's return-to-
+        # entry and sneak-release lifecycle merely because it is nearby.
+        return edge_probe.allows_evidence(frame, landing_cell)
     evidence = fact.visual_air_evidence
-    if fact.knowledge is not CellKnowledge.AIR or evidence is None:
+    if evidence is None:
         return False
     age = frame.body.stamp.sequence_id - evidence.stamp.sequence_id
     if age < 0 or age > DIRECT_DROP_EVIDENCE_MAX_AGE_TICKS:
@@ -136,21 +147,14 @@ def direct_drop_visual_evidence_sufficient(
         and evidence.observer_distance_blocks
             <= DIRECT_DROP_EVIDENCE_DISTANCE_BLOCKS + 1.0e-9
     )
-    horizontal = math.hypot(
-        landing_cell[0] + .5 - frame.body.position[0],
-        landing_cell[2] + .5 - frame.body.position[2],
-    )
-    fresh_edge_probe = (
-        frame.body.is_on_ground
-        and frame.body.is_sneaking
-        and horizontal <= DIRECT_DROP_EDGE_PROBE_HORIZONTAL_BLOCKS + 1.0e-9
-    )
-    return lower_volume_seen or fresh_edge_probe
+    return lower_volume_seen
 
 
 def _direct_drop_missing_visual_evidence(
     candidate: SurfaceRouteCandidate,
     frame: NavigationFrame,
+    *,
+    edge_probe: LandingEdgeProbe | None = None,
 ) -> tuple[BlockPos, ...]:
     nodes = {node.node_id: node for node in candidate.path}
     missing = set()
@@ -171,7 +175,8 @@ def _direct_drop_missing_visual_evidence(
         # Its explicit collision and fluid facts replace visual-air evidence.
         if fact.knowledge is CellKnowledge.BLOCK:
             continue
-        if not direct_drop_visual_evidence_sufficient(frame, landing_cell):
+        if not direct_drop_visual_evidence_sufficient(
+                frame, landing_cell, edge_probe=edge_probe):
             missing.add(landing_cell)
     return tuple(sorted(missing))
 
@@ -668,6 +673,7 @@ class RouteAdmitter:
         goal_id: str,
         goal_revision: int,
         changed_cells: tuple[BlockPos, ...],
+        edge_probe: LandingEdgeProbe | None = None,
     ) -> AdmissionResult:
         """Recheck a B07 surface route before it enters the control thread."""
         if type(candidate) is not SurfaceRouteCandidate or type(frame) is not NavigationFrame:
@@ -687,7 +693,7 @@ class RouteAdmitter:
         if set(candidate.dependencies).intersection(changed_cells):
             return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.ROUTE_DEPENDENCIES_CHANGED)
         missing_landing_evidence = _direct_drop_missing_visual_evidence(
-            candidate, frame,
+            candidate, frame, edge_probe=edge_probe,
         )
         if missing_landing_evidence:
             return AdmissionResult(

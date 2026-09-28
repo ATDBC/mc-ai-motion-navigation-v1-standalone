@@ -5,6 +5,7 @@ import unittest
 from scripts.continuous_height_runtime import (
     _air_positions,
     _damage_budget,
+    _diagnostic_row,
     _fixture_commands,
     _goal,
     _start_and_goal,
@@ -14,6 +15,30 @@ from scripts.continuous_height_runtime import (
 
 
 class ContinuousHeightRuntimeTests(unittest.TestCase):
+    def test_diagnostic_row_keeps_pipeline_metrics_at_the_exported_level(self):
+        from types import SimpleNamespace
+
+        runtime = SimpleNamespace(
+            observation=SimpleNamespace(sequence_id=7),
+            navigation_observation_adapter=SimpleNamespace(
+                latest_frame=SimpleNamespace(
+                    body=SimpleNamespace(position=(1.0, 2.0, 3.0)),
+                ),
+            ),
+        )
+        backend = SimpleNamespace(last_diagnostics={"client_tick": 9})
+
+        row = _diagnostic_row(
+            runtime,
+            backend,
+            "episode",
+            "trial",
+            pipeline_diagnostic=lambda: {"payload_bytes": 123},
+        )
+
+        self.assertEqual(row["observation_pipeline"], {"payload_bytes": 123})
+        self.assertEqual(row["diagnostics"], {"client_tick": 9})
+
     def test_trial_plan_covers_four_directions_and_three_motion_shapes(self):
         trials = continuous_height_trial_plan()
 

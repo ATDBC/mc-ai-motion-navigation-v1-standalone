@@ -1,5 +1,9 @@
 from dataclasses import replace
+import math
 import unittest
+from unittest.mock import patch
+
+from mc2p.motion_nav import known_map_planner as planner_module
 
 from mc2p.motion_nav.known_map_planner import (
     KnownMapBounds,
@@ -15,6 +19,7 @@ from mc2p.motion_nav.known_map_planner import (
     astar_surface_plan,
 )
 from mc2p.motion_nav.support_surfaces import SurfaceNodeId
+from mc2p.motion_nav.support_surfaces import query_support_surfaces
 from mc2p.motion_nav.ground_traversal import (
     GroundTraversalProofCache,
     verify_ground_traversal,
@@ -382,6 +387,139 @@ class ContinuousHeightPlanningTests(unittest.TestCase):
         self.assertEqual(len(candidate.segments), 1)
         self.assertIs(type(candidate.segments[0]), SurfaceControlledDropEdge)
         self.assertFalse(candidate.ground_traversal_plans)
+
+    def test_ground_after_air_uses_step_fallback_without_repeated_research(self):
+        from tests.motion_nav.test_b09_air_transitions import air_profile, frame
+
+        session = surface_world({}).session
+        world = WorldKnowledge(session)
+        observed = ObservationStamp(
+            session, 1, 1, "test-clock", 50_000_000,
+        )
+        grass = BlockGeometry.full_cube("minecraft:grass_block")
+        slab = BlockGeometry(
+            "minecraft:smooth_stone_slab", "boxes",
+            (Aabb(0, 0, 0, 1, .5, 1),),
+        )
+        columns: list[list[int | tuple[int, BlockGeometry]]] = [
+            [63, 64], [63, 64], [63], [63],
+        ]
+        full_height = 63
+        for row in range(8):
+            if row % 2 == 0:
+                columns.append(
+                    list(range(63, full_height + 1))
+                    + [(full_height + 1, slab)]
+                )
+            else:
+                full_height += 1
+                columns.append(list(range(63, full_height + 1)))
+        columns.append(list(columns[-1]))
+        blocks = {}
+        air = set()
+        for z in range(-2, len(columns) + 2):
+            column = columns[min(max(z, 0), len(columns) - 1)]
+            solids = {
+                item if type(item) is int else item[0]:
+                grass if type(item) is int else item[1]
+                for item in column
+            }
+            for x in range(-11, 12):
+                blocks[(x, 62, z)] = grass
+                for y in range(63, 75):
+                    if y in solids:
+                        blocks[(x, y, z)] = solids[y]
+                    else:
+                        air.add((x, y, z))
+        world.observe_blocks(observed, blocks)
+        world.confirm_air(observed, tuple(sorted(air)))
+        view = world.view()
+
+        def top(column):
+            value = column[-1]
+            if type(value) is int:
+                return float(value + 1)
+            return float(value[0]) + value[1].boxes[0].max_y
+
+        start_position = (.5, top(columns[0]), .5)
+        goal_position = (.5, top(columns[-1]), len(columns) - .5)
+
+        def node(position):
+            found = query_support_surfaces(
+                view, math.floor(position[0]), math.floor(position[2]),
+                position[1] - .1, position[1] + .1,
+            )
+            return min(
+                found.surfaces,
+                key=lambda value: abs(value.position[1] - position[1]),
+            ).node_id
+
+        snapshot = KnownMapSnapshotBuilder(
+            view,
+            KnownMapBounds(
+                -10, 10, 63, 71, -1, len(columns), True,
+                extra_top_clearance_cells=2,
+            ),
+        ).advance(view, 1_000_000).snapshot
+        anchor, _, _, _ = gap_fixture()
+        entry = replace(
+            anchor.physics_state,
+            session=session,
+            position=start_position,
+            movement_tick_id=0,
+            yaw_radians=0.0,
+            velocity_blocks_per_tick=(0.0, -0.0784000015258789, 0.0),
+        )
+        request = SurfacePlanningRequest(
+            1, "post-air-step-fallback", "post-air-goal", 1,
+            session.value, node(start_position), node(goal_position),
+            entry_physics_state=entry,
+        )
+        calls = 0
+        original_plain = planner_module._plain_search
+        original_resource = planner_module._resource_aware_search
+
+        def counted_plain(*args, **kwargs):
+            nonlocal calls
+            calls += 1
+            return original_plain(*args, **kwargs)
+
+        def counted_resource(*args, **kwargs):
+            nonlocal calls
+            calls += 1
+            return original_resource(*args, **kwargs)
+
+        with (
+            patch.object(planner_module, "_plain_search", counted_plain),
+            patch.object(
+                planner_module, "_resource_aware_search", counted_resource,
+            ),
+        ):
+            candidate = plan_known_surface_snapshot(
+                snapshot,
+                replace(
+                    ordinary_profile(),
+                    support_materials=frozenset({
+                        "minecraft:grass_block",
+                        "minecraft:smooth_stone_slab",
+                    }),
+                ),
+                step_profile(),
+                request,
+                air_profiles=(air_profile(MovementMode.CONTROLLED_DROP),),
+            )
+
+        self.assertIs(candidate.status, SurfacePlanningStatus.COMPLETE)
+        self.assertLessEqual(calls, 3)
+        first_air = next(
+            index for index, edge in enumerate(candidate.segments)
+            if type(edge) is SurfaceControlledDropEdge
+        )
+        self.assertFalse(any(
+            type(edge) is SurfaceWalkEdge
+            and edge.requires_ground_traversal_proof
+            for edge in candidate.segments[first_air + 1:]
+        ))
 
 
 if __name__ == "__main__":

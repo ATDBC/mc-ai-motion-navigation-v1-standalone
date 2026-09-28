@@ -45,6 +45,11 @@ from mc2p.motion_nav.ground_modes import GroundModeProfiles
 from mc2p.motion_nav.ground_modes import load_ground_mode_profiles
 from mc2p.motion_nav.ground_motion import GroundMotionProfile
 from mc2p.motion_nav.jump_up import JumpUpProfile, load_jump_up_profile
+from mc2p.motion_nav.landing_edge_probe import (
+    LandingEdgeProbe,
+    LandingEdgeProbeState,
+    information_probe_movement,
+)
 from mc2p.motion_nav.known_map_planner import (
     KnownMapBounds, KnownMapSnapshot,
     KnownMapSnapshotBuilder,
@@ -64,7 +69,9 @@ from mc2p.motion_nav.motion_solver import (
     DEFAULT_GAP_SOLVER_POLICY, GapSolverPolicy, load_gap_solver_policy,
 )
 from mc2p.motion_nav.motion_worker import MotionSolverWorker
-from mc2p.motion_nav.motion_risk import TaskDamageBudget
+from mc2p.motion_nav.motion_risk import (
+    TaskDamageBudget, conservative_plain_fall_damage_points,
+)
 from mc2p.motion_nav.movement_transition import (
     GoalState, MovementMode, ResourceState,
 )
@@ -78,7 +85,6 @@ from mc2p.motion_nav.planner_worker import PlannerWorker
 from mc2p.motion_nav.route_admission import (
     ActiveRoute, AdmissionReason,
     AdmissionStatus,
-    DIRECT_DROP_EDGE_PROBE_HORIZONTAL_BLOCKS,
     direct_drop_visual_evidence_sufficient,
     RouteAdmitter,
 )
@@ -95,6 +101,7 @@ from mc2p.motion_nav.world_model import BlockPos, CellKnowledge
 _FORMAL_HALF_FOV_DEGREES = 60.0
 _INFORMATION_LOOK_MAX_DELTA_DEGREES = 36.0
 _INFORMATION_WAIT_LIMIT_FRAMES = 40
+_SAME_CAUSE_REPLAN_LIMIT = 2
 
 
 def information_look_for_missing_cells(
@@ -148,66 +155,6 @@ def information_look_for_missing_cells(
     if abs(yaw_delta) <= 1.0e-6 and abs(pitch_delta) <= 1.0e-6:
         return None
     return LookV1(yaw_delta, pitch_delta)
-
-
-def information_probe_movement(
-    frame: NavigationFrame,
-    lower_region_positions: frozenset[BlockPos],
-) -> MovementV1:
-    """Sneak toward one adjacent lower cell only while known support remains."""
-    if (type(frame) is not NavigationFrame
-            or type(lower_region_positions) is not frozenset
-            or len(lower_region_positions) != 1
-            or not frame.body.is_on_ground
-            or frame.body.pose not in {"standing", "crouching"}):
-        return MovementV1()
-    target = next(iter(lower_region_positions))
-    body = frame.body
-    dx = target[0] + .5 - body.position[0]
-    dz = target[2] + .5 - body.position[2]
-    horizontal = math.hypot(dx, dz)
-    if (horizontal < .2 or horizontal > 1.75
-            or target[1] + 1 > body.position[1] - .5):
-        return MovementV1()
-    desired_yaw = math.atan2(-dx, dz)
-    yaw_error = math.atan2(
-        math.sin(desired_yaw - body.yaw_radians),
-        math.cos(desired_yaw - body.yaw_radians),
-    )
-    if abs(math.degrees(yaw_error)) > 5.0:
-        return MovementV1()
-    support_found = False
-    min_x = math.floor(body.body_box.min_x + 1.0e-6)
-    max_x = math.floor(body.body_box.max_x - 1.0e-6)
-    min_z = math.floor(body.body_box.min_z + 1.0e-6)
-    max_z = math.floor(body.body_box.max_z - 1.0e-6)
-    feet_y = body.position[1]
-    for y in range(math.floor(feet_y) - 1, math.floor(feet_y) + 1):
-        for x in range(min_x, max_x + 1):
-            for z in range(min_z, max_z + 1):
-                fact = frame.world.cell((x, y, z))
-                if fact.knowledge is not CellKnowledge.BLOCK:
-                    continue
-                assert fact.block is not None
-                for box in fact.block.world_boxes((x, y, z)):
-                    if (box.max_x > body.body_box.min_x + 1.0e-6
-                            and box.min_x < body.body_box.max_x - 1.0e-6
-                            and box.max_z > body.body_box.min_z + 1.0e-6
-                            and box.min_z < body.body_box.max_z - 1.0e-6
-                            and 0.0 <= feet_y - box.max_y <= .125):
-                        support_found = True
-                        break
-                if support_found:
-                    break
-            if support_found:
-                break
-        if support_found:
-            break
-    if not support_found:
-        return MovementV1()
-    if horizontal <= DIRECT_DROP_EDGE_PROBE_HORIZONTAL_BLOCKS + 1.0e-9:
-        return MovementV1(sneak=True)
-    return MovementV1(forward=1, sneak=True)
 
 
 class NavigationSessionState(StrEnum):
@@ -439,7 +386,7 @@ class NavigationSession:
         self._residual_missing: tuple[BlockPos, ...] = ()
         self._information_statuses: dict[BlockPos, str] = {}
         self._information_lower_required: set[BlockPos] = set()
-        self._information_edge_hold = False
+        self._edge_probe: LandingEdgeProbe | None = None
         self._information_wait_key: tuple[tuple[BlockPos, str], ...] = ()
         self._information_wait_last_sequence: int | None = None
         self._information_wait_frames = 0
@@ -458,6 +405,8 @@ class NavigationSession:
         self._executor_reported_damage_points = 0.0
         self._motion_residual = MotionResidualTracker()
         self._restart_after_active_terminal = False
+        self._replan_key: tuple[str, object, int] | None = None
+        self._replan_attempts = 0
         self._cancel_reason: str | None = None
         self._closed = False
 
@@ -660,6 +609,22 @@ class NavigationSession:
                 residual_missing, max_positions=max_positions,
             )
         remaining = max_positions - len(residual_request.air_positions)
+        probe_request = ObservationRequestV3("navigation_v1")
+        if (remaining
+                and self._edge_probe is not None
+                and self._edge_probe.active
+                and self._edge_probe.landing_cell in planning_missing):
+            # An owned edge probe is already paying the movement cost to make
+            # this exact cell visible.  Query it on every new frame instead of
+            # waiting for the ordinary known-cell refresh interval.
+            probe_request = ObservationRequestV3(
+                "navigation_v1", (self._edge_probe.landing_cell,),
+            )
+            planning_missing = tuple(
+                position for position in planning_missing
+                if position != self._edge_probe.landing_cell
+            )
+            remaining -= 1
         planning_request = ObservationRequestV3("navigation_v1")
         if planning_missing and remaining:
             unknown = tuple(
@@ -692,7 +657,8 @@ class NavigationSession:
                 include_known=True,
             )
         return merge_observation_requests((
-            residual_request, planning_request, dependency_request,
+            residual_request, probe_request, planning_request,
+            dependency_request,
         ))
 
     def start(
@@ -714,6 +680,8 @@ class NavigationSession:
             self._task_damage_budget = request.damage_budget
             self._movement_damage_spent_points = 0.0
             self._executor_reported_damage_points = 0.0
+        self._replan_key = None
+        self._replan_attempts = 0
         self._pending_goal = None
         self._replace_request(request, frame, "request_started")
 
@@ -741,6 +709,8 @@ class NavigationSession:
         self._task_damage_budget = damage_budget
         self._movement_damage_spent_points = 0.0
         self._executor_reported_damage_points = 0.0
+        self._replan_key = None
+        self._replan_attempts = 0
         goal_node, missing = self._surface_for_goal(frame, goal_state)
         if goal_node is None:
             self._frame = frame
@@ -803,6 +773,9 @@ class NavigationSession:
                 raise ContractViolation(
                     "navigation goal identity or revision is invalid"
                 )
+            self._end_edge_probe("goal_revised")
+            self._replan_key = None
+            self._replan_attempts = 0
             self._pending_goal = None
             self._snapshot_missing = ()
             self.start_goal(
@@ -818,6 +791,9 @@ class NavigationSession:
                 or goal_revision <= self._request.goal_revision
                 or type(goal_state) is not GoalState):
             raise ContractViolation("navigation goal identity or revision is invalid")
+        self._end_edge_probe("goal_revised")
+        self._replan_key = None
+        self._replan_attempts = 0
         if damage_budget is not None:
             self._task_damage_budget = damage_budget
         if type(self._task_damage_budget) is not TaskDamageBudget:
@@ -936,6 +912,18 @@ class NavigationSession:
         )
         self._executor_reported_damage_points = reported
 
+    @staticmethod
+    def _route_expected_damage_points(route: ActiveRoute) -> float:
+        return sum(
+            conservative_plain_fall_damage_points(max(
+                0.0,
+                action.start_surface.position[1]
+                - action.end_surface.position[1],
+            ))
+            for action in route.action_route.actions
+            if type(action) is ControlledDropSegment
+        )
+
     def observe(
         self,
         frame: NavigationFrame,
@@ -990,16 +978,48 @@ class NavigationSession:
             if result.status == "visible_air"
             and result.position in set(self._snapshot_missing)
         )
+        probe_acquired_evidence = False
+        if (self._reason is AdmissionReason.LANDING_VISUAL_EVIDENCE_MISSING
+                and self._edge_probe is not None
+                and self._edge_probe.state
+                    is LandingEdgeProbeState.HOLDING_EDGE):
+            for result in visible_information_results:
+                if self._edge_probe.has_observed_evidence(
+                        frame, result.position):
+                    self._edge_probe.begin_entry_alignment(frame)
+                    probe_acquired_evidence = True
+                    break
         if self._reason is AdmissionReason.LANDING_VISUAL_EVIDENCE_MISSING:
             visible_information_results = tuple(
                 result for result in visible_information_results
                 if direct_drop_visual_evidence_sufficient(
-                    frame, result.position,
+                    frame, result.position, edge_probe=self._edge_probe,
                 )
             )
+            if probe_acquired_evidence:
+                # Move sideways from the view corner to the controlled-drop
+                # entry line before this evidence can authorize a route.
+                visible_information_results = ()
+        changed_information = set(changed_cells).intersection(
+            self._snapshot_missing
+        )
+        if self._reason is AdmissionReason.LANDING_VISUAL_EVIDENCE_MISSING:
+            # Learning that the landing cell is air does not by itself make a
+            # direct drop executable.  The edge probe must first own fresh
+            # lower-region evidence, return to the stable entry line and
+            # release sneak.  A solid block is different: it invalidates the
+            # candidate immediately and should be replanned without waiting
+            # for the probe lifecycle.
+            changed_information = {
+                position for position in changed_information
+                if (frame.world.cell(position).knowledge
+                    is CellKnowledge.BLOCK)
+                or direct_drop_visual_evidence_sufficient(
+                    frame, position, edge_probe=self._edge_probe,
+                )
+            }
         information_updated = bool(
-            set(changed_cells).intersection(self._snapshot_missing)
-            or visible_information_results
+            changed_information or visible_information_results
         )
         if ((self._state is NavigationSessionState.NEEDS_INFORMATION
             or self._pending_goal is not None)
@@ -1084,6 +1104,27 @@ class NavigationSession:
             NavigationSessionState.CANCELLED,
         }:
             return self._proposal(MovementV1(), None, 1, deadline_ns)
+        if (self._edge_probe is not None
+                and self._edge_probe.positioning_entry):
+            movement = self._edge_probe.movement(frame)
+            if not self._edge_probe.owned:
+                self._state = NavigationSessionState.FAILED
+                self._reason = (
+                    self._edge_probe.ended_reason
+                    or "landing_edge_probe_ended"
+                )
+                self._edge_probe = None
+                return self._proposal(MovementV1(), None, 1, deadline_ns)
+            return self._proposal(movement, None, 1, deadline_ns)
+        if self._edge_probe is not None and self._edge_probe.releasing:
+            if not self._edge_probe.finish_release(frame):
+                return self._proposal(
+                    MovementV1(), self._edge_probe.release_look(frame),
+                    1, deadline_ns,
+                )
+            self._restart_request_from_current(
+                frame, "landing_edge_probe_complete",
+            )
         if self._state is not NavigationSessionState.CANCELLING:
             self._advance_planning(frame, state_anchor)
         if self._active_route is None:
@@ -1094,14 +1135,15 @@ class NavigationSession:
             information_movement = MovementV1()
             if conditioned_look_intent_id is None:
                 information_look = self._information_look(frame)
-                if self._reason is AdmissionReason.LANDING_VISUAL_EVIDENCE_MISSING:
-                    information_movement = information_probe_movement(
-                        frame, frozenset(self._information_lower_required),
-                    )
-                    if information_movement != MovementV1():
-                        self._information_edge_hold = True
-            if self._information_edge_hold and information_movement == MovementV1():
-                information_movement = MovementV1(sneak=True)
+                if self._edge_probe is not None:
+                    information_movement = self._edge_probe.movement(frame)
+                    if not self._edge_probe.owned:
+                        self._reason = (
+                            self._edge_probe.ended_reason
+                            or "landing_edge_probe_ended"
+                        )
+                        self._edge_probe = None
+                        self._state = NavigationSessionState.FAILED
             if information_movement != MovementV1():
                 return self._proposal(
                     information_movement, information_look, 1, deadline_ns,
@@ -1197,22 +1239,42 @@ class NavigationSession:
             self._interaction_approach_pending = False
             self._state = NavigationSessionState.REQUIRES_INTERACTION
             self._reason = "interaction_work_position_reached"
-        elif decision.state in {
-            ActionRouteState.NEEDS_REPLAN,
-            ActionRouteState.INPUT_LOST,
-        }:
+        elif decision.state is ActionRouteState.INPUT_LOST:
             self._clear_active_execution()
-            self._restart_request_from_current(
-                frame, decision.reason_code,
+            self._state = NavigationSessionState.FAILED
+            self._reason = decision.reason_code
+            self._snapshot_missing = decision.missing_cells
+        elif decision.state is ActionRouteState.NEEDS_REPLAN:
+            start_node = None
+            if type(self._request) is SurfacePlanningRequest:
+                start_node, _ = self._surface_for_body(frame)
+            key = (
+                decision.reason_code,
+                start_node,
+                frame.world.geometry_revision,
             )
+            if key == self._replan_key:
+                self._replan_attempts += 1
+            else:
+                self._replan_key = key
+                self._replan_attempts = 1
+            self._clear_active_execution()
+            if self._replan_attempts > _SAME_CAUSE_REPLAN_LIMIT:
+                self._state = NavigationSessionState.FAILED
+                self._reason = "replan_retry_exhausted"
+                self._snapshot_missing = decision.missing_cells
+            else:
+                self._restart_request_from_current(
+                    frame, decision.reason_code,
+                )
         else:
             self._apply_decision_state(decision)
         movement = decision.movement if decision.submit_input else MovementV1()
-        if self._information_edge_hold:
+        if self._edge_probe is not None:
             if (decision.submit_input
                     and decision.verified_command_index is not None):
-                self._information_edge_hold = False
-            else:
+                self._end_edge_probe("verified_drop_command_handoff")
+            elif self._edge_probe.active:
                 movement = MovementV1(sneak=True)
         return self._proposal(
             movement, decision.look, decision.input_lease_ticks,
@@ -1258,10 +1320,12 @@ class NavigationSession:
         self._reason = self._cancel_reason
         self._required_interaction = None
         self._interaction_approach_pending = False
+        self._end_edge_probe("cancelled")
 
     def close(self) -> None:
         if self._closed:
             return
+        self._end_edge_probe("closed")
         self._closed = True
         if self._owns_planner_worker and hasattr(self._planner, "close"):
             self._planner.close()
@@ -1283,6 +1347,11 @@ class NavigationSession:
         # replace.  Callers may still state the preservation intent explicitly
         # to make the reason visible, but an existing executor is authoritative.
         preserve_active_route = preserve_active_route or self._executor is not None
+        if (self._edge_probe is not None
+                and not self._edge_probe.belongs_to(
+                    request.goal_id, request.goal_revision,
+                )):
+            self._end_edge_probe("planning_request_replaced")
         if not preserve_active_route:
             self._retire_route()
         self._request = request
@@ -1310,6 +1379,12 @@ class NavigationSession:
         self._coordinator = None
         self._last_decision = None
         self._executor_reported_damage_points = 0.0
+
+    def _end_edge_probe(self, reason: str) -> None:
+        if self._edge_probe is None:
+            return
+        self._edge_probe.end(reason)
+        self._edge_probe = None
 
     def _retire_route(self) -> None:
         if self._executor is not None:
@@ -1596,6 +1671,7 @@ class NavigationSession:
                 goal_id=current.goal_id,
                 goal_revision=current.goal_revision,
                 changed_cells=tuple(sorted(self._planning_changes)),
+                edge_probe=self._edge_probe,
             )
         else:
             admitted = self._admitter.admit(
@@ -1610,6 +1686,20 @@ class NavigationSession:
                 self._snapshot_missing = admitted.missing_cells
                 self._state = NavigationSessionState.NEEDS_INFORMATION
                 self._reason = admitted.reason
+                if len(admitted.missing_cells) == 1:
+                    landing_cell = admitted.missing_cells[0]
+                    if (self._edge_probe is None
+                            or not self._edge_probe.belongs_to(
+                                current.goal_id, current.goal_revision,
+                            )
+                            or self._edge_probe.landing_cell != landing_cell):
+                        self._end_edge_probe("landing_cell_replaced")
+                        self._edge_probe = LandingEdgeProbe(
+                            current.goal_id,
+                            current.goal_revision,
+                            landing_cell,
+                            frame.body.sequence_id,
+                        )
                 return
             if admitted.reason in {
                 AdmissionReason.PLANNING_REQUEST_REPLACED,
@@ -1627,6 +1717,14 @@ class NavigationSession:
             self._state = NavigationSessionState.FAILED
             self._reason = admitted.reason
             return
+        current_damage_budget = self._remaining_damage_budget()
+        if (self._route_expected_damage_points(admitted.route)
+                > current_damage_budget.maximum_expected_damage_points
+                + 1.0e-9):
+            self._restart_request_from_current(
+                frame, "damage_budget_changed_before_admission",
+            )
+            return
         if (self._active_route is not None
                 and self._active_route.source_request_id != current.request_id):
             assert self._executor is not None
@@ -1638,6 +1736,11 @@ class NavigationSession:
                 return
             self._clear_active_execution()
         self._active_route = admitted.route
+        if self._edge_probe is not None:
+            if self._edge_probe.ready:
+                self._end_edge_probe("route_admitted")
+            else:
+                self._edge_probe.begin_handoff("route_admitted")
         self._executor = ActionRouteExecutor(
             self.profiles.ground,
             self.profiles.jump_up,
@@ -1654,14 +1757,14 @@ class NavigationSession:
                 self._owns_motion_worker = True
             self._coordinator = MotionRouteCoordinator(
                 admitted.route, self._executor, self._motion_worker,
-                damage_budget=current.damage_budget,
+                damage_budget=current_damage_budget,
                 gap_solver_policy=self.profiles.gap_solver,
             )
             self._coordinator.start(frame)
         else:
             self._executor.start(
                 admitted.route.action_route, frame,
-                damage_budget=current.damage_budget,
+                damage_budget=current_damage_budget,
             )
         self._executor_reported_damage_points = 0.0
         self._planning_changes.clear()
@@ -1677,7 +1780,7 @@ class NavigationSession:
             ActionRouteState.FAILED: NavigationSessionState.FAILED,
             ActionRouteState.BLOCKED: NavigationSessionState.FAILED,
             ActionRouteState.UNSUPPORTED: NavigationSessionState.FAILED,
-            ActionRouteState.INPUT_LOST: NavigationSessionState.PLANNING,
+            ActionRouteState.INPUT_LOST: NavigationSessionState.FAILED,
             ActionRouteState.NEEDS_REPLAN: NavigationSessionState.PLANNING,
         }
         self._state = mapping.get(decision.state, NavigationSessionState.EXECUTING)
@@ -1706,7 +1809,7 @@ class NavigationSession:
                     route_decision, conditioned_look_intent_id,
                 ),)
             if (route_decision is not None and not route_decision.submit_input
-                    and not self._information_edge_hold):
+                    and self._edge_probe is None):
                 return NavigationSessionProposal(
                     ControlFrameProposalV1(
                         observation_request=observation_request,
@@ -1843,7 +1946,7 @@ class NavigationSession:
             status = result.status
             if status == "visible_air":
                 if not direct_drop_visual_evidence_sufficient(
-                        frame, result.position):
+                        frame, result.position, edge_probe=self._edge_probe):
                     self._information_lower_required.add(result.position)
                 else:
                     self._information_lower_required.discard(result.position)

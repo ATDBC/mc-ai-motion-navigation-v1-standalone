@@ -421,6 +421,13 @@ class FabricDeploymentProbeTests(unittest.TestCase):
             self.assertIsInstance(plain, JsonlTraceWriterV0)
             plain.close()
 
+        source = (ROOT / "scripts/probe_fabric_deployment_observation.py").read_text(
+            "utf-8"
+        )
+        self.assertIn(
+            "or (continuous_height_probe and time_diagnostics)", source,
+        )
+
     def test_segmented_c1_trace_captures_diagnostics_for_every_formal_observation(self):
         import json
         from tempfile import TemporaryDirectory

@@ -247,6 +247,27 @@ def _self_health(runtime) -> float:
     return float(own.health_points + own.absorption_points)
 
 
+def _diagnostic_row(
+    runtime,
+    backend,
+    episode: str,
+    trial_id: str,
+    *,
+    pipeline_diagnostic: Callable[[], dict] | None = None,
+) -> dict:
+    frame = runtime.navigation_observation_adapter.latest_frame
+    row = {
+        "episode_id": episode,
+        "trial_id": trial_id,
+        "observation_sequence_id": runtime.observation.sequence_id,
+        "diagnostics": backend.last_diagnostics,
+        "position": None if frame is None else list(frame.body.position),
+    }
+    if pipeline_diagnostic is not None:
+        row["observation_pipeline"] = pipeline_diagnostic()
+    return row
+
+
 def run_continuous_height_runtime(
     runtime,
     backend,
@@ -254,6 +275,7 @@ def run_continuous_height_runtime(
     directory: Path,
     deadline_ns: int,
     fixture_writer: Callable[[tuple[str, ...], dict], None],
+    pipeline_diagnostic: Callable[[], dict] | None = None,
 ) -> tuple[dict, list[dict], list[dict]]:
     """Run a small real-game matrix through the formal navigation driver."""
     profiles = NavigationSessionProfiles.load(CONFIG)
@@ -262,14 +284,13 @@ def run_continuous_height_runtime(
     diagnostics: list[dict] = []
 
     def record_diagnostic(trial_id: str) -> None:
-        frame = runtime.navigation_observation_adapter.latest_frame
-        row = {
-            "episode_id": episode,
-            "trial_id": trial_id,
-            "observation_sequence_id": runtime.observation.sequence_id,
-            "diagnostics": backend.last_diagnostics,
-            "position": None if frame is None else list(frame.body.position),
-        }
+        row = _diagnostic_row(
+            runtime,
+            backend,
+            episode,
+            trial_id,
+            pipeline_diagnostic=pipeline_diagnostic,
+        )
         diagnostics.append(row)
         append_jsonl(directory / "diagnostics.jsonl", row)
 

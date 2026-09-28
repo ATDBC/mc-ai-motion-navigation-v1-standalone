@@ -1140,6 +1140,7 @@ class PlannerStateKey:
     pose: str | None
     heading: tuple[int, int] | None = None
     speed_interval: tuple[float, float] | None = None
+    first_ground_run: bool = True
 
     def __post_init__(self) -> None:
         if type(self.node_id) is not SurfaceNodeId:
@@ -1161,6 +1162,8 @@ class PlannerStateKey:
                             for value in self.speed_interval)
                      or not 0 <= self.speed_interval[0] <= self.speed_interval[1])):
             raise ContractViolation("planner state speed interval is invalid")
+        if type(self.first_ground_run) is not bool:
+            raise ContractViolation("planner ground-run state must be bool")
 
 
 def _surface_edge_identity(edge: SurfaceEdge) -> tuple:
@@ -2038,17 +2041,20 @@ def _surface_successor_states(
         current: PlannerStateKey, edge: SurfaceEdge,
 ) -> tuple[PlannerStateKey, ...]:
     heading = None
+    first_ground_run = (
+        current.first_ground_run and type(edge) is SurfaceWalkEdge
+    )
     transition = edge.transition
     if transition is None:
         return (PlannerStateKey(
             edge.end, current.movement_mode, current.pose, heading,
-            current.speed_interval,
+            current.speed_interval, first_ground_run,
         ),)
     return tuple(
         PlannerStateKey(
             edge.end, state.mode, state.pose, heading,
             (state.minimum_speed_blocks_per_second,
-             state.maximum_speed_blocks_per_second),
+             state.maximum_speed_blocks_per_second), first_ground_run,
         )
         for state in transition.exits
     )
@@ -2308,7 +2314,14 @@ def plan_known_surface_snapshot(
         return state.node_id == request.goal
 
     def outgoing(state: PlannerStateKey) -> tuple[SurfaceEdge, ...]:
-        return expander.outgoing(state.node_id)
+        return tuple(
+            edge for edge in expander.outgoing(state.node_id)
+            if (
+                state.first_ground_run
+                or type(edge) is not SurfaceWalkEdge
+                or not edge.requires_ground_traversal_proof
+            )
+        )
 
     def run_search() -> _SearchResult:
         if expander.resource_neutral(request):

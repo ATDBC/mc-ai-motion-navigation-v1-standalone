@@ -9,7 +9,7 @@ from unittest.mock import Mock
 
 from mc2p.contracts.action import ActionPriorityV0
 from mc2p.contracts.common import ContractViolation
-from mc2p.contracts.action_v1 import MovementV1
+from mc2p.contracts.action_v1 import LookV1, MovementV1
 from mc2p.contracts.intent_source import IntentSourceV1
 from mc2p.contracts.observation_v3 import AirQueryResultV3
 from mc2p.motion_nav.known_map_planner import (
@@ -34,13 +34,17 @@ from mc2p.motion_nav.navigation_session import (
     information_look_for_missing_cells,
     information_probe_movement,
 )
+from mc2p.motion_nav.landing_edge_probe import (
+    LandingEdgeProbe, LandingEdgeProbeState,
+)
 from mc2p.motion_nav.action_route_executor import (
     ActionRouteDecision, ActionRouteState,
 )
 from mc2p.motion_nav.route_admission import AdmissionReason
 from mc2p.motion_nav.support_surfaces import query_support_surfaces
 from mc2p.motion_nav.world_model import (
-    Aabb, BlockGeometry, ObservationStamp, WorldKnowledge, WorldSessionId,
+    Aabb, BlockGeometry, ObservationStamp, VisualAirEvidence,
+    WorldKnowledge, WorldSessionId,
 )
 from tests.motion_nav.test_b07_step_route import (
     frame,
@@ -117,6 +121,24 @@ class _DelayedCancelExecutor:
         return ActionRouteDecision(
             ActionRouteState.CANCELLED, MovementV1(), None,
             1, 0, "cancelled_after_landing", (), 0,
+        )
+
+
+class _RepeatingRecoveryExecutor:
+    def __init__(self, state: ActionRouteState, reason: str) -> None:
+        self.state = state
+        self.reason = reason
+
+    def cancel(self) -> None:
+        pass
+
+    def requires_safe_handoff(self, _frame) -> bool:
+        return False
+
+    def decide(self, _frame, **_):
+        return ActionRouteDecision(
+            self.state, MovementV1(), None,
+            1, 0, self.reason, (), 0,
         )
 
 
@@ -323,6 +345,55 @@ class NavigationSessionTests(unittest.TestCase):
             TaskDamageBudget("task-total-four", 1.0),
         )
 
+    def test_admission_rechecks_damage_spent_after_request_was_issued(self):
+        world_session = WorldSessionId("stale-damage-budget-world")
+        world = WorldKnowledge(world_session)
+        stamp = ObservationStamp(world_session, 1, 1, "test-clock", 1)
+        stone = BlockGeometry.full_cube("minecraft:stone")
+        blocks = {(0, 63, 0): stone, (1, 58, 0): stone}
+        landing_cell = (1, 59, 0)
+        world.confirm_air(
+            stamp,
+            tuple(
+                (x, y, z)
+                for x in range(-3, 5)
+                for y in range(55, 71)
+                for z in range(-3, 4)
+                if (x, y, z) not in blocks
+            ),
+            visual_evidence={
+                landing_cell: VisualAirEvidence(stamp, 2.0, True),
+            },
+        )
+        world.observe_blocks(stamp, blocks)
+        session = NavigationSession(
+            "stale-damage-budget",
+            NavigationSessionProfiles.load(Path("config/motion-navigation")),
+            planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        body = (.5, 64.0, .5)
+        session.start_goal(
+            "task", 1,
+            replace(_goal((1.5, 59.0, .5)), risk_policy_id="two"),
+            frame(world, 1, body),
+            damage_budget=TaskDamageBudget("two", 2.0),
+        )
+        session._executor = Mock(completed_movement_damage_points=2.0)
+        session._record_completed_movement_damage()
+        session._clear_active_execution()
+
+        proposal = session.propose(
+            frame(world, 2, body), None, 2_000_000_000,
+        )
+
+        self.assertIsNone(session.active_route)
+        self.assertIsNot(proposal.report.state, NavigationSessionState.EXECUTING)
+        self.assertEqual(
+            session._request.damage_budget.maximum_expected_damage_points,
+            0.0,
+        )
+
     def test_started_session_cannot_replace_its_world_owner(self):
         from mc2p.motion_nav.runtime_adapter import NavigationObservationAdapter
 
@@ -347,6 +418,24 @@ class NavigationSessionTests(unittest.TestCase):
 
         self.assertIn(urgent, request.air_positions)
         self.assertEqual(len(request.air_positions), 2)
+
+    def test_owned_edge_probe_rechecks_its_landing_cell_each_frame(self):
+        session = NavigationSession(
+            "edge-probe-query-priority", self.profiles(),
+            planner_worker=_InlinePlanner(),
+        )
+        session.ingest(valid_snapshot_v3(sequence=1))
+        landing = (0, -4, 1)
+        session._snapshot_missing = (landing,)
+        session._edge_probe = LandingEdgeProbe(
+            "edge-probe-query-goal", 1, landing, 1,
+        )
+
+        first = session.observation_request()
+        second = session.observation_request()
+
+        self.assertEqual(first.air_positions, (landing,))
+        self.assertEqual(second.air_positions, (landing,))
 
     def test_duplicate_residual_check_keeps_pending_world_query(self):
         session = NavigationSession(
@@ -724,12 +813,20 @@ class NavigationSessionTests(unittest.TestCase):
             current, frozenset({landing_body_cell}),
         )
 
-        self.assertEqual(movement, MovementV1(forward=1, sneak=True))
-        edge = frame(world, 1, (.5, 1.0, 1.15), yaw=0.0)
         self.assertEqual(
-            information_probe_movement(
-                edge, frozenset({landing_body_cell}),
-            ),
+            movement,
+            MovementV1(forward=1, strafe=1, sneak=True),
+        )
+        # The eye must move around one corner of the support.  Looking straight
+        # over the edge leaves the platform between the eye and the lower part
+        # of the landing cell.
+        edge = frame(world, 1, (1.15, 1.0, .85), yaw=0.0)
+        probe = LandingEdgeProbe(
+            "lower-landing-probe", 1, landing_body_cell, 0,
+        )
+        probe.vantage_position = (1.15, .85)
+        self.assertEqual(
+            probe.movement(edge),
             MovementV1(sneak=True),
         )
         self.assertEqual(
@@ -766,7 +863,7 @@ class NavigationSessionTests(unittest.TestCase):
             information_probe_movement(
                 current, frozenset(session._information_lower_required),
             ),
-            MovementV1(forward=1, sneak=True),
+            MovementV1(forward=1, strafe=1, sneak=True),
         )
 
         session._reason = "no_known_route_requires_information"
@@ -785,7 +882,9 @@ class NavigationSessionTests(unittest.TestCase):
         )
         session.bind_source(_source())
         session._frame = current
-        session._information_edge_hold = True
+        session._edge_probe = LandingEdgeProbe(
+            "edge-hold-goal", 1, (0, -2, 1), 0,
+        )
         waiting = ActionRouteDecision(
             ActionRouteState.RUNNING, MovementV1(), None,
             1, 0, "awaiting_verified_motion", (), 0,
@@ -801,6 +900,261 @@ class NavigationSessionTests(unittest.TestCase):
             proposal.control_frame.intents[0].intent.movement,
             MovementV1(sneak=True),
         )
+
+    def test_new_air_fact_does_not_restart_before_edge_probe_owns_evidence(self):
+        world = _known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        landing = (0, -2, 1)
+        initial = frame(world, 0, (.5, 1.0, .5), yaw=0.0)
+        session = NavigationSession(
+            "edge-probe-premature-replan", self.profiles(),
+            planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        session._frame = initial
+        session._state = NavigationSessionState.NEEDS_INFORMATION
+        session._reason = AdmissionReason.LANDING_VISUAL_EVIDENCE_MISSING
+        session._snapshot_missing = (landing,)
+        session._request = Mock()
+        session._edge_probe = LandingEdgeProbe(
+            "edge-probe-goal", 1, landing, 0,
+        )
+        stamp = ObservationStamp(world.session, 1, 1, "test-clock", 1)
+        world.confirm_air(
+            stamp, (landing,),
+            {landing: VisualAirEvidence(stamp, 2.0, True)},
+        )
+        observed = replace(
+            frame(world, 1, (.9, 1.0, .8), yaw=0.0),
+            air_query_results=(
+                AirQueryResultV3(
+                    landing, "visible_air", 2.0,
+                    lower_region_visible=True,
+                ),
+            ),
+        )
+        session._restart_request_from_current = Mock()
+
+        session.observe(observed, (landing,))
+
+        session._restart_request_from_current.assert_not_called()
+        self.assertIs(session._state, NavigationSessionState.NEEDS_INFORMATION)
+        self.assertIs(
+            session._edge_probe.state, LandingEdgeProbeState.APPROACHING,
+        )
+
+    def test_edge_probe_handoff_waits_until_sneak_has_released(self):
+        world = _known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        crouching = replace(
+            frame(world, 1, (.5, 1.0, .5), yaw=0.0),
+            body=replace(
+                frame(world, 1, (.5, 1.0, .5), yaw=0.0).body,
+                pose="crouching", is_sneaking=True,
+            ),
+        )
+        probe = LandingEdgeProbe(
+            "edge-handoff-goal", 1, (0, -2, 1), 0,
+        )
+        probe.entry_position = (.5, .5)
+        probe.state = LandingEdgeProbeState.HOLDING_EDGE
+        probe.begin_handoff("route_admitted")
+
+        self.assertFalse(probe.handoff_ready(crouching))
+        standing = replace(
+            crouching,
+            body=replace(
+                crouching.body, pose="standing", is_sneaking=False,
+            ),
+        )
+        self.assertTrue(probe.handoff_ready(standing))
+
+    def test_edge_probe_moves_from_view_corner_to_stable_drop_entry(self):
+        world = _known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        landing = (0, -2, 1)
+        stamp = ObservationStamp(world.session, 3, 3, "test-clock", 3)
+        world.confirm_air(
+            stamp, (landing,),
+            {landing: VisualAirEvidence(stamp, 3.0, True)},
+        )
+        edge = replace(
+            frame(world, 3, (1.15, 1.0, .85), yaw=0.0),
+            body=replace(
+                frame(world, 3, (1.15, 1.0, .85), yaw=0.0).body,
+                yaw_radians=math.radians(40.0),
+                pitch_radians=math.radians(74.0),
+                pose="crouching", is_sneaking=True,
+            ),
+        )
+        probe = LandingEdgeProbe("returning-probe", 1, landing, 0)
+        start = frame(world, 0, (.5, 1.0, .5), yaw=0.0)
+        probe.movement(start)
+        probe.vantage_position = (1.15, .85)
+        probe.edge_sequence_id = 2
+        probe.state = LandingEdgeProbeState.HOLDING_EDGE
+
+        probe.begin_entry_alignment(edge)
+        self.assertTrue(probe.positioning_entry)
+        positioning = probe.movement(edge)
+        self.assertTrue(positioning.sneak)
+        self.assertNotEqual(positioning, MovementV1(sneak=True))
+
+        entry = replace(
+            edge,
+            body=replace(
+                edge.body,
+                position=(.5, 1.0, .85),
+                velocity_blocks_per_second=(0.0, 0.0, 0.0),
+            ),
+        )
+        self.assertEqual(probe.movement(entry), MovementV1())
+        self.assertTrue(probe.releasing)
+        standing = replace(
+            entry,
+            body=replace(entry.body, pose="standing", is_sneaking=False),
+        )
+        self.assertFalse(probe.finish_release(standing))
+        self.assertEqual(
+            probe.release_look(standing),
+            LookV1(yaw_delta_degrees=-36.0, pitch_delta_degrees=-36.0),
+        )
+        restored = replace(
+            standing,
+            body=replace(
+                standing.body, yaw_radians=0.0, pitch_radians=0.0,
+            ),
+        )
+        self.assertTrue(probe.finish_release(restored))
+        self.assertTrue(probe.ready)
+        self.assertTrue(probe.allows_evidence(restored, landing))
+        later = frame(world, 20, (.5, 1.0, .85), yaw=0.0)
+        self.assertTrue(probe.allows_evidence(later, landing))
+
+    def test_goal_revision_releases_edge_probe_before_new_walk(self):
+        world_session = WorldSessionId("edge-probe-goal-revision")
+        world = WorldKnowledge(world_session)
+        stamp = ObservationStamp(world_session, 1, 1, "test-clock", 1)
+        stone = BlockGeometry.full_cube("minecraft:stone")
+        blocks = {
+            **{(0, 63, z): stone for z in range(-4, 1)},
+            (1, 59, 0): stone,
+        }
+        world.confirm_air(stamp, tuple(
+            (x, y, z)
+            for x in range(-3, 5)
+            for y in range(55, 71)
+            for z in range(-7, 4)
+            if (x, y, z) not in blocks
+        ))
+        world.observe_blocks(stamp, blocks)
+        session = NavigationSession(
+            "edge-probe-goal-revision-session",
+            NavigationSessionProfiles.load(Path("config/motion-navigation")),
+            planner_worker=_InlinePlanner(),
+            clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        body = (.5, 64.0, .5)
+        landing_cell = (1, 60, 0)
+        session.start_goal(
+            "task", 1,
+            replace(_goal((1.5, 60.0, .5)), risk_policy_id="one"),
+            frame(world, 0, body),
+            damage_budget=TaskDamageBudget("one", 1.0),
+        )
+        for sequence in range(1, 4):
+            current = replace(
+                frame(world, sequence, body),
+                air_query_results=(AirQueryResultV3(landing_cell, "occluded"),),
+            )
+            proposal = session.propose(current, None, 2_000_000_000)
+            movement = proposal.control_frame.intents[0].intent.movement
+            self.assertEqual(movement.forward, 1)
+
+        session.update_goal(
+            "task", 2,
+            replace(_goal((.5, 64.0, -3.5)), risk_policy_id="one"),
+        )
+        compared = False
+        for sequence in range(4, 10):
+            proposal = session.propose(
+                frame(world, sequence, body), None, 2_000_000_000,
+            )
+            decision = proposal.route_decision
+            if decision is None or decision.movement == MovementV1():
+                continue
+            compared = True
+            self.assertEqual(
+                proposal.control_frame.intents[0].intent.movement,
+                decision.movement,
+            )
+            break
+        self.assertTrue(compared, "revised walk route never produced movement")
+
+    def test_input_lost_returns_a_terminal_result_without_replanning(self):
+        world = _known_world({
+            (x, 0, 0): BlockGeometry.full_cube("minecraft:stone")
+            for x in range(4)
+        })
+        start, goal = _nodes(world, (0, 3))
+        session = NavigationSession(
+            "input-lost-terminal", self.profiles(),
+            planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        session.start_goal(
+            "task", 1, _goal(goal.position), frame(world, 0, start.position),
+        )
+        session.propose(frame(world, 1, start.position), None, 2_000_000_000)
+        self.assertIsNotNone(session._executor)
+        request_sequence = session._request.sequence
+        session._executor = _RepeatingRecoveryExecutor(
+            ActionRouteState.INPUT_LOST, "input_application_unconfirmed",
+        )
+
+        proposal = session.propose(
+            frame(world, 2, start.position), None, 2_000_000_000,
+        )
+
+        self.assertIs(proposal.report.state, NavigationSessionState.FAILED)
+        self.assertEqual(proposal.report.reason, "input_application_unconfirmed")
+        self.assertEqual(session._request.sequence, request_sequence)
+
+    def test_same_replan_cause_is_bounded_to_two_retries(self):
+        world = _known_world({
+            (x, 0, 0): BlockGeometry.full_cube("minecraft:stone")
+            for x in range(4)
+        })
+        start, goal = _nodes(world, (0, 3))
+        session = NavigationSession(
+            "bounded-same-replan", self.profiles(),
+            planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        session.start_goal(
+            "task", 1, _goal(goal.position), frame(world, 0, start.position),
+        )
+        terminal = None
+        for sequence in range(1, 10):
+            if session._executor is not None:
+                session._executor = _RepeatingRecoveryExecutor(
+                    ActionRouteState.NEEDS_REPLAN,
+                    "ground_traversal_stalled",
+                )
+            terminal = session.propose(
+                frame(world, sequence, start.position), None, 2_000_000_000,
+            )
+            if terminal.report.terminal:
+                break
+
+        self.assertIsNotNone(terminal)
+        self.assertIs(terminal.report.state, NavigationSessionState.FAILED)
+        self.assertEqual(terminal.report.reason, "replan_retry_exhausted")
+        self.assertEqual(session._request.sequence, 3)
 
     def test_structurally_occluded_information_wait_is_bounded(self):
         world, unknown_gap = _known_endpoints_with_unknown_gap()

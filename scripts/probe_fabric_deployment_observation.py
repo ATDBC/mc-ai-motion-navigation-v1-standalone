@@ -1037,6 +1037,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                             capture_close_diagnostics=(
                                 visibility_probe or surface_cost_probe
                                 or (b11_world_change_probe and time_diagnostics)
+                                or (continuous_height_probe and time_diagnostics)
                             ),
                         )
                     if c1_probe and time_diagnostics:
@@ -1445,6 +1446,9 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                         stages, rows, episode_checks = run_continuous_height_runtime(
                             runtime, backend, episode, directory, deadline,
                             fixture_writer=write_continuous_height_fixture,
+                            pipeline_diagnostic=lambda: observation_pipeline_diagnostics(
+                                runtime, backend,
+                            ),
                         )
                     elif b11_world_change_probe:
                         from scripts.b11_world_change_runtime import run_b11_world_change_runtime

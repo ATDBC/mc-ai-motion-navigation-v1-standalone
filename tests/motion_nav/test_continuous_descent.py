@@ -3,7 +3,9 @@ import math
 import unittest
 from unittest.mock import patch
 
+from mc2p.contracts.action_v1 import MovementV1
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
+from mc2p.motion_nav.landing_edge_probe import LandingEdgeProbe
 from mc2p.motion_nav.online_motion import (
     CandidateExecutionWindow, MotionTickPhase, StateAnchor,
 )
@@ -271,7 +273,7 @@ class ContinuousDescentTests(unittest.TestCase):
         self.assertEqual(len(candidate.segments), 1)
         self.assertIs(type(candidate.segments[0]), SurfaceControlledDropEdge)
 
-    def test_multi_block_drop_accepts_fresh_bottom_or_sneak_edge_evidence(self):
+    def test_multi_block_drop_rejects_upper_only_edge_evidence(self):
         from mc2p.motion_nav.action_route import ControlledDropSegment
         from mc2p.motion_nav.known_map_planner import (
             KnownMapBounds, KnownMapSnapshotBuilder, SurfacePlanningRequest,
@@ -349,22 +351,103 @@ class ContinuousDescentTests(unittest.TestCase):
                 edge_frame.body, pose="crouching", is_sneaking=True,
             ),
         )
-        admitted = RouteAdmitter().admit_surface(
+        upper_only_at_edge = RouteAdmitter().admit_surface(
             candidate, edge_frame,
             expected_request_id=request.request_id,
             goal_id=request.goal_id, goal_revision=request.goal_revision,
             changed_cells=(),
         )
-        self.assertIs(admitted.status, AdmissionStatus.ACCEPTED)
-        self.assertEqual(len(admitted.route.action_route.actions), 1)
+        self.assertIs(upper_only_at_edge.status, AdmissionStatus.REJECTED)
         self.assertIs(
-            type(admitted.route.action_route.actions[0]),
-            ControlledDropSegment,
+            upper_only_at_edge.reason,
+            AdmissionReason.LANDING_VISUAL_EVIDENCE_MISSING,
         )
-        self.assertEqual(admitted.route.connection_length_blocks, 0.0)
+
+        edge_bottom_stamp = ObservationStamp(
+            SESSION, 4, 4, "test-clock", 200_000_000,
+        )
+        owner.confirm_air(
+            edge_bottom_stamp, ((0, 58, 1),),
+            {(0, 58, 1): VisualAirEvidence(
+                edge_bottom_stamp, 6.0, True,
+            )},
+        )
+        unowned_edge_frame = frame(
+            owner, 4, (1.15, 64., .85), (0., 0., 0.), on_ground=True,
+        )
+        unowned_edge_frame = replace(
+            unowned_edge_frame,
+            body=replace(
+                unowned_edge_frame.body, pose="crouching", is_sneaking=True,
+            ),
+        )
+        unowned_edge_evidence = RouteAdmitter().admit_surface(
+            candidate,
+            unowned_edge_frame,
+            expected_request_id=request.request_id,
+            goal_id=request.goal_id,
+            goal_revision=request.goal_revision,
+            changed_cells=(),
+        )
+        self.assertIs(unowned_edge_evidence.status, AdmissionStatus.REJECTED)
+
+        edge_probe = LandingEdgeProbe(
+            request.goal_id, request.goal_revision, (0, 58, 1), 3,
+        )
+        edge_probe.movement(frame(
+            owner, 3, (.5, 64., .5), (0., 0., 0.), on_ground=True,
+        ))
+        edge_probe.vantage_position = (1.15, .85)
+        self.assertEqual(
+            edge_probe.movement(unowned_edge_frame), MovementV1(sneak=True),
+        )
+        edge_not_ready = RouteAdmitter().admit_surface(
+            candidate,
+            unowned_edge_frame,
+            expected_request_id=request.request_id,
+            goal_id=request.goal_id,
+            goal_revision=request.goal_revision,
+            changed_cells=(),
+            edge_probe=edge_probe,
+        )
+        self.assertIs(edge_not_ready.status, AdmissionStatus.REJECTED)
+
+        edge_probe.begin_entry_alignment(unowned_edge_frame)
+        entry_frame = frame(
+            owner, 5, (.5, 64., .85), (0., 0., 0.), on_ground=True,
+        )
+        entry_frame = replace(
+            entry_frame,
+            body=replace(
+                entry_frame.body, pose="crouching", is_sneaking=True,
+            ),
+        )
+        self.assertEqual(edge_probe.movement(entry_frame), MovementV1())
+        standing_entry = replace(
+            entry_frame,
+            body=replace(
+                entry_frame.body, pose="standing", is_sneaking=False,
+            ),
+        )
+        self.assertTrue(edge_probe.finish_release(standing_entry))
+        owned_edge_evidence = RouteAdmitter().admit_surface(
+            candidate,
+            standing_entry,
+            expected_request_id=request.request_id,
+            goal_id=request.goal_id,
+            goal_revision=request.goal_revision,
+            changed_cells=(),
+            edge_probe=edge_probe,
+        )
+        self.assertIs(owned_edge_evidence.status, AdmissionStatus.ACCEPTED)
+        self.assertEqual(
+            [type(action).__name__
+             for action in owned_edge_evidence.route.action_route.actions],
+            ["ControlledDropSegment"],
+        )
 
         bottom_stamp = ObservationStamp(
-            SESSION, 4, 4, "test-clock", 200_000_000,
+            SESSION, 5, 5, "test-clock", 250_000_000,
         )
         owner.confirm_air(
             bottom_stamp, ((0, 58, 1),),
@@ -374,12 +457,85 @@ class ContinuousDescentTests(unittest.TestCase):
         )
         bottom_admitted = RouteAdmitter().admit_surface(
             candidate,
-            frame(owner, 4, (.5, 64., .5), (0., 0., 1.5), on_ground=True),
+            frame(owner, 5, (.5, 64., .5), (0., 0., 1.5), on_ground=True),
             expected_request_id=request.request_id,
             goal_id=request.goal_id, goal_revision=request.goal_revision,
             changed_cells=(),
         )
         self.assertIs(bottom_admitted.status, AdmissionStatus.ACCEPTED)
+
+    def test_drop_damage_is_committed_when_the_body_leaves_support(self):
+        from mc2p.motion_nav.action_route_executor import ActionRouteExecutor
+        from mc2p.motion_nav.known_map_planner import (
+            KnownMapBounds, KnownMapSnapshotBuilder, SurfacePlanningRequest,
+            plan_known_surface_snapshot,
+        )
+        from mc2p.motion_nav.movement_transition import MovementMode
+        from mc2p.motion_nav.route_admission import RouteAdmitter
+        from mc2p.motion_nav.support_surfaces import SurfaceNodeId
+        from tests.motion_nav.test_b07_surface_planning import ordinary_profile
+        from tests.motion_nav.test_b07_step_transition import (
+            profile as step_profile,
+        )
+        from tests.motion_nav.test_b09_air_transitions import air_profile, frame
+        from tests.motion_nav.test_jump_up import jump_profile
+
+        _, physics_world = world_and_anchor(
+            direct_height=6, material="minecraft:stone",
+        )
+        view = physics_world._world
+        owner = view._owner
+        assert owner is not None
+        stamp = ObservationStamp(
+            SESSION, 2, 2, "test-clock", 100_000_000,
+        )
+        owner.confirm_air(
+            stamp, ((0, 58, 1),),
+            {(0, 58, 1): VisualAirEvidence(stamp, 4.0, True)},
+        )
+        fresh_view = owner.view()
+        snapshot = KnownMapSnapshotBuilder(
+            fresh_view, KnownMapBounds(0, 0, 58, 64, 0, 1, True),
+        ).advance(fresh_view, 10_000).snapshot
+        budget = TaskDamageBudget("allow-direct-fall", 3.0)
+        request = SurfacePlanningRequest(
+            1, "commit-drop-damage", "landing", 1,
+            owner.session.value,
+            SurfaceNodeId(0, 0, 64, 0),
+            SurfaceNodeId(0, 1, 58, 0),
+            damage_budget=budget,
+        )
+        profile = air_profile(MovementMode.CONTROLLED_DROP)
+        candidate = plan_known_surface_snapshot(
+            snapshot, ordinary_profile(), step_profile(), request,
+            air_profiles=(profile,),
+        )
+        start_frame = frame(
+            owner, 2, (.5, 64.0, .5), (0.0, 0.0, 0.0), on_ground=True,
+        )
+        admitted = RouteAdmitter().admit_surface(
+            candidate, start_frame,
+            expected_request_id=request.request_id,
+            goal_id=request.goal_id,
+            goal_revision=request.goal_revision,
+            changed_cells=(),
+        )
+        self.assertIsNotNone(admitted.route)
+        executor = ActionRouteExecutor(
+            ordinary_profile(), jump_profile(), step_profile(),
+            air_profiles=(profile,),
+        )
+        executor.start(
+            admitted.route.action_route, start_frame,
+            damage_budget=budget,
+            require_verified_gap_motion=False,
+        )
+
+        executor.decide(frame(
+            owner, 3, (.5, 63.6, .8), (0.0, -2.0, 1.0), on_ground=False,
+        ), input_confirmed=False)
+
+        self.assertEqual(executor.completed_movement_damage_points, 3.0)
 
     def test_direct_fall_uses_existing_worker_admission_and_executor_chain(self):
         from mc2p.motion_nav.action_route import (
