@@ -1,0 +1,43 @@
+NavigationSession: 1840 lines, 43 methods, 47 instance attributes
+largest methods: [(278, '_advance_planning'), (215, 'propose'), (144, 'observe'), (140, '_proposal'), (112, 'update_goal')]
+self._state = assignments: 43 | methods writing _state: 14
+self._reason = assignments: 42 | methods writing _reason: 14
+  goal and request            : 4
+  planning and snapshot       : 8
+  execution and handoff       : 8
+  information and edge probe  : 8
+  task risk (damage)          : 3
+  recovery limits             : 2
+  world interaction / bridging: 4
+  world, residual, admission  : 4
+  lifecycle                   : 3
+  ungrouped: ['_clock', 'profiles', 'session_id']
+
+navigation_session.py lines per exported commit:
+   1142  f097298 09-25 feat: publish self-verifying motion navigation snapshot
+   1257  5c600cb 09-25 fix: publish C1-R rereview hardening
+   1292  7bd1228 09-25 fix: retain verified motion ownership across uncertainty
+   1312  556381a 09-25 feat: complete C1-R6 runtime hardening
+   1292  f0b66e2 09-25 docs: clean C1-R6 markdown formatting
+   1312  bf2e7c9 09-25 fix: restore C1-R6 standalone tree
+   1452  ba4acda 09-25 feat: publish B11 confirmed block placement and bridging
+   1450  dd38c6b 09-25 feat: publish B11 review hardening and evidence
+   1465  1ea37d7 09-25 sync reviewed B11 boundary fixes and evidence
+   1484  f115920 09-25 fix: preserve verified movement execution windows
+   1502  2c6401c 09-26 feat: publish B12 combat movement snapshot
+   1560  211af42 09-26 feat: publish reviewed B12 runtime
+   1607  3a1fdf0 09-26 fix: validate sustained combat pursuit
+   1659  cba2899 09-26 fix: close B12 pursuit review findings
+   1738  b740098 09-27 feat: publish profile4 surface-depth baseline
+   1789  4b9e73e 09-27 feat: publish partial-visibility air correction
+   1872  59c45bb 09-27 feat: publish continuous height movement
+   2064  5fa2f33 09-27 fix: harden surface visibility and continuous height movement
+   2167  8898cf9 09-28 fix: publish continuous height hardening
+
+tests:
+  test functions: 1004
+  test files that use NavigationSession: 16; of these, files that also drive the 1.21 calculator: 0
+  accesses to private session attributes in those files: 61
+
+free-form reason strings used as control flow (reason == / in literal):
+  19 sites, e.g. ['mc2p/skills/block_placement_driver.py:165', 'mc2p/skills/block_placement_driver.py:228', 'mc2p/skills/engagement_memory.py:152', 'mc2p/skills/moving_melee_driver.py:834']
