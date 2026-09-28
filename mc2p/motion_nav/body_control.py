@@ -16,6 +16,7 @@ class StopCause(StrEnum):
     INFORMATION_TIMED_OUT = "information_timed_out"
     DEPENDENCY_CHANGED = "dependency_changed"
     INPUT_LOST = "input_lost"
+    MOTION_UNSOLVABLE = "motion_unsolvable"
     CLOSED = "closed"
     ROUTE_REPLACED = "route_replaced"
 

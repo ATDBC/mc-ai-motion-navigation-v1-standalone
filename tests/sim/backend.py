@@ -45,6 +45,19 @@ HALF_FOV_RADIANS = math.radians(60.0)
 SLAB_ID = "minecraft:smooth_stone_slab"
 
 
+def _block_state(block_id: str) -> tuple[str, dict[str, str]]:
+    if "[" not in block_id:
+        return block_id, {}
+    material, raw = block_id.split("[", 1)
+    if not raw.endswith("]"):
+        raise ValueError(f"invalid simulated block state: {block_id}")
+    values = {}
+    for item in raw[:-1].split(","):
+        key, value = item.split("=", 1)
+        values[key] = value
+    return material, values
+
+
 @dataclass(frozen=True, slots=True)
 class Scene:
     """Solid blocks of a small test world; everything else in `volume` is air."""
@@ -60,9 +73,48 @@ class Scene:
         return Scene({**floor, **self.solids}, self.volume)
 
     def geometry(self, block_id: str) -> BlockGeometry:
-        if block_id == SLAB_ID:
-            return BlockGeometry(block_id, "boxes", (Aabb(0, 0, 0, 1, .5, 1),))
-        return BlockGeometry.full_cube(block_id)
+        material, state = _block_state(block_id)
+        if material == SLAB_ID:
+            height = 1.0 if state.get("type") == "double" else .5
+            return BlockGeometry(
+                material, "boxes", (Aabb(0, 0, 0, 1, height, 1),),
+            )
+        if material == "minecraft:dirt_path":
+            return BlockGeometry(
+                material, "boxes", (Aabb(0, 0, 0, 1, 15 / 16, 1),),
+            )
+        if material == "minecraft:white_carpet":
+            return BlockGeometry(
+                material, "boxes", (Aabb(0, 0, 0, 1, 1 / 16, 1),),
+            )
+        if material == "minecraft:snow":
+            layers = int(state.get("layers", "1"))
+            if not 2 <= layers <= 8:
+                raise ValueError(f"invalid simulated snow layers: {block_id}")
+            return BlockGeometry(
+                material, "boxes", (
+                    Aabb(0, 0, 0, 1, (layers - 1) / 8, 1),
+                ),
+            )
+        if material == "minecraft:oak_stairs":
+            if state.get("half", "bottom") != "bottom" or state.get(
+                    "shape", "straight") != "straight":
+                raise ValueError(f"unsupported simulated stair state: {block_id}")
+            facing = state.get("facing", "south")
+            upper = {
+                "north": Aabb(0, .5, 0, 1, 1, .5),
+                "south": Aabb(0, .5, .5, 1, 1, 1),
+                "west": Aabb(0, .5, 0, .5, 1, 1),
+                "east": Aabb(.5, .5, 0, 1, 1, 1),
+            }.get(facing)
+            if upper is None:
+                raise ValueError(f"invalid simulated stair facing: {block_id}")
+            boxes = tuple(sorted(
+                (Aabb(0, 0, 0, 1, .5, 1), upper),
+                key=Aabb.as_tuple,
+            ))
+            return BlockGeometry(material, "boxes", boxes)
+        return BlockGeometry.full_cube(material)
 
     def air_cells(self) -> tuple[tuple[int, int, int], ...]:
         (x0, x1), (y0, y1), (z0, z1) = self.volume
@@ -145,10 +197,12 @@ class CalculatorBackend:
         blocks = []
         for (x, y, z), block_id in self.scene.solids.items():
             if max(abs(x - bx), abs(y - by), abs(z - bz)) <= BLOCK_RADIUS:
-                if block_id == SLAB_ID:
-                    blocks.append(observed_block((x, y, z), block_id, kind="boxes", boxes=((0, 0, 0, 1, .5, 1),)))
-                else:
-                    blocks.append(observed_block((x, y, z), block_id))
+                geometry = self.scene.geometry(block_id)
+                blocks.append(observed_block(
+                    (x, y, z), geometry.material_key,
+                    kind=geometry.collision_kind,
+                    boxes=tuple(box.as_tuple() for box in geometry.boxes),
+                ))
         return blocks
 
     def _blocked(self, point) -> bool:
@@ -157,8 +211,12 @@ class CalculatorBackend:
         block_id = self.scene.solids.get(cell)
         if block_id is None:
             return False
-        top = .5 if block_id == SLAB_ID else 1.0
-        return y - cell[1] <= top
+        return any(
+            box.min_x <= x <= box.max_x
+            and box.min_y <= y <= box.max_y
+            and box.min_z <= z <= box.max_z
+            for box in self.scene.geometry(block_id).world_boxes(cell)
+        )
 
     def _visible(self, eye, point, target) -> bool:
         dx, dy, dz = (point[i] - eye[i] for i in range(3))
@@ -220,8 +278,12 @@ class CalculatorBackend:
             if cell in self.scene.solids:
                 block_id = self.scene.solids[cell]
                 if not any(b.position == cell for b in blocks):
-                    blocks.append(observed_block(cell, block_id, kind="boxes", boxes=((0, 0, 0, 1, .5, 1),))
-                                  if block_id == SLAB_ID else observed_block(cell, block_id))
+                    geometry = self.scene.geometry(block_id)
+                    blocks.append(observed_block(
+                        cell, geometry.material_key,
+                        kind=geometry.collision_kind,
+                        boxes=tuple(box.as_tuple() for box in geometry.boxes),
+                    ))
                 continue
             result = self.air_query(cell)
             air_results.append(result)

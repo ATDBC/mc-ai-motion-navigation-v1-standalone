@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from dataclasses import replace
+from collections import OrderedDict
 from enum import StrEnum
 import math
 
@@ -154,6 +155,7 @@ class RiskReservationResult:
 
 
 _MAX_RISK_ACTIONS = 64
+_MAX_RISK_AUDIT_RECORDS = 64
 _MAX_SUBMITTED_SEQUENCES = 64
 
 
@@ -171,6 +173,8 @@ class TaskRiskLedger:
         self.budget = budget
         self.policy_revision = policy_revision
         self._actions: dict[str, RiskActionRecord] = {}
+        self._settled_expected_points = 0.0
+        self._audit_records: OrderedDict[str, RiskActionRecord] = OrderedDict()
         self._risk_overrun = False
         self._next_action_sequence = 0
         self._health_windows: dict[str, _RiskHealthWindow] = {}
@@ -181,10 +185,11 @@ class TaskRiskLedger:
 
     @property
     def committed_points(self) -> float:
-        return sum(record.expected_damage_points
-                   for record in self._actions.values()
-                   if record.state in {RiskActionState.COMMITTED,
-                                       RiskActionState.SETTLED})
+        return self._settled_expected_points + sum(
+            record.expected_damage_points
+            for record in self._actions.values()
+            if record.state is RiskActionState.COMMITTED
+        )
 
     @property
     def held_points(self) -> float:
@@ -200,10 +205,25 @@ class TaskRiskLedger:
                    - self.committed_points - self.held_points)
 
     def action(self, action_id: str) -> RiskActionRecord | None:
-        return self._actions.get(action_id)
+        return self._actions.get(action_id, self._audit_records.get(action_id))
 
     def snapshot_actions(self) -> tuple[RiskActionRecord, ...]:
-        return tuple(self._actions.values())
+        return (*self._audit_records.values(), *self._actions.values())
+
+    def _archive(self, record: RiskActionRecord) -> None:
+        self._audit_records.pop(record.action_id, None)
+        self._audit_records[record.action_id] = record
+        while len(self._audit_records) > _MAX_RISK_AUDIT_RECORDS:
+            self._audit_records.popitem(last=False)
+
+    def _replace_known(self, record: RiskActionRecord) -> None:
+        if record.action_id in self._actions:
+            self._actions[record.action_id] = record
+            return
+        if record.action_id in self._audit_records:
+            self._archive(record)
+            return
+        raise ContractViolation("risk action is no longer tracked")
 
     def next_action_id(self) -> str:
         self._next_action_sequence += 1
@@ -222,14 +242,10 @@ class TaskRiskLedger:
         require_identifier(action_id, "risk action id")
         expected = _finite_nonnegative(expected_damage_points,
                                        "expected action damage")
-        old = self._actions.get(action_id)
+        old = self.action(action_id)
         if old is not None:
             if abs(old.expected_damage_points - expected) > 1.0e-9:
                 raise ContractViolation("risk action changed expected damage")
-            if old.state is RiskActionState.RELEASED:
-                return RiskReservationResult(
-                    RiskReservationStatus.RELEASED_REQUIRES_NEW_ACTION, old,
-                )
             if (self._risk_overrun and old.state is RiskActionState.RESERVED
                     and not old.submitted_sequences):
                 return RiskReservationResult(
@@ -238,12 +254,11 @@ class TaskRiskLedger:
             if (old.state is RiskActionState.RESERVED
                     and old.policy_revision != self.policy_revision
                     and not old.submitted_sequences):
-                self._actions[action_id] = replace(
-                    old, state=RiskActionState.RELEASED,
-                )
+                released = replace(old, state=RiskActionState.RELEASED)
+                self._actions.pop(action_id, None)
+                self._health_windows.pop(action_id, None)
                 return RiskReservationResult(
-                    RiskReservationStatus.STALE_POLICY,
-                    self._actions[action_id],
+                    RiskReservationStatus.STALE_POLICY, released,
                 )
             return RiskReservationResult(RiskReservationStatus.EXISTING, old)
         if self._risk_overrun:
@@ -265,11 +280,11 @@ class TaskRiskLedger:
 
     def mark_submitted(self, action_id: str,
                        control_sequence: int) -> RiskSubmissionStatus:
-        record = self._actions[action_id]
+        record = self.action(action_id)
+        if record is None or record.state is RiskActionState.RELEASED:
+            raise ContractViolation("released risk action cannot submit input")
         if type(control_sequence) is not int or control_sequence < 0:
             raise ContractViolation("risk submission sequence is invalid")
-        if record.state is RiskActionState.RELEASED:
-            raise ContractViolation("released risk action cannot submit input")
         if record.state is not RiskActionState.RESERVED:
             return RiskSubmissionStatus.DUPLICATE
         if self._risk_overrun and not record.submitted_sequences:
@@ -292,7 +307,9 @@ class TaskRiskLedger:
     def commit(self, action_id: str, evidence: RiskCommitEvidence) -> bool:
         if type(evidence) is not RiskCommitEvidence:
             raise ContractViolation("risk commit needs typed application evidence")
-        record = self._actions[action_id]
+        record = self.action(action_id)
+        if record is None:
+            raise ContractViolation("unknown risk action cannot commit")
         if record.state in {RiskActionState.COMMITTED, RiskActionState.SETTLED}:
             return False
         if record.state is not RiskActionState.RESERVED:
@@ -319,8 +336,9 @@ class TaskRiskLedger:
             health_points = _finite_nonnegative(health_points, "observed health")
         if type(on_ground) is not bool:
             raise ContractViolation("risk health support flag is invalid")
-        record = self._actions[action_id]
-        if record.state in {RiskActionState.RELEASED, RiskActionState.SETTLED}:
+        record = self.action(action_id)
+        if record is None or record.state in {
+                RiskActionState.RELEASED, RiskActionState.SETTLED}:
             return False
         window = self._health_windows.get(action_id)
         if window is None:
@@ -372,9 +390,11 @@ class TaskRiskLedger:
                 )
                 return False
             self.settle(action_id, observed_damage_points=window.observed_loss)
-            self._actions[action_id] = replace(
-                self._actions[action_id], health_evidence_complete=True,
-            )
+            settled = self.action(action_id)
+            assert settled is not None
+            self._replace_known(replace(
+                settled, health_evidence_complete=True,
+            ))
             return True
         return False
 
@@ -384,9 +404,13 @@ class TaskRiskLedger:
             raise ContractViolation("risk action closure support flag is invalid")
         if not on_ground:
             return False
-        record = self._actions[action_id]
+        record = self.action(action_id)
+        if record is None:
+            return False
         if record.state not in {RiskActionState.COMMITTED,
                                 RiskActionState.SETTLED}:
+            return False
+        if record.state is RiskActionState.SETTLED:
             return False
         window = self._health_windows.get(action_id)
         if window is None or window.closed:
@@ -395,9 +419,11 @@ class TaskRiskLedger:
         if record.state is RiskActionState.COMMITTED:
             if window.complete:
                 self.settle(action_id, observed_damage_points=window.observed_loss)
-                self._actions[action_id] = replace(
-                    self._actions[action_id], health_evidence_complete=True,
-                )
+                settled = self.action(action_id)
+                assert settled is not None
+                self._replace_known(replace(
+                    settled, health_evidence_complete=True,
+                ))
             else:
                 self._actions[action_id] = replace(
                     record, health_evidence_complete=False,
@@ -409,8 +435,8 @@ class TaskRiskLedger:
                           input_ledger: InputApplicationLedger | None = None) -> bool:
         if type(evidence) is not RiskReleaseEvidence:
             raise ContractViolation("risk release evidence must be typed")
-        record = self._actions[action_id]
-        if record.state is RiskActionState.RELEASED:
+        record = self.action(action_id)
+        if record is None or record.state is RiskActionState.RELEASED:
             return True
         if record.state is not RiskActionState.RESERVED:
             return False
@@ -425,29 +451,38 @@ class TaskRiskLedger:
                    or records[sequence].status is not InputApplicationStatus.REJECTED
                    for sequence in record.submitted_sequences):
                 return False
-        self._actions[action_id] = replace(record, state=RiskActionState.RELEASED)
+        self._actions.pop(action_id, None)
+        self._health_windows.pop(action_id, None)
         return True
 
     def settle(self, action_id: str, *, observed_damage_points: float) -> bool:
         observed = _finite_nonnegative(observed_damage_points,
                                        "observed action damage")
-        record = self._actions[action_id]
+        record = self.action(action_id)
+        if record is None:
+            raise ContractViolation("unknown risk action cannot settle")
         if record.state is RiskActionState.SETTLED:
             return (record.observed_damage_points is not None
                     and record.observed_damage_points
                         > record.expected_damage_points + 1.0e-9)
         if record.state is not RiskActionState.COMMITTED:
             raise ContractViolation("uncommitted risk action cannot settle")
-        self._actions[action_id] = replace(
+        settled = replace(
             record, state=RiskActionState.SETTLED,
             observed_damage_points=observed,
         )
+        self._actions.pop(action_id, None)
+        self._health_windows.pop(action_id, None)
+        self._settled_expected_points += record.expected_damage_points
+        self._archive(settled)
         exceeded = observed > record.expected_damage_points + 1.0e-9
         self._risk_overrun |= exceeded
         return exceeded
 
     def authorized_commit(self, action_id: str) -> tuple[int, float] | None:
-        record = self._actions[action_id]
+        record = self.action(action_id)
+        if record is None:
+            return None
         if record.state not in {RiskActionState.COMMITTED,
                                 RiskActionState.SETTLED}:
             return None

@@ -78,6 +78,12 @@ class SegmentEntryWindowTests(unittest.TestCase):
                     window(), body, MovementMode.WALK,
                 ))
 
+    def test_nearly_stopped_entry_has_no_meaningful_velocity_direction(self):
+        self.assertTrue(body_fits_segment_entry(
+            window(), self.body(velocity=(0.0, 0.0, -0.08)),
+            MovementMode.WALK,
+        ))
+
     def test_physics_state_uses_per_tick_velocity_without_changing_semantics(self):
         anchor, _, _, _ = fixture()
         state = replace(

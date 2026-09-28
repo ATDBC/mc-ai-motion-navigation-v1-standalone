@@ -8,12 +8,16 @@ import math
 
 from mc2p.contracts.common import ContractViolation, require_identifier
 from mc2p.motion_nav.action_route import ControlledDropSegment
+from mc2p.motion_nav.geometry import QueryStatus, query_support
 from mc2p.motion_nav.landing_edge_probe import LandingEdgeProbe
 from mc2p.motion_nav.route_admission import (
     ActiveRoute, direct_drop_visual_evidence_sufficient,
 )
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.world_model import BlockPos, CellKnowledge
+
+
+DIRECT_DROP_SUPPORT_MAX_AGE_TICKS = 1
 
 
 class ActionPreconditionStatus(StrEnum):
@@ -26,6 +30,11 @@ class ActionPreconditionStatus(StrEnum):
 class ActionPreconditionReason(StrEnum):
     READY = "action_precondition_ready"
     LANDING_LOWER_EVIDENCE_REQUIRED = "landing_lower_evidence_required"
+    LANDING_SUPPORT_INFORMATION_REQUIRED = (
+        "landing_support_information_required"
+    )
+    LANDING_SUPPORT_MISSING = "landing_support_missing"
+    LANDING_SUPPORT_UNSUPPORTED = "landing_support_unsupported"
     ACTION_INDEX_INVALID = "action_index_invalid"
 
 
@@ -151,6 +160,20 @@ def _acquisition_id(
     return "landing-" + hashlib.sha256(raw.encode("utf-8")).hexdigest()[:20]
 
 
+def _landing_support_result(
+    action: ControlledDropSegment,
+    frame: NavigationFrame,
+):
+    target = action.end_surface.position
+    current = frame.body.position
+    body = frame.body.body_box.moved(
+        target[0] - current[0],
+        target[1] - current[1],
+        target[2] - current[2],
+    )
+    return query_support(body, frame.world)
+
+
 def check_action_precondition(
     route: ActiveRoute,
     action_index: int,
@@ -179,6 +202,33 @@ def check_action_precondition(
             ActionPreconditionReason.READY,
         )
     landing_cell = _landing_cell(action)
+    landing_support = _landing_support_result(action, frame)
+    if landing_support.status is QueryStatus.NEEDS_INFORMATION:
+        return ActionPreconditionResult(
+            ActionPreconditionStatus.NEEDS_INFORMATION,
+            ActionPreconditionReason.LANDING_SUPPORT_INFORMATION_REQUIRED,
+            missing_cells=landing_support.missing_cells,
+        )
+    if landing_support.status is QueryStatus.UNSUPPORTED:
+        return ActionPreconditionResult(
+            ActionPreconditionStatus.REJECTED,
+            ActionPreconditionReason.LANDING_SUPPORT_UNSUPPORTED,
+        )
+    if (landing_support.status is not QueryStatus.FEASIBLE
+            or landing_support.support_fraction <= 0.0):
+        return ActionPreconditionResult(
+            ActionPreconditionStatus.REJECTED,
+            ActionPreconditionReason.LANDING_SUPPORT_MISSING,
+        )
+    stale_support_cells: list[BlockPos] = []
+    for position in landing_support.dependencies:
+        support_fact = frame.world.cell(position)
+        if (support_fact.knowledge is CellKnowledge.BLOCK
+                and support_fact.stamp is not None
+                and frame.body.sequence_id - support_fact.stamp.sequence_id
+                    > DIRECT_DROP_SUPPORT_MAX_AGE_TICKS):
+            stale_support_cells.append(position)
+    stale_support = tuple(sorted(stale_support_cells))
     fact = frame.world.cell(landing_cell)
     if (fact.knowledge is CellKnowledge.BLOCK
             or (acquisition_grant is not None
@@ -186,11 +236,21 @@ def check_action_precondition(
             or direct_drop_visual_evidence_sufficient(
                 frame, landing_cell, edge_probe=edge_probe,
             )):
+        if stale_support:
+            return ActionPreconditionResult(
+                ActionPreconditionStatus.NEEDS_INFORMATION,
+                ActionPreconditionReason.LANDING_SUPPORT_INFORMATION_REQUIRED,
+                missing_cells=stale_support,
+            )
         return ActionPreconditionResult(
             ActionPreconditionStatus.READY,
             ActionPreconditionReason.READY,
         )
-    dependencies = tuple(sorted(set(action.dependencies) | {landing_cell}))
+    dependencies = tuple(sorted(
+        set(action.dependencies)
+        | set(landing_support.dependencies)
+        | {landing_cell}
+    ))
     spec = AcquisitionSpec(
         _acquisition_id(route, action_index, landing_cell),
         task_id,

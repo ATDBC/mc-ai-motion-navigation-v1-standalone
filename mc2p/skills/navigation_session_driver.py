@@ -264,6 +264,17 @@ class RuntimeNavigationDriver:
                 )),
                 control.task_events,
             )
+        if (self.source is not None
+                and not any(
+                    envelope.intent.movement is not None
+                    for envelope in control.intents
+                )):
+            # Movement intents may persist until their bounded expiry.  A
+            # session frame that deliberately claims no movement must revoke
+            # its earlier lease before arbitration; otherwise an old neutral
+            # or moving intent can be selected again with almost no deadline
+            # left and fail the whole Runtime during the backend tick.
+            self.runtime.cancel_source(self.source.source_id)
         proposals = (control,)
         self._prepared_deadline_ns = deadline
         self._prepared_proposal = proposal

@@ -109,7 +109,7 @@ SCENARIOS = [
     Scenario("direct_drop_2_cancel_in_air", drop_ledge(2), (.5, 64.0, .5), (.5, 62.0, 4.5),
              events=[Event("cancel_in_air", airborne_in_drop, cancel_task)], expect="cancelled"),
     Scenario("direct_drop_2_20pct_late", drop_ledge(2), (.5, 64.0, .5), (.5, 62.0, 4.5),
-             perturbations=Perturbations(late_ticks=late_ticks(.2, 11)), expect="failed"),
+             perturbations=Perturbations(late_ticks=late_ticks(.2, 11))),
     Scenario("far_landing_L_walkway", l_walkway_with_drop(), (.5, 64.0, .5), (7.5, 61.0, 6.5)),
     Scenario("far_landing_L_goal_revised_at_30", l_walkway_with_drop(), (.5, 64.0, .5), (7.5, 61.0, 6.5),
              events=[Event("revise_goal_back", lambda c: c.tick >= 30 and probe_active(c), revise_goal_back)]),

@@ -14,7 +14,10 @@ from tests.sim.runner import Event, late_ticks, run
 from tests.sim.runner import _goal
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.retry_ledger import WaitVerdict
-from tests.sim.scenarios import SCENARIOS, airborne_in_drop, revise_goal_back
+from tests.sim.runner import Scenario
+from tests.sim.scenarios import (
+    SCENARIOS, airborne_in_drop, drop_ledge, revise_goal_back,
+)
 from tests.test_player_runtime import _task
 
 
@@ -39,6 +42,54 @@ def request_close(context):
 
 
 class SupervisedInterruptionTests(unittest.TestCase):
+    def test_removed_landing_support_is_rejected_before_drop_submission(self):
+        floor_removal = {
+            (x, 61, z): None
+            for x in (-1, 0, 1)
+            for z in (3, 4, 5)
+        }
+        configured = replace(
+            scenario("direct_drop_2"),
+            name="landing_removed_before_drop_submission",
+            perturbations=Perturbations(world_edits={28: floor_removal}),
+            expect="failed",
+        )
+        result = run(configured)
+        self.assertEqual(result.violations, [])
+        self.assertEqual(
+            (result.outcome, result.reason, result.damage),
+            ("failed", "landing_support_missing", 0.0),
+        )
+        self.assertTrue(result.trace[-1]["on_ground"])
+
+    def test_unsolved_side_landing_stops_probe_and_reports_motion_failure(self):
+        result = run(Scenario(
+            "side_landing_unsolved",
+            drop_ledge(2),
+            (.5, 64.0, .5),
+            (1.5, 62.0, 4.5),
+            max_ticks=300,
+        ))
+        self.assert_safe_settled_result(result)
+        self.assertEqual(result.outcome, "failed")
+        self.assertTrue(result.reason.startswith("motion_unsolvable:"))
+
+    def test_edge_probe_handoff_finishes_with_constant_one_tick_latency(self):
+        configured = replace(
+            scenario("direct_drop_2"),
+            name="direct_drop_fixed_one_tick_latency",
+            perturbations=Perturbations(
+                late_ticks=frozenset(range(2, 800)),
+            ),
+            max_ticks=600,
+        )
+        result = run(configured)
+        self.assert_safe_settled_result(result)
+        self.assertEqual(
+            (result.outcome, result.reason),
+            ("failed", "edge_probe_acquisition_timeout"),
+        )
+
     def test_airborne_budget_cut_retains_executing_owner_until_landing(self):
         def cut_budget(context):
             goal = _goal(context.goal_position, "zero-after-start")

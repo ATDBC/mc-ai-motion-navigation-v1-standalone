@@ -4,6 +4,7 @@ from dataclasses import replace
 import unittest
 
 from mc2p.motion_nav.action_preconditions import (
+    ActionPreconditionReason,
     ActionPreconditionStatus,
     check_action_precondition,
 )
@@ -70,6 +71,9 @@ class ActionPreconditionTests(unittest.TestCase):
         owner = physics_world._world._owner
         self.assertIsNotNone(owner)
         stamp = ObservationStamp(SESSION, 2, 2, "test", 100_000_000)
+        support = owner.view().cell((0, 57, 1)).block
+        self.assertIsNotNone(support)
+        owner.observe_blocks(stamp, {(0, 57, 1): support})
         owner.confirm_air(
             stamp, ((0, 58, 1),),
             {(0, 58, 1): VisualAirEvidence(stamp, 4.0, True)},
@@ -84,6 +88,55 @@ class ActionPreconditionTests(unittest.TestCase):
 
         self.assertIs(result.status, ActionPreconditionStatus.READY)
         self.assertIsNone(result.acquisition)
+
+    def test_fresh_air_where_landing_support_was_rejects_drop(self):
+        anchor, physics_world = world_and_anchor(direct_height=6, speed=0.0)
+        owner = physics_world._world._owner
+        self.assertIsNotNone(owner)
+        stamp = ObservationStamp(SESSION, 2, 2, "test", 100_000_000)
+        owner.confirm_air(
+            stamp,
+            ((0, 57, 1), (0, 58, 1)),
+            {(0, 58, 1): VisualAirEvidence(stamp, 4.0, True)},
+        )
+        frame = VerifiedMotionRouteIntegrationTests.frame(
+            owner.view(), replace(anchor.physics_state, movement_tick_id=2), 2,
+        )
+
+        result = check_action_precondition(
+            _drop_route(), 0, frame, task_id="navigation-task",
+        )
+
+        self.assertIs(result.status, ActionPreconditionStatus.REJECTED)
+        self.assertIs(
+            result.reason, ActionPreconditionReason.LANDING_SUPPORT_MISSING,
+        )
+
+    def test_stale_landing_support_requires_refresh_before_drop(self):
+        anchor, physics_world = world_and_anchor(direct_height=6, speed=0.0)
+        owner = physics_world._world._owner
+        self.assertIsNotNone(owner)
+        stamp = ObservationStamp(SESSION, 10, 10, "test", 500_000_000)
+        owner.confirm_air(
+            stamp, ((0, 58, 1),),
+            {(0, 58, 1): VisualAirEvidence(stamp, 4.0, True)},
+        )
+        frame = VerifiedMotionRouteIntegrationTests.frame(
+            owner.view(), replace(anchor.physics_state, movement_tick_id=10), 10,
+        )
+
+        result = check_action_precondition(
+            _drop_route(), 0, frame, task_id="navigation-task",
+        )
+
+        self.assertIs(
+            result.status, ActionPreconditionStatus.NEEDS_INFORMATION,
+        )
+        self.assertIs(
+            result.reason,
+            ActionPreconditionReason.LANDING_SUPPORT_INFORMATION_REQUIRED,
+        )
+        self.assertIn((0, 57, 1), result.missing_cells)
 
 
 if __name__ == "__main__":

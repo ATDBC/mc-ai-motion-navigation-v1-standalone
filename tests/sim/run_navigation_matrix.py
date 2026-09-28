@@ -44,7 +44,7 @@ def read_manifest(path: Path) -> tuple[dict, bytes]:
                 case["late_ticks_horizon"])):
             raise ValueError(f"late tick seed does not reproduce list: {identifier}")
         if (not isinstance(case.get("violations"), list)
-                or any(item not in {f"I{i}" for i in range(1, 10)}
+                or any(item not in {f"I{i}" for i in range(1, 14)}
                        for item in case["violations"])):
             raise ValueError(f"invalid frozen violations: {identifier}")
         event_ticks = case.get("event_ticks", {})
@@ -114,7 +114,7 @@ def run_matrix(manifest: Path, output: Path) -> dict:
     output.mkdir(parents=True)
     cases = {scenario.name: scenario for scenario in SCENARIOS}
     summary = {
-        "schema_version": "mc2p.navigation-sim-result.v1",
+        "schema_version": "mc2p.navigation-sim-result.v2",
         "source_commit": _commit(),
         "source_identity": _source_identity(),
         "baseline_commit": document["source_commit"],
@@ -125,6 +125,11 @@ def run_matrix(manifest: Path, output: Path) -> dict:
         "counts": {"positive_pass": 0, "known_failure": 0,
                    "formal_receipt_new_failure": 0,
                    "calibrated_input_new_failure": 0, "unexpected": 0},
+        "outcome_counts": {
+            "task_success": 0,
+            "bounded_safe_failure": 0,
+            "unexpected_result": 0,
+        },
         "cases": [],
     }
     started = time.perf_counter()
@@ -151,6 +156,7 @@ def run_matrix(manifest: Path, output: Path) -> dict:
             if case["classification"] == "positive":
                 exact = exact and result.verdict == "PASS"
             payload = {"case": case, "result": asdict(result),
+                       "outcome_class": result.outcome_class,
                        "matched_frozen_baseline": exact,
                        "elapsed_seconds": time.perf_counter() - case_started,
                        "requested_late_ticks": case["late_ticks"],
@@ -164,8 +170,10 @@ def run_matrix(manifest: Path, output: Path) -> dict:
                 "positive_pass" if exact and case["classification"] == "positive"
                 else case["classification"] if exact else "unexpected"
             )
+            outcome_class = result.outcome_class
         except Exception as error:
             classification = "unexpected"
+            outcome_class = "unexpected_result"
             payload = {"case": case, "matched_frozen_baseline": False,
                        "error": f"{type(error).__name__}: {error}",
                        "traceback": traceback.format_exc(),
@@ -174,7 +182,9 @@ def run_matrix(manifest: Path, output: Path) -> dict:
         (output / f"{case['id']}.json").write_text(
             json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         summary["counts"][classification] += 1
+        summary["outcome_counts"][outcome_class] += 1
         summary["cases"].append({"id": case["id"], "classification": classification,
+                                  "outcome_class": outcome_class,
                                   "matched_frozen_baseline": classification != "unexpected",
                                   "elapsed_seconds": payload["elapsed_seconds"]})
     summary["elapsed_seconds"] = time.perf_counter() - started
@@ -194,6 +204,7 @@ def main() -> int:
         print(f"matrix setup failed: {error}", file=sys.stderr)
         return 2
     print(json.dumps({"counts": summary["counts"],
+                      "outcome_counts": summary["outcome_counts"],
                       "elapsed_seconds": summary["elapsed_seconds"],
                       "output": str(args.output)}, ensure_ascii=False))
     return 1 if summary["counts"]["unexpected"] else 0

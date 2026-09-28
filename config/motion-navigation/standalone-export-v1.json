@@ -67,6 +67,8 @@
     "scripts/b12a_fabric_runtime.py",
     "scripts/b12b_partial_combat_runtime.py",
     "scripts/continuous_height_runtime.py",
+    "scripts/run_continuous_height_matrix.py",
+    "scripts/run_continuous_height_planning_matrix.py",
     "scripts/surface_depth_probe/native.py",
     "scripts/public_runtime_evidence.py",
     "tests/motion_nav/test_*.py",

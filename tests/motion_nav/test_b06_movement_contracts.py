@@ -68,6 +68,75 @@ def transition(name: str, seconds: float, stamina_delta: float = 0.0):
 
 
 class B06MovementContractTests(unittest.TestCase):
+    def test_final_walk_accepts_a_safe_stop_inside_the_goal_region(self):
+        environment = load_frozen_environment(CONFIG / "environment-v1.json")
+        catalog = BlockMotionCatalog.load(
+            CONFIG / "block-motion-traits-v1.json",
+            CONFIG / "vanilla-block-registry-1_21.json",
+        )
+        ground = load_ground_motion_profile(
+            CONFIG / "ordinary-ground-b06-v1.json",
+            environment=environment,
+            catalog=catalog,
+        )
+        jump = load_jump_up_profile(
+            CONFIG / "jump-up-b06-v1.json",
+            environment=environment,
+            catalog=catalog,
+        )
+        fixture = FlatFixture("minecraft:stone")
+        route = ActionRoute(
+            "narrow-final-goal",
+            (WalkSegment(
+                FixedRoute("narrow-final-goal-walk", (
+                    RoutePoint(1.0790567, 1.0, .5),
+                    RoutePoint(2.5, 1.0, .5),
+                )),
+                ((1, 1, 0), (2, 1, 0)), (),
+            ),),
+            GoalState(
+                region=Aabb(2.4, .95, .4, 2.6, 1.05, .6),
+                support=GoalSupport.SOLID,
+                allowed_modes=frozenset({MovementMode.WALK}),
+                allowed_poses=frozenset({"standing"}),
+                maximum_terminal_speed_blocks_per_second=.6,
+            ),
+            ResourceState(),
+        )
+        samples = (
+            (1.0790567, .03416652),
+            (1.1770567, 1.07016016),
+            (1.3285647, 1.65446768),
+            (1.5092881, 1.97349962),
+            (1.7059631, 2.14769108),
+            (1.9113476, 2.24279963),
+            (2.1214876, 2.29472890),
+            (2.3342241, 2.32308229),
+            (2.4503782, 1.26840308),
+            (2.5137983, .69254816),
+            (2.5484258, .37813134),
+            (2.5673323, .20645974),
+            (2.5776553, .11272703),
+            (2.5832917, .06154896),
+        )
+        body = PlanarBodyState(
+            samples[0][0], .5, samples[0][1], 0.0, -math.pi / 2,
+        )
+        executor = ActionRouteExecutor(ground, jump)
+        executor.start(route, fixture.frame(0, body))
+
+        for sequence, (x, velocity_x) in enumerate(samples, 1):
+            body = PlanarBodyState(
+                x, .5, velocity_x, 0.0, -math.pi / 2,
+            )
+            decision = executor.decide(fixture.frame(sequence, body))
+            if decision.state is ActionRouteState.COMPLETE:
+                self.assertGreaterEqual(body.x, 2.4)
+                self.assertLessEqual(body.x, 2.6)
+                return
+            self.assertIsNot(decision.state, ActionRouteState.FAILED)
+        self.fail("the final walk did not settle inside its declared goal region")
+
     def test_goal_checks_region_support_mode_pose_speed_and_resources(self):
         goal = GoalState(
             region=Aabb(4.0, 1.0, 4.0, 5.0, 2.0, 5.0),

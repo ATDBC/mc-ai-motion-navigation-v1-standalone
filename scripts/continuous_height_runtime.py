@@ -7,6 +7,7 @@ from pathlib import Path
 import time
 from typing import Callable
 
+from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.observation_request_v3 import (
     MAX_AIR_QUERY_POSITIONS, ObservationRequestV3,
@@ -64,6 +65,42 @@ def continuous_height_trial_plan() -> tuple[dict, ...]:
     return tuple(rows)
 
 
+def navigation_coordination_hardening_plan() -> tuple[dict, ...]:
+    """Freeze the three real-game gates reopened by coordination review 19."""
+    return (
+        {
+            "trial_id": "runup-step-down",
+            "kind": "stair_descent",
+            "direction_index": 0,
+            "fixture": "runup_step_down",
+            "runup_blocks": 4,
+            "origin": (0, 128),
+            "length": 7,
+            "injection": None,
+            "expected_terminal": "success",
+        },
+        {
+            "trial_id": "landing-support-removed",
+            "kind": "direct_drop",
+            "direction_index": 1,
+            "drop_blocks": 2,
+            "origin": (32, 128),
+            "injection": "remove_landing_support",
+            "expected_terminal": "failed",
+            "expected_reason": "landing_support_missing",
+        },
+        {
+            "trial_id": "fixed-one-tick-late-drop",
+            "kind": "direct_drop",
+            "direction_index": 2,
+            "drop_blocks": 2,
+            "origin": (64, 128),
+            "injection": "late_first_verified_input",
+            "expected_terminal": "success",
+        },
+    )
+
+
 def _transform(direction_index: int, u: int, v: int = 0) -> tuple[int, int]:
     dx, dz, _ = _DIRECTIONS[direction_index]
     right_x, right_z = -dz, dx
@@ -71,6 +108,8 @@ def _transform(direction_index: int, u: int, v: int = 0) -> tuple[int, int]:
 
 
 def _origin(trial: dict) -> tuple[int, int]:
+    if "origin" in trial:
+        return tuple(trial["origin"])
     kind_row = {
         "low_height_stairs": 0,
         "stair_descent": 1,
@@ -81,7 +120,16 @@ def _origin(trial: dict) -> tuple[int, int]:
 
 def _supports(trial: dict) -> tuple[tuple[tuple[int, int, int], str], ...]:
     direction = trial["direction_index"]
-    if trial["kind"] == "low_height_stairs":
+    if trial.get("fixture") == "runup_step_down":
+        runup = trial["runup_blocks"]
+        local = tuple(
+            ((u, FEET_Y - 1, 0), "minecraft:stone")
+            for u in range(runup)
+        ) + tuple(
+            ((u, FEET_Y - 2, 0), "minecraft:stone")
+            for u in range(runup, trial["length"] + 1)
+        )
+    elif trial["kind"] == "low_height_stairs":
         local = (
             ((0, FEET_Y - 1, 0), "minecraft:stone"),
             ((1, FEET_Y, 0), "minecraft:smooth_stone_slab[type=bottom]"),
@@ -146,7 +194,9 @@ def _damage_budget(trial: dict) -> TaskDamageBudget:
 
 def _observer(trial: dict) -> tuple[float, float, float, float, float]:
     direction = trial["direction_index"]
-    length = 4 if trial["kind"] != "direct_drop" else 1
+    length = trial.get(
+        "length", 4 if trial["kind"] != "direct_drop" else 1,
+    )
     origin_x, origin_z = _origin(trial)
     observer_x, observer_z = _transform(direction, length // 2, -6)
     center_x, center_z = _transform(direction, length // 2, 0)
@@ -296,7 +346,9 @@ def run_continuous_height_runtime(
 
     record_diagnostic("continuous-height-reset")
     with PlannerWorker() as planner, MotionSolverWorker(max_pending=4) as motion:
-        for trial in continuous_height_trial_plan():
+        representative_plan = continuous_height_trial_plan()
+        hardening_plan = navigation_coordination_hardening_plan()
+        for trial in representative_plan + hardening_plan:
             trial_id = trial["trial_id"]
             fixture_writer(_fixture_commands(trial), trial)
             task = _task(trial_id, deadline_ns)
@@ -394,6 +446,10 @@ def run_continuous_height_runtime(
             budget = _damage_budget(trial)
             samples: list[dict] = []
             admitted_actions: tuple[str, ...] = ()
+            injection = trial.get("injection")
+            injection_applied = injection is None
+            injection_attempts = 0
+            input_delay_ticks: int | None = None
             started_ns = time.perf_counter_ns()
             driver.start(
                 trial_id + "/goal", 1, _goal(trial), started_ns,
@@ -401,6 +457,36 @@ def run_continuous_height_runtime(
             )
             try:
                 for tick in range(240):
+                    before_frame = runtime.navigation_observation_adapter.latest_frame
+                    before_tick = (
+                        None if before_frame is None
+                        else before_frame.body.movement_tick_id
+                    )
+                    awaiting_motion = (
+                        session.report.reason == "awaiting_verified_motion"
+                    )
+                    if (injection == "remove_landing_support"
+                            and not injection_applied and awaiting_motion):
+                        landing_position, _ = _supports(trial)[-1]
+                        fixture_writer((
+                            (f"setblock {landing_position[0]} "
+                             f"{landing_position[1]} {landing_position[2]} "
+                             "minecraft:air replace"),
+                        ), trial)
+                        injection_applied = True
+                        injection_attempts += 1
+                    delay_this_frame = (
+                        injection == "late_first_verified_input"
+                        and input_delay_ticks is None
+                        and awaiting_motion
+                    )
+                    if delay_this_frame:
+                        # The independent client continues its real movement
+                        # ticks while the controller is late.  A 55 ms pause is
+                        # deliberately just over one 20 Hz game tick; the
+                        # receipt below proves the actual tick displacement.
+                        time.sleep(.055)
+                        injection_attempts += 1
                     result = driver.tick(
                         profile,
                         min(deadline_ns,
@@ -418,6 +504,22 @@ def run_continuous_height_runtime(
                         None if result.decision is None
                         else asdict(result.decision.action.movement)
                     )
+                    if (delay_this_frame and result.decision is not None
+                            and result.decision.action.movement != MovementV1()
+                            and result.backend_result is not None
+                            and before_tick is not None):
+                        owned = tuple(
+                            item for item in
+                            result.backend_result.receipt.input_applications
+                            if item.request_sequence_id
+                            == result.decision.action.request_sequence_id
+                        )
+                        if owned:
+                            input_delay_ticks = (
+                                min(item.movement_tick_id for item in owned)
+                                - (before_tick + 1)
+                            )
+                            injection_applied = input_delay_ticks == 1
                     sample = {
                         "trial_id": trial_id,
                         "tick": tick,
@@ -430,6 +532,9 @@ def run_continuous_height_runtime(
                         "is_on_ground": frame.body.is_on_ground,
                         "movement": movement,
                         "admitted_actions": list(admitted_actions),
+                        "injection": injection,
+                        "injection_attempts": injection_attempts,
+                        "input_delay_ticks": input_delay_ticks,
                     }
                     samples.append(sample)
                     append_jsonl(
@@ -437,17 +542,31 @@ def run_continuous_height_runtime(
                     )
                     if driver.state in {"success", "failed", "cancelled"}:
                         break
-                if driver.state != "success":
-                    raise RuntimeError(
-                        f"{trial_id} ended as {driver.state}: {driver.reason}; "
-                        f"session={session.report}"
-                    )
                 final_health = _self_health(runtime)
                 actual_damage = max(0.0, initial_health - final_health)
                 final_position = tuple(frame.body.position)
-                if math.dist(final_position, goal_position) > .35:
+                expected_terminal = trial.get("expected_terminal", "success")
+                if driver.state != expected_terminal:
                     raise RuntimeError(
-                        f"{trial_id} completed outside goal: {final_position}"
+                        f"{trial_id} ended as {driver.state}: {driver.reason}; "
+                        f"expected={expected_terminal}; session={session.report}"
+                    )
+                expected_reason = trial.get("expected_reason")
+                if expected_reason is not None and driver.reason != expected_reason:
+                    raise RuntimeError(
+                        f"{trial_id} ended for {driver.reason}; "
+                        f"expected={expected_reason}"
+                    )
+                if expected_terminal == "success":
+                    if math.dist(final_position, goal_position) > .35:
+                        raise RuntimeError(
+                            f"{trial_id} completed outside goal: {final_position}"
+                        )
+                elif (not frame.body.is_on_ground
+                      or math.dist(final_position, start) > .45):
+                    raise RuntimeError(
+                        f"{trial_id} did not fail safely on its start support: "
+                        f"{final_position}"
                     )
                 if actual_damage > budget.maximum_expected_damage_points + 1e-6:
                     raise RuntimeError(
@@ -463,6 +582,11 @@ def run_continuous_height_runtime(
                     "initial_health_points": initial_health,
                     "final_health_points": final_health,
                     "actual_damage_points": actual_damage,
+                    "terminal_state": driver.state,
+                    "terminal_reason": driver.reason,
+                    "injection_applied": injection_applied,
+                    "injection_attempts": injection_attempts,
+                    "input_delay_ticks": input_delay_ticks,
                     "damage_budget": asdict(budget),
                     "final_position": list(final_position),
                     "goal_position": list(goal_position),
@@ -487,11 +611,53 @@ def run_continuous_height_runtime(
             row["damage_budget"]["maximum_expected_damage_points"] > 0
             for row in rows
         ),
+        "representative_trial_count": len(representative_plan),
+        "representative_passed_count": sum(
+            bool(row["passed"])
+            for row in rows if row["trial_id"] in {
+                trial["trial_id"] for trial in representative_plan
+            }
+        ),
+        "hardening_trial_count": len(hardening_plan),
+        "hardening_passed_count": sum(
+            bool(row["passed"])
+            for row in rows if row["trial_id"] in {
+                trial["trial_id"] for trial in hardening_plan
+            }
+        ),
     }
     write_json_atomic(directory / "continuous-height-summary.json", summary)
-    checks = [{
-        "name": "continuous_height_representative_matrix",
-        "passed": summary["passed_count"] == summary["trial_count"] == 12,
-        "details": summary,
-    }]
+    hardening_rows = tuple(
+        row for row in rows if row["trial_id"] in {
+            trial["trial_id"] for trial in hardening_plan
+        }
+    )
+    checks = [
+        {
+            "name": "continuous_height_representative_matrix",
+            "passed": (
+                summary["representative_passed_count"]
+                == summary["representative_trial_count"] == 12
+            ),
+            "details": summary,
+        },
+        {
+            "name": "navigation_coordination_hardening_matrix",
+            "passed": (
+                summary["hardening_passed_count"]
+                == summary["hardening_trial_count"] == 3
+                and all(row["injection_applied"] for row in hardening_rows)
+                and next(
+                    row for row in hardening_rows
+                    if row["trial_id"] == "fixed-one-tick-late-drop"
+                )["input_delay_ticks"] == 1
+            ),
+            "details": {
+                "trial_count": len(hardening_rows),
+                "passed_count": sum(bool(row["passed"])
+                                    for row in hardening_rows),
+                "trials": hardening_rows,
+            },
+        },
+    ]
     return summary, diagnostics, checks

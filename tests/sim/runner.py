@@ -167,6 +167,32 @@ class Result:
         ok = (self.outcome == self.expect) and not self.violations
         return "PASS" if ok else "FAIL"
 
+    @property
+    def outcome_class(self) -> str:
+        if self.violations:
+            return "unexpected_result"
+        if self.outcome == "success":
+            return "task_success"
+        final = self.trace[-1] if self.trace else None
+        safe_release = (
+            final is not None
+            and not final["source_bound"]
+            and final["on_ground"]
+            and final["support_fraction"] is not None
+            and final["support_fraction"] > 0.0
+        )
+        if safe_release and self.outcome in {
+                "failed", "cancelled", "closed", "requires_interaction"}:
+            return "bounded_safe_failure"
+        return "unexpected_result"
+
+    @property
+    def recovery_failures(self) -> int:
+        return max(
+            (int(row["retry_total_failures"]) for row in self.trace),
+            default=0,
+        )
+
 
 def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
         trace_sink: Callable[[dict], None] | None = None,
@@ -227,6 +253,9 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                 if event.fired_at is None and driver.source is not None and event.when(context):
                     event.fired_at = tick
                     event.action(context)
+            if driver.source is not None and driver.state in {
+                    "success", "failed", "cancelled"}:
+                driver.release("simulation_terminal_release")
             if driver.source is None or driver.state in TERMINAL_DRIVER:
                 # The client still samples any accepted lease after source release.
                 backend.free_tick()
@@ -294,6 +323,8 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                     (cause.value, count)
                     for cause, count in diagnostics.retry_approved_cause_counts
                 ),
+                support_fraction=diagnostics.support_fraction,
+                illegal_transition_count=diagnostics.illegal_transition_count,
             )
             monitor.check(evidence)
             row = {
@@ -346,6 +377,9 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                 "risk_policy_revision": diagnostics.risk_policy_revision,
                 "risk_submission_capacity_exhausted":
                     diagnostics.risk_submission_capacity_exhausted,
+                "support_fraction": diagnostics.support_fraction,
+                "transition_count": diagnostics.transition_count,
+                "illegal_transition_count": diagnostics.illegal_transition_count,
                 "retry_round_failures": diagnostics.retry_round_failures,
                 "retry_total_failures": diagnostics.retry_total_failures,
                 "retry_approved_round": diagnostics.retry_approved_round,

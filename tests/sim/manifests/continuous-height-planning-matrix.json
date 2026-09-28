@@ -1,0 +1,13 @@
+{
+  "schema_version": "mc2p.continuous-height-planning-matrix.v1",
+  "seed_start": 282001,
+  "seed_end": 283000,
+  "grid_size": 8,
+  "missing_probability": 0.16,
+  "materials": [
+    "minecraft:stone",
+    "minecraft:smooth_stone_slab",
+    "minecraft:dirt_path",
+    "minecraft:oak_stairs"
+  ]
+}

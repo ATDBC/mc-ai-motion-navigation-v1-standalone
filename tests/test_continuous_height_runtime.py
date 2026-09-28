@@ -11,6 +11,7 @@ from scripts.continuous_height_runtime import (
     _start_and_goal,
     _supports,
     continuous_height_trial_plan,
+    navigation_coordination_hardening_plan,
 )
 
 
@@ -68,6 +69,44 @@ class ContinuousHeightRuntimeTests(unittest.TestCase):
                 and trial.get("drop_blocks") == 5 else 0.0
             )
             self.assertEqual(budget.maximum_expected_damage_points, expected)
+
+    def test_hardening_plan_freezes_three_formal_path_gates(self):
+        trials = navigation_coordination_hardening_plan()
+
+        self.assertEqual(
+            [trial["trial_id"] for trial in trials],
+            [
+                "runup-step-down",
+                "landing-support-removed",
+                "fixed-one-tick-late-drop",
+            ],
+        )
+        self.assertEqual(
+            [trial["injection"] for trial in trials],
+            [None, "remove_landing_support", "late_first_verified_input"],
+        )
+        self.assertEqual(
+            [trial["expected_terminal"] for trial in trials],
+            ["success", "failed", "success"],
+        )
+        self.assertEqual(
+            trials[1]["expected_reason"], "landing_support_missing",
+        )
+
+    def test_hardening_fixtures_are_disjoint_and_runup_precedes_descent(self):
+        trials = navigation_coordination_hardening_plan()
+        occupied = []
+        for trial in trials:
+            positions = {position for position, _ in _supports(trial)}
+            self.assertTrue(all(positions.isdisjoint(old) for old in occupied))
+            occupied.append(positions)
+
+        runup = trials[0]
+        supports = sorted(position for position, _ in _supports(runup))
+        start, goal = _start_and_goal(runup)
+        self.assertEqual(start[1] - goal[1], 1.0)
+        self.assertGreaterEqual(len(supports), 7)
+        self.assertEqual(runup["runup_blocks"], 4)
 
     def test_each_trial_uses_a_disjoint_world_region(self):
         occupied_regions = []

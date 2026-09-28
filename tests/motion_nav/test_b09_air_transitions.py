@@ -763,6 +763,43 @@ class B09AirTransitionTests(unittest.TestCase):
         self.assertFalse(any(type(edge) is SurfaceJumpGapEdge
                              for edge in graph.edges))
 
+    def test_walkable_lower_middle_support_rejects_gap_before_expensive_sweep(self):
+        world = known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:grass_block"),
+            (0, 0, 1): BlockGeometry(
+                "minecraft:dirt_path", "boxes",
+                (Aabb(0, 0, 0, 1, 15 / 16, 1),),
+            ),
+            (0, 0, 2): BlockGeometry.full_cube("minecraft:grass_block"),
+        })
+        motion = replace(
+            ground_profile(),
+            support_materials=frozenset({
+                "minecraft:grass_block", "minecraft:dirt_path",
+            }),
+        )
+
+        with patch(
+            "mc2p.motion_nav.known_map_planner.query_jump_gap",
+            side_effect=AssertionError(
+                "a walkable shallow depression must reject JumpGap early"
+            ),
+        ):
+            graph = build_surface_graph(
+                world.view(), KnownMapBounds(0, 0, 0, 1, 0, 2, True),
+                motion, step_profile(),
+                air_profiles=(air_profile(MovementMode.JUMP_GAP),),
+            )
+
+        self.assertFalse(any(type(edge) is SurfaceJumpGapEdge
+                             for edge in graph.edges))
+        self.assertTrue(any(
+            type(edge) is SurfaceWalkEdge
+            and edge.start.column_z == 0
+            and edge.end.column_z == 1
+            for edge in graph.edges
+        ))
+
     def test_formal_air_planning_reports_missing_top_clearance(self):
         world = known_world({
             (0, 0, 0): BlockGeometry.full_cube("minecraft:grass_block"),

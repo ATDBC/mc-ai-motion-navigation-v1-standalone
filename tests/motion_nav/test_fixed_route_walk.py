@@ -75,6 +75,49 @@ def apply(body: PlanarBodyState, movement: MovementV1, motion: GroundMotionProfi
 
 
 class FixedRouteWalkTests(unittest.TestCase):
+    def test_prediction_margin_allows_departing_a_wall_without_weakening_other_directions(self) -> None:
+        fixture, motion = FlatFixture(), profile()
+        stamp = ObservationStamp(fixture.session, 1, 1, "test-clock", 50_000_000)
+        fixture.world.observe_blocks(stamp, {
+            (0, y, 2): BlockGeometry.full_cube("minecraft:stone")
+            for y in (1, 2)
+        })
+        body = PlanarBodyState(0.5, 3.30284, 0.0, 0.0, 0.0)
+        frame = fixture.frame(0, body)
+
+        departing = FixedRouteController(motion)
+        departing.start(FixedRoute("depart-wall", (
+            RoutePoint(0.5, 1.0, body.z), RoutePoint(0.5, 1.0, 5.5),
+        )), frame)
+        depart_decision = departing.decide(frame)
+
+        self.assertIs(depart_decision.state, FixedRouteState.RUNNING)
+        self.assertGreater(depart_decision.movement.forward, 0)
+
+        approaching = FixedRouteController(motion)
+        approaching.start(FixedRoute("approach-wall", (
+            RoutePoint(0.5, 1.0, body.z), RoutePoint(0.5, 1.0, 1.5),
+        )), frame)
+        approach_decision = approaching.decide(frame)
+
+        self.assertIs(approach_decision.state, FixedRouteState.RUNNING)
+        self.assertGreaterEqual(
+            approach_decision.movement.forward, 0,
+            "the controller must not follow the route into the wall",
+        )
+
+        parallel = FixedRouteController(motion)
+        parallel.start(FixedRoute("parallel-wall", (
+            RoutePoint(0.5, 1.0, body.z), RoutePoint(3.5, 1.0, body.z),
+        )), frame)
+        parallel_decision = parallel.decide(frame)
+
+        self.assertIs(parallel_decision.state, FixedRouteState.RUNNING)
+        self.assertGreater(
+            parallel_decision.movement.forward, 0,
+            "parallel travel must first open real clearance from the wall",
+        )
+
     def test_one_false_ground_flag_over_full_support_keeps_tracking(self) -> None:
         fixture, motion = FlatFixture(), profile()
         body = PlanarBodyState(0.5, 0.5, 0.0, 0.0, 0.0)

@@ -19,6 +19,17 @@ from mc2p.motion_nav.segment_entry import SegmentEntryWindow
 from mc2p.motion_nav.support_surfaces import SupportSurface, SurfaceNodeId
 
 
+def canonical_surface_node_path(
+    path: tuple[SurfaceNodeId, ...],
+) -> tuple[SurfaceNodeId, ...]:
+    """Collapse route points that remain on the same support surface."""
+    canonical: list[SurfaceNodeId] = []
+    for node in path:
+        if not canonical or canonical[-1] != node:
+            canonical.append(node)
+    return tuple(canonical)
+
+
 @dataclass(frozen=True, slots=True)
 class WalkSegment:
     fixed_route: FixedRoute
@@ -39,7 +50,9 @@ class WalkSegment:
         if (self.traversal_plan is not None
                 and (type(self.traversal_plan) is not GroundTraversalPlan
                      or (self.traversal_plan.surface_node_path
-                         and self.traversal_plan.surface_node_path
+                         and canonical_surface_node_path(
+                             self.traversal_plan.surface_node_path
+                         )
                          != self.node_ids)
                      or (not self.traversal_plan.surface_node_path
                          and self.fixed_route.points[

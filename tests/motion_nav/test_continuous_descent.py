@@ -432,6 +432,13 @@ class ContinuousDescentTests(unittest.TestCase):
             ),
         )
         self.assertTrue(edge_probe.finish_release(standing_entry))
+        support = owner.view().cell((0, 57, 1)).block
+        self.assertIsNotNone(support)
+        owner.observe_blocks(
+            ObservationStamp(SESSION, 5, 5, "test-clock", 250_000_000),
+            {(0, 57, 1): support},
+        )
+        standing_entry = replace(standing_entry, world=owner.view())
         owned_edge_evidence = check_action_precondition(
             admitted.route, 0,
             standing_entry,

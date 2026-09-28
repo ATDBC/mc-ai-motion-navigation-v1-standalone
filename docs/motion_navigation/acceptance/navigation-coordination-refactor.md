@@ -2,9 +2,9 @@
 
 日期：2026-09-28
 
-状态：S0 至 S5 已完成本轮实现和验收。固定矩阵、冻结种子扫描、真实后台进程门禁和代表性 Fabric 回归均已通过。完整连续高度能力矩阵仍按原文档单独关闭。
+状态：S0 至 S4 已完成。H1 至 H7 已关闭第十九轮评审发现的结构缺陷和三项专项 Fabric 证据缺口，S4 已重新关闭。S5 仍然打开。原固定矩阵和冻结种子扫描证明的是“结果属于登记范围”，不是全部可达任务成功。完整连续高度能力矩阵仍按原文档单独关闭。
 
-关联：[阶段计划](../stages/navigation-coordination-refactor-plan.md)、[架构](../architecture/navigation-coordination-v1.md)、[D039](../decisions/0039-shared-navigation-coordination-and-closed-loop-gates.md)。
+关联：[原阶段计划](../stages/navigation-coordination-refactor-plan.md)、[强化计划](../stages/navigation-coordination-hardening-plan.md)、[架构](../architecture/navigation-coordination-v1.md)、[D039](../decisions/0039-shared-navigation-coordination-and-closed-loop-gates.md)、[D040](../decisions/0040-reopen-navigation-coordination-gates.md)。
 
 ## 1. 基线与已知失败
 
@@ -135,8 +135,8 @@ D:\Miniforge3\Scripts\conda.exe run --prefix D:\My_project\mc_ai\.venv --no-capt
 | S1 身体监督与安全交接 | 已实现并本地回归 | motion_nav 602/602 | 14 场：8 正例、2 已知有界失败、4 校准后取证失败；无未登记差异 | 未运行 | 扫描未完成 |
 | S2 任务重试与风险 | 已实现并本地回归 | motion_nav 638/638 | 14 场：8／2／0／4／0；增加失联、预算下调和实测超额正式路径 | 未运行 | 100 种子扫描未完成 |
 | S3 动作边界门槛 | 已实现 | 已通过 | 远处落点、两道和三道坎通过 | 代表场景通过 | 本轮门槛关闭 |
-| S4 状态所有者与转移 | 已实现 | 已通过 | 中断、交接和旧代次通过 | 跨模块代表通过 | 本轮门槛关闭 |
-| S5 综合验收 | 已完成 | motion_nav 664/664 | 固定 14/14；种子 200/200；进程 43/43 | 五组代表批次通过 | 完整连续高度矩阵仍未关闭 |
+| S4 状态所有者与转移 | 已强化并关闭 | motion_nav 685/685；非法转移探针 0 | 中断、交接、旧代次和终态不可复活通过 | 历史跨模块代表通过 | 本轮结构门槛关闭 |
+| S5 综合验收 | 进行中 | 真实进程 43/43 | 固定场景 12 成功、2 安全终止；种子扫描 192 成功、8 安全失败、0 意外 | 代表 12/12；专项 3/3 | 未关闭 |
 
 方案本身不关闭任何 P0/P1，也不撤回历史失败。每步完成后更新本表和阶段记录；新的通过必须附正式链路及源码身份。
 
@@ -148,7 +148,17 @@ S1 本地命令结果：`python -m unittest discover -s tests/motion_nav -p 'tes
 
 S2 本地命令结果：`python -m unittest discover -s tests/motion_nav -p 'test_*.py' -q` 为 638/638（78.996 秒）；`python -m tests.sim.run_navigation_matrix --manifest tests/sim/manifests/navigation-coordination-smoke.json --output .tmp/coordination-s2-frozen-v2` 为 8／2／0／4／0，未登记差异 0，完整逐帧轨迹和未提交源码身份在该目录。独立公开目录的账本、监视器、闭环及监督专项为 63/63；同一矩阵结果在 `.tmp/coordination-export-s2-frozen-v1/`，计数相同。公开导出哈希验证为 `STANDALONE_EXPORT_OK files=638`。这仍是本地计算器模拟，四项取证失败未关闭；未运行新 Fabric 或 100 种子扫描，也未进入 S3。
 
-S3 至 S5 本地结果：固定清单 `navigation-coordination-smoke.json` 为 14/14，目标修订事件在真实探边阶段触发；`navigation-coordination-s5-seeds.json` 固定 `280001..280100`，两类输入迟到场景合计 200/200 属于清单预先允许的成功或安全终态，未发现 I1 至 I9 违规。真实规划进程、动作求解进程和候选接纳检查为 43/43。`tests/motion_nav` 最终为 664/664。
+H1 至 H6 本地结果：`tests/motion_nav` 为 685/685。真实规划进程、动作求解进程和候选接纳检查为 43/43。状态复活探针运行 38 次，没有发现终态后的非法状态写入。风险容量、探边收尾、目标修改、动作入口重新锚定和落点支撑移除都已有正式路径组件回归。
+
+固定清单 `navigation-coordination-smoke.json` 的 14 个结果都属于预先登记范围，但任务层结果为 **12 个成功、2 个有界安全终止、0 个意外结果**。两个安全终止分别来自取消和输入失联场景，不能加入任务成功数。
+
+`navigation-coordination-s5-seeds.json` 固定种子 `280001..280100`。方向性预测余量修正后的复验目录为 `.tmp/h7-seeds-directional-margin-v1/`。200 次运行中有 **192 个任务成功、8 个有界安全失败、0 个意外结果**。其中：
+
+- 半砖上下、20% 概率晚一帧：100/100 最终完成；100 次都发生一次合法恢复，因此首次成功率为 0；
+- 两格下降、20% 概率晚一帧：92/100 完成；其余为 3 次探边取证超时和 5 次输入失联；
+- 旧冻结白名单覆盖这两类安全失败。原来唯一未声明的 `no_safe_ground_candidate` 来自尾侧预测余量与身后上层方块的虚拟重叠。修正后同一种子正常完成，前侧和侧面余量、真实碰撞及坑边支撑门槛没有放宽。
+
+这些结果说明协调层能在高频迟到下继续执行或给出有界结果，也说明未声明结果已经清零。但仍不能把 192/200 写成完整能力通过。S5 不能因为 0 个意外结果就忽略 8 个任务失败。
 
 代表性 Fabric 证据如下：
 
@@ -162,4 +172,10 @@ S3 至 S5 本地结果：固定清单 `navigation-coordination-smoke.json` 为 1
 
 B10 第一次运行在外层 300 秒命令期限结束，未形成算法失败；使用 600 秒外层期限重跑后完成。C1-B 第一次运行发现移动目标连续修订时，未获仲裁的待接替路线无法更新；修正为只替换尚未接管身体的候选后重跑 30/30。两项失败均保留，没有从统计中删除。
 
-本轮 Fabric 是代表性回归。它没有完成连续高度文档要求的全部速度带、方块形状和随机迟到组合，因此该完整矩阵仍未关闭。
+强化后的专项 Fabric 批次 `20260928T135808548919Z-587c5904` 继续通过原代表矩阵 12/12，并新增：
+
+- `runup-step-down`：先走四格，再下一整格并继续到目标；路线为 `WalkSegment → ControlledDropSegment → WalkSegment`，52 tick，零伤害；
+- `landing-support-removed`：在首条不可逆下落输入前移除落点支撑，以 `landing_support_missing` 失败，机器人留在上层，零伤害；
+- `fixed-one-tick-late-drop`：输入回执确认首条已验证移动相对请求窗口精确晚 1 tick，动作仍完成，42 tick，零伤害。
+
+本批没有完成连续高度文档要求的全部速度带、方块形状和随机迟到组合。冻结种子扫描也仍有 8 次有界任务失败。因此专项证据通过，S5 和完整连续高度矩阵仍未关闭。

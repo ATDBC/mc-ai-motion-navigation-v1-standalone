@@ -46,6 +46,24 @@ class SessionEventPolicy(StrEnum):
     REJECT = "reject"
 
 
+class NavigationTransitionAction(StrEnum):
+    """One explicit task-state change with a fixed destination."""
+
+    RESET_READY = "reset_ready"
+    BEGIN_PLANNING = "begin_planning"
+    WAIT_FOR_INFORMATION = "wait_for_information"
+    BEGIN_EXECUTION = "begin_execution"
+    BEGIN_HANDOFF = "begin_handoff"
+    BEGIN_STOPPING = "begin_stopping"
+    REQUIRE_INTERACTION = "require_interaction"
+    MARK_COMPLETE = "mark_complete"
+    MARK_CANCELLED = "mark_cancelled"
+    MARK_FAILED = "mark_failed"
+    MARK_CLOSED = "mark_closed"
+    RESUME_EXECUTION_AFTER_HANDOFF = "resume_execution_after_handoff"
+    REPLAN_AFTER_HANDOFF = "replan_after_handoff"
+
+
 _TERMINAL = {
     NavigationSessionState.COMPLETE,
     NavigationSessionState.CANCELLED,
@@ -86,10 +104,84 @@ SESSION_EVENT_TABLE = {
 }
 
 
+def _transition_table() -> dict[
+    tuple[NavigationSessionState, NavigationTransitionAction],
+    NavigationSessionState,
+]:
+    table: dict[
+        tuple[NavigationSessionState, NavigationTransitionAction],
+        NavigationSessionState,
+    ] = {}
+    active = tuple(state for state in NavigationSessionState
+                   if state not in _TERMINAL)
+
+    def allow(states: tuple[NavigationSessionState, ...],
+              action: NavigationTransitionAction,
+              target: NavigationSessionState) -> None:
+        for state in states:
+            table[(state, action)] = target
+
+    ordinary = tuple(state for state in active
+                     if state is not NavigationSessionState.STOPPING)
+    allow(ordinary, NavigationTransitionAction.RESET_READY,
+          NavigationSessionState.READY)
+    allow(ordinary, NavigationTransitionAction.BEGIN_PLANNING,
+          NavigationSessionState.PLANNING)
+    allow(ordinary, NavigationTransitionAction.WAIT_FOR_INFORMATION,
+          NavigationSessionState.NEEDS_INFORMATION)
+    allow(ordinary, NavigationTransitionAction.BEGIN_EXECUTION,
+          NavigationSessionState.EXECUTING)
+    allow(ordinary, NavigationTransitionAction.BEGIN_HANDOFF,
+          NavigationSessionState.HANDOFF)
+    allow(ordinary, NavigationTransitionAction.REQUIRE_INTERACTION,
+          NavigationSessionState.REQUIRES_INTERACTION)
+    allow(active, NavigationTransitionAction.BEGIN_STOPPING,
+          NavigationSessionState.STOPPING)
+    allow(active, NavigationTransitionAction.MARK_COMPLETE,
+          NavigationSessionState.COMPLETE)
+    allow(active, NavigationTransitionAction.MARK_CANCELLED,
+          NavigationSessionState.CANCELLED)
+    allow(active, NavigationTransitionAction.MARK_FAILED,
+          NavigationSessionState.FAILED)
+    allow(active, NavigationTransitionAction.MARK_CLOSED,
+          NavigationSessionState.CLOSED)
+    allow((NavigationSessionState.STOPPING,),
+          NavigationTransitionAction.RESUME_EXECUTION_AFTER_HANDOFF,
+          NavigationSessionState.EXECUTING)
+    allow((NavigationSessionState.STOPPING,),
+          NavigationTransitionAction.REPLAN_AFTER_HANDOFF,
+          NavigationSessionState.PLANNING)
+    allow((NavigationSessionState.COMPLETE,),
+          NavigationTransitionAction.MARK_COMPLETE,
+          NavigationSessionState.COMPLETE)
+    allow((NavigationSessionState.CANCELLED,),
+          NavigationTransitionAction.MARK_CANCELLED,
+          NavigationSessionState.CANCELLED)
+    allow((NavigationSessionState.FAILED,),
+          NavigationTransitionAction.MARK_FAILED,
+          NavigationSessionState.FAILED)
+    allow((NavigationSessionState.CLOSED,),
+          NavigationTransitionAction.MARK_CLOSED,
+          NavigationSessionState.CLOSED)
+    return table
+
+
+SESSION_TRANSITION_TABLE = _transition_table()
+
+
+@dataclass(frozen=True, slots=True)
+class NavigationTransition:
+    previous: NavigationSessionState
+    action: NavigationTransitionAction
+    current: NavigationSessionState
+
+
 @dataclass(slots=True)
 class NavigationLifecycle:
     state: NavigationSessionState = NavigationSessionState.READY
     last_event: NavigationSessionEvent | None = None
+    transition_count: int = 0
+    illegal_transition_count: int = 0
 
     def record(self, event: NavigationSessionEvent) -> SessionEventPolicy:
         if type(event) is not NavigationSessionEvent:
@@ -97,7 +189,21 @@ class NavigationLifecycle:
         self.last_event = event
         return SESSION_EVENT_TABLE[(self.state, event)]
 
-    def set_state(self, state: NavigationSessionState) -> None:
-        if type(state) is not NavigationSessionState:
-            raise ContractViolation("navigation lifecycle state must be typed")
-        self.state = state
+    def transition(
+        self, action: NavigationTransitionAction,
+    ) -> NavigationTransition:
+        if type(action) is not NavigationTransitionAction:
+            raise ContractViolation("navigation transition action must be typed")
+        previous = self.state
+        current = SESSION_TRANSITION_TABLE.get((previous, action))
+        if current is None:
+            self.illegal_transition_count += 1
+            if previous in _TERMINAL:
+                raise ContractViolation("terminal navigation state cannot be left")
+            raise ContractViolation(
+                f"navigation transition is not allowed: "
+                f"{previous.value} + {action.value}"
+            )
+        self.transition_count += 1
+        self.state = current
+        return NavigationTransition(previous, action, current)

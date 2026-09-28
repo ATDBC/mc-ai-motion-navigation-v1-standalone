@@ -1565,6 +1565,19 @@ class _SurfaceExpander:
             self.world, x, z, float(self.bounds.min_feet_y),
             float(self.bounds.max_feet_y + 1), body_height=self.body_height,
         )
+        if result.status in {QueryStatus.FEASIBLE, QueryStatus.BLOCKED}:
+            # A dirt path, carpet, snow layer or bottom slab may sit slightly
+            # below the integer feet band.  Prefer the widened result when its
+            # extra collision-owner cells are known.  Otherwise retain the
+            # normal result: an unrelated deeper unknown cell on a mixed
+            # height route must not hide a perfectly known full block.
+            widened = query_support_surfaces(
+                self.world, x, z, float(self.bounds.min_feet_y) - .6,
+                float(self.bounds.max_feet_y + 1),
+                body_height=self.body_height,
+            )
+            if widened.status is QueryStatus.FEASIBLE:
+                result = widened
         self.complete = self.complete and result.status is not QueryStatus.NEEDS_INFORMATION
         self.column_status[key] = result.status
         self.has_unsupported = (
@@ -1790,12 +1803,16 @@ class _SurfaceExpander:
                      start.node_id.column_z + unit_z),
                     QueryStatus.NEEDS_INFORMATION,
                 )
+                middle_has_walk_connection = any(
+                    abs(node.position[1] - start.position[1])
+                    <= .6 + 1.0e-9
+                    and abs(end.position[1] - node.position[1])
+                    <= .6 + 1.0e-9
+                    for node in middle
+                )
                 if (middle_status not in {
                         QueryStatus.NEEDS_INFORMATION, QueryStatus.UNSUPPORTED}
-                        and not any(
-                            abs(node.position[1] - start.position[1]) <= 1.0e-6
-                            for node in middle
-                        )):
+                        and not middle_has_walk_connection):
                     jump = query_jump_gap(
                         self.world, start.surface, end.surface, profile,
                     )
@@ -2240,6 +2257,43 @@ def _ground_traversal_cache_key(
     )
 
 
+def _ground_traversal_entry_route(
+    state: PhysicsState,
+    node_path: tuple[SurfaceNodeId, ...],
+    expander: _SurfaceExpander,
+    route_id: str,
+) -> tuple[FixedRoute, tuple[SurfaceNodeId, ...]]:
+    """Start a proof on the current body's projection onto its first lane.
+
+    A body may still be supported by the first surface while its center
+    overhangs that surface's cell.  Starting the proof at the cell center then
+    puts the real entry outside the proof corridor.  Preserve the route's
+    cardinal lane and bind the projected point to the same support node.
+    """
+    points = [RoutePoint(*expander.nodes[node].position) for node in node_path]
+    if len(points) < 2:
+        return FixedRoute(route_id, tuple(points)), node_path
+    first, second = points[:2]
+    dx, dz = second.x - first.x, second.z - first.z
+    if abs(dx) > 1.0e-9 and abs(dz) > 1.0e-9:
+        return FixedRoute(route_id, tuple(points)), node_path
+    if abs(dx) > 1.0e-9:
+        projected = RoutePoint(state.position[0], first.y, first.z)
+        progress = (projected.x - first.x) * math.copysign(1.0, dx)
+    else:
+        projected = RoutePoint(first.x, first.y, state.position[2])
+        progress = (projected.z - first.z) * math.copysign(1.0, dz)
+    if math.hypot(projected.x - first.x, projected.z - first.z) <= 1.0e-9:
+        return FixedRoute(route_id, tuple(points)), node_path
+    if progress > 0.0:
+        points[0] = projected
+        return FixedRoute(route_id, tuple(points)), node_path
+    return (
+        FixedRoute(route_id, (projected, *points)),
+        (node_path[0], *node_path),
+    )
+
+
 def plan_known_surface_snapshot(
     snapshot: KnownMapSnapshot,
     ground_profile: GroundMotionProfile,
@@ -2510,9 +2564,11 @@ def plan_known_surface_snapshot(
         first, last = runs[0]
         states = search.path[first:last + 2]
         node_path = tuple(state.node_id for state in states)
-        route = FixedRoute(
+        route, proof_node_path = _ground_traversal_entry_route(
+            request.entry_physics_state,
+            node_path,
+            expander,
             f"{request.request_id}-ground-traversal-{first}",
-            tuple(RoutePoint(*expander.nodes[node].position) for node in node_path),
         )
         run_edges = search.segments[first:last + 1]
         dependencies = tuple(sorted({
@@ -2528,7 +2584,7 @@ def plan_known_surface_snapshot(
                 request.entry_physics_state, route,
                 PhysicsWorldView(snapshot.world, JAVA_1_21_RULESET),
                 ground_profile, maximum_ticks=200,
-                surface_node_path=node_path,
+                surface_node_path=proof_node_path,
             )
             _GROUND_TRAVERSAL_PROOF_CACHE.put(key, verified)
         disabled = {
@@ -2560,13 +2616,11 @@ def plan_known_surface_snapshot(
             - estimated_run_ticks
             + verified.plan.estimated_ticks
         )
-        expander.disabled_ground_walk_edges.update(disabled)
-        alternative = run_search()
-        if (alternative.path and alternative.cost_seconds is not None
-                and int(alternative.cost_seconds) < formal_total):
-            search = alternative
-            continue
-        expander.disabled_ground_walk_edges.difference_update(disabled)
+        # A verified continuous-ground run already has calculator-derived
+        # cost and executable commands.  Do not disable it merely to compare
+        # the fixed-cost Step fallback: that recreates the same geometric
+        # route with stop-and-go actions and can even lose the next stair's
+        # entry surface.  Step remains available when verification fails.
         search = replace(search, cost_seconds=float(formal_total))
         traversal_plans = (verified.plan,)
         break

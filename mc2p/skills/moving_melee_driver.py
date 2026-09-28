@@ -100,6 +100,8 @@ class MovingMeleeDriver:
             raise ContractViolation("moving melee requires ready V3 Runtime")
         self.runtime = runtime
         self.navigation_session = navigation_session
+        self._navigation_session_root_id = navigation_session.report.session_id
+        self._navigation_session_generation = 0
         self._clock = clock_ns
         self._target: CombatTargetV1 | None = None
         self._deadline_ns = 0
@@ -558,6 +560,12 @@ class MovingMeleeDriver:
         )
         self._moving_goal = decision
         self._navigation_goal_revision += 1
+        if self.navigation_session.report.terminal:
+            self._navigation_session_generation += 1
+            self.navigation_session = self.navigation_session.spawn_successor(
+                f"{self._navigation_session_root_id}-pursuit-"
+                f"{self._navigation_session_generation}"
+            )
         self.approach_driver = RuntimeNavigationDriver(
             self.runtime, self.navigation_session, clock_ns=self._clock,
             observation_request=ObservationRequestV3(

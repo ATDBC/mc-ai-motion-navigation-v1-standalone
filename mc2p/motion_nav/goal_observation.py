@@ -47,16 +47,36 @@ def evaluate_observed_goal(
         frame.body.velocity_blocks_per_second[index] for index in (0, 2)
     ))
     facts = dict(
-        position=frame.body.position, support=support,
+        support=support,
         mode=observed_ground_mode(frame.body), pose=frame.body.pose,
         speed_blocks_per_second=speed,
         resources=ResourceState((("food_points", float(frame.body.food_points)),)),
         applied_risk_policy_id=risk_policy_id,
     )
-    if goal.accepts(**facts, yaw_radians=frame.body.yaw_radians):
+    # A completion decision is followed by at least one neutral input sample.
+    # Require the body's current horizontal velocity to remain inside the goal
+    # through that tick; otherwise a result can become complete at the inner
+    # edge and drift outside before the release is observed.
+    projected_position = (
+        frame.body.position[0]
+        + frame.body.velocity_blocks_per_second[0] / 20.0,
+        frame.body.position[1],
+        frame.body.position[2]
+        + frame.body.velocity_blocks_per_second[2] / 20.0,
+    )
+
+    def accepts(yaw_radians: float) -> bool:
+        return all(
+            goal.accepts(
+                **facts, position=position, yaw_radians=yaw_radians,
+            )
+            for position in (frame.body.position, projected_position)
+        )
+
+    if accepts(frame.body.yaw_radians):
         return ObservedGoal(ObservedGoalStatus.SATISFIED)
-    if (goal.required_yaw_radians is not None and goal.accepts(
-            **facts, yaw_radians=goal.required_yaw_radians)):
+    if (goal.required_yaw_radians is not None
+            and accepts(goal.required_yaw_radians)):
         delta = math.atan2(
             math.sin(goal.required_yaw_radians - frame.body.yaw_radians),
             math.cos(goal.required_yaw_radians - frame.body.yaw_radians),

@@ -10,7 +10,7 @@ import math
 from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.action_route import (
     ActionRoute, ControlledDropSegment, JumpGapSegment, JumpUpSegment,
-    StepSegment, WalkSegment,
+    StepSegment, WalkSegment, canonical_surface_node_path,
 )
 from mc2p.motion_nav.fixed_route import FixedRoute, RoutePoint
 from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
@@ -561,9 +561,14 @@ class RouteAdmitter:
                 )
                 traversal_plan = next((
                     plan for plan in candidate.ground_traversal_plans
-                    if plan.surface_node_path
+                    if canonical_surface_node_path(plan.surface_node_path)
                     == tuple(node.node_id for node in pending_nodes)
                 ), None)
+                if traversal_plan is not None:
+                    # Execute the concrete entry route that the calculator
+                    # proved.  Rebuilding it from graph-node centres would
+                    # discard an overhanging or offset current position.
+                    fixed_route = traversal_plan.route
                 actions.append(WalkSegment(
                     fixed_route,
                     tuple(node.node_id for node in pending_nodes),

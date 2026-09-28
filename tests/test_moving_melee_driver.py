@@ -196,8 +196,13 @@ class MovingMeleeDriverTests(unittest.TestCase):
 
         self.assertIsNone(driver._reacquire_source)
         self.assertIsNotNone(driver.approach_driver)
-        self.assertEqual(len(session.starts) + len(session.updates), 2)
-        self.assertEqual(session.state, NavigationSessionState.EXECUTING)
+        self.assertTrue(session.closed)
+        self.assertIsNot(driver.navigation_session, session)
+        self.assertEqual(len(driver.navigation_session.starts), 1)
+        self.assertEqual(
+            driver.navigation_session.state,
+            NavigationSessionState.EXECUTING,
+        )
         self.assertEqual(driver.report.state, "pursuing")
 
     def test_transient_target_gap_inside_strike_returns_to_reacquisition(self):

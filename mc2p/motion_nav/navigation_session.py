@@ -119,6 +119,7 @@ from mc2p.motion_nav.navigation_lifecycle import (
     NavigationLifecycle,
     NavigationSessionEvent,
     NavigationSessionState,
+    NavigationTransitionAction,
 )
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView
 from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET
@@ -133,6 +134,9 @@ from mc2p.motion_nav.runtime_adapter import (
     NavigationFrame,
     NavigationObservationAdapter,
     world_session_from_observation,
+)
+from mc2p.motion_nav.safe_ground_control import (
+    verified_ground_recovery_movement,
 )
 from mc2p.motion_nav.step_transition import StepProfile, load_step_profile
 from mc2p.motion_nav.support_surfaces import SurfaceNodeId, query_support_surfaces
@@ -337,6 +341,9 @@ class NavigationDiagnostics:
     retry_approved_round: int = 0
     retry_approved_total: int = 0
     retry_approved_cause_counts: tuple[tuple[RetryCause, int], ...] = ()
+    support_fraction: float | None = None
+    transition_count: int = 0
+    illegal_transition_count: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -408,6 +415,8 @@ class NavigationSessionPort(Protocol):
         frame: NavigationFrame,
     ) -> None: ...
     def cancel(self, reason: str) -> None: ...
+    def spawn_successor(self, session_id: str) -> "NavigationSessionPort": ...
+    def close(self) -> None: ...
 
 
 class NavigationSession:
@@ -476,6 +485,7 @@ class NavigationSession:
         self._planning_pipeline = PlanningPipelineState()
         self._information = InformationAcquisitionState()
         self._frame: NavigationFrame | None = None
+        self._last_support_fraction: float | None = None
         self._control_ledger: InputApplicationLedger | None = None
         self._control_anchor: StateAnchor | None = None
         self._supervisor = ExecutionSupervisor()
@@ -494,6 +504,7 @@ class NavigationSession:
         self._executor_reported_damage_points = 0.0
         self._motion_residual = MotionResidualTracker()
         self._restart_after_active_terminal = False
+        self._replacement_failure_reason: str | None = None
         self._retry_ledger: RetryLedger | None = retry_ledger
         self._risk_ledger: TaskRiskLedger | None = risk_ledger
         self._risk_action_id: str | None = None
@@ -528,9 +539,15 @@ class NavigationSession:
     def _state(self) -> NavigationSessionState:
         return self._lifecycle.state
 
-    @_state.setter
-    def _state(self, value: NavigationSessionState) -> None:
-        self._lifecycle.set_state(value)
+    def _transition(
+        self,
+        action: NavigationTransitionAction,
+        reason: str,
+    ) -> None:
+        if not isinstance(reason, str) or not reason:
+            raise ContractViolation("navigation transition reason must be non-empty")
+        self._lifecycle.transition(action)
+        self._reason = reason
 
     @property
     def _request(self) -> PlanningRequest | SurfacePlanningRequest | None:
@@ -780,6 +797,9 @@ class NavigationSession:
              self._retry_ledger.approved_total_retries),
             (() if self._retry_ledger is None else
              self._retry_ledger.approved_cause_counts),
+            self._last_support_fraction,
+            self._lifecycle.transition_count,
+            self._lifecycle.illegal_transition_count,
         )
 
     def bind_source(self, source: IntentSourceV1) -> None:
@@ -944,14 +964,18 @@ class NavigationSession:
             # An owned edge probe is already paying the movement cost to make
             # this exact cell visible.  Query it on every new frame instead of
             # waiting for the ordinary known-cell refresh interval.
+            probe_positions = tuple(dict.fromkeys((
+                self._edge_probe.landing_cell,
+                *self._edge_probe.dependencies,
+            )))[:remaining]
             probe_request = ObservationRequestV3(
-                "navigation_v1", (self._edge_probe.landing_cell,),
+                "navigation_v1", probe_positions,
             )
             planning_missing = tuple(
                 position for position in planning_missing
                 if position != self._edge_probe.landing_cell
             )
-            remaining -= 1
+            remaining -= len(probe_positions)
         planning_request = ObservationRequestV3("navigation_v1")
         if planning_missing and remaining:
             unknown = tuple(
@@ -1076,13 +1100,11 @@ class NavigationSession:
                 goal_id, goal_revision, goal_state, damage_budget,
             )
             self._snapshot_missing = missing
-            self._state = (
-                NavigationSessionState.NEEDS_INFORMATION
-                if missing else NavigationSessionState.FAILED
-            )
-            self._reason = (
-                "goal_surface_requires_information"
-                if missing else "goal_surface_unavailable"
+            self._transition(
+                (NavigationTransitionAction.WAIT_FOR_INFORMATION
+                 if missing else NavigationTransitionAction.MARK_FAILED),
+                ("goal_surface_requires_information"
+                 if missing else "goal_surface_unavailable"),
             )
             return
         start_node, start_missing = self._surface_for_body(frame)
@@ -1092,13 +1114,11 @@ class NavigationSession:
                 goal_id, goal_revision, goal_state, damage_budget,
             )
             self._snapshot_missing = start_missing
-            self._state = (
-                NavigationSessionState.NEEDS_INFORMATION
-                if start_missing else NavigationSessionState.FAILED
-            )
-            self._reason = (
-                "current_surface_requires_information"
-                if start_missing else "current_surface_unavailable"
+            self._transition(
+                (NavigationTransitionAction.WAIT_FOR_INFORMATION
+                 if start_missing else NavigationTransitionAction.MARK_FAILED),
+                ("current_surface_requires_information"
+                 if start_missing else "current_surface_unavailable"),
             )
             return
         request = self._goal_request(
@@ -1175,14 +1195,16 @@ class NavigationSession:
                 goal_id, goal_revision, goal_state, next_budget,
             )
             self._snapshot_missing = missing
-            self._state = (NavigationSessionState.EXECUTING
-                           if self._executor is not None else
-                           NavigationSessionState.NEEDS_INFORMATION
-                           if missing else NavigationSessionState.FAILED)
-            self._reason = ("goal_revision_waits_for_body_owner"
-                            if self._executor is not None else
-                            "goal_surface_requires_information"
-                            if missing else "goal_surface_unavailable")
+            if self._executor is not None:
+                action = NavigationTransitionAction.BEGIN_EXECUTION
+                reason = "goal_revision_waits_for_body_owner"
+            elif missing:
+                action = NavigationTransitionAction.WAIT_FOR_INFORMATION
+                reason = "goal_surface_requires_information"
+            else:
+                action = NavigationTransitionAction.MARK_FAILED
+                reason = "goal_surface_unavailable"
+            self._transition(action, reason)
             self._request = replace(
                 self._request,
                 sequence=self._request.sequence + 1,
@@ -1193,20 +1215,56 @@ class NavigationSession:
                 damage_budget=next_budget,
             )
             return
+        if self._current_risk_action_has_started():
+            # A submitted damaging action already owns the body's immediate
+            # future.  Planning from the pre-landing pose would either count
+            # that same drop twice or reject the replacement because its
+            # allowance is currently held.  Record the new target, ask the
+            # incumbent to finish safely, then re-anchor and plan from the
+            # observed landing state.
+            sequence = self._request.sequence + 1
+            self._request = replace(
+                self._request,
+                sequence=sequence,
+                request_id=f"{self.session_id}-request-{sequence}",
+                goal=goal_node,
+                goal_id=goal_id,
+                goal_revision=goal_revision,
+                goal_state=goal_state,
+                damage_budget=next_budget,
+            )
+            self._pending_goal = None
+            self._snapshot_missing = ()
+            self._snapshot_builder = None
+            self._planning_snapshot = None
+            self._planning_snapshot_request_id = None
+            self._replacement_failure_reason = None
+            assert self._executor is not None
+            self._executor.cancel()
+            self._restart_after_active_terminal = True
+            self._transition(
+                (NavigationTransitionAction.RESUME_EXECUTION_AFTER_HANDOFF
+                 if self._state is NavigationSessionState.STOPPING else
+                 NavigationTransitionAction.BEGIN_EXECUTION),
+                "goal_revision_waits_for_risk_action_terminal",
+            )
+            return
         start_node, start_missing = self._surface_for_body(self._frame)
         if start_node is None:
             self._pending_goal = (
                 goal_id, goal_revision, goal_state, next_budget,
             )
             self._snapshot_missing = start_missing
-            self._state = (NavigationSessionState.EXECUTING
-                           if self._executor is not None else
-                           NavigationSessionState.NEEDS_INFORMATION
-                           if start_missing else NavigationSessionState.FAILED)
-            self._reason = ("goal_revision_waits_for_body_owner"
-                            if self._executor is not None else
-                            "current_surface_requires_information"
-                            if start_missing else "current_surface_unavailable")
+            if self._executor is not None:
+                action = NavigationTransitionAction.BEGIN_EXECUTION
+                reason = "goal_revision_waits_for_body_owner"
+            elif start_missing:
+                action = NavigationTransitionAction.WAIT_FOR_INFORMATION
+                reason = "current_surface_requires_information"
+            else:
+                action = NavigationTransitionAction.MARK_FAILED
+                reason = "current_surface_unavailable"
+            self._transition(action, reason)
             self._request = replace(
                 self._request,
                 sequence=self._request.sequence + 1,
@@ -1417,6 +1475,18 @@ class NavigationSession:
             )
         return result.status, self._risk_action_id
 
+    def _current_risk_action_has_started(self) -> bool:
+        ledger = self._risk_ledger
+        if ledger is None or self._risk_action_id is None \
+                or self._executor is None:
+            return False
+        record = ledger.action(self._risk_action_id)
+        return record is not None and (
+            record.state is RiskActionState.COMMITTED
+            or (record.state is RiskActionState.RESERVED
+                and bool(record.submitted_sequences))
+        )
+
     def _release_unselected_risk(
         self, proposal: NavigationSessionProposal,
     ) -> None:
@@ -1440,8 +1510,7 @@ class NavigationSession:
             return decision, action_id
         self._risk_failure_reason = f"risk_{status.value}"
         route_control.executor.cancel()
-        self._state = NavigationSessionState.CANCELLING
-        self._reason = self._risk_failure_reason
+        self._transition(NavigationTransitionAction.BEGIN_STOPPING, self._risk_failure_reason)
         # The incumbent still owns the body. Its cancel path must provide the
         # protective input until Runtime verifies that it can be retired.
         return route_control.executor.decide(
@@ -1523,7 +1592,8 @@ class NavigationSession:
     ) -> ActionPreconditionResult | None:
         route = self._active_route
         executor = self._executor
-        if route is None or executor is None:
+        if (route is None or executor is None
+                or self._state is NavigationSessionState.STOPPING):
             return None
         action_index = getattr(executor, "action_index", None)
         if type(action_index) is not int:
@@ -1571,8 +1641,7 @@ class NavigationSession:
         if probe is not None and probe.belongs_to_action(
                 spec.route_id, spec.route_revision, spec.action_index):
             self._snapshot_missing = result.missing_cells
-            self._state = NavigationSessionState.NEEDS_INFORMATION
-            self._reason = result.reason
+            self._transition(NavigationTransitionAction.WAIT_FOR_INFORMATION, result.reason)
             return True
         if probe is not None and probe.owned:
             self._request_probe_stop(StopCause.ROUTE_REPLACED)
@@ -1591,8 +1660,7 @@ class NavigationSession:
             dependencies=spec.dependencies,
         )
         self._snapshot_missing = result.missing_cells
-        self._state = NavigationSessionState.NEEDS_INFORMATION
-        self._reason = result.reason
+        self._transition(NavigationTransitionAction.WAIT_FOR_INFORMATION, result.reason)
         if self._retry_ledger is not None:
             self._retry_ledger.end_wait("information")
         return True
@@ -1601,16 +1669,14 @@ class NavigationSession:
         pending = self._pending_retry
         assert pending is not None
         if not self._clear_active_execution():
-            self._state = NavigationSessionState.CANCELLING
-            self._reason = "route_release_waiting_for_evidence"
+            self._transition(NavigationTransitionAction.BEGIN_STOPPING, 'route_release_waiting_for_evidence')
             return
         self._pending_retry = None
         _, verdict, reason, missing = pending
         if verdict is RetryVerdict.RETRY:
             self._reissue_request_from_current(frame, reason)
         else:
-            self._state = NavigationSessionState.FAILED
-            self._reason = "replan_retry_exhausted"
+            self._transition(NavigationTransitionAction.MARK_FAILED, 'replan_retry_exhausted')
             self._snapshot_missing = missing
 
     def observe(
@@ -1622,10 +1688,14 @@ class NavigationSession:
             raise ContractViolation("navigation observation requires typed current state")
         if self._closed:
             raise ContractViolation("navigation session is closed")
+        support = query_support(frame.body.body_box, frame.world)
+        self._last_support_fraction = (
+            support.support_fraction
+            if support.status is QueryStatus.FEASIBLE else None
+        )
         if self._frame is not None:
             if frame.session != self._frame.session:
-                self._state = NavigationSessionState.FAILED
-                self._reason = "world_session_changed"
+                self._transition(NavigationTransitionAction.MARK_FAILED, 'world_session_changed')
                 self._retire_route()
                 self._frame = frame
                 return
@@ -1733,7 +1803,10 @@ class NavigationSession:
             if self._pending_goal is not None:
                 goal_id, revision, goal_state, damage_budget = self._pending_goal
                 if self._request is None:
-                    self._state = NavigationSessionState.READY
+                    self._transition(
+                        NavigationTransitionAction.RESET_READY,
+                        "pending_goal_restarting",
+                    )
                     self._snapshot_missing = ()
                     self.start_goal(
                         goal_id, revision, goal_state, frame,
@@ -1763,10 +1836,10 @@ class NavigationSession:
                         combined = tuple(sorted(set(missing) | set(start_missing)))
                         self._snapshot_missing = combined
                         if not combined:
-                            self._state = NavigationSessionState.FAILED
-                            self._reason = (
-                                "goal_surface_unavailable"
-                                if goal_node is None else "current_surface_unavailable"
+                            self._transition(
+                                NavigationTransitionAction.MARK_FAILED,
+                                ("goal_surface_unavailable" if goal_node is None
+                                 else "current_surface_unavailable"),
                             )
             elif self._request is not None:
                 self._reissue_request_from_current(
@@ -1836,25 +1909,42 @@ class NavigationSession:
                     route_control = self._supervisor.route
                     if route_control is not None:
                         route_control.executor.cancel()
-                    self._state = terminal
-                    self._reason = terminal_reason or terminal.value
+                    terminal_action = {
+                        NavigationSessionState.COMPLETE:
+                            NavigationTransitionAction.MARK_COMPLETE,
+                        NavigationSessionState.CANCELLED:
+                            NavigationTransitionAction.MARK_CANCELLED,
+                        NavigationSessionState.FAILED:
+                            NavigationTransitionAction.MARK_FAILED,
+                        NavigationSessionState.CLOSED:
+                            NavigationTransitionAction.MARK_CLOSED,
+                    }.get(terminal)
+                    if terminal_action is None:
+                        raise ContractViolation(
+                            "probe terminal state must be terminal"
+                        )
+                    self._transition(
+                        terminal_action,
+                        terminal_reason or terminal.value,
+                    )
                     if terminal is NavigationSessionState.CLOSED:
                         self._finalize_close()
                 elif stop_cause is StopCause.ACQUISITION_TIMED_OUT:
                     route_control = self._supervisor.route
                     if route_control is not None:
                         route_control.executor.cancel()
-                    self._state = NavigationSessionState.FAILED
-                    self._reason = "edge_probe_acquisition_timeout"
+                    self._transition(
+                        NavigationTransitionAction.MARK_FAILED,
+                        "edge_probe_acquisition_timeout",
+                    )
                 else:
                     self._probe_mode_exit_pending = True
                     self._reissue_request_from_current(
                         frame, "edge_probe_stopped_for_replan",
                     )
             else:
-                self._state = NavigationSessionState.CANCELLING
                 self._check_recovery_wait(frame)
-                self._reason = (
+                stopping_reason = (
                     "recovery_unresolved"
                     if (self._recovery_wait_capacity_exhausted or
                         self._recovery_wait_status in {
@@ -1862,14 +1952,17 @@ class NavigationSession:
                             WaitVerdict.EXHAUSTED_CLOCK,
                         }) else "edge_probe_stopping"
                 )
+                self._transition(
+                    NavigationTransitionAction.BEGIN_STOPPING,
+                    stopping_reason,
+                )
             return self._proposal(
                 decision.movement, LookV1(0.0, 0.0), 1, deadline_ns,
                 safety_guard=True,
             )
         if self._probe_mode_exit_pending:
             if frame.body.is_sneaking or frame.body.pose == "crouching":
-                self._state = NavigationSessionState.EXECUTING
-                self._reason = "edge_probe_mode_exit_pending"
+                self._transition(NavigationTransitionAction.BEGIN_EXECUTION, 'edge_probe_mode_exit_pending')
                 return self._proposal(MovementV1(), None, 1, deadline_ns)
             self._probe_mode_exit_pending = False
         if self._state in {
@@ -1883,10 +1976,10 @@ class NavigationSession:
                 and self._edge_probe.positioning_entry):
             movement = self._probe_movement(frame)
             if not self._edge_probe.owned:
-                self._state = NavigationSessionState.FAILED
-                self._reason = (
-                    self._edge_probe.ended_reason
-                    or "landing_edge_probe_ended"
+                self._transition(
+                    NavigationTransitionAction.MARK_FAILED,
+                    (self._edge_probe.ended_reason
+                     or "landing_edge_probe_ended"),
                 )
                 self._edge_probe = None
                 return self._proposal(MovementV1(), None, 1, deadline_ns)
@@ -1902,8 +1995,7 @@ class NavigationSession:
             # when a delayed look command never reached the required pose.
             release_movement = self._probe_movement(frame)
             if self._edge_probe.state is LandingEdgeProbeState.STOPPING:
-                self._state = NavigationSessionState.STOPPING
-                self._reason = "edge_probe_stopping"
+                self._transition(NavigationTransitionAction.BEGIN_STOPPING, 'edge_probe_stopping')
                 return self._proposal(
                     release_movement, LookV1(0.0, 0.0), 1, deadline_ns,
                     safety_guard=True,
@@ -1936,8 +2028,7 @@ class NavigationSession:
                         probe.evidence_sequence_id,
                         probe.dependencies,
                     )
-                self._state = NavigationSessionState.EXECUTING
-                self._reason = "action_acquisition_complete"
+                self._transition(NavigationTransitionAction.BEGIN_EXECUTION, 'action_acquisition_complete')
                 if self._retry_ledger is not None:
                     wait_id = self._edge_probe.acquisition_id
                     if wait_id is not None:
@@ -1954,8 +2045,10 @@ class NavigationSession:
             self._advance_planning(frame, state_anchor, input_ledger)
         if self._active_route is None:
             if self._state is NavigationSessionState.CANCELLING:
-                self._state = NavigationSessionState.CANCELLED
-                self._reason = self._cancel_reason or "cancelled"
+                self._transition(
+                    NavigationTransitionAction.MARK_CANCELLED,
+                    self._cancel_reason or "cancelled",
+                )
             information_look = self._information_look(frame)
             information_movement = MovementV1()
             if conditioned_look_intent_id is not None and self._edge_probe is None:
@@ -1963,12 +2056,15 @@ class NavigationSession:
             if self._edge_probe is not None:
                 information_movement = self._probe_movement(frame)
                 if not self._edge_probe.owned:
-                    self._reason = (
+                    failure_reason = (
                         self._edge_probe.ended_reason
                         or "landing_edge_probe_ended"
                     )
                     self._edge_probe = None
-                    self._state = NavigationSessionState.FAILED
+                    self._transition(
+                        NavigationTransitionAction.MARK_FAILED,
+                        failure_reason,
+                    )
             if self._edge_probe is not None and self._edge_probe.owned:
                 # Probe keys use the observed yaw. A SAFETY look keeps combat
                 # from rotating those keys. To turn for information, hold
@@ -2022,16 +2118,33 @@ class NavigationSession:
                     deadline_ns, safety_guard=True,
                 )
             if precondition.status is ActionPreconditionStatus.NEEDS_INFORMATION:
-                self._state = NavigationSessionState.NEEDS_INFORMATION
-                self._reason = precondition.reason
+                self._transition(NavigationTransitionAction.WAIT_FOR_INFORMATION, precondition.reason)
                 self._snapshot_missing = precondition.missing_cells
                 return self._proposal(
                     MovementV1(), None, 1, deadline_ns,
                     information_look=self._information_look(frame),
                 )
             if precondition.status is ActionPreconditionStatus.REJECTED:
-                self._state = NavigationSessionState.FAILED
-                self._reason = precondition.reason
+                if (self._edge_probe is not None
+                        and self._edge_probe.owned
+                        and self._request_probe_stop(
+                            StopCause.DEPENDENCY_CHANGED,
+                            terminal=NavigationSessionState.FAILED,
+                            terminal_reason=precondition.reason.value,
+                        )):
+                    return self._proposal(
+                        self._probe_movement(frame),
+                        LookV1(0.0, 0.0),
+                        1,
+                        deadline_ns,
+                        safety_guard=True,
+                    )
+                self._risk_failure_reason = precondition.reason.value
+                self._executor.cancel()
+                self._transition(
+                    NavigationTransitionAction.BEGIN_STOPPING,
+                    precondition.reason.value,
+                )
                 return self._proposal(MovementV1(), None, 1, deadline_ns)
         current_action = None
         executor_route = getattr(self._executor, "route", None)
@@ -2059,6 +2172,15 @@ class NavigationSession:
                 PhysicsWorldView(frame.world, JAVA_1_21_RULESET),
                 changed_cells=frame.changed_cells,
                 movement_yaw_radians=movement_yaw_radians,
+                allow_grounded_reprepare=(
+                    not self._supervisor.has_pending_route
+                    and self._state is not NavigationSessionState.CANCELLING
+                    and not self._restart_after_active_terminal
+                    and self._active_route is not None
+                    and self._request is not None
+                    and self._active_route.source_request_id
+                        == self._request.request_id
+                ),
             )
         else:
             decision = self._executor.decide(
@@ -2083,6 +2205,7 @@ class NavigationSession:
                     frame, state_anchor, input_ledger,
                     PhysicsWorldView(frame.world, JAVA_1_21_RULESET),
                     changed_cells=frame.changed_cells,
+                    allow_grounded_reprepare=False,
                 )
             else:
                 incumbent_decision = incumbent.executor.decide(
@@ -2096,8 +2219,10 @@ class NavigationSession:
             self._last_decision = incumbent_decision
             self._close_finished_risk(frame, incumbent_decision)
             if self._risk_failure_reason is None:
-                self._state = NavigationSessionState.EXECUTING
-                self._reason = "executing_safe_prefix_during_handoff"
+                self._transition(
+                    NavigationTransitionAction.BEGIN_EXECUTION,
+                    "executing_safe_prefix_during_handoff",
+                )
             return self._proposal(
                 incumbent_decision.movement if incumbent_decision.submit_input
                 else MovementV1(), incumbent_decision.look,
@@ -2132,11 +2257,19 @@ class NavigationSession:
                 ActionRouteState.CANCELLED, ActionRouteState.COMPLETE,
             }:
                 if self._clear_active_execution():
-                    self._state = (NavigationSessionState.FAILED
-                                   if self._risk_failure_reason is not None
-                                   else NavigationSessionState.CANCELLED)
-                    self._reason = (self._risk_failure_reason or
-                                    self._cancel_reason or decision.reason_code)
+                    if self._close_requested:
+                        self._transition(
+                            NavigationTransitionAction.MARK_CLOSED,
+                            "closed",
+                        )
+                    else:
+                        self._transition(
+                            (NavigationTransitionAction.MARK_FAILED
+                             if self._risk_failure_reason is not None else
+                             NavigationTransitionAction.MARK_CANCELLED),
+                            (self._risk_failure_reason or self._cancel_reason
+                             or decision.reason_code),
+                        )
                     self._risk_failure_reason = None
                 else:
                     self._reason = "route_release_waiting_for_evidence"
@@ -2145,21 +2278,26 @@ class NavigationSession:
                 ActionRouteState.UNSUPPORTED, ActionRouteState.INPUT_LOST,
             }:
                 if self._clear_active_execution():
-                    self._state = NavigationSessionState.FAILED
-                    self._reason = decision.reason_code
+                    self._transition(
+                        (NavigationTransitionAction.MARK_CLOSED
+                         if self._close_requested else
+                         NavigationTransitionAction.MARK_FAILED),
+                        ("closed" if self._close_requested else
+                         decision.reason_code),
+                    )
                 else:
                     self._reason = "route_release_waiting_for_evidence"
             else:
-                self._state = NavigationSessionState.CANCELLING
-                self._reason = decision.reason_code
+                self._transition(NavigationTransitionAction.BEGIN_STOPPING, decision.reason_code)
         elif decision.state is ActionRouteState.INPUT_LOST:
             if self._clear_active_execution():
-                self._state = NavigationSessionState.FAILED
-                self._reason = decision.reason_code
+                self._transition(NavigationTransitionAction.MARK_FAILED, decision.reason_code)
                 self._snapshot_missing = decision.missing_cells
             else:
-                self._state = NavigationSessionState.CANCELLING
-                self._reason = "route_release_waiting_for_evidence"
+                self._transition(
+                    NavigationTransitionAction.BEGIN_STOPPING,
+                    "route_release_waiting_for_evidence",
+                )
         elif (self._restart_after_active_terminal
                 and decision.state in terminal_decisions):
             if self._clear_active_execution():
@@ -2168,33 +2306,49 @@ class NavigationSession:
                     frame, "route_handoff_reanchored",
                 )
             else:
-                self._state = NavigationSessionState.CANCELLING
-                self._reason = "route_release_waiting_for_evidence"
+                self._transition(
+                    NavigationTransitionAction.BEGIN_STOPPING,
+                    "route_release_waiting_for_evidence",
+                )
         elif active_request_id != current_request_id:
             if decision.state in terminal_decisions:
                 if self._clear_active_execution():
-                    self._state = (
-                        NavigationSessionState.SNAPSHOTTING
-                        if self._snapshot_builder is not None
-                        else NavigationSessionState.PLANNING
-                    )
-                    self._reason = "replacement_route_pending"
+                    if self._replacement_failure_reason is not None:
+                        replacement_failure = self._replacement_failure_reason
+                        self._replacement_failure_reason = None
+                        self._transition(
+                            NavigationTransitionAction.MARK_FAILED,
+                            replacement_failure,
+                        )
+                    else:
+                        self._transition(
+                            NavigationTransitionAction.BEGIN_PLANNING,
+                            "replacement_route_pending",
+                        )
                 else:
-                    self._state = NavigationSessionState.CANCELLING
-                    self._reason = "route_release_waiting_for_evidence"
+                    self._transition(
+                        NavigationTransitionAction.BEGIN_STOPPING,
+                        "route_release_waiting_for_evidence",
+                    )
             else:
-                self._state = NavigationSessionState.EXECUTING
-                self._reason = "executing_safe_prefix_during_replan"
+                self._transition(
+                    NavigationTransitionAction.BEGIN_EXECUTION,
+                    "executing_safe_prefix_during_replan",
+                )
                 self._snapshot_missing = decision.missing_cells
         elif (self._interaction_approach_pending
                 and decision.state is ActionRouteState.COMPLETE):
             if self._clear_active_execution():
                 self._interaction_approach_pending = False
-                self._state = NavigationSessionState.REQUIRES_INTERACTION
-                self._reason = "interaction_work_position_reached"
+                self._transition(
+                    NavigationTransitionAction.REQUIRE_INTERACTION,
+                    "interaction_work_position_reached",
+                )
             else:
-                self._state = NavigationSessionState.CANCELLING
-                self._reason = "route_release_waiting_for_evidence"
+                self._transition(
+                    NavigationTransitionAction.BEGIN_STOPPING,
+                    "route_release_waiting_for_evidence",
+                )
         elif decision.state is ActionRouteState.NEEDS_REPLAN:
             assert self._active_route is not None and self._retry_ledger is not None
             attempt_id = (
@@ -2214,10 +2368,24 @@ class NavigationSession:
                     decision.reason_code, decision.missing_cells,
                 )
             if self._pending_retry is None:
-                self._state = NavigationSessionState.FAILED
-                self._reason = "replan_retry_event_already_consumed"
+                self._transition(
+                    NavigationTransitionAction.MARK_FAILED,
+                    "replan_retry_event_already_consumed",
+                )
             else:
                 self._resolve_pending_retry(frame)
+        elif (self._edge_probe is not None and self._edge_probe.owned
+                and decision.state in {
+                    ActionRouteState.FAILED,
+                    ActionRouteState.BLOCKED,
+                    ActionRouteState.UNSUPPORTED,
+                }):
+            if not self._request_probe_stop(
+                StopCause.MOTION_UNSOLVABLE,
+                terminal=NavigationSessionState.FAILED,
+                terminal_reason=decision.reason_code,
+            ):
+                self._apply_decision_state(decision)
         else:
             self._apply_decision_state(decision)
         if (self._state is NavigationSessionState.CANCELLING
@@ -2241,6 +2409,21 @@ class NavigationSession:
                 and self._edge_probe is None):
             self._finalize_close()
         movement = decision.movement if decision.submit_input else MovementV1()
+        recovery_override = False
+        if (self._state is NavigationSessionState.STOPPING
+                and self._executor is not None
+                and (self._recovery_wait_capacity_exhausted
+                     or self._recovery_wait_status in {
+                         WaitVerdict.EXHAUSTED_TICKS,
+                         WaitVerdict.EXHAUSTED_CLOCK,
+                     })):
+            recovery_movement = verified_ground_recovery_movement(
+                frame,
+                None if state_anchor is None else state_anchor.physics_state,
+            )
+            if recovery_movement is not None:
+                movement = recovery_movement
+                recovery_override = True
         if self._edge_probe is not None:
             if (decision.submit_input
                     and decision.verified_command_index is not None):
@@ -2255,16 +2438,17 @@ class NavigationSession:
             (decision.look or LookV1(0.0, 0.0))
             if self._edge_probe is not None else decision.look,
             decision.input_lease_ticks,
-            deadline_ns, route_decision=decision,
+            deadline_ns,
+            route_decision=None if recovery_override else decision,
             conditioned_look_intent_id=(
                 conditioned_look_intent_id
                 if conditioned_ordinary_walk else None
             ),
-            safety_guard=self._edge_probe is not None,
+            safety_guard=self._edge_probe is not None or recovery_override,
             risk_action_id=risk_action_id,
             retain_body_input=(
-                decision.state is ActionRouteState.INPUT_LOST
-                and self._state is NavigationSessionState.CANCELLING
+                self._state is NavigationSessionState.STOPPING
+                and self._executor is not None
             ),
         )
 
@@ -2300,8 +2484,7 @@ class NavigationSession:
                 self._risk_submission_capacity_exhausted = True
                 self._risk_failure_reason = "risk_submission_capacity_exhausted"
                 route_control.executor.cancel()
-                self._state = NavigationSessionState.CANCELLING
-                self._reason = self._risk_failure_reason
+                self._transition(NavigationTransitionAction.BEGIN_STOPPING, self._risk_failure_reason)
         if (self._supervisor.has_pending_route
                 and self._supervisor.route is route_control
                 and self._frame is not None
@@ -2376,14 +2559,18 @@ class NavigationSession:
             return
         if self._executor is not None:
             self._executor.cancel()
-            self._state = NavigationSessionState.CANCELLING
             self._cancel_reason = reason.strip()
-            self._reason = "cancellation_requested"
+            self._transition(
+                NavigationTransitionAction.BEGIN_STOPPING,
+                "cancellation_requested",
+            )
             self._snapshot_builder = None
             return
-        self._state = NavigationSessionState.CANCELLED
         self._cancel_reason = reason.strip()
-        self._reason = self._cancel_reason
+        self._transition(
+            NavigationTransitionAction.MARK_CANCELLED,
+            self._cancel_reason,
+        )
         self._required_interaction = None
         self._interaction_approach_pending = False
 
@@ -2392,6 +2579,17 @@ class NavigationSession:
             return
         self._lifecycle.record(NavigationSessionEvent.CLOSE)
         self._close_requested = True
+        if self._state in {
+            NavigationSessionState.COMPLETE,
+            NavigationSessionState.CANCELLED,
+            NavigationSessionState.FAILED,
+            NavigationSessionState.CLOSED,
+        }:
+            # Task outcome and resource lifetime are separate.  Once the
+            # task has a terminal outcome, closing workers must not rewrite
+            # that outcome or re-enter body-control states.
+            self._finalize_close()
+            return
         if self._request_probe_stop(
             StopCause.CLOSED, terminal=NavigationSessionState.CLOSED,
             terminal_reason="closed",
@@ -2399,10 +2597,40 @@ class NavigationSession:
             return
         if self._executor is not None:
             self._executor.cancel()
-            self._state = NavigationSessionState.CANCELLING
-            self._reason = "closing_after_body_control"
+            self._transition(NavigationTransitionAction.BEGIN_STOPPING, 'closing_after_body_control')
             return
         self._finalize_close()
+
+    def spawn_successor(self, session_id: str) -> "NavigationSession":
+        """Move reusable workers into a fresh, independent goal lifecycle."""
+        require_identifier(session_id, "successor navigation session id")
+        if self._closed:
+            raise ContractViolation("closed navigation session has no successor")
+        if not self.report.terminal or self._source is not None:
+            raise ContractViolation(
+                "navigation successor requires a released terminal session"
+            )
+        successor = NavigationSession(
+            session_id,
+            self.profiles,
+            planner_worker=self._planner,
+            owns_planner_worker=self._owns_planner_worker,
+            motion_worker=self._motion_worker,
+            observation_adapter=self._adapter,
+            route_admitter=self._admitter,
+            clock_ns=self._clock,
+            snapshot_cells_per_step=self._snapshot_cells_per_step,
+            planning_margin_cells=self._planning_margin,
+            bridge_policy=self._bridge_policy,
+            retry_ledger=self._retry_ledger,
+            risk_ledger=self._risk_ledger,
+        )
+        successor._owns_motion_worker = self._owns_motion_worker
+        successor._bridge_remaining = self._bridge_remaining
+        self._owns_planner_worker = False
+        self._owns_motion_worker = False
+        self._finalize_close()
+        return successor
 
     def _finalize_close(self) -> None:
         if self._closed:
@@ -2412,8 +2640,15 @@ class NavigationSession:
             self._planner.close()
         if self._motion_worker is not None and self._owns_motion_worker:
             self._motion_worker.close()
-        self._state = NavigationSessionState.CLOSED
-        self._reason = "closed"
+        # COMPLETE/CANCELLED/FAILED describe the task result and remain
+        # immutable after they are reached.  ``_closed`` separately records
+        # that workers and input resources have been released.
+        if self._state not in {
+            NavigationSessionState.COMPLETE,
+            NavigationSessionState.CANCELLED,
+            NavigationSessionState.FAILED,
+        }:
+            self._transition(NavigationTransitionAction.MARK_CLOSED, 'closed')
 
     def _replace_request(
         self,
@@ -2433,6 +2668,7 @@ class NavigationSession:
             return
         self._local_goal_request_id = None
         self._local_input_floor = None
+        self._replacement_failure_reason = None
         # Replacing a planning request never revokes an active body's owner.
         # The admitted-route handoff below decides when that owner is safe to
         # replace.  Callers may still state the preservation intent explicitly
@@ -2458,8 +2694,22 @@ class NavigationSession:
         self._snapshot_builder = KnownMapSnapshotBuilder(
             frame.world, self._bounds(request),
         )
-        self._state = NavigationSessionState.SNAPSHOTTING
-        self._reason = reason
+        planning_action = (
+            NavigationTransitionAction.REPLAN_AFTER_HANDOFF
+            if self._state is NavigationSessionState.STOPPING else
+            NavigationTransitionAction.BEGIN_PLANNING
+        )
+        self._transition(planning_action, reason)
+
+    def _fail_planning_or_preserve_incumbent(self, reason: str) -> None:
+        """Keep an older body owner until its safe terminal is observed."""
+        current = self._request
+        active = self._active_route
+        if (current is not None and active is not None
+                and active.source_request_id != current.request_id):
+            self._replacement_failure_reason = reason
+            return
+        self._transition(NavigationTransitionAction.MARK_FAILED, reason)
 
     def _accept_goal_request(
         self, request: SurfacePlanningRequest, frame: NavigationFrame,
@@ -2485,8 +2735,7 @@ class NavigationSession:
         self._snapshot_missing = ()
         self._required_interaction = None
         self._interaction_approach_pending = False
-        self._state = NavigationSessionState.EXECUTING
-        self._reason = "same_support_local_goal"
+        self._transition(NavigationTransitionAction.BEGIN_EXECUTION, 'same_support_local_goal')
         if self._executor is not None:
             self._executor.cancel()
 
@@ -2502,13 +2751,14 @@ class NavigationSession:
             frame, goal, self._task_damage_budget.risk_policy_id,
         )
         if observed.status is ObservedGoalStatus.NEEDS_INFORMATION:
-            self._state = NavigationSessionState.NEEDS_INFORMATION
-            self._reason = "goal_support_requires_information"
+            self._transition(
+                NavigationTransitionAction.WAIT_FOR_INFORMATION,
+                "goal_support_requires_information",
+            )
             self._snapshot_missing = observed.missing_cells
             return
         if observed.status is ObservedGoalStatus.RESOURCE_UNOBSERVABLE:
-            self._state = NavigationSessionState.FAILED
-            self._reason = "goal_resource_unobservable"
+            self._transition(NavigationTransitionAction.MARK_FAILED, 'goal_resource_unobservable')
             return
         if self._local_input_floor is None:
             self._local_input_floor = max(
@@ -2520,31 +2770,28 @@ class NavigationSession:
             previous_sequence_floor=self._local_input_floor,
         )
         if responsibility is InputResponsibilityStatus.AMBIGUOUS:
-            self._state = NavigationSessionState.FAILED
-            self._reason = "previous_input_application_ambiguous"
+            self._transition(NavigationTransitionAction.MARK_FAILED, 'previous_input_application_ambiguous')
             return
         if responsibility is InputResponsibilityStatus.IN_FLIGHT:
-            self._state = NavigationSessionState.EXECUTING
-            self._reason = "waiting_for_previous_input"
+            self._transition(NavigationTransitionAction.BEGIN_EXECUTION, 'waiting_for_previous_input')
             return
         if observed.status is ObservedGoalStatus.SATISFIED:
-            self._state = NavigationSessionState.COMPLETE
-            self._reason = "goal_state_satisfied"
+            self._transition(NavigationTransitionAction.MARK_COMPLETE, 'goal_state_satisfied')
             return
         if (MovementMode.WALK not in goal.allowed_modes
                 or "standing" not in goal.allowed_poses):
-            self._state = NavigationSessionState.FAILED
-            self._reason = "same_support_local_mode_unsupported"
+            self._transition(NavigationTransitionAction.MARK_FAILED, 'same_support_local_mode_unsupported')
             return
         if (frame.body.is_on_ground
                 and (frame.body.is_sneaking or frame.body.pose == "crouching")):
             self._local_mode_wait_frames += 1
             if self._local_mode_wait_frames > 8:
-                self._state = NavigationSessionState.FAILED
-                self._reason = "same_support_mode_exit_timeout"
+                self._transition(NavigationTransitionAction.MARK_FAILED, 'same_support_mode_exit_timeout')
             else:
-                self._state = NavigationSessionState.EXECUTING
-                self._reason = "same_support_mode_exit_pending"
+                self._transition(
+                    NavigationTransitionAction.BEGIN_EXECUTION,
+                    "same_support_mode_exit_pending",
+                )
             return
         self._local_mode_wait_frames = 0
         center = (
@@ -2561,16 +2808,17 @@ class NavigationSession:
         dependencies = tuple(sorted(set(movement.dependencies) | set(landing.dependencies)))
         if (movement.status is QueryStatus.NEEDS_INFORMATION
                 or landing.status is QueryStatus.NEEDS_INFORMATION):
-            self._state = NavigationSessionState.NEEDS_INFORMATION
-            self._reason = "same_support_local_requires_information"
+            self._transition(
+                NavigationTransitionAction.WAIT_FOR_INFORMATION,
+                "same_support_local_requires_information",
+            )
             self._snapshot_missing = tuple(sorted(
                 set(movement.missing_cells) | set(landing.missing_cells)
             ))
             return
         if (movement.status is not QueryStatus.FEASIBLE
                 or landing.status is not QueryStatus.FEASIBLE):
-            self._state = NavigationSessionState.FAILED
-            self._reason = "same_support_local_path_unavailable"
+            self._transition(NavigationTransitionAction.MARK_FAILED, 'same_support_local_path_unavailable')
             return
         route_id = f"{request.request_id}-local"
         fixed = FixedRoute(route_id, (
@@ -2601,8 +2849,7 @@ class NavigationSession:
             input_ledger, state_anchor,
         ):
             raise ContractViolation("local route cannot replace active body owner")
-        self._state = NavigationSessionState.EXECUTING
-        self._reason = "same_support_local_route_started"
+        self._transition(NavigationTransitionAction.BEGIN_EXECUTION, 'same_support_local_route_started')
         self._snapshot_missing = ()
     def _clear_active_execution(self) -> bool:
         if self._frame is None and self._supervisor.route is not None:
@@ -2640,8 +2887,7 @@ class NavigationSession:
         if terminal is not None:
             self._pending_probe_terminal = terminal
             self._pending_probe_terminal_reason = terminal_reason
-        self._state = NavigationSessionState.CANCELLING
-        self._reason = "edge_probe_stopping"
+        self._transition(NavigationTransitionAction.BEGIN_STOPPING, 'edge_probe_stopping')
         return True
 
     def _check_recovery_wait(self, frame: NavigationFrame) -> None:
@@ -2711,8 +2957,7 @@ class NavigationSession:
         self._executor.cancel()
         self._restart_after_active_terminal = True
         self._snapshot_missing = missing
-        self._state = NavigationSessionState.EXECUTING
-        self._reason = reason
+        self._transition(NavigationTransitionAction.BEGIN_EXECUTION, reason)
         return True
 
     def _reissue_request_from_current(
@@ -2733,13 +2978,11 @@ class NavigationSession:
                     return
                 self._retire_route()
                 self._snapshot_missing = missing
-                self._state = (
-                    NavigationSessionState.NEEDS_INFORMATION
-                    if missing else NavigationSessionState.FAILED
-                )
-                self._reason = (
-                    "current_surface_requires_information"
-                    if missing else "current_surface_unavailable"
+                self._transition(
+                    (NavigationTransitionAction.WAIT_FOR_INFORMATION
+                     if missing else NavigationTransitionAction.MARK_FAILED),
+                    ("current_surface_requires_information"
+                     if missing else "current_surface_unavailable"),
                 )
                 return
             request = replace(
@@ -2788,12 +3031,13 @@ class NavigationSession:
                 self._snapshot_builder = KnownMapSnapshotBuilder(
                     frame.world, self._bounds(request),
                 )
-                self._state = NavigationSessionState.SNAPSHOTTING
-                self._reason = "snapshot_restarted_after_world_change"
+                self._transition(
+                    NavigationTransitionAction.BEGIN_PLANNING,
+                    "snapshot_restarted_after_world_change",
+                )
                 return
             if progress.status is SnapshotBuildStatus.BUILDING:
-                self._state = NavigationSessionState.SNAPSHOTTING
-                self._reason = "snapshot_building"
+                self._transition(NavigationTransitionAction.BEGIN_PLANNING, 'snapshot_building')
                 return
             assert progress.snapshot is not None
             # Unknown cells remain blocked inside the detached snapshot.  The
@@ -2834,14 +3078,14 @@ class NavigationSession:
                     self.profiles.jump_up,
                 )
             self._snapshot_builder = None
-            self._state = NavigationSessionState.PLANNING
-            self._reason = "planning_submitted"
+            self._transition(NavigationTransitionAction.BEGIN_PLANNING, 'planning_submitted')
 
         candidate = self._planner.poll_latest()
         if candidate is None:
             if hasattr(self._planner, "is_alive") and not self._planner.is_alive():
-                self._state = NavigationSessionState.FAILED
-                self._reason = "planner_worker_died"
+                self._fail_planning_or_preserve_incumbent(
+                    "planner_worker_died",
+                )
             return
         self._lifecycle.record(NavigationSessionEvent.PLANNER_RESULT)
         current = self._request
@@ -2869,13 +3113,16 @@ class NavigationSession:
                         current, frame, "planning_information_updated",
                     )
                 else:
-                    self._state = NavigationSessionState.NEEDS_INFORMATION
-                    self._reason = "no_known_route_requires_information"
+                    self._transition(
+                        NavigationTransitionAction.WAIT_FOR_INFORMATION,
+                        "no_known_route_requires_information",
+                    )
                 return
         if no_known_route or no_route_within_scope:
             if self._interaction_approach_pending:
-                self._state = NavigationSessionState.FAILED
-                self._reason = "interaction_work_route_unavailable"
+                self._fail_planning_or_preserve_incumbent(
+                    "interaction_work_route_unavailable",
+                )
                 return
             if (self._bridge_policy is not None
                     and self._bridge_remaining > 0
@@ -2922,16 +3169,19 @@ class NavigationSession:
                             ground_mode_profile=planning_mode,
                         )
                         self._interaction_approach_pending = True
-                        self._state = NavigationSessionState.PLANNING
-                        self._reason = "interaction_work_route_submitted"
+                        self._transition(
+                            NavigationTransitionAction.BEGIN_PLANNING,
+                            "interaction_work_route_submitted",
+                        )
                         return
-                    self._state = NavigationSessionState.REQUIRES_INTERACTION
-                    self._reason = "world_interaction_required"
+                    self._transition(
+                        NavigationTransitionAction.REQUIRE_INTERACTION,
+                        "world_interaction_required",
+                    )
                     return
-            self._state = NavigationSessionState.FAILED
-            self._reason = (
+            self._fail_planning_or_preserve_incumbent(
                 "no_known_route_without_missing_cells"
-                if no_known_route else "no_route_within_complete_scope"
+                if no_known_route else "no_route_within_complete_scope",
             )
             return
         complete = (
@@ -2940,8 +3190,9 @@ class NavigationSession:
             else status is PlanningStatus.COMPLETE
         )
         if not complete:
-            self._state = NavigationSessionState.FAILED
-            self._reason = f"planning_{status.value}"
+            self._fail_planning_or_preserve_incumbent(
+                f"planning_{status.value}",
+            )
             return
         if type(candidate) is SurfaceRouteCandidate:
             admitted = self._admitter.admit_surface(
@@ -2963,8 +3214,7 @@ class NavigationSession:
         if admitted.status is not AdmissionStatus.ACCEPTED or admitted.route is None:
             if admitted.reason is AdmissionReason.LANDING_VISUAL_EVIDENCE_MISSING:
                 self._snapshot_missing = admitted.missing_cells
-                self._state = NavigationSessionState.NEEDS_INFORMATION
-                self._reason = admitted.reason
+                self._transition(NavigationTransitionAction.WAIT_FOR_INFORMATION, admitted.reason)
                 if len(admitted.missing_cells) == 1:
                     landing_cell = admitted.missing_cells[0]
                     if (self._edge_probe is None
@@ -2989,15 +3239,12 @@ class NavigationSession:
                 AdmissionReason.WORLD_SESSION_CHANGED,
                 AdmissionReason.ROUTE_DEPENDENCIES_CHANGED,
             }:
-                self._state = (
-                    NavigationSessionState.SNAPSHOTTING
-                    if self._snapshot_builder is not None
-                    else NavigationSessionState.PLANNING
+                self._transition(
+                    NavigationTransitionAction.BEGIN_PLANNING,
+                    admitted.reason,
                 )
-                self._reason = admitted.reason
                 return
-            self._state = NavigationSessionState.FAILED
-            self._reason = admitted.reason
+            self._fail_planning_or_preserve_incumbent(str(admitted.reason))
             return
         current_damage_budget = self._remaining_damage_budget()
         if (self._route_expected_damage_points(admitted.route)
@@ -3013,8 +3260,10 @@ class NavigationSession:
             if self._executor.requires_safe_handoff(frame):
                 self._executor.cancel()
                 self._restart_after_active_terminal = True
-                self._state = NavigationSessionState.EXECUTING
-                self._reason = "route_handoff_waiting_for_safe_terminal"
+                self._transition(
+                    NavigationTransitionAction.BEGIN_EXECUTION,
+                    "route_handoff_waiting_for_safe_terminal",
+                )
                 return
         if self._edge_probe is not None and not self._edge_probe.ready:
             self._edge_probe.begin_handoff("route_admitted")
@@ -3049,28 +3298,38 @@ class NavigationSession:
             RouteControl(admitted.route, executor, coordinator), frame,
             input_ledger, state_anchor,
         ):
-            self._state = NavigationSessionState.EXECUTING
-            self._reason = "route_handoff_waiting_for_safe_terminal"
+            self._transition(
+                NavigationTransitionAction.BEGIN_EXECUTION,
+                "route_handoff_waiting_for_safe_terminal",
+            )
             return
         self._executor_reported_damage_points = 0.0
         self._planning_changes.clear()
         self._snapshot_missing = ()
-        self._state = NavigationSessionState.EXECUTING
-        self._reason = "route_admitted"
+        self._transition(NavigationTransitionAction.BEGIN_EXECUTION, 'route_admitted')
 
     def _apply_decision_state(self, decision: ActionRouteDecision) -> None:
         mapping = {
-            ActionRouteState.COMPLETE: NavigationSessionState.COMPLETE,
-            ActionRouteState.CANCELLED: NavigationSessionState.CANCELLED,
-            ActionRouteState.NEEDS_INFORMATION: NavigationSessionState.NEEDS_INFORMATION,
-            ActionRouteState.FAILED: NavigationSessionState.FAILED,
-            ActionRouteState.BLOCKED: NavigationSessionState.FAILED,
-            ActionRouteState.UNSUPPORTED: NavigationSessionState.FAILED,
-            ActionRouteState.INPUT_LOST: NavigationSessionState.FAILED,
-            ActionRouteState.NEEDS_REPLAN: NavigationSessionState.PLANNING,
+            ActionRouteState.COMPLETE:
+                NavigationTransitionAction.MARK_COMPLETE,
+            ActionRouteState.CANCELLED:
+                NavigationTransitionAction.MARK_CANCELLED,
+            ActionRouteState.NEEDS_INFORMATION:
+                NavigationTransitionAction.WAIT_FOR_INFORMATION,
+            ActionRouteState.FAILED: NavigationTransitionAction.MARK_FAILED,
+            ActionRouteState.BLOCKED: NavigationTransitionAction.MARK_FAILED,
+            ActionRouteState.UNSUPPORTED: NavigationTransitionAction.MARK_FAILED,
+            ActionRouteState.INPUT_LOST: NavigationTransitionAction.MARK_FAILED,
+            ActionRouteState.NEEDS_REPLAN:
+                NavigationTransitionAction.BEGIN_PLANNING,
         }
-        self._state = mapping.get(decision.state, NavigationSessionState.EXECUTING)
-        self._reason = decision.reason_code
+        self._transition(
+            mapping.get(
+                decision.state,
+                NavigationTransitionAction.BEGIN_EXECUTION,
+            ),
+            decision.reason_code,
+        )
         self._snapshot_missing = decision.missing_cells
 
     def _proposal(
@@ -3310,8 +3569,7 @@ class NavigationSession:
                         StopCause.INFORMATION_TIMED_OUT,
                         terminal=NavigationSessionState.FAILED,
                         terminal_reason=failure):
-                    self._state = NavigationSessionState.FAILED
-                    self._reason = failure
+                    self._transition(NavigationTransitionAction.MARK_FAILED, failure)
         return information_look
 
     def _session_decision_event(

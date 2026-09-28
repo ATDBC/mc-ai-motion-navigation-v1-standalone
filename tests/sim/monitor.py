@@ -57,6 +57,8 @@ class TickEvidence:
     retry_approved_round: int | None = None
     retry_approved_total: int | None = None
     retry_approved_cause_counts: tuple[tuple[str, int], ...] = ()
+    support_fraction: float | None = None
+    illegal_transition_count: int = 0
 
 
 class InvariantMonitor:
@@ -80,6 +82,8 @@ class InvariantMonitor:
         self._last_retry_total = 0
         self._last_progress_version = 0
         self._last_retry_attempt_id: str | None = None
+        self._last_source_bound: bool | None = None
+        self._terminal_owned_ticks = 0
 
     def _record(self, tick: int, code: str, detail: str) -> None:
         if not any(item[1] == code for item in self.violations):
@@ -163,12 +167,34 @@ class InvariantMonitor:
             self._best_action_index = e.action_index
             self._retries_without_progress.clear()
         self._last_position = e.position
-        unresolved_recovery = (
-            e.state == "stopping" and e.reason == "recovery_unresolved"
-        )
-        if ((e.wait_frames > 40 and not terminal and not unresolved_recovery)
-                or (self._still_ticks >= 100 and not unresolved_recovery)):
+        if ((e.wait_frames > 40 and not terminal)
+                or self._still_ticks >= 100):
             self._record(e.tick, "I4", f"unbounded wait in {e.state}/{e.reason}")
+        if terminal and (e.source_bound or owners):
+            self._terminal_owned_ticks += 1
+            if self._terminal_owned_ticks > 20:
+                self._record(
+                    e.tick, "I10",
+                    "terminal navigation retained its input source or body owner",
+                )
+        else:
+            self._terminal_owned_ticks = 0
+        if self._last_source_bound is True and not e.source_bound:
+            if (not e.on_ground or e.support_fraction is None
+                    or e.support_fraction <= 0.0):
+                self._record(
+                    e.tick, "I11",
+                    "navigation released input without verified stable support",
+                )
+        self._last_source_bound = e.source_bound
+        active_risk_actions = sum(
+            action.state in {RiskActionState.RESERVED, RiskActionState.COMMITTED}
+            for action in e.risk_actions
+        )
+        if active_risk_actions > 64:
+            self._record(e.tick, "I12", "active risk record capacity exceeded")
+        if e.illegal_transition_count:
+            self._record(e.tick, "I13", "navigation attempted an illegal transition")
         if e.retry_total_failures is not None and e.retry_round_failures is not None:
             if (e.retry_approved_round is not None
                     and e.retry_approved_total is not None

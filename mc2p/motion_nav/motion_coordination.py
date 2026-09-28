@@ -11,7 +11,7 @@ from mc2p.motion_nav.action_route import (
     ControlledDropSegment, JumpGapSegment, JumpUpSegment, WalkSegment,
 )
 from mc2p.motion_nav.action_route_executor import (
-    ActionRouteDecision, ActionRouteExecutor,
+    ActionRouteDecision, ActionRouteExecutor, ActionRouteState,
 )
 from mc2p.motion_nav.motion_candidate import (
     AdmittedMotionCandidate, MotionCandidateStatus,
@@ -38,6 +38,10 @@ from mc2p.motion_nav.physics_1_21 import step
 from mc2p.motion_nav.physics_types import CalculationStatus, JAVA_1_21_RULESET
 from mc2p.motion_nav.route_admission import ActiveRoute, RouteAdmitter
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
+from mc2p.motion_nav.safe_ground_control import (
+    verified_ground_recovery_movement, verified_ground_rollout,
+    verified_ground_target_movement,
+)
 from mc2p.motion_nav.world_model import BlockPos
 
 
@@ -450,7 +454,12 @@ class MotionRouteCoordinator:
             if self._pending_action_index is not None
             else self.executor.action_index
         )
-        preparation_anchor = self._pending_preparation_anchor or anchor
+        preparation_anchor = (
+            self._pending_preparation_anchor
+            if action_index > self.executor.action_index
+            and self._pending_preparation_anchor is not None
+            else anchor
+        )
         self._pending_connection = None
         self._pending_action_index = None
         self._pending_submitted_tick = None
@@ -690,12 +699,14 @@ class MotionRouteCoordinator:
             ledger: InputApplicationLedger, world: PhysicsWorldView, *,
             changed_cells: tuple[BlockPos, ...],
             input_confirmed: bool = True,
-            movement_yaw_radians: float | None = None) -> ActionRouteDecision:
+            movement_yaw_radians: float | None = None,
+            allow_grounded_reprepare: bool = True) -> ActionRouteDecision:
         if (type(frame) is not NavigationFrame
                 or type(anchor) is not StateAnchor
                 or type(ledger) is not InputApplicationLedger
                 or type(world) is not PhysicsWorldView
-                or type(changed_cells) is not tuple):
+                or type(changed_cells) is not tuple
+                or type(allow_grounded_reprepare) is not bool):
             raise ContractViolation("motion route decision requires current typed state")
         installed = False
         worker_available = True
@@ -721,11 +732,140 @@ class MotionRouteCoordinator:
             installed = self._accept_result(
                 result, anchor, world, changed_cells,
             ) or installed
+        entry_ready = self.executor.current_verified_motion_can_start(anchor)
+        if entry_ready is False:
+            attempt_id = (
+                f"{self._connection_id(self.executor.action_index)}:"
+                f"entry-reanchor:{self._candidate_revision}"
+            )
+            registration = self.retry_ledger.record_failure(
+                attempt_id, RetryCause.EXECUTION,
+            )
+            self.last_failure_attempt_id = attempt_id
+            self.last_failure_reason = "verified_entry_changed_before_submission"
+            if registration.verdict is not RetryVerdict.RETRY:
+                self.executor.cancel()
+            else:
+                self.executor.discard_unstarted_verified_motion()
+                self._submit_current(anchor, world)
         decision = self.executor.decide(
             frame, input_confirmed=input_confirmed,
             state_anchor=anchor, input_ledger=ledger,
             movement_yaw_radians=movement_yaw_radians,
         )
+        if (allow_grounded_reprepare
+                and decision.state is ActionRouteState.INPUT_LOST
+                and frame.body.is_on_ground):
+            attempt_id = (
+                f"{self._connection_id(self.executor.action_index)}:"
+                f"grounded-input-reanchor:{self._candidate_revision}"
+            )
+            registration = self.retry_ledger.record_failure(
+                attempt_id, RetryCause.EXECUTION,
+            )
+            self.last_failure_attempt_id = attempt_id
+            self.last_failure_reason = decision.reason_code
+            if registration.verdict is RetryVerdict.RETRY:
+                entry_state = self.executor.active_verified_entry_state()
+                recovery_movement = (
+                    None if entry_state is None else
+                    verified_ground_target_movement(
+                        frame, anchor.physics_state, entry_state.position,
+                    )
+                )
+                if recovery_movement is None and entry_state is None:
+                    recovery_movement = verified_ground_recovery_movement(
+                        frame, anchor.physics_state,
+                    )
+                if recovery_movement is not None:
+                    return replace(
+                        decision,
+                        state=ActionRouteState.RUNNING,
+                        movement=recovery_movement,
+                        look=None,
+                        input_lease_ticks=1,
+                        reason_code="recovering_grounded_verified_entry",
+                        submit_input=True,
+                        verified_command_index=None,
+                        expected_movement_tick=None,
+                        latest_movement_tick=None,
+                        requires_verified_motion=True,
+                    )
+                horizontal_speed = math.hypot(
+                    anchor.physics_state.velocity_blocks_per_tick[0],
+                    anchor.physics_state.velocity_blocks_per_tick[2],
+                )
+                neutral_ground = verified_ground_rollout(
+                    frame, anchor.physics_state, MovementV1(),
+                    control_ticks=1, tail_ticks=0,
+                    minimum_support=1.0e-4,
+                )
+                if (horizontal_speed > .01 and neutral_ground is None
+                        and self.executor
+                            .retain_landing_after_verified_input_loss(anchor)):
+                    return replace(
+                        decision,
+                        state=ActionRouteState.CANCELLING,
+                        movement=MovementV1(),
+                        look=None,
+                        input_lease_ticks=1,
+                        reason_code="retain_landing_after_grounded_input_loss",
+                        submit_input=True,
+                        verified_command_index=None,
+                        expected_movement_tick=None,
+                        latest_movement_tick=None,
+                        requires_verified_motion=True,
+                    )
+                settle_movement = MovementV1(sneak=True)
+                if (horizontal_speed > .01
+                        and verified_ground_rollout(
+                            frame, anchor.physics_state, settle_movement,
+                            control_ticks=1, tail_ticks=8,
+                            minimum_support=1.0e-4,
+                        ) is not None):
+                    return replace(
+                        decision,
+                        state=ActionRouteState.RUNNING,
+                        movement=settle_movement,
+                        look=None,
+                        input_lease_ticks=1,
+                        reason_code="settling_grounded_verified_entry",
+                        submit_input=True,
+                        verified_command_index=None,
+                        expected_movement_tick=None,
+                        latest_movement_tick=None,
+                        requires_verified_motion=True,
+                    )
+                if frame.body.is_sneaking or frame.body.pose == "crouching":
+                    return replace(
+                        decision,
+                        state=ActionRouteState.RUNNING,
+                        movement=MovementV1(),
+                        look=None,
+                        input_lease_ticks=1,
+                        reason_code="releasing_grounded_verified_entry",
+                        submit_input=True,
+                        verified_command_index=None,
+                        expected_movement_tick=None,
+                        latest_movement_tick=None,
+                        requires_verified_motion=True,
+                    )
+            if (registration.verdict is RetryVerdict.RETRY
+                    and self.executor.reprepare_grounded_verified_motion(frame)):
+                self._submit_current(anchor, world)
+                return replace(
+                    decision,
+                    state=ActionRouteState.RUNNING,
+                    movement=MovementV1(),
+                    look=None,
+                    input_lease_ticks=1,
+                    reason_code="repreparing_grounded_verified_motion",
+                    submit_input=True,
+                    verified_command_index=None,
+                    expected_movement_tick=None,
+                    latest_movement_tick=None,
+                    requires_verified_motion=True,
+                )
         if (decision.requires_verified_motion
                 and self._pending_connection is None and not installed
                 and worker_available):
@@ -748,5 +888,16 @@ class MotionRouteCoordinator:
               and worker_available):
             self._prepare_upcoming_from_applied_state(
                 decision, anchor, world,
+            )
+        if (self.last_failure_reason
+                and decision.state is ActionRouteState.CANCELLED):
+            # Cancelling is the executor's safe physical shutdown mechanism;
+            # it is not the task result when the solver could not construct a
+            # legal action.  Preserve the concrete failure for the session and
+            # its parent instead of reporting a user cancellation.
+            return replace(
+                decision,
+                state=ActionRouteState.UNSUPPORTED,
+                reason_code=f"motion_unsolvable:{self.last_failure_reason}",
             )
         return decision

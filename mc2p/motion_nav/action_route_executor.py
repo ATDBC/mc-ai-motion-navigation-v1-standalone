@@ -27,7 +27,7 @@ from mc2p.motion_nav.goal_observation import (
 from mc2p.motion_nav.movement_transition import MovementMode
 from mc2p.motion_nav.motion_candidate import (
     AdmittedMotionCandidate, VerifiedMotionExecutor,
-    VerifiedMotionExecutorState,
+    VerifiedMotionExecutorState, verified_candidate_can_start,
 )
 from mc2p.motion_nav.motion_risk import (
     TaskDamageBudget, conservative_plain_fall_damage_points,
@@ -289,11 +289,24 @@ class ActionRouteExecutor:
                     goal.region.max_z - endpoint.z,
                 )
                 if horizontal_margin >= 0:
+                    # Completion uses the controller's stopped threshold, so
+                    # reserve the drift of that threshold instead of the
+                    # goal's usually much larger maximum allowed speed.  The
+                    # latter would shrink a valid goal region so far that an
+                    # already safe stop could no longer complete.
+                    release_margin = (
+                        config.stopped_speed_blocks_per_second
+                        * motion_profile.tick_seconds
+                    )
                     config = replace(
                         config,
                         endpoint_tolerance_blocks=min(
                             config.endpoint_tolerance_blocks,
-                            max(1.0e-4, horizontal_margin),
+                            max(1.0e-4, horizontal_margin - release_margin),
+                        ),
+                        traversal_endpoint_tolerance_blocks=min(
+                            config.traversal_endpoint_tolerance_blocks,
+                            max(1.0e-4, horizontal_margin - release_margin),
                         ),
                         stopped_speed_blocks_per_second=min(
                             config.stopped_speed_blocks_per_second,
@@ -348,6 +361,46 @@ class ActionRouteExecutor:
             controller = StepController(self.step_profile)
             controller.start(action.start_surface, action.end_surface, frame)
         self._controller = controller
+
+    @staticmethod
+    def _landed_on_current_action_destination(
+        action,
+        frame: NavigationFrame,
+    ) -> bool:
+        """Accept a lost proof once the observed body is on its end support.
+
+        A delayed command can change the exact landing point without changing
+        the topological result of an air action.  Replaying the old entry from
+        the new support would try to perform the same height transition twice.
+        The following ground segment is responsible for tracking from the
+        observed landing position, so only support height and footprint overlap
+        are required here.
+        """
+        if not frame.body.is_on_ground:
+            return False
+        if type(action) is JumpUpSegment:
+            end_x, end_y, end_z = action.edge.end
+            min_x, max_x = float(end_x), float(end_x + 1)
+            min_z, max_z = float(end_z), float(end_z + 1)
+            feet_y = float(end_y)
+        elif type(action) in (JumpGapSegment, ControlledDropSegment):
+            region = action.end_surface.region
+            min_x, max_x = region.min_x, region.max_x
+            min_z, max_z = region.min_z, region.max_z
+            feet_y = action.end_surface.position[1]
+        else:
+            return False
+        x, y, z = frame.body.position
+        if abs(y - feet_y) > .10:
+            return False
+        half_width = .30
+        overlap_x = max(
+            0.0, min(x + half_width, max_x) - max(x - half_width, min_x),
+        )
+        overlap_z = max(
+            0.0, min(z + half_width, max_z) - max(z - half_width, min_z),
+        )
+        return overlap_x * overlap_z >= .01
 
     def start(self, route: ActionRoute, frame: NavigationFrame, *,
               damage_budget: TaskDamageBudget = TaskDamageBudget(),
@@ -464,12 +517,80 @@ class ActionRouteExecutor:
             return None
         return self._controller.predicted_exit_state()
 
+    def active_verified_entry_state(self) -> PhysicsState | None:
+        """Expose the stale proof entry while a grounded retry still owns it."""
+        if type(self._controller) is not VerifiedMotionExecutor:
+            return None
+        return self._controller.entry_state()
+
     def current_verified_action_started(self) -> bool:
         """Return whether the current verified action owns the body already."""
         return (
             type(getattr(self, "_controller", None)) is VerifiedMotionExecutor
             and self._controller.has_started()
         )
+
+    def current_verified_motion_can_start(self, anchor: StateAnchor) -> bool | None:
+        """Check the installed proof before its first command is submitted."""
+        if type(anchor) is not StateAnchor:
+            raise ContractViolation("verified entry check requires an anchor")
+        if type(getattr(self, "_controller", None)) is not VerifiedMotionExecutor:
+            return None
+        if self._controller.has_started():
+            return None
+        return self._controller.can_start_from(anchor)
+
+    def discard_unstarted_verified_motion(self) -> bool:
+        """Return the current action to its bounded solve boundary."""
+        controller = getattr(self, "_controller", None)
+        if type(controller) is not VerifiedMotionExecutor:
+            return False
+        if controller.has_started():
+            raise ContractViolation(
+                "started verified motion cannot return to entry solving"
+            )
+        self._verified_motion.pop(self.action_index, None)
+        self._controller = None
+        return True
+
+    def reprepare_grounded_verified_motion(
+        self,
+        frame: NavigationFrame,
+    ) -> bool:
+        """Return a failed air action to solving while it is still supported.
+
+        A verified action may already have submitted one or more approach
+        inputs without leaving the start surface.  If a later command is lost,
+        the old proof no longer applies, but the body is still available for a
+        fresh proof from the observed state.  Keep the route and body owner;
+        only discard the stale candidate and controller.
+        """
+        if type(frame) is not NavigationFrame:
+            raise ContractViolation(
+                "grounded verified reprepare requires a navigation frame"
+            )
+        controller = getattr(self, "_controller", None)
+        if (type(controller) is not VerifiedMotionExecutor
+                or controller.state is not VerifiedMotionExecutorState.INPUT_LOST
+                or not frame.body.is_on_ground
+                or self.action_index not in self._required_verified_motion):
+            return False
+        self._verified_motion.pop(self.action_index, None)
+        self._controller = None
+        self.state = ActionRouteState.RUNNING
+        return True
+
+    def retain_landing_after_verified_input_loss(
+        self,
+        anchor: StateAnchor,
+    ) -> bool:
+        """Keep a lost verified action until its residual motion lands."""
+        controller = getattr(self, "_controller", None)
+        if (type(controller) is not VerifiedMotionExecutor
+                or not controller.retain_landing_after_input_loss(anchor)):
+            return False
+        self.state = ActionRouteState.CANCELLING
+        return True
 
     def requires_safe_handoff(self, frame: NavigationFrame) -> bool:
         """Return whether another route must wait for this action to finish."""
@@ -597,6 +718,22 @@ class ActionRouteExecutor:
             else:
                 verified = self._controller.decide(
                     state_anchor, input_ledger, changed_cells=frame.changed_cells,
+                )
+            if (not self._cancel_requested
+                    and verified.state is VerifiedMotionExecutorState.INPUT_LOST
+                    and type(state_anchor) is StateAnchor
+                    and (
+                        self._controller.confirm_observed_exit_after_input_loss(
+                            state_anchor,
+                        )
+                        or self._landed_on_current_action_destination(
+                            action, frame,
+                        )
+                    )):
+                return self._advance(
+                    frame, started, state_anchor=state_anchor,
+                    input_ledger=input_ledger,
+                    movement_yaw_radians=movement_yaw_radians,
                 )
             terminal = {
                 VerifiedMotionExecutorState.CANCELLED: ActionRouteState.CANCELLED,
@@ -764,6 +901,23 @@ class ActionRouteExecutor:
             self.action_index = len(self.route.actions) - 1
             self._actions_finished = True
             return self._finish_goal(frame, started, input_ledger, state_anchor)
+        installed = self._verified_motion.get(self.action_index)
+        if (installed is not None
+                and self.action_index in self._required_verified_motion
+                and state_anchor is not None):
+            if verified_candidate_can_start(installed, state_anchor):
+                # A proof may contain a one-tick delayed start variant.  Bind
+                # the executor to the variant matching the observed boundary,
+                # rather than retaining the earlier predicted start tick.
+                self._verified_motion[self.action_index] = replace(
+                    installed,
+                    intended_start_tick=state_anchor.movement_tick_id + 1,
+                )
+            else:
+                # The preceding action ended outside every proved start
+                # variant.  No proof command has been submitted, so return to
+                # solving rather than misclassifying drift as input loss.
+                self._verified_motion.pop(self.action_index, None)
         self._activate(frame)
         self.state = ActionRouteState.RUNNING
         # Run the new controller immediately so a hand-off does not introduce

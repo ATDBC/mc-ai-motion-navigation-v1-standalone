@@ -76,6 +76,7 @@ class FixedRoute:
 @dataclass(frozen=True, slots=True)
 class FixedRouteConfig:
     endpoint_tolerance_blocks: float = 0.25
+    traversal_endpoint_tolerance_blocks: float = 0.35
     stopped_speed_blocks_per_second: float = 0.1
     minimum_support_fraction: float = 0.15
     preferred_support_fraction: float = 0.80
@@ -95,7 +96,8 @@ class FixedRouteConfig:
 
     def __post_init__(self) -> None:
         for name in (
-            "endpoint_tolerance_blocks", "stopped_speed_blocks_per_second",
+            "endpoint_tolerance_blocks", "traversal_endpoint_tolerance_blocks",
+            "stopped_speed_blocks_per_second",
             "minimum_support_fraction", "preferred_support_fraction",
             "wall_soft_margin_blocks", "maximum_cross_track_blocks",
             "motion_prediction_margin_blocks",
@@ -294,6 +296,31 @@ def _horizontal_wall_penalty(
                     if distance < margin:
                         penalty += ((margin - distance) / margin) ** 2
     return penalty
+
+
+def _directional_prediction_box(
+    body: Aabb,
+    delta: tuple[float, float, float],
+    margin: float,
+) -> Aabb:
+    """Expand prediction uncertainty without inventing a trailing collision.
+
+    The observed body box is authoritative at the start of each predicted
+    step.  Position uncertainty still covers the leading and lateral sides,
+    where it can turn a nominally clear movement into a collision.  The side
+    that is moving away from an obstacle uses the observed boundary; otherwise
+    a safely landed body within ``margin`` of the wall would overlap the wall
+    only after expansion and could never move away from it.
+    """
+    delta_x, _, delta_z = delta
+    return Aabb(
+        body.min_x if delta_x > _EPSILON else body.min_x - margin,
+        body.min_y,
+        body.min_z if delta_z > _EPSILON else body.min_z - margin,
+        body.max_x if delta_x < -_EPSILON else body.max_x + margin,
+        body.max_y,
+        body.max_z if delta_z < -_EPSILON else body.max_z + margin,
+    )
 
 
 class FixedRouteController:
@@ -640,9 +667,8 @@ class FixedRouteController:
         at_goal = (
             frame.body.is_on_ground and route_complete
             and (entry_matches if entry_matches is not None else
-                 goal_distance <= max(
-                     self.config.endpoint_tolerance_blocks, 0.35,
-                 ))
+                 goal_distance
+                 <= self.config.traversal_endpoint_tolerance_blocks)
             and abs(frame.body.position[1] - goal.y) <= 0.10
         )
         if at_goal and speed <= completion_speed:
@@ -924,8 +950,29 @@ class FixedRouteController:
 
         stop_distance = self._release_distance(body, completion_speed)
         remaining = max(0.0, self._geometry.total_length - self._progress)
-        if at_goal or (speed > completion_speed
-                       and remaining <= stop_distance + self.config.endpoint_tolerance_blocks * 0.65):
+        handoff_reachable_after_release = False
+        if self.config.handoff_entry_window is not None:
+            window = self.config.handoff_entry_window
+            earliest_entry = max(
+                0.0, -window.minimum_longitudinal_offset_blocks,
+            )
+            next_active_speed = min(
+                self.profile.maximum_speed_blocks_per_second,
+                speed + self.profile.acceleration_blocks_per_second2
+                * self.profile.tick_seconds,
+            )
+            handoff_reachable_after_release = (
+                remaining <= earliest_entry + 1.0e-9
+                or (
+                    speed > self.config.stopped_speed_blocks_per_second
+                    and remaining <= earliest_entry
+                    + next_active_speed * self.profile.tick_seconds + 1.0e-9
+                )
+            )
+        if (at_goal or handoff_reachable_after_release
+                or (speed > completion_speed
+                    and remaining <= stop_distance
+                    + self.config.endpoint_tolerance_blocks * 0.65)):
             self.state = FixedRouteState.BRAKING
             return self._brake(
                 frame, body, started, hold_position=False,
@@ -1132,7 +1179,32 @@ class FixedRouteController:
     def _brake(self, frame: NavigationFrame, body: PlanarBodyState, started: int,
                *, hold_position: bool, reason: str,
                query_cache: WorldQueryCache) -> FixedRouteDecision:
-        target = (body.x, body.z) if hold_position else (self._geometry.goal.x, self._geometry.goal.z)  # type: ignore[union-attr]
+        target = (body.x, body.z) if hold_position else (
+            self._geometry.goal.x, self._geometry.goal.z  # type: ignore[union-attr]
+        )
+        if not hold_position and self.config.handoff_entry_window is not None:
+            window = self.config.handoff_entry_window
+            dx, dz = window.horizontal_approach_direction
+            offset_x = body.x - window.reference_point[0]
+            offset_z = body.z - window.reference_point[2]
+            lateral = max(
+                -window.maximum_lateral_offset_blocks,
+                min(window.maximum_lateral_offset_blocks,
+                    -offset_x * dz + offset_z * dx),
+            )
+            longitudinal = min(
+                0.0,
+                (window.minimum_longitudinal_offset_blocks
+                 + window.maximum_longitudinal_offset_blocks) * 0.5,
+            )
+            # The next action accepts a corridor, not one exact centre point.
+            # Preserve an already-valid lateral lane while braking along the
+            # approach direction, otherwise tiny centring corrections create
+            # sideways velocity and can prevent the handoff forever.
+            target = (
+                window.reference_point[0] + dx * longitudinal - dz * lateral,
+                window.reference_point[2] + dz * longitudinal + dx * lateral,
+            )
         candidates = self._ranked_braking_candidates(
             frame, body, target, query_cache,
         )
@@ -1290,17 +1362,15 @@ class FixedRouteController:
         support_penalty = 0.0
         wall_penalty = 0.0
         margin = self.config.motion_prediction_margin_blocks
-        collision_box = Aabb(
-            frame.body.body_box.min_x - margin, frame.body.body_box.min_y,
-            frame.body.body_box.min_z - margin, frame.body.body_box.max_x + margin,
-            frame.body.body_box.max_y, frame.body.body_box.max_z + margin,
-        )
         support_box = frame.body.body_box
         previous_state = body
         blocked = False
         unsupported = False
         for state in states[1:]:
             delta = (state.x - previous_state.x, 0.0, state.z - previous_state.z)
+            collision_box = _directional_prediction_box(
+                support_box, delta, margin,
+            )
             collision = sweep(
                 collision_box, delta, frame.world,
                 query_cache=query_cache,
@@ -1392,7 +1462,7 @@ class FixedRouteController:
                 next_collision_box, frame.world,
                 self.config.wall_soft_margin_blocks, query_cache,
             )
-            collision_box, support_box = next_collision_box, next_support_box
+            support_box = next_support_box
             previous_state = state
         if blocked or unsupported:
             return _Candidate(

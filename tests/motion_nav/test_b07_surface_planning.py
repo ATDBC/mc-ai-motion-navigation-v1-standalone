@@ -73,6 +73,56 @@ def flat_surface_world(size: int) -> WorldKnowledge:
 
 
 class B07SurfacePlanningTests(unittest.TestCase):
+    def test_low_shape_fallback_does_not_require_deeper_cells_for_full_support(self):
+        session = WorldSessionId("b07-low-shape-fallback")
+        world = WorldKnowledge(session)
+        observed = ObservationStamp(session, 1, 1, "test-clock", 50_000_000)
+        world.confirm_air(observed, (
+            (0, -1, 0), (0, 1, 0), (0, 2, 0),
+        ))
+        world.observe_blocks(observed, {
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        expander = _SurfaceExpander(
+            world.view(), KnownMapBounds(0, 0, 0, 1, 0, 0, True),
+            ordinary_profile(), step_profile(),
+        )
+
+        surfaces = expander.column(0, 0)
+
+        self.assertEqual(tuple(surface.position[1] for surface in surfaces), (1.0,))
+        self.assertTrue(expander.complete)
+
+    def test_low_shape_fallback_keeps_path_inside_integer_feet_band(self):
+        session = WorldSessionId("b07-path-fallback")
+        world = WorldKnowledge(session)
+        observed = ObservationStamp(session, 1, 1, "test-clock", 50_000_000)
+        world.confirm_air(observed, tuple(
+            (0, y, 0) for y in range(-1, 4)
+        ))
+        world.observe_blocks(observed, {
+            (0, 0, 0): BlockGeometry(
+                "minecraft:dirt_path", "boxes",
+                (Aabb(0, 0, 0, 1, 15 / 16, 1),),
+            ),
+        })
+        motion = replace(
+            ordinary_profile(),
+            support_materials=frozenset({"minecraft:dirt_path"}),
+        )
+        expander = _SurfaceExpander(
+            world.view(), KnownMapBounds(0, 0, 1, 1, 0, 0, True),
+            motion, step_profile(),
+        )
+
+        surfaces = expander.column(0, 0)
+
+        self.assertEqual(
+            tuple(surface.position[1] for surface in surfaces),
+            (15 / 16,),
+        )
+        self.assertTrue(expander.complete)
+
     def test_goal_and_task_damage_policy_must_match(self):
         node = SurfaceNodeId(0, 0, 1, 0)
         goal = GoalState(

@@ -27,7 +27,7 @@ from mc2p.motion_nav.runtime_adapter import NavigationObservationAdapter, TEST_O
 from mc2p.motion_nav.world_model import Aabb
 from tests.sim.backend import CalculatorBackend, Scene
 from tests.sim.monitor import InvariantMonitor, TickEvidence
-from tests.sim.runner import Event, late_ticks, run
+from tests.sim.runner import Event, _goal, late_ticks, run
 from tests.sim.scenarios import SCENARIOS
 from tests.sim.scenarios import airborne_in_drop, revise_goal_back
 from tests.sim.run_navigation_matrix import read_manifest, run_matrix
@@ -132,7 +132,40 @@ class InvariantNegativeTests(unittest.TestCase):
                 state="stopping",
                 reason="recovery_unresolved",
             ))
-        self.assertNotIn("I4", {item[1] for item in monitor.violations})
+        self.assertIn("I4", {item[1] for item in monitor.violations})
+
+    def test_i10_terminal_source_release_has_a_deadline(self):
+        monitor = InvariantMonitor()
+        for tick in range(2, 24):
+            monitor.check(evidence(
+                tick=tick,
+                state="failed",
+                reason="bounded_failure",
+                source_bound=True,
+            ))
+        self.assertIn("I10", {item[1] for item in monitor.violations})
+
+    def test_i11_source_release_requires_stable_support(self):
+        monitor = InvariantMonitor()
+        monitor.check(evidence(tick=2, source_bound=True))
+        monitor.check(evidence(
+            tick=3,
+            source_bound=False,
+            controller_ids=(),
+            support_fraction=0.0,
+        ))
+        self.assertIn("I11", {item[1] for item in monitor.violations})
+
+    def test_i12_active_risk_records_have_a_capacity(self):
+        ledger = TaskRiskLedger("capacity", TaskDamageBudget("many", 100))
+        reservation = ledger.reserve("one", 0, policy_revision=0)
+        self.assertIsNotNone(reservation.record)
+        record = reservation.record
+        assert record is not None
+        self.check_code("I12", evidence(risk_actions=(record,) * 65))
+
+    def test_i13_illegal_lifecycle_transition_is_observable(self):
+        self.check_code("I13", evidence(illegal_transition_count=1))
 
     def test_i5_distinct_failures_without_progress(self):
         samples = [evidence(tick=i + 2, retry_attempt_id=f"attempt-{i}")
@@ -263,6 +296,24 @@ class InvariantNegativeTests(unittest.TestCase):
 
 
 class ClosedLoopToolTests(unittest.TestCase):
+    def test_exhausted_recovery_moves_back_onto_support_and_terminates(self):
+        scenario = next(item for item in SCENARIOS
+                        if item.name == "direct_drop_2")
+        configured = replace(
+            scenario,
+            perturbations=replace(
+                scenario.perturbations,
+                late_ticks=late_ticks(.2, 280067),
+            ),
+        )
+
+        result = run(configured)
+
+        self.assertNotEqual(result.outcome, "stopping")
+        self.assertNotIn("I4", {item[1] for item in result.violations})
+        self.assertFalse(result.trace[-1]["source_bound"])
+        self.assertTrue(result.trace[-1]["on_ground"])
+
     def test_probe_release_stage_keeps_its_acquisition_deadline(self):
         configured = replace(
             next(item for item in SCENARIOS if item.name == "direct_drop_2"),
@@ -356,6 +407,95 @@ class ClosedLoopToolTests(unittest.TestCase):
                             for record in records))
         self.assertEqual(result.damage, 2.0)
 
+    def test_grounded_drop_reprepares_after_one_late_active_command(self):
+        base = next(
+            scenario for scenario in SCENARIOS
+            if scenario.name == "direct_drop_2_20pct_late"
+        )
+        scenario = replace(
+            base,
+            name="direct_drop_grounded_active_command_late_once",
+            perturbations=replace(
+                base.perturbations,
+                late_ticks=frozenset({37}),
+            ),
+        )
+
+        result = run(scenario)
+
+        self.assertEqual(result.violations, [])
+        self.assertEqual(
+            (result.outcome, result.reason),
+            ("success", "goal_state_satisfied"),
+        )
+        self.assertTrue(any(
+            row["session_reason"]
+                == "repreparing_grounded_verified_motion"
+            for row in result.trace
+        ))
+
+    def test_late_neutral_confirmation_after_landing_completes_drop(self):
+        base = next(
+            scenario for scenario in SCENARIOS
+            if scenario.name == "direct_drop_2"
+        )
+        scenario = replace(
+            base,
+            name="direct_drop_late_neutral_after_landing",
+            perturbations=replace(
+                base.perturbations,
+                late_ticks=late_ticks(.2, 280033),
+            ),
+        )
+
+        result = run(scenario)
+
+        self.assertEqual(result.violations, [])
+        self.assertEqual(
+            (result.outcome, result.reason),
+            ("success", "goal_state_satisfied"),
+        )
+        self.assertFalse(any(
+            row["session_reason"]
+                == "repreparing_grounded_verified_motion"
+            for row in result.trace
+        ))
+
+    def test_moving_off_edge_after_input_loss_keeps_landing_owner(self):
+        base = next(
+            scenario for scenario in SCENARIOS
+            if scenario.name == "direct_drop_2"
+        )
+        scenario = replace(
+            base,
+            name="direct_drop_input_loss_at_departure",
+            perturbations=replace(
+                base.perturbations,
+                late_ticks=late_ticks(.2, 280078),
+            ),
+        )
+
+        result = run(scenario)
+
+        self.assertEqual(result.violations, [])
+        self.assertEqual((result.outcome, result.reason),
+                         ("success", "goal_state_satisfied"))
+        self.assertTrue(result.trace[-1]["on_ground"])
+        self.assertFalse(result.trace[-1]["source_bound"])
+        self.assertTrue(any(
+            row["session_reason"]
+                == "expired_pending_submission_retain_responsibility"
+            for row in result.trace
+        ))
+        self.assertTrue(all(
+            row["source_bound"] and row["controller_ids"]
+            for row in result.trace if not row["on_ground"]
+        ))
+        self.assertFalse(any(
+            row["session_reason"].startswith("motion_unsolvable:")
+            for row in result.trace
+        ))
+
     def test_old_air_input_loss_during_revised_goal_keeps_landing_owner(self):
         scenario = replace(
             SCENARIOS[7], name="air_input_loss_during_goal_revision",
@@ -381,6 +521,41 @@ class ClosedLoopToolTests(unittest.TestCase):
         self.assertTrue(any(row["recovery_wait_status"] == "exhausted_ticks"
                             and row["source_bound"]
                             for row in result.trace))
+
+    def test_goal_revision_after_risk_commit_finishes_drop_before_replanning(self):
+        def revise_after_first_submission(context):
+            goal = _goal((1.5, 59.0, 4.5), context.risk_policy_id)
+            context.driver.replace_goal(
+                "goal", 2, goal, context.clock[0],
+                damage_budget=TaskDamageBudget(
+                    context.risk_policy_id, context.damage_points,
+                ),
+            )
+            context.goal_state = goal
+            context.goal_position = (1.5, 59.0, 4.5)
+
+        base = next(
+            item for item in SCENARIOS
+            if item.name == "direct_drop_5_budget_2"
+        )
+        scenario = replace(
+            base,
+            name="drop_revision_after_risk_commit",
+            events=[Event(
+                "revise",
+                lambda context: context.tick >= 36,
+                revise_after_first_submission,
+            )],
+            max_ticks=300,
+        )
+        result = run(scenario)
+        self.assertEqual(result.events, ["revise@36"])
+        self.assertEqual(result.violations, [])
+        self.assertEqual(
+            (result.outcome, result.reason),
+            ("success", "goal_state_satisfied"),
+        )
+        self.assertEqual(result.damage, 2.0)
 
     def test_observed_health_overrun_locks_future_risk_on_formal_path(self):
         ledger = TaskRiskLedger("goal", TaskDamageBudget("sim-budget", 4))
@@ -496,10 +671,19 @@ class ClosedLoopToolTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "matrix"
             summary = run_matrix(MANIFEST, output)
+            self.assertEqual(
+                summary["schema_version"],
+                "mc2p.navigation-sim-result.v2",
+            )
             self.assertEqual(summary["counts"], {
                 "positive_pass": 14, "known_failure": 0,
                 "formal_receipt_new_failure": 0,
                 "calibrated_input_new_failure": 0, "unexpected": 0,
+            })
+            self.assertEqual(summary["outcome_counts"], {
+                "task_success": 13,
+                "bounded_safe_failure": 1,
+                "unexpected_result": 0,
             })
             identity = summary["source_identity"]
             self.assertGreater(identity["python_files"], 0)

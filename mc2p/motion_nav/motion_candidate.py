@@ -148,6 +148,22 @@ def _state_fits_entry(actual: PhysicsState, expected: PhysicsState) -> bool:
         <= _ENTRY_YAW_TOLERANCE_RADIANS
 
 
+def verified_candidate_can_start(
+    candidate: AdmittedMotionCandidate,
+    anchor: StateAnchor,
+) -> bool:
+    """Check an unsubmitted candidate against the next real movement tick."""
+    if (type(candidate) is not AdmittedMotionCandidate
+            or type(anchor) is not StateAnchor):
+        raise ContractViolation("verified entry check requires typed inputs")
+    variant = candidate.proof.start_variant(anchor.movement_tick_id + 1)
+    return (
+        variant is not None
+        and anchor.session == variant.entry_state.session
+        and _state_fits_entry(anchor.physics_state, variant.entry_state)
+    )
+
+
 def _state_satisfies_verified_exit(
         actual: PhysicsState,
         proof: VerifiedMotionResult,
@@ -409,6 +425,48 @@ class VerifiedMotionExecutor:
             return None
         return self._start_variant.exit_state
 
+    def entry_state(self) -> PhysicsState | None:
+        """Return the selected proof entry for bounded grounded recovery."""
+        return None if self._start_variant is None else self._start_variant.entry_state
+
+    def confirm_observed_exit_after_input_loss(
+        self,
+        anchor: StateAnchor,
+    ) -> bool:
+        """Finish a lost command sequence when its proved exit is observed.
+
+        A late request identity can be lost after the physical action has
+        already landed.  Returning to the old entry in that case would undo a
+        completed action and can make the solver see an impossible reverse
+        transition.  The action may finish only when the current state
+        satisfies the original landing envelope, speed and heading bounds.
+        """
+        if type(anchor) is not StateAnchor:
+            raise ContractViolation("verified exit confirmation requires an anchor")
+        if (self.state is not VerifiedMotionExecutorState.INPUT_LOST
+                or self._candidate is None or self._start_variant is None):
+            return False
+        if not _state_satisfies_verified_exit(
+                anchor.physics_state, self._candidate.proof,
+                self._start_variant):
+            return False
+        self._pending = None
+        self.state = VerifiedMotionExecutorState.COMPLETE
+        return True
+
+    def retain_landing_after_input_loss(self, anchor: StateAnchor) -> bool:
+        """Keep body ownership when a grounded flag races edge departure."""
+        if type(anchor) is not StateAnchor:
+            raise ContractViolation("verified landing recovery requires an anchor")
+        if self.state is not VerifiedMotionExecutorState.INPUT_LOST:
+            return False
+        self._pending = None
+        self._recovery_started_at_tick = anchor.movement_tick_id
+        self._recovery_uses_verified_remainder = False
+        self._terminal_after_recovery = VerifiedMotionExecutorState.INPUT_LOST
+        self.state = VerifiedMotionExecutorState.RECOVERING
+        return True
+
     def has_started(self) -> bool:
         """Return whether this proof has already taken body responsibility.
 
@@ -417,6 +475,14 @@ class VerifiedMotionExecutor:
         must not send the same action back through its entry preconditions.
         """
         return self._pending is not None or self._command_index > 0
+
+    def can_start_from(self, anchor: StateAnchor) -> bool:
+        """Whether no command has been sent and this proof fits now."""
+        if type(anchor) is not StateAnchor:
+            raise ContractViolation("verified entry check requires an anchor")
+        if self._candidate is None or self.has_started():
+            return False
+        return verified_candidate_can_start(self._candidate, anchor)
 
     def cancel(self, anchor: StateAnchor) -> None:
         if type(anchor) is not StateAnchor:
@@ -513,8 +579,13 @@ class VerifiedMotionExecutor:
         if record.status is InputApplicationStatus.APPLIED_OUTSIDE_WINDOW:
             self.state = VerifiedMotionExecutorState.INPUT_LOST
             return "input_applied_outside_window"
+        if record.status is InputApplicationStatus.EXPIRED:
+            # Expiry of one submitted lease is not yet loss of the proved
+            # command while a later start tick is still inside the solver's
+            # accepted window.  decide() owns that time comparison and may
+            # submit the same proved command again for the remaining tick.
+            return "input_expired"
         if record.status in {
-                InputApplicationStatus.EXPIRED,
                 InputApplicationStatus.REJECTED,
                 InputApplicationStatus.AMBIGUOUS}:
             self.state = VerifiedMotionExecutorState.INPUT_LOST
@@ -542,6 +613,38 @@ class VerifiedMotionExecutor:
         self._pending = None
         return None
 
+    def _consume_observed_neutral_tick(
+        self,
+        anchor: StateAnchor,
+        ledger: InputApplicationLedger,
+    ) -> bool:
+        """Accept exact neutral physics evidence when its request arrived late.
+
+        Once an action has started, a later proof row may require no movement
+        input.  The client input sample is the authority for what the game
+        actually consumed.  If that sample is present and exactly neutral,
+        losing only the pending request identity does not change the proved
+        physics.  Active inputs and missing samples still use normal input-loss
+        recovery.
+        """
+        if (self._candidate is None or self._pending is None
+                or self._command_index == 0
+                or anchor.movement_tick_id
+                    < self._pending.requested_movement_tick):
+            return False
+        command = self._candidate.proof.commands[self._pending.command_index]
+        if command.movement != MovementV1():
+            return False
+        sample = ledger.sample(self._pending.requested_movement_tick)
+        if (sample is None
+                or abs(float(sample.forward)) > 1.0e-9
+                or abs(float(sample.strafe)) > 1.0e-9
+                or sample.jump or sample.sneak or sample.sprint):
+            return False
+        self._command_index += 1
+        self._pending = None
+        return True
+
     def _recover_from_expired_command_window(
         self,
         anchor: StateAnchor,
@@ -549,9 +652,23 @@ class VerifiedMotionExecutor:
         """Stop issuing proof commands once their movement tick has passed."""
         if anchor.movement_tick_id + 1 <= self._latest_tick():
             return None
-        self._pending = None
         self._recovery_uses_verified_remainder = False
         self._terminal_after_recovery = VerifiedMotionExecutorState.INPUT_LOST
+        if self._pending is not None:
+            # A submitted command can still be sitting between the Runtime and
+            # the client when its proved start window closes.  A neutral
+            # replacement does not prove that the older command can no longer
+            # reach the game on the next tick.  Keep the body owner for one
+            # further observation (and through landing if it arrives late)
+            # instead of releasing a body that can become airborne immediately
+            # after this grounded frame.
+            self.state = VerifiedMotionExecutorState.RECOVERING
+            self._recovery_started_at_tick = anchor.movement_tick_id
+            return self._decision(
+                MovementV1(), None,
+                "expired_pending_submission_retain_responsibility",
+            )
+        self._pending = None
         if anchor.physics_state.on_ground:
             self.state = VerifiedMotionExecutorState.INPUT_LOST
             return self._decision(
@@ -688,6 +805,13 @@ class VerifiedMotionExecutor:
             self.state = VerifiedMotionExecutorState.FAILED
             return self._decision(MovementV1(), None, "world_session_changed")
         pending = self._consume_pending(ledger)
+        consumed_observed_neutral = False
+        if pending == "awaiting_application":
+            consumed_observed_neutral = self._consume_observed_neutral_tick(
+                anchor, ledger,
+            )
+            if consumed_observed_neutral:
+                pending = None
         if pending is not None:
             if self.state is VerifiedMotionExecutorState.INPUT_LOST:
                 self.state = VerifiedMotionExecutorState.RECOVERING
@@ -698,7 +822,7 @@ class VerifiedMotionExecutor:
                 return self._decision(
                     MovementV1(), None, "retain_landing_after_input_loss",
                 )
-            if (pending == "awaiting_application"
+            if (pending in {"awaiting_application", "input_expired"}
                     and self._pending is not None
                     and anchor.movement_tick_id + 1
                         > self._pending.requested_movement_tick
@@ -715,7 +839,7 @@ class VerifiedMotionExecutor:
                         self._pending.requested_latest_movement_tick
                     ),
                 )
-            if (pending == "awaiting_application"
+            if (pending in {"awaiting_application", "input_expired"}
                     and self._pending is not None
                     and anchor.movement_tick_id
                         >= self._pending.requested_latest_movement_tick):
@@ -793,6 +917,7 @@ class VerifiedMotionExecutor:
         command = proof.commands[self._command_index]
         return self._decision(
             command.movement, command.required_movement_yaw_radians,
-            "submit_verified_command",
+            ("submit_verified_command_after_observed_neutral"
+             if consumed_observed_neutral else "submit_verified_command"),
             submittable_as_verified_command=True,
         )

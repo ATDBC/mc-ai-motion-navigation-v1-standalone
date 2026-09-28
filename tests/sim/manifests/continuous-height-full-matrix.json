@@ -1,0 +1,38 @@
+{
+  "schema_version": "mc2p.continuous-height-full-matrix.v1",
+  "seed_start": 281001,
+  "seed_end": 281100,
+  "directions": ["east", "south", "west", "north"],
+  "entry_speed_bands": [
+    {"id": "low", "minimum": 0.5, "maximum": 1.0, "target": 0.75},
+    {"id": "medium", "minimum": 1.0, "maximum": 2.0, "target": 1.5},
+    {"id": "high", "minimum": 2.0, "maximum": 3.0, "target": 2.5}
+  ],
+  "small_height_families": [
+    "slab_up_down",
+    "slab_down_up",
+    "stairs_up",
+    "stairs_down",
+    "dirt_path_alternating",
+    "carpet_alternating",
+    "snow_layers_2",
+    "snow_layers_4",
+    "snow_layers_5",
+    "single_bottom_slab",
+    "low_height_then_brake"
+  ],
+  "height_action_families": [
+    "jump_up_1",
+    "step_down_1",
+    "stair_descent_2",
+    "stair_descent_4",
+    "stair_descent_8",
+    "direct_drop_1",
+    "direct_drop_2",
+    "direct_drop_3",
+    "direct_drop_5_budget_2"
+  ],
+  "component_repetitions": 100,
+  "late_probability": 0.2,
+  "fabric_repetitions_per_direction": 5
+}

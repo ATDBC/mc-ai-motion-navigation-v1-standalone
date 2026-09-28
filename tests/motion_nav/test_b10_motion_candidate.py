@@ -571,6 +571,84 @@ class VerifiedMotionExecutorTests(unittest.TestCase):
         self.assertIs(completed.state, VerifiedMotionExecutorState.COMPLETE)
         self.assertEqual(completed.reason, "verified_motion_complete")
 
+    def test_observed_neutral_sample_can_confirm_a_missed_neutral_command(self):
+        anchor, candidate = self.admitted()
+        commands = list(candidate.proof.commands)
+        commands[3] = replace(
+            commands[3], movement=MovementV1(forward=1),
+        )
+        candidate = replace(
+            candidate,
+            candidate=replace(
+                candidate.candidate,
+                proof=replace(candidate.proof, commands=tuple(commands)),
+            ),
+        )
+        executor = VerifiedMotionExecutor()
+        executor.start(candidate)
+        ledger = InputApplicationLedger(max_records=64)
+
+        for index in range(2):
+            decision = executor.decide(anchor, ledger)
+            tick = 11 + index
+            executor.register_submission(
+                index,
+                control_sequence=600 + index,
+                requested_movement_tick=decision.expected_movement_tick,
+                requested_latest_movement_tick=decision.latest_movement_tick,
+            )
+            self.applied(
+                ledger, anchor, 600 + index, tick,
+                candidate.proof.commands[index].movement,
+                requested_tick=decision.expected_movement_tick,
+                requested_latest_tick=decision.latest_movement_tick,
+            )
+            anchor = replace(
+                anchor,
+                observation_sequence_id=anchor.observation_sequence_id + 1,
+                movement_tick_id=tick,
+                physics_state=candidate.proof.trajectory[index + 1],
+            )
+
+        neutral = executor.decide(anchor, ledger)
+        self.assertEqual(neutral.command_index, 2)
+        self.assertEqual(neutral.movement, MovementV1())
+        executor.register_submission(
+            2,
+            control_sequence=602,
+            requested_movement_tick=neutral.expected_movement_tick,
+            requested_latest_movement_tick=neutral.latest_movement_tick,
+        )
+        ledger.submit(
+            anchor.session,
+            ActionSnapshotV1(
+                "episode", 602, anchor.observation_sequence_id,
+                1_000_000, movement=MovementV1(), valid_for_ticks=1,
+            ),
+            requested_first_tick=neutral.expected_movement_tick,
+            latest_allowed_first_tick=neutral.latest_movement_tick,
+        )
+        ledger.observe_sample(ClientInputApplicationV1(
+            "mc2p.input-application.v1", neutral.expected_movement_tick,
+            "episode", 601, 100 + neutral.expected_movement_tick,
+            "lease_exhausted", 0.0, 0.0, False, False, False,
+        ))
+        anchor = replace(
+            anchor,
+            observation_sequence_id=anchor.observation_sequence_id + 1,
+            movement_tick_id=neutral.expected_movement_tick,
+            physics_state=candidate.proof.trajectory[3],
+        )
+
+        continued = executor.decide(anchor, ledger)
+
+        self.assertIs(continued.state, VerifiedMotionExecutorState.RUNNING)
+        self.assertEqual(continued.command_index, 3)
+        self.assertEqual(continued.movement, MovementV1(forward=1))
+        self.assertEqual(
+            continued.reason, "submit_verified_command_after_observed_neutral",
+        )
+
     def test_non_neutral_sample_during_coast_enters_local_landing_recovery(self):
         anchor, candidate = self.admitted()
         executor = VerifiedMotionExecutor()
@@ -1217,15 +1295,28 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
             self.assertEqual(len(jobs), 1)
             predicted_anchor = jobs[0].anchor
             solved = _execute_job(jobs[0])
+            self.assertIsNotNone(solved.solve_result.proof)
+            delayed_variant = solved.solve_result.proof.start_variant(
+                predicted_anchor.movement_tick_id + 2,
+            )
+            self.assertIsNotNone(delayed_variant)
+            boundary_anchor = replace(
+                predicted_anchor,
+                observation_sequence_id=(
+                    predicted_anchor.observation_sequence_id + 1
+                ),
+                movement_tick_id=delayed_variant.entry_state.movement_tick_id,
+                physics_state=delayed_variant.entry_state,
+            )
             predicted_frame = self.frame(
-                physics_world._world, predicted_anchor.physics_state, 2,
+                physics_world._world, boundary_anchor.physics_state, 2,
             )
             with (
                 patch.object(worker, "is_alive", return_value=True),
                 patch.object(worker, "poll_available", return_value=(solved,)),
             ):
                 handoff = coordinator.decide(
-                    predicted_frame, predicted_anchor,
+                    predicted_frame, boundary_anchor,
                     InputApplicationLedger(max_records=64),
                     physics_world, changed_cells=(),
                 )
@@ -1242,6 +1333,10 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
         self.assertEqual(handoff.action_index, 1)
         self.assertTrue(handoff.submit_input)
         self.assertTrue(handoff.movement.jump)
+        self.assertEqual(
+            handoff.expected_movement_tick,
+            boundary_anchor.movement_tick_id + 1,
+        )
         self.assertNotEqual(handoff.reason_code, "awaiting_verified_motion")
 
     def test_online_coordinator_stops_waiting_when_solver_worker_dies(self):

@@ -217,6 +217,12 @@ class LandingEdgeProbe:
             self.stop_target = self._choose_stop_target(frame)
         if self.stop_target is None or not frame.body.is_on_ground:
             return MovementV1(sneak=True)
+        if self.stop_ready(frame, state):
+            # The body is already on a verified stable tail.  Stop extending
+            # the sneak lease and let the one outstanding command resolve;
+            # otherwise a fixed one-tick transport delay creates a new
+            # in-flight command on every frame and the probe can never retire.
+            return MovementV1()
         # Keep the edge guard until the supervisor also confirms that all
         # issued input is resolved. A safe pose alone cannot release sneak.
         dx = self.stop_target[0] - frame.body.position[0]

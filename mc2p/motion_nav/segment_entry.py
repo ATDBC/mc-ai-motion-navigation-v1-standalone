@@ -10,6 +10,9 @@ from mc2p.motion_nav.physics_types import PhysicsState
 from mc2p.motion_nav.runtime_adapter import BodyState
 
 
+_DIRECTION_DEFINED_SPEED_BLOCKS_PER_SECOND = 0.1
+
+
 def _finite(value: float, name: str) -> float:
     if type(value) not in (int, float) or not math.isfinite(float(value)):
         raise ContractViolation(f"{name} must be finite")
@@ -126,7 +129,10 @@ def _fits(window: SegmentEntryWindow, *, position, velocity, yaw, pose, mode) ->
     if not (window.minimum_speed_blocks_per_second - 1.0e-9
             <= speed <= window.maximum_speed_blocks_per_second + 1.0e-9):
         return False
-    if speed > 1.0e-9:
+    # Below the shared stopped-speed boundary, the residual vector is too
+    # small to define a useful approach direction.  Requiring its angle lets
+    # tiny lateral decay prevent an otherwise valid stopped handoff forever.
+    if speed > _DIRECTION_DEFINED_SPEED_BLOCKS_PER_SECOND + 1.0e-9:
         cosine = max(-1.0, min(1.0, (vx * dx + vz * dz) / speed))
         if math.acos(cosine) > window.maximum_velocity_direction_error_radians + 1.0e-9:
             return False

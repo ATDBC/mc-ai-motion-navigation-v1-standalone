@@ -6,6 +6,8 @@
 
 当前已完成 B01 至 B10、C1-A 至 C1-C、C1-R 的 R0 至 R6、B11 固定放置与有限搭桥，以及 B12-A、B12-B。B12-A 固定了每次攻击的证据和分类重试，并接入 Minecraft 1.21 伤害来源事实。B12-B 让战斗先确定本帧视角，导航再按最终视角计算普通地面移动；追逐阶段会持续给出目标视角，导航同时记录每帧的移动决定原因。活动目标和真实墙体场景补齐了持续瞄准、遮挡后的导航、补看和权限撤销。动作证明的生效窗口修正和客户端额外推进一个 tick 时的局部安全恢复也已包含。正式 Fabric 结果与适用边界写在 `docs/motion_navigation/acceptance/`。
 
+导航协调层重构已经完成 S0 至 S5。路线执行、探边和待接替路线由同一个执行监督者管理；目标变化、取消、取证超时和输入失联都必须先安全结束身体责任。连续高度组件矩阵覆盖 11 类小高差和 9 类整格动作，并加入 1,000 张混合表面图的 A*／Dijkstra 对照。半砖、楼梯、土径、地毯和不超过半格的积雪统一作为普通步行候选，再由同一个 1.21 运动计算器验证真实高度、净空和扫掠结果。完整 Fabric 形状、方向和速度带矩阵尚未关闭，不能把组件矩阵或代表性实机回归写成完整能力通过。
+
 2026-09-26 起，正式 Fabric 方块视觉只接受 profile 4 表面深度。旧 profile 3 稀疏射线只能读取历史记录，不能启动正式会话，也不能形成新的验收结论。`evidence/motion_navigation/representative-v1` 保留九份带有 `historical_legacy_ray_profile3` 标签的旧归档，并加入一份 `current_surface_depth_profile4` 的 B12-B 当前代表批次。具体边界见 `docs/motion_navigation/decisions/0035-formal-surface-depth-only.md`。
 
 主仓库仍保留 CraftGround、`legacy_ray_profile3` 和旧轨迹读取代码，以便复现历史结果。它们的采集器、运行入口、导航审计和测试不会进入这个当前实现仓库。V3 仍复用少量早期版本中已经冻结的通用数据类型和 JSON 校验函数；正式后端随后强制检查 profile 4，不能因此启动旧射线。正式 Fabric 构建门禁还会检查旧采集器没有进入客户端 JAR。
@@ -13,15 +15,15 @@
 ## 先读什么
 
 1. `AGENTS.md`
-2. `docs/motion_navigation/stages/B12-partial-observation-combat.md`
-3. `docs/motion_navigation/acceptance/B12B-partial-observation-combat-motion.md`
-4. `docs/motion_navigation/architecture/B12B-partial-observation-combat-motion-v1.md`
-5. `docs/motion_navigation/decisions/0032-harden-b12-aim-movement-and-damage-source.md`
-6. `docs/motion_navigation/stages/B12-review-hardening-plan.md`
-7. `docs/motion_navigation/acceptance/B12A-attack-evidence-retry.md`
-8. `docs/motion_navigation/architecture/B12-attack-evidence-v1.md`
-9. `docs/motion_navigation/architecture/runtime-navigation-convergence-v1.md`
-10. `docs/motion_navigation/decisions/0028-expired-motion-window-local-recovery.md`
+2. `docs/motion_navigation/stages/navigation-coordination-refactor-plan.md`
+3. `docs/motion_navigation/acceptance/navigation-coordination-refactor.md`
+4. `docs/motion_navigation/architecture/navigation-coordination-v1.md`
+5. `docs/motion_navigation/stages/continuous-height-full-matrix-plan.md`
+6. `docs/motion_navigation/acceptance/continuous-height-ground-movement.md`
+7. `docs/motion_navigation/architecture/continuous-height-ground-movement-v1.md`
+8. `docs/motion_navigation/decisions/0039-shared-navigation-coordination-and-closed-loop-gates.md`
+9. `docs/motion_navigation/decisions/0037-closed-loop-continuous-height-execution.md`
+10. 需要检查战斗或部分观察时，再读对应的 B12、C1 文档。
 
 ## 环境
 
@@ -62,6 +64,13 @@ python scripts/export_motion_navigation_standalone.py verify --root .
 
 ```text
 python -m unittest discover -s tests/motion_nav -p "test_*.py" -v
+```
+
+重新生成连续高度正式调用链组件矩阵和规划代价对照时，必须使用新的空输出目录：
+
+```text
+python scripts/run_continuous_height_matrix.py --output output/continuous-height-matrix --condition both --scope all
+python scripts/run_continuous_height_planning_matrix.py --output output/continuous-height-planning-matrix
 ```
 
 运行 C1 正式证据读取和离线重放检查：
@@ -122,12 +131,14 @@ python scripts/public_runtime_evidence.py verify --root evidence/motion_navigati
 - C1 战斗纵切片已覆盖固定目标、移动目标和真实受击后的恢复；
 - B11 已覆盖单块放置、一至三格直桥和十二类边界与反例；
 - B12-A 已覆盖单次攻击证据、分类重试和伤害来源，B12-B 已覆盖按最终战斗视角计算的普通地面移动、活动目标持续瞄准和部分观察边界；
+- 导航协调层的身体责任、前置条件、重试与伤害额度已经有正式路径闭环门禁；
+- 连续高度组件矩阵已覆盖已声明的小高差与整格动作，并保留随机迟到造成的有界安全失败；
 - 公开仓库附带十个结构化真实运行批次，可以重新统计历史结果，并核对 B12-B 当前 profile 4 结果。
 
 ## 不能说明什么
 
 这个快照不包含世界存档、完整普通日志、画面、Gradle 缓存、Minecraft 依赖 JAR 或构建产物，因此不能只靠本仓库重跑游戏内正式实验。公开的十个真实批次是经过筛选的结构化轨迹，可以核对历史结果、当前 B12-B 结果和读取链，但不能替代新的 Fabric 实机运行。其他原始证据仍由主项目保管。
 
-未知区域探索、攀爬、游泳、主动 Crawl、特殊地面、任意宽度跨隙和所有动作的带速衔接仍未完成。当前独立仓库只包含正式 Fabric 路径；CraftGround 适配和旧射线兼容代码只在主仓库保留。
+未知区域探索、攀爬、游泳、主动 Crawl、特殊地面、任意宽度跨隙和尚未声明的动作接续仍未完成。连续高度的完整 Fabric 形状、方向和速度带矩阵也尚未关闭。当前独立仓库只包含正式 Fabric 路径；CraftGround 适配和旧射线兼容代码只在主仓库保留。
 
 公开快照能够复现其声明的源码检查，不代表项目已经没有剩余问题。

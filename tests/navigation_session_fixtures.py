@@ -53,6 +53,7 @@ class FakeNavigationSession:
         self.route_look_required = False
         self.route_look_after_propose = False
         self.handoff_ready = True
+        self.closed = False
 
     def attach_observation_adapter(self, adapter):
         if self.frames and adapter is not self.observation_adapter:
@@ -251,3 +252,12 @@ class FakeNavigationSession:
             self.state = NavigationSessionState.CANCELLING
         else:
             self.state = NavigationSessionState.CANCELLED
+
+    def spawn_successor(self, session_id):
+        if not self.report.terminal or self.source is not None:
+            raise AssertionError("fake successor requires released terminal session")
+        self.closed = True
+        return FakeNavigationSession(cancel_steps=self.cancel_steps)
+
+    def close(self):
+        self.closed = True

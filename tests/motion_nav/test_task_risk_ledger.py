@@ -43,10 +43,49 @@ class TaskRiskLedgerTests(unittest.TestCase):
             "drop-a", RiskReleaseEvidence.ARBITRATION_LOST,
         ))
         self.assertEqual(ledger.available_points, 2)
+        self.assertIsNone(ledger.action("drop-a"))
+        self.assertEqual(ledger.snapshot_actions(), ())
         self.assertIs(ledger.reserve("drop-b", 2, policy_revision=0).status,
                       RiskReservationStatus.RESERVED)
-        self.assertIs(ledger.reserve("drop-a", 2, policy_revision=0).status,
-                      RiskReservationStatus.RELEASED_REQUIRES_NEW_ACTION)
+
+    def test_repeated_unsubmitted_releases_do_not_consume_capacity(self):
+        ledger = TaskRiskLedger("task", TaskDamageBudget("zero", 0))
+        for index in range(256):
+            action_id = f"align-{index}"
+            self.assertIs(
+                ledger.reserve(action_id, 0, policy_revision=0).status,
+                RiskReservationStatus.RESERVED,
+            )
+            self.assertTrue(ledger.release_unstarted(
+                action_id, RiskReleaseEvidence.ARBITRATION_LOST,
+            ))
+        self.assertEqual(ledger.snapshot_actions(), ())
+        self.assertIs(
+            ledger.reserve("real-action", 0, policy_revision=0).status,
+            RiskReservationStatus.RESERVED,
+        )
+
+    def test_settled_actions_use_task_aggregate_not_active_capacity(self):
+        ledger = TaskRiskLedger("task", TaskDamageBudget("zero", 0))
+        for index in range(128):
+            action_id = f"drop-{index}"
+            self.assertIs(
+                ledger.reserve(action_id, 0, policy_revision=0).status,
+                RiskReservationStatus.RESERVED,
+            )
+            ledger.commit(action_id, RiskCommitEvidence(
+                RiskCommitKind.OBSERVED_DEPARTURE,
+                observation_sequence=index,
+            ))
+            self.assertFalse(
+                ledger.settle(action_id, observed_damage_points=0),
+            )
+        self.assertEqual(ledger.committed_points, 0)
+        self.assertLessEqual(len(ledger.snapshot_actions()), 64)
+        self.assertIs(
+            ledger.reserve("next", 0, policy_revision=0).status,
+            RiskReservationStatus.RESERVED,
+        )
 
     def test_budget_reduction_keeps_old_commit_and_rejects_new_risk(self):
         ledger = TaskRiskLedger("task", TaskDamageBudget("two", 2))

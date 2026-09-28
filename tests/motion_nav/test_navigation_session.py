@@ -43,6 +43,7 @@ from mc2p.motion_nav.navigation_session import (
     information_look_for_missing_cells,
     information_probe_movement,
 )
+from mc2p.motion_nav.navigation_lifecycle import NavigationTransitionAction
 from mc2p.motion_nav.landing_edge_probe import (
     LandingEdgeProbe, LandingEdgeProbeState,
 )
@@ -479,6 +480,28 @@ class NavigationSessionTests(unittest.TestCase):
         navigation.start_goal("goal", 1, goal, initial)
         self.assertIs(navigation.report.state,
                       NavigationSessionState.NEEDS_INFORMATION)
+
+    def test_goal_waits_when_current_velocity_will_leave_region_next_tick(self):
+        world = _known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        goal = GoalState(
+            Aabb(.3, .95, .3, .7, 1.05, .7),
+            GoalSupport.SOLID,
+            frozenset({MovementMode.WALK}),
+            frozenset({"standing"}),
+            .6,
+        )
+        moving = frame(
+            world, 1, (.5, 1.0, .697), velocity=(0.0, 0.0, .078),
+            yaw=0.0,
+        )
+
+        observed = evaluate_observed_goal(
+            moving, goal, "no_expected_damage",
+        )
+
+        self.assertIs(observed.status, ObservedGoalStatus.NOT_SATISFIED)
 
 
     def test_goal_start_binds_the_callers_task_damage_budget(self):
@@ -1038,7 +1061,10 @@ class NavigationSessionTests(unittest.TestCase):
             planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
         )
         session.bind_source(_source())
-        session._state = NavigationSessionState.NEEDS_INFORMATION
+        session._transition(
+            NavigationTransitionAction.WAIT_FOR_INFORMATION,
+            "landing_visual_evidence_missing",
+        )
         session._reason = AdmissionReason.LANDING_VISUAL_EVIDENCE_MISSING
         session._snapshot_missing = (landing_body_cell,)
 
@@ -1097,7 +1123,10 @@ class NavigationSessionTests(unittest.TestCase):
         )
         session.bind_source(_source())
         session._frame = initial
-        session._state = NavigationSessionState.NEEDS_INFORMATION
+        session._transition(
+            NavigationTransitionAction.WAIT_FOR_INFORMATION,
+            "landing_visual_evidence_missing",
+        )
         session._reason = AdmissionReason.LANDING_VISUAL_EVIDENCE_MISSING
         session._snapshot_missing = (landing,)
         session._request = Mock()
@@ -1770,6 +1799,28 @@ class NavigationSessionTests(unittest.TestCase):
         session.close()
 
         self.assertFalse(planner.closed)
+
+    def test_terminal_session_transfers_workers_to_fresh_successor(self):
+        planner = _InlinePlanner()
+        session = NavigationSession(
+            "terminal-session",
+            self.profiles(),
+            planner_worker=planner,
+            clock_ns=lambda: 1_000_000_000,
+        )
+        session._transition(
+            NavigationTransitionAction.MARK_FAILED,
+            "test_terminal",
+        )
+
+        successor = session.spawn_successor("terminal-session-successor")
+
+        self.assertTrue(session._closed)
+        self.assertFalse(planner.closed)
+        self.assertIs(successor._planner, planner)
+        self.assertIs(successor.report.state, NavigationSessionState.READY)
+        successor.close()
+        self.assertTrue(planner.closed)
 
     def test_gap_route_is_solved_by_the_session_coordinator(self):
         session, current, anchor = _gap_session()
