@@ -410,6 +410,10 @@ PYTHONPATH=.:<harness 目录> python -B <harness 目录>/scenarios.py far_landin
 
 依赖仓库自带的测试夹具（`tests/follow_v3_fixtures.py`、`tests/test_action_receipt.py`、`tests/test_player_runtime.py`）和正式配置 `config/motion-navigation/`。
 
+## 十、后续
+
+按本方案实施后的复审见 [第十九轮评审：导航协调重构 S0–S5](2026-09-28-coordination-refactor-review.md)。其中 P1-1（先走几步再下一格台阶）是本方案第 2.2 节的 14 个场景漏掉的情形。
+
 [base]: https://github.com/ATDBC/mc-ai-motion-navigation-v1-standalone/tree/8898cf958cf31ad231fcb3953df240ce83bb6292
 [gate-all]: https://github.com/ATDBC/mc-ai-motion-navigation-v1-standalone/blob/8898cf958cf31ad231fcb3953df240ce83bb6292/mc2p/motion_nav/route_admission.py#L153-L180
 [probe-create]: https://github.com/ATDBC/mc-ai-motion-navigation-v1-standalone/blob/8898cf958cf31ad231fcb3953df240ce83bb6292/mc2p/motion_nav/navigation_session.py#L1685-L1702

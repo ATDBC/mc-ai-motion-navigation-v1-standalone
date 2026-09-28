@@ -1,0 +1,44 @@
+NavigationSession: 3076 lines, 92 methods, 54 instance attributes
+largest methods: [(491, 'propose'), (289, '_advance_planning'), (162, 'observe'), (157, '_proposal'), (124, 'update_goal')]
+self._state = assignments: 75 | methods writing _state: 20
+self._reason = assignments: 78 | methods writing _reason: 21
+  goal and request            : 2
+  planning and snapshot       : 4
+  execution and handoff       : 5
+  information and edge probe  : 0
+  task risk (damage)          : 3
+  recovery limits             : 0
+  world interaction / bridging: 4
+  world, residual, admission  : 4
+  lifecycle                   : 2
+  ungrouped: ['_clock', '_close_requested', '_control_anchor', '_control_ledger', '_goal_requests', '_information', '_last_retry_action_index', '_last_retry_body_cell', '_last_retry_route_id', '_lifecycle', '_local_goal_request_id', '_local_input_floor', '_local_mode_wait_frames', '_pending_probe_stop_cause', '_pending_probe_terminal', '_pending_probe_terminal_reason', '_pending_retry', '_planning_pipeline', '_probe_mode_exit_pending', '_recovery_wait_capacity_exhausted', '_recovery_wait_status', '_retry_ledger', '_risk_action_id', '_risk_action_key', '_risk_failure_reason', '_risk_ledger', '_risk_submission_capacity_exhausted', '_supervisor', 'profiles', 'session_id']
+
+navigation_session.py lines per exported commit:
+   1142  f097298 09-25 feat: publish self-verifying motion navigation snapshot
+   1257  5c600cb 09-25 fix: publish C1-R rereview hardening
+   1292  7bd1228 09-25 fix: retain verified motion ownership across uncertainty
+   1312  556381a 09-25 feat: complete C1-R6 runtime hardening
+   1292  f0b66e2 09-25 docs: clean C1-R6 markdown formatting
+   1312  bf2e7c9 09-25 fix: restore C1-R6 standalone tree
+   1452  ba4acda 09-25 feat: publish B11 confirmed block placement and bridging
+   1450  dd38c6b 09-25 feat: publish B11 review hardening and evidence
+   1465  1ea37d7 09-25 sync reviewed B11 boundary fixes and evidence
+   1484  f115920 09-25 fix: preserve verified movement execution windows
+   1502  2c6401c 09-26 feat: publish B12 combat movement snapshot
+   1560  211af42 09-26 feat: publish reviewed B12 runtime
+   1607  3a1fdf0 09-26 fix: validate sustained combat pursuit
+   1659  cba2899 09-26 fix: close B12 pursuit review findings
+   1738  b740098 09-27 feat: publish profile4 surface-depth baseline
+   1789  4b9e73e 09-27 feat: publish partial-visibility air correction
+   1872  59c45bb 09-27 feat: publish continuous height movement
+   2064  5fa2f33 09-27 fix: harden surface visibility and continuous height movement
+   2167  8898cf9 09-28 fix: publish continuous height hardening
+   3488  d34a674 09-28 refactor: publish navigation coordination S0-S5
+
+tests:
+  test functions: 1110
+  test files that use NavigationSession: 18; of these, files that also drive the 1.21 calculator: 0
+  accesses to private session attributes in those files: 70
+
+free-form reason strings used as control flow (reason == / in literal):
+  18 sites, e.g. ['mc2p/skills/block_placement_driver.py:165', 'mc2p/skills/block_placement_driver.py:228', 'mc2p/skills/engagement_memory.py:152', 'mc2p/skills/moving_melee_driver.py:835']

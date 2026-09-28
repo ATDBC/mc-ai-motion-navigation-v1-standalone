@@ -1,0 +1,8 @@
+8898cf9 drop 1 approach 1 -> success   goal_state_satisfied               ticks=34
+8898cf9 drop 1 approach 2 -> failed    verified_entry_not_observed        ticks=27
+8898cf9 drop 1 approach 3 -> failed    verified_entry_not_observed        ticks=32
+8898cf9 drop 1 approach 5 -> failed    verified_entry_not_observed        ticks=46
+8898cf9 drop 2 approach 1 -> success   goal_state_satisfied               ticks=56
+8898cf9 drop 2 approach 2 -> success   goal_state_satisfied               ticks=60
+8898cf9 drop 2 approach 3 -> success   goal_state_satisfied               ticks=67
+8898cf9 drop 2 approach 5 -> failed    landing_edge_probe_timed_out       ticks=61
