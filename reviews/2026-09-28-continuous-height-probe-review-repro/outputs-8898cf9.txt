@@ -1,0 +1,284 @@
+===== 2026-09-28-continuous-height-probe-review-repro/probe_far_landing.py
+walkway route length from start to the ledge: 12 blocks (6 along +z, 6 along +x)
+straight-line distance from start to landing column centre: 9.2 blocks
+
+=== variant timeout
+frame  1: needs_information landing_visual_evidence_missing    body (0.50, 64.00, 0.50) probe approaching keys f=1 s=1 sneak=True vx=+0.000 ground=True
+frame 10: needs_information landing_visual_evidence_missing    body (1.27, 64.00, 1.72) probe approaching keys f=1 s=1 sneak=True vx=+0.085 ground=True
+frame 20: needs_information landing_visual_evidence_missing    body (1.30, 64.00, 3.13) probe approaching keys f=1 s=1 sneak=True vx=+0.109 ground=True
+frame 28: needs_information landing_visual_evidence_missing    body (1.30, 64.00, 3.45) probe approaching keys f=1 s=1 sneak=True vx=+0.119 ground=True
+frame 29: needs_information landing_visual_evidence_missing    body (1.30, 64.00, 3.49) probe approaching keys f=1 s=1 sneak=True vx=+0.119 ground=True
+frame 30: needs_information landing_visual_evidence_missing    body (1.30, 64.00, 3.52) probe approaching keys f=1 s=1 sneak=True vx=+0.119 ground=True
+frame 31: needs_information landing_visual_evidence_missing    body (1.30, 64.00, 3.55) probe approaching keys f=1 s=1 sneak=True vx=+0.119 ground=True
+frame 32: needs_information landing_visual_evidence_missing    body (1.30, 64.00, 3.59) probe approaching keys f=1 s=1 sneak=True vx=+0.119 ground=True
+frame 33: needs_information landing_visual_evidence_missing    body (1.30, 64.00, 3.62) probe approaching keys f=1 s=1 sneak=True vx=+0.119 ground=True
+frame 34: needs_information landing_visual_evidence_missing    body (1.30, 64.00, 3.66) probe approaching keys f=1 s=1 sneak=True vx=+0.119 ground=True
+frame 35: needs_information landing_visual_evidence_missing    body (1.30, 64.00, 3.69) probe approaching keys f=1 s=1 sneak=True vx=+0.119 ground=True
+frame 36: needs_information landing_visual_evidence_missing    body (1.30, 64.00, 3.73) probe approaching keys f=1 s=1 sneak=True vx=+0.119 ground=True
+frame 37: needs_information landing_visual_evidence_missing    body (1.30, 64.00, 3.76) probe approaching keys f=1 s=1 sneak=True vx=+0.119 ground=True
+frame 38: needs_information landing_visual_evidence_missing    body (1.30, 64.00, 3.80) probe approaching keys f=1 s=1 sneak=True vx=+0.119 ground=True
+frame 39: needs_information landing_visual_evidence_missing    body (1.30, 64.00, 3.83) probe approaching keys f=1 s=1 sneak=True vx=+0.119 ground=True
+frame 40: needs_information landing_visual_evidence_missing    body (1.30, 64.00, 3.86) probe approaching keys f=1 s=1 sneak=True vx=+0.119 ground=True
+frame 41: failed            landing_edge_probe_timed_out       body (1.30, 64.00, 3.90) probe None        keys f=0 s=0 sneak=False vx=+0.119 ground=True
+frame 42: failed            landing_edge_probe_timed_out       body (1.42, 64.00, 3.92) probe None        keys f=0 s=0 sneak=False vx=+0.065 ground=True
+frame 43: failed            landing_edge_probe_timed_out       body (1.48, 63.92, 3.93) probe None        keys f=0 s=0 sneak=False vx=+0.035 ground=False
+frame 44: failed            landing_edge_probe_timed_out       body (1.52, 63.77, 3.93) probe None        keys f=0 s=0 sneak=False vx=+0.032 ground=False
+frame 45: failed            landing_edge_probe_timed_out       body (1.55, 63.54, 3.94) probe None        keys f=0 s=0 sneak=False vx=+0.029 ground=False
+frame 46: failed            landing_edge_probe_timed_out       body (1.58, 63.23, 3.94) probe None        keys f=0 s=0 sneak=False vx=+0.027 ground=False
+final body (1.58, 63.23, 3.94), on_ground=False; walkway top is y=64, the pit floor is below y=55
+
+=== variant goal_update
+frame  1: needs_information landing_visual_evidence_missing    body (0.50, 64.00, 0.50) probe approaching keys f=1 s=1 sneak=True vx=+0.000 ground=True
+frame 10: needs_information landing_visual_evidence_missing    body (1.27, 64.00, 1.72) probe approaching keys f=1 s=1 sneak=True vx=+0.085 ground=True
+frame 20: needs_information landing_visual_evidence_missing    body (1.30, 64.00, 3.13) probe approaching keys f=1 s=1 sneak=True vx=+0.109 ground=True
+frame 28: needs_information landing_visual_evidence_missing    body (1.30, 64.00, 3.45) probe approaching keys f=1 s=1 sneak=True vx=+0.119 ground=True
+frame 29: needs_information landing_visual_evidence_missing    body (1.30, 64.00, 3.49) probe approaching keys f=1 s=1 sneak=True vx=+0.119 ground=True
+frame 30: executing         ground_mode_confirmation_pending   body (1.30, 64.00, 3.52) probe None        keys f=0 s=0 sneak=False vx=+0.119 ground=True
+frame 31: failed            ground_mode_invalid_entry          body (1.42, 64.00, 3.54) probe None        keys f=0 s=0 sneak=False vx=+0.065 ground=True
+frame 32: failed            ground_mode_invalid_entry          body (1.48, 63.92, 3.55) probe None        keys f=0 s=0 sneak=False vx=+0.035 ground=False
+frame 33: failed            ground_mode_invalid_entry          body (1.52, 63.77, 3.55) probe None        keys f=0 s=0 sneak=False vx=+0.032 ground=False
+frame 34: failed            ground_mode_invalid_entry          body (1.55, 63.54, 3.56) probe None        keys f=0 s=0 sneak=False vx=+0.029 ground=False
+frame 35: failed            ground_mode_invalid_entry          body (1.58, 63.23, 3.56) probe None        keys f=0 s=0 sneak=False vx=+0.027 ground=False
+frame 36: failed            ground_mode_invalid_entry          body (1.61, 62.85, 3.57) probe None        keys f=0 s=0 sneak=False vx=+0.024 ground=False
+final body (1.61, 62.85, 3.57), on_ground=False; walkway top is y=64, the pit floor is below y=55
+exit 0
+===== 2026-09-28-continuous-height-probe-review-repro/two_drop_terrace.py
+first ledge landing body cell (0, 61, 3): distance from the start eye 4.40 (limit 4.5), lower part visible
+second ledge landing body cell (0, 58, 9): distance from the start eye 10.77 (limit 4.5), lower part visible
+frame  1: needs_information landing_visual_evidence_missing    missing ((0, 58, 9),) probe ('approaching', (0, 58, 9)) body (0.50, 64.00, 0.50)
+frame  2: needs_information landing_visual_evidence_missing    missing ((0, 58, 9),) probe ('approaching', (0, 58, 9)) body (0.50, 64.00, 0.60)
+frame  5: needs_information landing_visual_evidence_missing    missing ((0, 58, 9),) probe ('approaching', (0, 58, 9)) body (0.50, 64.00, 1.13)
+frame 10: needs_information landing_visual_evidence_missing    missing ((0, 58, 9),) probe ('approaching', (0, 58, 9)) body (0.50, 64.00, 2.18)
+frame 20: needs_information landing_visual_evidence_missing    missing ((0, 58, 9),) probe ('approaching', (0, 58, 9)) body (0.50, 64.00, 3.29)
+frame 30: needs_information landing_visual_evidence_missing    missing ((0, 58, 9),) probe ('approaching', (0, 58, 9)) body (0.50, 64.00, 3.29)
+frame 40: needs_information landing_visual_evidence_missing    missing ((0, 58, 9),) probe ('approaching', (0, 58, 9)) body (0.50, 64.00, 3.29)
+frame 41: failed            landing_edge_probe_timed_out       missing ((0, 58, 9),) probe None body (0.50, 64.00, 3.29)
+frame 42: failed            landing_edge_probe_timed_out       missing ((0, 58, 9),) probe None body (0.50, 64.00, 3.41)
+frame 43: failed            landing_edge_probe_timed_out       missing ((0, 58, 9),) probe None body (0.50, 63.92, 3.48)
+frame 44: failed            landing_edge_probe_timed_out       missing ((0, 58, 9),) probe None body (0.50, 63.77, 3.51)
+frame 45: failed            landing_edge_probe_timed_out       missing ((0, 58, 9),) probe None body (0.50, 63.54, 3.54)
+frame 46: failed            landing_edge_probe_timed_out       missing ((0, 58, 9),) probe None body (0.50, 63.23, 3.57)
+frame 47: failed            landing_edge_probe_timed_out       missing ((0, 58, 9),) probe None body (0.50, 62.85, 3.60)
+final body (0.50, 62.85, 3.60), on_ground=False
+exit 0
+===== 2026-09-28-continuous-height-probe-review-repro/later_run_research.py
+table 1: a one-block drop first (later ground run), entry standing still
+width  7, 2 half-step rows, no drop   : complete    A* searches  2       19 ms  steps 0
+width  7, 2 half-step rows, drop first: complete    A* searches  1       82 ms  steps 2
+width  7, 4 half-step rows, no drop   : complete    A* searches  2       23 ms  steps 0
+width  7, 4 half-step rows, drop first: complete    A* searches  1      105 ms  steps 4
+width  7, 6 half-step rows, no drop   : complete    A* searches  2       30 ms  steps 0
+width  7, 6 half-step rows, drop first: complete    A* searches  1      117 ms  steps 6
+width  7, 8 half-step rows, no drop   : complete    A* searches  2       38 ms  steps 0
+width  7, 8 half-step rows, drop first: complete    A* searches  1      133 ms  steps 8
+width 21, 2 half-step rows, no drop   : complete    A* searches  2       19 ms  steps 0
+width 21, 2 half-step rows, drop first: complete    A* searches  1       88 ms  steps 2
+width 21, 4 half-step rows, no drop   : complete    A* searches  2       25 ms  steps 0
+width 21, 4 half-step rows, drop first: complete    A* searches  1      148 ms  steps 4
+width 21, 6 half-step rows, no drop   : complete    A* searches  2       32 ms  steps 0
+width 21, 6 half-step rows, drop first: complete    A* searches  1      229 ms  steps 6
+width 21, 8 half-step rows, no drop   : complete    A* searches  2       38 ms  steps 0
+width 21, 8 half-step rows, drop first: complete    A* searches  1      312 ms  steps 8
+
+table 2: no drop; the first ground run cannot be proved because of the entry state
+width  7, 4 half-step rows, entry none     : complete    A* searches  8       75 ms  steps 4
+width  7, 4 half-step rows, entry sprinting: complete    A* searches  8       87 ms  steps 4
+width  7, 4 half-step rows, entry fast     : complete    A* searches  8       89 ms  steps 4
+width  7, 8 half-step rows, entry none     : complete    A* searches  8      104 ms  steps 8
+width  7, 8 half-step rows, entry sprinting: complete    A* searches  8       99 ms  steps 8
+width  7, 8 half-step rows, entry fast     : complete    A* searches  8      120 ms  steps 8
+width 21, 4 half-step rows, entry none     : complete    A* searches 10      115 ms  steps 4
+width 21, 4 half-step rows, entry sprinting: complete    A* searches 10      100 ms  steps 4
+width 21, 4 half-step rows, entry fast     : complete    A* searches 10      102 ms  steps 4
+width 21, 8 half-step rows, entry none     : no_route_within_complete_scope A* searches 17      325 ms  steps 0
+width 21, 8 half-step rows, entry sprinting: no_route_within_complete_scope A* searches 17      299 ms  steps 0
+width 21, 8 half-step rows, entry fast     : no_route_within_complete_scope A* searches 17      307 ms  steps 0
+exit 0
+===== 2026-09-28-continuous-height-probe-review-repro/input_lost_replans.py
+input_lost input_application_unconfirmed
+  frame  1: executing    tracking_fixed_route           request sequence 1
+  frame  2: failed       input_application_unconfirmed  request sequence 1
+  frame  3: failed       input_application_unconfirmed  request sequence 1
+  frame  4: failed       input_application_unconfirmed  request sequence 1
+  frame  5: failed       input_application_unconfirmed  request sequence 1
+  frame  6: failed       input_application_unconfirmed  request sequence 1
+  frame  7: failed       input_application_unconfirmed  request sequence 1
+  frame  8: failed       input_application_unconfirmed  request sequence 1
+  frame  9: failed       input_application_unconfirmed  request sequence 1
+  frame 10: failed       input_application_unconfirmed  request sequence 1
+  frame 11: failed       input_application_unconfirmed  request sequence 1
+  frame 12: failed       input_application_unconfirmed  request sequence 1
+  frame 13: failed       input_application_unconfirmed  request sequence 1
+  frame 14: failed       input_application_unconfirmed  request sequence 1
+  frame 15: failed       input_application_unconfirmed  request sequence 1
+  frame 16: failed       input_application_unconfirmed  request sequence 1
+  planning requests issued after input_application_unconfirmed: 0; final state failed
+needs_replan ground_traversal_stalled
+  frame  1: executing    tracking_fixed_route           request sequence 1
+  frame  2: snapshotting ground_traversal_stalled       request sequence 2
+  frame  3: executing    tracking_fixed_route           request sequence 2
+  frame  4: snapshotting ground_traversal_stalled       request sequence 3
+  frame  5: executing    tracking_fixed_route           request sequence 3
+  frame  6: failed       replan_retry_exhausted         request sequence 3
+  frame  7: failed       replan_retry_exhausted         request sequence 3
+  frame  8: failed       replan_retry_exhausted         request sequence 3
+  frame  9: failed       replan_retry_exhausted         request sequence 3
+  frame 10: failed       replan_retry_exhausted         request sequence 3
+  frame 11: failed       replan_retry_exhausted         request sequence 3
+  frame 12: failed       replan_retry_exhausted         request sequence 3
+  frame 13: failed       replan_retry_exhausted         request sequence 3
+  frame 14: failed       replan_retry_exhausted         request sequence 3
+  frame 15: failed       replan_retry_exhausted         request sequence 3
+  frame 16: failed       replan_retry_exhausted         request sequence 3
+  planning requests issued after ground_traversal_stalled: 2; final state failed
+needs_replan ground_traversal_stalled/ground_traversal_left_verified_envelope
+  frame  1: executing    tracking_fixed_route           request sequence 1
+  frame  2: snapshotting ground_traversal_stalled       request sequence 2
+  frame  3: executing    tracking_fixed_route           request sequence 2
+  frame  4: snapshotting ground_traversal_left_verified_envelope request sequence 3
+  frame  5: executing    tracking_fixed_route           request sequence 3
+  frame  6: snapshotting ground_traversal_stalled       request sequence 4
+  frame  7: executing    tracking_fixed_route           request sequence 4
+  frame  8: snapshotting ground_traversal_left_verified_envelope request sequence 5
+  frame  9: executing    tracking_fixed_route           request sequence 5
+  frame 10: snapshotting ground_traversal_stalled       request sequence 6
+  frame 11: executing    tracking_fixed_route           request sequence 6
+  frame 12: snapshotting ground_traversal_left_verified_envelope request sequence 7
+  frame 13: executing    tracking_fixed_route           request sequence 7
+  frame 14: snapshotting ground_traversal_stalled       request sequence 8
+  frame 15: executing    tracking_fixed_route           request sequence 8
+  frame 16: snapshotting ground_traversal_left_verified_envelope request sequence 9
+  planning requests issued after ground_traversal_stalled / ground_traversal_left_verified_envelope: 8; final state snapshotting
+exit 0
+===== 2026-09-28-continuous-height-probe-review-repro/drop_action_reference.py
+drop 1: first landing after 9 ticks from the entry stance (from the block centre: 10)
+drop 2: first landing after 11 ticks from the entry stance (from the block centre: 12)
+drop 3: first landing after 13 ticks from the entry stance (from the block centre: 14)
+drop 5: first landing after 16 ticks from the entry stance (from the block centre: 17)
+Fabric action window reported in 12.2 for 1/2/3/5 blocks: 13/14/16/20 ticks
+exit 0
+===== 2026-09-28-continuous-height-probe-review-repro/edge_hold_persists.py
+drop task frame  1: needs_information landing_visual_evidence_missing    route wants None
+                   submitted MovementV1(forward=1, strafe=1, jump=False, sneak=True, sprint=False)  probe=approaching
+drop task frame  2: needs_information landing_visual_evidence_missing    route wants None
+                   submitted MovementV1(forward=1, strafe=1, jump=False, sneak=True, sprint=False)  probe=approaching
+drop task frame  3: needs_information landing_visual_evidence_missing    route wants None
+                   submitted MovementV1(forward=1, strafe=1, jump=False, sneak=True, sprint=False)  probe=approaching
+walk goal frame  4: executing         tracking_fixed_route               route wants MovementV1(forward=0, strafe=1, jump=False, sneak=False, sprint=False)
+                   submitted MovementV1(forward=0, strafe=1, jump=False, sneak=False, sprint=False)  probe=None
+walk goal frame  5: executing         tracking_fixed_route               route wants MovementV1(forward=0, strafe=1, jump=False, sneak=False, sprint=False)
+                   submitted MovementV1(forward=0, strafe=1, jump=False, sneak=False, sprint=False)  probe=None
+walk goal frame  6: executing         tracking_fixed_route               route wants MovementV1(forward=0, strafe=1, jump=False, sneak=False, sprint=False)
+                   submitted MovementV1(forward=0, strafe=1, jump=False, sneak=False, sprint=False)  probe=None
+walk goal frame  7: executing         tracking_fixed_route               route wants MovementV1(forward=0, strafe=1, jump=False, sneak=False, sprint=False)
+                   submitted MovementV1(forward=0, strafe=1, jump=False, sneak=False, sprint=False)  probe=None
+walk goal frame  8: executing         tracking_fixed_route               route wants MovementV1(forward=0, strafe=1, jump=False, sneak=False, sprint=False)
+                   submitted MovementV1(forward=0, strafe=1, jump=False, sneak=False, sprint=False)  probe=None
+walk goal frame  9: executing         tracking_fixed_route               route wants MovementV1(forward=0, strafe=1, jump=False, sneak=False, sprint=False)
+                   submitted MovementV1(forward=0, strafe=1, jump=False, sneak=False, sprint=False)  probe=None
+exit 0
+===== 2026-09-27-continuous-height-hardening-repro/landing_gate_edge_branch.py
+part 1: upper-only evidence seen 9 blocks away, standing at centre  : False
+part 1: upper-only evidence seen 9 blocks away, standing at edge    : False
+part 1: upper-only evidence seen 9 blocks away, sneaking at edge    : False
+
+part 2: nearest-point distance from the eye to the landing body cell, body at the edge (gate limit 4.5)
+  drop 2 (standing): 2.62  within the limit
+  drop 2 (sneaking): 2.27  within the limit
+  drop 3 (standing): 3.62  within the limit
+  drop 3 (sneaking): 3.27  within the limit
+  drop 4 (standing): 4.62  beyond the limit
+  drop 4 (sneaking): 4.27  within the limit
+  drop 5 (standing): 5.62  beyond the limit
+  drop 5 (sneaking): 5.27  beyond the limit
+  drop 8 (standing): 8.62  beyond the limit
+  drop 8 (sneaking): 8.27  beyond the limit
+exit 0
+===== 2026-09-27-continuous-height-hardening-repro/stale_request_budget.py
+request budget when issued      : 2.0
+remaining task budget now       : 0.0
+session after next propose      : snapshotting damage_budget_changed_before_admission
+exit 0
+===== 2026-09-27-continuous-height-hardening-repro/start_offset_closed_loop.py
+start offset (0.0, 0.0)   : admitted, proofs 1; execution complete in 30 ticks
+start offset (0.12, 0.0)  : admitted, proofs 1; execution complete in 30 ticks
+start offset (0.3, 0.0)   : admitted, proofs 1; execution complete in 30 ticks
+start offset (0.0, -0.3)  : admitted, proofs 1; execution complete in 31 ticks
+start offset (0.35, 0.35) : admitted, proofs 1; execution complete in 30 ticks
+start offset (0.45, -0.45): admitted, proofs 1; execution complete in 33 ticks
+start offset (-0.45, 0.45): admitted, proofs 1; execution complete in 32 ticks
+exit 0
+===== 2026-09-27-continuous-height-hardening-repro/stair_descent_robustness.py
+planned edges: ['Walk', 'Walk', 'Walk', 'Walk', 'Walk', 'Walk'] proofs 1
+nominal                   : complete in 39 ticks
+every command 1 tick late : complete in 40 ticks
+20% commands 1 tick late  : 100/100 []
+yaw held 30 deg off      : complete in 40 ticks
+yaw held 60 deg off      : complete in 40 ticks
+start offset (0.3, -0.3)  : complete in 41 ticks
+exit 0
+===== 2026-09-27-continuous-height-hardening-repro/traversal_control_cost.py
+up    yaw+ 0: frames  320  P50   1.15 ms  P95   1.47 ms  max   1.91 ms  calculator steps/frame median 7 max 8
+up    yaw+30: frames  340  P50   1.15 ms  P95   1.50 ms  max   2.20 ms  calculator steps/frame median 7 max 8
+down  yaw+ 0: frames  380  P50   1.14 ms  P95   1.60 ms  max   2.62 ms  calculator steps/frame median 7 max 10
+down  yaw+30: frames  380  P50   1.13 ms  P95   1.62 ms  max   1.90 ms  calculator steps/frame median 7 max 10
+exit 0
+===== 2026-09-27-continuous-height-repro/traversal_robustness.py
+up two half-blocks
+  nominal proof                 : proof ends 0.064 from the goal (completion radius 0.35, margin 0.286)
+  nominal                       : complete in 16 ticks
+  every command 1 tick late     : complete in 18 ticks
+  20% commands 1 tick late      : 100/100 complete; failures: []
+  yaw held 10 deg off route    : complete in 16 ticks
+  yaw held 20 deg off route    : complete in 17 ticks
+  yaw held 30 deg off route    : complete in 17 ticks
+  yaw held 45 deg off route    : complete in 16 ticks
+  yaw held 60 deg off route    : complete in 17 ticks
+  yaw held 90 deg off route    : complete in 16 ticks
+  proof from 0 b/s, start at 1 b/s: complete in 16 ticks
+  proof from 0 b/s, start at 2 b/s: complete in 15 ticks
+  proof from 0 b/s, start at 3 b/s: complete in 15 ticks
+  proof from 2 b/s, start at 0 b/s: complete in 16 ticks
+down two half-blocks
+  nominal proof                 : proof ends 0.334 from the goal (completion radius 0.35, margin 0.016)
+  nominal                       : complete in 19 ticks
+  every command 1 tick late     : complete in 24 ticks
+  20% commands 1 tick late      : 100/100 complete; failures: []
+  yaw held 10 deg off route    : complete in 19 ticks
+  yaw held 20 deg off route    : complete in 19 ticks
+  yaw held 30 deg off route    : complete in 19 ticks
+  yaw held 45 deg off route    : complete in 19 ticks
+  yaw held 60 deg off route    : complete in 19 ticks
+  yaw held 90 deg off route    : complete in 19 ticks
+  proof from 0 b/s, start at 1 b/s: complete in 18 ticks
+  proof from 0 b/s, start at 2 b/s: complete in 18 ticks
+  proof from 0 b/s, start at 3 b/s: complete in 18 ticks
+  proof from 2 b/s, start at 0 b/s: complete in 19 ticks
+exit 0
+===== 2026-09-27-continuous-height-repro/off_center_start.py
+start offset (0.0, 0.0): plan complete, proofs 1; admission accepted candidate_admitted
+start offset (0.05, 0.0): plan complete, proofs 1; admission accepted candidate_admitted
+start offset (0.12, -0.09): plan complete, proofs 1; admission accepted candidate_admitted
+exit 0
+===== 2026-09-27-continuous-height-repro/mixed_route_fallback.py
+rises only (control): complete; edges ['Walk', 'Walk', 'Walk', 'Walk', 'Walk']; ground traversal proofs 1; reasons ()
+    SurfaceWalkEdge            -> column (0,1) y=64.00 proof_required=False
+    SurfaceWalkEdge            -> column (0,2) y=64.50 proof_required=True
+    SurfaceWalkEdge            -> column (0,3) y=65.00 proof_required=True
+    SurfaceWalkEdge            -> column (0,4) y=65.00 proof_required=False
+    SurfaceWalkEdge            -> column (0,5) y=65.00 proof_required=False
+rises then a one-block drop: complete; edges ['Walk', 'Walk', 'Walk', 'ControlledDrop', 'Walk']; ground traversal proofs 1; reasons ()
+    SurfaceWalkEdge            -> column (0,1) y=64.00 proof_required=False
+    SurfaceWalkEdge            -> column (0,2) y=64.50 proof_required=True
+    SurfaceWalkEdge            -> column (0,3) y=65.00 proof_required=True
+    SurfaceControlledDropEdge  -> column (0,4) y=64.00 proof_required=-
+    SurfaceWalkEdge            -> column (0,5) y=64.00 proof_required=False
+admission of the mixed route: accepted candidate_admitted
+  actions: ['WalkSegment', 'ControlledDropSegment', 'WalkSegment']
+  executor start: ok
+exit 0
+===== 2026-09-27-continuous-height-repro/damage_budget_accumulation.py
+budget 0: unsupported; drops []; sum of per-drop conservative damage 0
+budget 2: unsupported; drops []; sum of per-drop conservative damage 0
+budget 4: complete; drops ['74->69', '69->64']; sum of per-drop conservative damage 4
+exit 0
