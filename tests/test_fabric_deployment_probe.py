@@ -198,9 +198,11 @@ class FabricDeploymentProbeTests(unittest.TestCase):
     def test_continuous_height_probe_freezes_formal_chain_and_is_exclusive(self):
         from scripts.probe_fabric_deployment_observation import (
             CONTINUOUS_HEIGHT_SOURCES, frozen_deployment_sources,
+            minimum_full_matrix_timeout_seconds,
         )
         required = {
             "scripts/continuous_height_runtime.py",
+            "tests/sim/manifests/continuous-height-full-matrix.json",
             "mc2p/motion_nav/ground_traversal.py",
             "mc2p/motion_nav/motion_solver.py",
             "mc2p/motion_nav/motion_risk.py",
@@ -220,6 +222,29 @@ class FabricDeploymentProbeTests(unittest.TestCase):
         )
         self.assertNotEqual(invalid.returncode, 0)
         self.assertIn("mutually exclusive", invalid.stderr)
+
+        missing_parent = subprocess.run(
+            [sys.executable, str(script),
+             "--continuous-height-full-matrix"],
+            cwd=ROOT, capture_output=True, text=True,
+        )
+        self.assertNotEqual(missing_parent.returncode, 0)
+        self.assertIn(
+            "requires --continuous-height-probe", missing_parent.stderr,
+        )
+
+        self.assertEqual(minimum_full_matrix_timeout_seconds(8), 520)
+        undersized = subprocess.run(
+            [sys.executable, str(script), "--continuous-height-probe",
+             "--continuous-height-full-matrix", "--matrix-shard-index", "0",
+             "--matrix-shard-count", "8", "--timeout-seconds", "519"],
+            cwd=ROOT, capture_output=True, text=True,
+        )
+        self.assertNotEqual(undersized.returncode, 0)
+        self.assertIn(
+            "full matrix timeout is too short for the selected shard",
+            undersized.stderr,
+        )
 
     def test_b11_source_freeze_includes_world_change_chain(self):
         from scripts.probe_fabric_deployment_observation import (

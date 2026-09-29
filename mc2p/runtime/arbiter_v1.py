@@ -112,6 +112,16 @@ class ActionArbiterV1:
             slot = self._ordered_sources.validate_submission(envelope)
             if len(self._intents) >= 128:
                 raise ContractViolation('formal intent capacity exceeded')
+            # Movement is the only persistent control group.  A newer
+            # movement from one ordered source supersedes that source's older
+            # movement even when the old command had a higher priority.  Look
+            # and operations remain one-shot, and a look-only update must not
+            # revoke a still-valid movement lease from the same source.
+            if envelope.intent.movement is not None:
+                for key, intent in tuple(self._intents.items()):
+                    if (intent.source_id == envelope.source.source_id
+                            and intent.movement is not None):
+                        del self._intents[key]
             self._intents[envelope.intent.intent_id] = envelope.intent
             slot.last_sequence = envelope.sequence
 

@@ -54,6 +54,19 @@ from scripts.visibility_fixture_world import _no_links, build_visibility_fixture
 
 PROXY_ARGS = ["-Dhttp.proxyHost=127.0.0.1", "-Dhttp.proxyPort=7897", "-Dhttps.proxyHost=127.0.0.1",
               "-Dhttps.proxyPort=7897", "-Dhttp.nonProxyHosts=localhost|127.*|[::1]|repo.huaweicloud.com"]
+_FULL_MATRIX_TRIAL_COUNT = 800
+_DEFAULT_PROBE_TIMEOUT_SECONDS = 240.0
+_DEFAULT_FULL_MATRIX_TIMEOUT_SECONDS = 1200.0
+
+
+def minimum_full_matrix_timeout_seconds(shard_count: int) -> int:
+    """Reserve startup time plus a conservative wall-clock share per trial."""
+    if type(shard_count) is not int or not 1 <= shard_count <= 64:
+        raise ValueError("full matrix shard count must be in [1, 64]")
+    selected_trials = math.ceil(_FULL_MATRIX_TRIAL_COUNT / shard_count)
+    return 120 + 4 * selected_trials
+
+
 DEPLOYMENT_BASE_SOURCES = (
     "scripts/probe_fabric_deployment_observation.py",
     "scripts/surface_perception_cost_runtime.py",
@@ -171,6 +184,7 @@ B10_GAP_SOLVER_SOURCES = (
 )
 CONTINUOUS_HEIGHT_SOURCES = (
     "scripts/continuous_height_runtime.py",
+    "tests/sim/manifests/continuous-height-full-matrix.json",
     *NAVIGATION_SESSION_SOURCES,
     "mc2p/motion_nav/ground_traversal.py",
     "mc2p/motion_nav/motion_candidate.py",
@@ -876,6 +890,9 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                b09_air_motion_probe: bool = False,
                b10_gap_solver_probe: bool = False,
                continuous_height_probe: bool = False,
+               continuous_height_full_matrix: bool = False,
+               matrix_shard_index: int = 0,
+               matrix_shard_count: int = 1,
                navigation_review20_probe: bool = False,
                b11_world_change_probe: bool = False,
                input_buffer_idle_probe: bool = False,
@@ -1456,6 +1473,9 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                                 runtime, backend,
                             ),
                             review20_only=review20_only,
+                            full_matrix=continuous_height_full_matrix,
+                            shard_index=matrix_shard_index,
+                            shard_count=matrix_shard_count,
                         )
                     elif b11_world_change_probe:
                         from scripts.b11_world_change_runtime import run_b11_world_change_runtime
@@ -2008,7 +2028,7 @@ def main(argv=None) -> int:
     parser.add_argument("--seed", type=int, choices=(21001, 21002, 21003), default=21001)
     parser.add_argument("--server-port", type=int, default=25597)
     parser.add_argument("--ipc-port", type=int, default=8140)
-    parser.add_argument("--timeout-seconds", type=float, default=240)
+    parser.add_argument("--timeout-seconds", type=float)
     parser.add_argument("--launch-json", type=Path)
     parser.add_argument("--container-probe", action="store_true", help="verify nonempty normal chest transfer and reconnect")
     parser.add_argument("--mining-probe", action="store_true", help="verify shared Runtime mining, pickup, placement and persisted server state")
@@ -2041,6 +2061,12 @@ def main(argv=None) -> int:
                         help='solve and validate one-cell gaps in a controlled session')
     parser.add_argument('--continuous-height-probe', action='store_true',
                         help='run continuous low-height and descending routes')
+    parser.add_argument('--continuous-height-full-matrix', action='store_true',
+                        help='run a deterministic shard of the frozen M3 matrix')
+    parser.add_argument('--matrix-shard-index', type=int, default=0,
+                        help=argparse.SUPPRESS)
+    parser.add_argument('--matrix-shard-count', type=int, default=1,
+                        help=argparse.SUPPRESS)
     parser.add_argument('--navigation-review20-probe', action='store_true',
                         help='run review-20 interruption and late-input matrix')
     parser.add_argument('--b11-world-change-probe', action='store_true',
@@ -2079,13 +2105,34 @@ def main(argv=None) -> int:
         parser.error('probe scenarios are mutually exclusive')
     if args.block_parity:
         parser.error('first-hit block parity was retired with sensor profile 3')
+    if (args.continuous_height_full_matrix
+            and not args.continuous_height_probe):
+        parser.error('--continuous-height-full-matrix requires --continuous-height-probe')
+    if (not 1 <= args.matrix_shard_count <= 64
+            or not 0 <= args.matrix_shard_index < args.matrix_shard_count):
+        parser.error('invalid continuous-height matrix shard')
+    if (not args.continuous_height_full_matrix
+            and (args.matrix_shard_index != 0 or args.matrix_shard_count != 1)):
+        parser.error('matrix shards require --continuous-height-full-matrix')
     if args.physics_tick_diagnostics and not args.time_diagnostics:
         parser.error('physics tick diagnostics require --time-diagnostics')
     if (args.c1r_control_frame_probe or args.b12b_partial_combat_probe
             or args.surface_cost_probe) \
             and not args.time_diagnostics:
         parser.error('selected probe requires --time-diagnostics')
-    maximum_timeout = 1200 if (args.c1_fixed_melee_probe
+    if args.timeout_seconds is None:
+        args.timeout_seconds = (
+            _DEFAULT_FULL_MATRIX_TIMEOUT_SECONDS
+            if args.continuous_height_full_matrix
+            else _DEFAULT_PROBE_TIMEOUT_SECONDS
+        )
+    if (args.continuous_height_full_matrix
+            and args.timeout_seconds
+            < minimum_full_matrix_timeout_seconds(args.matrix_shard_count)):
+        parser.error(
+            'full matrix timeout is too short for the selected shard'
+        )
+    maximum_timeout = 3600 if args.continuous_height_full_matrix else 1200 if (args.c1_fixed_melee_probe
                                or args.c1_moving_melee_probe
                                or args.c1_external_motion_probe
                                or args.c1r_control_frame_probe
@@ -2112,6 +2159,9 @@ def main(argv=None) -> int:
                           args.b08_ground_modes_probe,args.b09_air_motion_probe,
                           args.b10_gap_solver_probe,
                           args.continuous_height_probe,
+                          args.continuous_height_full_matrix,
+                          args.matrix_shard_index,
+                          args.matrix_shard_count,
                           args.navigation_review20_probe,
                           args.b11_world_change_probe,
                           args.input_buffer_idle_probe,
@@ -2168,6 +2218,12 @@ def main(argv=None) -> int:
     if args.b09_air_motion_probe: command.append('--b09-air-motion-probe')
     if args.b10_gap_solver_probe: command.append('--b10-gap-solver-probe')
     if args.continuous_height_probe: command.append('--continuous-height-probe')
+    if args.continuous_height_full_matrix:
+        command.extend([
+            '--continuous-height-full-matrix',
+            '--matrix-shard-index', str(args.matrix_shard_index),
+            '--matrix-shard-count', str(args.matrix_shard_count),
+        ])
     if args.navigation_review20_probe:
         command.append('--navigation-review20-probe')
     if args.b11_world_change_probe: command.append('--b11-world-change-probe')

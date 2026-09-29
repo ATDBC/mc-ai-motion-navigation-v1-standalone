@@ -286,11 +286,22 @@ def verify_ground_traversal(
                 and abs(state.position[1] - target.y) <= 0.10
                 and state.on_ground
         )
+        # A shallow downward edge can keep the feet on the higher shape until
+        # the body centre has nearly crossed the terminal point.  Waiting for
+        # the lower feet height before releasing forward input then spends the
+        # entire verified endpoint margin on momentum.  Begin braking once the
+        # terminal is horizontally reached and no upward step is still needed;
+        # the calculator still has to prove the landing and complete stop.
+        approaching_terminal_descent = (
+            target_index == len(route.points) - 1
+            and distance <= 0.35
+            and target.y <= state.position[1] + 0.15
+        )
         horizontal_speed = math.hypot(
             state.velocity_blocks_per_tick[0],
             state.velocity_blocks_per_tick[2],
         ) * 20.0
-        if reached_terminal:
+        if reached_terminal or approaching_terminal_descent:
             braking = True
         if braking and horizontal_speed <= 0.10:
             plan = GroundTraversalPlan(

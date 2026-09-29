@@ -62,7 +62,57 @@ def traversal_fixture(*, hide=()):
     return state, route, PhysicsWorldView(world.view(), JAVA_1_21_RULESET)
 
 
+def shallow_snow_fixture():
+    """A flat lane whose two 1/8-block snow rises start at the first edge."""
+    session = WorldSessionId("ground-traversal-shallow-snow-test")
+    world = WorldKnowledge(session)
+    stamp = ObservationStamp(session, 1, 1, "test", 1)
+    blocks = {
+        (x, 0, 0): BlockGeometry.full_cube("minecraft:stone")
+        for x in range(5)
+    }
+    for x in (1, 3):
+        blocks[(x, 1, 0)] = BlockGeometry(
+            "minecraft:snow", "boxes",
+            (Aabb(0, 0, 0, 1, .125, 1),),
+        )
+    world.confirm_air(stamp, tuple(
+        (x, y, z)
+        for x in range(-2, 7)
+        for y in range(-2, 7)
+        for z in range(-2, 3)
+        if (x, y, z) not in blocks
+    ))
+    world.observe_blocks(stamp, blocks)
+    anchor, _, _, _ = gap_fixture()
+    state = replace(
+        anchor.physics_state,
+        session=session,
+        movement_tick_id=0,
+        position=(.5, 1.0, .5),
+        velocity_blocks_per_tick=(0.0, -0.0784000015258789, 0.0),
+        yaw_radians=-math.pi / 2.0,
+    )
+    route = FixedRoute("shallow-snow-from-rest", tuple(
+        RoutePoint(x + .5, 1.125 if x in (1, 3) else 1.0, .5)
+        for x in range(5)
+    ))
+    return state, route, PhysicsWorldView(world.view(), JAVA_1_21_RULESET)
+
+
 class GroundTraversalVerificationTests(unittest.TestCase):
+    def test_rest_entry_brakes_before_the_final_shallow_drop(self):
+        state, route, world = shallow_snow_fixture()
+
+        result = verify_ground_traversal(
+            state, route, world, profile(), maximum_ticks=80,
+        )
+
+        self.assertIs(result.status, GroundTraversalStatus.VERIFIED)
+        self.assertIsNotNone(result.plan)
+        self.assertEqual(result.plan.route, route)
+        self.assertLess(result.plan.trajectory[-1].position[0], 4.95)
+
     def test_verifies_two_natural_half_block_steps_without_static_step_actions(self):
         state, route, world = traversal_fixture()
 

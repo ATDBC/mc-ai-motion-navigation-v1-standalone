@@ -37,6 +37,10 @@ from mc2p.runtime.player_runtime_v1 import (
 _STEP_WINDOW_NS = 500_000_000
 
 
+class _OwnerDeadlineExpired(ContractViolation):
+    """The caller's current control authority expired before dispatch."""
+
+
 @dataclass(frozen=True, slots=True)
 class NavigationFrameDiagnostics:
     proposed_intents: tuple[str, ...]
@@ -192,7 +196,14 @@ class RuntimeNavigationDriver:
             "interaction_required",
         }:
             raise ContractViolation("runtime navigation driver cannot tick")
-        proposals = self.prepare_proposals(owner_deadline_ns)
+        try:
+            proposals = self.prepare_proposals(owner_deadline_ns)
+        except _OwnerDeadlineExpired:
+            # Losing the caller's current lease is an expected runtime event,
+            # not a broken navigation contract.  Cancel the task through the
+            # existing body handoff path so an airborne controller keeps its
+            # landing responsibility and a grounded task ends cleanly.
+            return self.stop(profile, "owner_heartbeat_lost")
         assert self._prepared_deadline_ns is not None
         deadline = self._prepared_deadline_ns
         try:
@@ -223,7 +234,9 @@ class RuntimeNavigationDriver:
         require_nonnegative_int(owner_deadline_ns, "runtime navigation owner deadline")
         deadline = min(owner_deadline_ns, now + _STEP_WINDOW_NS)
         if deadline <= now:
-            raise ContractViolation("runtime navigation action window expired")
+            raise _OwnerDeadlineExpired(
+                "runtime navigation action window expired"
+            )
         observation = self.runtime.observation
         frame = self.session.ingest(observation)
         ledger = self.runtime.input_ledger
@@ -323,7 +336,9 @@ class RuntimeNavigationDriver:
             )
             self.state, self.reason = "failed", "runtime_failure"
         else:
-            if (proposal is not None and proposal.route_decision is not None
+            if (not self.session.report.terminal
+                    and proposal is not None
+                    and proposal.route_decision is not None
                     and proposal.control_frame is not None
                     and result.decision is not None):
                 navigation_intents = {

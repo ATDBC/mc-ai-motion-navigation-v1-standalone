@@ -1,0 +1,15 @@
+{
+  "schema_version": "mc2p.navigation-event-sequence-manifest.v1",
+  "scenarios": [
+    "direct_drop_2",
+    "direct_drop_5_budget_2"
+  ],
+  "event_count": 4,
+  "maximum_ticks": 300,
+  "seeds": [
+    23001, 23002, 23003, 23004, 23005,
+    23006, 23007, 23008, 23009, 23010,
+    23011, 23012, 23013, 23014, 23015,
+    23016, 23017, 23018, 23019, 23020
+  ]
+}

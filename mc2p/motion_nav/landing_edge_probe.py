@@ -167,18 +167,17 @@ class LandingEdgeProbe:
             frame.body.velocity_blocks_per_second[0],
             frame.body.velocity_blocks_per_second[2],
         )
-        distance = math.hypot(
-            self.stop_target[0] - frame.body.position[0],
-            self.stop_target[1] - frame.body.position[2],
-        )
-        if speed > .10 or distance > .20:
+        if speed > .10:
             return False
         support = query_support(frame.body.body_box, frame.world)
         if (support.status is not QueryStatus.FEASIBLE
                 or support.support_fraction < .80):
             return False
         # The calculator must prove the entire released-input tail on known
-        # ordinary ground. Unknown material or a missing anchor retains owner.
+        # ordinary ground.  Returning to the original point is preferable but
+        # not required: an external push may have placed the body on another
+        # stable support from which the old point is no longer reachable.
+        # Unknown material or a missing anchor still retains ownership.
         return verified_ground_rollout(
             frame, state, MovementV1(), control_ticks=0,
             tail_ticks=8, minimum_support=.80,
@@ -213,6 +212,13 @@ class LandingEdgeProbe:
 
     def _stopping_movement(self, frame: NavigationFrame,
                            state: PhysicsState | None) -> MovementV1:
+        if not frame.body.is_on_ground:
+            # A probe can be pushed or can lose its support after stop was
+            # requested.  The old target belongs to the support height from
+            # which stopping began.  Once airborne, retaining that target can
+            # make the controller walk back toward an unreachable upper ledge
+            # after it safely lands below.
+            self.stop_target = None
         if self.stop_target is None:
             self.stop_target = self._choose_stop_target(frame)
         if self.stop_target is None or not frame.body.is_on_ground:

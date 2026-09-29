@@ -2,13 +2,17 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+import json
 import math
 from pathlib import Path
+import random
 import time
 from typing import Callable
 
-from mc2p.contracts.action_v1 import MovementV1
+from mc2p.contracts.action import ActionPriorityV0
+from mc2p.contracts.action_v1 import ActionIntentV1, MovementV1
 from mc2p.contracts.behavior import BehaviorProfileV0
+from mc2p.contracts.intent_source import OrderedIntentV1, ordered_intent_id
 from mc2p.contracts.observation_request_v3 import (
     MAX_AIR_QUERY_POSITIONS, ObservationRequestV3,
 )
@@ -23,6 +27,14 @@ from mc2p.motion_nav.navigation_session import (
     NavigationSession, NavigationSessionProfiles,
 )
 from mc2p.motion_nav.motion_worker import MotionSolverWorker
+from mc2p.motion_nav.online_motion import (
+    ProjectionStatus, project_movement_command,
+)
+from mc2p.motion_nav.physics_1_21 import step as physics_step
+from mc2p.motion_nav.physics_adapter import PhysicsWorldView, build_physics_state
+from mc2p.motion_nav.physics_types import (
+    CalculationStatus, JAVA_1_21_RULESET, StateBuildStatus,
+)
 from mc2p.motion_nav.planner_worker import PlannerWorker
 from mc2p.motion_nav.world_model import Aabb, CellKnowledge
 from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
@@ -31,12 +43,22 @@ from scripts.control_probe_core import append_jsonl, write_json_atomic
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "config/motion-navigation"
+FULL_MATRIX_MANIFEST = (
+    ROOT / "tests/sim/manifests/continuous-height-full-matrix.json"
+)
 FEET_Y = 100
 _DIRECTIONS = (
     (1, 0, -90.0),
     (0, 1, 0.0),
     (-1, 0, 90.0),
     (0, -1, 180.0),
+)
+_STATE_ASSUMPTIONS = dict(
+    jumping_cooldown_ticks=0,
+    movement_speed_attribute=.1,
+    step_height_blocks=.6,
+    gravity_attribute=.08,
+    jump_strength_attribute=.42,
 )
 
 
@@ -63,6 +85,309 @@ def continuous_height_trial_plan() -> tuple[dict, ...]:
             "drop_blocks": drop_blocks,
         })
     return tuple(rows)
+
+
+def _matrix_trial_geometry(
+    family: str,
+    direction_index: int,
+    speed_band: str,
+    family_index: int,
+) -> dict:
+    """Build one reusable real-game fixture for a frozen M3 row."""
+    direction = ("east", "south", "west", "north")[direction_index]
+    opposite = {"east": "west", "south": "north",
+                "west": "east", "north": "south"}[direction]
+    blocks: dict[tuple[int, int, int], str] = {}
+
+    def full(u: int, feet_y: int, v: int = 0,
+             material: str = "minecraft:stone") -> None:
+        blocks[(u, feet_y - 1, v)] = material
+
+    def decorate(u: int, y: int, material: str, v: int = 0) -> None:
+        blocks[(u, y, v)] = material
+
+    start_feet = FEET_Y
+    goal_feet = FEET_Y
+    transition_u = 1
+    goal_u = 4
+    kind = "low_height_route"
+    drop_blocks = None
+    max_ticks = 240
+
+    if family == "slab_up_down":
+        transition_u, goal_u, goal_feet = 2, 6, FEET_Y + 2
+        for u, feet in enumerate((100, 100, 100, 101, 101, 102, 102)):
+            full(u, feet)
+        decorate(2, FEET_Y, "minecraft:smooth_stone_slab[type=bottom]")
+        decorate(4, FEET_Y + 1,
+                 "minecraft:smooth_stone_slab[type=bottom]")
+    elif family == "slab_down_up":
+        transition_u, goal_u = 2, 6
+        start_feet, goal_feet = FEET_Y + 2, FEET_Y
+        for u, feet in enumerate((102, 102, 101, 101, 100, 100, 100)):
+            full(u, feet)
+        decorate(2, FEET_Y + 1,
+                 "minecraft:smooth_stone_slab[type=bottom]")
+        decorate(4, FEET_Y,
+                 "minecraft:smooth_stone_slab[type=bottom]")
+    elif family in {"stairs_up", "stairs_down"}:
+        transition_u, goal_u = 2, 6
+        ascending = family == "stairs_up"
+        start_feet = FEET_Y if ascending else FEET_Y + 2
+        goal_feet = FEET_Y + 2 if ascending else FEET_Y
+        feet_rows = ((100, 100, 100, 101, 101, 102, 102)
+                     if ascending else
+                     (102, 102, 101, 101, 100, 100, 100))
+        for u, feet in enumerate(feet_rows):
+            full(u, feet)
+        stair_facing = direction if ascending else opposite
+        first_y = FEET_Y if ascending else FEET_Y + 1
+        second_y = FEET_Y + 1 if ascending else FEET_Y
+        decorate(
+            2, first_y,
+            f"minecraft:oak_stairs[facing={stair_facing},half=bottom,shape=straight]",
+        )
+        decorate(
+            4, second_y,
+            f"minecraft:oak_stairs[facing={stair_facing},half=bottom,shape=straight]",
+        )
+    elif family == "dirt_path_alternating":
+        transition_u, goal_u = 1, 8
+        for u in range(9):
+            full(u, FEET_Y, material=(
+                "minecraft:stone" if u % 2 == 0 else "minecraft:dirt_path"
+            ))
+    elif family in {"carpet_alternating", "snow_layers_2",
+                    "snow_layers_4", "snow_layers_5"}:
+        transition_u, goal_u = 1, 4
+        for u in range(5):
+            full(u, FEET_Y)
+        if family == "carpet_alternating":
+            material = "minecraft:white_carpet"
+        else:
+            material = f"minecraft:snow[layers={family.rsplit('_', 1)[1]}]"
+        decorate(1, FEET_Y, material)
+        decorate(3, FEET_Y, material)
+    elif family == "single_bottom_slab":
+        transition_u, goal_u = 2, 4
+        for u in range(5):
+            full(u, FEET_Y)
+        decorate(2, FEET_Y, "minecraft:smooth_stone_slab[type=bottom]")
+    elif family == "low_height_then_brake":
+        transition_u, goal_u, goal_feet = 1, 3, FEET_Y + 1
+        full(0, FEET_Y)
+        full(1, FEET_Y)
+        decorate(1, FEET_Y, "minecraft:smooth_stone_slab[type=bottom]")
+        full(2, FEET_Y + 1)
+        full(3, FEET_Y + 1)
+    elif family == "jump_up_1":
+        kind = "jump_up"
+        transition_u, goal_u, goal_feet = 2, 5, FEET_Y + 1
+        for u, feet in enumerate((100, 100, 101, 101, 101, 101)):
+            full(u, feet)
+    elif family == "step_down_1":
+        kind = "step_down"
+        transition_u, goal_u = 2, 5
+        start_feet, goal_feet = FEET_Y + 1, FEET_Y
+        for u, feet in enumerate((101, 101, 100, 100, 100, 100)):
+            full(u, feet)
+    elif family.startswith("stair_descent_"):
+        kind = "stair_descent"
+        levels = int(family.rsplit("_", 1)[1])
+        transition_u = 2
+        start_feet = FEET_Y + levels
+        feet_rows = (start_feet, start_feet) + tuple(
+            start_feet - index for index in range(1, levels + 1)
+        ) + (FEET_Y,)
+        goal_u = len(feet_rows) - 1
+        max_ticks = 600 if levels == 8 else 240
+        for u, feet in enumerate(feet_rows):
+            full(u, feet)
+    elif family.startswith("direct_drop_"):
+        kind = "direct_drop"
+        drop_token = family.removeprefix("direct_drop_").split("_", 1)[0]
+        drop_blocks = int(drop_token)
+        transition_u, goal_u = 3, 5
+        goal_feet = FEET_Y - drop_blocks
+        for u in range(0, 3):
+            full(u, FEET_Y)
+        for u in range(3, 7):
+            full(u, goal_feet)
+    else:
+        raise ValueError(f"unknown continuous-height family: {family}")
+
+    # Full-block actions receive their requested entry speed through ordinary
+    # player inputs on a three-block runway.  Small-height routes need no
+    # synthetic speed preparation; their differing approach lengths remain a
+    # useful timing variation, but do not claim to prove an entry-speed band.
+    approach_cells = (
+        {"low": 1, "medium": 2, "high": 4}[speed_band]
+        if kind == "low_height_route" else 4
+    )
+    start_u = transition_u - approach_cells
+    for u in range(start_u, transition_u):
+        if kind == "direct_drop":
+            full(u, start_feet)
+        else:
+            full(u, start_feet)
+
+    slot = family_index * 4 + direction_index
+    origin_x = (slot % 10) * 20
+    origin_z = (slot // 10) * 20
+
+    def world_cell(position: tuple[int, int, int]) -> tuple[int, int, int]:
+        u, y, v = position
+        x_offset, z_offset = _transform(direction_index, u, v)
+        return origin_x + x_offset, y, origin_z + z_offset
+
+    support_blocks = tuple(sorted(
+        (world_cell(position), material)
+        for position, material in blocks.items()
+    ))
+
+    def world_point(u: int, feet_y: float, v: int = 0) -> tuple[float, float, float]:
+        x_offset, z_offset = _transform(direction_index, u, v)
+        return origin_x + x_offset + .5, feet_y, origin_z + z_offset + .5
+
+    start = world_point(start_u, float(start_feet))
+    goal = world_point(goal_u, float(goal_feet))
+    middle_u = (start_u + goal_u) // 2
+    lower_x, lower_z = _transform(direction_index, middle_u, -6)
+    upper_x, upper_z = _transform(direction_index, middle_u, 6)
+    lower_world_x = origin_x + lower_x + .5
+    lower_world_z = origin_z + lower_z + .5
+    upper_world_x = origin_x + upper_x + .5
+    upper_world_z = origin_z + upper_z + .5
+    center_x = (start[0] + goal[0]) / 2
+    center_z = (start[2] + goal[2]) / 2
+    lower_yaw = math.degrees(math.atan2(
+        -(center_x - lower_world_x), center_z - lower_world_z,
+    ))
+    upper_yaw = math.degrees(math.atan2(
+        -(center_x - upper_world_x), center_z - upper_world_z,
+    ))
+    lower_y = float(goal_feet if kind == "direct_drop" else min(
+        start_feet, goal_feet,
+    ))
+    geometry = {
+        "kind": kind,
+        "drop_blocks": drop_blocks,
+        "support_blocks": support_blocks,
+        "start_position": start,
+        "goal_position": goal,
+        "observer_pose": (
+            lower_world_x, lower_y, lower_world_z, lower_yaw, 30.0,
+        ),
+        "upper_observer_pose": (
+            upper_world_x, float(max(start_feet, goal_feet)),
+            upper_world_z, upper_yaw, -25.0,
+        ),
+        "entry_progress_blocks": transition_u - start_u - .5,
+        "max_ticks": max_ticks,
+        "origin": (origin_x, origin_z),
+    }
+    if kind != "low_height_route":
+        geometry["entry_position"] = world_point(
+            transition_u - 1, float(start_feet),
+        )
+    return geometry
+
+
+def continuous_height_fabric_matrix_plan() -> tuple[dict, ...]:
+    """Expand the frozen M3 manifest before any real-game result is read."""
+    manifest = json.loads(FULL_MATRIX_MANIFEST.read_text(encoding="utf-8"))
+    if manifest.get("schema_version") != (
+            "mc2p.continuous-height-full-matrix.v1"):
+        raise ValueError("unsupported continuous-height matrix manifest")
+    families = (
+        *(str(item) for item in manifest["small_height_families"]),
+        *(str(item) for item in manifest["height_action_families"]),
+    )
+    directions = tuple(str(item) for item in manifest["directions"])
+    speed_bands = tuple(manifest["entry_speed_bands"])
+    repetitions = int(manifest["fabric_repetitions_per_direction"])
+    seed_start = int(manifest["seed_start"])
+    seed_count = int(manifest["seed_end"]) - seed_start + 1
+    rows: list[dict] = []
+    for family_index, family in enumerate(families):
+        for condition_index, condition in enumerate(("normal", "late")):
+            for direction_index, direction in enumerate(directions):
+                for repetition in range(repetitions):
+                    # Five repetitions per direction and two conditions make
+                    # forty real trials per family.  Rotate across that whole
+                    # sequence so every full-block family retains at least ten
+                    # low, medium and high entry samples.
+                    speed = speed_bands[
+                        (condition_index * len(directions) * repetitions
+                         + direction_index * repetitions + repetition)
+                        % len(speed_bands)
+                    ]
+                    seed_offset = (
+                        family_index * 40 + condition_index * 20
+                        + direction_index * repetitions + repetition
+                    ) % seed_count
+                    row = {
+                        "trial_id": (
+                            f"m3-{family}-{condition}-{direction}-"
+                            f"{repetition + 1}"
+                        ),
+                        "family": family,
+                        "condition": condition,
+                        "direction_index": direction_index,
+                        "direction": direction,
+                        "repetition": repetition + 1,
+                        "speed_band": str(speed["id"]),
+                        "entry_speed_minimum": float(speed["minimum"]),
+                        "entry_speed_maximum": float(speed["maximum"]),
+                        "target_entry_speed": float(speed["target"]),
+                        "seed": seed_start + seed_offset,
+                        "late_probability": (
+                            float(manifest["late_probability"])
+                            if condition == "late" else 0.0
+                        ),
+                        "injection": (
+                            "random_late_verified_input"
+                            if condition == "late" else None
+                        ),
+                    }
+                    row.update(_matrix_trial_geometry(
+                        family, direction_index, str(speed["id"]),
+                        family_index,
+                    ))
+                    row["expected_terminal"] = (
+                        ("success", "failed", "cancelled")
+                        if condition == "late" else "success"
+                    )
+                    rows.append(row)
+    return tuple(rows)
+
+
+def select_continuous_height_fabric_matrix_shard(
+    plan: tuple[dict, ...], shard_index: int, shard_count: int,
+) -> tuple[dict, ...]:
+    if shard_count <= 0 or not 0 <= shard_index < shard_count:
+        raise ValueError("invalid continuous-height matrix shard")
+    return tuple(
+        trial for index, trial in enumerate(plan)
+        if index % shard_count == shard_index
+    )
+
+
+def continuous_height_execution_plan(
+    *, review20_only: bool, full_matrix: bool,
+    shard_index: int, shard_count: int,
+) -> tuple[dict, ...]:
+    if review20_only and full_matrix:
+        raise ValueError("review-20 and the full matrix are separate runs")
+    if review20_only:
+        return navigation_coordination_review20_plan()
+    if full_matrix:
+        return select_continuous_height_fabric_matrix_shard(
+            continuous_height_fabric_matrix_plan(), shard_index, shard_count,
+        )
+    if shard_index != 0 or shard_count != 1:
+        raise ValueError("matrix shards require the full matrix")
+    return continuous_height_trial_plan() + navigation_coordination_hardening_plan()
 
 
 def navigation_coordination_hardening_plan() -> tuple[dict, ...]:
@@ -179,6 +504,8 @@ def _origin(trial: dict) -> tuple[int, int]:
 
 
 def _supports(trial: dict) -> tuple[tuple[tuple[int, int, int], str], ...]:
+    if "support_blocks" in trial:
+        return tuple(trial["support_blocks"])
     direction = trial["direction_index"]
     if trial.get("fixture") == "runup_step_down":
         runup = trial["runup_blocks"]
@@ -223,6 +550,8 @@ def _supports(trial: dict) -> tuple[tuple[tuple[int, int, int], str], ...]:
 
 def _start_and_goal(trial: dict) -> tuple[
         tuple[float, float, float], tuple[float, float, float]]:
+    if "start_position" in trial:
+        return tuple(trial["start_position"]), tuple(trial["goal_position"])
     supports = _supports(trial)
     (sx, sy, sz), _ = supports[0]
     (gx, gy, gz), goal_material = supports[-1]
@@ -250,12 +579,15 @@ def _air_positions(trial: dict) -> tuple[tuple[int, int, int], ...]:
 
 
 def _damage_budget(trial: dict) -> TaskDamageBudget:
-    if trial["kind"] == "direct_drop" and trial["drop_blocks"] == 5:
+    if (trial["kind"] == "direct_drop"
+            and trial.get("drop_blocks") == 5):
         return TaskDamageBudget("allow_two_points", 2.0)
     return TaskDamageBudget()
 
 
 def _observer(trial: dict) -> tuple[float, float, float, float, float]:
+    if "observer_pose" in trial:
+        return tuple(trial["observer_pose"])
     direction = trial["direction_index"]
     length = trial.get(
         "length", 4 if trial["kind"] != "direct_drop" else 1,
@@ -283,6 +615,8 @@ def _observer(trial: dict) -> tuple[float, float, float, float, float]:
 def _upper_observer(
     trial: dict,
 ) -> tuple[float, float, float, float, float]:
+    if "upper_observer_pose" in trial:
+        return tuple(trial["upper_observer_pose"])
     direction = trial["direction_index"]
     length = trial.get(
         "length", 4 if trial["kind"] != "direct_drop" else 1,
@@ -358,7 +692,13 @@ def _fixture_commands(trial: dict) -> tuple[str, ...]:
     clear_min_z = min(min(zs) - 2, *(p[2] - 2 for p in observer_supports))
     clear_max_z = max(max(zs) + 2, *(p[2] + 2 for p in observer_supports))
     clear_max_y = max(y for _, y, _ in _air_positions(trial))
-    commands = [
+    commands = []
+    if "family" in trial:
+        commands.append(
+            f"forceload add {clear_min_x} {clear_min_z} "
+            f"{clear_max_x} {clear_max_z}"
+        )
+    commands.extend([
         "difficulty peaceful",
         "time set midnight",
         "gamerule doDaylightCycle false",
@@ -374,7 +714,7 @@ def _fixture_commands(trial: dict) -> tuple[str, ...]:
          f"{min((min(ys) - 2, *(p[1] - 1 for p in catch_supports)))} "
          f"{clear_min_z} "
          f"{clear_max_x} {clear_max_y} {clear_max_z} minecraft:air replace"),
-    ]
+    ])
     commands.extend(
         f"setblock {x} {y} {z} {material} replace"
         for (x, y, z), material in supports
@@ -483,6 +823,168 @@ def _diagnostic_row(
     return row
 
 
+def _entry_preparation_decision(frame, trial: dict) -> MovementV1 | None:
+    """Choose one legal key snapshot that approaches the frozen entry state.
+
+    ``None`` means the body is already on the entry support, moving in the
+    requested speed band.  This is the same bounded one-tick look-ahead used
+    by the established B10 moving-entry Fabric probe; it neither writes player
+    velocity nor bypasses Runtime arbitration.
+    """
+    entry = tuple(trial["entry_position"])
+    dx, dz, _ = _DIRECTIONS[trial["direction_index"]]
+    along = (
+        (frame.body.position[0] - entry[0]) * dx
+        + (frame.body.position[2] - entry[2]) * dz
+    )
+    forward_speed = (
+        frame.body.velocity_blocks_per_second[0] * dx
+        + frame.body.velocity_blocks_per_second[2] * dz
+    )
+    minimum = float(trial["entry_speed_minimum"])
+    maximum = float(trial["entry_speed_maximum"])
+    if (-.18 <= along <= .05 and minimum - 1.0e-6 <= forward_speed
+            <= maximum + 1.0e-6 and frame.body.is_on_ground):
+        return None
+    if along > .07:
+        raise RuntimeError(
+            f"{trial['trial_id']} passed its entry before reaching "
+            f"{trial['speed_band']} speed: along={along}, "
+            f"speed={forward_speed}"
+        )
+    built = build_physics_state(
+        frame, JAVA_1_21_RULESET, _STATE_ASSUMPTIONS,
+    )
+    if built.status is not StateBuildStatus.READY or built.state is None:
+        raise RuntimeError(
+            f"{trial['trial_id']} entry preparation state is incomplete: "
+            f"{built}"
+        )
+    physics_world = PhysicsWorldView(frame.world, JAVA_1_21_RULESET)
+    target_speed = float(trial["target_entry_speed"])
+    target_along = -.05
+    ranked: list[tuple[float, int, MovementV1]] = []
+    controls = (
+        MovementV1(),
+        MovementV1(forward=1),
+        MovementV1(forward=1, sprint=True),
+        MovementV1(forward=-1),
+    )
+    position_weight = 5.0 if along > -.5 else 1.5
+    for order, movement in enumerate(controls):
+        projected = project_movement_command(
+            built.state, movement,
+            movement_yaw_radians=built.state.yaw_radians,
+        )
+        if (projected.status is not ProjectionStatus.READY
+                or projected.tick_input is None):
+            continue
+        calculated = physics_step(
+            built.state, projected.tick_input,
+            physics_world, JAVA_1_21_RULESET,
+        )
+        if (calculated.status is not CalculationStatus.OK
+                or calculated.next_state is None):
+            continue
+        next_state = calculated.next_state
+        next_along = (
+            (next_state.position[0] - entry[0]) * dx
+            + (next_state.position[2] - entry[2]) * dz
+        )
+        next_speed = 20.0 * (
+            next_state.velocity_blocks_per_tick[0] * dx
+            + next_state.velocity_blocks_per_tick[2] * dz
+        )
+        score = (
+            abs(next_along - target_along) * position_weight
+            + abs(next_speed - target_speed) * .8
+        )
+        if next_along > .06:
+            score += 100.0 + (next_along - .06) * 100.0
+        if next_speed < -.01:
+            score += 20.0
+        ranked.append((score, order, movement))
+    if not ranked:
+        raise RuntimeError(
+            f"{trial['trial_id']} has no calculable entry-preparation input"
+        )
+    ranked.sort(key=lambda item: (item[0], item[1]))
+    return ranked[0][2]
+
+
+def _prepare_full_block_entry_speed(
+    runtime,
+    task: TaskIntentV0,
+    profile: BehaviorProfileV0,
+    deadline_ns: int,
+    trial: dict,
+    air_chunks: tuple[tuple[tuple[int, int, int], ...], ...],
+    record_diagnostic: Callable[[], None],
+) -> dict:
+    """Reach one frozen full-block entry state through formal player input."""
+    source = runtime.register_ordered_source("continuous-height-entry")
+    sequence = 0
+    try:
+        for tick in range(80):
+            frame = runtime.navigation_observation_adapter.latest_frame
+            if frame is None:
+                raise RuntimeError("entry preparation has no navigation frame")
+            movement = _entry_preparation_decision(frame, trial)
+            if movement is None:
+                speed = math.hypot(
+                    frame.body.velocity_blocks_per_second[0],
+                    frame.body.velocity_blocks_per_second[2],
+                )
+                return {
+                    "ticks": tick,
+                    "position": list(frame.body.position),
+                    "speed_blocks_per_second": speed,
+                    "movement_tick_id": frame.body.movement_tick_id,
+                }
+            runtime.cancel_source(source.source_id)
+            sequence += 1
+            now = time.perf_counter_ns()
+            intent = ActionIntentV1(
+                ordered_intent_id(source, sequence),
+                source.source_id,
+                runtime.observation.episode_id,
+                runtime.observation.sequence_id,
+                ActionPriorityV0.TASK,
+                now,
+                min(deadline_ns, now + 750_000_000),
+                movement=movement,
+                valid_for_ticks=1,
+            )
+            runtime.submit_ordered_intent(
+                OrderedIntentV1(source, sequence, intent)
+            )
+            result = runtime.step(
+                task, profile,
+                min(deadline_ns, time.perf_counter_ns() + 500_000_000),
+                observation_request=ObservationRequestV3(
+                    "navigation_v1", air_chunks[tick % len(air_chunks)],
+                ),
+            )
+            record_diagnostic()
+            if result.report.failure is not None:
+                raise RuntimeError(
+                    f"{trial['trial_id']} entry preparation failed: "
+                    f"{result.report.failure.message}"
+                )
+            if (result.decision is None
+                    or result.decision.action.movement != movement):
+                raise RuntimeError(
+                    f"{trial['trial_id']} entry input lost arbitration"
+                )
+        raise RuntimeError(
+            f"{trial['trial_id']} did not reach its entry speed within 80 ticks"
+        )
+    finally:
+        if runtime.has_ordered_source(source):
+            runtime.cancel_source(source.source_id)
+            runtime.unregister_ordered_source(source)
+
+
 def _review20_phase_matches(
     phase: str,
     session: NavigationSession,
@@ -530,8 +1032,11 @@ def run_continuous_height_runtime(
     pipeline_diagnostic: Callable[[], dict] | None = None,
     *,
     review20_only: bool = False,
+    full_matrix: bool = False,
+    shard_index: int = 0,
+    shard_count: int = 1,
 ) -> tuple[dict, list[dict], list[dict]]:
-    """Run a small real-game matrix through the formal navigation driver."""
+    """Run the selected real-game matrix through the formal navigation driver."""
     profiles = NavigationSessionProfiles.load(CONFIG)
     profile = BehaviorProfileV0()
     rows: list[dict] = []
@@ -551,13 +1056,25 @@ def run_continuous_height_runtime(
     record_diagnostic("continuous-height-reset")
     with PlannerWorker() as planner, MotionSolverWorker(max_pending=4) as motion:
         departure_baselines: dict[int, int] = {}
-        representative_plan = (() if review20_only
+        representative_plan = (() if (review20_only or full_matrix)
                                else continuous_height_trial_plan())
-        hardening_plan = (() if review20_only
+        hardening_plan = (() if (review20_only or full_matrix)
                           else navigation_coordination_hardening_plan())
         review20_plan = (navigation_coordination_review20_plan()
                          if review20_only else ())
-        for trial in representative_plan + hardening_plan + review20_plan:
+        matrix_plan = (
+            select_continuous_height_fabric_matrix_shard(
+                continuous_height_fabric_matrix_plan(),
+                shard_index, shard_count,
+            ) if full_matrix else ()
+        )
+        execution_plan = continuous_height_execution_plan(
+            review20_only=review20_only,
+            full_matrix=full_matrix,
+            shard_index=shard_index,
+            shard_count=shard_count,
+        )
+        for trial in execution_plan:
             trial_id = trial["trial_id"]
             fixture_writer(_fixture_commands(trial), trial)
             task = _task(trial_id, deadline_ns)
@@ -645,6 +1162,18 @@ def run_continuous_height_runtime(
             if not settled:
                 raise RuntimeError(f"{trial_id} start teleport did not settle")
 
+            entry_preparation = None
+            if full_matrix and trial["kind"] != "low_height_route":
+                entry_preparation = _prepare_full_block_entry_speed(
+                    runtime,
+                    task,
+                    profile,
+                    deadline_ns,
+                    trial,
+                    air_chunks,
+                    lambda: record_diagnostic(trial_id),
+                )
+
             initial_health = _self_health(runtime)
             session = NavigationSession(
                 trial_id + "/session", profiles,
@@ -665,7 +1194,12 @@ def run_continuous_height_runtime(
             injection_attempts = 0
             input_delay_ticks: int | None = None
             input_delay_tick_samples: list[int] = []
+            delay_rng = random.Random(trial.get("seed", 0))
             first_airborne_tick: int | None = None
+            measured_entry_speed: float | None = (
+                None if entry_preparation is None
+                else float(entry_preparation["speed_blocks_per_second"])
+            )
             interruption_phase_observed: str | None = None
             removal_target_tick: int | None = None
             if injection == "remove_landing_support_at_lead":
@@ -681,7 +1215,7 @@ def run_continuous_height_runtime(
                 damage_budget=budget,
             )
             try:
-                for tick in range(240):
+                for tick in range(int(trial.get("max_ticks", 240))):
                     before_frame = runtime.navigation_observation_adapter.latest_frame
                     before_tick = (
                         None if before_frame is None
@@ -739,6 +1273,12 @@ def run_continuous_height_runtime(
                             interrupt_this_frame
                             and trial["late_after_interrupt"]
                         )
+                        or (
+                            injection == "random_late_verified_input"
+                            and session._active_route is not None
+                            and delay_rng.random()
+                                < float(trial["late_probability"])
+                        )
                     )
                     if delay_this_frame:
                         # The independent client continues its real movement
@@ -789,9 +1329,23 @@ def run_continuous_height_runtime(
                             input_delay_tick_samples.append(observed_delay)
                             if injection == "late_first_verified_input":
                                 injection_applied = observed_delay == 1
+                            elif injection == "random_late_verified_input":
+                                injection_applied = True
                     if (first_airborne_tick is None
                             and not frame.body.is_on_ground):
                         first_airborne_tick = tick
+                    if (measured_entry_speed is None
+                            and "entry_progress_blocks" in trial):
+                        dx, dz, _ = _DIRECTIONS[trial["direction_index"]]
+                        progress = (
+                            (frame.body.position[0] - start[0]) * dx
+                            + (frame.body.position[2] - start[2]) * dz
+                        )
+                        if progress >= float(trial["entry_progress_blocks"]):
+                            measured_entry_speed = math.hypot(
+                                frame.body.velocity_blocks_per_second[0],
+                                frame.body.velocity_blocks_per_second[2],
+                            )
                     sample = {
                         "trial_id": trial_id,
                         "tick": tick,
@@ -827,21 +1381,22 @@ def run_continuous_height_runtime(
                     if type(expected_terminal) is tuple
                     else driver.state == expected_terminal
                 )
+                violations: list[str] = []
                 if not terminal_matches:
-                    raise RuntimeError(
-                        f"{trial_id} ended as {driver.state}: {driver.reason}; "
-                        f"expected={expected_terminal}; session={session.report}"
+                    violations.append(
+                        f"unexpected_terminal:{driver.state}:{driver.reason}:"
+                        f"expected={expected_terminal}"
                     )
                 expected_reason = trial.get("expected_reason")
                 if expected_reason is not None and driver.reason != expected_reason:
-                    raise RuntimeError(
-                        f"{trial_id} ended for {driver.reason}; "
+                    violations.append(
+                        f"unexpected_reason:{driver.reason}:"
                         f"expected={expected_reason}"
                     )
                 if driver.state == "success":
                     if math.dist(final_position, expected_goal_position) > .35:
-                        raise RuntimeError(
-                            f"{trial_id} completed outside goal: {final_position}"
+                        violations.append(
+                            f"success_outside_goal:{final_position}"
                         )
                 elif not frame.body.is_on_ground:
                     raise RuntimeError(
@@ -852,8 +1407,8 @@ def run_continuous_height_runtime(
                       and injection == "remove_landing_support_at_lead"
                       and actual_damage == 0.0
                       and abs(final_position[1] - start[1]) > .01):
-                    raise RuntimeError(
-                        f"{trial_id} did not fail safely on its start support: "
+                    violations.append(
+                        "unsafe_failure_support:"
                         f"{final_position}"
                     )
                 if (actual_damage > budget.maximum_expected_damage_points + 1e-6
@@ -862,8 +1417,8 @@ def run_continuous_height_runtime(
                             and not trial.get("expected_safe_stop", False)
                             and driver.state in {"failed", "cancelled"}
                         )):
-                    raise RuntimeError(
-                        f"{trial_id} exceeded damage budget: {actual_damage}"
+                    violations.append(
+                        f"damage_budget_exceeded:{actual_damage}"
                     )
                 if injection == "late_every_verified_input":
                     injection_applied = (
@@ -878,7 +1433,9 @@ def run_continuous_height_runtime(
                 row = {
                     **trial,
                     "episode_id": episode,
-                    "passed": True,
+                    "passed": not violations,
+                    "violations": violations,
+                    "task_succeeded": driver.state == "success",
                     "ticks": len(samples),
                     "elapsed_ns": time.perf_counter_ns() - started_ns,
                     "actions": list(admitted_actions),
@@ -896,6 +1453,15 @@ def run_continuous_height_runtime(
                     "input_delay_ticks": input_delay_ticks,
                     "input_delay_tick_samples": input_delay_tick_samples,
                     "first_airborne_tick": first_airborne_tick,
+                    "measured_entry_speed": measured_entry_speed,
+                    "entry_preparation": entry_preparation,
+                    "entry_speed_band_matched": (
+                        None if (measured_entry_speed is None
+                                 or trial["kind"] == "low_height_route")
+                        else float(trial.get("entry_speed_minimum", 0.0))
+                        <= measured_entry_speed
+                        <= float(trial.get("entry_speed_maximum", math.inf))
+                    ),
                     "removal_target_tick": removal_target_tick,
                     "interruption_phase_observed": (
                         interruption_phase_observed
@@ -945,6 +1511,20 @@ def run_continuous_height_runtime(
                 trial["trial_id"] for trial in review20_plan
             }
         ),
+        "matrix_trial_count": len(matrix_plan),
+        "matrix_result_count": sum(
+            row["trial_id"] in {
+                trial["trial_id"] for trial in matrix_plan
+            } for row in rows
+        ),
+        "matrix_task_success_count": sum(
+            bool(row["task_succeeded"])
+            for row in rows if row["trial_id"] in {
+                trial["trial_id"] for trial in matrix_plan
+            }
+        ),
+        "matrix_shard_index": shard_index if full_matrix else None,
+        "matrix_shard_count": shard_count if full_matrix else None,
     }
     write_json_atomic(directory / "continuous-height-summary.json", summary)
     hardening_rows = tuple(
@@ -957,7 +1537,7 @@ def run_continuous_height_runtime(
             trial["trial_id"] for trial in review20_plan
         }
     )
-    checks = ([] if review20_only else [
+    checks = ([] if (review20_only or full_matrix) else [
         {
             "name": "continuous_height_representative_matrix",
             "passed": (
@@ -1032,6 +1612,40 @@ def run_continuous_height_runtime(
                 "passed_count": sum(bool(row["passed"])
                                     for row in review20_rows),
                 "trials": review20_rows,
+            },
+        })
+    if full_matrix:
+        matrix_ids = {trial["trial_id"] for trial in matrix_plan}
+        matrix_rows = tuple(row for row in rows
+                            if row["trial_id"] in matrix_ids)
+        checks.append({
+            "name": "continuous_height_full_matrix_shard",
+            "passed": (
+                len(matrix_rows) == len(matrix_plan)
+                and len({row["trial_id"] for row in matrix_rows})
+                    == len(matrix_plan)
+                and all(bool(row["passed"]) for row in matrix_rows)
+                and all(
+                    row["entry_speed_band_matched"] is True
+                    for row in matrix_rows
+                    if (row["task_succeeded"]
+                        and row["kind"] != "low_height_route")
+                )
+            ),
+            "details": {
+                "shard_index": shard_index,
+                "shard_count": shard_count,
+                "trial_count": len(matrix_plan),
+                "task_success_count": sum(
+                    bool(row["task_succeeded"]) for row in matrix_rows
+                ),
+                "bounded_failure_count": sum(
+                    not bool(row["task_succeeded"]) for row in matrix_rows
+                ),
+                "entry_speed_match_count": sum(
+                    row["entry_speed_band_matched"] is True
+                    for row in matrix_rows
+                ),
             },
         })
     return summary, diagnostics, checks

@@ -605,6 +605,32 @@ class ContinuousDescentTests(unittest.TestCase):
             ),
             precomputed=solved,
         )
+        rounding_drift_anchor = replace(
+            anchor,
+            physics_state=replace(
+                anchor.physics_state,
+                body_width=math.nextafter(
+                    anchor.physics_state.body_width, math.inf,
+                ),
+            ),
+        )
+        rounding_drift = prepare_planned_air_transition(
+            route, 0, rounding_drift_anchor, world,
+            candidate_revision=3, intended_start_tick=11,
+            damage_budget=budget,
+            precomputed=solved,
+        )
+        changed_body_width = prepare_planned_air_transition(
+            route, 0,
+            replace(
+                anchor,
+                physics_state=replace(anchor.physics_state, body_width=.7),
+            ),
+            world,
+            candidate_revision=4, intended_start_tick=11,
+            damage_budget=budget,
+            precomputed=solved,
+        )
 
         self.assertIs(prepared.status, GapPreparationStatus.READY)
         self.assertEqual(prepared.candidate.proof.kind.value, "controlled_drop")
@@ -615,6 +641,13 @@ class ContinuousDescentTests(unittest.TestCase):
             changed_budget.status, GapPreparationStatus.SOLVE_FAILED,
         )
         self.assertEqual(changed_budget.reason, "precomputed_connection_mismatch")
+        self.assertIs(rounding_drift.status, GapPreparationStatus.READY)
+        self.assertIs(
+            changed_body_width.status, GapPreparationStatus.SOLVE_FAILED,
+        )
+        self.assertEqual(
+            changed_body_width.reason, "precomputed_connection_mismatch",
+        )
 
     def test_next_stair_drop_is_solved_from_the_confirmed_moving_exit(self):
         from mc2p.motion_nav.action_route import (

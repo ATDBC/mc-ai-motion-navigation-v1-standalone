@@ -6,7 +6,7 @@
 
 当前已完成 B01 至 B10、C1-A 至 C1-C、C1-R 的 R0 至 R6、B11 固定放置与有限搭桥，以及 B12-A、B12-B。B12-A 固定了每次攻击的证据和分类重试，并接入 Minecraft 1.21 伤害来源事实。B12-B 让战斗先确定本帧视角，导航再按最终视角计算普通地面移动；追逐阶段会持续给出目标视角，导航同时记录每帧的移动决定原因。活动目标和真实墙体场景补齐了持续瞄准、遮挡后的导航、补看和权限撤销。动作证明的生效窗口修正和客户端额外推进一个 tick 时的局部安全恢复也已包含。正式 Fabric 结果与适用边界写在 `docs/motion_navigation/acceptance/`。
 
-导航协调层重构已经完成 S0 至 S4。路线执行、探边和待接替路线由同一个执行监督者管理；目标变化、取消、取证超时和输入失联都必须先安全结束身体责任。第二十轮整改进一步补齐事件准入、有界收尾、阶段进展和交接证据，并通过专项 Fabric 对照。S5 仍然打开。连续高度组件矩阵覆盖 11 类小高差和 9 类整格动作，并加入 1,000 张混合表面图的 A*／Dijkstra 对照。半砖、楼梯、土径、地毯和不超过半格的积雪统一作为普通步行候选，再由同一个 1.21 运动计算器验证真实高度、净空和扫掠结果。完整 Fabric 形状、方向、速度带和随机迟到矩阵尚未关闭，不能把组件矩阵或代表性实机回归写成完整能力通过。
+导航协调层重构已经完成 S0 至 S4。路线执行、探边和待接替路线由同一个执行监督者管理；目标变化、取消、取证超时和输入失联都必须先安全结束身体责任。第二十一轮进一步修正停止收尾期间改目标、探边被外力推到下层，以及目标频繁变化后的永久等待，并加入固定种子的随机事件序列门禁。第二十轮专项 Fabric 对照仍是当前实机证据；第二十一轮没有新增 Fabric 批次。S5 仍然打开。连续高度组件矩阵覆盖 11 类小高差和 9 类整格动作，并加入 1,000 张混合表面图的 A*／Dijkstra 对照。半砖、楼梯、土径、地毯和不超过半格的积雪统一作为普通步行候选，再由同一个 1.21 运动计算器验证真实高度、净空和扫掠结果。完整 Fabric 形状、方向、速度带和随机迟到矩阵尚未关闭，不能把组件矩阵或代表性实机回归写成完整能力通过。
 
 2026-09-26 起，正式 Fabric 方块视觉只接受 profile 4 表面深度。旧 profile 3 稀疏射线只能读取历史记录，不能启动正式会话，也不能形成新的验收结论。`evidence/motion_navigation/representative-v1` 保留九份带有 `historical_legacy_ray_profile3` 标签的旧归档，并加入一份 `current_surface_depth_profile4` 的 B12-B 当前代表批次。具体边界见 `docs/motion_navigation/decisions/0035-formal-surface-depth-only.md`。
 
@@ -15,7 +15,7 @@
 ## 先读什么
 
 1. `AGENTS.md`
-2. `docs/motion_navigation/stages/navigation-coordination-review20-remediation-plan.md`
+2. `docs/motion_navigation/stages/navigation-coordination-review21-remediation-plan.md`
 3. `docs/motion_navigation/acceptance/navigation-coordination-refactor.md`
 4. `docs/motion_navigation/acceptance/defect-ledger.md`
 5. `docs/motion_navigation/architecture/navigation-coordination-v1.md`
@@ -71,6 +71,12 @@ python -m unittest discover -s tests/motion_nav -p "test_*.py" -v
 ```text
 python scripts/run_continuous_height_matrix.py --output output/continuous-height-matrix --condition both --scope all
 python scripts/run_continuous_height_planning_matrix.py --output output/continuous-height-planning-matrix
+```
+
+运行固定的导航随机事件序列时，也必须使用新的空输出目录：
+
+```text
+python -m tests.sim.run_navigation_event_sequences --manifest tests/sim/manifests/navigation-coordination-event-sequences.json --output-root output/navigation-event-sequences
 ```
 
 运行 C1 正式证据读取和离线重放检查：

@@ -453,6 +453,67 @@ class RuntimeV1Tests(unittest.TestCase):
             )
         self.assertEqual(self.backend.actions, [])
 
+    def test_control_frame_replaces_previous_intents_from_same_ordered_source(self):
+        from mc2p.contracts.intent_source import ControlFrameProposalV1
+
+        source = self.ordered_source()
+        safety = self.ordered(
+            source,
+            movement=MovementV1(sneak=True),
+        )
+        safety = replace(
+            safety,
+            intent=replace(safety.intent, priority=ActionPriorityV0.SAFETY),
+        )
+        first = self.runtime.control_frame(
+            legacy._task(), BehaviorProfileV0(), 1000,
+            proposals=(ControlFrameProposalV1((safety,)),),
+        )
+        successor = self.ordered(
+            source,
+            sequence=2,
+            movement=MovementV1(forward=1),
+        )
+
+        second = self.runtime.control_frame(
+            legacy._task(), BehaviorProfileV0(), 1000,
+            proposals=(ControlFrameProposalV1((successor,)),),
+        )
+
+        self.assertEqual(first.decision.action.movement, MovementV1(sneak=True))
+        self.assertEqual(second.decision.action.movement, MovementV1(forward=1))
+        self.assertNotIn(
+            safety.intent.intent_id,
+            second.decision.candidate_intent_ids,
+        )
+
+    def test_look_only_update_keeps_same_sources_persistent_movement(self):
+        from mc2p.contracts.intent_source import ControlFrameProposalV1
+
+        source = self.ordered_source()
+        movement = self.ordered(
+            source,
+            movement=MovementV1(forward=1),
+        )
+        first = self.runtime.control_frame(
+            legacy._task(), BehaviorProfileV0(), 1000,
+            proposals=(ControlFrameProposalV1((movement,)),),
+        )
+        look = self.ordered(
+            source,
+            sequence=2,
+            look=LookV1(6, 0),
+        )
+
+        second = self.runtime.control_frame(
+            legacy._task(), BehaviorProfileV0(), 1000,
+            proposals=(ControlFrameProposalV1((look,)),),
+        )
+
+        self.assertEqual(first.decision.action.movement, MovementV1(forward=1))
+        self.assertEqual(second.decision.action.movement, MovementV1(forward=1))
+        self.assertEqual(second.decision.action.look, LookV1(6, 0))
+
     def ordered(self, source, sequence=1, **kwargs):
         from mc2p.contracts.intent_source import OrderedIntentV1, ordered_intent_id
         return OrderedIntentV1(source, sequence, self.intent(ordered_intent_id(source, sequence),

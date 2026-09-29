@@ -2,7 +2,7 @@
 
 日期：2026-09-28
 
-状态：H1 至 H7 的历史整改与三项专项 Fabric 对照已完成。第二十轮复审又发现“中断后晚一帧”的无界收尾，因此 S4 再次打开。对应本地结构整改与正式路径模拟已经完成，等待第二十轮专项 Fabric 对照后重新关闭。S5 继续保持打开。在这些门槛关闭前暂停新增运动、地形和战斗能力。
+状态：H1 至 H7 的历史整改与三项专项 Fabric 对照已完成。第二十轮发现的“中断后晚一帧”无界收尾也已整改并关闭 S4。后续第二十一轮整改和 800 场完整连续高度 Fabric 矩阵已经关闭 S5。
 
 关联：[协调架构](../architecture/navigation-coordination-v1.md)、[原阶段计划](navigation-coordination-refactor-plan.md)、[验收](../acceptance/navigation-coordination-refactor.md)、[D040](../decisions/0040-reopen-navigation-coordination-gates.md)。
 

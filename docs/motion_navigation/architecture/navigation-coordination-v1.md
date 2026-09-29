@@ -2,7 +2,7 @@
 
 日期：2026-09-28
 
-状态：S0 至 S4 已实施。第十九轮评审后的 H1 至 H7 结构整改和三项专项 Fabric 对照已完成，S4 的状态写入和所有权门槛已经重新关闭。冻结扰动扫描中唯一未声明的固定路线失败也已修正。S5 仍等待其余正例可靠性缺口和完整连续高度矩阵。替换的是协调职责及其检查入口，不改变运动计算器、正式视觉或 Runtime 的输入权限。
+状态：S0 至 S5 已实施并关闭。第十九轮评审后的 H1 至 H7 结构整改和三项专项 Fabric 对照已完成，状态写入和所有权门槛已经重新关闭。冻结扰动扫描中唯一未声明的固定路线失败也已修正。连续高度 800 场完整 Fabric 矩阵在新源码下完成：正常输入 400/400，20% 随机晚一帧 384/400，其余 16 场均为冻结口径允许的有界失败；没有伤害额度超出或不变量违规。替换的是协调职责及其检查入口，不改变运动计算器、正式视觉或 Runtime 的输入权限。
 
 相关文档：[D039](../decisions/0039-shared-navigation-coordination-and-closed-loop-gates.md)、[阶段计划](../stages/navigation-coordination-refactor-plan.md)、[验收及不变量](../acceptance/navigation-coordination-refactor.md)。
 

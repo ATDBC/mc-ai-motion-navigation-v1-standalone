@@ -291,6 +291,30 @@ class C1NavigationSessionTests(unittest.TestCase):
         self.assertIsNone(driver.source)
         self.assertEqual(self.runtime.ordered_source_stats["active_sources"], 0)
 
+    def test_expired_owner_deadline_becomes_a_bounded_safe_stop(self):
+        session = FakeNavigationSession()
+        driver = RuntimeNavigationDriver(
+            self.runtime, session, clock_ns=lambda: self.clock[0],
+        )
+        from mc2p.motion_nav.movement_transition import (
+            GoalState, GoalSupport, MovementMode,
+        )
+        from mc2p.motion_nav.world_model import Aabb
+        goal = GoalState(
+            Aabb(0, 64, 1, 1, 64.2, 2), GoalSupport.SOLID,
+            frozenset({MovementMode.WALK}), frozenset({"standing"}), .6,
+        )
+        driver.start("combat-goal", 1, goal, self.clock[0])
+
+        result = driver.tick(BehaviorProfileV0(), self.clock[0])
+
+        self.assertIsNone(result.report.failure)
+        self.assertEqual(driver.state, "cancelled")
+        self.assertEqual(driver.reason, "owner_heartbeat_lost")
+        self.assertIsNone(driver.source)
+        self.assertEqual(self.runtime.state.value, "ready")
+        self.assertEqual(self.runtime.ordered_source_stats["active_sources"], 0)
+
     def test_stop_with_terminal_task_waits_for_current_body_evidence(self):
         from mc2p.motion_nav.movement_transition import (
             GoalState, GoalSupport, MovementMode,

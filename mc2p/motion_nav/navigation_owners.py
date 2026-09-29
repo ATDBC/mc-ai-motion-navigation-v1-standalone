@@ -11,7 +11,29 @@ from typing import Any
 
 from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.action_preconditions import AcquisitionGrant
+from mc2p.motion_nav.motion_risk import TaskDamageBudget
+from mc2p.motion_nav.movement_transition import GoalState
 from mc2p.motion_nav.world_model import BlockPos
+
+
+@dataclass(frozen=True, slots=True)
+class PendingGoalRevision:
+    """One validated goal revision waiting for information or body release."""
+
+    goal_id: str
+    goal_revision: int
+    goal_state: GoalState
+    damage_budget: TaskDamageBudget
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.goal_id, str) or not self.goal_id:
+            raise ContractViolation("pending goal id is required")
+        if type(self.goal_revision) is not int or self.goal_revision < 0:
+            raise ContractViolation("pending goal revision is invalid")
+        if type(self.goal_state) is not GoalState:
+            raise ContractViolation("pending goal state must be typed")
+        if type(self.damage_budget) is not TaskDamageBudget:
+            raise ContractViolation("pending goal damage budget must be typed")
 
 
 @dataclass(slots=True)
@@ -19,7 +41,7 @@ class GoalRequestLedger:
     """Own the current planning request and a not-yet-activated goal."""
 
     request: Any | None = None
-    pending_goal: Any | None = None
+    pending_goal: PendingGoalRevision | None = None
 
 
 @dataclass(slots=True)

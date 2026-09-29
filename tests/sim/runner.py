@@ -250,7 +250,13 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
             movement_tick_before = backend.movement_tick
             submitted_count_before = len(backend.actions)
             for event in events:
-                if event.fired_at is None and driver.source is not None and event.when(context):
+                if (event.fired_at is None
+                        and driver.source is not None
+                        and driver.state not in TERMINAL_DRIVER
+                        and context.diagnostics.state.value not in {
+                            "complete", "failed", "cancelled", "closed",
+                        }
+                        and event.when(context)):
                     event.fired_at = tick
                     event.action(context)
             if driver.source is not None and driver.state in {

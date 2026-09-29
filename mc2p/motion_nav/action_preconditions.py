@@ -108,13 +108,13 @@ class AcquisitionGrant:
                 or self.action_index != action_index):
             return False
         fact = frame.world.cell(self.landing_cell)
-        evidence = fact.visual_air_evidence
-        if (fact.knowledge is not CellKnowledge.AIR
-                or evidence is None
-                or not evidence.lower_region_visible
-                or evidence.stamp.sequence_id < self.evidence_sequence_id):
+        if fact.knowledge is not CellKnowledge.AIR:
             return False
-        age = frame.body.sequence_id - evidence.stamp.sequence_id
+        # The grant owns the lower-region observation made by the edge probe.
+        # A later view from the route entry can still confirm that this cell is
+        # air while no longer seeing its lower region.  That ordinary refresh
+        # must not erase the completed acquisition or extend its lifetime.
+        age = frame.body.sequence_id - self.evidence_sequence_id
         return 0 <= age <= 80
 
 

@@ -148,6 +148,18 @@ def _air_action_landing(action, anchor: StateAnchor) -> LandingRegion | None:
     )
 
 
+def _same_landing_region(
+        first: LandingRegion, second: LandingRegion, *,
+        epsilon: float = 1.0e-7) -> bool:
+    """Compare one geometric region without treating float roundoff as a new edge."""
+    return all(math.isclose(
+        left, right, rel_tol=0.0, abs_tol=epsilon,
+    ) for left, right in zip(
+        (first.min_x, first.max_x, first.min_z, first.max_z, first.surface_y),
+        (second.min_x, second.max_x, second.min_z, second.max_z, second.surface_y),
+    ))
+
+
 def _following_motion_direction(
         route: ActiveRoute, action_index: int, action) -> tuple[int, int] | None:
     next_index = action_index + 1
@@ -280,7 +292,9 @@ def prepare_planned_gap_motion(
             solve_result=solved, reason=solved.status.value,
         )
     if (solved.proof.direction != request.direction
-            or solved.proof.landing != request.landing
+            or not _same_landing_region(
+                solved.proof.landing, request.landing,
+            )
             or solved.proof.exit_direction != request.exit_direction
             or solved.proof.exit_motion_ticks != request.exit_motion_ticks):
         return GapPreparationResult(
@@ -351,7 +365,7 @@ def prepare_planned_air_transition(
     proof = solved.proof
     if (proof.kind is not request.kind
             or proof.direction != request.direction
-            or proof.landing != request.landing
+            or not _same_landing_region(proof.landing, request.landing)
             or proof.exit_direction != request.exit_direction
             or proof.exit_motion_ticks != request.exit_motion_ticks
             or proof.damage_budget != damage_budget):

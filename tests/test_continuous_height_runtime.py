@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import unittest
 
 import scripts.continuous_height_runtime as continuous_height_runtime
@@ -16,13 +17,182 @@ from scripts.continuous_height_runtime import (
     _start_and_goal,
     _supports,
     _safety_catch_supports,
+    continuous_height_execution_plan,
+    continuous_height_fabric_matrix_plan,
     continuous_height_trial_plan,
     navigation_coordination_hardening_plan,
     navigation_coordination_review20_plan,
+    select_continuous_height_fabric_matrix_shard,
 )
 
 
 class ContinuousHeightRuntimeTests(unittest.TestCase):
+    def test_full_fabric_matrix_expands_the_frozen_manifest(self):
+        trials = continuous_height_fabric_matrix_plan()
+
+        self.assertEqual(len(trials), 800)
+        self.assertEqual(len({trial["trial_id"] for trial in trials}), 800)
+        self.assertEqual(
+            {trial["condition"] for trial in trials}, {"normal", "late"},
+        )
+        self.assertEqual(
+            {trial["family"] for trial in trials},
+            {
+                "slab_up_down", "slab_down_up", "stairs_up",
+                "stairs_down", "dirt_path_alternating",
+                "carpet_alternating", "snow_layers_2",
+                "snow_layers_4", "snow_layers_5",
+                "single_bottom_slab", "low_height_then_brake",
+                "jump_up_1", "step_down_1", "stair_descent_2",
+                "stair_descent_4", "stair_descent_8",
+                "direct_drop_1", "direct_drop_2", "direct_drop_3",
+                "direct_drop_5_budget_2",
+            },
+        )
+        action_families = {
+            "jump_up_1", "step_down_1", "stair_descent_2",
+            "stair_descent_4", "stair_descent_8", "direct_drop_1",
+            "direct_drop_2", "direct_drop_3",
+            "direct_drop_5_budget_2",
+        }
+        for family in {trial["family"] for trial in trials}:
+            for condition in ("normal", "late"):
+                rows = [
+                    trial for trial in trials
+                    if trial["family"] == family
+                    and trial["condition"] == condition
+                ]
+                self.assertEqual(len(rows), 20)
+                for direction_index in range(4):
+                    directional = [
+                        trial for trial in rows
+                        if trial["direction_index"] == direction_index
+                    ]
+                    self.assertEqual(len(directional), 5)
+                    self.assertEqual(
+                        {trial["speed_band"] for trial in directional},
+                        {"low", "medium", "high"},
+                    )
+            if family in action_families:
+                family_rows = [
+                    trial for trial in trials if trial["family"] == family
+                ]
+                for speed_band in ("low", "medium", "high"):
+                    self.assertGreaterEqual(
+                        sum(row["speed_band"] == speed_band
+                            for row in family_rows),
+                        10,
+                    )
+
+    def test_full_fabric_matrix_has_real_bounded_fixtures(self):
+        for trial in continuous_height_fabric_matrix_plan():
+            supports = _supports(trial)
+            start, goal = _start_and_goal(trial)
+            air = _air_positions(trial)
+            commands = _fixture_commands(trial)
+
+            self.assertTrue(supports, trial["trial_id"])
+            self.assertNotEqual(start, goal, trial["trial_id"])
+            self.assertLessEqual(len(air), 768, trial["trial_id"])
+            self.assertTrue(any(
+                command.startswith("tp MC2PProbe") for command in commands
+            ))
+            self.assertTrue(any(
+                command.startswith("forceload add ") for command in commands
+            ))
+            self.assertIn(trial["speed_band"], {"low", "medium", "high"})
+            self.assertLess(
+                trial["entry_speed_minimum"], trial["entry_speed_maximum"],
+            )
+            self.assertTrue(
+                trial["entry_speed_minimum"]
+                <= trial["target_entry_speed"]
+                <= trial["entry_speed_maximum"],
+            )
+            expected_damage = (
+                2.0 if trial["family"] == "direct_drop_5_budget_2"
+                else 0.0
+            )
+            self.assertEqual(
+                _damage_budget(trial).maximum_expected_damage_points,
+                expected_damage,
+            )
+            if trial["kind"] == "direct_drop":
+                dx, dz, _ = continuous_height_runtime._DIRECTIONS[
+                    trial["direction_index"]
+                ]
+                lateral_columns = {
+                    position[0] * -dz + position[2] * dx
+                    for position, _ in supports
+                }
+                self.assertEqual(
+                    len(lateral_columns), 1, trial["trial_id"],
+                )
+
+    def test_full_block_actions_have_a_three_block_physical_entry_runway(self):
+        for trial in continuous_height_fabric_matrix_plan():
+            if trial["kind"] == "low_height_route":
+                self.assertNotIn("entry_position", trial)
+                continue
+            start, _ = _start_and_goal(trial)
+            entry = trial["entry_position"]
+            dx, dz, _ = continuous_height_runtime._DIRECTIONS[
+                trial["direction_index"]
+            ]
+            along = (entry[0] - start[0]) * dx + (entry[2] - start[2]) * dz
+            self.assertAlmostEqual(along, 3.0, places=6)
+
+    def test_full_matrix_observers_face_the_route_center(self):
+        for trial in continuous_height_fabric_matrix_plan():
+            start, goal = _start_and_goal(trial)
+            center = ((start[0] + goal[0]) / 2, (start[2] + goal[2]) / 2)
+            for observer in (_observer(trial),
+                             continuous_height_runtime._upper_observer(trial)):
+                dx = center[0] - observer[0]
+                dz = center[1] - observer[2]
+                length = math.hypot(dx, dz)
+                look_x = -math.sin(math.radians(observer[3]))
+                look_z = math.cos(math.radians(observer[3]))
+                self.assertGreater(
+                    look_x * dx / length + look_z * dz / length,
+                    .999,
+                    trial["trial_id"],
+                )
+
+    def test_full_fabric_matrix_shards_are_disjoint_and_complete(self):
+        plan = continuous_height_fabric_matrix_plan()
+        shards = tuple(
+            select_continuous_height_fabric_matrix_shard(plan, index, 8)
+            for index in range(8)
+        )
+
+        self.assertTrue(all(len(shard) == 100 for shard in shards))
+        combined = tuple(trial for shard in shards for trial in shard)
+        self.assertEqual(
+            {trial["trial_id"] for trial in combined},
+            {trial["trial_id"] for trial in plan},
+        )
+        self.assertEqual(len(combined), len(plan))
+
+    def test_execution_plan_keeps_smoke_review_and_full_matrix_separate(self):
+        smoke = continuous_height_execution_plan(
+            review20_only=False, full_matrix=False,
+            shard_index=0, shard_count=1,
+        )
+        review = continuous_height_execution_plan(
+            review20_only=True, full_matrix=False,
+            shard_index=0, shard_count=1,
+        )
+        matrix = continuous_height_execution_plan(
+            review20_only=False, full_matrix=True,
+            shard_index=3, shard_count=8,
+        )
+
+        self.assertEqual(len(smoke), 19)
+        self.assertEqual(len(review), 24)
+        self.assertEqual(len(matrix), 100)
+        self.assertTrue(all(row["trial_id"].startswith("m3-") for row in matrix))
+
     def test_review20_side_observer_covers_landing_lower_air(self):
         for trial in navigation_coordination_review20_plan():
             observer = _observer(trial)
