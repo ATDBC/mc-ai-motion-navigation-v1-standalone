@@ -102,18 +102,36 @@ SCENARIOS = [
              perturbations=Perturbations(late_ticks=late_ticks(.2, 7))),
     Scenario("stair_descent_4", lane(columns([68, 68, 67, 66, 65, 64, 64]), width=3),
              (.5, 68.0, .5), (.5, 64.0, 6.5)),
-    Scenario("direct_drop_2", drop_ledge(2), (.5, 64.0, .5), (.5, 62.0, 4.5)),
-    Scenario("direct_drop_5_budget_2", drop_ledge(5), (.5, 64.0, .5), (.5, 59.0, 4.5), damage_points=2.0),
+    Scenario(
+        "direct_drop_2", drop_ledge(2), (.5, 64.0, .5), (.5, 62.0, 4.5),
+        landing_support_cells=tuple(
+            (x, 61, z) for x in (-1, 0, 1) for z in (3, 4, 5)
+        ),
+    ),
+    Scenario(
+        "direct_drop_5_budget_2", drop_ledge(5), (.5, 64.0, .5),
+        (.5, 59.0, 4.5), damage_points=2.0,
+        landing_support_cells=tuple(
+            (x, 58, z) for x in (-1, 0, 1) for z in (3, 4, 5)
+        ),
+    ),
     Scenario("direct_drop_2_goal_revised_during_probe", drop_ledge(2), (.5, 64.0, .5), (.5, 62.0, 4.5),
              events=[Event("revise_goal_back", probe_active, revise_goal_back)]),
     Scenario("direct_drop_2_cancel_in_air", drop_ledge(2), (.5, 64.0, .5), (.5, 62.0, 4.5),
              events=[Event("cancel_in_air", airborne_in_drop, cancel_task)], expect="cancelled"),
     Scenario("direct_drop_2_20pct_late", drop_ledge(2), (.5, 64.0, .5), (.5, 62.0, 4.5),
              perturbations=Perturbations(late_ticks=late_ticks(.2, 11))),
-    Scenario("far_landing_L_walkway", l_walkway_with_drop(), (.5, 64.0, .5), (7.5, 61.0, 6.5)),
+    Scenario(
+        "far_landing_L_walkway", l_walkway_with_drop(), (.5, 64.0, .5),
+        (7.5, 61.0, 6.5), landing_support_cells=((7, 60, 6),),
+    ),
     Scenario("far_landing_L_goal_revised_at_30", l_walkway_with_drop(), (.5, 64.0, .5), (7.5, 61.0, 6.5),
              events=[Event("revise_goal_back", lambda c: c.tick >= 30 and probe_active(c), revise_goal_back)]),
-    Scenario("terrace_two_ledges", terrace(), (.5, 64.0, .5), (.5, 58.0, 10.5)),
+    Scenario(
+        "terrace_two_ledges", terrace(), (.5, 64.0, .5),
+        (.5, 58.0, 10.5),
+        landing_support_cells=((0, 57, 9), (0, 57, 10)),
+    ),
     Scenario("terrace_three_ledges", terrace_three(), (.5, 64.0, .5), (.5, 55.0, 13.5)),
 ]
 

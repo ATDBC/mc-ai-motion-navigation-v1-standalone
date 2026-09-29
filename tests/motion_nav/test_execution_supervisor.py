@@ -97,6 +97,28 @@ class ExecutionSupervisorTests(unittest.TestCase):
         self.assertIs(evidence.disposition, HandoffDisposition.RETAIN)
         self.assertFalse(supervisor.retire_route(current, ledger, anchor))
 
+    def test_quiescent_release_requires_the_current_body_to_be_stable(self):
+        control, current, _ = self._control()
+        moving = replace(
+            current,
+            body=replace(
+                current.body,
+                velocity_blocks_per_second=(0.0, 0.0, 2.0),
+            ),
+        )
+        anchor = _ground_anchor(moving)
+        supervisor = ExecutionSupervisor()
+        self.assertTrue(supervisor.offer_route(
+            control, moving, InputApplicationLedger(), anchor,
+        ))
+
+        evidence = supervisor.evaluate_quiescence(
+            moving, InputApplicationLedger(), anchor,
+        )
+
+        self.assertIs(evidence.disposition, HandoffDisposition.RETAIN)
+        self.assertEqual(evidence.reason, "current_body_still_moving")
+
     def test_newer_unselected_successor_replaces_the_pending_candidate(self):
         incumbent, current, anchor = self._control()
         ledger = InputApplicationLedger()

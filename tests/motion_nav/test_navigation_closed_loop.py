@@ -564,9 +564,17 @@ class ClosedLoopToolTests(unittest.TestCase):
         self.assertTrue(all(row["source_bound"] and
                             row["driver_state"] not in {"failed", "cancelled"}
                             for row in airborne))
-        self.assertTrue(any(row["recovery_wait_status"] == "exhausted_ticks"
-                            and row["source_bound"]
-                            for row in result.trace))
+        self.assertTrue(any(
+            row["recovery_wait_status"] == "waiting"
+            and row["source_bound"]
+            for row in result.trace
+        ))
+        self.assertTrue(any(
+            row["body_handoff"] is not None
+            and row["body_handoff"]["reason"] == "current_body_still_moving"
+            and row["source_bound"]
+            for row in result.trace
+        ))
 
     def test_goal_revision_after_risk_commit_finishes_drop_before_replanning(self):
         def revise_after_first_submission(context):

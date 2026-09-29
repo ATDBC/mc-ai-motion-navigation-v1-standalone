@@ -38,8 +38,8 @@ from mc2p.motion_nav.motion_solver import (
     AirTransitionSolverPolicy, GapSolverPolicy, MotionSolveKind,
 )
 from mc2p.motion_nav.online_motion import (
-    InputApplicationLedger, InputResponsibilityStatus, StateAnchor,
-    input_responsibility_status,
+    InputApplicationLedger, InputResponsibilityDisposition, StateAnchor,
+    assess_input_responsibility,
 )
 from mc2p.motion_nav.physics_types import PhysicsState
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
@@ -985,17 +985,17 @@ class ActionRouteExecutor:
         state_anchor: StateAnchor | None = None,
     ) -> ActionRouteDecision:
         assert self.route is not None
-        responsibility = input_responsibility_status(
+        responsibility = assess_input_responsibility(
             input_ledger, state_anchor,
             previous_sequence_floor=self._input_scope_floor or 0,
-        )
-        if responsibility is InputResponsibilityStatus.IN_FLIGHT:
+        ).disposition
+        if responsibility is InputResponsibilityDisposition.IN_FLIGHT:
             self.state = ActionRouteState.RUNNING
             return self._result(
                 started, MovementV1(), 1,
                 "waiting_for_previous_input_application",
             )
-        if responsibility is InputResponsibilityStatus.AMBIGUOUS:
+        if responsibility is InputResponsibilityDisposition.AMBIGUOUS_WAITING:
             self.state = ActionRouteState.INPUT_LOST
             return self._result(
                 started, MovementV1(), 1,

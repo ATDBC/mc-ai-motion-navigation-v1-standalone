@@ -32,6 +32,32 @@ class InputResponsibilityStatus(StrEnum):
     AMBIGUOUS = "ambiguous"
 
 
+class InputResponsibilityDisposition(StrEnum):
+    """Whether the current body can move past retained input history."""
+
+    CLEAR = "clear"
+    IN_FLIGHT = "in_flight"
+    AMBIGUOUS_WAITING = "ambiguous_waiting"
+    TRANSFERABLE_FROM_CURRENT_ANCHOR = "transferable_from_current_anchor"
+
+
+@dataclass(frozen=True, slots=True)
+class InputResponsibilityAssessment:
+    disposition: InputResponsibilityDisposition
+    blocking_sequences: tuple[int, ...] = ()
+    latest_possible_tick: int | None = None
+
+    def __post_init__(self) -> None:
+        if type(self.disposition) is not InputResponsibilityDisposition:
+            raise ContractViolation("input responsibility disposition must be typed")
+        if self.blocking_sequences != tuple(sorted(set(self.blocking_sequences))):
+            raise ContractViolation("input responsibility sequences must be sorted and unique")
+        if (self.latest_possible_tick is not None
+                and (type(self.latest_possible_tick) is not int
+                     or self.latest_possible_tick < 0)):
+            raise ContractViolation("input responsibility latest tick must be nonnegative")
+
+
 def input_responsibility_status(
     ledger: InputApplicationLedger | None,
     anchor: StateAnchor | None = None,
@@ -71,6 +97,69 @@ def input_responsibility_status(
                 ambiguous = True
     return (InputResponsibilityStatus.AMBIGUOUS if ambiguous
             else InputResponsibilityStatus.CLEAR)
+
+
+def assess_input_responsibility(
+    ledger: InputApplicationLedger | None,
+    anchor: StateAnchor | None = None,
+    *, previous_sequence_floor: int = 0,
+) -> InputResponsibilityAssessment:
+    """Assess present ownership without rewriting an ambiguous past input.
+
+    A later body anchor does not prove whether an old command ran.  It can,
+    however, prove that every possible application tick is already reflected
+    in the current body state.  The body controller must still verify that its
+    current state is safe before using the transferable disposition.
+    """
+    status = input_responsibility_status(
+        ledger, anchor, previous_sequence_floor=previous_sequence_floor,
+    )
+    if status is InputResponsibilityStatus.CLEAR:
+        return InputResponsibilityAssessment(
+            InputResponsibilityDisposition.CLEAR,
+        )
+    if status is InputResponsibilityStatus.IN_FLIGHT:
+        blocking = tuple(
+            record.control_sequence
+            for record in (() if ledger is None else ledger.snapshot())
+            if record.action.movement != MovementV1()
+            or record.action.look != LookV1()
+            if record.status in {
+                InputApplicationStatus.IN_FLIGHT,
+                InputApplicationStatus.PARTIALLY_APPLIED,
+            }
+        )
+        return InputResponsibilityAssessment(
+            InputResponsibilityDisposition.IN_FLIGHT,
+            blocking,
+        )
+    ambiguous = tuple(
+        record
+        for record in (() if ledger is None else ledger.snapshot())
+        if (record.action.movement != MovementV1()
+            or record.action.look != LookV1())
+        and record.status is InputApplicationStatus.AMBIGUOUS
+    )
+    blocking = tuple(record.control_sequence for record in ambiguous)
+    latest = max((max(
+        record.requested_last_tick,
+        record.latest_allowed_first_tick + record.action.valid_for_ticks - 1,
+        record.resolved_at_tick or 0,
+    ) for record in ambiguous), default=None)
+    transferable = (
+        bool(ambiguous)
+        and anchor is not None
+        and all(record.session == anchor.session for record in ambiguous)
+        and latest is not None
+        and anchor.movement_tick_id > latest
+    )
+    return InputResponsibilityAssessment(
+        (InputResponsibilityDisposition.TRANSFERABLE_FROM_CURRENT_ANCHOR
+         if transferable else
+         InputResponsibilityDisposition.AMBIGUOUS_WAITING),
+        blocking,
+        latest,
+    )
 
 
 _TERMINAL_INPUT_STATES = frozenset({

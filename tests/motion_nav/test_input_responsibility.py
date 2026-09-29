@@ -4,8 +4,10 @@ import unittest
 
 from mc2p.contracts.action_v1 import LookV1, MovementV1
 from mc2p.motion_nav.online_motion import (
-    InputApplicationLedger, InputApplicationStatus, InputResponsibilityStatus,
-    MotionTickPhase, StateAnchor, input_responsibility_status,
+    InputApplicationLedger, InputApplicationStatus,
+    InputResponsibilityDisposition, InputResponsibilityStatus,
+    MotionTickPhase, StateAnchor, assess_input_responsibility,
+    input_responsibility_status,
 )
 from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET
 from mc2p.motion_nav.world_model import WorldSessionId
@@ -44,6 +46,32 @@ class InputResponsibilityTests(unittest.TestCase):
         self.assertIs(input_responsibility_status(
             ledger, anchor(), previous_sequence_floor=1,
         ), InputResponsibilityStatus.AMBIGUOUS)
+
+    def test_later_anchor_can_transfer_current_body_without_rewriting_history(self):
+        ledger = self.ambiguous_ledger()
+
+        assessment = assess_input_responsibility(
+            ledger, anchor(6), previous_sequence_floor=0,
+        )
+
+        self.assertIs(
+            assessment.disposition,
+            InputResponsibilityDisposition.TRANSFERABLE_FROM_CURRENT_ANCHOR,
+        )
+        self.assertEqual(assessment.blocking_sequences, (1,))
+        self.assertIs(ledger.record(1).status, InputApplicationStatus.AMBIGUOUS)
+
+    def test_anchor_inside_possible_application_window_keeps_ambiguity(self):
+        ledger = self.ambiguous_ledger()
+
+        assessment = assess_input_responsibility(
+            ledger, anchor(4), previous_sequence_floor=0,
+        )
+
+        self.assertIs(
+            assessment.disposition,
+            InputResponsibilityDisposition.AMBIGUOUS_WAITING,
+        )
 
     def test_confirmed_replacement_and_reanchor_clear_historical_ambiguity(self):
         ledger = self.ambiguous_ledger()

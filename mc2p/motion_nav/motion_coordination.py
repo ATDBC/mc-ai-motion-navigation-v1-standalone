@@ -815,7 +815,8 @@ class MotionRouteCoordinator:
             if self._grounded_recovery_wait_id != wait_id:
                 self._end_grounded_recovery_wait()
                 self.retry_ledger.begin_wait(
-                    wait_id, _GROUNDED_ENTRY_RECOVERY_POLICY,
+                    wait_id, f"motion-route/{self.route.route_id}",
+                    _GROUNDED_ENTRY_RECOVERY_POLICY,
                     anchor.movement_tick_id,
                     frame.body.stamp.received_monotonic_ns,
                 )

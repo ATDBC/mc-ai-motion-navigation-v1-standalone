@@ -19,6 +19,25 @@ from tests.sim.event_sequences import (
 SCHEMA = "mc2p.navigation-event-sequence-manifest.v1"
 
 
+def _increment(table: dict, key: str, field: str, amount: int = 1) -> None:
+    row = table.setdefault(key, {})
+    row[field] = row.get(field, 0) + amount
+
+
+def _result_class(outcome) -> str:
+    if outcome.exception is not None:
+        return "public_exception"
+    if outcome.result is None:
+        return "missing_result"
+    if outcome.result.violations:
+        return "invariant_violation"
+    if outcome.result.outcome == "success":
+        return "task_success"
+    if outcome.result.outcome in {"failed", "cancelled"}:
+        return f"bounded_{outcome.result.outcome}"
+    return "non_terminal_result"
+
+
 def _commit() -> str:
     result = subprocess.run(
         ["git", "rev-parse", "HEAD"],
@@ -54,6 +73,10 @@ def run_manifest(manifest: Path, output_root: Path) -> dict:
         raise ValueError("invalid event sequence manifest")
     output_root.mkdir(parents=True)
     counts = Counter()
+    by_scenario: dict[str, dict[str, int]] = {}
+    by_event_kind: dict[str, dict[str, int]] = {}
+    by_outcome: dict[str, dict[str, int]] = {}
+    by_invariant: dict[str, dict[str, int]] = {}
     rows = []
     for scenario in scenarios:
         for seed in seeds:
@@ -66,6 +89,20 @@ def run_manifest(manifest: Path, output_root: Path) -> dict:
             outcome = run_sequence(sequence)
             failed = outcome.failed_invariant
             counts["failed_invariant" if failed else "accepted"] += 1
+            result_class = _result_class(outcome)
+            _increment(by_scenario, scenario, "total")
+            _increment(by_scenario, scenario,
+                       "failed_invariant" if failed else "accepted")
+            _increment(by_outcome, result_class, "total")
+            for kind in sorted({event.kind.value for event in sequence.events}):
+                _increment(by_event_kind, kind, "sequences")
+                _increment(by_event_kind, kind,
+                           "failed_invariant" if failed else "accepted")
+            for event in sequence.events:
+                _increment(by_event_kind, event.kind.value, "occurrences")
+            if outcome.result is not None:
+                for _, invariant, _ in outcome.result.violations:
+                    _increment(by_invariant, invariant, "violations")
             row = _document(sequence, outcome)
             rows.append(row)
             if failed:
@@ -86,6 +123,10 @@ def run_manifest(manifest: Path, output_root: Path) -> dict:
         "manifest": str(manifest),
         "manifest_sha256": hashlib.sha256(raw).hexdigest(),
         "counts": dict(counts),
+        "by_scenario": by_scenario,
+        "by_event_kind": by_event_kind,
+        "by_outcome": by_outcome,
+        "by_invariant": by_invariant,
         "results": rows,
     }
     (output_root / "summary.json").write_text(

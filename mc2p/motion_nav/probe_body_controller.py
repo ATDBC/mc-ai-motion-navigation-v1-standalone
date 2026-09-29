@@ -10,8 +10,8 @@ from mc2p.motion_nav.landing_edge_probe import (
     LandingEdgeProbe, LandingEdgeProbeState,
 )
 from mc2p.motion_nav.online_motion import (
-    InputApplicationLedger, InputResponsibilityStatus, StateAnchor,
-    input_responsibility_status,
+    InputApplicationLedger, InputResponsibilityDisposition, StateAnchor,
+    assess_input_responsibility,
 )
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 
@@ -24,10 +24,7 @@ class ProbeBodyController:
 
     @property
     def owner_id(self) -> str:
-        return (
-            f"landing-edge-probe/{self.probe.goal_id}/"
-            f"{self.probe.goal_revision}"
-        )
+        return self.probe.owner_id
 
     def request_stop(self, cause: StopCause) -> None:
         self.probe.request_stop(cause)
@@ -50,15 +47,19 @@ class ProbeBodyController:
         disposition = HandoffDisposition.RETAIN
         reason = self.probe.state.value
         if self.probe.state is LandingEdgeProbeState.STOPPING:
-            responsibility = input_responsibility_status(ledger, anchor)
+            responsibility = assess_input_responsibility(ledger, anchor)
             if (ledger is not None and anchor is not None
                     and self.probe.stop_ready(frame, physics_state)
-                    and responsibility is InputResponsibilityStatus.CLEAR):
+                    and responsibility.disposition in {
+                        InputResponsibilityDisposition.CLEAR,
+                        InputResponsibilityDisposition.TRANSFERABLE_FROM_CURRENT_ANCHOR,
+                    }):
                 disposition = HandoffDisposition.QUIESCENT
                 reason = "safe_stance_and_input_resolved"
                 movement = MovementV1()
                 self.probe.end(reason)
-            elif responsibility is InputResponsibilityStatus.AMBIGUOUS:
+            elif responsibility.disposition is \
+                    InputResponsibilityDisposition.AMBIGUOUS_WAITING:
                 reason = "input_application_ambiguous"
         handoff = HandoffEvidence(
             self.owner_id, frame.session, disposition,
@@ -74,4 +75,3 @@ class ProbeBodyController:
         anchor: StateAnchor | None, *, input_floor: int,
     ) -> HandoffEvidence:
         return self.decide(frame, ledger, anchor).handoff
-

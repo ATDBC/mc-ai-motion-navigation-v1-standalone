@@ -13,11 +13,9 @@ class NavigationOwnerTests(unittest.TestCase):
     def test_goal_request_ledger_replaces_one_authoritative_request(self):
         owner = GoalRequestLedger()
         owner.request = "request-1"
-        owner.pending_goal = ("goal", 2)
         owner.request = "request-2"
 
         self.assertEqual(owner.request, "request-2")
-        self.assertEqual(owner.pending_goal, ("goal", 2))
 
     def test_planning_pipeline_clear_drops_only_planning_state(self):
         owner = PlanningPipelineState()

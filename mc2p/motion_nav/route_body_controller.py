@@ -14,8 +14,8 @@ from mc2p.motion_nav.body_control import (
 )
 from mc2p.motion_nav.motion_coordination import MotionRouteCoordinator
 from mc2p.motion_nav.online_motion import (
-    InputApplicationLedger, InputResponsibilityStatus, StateAnchor,
-    input_responsibility_status,
+    InputApplicationLedger, InputResponsibilityDisposition,
+    StateAnchor, assess_input_responsibility,
 )
 from mc2p.motion_nav.route_admission import ActiveRoute
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
@@ -99,10 +99,18 @@ class RouteControl:
                 or anchor.session != frame.session
                 or anchor.observation_sequence_id != frame.body.sequence_id):
             reason = "current_body_or_input_evidence_missing"
-        elif input_responsibility_status(
+        elif assess_input_responsibility(
             ledger, anchor, previous_sequence_floor=input_floor,
-        ) is not InputResponsibilityStatus.CLEAR:
+        ).disposition not in {
+            InputResponsibilityDisposition.CLEAR,
+            InputResponsibilityDisposition.TRANSFERABLE_FROM_CURRENT_ANCHOR,
+        }:
             reason = "input_responsibility_unresolved"
+        elif math.hypot(
+            frame.body.velocity_blocks_per_second[0],
+            frame.body.velocity_blocks_per_second[2],
+        ) > .10:
+            reason = "current_body_still_moving"
         else:
             predicted = verified_ground_rollout(
                 frame, anchor.physics_state, MovementV1(),

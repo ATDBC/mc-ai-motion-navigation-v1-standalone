@@ -23,6 +23,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 import math
+from typing import Callable
 
 from mc2p.contracts.action_receipt import behavior_receipt_from_mapping
 from mc2p.contracts.action_v1 import ActionSnapshotV1, MovementV1
@@ -145,6 +146,8 @@ class CalculatorBackend:
         self.scene = scene
         self.episode = episode
         self.perturbations = perturbations or Perturbations()
+        self._external_perturbation_guard: Callable[[], bool] | None = None
+        self._external_impulse_guard: Callable[[], bool] | None = None
         self.sequence = 0
         self.movement_tick = 1
         self.health = 20.0
@@ -161,6 +164,7 @@ class CalculatorBackend:
         self.command_events: list[dict] = []
         self._sample_records: list[dict] = []
         self._receipt_sample_cursor = 0
+        self._omitted_sample_ticks: set[int] = set()
         self._truth_session = WorldSessionId("sim-truth")
         self._build_truth()
         self.state = self._initial_state(start, yaw_degrees)
@@ -186,6 +190,36 @@ class CalculatorBackend:
 
     def solid_at(self, cell) -> str | None:
         return self.scene.solids.get(cell)
+
+    def set_external_perturbation_guard(
+        self, guard: Callable[[], bool],
+    ) -> None:
+        if not callable(guard):
+            raise TypeError("external perturbation guard must be callable")
+        self._external_perturbation_guard = guard
+
+    def set_external_impulse_guard(
+        self, guard: Callable[[], bool],
+    ) -> None:
+        """Limit shove injection to a scope that includes its real recovery owner."""
+        if not callable(guard):
+            raise TypeError("external impulse guard must be callable")
+        self._external_impulse_guard = guard
+
+    def _external_perturbations_enabled(self) -> bool:
+        return (
+            self._external_perturbation_guard is None
+            or bool(self._external_perturbation_guard())
+        )
+
+    def _external_impulses_enabled(self) -> bool:
+        return (
+            self._external_perturbations_enabled()
+            and (
+                self._external_impulse_guard is None
+                or bool(self._external_impulse_guard())
+            )
+        )
 
     # ----- observation -------------------------------------------------------
     def _eye(self) -> tuple[float, float, float]:
@@ -322,12 +356,17 @@ class CalculatorBackend:
     def advance(self, movement: MovementV1, look_yaw: float = 0.0, look_pitch: float = 0.0) -> None:
         """One game tick with the given (already arbitrated) input."""
         tick = self.movement_tick + 1
-        for cell, block_id in self.perturbations.world_edits.get(tick, {}).items():
+        perturbations_enabled = self._external_perturbations_enabled()
+        world_edits = (
+            self.perturbations.world_edits.get(tick, {})
+            if perturbations_enabled else {}
+        )
+        for cell, block_id in world_edits.items():
             if block_id is None:
                 self.scene.solids.pop(cell, None)
             else:
                 self.scene.solids[cell] = block_id
-        if tick in self.perturbations.world_edits:
+        if world_edits:
             self._build_truth()
             self.state = replace(self.state, session=self._truth_session)
         state = replace(
@@ -348,7 +387,7 @@ class CalculatorBackend:
         if result.next_state is None:
             raise RuntimeError(f"calculator stopped: {result.status} {getattr(result, 'reasons', ())}")
         next_state = result.next_state
-        if tick in self.perturbations.impulses:
+        if self._external_impulses_enabled() and tick in self.perturbations.impulses:
             vx, vy, vz = next_state.velocity_blocks_per_tick
             ix, iy, iz = self.perturbations.impulses[tick]
             next_state = replace(next_state, velocity_blocks_per_tick=(vx + ix, vy + iy, vz + iz))
@@ -375,10 +414,19 @@ class CalculatorBackend:
             episode_id=action.episode_id,
         )
         leased = sample_state in {"neutral", "leased"}
+        configured_omissions = (
+            self.perturbations.omitted_receipt_ticks
+            if self._external_perturbations_enabled() else frozenset()
+        )
+        self._omitted_sample_ticks.update(
+            sample["movement_tick_id"]
+            for sample in self._sample_records[self._receipt_sample_cursor:]
+            if sample["movement_tick_id"] in configured_omissions
+        )
         samples = [sample for sample in
                    self._sample_records[self._receipt_sample_cursor:]
                    if sample["movement_tick_id"] not in
-                   self.perturbations.omitted_receipt_ticks]
+                   self._omitted_sample_ticks]
         self._receipt_sample_cursor = len(self._sample_records)
         receipt = behavior_receipt_from_mapping({
             **receipt_value(
@@ -388,11 +436,7 @@ class CalculatorBackend:
                 input_samples=self.movement_tick, leased_input_samples=1 if leased else 0,
             ),
             "schema_version": "mc2p.client_action_receipt.v3",
-            "dropped_input_samples": sum(
-                sample["movement_tick_id"] in
-                self.perturbations.omitted_receipt_ticks
-                for sample in self._sample_records
-            ),
+            "dropped_input_samples": len(self._omitted_sample_ticks),
             "oldest_retained_input_tick": (
                 samples[0]["movement_tick_id"] if samples else
                 self.movement_tick
@@ -406,12 +450,24 @@ class CalculatorBackend:
         self.clock[0] += 50_000_000
         self._sample_command(None)
 
+    def stop_external_perturbations(self) -> None:
+        """Stop future test disturbances without discarding accepted commands.
+
+        The task may already be terminal while an accepted input lease still has
+        to settle.  Clearing only the injector keeps that real client behaviour
+        while preventing the test harness from manufacturing post-task events.
+        """
+        self.perturbations = Perturbations()
+
     def _sample_command(
         self, action: ActionSnapshotV1 | None,
     ) -> tuple[int | None, int | None, str]:
         tick = self.movement_tick + 1
         if action is not None:
-            arrival_tick = tick + int(tick in self.perturbations.late_ticks)
+            arrival_tick = tick + int(
+                self._external_perturbations_enabled()
+                and tick in self.perturbations.late_ticks
+            )
             self.submitted_commands.append((action.request_sequence_id, action.movement,
                                             arrival_tick, action.deadline_monotonic_ns))
             self._pending_actions.append((arrival_tick, action))

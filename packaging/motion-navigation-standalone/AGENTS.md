@@ -2,7 +2,7 @@
 
 本仓库是由主项目生成的只读源码快照。先读最新的 `docs/motion_navigation/stages/` 和对应的 `acceptance/`，再读取相关 `architecture/` 与 `decisions/`。
 
-当前导航协调已完成 S0 至 S4。第二十一轮整改关闭了停止收尾期间改目标、探边外力位移和目标频繁变化后的永久等待，并加入固定种子的随机事件序列门禁。第二十轮专项 Fabric 对照仍是当前实机证据；第二十一轮没有新增 Fabric 批次。S5 仍然打开，等待完整连续高度速度带、形状和随机迟到矩阵达到可靠性门槛。结果和适用边界见[第二十一轮整改计划](docs/motion_navigation/stages/navigation-coordination-review21-remediation-plan.md)、[验收记录](docs/motion_navigation/acceptance/navigation-coordination-refactor.md)和[缺陷台账](docs/motion_navigation/acceptance/defect-ledger.md)。
+当前导航协调已完成 S0 至 S5。第二十二轮整改补齐输入歧义的有界交接、等待记录的动作归属，以及停止后的单一交接入口。固定 14 场、冻结 200 种子和 192 个中断组合保持既定结果；1000 个固定随机事件序列没有永久等待、公开接口异常或不变量违规。连续高度 M3 的 800 场完整 Fabric 矩阵已经关闭。本轮没有新增 Fabric 批次，第二十轮专项 Fabric 对照和 M3 完整矩阵仍是当前实机证据。结果和适用边界见[第二十二轮整改计划](docs/motion_navigation/stages/navigation-coordination-review22-remediation-plan.md)、[验收记录](docs/motion_navigation/acceptance/navigation-coordination-refactor.md)和[缺陷台账](docs/motion_navigation/acceptance/defect-ledger.md)。
 
 项目方只通过默认分支 `main` 发布由固定导出清单生成、校验通过的公开快照。不得把主项目的完整开发分支或提交历史直接推入本仓库。三方审查分支可以保留，但只保存审查者自己的报告和复现材料，不代表正式发布状态。
 

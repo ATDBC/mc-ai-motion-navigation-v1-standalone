@@ -104,8 +104,8 @@ from mc2p.motion_nav.movement_transition import (
     GoalState, MovementMode, ResourceState,
 )
 from mc2p.motion_nav.online_motion import (
-    InputApplicationLedger, InputResponsibilityStatus, StateAnchor,
-    input_responsibility_status,
+    InputApplicationLedger, InputResponsibilityDisposition, StateAnchor,
+    assess_input_responsibility,
 )
 from mc2p.motion_nav.motion_residual import (
     MotionResidualResult, MotionResidualStatus, MotionResidualTracker,
@@ -123,6 +123,9 @@ from mc2p.motion_nav.navigation_lifecycle import (
     NavigationSessionState,
     NavigationTransitionAction,
     SessionEventPolicy,
+)
+from mc2p.motion_nav.navigation_handoff import (
+    HandoffDestination, NavigationHandoffCoordinator,
 )
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView
 from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET
@@ -486,6 +489,7 @@ class NavigationSession:
         self._lifecycle = NavigationLifecycle()
         self._reason = "not_started"
         self._goal_requests = GoalRequestLedger()
+        self._handoff = NavigationHandoffCoordinator()
         self._planning_pipeline = PlanningPipelineState()
         self._information = InformationAcquisitionState()
         self._frame: NavigationFrame | None = None
@@ -536,6 +540,20 @@ class NavigationSession:
     @_edge_probe.setter
     def _edge_probe(self, value: LandingEdgeProbe | None) -> None:
         self._supervisor.probe = value
+
+    def _information_wait_owner_id(self) -> str:
+        return f"navigation-session/{self.session_id}/information"
+
+    def _probe_wait_owner_id(self) -> str:
+        probe = self._edge_probe
+        return (
+            probe.owner_id if probe is not None
+            else f"navigation-session/{self.session_id}/recovery"
+        )
+
+    def _end_probe_waits(self, probe: LandingEdgeProbe | None) -> None:
+        if probe is not None and self._retry_ledger is not None:
+            self._retry_ledger.end_owner_waits(probe.owner_id)
 
     @property
     def _state(self) -> NavigationSessionState:
@@ -642,11 +660,14 @@ class NavigationSession:
 
     @property
     def _pending_goal(self) -> PendingGoalRevision | None:
-        return self._goal_requests.pending_goal
+        return self._handoff.pending_goal
 
     @_pending_goal.setter
     def _pending_goal(self, value: PendingGoalRevision | None) -> None:
-        self._goal_requests.pending_goal = value
+        if value is None:
+            self._handoff.clear_goal()
+        else:
+            self._handoff.stage_waiting_goal(value)
 
     @property
     def _snapshot_builder(self) -> KnownMapSnapshotBuilder | None:
@@ -2053,7 +2074,9 @@ class NavigationSession:
                     self._retry_ledger.end_wait("recovery")
                 self._recovery_wait_status = None
                 stop_cause = self._edge_probe.stop_cause
+                retired_probe = self._edge_probe
                 self._supervisor.retire_quiescent_probe(frame)
+                self._end_probe_waits(retired_probe)
                 terminal = self._pending_probe_terminal
                 terminal_reason = self._pending_probe_terminal_reason
                 self._pending_probe_stop_cause = None
@@ -2151,7 +2174,9 @@ class NavigationSession:
                     (self._edge_probe.ended_reason
                      or "landing_edge_probe_ended"),
                 )
+                ended_probe = self._edge_probe
                 self._edge_probe = None
+                self._end_probe_waits(ended_probe)
                 return self._proposal(MovementV1(), None, 1, deadline_ns)
             return self._proposal(
                 movement, LookV1(0.0, 0.0), 1, deadline_ns,
@@ -2241,7 +2266,9 @@ class NavigationSession:
                         self._edge_probe.ended_reason
                         or "landing_edge_probe_ended"
                     )
+                    ended_probe = self._edge_probe
                     self._edge_probe = None
+                    self._end_probe_waits(ended_probe)
                     self._transition(
                         NavigationTransitionAction.MARK_FAILED,
                         failure_reason,
@@ -2611,14 +2638,13 @@ class NavigationSession:
                             replacement_failure,
                         )
                     else:
-                        handoff = self._supervisor.last_handoff
-                        self._transition(
-                            (NavigationTransitionAction.REPLAN_AFTER_HANDOFF
-                             if self._state is NavigationSessionState.STOPPING else
-                             NavigationTransitionAction.BEGIN_PLANNING),
-                            "replacement_route_pending",
-                            handoff=(handoff if self._state is
-                                     NavigationSessionState.STOPPING else None),
+                        # The replacement candidate may have been consumed
+                        # while the incumbent still owned the body.  Start a
+                        # fresh request from the observed release position;
+                        # merely changing the lifecycle state would leave no
+                        # snapshot, job, or result capable of making progress.
+                        self._reissue_request_from_current(
+                            frame, "replacement_route_reanchored",
                         )
                 else:
                     self._transition(
@@ -2799,6 +2825,7 @@ class NavigationSession:
                     == self._active_route.goal_revision
                 and decision.submit_input
                 and decision.movement != MovementV1()):
+            transferred_probe = self._edge_probe
             handoff = self._supervisor.transfer_probe_to_route(
                 self._frame, route_id=self._active_route.route_id,
                 route_revision=self._active_route.route_revision,
@@ -2807,6 +2834,7 @@ class NavigationSession:
                 control_sequence=control_sequence,
                 movement_tick_id=None,
             )
+            self._end_probe_waits(transferred_probe)
             if self._state is NavigationSessionState.STOPPING:
                 self._transition(
                     NavigationTransitionAction.RESUME_EXECUTION_AFTER_HANDOFF,
@@ -3029,6 +3057,13 @@ class NavigationSession:
             self._planning_pipeline.replacement_failure = (
                 ReplacementPlanningFailure(reason)
             )
+            route_control = self._supervisor.incumbent_route
+            if route_control is not None:
+                route_control.request_stop(StopCause.MOTION_UNSOLVABLE)
+                self._transition(
+                    NavigationTransitionAction.BEGIN_STOPPING,
+                    "replacement_failure_waits_for_body_release",
+                )
             return
         self._transition(NavigationTransitionAction.MARK_FAILED, reason)
 
@@ -3086,14 +3121,14 @@ class NavigationSession:
                 (record.control_sequence for record in input_ledger.snapshot()),
                 default=0,
             ) if input_ledger is not None else 0
-        responsibility = input_responsibility_status(
+        responsibility = assess_input_responsibility(
             input_ledger, state_anchor,
             previous_sequence_floor=self._local_input_floor,
-        )
-        if responsibility is InputResponsibilityStatus.AMBIGUOUS:
+        ).disposition
+        if responsibility is InputResponsibilityDisposition.AMBIGUOUS_WAITING:
             self._transition(NavigationTransitionAction.MARK_FAILED, 'previous_input_application_ambiguous')
             return
-        if responsibility is InputResponsibilityStatus.IN_FLIGHT:
+        if responsibility is InputResponsibilityDisposition.IN_FLIGHT:
             self._continue_execution('waiting_for_previous_input')
             return
         if observed.status is ObservedGoalStatus.SATISFIED:
@@ -3196,7 +3231,7 @@ class NavigationSession:
                              else frame.body.sequence_id)
             try:
                 self._retry_ledger.begin_wait(
-                    "recovery",
+                    "recovery", self._probe_wait_owner_id(),
                     WaitPolicy(_INFORMATION_WAIT_LIMIT_FRAMES,
                                _INFORMATION_WAIT_LIMIT_NS),
                     movement_tick, self._clock(),
@@ -3254,7 +3289,7 @@ class NavigationSession:
         reason: str,
     ) -> None:
         """Commit a validated revision while the incumbent exits safely."""
-        self._pending_goal = pending
+        self._handoff.stage_goal(pending, StopCause.GOAL_REVISED, reason)
         self._snapshot_missing = missing
         self._supervisor.discard_pending_route()
         route_control = self._supervisor.incumbent_route
@@ -3273,7 +3308,7 @@ class NavigationSession:
         if pending is None:
             return
         if self._request is None:
-            self._pending_goal = None
+            self._handoff.clear_goal()
             self._snapshot_missing = ()
             self._transition(
                 NavigationTransitionAction.RESET_READY,
@@ -3293,6 +3328,40 @@ class NavigationSession:
         )
         start_node, start_missing = self._surface_for_body(frame)
         missing = tuple(sorted(set(goal_missing) | set(start_missing)))
+        if self._handoff.stop_request is not None:
+            handoff = self._supervisor.last_handoff
+            resolution = self._handoff.resolve_goal(
+                handoff,
+                goal_ready=goal_node is not None,
+                start_ready=start_node is not None,
+                missing_cells=missing,
+                unavailable_reason=(
+                    "goal_surface_unavailable" if goal_node is None
+                    else "current_surface_unavailable"
+                ),
+            )
+            assert resolution.pending_goal is not None
+            pending = resolution.pending_goal
+            if resolution.destination is HandoffDestination.WAIT_FOR_INFORMATION:
+                self._snapshot_missing = resolution.missing_cells
+                self._transition(
+                    NavigationTransitionAction.WAIT_FOR_INFORMATION,
+                    resolution.reason,
+                )
+                return
+            if resolution.destination is HandoffDestination.FAIL:
+                self._snapshot_missing = ()
+                self._transition(
+                    NavigationTransitionAction.MARK_FAILED,
+                    resolution.reason,
+                )
+                return
+            if resolution.destination is not HandoffDestination.REPLAN:
+                raise ContractViolation(
+                    "goal handoff produced an unsupported destination"
+                )
+        else:
+            self._handoff.clear_goal()
         if goal_node is None or start_node is None:
             self._snapshot_missing = missing
             if missing:
@@ -3303,7 +3372,6 @@ class NavigationSession:
                      "current_surface_requires_information"),
                 )
                 return
-            self._pending_goal = None
             self._transition(
                 NavigationTransitionAction.MARK_FAILED,
                 ("goal_surface_unavailable" if goal_node is None else
@@ -3319,7 +3387,6 @@ class NavigationSession:
             goal_state=pending.goal_state,
             damage_budget=pending.damage_budget,
         )
-        self._pending_goal = None
         self._snapshot_missing = ()
         self._accept_goal_request(request, frame, "pending_goal_committed")
 
@@ -3331,7 +3398,7 @@ class NavigationSession:
                          else frame.body.sequence_id)
         try:
             self._retry_ledger.begin_wait(
-                "recovery",
+                "recovery", self._probe_wait_owner_id(),
                 WaitPolicy(_INFORMATION_WAIT_LIMIT_FRAMES,
                            _INFORMATION_WAIT_LIMIT_NS),
                 movement_tick, self._clock(),
@@ -3360,7 +3427,7 @@ class NavigationSession:
         now_ns = self._clock()
         try:
             ledger.begin_wait(
-                wait_id,
+                wait_id, probe.owner_id,
                 WaitPolicy(DIRECT_DROP_EDGE_PROBE_MAX_FRAMES,
                            _INFORMATION_WAIT_LIMIT_NS),
                 movement_tick, now_ns,
@@ -3448,6 +3515,11 @@ class NavigationSession:
         self, frame: NavigationFrame, state_anchor: StateAnchor | None,
         input_ledger: InputApplicationLedger | None,
     ) -> None:
+        # STOPPING is owned by the handoff path.  Background planning may run
+        # while an incumbent executes, but it must never reopen planning while
+        # the incumbent or probe is still proving release.
+        if self._state is NavigationSessionState.STOPPING:
+            return
         request = self._request
         if request is None or self._state is NavigationSessionState.NEEDS_INFORMATION:
             return
@@ -3731,9 +3803,23 @@ class NavigationSession:
             RouteControl(admitted.route, executor, coordinator), frame,
             input_ledger, state_anchor,
         ):
-            self._continue_execution(
-                "route_handoff_waiting_for_safe_terminal",
-            )
+            # A candidate that cannot directly take ownership has already
+            # consumed its planning result.  Ask the incumbent to stop at its
+            # next safe boundary, then rebuild from the released body state.
+            # Letting the old route continue indefinitely can strand it at an
+            # air-action boundary with no verified command to run.
+            incumbent = self._supervisor.incumbent_route
+            if incumbent is not None:
+                incumbent.request_stop(StopCause.ROUTE_REPLACED)
+                self._restart_after_active_terminal = True
+                self._transition(
+                    NavigationTransitionAction.BEGIN_STOPPING,
+                    "route_handoff_waiting_for_safe_terminal",
+                )
+            else:
+                self._reissue_request_from_current(
+                    frame, "route_handoff_reanchored",
+                )
             return
         self._executor_reported_damage_points = 0.0
         self._planning_changes.clear()
@@ -3983,7 +4069,7 @@ class NavigationSession:
                     self._cell_fact_id(position) for position, _ in unresolved
                 ))
                 token = self._retry_ledger.begin_wait(
-                    "information",
+                    "information", self._information_wait_owner_id(),
                     WaitPolicy(_INFORMATION_WAIT_LIMIT_FRAMES,
                                _INFORMATION_WAIT_LIMIT_NS),
                     movement_tick, now_ns,

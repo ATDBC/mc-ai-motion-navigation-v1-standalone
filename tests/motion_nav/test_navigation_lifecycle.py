@@ -113,6 +113,14 @@ class NavigationLifecycleTests(unittest.TestCase):
         )
         self.assertIs(lifecycle.state, NavigationSessionState.PLANNING)
 
+    def test_stopping_cannot_use_the_ordinary_planning_entry(self):
+        lifecycle = NavigationLifecycle(NavigationSessionState.STOPPING)
+
+        with self.assertRaisesRegex(Exception, "not allowed"):
+            lifecycle.transition(NavigationTransitionAction.BEGIN_PLANNING)
+
+        self.assertIs(lifecycle.state, NavigationSessionState.STOPPING)
+
     def test_every_transition_table_entry_has_one_fixed_destination(self):
         self.assertTrue(SESSION_TRANSITION_TABLE)
         for (state, action), target in SESSION_TRANSITION_TABLE.items():

@@ -76,6 +76,7 @@ class WaitPolicy:
 @dataclass(frozen=True, slots=True)
 class WaitToken:
     wait_id: str
+    owner_id: str
     policy: WaitPolicy
     started_movement_tick: int
     started_monotonic_ns: int
@@ -254,9 +255,10 @@ class RetryLedger:
         self._progress_capacity_exhausted |= full
         return full
 
-    def begin_wait(self, wait_id: str, policy: WaitPolicy,
+    def begin_wait(self, wait_id: str, owner_id: str, policy: WaitPolicy,
                    movement_tick: int, monotonic_ns: int) -> WaitToken:
         require_identifier(wait_id, "wait id")
+        require_identifier(owner_id, "wait owner id")
         if type(policy) is not WaitPolicy:
             raise ContractViolation("wait policy must be typed")
         if (type(movement_tick) is not int or movement_tick < 0
@@ -266,8 +268,14 @@ class RetryLedger:
         if token is None:
             if len(self._waits) >= _MAX_ACTIVE_WAITS:
                 raise RetryLedgerCapacityExceeded("active navigation wait ledger is full")
-            token = WaitToken(wait_id, policy, movement_tick, monotonic_ns)
+            token = WaitToken(
+                wait_id, owner_id, policy, movement_tick, monotonic_ns,
+            )
             self._waits[wait_id] = token
+        elif token.owner_id != owner_id:
+            raise ContractViolation(
+                "active navigation wait cannot change owner"
+            )
         return token
 
     def check_wait(self, wait_id: str, movement_tick: int,
@@ -283,3 +291,24 @@ class RetryLedger:
 
     def end_wait(self, wait_id: str) -> None:
         self._waits.pop(wait_id, None)
+
+    def end_owner_waits(self, owner_id: str) -> tuple[str, ...]:
+        """Close every live wait when its owning action leaves the task."""
+        require_identifier(owner_id, "wait owner id")
+        ended = tuple(sorted(
+            wait_id for wait_id, token in self._waits.items()
+            if token.owner_id == owner_id
+        ))
+        for wait_id in ended:
+            del self._waits[wait_id]
+        return ended
+
+    def active_waits(self, owner_id: str | None = None) -> tuple[WaitToken, ...]:
+        """Return an immutable diagnostic view without transferring ownership."""
+        if owner_id is not None:
+            require_identifier(owner_id, "wait owner id")
+        return tuple(
+            self._waits[wait_id]
+            for wait_id in sorted(self._waits)
+            if owner_id is None or self._waits[wait_id].owner_id == owner_id
+        )

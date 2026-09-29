@@ -38,10 +38,9 @@ class PendingGoalRevision:
 
 @dataclass(slots=True)
 class GoalRequestLedger:
-    """Own the current planning request and a not-yet-activated goal."""
+    """Own the one planning request currently visible to the planner."""
 
     request: Any | None = None
-    pending_goal: PendingGoalRevision | None = None
 
 
 @dataclass(slots=True)

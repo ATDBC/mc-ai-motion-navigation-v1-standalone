@@ -11,6 +11,29 @@ from mc2p.motion_nav.retry_ledger import (
 
 
 class RetryLedgerTests(unittest.TestCase):
+    def test_waits_can_be_closed_by_the_action_that_owns_them(self):
+        ledger = RetryLedger("task")
+        policy = WaitPolicy(40, 2_000_000_000)
+        ledger.begin_wait("probe-a-acquisition", "probe-a", policy, 0, 0)
+        ledger.begin_wait("probe-a-recovery", "probe-a", policy, 0, 0)
+        ledger.begin_wait("route-recovery", "route-a", policy, 0, 0)
+
+        self.assertEqual(
+            ledger.end_owner_waits("probe-a"),
+            ("probe-a-acquisition", "probe-a-recovery"),
+        )
+        self.assertEqual(
+            tuple(token.wait_id for token in ledger.active_waits()),
+            ("route-recovery",),
+        )
+
+    def test_existing_wait_cannot_be_adopted_by_another_owner(self):
+        ledger = RetryLedger("task")
+        policy = WaitPolicy(40, 2_000_000_000)
+        ledger.begin_wait("shared-id", "probe-a", policy, 0, 0)
+        with self.assertRaisesRegex(Exception, "owner"):
+            ledger.begin_wait("shared-id", "probe-b", policy, 1, 1)
+
     def test_repeated_failure_id_and_alternating_causes_do_not_create_retries(self):
         ledger = RetryLedger("task")
         causes = tuple(RetryCause)
@@ -131,9 +154,11 @@ class RetryLedgerTests(unittest.TestCase):
         ledger = RetryLedger("task")
         policy = WaitPolicy(40, 2_000_000_000)
         for index in range(8):
-            ledger.begin_wait(f"wait-{index}", policy, 0, 0)
+            ledger.begin_wait(f"wait-{index}", "test-owner", policy, 0, 0)
         with self.assertRaises(RetryLedgerCapacityExceeded):
-            ledger.begin_wait("overflow", policy, 20, 1_000_000_000)
+            ledger.begin_wait(
+                "overflow", "test-owner", policy, 20, 1_000_000_000,
+            )
         self.assertIs(ledger.check_wait("wait-0", 40, 1_000_000_000),
                       WaitVerdict.EXHAUSTED_TICKS)
 
@@ -150,8 +175,12 @@ class RetryLedgerTests(unittest.TestCase):
         ledger = RetryLedger("task")
         policy = WaitPolicy(maximum_movement_ticks=40,
                             maximum_elapsed_ns=2_000_000_000)
-        ledger.begin_wait("information", policy, 10, 1_000_000_000)
-        ledger.begin_wait("information", policy, 30, 2_000_000_000)
+        ledger.begin_wait(
+            "information", "test-owner", policy, 10, 1_000_000_000,
+        )
+        ledger.begin_wait(
+            "information", "test-owner", policy, 30, 2_000_000_000,
+        )
         self.assertIs(ledger.check_wait("information", 49, 2_900_000_000),
                       WaitVerdict.WAITING)
         self.assertIs(ledger.check_wait("information", 50, 2_900_000_000),

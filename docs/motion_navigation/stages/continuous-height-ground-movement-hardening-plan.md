@@ -4,7 +4,7 @@
 
 状态：H1 至 H6 已完成代码和组件闭环；整改后的代表性 Fabric 矩阵 12/12 通过，完整验收矩阵仍待运行
 
-2026-09-28 复审补充：正式路径模拟重现探边中断后无主坠落、远处落点及多个下落的协调缺口。下面保留原实施及批次记录；H7 的“立即结束并交出”、H8 的原因／目标变化重置规则均不再作为后续设计要求，由[D039](../decisions/0039-shared-navigation-coordination-and-closed-loop-gates.md)修订。后续按[协调重构计划](navigation-coordination-refactor-plan.md)推进，尚未实施。
+2026-09-30 更新：正式路径模拟曾重现探边中断后无主坠落、远处落点及多个下落的协调缺口。下面保留原实施及批次记录；H7 的“立即结束并交出”、H8 的原因／目标变化重置规则均不再作为现行要求，由[D039](../decisions/0039-shared-navigation-coordination-and-closed-loop-gates.md)修订。协调重构及第二十二轮收口已经实施，现行状态见[协调架构](../architecture/navigation-coordination-v1.md)与[协调验收](../acceptance/navigation-coordination-refactor.md)。
 
 ## 1. 要解决的问题
 

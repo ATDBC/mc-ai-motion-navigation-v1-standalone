@@ -117,6 +117,7 @@ class Scenario:
     expect: str = "success"          # what a correct navigation stack should do
     goal_yaw_degrees: float | None = None
     start_velocity_blocks_per_tick: tuple[float, float, float] | None = None
+    landing_support_cells: tuple[tuple[int, int, int], ...] = ()
 
 
 @dataclass
@@ -227,6 +228,20 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                                 risk_ledger=risk_ledger,
                                 clock_ns=lambda: clock[0])
     driver = RuntimeNavigationDriver(runtime, session, clock_ns=lambda: clock[0])
+    backend.set_external_perturbation_guard(lambda: (
+        driver.source is not None
+        and driver.state not in TERMINAL_DRIVER
+        and session.diagnostics.state.value not in {
+            "complete", "failed", "cancelled", "closed",
+        }
+    ))
+    # This harness contains the navigation body owners, but not C1's external
+    # motion detector and recovery driver.  Inject shoves only while one of the
+    # owners under test is active; otherwise the harness would manufacture an
+    # unowned disturbance that the omitted outer layer is responsible for.
+    backend.set_external_impulse_guard(
+        lambda: bool(session.diagnostics.controller_ids)
+    )
     policy = "sim-budget" if scenario.damage_points else "no_expected_damage"
     goal = _goal(scenario.goal, policy)
     if scenario.goal_yaw_degrees is not None:
@@ -242,6 +257,7 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                       scenario.damage_points, policy, goal, scenario.goal)
     trace: list[dict] = []
     released_ticks = 0
+    perturbations_stopped = False
     tick = 0
     try:
         for tick in range(1, scenario.max_ticks + 1):
@@ -263,6 +279,9 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                     "success", "failed", "cancelled"}:
                 driver.release("simulation_terminal_release")
             if driver.source is None or driver.state in TERMINAL_DRIVER:
+                if not perturbations_stopped:
+                    backend.stop_external_perturbations()
+                    perturbations_stopped = True
                 # The client still samples any accepted lease after source release.
                 backend.free_tick()
                 released_ticks += 1

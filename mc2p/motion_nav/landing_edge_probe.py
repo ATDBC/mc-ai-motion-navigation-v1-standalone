@@ -118,6 +118,10 @@ class LandingEdgeProbe:
         }
 
     @property
+    def owner_id(self) -> str:
+        return f"landing-edge-probe/{self.goal_id}/{self.goal_revision}"
+
+    @property
     def owned(self) -> bool:
         return self.state not in {
             LandingEdgeProbeState.TIMED_OUT,

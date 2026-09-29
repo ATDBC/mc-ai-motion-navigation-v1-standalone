@@ -39,6 +39,19 @@ class EventKind(StrEnum):
     REMOVE_LANDING_SUPPORT = "remove_landing_support"
 
 
+_EVENT_WEIGHTS = {
+    EventKind.GOAL_BACK: 3,
+    EventKind.GOAL_OUT_OF_RANGE: 2,
+    EventKind.CANCEL: 1,
+    EventKind.LATE_INPUT: 3,
+    EventKind.OMIT_RECEIPT: 3,
+    EventKind.LOSE_ARBITRATION: 2,
+    EventKind.EXTERNAL_PUSH: 2,
+    EventKind.EXTERNAL_PUSH_BACKWARD: 2,
+    EventKind.REMOVE_LANDING_SUPPORT: 2,
+}
+
+
 @dataclass(frozen=True, slots=True)
 class GeneratedEvent:
     kind: EventKind
@@ -97,17 +110,24 @@ def generate_sequence(
         raise ValueError("event count must be between zero and 32")
     rng = random.Random(seed)
     kinds = list(EventKind)
-    chosen = (
-        rng.sample(kinds, event_count)
-        if event_count <= len(kinds)
-        else [rng.choice(kinds) for _ in range(event_count)]
+    chosen = rng.choices(
+        kinds,
+        weights=[_EVENT_WEIGHTS[kind] for kind in kinds],
+        k=event_count,
     )
-    ticks = [
-        (rng.randint(14, 34)
-         if kind is EventKind.REMOVE_LANDING_SUPPORT else
-         rng.randint(10, 79))
-        for kind in chosen
-    ]
+    ticks = []
+    occupied = set()
+    for kind in chosen:
+        lower, upper = (
+            (14, 34)
+            if kind is EventKind.REMOVE_LANDING_SUPPORT else
+            (10, 79)
+        )
+        tick = rng.randint(lower, upper)
+        while tick in occupied:
+            tick = lower if tick == upper else tick + 1
+        occupied.add(tick)
+        ticks.append(tick)
     events = tuple(sorted(
         (GeneratedEvent(kind, tick) for kind, tick in zip(chosen, ticks)),
         key=lambda item: (item.tick, item.kind.value),
@@ -115,12 +135,12 @@ def generate_sequence(
     return GeneratedSequence(seed, scenario, max_ticks, events)
 
 
-def _revision_event(kind: EventKind, revision: int, tick: int) -> Event:
-    position = (
-        (.5, 64.0, .5)
-        if kind is EventKind.GOAL_BACK else
-        (.5, 62.0, 30.5)
-    )
+def _revision_event(
+    kind: EventKind,
+    revision: int,
+    tick: int,
+    position: tuple[float, float, float],
+) -> Event:
 
     def revise(context) -> None:
         goal = _goal(position, context.risk_policy_id)
@@ -140,9 +160,9 @@ def _revision_event(kind: EventKind, revision: int, tick: int) -> Event:
     )
 
 
-def _cancel_event(tick: int) -> Event:
+def _cancel_event(tick: int, ordinal: int) -> Event:
     return Event(
-        "cancel",
+        f"cancel-{ordinal}",
         lambda context, at=tick: context.tick >= at,
         lambda context: context.driver.release("generated_sequence_cancel"),
     )
@@ -160,12 +180,19 @@ def _configured(sequence: GeneratedSequence):
     runtime_events = []
     arbitration_ticks = set()
     revision = 1
-    for event in sequence.events:
+    for ordinal, event in enumerate(sequence.events, start=1):
         if event.kind in {EventKind.GOAL_BACK, EventKind.GOAL_OUT_OF_RANGE}:
             revision += 1
-            runtime_events.append(_revision_event(event.kind, revision, event.tick))
+            position = (
+                base.start
+                if event.kind is EventKind.GOAL_BACK else
+                (base.goal[0], base.goal[1], base.scene.volume[2][1] + 20.5)
+            )
+            runtime_events.append(_revision_event(
+                event.kind, revision, event.tick, position,
+            ))
         elif event.kind is EventKind.CANCEL:
-            runtime_events.append(_cancel_event(event.tick))
+            runtime_events.append(_cancel_event(event.tick, ordinal))
         elif event.kind is EventKind.LATE_INPUT:
             late.add(event.tick)
         elif event.kind is EventKind.OMIT_RECEIPT:
@@ -173,16 +200,20 @@ def _configured(sequence: GeneratedSequence):
         elif event.kind is EventKind.LOSE_ARBITRATION:
             arbitration_ticks.add(event.tick)
         elif event.kind is EventKind.EXTERNAL_PUSH:
-            impulses[event.tick] = (0.0, 0.0, .3)
+            # The navigation-only harness omits C1's external-motion recovery
+            # driver.  Use a shove that perturbs an owned route without turning
+            # the test into an unmodelled knockback/fall-recovery scenario.
+            impulses[event.tick] = (0.0, 0.0, .15)
         elif event.kind is EventKind.EXTERNAL_PUSH_BACKWARD:
-            impulses[event.tick] = (0.0, 0.0, -.3)
+            impulses[event.tick] = (0.0, 0.0, -.15)
         elif event.kind is EventKind.REMOVE_LANDING_SUPPORT:
-            landing_y = int(base.goal[1]) - 1
-            world_edits[event.tick] = {
-                (x, landing_y, z): None
-                for x in (-1, 0, 1)
-                for z in (3, 4, 5)
-            }
+            if not base.landing_support_cells:
+                raise ValueError(
+                    f"scenario has no declared landing support: {base.name}"
+                )
+            world_edits.setdefault(event.tick, {}).update({
+                cell: None for cell in base.landing_support_cells
+            })
     configured = replace(
         base,
         name=f"generated-{sequence.seed}",

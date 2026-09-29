@@ -6,7 +6,9 @@
 
 当前已完成 B01 至 B10、C1-A 至 C1-C、C1-R 的 R0 至 R6、B11 固定放置与有限搭桥，以及 B12-A、B12-B。B12-A 固定了每次攻击的证据和分类重试，并接入 Minecraft 1.21 伤害来源事实。B12-B 让战斗先确定本帧视角，导航再按最终视角计算普通地面移动；追逐阶段会持续给出目标视角，导航同时记录每帧的移动决定原因。活动目标和真实墙体场景补齐了持续瞄准、遮挡后的导航、补看和权限撤销。动作证明的生效窗口修正和客户端额外推进一个 tick 时的局部安全恢复也已包含。正式 Fabric 结果与适用边界写在 `docs/motion_navigation/acceptance/`。
 
-导航协调层重构已经完成 S0 至 S4。路线执行、探边和待接替路线由同一个执行监督者管理；目标变化、取消、取证超时和输入失联都必须先安全结束身体责任。第二十一轮进一步修正停止收尾期间改目标、探边被外力推到下层，以及目标频繁变化后的永久等待，并加入固定种子的随机事件序列门禁。第二十轮专项 Fabric 对照仍是当前实机证据；第二十一轮没有新增 Fabric 批次。S5 仍然打开。连续高度组件矩阵覆盖 11 类小高差和 9 类整格动作，并加入 1,000 张混合表面图的 A*／Dijkstra 对照。半砖、楼梯、土径、地毯和不超过半格的积雪统一作为普通步行候选，再由同一个 1.21 运动计算器验证真实高度、净空和扫掠结果。完整 Fabric 形状、方向、速度带和随机迟到矩阵尚未关闭，不能把组件矩阵或代表性实机回归写成完整能力通过。
+导航协调层重构已经完成 S0 至 S5。路线执行、探边和待接替路线由同一个执行监督者管理；输入回执缺失后可以依据更新的身体锚点有界交接；等待记录随创建它的动作统一结束；改目标、停止和重新规划统一经过交接协调器。固定 14 场、冻结 200 种子和 192 个中断组合保持既定结果。扩大的门禁覆盖两格下降、五格下降、L 形走道和两级台地，共 1000 个固定随机事件序列，没有永久等待、公开接口异常或不变量违规。本轮没有新增 Fabric 批次。
+
+连续高度 M3 已关闭。完整 Fabric 矩阵覆盖 800 个唯一试次：正常输入 400/400 完成；20% 随机晚一帧为 384/400 完成，另外 16 场均按冻结口径有界失败；伤害额度超出和不变量违规均为 0。半砖、楼梯、土径、地毯和不超过半格的积雪统一作为普通步行候选，再由同一个 1.21 运动计算器验证真实高度、净空和扫掠结果。
 
 2026-09-26 起，正式 Fabric 方块视觉只接受 profile 4 表面深度。旧 profile 3 稀疏射线只能读取历史记录，不能启动正式会话，也不能形成新的验收结论。`evidence/motion_navigation/representative-v1` 保留九份带有 `historical_legacy_ray_profile3` 标签的旧归档，并加入一份 `current_surface_depth_profile4` 的 B12-B 当前代表批次。具体边界见 `docs/motion_navigation/decisions/0035-formal-surface-depth-only.md`。
 
@@ -15,11 +17,11 @@
 ## 先读什么
 
 1. `AGENTS.md`
-2. `docs/motion_navigation/stages/navigation-coordination-review21-remediation-plan.md`
+2. `docs/motion_navigation/stages/navigation-coordination-review22-remediation-plan.md`
 3. `docs/motion_navigation/acceptance/navigation-coordination-refactor.md`
 4. `docs/motion_navigation/acceptance/defect-ledger.md`
 5. `docs/motion_navigation/architecture/navigation-coordination-v1.md`
-6. `docs/motion_navigation/decisions/0041-enforce-event-admission-and-bounded-motion-finalization.md`
+6. `docs/motion_navigation/decisions/0042-own-navigation-obligations-and-centralize-handoff.md`
 7. `docs/motion_navigation/stages/continuous-height-full-matrix-plan.md`
 8. `docs/motion_navigation/acceptance/continuous-height-ground-movement.md`
 9. `docs/motion_navigation/architecture/continuous-height-ground-movement-v1.md`
@@ -145,6 +147,6 @@ python scripts/public_runtime_evidence.py verify --root evidence/motion_navigati
 
 这个快照不包含世界存档、完整普通日志、画面、Gradle 缓存、Minecraft 依赖 JAR 或构建产物，因此不能只靠本仓库重跑游戏内正式实验。公开的十个真实批次是经过筛选的结构化轨迹，可以核对历史结果、当前 B12-B 结果和读取链，但不能替代新的 Fabric 实机运行。其他原始证据仍由主项目保管。
 
-未知区域探索、攀爬、游泳、主动 Crawl、特殊地面、任意宽度跨隙和尚未声明的动作接续仍未完成。连续高度的完整 Fabric 形状、方向和速度带矩阵也尚未关闭。当前独立仓库只包含正式 Fabric 路径；CraftGround 适配和旧射线兼容代码只在主仓库保留。
+未知区域探索、攀爬、游泳、主动 Crawl、特殊地面、任意宽度跨隙和尚未声明的动作接续仍未完成。当前独立仓库只包含正式 Fabric 路径；CraftGround 适配和旧射线兼容代码只在主仓库保留。
 
 公开快照能够复现其声明的源码检查，不代表项目已经没有剩余问题。
