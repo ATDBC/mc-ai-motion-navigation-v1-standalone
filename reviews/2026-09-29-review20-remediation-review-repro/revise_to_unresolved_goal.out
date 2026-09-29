@@ -1,0 +1,14 @@
+goal=(0.5, 62.0, 30.5) revise@5   accepted in executing -> planning/replacement_route_pending violations=['I4']
+goal=(0.5, 62.0, 30.5) revise@15  RAISED in needs_information: ContractViolation: navigation transition is not allowed: stopping + begin_execution; after: state=stopping reason=edge_probe_stopping goal_rev=1 -> run aborted by ContractViolation
+goal=(0.5, 62.0, 30.5) revise@25  RAISED in needs_information: ContractViolation: navigation transition is not allowed: stopping + begin_execution; after: state=stopping reason=edge_probe_stopping goal_rev=1 -> run aborted by ContractViolation
+goal=(0.5, 62.0, 30.5) revise@34  RAISED in needs_information: ContractViolation: navigation transition is not allowed: stopping + begin_execution; after: state=stopping reason=edge_probe_stopping goal_rev=1 -> run aborted by ContractViolation
+goal=(0.5, 62.0, 30.5) revise@38  accepted in executing -> planning/replacement_route_pending violations=['I4']
+goal=(0.5, 62.0, 30.5) revise@45  accepted in executing -> planning/replacement_route_pending violations=['I4']
+goal=(0.5, 62.0, 30.5) revise@60  not fired -> success/goal_state_satisfied violations=[]
+goal=(1.0, 62.0, 4.5) revise@5   accepted in executing -> failed/goal_surface_unavailable violations=['I10']
+goal=(1.0, 62.0, 4.5) revise@15  RAISED in needs_information: ContractViolation: navigation transition is not allowed: stopping + begin_execution; after: state=stopping reason=edge_probe_stopping goal_rev=1 -> run aborted by ContractViolation
+goal=(1.0, 62.0, 4.5) revise@25  RAISED in needs_information: ContractViolation: navigation transition is not allowed: stopping + begin_execution; after: state=stopping reason=edge_probe_stopping goal_rev=1 -> run aborted by ContractViolation
+goal=(1.0, 62.0, 4.5) revise@34  RAISED in needs_information: ContractViolation: navigation transition is not allowed: stopping + begin_execution; after: state=stopping reason=edge_probe_stopping goal_rev=1 -> run aborted by ContractViolation
+goal=(1.0, 62.0, 4.5) revise@38  accepted in executing -> failed/goal_surface_unavailable violations=['I10']
+goal=(1.0, 62.0, 4.5) revise@45  accepted in executing -> failed/goal_surface_unavailable violations=['I10']
+goal=(1.0, 62.0, 4.5) revise@60  not fired -> success/goal_state_satisfied violations=[]

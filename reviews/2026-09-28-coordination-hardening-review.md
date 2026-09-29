@@ -166,3 +166,8 @@
 [handoff1]: https://github.com/ATDBC/mc-ai-motion-navigation-v1-standalone/blob/eb4653c/mc2p/motion_nav/navigation_session.py#L1244-L1250
 [handoff2]: https://github.com/ATDBC/mc-ai-motion-navigation-v1-standalone/blob/eb4653c/mc2p/motion_nav/navigation_session.py#L2696-L2701
 [quiesce]: https://github.com/ATDBC/mc-ai-motion-navigation-v1-standalone/blob/eb4653c/mc2p/motion_nav/execution_supervisor.py#L148-L190
+
+
+## 后续
+
+对第二十轮整改（`340cac6`）的复核见 [第二十一轮评审](2026-09-29-review20-remediation-review.md)。

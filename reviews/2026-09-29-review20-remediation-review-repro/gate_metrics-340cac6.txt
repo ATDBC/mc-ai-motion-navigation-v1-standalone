@@ -1,0 +1,13 @@
+G1 structure of the current checkout
+  mc2p/motion_nav/navigation_session.py: 4064 lines; NavigationSession 3640 lines, 99 methods, 54 __init__ fields
+  [PASS] G1-1 methods that assign self._state: 0 methods, 0 assignments ()
+  [PASS] G1-2 lifecycle event results discarded (record/admit_event): 0 of 2 calls
+  [PASS] G1-3 supervisor imports concrete controller modules: none
+  review item: monitor state/reason string comparisons (each must be a detection, not an exemption):
+    tests/sim/monitor.py:293: if e.state == "complete" and not self._completion_checked:
+    tests/sim/monitor.py:314: if e.reason == "planning_internal_error":
+G1 change since eb4653c
+  [PASS] G1-4 new NavigationSession fields: 0
+  [PASS] G1-5 new methods that assign self._state: 0
+  [WARN] G1-6 share of added source lines in the session: 367/897 = 41% (limit 10%; above the limit the delivery record must explain why the work belongs to the session)
+hard criteria failed: none

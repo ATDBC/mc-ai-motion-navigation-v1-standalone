@@ -1,0 +1,47 @@
+==== interrupt_late_family
+direct_drop_2            revise  runs=48 {'terminal': 48}
+direct_drop_2            cancel  runs=48 {'terminal': 48}
+direct_drop_5_budget_2   revise  runs=48 {'terminal': 48}
+direct_drop_5_budget_2   cancel  runs=48 {'terminal': 48}
+==== step_down_single_late
+approach 2: clean=success@49; single-late failures 0/47 ; every-command-late -> failed/input_lost@80 violations=[]
+approach 3: clean=success@56; single-late failures 0/54 ; every-command-late -> failed/input_lost@83 violations=[]
+approach 5: clean=success@63; single-late failures 0/61 ; every-command-late -> failed/input_lost@94 violations=[]
+==== constant_latency_livelock
+failed input_lost violations []
+72 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+73 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+74 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+75 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+76 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+77 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+78 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+79 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+80 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+81 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+82 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+83 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+84 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+==== first_dependency_change
+success 0
+(0, [((-1, 63, 0), 'block'), ((-1, 63, 1), 'block'), ((-1, 63, 2), 'block'), ((-1, 63, 3), 'block'), ((-1, 63, 4), 'block'), ((-1, 63, 5), 'block'), ((-1, 63, 6), 'block'), ((-1, 64, 0), 'block')], 63)
+==== revise_then_late 36
+failed planning_unsupported 61 (0.48, 64.0, 3.07) []
+2 (0.5, 64.0, 0.6) executing tracking_fixed_route ('route_executor',) running WalkSegment gen 1 ground driver running
+11 (0.53, 64.0, 2.33) needs_information landing_lower_evidence_required ('landing_edge_probe', 'route_executor') overlap ControlledDropSegment gen 1 ground driver running sneak
+35 (0.48, 64.0, 2.86) executing awaiting_verified_motion ('landing_edge_probe', 'route_executor') overlap ControlledDropSegment gen 1 ground driver running
+36 (0.48, 64.0, 2.96) executing submit_verified_command ('route_executor',) running ControlledDropSegment gen 1 ground driver running
+37 (0.48, 64.0, 3.01) executing executing_safe_prefix_during_replan ('route_executor',) cancelling ControlledDropSegment gen 2 ground driver running
+41 (0.48, 64.0, 3.07) planning route_handoff_reanchored () None None gen 3 ground driver running
+42 (0.48, 64.0, 3.07) failed planning_unsupported () None None gen 3 ground driver failed
+==== cancel_then_late_inner 38
+cancelled harness_cancel 67 (0.48, 62.0, 3.61) []
+(34, ('executing', 'submit_verified_command', 'running', 'running', 'submit_verified_command', True))
+(37, ('stopping', 'complete_verified_landing_after_cancel', 'cancelling', 'recovering', 'complete_verified_landing_after_cancel', True))
+(38, ('stopping', 'awaiting_application', 'cancelling', 'recovering', 'awaiting_application', True))
+(39, ('stopping', 'awaiting_application', 'cancelling', 'recovering', 'awaiting_application', False))
+(40, ('stopping', 'recovery_application_unresolved', 'cancelling', 'recovering', 'recovery_application_unresolved', False))
+(41, ('stopping', 'retain_landing_responsibility', 'cancelling', 'recovering', 'retain_landing_responsibility', False))
+(45, ('stopping', 'retain_landing_responsibility', 'cancelling', 'recovering', 'retain_landing_responsibility', True))
+(46, ('cancelled', 'harness_cancel', None, None, 'cancelled', True))
+REPROS_DONE

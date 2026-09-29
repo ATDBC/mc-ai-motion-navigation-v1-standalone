@@ -1,0 +1,20 @@
+==== direct_drop_2 push +0.3 at tick 35
+stopping recovery_unresolved 300 (0.48, 62.0, 3.3) damage 0.0 [(150, 'I4', 'unbounded wait in stopping/recovery_unresolved')]
+2 (0.5, 64.0, 0.6) executing tracking_fixed_route ('route_executor',) ground driver running bound ()
+11 (0.53, 64.0, 2.33) needs_information landing_lower_evidence_required ('landing_edge_probe', 'route_executor') ground driver running bound ()
+35 (0.48, 64.0, 2.86) executing awaiting_verified_motion ('landing_edge_probe', 'route_executor') ground driver running bound ()
+37 (0.48, 64.0, 3.32) stopping edge_probe_stopping ('landing_edge_probe',) ground driver stopping bound ()
+38 (0.48, 63.92, 3.32) stopping edge_probe_stopping ('landing_edge_probe',) AIR driver stopping bound ()
+44 (0.48, 62.0, 3.56) stopping edge_probe_stopping ('landing_edge_probe',) ground driver stopping bound ()
+77 (0.48, 62.0, 3.3) stopping recovery_unresolved ('landing_edge_probe',) ground driver stopping bound ()
+==== direct_drop_5_budget_2 push -0.3 at tick 47
+failed verified_exit_not_observed 77 (0.48, 53.0, 1.35) damage 8.0 [(57, 'I3', 'observed damage has no authorized commitment')]
+2 (0.5, 64.0, 0.6) executing tracking_fixed_route ('route_executor',) ground driver running bound ()
+11 (0.53, 64.0, 2.33) needs_information landing_lower_evidence_required ('landing_edge_probe', 'route_executor') ground driver running bound ()
+35 (0.48, 64.0, 2.86) executing awaiting_verified_motion ('landing_edge_probe', 'route_executor') ground driver running bound ()
+36 (0.48, 64.0, 2.96) executing submit_verified_command ('route_executor',) ground driver running bound (('risk-1', 'reserved', 2.0),)
+37 (0.48, 64.0, 3.11) executing submit_verified_command ('route_executor',) ground driver running bound (('risk-1', 'committed', 2.0),)
+40 (0.48, 63.92, 3.49) executing submit_verified_command ('route_executor',) AIR driver running bound (('risk-1', 'committed', 2.0),)
+53 (0.48, 56.44, 2.12) executing coast_to_verified_landing ('route_executor',) AIR driver running bound (('risk-1', 'committed', 2.0),)
+57 (0.48, 53.0, 1.58) executing coast_to_verified_landing ('route_executor',) ground driver running bound (('risk-1', 'committed', 2.0),)
+58 (0.48, 53.0, 1.47) failed verified_exit_not_observed () ground driver failed unbound (('risk-1', 'settled', 2.0),)

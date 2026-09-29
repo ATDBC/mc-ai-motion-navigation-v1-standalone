@@ -1,0 +1,51 @@
+A far_landing_L_walkway revise: runs=60 {'NOT_TERMINAL': 27, 'RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution': 27, 'terminal': 33, 'failed/goal_surface_unavailable': 33}
+     @80+None:RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution/
+     @80+1:RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution/
+     @80+2:RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution/
+     @81+None:RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution/
+     @81+1:RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution/
+     @81+2:RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution/
+     @82+None:RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution/
+     @82+1:RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution/
+     @82+2:RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution/
+     @83+None:RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution/
+     @83+1:RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution/
+     @83+2:RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution/
+     ... 48 more
+A far_landing_L_walkway cancel: runs=60 {'terminal': 60, 'cancelled/harness_cancel': 60}
+A terrace_two_ledges revise: runs=75 {'NOT_TERMINAL': 24, 'RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution': 24, 'terminal': 51, 'failed/goal_surface_unavailable': 51}
+     @20+None:RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution/
+     @20+1:RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution/
+     @20+2:RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution/
+     @22+None:RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution/
+     @22+1:RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution/
+     @22+2:RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution/
+     @24+None:RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution/
+     @24+1:RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution/
+     @24+2:RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution/
+     @26+None:RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution/
+     @26+1:RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution/
+     @26+2:RAISED/ContractViolation: navigation transition is not allowed: stopping + begin_execution/
+     ... 63 more
+A terrace_two_ledges cancel: runs=75 {'terminal': 75, 'cancelled/harness_cancel': 75}
+A step_down_after_walk revise: runs=60 {'terminal': 57, 'success/goal_state_satisfied': 57, 'NOT_TERMINAL': 3, 'RAISED/ContractViolation: navigation lifecycle event revise_goal is reject in complete': 3}
+     @37+None:RAISED/ContractViolation: navigation lifecycle event revise_goal is reject in complete/
+     @37+1:RAISED/ContractViolation: navigation lifecycle event revise_goal is reject in complete/
+     @37+2:RAISED/ContractViolation: navigation lifecycle event revise_goal is reject in complete/
+A step_down_after_walk cancel: runs=60 {'terminal': 60, 'cancelled/harness_cancel': 51, 'success/goal_state_satisfied': 9}
+B direct_drop_2 revise: runs=36 {'terminal': 36, 'failed/motion_unsolvable:no_solution_within_search': 4, 'success/goal_state_satisfied': 12, 'failed/input_lost': 20}
+B direct_drop_2 cancel: runs=36 {'terminal': 36, 'cancelled/harness_cancel': 36}
+B direct_drop_5_budget_2 revise: runs=36 {'terminal': 36, 'failed/motion_unsolvable:no_solution_within_search': 4, 'success/goal_state_satisfied': 12, 'failed/input_lost': 20}
+B direct_drop_5_budget_2 cancel: runs=36 {'terminal': 36, 'cancelled/harness_cancel': 36}
+B direct_drop_2 omitted receipts without interruption: runs=54 {'terminal': 54, 'failed/input_lost': 24, 'success/goal_state_satisfied': 30}
+B direct_drop_5_budget_2 omitted receipts without interruption: runs=54 {'terminal': 54, 'failed/input_lost': 18, 'success/goal_state_satisfied': 36}
+C direct_drop_2 one lost movement frame: runs=22 {'terminal': 22, 'success/goal_state_satisfied': 22}
+C direct_drop_5_budget_2 one lost movement frame: runs=22 {'terminal': 22, 'success/goal_state_satisfied': 22}
+D direct_drop_2 knockback: runs=44 {'terminal': 43, 'success/goal_state_satisfied': 17, 'failed/edge_probe_acquisition_timeout': 4, 'NOT_TERMINAL': 1, 'stopping/recovery_unresolved': 1, 'failed/motion_unsolvable:needs_state': 1, 'failed/verified_exit_not_observed': 16, 'failed/ordinary_ground_speed_outside_model': 5}
+     push@35:+0.3:stopping/recovery_unresolved/I4
+D direct_drop_5_budget_2 knockback: runs=44 {'terminal': 43, 'success/goal_state_satisfied': 15, 'failed/edge_probe_acquisition_timeout': 4, 'NOT_TERMINAL': 1, 'stopping/recovery_unresolved': 1, 'failed/motion_unsolvable:needs_state': 1, 'failed/verified_exit_not_observed': 23}
+     push@35:+0.3:stopping/recovery_unresolved/I4
+     push@47:-0.3:failed/verified_exit_not_observed/I3
+     push@48:-0.3:failed/verified_exit_not_observed/I3
+     push@49:-0.3:failed/verified_exit_not_observed/I3
+EXT_DONE

@@ -1,0 +1,9 @@
+==== period 3
+propose raised at observation 33: ContractViolation: navigation transition is not allowed: stopping + begin_execution | transition:228 <- _transition:565 <- propose:2478 <- propose:11
+run aborted: ContractViolation navigation transition is not allowed: stopping + begin_execution
+==== period 5
+propose raised at observation 27: ContractViolation: navigation transition is not allowed: stopping + begin_execution | transition:228 <- _transition:565 <- propose:2478 <- propose:11
+run aborted: ContractViolation navigation transition is not allowed: stopping + begin_execution
+==== period 8
+propose raised at observation 41: ContractViolation: navigation transition is not allowed: stopping + begin_execution | transition:228 <- _transition:565 <- propose:2478 <- propose:11
+run aborted: ContractViolation navigation transition is not allowed: stopping + begin_execution

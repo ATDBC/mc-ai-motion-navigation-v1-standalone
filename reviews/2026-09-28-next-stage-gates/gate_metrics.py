@@ -20,6 +20,8 @@ CONCRETE_CONTROLLER_MODULES = (
     "mc2p.motion_nav.motion_coordination",
 )
 SESSION_SHARE_LIMIT = 0.10
+# record() was renamed admit_event() in 340cac6; both are lifecycle event entry points.
+LIFECYCLE_EVENT_METHODS = ("record", "admit_event")
 
 
 def session_facts(source):
@@ -48,12 +50,12 @@ def session_facts(source):
     used_records = 0
     for node in ast.walk(cls):
         if (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
-                and node.func.attr == "record" and isinstance(node.func.value, ast.Attribute)
+                and node.func.attr in LIFECYCLE_EVENT_METHODS and isinstance(node.func.value, ast.Attribute)
                 and node.func.value.attr == "_lifecycle"):
             used_records += 1
     for node in ast.walk(cls):
         if (isinstance(node, ast.Expr) and isinstance(node.value, ast.Call)
-                and isinstance(node.value.func, ast.Attribute) and node.value.func.attr == "record"
+                and isinstance(node.value.func, ast.Attribute) and node.value.func.attr in LIFECYCLE_EVENT_METHODS
                 and isinstance(node.value.func.value, ast.Attribute)
                 and node.value.func.value.attr == "_lifecycle"):
             discarded_records += 1
@@ -98,7 +100,7 @@ def main():
     verdict("G1-1 methods that assign self._state", len(now["state_writes"]) <= 1,
             f"{len(now['state_writes'])} methods, {writes} assignments "
             f"({', '.join(sorted(now['state_writes']))})")
-    verdict("G1-2 lifecycle record() results discarded", now["record_discarded"] == 0,
+    verdict("G1-2 lifecycle event results discarded (record/admit_event)", now["record_discarded"] == 0,
             f"{now['record_discarded']} of {now['record_calls']} calls")
     concrete = supervisor_concrete_imports(open(SUPERVISOR, encoding="utf-8").read())
     verdict("G1-3 supervisor imports concrete controller modules", not concrete,

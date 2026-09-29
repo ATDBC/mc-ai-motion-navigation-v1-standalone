@@ -1,0 +1,5 @@
+E flap every 3 ticks: replace_goal RAISED ContractViolation: navigation transition is not allowed: stopping + begin_execution
+E flap every 5 ticks: replace_goal RAISED ContractViolation: navigation transition is not allowed: stopping + begin_execution
+E flap every 8 ticks: replace_goal RAISED ContractViolation: navigation transition is not allowed: stopping + begin_execution
+E flap every 13 ticks (retries=1, final=(-0.49, 64.0, 2.48)): runs=1 {'NOT_TERMINAL': 1, 'stopping/successor_route_waiting_for_motion': 1}
+     run:stopping/successor_route_waiting_for_motion/I4

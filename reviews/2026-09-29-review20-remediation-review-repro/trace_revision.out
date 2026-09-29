@@ -1,0 +1,10 @@
+==== unknown goal, revision at tick 5
+planning replacement_route_pending 200 (0.5, 64.0, 2.65) [(118, 'I4', 'unbounded wait in planning/replacement_route_pending')]
+2 (0.5, 64.0, 0.6) executing tracking_fixed_route ('route_executor',) gen 1 driver running ground bound
+6 (0.5, 64.0, 1.33) executing executing_safe_prefix_during_replan ('route_executor',) gen 2 driver running ground bound
+17 (0.5, 64.0, 2.62) planning replacement_route_pending () gen 2 driver running ground bound
+==== boundary goal, revision at tick 5
+failed goal_surface_unavailable 200 (0.5, 64.0, 1.57) [(27, 'I10', 'terminal navigation retained its input source or body owner')]
+2 (0.5, 64.0, 0.6) executing tracking_fixed_route ('route_executor',) gen 1 driver running ground bound
+6 (0.5, 64.0, 1.33) executing executing_safe_prefix_during_replan ('route_executor',) gen 2 driver running ground bound
+7 (0.5, 64.0, 1.44) failed goal_surface_unavailable ('route_executor',) gen 2 driver stopping ground bound
