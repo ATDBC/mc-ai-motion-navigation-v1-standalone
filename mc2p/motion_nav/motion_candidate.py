@@ -24,6 +24,7 @@ _ENTRY_POSITION_TOLERANCE = 0.05
 _ENTRY_VELOCITY_TOLERANCE_PER_TICK = 0.01
 _ENTRY_YAW_TOLERANCE_RADIANS = math.radians(1.0)
 _RECOVERY_GROUND_SPEED_TOLERANCE_PER_TICK = 0.01
+_PENDING_APPLICATION_GRACE_TICKS = 1
 
 
 @dataclass(frozen=True, slots=True)
@@ -484,17 +485,26 @@ class VerifiedMotionExecutor:
             return False
         return verified_candidate_can_start(self._candidate, anchor)
 
-    def cancel(self, anchor: StateAnchor) -> None:
+    def cancel(
+        self, anchor: StateAnchor, *, preserve_verified_remainder: bool = True,
+    ) -> None:
         if type(anchor) is not StateAnchor:
             raise ContractViolation("verified cancellation requires a state anchor")
+        if type(preserve_verified_remainder) is not bool:
+            raise ContractViolation(
+                "verified cancellation remainder policy must be boolean"
+            )
         if self.state is not VerifiedMotionExecutorState.RUNNING:
             return
         self._cancel_requested = True
         self._recovery_started_at_tick = anchor.movement_tick_id
         self.state = VerifiedMotionExecutorState.RECOVERING
         self._recovery_uses_verified_remainder = (
-            self._pending is not None or not anchor.physics_state.on_ground
+            preserve_verified_remainder
+            and (self._pending is not None or not anchor.physics_state.on_ground)
         )
+        if not preserve_verified_remainder:
+            self._pending = None
         self._terminal_after_recovery = VerifiedMotionExecutorState.CANCELLED
 
     def recover_without_anchor(self) -> VerifiedMotionDecision:
@@ -769,6 +779,22 @@ class VerifiedMotionExecutor:
             if self._recovery_uses_verified_remainder:
                 pending = self._consume_pending(ledger)
                 if pending is not None:
+                    if (pending in {"awaiting_application", "input_expired"}
+                            and self._pending is not None
+                            and anchor.movement_tick_id
+                                > self._pending.requested_latest_movement_tick
+                                  + _PENDING_APPLICATION_GRACE_TICKS):
+                        # The command can no longer receive an in-window
+                        # receipt, and the one-tick transport grace has also
+                        # passed.  It may still have affected the body late,
+                        # so keep neutral landing ownership, but do not wait
+                        # forever for an identity the ledger may never see.
+                        self._pending = None
+                        self._recovery_uses_verified_remainder = False
+                        return self._decision(
+                            MovementV1(), None,
+                            "recovery_application_unresolved",
+                        )
                     if self.state is VerifiedMotionExecutorState.INPUT_LOST:
                         self.state = VerifiedMotionExecutorState.RECOVERING
                         self._recovery_uses_verified_remainder = False

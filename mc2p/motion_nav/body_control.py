@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import Any, Protocol, runtime_checkable
 
 from mc2p.contracts.action_v1 import LookV1, MovementV1
 from mc2p.contracts.common import ContractViolation, require_identifier
@@ -25,6 +26,34 @@ class HandoffDisposition(StrEnum):
     RETAIN = "retain"
     QUIESCENT = "quiescent"
     TRANSFERABLE = "transferable"
+
+
+@dataclass(frozen=True, slots=True)
+class BodyControlProgress:
+    """Read-only progress facts; phase labels never grant control authority."""
+
+    owner_id: str
+    phase_label: str
+    progress_revision: int
+    action_index: int | None
+    last_confirmed_application_tick: int | None
+    stall_limit_ticks: int | None = None
+
+    def __post_init__(self) -> None:
+        require_identifier(self.owner_id, "body progress owner id")
+        require_identifier(self.phase_label, "body progress phase label")
+        for value, name in (
+            (self.progress_revision, "body progress revision"),
+            (self.action_index, "body progress action index"),
+            (self.last_confirmed_application_tick,
+             "body progress confirmed application tick"),
+        ):
+            if value is not None and (type(value) is not int or value < 0):
+                raise ContractViolation(f"{name} must be nonnegative")
+        if (self.stall_limit_ticks is not None
+                and (type(self.stall_limit_ticks) is not int
+                     or self.stall_limit_ticks <= 0)):
+            raise ContractViolation("body progress stall limit must be positive")
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,3 +109,24 @@ class BodyControlDecision:
     movement: MovementV1
     look: LookV1 | None
     handoff: HandoffEvidence
+
+
+@runtime_checkable
+class BodyController(Protocol):
+    """Minimum lifecycle used by the execution supervisor."""
+
+    @property
+    def owner_id(self) -> str: ...
+
+    def decide(
+        self, frame: Any, ledger: Any, anchor: Any, *,
+        movement: MovementV1 | None = None,
+        look: LookV1 | None = None,
+        reason: str | None = None,
+    ) -> BodyControlDecision: ...
+
+    def request_stop(self, cause: StopCause) -> None: ...
+
+    def safe_to_release(
+        self, frame: Any, ledger: Any, anchor: Any, *, input_floor: int,
+    ) -> HandoffEvidence: ...

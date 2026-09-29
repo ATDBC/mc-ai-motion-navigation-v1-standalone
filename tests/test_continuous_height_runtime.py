@@ -2,20 +2,108 @@ from __future__ import annotations
 
 import unittest
 
+import scripts.continuous_height_runtime as continuous_height_runtime
+
 from scripts.continuous_height_runtime import (
     _air_positions,
     _damage_budget,
     _diagnostic_row,
     _fixture_commands,
     _goal,
+    _observer,
+    _revised_goal,
+    _revised_goal_position,
     _start_and_goal,
     _supports,
+    _safety_catch_supports,
     continuous_height_trial_plan,
     navigation_coordination_hardening_plan,
+    navigation_coordination_review20_plan,
 )
 
 
 class ContinuousHeightRuntimeTests(unittest.TestCase):
+    def test_review20_side_observer_covers_landing_lower_air(self):
+        for trial in navigation_coordination_review20_plan():
+            observer = _observer(trial)
+            self.assertEqual(observer[1], 100.0 - trial["drop_blocks"])
+            self.assertEqual(observer[4], 0.0)
+
+    def test_every_fixture_observation_includes_an_upward_vantage(self):
+        self.assertTrue(hasattr(
+            continuous_height_runtime, "_fixture_observation_reposition",
+        ))
+        reposition = continuous_height_runtime._fixture_observation_reposition
+        for trial in continuous_height_trial_plan():
+            upward = reposition(trial, 20)
+            lower = reposition(trial, 40)
+
+            self.assertIsNotNone(upward)
+            self.assertIsNotNone(lower)
+            self.assertTrue(upward.endswith(" -20.000000"))
+            self.assertEqual(lower, reposition(trial, 0))
+
+    def test_review20_goal_revision_changes_the_requested_place(self):
+        trial = navigation_coordination_review20_plan()[0]
+
+        original = _goal(trial)
+        revised = _revised_goal(trial)
+        _, original_position = _start_and_goal(trial)
+
+        self.assertNotEqual(revised.region, original.region)
+        self.assertNotEqual(_revised_goal_position(trial), original_position)
+        self.assertEqual(
+            _revised_goal_position(trial),
+            tuple(value + offset for value, offset in zip(
+                _supports(trial)[1][0], (.5, 1.0, .5),
+            )),
+        )
+
+    def test_review20_plan_covers_both_drops_interruptions_and_phases(self):
+        trials = navigation_coordination_review20_plan()
+
+        self.assertEqual(len(trials), 24)
+        self.assertEqual({trial["drop_blocks"] for trial in trials}, {2, 5})
+        self.assertEqual(
+            {trial["interruption"] for trial in trials},
+            {"revise_goal", "cancel"},
+        )
+        self.assertEqual(
+            {trial["interrupt_phase"] for trial in trials},
+            {
+                "approach", "edge", "submitted_unapplied",
+                "leave_edge", "airborne", "landed",
+            },
+        )
+        for drop in (2, 5):
+            for phase in {
+                    "approach", "edge", "submitted_unapplied",
+                    "leave_edge", "airborne", "landed"}:
+                rows = [
+                    trial for trial in trials
+                    if trial["drop_blocks"] == drop
+                    and trial["interrupt_phase"] == phase
+                ]
+                self.assertEqual(
+                    {trial["interruption"] for trial in rows},
+                    {"revise_goal", "cancel"},
+                )
+                self.assertEqual(
+                    {trial["late_after_interrupt"] for trial in rows},
+                    {False, True},
+                )
+                self.assertTrue(all(
+                    trial["landing_exit_blocks"] == 2 for trial in rows
+                ))
+                self.assertTrue(all(
+                    trial["observer_lateral_blocks"] == -5 for trial in rows
+                ))
+                self.assertEqual(rows[0]["origin"][1], 0)
+                self.assertTrue(all(
+                    next_row["origin"][0] - row["origin"][0] == 12
+                    for row, next_row in zip(rows, rows[1:])
+                ))
+
     def test_diagnostic_row_keeps_pipeline_metrics_at_the_exported_level(self):
         from types import SimpleNamespace
 
@@ -77,21 +165,64 @@ class ContinuousHeightRuntimeTests(unittest.TestCase):
             [trial["trial_id"] for trial in trials],
             [
                 "runup-step-down",
-                "landing-support-removed",
+                "landing-support-removed-lead-4",
+                "landing-support-removed-lead-3",
+                "landing-support-removed-lead-2",
+                "landing-support-removed-lead-1",
                 "fixed-one-tick-late-drop",
+                "constant-one-tick-late-drop",
             ],
         )
         self.assertEqual(
             [trial["injection"] for trial in trials],
-            [None, "remove_landing_support", "late_first_verified_input"],
+            [
+                None,
+                "remove_landing_support_at_lead",
+                "remove_landing_support_at_lead",
+                "remove_landing_support_at_lead",
+                "remove_landing_support_at_lead",
+                "late_first_verified_input",
+                "late_every_verified_input",
+            ],
         )
         self.assertEqual(
             [trial["expected_terminal"] for trial in trials],
-            ["success", "failed", "success"],
+            [
+                "success", "failed",
+                ("failed", "cancelled"),
+                ("failed", "cancelled"),
+                ("failed", "cancelled"),
+                "success", ("success", "failed", "cancelled"),
+            ],
         )
         self.assertEqual(
-            trials[1]["expected_reason"], "landing_support_missing",
+            [trial["removal_lead_ticks"] for trial in trials[1:5]],
+            [4, 3, 2, 1],
         )
+        self.assertEqual(
+            [trial["expected_safe_stop"] for trial in trials[1:5]],
+            [True, False, False, False],
+        )
+        self.assertEqual(
+            [trial["expected_reason"] for trial in trials[1:5]],
+            ["landing_support_missing", None, None, None],
+        )
+
+    def test_support_removal_trials_have_a_bounded_physical_catch_floor(self):
+        trials = navigation_coordination_hardening_plan()[1:5]
+
+        for trial in trials:
+            catch = _safety_catch_supports(trial)
+            (landing_x, landing_y, landing_z), _ = _supports(trial)[-1]
+
+            self.assertEqual(len(catch), 9)
+            self.assertTrue(all(y == landing_y - 4 for _, y, _ in catch))
+            self.assertIn((landing_x, landing_y - 4, landing_z), catch)
+            commands = _fixture_commands(trial)
+            self.assertTrue(all(
+                f"setblock {x} {y} {z} minecraft:stone replace" in commands
+                for x, y, z in catch
+            ))
 
     def test_hardening_fixtures_are_disjoint_and_runup_precedes_descent(self):
         trials = navigation_coordination_hardening_plan()

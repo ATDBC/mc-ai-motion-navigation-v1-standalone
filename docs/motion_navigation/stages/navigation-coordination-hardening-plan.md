@@ -2,7 +2,7 @@
 
 日期：2026-09-28
 
-状态：H1 至 H7 的结构整改、统计复验和三项专项 Fabric 对照已完成，S4 已重新关闭；S5 因冻结扰动扫描中的任务失败和完整连续高度矩阵仍保持打开。在 S5 关闭前暂停新增运动、地形和战斗能力。
+状态：H1 至 H7 的历史整改与三项专项 Fabric 对照已完成。第二十轮复审又发现“中断后晚一帧”的无界收尾，因此 S4 再次打开。对应本地结构整改与正式路径模拟已经完成，等待第二十轮专项 Fabric 对照后重新关闭。S5 继续保持打开。在这些门槛关闭前暂停新增运动、地形和战斗能力。
 
 关联：[协调架构](../architecture/navigation-coordination-v1.md)、[原阶段计划](navigation-coordination-refactor-plan.md)、[验收](../acceptance/navigation-coordination-refactor.md)、[D040](../decisions/0040-reopen-navigation-coordination-gates.md)。
 
@@ -122,6 +122,8 @@ H7 当前证据：
 稳定落地后的 `no_safe_ground_candidate` 已修正。根因是 `0.03` 格预测余量在身体真实碰撞箱已经离墙时，仍向尾侧扩张并与身后的上层方块形成虚拟重叠。固定路线现按每一步运动方向裁掉尾侧余量；前侧和侧面余量、真实碰撞、坑边支撑及停止尾迹检查保持不变。冻结复验目录 `.tmp/h7-seeds-directional-margin-v1/` 中，两格下降由 91/100 提升到 92/100，唯一未声明结果消失。
 
 因此，S4 可以重新关闭，三项专项 Fabric 缺口和未声明扫描结果也已经关闭。S5 继续打开。下一步按原连续高度验收补完整速度带、形状和随机迟到矩阵，并继续评估 3 次取证超时和 5 次输入失联是否达到正例可靠性门槛。专项 3/3 和 0 个意外结果不能替代这两项剩余门槛。
+
+上段是 H1 至 H7 完成时的历史判断。第二十轮复审随后重新打开 S4。当前整改见[第二十轮整改计划](navigation-coordination-review20-remediation-plan.md)和[D041](../decisions/0041-enforce-event-admission-and-bounded-motion-finalization.md)。本地结果为：192 个中断组合全部到达终态，固定 14 场为 13 个任务成功、1 个有界安全取消、0 个意外结果，冻结种子为 198/200 个任务成功、2 个输入失联安全失败、0 个意外结果。S4 要等专项 Fabric 对照后再关闭；S5 还要等待完整连续高度矩阵。
 
 ## 3. 提交与验证约束
 

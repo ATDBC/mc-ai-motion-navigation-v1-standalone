@@ -50,8 +50,15 @@ from mc2p.motion_nav.landing_edge_probe import (
 from mc2p.motion_nav.action_route_executor import (
     ActionRouteDecision, ActionRouteExecutor, ActionRouteState,
 )
-from mc2p.motion_nav.route_admission import AdmissionReason
-from mc2p.motion_nav.support_surfaces import query_support_surfaces
+from mc2p.motion_nav.action_route import ActionRoute, ControlledDropSegment
+from mc2p.motion_nav.controlled_drop import ControlledDropEdge
+from mc2p.motion_nav.route_admission import (
+    ActiveRoute, AdmissionReason, ExecutableCorridor,
+)
+from mc2p.motion_nav.route_body_controller import RouteControl
+from mc2p.motion_nav.support_surfaces import (
+    HorizontalRegion, SupportSurface, SurfaceNodeId, query_support_surfaces,
+)
 from mc2p.motion_nav.world_model import (
     Aabb, BlockGeometry, ObservationStamp, VisualAirEvidence,
     WorldKnowledge, WorldSessionId,
@@ -142,6 +149,8 @@ class _RepeatingRecoveryExecutor(ActionRouteExecutor):
     def __init__(self, state: ActionRouteState, reason: str) -> None:
         self.state = state
         self.reason = reason
+        self.route = None
+        self.action_index = 0
 
     def cancel(self) -> None:
         pass
@@ -153,6 +162,26 @@ class _RepeatingRecoveryExecutor(ActionRouteExecutor):
         return ActionRouteDecision(
             self.state, MovementV1(), None,
             1, 0, self.reason, (), 0,
+        )
+
+
+class _ObservationRouteExecutor(ActionRouteExecutor):
+    """Minimal active route owner for observation-request contract tests."""
+
+    def __init__(self, route: ActionRoute) -> None:
+        self.route = route
+        self.action_index = 0
+        self.state = ActionRouteState.RUNNING
+
+
+class _WaitingRouteExecutor(_RepeatingRecoveryExecutor):
+    def __init__(self) -> None:
+        super().__init__(ActionRouteState.RUNNING, "awaiting_verified_motion")
+
+    def decide(self, _frame, **_):
+        return ActionRouteDecision(
+            ActionRouteState.RUNNING, MovementV1(), None,
+            1, 0, self.reason, (), 0, submit_input=False,
         )
 
 
@@ -407,6 +436,27 @@ class NavigationSessionTests(unittest.TestCase):
         )
         self.assertIs(complete.report.state, NavigationSessionState.COMPLETE)
 
+    def test_completed_session_rejects_goal_revision_without_mutation(self):
+        world = _known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        node = _nodes(world, (0,))[0]
+        initial = frame(world, 0, node.position)
+        session = NavigationSession(
+            "complete-rejects-revision", self.profiles(),
+            planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        session.start_goal("goal", 1, _goal(node.position), initial)
+        completed = session.propose(initial, None, 2_000_000_000)
+        self.assertIs(completed.report.state, NavigationSessionState.COMPLETE)
+        before = session.report
+
+        with self.assertRaisesRegex(ContractViolation, "lifecycle event"):
+            session.update_goal("goal", 2, _goal(node.position))
+
+        self.assertEqual(session.report, before)
+
     def test_replan_after_reaching_goal_support_skips_graph_search(self):
         world = _known_world({
             (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
@@ -643,6 +693,47 @@ class NavigationSessionTests(unittest.TestCase):
 
         self.assertEqual(first.air_positions, (landing,))
         self.assertEqual(second.air_positions, (landing,))
+
+    def test_grounded_drop_rechecks_landing_dependencies_each_frame(self):
+        session = NavigationSession(
+            "drop-dependency-query-priority", self.profiles(),
+            planner_worker=_InlinePlanner(),
+        )
+        frame = session.ingest(valid_snapshot_v3(sequence=1))
+        start_id = SurfaceNodeId(0, 0, 1, 0)
+        end_id = SurfaceNodeId(0, 1, 0, 0)
+        start = SupportSurface(
+            start_id, (.5, 1.0, .5), HorizontalRegion(0, 0, 1, 1),
+            1.0, ("minecraft:grass_block",), (),
+        )
+        end = SupportSurface(
+            end_id, (.5, 0.0, 1.5), HorizontalRegion(0, 1, 1, 2),
+            1.0, ("minecraft:grass_block",), (),
+        )
+        landing_support = (0, -1, 1)
+        action = ControlledDropSegment(
+            ControlledDropEdge(start_id, end_id, "direct-fall", 1.0, ()),
+            start, end, (landing_support,),
+        )
+        action_route = ActionRoute("drop-observation-route", (action,))
+        active_route = ActiveRoute(
+            "drop-observation-route", 1, "request", "goal", 1,
+            frame.session.value, None, 1.0, 0.0, (),
+            ExecutableCorridor(
+                (start_id, end_id), (landing_support,), 1.0, end_id,
+            ),
+            action_route,
+        )
+        executor = _ObservationRouteExecutor(action_route)
+        self.assertTrue(session._supervisor.offer_route(
+            RouteControl(active_route, executor), frame,
+        ))
+
+        first = session.observation_request()
+        second = session.observation_request()
+
+        self.assertIn(landing_support, first.air_positions)
+        self.assertIn(landing_support, second.air_positions)
 
     def test_duplicate_residual_check_keeps_pending_world_query(self):
         session = NavigationSession(
@@ -1101,14 +1192,22 @@ class NavigationSessionTests(unittest.TestCase):
             submit_input=False,
         )
 
+        route_control = Mock()
+        route_control.executor.route = None
+        route_control.route.route_id = "waiting-route"
         proposal = session._proposal(
             MovementV1(sneak=True), None, 1, 2_000_000_000,
             route_decision=waiting,
+            route_control=route_control,
         )
 
         self.assertEqual(
             proposal.control_frame.intents[0].intent.movement,
             MovementV1(sneak=True),
+        )
+        self.assertIsNone(
+            proposal.route_owner_id,
+            "edge safety movement must not be registered as a route command",
         )
 
     def test_new_air_fact_does_not_restart_before_edge_probe_owns_evidence(self):
@@ -1334,6 +1433,36 @@ class NavigationSessionTests(unittest.TestCase):
         self.assertIs(proposal.report.state, NavigationSessionState.FAILED)
         self.assertEqual(proposal.report.reason, "input_application_unconfirmed")
         self.assertEqual(session._request.sequence, request_sequence)
+
+    def test_input_lost_after_cancel_and_safe_release_keeps_cancel_outcome(self):
+        world = _known_world({
+            (x, 0, 0): BlockGeometry.full_cube("minecraft:stone")
+            for x in range(4)
+        })
+        start, goal = _nodes(world, (0, 3))
+        session = NavigationSession(
+            "cancel-input-lost-terminal", self.profiles(),
+            planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        session.start_goal(
+            "task", 1, _goal(goal.position), frame(world, 0, start.position),
+        )
+        session.propose(frame(world, 1, start.position), None, 2_000_000_000)
+        self.assertIsNotNone(session._executor)
+        session.cancel("user_cancelled")
+        _replace_route_executor(session, _RepeatingRecoveryExecutor(
+            ActionRouteState.INPUT_LOST, "input_application_unconfirmed",
+        ))
+
+        current = frame(world, 2, start.position)
+        proposal = session.propose(
+            current, _ground_anchor(current), 2_000_000_000,
+            input_ledger=InputApplicationLedger(),
+        )
+
+        self.assertIs(proposal.report.state, NavigationSessionState.CANCELLED)
+        self.assertEqual(proposal.report.reason, "user_cancelled")
 
     def test_old_route_input_lost_during_goal_revision_is_not_replaced(self):
         world = _known_world({
@@ -1662,6 +1791,66 @@ class NavigationSessionTests(unittest.TestCase):
             while_replanning.control_frame.intents[0].intent.movement,
             MovementV1(),
         )
+
+    def test_quiescent_terminal_predecessor_waits_for_pending_route_command(self):
+        world = _known_world({
+            (x, 0, 0): BlockGeometry.full_cube("minecraft:stone")
+            for x in range(-1, 9)
+        })
+        start, old_goal, new_goal = _nodes(world, (0, 6, 8))
+        session = NavigationSession(
+            "terminal-predecessor-handoff", self.profiles(),
+            planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        initial = frame(world, 0, start.position)
+        session.start(SurfacePlanningRequest(
+            1, "request-1", "goal", 1, world.session.value,
+            start.node_id, old_goal.node_id, goal_state=_goal(old_goal.position),
+        ), initial)
+        session.propose(initial, None, 2_000_000_000)
+        incumbent = session._supervisor.incumbent_route
+        self.assertIsNotNone(incumbent)
+        session._supervisor._route = replace(
+            incumbent,
+            executor=_RepeatingRecoveryExecutor(
+                ActionRouteState.UNSUPPORTED,
+                "ordinary_ground_state_lost",
+            ),
+        )
+        successor = replace(
+            incumbent.route,
+            route_id="pending-successor",
+            source_request_id="request-2",
+            goal_revision=2,
+        )
+        current = frame(world, 1, start.position)
+        anchor = _ground_anchor(current)
+        ledger = InputApplicationLedger()
+        self.assertTrue(session._supervisor.offer_route(
+            RouteControl(successor, _WaitingRouteExecutor()),
+            current, ledger, anchor,
+        ))
+        session._request = replace(
+            session._request,
+            request_id="request-2",
+            sequence=2,
+            goal=new_goal.node_id,
+            goal_revision=2,
+            goal_state=_goal(new_goal.position),
+        )
+
+        proposal = session.propose(
+            current, anchor, 2_000_000_000, input_ledger=ledger,
+        )
+
+        self.assertIs(proposal.report.state, NavigationSessionState.STOPPING)
+        self.assertEqual(
+            proposal.report.reason, "successor_route_waiting_for_motion",
+        )
+        self.assertIsNone(proposal.route_decision)
+        self.assertIsNotNone(session.diagnostics.pending_route_id)
+        self.assertIsNotNone(session.diagnostics.incumbent_route_id)
 
     def test_pending_goal_accepts_a_new_revision_before_support_is_known(self):
         world = _known_world({

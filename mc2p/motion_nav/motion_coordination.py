@@ -25,7 +25,9 @@ from mc2p.motion_nav.motion_solver import (
     solve_air_transition, solve_one_cell_gap,
 )
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
-from mc2p.motion_nav.retry_ledger import RetryCause, RetryLedger, RetryVerdict
+from mc2p.motion_nav.retry_ledger import (
+    RetryCause, RetryLedger, RetryVerdict, WaitPolicy, WaitVerdict,
+)
 from mc2p.motion_nav.motion_worker import (
     GapMotionSolveJob, GapMotionSolveResult, MotionWorkerPort,
 )
@@ -47,6 +49,7 @@ from mc2p.motion_nav.world_model import BlockPos
 
 _RESOURCE_ASSUMPTIONS = ("server_hunger_clock_not_in_physics_state",)
 _MAX_ENTRY_ALIGNMENT_DEGREES_PER_TICK = 36.0
+_GROUNDED_ENTRY_RECOVERY_POLICY = WaitPolicy(40, 2_000_000_000)
 
 
 def _gap_physics_snapshot(
@@ -418,6 +421,7 @@ class MotionRouteCoordinator:
         self._candidate_revision = 0
         self.last_failure_attempt_id: str | None = None
         self.last_failure_reason = ""
+        self._grounded_recovery_wait_id: str | None = None
 
     def start(self, frame: NavigationFrame) -> None:
         if type(frame) is not NavigationFrame:
@@ -429,6 +433,7 @@ class MotionRouteCoordinator:
         self._candidate_revision = 0
         self.last_failure_attempt_id = None
         self.last_failure_reason = ""
+        self._end_grounded_recovery_wait()
         self.executor.start(
             self.route.action_route, frame,
             damage_budget=self.damage_budget,
@@ -442,6 +447,11 @@ class MotionRouteCoordinator:
 
     def _connection_id(self, action_index: int) -> str:
         return f"{self.route.route_id}/action-{action_index}"
+
+    def _end_grounded_recovery_wait(self) -> None:
+        if self._grounded_recovery_wait_id is not None:
+            self.retry_ledger.end_wait(self._grounded_recovery_wait_id)
+            self._grounded_recovery_wait_id = None
 
     def _accept_result(
             self, result: GapMotionSolveResult, anchor: StateAnchor,
@@ -722,12 +732,35 @@ class MotionRouteCoordinator:
         elif (self._pending_connection is not None
               and self._pending_submitted_tick is not None
               and anchor.movement_tick_id > self._pending_submitted_tick + 20):
+            expired_connection = self._pending_connection
+            expired_action_index = (
+                self._pending_action_index
+                if self._pending_action_index is not None
+                else self.executor.action_index
+            )
+            expired_revision = self._candidate_revision
             self._pending_connection = None
             self._pending_action_index = None
             self._pending_submitted_tick = None
             self._pending_preparation_anchor = None
-            self.last_failure_reason = "motion_solver_request_expired"
-            self.executor.cancel()
+            attempt_id = (
+                f"{expired_connection}/candidate-{expired_revision}/"
+                "solver-request-expired"
+            )
+            registration = self.retry_ledger.record_failure(
+                attempt_id, RetryCause.PLANNING,
+            )
+            self.last_failure_attempt_id = attempt_id
+            if (registration.first_seen
+                    and registration.verdict is RetryVerdict.RETRY):
+                self.last_failure_reason = ""
+                if expired_action_index == self.executor.action_index:
+                    self._submit_action(
+                        expired_action_index, anchor, world,
+                    )
+            else:
+                self.last_failure_reason = "motion_solver_retry_exhausted"
+                self.executor.cancel()
         for result in self.worker.poll_available():
             installed = self._accept_result(
                 result, anchor, world, changed_cells,
@@ -753,9 +786,39 @@ class MotionRouteCoordinator:
             state_anchor=anchor, input_ledger=ledger,
             movement_yaw_radians=movement_yaw_radians,
         )
-        if (allow_grounded_reprepare
-                and decision.state is ActionRouteState.INPUT_LOST
-                and frame.body.is_on_ground):
+        grounded_recovery = (
+            allow_grounded_reprepare
+            and decision.state is ActionRouteState.INPUT_LOST
+            and frame.body.is_on_ground
+        )
+        if not grounded_recovery:
+            self._end_grounded_recovery_wait()
+        if grounded_recovery:
+            wait_id = (
+                f"grounded-entry-recovery:"
+                f"{self._connection_id(self.executor.action_index)}"
+            )
+            if self._grounded_recovery_wait_id != wait_id:
+                self._end_grounded_recovery_wait()
+                self.retry_ledger.begin_wait(
+                    wait_id, _GROUNDED_ENTRY_RECOVERY_POLICY,
+                    anchor.movement_tick_id,
+                    frame.body.stamp.received_monotonic_ns,
+                )
+                self._grounded_recovery_wait_id = wait_id
+            wait_status = self.retry_ledger.check_wait(
+                wait_id, anchor.movement_tick_id,
+                frame.body.stamp.received_monotonic_ns,
+            )
+            if wait_status is not WaitVerdict.WAITING:
+                self._end_grounded_recovery_wait()
+                self.last_failure_reason = (
+                    "grounded_verified_entry_recovery_exhausted"
+                )
+                return replace(
+                    decision,
+                    reason_code=self.last_failure_reason,
+                )
             attempt_id = (
                 f"{self._connection_id(self.executor.action_index)}:"
                 f"grounded-input-reanchor:{self._candidate_revision}"

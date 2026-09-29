@@ -1,6 +1,7 @@
 from dataclasses import replace
 import math
 import unittest
+from dataclasses import replace
 from unittest.mock import patch
 
 from mc2p.contracts.action_receipt import ClientInputApplicationV1
@@ -31,6 +32,7 @@ from mc2p.motion_nav.support_surfaces import (
 )
 from mc2p.motion_nav.world_model import Aabb, ObservationStamp
 from mc2p.motion_nav.route_admission import ActiveRoute, ExecutableCorridor, RouteAdmitter
+from mc2p.motion_nav.retry_ledger import RetryCause
 from tests.motion_nav.test_b10_gap_solver import fixture
 from tests.motion_nav.test_b09_air_transitions import air_profile
 from tests.motion_nav.test_b07_step_transition import profile as step_profile
@@ -323,6 +325,45 @@ class VerifiedMotionExecutorTests(unittest.TestCase):
         self.assertIs(
             terminal.state, VerifiedMotionExecutorState.INPUT_LOST,
         )
+
+    def test_cancelled_executor_bounds_missing_application_receipt(self):
+        anchor, candidate = self.admitted()
+        executor = VerifiedMotionExecutor()
+        executor.start(candidate)
+        ledger = InputApplicationLedger(max_records=64)
+        executor.register_submission(
+            0, control_sequence=20, requested_movement_tick=11,
+            requested_latest_movement_tick=12,
+        )
+        executor.cancel(anchor)
+        after_transport_grace = replace(
+            anchor,
+            observation_sequence_id=anchor.observation_sequence_id + 1,
+            movement_tick_id=14,
+            physics_state=replace(
+                anchor.physics_state,
+                movement_tick_id=14,
+                velocity_blocks_per_tick=(0.0, 0.0, 0.0),
+                on_ground=True,
+            ),
+        )
+
+        bounded = executor.decide(after_transport_grace, ledger)
+
+        self.assertIs(bounded.state, VerifiedMotionExecutorState.RECOVERING)
+        self.assertEqual(bounded.reason, "recovery_application_unresolved")
+        self.assertEqual(bounded.movement, MovementV1())
+        settled = replace(
+            after_transport_grace,
+            observation_sequence_id=after_transport_grace.observation_sequence_id + 1,
+            movement_tick_id=15,
+            physics_state=replace(
+                after_transport_grace.physics_state,
+                movement_tick_id=15,
+            ),
+        )
+        terminal = executor.decide(settled, ledger)
+        self.assertIs(terminal.state, VerifiedMotionExecutorState.CANCELLED)
 
     def test_first_command_rebases_to_actual_tick_within_start_window(self):
         anchor, candidate = self.admitted()
@@ -1384,6 +1425,86 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
             self.assertFalse(decision.submit_input)
             self.assertEqual(coordinator.last_failure_reason,
                              "motion_solver_worker_died")
+        finally:
+            worker.close()
+
+    def test_online_coordinator_retries_expired_solver_request_with_shared_budget(self):
+        anchor, physics_world, _, _ = fixture()
+        start_id = SurfaceNodeId(0, 0, 64, 0)
+        end_id = SurfaceNodeId(0, 2, 64, 0)
+        start_surface = SupportSurface(
+            start_id, (.5, 64.0, .5), HorizontalRegion(0, 0, 1, 1),
+            1.0, ("minecraft:grass_block",), (),
+        )
+        end_surface = SupportSurface(
+            end_id, (.5, 64.0, 2.5), HorizontalRegion(0, 2, 1, 3),
+            1.0, ("minecraft:grass_block",), (),
+        )
+        action_route = ActionRoute(
+            "expired-worker-gap",
+            (JumpGapSegment(
+                JumpGapEdge(start_id, end_id, "test-jump-gap", .9, ()),
+                start_surface, end_surface, (),
+            ),),
+        )
+        active = ActiveRoute(
+            "expired-worker-gap", 1, "request", "goal", 1,
+            anchor.session.value, None, 2.0, 0.0, (),
+            ExecutableCorridor((start_id, end_id), (), 2.0, end_id),
+            action_route, planning_generation=2,
+        )
+        executor = ActionRouteExecutor(
+            ground_profile(), jump_profile(), step_profile(),
+            air_profiles=(air_profile(MovementMode.JUMP_GAP),),
+        )
+        worker = MotionSolverWorker(max_pending=4)
+        ledger = InputApplicationLedger(max_records=64)
+        try:
+            coordinator = MotionRouteCoordinator(active, executor, worker)
+            coordinator.start(self.frame(
+                physics_world._world, anchor.physics_state, 1,
+            ))
+            coordinator._pending_connection = coordinator._connection_id(0)
+            coordinator._pending_action_index = 0
+            coordinator._pending_submitted_tick = anchor.movement_tick_id
+            coordinator._candidate_revision = 1
+
+            with patch.object(worker, "poll_available", return_value=[]), \
+                    patch.object(worker, "submit", return_value=True):
+                for expected_revision, tick in ((2, 31), (3, 52)):
+                    current = replace(anchor, movement_tick_id=tick)
+                    decision = coordinator.decide(
+                        self.frame(
+                            physics_world._world,
+                            current.physics_state,
+                            current.observation_sequence_id,
+                        ),
+                        current, ledger, physics_world, changed_cells=(),
+                    )
+                    self.assertIs(decision.state, ActionRouteState.RUNNING)
+                    self.assertEqual(
+                        coordinator._candidate_revision, expected_revision,
+                    )
+                    self.assertEqual(coordinator._pending_submitted_tick, tick)
+
+                exhausted = replace(anchor, movement_tick_id=73)
+                decision = coordinator.decide(
+                    self.frame(
+                        physics_world._world,
+                        exhausted.physics_state,
+                        exhausted.observation_sequence_id,
+                    ),
+                    exhausted, ledger, physics_world, changed_cells=(),
+                )
+
+            self.assertIs(decision.state, ActionRouteState.UNSUPPORTED)
+            self.assertEqual(
+                decision.reason_code,
+                "motion_unsolvable:motion_solver_retry_exhausted",
+            )
+            self.assertEqual(
+                coordinator.retry_ledger.count_for(RetryCause.PLANNING), 3,
+            )
         finally:
             worker.close()
 

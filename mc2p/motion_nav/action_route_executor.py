@@ -9,6 +9,7 @@ import time
 from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.action_v1 import LookV1
 from mc2p.contracts.common import ContractViolation
+from mc2p.motion_nav.body_control import StopCause
 from mc2p.motion_nav.action_route import (
     ActionRoute, ControlledDropSegment, JumpGapSegment, JumpUpSegment,
     StepSegment, WalkSegment,
@@ -121,6 +122,7 @@ class ActionRouteExecutor:
             | AirMotionController | VerifiedMotionExecutor | None
         ) = None
         self._cancel_requested = False
+        self._stop_cause: StopCause | None = None
         self._actions_finished = False
         self._damage_budget = TaskDamageBudget()
         self._session = None
@@ -436,6 +438,7 @@ class ActionRouteExecutor:
         self.state = ActionRouteState.RUNNING
         self.action_index = 0
         self._cancel_requested = False
+        self._stop_cause = None
         self._actions_finished = False
         self._damage_budget = damage_budget
         self._session = frame.session
@@ -623,6 +626,12 @@ class ActionRouteExecutor:
             requested_latest_movement_tick=requested_latest_movement_tick,
         )
 
+    def request_stop(self, cause: StopCause) -> None:
+        if type(cause) is not StopCause:
+            raise ContractViolation("action route stop cause must be typed")
+        self._stop_cause = cause
+        self.cancel()
+
     def cancel(self) -> None:
         if self.state in {
             ActionRouteState.RUNNING,
@@ -706,12 +715,34 @@ class ActionRouteExecutor:
             return self._finish_goal(frame, started, input_ledger, state_anchor)
         action = self.route.actions[self.action_index]
         self._commit_drop_damage_if_started(action, frame)
+        if (self._cancel_requested
+                and self._stop_cause is StopCause.DEPENDENCY_CHANGED
+                and type(action) is ControlledDropSegment
+                and frame.body.is_on_ground
+                and math.hypot(
+                    frame.body.velocity_blocks_per_second[0],
+                    frame.body.velocity_blocks_per_second[2],
+                ) > .10):
+            # The landing changed while departure was still preventable.
+            # Neutral input only brakes; it does not keep a moving player on
+            # the edge.  Hold sneak until the observed body is stationary,
+            # then finish cancellation without replaying the stale proof.
+            self.state = ActionRouteState.CANCELLING
+            return self._result(
+                started, MovementV1(sneak=True), 1,
+                "grounded_dependency_stop",
+            )
         if type(self._controller) is VerifiedMotionExecutor:
             if (type(state_anchor) is not StateAnchor
                     or type(input_ledger) is not InputApplicationLedger):
                 verified = self._controller.recover_without_anchor()
             elif self._cancel_requested:
-                self._controller.cancel(state_anchor)
+                self._controller.cancel(
+                    state_anchor,
+                    preserve_verified_remainder=(
+                        self._stop_cause is not StopCause.DEPENDENCY_CHANGED
+                    ),
+                )
                 verified = self._controller.decide(
                     state_anchor, input_ledger, changed_cells=frame.changed_cells,
                 )

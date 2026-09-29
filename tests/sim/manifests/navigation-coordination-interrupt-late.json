@@ -1,0 +1,18 @@
+{
+  "schema_version": "mc2p.navigation-interrupt-matrix.v1",
+  "scenarios": [
+    {
+      "name": "direct_drop_2",
+      "revised_goal": [-0.5, 62.0, 4.5]
+    },
+    {
+      "name": "direct_drop_5_budget_2",
+      "revised_goal": [-0.5, 59.0, 4.5]
+    }
+  ],
+  "interruptions": ["revise", "cancel"],
+  "interrupt_tick_start": 30,
+  "interrupt_tick_end": 45,
+  "late_offsets": [null, 1, 2],
+  "maximum_ticks": 300
+}

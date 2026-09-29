@@ -14,7 +14,9 @@ from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, MovementMode, ResourceState
 from mc2p.motion_nav.online_motion import InputApplicationLedger
-from mc2p.motion_nav.body_control import HandoffDisposition, HandoffEvidence
+from mc2p.motion_nav.body_control import (
+    BodyControlProgress, HandoffDisposition, HandoffEvidence,
+)
 from mc2p.motion_nav.motion_risk import (
     RiskCommitEvidence, RiskCommitKind, RiskReservationStatus,
     TaskDamageBudget, TaskRiskLedger,
@@ -25,10 +27,10 @@ from mc2p.motion_nav.retry_ledger import (
 from mc2p.motion_nav.world_model import WorldSessionId
 from mc2p.motion_nav.runtime_adapter import NavigationObservationAdapter, TEST_ORACLE
 from mc2p.motion_nav.world_model import Aabb
-from tests.sim.backend import CalculatorBackend, Scene
+from tests.sim.backend import CalculatorBackend, Perturbations, Scene
 from tests.sim.monitor import InvariantMonitor, TickEvidence
-from tests.sim.runner import Event, _goal, late_ticks, run
-from tests.sim.scenarios import SCENARIOS
+from tests.sim.runner import Event, Scenario, _goal, lane, late_ticks, run
+from tests.sim.scenarios import SCENARIOS, columns
 from tests.sim.scenarios import airborne_in_drop, revise_goal_back
 from tests.sim.run_navigation_matrix import read_manifest, run_matrix
 
@@ -131,6 +133,21 @@ class InvariantNegativeTests(unittest.TestCase):
                 tick=tick,
                 state="stopping",
                 reason="recovery_unresolved",
+            ))
+        self.assertIn("I4", {item[1] for item in monitor.violations})
+
+    def test_i4_detects_motion_without_body_control_progress(self):
+        monitor = InvariantMonitor()
+        progress = BodyControlProgress(
+            "route/test-route", "recovering_grounded_verified_entry",
+            3, 1, 20, 40,
+        )
+        for tick in range(2, 45):
+            offset = .04 if tick % 2 else -.04
+            monitor.check(evidence(
+                tick=tick,
+                position=(.5 + offset, 64.0, .5 - offset),
+                body_control_progress=progress,
             ))
         self.assertIn("I4", {item[1] for item in monitor.violations})
 
@@ -296,6 +313,35 @@ class InvariantNegativeTests(unittest.TestCase):
 
 
 class ClosedLoopToolTests(unittest.TestCase):
+    def test_initial_live_observation_precedes_height_route_planning(self):
+        scenario = next(
+            item for item in SCENARIOS
+            if item.name == "half_steps_up_down"
+        )
+
+        result = run(scenario)
+
+        self.assertEqual(result.verdict, "PASS", result.reason)
+        self.assertEqual(result.trace[0]["retry_total_failures"], 0)
+        self.assertIsNotNone(result.trace[0]["route_id"])
+
+    def test_constant_late_input_has_a_bounded_typed_result(self):
+        configured = Scenario(
+            "down1_after_approach_constant_late",
+            lane(columns([65] * 3 + [64] * 3), width=3),
+            (.5, 65.0, .5),
+            (.5, 64.0, 4.5),
+            max_ticks=120,
+            perturbations=Perturbations(
+                late_ticks=frozenset(range(2, 800)),
+            ),
+        )
+
+        result = run(configured)
+
+        self.assertIn(result.outcome, {"success", "failed", "cancelled"})
+        self.assertLess(result.ticks, configured.max_ticks)
+
     def test_exhausted_recovery_moves_back_onto_support_and_terminates(self):
         scenario = next(item for item in SCENARIOS
                         if item.name == "direct_drop_2")

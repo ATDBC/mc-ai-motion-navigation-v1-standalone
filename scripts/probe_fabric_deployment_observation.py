@@ -876,6 +876,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                b09_air_motion_probe: bool = False,
                b10_gap_solver_probe: bool = False,
                continuous_height_probe: bool = False,
+               navigation_review20_probe: bool = False,
                b11_world_change_probe: bool = False,
                input_buffer_idle_probe: bool = False,
                c1_fixed_melee_probe: bool = False,
@@ -894,7 +895,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
             b05_jump_calibration_probe,b05_jump_route_probe,
             b05_jump_acceptance_probe,b06_ordinary_material_probe,
             b07_step_probe,b08_ground_modes_probe,b09_air_motion_probe,
-            b10_gap_solver_probe,continuous_height_probe,b11_world_change_probe,
+            b10_gap_solver_probe,continuous_height_probe,
+            navigation_review20_probe,b11_world_change_probe,
             input_buffer_idle_probe,c1_fixed_melee_probe,
             c1_moving_melee_probe,c1_external_motion_probe,
             c1r_control_frame_probe,b12a_attack_evidence_probe,
@@ -904,6 +906,10 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
         raise ValueError('first-hit block parity was retired with sensor profile 3')
     if (c1r_control_frame_probe or b12b_partial_combat_probe or surface_cost_probe) and not time_diagnostics:
         raise ValueError('selected probe requires --time-diagnostics')
+    review20_only = navigation_review20_probe
+    continuous_height_probe = (
+        continuous_height_probe or navigation_review20_probe
+    )
     source_before = frozen_deployment_sources(
         b03_fixed_route_probe=b03_fixed_route_probe,
         b03_shape_probe=b03_shape_probe,
@@ -1449,6 +1455,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                             pipeline_diagnostic=lambda: observation_pipeline_diagnostics(
                                 runtime, backend,
                             ),
+                            review20_only=review20_only,
                         )
                     elif b11_world_change_probe:
                         from scripts.b11_world_change_runtime import run_b11_world_change_runtime
@@ -2034,6 +2041,8 @@ def main(argv=None) -> int:
                         help='solve and validate one-cell gaps in a controlled session')
     parser.add_argument('--continuous-height-probe', action='store_true',
                         help='run continuous low-height and descending routes')
+    parser.add_argument('--navigation-review20-probe', action='store_true',
+                        help='run review-20 interruption and late-input matrix')
     parser.add_argument('--b11-world-change-probe', action='store_true',
                         help='place full blocks and cross one-to-three-cell gaps')
     parser.add_argument('--input-buffer-idle-probe', action='store_true',
@@ -2061,7 +2070,7 @@ def main(argv=None) -> int:
             args.b05_jump_acceptance_probe,args.b06_ordinary_material_probe,
             args.b07_step_probe,args.b08_ground_modes_probe,
             args.b09_air_motion_probe,args.b10_gap_solver_probe,
-            args.continuous_height_probe,
+            args.continuous_height_probe,args.navigation_review20_probe,
             args.b11_world_change_probe,
             args.input_buffer_idle_probe,args.c1_fixed_melee_probe,
             args.c1_moving_melee_probe,args.c1_external_motion_probe,
@@ -2084,7 +2093,8 @@ def main(argv=None) -> int:
                                or args.b12b_partial_combat_probe
                                or args.surface_cost_probe
                                or args.b11_world_change_probe
-                               or args.continuous_height_probe) else 600
+                               or args.continuous_height_probe
+                               or args.navigation_review20_probe) else 600
     if (not math.isfinite(args.timeout_seconds) or not 120 <= args.timeout_seconds <= maximum_timeout
             or not 1 <= args.server_port <= 65535 or not 1 <= args.ipc_port <= 65535 or args.server_port == args.ipc_port):
         parser.error("invalid bounded probe configuration")
@@ -2102,6 +2112,7 @@ def main(argv=None) -> int:
                           args.b08_ground_modes_probe,args.b09_air_motion_probe,
                           args.b10_gap_solver_probe,
                           args.continuous_height_probe,
+                          args.navigation_review20_probe,
                           args.b11_world_change_probe,
                           args.input_buffer_idle_probe,
                           args.c1_fixed_melee_probe,
@@ -2157,6 +2168,8 @@ def main(argv=None) -> int:
     if args.b09_air_motion_probe: command.append('--b09-air-motion-probe')
     if args.b10_gap_solver_probe: command.append('--b10-gap-solver-probe')
     if args.continuous_height_probe: command.append('--continuous-height-probe')
+    if args.navigation_review20_probe:
+        command.append('--navigation-review20-probe')
     if args.b11_world_change_probe: command.append('--b11-world-change-probe')
     if args.input_buffer_idle_probe: command.append('--input-buffer-idle-probe')
     if args.c1_fixed_melee_probe: command.append('--c1-fixed-melee-probe')

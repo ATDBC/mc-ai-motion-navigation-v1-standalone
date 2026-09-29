@@ -8,6 +8,7 @@ import unittest
 from mc2p.contracts.action_receipt import behavior_receipt_from_mapping
 from mc2p.contracts.action_v1 import ActionSnapshotV1, MovementV1
 from mc2p.contracts.behavior import BehaviorProfileV0
+from mc2p.contracts.common import ContractViolation
 from mc2p.contracts.reset import ResetRequestV0, ResetResultV0
 from mc2p.motion_nav.navigation_session import (
     NavigationSession,
@@ -175,6 +176,13 @@ class _AnchorInjectionSession(NavigationSession):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.drop_next_anchor = False
+        self.raise_next_proposal_contract = False
+
+    def propose(self, *args, **kwargs):
+        if self.raise_next_proposal_contract:
+            self.raise_next_proposal_contract = False
+            raise ContractViolation("injected illegal transition")
+        return super().propose(*args, **kwargs)
 
     def execution_anchor(self, snapshot, ledger):
         if self.drop_next_anchor:
@@ -308,6 +316,23 @@ class RuntimeVerifiedMotionHandoffTests(unittest.TestCase):
             session.report.reason,
             "coast_to_verified_landing",
         )
+
+    def test_formal_driver_converts_internal_contract_error_to_safe_stop(self):
+        clock, backend, runtime, session, driver = self._running_gap()
+        self.addCleanup(runtime.close)
+        self.addCleanup(session.close)
+        session.raise_next_proposal_contract = True
+
+        result = driver.tick(
+            BehaviorProfileV0(), clock[0] + 500_000_000,
+        )
+
+        self.assertIsNone(result.report.failure)
+        self.assertEqual(runtime.state.value, "ready")
+        self.assertIn(driver.state, {"stopping", "failed"})
+        self.assertIsNotNone(driver.source)
+        self.assertIs(session.report.state, NavigationSessionState.CANCELLING)
+        self.assertIsNotNone(session._executor)
 
 
 if __name__ == "__main__":

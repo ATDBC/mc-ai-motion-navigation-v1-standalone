@@ -240,11 +240,24 @@ class RuntimeNavigationDriver:
                 conditioned_look.intent.look.yaw_delta_degrees
             )
             conditioned_look_intent_id = conditioned_look.intent.intent_id
-        proposal = self.session.propose(
-            frame, anchor, deadline, input_ledger=ledger,
-            conditioned_yaw_delta_degrees=conditioned_yaw_delta,
-            conditioned_look_intent_id=conditioned_look_intent_id,
-        )
+        try:
+            proposal = self.session.propose(
+                frame, anchor, deadline, input_ledger=ledger,
+                conditioned_yaw_delta_degrees=conditioned_yaw_delta,
+                conditioned_look_intent_id=conditioned_look_intent_id,
+            )
+        except ContractViolation:
+            # Direct session and simulator calls still expose programmer
+            # errors.  The formal driver keeps the current body owner and
+            # converts the fault into a bounded safe stop.
+            self.session.handle_internal_contract_failure(
+                "navigation_internal_contract_failure",
+            )
+            proposal = self.session.propose(
+                frame, anchor, deadline, input_ledger=ledger,
+                conditioned_yaw_delta_degrees=conditioned_yaw_delta,
+                conditioned_look_intent_id=conditioned_look_intent_id,
+            )
         control = proposal.control_frame
         if control is None:
             control = ControlFrameProposalV1(

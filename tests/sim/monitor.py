@@ -5,7 +5,9 @@ from dataclasses import dataclass
 import math
 
 from mc2p.contracts.action_v1 import MovementV1
-from mc2p.motion_nav.body_control import HandoffDisposition, HandoffEvidence
+from mc2p.motion_nav.body_control import (
+    BodyControlProgress, HandoffDisposition, HandoffEvidence,
+)
 from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, MovementMode
 from mc2p.motion_nav.motion_risk import RiskActionRecord, RiskActionState
 from mc2p.motion_nav.retry_ledger import ProgressEvidence, ProgressKind
@@ -59,6 +61,7 @@ class TickEvidence:
     retry_approved_cause_counts: tuple[tuple[str, int], ...] = ()
     support_fraction: float | None = None
     illegal_transition_count: int = 0
+    body_control_progress: BodyControlProgress | None = None
 
 
 class InvariantMonitor:
@@ -84,6 +87,10 @@ class InvariantMonitor:
         self._last_retry_attempt_id: str | None = None
         self._last_source_bound: bool | None = None
         self._terminal_owned_ticks = 0
+        self._body_progress_owner: str | None = None
+        self._body_progress_revision = -1
+        self._body_progress_action_index = -1
+        self._body_progress_stalled_ticks = 0
 
     def _record(self, tick: int, code: str, detail: str) -> None:
         if not any(item[1] == code for item in self.violations):
@@ -160,15 +167,55 @@ class InvariantMonitor:
         progress = (0.0 if length < 1e-9 else sum(
             (e.position[i] - self._origin[i]) * direction[j] / length
             for j, i in enumerate((0, 2))))
-        if (e.on_ground and progress >= self._best_route_progress + .5):
+        route_progressed = (
+            e.on_ground and progress >= self._best_route_progress + .5
+        )
+        if route_progressed:
             self._best_route_progress = progress
             self._retries_without_progress.clear()
-        if e.action_index is not None and e.action_index > self._best_action_index:
+        action_progressed = (
+            e.action_index is not None
+            and e.action_index > self._best_action_index
+        )
+        if action_progressed:
             self._best_action_index = e.action_index
             self._retries_without_progress.clear()
         self._last_position = e.position
+        body_progress = e.body_control_progress
+        if (body_progress is None or terminal
+                or body_progress.stall_limit_ticks is None):
+            self._body_progress_owner = None
+            self._body_progress_stalled_ticks = 0
+        else:
+            new_owner = body_progress.owner_id != self._body_progress_owner
+            revision_advanced = (
+                body_progress.owner_id == self._body_progress_owner
+                and body_progress.progress_revision
+                    > self._body_progress_revision
+            )
+            body_action_advanced = (
+                body_progress.owner_id == self._body_progress_owner
+                and body_progress.action_index is not None
+                and body_progress.action_index
+                    > self._body_progress_action_index
+            )
+            if (new_owner or revision_advanced or body_action_advanced
+                    or route_progressed or action_progressed):
+                self._body_progress_stalled_ticks = 0
+            else:
+                self._body_progress_stalled_ticks += 1
+            self._body_progress_owner = body_progress.owner_id
+            self._body_progress_revision = body_progress.progress_revision
+            self._body_progress_action_index = (
+                -1 if body_progress.action_index is None
+                else body_progress.action_index
+            )
         if ((e.wait_frames > 40 and not terminal)
-                or self._still_ticks >= 100):
+                or self._still_ticks >= 100
+                or (body_progress is not None
+                    and body_progress.stall_limit_ticks is not None
+                    and self._body_progress_stalled_ticks
+                        > body_progress.stall_limit_ticks)):
             self._record(e.tick, "I4", f"unbounded wait in {e.state}/{e.reason}")
         if terminal and (e.source_bound or owners):
             self._terminal_owned_ticks += 1

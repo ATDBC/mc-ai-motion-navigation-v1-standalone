@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from dataclasses import replace
+import ast
+from pathlib import Path
 import unittest
 
 from mc2p.contracts.action_v1 import MovementV1
@@ -25,6 +27,23 @@ from tests.motion_nav.test_navigation_session import (
 
 
 class ExecutionSupervisorTests(unittest.TestCase):
+    def test_supervisor_does_not_import_concrete_body_controllers(self):
+        source = Path("mc2p/motion_nav/execution_supervisor.py").read_text(
+            encoding="utf-8",
+        )
+        tree = ast.parse(source)
+        concrete = {
+            "ActionRouteExecutor", "LandingEdgeProbe",
+            "MotionRouteCoordinator",
+        }
+        imported = {
+            alias.name
+            for node in ast.walk(tree)
+            if isinstance(node, ast.ImportFrom)
+            for alias in node.names
+        }
+        self.assertEqual(imported.intersection(concrete), set())
+
     def _control(self):
         world = _known_world({
             (x, 0, 0): BlockGeometry.full_cube("minecraft:stone")

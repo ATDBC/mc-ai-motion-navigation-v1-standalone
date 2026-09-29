@@ -325,6 +325,7 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                 ),
                 support_fraction=diagnostics.support_fraction,
                 illegal_transition_count=diagnostics.illegal_transition_count,
+                body_control_progress=diagnostics.body_control_progress,
             )
             monitor.check(evidence)
             row = {
@@ -380,6 +381,21 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                 "support_fraction": diagnostics.support_fraction,
                 "transition_count": diagnostics.transition_count,
                 "illegal_transition_count": diagnostics.illegal_transition_count,
+                "body_control_progress": (
+                    None if diagnostics.body_control_progress is None else {
+                        "owner_id": diagnostics.body_control_progress.owner_id,
+                        "phase_label": diagnostics.body_control_progress.phase_label,
+                        "progress_revision":
+                            diagnostics.body_control_progress.progress_revision,
+                        "action_index":
+                            diagnostics.body_control_progress.action_index,
+                        "last_confirmed_application_tick":
+                            diagnostics.body_control_progress
+                                .last_confirmed_application_tick,
+                        "stall_limit_ticks":
+                            diagnostics.body_control_progress.stall_limit_ticks,
+                    }
+                ),
                 "retry_round_failures": diagnostics.retry_round_failures,
                 "retry_total_failures": diagnostics.retry_total_failures,
                 "retry_approved_round": diagnostics.retry_approved_round,

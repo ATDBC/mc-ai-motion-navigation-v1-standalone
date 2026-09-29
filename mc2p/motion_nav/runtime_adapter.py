@@ -176,7 +176,14 @@ class NavigationObservationAdapter:
         stamp = self._latest_frame.body.stamp
         self._world.observe_blocks(stamp, blocks)
         self._world.confirm_air(stamp, air)
-        self._latest_frame = replace(self._latest_frame, world=self._world.view())
+        # The reset observation and the historical test facts form one initial
+        # planning baseline.  Its reset-time changed cells predate every route
+        # and must not invalidate the first route built from that same baseline.
+        self._latest_frame = replace(
+            self._latest_frame,
+            world=self._world.view(),
+            changed_cells=(),
+        )
         return self._latest_frame
 
     def air_request(self, positions: tuple[BlockPos, ...], *, max_positions: int = 128,

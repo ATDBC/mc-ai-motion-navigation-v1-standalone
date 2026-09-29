@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from mc2p.contracts.common import ContractViolation
+from mc2p.motion_nav.body_control import HandoffDisposition, HandoffEvidence
 
 
 class NavigationSessionState(StrEnum):
@@ -183,17 +184,41 @@ class NavigationLifecycle:
     transition_count: int = 0
     illegal_transition_count: int = 0
 
-    def record(self, event: NavigationSessionEvent) -> SessionEventPolicy:
+    def admit_event(self, event: NavigationSessionEvent) -> SessionEventPolicy:
+        """Classify one event before any session-owned state is changed."""
         if type(event) is not NavigationSessionEvent:
             raise ContractViolation("navigation lifecycle event must be typed")
         self.last_event = event
         return SESSION_EVENT_TABLE[(self.state, event)]
 
     def transition(
-        self, action: NavigationTransitionAction,
+        self, action: NavigationTransitionAction, *,
+        handoff: HandoffEvidence | None = None,
     ) -> NavigationTransition:
         if type(action) is not NavigationTransitionAction:
             raise ContractViolation("navigation transition action must be typed")
+        expected_handoff = {
+            NavigationTransitionAction.RESUME_EXECUTION_AFTER_HANDOFF:
+                HandoffDisposition.TRANSFERABLE,
+            NavigationTransitionAction.REPLAN_AFTER_HANDOFF:
+                HandoffDisposition.QUIESCENT,
+        }.get(action)
+        if expected_handoff is not None and (
+                type(handoff) is not HandoffEvidence
+                or handoff.disposition is not expected_handoff):
+            self.illegal_transition_count += 1
+            label = (
+                "transferable handoff" if expected_handoff is
+                HandoffDisposition.TRANSFERABLE else "quiescent handoff"
+            )
+            raise ContractViolation(
+                f"navigation transition requires {label} evidence"
+            )
+        if expected_handoff is None and handoff is not None:
+            self.illegal_transition_count += 1
+            raise ContractViolation(
+                "navigation transition does not accept handoff evidence"
+            )
         previous = self.state
         current = SESSION_TRANSITION_TABLE.get((previous, action))
         if current is None:

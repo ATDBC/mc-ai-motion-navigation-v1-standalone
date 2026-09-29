@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.action_preconditions import AcquisitionGrant
 from mc2p.motion_nav.world_model import BlockPos
 
@@ -29,12 +30,23 @@ class PlanningPipelineState:
     snapshot: Any | None = None
     snapshot_request_id: str | None = None
     changed_cells: set[BlockPos] = field(default_factory=set)
+    replacement_failure: "ReplacementPlanningFailure | None" = None
 
     def clear(self) -> None:
         self.builder = None
         self.snapshot = None
         self.snapshot_request_id = None
         self.changed_cells.clear()
+        self.replacement_failure = None
+
+
+@dataclass(frozen=True, slots=True)
+class ReplacementPlanningFailure:
+    reason: str
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.reason, str) or not self.reason:
+            raise ContractViolation("replacement planning failure needs a reason")
 
 
 @dataclass(slots=True)
