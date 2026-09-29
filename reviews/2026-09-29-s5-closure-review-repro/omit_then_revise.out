@@ -1,0 +1,15 @@
+direct_drop_2          omit@3 only              -> failed/input_lost []  route-release responsibility verdicts={'ambiguous': 11, 'clear': 1}
+direct_drop_2          goal_back@5 only         -> success/goal_state_satisfied []  route-release responsibility verdicts={'clear': 1}
+direct_drop_2          omit@3 + goal_back@5     -> planning/replacement_route_pending ['I4']  route-release responsibility verdicts={'ambiguous': 51, 'clear': 1}
+direct_drop_2          omit@6 + goal_back@9     -> planning/replacement_route_pending ['I4']  route-release responsibility verdicts={'ambiguous': 54, 'clear': 1}
+direct_drop_2          omit@10 + goal_back@14   -> success/goal_state_satisfied []  route-release responsibility verdicts={'clear': 1}
+terrace_two_ledges     omit@3 only              -> success/goal_state_satisfied []  route-release responsibility verdicts={'clear': 1}
+terrace_two_ledges     goal_back@5 only         -> success/goal_state_satisfied []  route-release responsibility verdicts={'clear': 1}
+terrace_two_ledges     omit@3 + goal_back@5     -> planning/replacement_route_pending ['I4']  route-release responsibility verdicts={'ambiguous': 51, 'clear': 1}
+terrace_two_ledges     omit@6 + goal_back@9     -> planning/replacement_route_pending ['I4']  route-release responsibility verdicts={'ambiguous': 54, 'clear': 1}
+terrace_two_ledges     omit@10 + goal_back@14   -> success/goal_state_satisfied []  route-release responsibility verdicts={'clear': 1}
+far_landing_L_walkway  omit@3 only              -> success/goal_state_satisfied []  route-release responsibility verdicts={'clear': 1}
+far_landing_L_walkway  goal_back@5 only         -> success/goal_state_satisfied []  route-release responsibility verdicts={'clear': 1}
+far_landing_L_walkway  omit@3 + goal_back@5     -> executing/executing_safe_prefix_during_replan ['I4']  route-release responsibility verdicts={}
+far_landing_L_walkway  omit@6 + goal_back@9     -> executing/executing_safe_prefix_during_replan ['I4']  route-release responsibility verdicts={}
+far_landing_L_walkway  omit@10 + goal_back@14   -> executing/executing_safe_prefix_during_replan ['I4']  route-release responsibility verdicts={}

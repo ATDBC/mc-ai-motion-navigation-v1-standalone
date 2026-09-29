@@ -1,0 +1,148 @@
+==== revise_to_unresolved_goal
+goal=(0.5, 62.0, 30.5) revise@5   accepted in executing -> failed/information_out_of_range violations=[]
+goal=(0.5, 62.0, 30.5) revise@15  accepted in needs_information -> failed/information_out_of_range violations=[]
+goal=(0.5, 62.0, 30.5) revise@25  accepted in needs_information -> failed/information_out_of_range violations=[]
+goal=(0.5, 62.0, 30.5) revise@34  accepted in needs_information -> failed/information_out_of_range violations=[]
+goal=(0.5, 62.0, 30.5) revise@38  accepted in executing -> failed/information_out_of_range violations=[]
+goal=(0.5, 62.0, 30.5) revise@45  accepted in executing -> failed/information_out_of_range violations=[]
+goal=(0.5, 62.0, 30.5) revise@60  not fired -> success/goal_state_satisfied violations=[]
+goal=(1.0, 62.0, 4.5) revise@5   accepted in executing -> failed/goal_surface_unavailable violations=[]
+goal=(1.0, 62.0, 4.5) revise@15  accepted in needs_information -> failed/goal_surface_unavailable violations=[]
+goal=(1.0, 62.0, 4.5) revise@25  accepted in needs_information -> failed/goal_surface_unavailable violations=[]
+goal=(1.0, 62.0, 4.5) revise@34  accepted in needs_information -> failed/goal_surface_unavailable violations=[]
+goal=(1.0, 62.0, 4.5) revise@38  accepted in executing -> failed/goal_surface_unavailable violations=[]
+goal=(1.0, 62.0, 4.5) revise@45  accepted in executing -> failed/goal_surface_unavailable violations=[]
+goal=(1.0, 62.0, 4.5) revise@60  not fired -> success/goal_state_satisfied violations=[]
+==== goal_flapping 3
+failed acquisition_wait_capacity_exhausted 123 (0.49, 64.0, 2.51) []
+revision (12, (-0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (15, (0.5, 62.0, 4.5), ('stopping', 'edge_probe_stopping'), 'accepted')
+revision (18, (-0.5, 62.0, 4.5), ('stopping', 'edge_probe_stopping'), 'accepted')
+revision (21, (0.5, 62.0, 4.5), ('planning', 'edge_probe_mode_exit_pending'), 'accepted')
+revision (24, (-0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (27, (0.5, 62.0, 4.5), ('planning', 'edge_probe_mode_exit_pending'), 'accepted')
+revision (30, (-0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (33, (0.5, 62.0, 4.5), ('planning', 'edge_probe_mode_exit_pending'), 'accepted')
+revision (36, (-0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (39, (0.5, 62.0, 4.5), ('stopping', 'edge_probe_stopping'), 'accepted')
+revision (42, (-0.5, 62.0, 4.5), ('stopping', 'edge_probe_stopping'), 'accepted')
+revision (45, (0.5, 62.0, 4.5), ('stopping', 'edge_probe_stopping'), 'accepted')
+revision (48, (-0.5, 62.0, 4.5), ('stopping', 'edge_probe_stopping'), 'accepted')
+revision (51, (0.5, 62.0, 4.5), ('executing', 'tracking_fixed_route'), 'accepted')
+revision (54, (-0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (57, (0.5, 62.0, 4.5), ('stopping', 'edge_probe_stopping'), 'accepted')
+revision (60, (-0.5, 62.0, 4.5), ('stopping', 'edge_probe_stopping'), 'accepted')
+revision (63, (0.5, 62.0, 4.5), ('executing', 'tracking_fixed_route'), 'accepted')
+revision (66, (-0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (69, (0.5, 62.0, 4.5), ('stopping', 'edge_probe_stopping'), 'accepted')
+revision (72, (-0.5, 62.0, 4.5), ('stopping', 'edge_probe_stopping'), 'accepted')
+revision (75, (0.5, 62.0, 4.5), ('executing', 'tracking_fixed_route'), 'accepted')
+revision (78, (-0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (81, (0.5, 62.0, 4.5), ('stopping', 'edge_probe_stopping'), 'accepted')
+revision (84, (-0.5, 62.0, 4.5), ('planning', 'edge_probe_mode_exit_pending'), 'accepted')
+revision (87, (0.5, 62.0, 4.5), ('executing', 'tracking_fixed_route'), 'accepted')
+revision (90, (-0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (93, (0.5, 62.0, 4.5), ('stopping', 'recovery_unresolved'), 'accepted')
+revision (96, (-0.5, 62.0, 4.5), ('stopping', 'recovery_unresolved'), 'accepted')
+revision (99, (0.5, 62.0, 4.5), ('stopping', 'recovery_unresolved'), 'accepted')
+revision (102, (-0.5, 62.0, 4.5), ('stopping', 'edge_probe_stopping'), 'accepted')
+==== goal_flapping 5
+failed acquisition_wait_capacity_exhausted 114 (-0.45, 64.0, 2.51) []
+revision (12, (-0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (17, (0.5, 62.0, 4.5), ('stopping', 'edge_probe_stopping'), 'accepted')
+revision (22, (-0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (27, (0.5, 62.0, 4.5), ('planning', 'edge_probe_stopped_for_replan'), 'accepted')
+revision (32, (-0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (37, (0.5, 62.0, 4.5), ('executing', 'tracking_fixed_route'), 'accepted')
+revision (42, (-0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (47, (0.5, 62.0, 4.5), ('executing', 'tracking_fixed_route'), 'accepted')
+revision (52, (-0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (57, (0.5, 62.0, 4.5), ('executing', 'tracking_fixed_route'), 'accepted')
+revision (62, (-0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (67, (0.5, 62.0, 4.5), ('stopping', 'edge_probe_stopping'), 'accepted')
+revision (72, (-0.5, 62.0, 4.5), ('planning', 'edge_probe_mode_exit_pending'), 'accepted')
+revision (77, (0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (82, (-0.5, 62.0, 4.5), ('stopping', 'edge_probe_stopping'), 'accepted')
+revision (87, (0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (92, (-0.5, 62.0, 4.5), ('planning', 'edge_probe_mode_exit_pending'), 'accepted')
+==== goal_flapping 8
+failed acquisition_wait_capacity_exhausted 180 (0.45, 64.0, 2.5) []
+revision (12, (-0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (20, (0.5, 62.0, 4.5), ('planning', 'edge_probe_stopped_for_replan'), 'accepted')
+revision (28, (-0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (36, (0.5, 62.0, 4.5), ('stopping', 'edge_probe_stopping'), 'accepted')
+revision (44, (-0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (52, (0.5, 62.0, 4.5), ('planning', 'edge_probe_mode_exit_pending'), 'accepted')
+revision (60, (-0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (68, (0.5, 62.0, 4.5), ('stopping', 'edge_probe_stopping'), 'accepted')
+revision (76, (-0.5, 62.0, 4.5), ('executing', 'tracking_fixed_route'), 'accepted')
+revision (84, (0.5, 62.0, 4.5), ('executing', 'tracking_fixed_route'), 'accepted')
+revision (92, (-0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (100, (0.5, 62.0, 4.5), ('planning', 'edge_probe_mode_exit_pending'), 'accepted')
+revision (108, (-0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (116, (0.5, 62.0, 4.5), ('stopping', 'edge_probe_stopping'), 'accepted')
+revision (124, (-0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (132, (0.5, 62.0, 4.5), ('executing', 'tracking_fixed_route'), 'accepted')
+revision (140, (-0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (148, (0.5, 62.0, 4.5), ('executing', 'tracking_fixed_route'), 'accepted')
+revision (156, (-0.5, 62.0, 4.5), ('stopping', 'recovery_unresolved'), 'accepted')
+==== goal_flapping 13
+failed motion_unsolvable:needs_state 129 (0.37, 64.0, 2.48) []
+revision (12, (-0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (25, (0.5, 62.0, 4.5), ('executing', 'tracking_fixed_route'), 'accepted')
+revision (38, (-0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (51, (0.5, 62.0, 4.5), ('executing', 'tracking_fixed_route'), 'accepted')
+revision (64, (-0.5, 62.0, 4.5), ('executing', 'executing_safe_prefix_during_handoff'), 'accepted')
+revision (77, (0.5, 62.0, 4.5), ('needs_information', <ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED: 'landing_lower_evidence_required'>), 'accepted')
+revision (90, (-0.5, 62.0, 4.5), ('planning', 'edge_probe_stopped_for_replan'), 'accepted')
+revision (103, (0.5, 62.0, 4.5), ('stopping', 'successor_route_waiting_for_motion'), 'accepted')
+==== trace_revision unknown
+failed information_out_of_range 68 (0.5, 64.0, 1.14) []
+2 (0.5, 64.0, 0.6) executing tracking_fixed_route ('route_executor',) gen 1 driver running ground bound
+6 (0.5, 64.0, 1.14) stopping executing_safe_prefix_during_replan ('route_executor',) gen 2 driver stopping ground bound
+8 (0.5, 64.0, 1.14) needs_information goal_surface_requires_information () gen 2 driver running ground bound
+49 (0.5, 64.0, 1.14) failed information_out_of_range () gen 2 driver failed ground unbound
+==== trace_revision boundary
+failed goal_surface_unavailable 27 (0.5, 64.0, 1.14) []
+2 (0.5, 64.0, 0.6) executing tracking_fixed_route ('route_executor',) gen 1 driver running ground bound
+6 (0.5, 64.0, 1.14) stopping executing_safe_prefix_during_replan ('route_executor',) gen 2 driver stopping ground bound
+8 (0.5, 64.0, 1.14) failed goal_surface_unavailable () gen 2 driver failed ground unbound
+==== knockback +0.3@35
+failed motion_unsolvable:needs_state 68 (0.48, 62.0, 3.61) damage 0.0 []
+2 (0.5, 64.0, 0.6) executing tracking_fixed_route ('route_executor',) ground driver running bound ()
+11 (0.53, 64.0, 2.33) needs_information landing_lower_evidence_required ('landing_edge_probe', 'route_executor') ground driver running bound ()
+35 (0.48, 64.0, 2.86) executing awaiting_verified_motion ('landing_edge_probe', 'route_executor') ground driver running bound ()
+37 (0.48, 64.0, 3.32) stopping edge_probe_stopping ('landing_edge_probe',) ground driver stopping bound ()
+38 (0.48, 63.92, 3.32) stopping edge_probe_stopping ('landing_edge_probe',) AIR driver stopping bound ()
+44 (0.48, 62.0, 3.56) stopping edge_probe_stopping ('landing_edge_probe',) ground driver stopping bound ()
+48 (0.48, 62.0, 3.61) stopping motion_unsolvable:needs_state () ground driver stopping bound ()
+49 (0.48, 62.0, 3.61) failed motion_unsolvable:needs_state () ground driver failed unbound ()
+==== knockback drop5 -0.3@47
+failed verified_exit_not_observed 77 (0.48, 53.0, 1.35) damage 8.0 [(57, 'I3', 'observed damage has no authorized commitment')]
+2 (0.5, 64.0, 0.6) executing tracking_fixed_route ('route_executor',) ground driver running bound ()
+11 (0.53, 64.0, 2.33) needs_information landing_lower_evidence_required ('landing_edge_probe', 'route_executor') ground driver running bound ()
+==== extended A B C D E
+A far_landing_L_walkway revise: runs=60 {'terminal': 60, 'failed/goal_surface_unavailable': 60}
+A far_landing_L_walkway cancel: runs=60 {'terminal': 60, 'cancelled/harness_cancel': 60}
+A terrace_two_ledges revise: runs=75 {'terminal': 75, 'failed/goal_surface_unavailable': 75}
+A terrace_two_ledges cancel: runs=75 {'terminal': 75, 'cancelled/harness_cancel': 75}
+A step_down_after_walk revise: runs=60 {'terminal': 60, 'success/goal_state_satisfied': 60}
+A step_down_after_walk cancel: runs=60 {'terminal': 60, 'cancelled/harness_cancel': 51, 'success/goal_state_satisfied': 9}
+B direct_drop_2 revise: runs=36 {'terminal': 36, 'failed/motion_unsolvable:no_solution_within_search': 4, 'success/goal_state_satisfied': 12, 'failed/input_lost': 20}
+B direct_drop_2 cancel: runs=36 {'terminal': 36, 'cancelled/harness_cancel': 36}
+B direct_drop_5_budget_2 revise: runs=36 {'terminal': 36, 'failed/motion_unsolvable:no_solution_within_search': 4, 'success/goal_state_satisfied': 12, 'failed/input_lost': 20}
+B direct_drop_5_budget_2 cancel: runs=36 {'terminal': 36, 'cancelled/harness_cancel': 36}
+B direct_drop_2 omitted receipts without interruption: runs=54 {'terminal': 54, 'failed/input_lost': 24, 'success/goal_state_satisfied': 30}
+B direct_drop_5_budget_2 omitted receipts without interruption: runs=54 {'terminal': 54, 'failed/input_lost': 18, 'success/goal_state_satisfied': 36}
+C direct_drop_2 one lost movement frame: runs=22 {'terminal': 22, 'success/goal_state_satisfied': 22}
+C direct_drop_5_budget_2 one lost movement frame: runs=22 {'terminal': 22, 'success/goal_state_satisfied': 22}
+D direct_drop_2 knockback: runs=44 {'terminal': 44, 'success/goal_state_satisfied': 17, 'failed/edge_probe_acquisition_timeout': 4, 'failed/motion_unsolvable:needs_state': 2, 'failed/verified_exit_not_observed': 16, 'failed/ordinary_ground_speed_outside_model': 5}
+D direct_drop_5_budget_2 knockback: runs=44 {'terminal': 44, 'success/goal_state_satisfied': 15, 'failed/edge_probe_acquisition_timeout': 4, 'failed/motion_unsolvable:needs_state': 2, 'failed/verified_exit_not_observed': 23}
+     push@47:-0.3:failed/verified_exit_not_observed/I3
+     push@48:-0.3:failed/verified_exit_not_observed/I3
+     push@49:-0.3:failed/verified_exit_not_observed/I3
+E flap every 3 ticks (retries=0, final=(0.49, 64.0, 2.51)): runs=1 {'terminal': 1, 'failed/acquisition_wait_capacity_exhausted': 1}
+E flap every 5 ticks (retries=0, final=(-0.45, 64.0, 2.51)): runs=1 {'terminal': 1, 'failed/acquisition_wait_capacity_exhausted': 1}
+E flap every 8 ticks (retries=1, final=(0.5, 62.0, 4.46)): runs=1 {'terminal': 1, 'success/goal_state_satisfied': 1}
+E flap every 13 ticks (retries=2, final=(0.37, 64.0, 2.48)): runs=1 {'terminal': 1, 'failed/motion_unsolvable:needs_state': 1}
+REPROS_DONE

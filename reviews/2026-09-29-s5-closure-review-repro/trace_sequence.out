@@ -1,0 +1,39 @@
+==== direct_drop_2 omit_receipt@3 goal_back@5
+planning replacement_route_pending 400 (0.5, 64.0, 2.65) damage 0.0 [(118, 'I4', 'unbounded wait in planning/replacement_route_pending')]
+2 (0.5, 64.0, 0.6) executing tracking_fixed_route ('route_executor',) ground driver running bound v=1.07
+6 (0.5, 64.0, 1.33) executing executing_safe_prefix_during_replan ('route_executor',) ground driver running bound v=2.24
+17 (0.5, 64.0, 2.62) stopping route_release_waiting_for_evidence ('route_executor',) ground driver stopping bound v=0.33
+68 (0.5, 64.0, 2.65) planning replacement_route_pending () ground driver running bound v=0.00
+==== far_landing_L_walkway omit_receipt@3 goal_back@5
+executing executing_safe_prefix_during_replan 400 (6.54, 64.0, 6.54) damage 0.0 [(167, 'I4', 'unbounded wait in executing/executing_safe_prefix_during_replan')]
+2 (0.5, 64.0, 0.6) executing tracking_fixed_route ('route_executor',) ground driver running bound v=1.07
+6 (0.5, 64.0, 1.33) executing executing_safe_prefix_during_replan ('route_executor',) ground driver running bound v=2.24
+==== direct_drop_2 external_push@8
+failed ordinary_ground_speed_outside_model 28 (0.5, 64.0, 2.67) damage 0.0 []
+2 (0.5, 64.0, 0.6) executing tracking_fixed_route ('route_executor',) ground driver running bound v=1.07
+9 (0.5, 64.0, 2.17) failed ordinary_ground_speed_outside_model () ground driver failed unbound v=4.54
+==== direct_drop_2 external_push@8 external_push@17 external_push@32
+failed ordinary_ground_speed_outside_model 30 (0.5, 62.0, 3.36) damage 0.0 [(23, 'I1', 'airborne without a bound body controller'), (29, 'I2', 'unowned fall of 2.00 blocks')]
+2 (0.5, 64.0, 0.6) executing tracking_fixed_route ('route_executor',) ground driver running bound v=1.07
+9 (0.5, 64.0, 2.17) failed ordinary_ground_speed_outside_model () ground driver failed unbound v=4.54
+23 (0.5, 63.92, 3.31) failed ordinary_ground_speed_outside_model () AIR driver failed unbound v=0.16
+29 (0.5, 62.0, 3.35) failed ordinary_ground_speed_outside_model () ground driver failed unbound v=0.09
+==== direct_drop_2 omit_receipt@5 external_push_backward@36
+failed verified_exit_not_observed 88 (0.48, 64.0, 3.05) damage 0.0 [(68, 'I10', 'terminal navigation retained its input source or body owner')]
+2 (0.5, 64.0, 0.6) executing tracking_fixed_route ('route_executor',) ground driver running bound v=1.07
+11 (0.53, 64.0, 2.33) needs_information landing_lower_evidence_required ('landing_edge_probe', 'route_executor') ground driver running bound v=1.63
+35 (0.48, 64.0, 2.86) executing awaiting_verified_motion ('landing_edge_probe', 'route_executor') ground driver running bound v=0.00
+36 (0.48, 64.0, 2.96) executing submit_verified_command ('route_executor',) ground driver running bound v=4.93
+48 (0.48, 64.0, 2.99) failed verified_exit_not_observed ('route_executor',) ground driver stopping bound v=0.58
+69 (0.48, 64.0, 3.05) failed verified_exit_not_observed () ground driver failed unbound v=0.00
+==== direct_drop_5_budget_2 late_input@2 external_push_backward@27 external_push@74
+success goal_state_satisfied 93 (0.54, 59.0, 5.03) damage 2.0 [(74, 'I9', 'complete violates full GoalState')]
+2 (0.5, 64.0, 0.5) executing tracking_fixed_route ('route_executor',) ground driver running bound v=0.00
+12 (0.53, 64.0, 2.33) needs_information landing_lower_evidence_required ('landing_edge_probe', 'route_executor') ground driver running bound v=1.63
+42 (0.54, 64.0, 2.87) executing awaiting_verified_motion ('landing_edge_probe', 'route_executor') ground driver running bound v=0.00
+43 (0.54, 64.0, 2.97) executing submit_verified_command ('route_executor',) ground driver running bound v=1.07
+51 (0.54, 63.92, 3.3) executing submit_verified_command ('route_executor',) AIR driver running bound v=0.00
+62 (0.54, 59.0, 3.3) executing submit_verified_command ('route_executor',) ground driver running bound v=0.00
+64 (0.54, 59.0, 3.55) executing tracking_fixed_route ('route_executor',) ground driver running bound v=1.65
+68 (0.54, 59.0, 4.25) executing goal_braking ('route_executor',) ground driver running bound v=1.22
+74 (0.54, 59.0, 4.37) complete goal_state_satisfied () ground driver success bound v=6.00

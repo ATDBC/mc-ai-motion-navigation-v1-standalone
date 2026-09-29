@@ -216,3 +216,8 @@
 
 [base]: https://github.com/ATDBC/mc-ai-motion-navigation-v1-standalone/tree/340cac6
 [ledger]: https://github.com/ATDBC/mc-ai-motion-navigation-v1-standalone/blob/340cac6/docs/motion_navigation/acceptance/defect-ledger.md
+
+
+## 后续
+
+对 `daa5cc4`（S5 关闭）的复核见 [第二十二轮评审](2026-09-29-s5-closure-review.md)。

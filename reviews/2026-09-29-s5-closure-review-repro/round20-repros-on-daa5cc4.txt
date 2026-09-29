@@ -1,0 +1,37 @@
+==== interrupt_late_family
+direct_drop_2            revise  runs=48 {'terminal': 48}
+direct_drop_2            cancel  runs=48 {'terminal': 48}
+direct_drop_5_budget_2   revise  runs=48 {'terminal': 48}
+direct_drop_5_budget_2   cancel  runs=48 {'terminal': 48}
+==== step_down_single_late
+approach 2: clean=success@49; single-late failures 0/47 ; every-command-late -> failed/input_lost@80 violations=[]
+approach 3: clean=success@56; single-late failures 0/54 ; every-command-late -> failed/input_lost@83 violations=[]
+approach 5: clean=success@63; single-late failures 0/61 ; every-command-late -> failed/input_lost@94 violations=[]
+==== constant_latency_livelock
+failed input_lost violations []
+72 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+73 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+74 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+75 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+76 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+77 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+78 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+79 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+80 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+81 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+82 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+83 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+84 (0.439, 65.0, 2.576) input_lost retries 2 fwd 0 sneak False
+==== first_dependency_change
+success 0
+(0, [((-1, 63, 0), 'block'), ((-1, 63, 1), 'block'), ((-1, 63, 2), 'block'), ((-1, 63, 3), 'block'), ((-1, 63, 4), 'block'), ((-1, 63, 5), 'block'), ((-1, 63, 6), 'block'), ((-1, 64, 0), 'block')], 63)
+==== cancel_then_late_inner 38
+cancelled harness_cancel 67 (0.48, 62.0, 3.61) []
+(34, ('executing', 'submit_verified_command', 'running', 'running', 'submit_verified_command', True))
+(37, ('stopping', 'complete_verified_landing_after_cancel', 'cancelling', 'recovering', 'complete_verified_landing_after_cancel', True))
+(38, ('stopping', 'awaiting_application', 'cancelling', 'recovering', 'awaiting_application', True))
+(39, ('stopping', 'awaiting_application', 'cancelling', 'recovering', 'awaiting_application', False))
+(40, ('stopping', 'recovery_application_unresolved', 'cancelling', 'recovering', 'recovery_application_unresolved', False))
+(41, ('stopping', 'retain_landing_responsibility', 'cancelling', 'recovering', 'retain_landing_responsibility', False))
+(45, ('stopping', 'retain_landing_responsibility', 'cancelling', 'recovering', 'retain_landing_responsibility', True))
+(46, ('cancelled', 'harness_cancel', None, None, 'cancelled', True))

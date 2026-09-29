@@ -1,0 +1,9 @@
+==== I13: goal_back@29 goal_out_of_range@38 (repo generator config, seed 46)
+illegal transition from stopping via begin_planning: navigation transition is not allowed: stopping + begin_planning | _transition:566 <- _advance_planning:3514 <- propose:2225 <- prepare_proposals:257 <- tick:200 <- run:271 <- run_sequence:244
+failed navigation_internal_contract_failure 59 (0.42, 64.0, 2.5) damage 0.0 [(40, 'I13', 'navigation attempted an illegal transition')]
+2 (0.5, 64.0, 0.6) executing tracking_fixed_route ('route_executor',) ground driver running bound v=1.07
+11 (0.53, 64.0, 2.33) needs_information landing_lower_evidence_required ('landing_edge_probe', 'route_executor') ground driver running bound v=1.63
+30 (0.48, 64.0, 2.83) stopping edge_probe_stopping ('landing_edge_probe',) ground driver stopping bound v=0.64
+38 (0.42, 64.0, 2.5) planning edge_probe_stopped_for_replan () ground driver running bound v=0.04
+39 (0.42, 64.0, 2.5) stopping edge_probe_mode_exit_pending () ground driver stopping bound v=0.00
+40 (0.42, 64.0, 2.5) failed navigation_internal_contract_failure () ground driver failed unbound v=0.00

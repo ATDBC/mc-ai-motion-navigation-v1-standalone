@@ -1,0 +1,8 @@
+----------------------------------------------------------------------
+Ran 736 tests in 178.743s
+
+OK
+{"counts": {"positive_pass": 14, "known_failure": 0, "formal_receipt_new_failure": 0, "calibrated_input_new_failure": 0, "unexpected": 0}, "outcome_counts": {"task_success": 13, "bounded_safe_failure": 1, "unexpected_result": 0}, "elapsed_seconds": 14.119712687999993, "output": "/tmp/claude-0/-home-user-mc-ai-motion-navigation-v1-standalone/7b6c23a8-548e-536b-b677-503d1715db15/scratchpad/simout22/smoke"}
+{"schema_version": "mc2p.navigation-seed-scan-result.v2", "counts": {"runs": 200, "within_declared_results": 200, "outside_declared_results": 0, "task_success": 198, "bounded_safe_failure": 2, "unexpected_result": 0}, "elapsed_seconds": 154.889638241, "output": "/tmp/claude-0/-home-user-mc-ai-motion-navigation-v1-standalone/7b6c23a8-548e-536b-b677-503d1715db15/scratchpad/simout22/seeds"}
+{"terminal": 192}
+{"accepted": 40}

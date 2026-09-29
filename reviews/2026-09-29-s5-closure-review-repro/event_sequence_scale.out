@@ -1,0 +1,40 @@
+tally ('repeat', 'direct_drop_2', 'FAIL') 9
+tally ('repeat', 'direct_drop_2', 'ok') 241
+tally ('repeat', 'direct_drop_5_budget_2', 'FAIL') 11
+tally ('repeat', 'direct_drop_5_budget_2', 'ok') 239
+tally ('repeat', 'far_landing_L_walkway', 'FAIL') 29
+tally ('repeat', 'far_landing_L_walkway', 'ok') 221
+tally ('repeat', 'terrace_two_ledges', 'FAIL') 11
+tally ('repeat', 'terrace_two_ledges', 'ok') 239
+tally ('repo', 'direct_drop_2', 'FAIL') 2
+tally ('repo', 'direct_drop_2', 'ok') 248
+tally ('repo', 'direct_drop_5_budget_2', 'FAIL') 6
+tally ('repo', 'direct_drop_5_budget_2', 'ok') 244
+failing sequences: 68
+  repeat seed=5 far_landing_L_walkway: shrunk to [('omit_receipt', 3), ('external_push_backward', 27)] -> failed/ordinary_ground_speed_outside_model/I10
+  repeat seed=9 far_landing_L_walkway: shrunk to [('lose_arbitration', 1), ('external_push_backward', 91)] -> failed/verified_exit_not_observed/I3
+  repeat seed=16 far_landing_L_walkway: shrunk to [('omit_receipt', 3), ('goal_back', 5)] -> executing/executing_safe_prefix_during_replan/I4
+  repeat seed=17 far_landing_L_walkway: shrunk to [('lose_arbitration', 1), ('external_push', 90)] -> failed/verified_exit_not_observed/I3
+  repo seed=19 direct_drop_5_budget_2: shrunk to [('external_push_backward', 47)] -> failed/verified_exit_not_observed/I3
+  repeat seed=22 far_landing_L_walkway: shrunk to [('external_push', 31), ('external_push', 52)] -> failed/ordinary_ground_speed_outside_model/I1,I2,I3
+  repeat seed=25 direct_drop_2: shrunk to [('omit_receipt', 5), ('external_push_backward', 36)] -> failed/verified_exit_not_observed/I10
+  repeat seed=25 direct_drop_5_budget_2: shrunk to [('omit_receipt', 10), ('external_push_backward', 36)] -> failed/verified_exit_not_observed/I10
+  repeat seed=25 far_landing_L_walkway: shrunk to [('external_push_backward', 90)] -> failed/verified_exit_not_observed/I3
+  repeat seed=25 terrace_two_ledges: shrunk to [('omit_receipt', 7), ('external_push_backward', 36)] -> failed/verified_exit_not_observed/I10
+  repeat seed=33 far_landing_L_walkway: shrunk to [('external_push', 89)] -> failed/verified_exit_not_observed/I3
+  repo seed=46 direct_drop_2: shrunk to [('goal_back', 29), ('goal_out_of_range', 38)] -> failed/navigation_internal_contract_failure/I13
+  repo seed=46 direct_drop_5_budget_2: shrunk to [('goal_back', 29), ('goal_out_of_range', 38)] -> failed/navigation_internal_contract_failure/I13
+  repeat seed=50 direct_drop_2: shrunk to [('external_push', 8), ('external_push', 17), ('external_push', 32)] -> failed/ordinary_ground_speed_outside_model/I1,I2
+  repeat seed=50 direct_drop_5_budget_2: shrunk to [('external_push', 36), ('external_push', 40)] -> failed/verified_exit_not_observed/I3
+  repeat seed=50 far_landing_L_walkway: shrunk to [('external_push', 29), ('external_push', 38)] -> failed/ordinary_ground_speed_outside_model/I1,I2,I3
+  repo seed=72 direct_drop_5_budget_2: shrunk to [('external_push_backward', 47)] -> failed/verified_exit_not_observed/I3
+  repeat seed=73 far_landing_L_walkway: shrunk to [('external_push', 13), ('omit_receipt', 13)] -> failed/ordinary_ground_speed_outside_model/I10
+  repeat seed=73 terrace_two_ledges: shrunk to [('omit_receipt', 13), ('external_push', 36)] -> failed/verified_exit_not_observed/I10
+  repeat seed=85 direct_drop_2: shrunk to [('remove_landing_support', 2), ('omit_receipt', 10), ('goal_out_of_range', 12)] -> failed/information_out_of_range/I4
+  repeat seed=86 direct_drop_5_budget_2: shrunk to [('omit_receipt', 10), ('external_push_backward', 36)] -> failed/verified_exit_not_observed/I10
+  repeat seed=86 far_landing_L_walkway: shrunk to [('external_push_backward', 38), ('external_push_backward', 39)] -> failed/ordinary_ground_speed_outside_model/I3
+  repeat seed=105 far_landing_L_walkway: shrunk to [('external_push_backward', 1), ('external_push_backward', 28), ('goal_back', 28)] -> failed/ordinary_ground_speed_outside_model/I10
+  repeat seed=105 terrace_two_ledges: shrunk to [('external_push_backward', 1), ('goal_back', 16), ('external_push_backward', 28)] -> failed/navigation_internal_contract_failure/I13
+  repo seed=109 direct_drop_2: shrunk to [('late_input', 2), ('omit_receipt', 6), ('external_push_backward', 37)] -> failed/verified_exit_not_observed/I10
+  repo seed=109 direct_drop_5_budget_2: shrunk to [('late_input', 2), ('external_push_backward', 27), ('external_push', 74)] -> success/goal_state_satisfied/I9
+(stopped by the reviewer after 26 shrunk examples; the tallies above cover all 1500 sequences)
