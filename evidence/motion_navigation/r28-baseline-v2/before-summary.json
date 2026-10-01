@@ -1,0 +1,111 @@
+{
+  "schema_version": "mc2p.navigation-product-run.v1",
+  "elapsed_seconds": 218.27174090000335,
+  "groups": [
+    {
+      "group": "point-normal",
+      "tasks": 200,
+      "success": 17,
+      "exceptions": 0,
+      "insufficient_evidence": 160,
+      "safety_violation_tasks": 0,
+      "arrival_ticks_p95": 74,
+      "first_movement_ticks_p95": 3,
+      "planning_requests": 40,
+      "zero_displacement_ticks": 0,
+      "controller_switches": 0
+    },
+    {
+      "group": "point-late",
+      "tasks": 200,
+      "success": 17,
+      "exceptions": 0,
+      "insufficient_evidence": 160,
+      "safety_violation_tasks": 0,
+      "arrival_ticks_p95": 93,
+      "first_movement_ticks_p95": 3,
+      "planning_requests": 40,
+      "zero_displacement_ticks": 0,
+      "controller_switches": 0
+    },
+    {
+      "group": "height-normal",
+      "tasks": 200,
+      "success": 200,
+      "exceptions": 0,
+      "insufficient_evidence": 0,
+      "safety_violation_tasks": 0,
+      "arrival_ticks_p95": 42,
+      "first_movement_ticks_p95": 1,
+      "planning_requests": 200,
+      "zero_displacement_ticks": 0,
+      "controller_switches": 0
+    },
+    {
+      "group": "height-late",
+      "tasks": 200,
+      "success": 200,
+      "exceptions": 0,
+      "insufficient_evidence": 0,
+      "safety_violation_tasks": 0,
+      "arrival_ticks_p95": 50,
+      "first_movement_ticks_p95": 2,
+      "planning_requests": 200,
+      "zero_displacement_ticks": 0,
+      "controller_switches": 0
+    },
+    {
+      "group": "target-normal",
+      "tasks": 200,
+      "success": 134,
+      "exceptions": 0,
+      "insufficient_evidence": 0,
+      "safety_violation_tasks": 0,
+      "arrival_ticks_p95": 85,
+      "first_movement_ticks_p95": 3,
+      "planning_requests": 534,
+      "zero_displacement_ticks": 0,
+      "controller_switches": 334
+    },
+    {
+      "group": "target-late",
+      "tasks": 200,
+      "success": 134,
+      "exceptions": 0,
+      "insufficient_evidence": 0,
+      "safety_violation_tasks": 0,
+      "arrival_ticks_p95": 95,
+      "first_movement_ticks_p95": 3,
+      "planning_requests": 577,
+      "zero_displacement_ticks": 8,
+      "controller_switches": 286
+    },
+    {
+      "group": "drop-normal",
+      "tasks": 200,
+      "success": 200,
+      "exceptions": 0,
+      "insufficient_evidence": 0,
+      "safety_violation_tasks": 0,
+      "arrival_ticks_p95": 66,
+      "first_movement_ticks_p95": 3,
+      "planning_requests": 200,
+      "zero_displacement_ticks": 1716,
+      "controller_switches": 400
+    },
+    {
+      "group": "drop-late",
+      "tasks": 200,
+      "success": 189,
+      "exceptions": 0,
+      "insufficient_evidence": 0,
+      "safety_violation_tasks": 0,
+      "arrival_ticks_p95": 96,
+      "first_movement_ticks_p95": 3,
+      "planning_requests": 200,
+      "zero_displacement_ticks": 1744,
+      "controller_switches": 398
+    }
+  ],
+  "records": 1600
+}

@@ -1,7 +1,7 @@
 """Control-thread admission boundary for B04 background route candidates."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 import hashlib
 import json
@@ -43,7 +43,7 @@ from mc2p.motion_nav.known_map_planner import (
     SurfaceControlledDropEdge, SurfaceJumpGapEdge, SurfaceJumpUpEdge,
 )
 from mc2p.motion_nav.step_transition import StepEdge
-from mc2p.motion_nav.support_surfaces import SurfaceNodeId
+from mc2p.motion_nav.support_surfaces import SurfaceNodeId, standable_point_in_region
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.segment_entry import (
     SegmentEntryWindow, body_fits_segment_entry,
@@ -57,6 +57,8 @@ class AdmissionStatus(StrEnum):
 
 
 class AdmissionReason(StrEnum):
+    GOAL_STANDING_POINT_UNAVAILABLE = "goal_standing_point_unavailable"
+    GOAL_STANDING_POINT_NEEDS_INFORMATION = "goal_standing_point_needs_information"
     CANDIDATE_NOT_COMPLETE = "candidate_not_complete"
     PLANNING_REQUEST_REPLACED = "planning_request_replaced"
     WORLD_SESSION_CHANGED = "world_session_changed"
@@ -502,6 +504,7 @@ class RouteAdmitter:
         connection_length: float,
         connection_dependencies: tuple[BlockPos, ...],
         route_id: str,
+        terminal_target=None,
     ) -> ActionRoute | None:
         def entry_window(previous, next_node, transition) -> SegmentEntryWindow:
             if type(transition) is not MovementTransition:
@@ -631,7 +634,26 @@ class RouteAdmitter:
                 pending_nodes = [next_node]
                 pending_points = [RoutePoint(*next_node.position)]
                 pending_dependencies = set(next_node.dependencies)
+        if terminal_target is not None:
+            terminal = RoutePoint(*terminal_target.position)
+            last = pending_points[-1]
+            pending_dependencies.update(terminal_target.dependencies)
+            if math.dist((last.x, last.y, last.z), terminal_target.position) > 1.0e-6:
+                has_proof = any(canonical_surface_node_path(plan.surface_node_path)
+                                == tuple(node.node_id for node in pending_nodes)
+                                for plan in candidate.ground_traversal_plans)
+                if has_proof:
+                    # Preserve the proved trajectory; its final same-height
+                    # connection is a separate ordinary closed-loop walk.
+                    flush_walk()
+                    actions.append(WalkSegment(FixedRoute(f"{route_id}-goal-tail", (last, terminal)),
+                                               (candidate.path[-1].node_id,), terminal_target.dependencies))
+                else:
+                    pending_points.append(terminal)
         flush_walk()
+        if terminal_target is not None and actions:
+            actions[-1] = replace(actions[-1], dependencies=tuple(sorted(
+                set(actions[-1].dependencies) | set(terminal_target.dependencies))))
         return (ActionRoute(
             route_id, tuple(actions), candidate.goal_state,
             candidate.final_resources if candidate.final_resources is not None
@@ -738,8 +760,18 @@ class RouteAdmitter:
                 AdmissionReason.GROUND_TRAVERSAL_PROOF_MISSING,
             )
         route_id = self._surface_route_id(candidate)
+        terminal_target = None
+        if candidate.goal_state is not None:
+            terminal_target = standable_point_in_region(
+                frame.world, candidate.path[-1].surface, candidate.goal_state.region,
+                connection_from=candidate.path[-1].position)
+            if terminal_target.status is not QueryStatus.FEASIBLE:
+                return AdmissionResult(AdmissionStatus.REJECTED,
+                    AdmissionReason.GOAL_STANDING_POINT_NEEDS_INFORMATION if terminal_target.missing_cells
+                    else AdmissionReason.GOAL_STANDING_POINT_UNAVAILABLE,
+                    missing_cells=terminal_target.missing_cells)
         action_route = self._surface_action_route(
-            candidate, frame, connection_length, connection_dependencies, route_id,
+            candidate, frame, connection_length, connection_dependencies, route_id, terminal_target,
         )
         if action_route is None:
             return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.CANDIDATE_HAS_NO_ACTIONS)
@@ -769,11 +801,15 @@ class RouteAdmitter:
             {cell for node in corridor_nodes for cell in node.dependencies}
             | {cell for edge in corridor_segments for cell in edge.dependencies}
             | set(connection_dependencies)
+            | (set(terminal_target.dependencies) if terminal_target is not None
+               and corridor_nodes[-1].node_id == candidate.path[-1].node_id else set())
         ))
         full_length = connection_length + sum(
             math.dist(first.position, second.position)
             for first, second in zip(candidate.path, candidate.path[1:])
         )
+        if terminal_target is not None:
+            full_length += math.dist(candidate.path[-1].position, terminal_target.position)
         corridor = ExecutableCorridor(
             tuple(node.node_id for node in corridor_nodes), dependencies,
             connection_length + length, corridor_nodes[-1].node_id,
@@ -811,7 +847,8 @@ class ActiveRouteTracker:
         if type(changed_cells) is not tuple:
             raise ContractViolation("route tracker changes must be immutable")
         dependencies=(set(self.candidate.dependencies)
-                      | set(self.route.connection_dependencies))
+                      | set(self.route.connection_dependencies)
+                      | set(self.route.action_route.dependencies))
         self._invalidated.update(cell for cell in changed_cells if cell in dependencies)
 
     def update(self, progress_blocks: float) -> CorridorUpdate:
@@ -839,6 +876,8 @@ class ActiveRouteTracker:
             | {cell for edge in segments for cell in edge.dependencies}
             | (set(self.route.connection_dependencies)
                if remaining_connection>1e-9 else set())
+            | (set(self.route.action_route.actions[-1].dependencies)
+               if nodes[-1].node_id == self.candidate.path[-1].node_id else set())
         ))
         corridor=ExecutableCorridor(tuple(node.node_id for node in nodes),dependencies,
                                     remaining_connection+length,nodes[-1].node_id)

@@ -9,6 +9,8 @@ import gzip
 
 from tests.sim.product_metrics import extract_metrics, compare_metrics, tango_interval, sequential_verdict
 from scripts.navigation_coordination_metrics import baseline, compare, load_manifest, quantile, _run_one
+from tests.sim.product_cases import product_scenario
+from scripts.navigation_migration_evidence import jobs, observe
 
 
 def frames():
@@ -29,6 +31,48 @@ def measure(rows):
 
 
 class ProductMetricTests(unittest.TestCase):
+    def test_migration_set_keeps_all_three_frozen_denominators(self):
+        cases = list(jobs())
+        self.assertEqual(len(cases), 192 + 1000 + 256)
+        self.assertEqual(len({item[0] for item in cases}), len(cases))
+        result = observe(cases[0])
+        self.assertTrue(result["passed"], result["exception"])
+        self.assertIn("navigation_session.propose", result["functions_entered"])
+        self.assertIn("navigation_session.observe", result["functions_entered"])
+        self.assertTrue(result["signature"]["trace"])
+
+    def test_window_detects_oscillation_without_reason_strings(self):
+        rows = [dict(frames()[0], movement_tick=tick,
+                     position=(.03 if tick % 2 else -.03, 64., 0.),
+                     planning_submissions=[], driver_reason="arbitrary text")
+                for tick in range(2, 26)]
+        rows.append(dict(frames()[-1], movement_tick=26))
+        metrics = measure(rows)
+        self.assertEqual(metrics["zero_displacement_ticks"], 0)
+        self.assertGreater(metrics["net_stall_ticks"]["walking"], 0)
+        for row in rows[:-1]:
+            row["controller_ids"] = ["landing_edge_probe"]
+        prepared = measure(rows)
+        self.assertEqual(prepared["net_stall_ticks"]["walking"], 0)
+        self.assertGreater(prepared["net_stall_ticks"]["strict_preparation"], 0)
+
+    def test_continuous_seed_parameters_are_unique_and_delay_pairs_share_body(self):
+        manifest, _ = load_manifest(Path("tests/sim/manifests/navigation-product-r28-v2.json"))
+        normal, late = manifest["groups"][:2]
+        parameters = []
+        for seed in range(1500):
+            _, value = product_scenario(manifest, normal, seed)
+            parameters.append(json.dumps(value, sort_keys=True))
+        self.assertEqual(len(set(parameters)), 1500)
+        for seed in range(12):
+            first, a = product_scenario(manifest, normal, seed)
+            second, b = product_scenario(manifest, late, seed)
+            self.assertEqual(first.start, second.start)
+            self.assertEqual(first.goal, second.goal)
+            self.assertEqual(first.start_velocity_blocks_per_tick, second.start_velocity_blocks_per_tick)
+            self.assertEqual({k: v for k, v in a.items() if k != "late_ticks"},
+                             {k: v for k, v in b.items() if k != "late_ticks"})
+
     def test_internal_recovery_count_does_not_change_common_ruler(self):
         old, new = frames(), frames()
         for row in old:

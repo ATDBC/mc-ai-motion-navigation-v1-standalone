@@ -221,3 +221,82 @@ Fabric 依影响选场景：R28-1 复跑 B11 终态停止、空中取消和改�
 迁移登记保存 41 个函数及分支位置。当前定义的协调范围为 10,977 行，包含公共 driver 和近战技能；Session 为 4,395 行。语法树的赋值／分支计数仅供定位，不等于长期状态数或已完成职责划分。多域分支仍标为待明确拥有者，R28-1 迁移前必须逐项补正式检查与删除／保留结论。本批不能把登记清单当成迁移已完成。
 
 本批未启动游戏。C1／B12 的实体感知、技能组合、外力恢复和实际输入生效仍要使用对应正式路径核对；组件目标流不能替代这些证据。持续到达策略、速率预算及 30 分钟探针仍待 R28-1／4。R28 整阶段保持打开，R27 和 M3 的原结论不变。
+
+## 9. 批次 2—4：产品基线修正
+
+范围由 D049 固定。本轮不推进 R28-1 的生产迁移。以下检查全部使用项目环境，失败保留在原任务分母中。
+
+批次 2 保留原零位移指标，新增连续 tick 的 10 tick 窗口净位移指标。普通步行、严格动作准备、空中严格执行和规划等待分别报告。缺 tick 时窗口重置；满足目标或任务终态后不累计行走停顿。原因文案不参与分类。
+
+`navigation-product-r28-v2.json` 固定八层各 200 个连续参数任务，正常与晚到共享身体与目标参数，只改变输入交付。场景与方向按完整组合轮换；偏移在旋转前应用。原离散边界清单保留，不能把重复配置当成新增统计样本。1,500 个指定点参数已验证不重复。该 200 对基线不是足量统计发布验收。
+
+迁移工具保存 192 个中断、1,000 个随机序列和 256 个异步组合的逐案例身体／输入记录与函数入口。它们不进入产品成功率。未执行到的函数明确禁止迁移；函数被执行一次仍不能替代关键分支的行为检查。分支拥有者自动提示只是初稿，R28-1 前还要按调用与状态归属人工确认。
+
+主要命令（`<新目录>` 不能已经存在）：
+
+```powershell
+python -m unittest tests.motion_nav.test_navigation_product_metrics -q
+python scripts/navigation_coordination_metrics.py reextract --source <旧基线目录> --output <新目录>
+python scripts/navigation_coordination_metrics.py baseline --manifest tests/sim/manifests/navigation-product-r28-v2.json --output <新目录> --workers 4
+python scripts/navigation_migration_evidence.py --output <新目录> --workers 4
+python scripts/navigation_migration_evidence.py --compare <修复前目录> <修复后目录>
+```
+
+这里的 `python` 均通过 AGENTS.md 所列的 `conda run --prefix D:\My_project\mc_ai\.venv --no-capture-output python` 调用。工具与导出专项最初 26 项通过，补入未覆盖函数拒绝迁移检查后为 27 项。各批次结果分别记录如下。
+
+批次 2 的完整迁移回归为 1,448/1,448，无检查失败。记录位于 `.tmp/r28-batch2-regression-complete`。第一次在第 1,257 项写盘时遇到动作对象序列化错误；修正后沿用前 1,256 个完整记录，只重跑未保存完整的异步项，原失败目录保留。四个函数仍未覆盖：`handle_internal_contract_failure`、`_wait_for_active_terminal`、`_resolve_pending_retry`、`PlanningCoordinator._retry_or_fail`。覆盖命令会明确拒绝迁移这些函数；R28-1/4 迁移它们前必须补正式路径场景。本批没有宣称迁移门槛整体关闭。
+
+修复前的 v2 原始运行位于 `.tmp/r28-v2-before`，新量尺重算位于 `.tmp/r28-v2-before-final`。指定点两层各 17/200，目标修订各 134/200，连续高度各 200/200，下降正常 200/200、晚到 189/200。非格心目标在规划作业尚未产生时就拒绝的 320 场，被正式监视器同时标为活动证据不足；它们保留在分母，不能算有效的严格等价证据。批次 3 必须消除这个目标解析缺陷。
+
+批次 3 的目标与相关规划／接纳／会话检查 99/99，通过真实 Runtime 链的非格心平地、小高差尾段和新增依赖变化均已覆盖。独立 40 个浮点目标由 5/40 提升到 40/40。仅修目标的 v2 结果保存在 `.tmp/r28-v2-goal-only`：指定点正常 198/200、晚到 199/200；目标修订两层均 200/200；连续高度两层仍 200/200，严格下降仍 200/200 和 189/200。没有异常、安全违规或活动证据不足。剩余三个绕墙停滞交给批次 4；Fabric 使用两批修改后的共同正式路径对照，不提前计为实机通过。
+
+批次 4 只调整连续 3 帧无进展时的紧邻下一段投影，没有改变候选平局、物理或安全门槛。完整旋转的四向、两种入口偏移共 8 场全部完成；目标、固定路线与剪枝等价检查合计 30/30。只读记录规划产物发现：南／西选出的路线先走到墙边再横移；东／北在入口就横移，代价相同。方向差异首先来自规划器的等价路线选择，不能仅凭失败分布认定为左右按键平局偏置。本批让两种合法路径都能执行，不为得到相同轨迹而修改全局规划评分。
+
+### 9.1 最终组件结果与 v2 冻结
+
+三个批次分别保存于 `9cdd8a1`（工具）、`6dbb6a0`（目标）、`90bb0e0`（拐角）。v2 运行时的 HEAD、工作树和实际源码哈希保留在归档元数据中，不改写成归档提交。以下全部是同一输入清单内的配对，v1 与 v2 不互相比成功率。
+
+| 分层 | v2 修复前 | v2 修复后 | 修复后到达 tick P95（只统计成功） |
+|---|---:|---:|---:|
+| 指定点，正常 | 17/200 | 200/200 | 79 |
+| 指定点，20% 晚到 | 17/200 | 200/200 | 91 |
+| 连续高度，正常 | 200/200 | 200/200 | 42 |
+| 连续高度，20% 晚到 | 200/200 | 200/200 | 50 |
+| 目标修订，正常 | 134/200 | 200/200 | 84 |
+| 目标修订，20% 晚到 | 134/200 | 200/200 | 95 |
+| 严格下降，正常 | 200/200 | 200/200 | 66 |
+| 严格下降，20% 晚到 | 189/200 | 189/200 | 96 |
+
+v2 从 1,091/1,600 提升到 **1,589/1,600**，498 场失败转成功，没有成功转失败。仅修目标时为 1,586/1,600；拐角修正再修复三个停滞。原 v1 清单从 1,438/1,600 提升到 **1,585/1,600**，147 场失败转成功，没有成功转失败。连续高度和严格下降的逐项轨迹相对各自修复前均不变。
+
+v2 剩余 11 个失败分别为：`input_lost` 7 场、`edge_probe_acquisition_timeout` 2 场、`motion_unsolvable:needs_state` 2 场。它们有界结束且保留在分母；原 v1 的 15 个严格下降失败也不改写。两套最终集合中均没有观察到安全违规、未处理异常或监视器证据缺口。200 对不是统计非退步门槛，不能据此宣布未覆盖条件可靠。
+
+最终完整运动导航 **870/870**。现行 `navigation-coordination-smoke.json` 固定矩阵 14/14 符合预期，实际为 13 成功和 1 有界安全失败。另一次误用了历史 `navigation-coordination-s0a-calibrated.json` 的输出保留在 `.tmp/r28-final-fixed`，其中八项历史预期差异不计作现行门槛通过。
+
+最终目标、拐角、量尺与导出专项 32/32，实机记录入口单元检查 30/30。本地整理快照 746 个文件全部通过哈希校验，在该独立目录再次运行上述专项也为 32/32。v2 归档的 1,600 个记录与原始轨迹逐项哈希相符；17 项外层证据哈希通过，v1 原有六项仍未变化。以上是 2026-10-01 本地冻结时的检查记录；当时尚未推送。后续公开同步以远端 `main` 的实际提交及 `EXPORT-METADATA.json` 为准，不改变这些基线结果。
+
+最终协调回归 1,448/1,448 符合检查；与批次 2 的身体、输入、终态和证据签名 **1,448 对完全一致**，包括 192 中断、1,000 随机序列和 256 异步组合。工具自身的命令行／覆盖报告哈希变化单列，配对仍要求模拟源码、案例输入和实际签名一致。四个未执行到的迁移函数仍被门禁拒绝，不能因其他案例通过就迁移它们。
+
+v2 归档为 `evidence/motion_navigation/r28-baseline-v2/`，包含 1,600 场完整结构化任务与轨迹、前两批汇总、配对结果、迁移回归汇总和原始 Fabric 流。迁移的全部逐案例文件保留在 `.tmp/r28-batch2-regression-complete` 与 `.tmp/r28-final-regression`；公开汇总记录它们的哈希和函数入口，完整复现由迁移工具重新生成。原 v1 六项哈希仍全部一致。
+
+### 9.2 代表性 Fabric 与记录边界
+
+实机批次 `20261001T123904974598Z-3fdd5d09` 走 Runtime → 正式导航 driver → Session → 后台规划／接纳／执行器。专用本地地图先通过 profile 4 实际观察取得知识，再测四向非格心目标、目标边界裕量与绕墙，共 **12/12 个导航任务完成**。夹具的建图和观察站位只用于测试；actor 没有读取全知地图。该批不覆盖未知探索、主动观察站位选择或实体追击。
+
+| 场景 | 四方向实际运动 tick |
+|---|---|
+| 非格心目标 | 60、63、59、67 |
+| 较小目标边界裕量 | 63、63、63、63 |
+| 绕墙 | 79、104、75、102 |
+
+原总批次状态为 **失败**：封装把身体帧列表返回给了要求诊断行的验证入口，导致 `continuous_zero_image_diagnostics` 检查失败。任务、客户端协议和实际保存的诊断流完整，原结果没有覆盖。修正记录封装后，直接读取原始 trace 与实际诊断，按原验证器独立重算，**七项协议／零图像检查全部通过**。这次没有重新跑游戏，也不将原批次状态改为通过；复核报告保留失败检查、实际源码哈希和原始流，不能冒充一次新的完整通过批次。
+
+复现与后续运行入口：
+
+```powershell
+D:\Miniforge3\Scripts\conda.exe run --prefix D:\My_project\mc_ai\.venv --no-capture-output python -m unittest tests.motion_nav.test_navigation_product_metrics tests.motion_nav.test_r28_product_repairs tests.motion_nav.test_r28_corner_progress tests.motion_nav.test_public_repository_completeness tests.motion_nav.test_standalone_export -q
+D:\Miniforge3\Scripts\conda.exe run --prefix D:\My_project\mc_ai\.venv --no-capture-output python scripts/navigation_migration_evidence.py --compare .tmp/r28-batch2-regression-complete .tmp/r28-final-regression
+D:\Miniforge3\Scripts\conda.exe run --prefix D:\My_project\mc_ai\.venv --no-capture-output python scripts/run_r28_product_fabric.py --time-diagnostics --seed 21001 --server-port 25597 --ipc-port 8140 --timeout-seconds 600
+```
+
+本轮冻结完成，停止在 R28-0。R28-1 前继续补未覆盖迁移函数与人工分支归属；持续目标、恢复速率预算、正式跟随和 30 分钟探针均未实施。普通步行自动转身只登记后续工作。本轮产品修复不扩大 R27／M3、严格下降或战斗的声明范围。

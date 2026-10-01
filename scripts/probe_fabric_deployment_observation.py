@@ -1226,6 +1226,9 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                         from scripts.r25_planning_information_runtime import (
                             run_r25_planning_information_runtime,
                         )
+                        if os.environ.get("MC2P_R28_PRODUCT_PROBE") == "1":
+                            from scripts.r28_product_fabric_runtime import run_r28_product_runtime
+                            run_r25_planning_information_runtime = run_r28_product_runtime
                         def write_r25_fixture(commands):
                             if server is None or server.stdin is None:
                                 raise RuntimeError(

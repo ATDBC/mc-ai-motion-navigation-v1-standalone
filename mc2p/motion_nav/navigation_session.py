@@ -145,7 +145,7 @@ from mc2p.motion_nav.safe_ground_control import (
     verified_ground_recovery_movement,
 )
 from mc2p.motion_nav.step_transition import StepProfile, load_step_profile
-from mc2p.motion_nav.support_surfaces import SurfaceNodeId, query_support_surfaces
+from mc2p.motion_nav.support_surfaces import SurfaceNodeId, query_support_surfaces, standable_point_in_region
 from mc2p.motion_nav.world_model import BlockPos, CellKnowledge
 
 
@@ -4377,11 +4377,10 @@ class NavigationSession:
                 )
                 missing.update(result.missing_cells)
                 for surface in result.surfaces:
-                    px, py, pz = surface.position
-                    if (goal.region.min_x <= px <= goal.region.max_x
-                            and goal.region.min_y <= py <= goal.region.max_y
-                            and goal.region.min_z <= pz <= goal.region.max_z):
-                        candidates.append(surface)
+                    target = standable_point_in_region(frame.world, surface, goal.region)
+                    missing.update(target.missing_cells)
+                    if target.status is QueryStatus.FEASIBLE:
+                        candidates.append((surface, target.position))
         if not candidates:
             return None, tuple(sorted(missing))
         center = (
@@ -4391,5 +4390,5 @@ class NavigationSession:
         )
         return min(
             candidates,
-            key=lambda surface: math.dist(surface.position, center),
-        ).node_id, tuple(sorted(missing))
+            key=lambda item: math.dist(item[1], center),
+        )[0].node_id, tuple(sorted(missing))

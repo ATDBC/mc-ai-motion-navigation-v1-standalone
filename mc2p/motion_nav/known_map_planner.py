@@ -39,7 +39,7 @@ from mc2p.motion_nav.motion_risk import (
 from mc2p.motion_nav.step_transition import StepEdge, StepProfile, query_step
 from mc2p.motion_nav.segment_entry import SegmentEntryWindow
 from mc2p.motion_nav.support_surfaces import (
-    SupportSurface, SurfaceNodeId, query_support_surfaces,
+    SupportSurface, SurfaceNodeId, query_support_surfaces, surface_overlaps_region,
 )
 
 
@@ -2456,19 +2456,16 @@ def astar_surface_plan(graph: SurfaceGraph,
         raise ContractViolation("surface A* requires a surface graph and request")
     if graph.world_session != request.world_session:
         return _surface_candidate(request, graph, SurfacePlanningStatus.UNSUPPORTED)
-    positions = {node.node_id: node.position for node in graph.nodes}
+    nodes_by_id = {node.node_id: node for node in graph.nodes}
+    positions = {key: node.position for key, node in nodes_by_id.items()}
     if request.start not in positions or request.goal not in positions:
         status = (SurfacePlanningStatus.UNSUPPORTED if graph.has_unsupported else
                   SurfacePlanningStatus.NO_ROUTE_WITHIN_COMPLETE_SCOPE
                   if graph.complete_scope else SurfacePlanningStatus.NO_KNOWN_ROUTE)
         return _surface_candidate(request, graph, status)
     if request.goal_state is not None:
-        goal_position = positions[request.goal]
-        region = request.goal_state.region
         if not (
-            region.min_x <= goal_position[0] <= region.max_x
-            and region.min_y <= goal_position[1] <= region.max_y
-            and region.min_z <= goal_position[2] <= region.max_z
+            surface_overlaps_region(nodes_by_id[request.goal].surface, request.goal_state.region)
             and request.goal_state.support in {GoalSupport.SOLID, GoalSupport.ANY}
         ):
             return _surface_candidate(
@@ -2731,12 +2728,8 @@ def plan_known_surface_snapshot(
             request, graph, status, information_need=information_need,
         )
     if request.goal_state is not None:
-        position = goal.position
-        region = request.goal_state.region
         if not (
-            region.min_x <= position[0] <= region.max_x
-            and region.min_y <= position[1] <= region.max_y
-            and region.min_z <= position[2] <= region.max_z
+            surface_overlaps_region(goal.surface, request.goal_state.region)
             and request.goal_state.support in {GoalSupport.SOLID, GoalSupport.ANY}
         ):
             return _surface_candidate(

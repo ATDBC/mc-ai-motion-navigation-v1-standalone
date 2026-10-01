@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+import random
 
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from tests.sim.backend import Scene, Perturbations
@@ -60,9 +61,19 @@ def product_scenario(manifest: dict, group: dict, seed: int) -> tuple[Scenario, 
         raise ValueError(f"unknown product case: {case}")
     base = Scenario(case, scene, start, goal, damage_points=damage, events=events,
                     max_ticks=manifest["budgets"]["finite_max_ticks"])
-    direction = manifest["directions"][index % len(manifest["directions"])]
+    continuous = manifest.get("parameter_generator") == "continuous-v2"
+    # Delay conditions share geometry and entry; only their input delivery differs.
+    rng = random.Random(f"{group['family']}:{seed}")
+    parameters = manifest.get("continuous_parameters", {})
+    if continuous and group["family"] == "point":
+        limit = parameters["maximum_goal_jitter"]
+        base = replace(base, goal=(base.goal[0] + rng.uniform(-limit, limit),
+                                  base.goal[1], base.goal[2] + rng.uniform(-limit, limit)))
+    direction_index = index // len(group["cases"]) if continuous else index
+    direction = manifest["directions"][direction_index % len(manifest["directions"])]
     speeds = manifest["entry_speeds_blocks_per_second"]
-    speed = speeds[(index // len(group["cases"])) % len(speeds)]
+    speed = (rng.uniform(0, parameters["maximum_speed"]) if continuous else
+             speeds[(index // len(group["cases"])) % len(speeds)])
     # The frozen command stream is rotated together with its map.
     from tests.sim.continuous_height_matrix import _rotate_point
     rotated = matrix_scenario(base, direction=direction, speed_blocks_per_second=speed,
@@ -75,8 +86,13 @@ def product_scenario(manifest: dict, group: dict, seed: int) -> tuple[Scenario, 
                               for rev, tick in enumerate(range(3, 43, 5), 2)],
         }[case]
         rotated.events = [_revision(tick, rev, _rotate_point(pos, direction)) for tick, rev, pos in positions]
-    offset = manifest["entry_offsets"][(index // 4) % len(manifest["entry_offsets"])]
-    rotated = replace(rotated, start=(rotated.start[0] + offset, rotated.start[1], rotated.start[2] - offset),
+    offset = (tuple(rng.uniform(-parameters["maximum_offset"], parameters["maximum_offset"])
+                    for _ in range(2)) if continuous else
+              manifest["entry_offsets"][(index // 4) % len(manifest["entry_offsets"])])
+    offset_x, offset_z = (_rotate_point((offset[0], 0., offset[1]), direction)[::2]
+                          if continuous else (offset, -offset))
+    rotated = replace(rotated, start=(rotated.start[0] + offset_x, rotated.start[1], rotated.start[2] + offset_z),
                       perturbations=Perturbations(late_ticks=late_ticks(group["late_probability"], seed, base.max_ticks + 2)))
     return rotated, {"case": case, "direction": direction, "speed": speed, "offset": offset,
+                     **({"goal": rotated.goal} if continuous else {}),
                      "late_ticks": sorted(rotated.perturbations.late_ticks)}

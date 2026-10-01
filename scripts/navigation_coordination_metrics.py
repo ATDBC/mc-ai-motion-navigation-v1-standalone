@@ -158,12 +158,30 @@ def coordination_inventory():
             if name not in functions:
                 raise ValueError(f"migration function disappeared without inventory update: {path.name}:{name}")
             node = functions[name]
+            def branch_hint(child):
+                attributes = {item.attr for item in ast.walk(child)
+                              if isinstance(item, ast.Attribute) and isinstance(item.value, ast.Name)
+                              and item.value.id == "self"}
+                categories = set()
+                for attribute in attributes:
+                    if any(word in attribute for word in ("planning", "snapshot", "worker")):
+                        categories.add("PlanningCoordinator")
+                    elif any(word in attribute for word in ("information", "probe", "acquisition")):
+                        categories.add("InformationAcquisitionState")
+                    elif any(word in attribute for word in ("supervisor", "executor", "tracker", "active_route")):
+                        categories.add("ExecutionSupervisor")
+                    elif any(word in attribute for word in ("retry", "risk", "budget", "wait")):
+                        categories.add("TaskBudgetOwners")
+                    elif any(word in attribute for word in ("goal", "request", "handoff", "terminal", "state")):
+                        categories.add("Goal/Handoff/Lifecycle")
+                return sorted(categories)
             rows.append({"id": f"{path.stem}.{name}", "file": path.relative_to(ROOT).as_posix(),
                          "line": node.lineno, "end_line": node.end_lineno, "step": step,
                          "current_owner": path.stem, "target_owner": owner, "status": "not_migrated",
                          "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
                          "branches": [{"line": child.lineno, "kind": type(child).__name__,
                                        "condition": ast.unparse(child.test) if isinstance(child, (ast.If, ast.While)) else None,
+                                       "owner_hints": branch_hint(child),
                                        "status": "requires_domain_mapping_before_migration"}
                                       for child in ast.walk(node) if isinstance(child, (ast.If, ast.Match, ast.Try, ast.While))]})
     return {"modules": sizes, "functions": rows,
@@ -289,6 +307,46 @@ def compare(old_dir, new_dir, output):
     return report
 
 
+def reextract(source: Path, output: Path):
+    """Write a new ruler report from immutable old traces, keeping the originals."""
+    if output.exists():
+        raise FileExistsError(f"refusing to overwrite evidence: {output}")
+    metadata = json.loads((source / "metadata.json").read_text("utf-8"))
+    records = [json.loads(line) for line in (source / "runs.jsonl").read_text("utf-8").splitlines()]
+    output.mkdir(parents=True)
+    (output / "traces").mkdir()
+    metadata["reextracted_from"] = str(source)
+    metadata["source_extractor_version"] = metadata["extractor_version"]
+    metadata["extractor_version"] = EXTRACTOR_VERSION
+    metadata["harness"] = source_fingerprint(["tests/sim/**/*.py", "scripts/navigation_coordination_metrics.py"])
+    with (output / "runs.jsonl").open("w", encoding="utf-8") as stream:
+        for record in records:
+            path = source / record["trace_file"]
+            if digest(path.read_bytes()) != record["trace_sha256"]:
+                raise ValueError("raw evidence checksum mismatch")
+            with gzip.open(path, "rt", encoding="utf-8") as raw_stream:
+                raw = json.load(raw_stream)
+            if raw["record"] != {k: v for k, v in record.items() if k != "trace_sha256"}:
+                raise ValueError("summary record disagrees with raw evidence")
+            trace = raw["trace"]
+            # Reconstruct only the frozen input, never actor state or permissions.
+            group = next(group for group in metadata["manifest"]["groups"] if group["id"] == record["group"])
+            scenario, _ = product_scenario(metadata["manifest"], group, record["seed"])
+            metrics = extract_metrics(trace, start_tick=1, start_position=scenario.start,
+                outcome=record["metrics"]["outcome"], violations=record["metrics"]["safety_events"])
+            if not record["verification_complete"]:
+                metrics["evidence_complete"] = False
+                metrics["coverage_gaps"].append("formal_monitor_coverage_incomplete")
+            record = dict(record, metrics=metrics, source_trace_sha256=record["trace_sha256"])
+            with gzip.open(output / record["trace_file"], "wt", encoding="utf-8", compresslevel=3) as raw_stream:
+                json.dump({"record": {k: v for k, v in record.items() if k != "trace_sha256"},
+                           "trace": trace, "strict_trace": raw["strict_trace"]}, raw_stream)
+            record["trace_sha256"] = digest((output / record["trace_file"]).read_bytes())
+            stream.write(json.dumps(record, ensure_ascii=False) + "\n")
+    (output / "metadata.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", "utf-8")
+    return {"records": len(records), "extractor": EXTRACTOR_VERSION, "source_preserved": True}
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -302,10 +360,16 @@ def main(argv=None):
     pair.add_argument("--baseline", type=Path, required=True)
     pair.add_argument("--candidate", type=Path, required=True)
     pair.add_argument("--output", type=Path, required=True)
+    ruler = sub.add_parser("reextract")
+    ruler.add_argument("--source", type=Path, required=True)
+    ruler.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
-    result = baseline(args.manifest, args.output, args.workers, seed_count=args.seed_count, groups=args.groups) if args.command == "baseline" else compare(args.baseline, args.candidate, args.output)
+    if args.command == "reextract":
+        result = reextract(args.source, args.output)
+    else:
+        result = baseline(args.manifest, args.output, args.workers, seed_count=args.seed_count, groups=args.groups) if args.command == "baseline" else compare(args.baseline, args.candidate, args.output)
     print(json.dumps(result, ensure_ascii=False, indent=2))
-    return 0 if args.command == "baseline" else int(bool(result["differences"]))
+    return int(bool(result["differences"])) if args.command == "compare" else 0
 
 
 if __name__ == "__main__":

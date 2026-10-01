@@ -1,0 +1,208 @@
+{
+  "run_id": "20261001T123904974598Z-3fdd5d09",
+  "original_batch_status": "failed",
+  "original_failed_checks": [
+    {
+      "name": "client-0:continuous_zero_image_diagnostics",
+      "passed": false
+    }
+  ],
+  "reason": "Wrapper returned physical frames instead of diagnostics; original result is retained unchanged.",
+  "runtime_steps": 1293,
+  "trials": [
+    {
+      "id": "r28-point-0",
+      "movement_ticks": 60,
+      "outcome": "success",
+      "passed": true,
+      "position": [
+        0.8061441133699064,
+        100.0,
+        9.439816346624236
+      ],
+      "reason": "goal_state_satisfied",
+      "wall_elapsed_seconds": 3.0011938
+    },
+    {
+      "id": "r28-point-1",
+      "movement_ticks": 63,
+      "outcome": "success",
+      "passed": true,
+      "position": [
+        9.439816346624236,
+        100.0,
+        -0.8061441133699064
+      ],
+      "reason": "goal_state_satisfied",
+      "wall_elapsed_seconds": 3.1507198
+    },
+    {
+      "id": "r28-point-2",
+      "movement_ticks": 59,
+      "outcome": "success",
+      "passed": true,
+      "position": [
+        -0.8061441133699065,
+        100.0,
+        -9.439816346624236
+      ],
+      "reason": "goal_state_satisfied",
+      "wall_elapsed_seconds": 2.9331114
+    },
+    {
+      "id": "r28-point-3",
+      "movement_ticks": 67,
+      "outcome": "success",
+      "passed": true,
+      "position": [
+        -9.439816346624236,
+        100.0,
+        0.8061441133699065
+      ],
+      "reason": "goal_state_satisfied",
+      "wall_elapsed_seconds": 3.3352774
+    },
+    {
+      "id": "r28-point-margin-0",
+      "movement_ticks": 63,
+      "outcome": "success",
+      "passed": true,
+      "position": [
+        0.6516238829076266,
+        100.0,
+        10.36288650743175
+      ],
+      "reason": "goal_state_satisfied",
+      "wall_elapsed_seconds": 3.1387927
+    },
+    {
+      "id": "r28-point-margin-1",
+      "movement_ticks": 63,
+      "outcome": "success",
+      "passed": true,
+      "position": [
+        10.36288650743175,
+        100.0,
+        -0.6516238829076266
+      ],
+      "reason": "goal_state_satisfied",
+      "wall_elapsed_seconds": 3.1369693
+    },
+    {
+      "id": "r28-point-margin-2",
+      "movement_ticks": 63,
+      "outcome": "success",
+      "passed": true,
+      "position": [
+        -0.6516238829076266,
+        100.0,
+        -10.36288650743175
+      ],
+      "reason": "goal_state_satisfied",
+      "wall_elapsed_seconds": 3.1354091
+    },
+    {
+      "id": "r28-point-margin-3",
+      "movement_ticks": 63,
+      "outcome": "success",
+      "passed": true,
+      "position": [
+        -10.36288650743175,
+        100.0,
+        0.6516238829076266
+      ],
+      "reason": "goal_state_satisfied",
+      "wall_elapsed_seconds": 3.1496664
+    },
+    {
+      "id": "r28-wall-0",
+      "movement_ticks": 79,
+      "outcome": "success",
+      "passed": true,
+      "position": [
+        2.4721960499985967,
+        100.0,
+        10.454852143105281
+      ],
+      "reason": "goal_state_satisfied",
+      "wall_elapsed_seconds": 3.9381654
+    },
+    {
+      "id": "r28-wall-1",
+      "movement_ticks": 104,
+      "outcome": "success",
+      "passed": true,
+      "position": [
+        10.481530928863322,
+        100.0,
+        -2.4383067627624277
+      ],
+      "reason": "goal_state_satisfied",
+      "wall_elapsed_seconds": 5.1922394
+    },
+    {
+      "id": "r28-wall-2",
+      "movement_ticks": 75,
+      "outcome": "success",
+      "passed": true,
+      "position": [
+        -2.5277296873311714,
+        100.0,
+        -10.521403512508257
+      ],
+      "reason": "goal_state_satisfied",
+      "wall_elapsed_seconds": 3.7374242
+    },
+    {
+      "id": "r28-wall-3",
+      "movement_ticks": 102,
+      "outcome": "success",
+      "passed": true,
+      "position": [
+        -10.335682013757422,
+        100.0,
+        2.473213379776329
+      ],
+      "reason": "goal_state_satisfied",
+      "wall_elapsed_seconds": 5.0896341
+    }
+  ],
+  "sources": {
+    "mc2p/motion_nav/fixed_route.py": "3e718f4b04338d53ec20131567d86b2a19783b23dfd588cd8553e297dbc3e1a3",
+    "mc2p/motion_nav/known_map_planner.py": "47a0816dfa13d447ab518b1eca484c3b23cde1b79e056286e91c7196fe6869e9",
+    "mc2p/motion_nav/route_admission.py": "477227c314c0e6b281f237d94c0870e9a3e910963bb2de58785c5a1a65cf4a58",
+    "mc2p/motion_nav/support_surfaces.py": "5220df1e117ab1949d4df23e7bed6946b8303174bfd0493da430e3ec28b2eb46",
+    "scripts/r28_product_fabric_runtime.py": "2da38af74d5e80d04e47647a2195a686d4875bd740da9e06e4506a71b573b244"
+  },
+  "independent_trace_checks": [
+    {
+      "name": "exact_continuous_v3",
+      "passed": true
+    },
+    {
+      "name": "separate_monotonic_client_samples",
+      "passed": true
+    },
+    {
+      "name": "exact_action_receipt_association",
+      "passed": true
+    },
+    {
+      "name": "normal_input_ticks_continue",
+      "passed": true
+    },
+    {
+      "name": "no_image_fields_or_binary_projection",
+      "passed": true
+    },
+    {
+      "name": "continuous_zero_image_diagnostics",
+      "passed": true
+    },
+    {
+      "name": "one_reset_1293_runtime_steps",
+      "passed": true
+    }
+  ],
+  "independent_passed": true
+}

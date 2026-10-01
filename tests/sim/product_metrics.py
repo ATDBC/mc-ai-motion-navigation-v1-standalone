@@ -6,15 +6,76 @@ counted. Retry counters and reason strings deliberately have no consumers here.
 from __future__ import annotations
 
 import math
+from collections import deque
 from collections.abc import Iterable, Mapping
 
-EXTRACTOR_VERSION = "mc2p.navigation-product-metrics.v1"
+EXTRACTOR_VERSION = "mc2p.navigation-product-metrics.v2"
 TERMINAL = {"success", "failed", "cancelled", "stopped", "interaction_required"}
+
+
+def window_stalls(frames: Iterable[Mapping], *, window_ticks: int = 10,
+                  minimum_displacement: float = .1) -> list[dict]:
+    """Count little net movement, including oscillation, on consecutive ticks.
+
+    This is an external measurement, never a reason to alter robot control.
+    Preparation is reported separately using observed owners and action types.
+    """
+    history = deque(maxlen=window_ticks + 1)
+    intervals, active = [], None
+    terminal, last_tick = False, None
+
+    def finish():
+        nonlocal active
+        if active is not None and active["end_tick"] - active["start_tick"] >= 2:
+            intervals.append(active)
+        active = None
+
+    for row in frames:
+        tick, position = row.get("movement_tick"), row.get("position")
+        if (type(tick) is not int or not isinstance(position, (list, tuple))
+                or len(position) != 3 or not all(math.isfinite(v) for v in position)):
+            history.clear()
+            finish()
+            continue
+        if last_tick is not None and tick != last_tick + 1:
+            history.clear()
+            finish()
+        last_tick = tick
+        terminal |= row.get("driver_state") in TERMINAL
+        demand = row.get("source_bound") and not row.get("goal_satisfied") and not terminal
+        if not demand:
+            history.clear()
+            finish()
+            continue
+        history.append(position)
+        stalled = len(history) == window_ticks + 1 and math.hypot(
+            position[0] - history[0][0], position[2] - history[0][2],
+        ) < minimum_displacement
+        owners = row.get("controller_ids", ())
+        kind = row.get("action_kind")
+        strict_action = kind in {"jump_gap", "controlled_drop", "jump_up", "step",
+                                 "JumpGapSegment", "ControlledDropSegment", "JumpUpSegment", "StepSegment"}
+        category = ("strict_execution" if strict_action and row.get("on_ground") is False
+                    else "strict_preparation" if "landing_edge_probe" in owners or strict_action
+                    else "planning_wait" if not owners and row.get("planning_work_owned")
+                    else "walking")
+        if stalled:
+            if active is None or active["category"] != category:
+                finish()
+                active = {"start_tick": tick, "end_tick": tick, "category": category}
+            else:
+                active["end_tick"] = tick
+        else:
+            finish()
+    finish()
+    return intervals
 
 
 def extract_metrics(frames: Iterable[Mapping], *, start_tick: int,
                     start_position: tuple[float, float, float], outcome: str,
                     violations: Iterable = ()) -> dict:
+    frames = list(frames)
+    net_stalls = window_stalls(frames)
     gaps = set()
     last_tick, last_position = start_tick, start_position
     last_owner = None
@@ -116,6 +177,11 @@ def extract_metrics(frames: Iterable[Mapping], *, start_tick: int,
         "controller_acquisitions": acquisitions, "controller_releases": releases,
         "zero_displacement_intervals": pauses,
         "zero_displacement_ticks": sum(end - begin + 1 for begin, end in pauses),
+        "net_stall_intervals": net_stalls,
+        "net_stall_ticks": {category: sum(
+            item["end_tick"] - item["start_tick"] + 1
+            for item in net_stalls if item["category"] == category
+        ) for category in ("walking", "strict_preparation", "strict_execution", "planning_wait")},
         "first_movement_ticks": None if first_move is None else first_move - start_tick,
         "arrival_ticks": release_tick - start_tick if outcome == "success" and release_tick is not None else None,
         "terminal_ticks": None if terminal_tick is None else terminal_tick - start_tick,
@@ -134,6 +200,8 @@ def compare_metrics(baseline: Mapping, candidate: Mapping, *, tick_tolerance: in
     differences = [key for key in exact if baseline[key] != candidate[key]]
     if len(baseline["zero_displacement_intervals"]) != len(candidate["zero_displacement_intervals"]):
         differences.append("zero_displacement_interval_count")
+    if baseline["net_stall_ticks"] != candidate["net_stall_ticks"]:
+        differences.append("net_stall_ticks")
     for key in ("arrival_ticks", "terminal_ticks", "first_movement_ticks", "zero_displacement_ticks"):
         old, new = baseline[key], candidate[key]
         if (old is None) != (new is None) or old is not None and abs(new - old) > tick_tolerance:

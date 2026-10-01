@@ -82,6 +82,81 @@ class SupportSurfaceResult:
     missing_cells: tuple[BlockPos, ...] = ()
 
 
+@dataclass(frozen=True, slots=True)
+class StandablePointResult:
+    status: QueryStatus
+    position: tuple[float, float, float] | None = None
+    dependencies: tuple[BlockPos, ...] = ()
+    missing_cells: tuple[BlockPos, ...] = ()
+
+
+def _region_overlap(surface: SupportSurface, region: Aabb):
+    top_y = surface.position[1]
+    if not region.min_y - _EPSILON <= top_y <= region.max_y + _EPSILON:
+        return None
+    low_x, high_x = max(region.min_x, surface.region.min_x), min(region.max_x, surface.region.max_x)
+    low_z, high_z = max(region.min_z, surface.region.min_z), min(region.max_z, surface.region.max_z)
+    if low_x > high_x + _EPSILON or low_z > high_z + _EPSILON:
+        return None
+    return low_x, high_x, low_z, high_z
+
+
+def surface_overlaps_region(surface: SupportSurface, region: Aabb) -> bool:
+    """Cheap necessary condition; final admission must verify a real body."""
+    return _region_overlap(surface, region) is not None
+
+
+def standable_point_in_region(world: WorldView, surface: SupportSurface, region: Aabb,
+                              *, body_width: float = .6, body_height: float = 1.8,
+                              minimum_support_fraction: float = .5,
+                              connection_from: tuple[float, float, float] | None = None) -> StandablePointResult:
+    """Select a concrete goal position with the existing clearance/support rules."""
+    overlap = _region_overlap(surface, region)
+    if overlap is None:
+        return StandablePointResult(QueryStatus.BLOCKED)
+    low_x, high_x, low_z, high_z = overlap
+    center_x = (region.min_x + region.max_x) / 2
+    center_z = (region.min_z + region.max_z) / 2
+    primary = (min(max(center_x, low_x), high_x), min(max(center_z, low_z), high_z))
+    candidates = dict.fromkeys((primary, ((low_x + high_x) / 2, (low_z + high_z) / 2),
+                               *((x, z) for x in (low_x, high_x) for z in (low_z, high_z))))
+    dependencies, missing = set(surface.dependencies), set()
+    unsupported = False
+    y, half = surface.position[1], body_width / 2
+    for x, z in candidates:
+        body = Aabb(x - half, y, z - half, x + half, y + body_height, z + half)
+        clearance = sweep(body, (0., 0., 0.), world)
+        support = query_support(body, world)
+        dependencies.update((*clearance.dependencies, *support.dependencies))
+        missing.update((*clearance.missing_cells, *support.missing_cells))
+        unsupported |= QueryStatus.UNSUPPORTED in (clearance.status, support.status)
+        if (clearance.status is QueryStatus.FEASIBLE and support.status is QueryStatus.FEASIBLE
+                and support.support_fraction + _EPSILON >= minimum_support_fraction):
+            if connection_from is not None:
+                dx, dy, dz = x - connection_from[0], y - connection_from[1], z - connection_from[2]
+                start = body.moved(-dx, -dy, -dz)
+                connection = sweep(start, (dx, dy, dz), world)
+                dependencies.update(connection.dependencies)
+                missing.update(connection.missing_cells)
+                unsupported |= connection.status is QueryStatus.UNSUPPORTED
+                if abs(dy) > _EPSILON or connection.status is not QueryStatus.FEASIBLE:
+                    continue
+                count = max(1, math.ceil(math.hypot(dx, dz) / .1))
+                supported = True
+                for index in range(count + 1):
+                    checked = query_support(start.moved(dx * index / count, 0., dz * index / count), world)
+                    dependencies.update(checked.dependencies)
+                    missing.update(checked.missing_cells)
+                    unsupported |= checked.status is QueryStatus.UNSUPPORTED
+                    supported &= checked.status is QueryStatus.FEASIBLE and checked.support_fraction + _EPSILON >= minimum_support_fraction
+                if not supported:
+                    continue
+            return StandablePointResult(QueryStatus.FEASIBLE, (x, y, z), tuple(sorted(dependencies)))
+    return StandablePointResult(QueryStatus.NEEDS_INFORMATION if missing else
+                               QueryStatus.UNSUPPORTED if unsupported else QueryStatus.BLOCKED,
+                               dependencies=tuple(sorted(dependencies)), missing_cells=tuple(sorted(missing)))
+
+
 def _candidate_owner_cells(column_x: int, column_z: int,
                            minimum_y: float, maximum_y: float) -> tuple[BlockPos, ...]:
     low = math.floor(minimum_y) - COLLISION_OWNER_BELOW_REACH_CELLS

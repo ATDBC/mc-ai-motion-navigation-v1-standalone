@@ -203,7 +203,8 @@ class _RouteGeometry:
         return self.goal.x, self.goal.z
 
     def project(self, x: float, z: float, previous_progress: float,
-                segment_index: int, advance_radius: float) -> _Projection:
+                segment_index: int, advance_radius: float,
+                prefer_next_segment: bool = False) -> _Projection:
         if len(self.points) == 1 or self.total_length <= _EPSILON:
             return _Projection(0.0, math.hypot(x - self.goal.x, z - self.goal.z), 0)
         if type(segment_index) is not int or not 0 <= segment_index < len(self.lengths):
@@ -229,6 +230,13 @@ class _RouteGeometry:
             if candidate.progress + 0.20 < previous_progress:
                 continue
             if best is None or (candidate.distance, -candidate.progress) < (best.distance, -best.progress):
+                best = candidate
+            # A safe lateral approach to the outgoing leg is genuine progress.
+            # Use it only after tracking stalls, near the immediate corner;
+            # collision, support and release-tail checks still apply normally.
+            if (prefer_next_segment and index == segment_index + 1
+                    and candidate.distance <= advance_radius
+                    and best is not candidate and candidate.progress > best.progress):
                 best = candidate
         if best is None:
             px, pz = self.point_at(previous_progress)
@@ -875,6 +883,7 @@ class FixedRouteController:
         projection = self._geometry.project(
             body.x, body.z, self._progress, self._segment_index,
             self.config.maximum_cross_track_blocks,
+            prefer_next_segment=self._no_progress_frames >= 3,
         )
         self._progress = max(self._progress, projection.progress)
         self._segment_index = max(self._segment_index, projection.segment_index)

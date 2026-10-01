@@ -1,0 +1,21 @@
+{
+  "pairs": 1448,
+  "differences": [],
+  "before": {
+    "cases": 1448,
+    "failed": 0,
+    "source_summary_sha256": "3a47f1a6c5b26947b28f4060ee31666b88cae9c57dbfa27b6764591db325bd71"
+  },
+  "final": {
+    "cases": 1448,
+    "failed": 0,
+    "source_summary_sha256": "919ce457dbd3293cce1927dc2fc023e20683464ae280476cafb774ac41192022"
+  },
+  "uncovered_functions": [
+    "navigation_session.handle_internal_contract_failure",
+    "navigation_session._wait_for_active_terminal",
+    "navigation_session._resolve_pending_retry",
+    "planning_coordinator._retry_or_fail"
+  ],
+  "limits": "Summaries retain case hashes and coverage. Complete case files remain in local run directories; rerun the formal-path tool to reproduce them. These cases are not in the product denominator."
+}

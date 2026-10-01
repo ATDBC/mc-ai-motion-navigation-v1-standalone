@@ -2,7 +2,7 @@
 
 本仓库是由主项目生成的只读源码快照。先读最新的 `docs/motion_navigation/stages/` 和对应的 `acceptance/`，再读取相关 `architecture/` 与 `decisions/`。
 
-当前 [R28 计划](docs/motion_navigation/stages/navigation-coordination-convergence-r28-plan.md)已交付共同量尺和 1,600 场组件基线，生产迁移未开始。持续任务速率预算、正式跟随及长时探针仍待实施；结果与限制见[R28 验收第 8 节](docs/motion_navigation/acceptance/navigation-coordination-convergence.md#8-r28-0-首批交付组件基线和共同量尺)。正常组存在未达产品门槛的失败，不能把无安全违规当成全部能力通过。现行能力仍按 R27 和 M3 声明。
+当前 [R28 计划](docs/motion_navigation/stages/navigation-coordination-convergence-r28-plan.md)已完成批次 2—4，修正工具、非格心目标与拐角并冻结 v2 基线：1,589/1,600，严格下降晚到的 11 个失败仍保留。旧清单 147 个失败转成功，没有成功转失败；1,448 组协调回归逐项一致。代表性 Fabric 12 个导航任务全部完成，原批次封装失败与原始流复核分开报告。结果与边界见[R28 验收第 9 节](docs/motion_navigation/acceptance/navigation-coordination-convergence.md#9-批次-24产品基线修正)。R28-1 迁移、持续任务预算、正式跟随及长时探针尚未实施，未覆盖函数不能迁移。现行 R27 和 M3 结论保持原范围。
 
 当前导航协调 S0 至 S5 已实施。2026-10-01，R27 复审整改 A0—A5 完成，S5 按本轮冻结范围重新关闭。停止请求保留业务终态和身体责任，信息通知携带完整身份，四个模拟关闭入口执行共同证据检查；测试走 Runtime 和正式 driver，不替实现生成身份。当前范围见 [R27](docs/motion_navigation/stages/navigation-async-work-r27-root-fix-plan.md)，结果和限制见[验收第 20 节](docs/motion_navigation/acceptance/navigation-coordination-refactor.md#20-r27-复审整改结果)与[缺陷台账](docs/motion_navigation/acceptance/defect-ledger.md)。连续高度 M3 的历史 Fabric 结论保留。
 

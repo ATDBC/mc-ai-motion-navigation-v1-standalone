@@ -1,0 +1,282 @@
+{
+  "v1_original_vs_final": {
+    "pairs": 1600,
+    "groups": {
+      "point-normal": {
+        "tasks": 200,
+        "before": 192,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 8,
+        "strict_trace_changes": 0
+      },
+      "point-late": {
+        "tasks": 200,
+        "before": 193,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 7,
+        "strict_trace_changes": 0
+      },
+      "height-normal": {
+        "tasks": 200,
+        "before": 200,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 0,
+        "strict_trace_changes": 0
+      },
+      "height-late": {
+        "tasks": 200,
+        "before": 200,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 0,
+        "strict_trace_changes": 0
+      },
+      "target-normal": {
+        "tasks": 200,
+        "before": 134,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 66,
+        "strict_trace_changes": 0
+      },
+      "target-late": {
+        "tasks": 200,
+        "before": 134,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 66,
+        "strict_trace_changes": 0
+      },
+      "drop-normal": {
+        "tasks": 200,
+        "before": 200,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 0,
+        "strict_trace_changes": 0
+      },
+      "drop-late": {
+        "tasks": 200,
+        "before": 185,
+        "after": 185,
+        "success_to_failure": 0,
+        "failure_to_success": 0,
+        "strict_trace_changes": 0
+      }
+    },
+    "scope": "fixed-set repair evidence; not a statistical release gate"
+  },
+  "v2_before_vs_goal": {
+    "pairs": 1600,
+    "groups": {
+      "point-normal": {
+        "tasks": 200,
+        "before": 17,
+        "after": 198,
+        "success_to_failure": 0,
+        "failure_to_success": 181,
+        "strict_trace_changes": 0
+      },
+      "point-late": {
+        "tasks": 200,
+        "before": 17,
+        "after": 199,
+        "success_to_failure": 0,
+        "failure_to_success": 182,
+        "strict_trace_changes": 0
+      },
+      "height-normal": {
+        "tasks": 200,
+        "before": 200,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 0,
+        "strict_trace_changes": 0
+      },
+      "height-late": {
+        "tasks": 200,
+        "before": 200,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 0,
+        "strict_trace_changes": 0
+      },
+      "target-normal": {
+        "tasks": 200,
+        "before": 134,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 66,
+        "strict_trace_changes": 0
+      },
+      "target-late": {
+        "tasks": 200,
+        "before": 134,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 66,
+        "strict_trace_changes": 0
+      },
+      "drop-normal": {
+        "tasks": 200,
+        "before": 200,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 0,
+        "strict_trace_changes": 0
+      },
+      "drop-late": {
+        "tasks": 200,
+        "before": 189,
+        "after": 189,
+        "success_to_failure": 0,
+        "failure_to_success": 0,
+        "strict_trace_changes": 0
+      }
+    },
+    "scope": "fixed-set repair evidence; not a statistical release gate"
+  },
+  "v2_goal_vs_final": {
+    "pairs": 1600,
+    "groups": {
+      "point-normal": {
+        "tasks": 200,
+        "before": 198,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 2,
+        "strict_trace_changes": 0
+      },
+      "point-late": {
+        "tasks": 200,
+        "before": 199,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 1,
+        "strict_trace_changes": 0
+      },
+      "height-normal": {
+        "tasks": 200,
+        "before": 200,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 0,
+        "strict_trace_changes": 0
+      },
+      "height-late": {
+        "tasks": 200,
+        "before": 200,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 0,
+        "strict_trace_changes": 0
+      },
+      "target-normal": {
+        "tasks": 200,
+        "before": 200,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 0,
+        "strict_trace_changes": 0
+      },
+      "target-late": {
+        "tasks": 200,
+        "before": 200,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 0,
+        "strict_trace_changes": 0
+      },
+      "drop-normal": {
+        "tasks": 200,
+        "before": 200,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 0,
+        "strict_trace_changes": 0
+      },
+      "drop-late": {
+        "tasks": 200,
+        "before": 189,
+        "after": 189,
+        "success_to_failure": 0,
+        "failure_to_success": 0,
+        "strict_trace_changes": 0
+      }
+    },
+    "scope": "fixed-set repair evidence; not a statistical release gate"
+  },
+  "v2_before_vs_final": {
+    "pairs": 1600,
+    "groups": {
+      "point-normal": {
+        "tasks": 200,
+        "before": 17,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 183,
+        "strict_trace_changes": 0
+      },
+      "point-late": {
+        "tasks": 200,
+        "before": 17,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 183,
+        "strict_trace_changes": 0
+      },
+      "height-normal": {
+        "tasks": 200,
+        "before": 200,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 0,
+        "strict_trace_changes": 0
+      },
+      "height-late": {
+        "tasks": 200,
+        "before": 200,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 0,
+        "strict_trace_changes": 0
+      },
+      "target-normal": {
+        "tasks": 200,
+        "before": 134,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 66,
+        "strict_trace_changes": 0
+      },
+      "target-late": {
+        "tasks": 200,
+        "before": 134,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 66,
+        "strict_trace_changes": 0
+      },
+      "drop-normal": {
+        "tasks": 200,
+        "before": 200,
+        "after": 200,
+        "success_to_failure": 0,
+        "failure_to_success": 0,
+        "strict_trace_changes": 0
+      },
+      "drop-late": {
+        "tasks": 200,
+        "before": 189,
+        "after": 189,
+        "success_to_failure": 0,
+        "failure_to_success": 0,
+        "strict_trace_changes": 0
+      }
+    },
+    "scope": "fixed-set repair evidence; not a statistical release gate"
+  }
+}
