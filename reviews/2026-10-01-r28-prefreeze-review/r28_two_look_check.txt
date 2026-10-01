@@ -1,0 +1,8 @@
+    d  n first | delta=0: look1 cumulative | delta=-1pt: false pass | delta=-1.5pt: false pass
+ 0.02     1500 |          64.9%      94.5% |                  2.09% |                    0.02%
+ 0.04     3200 |          72.8%      96.7% |                  2.42% |                    0.01%
+ 0.08     6400 |          74.1%      96.9% |                  2.48% |                    0.01%
+ 0.04     1500 |          38.3%      72.2% |                  2.37% |                    0.10%
+ 0.08     3200 |          42.6%      76.3% |                  2.47% |                    0.10%
+
+Trials per cell: 200000; Monte Carlo standard error of a 2.5% rate ~ 0.03 pt
