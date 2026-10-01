@@ -1,0 +1,21 @@
+propose: 99 branches; by number of distinct owner states touched: 0: 25, 1: 38, 2: 12, 3: 6, 4: 10, 5: 3, 6: 5
+    line 2232: Budget + Handoff + Information + Lifecycle + Supervisor/Executor
+    line 2318: Information + Lifecycle + Supervisor/Executor
+    line 2327: Handoff + Lifecycle + Supervisor/Executor
+    line 2364: Budget + Information + Lifecycle + Supervisor/Executor
+    line 2430: Information + Lifecycle + Supervisor/Executor
+    line 2512: Information + Planning + Supervisor/Executor
+    line 2590: Handoff + Lifecycle + Supervisor/Executor
+    line 2710: Budget + Handoff + Information + Lifecycle + Planning + Supervisor/Executor
+    line 2912: Budget + Information + Lifecycle + Supervisor/Executor
+    line 2237: Budget + Handoff + Information + Lifecycle + Supervisor/Executor
+    line 2383: Budget + Information + Lifecycle + Supervisor/Executor
+    line 2713: Budget + Handoff + Information + Lifecycle + Planning + Supervisor/Executor
+    ... 12 more branches touching >= 3 owners
+observe: 32 branches; by number of distinct owner states touched: 0: 8, 1: 15, 2: 3, 3: 5, 4: 1
+    line 2010: Handoff + Information + Planning
+    line 2107: Budget + Information + Planning
+    line 2136: Budget + Handoff + Lifecycle + Planning
+    line 2139: Budget + Handoff + Planning
+    line 2151: Budget + Handoff + Planning
+    line 2152: Budget + Handoff + Planning

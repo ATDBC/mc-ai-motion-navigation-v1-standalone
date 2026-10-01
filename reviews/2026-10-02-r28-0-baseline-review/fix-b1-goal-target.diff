@@ -1,0 +1,172 @@
+diff --git a/mc2p/motion_nav/known_map_planner.py b/mc2p/motion_nav/known_map_planner.py
+index 6eb9eb9..f2c9152 100644
+--- a/mc2p/motion_nav/known_map_planner.py
++++ b/mc2p/motion_nav/known_map_planner.py
+@@ -39,7 +39,7 @@ from mc2p.motion_nav.motion_risk import (
+ from mc2p.motion_nav.step_transition import StepEdge, StepProfile, query_step
+ from mc2p.motion_nav.segment_entry import SegmentEntryWindow
+ from mc2p.motion_nav.support_surfaces import (
+-    SupportSurface, SurfaceNodeId, query_support_surfaces,
++    SupportSurface, SurfaceNodeId, query_support_surfaces, surface_overlaps_region,
+ )
+
+
+@@ -2463,12 +2463,9 @@ def astar_surface_plan(graph: SurfaceGraph,
+                   if graph.complete_scope else SurfacePlanningStatus.NO_KNOWN_ROUTE)
+         return _surface_candidate(request, graph, status)
+     if request.goal_state is not None:
+-        goal_position = positions[request.goal]
+-        region = request.goal_state.region
++        goal_surface = next(node.surface for node in graph.nodes if node.node_id == request.goal)
+         if not (
+-            region.min_x <= goal_position[0] <= region.max_x
+-            and region.min_y <= goal_position[1] <= region.max_y
+-            and region.min_z <= goal_position[2] <= region.max_z
++            surface_overlaps_region(goal_surface, request.goal_state.region)
+             and request.goal_state.support in {GoalSupport.SOLID, GoalSupport.ANY}
+         ):
+             return _surface_candidate(
+@@ -2731,12 +2728,8 @@ def plan_known_surface_snapshot(
+             request, graph, status, information_need=information_need,
+         )
+     if request.goal_state is not None:
+-        position = goal.position
+-        region = request.goal_state.region
+         if not (
+-            region.min_x <= position[0] <= region.max_x
+-            and region.min_y <= position[1] <= region.max_y
+-            and region.min_z <= position[2] <= region.max_z
++            surface_overlaps_region(goal.surface, request.goal_state.region)
+             and request.goal_state.support in {GoalSupport.SOLID, GoalSupport.ANY}
+         ):
+             return _surface_candidate(
+diff --git a/mc2p/motion_nav/navigation_session.py b/mc2p/motion_nav/navigation_session.py
+index 80528cc..944a9f1 100644
+--- a/mc2p/motion_nav/navigation_session.py
++++ b/mc2p/motion_nav/navigation_session.py
+@@ -145,7 +145,9 @@ from mc2p.motion_nav.safe_ground_control import (
+     verified_ground_recovery_movement,
+ )
+ from mc2p.motion_nav.step_transition import StepProfile, load_step_profile
+-from mc2p.motion_nav.support_surfaces import SurfaceNodeId, query_support_surfaces
++from mc2p.motion_nav.support_surfaces import (
++    SurfaceNodeId, query_support_surfaces, standable_point_in_region,
++)
+ from mc2p.motion_nav.world_model import BlockPos, CellKnowledge
+
+
+@@ -4377,11 +4379,9 @@ class NavigationSession:
+                 )
+                 missing.update(result.missing_cells)
+                 for surface in result.surfaces:
+-                    px, py, pz = surface.position
+-                    if (goal.region.min_x <= px <= goal.region.max_x
+-                            and goal.region.min_y <= py <= goal.region.max_y
+-                            and goal.region.min_z <= pz <= goal.region.max_z):
+-                        candidates.append(surface)
++                    target = standable_point_in_region(frame.world, surface, goal.region)
++                    if target is not None:
++                        candidates.append((surface, target))
+         if not candidates:
+             return None, tuple(sorted(missing))
+         center = (
+@@ -4391,5 +4391,5 @@ class NavigationSession:
+         )
+         return min(
+             candidates,
+-            key=lambda surface: math.dist(surface.position, center),
+-        ).node_id, tuple(sorted(missing))
++            key=lambda item: math.dist(item[1], center),
++        )[0].node_id, tuple(sorted(missing))
+diff --git a/mc2p/motion_nav/route_admission.py b/mc2p/motion_nav/route_admission.py
+index e1a9689..c9355b1 100644
+--- a/mc2p/motion_nav/route_admission.py
++++ b/mc2p/motion_nav/route_admission.py
+@@ -43,7 +43,7 @@ from mc2p.motion_nav.known_map_planner import (
+     SurfaceControlledDropEdge, SurfaceJumpGapEdge, SurfaceJumpUpEdge,
+ )
+ from mc2p.motion_nav.step_transition import StepEdge
+-from mc2p.motion_nav.support_surfaces import SurfaceNodeId
++from mc2p.motion_nav.support_surfaces import SurfaceNodeId, standable_point_in_region
+ from mc2p.motion_nav.runtime_adapter import NavigationFrame
+ from mc2p.motion_nav.segment_entry import (
+     SegmentEntryWindow, body_fits_segment_entry,
+@@ -631,6 +631,16 @@ class RouteAdmitter:
+                 pending_nodes = [next_node]
+                 pending_points = [RoutePoint(*next_node.position)]
+                 pending_dependencies = set(next_node.dependencies)
++        if candidate.goal_state is not None:
++            # The graph ends at the goal surface's representative point; walk
++            # on to a standable point inside the goal box so the endpoint has
++            # the box's own margin instead of the block centre's margin.
++            target = standable_point_in_region(
++                frame.world, candidate.path[-1].surface, candidate.goal_state.region,
++            )
++            last = pending_points[-1]
++            if target is not None and math.dist(target, (last.x, last.y, last.z)) > 1.0e-6:
++                pending_points.append(RoutePoint(*target))
+         flush_walk()
+         return (ActionRoute(
+             route_id, tuple(actions), candidate.goal_state,
+diff --git a/mc2p/motion_nav/support_surfaces.py b/mc2p/motion_nav/support_surfaces.py
+index 69042cc..cca8011 100644
+--- a/mc2p/motion_nav/support_surfaces.py
++++ b/mc2p/motion_nav/support_surfaces.py
+@@ -321,3 +321,57 @@ def query_support_surfaces(
+     return SupportSurfaceResult(
+         QueryStatus.BLOCKED, (), tuple(sorted(query_dependencies)),
+     )
++
++
++def standable_point_in_region(
++    world: WorldView,
++    surface: SupportSurface,
++    region: Aabb,
++    *,
++    body_width: float = 0.6,
++    body_height: float = 1.8,
++    minimum_support_fraction: float = 0.5,
++) -> tuple[float, float, float] | None:
++    """Best standable feet position on ``surface`` inside ``region``.
++
++    The representative ``surface.position`` is a block-level choice.  A goal
++    box may lie anywhere on the surface, so the target is the box centre
++    clamped into the part of the surface that the box covers, checked with
++    the same clearance and support rules as the representative point.
++    """
++    top_y = surface.position[1]
++    if not region.min_y - _EPSILON <= top_y <= region.max_y + _EPSILON:
++        return None
++    low_x = max(region.min_x, surface.region.min_x)
++    high_x = min(region.max_x, surface.region.max_x)
++    low_z = max(region.min_z, surface.region.min_z)
++    high_z = min(region.max_z, surface.region.max_z)
++    if low_x > high_x + _EPSILON or low_z > high_z + _EPSILON:
++        return None
++    centre_x = (region.min_x + region.max_x) / 2.0
++    centre_z = (region.min_z + region.max_z) / 2.0
++    half = body_width / 2.0
++    candidates = (
++        (min(max(centre_x, low_x), high_x), min(max(centre_z, low_z), high_z)),
++        ((low_x + high_x) / 2.0, (low_z + high_z) / 2.0),
++    )
++    for x, z in candidates:
++        body = Aabb(x - half, top_y, z - half, x + half, top_y + body_height, z + half)
++        clearance = sweep(body, (0.0, 0.0, 0.0), world)
++        if clearance.status is not QueryStatus.FEASIBLE:
++            continue
++        support = query_support(body, world)
++        if (support.status is QueryStatus.FEASIBLE
++                and support.support_fraction + _EPSILON >= minimum_support_fraction):
++            return (x, top_y, z)
++    return None
++
++
++def surface_overlaps_region(surface: SupportSurface, region: Aabb) -> bool:
++    """Geometric part of the goal test; standability is checked at resolution."""
++    top_y = surface.position[1]
++    return (
++        region.min_y - _EPSILON <= top_y <= region.max_y + _EPSILON
++        and max(region.min_x, surface.region.min_x) <= min(region.max_x, surface.region.max_x) + _EPSILON
++        and max(region.min_z, surface.region.min_z) <= min(region.max_z, surface.region.max_z) + _EPSILON
++    )

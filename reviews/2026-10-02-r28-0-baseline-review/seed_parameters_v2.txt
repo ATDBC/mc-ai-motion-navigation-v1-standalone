@@ -1,0 +1,4 @@
+point-normal  n=200   distinct: current  144   sketch  200
+point-normal  n=1500  distinct: current  144   sketch 1500
+drop-normal   n=200   distinct: current   48   sketch  200
+drop-normal   n=1500  distinct: current   48   sketch 1500

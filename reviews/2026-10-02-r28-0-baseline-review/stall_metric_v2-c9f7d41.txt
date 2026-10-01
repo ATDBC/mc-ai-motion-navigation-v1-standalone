@@ -1,0 +1,33 @@
+v2 parameters: window 10 ticks, net displacement < 0.1 block, runs >= 3 ticks
+
+layer, success             tasks v1 stall tasks  v2 walking tasks/ticks  v2 strict-prep tasks/ticks
+('drop-late', False)          15             15           8/44                      2/24
+('drop-late', True)          185            185          30/134                    58/236
+('drop-normal', True)        200            200           0/0                     100/401
+('height-late', True)        200              0           0/0                       0/0
+('height-normal', True)      200              0           0/0                       0/0
+('point-late', False)          7              0           7/74                      0/0
+('point-late', True)         193              0           1/5                       0/0
+('point-normal', False)        8              0           8/104                     0/0
+('point-normal', True)       192              0           0/0                       0/0
+('target-late', False)        66              0           0/0                       0/0
+('target-late', True)        134              1           0/0                       0/0
+('target-normal', False)      66              0           0/0                       0/0
+('target-normal', True)      134              0           0/0                       0/0
+
+fixed_route_stalled failures and their v2 walking-stall ticks:
+  point-normal-000035: 13
+  point-normal-000044: 13
+  point-normal-000080: 13
+  point-normal-000095: 13
+  point-normal-000140: 13
+  point-normal-000143: 13
+  point-normal-000179: 13
+  point-normal-000188: 13
+  point-late-000035: 4
+  point-late-000044: 12
+  point-late-000080: 13
+  point-late-000095: 11
+  point-late-000140: 13
+  point-late-000179: 12
+  point-late-000188: 9

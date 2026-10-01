@@ -1,0 +1,92 @@
+Paired comparisons against the archived R28-0 baseline (Linux re-runs, 1,600 tasks each).
+
+=== goal-only (fix-b1-goal-target.diff)
+layer           before   after    b    c  changed  arrival delta on both-success (min/mean/max)
+drop-late       185/200 185/200   0    0        0  0/+0.00/0
+drop-normal     200/200 200/200   0    0        0  0/+0.00/0
+height-late     200/200 200/200   0    0        0  0/+0.00/0
+height-normal   200/200 200/200   0    0        0  0/+0.00/0
+point-late      193/200 193/200   0    0        0  0/+0.00/0
+point-normal    192/200 192/200   0    0        0  0/+0.00/0
+target-late     134/200 200/200   0   66       66  0/+0.00/0
+target-normal   134/200 200/200   0   66       66  0/+0.00/0
+
+remaining failures after the patch:
+  drop-late: {'input_lost': 10, 'edge_probe_acquisition_timeout': 2, 'motion_unsolvable:needs_state': 3}
+  point-late: {'fixed_route_stalled': 7}
+  point-normal: {'fixed_route_stalled': 8}
+
+changed metric fields (task counts):
+  target-late: {'outcome': 66, 'success': 66, 'planning_requests': 66, 'controller_switches': 66, 'controller_acquisitions': 66, 'controller_releases': 66}
+  target-normal: {'outcome': 66, 'success': 66, 'planning_requests': 66, 'controller_switches': 66, 'controller_acquisitions': 66, 'controller_releases': 66}
+
+=== corner, always-on variant (rejected prototype A)
+layer           before   after    b    c  changed  arrival delta on both-success (min/mean/max)
+drop-late       185/200 184/200   4    3       82  -44/-1.22/35
+drop-normal     200/200 200/200   0    0       90  -13/-0.96/3
+height-late     200/200 200/200   0    0        3  -3/-0.01/1
+height-normal   200/200 200/200   0    0        0  0/+0.00/0
+point-late      193/200 200/200   0    7      129  -19/-1.44/3
+point-normal    192/200 200/200   0    8      132  -9/-1.31/1
+target-late     134/200 134/200   0    0      148  -13/-2.67/5
+target-normal   134/200 134/200   0    0      161  -12/-2.78/3
+
+remaining failures after the patch:
+  drop-late: {'input_lost': 11, 'edge_probe_acquisition_timeout': 2, 'motion_unsolvable:needs_state': 3}
+  target-late: {'goal_surface_unavailable': 66}
+  target-normal: {'goal_surface_unavailable': 66}
+
+changed metric fields (task counts):
+  drop-late: {'zero_displacement_intervals': 78, 'arrival_ticks': 74, 'terminal_ticks': 72, 'observed_ticks': 72, 'zero_displacement_ticks': 68, 'first_movement_ticks': 45}
+  drop-normal: {'zero_displacement_intervals': 81, 'arrival_ticks': 81, 'terminal_ticks': 81, 'observed_ticks': 81, 'first_movement_ticks': 50, 'zero_displacement_ticks': 24}
+  height-late: {'arrival_ticks': 3, 'terminal_ticks': 3, 'observed_ticks': 3}
+  point-late: {'arrival_ticks': 124, 'terminal_ticks': 124, 'observed_ticks': 124, 'first_movement_ticks': 48, 'outcome': 7, 'success': 7}
+  point-normal: {'arrival_ticks': 132, 'terminal_ticks': 132, 'observed_ticks': 132, 'first_movement_ticks': 48, 'outcome': 8, 'success': 8}
+  target-late: {'revision_responses': 132, 'observed_ticks': 129, 'terminal_ticks': 128, 'arrival_ticks': 104, 'first_movement_ticks': 47, 'controller_switches': 4}
+  target-normal: {'revision_responses': 148, 'terminal_ticks': 142, 'observed_ticks': 142, 'arrival_ticks': 96, 'first_movement_ticks': 48}
+
+=== corner, only after 3 frames without progress (fix-b2-corner-progress.diff)
+layer           before   after    b    c  changed  arrival delta on both-success (min/mean/max)
+drop-late       185/200 185/200   0    0        0  0/+0.00/0
+drop-normal     200/200 200/200   0    0        0  0/+0.00/0
+height-late     200/200 200/200   0    0        0  0/+0.00/0
+height-normal   200/200 200/200   0    0        0  0/+0.00/0
+point-late      193/200 200/200   0    7       13  -11/-0.16/0
+point-normal    192/200 200/200   0    8       13  -4/-0.05/0
+target-late     134/200 134/200   0    0        1  -1/-0.01/0
+target-normal   134/200 134/200   0    0        0  0/+0.00/0
+
+remaining failures after the patch:
+  drop-late: {'input_lost': 10, 'edge_probe_acquisition_timeout': 2, 'motion_unsolvable:needs_state': 3}
+  target-late: {'goal_surface_unavailable': 66}
+  target-normal: {'goal_surface_unavailable': 66}
+
+changed metric fields (task counts):
+  point-late: {'arrival_ticks': 13, 'terminal_ticks': 13, 'observed_ticks': 13, 'outcome': 7, 'success': 7, 'body_tail_ticks': 7}
+  point-normal: {'arrival_ticks': 13, 'terminal_ticks': 13, 'observed_ticks': 13, 'outcome': 8, 'success': 8, 'body_tail_ticks': 8}
+  target-late: {'arrival_ticks': 1, 'terminal_ticks': 1, 'observed_ticks': 1}
+
+=== final = B-1 + narrowed B-2
+layer           before   after    b    c  changed  arrival delta on both-success (min/mean/max)
+drop-late       185/200 185/200   0    0        0  0/+0.00/0
+drop-normal     200/200 200/200   0    0        0  0/+0.00/0
+height-late     200/200 200/200   0    0        0  0/+0.00/0
+height-normal   200/200 200/200   0    0        0  0/+0.00/0
+point-late      193/200 200/200   0    7       13  -11/-0.16/0
+point-normal    192/200 200/200   0    8       13  -4/-0.05/0
+target-late     134/200 200/200   0   66       67  -1/-0.01/0
+target-normal   134/200 200/200   0   66       66  0/+0.00/0
+
+remaining failures after the patch:
+  drop-late: {'input_lost': 10, 'edge_probe_acquisition_timeout': 2, 'motion_unsolvable:needs_state': 3}
+
+changed metric fields (task counts):
+  point-late: {'arrival_ticks': 13, 'terminal_ticks': 13, 'observed_ticks': 13, 'outcome': 7, 'success': 7, 'body_tail_ticks': 7}
+  point-normal: {'arrival_ticks': 13, 'terminal_ticks': 13, 'observed_ticks': 13, 'outcome': 8, 'success': 8, 'body_tail_ticks': 8}
+  target-late: {'arrival_ticks': 67, 'terminal_ticks': 67, 'observed_ticks': 67, 'outcome': 66, 'success': 66, 'planning_requests': 66}
+  target-normal: {'outcome': 66, 'success': 66, 'planning_requests': 66, 'controller_switches': 66, 'controller_acquisitions': 66, 'controller_releases': 66}
+
+=== motion_nav unit tests
+goal-only: Ran 862 tests in 276.027s OK
+final:     Ran 862 tests in 274.641s OK
+always-on corner + goal: Ran 862 tests in 248.963s FAILED (failures=1)  (frozen-14 case far_landing_L_goal_revised_at_30: revision event at tick 63 instead of frozen 62)
