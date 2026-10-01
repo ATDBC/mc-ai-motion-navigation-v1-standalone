@@ -1,0 +1,19 @@
+Wilson 95% lower bound for the normal-input success rate (gate: >= 99%)
+  n=200  200/200: point 100.00%  lower  98.12%
+  n=200  199/200: point  99.50%  lower  97.22%
+  n=200  198/200: point  99.00%  lower  96.43%
+  n=200  196/200: point  98.00%  lower  94.97%
+  n=400  400/400: point 100.00%  lower  99.05%
+  n=400  399/400: point  99.75%  lower  98.60%
+  n=400  398/400: point  99.50%  lower  98.20%
+  n=400  396/400: point  99.00%  lower  97.46%
+
+Half-width of the paired 95% interval when candidate == baseline (expected discordance d)
+  d=0.02: n=200 -> +/-1.96 pt, n=400 -> +/-1.39 pt, seeds needed for +/-1 pt ~ 769
+  d=0.04: n=200 -> +/-2.77 pt, n=400 -> +/-1.96 pt, seeds needed for +/-1 pt ~ 1537
+  d=0.08: n=200 -> +/-3.92 pt, n=400 -> +/-2.77 pt, seeds needed for +/-1 pt ~ 3074
+
+Simulated: equal candidate, share of comparisons whose interval excludes a 1-point regression
+  d=0.02: decided at 200  22.1%, after extension to 400  38.2%, point estimate already > 1 pt worse   9.9%
+  d=0.04: decided at 200  12.1%, after extension to 400  22.9%, point estimate already > 1 pt worse  17.2%
+  d=0.08: decided at 200   7.6%, after extension to 400  14.5%, point estimate already > 1 pt worse  27.0%
