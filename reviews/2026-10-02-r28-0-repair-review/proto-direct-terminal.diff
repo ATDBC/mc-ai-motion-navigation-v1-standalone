@@ -1,0 +1,26 @@
+diff --git a/mc2p/motion_nav/route_admission.py b/mc2p/motion_nav/route_admission.py
+index 65a3c83..418ca0c 100644
+--- a/mc2p/motion_nav/route_admission.py
++++ b/mc2p/motion_nav/route_admission.py
+@@ -649,7 +649,20 @@ class RouteAdmitter:
+                     actions.append(WalkSegment(FixedRoute(f"{route_id}-goal-tail", (last, terminal)),
+                                                (candidate.path[-1].node_id,), terminal_target.dependencies))
+                 else:
+-                    pending_points.append(terminal)
++                    # End at the target directly from the previous route point
++                    # when that straight same-height walk is clear; otherwise
++                    # keep the representative point and walk on to the target.
++                    direct = None
++                    if len(pending_points) >= 2 and candidate.goal_state is not None:
++                        before = pending_points[-2]
++                        direct = standable_point_in_region(
++                            frame.world, candidate.path[-1].surface, candidate.goal_state.region,
++                            connection_from=(before.x, before.y, before.z))
++                    if direct is not None and direct.status is QueryStatus.FEASIBLE:
++                        pending_points[-1] = RoutePoint(*direct.position)
++                        pending_dependencies.update(direct.dependencies)
++                    else:
++                        pending_points.append(terminal)
+         flush_walk()
+         if terminal_target is not None and actions:
+             actions[-1] = replace(actions[-1], dependencies=tuple(sorted(

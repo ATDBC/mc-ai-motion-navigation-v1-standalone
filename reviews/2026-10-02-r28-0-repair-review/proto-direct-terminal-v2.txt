@@ -1,0 +1,23 @@
+Paired comparison: archived r28-baseline-v2 (41c7d9b) vs 41c7d9b + proto-direct-terminal.diff, same v2 manifest, Linux re-run
+layer           before   after    b    c  changed  arrival delta on both-success (min/mean/max)
+drop-late       189/200 189/200   0    0        0  0/+0.00/0
+drop-normal     200/200 200/200   0    0        0  0/+0.00/0
+height-late     200/200 200/200   0    0        0  0/+0.00/0
+height-normal   200/200 200/200   0    0        0  0/+0.00/0
+point-late      200/200 200/200   0    0      170  -7/-3.17/1
+point-normal    200/200 200/200   0    0      170  -6/-3.00/1
+target-late     200/200 200/200   0    0       66  -7/-1.28/0
+target-normal   200/200 200/200   0    0       66  -6/-1.24/0
+
+remaining failures after the patch:
+  drop-late: {'input_lost': 7, 'edge_probe_acquisition_timeout': 2, 'motion_unsolvable:needs_state': 2}
+
+changed metric fields (task counts):
+  point-late: {'arrival_ticks': 170, 'terminal_ticks': 170, 'observed_ticks': 170}
+  point-normal: {'arrival_ticks': 170, 'terminal_ticks': 170, 'observed_ticks': 170}
+  target-late: {'arrival_ticks': 66, 'terminal_ticks': 66, 'observed_ticks': 66}
+  target-normal: {'arrival_ticks': 66, 'terminal_ticks': 66, 'observed_ticks': 66, 'revision_responses': 1}
+
+motion_nav tests with the prototype: Ran 870 tests in 238.002s OK
+motion_nav tests on 41c7d9b:      Ran 870 tests in 245.467s OK
+v2 reproduction (first 40 seeds x 8 layers, Linux):

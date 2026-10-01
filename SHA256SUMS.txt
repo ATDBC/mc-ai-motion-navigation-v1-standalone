@@ -559,6 +559,17 @@ adad1e92994fee1ed2434e05ed197a6c0f8193a8732d25585b8d3609d56de0b5  reviews/2026-1
 27f921d0be0558e9ef30f329a47f70131037dd770da1984f0b504ef057132020  reviews/2026-10-02-r28-0-baseline-review/stall_metric_v2-c9f7d41.txt
 7dd5777cc2e3991be36e582e7feff77c206937e9b4c024395bce178152ed2372  reviews/2026-10-02-r28-0-baseline-review/stall_metric_v2.py
 3e41763318314066eebc46353896bf273a266f67bd2b468b93386fe2444fa54f  reviews/2026-10-02-r28-0-fix-guide.md
+2e034ed864c21ad221b77377bcad2d023e256de0dfd455a840aac05217019f2d  reviews/2026-10-02-r28-0-repair-review.md
+e136d39a601497c02ff4f069283cc79ee57c29e035b7c8911fb52adf523c6b3d  reviews/2026-10-02-r28-0-repair-review/approach_limit.py
+5b659eca8fe4b55a8d121e1b1d547a896661f748ead7a8136407bcd0957d9c3e  reviews/2026-10-02-r28-0-repair-review/approach_limit.txt
+9c169857e29cba50b3278992889fe54d946a0a082992db8c580c11e5808037d2  reviews/2026-10-02-r28-0-repair-review/edge_goals-41c7d9b.txt
+f97b3a1d378f2a0132b99b2685f5caa8951b0f545e0a9973bca4bd287adb67cd  reviews/2026-10-02-r28-0-repair-review/edge_goals.py
+ab993459597a3c4a044372cead5e675f00dfca3b4000760074bdd236881c8160  reviews/2026-10-02-r28-0-repair-review/player_spots.py
+df03f0bf483c326971d24fd6185489a467cdea3db56ddd3c9e96e5417f628b52  reviews/2026-10-02-r28-0-repair-review/player_spots.txt
+b1904c7b866d8b8eae1f2ea0ec4124aedc5f1db30b23eb1ce99eb5389c3a4056  reviews/2026-10-02-r28-0-repair-review/proto-direct-terminal-v2.txt
+29a266a90f075996618b982304dbd4bdb27506756c56568ba964ff285f8fcd66  reviews/2026-10-02-r28-0-repair-review/proto-direct-terminal.diff
+5410ad7e1d09531036668c67a07c9c5a35549caebb3c4a69256a0c8d2a0d495a  reviews/2026-10-02-r28-0-repair-review/stall_attribution-41c7d9b.txt
+8e9f67df13027293c7908ae59c2b85d8f7480dd494c9e4d0d50abf39d6294d04  reviews/2026-10-02-r28-0-repair-review/stall_attribution.py
 09c3a5b337de4f64d65e188a2903c84cdd9a247da8f69e5155851f3b87287b95  scripts/active_perception_diagnostics.py
 1e6cfdc7c7f333624f0f3bdd57ff51d21454124d7e9bd27d247b9afc4db48442  scripts/active_perception_evidence.py
 a28fccf0fc5ae383fcee8023078b59cd0687ab9c54454adca02d90e142ff62d2  scripts/active_perception_metrics.py

@@ -1,0 +1,12 @@
+kind  goal                  picked point          margin  outcome
+ledge (0.5, 64.0, 10.85)    (0.5, 10.85)             0.2  failed fixed_route_has_no_forward_control ticks=74 final=(0.500, 10.640)
+ledge (0.5, 64.0, 10.95)    (0.5, 10.95)             0.2  failed fixed_route_has_no_forward_control ticks=74 final=(0.500, 10.640)
+ledge (0.5, 64.0, 11.05)    (0.5, 11.0)             0.15  failed fixed_route_has_no_forward_control ticks=74 final=(0.500, 10.640)
+ledge (0.5, 64.0, 11.15)    (0.5, 11.0)             0.05  failed fixed_route_has_no_forward_control ticks=74 final=(0.500, 10.640)
+wall  (1.7, 64.0, 6.5)      (1.7, 6.5)               0.2  failed fixed_route_has_no_forward_control ticks=63 final=(1.300, 6.480)
+wall  (1.75, 64.0, 6.5)     (1.55, 6.3)              0.0  failed fixed_route_has_no_forward_control ticks=70 final=(1.300, 6.270)
+wall  (1.8, 64.0, 6.5)      (1.6, 6.3)               0.0  failed fixed_route_has_no_forward_control ticks=65 final=(1.300, 6.480)
+wall  (1.85, 64.0, 6.5)     (1.65, 6.3)              0.0  failed fixed_route_has_no_forward_control ticks=65 final=(1.300, 6.480)
+wall  (1.9, 64.0, 6.5)      (1.7, 6.3)               0.0  failed fixed_route_has_no_forward_control ticks=65 final=(1.300, 6.480)
+open  (0.5, 64.0, 9.5)      (0.5, 9.5)               0.2  success goal_state_satisfied ticks=69 final=(0.500, 9.560)
+open  (0.83, 64.0, 9.17)    (0.83, 9.17)             0.2  success goal_state_satisfied ticks=72 final=(0.810, 9.140)

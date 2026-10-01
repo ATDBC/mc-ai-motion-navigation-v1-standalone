@@ -1,0 +1,17 @@
+1. net-stall ticks by layer and category (non-zero only)
+   drop-late     strict_execution      132
+   drop-late     strict_preparation    112
+   drop-late     walking               187
+   drop-normal   strict_execution       76
+   target-late   walking                 8
+
+2. 'walking' net-stall ticks: (layer, driver reason, action kind, controllers) -> ticks
+     137 ('drop-late', 'recovering_grounded_verified_entry', None, ())
+      39 ('drop-late', 'releasing_grounded_verified_entry', None, ())
+      11 ('drop-late', 'settling_grounded_verified_entry', None, ())
+       8 ('target-late', 'tracking_fixed_route', 'WalkSegment', ('route_executor',))
+
+3. non-neutral navigation input with an empty controller list: (layer, state, reason) -> ticks
+     527 ('drop-late', 'executing', 'recovering_grounded_verified_entry')
+       1 ('drop-late', 'executing', 'settling_grounded_verified_entry')
+   tasks affected: {'drop-late': 64}
