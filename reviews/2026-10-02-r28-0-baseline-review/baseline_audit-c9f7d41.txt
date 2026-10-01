@@ -1,0 +1,45 @@
+1. Distinct configurations per layer
+  drop-late      tasks=200 distinct=200 duplicated_configs=0 duplicates_with_different_metrics=0 failures=15 distinct_failing_configs=15
+  drop-normal    tasks=200 distinct=48 duplicated_configs=48 duplicates_with_different_metrics=0 failures=0 distinct_failing_configs=0
+  height-late    tasks=200 distinct=200 duplicated_configs=0 duplicates_with_different_metrics=0 failures=0 distinct_failing_configs=0
+  height-normal  tasks=200 distinct=144 duplicated_configs=56 duplicates_with_different_metrics=0 failures=0 distinct_failing_configs=0
+  point-late     tasks=200 distinct=200 duplicated_configs=0 duplicates_with_different_metrics=0 failures=7 distinct_failing_configs=7
+  point-normal   tasks=200 distinct=144 duplicated_configs=56 duplicates_with_different_metrics=0 failures=8 distinct_failing_configs=6
+  target-late    tasks=200 distinct=200 duplicated_configs=0 duplicates_with_different_metrics=0 failures=66 distinct_failing_configs=66
+  target-normal  tasks=200 distinct=144 duplicated_configs=56 duplicates_with_different_metrics=0 failures=66 distinct_failing_configs=48
+
+2. fixed_route_stalled failures
+  point-normal-000035 west  speed=3.0 offset=0.0 oscillation_ticks=18 last12: path=0.513 net=0.133  extractor zero_displacement_ticks=0
+  point-normal-000044 south speed=3.0 offset=0.3 oscillation_ticks=18 last12: path=0.513 net=0.133  extractor zero_displacement_ticks=0
+  point-normal-000080 south speed=3.0 offset=0.0 oscillation_ticks=18 last12: path=0.513 net=0.133  extractor zero_displacement_ticks=0
+  point-normal-000095 west  speed=1.0 offset=0.3 oscillation_ticks=18 last12: path=0.513 net=0.133  extractor zero_displacement_ticks=0
+  point-normal-000140 south speed=1.0 offset=0.3 oscillation_ticks=18 last12: path=0.513 net=0.133  extractor zero_displacement_ticks=0
+  point-normal-000143 west  speed=3.0 offset=0.3 oscillation_ticks=18 last12: path=0.513 net=0.133  extractor zero_displacement_ticks=0
+  point-normal-000179 west  speed=3.0 offset=0.0 oscillation_ticks=18 last12: path=0.513 net=0.133  extractor zero_displacement_ticks=0
+  point-normal-000188 south speed=3.0 offset=0.3 oscillation_ticks=18 last12: path=0.513 net=0.133  extractor zero_displacement_ticks=0
+  point-late-000035 west  speed=3.0 offset=0.0 oscillation_ticks=7 last12: path=0.514 net=0.135  extractor zero_displacement_ticks=0
+  point-late-000044 south speed=3.0 offset=0.3 oscillation_ticks=9 last12: path=0.513 net=0.131  extractor zero_displacement_ticks=0
+  point-late-000080 south speed=3.0 offset=0.0 oscillation_ticks=10 last12: path=0.513 net=0.133  extractor zero_displacement_ticks=0
+  point-late-000095 west  speed=1.0 offset=0.3 oscillation_ticks=6 last12: path=0.551 net=0.160  extractor zero_displacement_ticks=0
+  point-late-000140 south speed=1.0 offset=0.3 oscillation_ticks=10 last12: path=0.512 net=0.128  extractor zero_displacement_ticks=0
+  point-late-000179 west  speed=3.0 offset=0.0 oscillation_ticks=3 last12: path=0.498 net=0.083  extractor zero_displacement_ticks=0
+  point-late-000188 south speed=3.0 offset=0.3 oscillation_ticks=9 last12: path=0.512 net=0.087  extractor zero_displacement_ticks=0
+
+3. Oscillation in all tasks: (layer, success) -> tasks with oscillation / oscillation ticks / tasks
+  ('drop-late', False): 0 / 0 / 15
+  ('drop-late', True): 0 / 0 / 185
+  ('drop-normal', True): 0 / 0 / 200
+  ('height-late', True): 0 / 0 / 200
+  ('height-normal', True): 0 / 0 / 200
+  ('point-late', False): 7 / 54 / 7
+  ('point-late', True): 2 / 10 / 193
+  ('point-normal', False): 8 / 144 / 8
+  ('point-normal', True): 3 / 12 / 192
+  ('target-late', False): 0 / 0 / 66
+  ('target-late', True): 0 / 0 / 134
+  ('target-normal', False): 0 / 0 / 66
+  ('target-normal', True): 0 / 0 / 134
+
+4. wall_detour outcome by direction (scene is rotation-symmetric)
+  point-normal: south:12ok/4fail, east:17ok/0fail, north:17ok/0fail, west:12ok/4fail
+  point-late: south:12ok/4fail, east:17ok/0fail, north:17ok/0fail, west:13ok/3fail

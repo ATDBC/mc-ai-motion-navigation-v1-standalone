@@ -1,0 +1,3 @@
+re-run tasks: 384; identical metrics: 384; identical end reason: 384
+strict traces identical: 170/192; differing by layer: {'drop-normal': 10, 'drop-late': 12}; differing fields (tick count): {'velocity': 466, 'position': 928}
+environment: re-run on Linux, Python 3.11.15; archive produced on Windows-10-10.0.26200, Python 3.11.16 (metadata.json)

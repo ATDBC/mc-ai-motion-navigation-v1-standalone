@@ -1,0 +1,59 @@
+product = product manifest, first 24 seeds x 8 layers (192 tasks), coverage.py 7.16.2 --branch
+interrupt = tests/sim/manifests/navigation-coordination-interrupt-late.json (192 combinations)
+
+function                                                  step                 product             interrupt
+                                                                        lines   / arcs        lines   / arcs
+motion_coordination._accept_result                        3        28/58     28/71       39/58     41/71
+motion_coordination._retire_work                          3        10/10     11/11       10/10     11/11
+motion_coordination._record_admission                     3         8/11      8/13        8/11      8/13
+navigation_session.update_goal                            1        28/64     29/82       31/64     32/82
+navigation_session._stage_goal_revision_for_body_release  1        10/11     10/13       11/11     12/13
+navigation_session._resume_pending_goal                   1        16/38     16/46       18/38     18/46
+navigation_session.cancel                                 1         0/22      0/28       16/22     17/28
+navigation_session.close                                  1/5       7/15      7/19        7/15      7/19
+navigation_session._finalize_close                        1/5      10/13     10/18       10/13     10/18
+navigation_session.handle_internal_contract_failure       1/5       0/12      0/15        0/12      0/15
+navigation_session.observe                                1        53/112    63/146      57/112    68/146
+navigation_session.propose                                1/5     152/293   175/392     167/293   196/392
+navigation_session._proposal                              1/5      29/34     32/41       29/34     32/41
+navigation_session.diagnostics                            1/5      30/31     35/38       30/31     35/38
+navigation_session._request_probe_stop                    1         2/15      2/18       13/15     15/18
+navigation_session._finish_pending_probe_terminal         1         0/10      0/12        8/10      8/12
+navigation_session._wait_for_active_terminal              1         0/7       0/8         0/7       0/8
+navigation_session._fail_planning_or_preserve_incumbent   1/4       6/13      6/16        6/13      6/16
+navigation_session._reissue_request_from_current          1/4      16/26     16/34        0/26      0/34
+navigation_session._resolve_pending_retry                 1/4       0/13      0/16        0/13      0/16
+navigation_session._clear_active_execution                1         6/7       7/9         6/7       7/9
+navigation_session._retire_route                          1         2/3       2/4         2/3       2/4
+navigation_session._activate_planning_route               1        27/38     30/48       19/38     20/48
+navigation_session._replace_request                       3        18/25     19/30       18/25     18/30
+navigation_session._accept_goal_request                   3         3/17      3/20        3/17      3/20
+navigation_session._advance_planning                      3        23/45     27/58       23/45     27/58
+navigation_session._end_probe_waits                       4         2/2       2/3         2/2       2/3
+navigation_session._end_session_waits                     4         7/9       8/12        7/9       8/12
+navigation_session._check_recovery_wait                   4         5/9       5/10        5/9       5/10
+navigation_session._probe_movement                        4        12/16     12/17       12/16     12/17
+navigation_session._information_look                      4        20/57     24/71       21/57     26/71
+navigation_session._begin_action_acquisition              4        14/17     15/21       14/17     15/21
+navigation_session._transition                            1/5       9/11     11/16        9/11     11/16
+planning_coordinator.advance                              3        49/136    50/177      49/136    50/177
+planning_coordinator._submit                              3        13/15     13/18       13/15     13/18
+planning_coordinator._record_admission                    3        14/19     15/23       14/19     15/23
+planning_coordinator.retry_from_current                   4         0/6       0/7         0/6       0/7
+planning_coordinator._retry_or_fail                       4         0/11      0/13        0/11      0/13
+retry_ledger.record_failure                               4        22/26     26/34        0/26      0/34
+retry_ledger.record_progress                              4        24/36     27/47       27/36     31/47
+safe_ground_control.verified_ground_rollout               2可选      17/20     19/25       16/20     17/25
+
+product: statements 692/1333 (51.9%), branch arcs 763/1700 (44.9%), functions never entered: 7/41
+interrupt: statements 720/1333 (54.0%), branch arcs 798/1700 (46.9%), functions never entered: 7/41
+
+union of both runs:
+union: statements 787/1333 (59.0%), branch arcs 882/1700 (51.9%), functions never entered: 5/41
+
+functions not entered by either run:
+  navigation_session.handle_internal_contract_failure (step 1/5)
+  navigation_session._wait_for_active_terminal (step 1)
+  navigation_session._resolve_pending_retry (step 1/4)
+  planning_coordinator.retry_from_current (step 4)
+  planning_coordinator._retry_or_fail (step 4)

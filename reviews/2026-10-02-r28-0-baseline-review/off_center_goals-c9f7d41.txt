@@ -1,0 +1,47 @@
+-0.323 10.37 True failed fixed_route_has_no_forward_control
+0.911 9.316 False failed goal_surface_unavailable
+1.609 10.897 False failed goal_surface_unavailable
+0.014 9.721 False failed goal_surface_unavailable
+0.378 6.512 True success goal_state_satisfied
+-1.984 7.642 False failed goal_surface_unavailable
+-0.663 6.921 False failed goal_surface_unavailable
+-0.377 9.26 False failed goal_surface_unavailable
+0.483 7.491 True success goal_state_satisfied
+1.397 9.871 False failed goal_surface_unavailable
+-0.948 10.97 False failed goal_surface_unavailable
+-0.526 6.663 True success goal_state_satisfied
+-0.288 6.347 False failed goal_surface_unavailable
+2.198 6.236 False failed goal_surface_unavailable
+0.558 8.848 False failed goal_surface_unavailable
+1.831 7.892 False failed goal_surface_unavailable
+1.473 7.635 True success goal_state_satisfied
+-1.865 6.983 False failed goal_surface_unavailable
+2.716 7.25 False failed goal_surface_unavailable
+2.919 6.746 False failed goal_surface_unavailable
+1.146 6.919 False failed goal_surface_unavailable
+1.467 8.037 False failed goal_surface_unavailable
+1.169 10.552 False failed goal_surface_unavailable
+1.393 9.26 False failed goal_surface_unavailable
+1.408 8.826 False failed goal_surface_unavailable
+1.662 6.531 True success goal_state_satisfied
+-0.115 9.46 False failed goal_surface_unavailable
+-1.084 7.407 False failed goal_surface_unavailable
+-0.345 6.701 False failed goal_surface_unavailable
+1.57 6.848 False failed goal_surface_unavailable
+-1.385 7.948 False failed goal_surface_unavailable
+2.96 6.782 False failed goal_surface_unavailable
+1.495 8.757 False failed goal_surface_unavailable
+1.884 8.838 False failed goal_surface_unavailable
+-0.585 8.209 False failed goal_surface_unavailable
+0.636 10.366 True failed fixed_route_has_no_forward_control
+1.379 6.078 False failed goal_surface_unavailable
+-0.231 8.814 False failed goal_surface_unavailable
+-0.684 10.273 False failed goal_surface_unavailable
+1.572 8.13 False failed goal_surface_unavailable
+
+(box contains a block-centre coordinate on both axes, outcome, reason) -> count
+  (False, 'failed', 'goal_surface_unavailable'): 33
+  (True, 'failed', 'fixed_route_has_no_forward_control'): 2
+  (True, 'success', 'goal_state_satisfied'): 5
+
+Expected share of uniformly random targets whose +/-0.20 box contains a centre on both axes: 0.16
