@@ -4,9 +4,19 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from enum import StrEnum
 import math
+import time
 
 from mc2p.contracts.action_v1 import LookV1, MovementV1
 from mc2p.contracts.common import ContractViolation, require_nonnegative_int
+from mc2p.motion_nav.async_work import (
+    AsyncAdmissionDisposition,
+    AsyncAdmissionRecord,
+    AsyncWorkIdentity,
+    AsyncWorkKind,
+    AsyncWorkWindow,
+    WorkCheck,
+    AsyncOwnerDiagnostics,
+)
 from mc2p.motion_nav.action_route import (
     ControlledDropSegment, JumpGapSegment, JumpUpSegment, WalkSegment,
 )
@@ -20,7 +30,7 @@ from mc2p.motion_nav.motion_solver import (
     DEFAULT_AIR_TRANSITION_POLICIES, DEFAULT_GAP_SOLVER_POLICY,
     AirTransitionSolveRequest, AirTransitionSolverPolicy,
     GapSolveRequest, GapSolverPolicy, LandingRegion, MotionSolveKind,
-    SolveResult, SolveStatus,
+    SolveResult, SolveStatus, check_motion_entry,
     gap_entry_heading_delta_radians, gap_entry_heading_is_aligned,
     solve_air_transition, solve_one_cell_gap,
 )
@@ -29,7 +39,8 @@ from mc2p.motion_nav.retry_ledger import (
     RetryCause, RetryLedger, RetryVerdict, WaitPolicy, WaitVerdict,
 )
 from mc2p.motion_nav.motion_worker import (
-    GapMotionSolveJob, GapMotionSolveResult, MotionWorkerPort,
+    GapMotionSolveJob, GapMotionSolveResult, MotionResultInbox,
+    MotionWorkerPort,
 )
 from mc2p.motion_nav.online_motion import (
     CandidateExecutionWindow, InputApplicationLedger, ProjectionStatus,
@@ -50,11 +61,13 @@ from mc2p.motion_nav.world_model import BlockPos
 _RESOURCE_ASSUMPTIONS = ("server_hunger_clock_not_in_physics_state",)
 _MAX_ENTRY_ALIGNMENT_DEGREES_PER_TICK = 36.0
 _GROUNDED_ENTRY_RECOVERY_POLICY = WaitPolicy(40, 2_000_000_000)
+_MOTION_SOLVE_LIMIT_NS = 1_000_000_000
+_MOTION_SOLVE_LIMIT_TICKS = 20
 
 
-def _gap_physics_snapshot(
+def _gap_physics_bounds(
         world: PhysicsWorldView, anchor: StateAnchor,
-        request: GapSolveRequest | AirTransitionSolveRequest) -> PhysicsWorldView:
+        request: GapSolveRequest | AirTransitionSolveRequest) -> PhysicsWorldBounds:
     """Copy only the collision volume one bounded gap solve can reach."""
     if (type(world) is not PhysicsWorldView or type(anchor) is not StateAnchor
             or type(request) not in {
@@ -76,7 +89,11 @@ def _gap_physics_snapshot(
         math.floor(min(z - half, request.landing.min_z) - horizontal_margin),
         math.ceil(max(z + half, request.landing.max_z) + horizontal_margin) - 1,
     )
-    return world.snapshot(bounds)
+    return bounds
+
+
+def _gap_physics_snapshot(world, anchor, request) -> PhysicsWorldView:
+    return world.snapshot(_gap_physics_bounds(world, anchor, request))
 
 
 class GapPreparationStatus(StrEnum):
@@ -403,6 +420,9 @@ class MotionRouteCoordinator:
                  worker: MotionWorkerPort, *,
                  damage_budget: TaskDamageBudget = TaskDamageBudget(),
                  retry_ledger: RetryLedger | None = None,
+                 result_inbox: MotionResultInbox | None = None,
+                 owner_instance_id: str | None = None,
+                 clock_ns=time.monotonic_ns,
                  gap_solver_policy: GapSolverPolicy = DEFAULT_GAP_SOLVER_POLICY,
                  air_transition_policies: dict[
                      MotionSolveKind, AirTransitionSolverPolicy
@@ -413,6 +433,9 @@ class MotionRouteCoordinator:
                 or type(damage_budget) is not TaskDamageBudget
                 or (retry_ledger is not None
                     and type(retry_ledger) is not RetryLedger)
+                or (result_inbox is not None
+                    and type(result_inbox) is not MotionResultInbox)
+                or not callable(clock_ns)
                 or type(gap_solver_policy) is not GapSolverPolicy
                 or type(air_transition_policies) is not dict
                 or any(type(kind) is not MotionSolveKind
@@ -428,11 +451,24 @@ class MotionRouteCoordinator:
         self.damage_budget = damage_budget
         self.retry_ledger = (retry_ledger if retry_ledger is not None else
                              RetryLedger(route.goal_id))
+        self._owns_result_inbox = result_inbox is None
+        self.result_inbox = result_inbox or MotionResultInbox()
+        self._clock = clock_ns
+        from mc2p.motion_nav.async_work import AsyncOwnerScope
+        self._owner_instance_id = owner_instance_id or AsyncOwnerScope().allocate()
         self._pending_connection: str | None = None
         self._pending_action_index: int | None = None
         self._pending_submitted_tick: int | None = None
         self._pending_preparation_anchor: StateAnchor | None = None
         self._candidate_revision = 0
+        from mc2p.motion_nav.async_work import AsyncWorkLifecycle
+        self._work = AsyncWorkLifecycle()
+        self._known_work_windows: dict[AsyncWorkIdentity, AsyncWorkWindow] = {}
+        self._pending_job: GapMotionSolveJob | None = None
+        self._solve_basis_job: GapMotionSolveJob | None = None
+        self.last_admission: AsyncAdmissionRecord | None = None
+        self._admission_records: list[AsyncAdmissionRecord] = []
+        self.unidentified_results = 0
         self.last_failure_attempt_id: str | None = None
         self.last_failure_reason = ""
         self._grounded_recovery_wait_id: str | None = None
@@ -440,11 +476,8 @@ class MotionRouteCoordinator:
     def start(self, frame: NavigationFrame) -> None:
         if type(frame) is not NavigationFrame:
             raise ContractViolation("motion route coordinator requires a frame")
-        self._pending_connection = None
-        self._pending_action_index = None
-        self._pending_submitted_tick = None
-        self._pending_preparation_anchor = None
-        self._candidate_revision = 0
+        self._retire_work("motion_restarted")
+        self.last_admission = None
         self.last_failure_attempt_id = None
         self.last_failure_reason = ""
         self._end_grounded_recovery_wait()
@@ -459,6 +492,35 @@ class MotionRouteCoordinator:
             ),
         )
 
+    @property
+    def admission_records(self) -> tuple[AsyncAdmissionRecord, ...]:
+        return tuple(self._admission_records)
+
+    @property
+    def async_diagnostics(self) -> AsyncOwnerDiagnostics:
+        resources = tuple((self._work_identity, name) for name, value in (
+            ("pending_connection", self._pending_connection),
+            ("pending_job", self._pending_job),
+            ("solve_basis", self._solve_basis_job),
+        ) if value is not None)
+        return AsyncOwnerDiagnostics(self._owner_instance_id, self._work_identity,
+                                    self._work_window, self._work.events,
+                                    self.admission_records, resources)
+
+    @property
+    def _work_identity(self):
+        return self._work.identity
+
+    @property
+    def _work_window(self):
+        return self._work.window
+
+    def cancel_work(self, cause: str = "motion_route_stopped") -> None:
+        if not isinstance(cause, str) or not cause:
+            raise ContractViolation("motion work cancellation requires a cause")
+        self._retire_work(cause)
+        self._end_grounded_recovery_wait()
+
     def _connection_id(self, action_index: int) -> str:
         return f"{self.route.route_id}/action-{action_index}"
 
@@ -470,7 +532,30 @@ class MotionRouteCoordinator:
     def _accept_result(
             self, result: GapMotionSolveResult, anchor: StateAnchor,
             world: PhysicsWorldView, changed_cells: tuple[BlockPos, ...]) -> bool:
-        if result.connection_id != self._pending_connection:
+        identity_matched = (
+            self._work_identity is not None
+            and result.work_identity == self._work_identity
+            and result.connection_id == self._pending_connection
+            and result.candidate_revision == self._candidate_revision
+        )
+        legacy_matched = (
+            self._work_identity is None
+            and result.work_identity is None
+            and result.connection_id == self._pending_connection
+        )
+        if not (identity_matched or legacy_matched):
+            if result.work_identity is None:
+                self.unidentified_results += 1
+            else:
+                self._record_admission(
+                    AsyncAdmissionDisposition.DISCARDED_LATE,
+                    identity_matched=False,
+                    facts_valid=None,
+                    result_identity=result.work_identity,
+                )
+            return False
+        if identity_matched and self._work.check(result.work_identity, self._clock()) is not WorkCheck.READY:
+            self._expire_delivered_result(result)
             return False
         connection = result.connection_id
         action_index = (
@@ -488,8 +573,30 @@ class MotionRouteCoordinator:
         self._pending_action_index = None
         self._pending_submitted_tick = None
         self._pending_preparation_anchor = None
+        self._pending_job = None
         action = self.route.action_route.actions[action_index]
-        if type(action) is JumpGapSegment:
+        negative_stale = (
+            result.solve_result.status not in {
+                SolveStatus.SOLVED, SolveStatus.INTERNAL_ERROR, SolveStatus.BUDGET_EXHAUSTED,
+            }
+            and self._negative_basis_changed(preparation_anchor, world)
+        )
+        if negative_stale and self._solve_basis_job is not None:
+            # A fresh necessary-condition rejection is already a current proof.
+            # Do not spend repeated solves while a pushed body is still settling.
+            current_rejection = check_motion_entry(
+                preparation_anchor, world, self._solve_basis_job.request,
+            )
+            if current_rejection is not None:
+                result = replace(result, solve_result=current_rejection)
+                negative_stale = False
+        if negative_stale:
+            prepared = GapPreparationResult(
+                GapPreparationStatus.ADMISSION_REJECTED,
+                solve_result=result.solve_result,
+                reason="motion_negative_basis_changed", retryable=True,
+            )
+        elif type(action) is JumpGapSegment:
             prepared = prepare_planned_gap_motion(
                 self.route, action_index, preparation_anchor, world,
                 candidate_revision=result.candidate_revision,
@@ -509,7 +616,17 @@ class MotionRouteCoordinator:
                 precomputed=result.solve_result,
                 policies=self.air_transition_policies,
             )
+        if identity_matched and self._work.check(result.work_identity, self._clock()) is not WorkCheck.READY:
+            self._expire_delivered_result(result)
+            return False
         if prepared.status is not GapPreparationStatus.READY:
+            self._record_admission(
+                (AsyncAdmissionDisposition.RECOMPUTE
+                 if prepared.retryable else AsyncAdmissionDisposition.TERMINATED),
+                identity_matched=True,
+                facts_valid=False,
+            )
+            self._retire_work("motion_result_rejected")
             self.last_failure_reason = prepared.reason
             if action_index > self.executor.action_index:
                 # An anticipated entry can differ from the next observation.
@@ -532,16 +649,72 @@ class MotionRouteCoordinator:
             else:
                 self.executor.cancel()
             return False
+        accepted_ns = self._clock()
+        if identity_matched and not self._work.try_apply(result.work_identity, accepted_ns):
+            self._expire_delivered_result(result)
+            return False
         self.executor.install_verified_motion(prepared.candidate)
+        self._record_admission(
+            AsyncAdmissionDisposition.APPLIED,
+            identity_matched=True,
+            facts_valid=True,
+            accepted_ns=accepted_ns,
+        )
+        self._retire_work("motion_proof_installed")
         self.last_failure_attempt_id = None
         self.last_failure_reason = ""
         return True
+
+    def _negative_basis_changed(self, anchor, world) -> bool:
+        job = self._solve_basis_job
+        if job is None:
+            return False  # Legacy direct preparation does not use background admission.
+        old = job.anchor.physics_state
+        current = anchor.physics_state
+        if replace(old, movement_tick_id=current.movement_tick_id) != current:
+            return True
+        if (job.anchor.health_points, job.anchor.absorption_points,
+                job.anchor.ruleset_id, job.anchor.input_projection_version) != (
+                anchor.health_points, anchor.absorption_points,
+                anchor.ruleset_id, anchor.input_projection_version):
+            return True
+        bounds = _gap_physics_bounds(job.world, job.anchor, job.request)
+        for x in range(bounds.min_x, bounds.max_x + 1):
+            for y in range(bounds.min_y, bounds.max_y + 1):
+                for z in range(bounds.min_z, bounds.max_z + 1):
+                    position = (x, y, z)
+                    old_cell = job.world.cell(position)
+                    cell = world.cell(position)
+                    if old_cell.knowledge != cell.knowledge or old_cell.block != cell.block:
+                        return True
+        return False
+
+    def _expire_delivered_result(self, result) -> None:
+        self._record_admission(
+            AsyncAdmissionDisposition.RECOMPUTE,
+            identity_matched=True, facts_valid=None,
+        )
+        attempt_id = f"{result.connection_id}/candidate-{result.candidate_revision}/solver-request-expired"
+        self._retire_work("motion_solver_request_expired")
+        registration = self.retry_ledger.record_failure(attempt_id, RetryCause.PLANNING)
+        self.last_failure_attempt_id = attempt_id
+        self.last_failure_reason = ""
+        if registration.verdict is not RetryVerdict.RETRY:
+            self.last_failure_reason = "motion_solver_retry_exhausted"
+            self.executor.cancel()
 
     def _submit_action(
             self, index: int, anchor: StateAnchor,
             world: PhysicsWorldView, *,
             preparation_anchor: StateAnchor | None = None) -> None:
         connection = self._connection_id(index)
+        if (self._work_identity is not None
+                and self._pending_connection == connection
+                and self._pending_action_index == index):
+            self._flush_pending_job()
+            return
+        if self._work_identity is not None:
+            self._retire_work("motion_work_superseded")
         window = CandidateExecutionWindow(
             anchor.movement_tick_id + 1,
             anchor.movement_tick_id + 2,
@@ -561,23 +734,120 @@ class MotionRouteCoordinator:
             self.executor.cancel()
             return
         self._candidate_revision += 1
+        now = self._clock()
+        identity = AsyncWorkIdentity(
+            self.route.world_session,
+            self.retry_ledger.task_id,
+            self._owner_instance_id,
+            AsyncWorkKind.MOTION_SOLVE,
+            connection,
+            self._candidate_revision,
+        )
+        window = AsyncWorkWindow(
+            anchor.movement_tick_id,
+            now,
+            now + _MOTION_SOLVE_LIMIT_NS,
+        )
+        self._work.begin(identity, window)
+        self._remember_work_window(self._work_identity, self._work_window)
+        if not self.result_inbox.register(self._work_identity):
+            self.last_failure_reason = "motion_inbox_capacity_exhausted"
+            self._retire_work(self.last_failure_reason)
+            self.executor.cancel()
+            return
         solve_world = _gap_physics_snapshot(world, anchor, request)
-        submitted = self.worker.submit(GapMotionSolveJob(
+        self._pending_job = GapMotionSolveJob(
             connection, self._candidate_revision, anchor, solve_world, request,
-        ))
+            self._work_identity,
+        )
+        self._solve_basis_job = self._pending_job
+        self._pending_connection = connection
+        self._pending_action_index = index
+        self._pending_submitted_tick = anchor.movement_tick_id
+        self._pending_preparation_anchor = preparation_anchor
+        submitted = self.worker.submit(self._pending_job)
         if submitted:
-            self._pending_connection = connection
-            self._pending_action_index = index
-            self._pending_submitted_tick = anchor.movement_tick_id
-            self._pending_preparation_anchor = preparation_anchor
+            self._pending_job = None
             self.last_failure_reason = ""
         else:
-            self._candidate_revision -= 1
             self.last_failure_reason = "motion_solver_backpressure"
+
+    def _flush_pending_job(self) -> None:
+        if self._pending_job is None:
+            return
+        if self.worker.submit(self._pending_job):
+            self._pending_job = None
+            self.last_failure_reason = ""
 
     def _submit_current(
             self, anchor: StateAnchor, world: PhysicsWorldView) -> None:
         self._submit_action(self.executor.action_index, anchor, world)
+
+    def _work_expired(self, anchor: StateAnchor) -> bool:
+        window = self._work_window
+        if window is None:
+            return (
+                self._pending_connection is not None
+                and self._pending_submitted_tick is not None
+                and anchor.movement_tick_id
+                    > self._pending_submitted_tick + _MOTION_SOLVE_LIMIT_TICKS
+            )
+        return (
+            (
+                window.expired(self._clock())
+                or anchor.movement_tick_id
+                    > window.started_movement_tick + _MOTION_SOLVE_LIMIT_TICKS
+            )
+        )
+
+    def _retire_work(self, _cause: str) -> None:
+        identity = self._work_identity
+        if identity is not None:
+            self.result_inbox.retire(identity)
+            self._work.finish(identity, _cause, self._clock())
+        self._pending_job = None
+        self._pending_connection = None
+        self._pending_action_index = None
+        self._pending_submitted_tick = None
+        self._pending_preparation_anchor = None
+        self._solve_basis_job = None
+
+    def _record_admission(
+        self,
+        disposition: AsyncAdmissionDisposition,
+        *,
+        identity_matched: bool,
+        facts_valid: bool | None,
+        result_identity: AsyncWorkIdentity | None = None,
+        accepted_ns: int | None = None,
+    ) -> None:
+        identity = result_identity or self._work_identity
+        if identity is None:
+            self.unidentified_results += 1
+            return
+        window = self._known_work_windows.get(identity)
+        deadline = 0 if window is None else window.deadline_monotonic_ns
+        record = AsyncAdmissionRecord(
+            identity,
+            self._clock() if accepted_ns is None else accepted_ns,
+            deadline,
+            identity_matched,
+            facts_valid,
+            disposition,
+        )
+        self.last_admission = record
+        if len(self._admission_records) >= 64:
+            del self._admission_records[0]
+        self._admission_records.append(record)
+
+    def _remember_work_window(
+        self,
+        identity: AsyncWorkIdentity,
+        window: AsyncWorkWindow,
+    ) -> None:
+        if len(self._known_work_windows) >= 64 and identity not in self._known_work_windows:
+            del self._known_work_windows[next(iter(self._known_work_windows))]
+        self._known_work_windows[identity] = window
 
     def _align_current_gap_entry(
             self, decision: ActionRouteDecision,
@@ -724,28 +994,27 @@ class MotionRouteCoordinator:
             changed_cells: tuple[BlockPos, ...],
             input_confirmed: bool = True,
             movement_yaw_radians: float | None = None,
-            allow_grounded_reprepare: bool = True) -> ActionRouteDecision:
+            allow_grounded_reprepare: bool = True,
+            result_poll_sequence: int | None = None) -> ActionRouteDecision:
         if (type(frame) is not NavigationFrame
                 or type(anchor) is not StateAnchor
                 or type(ledger) is not InputApplicationLedger
                 or type(world) is not PhysicsWorldView
                 or type(changed_cells) is not tuple
-                or type(allow_grounded_reprepare) is not bool):
+                or type(allow_grounded_reprepare) is not bool
+                or (result_poll_sequence is not None
+                    and (type(result_poll_sequence) is not int
+                         or result_poll_sequence < 0))):
             raise ContractViolation("motion route decision requires current typed state")
         installed = False
         worker_available = True
         starting_action_index = self.executor.action_index
         if not self.worker.is_alive():
             worker_available = False
-            self._pending_connection = None
-            self._pending_action_index = None
-            self._pending_submitted_tick = None
-            self._pending_preparation_anchor = None
+            self._retire_work("motion_solver_worker_died")
             self.last_failure_reason = "motion_solver_worker_died"
             self.executor.cancel()
-        elif (self._pending_connection is not None
-              and self._pending_submitted_tick is not None
-              and anchor.movement_tick_id > self._pending_submitted_tick + 20):
+        elif self._work_expired(anchor):
             expired_connection = self._pending_connection
             expired_action_index = (
                 self._pending_action_index
@@ -753,10 +1022,8 @@ class MotionRouteCoordinator:
                 else self.executor.action_index
             )
             expired_revision = self._candidate_revision
-            self._pending_connection = None
-            self._pending_action_index = None
-            self._pending_submitted_tick = None
-            self._pending_preparation_anchor = None
+            self._retire_work("motion_solver_request_expired")
+            assert expired_connection is not None
             attempt_id = (
                 f"{expired_connection}/candidate-{expired_revision}/"
                 "solver-request-expired"
@@ -775,7 +1042,22 @@ class MotionRouteCoordinator:
             else:
                 self.last_failure_reason = "motion_solver_retry_exhausted"
                 self.executor.cancel()
-        for result in self.worker.poll_available():
+        elif self._pending_job is not None:
+            self._flush_pending_job()
+        available_results = ()
+        if self._owns_result_inbox:
+            available_results = self.worker.poll_available()
+        else:
+            self.result_inbox.drain_once(
+                self.worker,
+                (frame.body.sequence_id if result_poll_sequence is None
+                 else result_poll_sequence),
+            )
+            if self._work_identity is not None:
+                available_results = self.result_inbox.take(
+                    self._work_identity,
+                )
+        for result in available_results:
             installed = self._accept_result(
                 result, anchor, world, changed_cells,
             ) or installed

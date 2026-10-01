@@ -35,6 +35,7 @@ from mc2p.motion_nav.motion_residual import (
 )
 from mc2p.motion_nav.motion_risk import TaskDamageBudget, TaskRiskLedger
 from mc2p.motion_nav.motion_risk import RiskCommitEvidence, RiskCommitKind
+from mc2p.motion_nav.retry_ledger import RetryCause, RetryLedger, WaitPolicy
 from mc2p.motion_nav.runtime_adapter import BodyState, NavigationFrame
 from mc2p.motion_nav.navigation_session import (
     NavigationSession,
@@ -373,6 +374,26 @@ def _known_endpoints_with_unknown_gap():
         (1, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
     })
     return world, unknown
+
+
+def _known_endpoints_with_external_unknown_and_unknown_gap():
+    session = WorldSessionId("navigation-session-targeted-unknown-gap")
+    world = WorldKnowledge(session)
+    stamp = ObservationStamp(session, 1, 1, "test-clock", 1)
+    external = (-2, -1, -1)
+    gap = (0, 0, 0)
+    world.confirm_air(stamp, tuple(
+        (x, y, z)
+        for x in range(-2, 3)
+        for y in range(-1, 3)
+        for z in range(-1, 2)
+        if (x, y, z) not in {external, gap}
+    ))
+    world.observe_blocks(stamp, {
+        (-1, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        (1, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+    })
+    return world, external, gap
 
 
 class NavigationSessionTests(unittest.TestCase):
@@ -998,6 +1019,31 @@ class NavigationSessionTests(unittest.TestCase):
         )
         self.assertIn(unknown_gap, proposal.report.missing_cells)
         self.assertIsNone(session.active_route)
+
+    def test_no_known_route_uses_planner_blockers_not_snapshot_order(self):
+        world, external, gap = (
+            _known_endpoints_with_external_unknown_and_unknown_gap()
+        )
+        start, goal = _nodes(world, (-1, 1))
+        initial = frame(world, 0, start.position)
+        session = NavigationSession(
+            "targeted-unknown-gap-session", self.profiles(),
+            planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        session.start(SurfacePlanningRequest(
+            1, "targeted-unknown-gap-request", "targeted-unknown-gap-goal", 1,
+            world.session.value, start.node_id, goal.node_id,
+            goal_state=_goal(goal.position),
+        ), initial)
+
+        proposal = session.propose(initial, None, 2_000_000_000)
+
+        self.assertIs(
+            proposal.report.state, NavigationSessionState.NEEDS_INFORMATION,
+        )
+        self.assertEqual(proposal.report.missing_cells, (gap,))
+        self.assertNotIn(external, proposal.report.missing_cells)
 
     def test_missing_cell_outside_view_adds_low_priority_information_look(self):
         world, unknown_gap = _known_endpoints_with_unknown_gap()
@@ -1633,6 +1679,10 @@ class NavigationSessionTests(unittest.TestCase):
             goal_state=_goal(goal.position),
         ), initial)
         session.propose(initial, None, 2_000_000_000)
+        # This test exercises the generic multi-cell wait owner directly. The
+        # planner-owned information selection has its own paging/progress
+        # tests in test_planning_coordinator.
+        session._planning_coordinator = None
         session._snapshot_missing = (first, second)
         session._reissue_request_from_current = Mock()
         session._information_look(initial)
@@ -2010,6 +2060,169 @@ class NavigationSessionTests(unittest.TestCase):
         self.assertIs(successor.report.state, NavigationSessionState.READY)
         successor.close()
         self.assertTrue(planner.closed)
+
+    def test_terminal_session_retires_owned_waits_before_successor_reuses_ledger(self):
+        planner = _InlinePlanner()
+        ledger = RetryLedger("goal")
+        session = NavigationSession(
+            "wait-owner-first",
+            self.profiles(),
+            planner_worker=planner,
+            retry_ledger=ledger,
+            clock_ns=lambda: 1_000_000_000,
+        )
+        policy = WaitPolicy(40, 2_000_000_000)
+        ledger.begin_wait(
+            "information",
+            "navigation-session/wait-owner-first/information",
+            policy,
+            1,
+            1_000_000_000,
+        )
+        ledger.begin_wait(
+            "recovery",
+            "navigation-session/wait-owner-first/recovery",
+            policy,
+            1,
+            1_000_000_000,
+        )
+
+        session._transition(
+            NavigationTransitionAction.MARK_FAILED,
+            "information_out_of_range",
+        )
+
+        self.assertEqual(ledger.active_waits(), ())
+        successor = session.spawn_successor("wait-owner-second")
+        ledger.begin_wait(
+            "information",
+            "navigation-session/wait-owner-second/information",
+            policy,
+            2,
+            1_050_000_000,
+        )
+        self.assertEqual(
+            ledger.active_waits()[0].owner_id,
+            "navigation-session/wait-owner-second/information",
+        )
+        successor.close()
+
+    def test_alive_planner_that_never_returns_has_a_caller_side_deadline(self):
+        world = _known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+            (1, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        start, goal = _nodes(world, (0, 1))
+        initial = frame(world, 0, start.position)
+        clock = [1_000_000_000]
+        planner = _InlinePlanner(hold_first=True)
+        session = NavigationSession(
+            "planner-timeout",
+            self.profiles(),
+            planner_worker=planner,
+            clock_ns=lambda: clock[0],
+        )
+        session.bind_source(_source())
+        session.start(SurfacePlanningRequest(
+            1,
+            "planner-timeout-request",
+            "goal",
+            1,
+            world.session.value,
+            start.node_id,
+            goal.node_id,
+            maximum_planning_seconds=.05,
+            goal_state=_goal(goal.position),
+        ), initial)
+        waiting = session.propose(initial, None, 2_000_000_000)
+        self.assertIs(waiting.report.state, NavigationSessionState.PLANNING)
+        self.assertEqual(waiting.report.reason, "planning_submitted")
+
+        clock[0] += 100_000_000
+        expired = session.propose(
+            frame(world, 1, start.position),
+            None,
+            2_000_000_000,
+        )
+
+        self.assertIs(expired.report.state, NavigationSessionState.PLANNING)
+        self.assertEqual(expired.report.reason, "planning_timeout_retry_started")
+        self.assertEqual(
+            session._retry_ledger.count_for(RetryCause.PLANNING), 1,
+        )
+
+        planner.hold_first = False
+        late = session.propose(
+            frame(world, 2, start.position),
+            None,
+            2_000_000_000,
+        )
+
+        self.assertIs(late.report.state, NavigationSessionState.PLANNING)
+        self.assertIsNone(session.active_route)
+
+    def test_result_arriving_after_caller_deadline_is_not_admitted(self):
+        world = _known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+            (1, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        start, goal = _nodes(world, (0, 1))
+        initial = frame(world, 0, start.position)
+        clock = [1_000_000_000]
+        planner = _InlinePlanner(hold_first=True)
+        session = NavigationSession(
+            "late-planner-result", self.profiles(),
+            planner_worker=planner, clock_ns=lambda: clock[0],
+        )
+        session.bind_source(_source())
+        session.start(SurfacePlanningRequest(
+            1, "late-result-request", "goal", 1, world.session.value,
+            start.node_id, goal.node_id,
+            maximum_planning_seconds=.05,
+            goal_state=_goal(goal.position),
+        ), initial)
+        session.propose(initial, None, 2_000_000_000)
+
+        clock[0] += 200_000_000
+        planner.hold_first = False
+        expired = session.propose(
+            frame(world, 1, start.position), None, 2_000_000_000,
+        )
+
+        self.assertIs(expired.report.state, NavigationSessionState.PLANNING)
+        self.assertEqual(expired.report.reason, "planning_timeout_retry_started")
+        self.assertIsNone(session.active_route)
+
+    def test_dependency_rejection_immediately_owns_a_replanning_job(self):
+        world = _known_world({
+            (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+            (1, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
+        })
+        start, goal = _nodes(world, (0, 1))
+        initial = frame(world, 0, start.position)
+        planner = _InlinePlanner(hold_first=True)
+        session = NavigationSession(
+            "dependency-replan", self.profiles(),
+            planner_worker=planner, clock_ns=lambda: 1_000_000_000,
+        )
+        session.bind_source(_source())
+        session.start(SurfacePlanningRequest(
+            1, "dependency-request", "goal", 1, world.session.value,
+            start.node_id, goal.node_id,
+            goal_state=_goal(goal.position),
+        ), initial)
+        session.propose(initial, None, 2_000_000_000)
+
+        world.observe_blocks(ObservationStamp(
+            world.session, 2, 2, "test-clock", 100_000_000,
+        ), {(1, 0, 0): BlockGeometry.full_cube("minecraft:dirt")})
+        changed = frame(world, 1, start.position)
+        session.observe(changed, ((1, 0, 0),))
+        planner.hold_first = False
+        rejected = session.propose(changed, None, 2_000_000_000)
+
+        self.assertIs(rejected.report.state, NavigationSessionState.PLANNING)
+        self.assertTrue(session.diagnostics.planning_work_owned)
 
     def test_gap_route_is_solved_by_the_session_coordinator(self):
         session, current, anchor = _gap_session()

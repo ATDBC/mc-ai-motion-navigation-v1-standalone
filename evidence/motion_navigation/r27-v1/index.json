@@ -1,0 +1,30 @@
+{
+  "max_total_archive_bytes": 10485760,
+  "publication_scope": "structured records only; no game worlds, images, process logs or private launch data",
+  "runs": [
+    {
+      "archive": "archives/b11-pass-20261001T011413953243Z-1fc0308e.tar.gz",
+      "bytes": 126194,
+      "members": 9,
+      "outcome": "pass",
+      "parent_stop_passed_rows": 20,
+      "parent_stop_rows": 20,
+      "run_id": "20261001T011413953243Z-1fc0308e",
+      "sha256": "08f491bb4a6ad47297ff2f430bf22b1177d2732a7c4139f7e6d00a86fb92f7f7",
+      "status": "passed"
+    },
+    {
+      "archive": "archives/b11-fail-20261001T005545494033Z-c0fc3f0f.tar.gz",
+      "bytes": 99120,
+      "members": 6,
+      "outcome": "fail",
+      "parent_stop_passed_rows": 16,
+      "parent_stop_rows": 16,
+      "run_id": "20261001T005545494033Z-c0fc3f0f",
+      "sha256": "1012749096789f5d6ad88f5bb442c201be9b1ad7209dce4bb32993d6bb371281",
+      "status": "failed"
+    }
+  ],
+  "schema_version": "mc2p.r27-public-evidence.v1",
+  "total_archive_bytes": 225314
+}

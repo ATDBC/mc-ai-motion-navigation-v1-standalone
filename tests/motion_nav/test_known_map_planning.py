@@ -124,6 +124,54 @@ class KnownMapPlanningTests(unittest.TestCase):
         self.assertIs(progress.snapshot.world.cell((0,1,0)).knowledge,
                       fixture.world.view().cell((0,1,0)).knowledge)
 
+    def test_snapshot_unknown_finalization_remains_bounded_after_scan_finishes(self):
+        session = WorldSessionId("bounded-unknown-finalization")
+        world = WorldKnowledge(session)
+        stamp = ObservationStamp(session, 1, 1, "clock", 50_000_000)
+        bounds = KnownMapBounds(0, 4, 1, 1, 0, 4, True)
+        world.observe_blocks(stamp, {
+            (x, 0, z): BlockGeometry.full_cube("minecraft:stone")
+            for x in range(5) for z in range(5)
+        })
+        world.confirm_air(stamp, tuple(
+            (x, y, z)
+            for x in range(5) for y in (1, 2) for z in range(5)
+        ))
+        builder = KnownMapSnapshotBuilder(world.view(), bounds)
+        saw_post_scan_building = False
+        previous_scanned = 0
+
+        for _ in range(200):
+            progress = builder.advance(world.view(), 7)
+            self.assertLessEqual(progress.scanned_cells - previous_scanned, 7)
+            previous_scanned = progress.scanned_cells
+            if (progress.status is SnapshotBuildStatus.BUILDING
+                    and progress.scanned_cells == progress.total_cells):
+                saw_post_scan_building = True
+            if progress.status is SnapshotBuildStatus.COMPLETE:
+                break
+        else:
+            self.fail("snapshot finalization did not complete")
+
+        self.assertTrue(saw_post_scan_building)
+        self.assertEqual(
+            progress.missing_cells,
+            tuple(sorted(progress.missing_cells)),
+        )
+        self.assertTrue(progress.snapshot.bounds.complete_scope)
+        self.assertEqual(progress.missing_cells, ())
+
+    def test_snapshot_finalization_stops_after_first_relevant_unknown(self):
+        session = WorldSessionId("first-relevant-unknown")
+        world = WorldKnowledge(session)
+        bounds = KnownMapBounds(0, 20, 1, 1, 0, 20, True)
+        builder = KnownMapSnapshotBuilder(world.view(), bounds)
+
+        scanned = builder.advance(world.view(), 100_000)
+        self.assertIs(scanned.status, SnapshotBuildStatus.COMPLETE)
+        self.assertFalse(scanned.snapshot.bounds.complete_scope)
+        self.assertEqual(len(scanned.missing_cells), 1)
+
     def test_full_cube_floor_hides_unknown_lower_collision_owner(self):
         session=WorldSessionId('b04-hidden-substrate')
         stamp=ObservationStamp(session,1,1,'clock',50_000_000)

@@ -7,7 +7,7 @@ import unittest
 from mc2p.contracts.action_v1 import InteractBlockV1
 from mc2p.contracts.action_receipt import behavior_receipt_from_mapping
 from mc2p.contracts.behavior import BehaviorProfileV0
-from mc2p.contracts.common import ContractViolation
+from mc2p.contracts.common import ContractViolation, FieldStatusV0
 from mc2p.contracts.observation import Vec3V0
 from mc2p.contracts.observation_v2 import ItemStackV2
 from mc2p.contracts.observation_v3 import TargetingStateV3
@@ -51,8 +51,12 @@ def observation(
     position: tuple[float, float, float] = WORK_POSITION,
     profile: str = "interaction_v1",
     sneaking: bool = False,
+    contact_air: bool = True,
 ):
     blocks = [observed_block(SUPPORT, "minecraft:stone", sources=("surface_depth",))]
+    if contact_air:
+        blocks.extend(observed_block((0, y, 0), "minecraft:air", kind="empty", sources=("body_contact",))
+                      for y in (64, 65))
     if destination == "air":
         blocks.append(observed_block(
             DESTINATION, "minecraft:air", kind="empty", sources=("air_query",),
@@ -68,7 +72,8 @@ def observation(
         blocks=tuple(blocks),
         entities=[],
         profile=profile,
-        self_changes={"is_sneaking": sneaking},
+        self_changes={"is_sneaking": sneaking, "movement_tick_id": sequence + 1,
+                      "velocity": {"x": 0., "y": -.0784, "z": 0.}},
     )
     held = _stack(count, item_id)
     empty = _stack(0)
@@ -96,6 +101,18 @@ def observation(
     if profile == "interaction_v1":
         changes["targeting"] = replace(snapshot.targeting, value=target)
     return replace(snapshot, **changes)
+
+
+def without_inventory(snapshot):
+    return replace(
+        snapshot,
+        inventory=replace(
+            snapshot.inventory,
+            status=FieldStatusV0.MISSING,
+            reason_code="inventory_not_sampled",
+            value=None,
+        ),
+    )
 
 
 def requirement(**changes) -> RequiredInteraction:
@@ -139,9 +156,11 @@ class RequiredInteractionTests(unittest.TestCase):
 class BlockPlacementTransactionTests(unittest.TestCase):
     def setUp(self):
         self.adapter = NavigationObservationAdapter()
-        self.transaction = BlockPlacementTransaction(requirement())
+        self.clock = [150_000_000]
+        self.transaction = BlockPlacementTransaction(requirement(), clock_ns=lambda: self.clock[0])
 
     def _propose(self, snapshot):
+        self.clock[0] = snapshot.received_at_monotonic_ns
         frame = self.adapter.ingest(snapshot)
         return self.transaction.propose(snapshot, frame)
 
@@ -249,17 +268,91 @@ class BlockPlacementTransactionTests(unittest.TestCase):
             first, selected=True, receipt_status="pending_confirmation",
             receipt_reason="block_use_dispatched", control_sequence=7,
         )
+        first_identity = self.transaction.work_identity
+        self.assertIsNotNone(first_identity)
         waiting = self._propose(observation(5))
         self.assertEqual(waiting.state, PlacementState.READY)
         self.assertEqual(waiting.reason, "confirmation_timeout_retry")
+        self.assertIsNone(self.transaction.work_identity)
         second = self._propose(observation(6))
         self.transaction.register_dispatch(
             second, selected=True, receipt_status="pending_confirmation",
             receipt_reason="block_use_dispatched", control_sequence=8,
         )
+        self.assertNotEqual(self.transaction.work_identity, first_identity)
         failed = self._propose(observation(10))
         self.assertEqual(failed.state, PlacementState.FAILED)
         self.assertEqual(failed.reason, "confirmation_timeout")
+        self.assertIsNone(self.transaction.work_identity)
+        self.assertEqual(
+            tuple(record.disposition.value
+                  for record in self.transaction.admission_records),
+            ("recompute", "terminated"),
+        )
+
+    def test_world_confirmation_without_inventory_still_reaches_fixed_deadline(self):
+        transaction = BlockPlacementTransaction(requirement(maximum_attempts=1), clock_ns=lambda: self.clock[0])
+        snapshot = observation(1)
+        proposal = transaction.propose(snapshot, self.adapter.ingest(snapshot))
+        transaction.register_dispatch(
+            proposal, selected=True, receipt_status="pending_confirmation",
+            receipt_reason="block_use_dispatched", control_sequence=7,
+        )
+
+        partial = without_inventory(observation(
+            2, destination="minecraft:dirt", count=2,
+        ))
+        waiting = transaction.propose(partial, self.adapter.ingest(partial))
+        self.assertEqual(waiting.state, PlacementState.AWAITING_CONFIRMATION)
+        self.assertEqual(waiting.reason, "awaiting_inventory_confirmation")
+
+        expired = without_inventory(observation(
+            5, destination="minecraft:dirt", count=2,
+        ))
+        self.clock[0] = expired.received_at_monotonic_ns
+        failed = transaction.propose(expired, self.adapter.ingest(expired))
+        self.assertEqual(failed.state, PlacementState.FAILED)
+        self.assertEqual(failed.reason, "confirmation_timeout")
+
+        late = observation(6, destination="minecraft:dirt", count=2)
+        unchanged = transaction.propose(late, self.adapter.ingest(late))
+        self.assertEqual(unchanged.state, PlacementState.FAILED)
+        self.assertEqual(unchanged.reason, "confirmation_timeout")
+        self.assertIsNone(transaction.work_identity)
+        self.assertEqual(
+            transaction.last_admission.disposition.value, "terminated",
+        )
+
+    def test_inventory_evidence_can_arrive_before_world_evidence(self):
+        proposal = self._propose(observation(1, count=3))
+        self.transaction.register_dispatch(
+            proposal, selected=True, receipt_status="pending_confirmation",
+            receipt_reason="block_use_dispatched", control_sequence=7,
+        )
+        inventory_first = self._propose(observation(2, count=2))
+        self.assertEqual(
+            inventory_first.state, PlacementState.AWAITING_CONFIRMATION,
+        )
+        confirmed = self._propose(observation(
+            3, destination="minecraft:dirt", count=2,
+        ))
+        self.assertEqual(confirmed.state, PlacementState.COMPLETE)
+
+    def test_complete_evidence_at_deadline_cannot_revive_confirmation(self):
+        transaction = BlockPlacementTransaction(requirement(maximum_attempts=1), clock_ns=lambda: self.clock[0])
+        snapshot = observation(1, count=3)
+        proposal = transaction.propose(snapshot, self.adapter.ingest(snapshot))
+        transaction.register_dispatch(
+            proposal, selected=True, receipt_status="pending_confirmation",
+            receipt_reason="block_use_dispatched", control_sequence=7,
+        )
+
+        late = observation(5, destination="minecraft:dirt", count=2)
+        self.clock[0] = late.received_at_monotonic_ns
+        result = transaction.propose(late, self.adapter.ingest(late))
+
+        self.assertEqual(result.state, PlacementState.FAILED)
+        self.assertEqual(result.reason, "confirmation_timeout")
 
     def test_cancel_is_terminal_and_never_proposes_an_operation(self):
         self.transaction.cancel("goal_cancelled")
@@ -317,13 +410,26 @@ class _PlacementBackend:
                 generation_id=self.sequence,
                 request_sequence_id=action.request_sequence_id,
                 world_tick=observed.world_time_ticks.value,
+                input_samples=self.sequence + 1,
                 status="pending_confirmation" if placed else "executed",
                 reason="block_use_dispatched" if placed else "neutral",
             ),
             "schema_version": "mc2p.client_action_receipt.v3",
             "dropped_input_samples": 0,
-            "oldest_retained_input_tick": self.sequence,
-            "input_applications": [],
+            "oldest_retained_input_tick": self.sequence + 1,
+            "input_applications": [{
+                "schema_version": "mc2p.input-application.v1",
+                "movement_tick_id": self.sequence + 1,
+                "episode_id": action.episode_id,
+                "request_sequence_id": action.request_sequence_id,
+                "sampled_at_jvm_ns": self.sequence + 1,
+                "state": "leased",
+                "forward": float(action.movement.forward),
+                "strafe": float(action.movement.strafe),
+                "jump": action.movement.jump,
+                "sneak": action.movement.sneak,
+                "sprint": action.movement.sprint,
+            }],
         })
         return BackendStepResultV1(observed, 0.0, False, False, receipt)
 
@@ -346,6 +452,7 @@ class RuntimeBlockPlacementDriverTests(unittest.TestCase):
                     position=(0.625, 64.0, 0.5),
                     profile=profile,
                     sneaking=True,
+                    contact_air=False,
                 )
                 value = replace(
                     value,

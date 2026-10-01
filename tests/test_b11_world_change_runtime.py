@@ -1,6 +1,11 @@
 from __future__ import annotations
 
 import unittest
+from types import SimpleNamespace
+from scripts.r27_placement_runtime import InventoryDelayTestBackend, CASES
+from mc2p.contracts.common import FieldStatusV0
+from tests.motion_nav.test_b11_block_placement import _PlacementBackend
+from mc2p.contracts.action_v1 import ActionSnapshotV1
 
 from scripts.b11_world_change_runtime import (
     b11_negative_trial_plan,
@@ -12,6 +17,21 @@ from scripts.b11_world_change_runtime import (
 
 
 class B11WorldChangeRuntimeTests(unittest.TestCase):
+    def test_r27_field_delivery_fault_preserves_raw_sample_and_all_other_fields(self):
+        fixture = _PlacementBackend([100_000_000])
+        raw = fixture.step(ActionSnapshotV1("episode-1", 1, 1, 500_000_000), 500_000_000)
+        sample = raw.observation
+        backend = InventoryDelayTestBackend(SimpleNamespace(step=lambda *_a, **_k: raw))
+        self.assertIs(backend.step(), raw)
+        backend.delay_inventory = True
+        delayed = backend.step()
+        self.assertIs(delayed.observation.inventory.status, FieldStatusV0.MISSING)
+        self.assertIsNone(delayed.observation.inventory.value)
+        self.assertIs(delayed.observation.self_state, sample.self_state)
+        self.assertIs(delayed.observation.perception, sample.perception)
+        self.assertIs(delayed.receipt, raw.receipt)
+        self.assertEqual(backend.raw_inventory_evidence["inventory"]["value"]["main_hand"]["count"], 3)
+        self.assertEqual(CASES, ("moving_cancel", "air_cancel", "late_confirmation", "partial_revoked"))
     def test_diagnostic_row_exposes_pipeline_sample_at_top_level(self):
         row = _diagnostic_row(
             "episode-1", 7, {"client_tick": 12},

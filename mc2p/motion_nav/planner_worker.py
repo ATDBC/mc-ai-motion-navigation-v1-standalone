@@ -103,6 +103,7 @@ def _failure_candidate(job: _PlanningJob, reason: str):
             initial_resources=request.initial_resources,
             minimum_resources=request.minimum_resources,
             reasons=(reason,),
+            work_identity=request.work_identity,
         )
     return RouteCandidate(
         request.sequence, request.request_id, request.goal_id,
@@ -110,6 +111,7 @@ def _failure_candidate(job: _PlanningJob, reason: str):
         request.start, request.goal, PlanningStatus.INTERNAL_ERROR,
         (), (), None, (), 0, goal_state=request.goal_state,
         reasons=(reason,),
+        work_identity=request.work_identity,
     )
 
 

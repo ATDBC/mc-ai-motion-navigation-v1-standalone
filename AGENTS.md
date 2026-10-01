@@ -2,7 +2,7 @@
 
 本仓库是由主项目生成的只读源码快照。先读最新的 `docs/motion_navigation/stages/` 和对应的 `acceptance/`，再读取相关 `architecture/` 与 `decisions/`。
 
-当前导航协调已完成 S0 至 S5。第二十二轮整改补齐输入歧义的有界交接、等待记录的动作归属，以及停止后的单一交接入口。固定 14 场、冻结 200 种子和 192 个中断组合保持既定结果；1000 个固定随机事件序列没有永久等待、公开接口异常或不变量违规。连续高度 M3 的 800 场完整 Fabric 矩阵已经关闭。本轮没有新增 Fabric 批次，第二十轮专项 Fabric 对照和 M3 完整矩阵仍是当前实机证据。结果和适用边界见[第二十二轮整改计划](docs/motion_navigation/stages/navigation-coordination-review22-remediation-plan.md)、[验收记录](docs/motion_navigation/acceptance/navigation-coordination-refactor.md)和[缺陷台账](docs/motion_navigation/acceptance/defect-ledger.md)。
+当前导航协调 S0 至 S5 已实施。2026-10-01，R27 复审整改 A0—A5 完成，S5 按本轮冻结范围重新关闭。停止请求保留业务终态和身体责任，信息通知携带完整身份，四个模拟关闭入口执行共同证据检查；测试走 Runtime 和正式 driver，不替实现生成身份。当前范围见 [R27](docs/motion_navigation/stages/navigation-async-work-r27-root-fix-plan.md)，结果和限制见[验收第 20 节](docs/motion_navigation/acceptance/navigation-coordination-refactor.md#20-r27-复审整改结果)与[缺陷台账](docs/motion_navigation/acceptance/defect-ledger.md)。连续高度 M3 的历史 Fabric 结论保留。
 
 项目方只通过默认分支 `main` 发布由固定导出清单生成、校验通过的公开快照。不得把主项目的完整开发分支或提交历史直接推入本仓库。三方审查分支可以保留，但只保存审查者自己的报告和复现材料，不代表正式发布状态。
 

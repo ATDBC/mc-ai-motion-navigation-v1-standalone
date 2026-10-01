@@ -607,9 +607,10 @@ def gap_entry_heading_is_aligned(
     )) <= _HEADING_TOLERANCE_RADIANS
 
 
-def _entry_check(anchor: StateAnchor, world: PhysicsWorldView,
+def check_motion_entry(anchor: StateAnchor, world: PhysicsWorldView,
                  request: GapSolveRequest | AirTransitionSolveRequest
                  ) -> SolveResult | None:
+    """Cheap necessary conditions shared by solving and current-state admission."""
     if (type(anchor) is not StateAnchor or type(world) is not PhysicsWorldView
             or type(request) not in {GapSolveRequest, AirTransitionSolveRequest}):
         raise ContractViolation("motion solving requires an anchor, world and request")
@@ -1044,7 +1045,7 @@ def revalidate_gap_motion(
             exit_motion_ticks=proof.exit_motion_ticks,
             policy=proof.solver_policy,
         )
-    rejected = _entry_check(anchor, world, request)
+    rejected = check_motion_entry(anchor, world, request)
     if rejected is not None:
         return rejected
     primary, failure = _replay_verified_commands(
@@ -1110,7 +1111,7 @@ def solve_air_transition(
         request: AirTransitionSolveRequest) -> SolveResult:
     if type(request) is not AirTransitionSolveRequest:
         raise ContractViolation("air transition solver requires a typed request")
-    rejected = _entry_check(anchor, world, request)
+    rejected = check_motion_entry(anchor, world, request)
     if rejected is not None:
         return rejected
     evaluated = 0

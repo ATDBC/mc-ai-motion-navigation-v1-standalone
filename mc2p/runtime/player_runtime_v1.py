@@ -55,9 +55,14 @@ class RuntimeStepResultV1:
     decision: ArbitrationDecisionV1 | None
     report: ExecutionReportV0
     backend_result: BackendStepResultV1 | None = None
+    dispatched_monotonic_ns: int | None = None
 
 
 class PlayerRuntimeV1:
+    def monotonic_ns(self) -> int:
+        """The owner-process clock used for actual dispatch and admission."""
+        return self._clock()
+
     def __init__(self, backend: PlayerBackendV1, trace_writer: TraceSinkV0,
                  clock_ns: Callable[[], int] = time.perf_counter_ns) -> None:
         if getattr(backend, "action_schema_version", None) != "mc2p.action-snapshot.v1":
@@ -415,6 +420,7 @@ class PlayerRuntimeV1:
                                                 "observation_request": request})
                 phase_code = FailureCodeV0.BACKEND_IO
                 self._submit_input_record(action, selected_execution_window)
+                dispatched_ns = self._clock()
                 backend_result = self._backend_step(action, action.deadline_monotonic_ns, request)
                 self._check_deadline(action.deadline_monotonic_ns)
                 self._validate_result(action, backend_result, request)
@@ -467,8 +473,10 @@ class PlayerRuntimeV1:
                 report = self._report(task, decision, status, phase, failure, self._observation)
                 phase_code = FailureCodeV0.TRACE_IO
                 self._trace.write("step", {"task": task, "profile": profile, "decision": decision,
-                                          "backend_result": backend_result, "report": report})
-                return RuntimeStepResultV1(self._observation, decision, report, backend_result)
+                                          "backend_result": backend_result, "report": report,
+                                          "dispatched_monotonic_ns": dispatched_ns,
+                                          "decision_observation_received_ns": obs.received_at_monotonic_ns})
+                return RuntimeStepResultV1(self._observation, decision, report, backend_result, dispatched_ns)
             except Exception as error:
                 failure = self._exception_failure(error, phase_code)
                 self._apply_failure(failure, record=False)

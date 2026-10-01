@@ -305,6 +305,55 @@ class InvariantNegativeTests(unittest.TestCase):
         self.check_code("I9", evidence(state="complete", velocity=(.1, 0.0, 0.0)))
         self.check_code("I9", evidence(state="complete", pose="crouching"))
 
+    def test_i14_terminal_session_cannot_keep_active_waits(self):
+        self.check_code(
+            "I14",
+            evidence(
+                state="failed",
+                controller_ids=(),
+                source_bound=False,
+                active_waits=(("information", "navigation-session/old/information"),),
+            ),
+        )
+
+    def test_i15_planning_state_requires_owned_work(self):
+        self.check_code(
+            "I15",
+            evidence(
+                state="planning",
+                reason="route_dependencies_changed",
+                planning_work_owned=False,
+            ),
+        )
+
+    def test_i15_planning_work_requires_matching_identity_and_deadline(self):
+        self.check_code(
+            "I15",
+            evidence(
+                state="planning",
+                planning_work_owned=True,
+                planning_work_identity_valid=False,
+            ),
+        )
+
+    def test_i16_attempt_requires_matching_one_shot_permit(self):
+        self.check_code(
+            "I16",
+            evidence(
+                state="planning",
+                planning_permit_identity_valid=False,
+            ),
+        )
+
+    def test_i17_information_need_requires_frontier_identity(self):
+        self.check_code(
+            "I17",
+            evidence(
+                state="needs_information",
+                planning_information_identity_valid=False,
+            ),
+        )
+
     def test_goal_monitor_rejects_unsupported_resource_contract(self):
         goal = replace(evidence().goal_state,
                        minimum_resources=ResourceState((("blocks", 1.0),)))

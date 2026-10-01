@@ -147,6 +147,7 @@ def run_matrix(manifest: Path, output: Path) -> dict:
             violation_codes = sorted({item[1] for item in result.violations})
             event_names = [event.split("@")[0] for event in result.events]
             exact = (result.outcome == case["outcome"]
+                     and result.verification_complete
                      and result.reason == case["reason"]
                      and violation_codes == case["violations"]
                      and event_names == case.get("events", [])

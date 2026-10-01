@@ -34,7 +34,10 @@ class _WorldChangeBackend:
     action_schema_version = "mc2p.action-snapshot.v1"
     observation_schema_version = "mc2p.client_observation.v3"
 
-    def __init__(self, clock, *, gap_count=1, item_count=3):
+    def __init__(
+        self, clock, *, gap_count=1, item_count=3,
+        ignored_interactions=0,
+    ):
         self.clock = clock
         self.gap_count = gap_count
         self.goal_x = gap_count + 1
@@ -48,6 +51,7 @@ class _WorldChangeBackend:
         self.external_cells: set[int] = set()
         self.item_count = item_count
         self.actions: list[ActionSnapshotV1] = []
+        self.ignored_interactions = ignored_interactions
 
     @property
     def placed(self):
@@ -164,8 +168,11 @@ class _WorldChangeBackend:
         work_x = self._work_x()
         if (operation == InteractBlockV1(work_x, 63, 0, "east")
                 and 1 <= work_x + 1 < self.goal_x):
-            self.placed_cells.add(work_x + 1)
-            self.item_count -= 1
+            if self.ignored_interactions > 0:
+                self.ignored_interactions -= 1
+            else:
+                self.placed_cells.add(work_x + 1)
+                self.item_count -= 1
         self.yaw = (self.yaw + action.look.yaw_delta_degrees + 180.0) % 360.0 - 180.0
         self.pitch = max(-90.0, min(90.0, self.pitch + action.look.pitch_delta_degrees))
         self.sneaking = action.movement.sneak
@@ -243,10 +250,14 @@ class WorldChangeNavigationIntegrationTests(unittest.TestCase):
 
         driver.session.body_handoff = body_handoff
 
-    def _fixture(self, *, gap_count=1, item_count=3, maximum_blocks=3):
+    def _fixture(
+        self, *, gap_count=1, item_count=3, maximum_blocks=3,
+        ignored_interactions=0,
+    ):
         clock = [100_000_000]
         backend = _WorldChangeBackend(
             clock, gap_count=gap_count, item_count=item_count,
+            ignored_interactions=ignored_interactions,
         )
         runtime = PlayerRuntimeV1(backend, _RecordingTrace(), lambda: clock[0])
         reset = runtime.reset(ResetRequestV0(
@@ -333,6 +344,41 @@ class WorldChangeNavigationIntegrationTests(unittest.TestCase):
         ])
         driver.release()
         self.assertIsNone(driver.navigation.source)
+
+    def test_confirmation_timeout_retries_without_releasing_edge_control(self):
+        clock, backend, driver = self._fixture(
+            maximum_blocks=1,
+            ignored_interactions=1,
+        )
+
+        self._run(driver, clock, limit=260)
+
+        self.assertEqual(driver.report.state, "success", driver.report)
+        self.assertEqual(driver.report.confirmed_placements, 1)
+        self.assertEqual(len([
+            action for action in backend.actions
+            if action.operation is not None
+        ]), 2)
+        self.assertEqual(backend.placed_cells, {1})
+
+    def test_external_displacement_during_edge_preparation_reapproaches(self):
+        clock, backend, driver = self._fixture(maximum_blocks=1)
+        for _ in range(120):
+            driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
+            placement = driver.placement
+            if (placement is not None
+                    and placement.transaction.report.reason
+                        == "target_not_aligned"):
+                break
+        self.assertIsNotNone(driver.placement)
+        self.assertGreater(backend.position_x, 1.0)
+
+        backend.position_x = 0.5
+        self._run(driver, clock, limit=260)
+
+        self.assertEqual(driver.report.state, "success", driver.report)
+        self.assertEqual(driver.report.confirmed_placements, 1)
+        self.assertEqual(backend.placed_cells, {1})
 
     def test_known_insufficient_inventory_fails_before_partial_bridge(self):
         clock, backend, driver = self._fixture(

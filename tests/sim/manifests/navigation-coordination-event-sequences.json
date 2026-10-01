@@ -8,6 +8,54 @@
   ],
   "event_count": 6,
   "maximum_ticks": 400,
+  "allowed_results": {
+    "direct_drop_2": [
+      ["success", "goal_state_satisfied"],
+      ["cancelled", "generated_sequence_cancel"],
+      ["failed", "edge_probe_acquisition_timeout"],
+      ["failed", "information_out_of_range"],
+      ["failed", "input_lost"],
+      ["failed", "landing_support_missing"],
+      ["failed", "motion_unsolvable:needs_state"],
+      ["failed", "ordinary_ground_speed_outside_model"],
+      ["failed", "planning_unsupported"],
+      ["failed", "verified_exit_not_observed"]
+    ],
+    "direct_drop_5_budget_2": [
+      ["success", "goal_state_satisfied"],
+      ["cancelled", "generated_sequence_cancel"],
+      ["failed", "edge_probe_acquisition_timeout"],
+      ["failed", "information_out_of_range"],
+      ["failed", "input_lost"],
+      ["failed", "landing_support_missing"],
+      ["failed", "motion_unsolvable:needs_state"],
+      ["failed", "no_route_within_complete_scope"],
+      ["failed", "ordinary_ground_speed_outside_model"],
+      ["failed", "planning_unsupported"],
+      ["failed", "verified_exit_not_observed"]
+    ],
+    "far_landing_L_walkway": [
+      ["success", "goal_state_satisfied"],
+      ["cancelled", "generated_sequence_cancel"],
+      ["failed", "information_capacity_exhausted"],
+      ["failed", "information_out_of_range"],
+      ["failed", "input_lost"],
+      ["failed", "landing_support_missing"],
+      ["failed", "ordinary_ground_speed_outside_model"]
+    ],
+    "terrace_two_ledges": [
+      ["success", "goal_state_satisfied"],
+      ["cancelled", "generated_sequence_cancel"],
+      ["failed", "edge_probe_acquisition_timeout"],
+      ["failed", "information_out_of_range"],
+      ["failed", "input_lost"],
+      ["failed", "landing_support_missing"],
+      ["failed", "motion_unsolvable:needs_state"],
+      ["failed", "ordinary_ground_speed_outside_model"],
+      ["failed", "planning_unsupported"],
+      ["failed", "verified_exit_not_observed"]
+    ]
+  },
   "seeds": [
     23001,
     23002,

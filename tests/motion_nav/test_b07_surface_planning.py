@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from mc2p.motion_nav.known_map_planner import (
     KnownMapBounds, KnownMapSnapshotBuilder, SnapshotBuildStatus,
+    PlanningBlockerKind, PlanningFrontierKind,
     SurfacePlanningRequest, SurfacePlanningStatus,
     SurfaceGraph, SurfaceJumpUpEdge, SurfaceNode, _SurfaceExpander,
     astar_surface_plan, build_surface_graph,
@@ -72,7 +73,110 @@ def flat_surface_world(size: int) -> WorldKnowledge:
     return world
 
 
+def partially_known_corridor_world(
+    *, unknown_cells: frozenset[tuple[int, int, int]],
+) -> WorldKnowledge:
+    session = WorldSessionId("r25-partially-known-corridor")
+    world = WorldKnowledge(session)
+    observed = ObservationStamp(session, 1, 1, "test-clock", 50_000_000)
+    cells = {
+        (x, y, z)
+        for x in range(-2, 3)
+        for y in range(-3, 4)
+        for z in range(-1, 2)
+    }
+    world.confirm_air(observed, tuple(sorted(cells - set(unknown_cells))))
+    world.observe_blocks(observed, {
+        (x, 0, 0): BlockGeometry.full_cube("minecraft:stone")
+        for x in range(3)
+        if (x, 0, 0) not in unknown_cells
+    })
+    return world
+
+
 class B07SurfacePlanningTests(unittest.TestCase):
+    def test_planning_information_is_capped_and_marks_truncation(self):
+        world = WorldKnowledge(WorldSessionId("r25-blocker-cap"))
+        expander = _SurfaceExpander(
+            world.view(), KnownMapBounds(0, 129, 1, 1, 0, 0, False),
+            ordinary_profile(), step_profile(),
+        )
+        dependencies = tuple((x, 2, 0) for x in range(130))
+
+        expander._record_blockers(
+            QueryStatus.NEEDS_INFORMATION,
+            dependencies,
+            kind=PlanningBlockerKind.CLEARANCE,
+            requirement_key="body-clearance:1.800000",
+            frontier_kind=PlanningFrontierKind.SEARCH_EDGE,
+            frontier_key="cap-frontier",
+        )
+        request = SurfacePlanningRequest(
+            7, "r25-cap-request", "r25-cap-goal", 1, world.session.value,
+            SurfaceNodeId(0, 0, 1, 0), SurfaceNodeId(129, 0, 1, 0),
+        )
+        snapshot = KnownMapSnapshotBuilder(
+            world.view(), KnownMapBounds(0, 129, 1, 1, 0, 0, False),
+        ).advance(world.view(), 10_000).snapshot
+
+        need = expander.information_need(request, snapshot)
+
+        self.assertEqual(len(need.blockers), 128)
+        self.assertTrue(need.truncated)
+        self.assertEqual(need.blockers[0].position, (0, 2, 0))
+        self.assertEqual(need.blockers[-1].position, (127, 2, 0))
+
+    def test_surface_planner_reports_unknown_goal_support_as_goal_blocker(self):
+        world = partially_known_corridor_world(
+            unknown_cells=frozenset({(2, 0, 0)}),
+        )
+        bounds = KnownMapBounds(0, 2, 1, 1, 0, 0, True)
+        snapshot = KnownMapSnapshotBuilder(world.view(), bounds).advance(
+            world.view(), 100_000,
+        ).snapshot
+        request = SurfacePlanningRequest(
+            1, "r25-goal-blocker", "r25-goal", 1, world.session.value,
+            SurfaceNodeId(0, 0, 1, 0), SurfaceNodeId(2, 0, 1, 0),
+        )
+
+        candidate = plan_known_surface_snapshot(
+            snapshot, ordinary_profile(), step_profile(), request,
+        )
+
+        self.assertIs(candidate.status, SurfacePlanningStatus.NO_KNOWN_ROUTE)
+        self.assertIsNotNone(candidate.information_need)
+        blocker = candidate.information_need.blockers[0]
+        self.assertEqual(blocker.position, (2, 0, 0))
+        self.assertEqual(blocker.frontier_kind.value, "goal")
+
+    def test_surface_planner_ignores_path_external_unknown_before_route_blocker(self):
+        external = (-2, 2, -1)
+        route_clearance = (1, 2, 0)
+        world = partially_known_corridor_world(
+            unknown_cells=frozenset({external, route_clearance}),
+        )
+        bounds = KnownMapBounds(-2, 2, 1, 1, -1, 1, True)
+        progress = KnownMapSnapshotBuilder(world.view(), bounds).advance(
+            world.view(), 100_000,
+        )
+        self.assertEqual(progress.missing_cells, (external,))
+        request = SurfacePlanningRequest(
+            2, "r25-route-blocker", "r25-goal", 1, world.session.value,
+            SurfaceNodeId(0, 0, 1, 0), SurfaceNodeId(2, 0, 1, 0),
+        )
+
+        candidate = plan_known_surface_snapshot(
+            progress.snapshot, ordinary_profile(), step_profile(), request,
+        )
+
+        self.assertIs(candidate.status, SurfacePlanningStatus.NO_KNOWN_ROUTE)
+        self.assertIsNotNone(candidate.information_need)
+        positions = tuple(
+            blocker.position for blocker in candidate.information_need.blockers
+        )
+        self.assertIn(route_clearance, positions)
+        self.assertNotIn(external, positions)
+
     def test_low_shape_fallback_does_not_require_deeper_cells_for_full_support(self):
         session = WorldSessionId("b07-low-shape-fallback")
         world = WorldKnowledge(session)

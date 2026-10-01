@@ -108,6 +108,11 @@ class RuntimeWorldChangeNavigationDriver:
             placement.discard_prepared()
         if placement.transaction.report.state is PlacementState.READY:
             placement.cancel("goal_revised_before_dispatch")
+            if placement.source is not None:
+                self._pending_goal_update = (goal_id, goal_revision, goal)
+                self._state = "placing"
+                self._reason = "goal_update_waiting_for_placement_body"
+                return
             self.placement = None
             self._active_interaction_id = None
             self.navigation.resume_after_interaction()
@@ -187,10 +192,19 @@ class RuntimeWorldChangeNavigationDriver:
             raise ContractViolation("world-change cancellation reason is required")
         if self.placement is not None:
             self.placement.cancel(reason)
-            self.placement = None
+            if self.placement.source is None:
+                if self.placement.transaction.report.state is PlacementState.COMPLETE:
+                    self._confirmed_placements += 1
+                self.placement = None
+                self._active_interaction_id = None
         self._pending_goal_update = None
         if not self.session.report.terminal:
             self.session.cancel(reason)
+        if self.placement is not None:
+            self._pending_terminal = ("cancelled", reason.strip())
+            self._state = "stopping"
+            self._reason = "placement_body_handoff_pending"
+            return
         if (self.navigation.source is not None
                 and not self.navigation.release(reason)):
             self._pending_terminal = ("cancelled", reason.strip())
@@ -205,7 +219,8 @@ class RuntimeWorldChangeNavigationDriver:
         if not self.report.terminal:
             raise ContractViolation("active world-change navigation cannot be released")
         if self.placement is not None:
-            self.placement.release()
+            if not self.placement.release():
+                raise ContractViolation("placement still owns an unfinished body action")
             self.placement = None
         if self.navigation.source is not None:
             if not self.navigation.release("world_change_navigation_finished"):
@@ -233,6 +248,20 @@ class RuntimeWorldChangeNavigationDriver:
             raise ContractViolation("world-change placement is missing")
         result = placement.tick(profile, owner_deadline_ns)
         placement_report = placement.transaction.report
+        if placement_report.terminal and placement.source is not None:
+            self._state = "stopping"
+            self._reason = "placement_body_handoff_pending"
+            return result
+        if self._pending_terminal is not None and placement.source is None:
+            # Retirement consumes the report once, including when the task was
+            # cancelled after the placement had already been confirmed.
+            if placement_report.state is PlacementState.COMPLETE:
+                self._confirmed_placements += 1
+            self.placement = None
+            self._active_interaction_id = None
+            self._state = "stopping"
+            self._reason = "placement_body_released"
+            return result
         if placement_report.state is PlacementState.COMPLETE:
             assert self._active_interaction_id is not None
             self.session.confirm_required_interaction(
@@ -250,6 +279,8 @@ class RuntimeWorldChangeNavigationDriver:
             dependency_changed = (
                 placement_report.failure_kind
                 is PlacementFailureKind.WORLD_DEPENDENCY_CHANGED
+                or (placement_report.state is PlacementState.CANCELLED
+                    and self._pending_goal_update is not None)
             )
             placement.release()
             self.placement = None

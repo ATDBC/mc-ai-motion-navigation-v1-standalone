@@ -92,6 +92,7 @@ def apply_observed_blocks(
         result, solid_changes = world.observe_blocks_with_changes(stamp, solids)
         rejected.update(result.rejected_positions)
         changed.update(solid_changes)
+        changed.update(result.evicted_positions)
     if requested_air:
         before = world.view()
         air = tuple(
@@ -109,9 +110,11 @@ def apply_observed_blocks(
         for position in air:
             if before.cell(position).knowledge is not CellKnowledge.AIR:
                 changed.add(position)
-        rejected.update(world.confirm_air(
+        air_update = world.confirm_air(
             stamp, air,
             {position: visual_evidence[position]
              for position in air if position in visual_evidence},
-        ).rejected_positions)
+        )
+        rejected.update(air_update.rejected_positions)
+        changed.update(air_update.evicted_positions)
     return tuple(sorted(changed - rejected))

@@ -147,6 +147,8 @@ B09_AIR_MOTION_SOURCES = (
 )
 NAVIGATION_SESSION_SOURCES = (
     "mc2p/motion_nav/navigation_session.py",
+    "mc2p/motion_nav/planning_coordinator.py",
+    "mc2p/motion_nav/navigation_owners.py",
     "mc2p/skills/navigation_session_driver.py",
     "mc2p/motion_nav/known_map_planner.py",
     "mc2p/motion_nav/planner_worker.py",
@@ -196,12 +198,20 @@ CONTINUOUS_HEIGHT_SOURCES = (
 )
 B11_WORLD_CHANGE_SOURCES = (
     "scripts/b11_world_change_runtime.py",
+    "scripts/r27_world_change_stop_runtime.py",
+    "scripts/r27_placement_runtime.py",
+    "scripts/r27_successor_gap_runtime.py",
+    "scripts/r25_planning_information_runtime.py",
     *NAVIGATION_SESSION_SOURCES,
     "mc2p/motion_nav/bridge_planner.py",
     "mc2p/motion_nav/world_interaction.py",
     "mc2p/skills/block_placement_driver.py",
     "mc2p/skills/navigation_session_driver.py",
     "mc2p/skills/world_change_navigation_driver.py",
+)
+R25_PLANNING_INFORMATION_SOURCES = (
+    "scripts/r25_planning_information_runtime.py",
+    *NAVIGATION_SESSION_SOURCES,
 )
 INPUT_BUFFER_IDLE_SOURCES = (
     "scripts/input_buffer_idle_runtime.py",
@@ -294,6 +304,7 @@ B12B_PARTIAL_COMBAT_SOURCES = (
 def frozen_deployment_sources(*, b03_fixed_route_probe: bool,
                               b03_shape_probe: bool = False,
                               b04_known_map_probe: bool = False,
+                              r25_planning_information_probe: bool = False,
                               b05_jump_calibration_probe: bool = False,
                               b05_jump_route_probe: bool = False,
                               b05_jump_acceptance_probe: bool = False,
@@ -318,6 +329,10 @@ def frozen_deployment_sources(*, b03_fixed_route_probe: bool,
         sources.update({name: _hash(ROOT / name) for name in B03_SHAPE_SOURCES})
     if b04_known_map_probe:
         sources.update({name: _hash(ROOT / name) for name in (*B03_SOURCES, *B04_SOURCES)})
+    if r25_planning_information_probe:
+        sources.update({name: _hash(ROOT / name) for name in (
+            *B03_SOURCES, *B04_SOURCES, *R25_PLANNING_INFORMATION_SOURCES,
+        )})
     if b05_jump_calibration_probe:
         sources.update({name: _hash(ROOT / name) for name in (*B03_SOURCES, *B05_CALIBRATION_SOURCES)})
     if b05_jump_route_probe or b05_jump_acceptance_probe:
@@ -881,6 +896,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                visibility_probe: bool = False, block_parity: bool = False, b02_air_probe: bool = False,
                b03_fixed_route_probe: bool = False, b03_shape_probe: bool = False,
                b04_known_map_probe: bool = False,
+               r25_planning_information_probe: bool = False,
                b05_jump_calibration_probe: bool = False,
                b05_jump_route_probe: bool = False,
                b05_jump_acceptance_probe: bool = False,
@@ -909,6 +925,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                 or b12a_attack_evidence_probe or b12b_partial_combat_probe)
     if sum((container_probe,mining_probe,visibility_probe,b02_air_probe,
             b03_fixed_route_probe,b03_shape_probe,b04_known_map_probe,
+            r25_planning_information_probe,
             b05_jump_calibration_probe,b05_jump_route_probe,
             b05_jump_acceptance_probe,b06_ordinary_material_probe,
             b07_step_probe,b08_ground_modes_probe,b09_air_motion_probe,
@@ -931,6 +948,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
         b03_fixed_route_probe=b03_fixed_route_probe,
         b03_shape_probe=b03_shape_probe,
         b04_known_map_probe=b04_known_map_probe,
+        r25_planning_information_probe=r25_planning_information_probe,
         b05_jump_calibration_probe=b05_jump_calibration_probe,
         b05_jump_route_probe=b05_jump_route_probe,
         b05_jump_acceptance_probe=b05_jump_acceptance_probe,
@@ -996,6 +1014,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
             time.sleep(.05)
         previous_gui = None
         for number in range(1 if (b03_shape_probe or b04_known_map_probe
+                                  or r25_planning_information_probe
                                   or b05_jump_calibration_probe
                                   or b05_jump_route_probe
                                   or b05_jump_acceptance_probe
@@ -1010,7 +1029,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
             directory = run_dir / f"client-{number}"
             directory.mkdir(exist_ok=False)
             options = "pauseOnLostFocus:false\nrenderDistance:2\nsimulationDistance:5\nmaxFps:60\nenableVsync:false\ntutorialStep:none\njoinedFirstServer:true\nskipMultiplayerWarning:true\nsoundCategory_master:0.0\n"
-            if (b05_jump_calibration_probe or b05_jump_route_probe
+            if (r25_planning_information_probe
+                    or b05_jump_calibration_probe or b05_jump_route_probe
                     or b05_jump_acceptance_probe or b06_ordinary_material_probe
                     or b07_step_probe or b08_ground_modes_probe
                     or b09_air_motion_probe or b10_gap_solver_probe
@@ -1042,6 +1062,9 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                     identity = ClientProcessIdentity(process.pid, psutil.Process(process.pid).create_time())
                     write_json_atomic(directory / "identity.json", asdict(identity))
                     backend = create_deployment_backend(transport, identity, token, server_port)
+                    if b11_world_change_probe:
+                        from scripts.r27_placement_runtime import InventoryDelayTestBackend
+                        backend = InventoryDelayTestBackend(backend)
                     if c1_probe:
                         from mc2p.runtime.async_trace import BoundedAsyncTraceWriter
                         from mc2p.runtime.segmented_trace import SegmentedTraceWriter
@@ -1060,10 +1083,13 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                             capture_close_diagnostics=(
                                 visibility_probe or surface_cost_probe
                                 or (b11_world_change_probe and time_diagnostics)
+                                or (b10_gap_solver_probe and time_diagnostics)
                                 or (continuous_height_probe and time_diagnostics)
                             ),
                         )
                     if c1_probe and time_diagnostics:
+                        trace = _RuntimeDiagnosticsTrace(directory, backend, trace)
+                    if r25_planning_information_probe and time_diagnostics:
                         trace = _RuntimeDiagnosticsTrace(directory, backend, trace)
                     runtime = PlayerRuntimeV1(backend,trace)
                     if isinstance(trace, _RuntimeDiagnosticsTrace):
@@ -1195,6 +1221,32 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                         stages, rows, episode_checks = run_known_map_navigation_runtime(
                             runtime, backend, episode, directory, deadline,
                             fixture_writer=write_b04_fixture,
+                        )
+                    elif r25_planning_information_probe:
+                        from scripts.r25_planning_information_runtime import (
+                            run_r25_planning_information_runtime,
+                        )
+                        def write_r25_fixture(commands):
+                            if server is None or server.stdin is None:
+                                raise RuntimeError(
+                                    "R25 fixture server command channel is unavailable"
+                                )
+                            server.stdin.write(("\n".join(commands) + "\n").encode("utf-8"))
+                            server.stdin.flush()
+                            append_jsonl(
+                                directory / "r25-fixture-commands.jsonl",
+                                {"commands": list(commands)},
+                            )
+                        stages, rows, episode_checks = (
+                            run_r25_planning_information_runtime(
+                                runtime,
+                                backend,
+                                episode,
+                                directory,
+                                deadline,
+                                fixture_writer=write_r25_fixture,
+                                trace_owns_diagnostics=time_diagnostics,
+                            )
                         )
                     elif b05_jump_calibration_probe:
                         from scripts.jump_up_calibration_runtime import run_jump_up_calibration_runtime
@@ -1446,6 +1498,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                             runtime, backend, episode, directory, deadline,
                             fixture_writer=write_b10_fixture,
                             player_teleporter=teleport_b10_player,
+                            pipeline_diagnostic=lambda: observation_pipeline_diagnostics(runtime, backend),
                         )
                     elif continuous_height_probe:
                         from scripts.continuous_height_runtime import (
@@ -1612,7 +1665,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                         air_evidence = None
                     final = runtime.observation
                     if (b03_fixed_route_probe or b03_shape_probe
-                            or b04_known_map_probe or b05_jump_calibration_probe
+                            or b04_known_map_probe or r25_planning_information_probe
+                            or b05_jump_calibration_probe
                             or b05_jump_route_probe or b05_jump_acceptance_probe
                             or b06_ordinary_material_probe or b07_step_probe
                             or b08_ground_modes_probe or b09_air_motion_probe
@@ -1774,6 +1828,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                     elif mining_probe:
                         if number == 0: episode_checks = evaluate_mining(records, stages)
                     elif (b02_air_probe or b03_fixed_route_probe or b03_shape_probe or b04_known_map_probe
+                          or r25_planning_information_probe
                           or b05_jump_calibration_probe or b05_jump_route_probe
                           or b05_jump_acceptance_probe or b06_ordinary_material_probe
                           or b07_step_probe or b08_ground_modes_probe
@@ -1791,6 +1846,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                         expected_steps=final.sequence_id if (container_probe or mining_probe or visibility_probe
                                                              or b02_air_probe or b03_fixed_route_probe
                                                              or b03_shape_probe or b04_known_map_probe
+                                                             or r25_planning_information_probe
                                                              or b05_jump_calibration_probe
                                                              or b05_jump_route_probe
                                                              or b05_jump_acceptance_probe
@@ -1805,6 +1861,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                                                              or surface_cost_probe) else 28,
                         require_gui_attempts=not (
                             b02_air_probe or b03_fixed_route_probe or b03_shape_probe or b04_known_map_probe
+                            or r25_planning_information_probe
                             or b05_jump_calibration_probe or b05_jump_route_probe
                             or b05_jump_acceptance_probe or b06_ordinary_material_probe
                             or b07_step_probe or b08_ground_modes_probe
@@ -1819,6 +1876,9 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                         b03_fixed_route=stages if b03_fixed_route_probe else None,
                         b03_shape=stages if b03_shape_probe else None,
                         b04_known_map=stages if b04_known_map_probe else None,
+                        r25_planning_information=(
+                            stages if r25_planning_information_probe else None
+                        ),
                         b05_jump_calibration=stages if b05_jump_calibration_probe else None,
                         b05_jump_route=stages if b05_jump_route_probe else None,
                         b05_jump_acceptance=stages if b05_jump_acceptance_probe else None,
@@ -1900,7 +1960,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                      {scenario.get("kind") for scenario in scenarios} == {"line", "circle"}
                      and sum(scenario.get("kind") == "circle" for scenario in scenarios) == 6),
             ]
-        elif not (b04_known_map_probe or b05_jump_calibration_probe
+        elif not (b04_known_map_probe or r25_planning_information_probe
+                  or b05_jump_calibration_probe
                   or b05_jump_route_probe or b05_jump_acceptance_probe
                   or b06_ordinary_material_probe or b07_step_probe
                   or b08_ground_modes_probe or b09_air_motion_probe
@@ -1924,7 +1985,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                 dict(name="b03_nonzero_pitch_routes_executed",
                      passed=any(abs(trial["pitch_degrees"]) >= 15 for trial in all_trials)),
             ]
-        if not (b03_shape_probe or b04_known_map_probe or b05_jump_calibration_probe
+        if not (b03_shape_probe or b04_known_map_probe
+                or r25_planning_information_probe or b05_jump_calibration_probe
                 or b05_jump_route_probe or b05_jump_acceptance_probe
                 or b06_ordinary_material_probe or b07_step_probe
                 or b08_ground_modes_probe or b09_air_motion_probe
@@ -1959,6 +2021,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
         b03_fixed_route_probe=b03_fixed_route_probe,
         b03_shape_probe=b03_shape_probe,
         b04_known_map_probe=b04_known_map_probe,
+        r25_planning_information_probe=r25_planning_information_probe,
         b05_jump_calibration_probe=b05_jump_calibration_probe,
         b05_jump_route_probe=b05_jump_route_probe,
         b05_jump_acceptance_probe=b05_jump_acceptance_probe,
@@ -1992,6 +2055,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
             else "b02-air-query" if b02_air_probe else "b03-fixed-route" if b03_fixed_route_probe
             else "b03-shape-tracking" if b03_shape_probe
             else "b04-known-map" if b04_known_map_probe
+            else "r25-planning-information" if r25_planning_information_probe
             else "b05-jump-calibration" if b05_jump_calibration_probe
             else "b05-jump-route" if b05_jump_route_probe
             else "b05-jump-acceptance" if b05_jump_acceptance_probe
@@ -2043,6 +2107,8 @@ def main(argv=None) -> int:
                         help='run B03 rotating-view line and fixed-view circle trials')
     parser.add_argument('--b04-known-map-probe',action='store_true',
                         help='run B04 known-map background planning and execution')
+    parser.add_argument('--r25-planning-information-probe', action='store_true',
+                        help='verify profile-4 planning blockers and information acquisition')
     parser.add_argument('--b05-jump-calibration-probe',action='store_true',
                         help='calibrate one observed low-speed adjacent one-block JumpUp')
     parser.add_argument('--b05-jump-route-probe',action='store_true',
@@ -2092,6 +2158,7 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
     if sum((args.container_probe,args.mining_probe,args.visibility_probe,args.b02_air_probe,
             args.b03_fixed_route_probe,args.b03_shape_probe,args.b04_known_map_probe,
+            args.r25_planning_information_probe,
             args.b05_jump_calibration_probe,args.b05_jump_route_probe,
             args.b05_jump_acceptance_probe,args.b06_ordinary_material_probe,
             args.b07_step_probe,args.b08_ground_modes_probe,
@@ -2153,7 +2220,8 @@ def main(argv=None) -> int:
                           args.server_port, args.ipc_port, args.timeout_seconds, args.container_probe, args.time_diagnostics, args.mining_probe,
                           args.visibility_probe,args.block_parity,args.b02_air_probe,
                           args.b03_fixed_route_probe,args.b03_shape_probe,
-                          args.b04_known_map_probe,args.b05_jump_calibration_probe,
+                          args.b04_known_map_probe,args.r25_planning_information_probe,
+                          args.b05_jump_calibration_probe,
                           args.b05_jump_route_probe,args.b05_jump_acceptance_probe,
                           args.b06_ordinary_material_probe,args.b07_step_probe,
                           args.b08_ground_modes_probe,args.b09_air_motion_probe,
@@ -2209,6 +2277,8 @@ def main(argv=None) -> int:
     if args.b03_fixed_route_probe: command.append('--b03-fixed-route-probe')
     if args.b03_shape_probe: command.append('--b03-shape-probe')
     if args.b04_known_map_probe: command.append('--b04-known-map-probe')
+    if args.r25_planning_information_probe:
+        command.append('--r25-planning-information-probe')
     if args.b05_jump_calibration_probe: command.append('--b05-jump-calibration-probe')
     if args.b05_jump_route_probe: command.append('--b05-jump-route-probe')
     if args.b05_jump_acceptance_probe: command.append('--b05-jump-acceptance-probe')

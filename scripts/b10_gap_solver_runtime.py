@@ -335,6 +335,7 @@ def run_b10_gap_solver_runtime(
     deadline_ns: int,
     fixture_writer: Callable[[tuple[tuple[int, int, int], ...], str], None],
     player_teleporter: Callable[[float, float, float, float, float], None],
+    *, pipeline_diagnostic: Callable[[], dict] | None = None,
 ) -> tuple[dict, list[dict], list[dict]]:
     """Keep background workers alive across the whole controlled probe."""
     with PlannerWorker() as planner_worker, MotionSolverWorker(
@@ -350,6 +351,7 @@ def run_b10_gap_solver_runtime(
             player_teleporter,
             planner_worker=planner_worker,
             motion_worker=motion_worker,
+            pipeline_diagnostic=pipeline_diagnostic,
         )
 
 
@@ -364,6 +366,7 @@ def _run_b10_gap_solver_runtime(
     *,
     planner_worker: PlannerWorker,
     motion_worker: MotionSolverWorker,
+    pipeline_diagnostic: Callable[[], dict] | None = None,
 ) -> tuple[dict, list[dict], list[dict]]:
     """Solve and execute frozen trials, including the default coordinator."""
     task = TaskIntentV0(
@@ -384,6 +387,8 @@ def _run_b10_gap_solver_runtime(
             observation_sequence_id=runtime.observation.sequence_id,
             diagnostics=backend.last_diagnostics,
         )
+        if pipeline_diagnostic is not None:
+            row["observation_pipeline"] = pipeline_diagnostic()
         rows.append(row)
         append_jsonl(directory / "diagnostics.jsonl", row)
 

@@ -63,6 +63,7 @@ def run_scan(manifest_path: Path, output: Path) -> dict:
             within_declared = (
                 (result.outcome, result.reason) in allowed
                 and not result.violations
+                and result.verification_complete
                 and result.damage <= scenario.damage_points + 1.0e-9
             )
             outcome_class = result.outcome_class

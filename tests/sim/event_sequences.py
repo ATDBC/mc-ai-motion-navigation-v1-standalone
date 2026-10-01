@@ -87,6 +87,7 @@ class SequenceOutcome:
     sequence: GeneratedSequence
     result: Result | None
     exception: str | None = None
+    event_applications: tuple["EventApplication", ...] = ()
 
     @property
     def failed_invariant(self) -> bool:
@@ -95,7 +96,23 @@ class SequenceOutcome:
             or self.result is None
             or bool(self.result.violations)
             or self.result.outcome not in {"success", "failed", "cancelled"}
+            or self.result.reason == "navigation_internal_contract_failure"
         )
+
+    @property
+    def failed_gate(self) -> bool:
+        return self.failed_invariant or self.result is None or not self.result.verification_complete
+
+
+@dataclass(frozen=True, slots=True)
+class EventApplication:
+    kind: EventKind
+    tick: int
+    status: str
+
+    def __post_init__(self) -> None:
+        if self.status not in {"dispatched", "applied", "skipped"}:
+            raise ValueError("event application status is invalid")
 
 
 def generate_sequence(
@@ -157,6 +174,7 @@ def _revision_event(
         f"{kind.value}-{revision}",
         lambda context, at=tick: context.tick >= at,
         revise,
+        kind=kind.value,
     )
 
 
@@ -165,6 +183,7 @@ def _cancel_event(tick: int, ordinal: int) -> Event:
         f"cancel-{ordinal}",
         lambda context, at=tick: context.tick >= at,
         lambda context: context.driver.release("generated_sequence_cancel"),
+        kind=EventKind.CANCEL.value,
     )
 
 
@@ -229,33 +248,36 @@ def _configured(sequence: GeneratedSequence):
     return configured, frozenset(arbitration_ticks)
 
 
-def _arbitrated_control(arbitration_ticks: frozenset[int]):
-    source = None
-    sequence = 0
+class _ArbitratedControl:
+    def __init__(self, arbitration_ticks: frozenset[int]) -> None:
+        self.arbitration_ticks = arbitration_ticks
+        self.source = None
+        self.sequence = 0
+        self.dispatched_ticks: set[int] = set()
+        self.applied_ticks: set[int] = set()
 
-    def control(context):
-        nonlocal source, sequence
+    def __call__(self, context):
         runtime = context.driver.runtime
         deadline = context.clock[0] + 500_000_000
-        if context.tick not in arbitration_ticks:
-            if source is not None:
-                runtime.cancel_source(source.source_id)
+        if context.tick not in self.arbitration_ticks:
+            if self.source is not None:
+                runtime.cancel_source(self.source.source_id)
             context.driver.tick(BehaviorProfileV0(), deadline)
             return ()
-        if source is None:
-            source = runtime.register_ordered_source("generated-arbitration-loss")
-        sequence += 1
+        if self.source is None:
+            self.source = runtime.register_ordered_source("generated-arbitration-loss")
+        self.sequence += 1
         intent = ActionIntentV1(
-            ordered_intent_id(source, sequence),
-            source.source_id,
-            source.episode_id,
+            ordered_intent_id(self.source, self.sequence),
+            self.source.source_id,
+            self.source.episode_id,
             runtime.observation.sequence_id,
             ActionPriorityV0.SAFETY,
             context.clock[0],
             deadline,
             movement=MovementV1(),
         )
-        envelope = OrderedIntentV1(source, sequence, intent)
+        envelope = OrderedIntentV1(self.source, self.sequence, intent)
         navigation = context.driver.prepare_proposals(deadline)
         result = runtime.control_frame(
             _task(deadline),
@@ -264,22 +286,53 @@ def _arbitrated_control(arbitration_ticks: frozenset[int]):
             proposals=navigation + (ControlFrameProposalV1((envelope,)),),
         )
         context.driver.adopt_result(result)
+        self.dispatched_ticks.add(context.tick)
+        diagnostics = context.driver.last_frame_diagnostics
+        if diagnostics is not None:
+            proposed = set(diagnostics.proposed_movement_intents)
+            suppressed = {
+                intent_id for intent_id, _ in diagnostics.suppressed_intents
+            }
+            if proposed.intersection(suppressed):
+                self.applied_ticks.add(context.tick)
         return (intent.intent_id,)
-
-    return control
 
 
 def run_sequence(sequence: GeneratedSequence) -> SequenceOutcome:
     configured, arbitration_ticks = _configured(sequence)
+    arbitration = _ArbitratedControl(arbitration_ticks)
     try:
         result = run(
             configured,
             control_step=(
                 None if not arbitration_ticks else
-                _arbitrated_control(arbitration_ticks)
+                arbitration
             ),
         )
-        return SequenceOutcome(sequence, result)
+        applied = set(result.applied_perturbations)
+        applied.update(
+            (EventKind.LOSE_ARBITRATION.value, tick)
+            for tick in arbitration.applied_ticks
+        )
+        dispatched = set(result.event_dispatches)
+        dispatched.update(result.dispatched_perturbations)
+        dispatched.update(
+            (EventKind.LOSE_ARBITRATION.value, tick)
+            for tick in arbitration.dispatched_ticks
+        )
+        applications = tuple(
+            EventApplication(
+                event.kind,
+                event.tick,
+                (
+                    "applied" if (event.kind.value, event.tick) in applied
+                    else "dispatched" if (event.kind.value, event.tick) in dispatched
+                    else "skipped"
+                ),
+            )
+            for event in sequence.events
+        )
+        return SequenceOutcome(sequence, result, event_applications=applications)
     except Exception as error:  # A public-call exception is itself a repro.
         return SequenceOutcome(
             sequence,
@@ -330,6 +383,14 @@ def _document(sequence: GeneratedSequence, outcome: SequenceOutcome) -> dict:
             ],
         },
         "exception": outcome.exception,
+        "event_applications": [
+            {
+                "kind": application.kind.value,
+                "tick": application.tick,
+                "status": application.status,
+            }
+            for application in outcome.event_applications
+        ],
         "result": None if outcome.result is None else {
             "outcome": outcome.result.outcome,
             "reason": outcome.result.reason,
@@ -337,6 +398,7 @@ def _document(sequence: GeneratedSequence, outcome: SequenceOutcome) -> dict:
             "damage": outcome.result.damage,
             "violations": outcome.result.violations,
             "events": outcome.result.events,
+            "verification": None if outcome.result.verification is None else asdict(outcome.result.verification),
         },
     }
 
@@ -350,7 +412,7 @@ def main() -> None:
     args = parser.parse_args()
     sequence = generate_sequence(args.seed, event_count=args.count)
     outcome = run_sequence(sequence)
-    if args.shrink and outcome.failed_invariant:
+    if args.shrink and outcome.failed_gate:
         sequence = shrink_sequence(
             sequence,
             lambda candidate: run_sequence(candidate).failed_invariant,

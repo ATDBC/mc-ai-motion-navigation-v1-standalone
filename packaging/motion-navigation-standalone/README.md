@@ -6,7 +6,9 @@
 
 当前已完成 B01 至 B10、C1-A 至 C1-C、C1-R 的 R0 至 R6、B11 固定放置与有限搭桥，以及 B12-A、B12-B。B12-A 固定了每次攻击的证据和分类重试，并接入 Minecraft 1.21 伤害来源事实。B12-B 让战斗先确定本帧视角，导航再按最终视角计算普通地面移动；追逐阶段会持续给出目标视角，导航同时记录每帧的移动决定原因。活动目标和真实墙体场景补齐了持续瞄准、遮挡后的导航、补看和权限撤销。动作证明的生效窗口修正和客户端额外推进一个 tick 时的局部安全恢复也已包含。正式 Fabric 结果与适用边界写在 `docs/motion_navigation/acceptance/`。
 
-导航协调层重构已经完成 S0 至 S5。路线执行、探边和待接替路线由同一个执行监督者管理；输入回执缺失后可以依据更新的身体锚点有界交接；等待记录随创建它的动作统一结束；改目标、停止和重新规划统一经过交接协调器。固定 14 场、冻结 200 种子和 192 个中断组合保持既定结果。扩大的门禁覆盖两格下降、五格下降、L 形走道和两级台地，共 1000 个固定随机事件序列，没有永久等待、公开接口异常或不变量违规。本轮没有新增 Fabric 批次。
+导航协调的 S0 至 S5 已实施。2026-10-01，R27 复审整改 A0—A5 完成，S5 按本轮冻结范围重新关闭。规划、motion 和放置复用同一生命周期入口；业务终态后仍可请求身体停止；旧信息通知自行携带身份；四个模拟工具共同拒绝缺证据。完整运动导航 847/847，原 1000 序列及独立新增 256 个异步组合符合各自冻结检查，8 个旧错误副本均被行为断言发现。完整父层 B11 实机停止及正常对照 20/20、原正例 60/60、反例 24/24。当前分组、失败记录和实机边界写在协调验收第 20 节，原检查和独立复审保留在第 17、18 节。
+
+`evidence/motion_navigation/r27-v1/` 提供本轮结构化汇总，以及一份完整 B11 通过归档和一份尾迹超时失败归档，两份压缩数据合计约 220 KiB。原有 `representative-v1` 归档保持不变。新归档保留试次、控制帧、实际应用采样、释放依据及尾迹；测试注入和源码冻结边界分别说明，便于外部核对。
 
 连续高度 M3 已关闭。完整 Fabric 矩阵覆盖 800 个唯一试次：正常输入 400/400 完成；20% 随机晚一帧为 384/400 完成，另外 16 场均按冻结口径有界失败；伤害额度超出和不变量违规均为 0。半砖、楼梯、土径、地毯和不超过半格的积雪统一作为普通步行候选，再由同一个 1.21 运动计算器验证真实高度、净空和扫掠结果。
 
@@ -17,11 +19,11 @@
 ## 先读什么
 
 1. `AGENTS.md`
-2. `docs/motion_navigation/stages/navigation-coordination-review22-remediation-plan.md`
+2. `docs/motion_navigation/stages/navigation-async-work-r27-root-fix-plan.md`
 3. `docs/motion_navigation/acceptance/navigation-coordination-refactor.md`
 4. `docs/motion_navigation/acceptance/defect-ledger.md`
 5. `docs/motion_navigation/architecture/navigation-coordination-v1.md`
-6. `docs/motion_navigation/decisions/0042-own-navigation-obligations-and-centralize-handoff.md`
+6. `docs/motion_navigation/decisions/0047-enforce-async-admission-and-test-formal-path.md`
 7. `docs/motion_navigation/stages/continuous-height-full-matrix-plan.md`
 8. `docs/motion_navigation/acceptance/continuous-height-ground-movement.md`
 9. `docs/motion_navigation/architecture/continuous-height-ground-movement-v1.md`
@@ -80,6 +82,16 @@ python scripts/run_continuous_height_planning_matrix.py --output output/continuo
 ```text
 python -m tests.sim.run_navigation_event_sequences --manifest tests/sim/manifests/navigation-coordination-event-sequences.json --output-root output/navigation-event-sequences
 ```
+
+运行 R27 新增的异步组合和验证门禁检查：
+
+```text
+python -m unittest tests.motion_nav.test_async_work_verification -v
+python -m tests.sim.run_async_work_sequences --manifest tests/sim/manifests/navigation-async-work-r27-hardening.json --output-root output/navigation-async-work-sequences
+python -m tests.sim.run_async_admission_mutations --output output/navigation-async-admission-mutations
+```
+
+任务结果和证据结论分别报告。任务已经完成但缺少应有异步记录时，仍不得通过验收；没有异步工作的场景必须预先声明，并由实际调用记录核对。
 
 运行 C1 正式证据读取和离线重放检查：
 

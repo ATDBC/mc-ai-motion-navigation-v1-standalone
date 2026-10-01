@@ -1,0 +1,1786 @@
+{
+  "code_was_uncommitted_when_tested": true,
+  "independent_export_tests": {
+    "direct_passed": 22,
+    "motion_nav_passed": 847
+  },
+  "motion_nav": {
+    "passed": 847,
+    "tests": 847
+  },
+  "related": {
+    "passed": 194,
+    "skipped": 1,
+    "tests": 195
+  },
+  "reports": {
+    "async": {
+      "source_file_sha256": "3e76e07b67735574d6187127651bc783352302a4d3a39a99ec48a094f0487de3",
+      "summary": {
+        "counts": {
+          "applied": 256,
+          "dispatched": 256,
+          "generated": 256,
+          "passed": 256,
+          "skipped": 0,
+          "task_cancelled": 192,
+          "task_success": 64
+        },
+        "guards": {
+          "cancel_information_work": 64,
+          "information_apply": 0,
+          "information_begin": 64,
+          "information_finish": 64,
+          "interleaved_results_delivered": 64,
+          "motion_solve_apply": 64,
+          "motion_solve_begin": 128,
+          "motion_solve_finish": 128,
+          "old_failure_delivered": 64,
+          "old_notification_discarded": 128,
+          "old_owner_stopped": 64,
+          "placement_confirmation_apply": 64,
+          "placement_confirmation_begin": 171,
+          "placement_confirmation_finish": 171,
+          "planning_apply": 320,
+          "planning_begin": 320,
+          "planning_finish": 320,
+          "processing_deadline_crossed": 64,
+          "repeat_stop": 256,
+          "same_goal_successor_started": 64,
+          "source_safely_released": 256,
+          "world_confirmation_revoked": 64
+        },
+        "manifest_sha256": "b0d11cc9426db063ef284eca36b0acd2f90cebcdbb5e22e9bec39a78f59aebea",
+        "normal_control_passed": true,
+        "results": [
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270001
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270002
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270003
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270004
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270005
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270006
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270007
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270008
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270009
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270010
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270011
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270012
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270013
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270014
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270015
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270016
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270017
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270018
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270019
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270020
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270021
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270022
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270023
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270024
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270025
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270026
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270027
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270028
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270029
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270030
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270031
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270032
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270033
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270034
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270035
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270036
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270037
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270038
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270039
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270040
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270041
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270042
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270043
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270044
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270045
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270046
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270047
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270048
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270049
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270050
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270051
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270052
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270053
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270054
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270055
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270056
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270057
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270058
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270059
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270060
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270061
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270062
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270063
+          },
+          {
+            "family": "information_exit",
+            "passed": true,
+            "seed": 270064
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270001
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270002
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270003
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270004
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270005
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270006
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270007
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270008
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270009
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270010
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270011
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270012
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270013
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270014
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270015
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270016
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270017
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270018
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270019
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270020
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270021
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270022
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270023
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270024
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270025
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270026
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270027
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270028
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270029
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270030
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270031
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270032
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270033
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270034
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270035
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270036
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270037
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270038
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270039
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270040
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270041
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270042
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270043
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270044
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270045
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270046
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270047
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270048
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270049
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270050
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270051
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270052
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270053
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270054
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270055
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270056
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270057
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270058
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270059
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270060
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270061
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270062
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270063
+          },
+          {
+            "family": "gap_successor",
+            "passed": true,
+            "seed": 270064
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270001
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270002
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270003
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270004
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270005
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270006
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270007
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270008
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270009
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270010
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270011
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270012
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270013
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270014
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270015
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270016
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270017
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270018
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270019
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270020
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270021
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270022
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270023
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270024
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270025
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270026
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270027
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270028
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270029
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270030
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270031
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270032
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270033
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270034
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270035
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270036
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270037
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270038
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270039
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270040
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270041
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270042
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270043
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270044
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270045
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270046
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270047
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270048
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270049
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270050
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270051
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270052
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270053
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270054
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270055
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270056
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270057
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270058
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270059
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270060
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270061
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270062
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270063
+          },
+          {
+            "family": "placement_revocation",
+            "passed": true,
+            "seed": 270064
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270001
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270002
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270003
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270004
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270005
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270006
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270007
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270008
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270009
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270010
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270011
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270012
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270013
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270014
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270015
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270016
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270017
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270018
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270019
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270020
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270021
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270022
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270023
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270024
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270025
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270026
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270027
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270028
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270029
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270030
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270031
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270032
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270033
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270034
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270035
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270036
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270037
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270038
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270039
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270040
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270041
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270042
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270043
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270044
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270045
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270046
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270047
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270048
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270049
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270050
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270051
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270052
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270053
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270054
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270055
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270056
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270057
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270058
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270059
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270060
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270061
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270062
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270063
+          },
+          {
+            "family": "terminal_body_stop",
+            "passed": true,
+            "seed": 270064
+          }
+        ],
+        "schema_version": "mc2p.async-work-sequences.v1",
+        "source_identity": {
+          "git_dirty": true,
+          "python_files": 201,
+          "scope": "mc2p/**/*.py + tests/sim/**/*.py + tests/navigation_session_fixtures.py",
+          "sha256": "95da2f8d681c6ca9e24ab01adebd163d206a4d380831bb524b432fb6e979f280"
+        }
+      }
+    },
+    "events": {
+      "source_file_sha256": "691c876f79d2008f37fa7cf83227911db06917c614aeffe03c660e1bae2a93b2",
+      "summary": {
+        "by_event_kind": {
+          "cancel": {
+            "accepted": 280,
+            "dispatched": 204,
+            "generated": 296,
+            "sequences": 280,
+            "skipped": 92
+          },
+          "external_push": {
+            "accepted": 472,
+            "applied": 383,
+            "generated": 620,
+            "sequences": 472,
+            "skipped": 237
+          },
+          "external_push_backward": {
+            "accepted": 464,
+            "applied": 344,
+            "generated": 592,
+            "sequences": 464,
+            "skipped": 248
+          },
+          "goal_back": {
+            "accepted": 660,
+            "dispatched": 616,
+            "generated": 944,
+            "sequences": 660,
+            "skipped": 328
+          },
+          "goal_out_of_range": {
+            "accepted": 504,
+            "dispatched": 449,
+            "generated": 664,
+            "sequences": 504,
+            "skipped": 215
+          },
+          "late_input": {
+            "accepted": 576,
+            "applied": 547,
+            "generated": 884,
+            "sequences": 576,
+            "skipped": 337
+          },
+          "lose_arbitration": {
+            "accepted": 428,
+            "applied": 354,
+            "dispatched": 22,
+            "generated": 540,
+            "sequences": 428,
+            "skipped": 164
+          },
+          "omit_receipt": {
+            "accepted": 652,
+            "applied": 562,
+            "generated": 904,
+            "sequences": 652,
+            "skipped": 342
+          },
+          "remove_landing_support": {
+            "accepted": 428,
+            "applied": 406,
+            "dispatched": 123,
+            "generated": 556,
+            "sequences": 428,
+            "skipped": 27
+          }
+        },
+        "by_invariant": {},
+        "by_outcome": {
+          "bounded_cancelled": {
+            "total": 199
+          },
+          "bounded_failed": {
+            "total": 524
+          },
+          "task_success": {
+            "total": 277
+          }
+        },
+        "by_scenario": {
+          "direct_drop_2": {
+            "accepted": 250,
+            "total": 250
+          },
+          "direct_drop_5_budget_2": {
+            "accepted": 250,
+            "total": 250
+          },
+          "far_landing_L_walkway": {
+            "accepted": 250,
+            "total": 250
+          },
+          "terrace_two_ledges": {
+            "accepted": 250,
+            "total": 250
+          }
+        },
+        "counts": {
+          "accepted": 1000
+        },
+        "manifest": "tests\\sim\\manifests\\navigation-coordination-event-sequences.json",
+        "manifest_sha256": "0ac144dccc086fdcbf7415125883f20d45cc2c887bcf85ee06ed25c8bd428a5d",
+        "schema_version": "mc2p.navigation-event-sequence-manifest.v1",
+        "source_commit": "57b5628f406ff573713a5c778370878cf16d472f"
+      }
+    },
+    "fixed": {
+      "source_file_sha256": "84c03f7a6d804f5b8eb1bff237d5b9bfd5deddfe0223402db691ff66da0477ce",
+      "summary": {
+        "baseline_commit": "df3e093",
+        "cases": [
+          {
+            "classification": "positive_pass",
+            "elapsed_seconds": 0.27380610001273453,
+            "id": "flat_walk",
+            "matched_frozen_baseline": true,
+            "outcome_class": "task_success"
+          },
+          {
+            "classification": "positive_pass",
+            "elapsed_seconds": 0.2942089999560267,
+            "id": "flat_walk_offset_start",
+            "matched_frozen_baseline": true,
+            "outcome_class": "task_success"
+          },
+          {
+            "classification": "positive_pass",
+            "elapsed_seconds": 0.03194010001607239,
+            "id": "goal_on_current_support",
+            "matched_frozen_baseline": true,
+            "outcome_class": "task_success"
+          },
+          {
+            "classification": "positive_pass",
+            "elapsed_seconds": 0.2553994000190869,
+            "id": "half_steps_up_down",
+            "matched_frozen_baseline": true,
+            "outcome_class": "task_success"
+          },
+          {
+            "classification": "positive_pass",
+            "elapsed_seconds": 0.29593899997416884,
+            "id": "half_steps_20pct_late",
+            "matched_frozen_baseline": true,
+            "outcome_class": "task_success"
+          },
+          {
+            "classification": "positive_pass",
+            "elapsed_seconds": 0.32018779998179525,
+            "id": "stair_descent_4",
+            "matched_frozen_baseline": true,
+            "outcome_class": "task_success"
+          },
+          {
+            "classification": "positive_pass",
+            "elapsed_seconds": 0.49540969997178763,
+            "id": "direct_drop_2",
+            "matched_frozen_baseline": true,
+            "outcome_class": "task_success"
+          },
+          {
+            "classification": "positive_pass",
+            "elapsed_seconds": 0.8538381999824196,
+            "id": "direct_drop_5_budget_2",
+            "matched_frozen_baseline": true,
+            "outcome_class": "task_success"
+          },
+          {
+            "classification": "positive_pass",
+            "elapsed_seconds": 0.17573230003472418,
+            "id": "direct_drop_2_goal_revised_during_probe",
+            "matched_frozen_baseline": true,
+            "outcome_class": "task_success"
+          },
+          {
+            "classification": "positive_pass",
+            "elapsed_seconds": 0.4944262000499293,
+            "id": "direct_drop_2_cancel_in_air",
+            "matched_frozen_baseline": true,
+            "outcome_class": "bounded_safe_failure"
+          },
+          {
+            "classification": "positive_pass",
+            "elapsed_seconds": 1.234474900062196,
+            "id": "direct_drop_2_20pct_late",
+            "matched_frozen_baseline": true,
+            "outcome_class": "task_success"
+          },
+          {
+            "classification": "positive_pass",
+            "elapsed_seconds": 0.9277553999563679,
+            "id": "far_landing_L_walkway",
+            "matched_frozen_baseline": true,
+            "outcome_class": "task_success"
+          },
+          {
+            "classification": "positive_pass",
+            "elapsed_seconds": 0.8034461999777704,
+            "id": "far_landing_L_goal_revised_at_30",
+            "matched_frozen_baseline": true,
+            "outcome_class": "task_success"
+          },
+          {
+            "classification": "positive_pass",
+            "elapsed_seconds": 1.6608350001042709,
+            "id": "terrace_two_ledges",
+            "matched_frozen_baseline": true,
+            "outcome_class": "task_success"
+          }
+        ],
+        "counts": {
+          "calibrated_input_new_failure": 0,
+          "formal_receipt_new_failure": 0,
+          "known_failure": 0,
+          "positive_pass": 14,
+          "unexpected": 0
+        },
+        "elapsed_seconds": 8.247558400034904,
+        "environment": {
+          "platform": "Windows-10-10.0.26200-SP0",
+          "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]"
+        },
+        "manifest": "tests\\sim\\manifests\\navigation-coordination-smoke.json",
+        "manifest_sha256": "1995a1581282b99946020688f5a557780b2fc488722603c8a3e87ae79f8e2496",
+        "outcome_counts": {
+          "bounded_safe_failure": 1,
+          "task_success": 13,
+          "unexpected_result": 0
+        },
+        "review_baseline_commit": "eae4419",
+        "schema_version": "mc2p.navigation-sim-result.v2",
+        "source_commit": "57b5628f406ff573713a5c778370878cf16d472f",
+        "source_identity": {
+          "git_dirty": true,
+          "python_files": 201,
+          "scope": "mc2p/**/*.py + tests/sim/**/*.py + tests/navigation_session_fixtures.py",
+          "sha256": "1d92a823d51ec8a8214ca5ed31fee5a887ec0be9b84648b6009c56778c768ee0"
+        }
+      }
+    },
+    "interrupt": {
+      "source_file_sha256": "53b908cb58caa32bb1276d1fdf395ddc047647cf6465f5e8485d9003ebe19576",
+      "summary": {
+        "counts": {
+          "terminal": 192
+        },
+        "manifest": "tests\\sim\\manifests\\navigation-coordination-interrupt-late.json",
+        "manifest_sha256": "c55f9d955798ab8d120e4d0b149c01c700ca184e0ddf42429b251715622461ec",
+        "schema_version": "mc2p.navigation-interrupt-matrix.v1",
+        "source_commit": "57b5628f406ff573713a5c778370878cf16d472f"
+      }
+    },
+    "mutations": {
+      "source_file_sha256": "b8614dbb1d337fa3b07f634f4eedcc997379bbdbc863d32c8457ff610ff8fa23",
+      "summary": {
+        "all_detected": true,
+        "cases": [
+          {
+            "baseline_exit": 0,
+            "detected": true,
+            "mutation": "reused_execution_identity",
+            "mutation_exit": 1,
+            "test": "tests.motion_nav.test_r27_async_admission.R27IdentityTests.test_formal_runtime_successor_rejects_old_same_goal_gap_failure"
+          },
+          {
+            "baseline_exit": 0,
+            "detected": true,
+            "mutation": "receipt_time_as_processing_time",
+            "mutation_exit": 1,
+            "test": "tests.motion_nav.test_r27_async_admission.R27IdentityTests.test_placement_uses_dispatch_and_processing_clock_even_without_new_observation"
+          },
+          {
+            "baseline_exit": 0,
+            "detected": true,
+            "mutation": "ignored_information_failure",
+            "mutation_exit": 1,
+            "test": "tests.motion_nav.test_r27_async_admission.R27IdentityTests.test_session_consumes_information_failure_instead_of_reopening_without_permit"
+          },
+          {
+            "baseline_exit": 0,
+            "detected": true,
+            "mutation": "sticky_placement_confirmation",
+            "mutation_exit": 1,
+            "test": "tests.motion_nav.test_r27_async_admission.R27IdentityTests.test_revoked_partial_placement_evidence_cannot_be_combined"
+          },
+          {
+            "baseline_exit": 0,
+            "detected": true,
+            "mutation": "terminal_business_cancelled_again",
+            "mutation_exit": 1,
+            "test": "tests.motion_nav.test_async_work_verification.AsyncWorkVerificationTests.test_repeated_cancel_preserves_terminal_placement_and_body_owner"
+          },
+          {
+            "baseline_exit": 0,
+            "detected": true,
+            "mutation": "stale_notification_borrows_active_attempt",
+            "mutation_exit": 1,
+            "test": "tests.motion_nav.test_async_work_verification.AsyncWorkVerificationTests.test_old_information_notification_after_cancel_is_discarded"
+          },
+          {
+            "baseline_exit": 0,
+            "detected": true,
+            "mutation": "empty_records_pass_gate",
+            "mutation_exit": 1,
+            "test": "tests.motion_nav.test_async_work_verification.AsyncWorkVerificationTests.test_missing_formal_async_records_cannot_pass"
+          },
+          {
+            "baseline_exit": 0,
+            "detected": true,
+            "mutation": "receivers_deduplicated_before_check",
+            "mutation_exit": 1,
+            "test": "tests.motion_nav.test_async_work_verification.AsyncWorkVerificationTests.test_duplicate_receivers_are_detected_before_event_deduplication"
+          }
+        ],
+        "schema_version": "mc2p.async-admission-mutations.v1"
+      }
+    },
+    "performance": {
+      "source_file_sha256": "d1ba2b42fb74a5f43786c2a57196df719bcd6f007160a68b785c8f7675d60c28",
+      "summary": {
+        "baseline": {
+          "elapsed": {
+            "maximum_ms": 95.8013,
+            "p50_ms": 0.8889,
+            "p95_ms": 1.4536,
+            "p99_ms": 8.0753,
+            "samples": 705
+          },
+          "repeats": 5,
+          "scenes": [
+            "flat_walk",
+            "half_steps_up_down",
+            "direct_drop_2"
+          ],
+          "scope": "RuntimeNavigationDriver.prepare_proposals; includes inline test workers; excludes game/IPC and trace serialization",
+          "thread_cpu": {
+            "maximum_ms": 93.75,
+            "p50_ms": 0.0,
+            "p95_ms": 15.625,
+            "p99_ms": 15.625,
+            "samples": 705
+          },
+          "warmup": 1
+        },
+        "baseline_commit": "57b5628f406ff573713a5c778370878cf16d472f",
+        "current": {
+          "elapsed": {
+            "maximum_ms": 95.5405,
+            "p50_ms": 0.8943,
+            "p95_ms": 1.466,
+            "p99_ms": 8.0917,
+            "samples": 705
+          },
+          "repeats": 5,
+          "scenes": [
+            "flat_walk",
+            "half_steps_up_down",
+            "direct_drop_2"
+          ],
+          "scope": "RuntimeNavigationDriver.prepare_proposals; includes inline test workers; excludes game/IPC and trace serialization",
+          "thread_cpu": {
+            "maximum_ms": 93.75,
+            "p50_ms": 0.0,
+            "p95_ms": 15.625,
+            "p99_ms": 15.625,
+            "samples": 705
+          },
+          "warmup": 1
+        },
+        "schema_version": "mc2p.r27-control-preparation-benchmark.v1"
+      }
+    },
+    "seeds": {
+      "source_file_sha256": "7131b52b081c9060e5fdd0b95bea3d9fe75ec5946a192bcc6938026f6a4df93f",
+      "summary": {
+        "counts": {
+          "bounded_safe_failure": 2,
+          "outside_declared_results": 0,
+          "runs": 200,
+          "task_success": 198,
+          "unexpected_result": 0,
+          "within_declared_results": 200
+        },
+        "elapsed_seconds": 88.45827280008234,
+        "families": [
+          {
+            "counts": {
+              "bounded_safe_failure": 0,
+              "first_attempt_success": 100,
+              "maximum_recovery_failures": 0,
+              "recovered_success": 0,
+              "runs": 100,
+              "task_success": 100,
+              "total_recovery_failures": 0,
+              "unexpected_result": 0
+            },
+            "first_attempt_success_rate": 1.0,
+            "late_probability": 0.2,
+            "mean_recovery_failures": 0.0,
+            "scenario": "half_steps_up_down",
+            "success_with_legal_recovery_rate": 1.0,
+            "task_success_rate": 1.0,
+            "terminal_distribution": {
+              "success/goal_state_satisfied": 100
+            }
+          },
+          {
+            "counts": {
+              "bounded_safe_failure": 2,
+              "first_attempt_success": 70,
+              "maximum_recovery_failures": 2,
+              "recovered_success": 28,
+              "runs": 100,
+              "task_success": 98,
+              "total_recovery_failures": 37,
+              "unexpected_result": 0
+            },
+            "first_attempt_success_rate": 0.7,
+            "late_probability": 0.2,
+            "mean_recovery_failures": 0.37,
+            "scenario": "direct_drop_2",
+            "success_with_legal_recovery_rate": 0.98,
+            "task_success_rate": 0.98,
+            "terminal_distribution": {
+              "failed/edge_probe_acquisition_timeout": 2,
+              "success/goal_state_satisfied": 98
+            }
+          }
+        ],
+        "findings": [],
+        "manifest_sha256": "3821e02f6e18694167565a3818ea67ec5fbda609144d05da93bbe3993abfae81",
+        "schema_version": "mc2p.navigation-seed-scan-result.v2"
+      }
+    }
+  },
+  "schema_version": "mc2p.r27-public-verification.v1",
+  "tested_baseline_commit": "57b5628f406ff573713a5c778370878cf16d472f"
+}

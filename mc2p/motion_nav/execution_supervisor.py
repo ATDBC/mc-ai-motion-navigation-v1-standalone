@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import math
+from collections import deque
 
 from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.common import ContractViolation
@@ -30,6 +31,19 @@ class ExecutionSupervisor:
         self._route_input_floor = 0
         self._pending_route_input_floor = 0
         self._support_fraction: float | None = None
+        self._async_history = deque(maxlen=64)
+
+    @property
+    def async_work_diagnostics(self):
+        current = tuple(control.coordinator.async_diagnostics
+                        for control in (self._route, self._pending_route)
+                        if control is not None and control.coordinator is not None)
+        return tuple(self._async_history) + current
+
+    def _retire_control_work(self, control, cause) -> None:
+        control.request_stop(cause)
+        if control.coordinator is not None:
+            self._async_history.append(control.coordinator.async_diagnostics)
 
     @property
     def route(self) -> RouteControl | None:
@@ -51,9 +65,14 @@ class ExecutionSupervisor:
 
     def discard_pending_route(self) -> None:
         if self._pending_route is not None:
-            self._pending_route.request_stop(StopCause.ROUTE_REPLACED)
+            self._retire_control_work(self._pending_route, StopCause.ROUTE_REPLACED)
         self._pending_route = None
         self._pending_route_input_floor = 0
+
+    def request_route_stop(self, cause: StopCause) -> None:
+        self.discard_pending_route()
+        if self._route is not None:
+            self._route.request_stop(cause)
 
     def offer_route(
         self, candidate: RouteControl, frame: NavigationFrame,
@@ -108,7 +127,7 @@ class ExecutionSupervisor:
         if successor is None:
             return None
         if not selected:
-            self._pending_route = None
+            self.discard_pending_route()
             return None
         if (control_sequence is None or movement is None
                 or movement == MovementV1()):
@@ -124,6 +143,7 @@ class ExecutionSupervisor:
             successor.route.route_revision,
             successor.action_index,
         )
+        self._retire_control_work(predecessor, StopCause.ROUTE_REPLACED)
         self._route = successor
         self._route_input_floor = self._pending_route_input_floor
         self._pending_route = None
@@ -230,6 +250,7 @@ class ExecutionSupervisor:
         if (evidence.disposition is not HandoffDisposition.QUIESCENT
                 or evidence.owner_id != self._route.owner_id):
             return False
+        self._retire_control_work(self._route, StopCause.CLOSED)
         self._route = None
         self._route_input_floor = 0
         return True

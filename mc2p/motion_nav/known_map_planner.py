@@ -8,6 +8,7 @@ import math
 import time
 
 from mc2p.contracts.common import ContractViolation, require_identifier, require_nonnegative_int
+from mc2p.motion_nav.async_work import AsyncWorkIdentity
 from mc2p.motion_nav.block_motion_traits import unsupported_motion_cells
 from mc2p.motion_nav.air_motion import AirMotionProfile
 from mc2p.motion_nav.controlled_drop import ControlledDropEdge, query_controlled_drop
@@ -97,6 +98,19 @@ class KnownMapSnapshot:
         if self.world._owner is not None:
             raise ContractViolation("known map snapshot cannot retain the live world owner")
 
+    @property
+    def snapshot_id(self) -> str:
+        bounds = self.bounds
+        return "/".join((
+            self.world.session.value,
+            str(self.world.geometry_revision),
+            str(self.world.evidence_revision),
+            f"{bounds.min_x},{bounds.max_x}",
+            f"{bounds.min_feet_y},{bounds.max_feet_y}",
+            f"{bounds.min_z},{bounds.max_z}",
+            str(bounds.extra_top_clearance_cells),
+        ))
+
 
 class SnapshotBuildStatus(StrEnum):
     BUILDING = "building"
@@ -153,16 +167,90 @@ class KnownMapSnapshotBuilder:
         self._section_geometry_revisions = source.geometry_revisions(sections)
         self._index = 0
         self._facts: dict[BlockPos, CellFact] = {}
-        self._unknown_positions: set[BlockPos] = set()
+        # `_position` visits cells in BlockPos tuple order. Keeping unknown
+        # cells in that order avoids one unbounded sort on the completion tick.
+        self._unknown_positions: list[BlockPos] = []
+        self._unknown_finalize_index = 0
+        self._first_relevant_unknown: BlockPos | None = None
         self._complete: KnownMapSnapshot | None = None
         self._stale = False
 
     def _position(self, index: int) -> BlockPos:
-        horizontal, layer = divmod(index, self._height)
-        x_offset, z_offset = divmod(horizontal, self._depth)
+        x_offset, remainder = divmod(index, self._height * self._depth)
+        layer, z_offset = divmod(remainder, self._depth)
         return (self._bounds.min_x + x_offset,
                 self._bounds.min_feet_y - 1 - self._owner_reach + layer,
                 self._bounds.min_z + z_offset)
+
+    def contains_position(self, position: BlockPos) -> bool:
+        """Return whether a cell belongs to the declared snapshot prism."""
+        x, y, z = position
+        minimum_y = (
+            self._bounds.min_feet_y - 1 - self._owner_reach
+        )
+        maximum_y = minimum_y + self._height - 1
+        return (
+            self._bounds.min_x <= x <= self._bounds.max_x
+            and minimum_y <= y <= maximum_y
+            and self._bounds.min_z <= z <= self._bounds.max_z
+        )
+
+    def was_scanned(self, position: BlockPos) -> bool:
+        """Return whether the current partial copy already read this cell."""
+        if not self.contains_position(position):
+            return False
+        x, y, z = position
+        minimum_y = self._bounds.min_feet_y - 1 - self._owner_reach
+        index = (
+            (x - self._bounds.min_x) * self._height * self._depth
+            + (y - minimum_y) * self._depth
+            + (z - self._bounds.min_z)
+        )
+        return index < self._index
+
+    def copied_fact(self, position: BlockPos) -> CellFact | None:
+        """Return a copied known fact; scanned unknown cells return ``None``."""
+        if not self.was_scanned(position):
+            return None
+        return self._facts.get(position)
+
+    def accept_changes_outside_bounds(
+        self,
+        source: WorldView,
+        changed_cells: tuple[BlockPos, ...],
+    ) -> bool:
+        """Refresh section versions when every reported change is irrelevant.
+
+        Section revisions are deliberately coarse.  A change in the same
+        section must not restart a bounded copy when the caller can prove all
+        changed cells lie outside this builder's prism.
+        """
+        if type(source) is not WorldView or type(changed_cells) is not tuple or source.session != self._session:
+            return False
+        complete_changes = source.changes_since(self._geometry_revision)
+        if (complete_changes is None
+                or any(self.contains_position(position) for position in complete_changes)):
+            return False
+        self._section_geometry_revisions = source.geometry_revisions(
+            section for section, _ in self._section_geometry_revisions
+        )
+        self._geometry_revision = source.geometry_revision
+        self._evidence_revision = source.evidence_revision
+        self._stale = False
+        return True
+
+    def _unknown_affects_scope(self, position: BlockPos) -> bool:
+        x, y, z = position
+        # A known solid full cube directly above hides every collision owner
+        # below it from the player's body and support queries.
+        for cover_y in range(y + 1, self._bounds.min_feet_y):
+            cover = self._facts.get((x, cover_y, z))
+            if (cover is not None and cover.knowledge is CellKnowledge.BLOCK
+                    and cover.block is not None
+                    and cover.block.collision_kind == "full_cube"
+                    and not cover.block.fluid):
+                return False
+        return True
 
     def advance(self, source: WorldView, maximum_cells: int) -> SnapshotBuildProgress:
         if type(source) is not WorldView:
@@ -181,13 +269,14 @@ class KnownMapSnapshotBuilder:
             return SnapshotBuildProgress(
                 SnapshotBuildStatus.STALE, self._index, self._total,
             )
+        start = self._index
         stop = min(self._total, self._index + maximum_cells)
         try:
             while self._index < stop:
                 position = self._position(self._index)
                 fact = source.cell(position)
                 if fact.knowledge is CellKnowledge.UNKNOWN:
-                    self._unknown_positions.add(position)
+                    self._unknown_positions.append(position)
                 else:
                     self._facts[position] = fact
                 self._index += 1
@@ -196,33 +285,36 @@ class KnownMapSnapshotBuilder:
             return SnapshotBuildProgress(
                 SnapshotBuildStatus.STALE, self._index, self._total,
             )
+        consumed = self._index - start
         if self._index < self._total:
             return SnapshotBuildProgress(
                 SnapshotBuildStatus.BUILDING, self._index, self._total,
             )
-        def unknown_affects_scope(position: BlockPos) -> bool:
-            x, y, z = position
-            # A known solid full cube directly above hides every collision
-            # owner below it from the player's body and support queries.  The
-            # substrate therefore need not be observed merely because shapes
-            # elsewhere are allowed to cross one vertical cell boundary.
-            for cover_y in range(y + 1, self._bounds.min_feet_y):
-                cover = self._facts.get((x, cover_y, z))
-                if (cover is not None and cover.knowledge is CellKnowledge.BLOCK
-                        and cover.block is not None
-                        and cover.block.collision_kind == "full_cube"
-                        and not cover.block.fluid):
-                    return False
-            return True
-
-        has_relevant_unknown = any(
-            unknown_affects_scope(position) for position in self._unknown_positions
+        finalize_stop = min(
+            len(self._unknown_positions),
+            self._unknown_finalize_index + maximum_cells - consumed,
         )
+        while self._unknown_finalize_index < finalize_stop:
+            position = self._unknown_positions[self._unknown_finalize_index]
+            self._unknown_finalize_index += 1
+            if self._unknown_affects_scope(position):
+                self._first_relevant_unknown = position
+                # One relevant unknown is enough to prove that the scope is
+                # incomplete.  Returning that stable representative lets the
+                # information loop acquire facts incrementally and avoids an
+                # O(all unknown cells) completion spike.
+                self._unknown_finalize_index = len(self._unknown_positions)
+                break
+        if self._unknown_finalize_index < len(self._unknown_positions):
+            return SnapshotBuildProgress(
+                SnapshotBuildStatus.BUILDING, self._index, self._total,
+            )
         actual_bounds = KnownMapBounds(
             self._bounds.min_x, self._bounds.max_x,
             self._bounds.min_feet_y, self._bounds.max_feet_y,
             self._bounds.min_z, self._bounds.max_z,
-            self._bounds.complete_scope and not has_relevant_unknown,
+            self._bounds.complete_scope
+                and self._first_relevant_unknown is None,
             self._bounds.extra_top_clearance_cells,
         )
         # Every fact was already validated while it was copied under the
@@ -237,7 +329,9 @@ class KnownMapSnapshotBuilder:
         self._complete = KnownMapSnapshot(detached, actual_bounds)
         return SnapshotBuildProgress(
             SnapshotBuildStatus.COMPLETE, self._total, self._total,
-            self._complete, tuple(sorted(self._unknown_positions)),
+            self._complete,
+            (() if self._first_relevant_unknown is None else
+             (self._first_relevant_unknown,)),
         )
 
 
@@ -341,6 +435,7 @@ class PlanningRequest:
     minimum_resources: ResourceState = ResourceState()
     goal_state: GoalState | None = None
     maximum_planning_seconds: float = .5
+    work_identity: AsyncWorkIdentity | None = None
 
     def __post_init__(self) -> None:
         require_nonnegative_int(self.sequence, "planning request sequence")
@@ -355,6 +450,9 @@ class PlanningRequest:
                 or not math.isfinite(float(self.maximum_planning_seconds))
                 or not 0 < self.maximum_planning_seconds <= 60):
             raise ContractViolation("planning wall-clock budget must be within (0, 60] seconds")
+        if (self.work_identity is not None
+                and type(self.work_identity) is not AsyncWorkIdentity):
+            raise ContractViolation("planning work identity must be typed")
         if (type(self.initial_resources) is not ResourceState
                 or type(self.minimum_resources) is not ResourceState):
             raise ContractViolation("planning resources must use resource states")
@@ -398,6 +496,7 @@ class RouteCandidate:
     final_resources: ResourceState | None = None
     goal_state: GoalState | None = None
     reasons: tuple[str, ...] = ()
+    work_identity: AsyncWorkIdentity | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -780,6 +879,7 @@ def plan_known_snapshot(snapshot: KnownMapSnapshot, profile: GroundMotionProfile
             request.goal_revision, request.world_session, world.geometry_revision,
             request.start, request.goal, status, path, segments, cost,
             dependencies, expanded, final_resources, request.goal_state,
+            work_identity=request.work_identity,
         )
 
     nodes: dict[WalkNodeId, WalkNode] = {}
@@ -901,7 +1001,8 @@ def _candidate(request: PlanningRequest, graph: WalkGraph, status: PlanningStatu
                           request.goal_revision,request.world_session,
                           graph.geometry_revision,request.start,request.goal,status,path,
                           segments,cost,dependencies,expanded,final_resources,
-                          request.goal_state)
+                          request.goal_state,
+                          work_identity=request.work_identity)
 
 
 def astar_plan(graph: WalkGraph, request: PlanningRequest) -> RouteCandidate:
@@ -1234,6 +1335,116 @@ class SurfacePlanningStatus(StrEnum):
     INTERNAL_ERROR = "internal_error"
 
 
+class PlanningBlockerKind(StrEnum):
+    SUPPORT = "support"
+    CLEARANCE = "clearance"
+    SWEEP = "sweep"
+    ACTION_PRECONDITION = "action_precondition"
+
+
+class PlanningFactRequirementKind(StrEnum):
+    """Finite fact queries used by the current information workflow."""
+
+    CELL_KNOWLEDGE = "cell_knowledge"
+    LANDING_VISUAL_EVIDENCE = "landing_visual_evidence"
+
+
+@dataclass(frozen=True, slots=True)
+class PlanningFactRequirement:
+    kind: PlanningFactRequirementKind
+    position: BlockPos
+
+    def __post_init__(self) -> None:
+        if type(self.kind) is not PlanningFactRequirementKind:
+            raise ContractViolation("planning fact requirement kind must be typed")
+        if (type(self.position) is not tuple or len(self.position) != 3
+                or any(type(value) is not int for value in self.position)):
+            raise ContractViolation(
+                "planning fact requirement position must be an integer triple"
+            )
+
+
+class PlanningFrontierKind(StrEnum):
+    START = "start"
+    GOAL = "goal"
+    SEARCH_EDGE = "search_edge"
+    ACTION = "action"
+
+
+@dataclass(frozen=True, slots=True)
+class PlanningBlocker:
+    position: BlockPos
+    kind: PlanningBlockerKind
+    requirement_key: str
+    frontier_kind: PlanningFrontierKind
+    frontier_key: str
+    requirement: PlanningFactRequirement | None = None
+
+    def __post_init__(self) -> None:
+        if (type(self.position) is not tuple or len(self.position) != 3
+                or any(type(value) is not int for value in self.position)):
+            raise ContractViolation("planning blocker position must be an integer triple")
+        if type(self.kind) is not PlanningBlockerKind:
+            raise ContractViolation("planning blocker kind must be typed")
+        if type(self.frontier_kind) is not PlanningFrontierKind:
+            raise ContractViolation("planning blocker frontier kind must be typed")
+        if not self.requirement_key or not self.frontier_key:
+            raise ContractViolation("planning blocker keys must be non-empty")
+        if (self.requirement is not None
+                and type(self.requirement) is not PlanningFactRequirement):
+            raise ContractViolation("planning blocker requirement must be typed")
+        if (self.requirement is not None
+                and self.requirement.position != self.position):
+            raise ContractViolation(
+                "planning blocker requirement must address the blocker position"
+            )
+
+    @property
+    def fact_requirement(self) -> PlanningFactRequirement:
+        return self.requirement or PlanningFactRequirement(
+            PlanningFactRequirementKind.CELL_KNOWLEDGE,
+            self.position,
+        )
+
+    @property
+    def blocker_key(self) -> tuple[BlockPos, str, str]:
+        return self.position, self.requirement_key, self.frontier_key
+
+
+@dataclass(frozen=True, slots=True)
+class PlanningInformationNeed:
+    world_session_id: str
+    snapshot_id: str
+    request_id: str
+    goal_id: str
+    goal_revision: int
+    selection_revision: int
+    blockers: tuple[PlanningBlocker, ...]
+    truncated: bool
+
+    def __post_init__(self) -> None:
+        require_identifier(self.world_session_id, "planning information world session")
+        if not self.snapshot_id:
+            raise ContractViolation("planning information snapshot id must be non-empty")
+        require_identifier(self.request_id, "planning information request id")
+        require_identifier(self.goal_id, "planning information goal id")
+        require_nonnegative_int(self.goal_revision, "planning information goal revision")
+        require_nonnegative_int(
+            self.selection_revision, "planning information selection revision",
+        )
+        if (type(self.blockers) is not tuple or not self.blockers
+                or len(self.blockers) > 128
+                or any(type(blocker) is not PlanningBlocker for blocker in self.blockers)):
+            raise ContractViolation(
+                "planning information blockers must contain 1..128 typed facts"
+            )
+        keys = tuple(blocker.blocker_key for blocker in self.blockers)
+        if len(set(keys)) != len(keys):
+            raise ContractViolation("planning information blockers must be unique")
+        if type(self.truncated) is not bool:
+            raise ContractViolation("planning information truncation must be explicit")
+
+
 @dataclass(frozen=True, slots=True)
 class SurfacePlanningRequest:
     sequence: int
@@ -1250,6 +1461,7 @@ class SurfacePlanningRequest:
     maximum_planning_seconds: float = .5
     damage_budget: TaskDamageBudget = TaskDamageBudget()
     entry_physics_state: PhysicsState | None = None
+    work_identity: AsyncWorkIdentity | None = None
 
     def __post_init__(self) -> None:
         require_nonnegative_int(self.sequence, "surface planning request sequence")
@@ -1296,6 +1508,9 @@ class SurfacePlanningRequest:
         if (self.entry_physics_state is not None
                 and type(self.entry_physics_state) is not PhysicsState):
             raise ContractViolation("surface planning entry state must be typed")
+        if (self.work_identity is not None
+                and type(self.work_identity) is not AsyncWorkIdentity):
+            raise ContractViolation("surface planning work identity must be typed")
         if self.goal_state is not None:
             if type(self.goal_state) is not GoalState:
                 raise ContractViolation("surface planning goal state must be typed")
@@ -1344,6 +1559,8 @@ class SurfaceRouteCandidate:
     reasons: tuple[str, ...] = ()
     total_cost_ticks: int | None = None
     ground_traversal_plans: tuple[GroundTraversalPlan, ...] = ()
+    information_need: PlanningInformationNeed | None = None
+    work_identity: AsyncWorkIdentity | None = None
 
     def __post_init__(self) -> None:
         if (self.total_cost_ticks is not None
@@ -1357,6 +1574,14 @@ class SurfaceRouteCandidate:
                 or any(type(plan) is not GroundTraversalPlan
                        for plan in self.ground_traversal_plans)):
             raise ContractViolation("surface route traversal proofs must be immutable")
+        if (self.information_need is not None
+                and type(self.information_need) is not PlanningInformationNeed):
+            raise ContractViolation("surface route information need must be typed")
+        if (self.information_need is not None
+                and self.status is not SurfacePlanningStatus.NO_KNOWN_ROUTE):
+            raise ContractViolation(
+                "only a no-known-route result may carry planning information"
+            )
 
 
 def _surface_edge_cost_ticks(edge: SurfaceEdge) -> int:
@@ -1550,12 +1775,80 @@ class _SurfaceExpander:
         ] = set()
         self.complete = bounds.complete_scope
         self.has_unsupported = False
+        self._planning_blockers: list[PlanningBlocker] = []
+        self._planning_blocker_keys: set[tuple[BlockPos, str, str]] = set()
+        self._planning_blockers_truncated = False
 
     def _inside_column(self, x: int, z: int) -> bool:
         return (self.bounds.min_x <= x <= self.bounds.max_x
                 and self.bounds.min_z <= z <= self.bounds.max_z)
 
-    def column(self, x: int, z: int) -> tuple[SurfaceNode, ...]:
+    def _inside_snapshot_volume(self, position: BlockPos) -> bool:
+        x, y, z = position
+        return (
+            self.bounds.min_x <= x <= self.bounds.max_x
+            and self.bounds.min_z <= z <= self.bounds.max_z
+            and (self.bounds.min_feet_y - 1
+                 - COLLISION_OWNER_BELOW_REACH_CELLS) <= y
+            <= (self.bounds.max_feet_y + 1
+                + self.bounds.extra_top_clearance_cells)
+        )
+
+    def _record_blockers(
+        self,
+        status: QueryStatus,
+        dependencies: tuple[BlockPos, ...],
+        *,
+        kind: PlanningBlockerKind,
+        requirement_key: str,
+        frontier_kind: PlanningFrontierKind,
+        frontier_key: str,
+    ) -> None:
+        if status is not QueryStatus.NEEDS_INFORMATION:
+            return
+        for position in dependencies:
+            if not self._inside_snapshot_volume(position):
+                continue
+            if self.world.cell(position).knowledge is not CellKnowledge.UNKNOWN:
+                continue
+            blocker = PlanningBlocker(
+                position, kind, requirement_key, frontier_kind, frontier_key,
+            )
+            key = blocker.blocker_key
+            if key in self._planning_blocker_keys:
+                continue
+            if len(self._planning_blockers) >= 128:
+                self._planning_blockers_truncated = True
+                continue
+            self._planning_blocker_keys.add(key)
+            self._planning_blockers.append(blocker)
+
+    def information_need(
+        self,
+        request: SurfacePlanningRequest,
+        snapshot: KnownMapSnapshot,
+    ) -> PlanningInformationNeed | None:
+        if not self._planning_blockers:
+            return None
+        return PlanningInformationNeed(
+            request.world_session,
+            snapshot.snapshot_id,
+            request.request_id,
+            request.goal_id,
+            request.goal_revision,
+            request.sequence,
+            tuple(self._planning_blockers),
+            self._planning_blockers_truncated,
+        )
+
+    def column(
+        self,
+        x: int,
+        z: int,
+        *,
+        frontier_kind: PlanningFrontierKind = PlanningFrontierKind.SEARCH_EDGE,
+        frontier_key: str | None = None,
+    ) -> tuple[SurfaceNode, ...]:
         key = x, z
         if not self._inside_column(x, z):
             return ()
@@ -1564,6 +1857,17 @@ class _SurfaceExpander:
         result = query_support_surfaces(
             self.world, x, z, float(self.bounds.min_feet_y),
             float(self.bounds.max_feet_y + 1), body_height=self.body_height,
+        )
+        self._record_blockers(
+            result.status,
+            result.dependencies,
+            kind=PlanningBlockerKind.SUPPORT,
+            requirement_key=(
+                f"support-surfaces:{self.bounds.min_feet_y}:"
+                f"{self.bounds.max_feet_y + 1}:{self.body_height:.6f}"
+            ),
+            frontier_kind=frontier_kind,
+            frontier_key=frontier_key or f"column:{x},{z}",
         )
         if result.status in {QueryStatus.FEASIBLE, QueryStatus.BLOCKED}:
             # A dirt path, carpet, snow layer or bottom slab may sit slightly
@@ -1612,9 +1916,20 @@ class _SurfaceExpander:
         self.columns[key] = value
         return value
 
-    def node(self, node_id: SurfaceNodeId) -> SurfaceNode | None:
+    def node(
+        self,
+        node_id: SurfaceNodeId,
+        *,
+        frontier_kind: PlanningFrontierKind = PlanningFrontierKind.SEARCH_EDGE,
+        frontier_key: str | None = None,
+    ) -> SurfaceNode | None:
         if node_id not in self.nodes:
-            self.column(node_id.column_x, node_id.column_z)
+            self.column(
+                node_id.column_x,
+                node_id.column_z,
+                frontier_kind=frontier_kind,
+                frontier_key=frontier_key or repr(node_id),
+            )
         return self.nodes.get(node_id)
 
     def _remember_status(self, status: QueryStatus) -> None:
@@ -1631,6 +1946,7 @@ class _SurfaceExpander:
         dz = end.node_id.column_z - start.node_id.column_z
         delta_y = end.position[1] - start.position[1]
         distance = abs(dx) + abs(dz)
+        frontier_key = f"edge:{start.node_id!r}->{end.node_id!r}"
         if abs(delta_y) <= .6 + 1.0e-9 and distance == 1:
             if abs(delta_y) <= 1.0e-6:
                 status, dependencies = _surface_walk_query(
@@ -1647,6 +1963,13 @@ class _SurfaceExpander:
                     set(start.dependencies) | set(end.dependencies)
                 ))
             self._remember_status(status)
+            self._record_blockers(
+                status, dependencies,
+                kind=PlanningBlockerKind.SWEEP,
+                requirement_key=f"ground-sweep:{self.body_height:.6f}",
+                frontier_kind=PlanningFrontierKind.SEARCH_EDGE,
+                frontier_key=frontier_key,
+            )
             if status is QueryStatus.FEASIBLE:
                 cost = distance / (
                     self.ground_profile.maximum_speed_blocks_per_second
@@ -1665,6 +1988,13 @@ class _SurfaceExpander:
                 self.world, start.surface, end.surface, self.step_profile,
             )
             self._remember_status(result.status)
+            self._record_blockers(
+                result.status, result.dependencies,
+                kind=PlanningBlockerKind.ACTION_PRECONDITION,
+                requirement_key=f"step:{self.step_profile.profile_id}",
+                frontier_kind=PlanningFrontierKind.ACTION,
+                frontier_key=frontier_key,
+            )
             if result.status is QueryStatus.FEASIBLE:
                 found.append(StepEdge(
                     start.node_id, end.node_id, self.step_profile.profile_id,
@@ -1693,6 +2023,13 @@ class _SurfaceExpander:
                     self.world, start_id, end_id, self.jump_profile,
                 )
                 self._remember_status(jump.status)
+                self._record_blockers(
+                    jump.status, jump.dependencies,
+                    kind=PlanningBlockerKind.ACTION_PRECONDITION,
+                    requirement_key=f"jump-up:{self.jump_profile.profile_id}",
+                    frontier_kind=PlanningFrontierKind.ACTION,
+                    frontier_key=frontier_key,
+                )
                 if jump.status is QueryStatus.FEASIBLE:
                     jump_edge = JumpUpEdge(
                         start_id, end_id, self.jump_profile.profile_id,
@@ -1764,6 +2101,13 @@ class _SurfaceExpander:
                                 body_height_blocks=self.body_height,
                             )
                     self._remember_status(drop_status)
+                    self._record_blockers(
+                        drop_status, drop_dependencies,
+                        kind=PlanningBlockerKind.ACTION_PRECONDITION,
+                        requirement_key=f"controlled-drop:{profile.profile_id}",
+                        frontier_kind=PlanningFrontierKind.ACTION,
+                        frontier_key=frontier_key,
+                    )
                 else:
                     drop_status = QueryStatus.UNSUPPORTED
                     drop_dependencies = tuple(sorted(
@@ -1817,6 +2161,13 @@ class _SurfaceExpander:
                         self.world, start.surface, end.surface, profile,
                     )
                     self._remember_status(jump.status)
+                    self._record_blockers(
+                        jump.status, jump.dependencies,
+                        kind=PlanningBlockerKind.ACTION_PRECONDITION,
+                        requirement_key=f"jump-gap:{profile.profile_id}",
+                        frontier_kind=PlanningFrontierKind.ACTION,
+                        frontier_key=frontier_key,
+                    )
                     if jump.status is QueryStatus.FEASIBLE:
                         transition = _air_transition(profile, jump.dependencies)
                         air_edge = JumpGapEdge(
@@ -1878,6 +2229,11 @@ class _SurfaceExpander:
         for dx, dz in self.offsets:
             for end in self.column(
                 node_id.column_x + dx, node_id.column_z + dz,
+                frontier_kind=PlanningFrontierKind.SEARCH_EDGE,
+                frontier_key=(
+                    f"expand:{node_id!r}->"
+                    f"{node_id.column_x + dx},{node_id.column_z + dz}"
+                ),
             ):
                 if end.node_id == node_id:
                     continue
@@ -1978,6 +2334,7 @@ def _surface_candidate(request: SurfacePlanningRequest, graph: SurfaceGraph,
                        planner_states: tuple[PlannerStateKey, ...] = (),
                        reasons: tuple[str, ...] = (),
                        ground_traversal_plans: tuple[GroundTraversalPlan, ...] = (),
+                       information_need: PlanningInformationNeed | None = None,
                        ) -> SurfaceRouteCandidate:
     by_id = {node.node_id: node for node in graph.nodes}
     path = tuple(by_id[node_id] for node_id in path_ids)
@@ -1994,6 +2351,7 @@ def _surface_candidate(request: SurfacePlanningRequest, graph: SurfaceGraph,
         dependencies, expanded, final_resources, request.goal_state,
         request.initial_resources, request.minimum_resources,
         planner_states, reasons, cost_ticks, ground_traversal_plans,
+        information_need, request.work_identity,
     )
 
 
@@ -2350,16 +2708,28 @@ def plan_known_surface_snapshot(
         return _surface_candidate(
             request, discovered_graph(), SurfacePlanningStatus.UNSUPPORTED,
         )
-    start = expander.node(request.start)
-    goal = expander.node(request.goal)
+    start = expander.node(
+        request.start,
+        frontier_kind=PlanningFrontierKind.START,
+        frontier_key=f"start:{request.start!r}",
+    )
+    goal = expander.node(
+        request.goal,
+        frontier_kind=PlanningFrontierKind.GOAL,
+        frontier_key=f"goal:{request.goal!r}",
+    )
     if start is None or goal is None:
         graph = discovered_graph()
+        information_need = expander.information_need(request, snapshot)
         status = (
+            SurfacePlanningStatus.NO_KNOWN_ROUTE if information_need is not None else
             SurfacePlanningStatus.UNSUPPORTED if graph.has_unsupported else
             SurfacePlanningStatus.NO_ROUTE_WITHIN_COMPLETE_SCOPE
             if graph.complete_scope else SurfacePlanningStatus.NO_KNOWN_ROUTE
         )
-        return _surface_candidate(request, graph, status)
+        return _surface_candidate(
+            request, graph, status, information_need=information_need,
+        )
     if request.goal_state is not None:
         position = goal.position
         region = request.goal_state.region
@@ -2653,12 +3023,17 @@ def plan_known_surface_snapshot(
             tuple(search.path),
             ground_traversal_plans=traversal_plans,
         )
+    information_need = expander.information_need(request, snapshot)
     status = (
+        SurfacePlanningStatus.NO_KNOWN_ROUTE if information_need is not None else
         SurfacePlanningStatus.UNSUPPORTED if graph.has_unsupported else
         SurfacePlanningStatus.NO_ROUTE_WITHIN_COMPLETE_SCOPE
         if graph.complete_scope else SurfacePlanningStatus.NO_KNOWN_ROUTE
     )
-    return _surface_candidate(request, graph, status, expanded=search.expanded)
+    return _surface_candidate(
+        request, graph, status, expanded=search.expanded,
+        information_need=information_need,
+    )
 
 
 def dijkstra_surface_reference(graph: SurfaceGraph, start: SurfaceNodeId,

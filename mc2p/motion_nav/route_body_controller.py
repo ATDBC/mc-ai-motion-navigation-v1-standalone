@@ -63,6 +63,8 @@ class RouteControl:
         if type(cause) is not StopCause:
             raise ContractViolation("route stop cause must be typed")
         self.executor.request_stop(cause)
+        if self.coordinator is not None:
+            self.coordinator.cancel_work(f"route_stop_{cause.value}")
 
     def requires_safe_handoff(self, frame: NavigationFrame) -> bool:
         return self.executor.requires_safe_handoff(frame)

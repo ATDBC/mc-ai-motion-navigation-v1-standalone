@@ -165,6 +165,10 @@ class CalculatorBackend:
         self._sample_records: list[dict] = []
         self._receipt_sample_cursor = 0
         self._omitted_sample_ticks: set[int] = set()
+        self.dispatched_perturbations: list[tuple[str, int]] = []
+        self._recorded_perturbation_dispatches: set[tuple[str, int]] = set()
+        self.applied_perturbations: list[tuple[str, int]] = []
+        self._recorded_perturbations: set[tuple[str, int]] = set()
         self._truth_session = WorldSessionId("sim-truth")
         self._build_truth()
         self.state = self._initial_state(start, yaw_degrees)
@@ -361,12 +365,23 @@ class CalculatorBackend:
             self.perturbations.world_edits.get(tick, {})
             if perturbations_enabled else {}
         )
+        if world_edits:
+            self._record_perturbation_dispatch(
+                "remove_landing_support", tick,
+            )
+        world_changed = False
         for cell, block_id in world_edits.items():
             if block_id is None:
-                self.scene.solids.pop(cell, None)
+                if cell in self.scene.solids:
+                    self.scene.solids.pop(cell)
+                    world_changed = True
             else:
-                self.scene.solids[cell] = block_id
-        if world_edits:
+                if self.scene.solids.get(cell) != block_id:
+                    self.scene.solids[cell] = block_id
+                    world_changed = True
+        if world_changed:
+            self._record_perturbation("remove_landing_support", tick)
+        if world_changed:
             self._build_truth()
             self.state = replace(self.state, session=self._truth_session)
         state = replace(
@@ -388,9 +403,16 @@ class CalculatorBackend:
             raise RuntimeError(f"calculator stopped: {result.status} {getattr(result, 'reasons', ())}")
         next_state = result.next_state
         if self._external_impulses_enabled() and tick in self.perturbations.impulses:
+            impulse_kind = (
+                "external_push"
+                if self.perturbations.impulses[tick][2] >= 0.0
+                else "external_push_backward"
+            )
+            self._record_perturbation_dispatch(impulse_kind, tick)
             vx, vy, vz = next_state.velocity_blocks_per_tick
             ix, iy, iz = self.perturbations.impulses[tick]
             next_state = replace(next_state, velocity_blocks_per_tick=(vx + ix, vy + iy, vz + iz))
+            self._record_perturbation(impulse_kind, tick)
         if next_state.on_ground and not was_on_ground:
             damage = max(0.0, math.ceil(max(falling_from, next_state.fall_distance_blocks) - 3.0))
             self.health -= damage
@@ -423,6 +445,11 @@ class CalculatorBackend:
             for sample in self._sample_records[self._receipt_sample_cursor:]
             if sample["movement_tick_id"] in configured_omissions
         )
+        if self.movement_tick in configured_omissions:
+            self._record_perturbation_dispatch(
+                "omit_receipt", self.movement_tick,
+            )
+            self._record_perturbation("omit_receipt", self.movement_tick)
         samples = [sample for sample in
                    self._sample_records[self._receipt_sample_cursor:]
                    if sample["movement_tick_id"] not in
@@ -459,15 +486,31 @@ class CalculatorBackend:
         """
         self.perturbations = Perturbations()
 
+    def _record_perturbation(self, kind: str, tick: int) -> None:
+        key = (kind, tick)
+        if key not in self._recorded_perturbations:
+            self._recorded_perturbations.add(key)
+            self.applied_perturbations.append(key)
+
+    def _record_perturbation_dispatch(self, kind: str, tick: int) -> None:
+        key = (kind, tick)
+        if key not in self._recorded_perturbation_dispatches:
+            self._recorded_perturbation_dispatches.add(key)
+            self.dispatched_perturbations.append(key)
+
     def _sample_command(
         self, action: ActionSnapshotV1 | None,
     ) -> tuple[int | None, int | None, str]:
         tick = self.movement_tick + 1
         if action is not None:
-            arrival_tick = tick + int(
+            delayed = (
                 self._external_perturbations_enabled()
                 and tick in self.perturbations.late_ticks
             )
+            arrival_tick = tick + int(delayed)
+            if delayed:
+                self._record_perturbation_dispatch("late_input", tick)
+                self._record_perturbation("late_input", tick)
             self.submitted_commands.append((action.request_sequence_id, action.movement,
                                             arrival_tick, action.deadline_monotonic_ns))
             self._pending_actions.append((arrival_tick, action))

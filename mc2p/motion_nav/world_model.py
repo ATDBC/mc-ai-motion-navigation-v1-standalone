@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from collections import deque
 from enum import StrEnum
 import math
 from typing import Iterable, Mapping
@@ -303,6 +304,14 @@ class WorldView:
         _position(position)
         return self._cell_at_valid_position(position)
 
+    def changes_since(self, revision: int) -> tuple[BlockPos, ...] | None:
+        """None means the bounded semantic change history is incomplete."""
+        if revision == self.geometry_revision:
+            return ()
+        if self._owner is None:
+            return None
+        return self._owner.changes_since(revision, through=self.geometry_revision)
+
     def _cell_at_valid_position(self, position: BlockPos) -> CellFact:
         """Read one already validated position for a per-decision query cache."""
         if self._owner is not None:
@@ -412,6 +421,8 @@ class WorldKnowledge:
         self._known_cell_count = 0
         self._invalidated_at: dict[BlockPos, ObservationStamp] = {}
         self._geometry_revision = 0
+        self._geometry_changes: deque[tuple[int, BlockPos]] = deque()
+        self._changes_complete_after = 0
         self._evidence_revision = 0
         self._section_geometry_revisions: dict[SectionPos, int] = {}
         self._section_evidence_revisions: dict[SectionPos, int] = {}
@@ -422,6 +433,21 @@ class WorldKnowledge:
     @property
     def known_cell_count(self) -> int:
         return self._known_cell_count
+
+    def changes_since(self, revision: int, *, through: int | None = None) -> tuple[BlockPos, ...] | None:
+        require_nonnegative_int(revision, "world change cursor")
+        if revision < self._changes_complete_after:
+            return None
+        end = self._geometry_revision if through is None else through
+        return tuple(sorted({position for number, position in self._geometry_changes
+                             if revision < number <= end}))
+
+    def _record_geometry_changes(self, positions: Iterable[BlockPos]) -> None:
+        for position in positions:
+            if len(self._geometry_changes) >= 4096:
+                revision, _ = self._geometry_changes.popleft()
+                self._changes_complete_after = max(self._changes_complete_after, revision)
+            self._geometry_changes.append((self._geometry_revision, position))
 
     @property
     def section_count(self) -> int:
@@ -633,6 +659,7 @@ class WorldKnowledge:
         self._section_evidence_revisions[section_position] = self._evidence_revision
         if semantic_changed:
             self._geometry_revision += 1
+            self._record_geometry_changes((position,))
             self._section_geometry_revisions[section_position] = self._geometry_revision
         return "applied", evicted
 
@@ -669,6 +696,7 @@ class WorldKnowledge:
                 del self._invalidated_at[position]
         self._section_last_order.pop(selected, None)
         self._geometry_revision += 1
+        self._record_geometry_changes(removed)
         self._evidence_revision += 1
         # A removed section returns to revision zero.  A future observation
         # receives the newer global revision, so old live views cannot become
@@ -706,6 +734,7 @@ class WorldKnowledge:
                     del self._sections[section_position]
                     self._section_last_order.pop(section_position, None)
                 self._geometry_revision += 1
+                self._record_geometry_changes((position,))
                 self._section_geometry_revisions[section_position] = \
                     self._geometry_revision
             self._evidence_revision += 1

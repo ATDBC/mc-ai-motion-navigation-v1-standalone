@@ -6,7 +6,7 @@ of the same long-lived fact.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from mc2p.contracts.common import ContractViolation
@@ -42,6 +42,25 @@ class GoalRequestLedger:
 
     request: Any | None = None
 
+    def accept(self, request: Any | None) -> None:
+        self.request = request
+
+    def advance(self, session_id: str, **changes: Any) -> Any:
+        """Create the sole next request generation for this task."""
+        if self.request is None:
+            raise ContractViolation("goal request ledger has no active request")
+        if not isinstance(session_id, str) or not session_id:
+            raise ContractViolation("goal request session id is required")
+        sequence = self.request.sequence + 1
+        advanced = replace(
+            self.request,
+            sequence=sequence,
+            request_id=f"{session_id}-request-{sequence}",
+            **changes,
+        )
+        self.request = advanced
+        return advanced
+
 
 @dataclass(slots=True)
 class PlanningPipelineState:
@@ -52,6 +71,19 @@ class PlanningPipelineState:
     snapshot_request_id: str | None = None
     changed_cells: set[BlockPos] = field(default_factory=set)
     replacement_failure: "ReplacementPlanningFailure | None" = None
+    attempt_started_movement_tick: int | None = None
+    attempt_started_monotonic_ns: int | None = None
+    attempt_deadline_monotonic_ns: int | None = None
+    submitted_request_id: str | None = None
+    submitted_movement_tick: int | None = None
+    submitted_monotonic_ns: int | None = None
+    result_deadline_monotonic_ns: int | None = None
+
+    def clear_submission(self) -> None:
+        self.submitted_request_id = None
+        self.submitted_movement_tick = None
+        self.submitted_monotonic_ns = None
+        self.result_deadline_monotonic_ns = None
 
     def clear(self) -> None:
         self.builder = None
@@ -59,6 +91,10 @@ class PlanningPipelineState:
         self.snapshot_request_id = None
         self.changed_cells.clear()
         self.replacement_failure = None
+        self.attempt_started_movement_tick = None
+        self.attempt_started_monotonic_ns = None
+        self.attempt_deadline_monotonic_ns = None
+        self.clear_submission()
 
 
 @dataclass(frozen=True, slots=True)

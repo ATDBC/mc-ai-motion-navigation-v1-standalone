@@ -11,6 +11,7 @@ from mc2p.motion_nav.body_control import (
 from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, MovementMode
 from mc2p.motion_nav.motion_risk import RiskActionRecord, RiskActionState
 from mc2p.motion_nav.retry_ledger import ProgressEvidence, ProgressKind
+from tests.sim.async_monitor import AsyncInvariantMonitor, VerificationAssessment, VerificationGap, VerificationStatus
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,6 +63,13 @@ class TickEvidence:
     support_fraction: float | None = None
     illegal_transition_count: int = 0
     body_control_progress: BodyControlProgress | None = None
+    active_waits: tuple[tuple[str, str], ...] = ()
+    planning_work_owned: bool = True
+    planning_work_identity_valid: bool = True
+    planning_permit_identity_valid: bool = True
+    planning_information_identity_valid: bool = True
+    async_work_diagnostics: tuple | None = None
+    active_motion_mailboxes: tuple = ()
 
 
 class InvariantMonitor:
@@ -91,12 +99,36 @@ class InvariantMonitor:
         self._body_progress_revision = -1
         self._body_progress_action_index = -1
         self._body_progress_stalled_ticks = 0
+        self.async_monitor = AsyncInvariantMonitor()
+        self._async_records_missing = False
 
     def _record(self, tick: int, code: str, detail: str) -> None:
         if not any(item[1] == code for item in self.violations):
             self.violations.append((tick, code, detail))
 
+    def check_body_responsibility(self, tick, *, on_ground, source_bound, controller_ids):
+        """The same body rule applies while navigation or placement owns control."""
+        if not on_ground and (not controller_ids or not source_bound):
+            self._unowned_airborne = True
+            self._record(tick, "I1", "airborne without a bound body controller")
+
+    def finalize(self, required_coverage, observed_activity) -> VerificationAssessment:
+        assessment = self.async_monitor.finalize(required_coverage, observed_activity)
+        missing = ((VerificationGap("I18-I22", "actual asynchronous records unavailable"),)
+                   if self._async_records_missing else ())
+        if missing:
+            return VerificationAssessment(VerificationStatus.INCOMPLETE,
+                assessment.coverage, assessment.gaps + missing)
+        return assessment
+
     def check(self, e: TickEvidence) -> None:
+        if e.async_work_diagnostics is None:
+            self._async_records_missing = True
+            self.coverage_gaps.add("I18-I22: actual asynchronous records unavailable")
+        else:
+            self.async_monitor.check(e.async_work_diagnostics, e.active_motion_mailboxes)
+            for code, detail in self.async_monitor.violations:
+                self._record(e.tick, code, detail)
         if (e.goal_state.allowed_modes != frozenset({MovementMode.WALK})
                 or e.goal_state.minimum_resources.values):
             raise ValueError("simulation goal monitor supports Walk with no resource minimum")
@@ -130,9 +162,8 @@ class InvariantMonitor:
                   and "landing_edge_probe" not in owners):
                 self._record(e.tick, "I1", "retained probe has no controller")
         if not e.on_ground:
-            if not owners or not e.source_bound:
-                self._unowned_airborne = True
-                self._record(e.tick, "I1", "airborne without a bound body controller")
+            self.check_body_responsibility(e.tick, on_ground=e.on_ground,
+                source_bound=e.source_bound, controller_ids=owners)
         elif self._support_y is not None:
             drop = self._support_y - e.position[1]
             if self._unowned_airborne and drop >= .99:
@@ -155,6 +186,33 @@ class InvariantMonitor:
         elif e.damage > e.damage_limit + 1e-9 or e.committed_damage > e.damage_limit + 1e-9:
             self._record(e.tick, "I3", "damage or commitment exceeds task limit")
         terminal = e.state in {"complete", "failed", "cancelled", "closed"}
+        if terminal and e.active_waits:
+            self._record(
+                e.tick,
+                "I14",
+                "terminal navigation session retains active waits",
+            )
+        if (e.state == "planning"
+                and (not e.planning_work_owned
+                     or not e.planning_work_identity_valid)):
+            self._record(
+                e.tick,
+                "I15",
+                "planning work is absent, stale, foreign, or past its deadline",
+            )
+        if e.state == "planning" and not e.planning_permit_identity_valid:
+            self._record(
+                e.tick,
+                "I16",
+                "planning attempt has no matching consumed one-shot permit",
+            )
+        if (e.state == "needs_information"
+                and not e.planning_information_identity_valid):
+            self._record(
+                e.tick,
+                "I17",
+                "information need is foreign or lacks search-frontier identity",
+            )
         if self._last_position is not None:
             moved = math.dist(e.position, self._last_position)
             self._still_ticks = 0 if moved > .01 or terminal else self._still_ticks + 1

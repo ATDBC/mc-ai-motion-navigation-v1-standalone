@@ -33,6 +33,10 @@ from mc2p.motion_nav.fixed_route import (
 from mc2p.motion_nav.ground_modes import GroundModeProfile
 from mc2p.motion_nav.movement_transition import MovementMode
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
+from mc2p.motion_nav.execution_supervisor import ExecutionSupervisor
+from mc2p.motion_nav.body_control import StopCause
+from mc2p.motion_nav.motion_residual import MotionResidualTracker
+from mc2p.motion_nav.body_control import HandoffDisposition
 from mc2p.motion_nav.world_interaction import (
     BlockPlacementTransaction,
     PlacementProposal,
@@ -89,6 +93,7 @@ class RuntimeBlockPlacementDriver:
                 raise ContractViolation(f"{name} must be within 1..1200 observations")
         self.runtime = runtime
         self.transaction = transaction
+        transaction.bind_clock(runtime.monotonic_ns)
         self._clock = clock_ns
         self._approach_mode = approach_mode
         self._approach: FixedRouteController | None = None
@@ -104,6 +109,9 @@ class RuntimeBlockPlacementDriver:
         self._selection_timeout_observations = selection_timeout_observations
         self._preparation_started_sequence: int | None = None
         self._selection_started_sequence: int | None = None
+        self._body_supervisor = ExecutionSupervisor()
+        self._release_anchor = MotionResidualTracker()
+        self._stop_cause: StopCause | None = None
 
     def start(self) -> None:
         if self.source is not None or self.transaction.report.terminal:
@@ -118,6 +126,11 @@ class RuntimeBlockPlacementDriver:
     @property
     def has_prepared_frame(self) -> bool:
         return self._prepared is not None
+
+    @property
+    def body_release_evidence(self):
+        """Read the supervisor's latest evidence; callers cannot authorize release."""
+        return self._body_supervisor.last_handoff
 
     def prepare_proposal(self, owner_deadline_ns: int) -> ControlFrameProposalV1:
         if self.source is None or self._prepared is not None:
@@ -170,7 +183,7 @@ class RuntimeBlockPlacementDriver:
             )
         )
         if (placement.operation is not None or look is not None
-                or movement != MovementV1()):
+                or movement != MovementV1() or self.transaction.report.terminal):
             self.runtime.cancel_source(self.source.source_id)
             self._sequence += 1
             intent_id = ordered_intent_id(self.source, self._sequence)
@@ -222,6 +235,14 @@ class RuntimeBlockPlacementDriver:
     ) -> MovementV1:
         self._approach_missing_cells = ()
         self._approach_waiting_for_information = False
+        if self.transaction.report.terminal:
+            if (self.transaction.report.state is PlacementState.COMPLETE
+                    and self._stop_cause is None
+                    and self._release_evidence(frame).disposition is HandoffDisposition.QUIESCENT):
+                # Successful placement resumes standing navigation. A proven
+                # neutral tail lets the current owner release sneak first.
+                return MovementV1()
+            return MovementV1(sneak=frame.body.is_on_ground)
         requirement = self.transaction.requirement
         if not requirement.requires_sneak:
             return MovementV1()
@@ -254,6 +275,17 @@ class RuntimeBlockPlacementDriver:
             self._approach_waiting_for_information = (
                 decision.state is FixedRouteState.NEEDS_INFORMATION
             )
+            if (decision.state in {
+                    FixedRouteState.BLOCKED,
+                    FixedRouteState.INPUT_LOST,
+                    FixedRouteState.FAILED,
+                } and frame.body.is_on_ground):
+                # A push or a delayed command can move the body outside the
+                # old short approach corridor. Re-anchor from the observed
+                # grounded state; the unchanged preparation deadline still
+                # bounds repeated recovery and sneak keeps the edge guarded.
+                self._approach = None
+                return MovementV1(sneak=True)
             if decision.state in {
                 FixedRouteState.BLOCKED,
                 FixedRouteState.INPUT_LOST,
@@ -338,6 +370,7 @@ class RuntimeBlockPlacementDriver:
             receipt_status=receipt.status,
             receipt_reason=receipt.reason,
             control_sequence=result.decision.action.request_sequence_id,
+            dispatched_monotonic_ns=result.dispatched_monotonic_ns,
         )
         if selected:
             self._preparation_started_sequence = None
@@ -354,9 +387,9 @@ class RuntimeBlockPlacementDriver:
             raise ContractViolation("block placement tick requires behavior profile")
         proposal = self.prepare_proposal(owner_deadline_ns)
         if self.transaction.report.terminal:
-            self.discard_prepared()
-            self.release()
-            return None
+            if self.release():
+                self.discard_prepared()
+                return None
         assert self._prepared_deadline_ns is not None
         result = self.runtime.control_frame(
             self._task(self._prepared_deadline_ns),
@@ -377,17 +410,48 @@ class RuntimeBlockPlacementDriver:
     def cancel(self, reason: str) -> None:
         if self._prepared is not None:
             raise ContractViolation("prepared placement must be adopted or discarded")
-        self.transaction.cancel(reason)
+        if not isinstance(reason, str) or not reason.strip():
+            raise ContractViolation("placement cancellation reason is required")
+        self._stop_cause = StopCause.CANCELLED
+        # A terminal business result can still own unfinished body control.
+        # Repeated stop requests must not rewrite the confirmed transaction.
+        if not self.transaction.report.terminal:
+            self.transaction.cancel(reason)
+        if self.source is None:
+            return
+        if self._approach is not None:
+            self._approach.cancel()
         self.release()
 
-    def release(self) -> None:
+    def release(self) -> bool:
         source = self.source
         if source is None:
-            return
+            return True
         if self.runtime.state is RuntimeStateV1.READY:
+            frame = self.runtime.navigation_observation_adapter.latest_frame
+            if frame is None:
+                return False
+            # Derive release state from the current formal body observation.
+            # Input uncertainty remains owned by Runtime's authoritative ledger.
+            evidence = self._release_evidence(frame)
+            if evidence.disposition is not HandoffDisposition.QUIESCENT:
+                self.runtime.cancel_source(source.source_id)
+                return False
+            if (self.transaction.report.state is PlacementState.COMPLETE
+                    and self._stop_cause is None
+                    and frame.body.pose != "standing"):
+                self.runtime.cancel_source(source.source_id)
+                return False
             self.runtime.cancel_source(source.source_id)
             self.runtime.unregister_ordered_source(source)
         self.source = None
+        return True
+
+    def _release_evidence(self, frame):
+        self._release_anchor.reset()
+        self._release_anchor.observe(self.runtime.observation, frame, self.runtime.input_ledger)
+        return self._body_supervisor.evaluate_quiescence(
+            frame, self.runtime.input_ledger, self._release_anchor.anchor)
 
     def _task(self, deadline_ns: int) -> TaskIntentV0:
         requirement = self.transaction.requirement

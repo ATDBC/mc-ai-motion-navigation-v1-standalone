@@ -251,7 +251,7 @@ def _run_fixed(runtime, trial: dict, profile: BehaviorProfileV0,
     driver.start()
     ticks = 0
     try:
-        while ticks < 40 and not transaction.report.terminal:
+        while ticks < 40 and driver.source is not None:
             ticks += 1
             result = driver.tick(
                 profile,
@@ -261,6 +261,8 @@ def _run_fixed(runtime, trial: dict, profile: BehaviorProfileV0,
                 diagnostic()
         if transaction.report.state is not PlacementState.COMPLETE:
             raise RuntimeError(f"B11 fixed placement failed: {transaction.report}")
+        if driver.source is not None:
+            raise RuntimeError("B11 fixed placement body responsibility did not finish")
     finally:
         driver.release()
     return {
@@ -693,6 +695,10 @@ def run_b11_world_change_runtime(
         last_diagnostic_sequence = observation.sequence_id
 
     diagnostic()
+    from scripts.r27_placement_runtime import run_r27_placement_cases
+    r27_rows = run_r27_placement_cases(runtime, backend, directory, deadline_ns, profiles, diagnostic, fixture_writer)
+    from scripts.r27_world_change_stop_runtime import run_world_change_stop_cases
+    r27_parent_rows = run_world_change_stop_cases(runtime, backend, directory, deadline_ns, profiles, diagnostic, fixture_writer)
     trials = b11_trial_plan()
     for trial in trials:
         fixture_writer(_fixture_commands(trial), trial)
@@ -763,6 +769,8 @@ def run_b11_world_change_runtime(
         negative_rows.append(row)
         append_jsonl(directory / "b11-negative-trials.jsonl", row)
     stages = {
+        "r27_trials": r27_rows,
+        "r27_parent_stop_trials": r27_parent_rows,
         "schema_version": "mc2p.b11-world-change-summary.v1",
         "positive_trials": len(trial_rows),
         "passed_trials": sum(bool(row["passed"]) for row in trial_rows),
@@ -784,6 +792,8 @@ def run_b11_world_change_runtime(
     }
     write_json_atomic(directory / "b11-summary.json", stages)
     return stages, diagnostic_rows, [
+        {"name": "r27_placement_cases_complete", "passed": all(row["passed"] for row in r27_rows)},
+        {"name": "r27_full_parent_stop_cases_complete", "passed": len(r27_parent_rows) == 20 and all(row["passed"] for row in r27_parent_rows)},
         {"name": "b11_positive_trials_complete", "passed": stages["all_passed"]},
         {
             "name": "b11_negative_trials_complete",

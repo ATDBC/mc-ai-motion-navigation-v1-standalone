@@ -853,6 +853,7 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
         stamp = ObservationStamp(
             state.session, sequence, sequence, "test", sequence * 50_000_000,
         )
+
         body = BodyState(
             state.session, sequence, stamp, state.position,
             tuple(value * 20.0 for value in state.velocity_blocks_per_tick),
@@ -866,6 +867,140 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
             saturation_points=state.saturation_points,
         )
         return NavigationFrame(state.session, body, world, "fabric")
+
+    def coordinator_fixture(self, route_id="coordinator-lifecycle"):
+        anchor, physics_world, _, _ = fixture()
+        start_id = SurfaceNodeId(0, 0, 64, 0)
+        end_id = SurfaceNodeId(0, 2, 64, 0)
+        start_surface = SupportSurface(
+            start_id, (.5, 64.0, .5), HorizontalRegion(0, 0, 1, 1),
+            1.0, ("minecraft:grass_block",), (),
+        )
+        end_surface = SupportSurface(
+            end_id, (.5, 64.0, 2.5), HorizontalRegion(0, 2, 1, 3),
+            1.0, ("minecraft:grass_block",), (),
+        )
+        active = ActiveRoute(
+            route_id, 1, "request", "goal", 1,
+            anchor.session.value, None, 2.0, 0.0, (),
+            ExecutableCorridor((start_id, end_id), (), 2.0, end_id),
+            ActionRoute(route_id, (JumpGapSegment(
+                JumpGapEdge(start_id, end_id, "test-jump-gap", .9, ()),
+                start_surface, end_surface, (),
+            ),)),
+            planning_generation=2,
+        )
+        executor = ActionRouteExecutor(
+            ground_profile(), jump_profile(), step_profile(),
+            air_profiles=(air_profile(MovementMode.JUMP_GAP),),
+        )
+        return anchor, physics_world, active, executor
+
+    def test_old_motion_revision_cannot_terminate_new_revision(self):
+        from mc2p.motion_nav.async_work import AsyncAdmissionDisposition
+        anchor, physics_world, active, executor = self.coordinator_fixture(
+            "stale-motion-revision",
+        )
+        clock = [1]
+        worker = MotionSolverWorker(max_pending=1)
+        jobs = []
+        try:
+            coordinator = MotionRouteCoordinator(
+                active, executor, worker, clock_ns=lambda: clock[0],
+            )
+            current_frame = self.frame(
+                physics_world._world, anchor.physics_state, 1,
+            )
+            coordinator.start(current_frame)
+            with patch.object(worker, "is_alive", return_value=True), \
+                    patch.object(worker, "poll_available", return_value=()), \
+                    patch.object(
+                        worker, "submit",
+                        side_effect=lambda job: jobs.append(job) or True,
+                    ):
+                coordinator.decide(
+                    current_frame, anchor,
+                    InputApplicationLedger(max_records=64),
+                    physics_world, changed_cells=(),
+                )
+            old_result = _execute_job(jobs[0])
+            old_identity = jobs[0].work_identity
+            clock[0] += 1_100_000_000
+            with patch.object(worker, "is_alive", return_value=True), \
+                    patch.object(
+                        worker, "poll_available", return_value=(old_result,),
+                    ), patch.object(
+                        worker, "submit",
+                        side_effect=lambda job: jobs.append(job) or True,
+                    ):
+                decision = coordinator.decide(
+                    self.frame(physics_world._world, anchor.physics_state, 2),
+                    anchor, InputApplicationLedger(max_records=64),
+                    physics_world, changed_cells=(),
+                )
+
+            self.assertEqual(len(jobs), 2)
+            self.assertNotEqual(jobs[1].work_identity, old_identity)
+            self.assertEqual(
+                coordinator._work_identity, jobs[1].work_identity,
+            )
+            self.assertIs(executor.state, ActionRouteState.RUNNING)
+            self.assertFalse(decision.submit_input)
+            self.assertIs(
+                coordinator.last_admission.disposition,
+                AsyncAdmissionDisposition.DISCARDED_LATE,
+            )
+            self.assertEqual(
+                coordinator.last_admission.identity, old_identity,
+            )
+            self.assertNotEqual(
+                coordinator.last_admission.identity,
+                coordinator._work_identity,
+            )
+            self.assertGreater(
+                coordinator.last_admission.deadline_monotonic_ns, 0,
+            )
+        finally:
+            worker.close()
+
+    def test_motion_backpressure_uses_fixed_deadline_and_shared_retry_limit(self):
+        anchor, physics_world, active, executor = self.coordinator_fixture(
+            "bounded-motion-backpressure",
+        )
+        clock = [1]
+        worker = MotionSolverWorker(max_pending=1)
+        try:
+            coordinator = MotionRouteCoordinator(
+                active, executor, worker, clock_ns=lambda: clock[0],
+            )
+            coordinator.start(self.frame(
+                physics_world._world, anchor.physics_state, 1,
+            ))
+            decision = None
+            with patch.object(worker, "is_alive", return_value=True), \
+                    patch.object(worker, "poll_available", return_value=()), \
+                    patch.object(worker, "submit", return_value=False):
+                for sequence in range(1, 5):
+                    decision = coordinator.decide(
+                        self.frame(
+                            physics_world._world, anchor.physics_state,
+                            sequence,
+                        ),
+                        anchor, InputApplicationLedger(max_records=64),
+                        physics_world, changed_cells=(),
+                    )
+                    clock[0] += 1_100_000_000
+
+            self.assertIs(decision.state, ActionRouteState.UNSUPPORTED)
+            self.assertEqual(
+                decision.reason_code,
+                "motion_unsolvable:motion_solver_retry_exhausted",
+            )
+            self.assertEqual(
+                coordinator.retry_ledger.count_for(RetryCause.PLANNING), 3,
+            )
+        finally:
+            worker.close()
 
     def test_action_route_uses_admitted_proof_and_hands_off_without_extra_frame(self):
         anchor, reusable = solved_candidate()

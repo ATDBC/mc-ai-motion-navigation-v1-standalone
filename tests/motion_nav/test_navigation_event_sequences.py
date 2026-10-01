@@ -1,5 +1,6 @@
 from dataclasses import replace
 import unittest
+from types import SimpleNamespace
 
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from tests.sim.event_sequences import (
@@ -13,10 +14,62 @@ from tests.sim.event_sequences import (
 )
 from tests.sim.backend import CalculatorBackend, Perturbations, Scene
 from tests.sim.runner import Event, _goal, run
+from tests.sim.run_navigation_event_sequences import (
+    _is_declared_result,
+    _result_class,
+)
 from tests.sim.scenarios import SCENARIOS
 
 
 class NavigationEventSequenceTests(unittest.TestCase):
+    def test_gate_rejects_a_bounded_result_not_frozen_for_the_scenario(self):
+        outcome = SimpleNamespace(
+            exception=None,
+            result=SimpleNamespace(
+                violations=[],
+                outcome="failed",
+                reason="new_unreviewed_failure",
+            ),
+        )
+
+        self.assertFalse(_is_declared_result(
+            outcome,
+            {("success", "goal_state_satisfied")},
+        ))
+
+    def test_generated_events_report_applied_and_skipped_separately(self):
+        sequence = GeneratedSequence(
+            seed=24001,
+            scenario="direct_drop_2",
+            max_ticks=300,
+            events=(
+                GeneratedEvent(EventKind.CANCEL, 10),
+                GeneratedEvent(EventKind.EXTERNAL_PUSH, 70),
+            ),
+        )
+
+        outcome = run_sequence(sequence)
+
+        self.assertEqual(
+            [(item.kind, item.status) for item in outcome.event_applications],
+            [
+                (EventKind.CANCEL, "dispatched"),
+                (EventKind.EXTERNAL_PUSH, "skipped"),
+            ],
+        )
+
+    def test_internal_contract_failure_is_never_a_bounded_accepted_result(self):
+        outcome = SimpleNamespace(
+            exception=None,
+            result=SimpleNamespace(
+                violations=[],
+                outcome="failed",
+                reason="navigation_internal_contract_failure",
+            ),
+        )
+
+        self.assertEqual(_result_class(outcome), "internal_contract_failure")
+
     def test_omitted_receipt_then_goal_revision_always_reaches_a_terminal_result(self):
         combinations = (
             (3, 5),
@@ -51,6 +104,27 @@ class NavigationEventSequenceTests(unittest.TestCase):
                         outcome.result.outcome,
                         {"success", "failed", "cancelled"},
                     )
+
+    def test_removed_landing_then_external_push_cannot_strand_probe(self):
+        sequence = GeneratedSequence(
+            23037,
+            "direct_drop_5_budget_2",
+            400,
+            (
+                GeneratedEvent(EventKind.REMOVE_LANDING_SUPPORT, 2),
+                GeneratedEvent(EventKind.EXTERNAL_PUSH_BACKWARD, 14),
+            ),
+        )
+
+        outcome = run_sequence(sequence)
+
+        self.assertIsNone(outcome.exception)
+        self.assertIsNotNone(outcome.result)
+        self.assertEqual(outcome.result.violations, [])
+        self.assertIn(
+            outcome.result.outcome,
+            {"success", "failed", "cancelled"},
+        )
 
     def test_stopping_goal_revision_cannot_reenter_planning_without_handoff(self):
         sequence = GeneratedSequence(
@@ -182,6 +256,46 @@ class NavigationEventSequenceTests(unittest.TestCase):
         self.assertIn((0, 63, 0), backend.scene.solids)
         self.assertEqual(backend.state.velocity_blocks_per_tick[2], 0.0)
         self.assertEqual(backend.perturbations.omitted_receipt_ticks, frozenset())
+
+    def test_repeated_world_removal_is_dispatched_twice_but_applied_once(self):
+        clock = [0]
+        cell = (0, 63, 0)
+        backend = CalculatorBackend(
+            clock,
+            Scene({cell: "minecraft:stone"}, ((-2, 2), (60, 68), (-2, 2))),
+            (.5, 64.0, .5),
+            0.0,
+            perturbations=Perturbations(world_edits={
+                2: {cell: None},
+                3: {cell: None},
+            }),
+        )
+
+        backend.free_tick()
+        backend.free_tick()
+
+        self.assertEqual(
+            backend.dispatched_perturbations,
+            [
+                (EventKind.REMOVE_LANDING_SUPPORT.value, 2),
+                (EventKind.REMOVE_LANDING_SUPPORT.value, 3),
+            ],
+        )
+        self.assertEqual(
+            backend.applied_perturbations,
+            [(EventKind.REMOVE_LANDING_SUPPORT.value, 2)],
+        )
+
+    def test_arbitration_without_a_navigation_movement_is_only_dispatched(self):
+        outcome = run_sequence(GeneratedSequence(
+            seed=24002,
+            scenario="direct_drop_2",
+            max_ticks=300,
+            events=(GeneratedEvent(EventKind.LOSE_ARBITRATION, 33),),
+        ))
+
+        self.assertEqual(len(outcome.event_applications), 1)
+        self.assertEqual(outcome.event_applications[0].status, "dispatched")
 
     def test_shrinker_removes_unrelated_events_and_moves_trigger_earlier(self):
         sequence = GeneratedSequence(

@@ -127,6 +127,8 @@ def run_matrix(manifest: Path, output_root: Path) -> dict:
         counts["terminal" if terminal else "nonterminal"] += 1
         if result.violations:
             counts["with_violations"] += 1
+        if not result.verification_complete:
+            counts["verification_incomplete"] += 1
         item = {
             "case": asdict(case),
             "outcome": result.outcome,
@@ -136,9 +138,10 @@ def run_matrix(manifest: Path, output_root: Path) -> dict:
             "violations": result.violations,
             "events": result.events,
             "terminal": terminal,
+            "verification": asdict(result.verification) if result.verification else None,
         }
         results.append(item)
-        if not terminal or result.violations:
+        if not terminal or result.violations or not result.verification_complete:
             (output_root / f"{case.identifier}.json").write_text(
                 json.dumps(asdict(result), ensure_ascii=False, indent=2),
                 encoding="utf-8",
@@ -157,14 +160,16 @@ def run_matrix(manifest: Path, output_root: Path) -> dict:
     return summary
 
 
-def main() -> None:
+def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, required=True)
     args = parser.parse_args()
     summary = run_matrix(args.manifest, args.output_root)
     print(json.dumps(summary["counts"], sort_keys=True))
+    return int(any(summary["counts"].get(key, 0) for key in
+                   ("nonterminal", "with_violations", "verification_incomplete")))
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

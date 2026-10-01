@@ -2,7 +2,7 @@
 
 日期：2026-09-28
 
-状态：S0 至 S5 已完成。第十九轮评审发现的状态写入缺口已由 H1 至 H6 修正，三项专项 Fabric 已在 H7 补齐。冻结扰动扫描中唯一未声明的 `no_safe_ground_candidate` 也已修正。扫描中的预先声明有界失败继续保留在分母中；后续 800 场完整连续高度矩阵关闭了 S5。整改经过见[导航协调强化计划](navigation-coordination-hardening-plan.md)和[第二十一轮计划](navigation-coordination-review21-remediation-plan.md)。
+状态：本阶段当时完成了 S0 至 S5。第十九轮评审发现的状态写入缺口已由 H1 至 H6 修正，三项专项 Fabric 已在 H7 补齐。冻结扰动扫描中唯一未声明的 `no_safe_ground_candidate` 也已修正。扫描中的预先声明有界失败继续保留在分母中；后续 800 场完整连续高度矩阵关闭了当时的 S5。D045 后来因规划信息选择和重试所有权缺口再次打开导航协调 S5；现行范围见 [R25](navigation-planning-coordinator-r25-plan.md)。
 
 设计依据：[架构](../architecture/navigation-coordination-v1.md)、[D039](../decisions/0039-shared-navigation-coordination-and-closed-loop-gates.md)。第三方基线为公开 `8898cf9`，对应本地 `df3e093`；评审方案固定在 `eae4419`。
 

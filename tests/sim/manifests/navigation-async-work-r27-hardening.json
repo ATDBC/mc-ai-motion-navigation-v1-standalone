@@ -1,0 +1,15 @@
+{
+  "schema_version": "mc2p.async-work-sequences.v1",
+  "seed_start": 270001,
+  "seed_end": 270064,
+  "families": [
+    {"name": "information_exit", "events": ["cancel_information_work", "old_notification_discarded"], "outcome": "cancelled"},
+    {"name": "gap_successor", "events": ["old_owner_stopped", "same_goal_successor_started", "old_failure_delivered", "interleaved_results_delivered"], "outcome": "success"},
+    {"name": "placement_revocation", "events": ["world_confirmation_revoked", "processing_deadline_crossed", "repeat_stop"], "outcome": "cancelled", "fresh_retry": "grounded: fresh retry completes; airborne: edge approach rejects lost ground; old identity never applies"},
+    {"name": "terminal_body_stop", "events": ["repeat_stop"], "outcome": "cancelled", "axes": ["complete/failed/cancelled", "inertia/pending/air", "one/three_stops"]}
+  ],
+  "controls": ["normal_placement", "declared_no_work"],
+  "limits": "160 gap ticks; 180 placement ticks; 400 information ticks",
+  "sensor_scope": "calculator backend, V3 contacts/inventory/targeting; no entity, fluid or transparency model",
+  "oracle_scope": "initial explored memory only, unknown strip excluded; actor generates every identity and permit"
+}

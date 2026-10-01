@@ -11,7 +11,7 @@ existing worker interfaces:
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field, replace
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 import math
 import random
@@ -33,6 +33,8 @@ from mc2p.motion_nav.runtime_adapter import TEST_ORACLE
 
 from tests.sim.backend import CalculatorBackend, Perturbations, Scene
 from tests.sim.monitor import InvariantMonitor, TickEvidence
+from tests.sim.async_monitor import AsyncCoverageRequirement, ObservedAsyncActivity, VerificationAssessment
+from mc2p.motion_nav.async_work import AsyncWorkKind
 
 CONFIG = Path("config/motion-navigation")
 TERMINAL_DRIVER = {"success", "failed", "cancelled", "stopped", "interaction_required"}
@@ -51,6 +53,7 @@ class InlinePlannerWorker:
 
     def __init__(self):
         self._job = None
+        self.activity = []
 
     def is_alive(self) -> bool:
         return True
@@ -59,10 +62,13 @@ class InlinePlannerWorker:
                                 jump_profile=None, *, air_profiles=(), ground_mode_profile=None) -> bool:
         self._job = planner_worker._PlanningJob(None, snapshot, ground_profile, ground_mode_profile,
                                                 step_profile, jump_profile, air_profiles, request)
+        self.activity.append(ObservedAsyncActivity(request.work_identity, "submit"))
         return True
 
     def poll_latest(self):
         job, self._job = self._job, None
+        if job is not None:
+            self.activity.append(ObservedAsyncActivity(job.request.work_identity, "poll"))
         return None if job is None else planner_worker._execute_job(job)
 
     def close(self) -> None:
@@ -76,16 +82,19 @@ class InlineMotionWorker:
 
     def __init__(self, *_, **__):
         self._pending = []
+        self.activity = []
 
     def is_alive(self) -> bool:
         return True
 
     def submit(self, job) -> bool:
         self._pending.append(job)
+        self.activity.append(ObservedAsyncActivity(job.work_identity, "submit"))
         return True
 
     def poll_available(self):
         done = tuple(motion_worker._execute_job(job) for job in self._pending)
+        self.activity.extend(ObservedAsyncActivity(job.work_identity, "poll") for job in self._pending)
         self._pending = []
         return done
 
@@ -101,6 +110,7 @@ class Event:
     when: Callable[["Context"], bool]
     action: Callable[["Context"], None]
     fired_at: int | None = None
+    kind: str | None = None
 
 
 @dataclass
@@ -118,6 +128,8 @@ class Scenario:
     goal_yaw_degrees: float | None = None
     start_velocity_blocks_per_tick: tuple[float, float, float] | None = None
     landing_support_cells: tuple[tuple[int, int, int], ...] = ()
+    async_coverage: AsyncCoverageRequirement = field(default_factory=AsyncCoverageRequirement)
+    initial_unknown_cells: frozenset[tuple[int, int, int]] = frozenset()
 
 
 @dataclass
@@ -137,15 +149,15 @@ class Context:
         return self.session.diagnostics
 
 
-def seed_memory(runtime: PlayerRuntimeV1, scene: Scene) -> None:
+def seed_memory(runtime: PlayerRuntimeV1, scene: Scene, *, exclude=frozenset()) -> None:
     """Pre-load the Runtime-owned world with earlier, non-visual knowledge of the scene.
 
     Stands in for a map explored earlier: blocks and air are known, but no cell
     carries near lower-part visual evidence.
     """
     runtime.navigation_observation_adapter.seed_test_oracle_memory(
-        TEST_ORACLE, {p: scene.geometry(b) for p, b in scene.solids.items()},
-        scene.air_cells(),
+        TEST_ORACLE, {p: scene.geometry(b) for p, b in scene.solids.items() if p not in exclude},
+        tuple(p for p in scene.air_cells() if p not in exclude),
     )
 
 
@@ -162,10 +174,18 @@ class Result:
     events: list[str]
     coverage_gaps: tuple[str, ...]
     trace: list[dict]
+    event_dispatches: tuple[tuple[str, int], ...] = ()
+    dispatched_perturbations: tuple[tuple[str, int], ...] = ()
+    applied_perturbations: tuple[tuple[str, int], ...] = ()
+    verification: VerificationAssessment | None = None
+
+    @property
+    def verification_complete(self) -> bool:
+        return self.verification is not None and self.verification.complete
 
     @property
     def verdict(self) -> str:
-        ok = (self.outcome == self.expect) and not self.violations
+        ok = (self.outcome == self.expect) and not self.violations and self.verification_complete
         return "PASS" if ok else "FAIL"
 
     @property
@@ -199,7 +219,8 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
         trace_sink: Callable[[dict], None] | None = None,
         event_ticks: dict[str, int] | None = None,
         control_step: Callable[[Context], tuple[str, ...] | None] | None = None,
-        risk_ledger: TaskRiskLedger | None = None) -> Result:
+        risk_ledger: TaskRiskLedger | None = None,
+        backend_factory=CalculatorBackend) -> Result:
     events = [replace(event, fired_at=None) for event in scenario.events]
     if event_ticks is not None:
         if set(event_ticks) != {event.name for event in events}:
@@ -209,7 +230,7 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                                        context.tick >= at and predicate(context)))
                   for event in events]
     clock = [100_000_000]
-    backend = CalculatorBackend(clock, Scene(dict(scenario.scene.solids), scenario.scene.volume).with_floor(),
+    backend = backend_factory(clock, Scene(dict(scenario.scene.solids), scenario.scene.volume).with_floor(),
                                 scenario.start, scenario.yaw_degrees,
                                 perturbations=scenario.perturbations)
     if scenario.start_velocity_blocks_per_tick is not None:
@@ -221,10 +242,12 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
     reset = runtime.reset(ResetRequestV0("reset-sim", backend.episode, "test", 1, 10_000_000_000))
     if not reset.succeeded:
         raise RuntimeError("reset failed")
-    seed_memory(runtime, backend.scene)
+    seed_memory(runtime, backend.scene, exclude=scenario.initial_unknown_cells)
     profiles = NavigationSessionProfiles.load(CONFIG)
-    session = NavigationSession("sim", profiles, planner_worker=InlinePlannerWorker(),
-                                motion_worker=InlineMotionWorker(),
+    planner = InlinePlannerWorker()
+    motion = InlineMotionWorker()
+    session = NavigationSession("sim", profiles, planner_worker=planner,
+                                motion_worker=motion,
                                 risk_ledger=risk_ledger,
                                 clock_ns=lambda: clock[0])
     driver = RuntimeNavigationDriver(runtime, session, clock_ns=lambda: clock[0])
@@ -257,6 +280,7 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                       scenario.damage_points, policy, goal, scenario.goal)
     trace: list[dict] = []
     released_ticks = 0
+    information_activity = {}
     perturbations_stopped = False
     tick = 0
     try:
@@ -302,6 +326,10 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                     "the event and every application sample must be recorded"
                 )
             diagnostics = session.diagnostics
+            information = session.planning_information_update
+            if information is not None:
+                information_activity[information.information_identity] = ObservedAsyncActivity(
+                    information.information_identity, "notification")
             frame_diagnostics = (driver.last_frame_diagnostics
                                  if len(backend.actions) > submitted_count_before else None)
             applied_request = (backend.applied_commands[-1][1]
@@ -351,9 +379,21 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                 support_fraction=diagnostics.support_fraction,
                 illegal_transition_count=diagnostics.illegal_transition_count,
                 body_control_progress=diagnostics.body_control_progress,
+                active_waits=diagnostics.active_waits,
+                planning_work_owned=diagnostics.planning_work_owned,
+                planning_work_identity_valid=
+                    diagnostics.planning_work_identity_valid,
+                planning_permit_identity_valid=
+                    diagnostics.planning_permit_identity_valid,
+                planning_information_identity_valid=
+                    diagnostics.planning_information_identity_valid,
+                async_work_diagnostics=session.async_work_diagnostics,
+                active_motion_mailboxes=session.active_motion_mailboxes,
             )
             monitor.check(evidence)
             row = {
+                "async_events": tuple(asdict(event) for event in monitor.async_monitor.last_events),
+                "async_coverage": dict(monitor.async_monitor.coverage),
                 "loop_tick": tick, "tick": backend.movement_tick,
                 "clock_ns": clock[0], "observation_sequence": backend.sequence,
                 "movement_tick": backend.movement_tick,
@@ -406,6 +446,14 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                 "support_fraction": diagnostics.support_fraction,
                 "transition_count": diagnostics.transition_count,
                 "illegal_transition_count": diagnostics.illegal_transition_count,
+                "active_waits": diagnostics.active_waits,
+                "planning_work_owned": diagnostics.planning_work_owned,
+                "planning_work_identity_valid":
+                    diagnostics.planning_work_identity_valid,
+                "planning_permit_identity_valid":
+                    diagnostics.planning_permit_identity_valid,
+                "planning_information_identity_valid":
+                    diagnostics.planning_information_identity_valid,
                 "body_control_progress": (
                     None if diagnostics.body_control_progress is None else {
                         "owner_id": diagnostics.body_control_progress.owner_id,
@@ -509,11 +557,27 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
     outcome = {"complete": "success"}.get(report.state.value, report.state.value)
     if driver_state == "failed" and outcome != "failed":
         outcome = f"driver_failed/{outcome}"
-    return Result(scenario.name, scenario.expect, outcome, str(report.reason), tick,
-                  tuple(round(v, 2) for v in backend.state.position), backend.damage_taken,
-                  monitor.violations,
-                  [f"{e.name}@{e.fired_at}" for e in events if e.fired_at is not None],
-                  tuple(sorted(monitor.coverage_gaps)), trace)
+    requirement = scenario.async_coverage
+    if outcome == "success" and not requirement.no_async_work:
+        requirement = replace(requirement, applied_kinds=tuple(dict.fromkeys(
+            (*requirement.applied_kinds, AsyncWorkKind.PLANNING))))
+    verification = monitor.finalize(requirement, (*planner.activity, *motion.activity,
+                                                 *information_activity.values()))
+    return Result(
+        scenario.name, scenario.expect, outcome, str(report.reason), tick,
+        tuple(round(v, 2) for v in backend.state.position), backend.damage_taken,
+        monitor.violations,
+        [f"{e.name}@{e.fired_at}" for e in events if e.fired_at is not None],
+        tuple(sorted(monitor.coverage_gaps)), trace,
+        tuple(
+            (event.kind, event.fired_at)
+            for event in events
+            if event.kind is not None and event.fired_at is not None
+        ),
+        tuple(backend.dispatched_perturbations),
+        tuple(backend.applied_perturbations),
+        verification,
+    )
 
 
 # ----------------------------------------------------------------- scenes

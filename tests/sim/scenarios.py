@@ -12,6 +12,7 @@ import time
 from tests.sim.backend import Perturbations, SLAB_ID, Scene
 from tests.sim.runner import Event, Scenario, lane, late_ticks, run, _goal
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
+from tests.sim.async_monitor import AsyncCoverageRequirement
 
 STONE = "minecraft:stone"
 
@@ -96,7 +97,8 @@ def airborne_in_drop(context) -> bool:
 SCENARIOS = [
     Scenario("flat_walk", lane([[63]] * 10, width=3), (.5, 64.0, .5), (.5, 64.0, 8.5)),
     Scenario("flat_walk_offset_start", lane([[63]] * 10, width=3), (.83, 64.0, .21), (.5, 64.0, 8.5)),
-    Scenario("goal_on_current_support", lane([[63]] * 6, width=3), (.6, 64.0, .4), (.5, 64.0, .5)),
+    Scenario("goal_on_current_support", lane([[63]] * 6, width=3), (.6, 64.0, .4), (.5, 64.0, .5),
+             async_coverage=AsyncCoverageRequirement(required_kinds=(), no_async_work=True)),
     Scenario("half_steps_up_down", lane(half_steps(), width=3), (.5, 64.0, .5), (.5, 64.0, 7.5)),
     Scenario("half_steps_20pct_late", lane(half_steps(), width=3), (.5, 64.0, .5), (.5, 64.0, 7.5),
              perturbations=Perturbations(late_ticks=late_ticks(.2, 7))),
