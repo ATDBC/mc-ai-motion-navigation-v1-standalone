@@ -111,6 +111,7 @@ class Event:
     action: Callable[["Context"], None]
     fired_at: int | None = None
     kind: str | None = None
+    goal_revision: int | None = None
 
 
 @dataclass
@@ -286,6 +287,7 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
     try:
         for tick in range(1, scenario.max_ticks + 1):
             context.tick = tick
+            planner_activity_start = len(planner.activity)
             external_movement_intents: tuple[str, ...] = ()
             movement_tick_before = backend.movement_tick
             submitted_count_before = len(backend.actions)
@@ -337,6 +339,10 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                                and backend.applied_commands[-1][0] == backend.movement_tick
                                else None)
             applied_movement = backend.applied[-1]
+            input_record = (
+                None if frame_diagnostics is None or frame_diagnostics.action_request_sequence is None
+                else runtime.input_ledger.record(frame_diagnostics.action_request_sequence)
+            )
             evidence = TickEvidence(
                 backend.movement_tick, clock[0], backend.state.position, backend.state.on_ground,
                 diagnostics.controller_ids,
@@ -392,6 +398,29 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
             )
             monitor.check(evidence)
             row = {
+                # External R28 ruler: actual worker submissions, not retry totals.
+                "planning_submissions": tuple(
+                    item.identity.key for item in planner.activity[planner_activity_start:]
+                    if item.operation == "submit"
+                ),
+                "goal_revision_requests": tuple(
+                    {"revision": event.goal_revision,
+                     "movement_tick": movement_tick_before}
+                    for event in events if event.fired_at == tick and event.goal_revision is not None
+                ),
+                "goal_position": context.goal_position,
+                "goal_satisfied": all(
+                    lower <= value <= upper for lower, value, upper in zip(
+                        context.goal_state.region.as_tuple()[:3],
+                        backend.state.position,
+                        context.goal_state.region.as_tuple()[3:],
+                    )
+                ),
+                "input_window": None if input_record is None else {
+                    "requested_first_tick": input_record.requested_first_tick,
+                    "latest_allowed_first_tick": input_record.latest_allowed_first_tick,
+                    "requested_last_tick": input_record.requested_last_tick,
+                },
                 "async_events": tuple(asdict(event) for event in monitor.async_monitor.last_events),
                 "async_coverage": dict(monitor.async_monitor.coverage),
                 "loop_tick": tick, "tick": backend.movement_tick,

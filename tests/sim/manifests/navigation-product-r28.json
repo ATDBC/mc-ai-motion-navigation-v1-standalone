@@ -1,0 +1,42 @@
+{
+  "schema_version": "mc2p.navigation-product-manifest.v1",
+  "baseline_commit": "56bd120",
+  "purpose": "固定布局下的入口与输入扰动基线；不推算任意地图成功概率",
+  "seed_start": 0,
+  "seed_count": 200,
+  "ground_tick_tolerance": 2,
+  "directions": ["south", "east", "north", "west"],
+  "entry_speeds_blocks_per_second": [0.0, 1.0, 3.0],
+  "entry_offsets": [0.0, 0.05, 0.12, 0.30],
+  "groups": [
+    {"id": "point-normal", "family": "point", "cases": ["flat", "turn", "wall_detour"], "late_probability": 0.0, "strict": false},
+    {"id": "point-late", "family": "point", "cases": ["flat", "turn", "wall_detour"], "late_probability": 0.2, "strict": false},
+    {"id": "height-normal", "family": "height", "cases": ["half_steps", "path", "stairs_down"], "late_probability": 0.0, "strict": true},
+    {"id": "height-late", "family": "height", "cases": ["half_steps", "path", "stairs_down"], "late_probability": 0.2, "strict": true},
+    {"id": "target-normal", "family": "target", "cases": ["target_away", "target_lateral", "target_repeat"], "late_probability": 0.0, "strict": false},
+    {"id": "target-late", "family": "target", "cases": ["target_away", "target_lateral", "target_repeat"], "late_probability": 0.2, "strict": false},
+    {"id": "drop-normal", "family": "strict_drop", "cases": ["drop_2", "drop_5"], "late_probability": 0.0, "strict": true},
+    {"id": "drop-late", "family": "strict_drop", "cases": ["drop_2", "drop_5"], "late_probability": 0.2, "strict": true}
+  ],
+  "budgets": {
+    "finite_max_ticks": 400,
+    "finite_task_recoveries": 12,
+    "follow_probe": {
+      "duration_seconds": 1800,
+      "recovery_window_seconds": 60,
+      "recoveries_per_window": 12,
+      "single_recovery_seconds": 10,
+      "continuous_no_progress_seconds": 30,
+      "periodic_recovery_spacing_seconds": 90,
+      "burst_recovery_count": 13,
+      "status": "pending_R28_1_and_4; not implemented or passed"
+    }
+  },
+  "coverage_limits": [
+    "inline worker timing is deterministic and is not process scheduling evidence",
+    "target cases are navigation goal-revision commands, not entities or a completed follow skill",
+    "external-motion recovery belongs to the omitted C1 outer driver; component baseline does not claim that capability",
+    "Fabric sensing, damage packets and actual application deadlines need separate representative evidence",
+    "200 seeds describe frozen layouts and perturbations; they are not 200 independent terrain layouts"
+  ]
+}

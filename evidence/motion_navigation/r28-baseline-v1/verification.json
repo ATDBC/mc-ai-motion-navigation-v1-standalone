@@ -1,0 +1,25 @@
+{
+  "schema_version": "mc2p.r28-baseline-verification.v1",
+  "motion_nav_tests": {
+    "passed": 862,
+    "failed": 0,
+    "elapsed_seconds": 144.309
+  },
+  "metric_tests": {
+    "passed": 15,
+    "failed": 0
+  },
+  "export_dependency_and_metric_tests": {
+    "passed": 24,
+    "failed": 0
+  },
+  "serial_parallel": {
+    "pairs": 16,
+    "equivalent": 16,
+    "differences": [],
+    "scope": "behaviour-preserving migration; not a behaviour-changing statistical release gate"
+  },
+  "long_follow_probe": "not implemented or run; R28-1/4 pending",
+  "fabric_this_batch": "not run",
+  "batch": 1
+}

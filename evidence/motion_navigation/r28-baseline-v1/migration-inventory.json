@@ -1,0 +1,2809 @@
+{
+  "modules": {
+    "mc2p/motion_nav/async_work.py": {
+      "lines": 239,
+      "sha256": "07aca1ee3c6282feb5cd31c02cc4ccba693187ffe27b2380f58e3ae052029f14",
+      "branches": 22,
+      "self_assignments": 15
+    },
+    "mc2p/motion_nav/execution_supervisor.py": {
+      "lines": 347,
+      "sha256": "83b69dd1f90a7fad309eaa270059e6b7a7705c646830a85e7bd73dacde96b890",
+      "branches": 33,
+      "self_assignments": 42
+    },
+    "mc2p/motion_nav/motion_coordination.py": {
+      "lines": 1263,
+      "sha256": "1a6247c67fe57993b783cdeb4097610a2755c86d4beb87d8d02ccf5f181d2cda",
+      "branches": 118,
+      "self_assignments": 76
+    },
+    "mc2p/motion_nav/navigation_handoff.py": {
+      "lines": 152,
+      "sha256": "c2d82f6c98dc73767d0a3798b0370254b33f1f1a08b1565728b4865087272c28",
+      "branches": 14,
+      "self_assignments": 9
+    },
+    "mc2p/motion_nav/navigation_lifecycle.py": {
+      "lines": 234,
+      "sha256": "4915b3eb56a00e8c415dc8660b9d2898fb610c41e413bb0b47362bb1950e6ad7",
+      "branches": 12,
+      "self_assignments": 6
+    },
+    "mc2p/motion_nav/navigation_owners.py": {
+      "lines": 124,
+      "sha256": "f4c5a3f4b1f7f8b5830c20c874beef7b67829da203bfb83688c5649e74dc98c5",
+      "branches": 7,
+      "self_assignments": 15
+    },
+    "mc2p/motion_nav/navigation_session.py": {
+      "lines": 4395,
+      "sha256": "b6c415bc48bbebcc4ac087debac7d35ff8bce93c30573b15a852856ee8064aa5",
+      "branches": 447,
+      "self_assignments": 228
+    },
+    "mc2p/motion_nav/planning_coordinator.py": {
+      "lines": 1875,
+      "sha256": "056e2c69b774f62d583650f79a3e012c474f562b845cbe7a8d667eb8589cd16f",
+      "branches": 164,
+      "self_assignments": 117
+    },
+    "mc2p/motion_nav/retry_ledger.py": {
+      "lines": 314,
+      "sha256": "994a7fcb5cd834044080f76f2475ab8ddc7e1e899d7c33aa1ea40091488eaa23",
+      "branches": 39,
+      "self_assignments": 34
+    },
+    "mc2p/motion_nav/safe_ground_control.py": {
+      "lines": 122,
+      "sha256": "ac7b827bc4ce9f3e52a5cc22ab72cd2daa4508fb3bac2f4f79f0615f590ea095",
+      "branches": 13,
+      "self_assignments": 0
+    },
+    "mc2p/skills/navigation_session_driver.py": {
+      "lines": 563,
+      "sha256": "4fe8053d477f036a7284d29d96f5bb865d659ed70f96b93e37690da203d133e4",
+      "branches": 56,
+      "self_assignments": 51
+    },
+    "mc2p/skills/moving_melee_driver.py": {
+      "lines": 1349,
+      "sha256": "ae1b5232eeecb8e2a2ceb2d99e88fe5901bae1e7fdc5d3eca4527ead3e68ef98",
+      "branches": 148,
+      "self_assignments": 228
+    }
+  },
+  "functions": [
+    {
+      "id": "motion_coordination._accept_result",
+      "file": "mc2p/motion_nav/motion_coordination.py",
+      "line": 532,
+      "end_line": 666,
+      "step": "3",
+      "current_owner": "motion_coordination",
+      "target_owner": "共同异步接纳 + 动作领域核验",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 546,
+          "kind": "If",
+          "condition": "not (identity_matched or legacy_matched)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 557,
+          "kind": "If",
+          "condition": "identity_matched and self._work.check(result.work_identity, self._clock()) is not WorkCheck.READY",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 584,
+          "kind": "If",
+          "condition": "negative_stale and self._solve_basis_job is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 593,
+          "kind": "If",
+          "condition": "negative_stale",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 619,
+          "kind": "If",
+          "condition": "identity_matched and self._work.check(result.work_identity, self._clock()) is not WorkCheck.READY",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 622,
+          "kind": "If",
+          "condition": "prepared.status is not GapPreparationStatus.READY",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 653,
+          "kind": "If",
+          "condition": "identity_matched and (not self._work.try_apply(result.work_identity, accepted_ns))",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 547,
+          "kind": "If",
+          "condition": "result.work_identity is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 590,
+          "kind": "If",
+          "condition": "current_rejection is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 599,
+          "kind": "If",
+          "condition": "type(action) is JumpGapSegment",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 631,
+          "kind": "If",
+          "condition": "action_index > self.executor.action_index",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 636,
+          "kind": "If",
+          "condition": "prepared.retryable",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 643,
+          "kind": "If",
+          "condition": "registration.verdict is not RetryVerdict.RETRY or not registration.first_seen",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "motion_coordination._retire_work",
+      "file": "mc2p/motion_nav/motion_coordination.py",
+      "line": 803,
+      "end_line": 813,
+      "step": "3",
+      "current_owner": "motion_coordination",
+      "target_owner": "共同异步接纳 + 动作领域核验",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 805,
+          "kind": "If",
+          "condition": "identity is not None",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "motion_coordination._record_admission",
+      "file": "mc2p/motion_nav/motion_coordination.py",
+      "line": 815,
+      "end_line": 841,
+      "step": "3",
+      "current_owner": "motion_coordination",
+      "target_owner": "共同异步接纳 + 动作领域核验",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 825,
+          "kind": "If",
+          "condition": "identity is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 839,
+          "kind": "If",
+          "condition": "len(self._admission_records) >= 64",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session.update_goal",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 1395,
+      "end_line": 1533,
+      "step": "1",
+      "current_owner": "navigation_session",
+      "target_owner": "NavigationHandoffCoordinator + GoalRequestLedger",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 1405,
+          "kind": "If",
+          "condition": "self._frame is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1407,
+          "kind": "If",
+          "condition": "task_id is not None and (self._retry_ledger is None or self._retry_ledger.task_id != task_id)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1410,
+          "kind": "If",
+          "condition": "task_id is not None and (self._risk_ledger is None or self._risk_ledger.task_id != task_id)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1413,
+          "kind": "If",
+          "condition": "self._request is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1435,
+          "kind": "If",
+          "condition": "type(self._request) is not SurfacePlanningRequest",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1437,
+          "kind": "If",
+          "condition": "goal_id != self._request.goal_id or type(goal_revision) is not int or goal_revision <= self._request.goal_revision or (type(goal_state) is not GoalState)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1443,
+          "kind": "If",
+          "condition": "damage_budget is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1452,
+          "kind": "If",
+          "condition": "type(self._task_damage_budget) is not TaskDamageBudget",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1466,
+          "kind": "If",
+          "condition": "goal_node is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1482,
+          "kind": "If",
+          "condition": "self._current_risk_action_has_started()",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1502,
+          "kind": "If",
+          "condition": "start_node is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1523,
+          "kind": "If",
+          "condition": "self._state is NavigationSessionState.STOPPING",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1414,
+          "kind": "If",
+          "condition": "self._pending_goal is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1419,
+          "kind": "If",
+          "condition": "goal_id != pending.goal_id or type(goal_revision) is not int or goal_revision <= pending.goal_revision or (type(goal_state) is not GoalState)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1445,
+          "kind": "If",
+          "condition": "self._risk_ledger is not None and self._risk_ledger.budget != damage_budget",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1468,
+          "kind": "If",
+          "condition": "self._has_body_owner() or self._state is NavigationSessionState.STOPPING",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1493,
+          "kind": "If",
+          "condition": "self._planning_coordinator is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1504,
+          "kind": "If",
+          "condition": "self._has_body_owner() or self._state is NavigationSessionState.STOPPING",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session._stage_goal_revision_for_body_release",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 3515,
+      "end_line": 3533,
+      "step": "1",
+      "current_owner": "navigation_session",
+      "target_owner": "NavigationHandoffCoordinator",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 3526,
+          "kind": "If",
+          "condition": "route_control is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3530,
+          "kind": "If",
+          "condition": "not probe_stopping",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session._resume_pending_goal",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 3535,
+      "end_line": 3621,
+      "step": "1",
+      "current_owner": "navigation_session",
+      "target_owner": "NavigationHandoffCoordinator",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 3538,
+          "kind": "If",
+          "condition": "pending is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3540,
+          "kind": "If",
+          "condition": "self._request is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3561,
+          "kind": "If",
+          "condition": "self._handoff.stop_request is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3595,
+          "kind": "If",
+          "condition": "goal_node is None or start_node is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3575,
+          "kind": "If",
+          "condition": "resolution.destination is HandoffDestination.WAIT_FOR_INFORMATION",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3582,
+          "kind": "If",
+          "condition": "resolution.destination is HandoffDestination.FAIL",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3589,
+          "kind": "If",
+          "condition": "resolution.destination is not HandoffDestination.REPLAN",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3597,
+          "kind": "If",
+          "condition": "missing",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session.cancel",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 3088,
+      "end_line": 3119,
+      "step": "1",
+      "current_owner": "navigation_session",
+      "target_owner": "NavigationHandoffCoordinator",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 3089,
+          "kind": "If",
+          "condition": "type(reason) is not str or not reason.strip()",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3091,
+          "kind": "If",
+          "condition": "self._closed",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3095,
+          "kind": "If",
+          "condition": "self._planning_coordinator is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3097,
+          "kind": "If",
+          "condition": "self._request_probe_stop(StopCause.CANCELLED, terminal=NavigationSessionState.CANCELLED, terminal_reason=reason.strip())",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3103,
+          "kind": "If",
+          "condition": "self._executor is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3110,
+          "kind": "If",
+          "condition": "self._planning_coordinator is not None",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session.close",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 3121,
+      "end_line": 3147,
+      "step": "1/5",
+      "current_owner": "navigation_session",
+      "target_owner": "NavigationHandoffCoordinator",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 3122,
+          "kind": "If",
+          "condition": "self._closed",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3127,
+          "kind": "If",
+          "condition": "self._state in {NavigationSessionState.COMPLETE, NavigationSessionState.CANCELLED, NavigationSessionState.FAILED, NavigationSessionState.CLOSED}",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3138,
+          "kind": "If",
+          "condition": "self._request_probe_stop(StopCause.CLOSED, terminal=NavigationSessionState.CLOSED, terminal_reason='closed')",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3143,
+          "kind": "If",
+          "condition": "self._executor is not None",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session._finalize_close",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 3183,
+      "end_line": 3203,
+      "step": "1/5",
+      "current_owner": "navigation_session",
+      "target_owner": "NavigationLifecycle",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 3184,
+          "kind": "If",
+          "condition": "self._closed",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3188,
+          "kind": "If",
+          "condition": "self._planning_coordinator is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3191,
+          "kind": "If",
+          "condition": "self._owns_planner_worker and hasattr(self._planner, 'close')",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3193,
+          "kind": "If",
+          "condition": "self._motion_worker is not None and self._owns_motion_worker",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3198,
+          "kind": "If",
+          "condition": "self._state not in {NavigationSessionState.COMPLETE, NavigationSessionState.CANCELLED, NavigationSessionState.FAILED}",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session.handle_internal_contract_failure",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 645,
+      "end_line": 670,
+      "step": "1/5",
+      "current_owner": "navigation_session",
+      "target_owner": "NavigationHandoffCoordinator",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 648,
+          "kind": "If",
+          "condition": "self._state in {NavigationSessionState.COMPLETE, NavigationSessionState.CANCELLED, NavigationSessionState.FAILED, NavigationSessionState.CLOSED}",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 655,
+          "kind": "If",
+          "condition": "self._edge_probe is not None and self._edge_probe.owned",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 662,
+          "kind": "If",
+          "condition": "self._executor is not None",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session.observe",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 1951,
+      "end_line": 2196,
+      "step": "1",
+      "current_owner": "navigation_session",
+      "target_owner": "按域：Planning/Information/ExecutionSupervisor/Handoff",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 1956,
+          "kind": "If",
+          "condition": "type(frame) is not NavigationFrame or type(changed_cells) is not tuple",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1958,
+          "kind": "If",
+          "condition": "self._closed",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1965,
+          "kind": "If",
+          "condition": "self._frame is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1982,
+          "kind": "If",
+          "condition": "self._state in {NavigationSessionState.CLOSED, NavigationSessionState.FAILED, NavigationSessionState.COMPLETE, NavigationSessionState.CANCELLED}",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1998,
+          "kind": "If",
+          "condition": "self._planning_coordinator is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2001,
+          "kind": "If",
+          "condition": "self._required_interaction is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2010,
+          "kind": "If",
+          "condition": "interaction_invalid",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2047,
+          "kind": "If",
+          "condition": "landing_acquisition_pending and self._edge_probe is not None and (self._edge_probe.state is LandingEdgeProbeState.HOLDING_EDGE)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2057,
+          "kind": "If",
+          "condition": "landing_acquisition_pending",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2071,
+          "kind": "If",
+          "condition": "landing_acquisition_pending",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2091,
+          "kind": "If",
+          "condition": "planning_need is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2107,
+          "kind": "If",
+          "condition": "planning_need is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2136,
+          "kind": "If",
+          "condition": "(self._state is NavigationSessionState.NEEDS_INFORMATION or self._pending_goal is not None) and (information_updated or pending_body_landed)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2171,
+          "kind": "If",
+          "condition": "route is not None and set(route.action_route.dependencies).intersection(changed_cells)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1966,
+          "kind": "If",
+          "condition": "frame.session != self._frame.session",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1971,
+          "kind": "If",
+          "condition": "frame.body.sequence_id < self._frame.body.sequence_id",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1973,
+          "kind": "If",
+          "condition": "frame.body.sequence_id == self._frame.body.sequence_id",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2014,
+          "kind": "If",
+          "condition": "planning is not None and planning.interaction_was_confirmed(interaction_id)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2064,
+          "kind": "If",
+          "condition": "probe_acquired_evidence",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2114,
+          "kind": "If",
+          "condition": "outcome.kind is PlanningUpdateKind.FAILED",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2120,
+          "kind": "If",
+          "condition": "information_updated and self._retry_ledger is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2139,
+          "kind": "If",
+          "condition": "self._pending_goal is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2175,
+          "kind": "If",
+          "condition": "departure is not None and departure.status is ActionPreconditionStatus.REJECTED",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2021,
+          "kind": "If",
+          "condition": "planning.request is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2023,
+          "kind": "If",
+          "condition": "update.kind is PlanningUpdateKind.FAILED",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2052,
+          "kind": "If",
+          "condition": "self._edge_probe.has_observed_evidence(frame, result.position)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2129,
+          "kind": "If",
+          "condition": "progressed",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2141,
+          "kind": "If",
+          "condition": "self._has_body_owner()",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2151,
+          "kind": "If",
+          "condition": "self._request is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2181,
+          "kind": "If",
+          "condition": "self._edge_probe is not None and self._edge_probe.owned",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2152,
+          "kind": "If",
+          "condition": "coordinator_progressed",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2160,
+          "kind": "If",
+          "condition": "self._retry_ledger is not None",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session.propose",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 2198,
+      "end_line": 2976,
+      "step": "1/5",
+      "current_owner": "navigation_session",
+      "target_owner": "按域：Planning/Information/ExecutionSupervisor/Handoff",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 2208,
+          "kind": "If",
+          "condition": "type(frame) is not NavigationFrame",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2210,
+          "kind": "If",
+          "condition": "type(deadline_ns) is not int or deadline_ns <= self._clock()",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2212,
+          "kind": "If",
+          "condition": "(conditioned_yaw_delta_degrees is None) != (conditioned_look_intent_id is None)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2217,
+          "kind": "If",
+          "condition": "conditioned_yaw_delta_degrees is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2230,
+          "kind": "If",
+          "condition": "self._executor is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2232,
+          "kind": "If",
+          "condition": "self._edge_probe is not None and self._edge_probe.state is LandingEdgeProbeState.STOPPING",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2318,
+          "kind": "If",
+          "condition": "self._probe_mode_exit_pending",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2327,
+          "kind": "If",
+          "condition": "self._state is NavigationSessionState.STOPPING and self._pending_goal is not None and (not self._has_body_owner())",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2340,
+          "kind": "If",
+          "condition": "self._state in {NavigationSessionState.CLOSED, NavigationSessionState.FAILED, NavigationSessionState.COMPLETE, NavigationSessionState.CANCELLED}",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2347,
+          "kind": "If",
+          "condition": "self._edge_probe is not None and self._edge_probe.positioning_entry",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2364,
+          "kind": "If",
+          "condition": "self._edge_probe is not None and self._edge_probe.releasing",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2424,
+          "kind": "If",
+          "condition": "self._local_goal_request_id is not None and self._executor is None and (not self._task_stop_requested())",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2428,
+          "kind": "If",
+          "condition": "not self._task_stop_requested()",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2430,
+          "kind": "If",
+          "condition": "self._active_route is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2488,
+          "kind": "If",
+          "condition": "not route_is_superseded",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2496,
+          "kind": "If",
+          "condition": "route_is_superseded and frame.body.is_on_ground and (current_executor_action is not None) and (type(current_executor_action) is not WalkSegment) and (not self._executor.current_verified_action_started())",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2512,
+          "kind": "If",
+          "condition": "precondition is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2573,
+          "kind": "If",
+          "condition": "executor_route is not None and 0 <= self._executor.action_index < len(executor_route.actions)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2585,
+          "kind": "If",
+          "condition": "conditioned_ordinary_walk",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2590,
+          "kind": "If",
+          "condition": "self._coordinator is not None and state_anchor is not None and (input_ledger is not None)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2614,
+          "kind": "If",
+          "condition": "self._supervisor.has_pending_route and (not decision.submit_input)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2694,
+          "kind": "If",
+          "condition": "route_control is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2710,
+          "kind": "If",
+          "condition": "self._pending_retry is not None and decision.state in terminal_decisions",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2912,
+          "kind": "If",
+          "condition": "self._state is NavigationSessionState.STOPPING and (self._task_stop_requested() or self._restart_after_active_terminal) and (self._executor is not None) and (self._edge_probe is None)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2931,
+          "kind": "If",
+          "condition": "self._close_requested and self._executor is None and (self._edge_probe is None)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2936,
+          "kind": "If",
+          "condition": "self._state is NavigationSessionState.STOPPING and self._executor is not None and (self._recovery_wait_capacity_exhausted or self._recovery_wait_status in {WaitVerdict.EXHAUSTED_TICKS, WaitVerdict.EXHAUSTED_CLOCK})",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2950,
+          "kind": "If",
+          "condition": "self._edge_probe is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2218,
+          "kind": "If",
+          "condition": "type(conditioned_yaw_delta_degrees) not in (int, float) or not math.isfinite(conditioned_yaw_delta_degrees)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2237,
+          "kind": "If",
+          "condition": "decision.handoff.disposition is HandoffDisposition.QUIESCENT",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2319,
+          "kind": "If",
+          "condition": "frame.body.is_sneaking or frame.body.pose == 'crouching'",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2333,
+          "kind": "If",
+          "condition": "handoff.disposition is HandoffDisposition.QUIESCENT",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2350,
+          "kind": "If",
+          "condition": "not self._edge_probe.owned",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2371,
+          "kind": "If",
+          "condition": "self._edge_probe.state is LandingEdgeProbeState.STOPPING",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2377,
+          "kind": "If",
+          "condition": "not self._edge_probe.finish_release(frame)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2383,
+          "kind": "If",
+          "condition": "self._active_route is not None and self._executor is not None and self._edge_probe.belongs_to_action(self._active_route.route_id, self._active_route.route_revision, self._executor.action_index)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2431,
+          "kind": "If",
+          "condition": "self._state is NavigationSessionState.STOPPING and self._task_stop_requested()",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2439,
+          "kind": "If",
+          "condition": "conditioned_look_intent_id is not None and self._edge_probe is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2441,
+          "kind": "If",
+          "condition": "self._edge_probe is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2455,
+          "kind": "If",
+          "condition": "self._edge_probe is not None and self._edge_probe.owned",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2470,
+          "kind": "If",
+          "condition": "information_movement != MovementV1()",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2513,
+          "kind": "If",
+          "condition": "precondition.status is ActionPreconditionStatus.NEEDS_ACQUISITION",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2535,
+          "kind": "If",
+          "condition": "precondition.status is ActionPreconditionStatus.NEEDS_INFORMATION",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2549,
+          "kind": "If",
+          "condition": "precondition.status is ActionPreconditionStatus.REJECTED",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2618,
+          "kind": "If",
+          "condition": "decision.state in {ActionRouteState.FAILED, ActionRouteState.BLOCKED, ActionRouteState.UNSUPPORTED, ActionRouteState.INPUT_LOST, ActionRouteState.NEEDS_REPLAN}",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2629,
+          "kind": "If",
+          "condition": "incumbent.coordinator is not None and state_anchor is not None and (input_ledger is not None)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2647,
+          "kind": "If",
+          "condition": "incumbent_decision.state in {ActionRouteState.COMPLETE, ActionRouteState.CANCELLED, ActionRouteState.FAILED, ActionRouteState.BLOCKED, ActionRouteState.UNSUPPORTED, ActionRouteState.INPUT_LOST, ActionRouteState.NEEDS_REPLAN}",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2680,
+          "kind": "If",
+          "condition": "self._risk_failure_reason is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2713,
+          "kind": "If",
+          "condition": "self._state is NavigationSessionState.STOPPING and self._task_stop_requested()",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2918,
+          "kind": "If",
+          "condition": "self._recovery_wait_capacity_exhausted or self._recovery_wait_status in {WaitVerdict.EXHAUSTED_TICKS, WaitVerdict.EXHAUSTED_CLOCK}",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2924,
+          "kind": "If",
+          "condition": "self._state in {NavigationSessionState.FAILED, NavigationSessionState.CANCELLED, NavigationSessionState.COMPLETE, NavigationSessionState.CLOSED} and self._retry_ledger is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2947,
+          "kind": "If",
+          "condition": "recovery_movement is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2951,
+          "kind": "If",
+          "condition": "decision.submit_input and decision.verified_command_index is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2238,
+          "kind": "If",
+          "condition": "self._retry_ledger is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2248,
+          "kind": "If",
+          "condition": "terminal is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2391,
+          "kind": "If",
+          "condition": "probe.acquisition_id is not None and probe.route_id is not None and (probe.route_revision is not None) and (probe.action_index is not None) and (probe.evidence_sequence_id is not None)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2405,
+          "kind": "If",
+          "condition": "self._state is NavigationSessionState.STOPPING",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2416,
+          "kind": "If",
+          "condition": "self._retry_ledger is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2443,
+          "kind": "If",
+          "condition": "not self._edge_probe.owned",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2459,
+          "kind": "If",
+          "condition": "information_look is not None and self._edge_probe.state is LandingEdgeProbeState.HOLDING_EDGE",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2514,
+          "kind": "If",
+          "condition": "self._begin_action_acquisition(precondition, frame)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2550,
+          "kind": "If",
+          "condition": "self._edge_probe is not None and self._edge_probe.owned and self._request_probe_stop(StopCause.DEPENDENCY_CHANGED, terminal=NavigationSessionState.FAILED, terminal_reason=precondition.reason.value)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2653,
+          "kind": "If",
+          "condition": "self._edge_probe is not None and self._edge_probe.owned",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2665,
+          "kind": "If",
+          "condition": "release.disposition is HandoffDisposition.QUIESCENT",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2715,
+          "kind": "If",
+          "condition": "decision.state in {ActionRouteState.CANCELLED, ActionRouteState.COMPLETE}",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2765,
+          "kind": "If",
+          "condition": "decision.state is ActionRouteState.INPUT_LOST",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2957,
+          "kind": "If",
+          "condition": "self._edge_probe.active",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2258,
+          "kind": "If",
+          "condition": "route_control is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2270,
+          "kind": "If",
+          "condition": "stop_cause is StopCause.ACQUISITION_TIMED_OUT",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2418,
+          "kind": "If",
+          "condition": "wait_id is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2517,
+          "kind": "If",
+          "condition": "information_look is not None and self._edge_probe is not None and (self._edge_probe.state is LandingEdgeProbeState.HOLDING_EDGE)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2718,
+          "kind": "If",
+          "condition": "self._clear_active_execution()",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2739,
+          "kind": "If",
+          "condition": "decision.state in {ActionRouteState.FAILED, ActionRouteState.BLOCKED, ActionRouteState.UNSUPPORTED, ActionRouteState.INPUT_LOST}",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2766,
+          "kind": "If",
+          "condition": "self._clear_active_execution()",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2774,
+          "kind": "If",
+          "condition": "self._edge_probe is not None and self._edge_probe.owned and (decision.state in {ActionRouteState.FAILED, ActionRouteState.BLOCKED, ActionRouteState.UNSUPPORTED})",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2272,
+          "kind": "If",
+          "condition": "route_control is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2278,
+          "kind": "If",
+          "condition": "self._pending_retry is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2719,
+          "kind": "If",
+          "condition": "self._pending_probe_terminal is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2743,
+          "kind": "If",
+          "condition": "self._clear_active_execution()",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2784,
+          "kind": "If",
+          "condition": "not self._request_probe_stop(StopCause.MOTION_UNSOLVABLE, terminal=NavigationSessionState.FAILED, terminal_reason=decision.reason_code)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2789,
+          "kind": "If",
+          "condition": "self._restart_after_active_terminal and decision.state in terminal_decisions",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2283,
+          "kind": "If",
+          "condition": "self._active_route is not None and self._request is not None and (self._active_route.source_request_id != self._request.request_id)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2723,
+          "kind": "If",
+          "condition": "self._close_requested",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2744,
+          "kind": "If",
+          "condition": "self._pending_probe_terminal is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2791,
+          "kind": "If",
+          "condition": "self._clear_active_execution()",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2823,
+          "kind": "If",
+          "condition": "active_request_id != current_request_id",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2294,
+          "kind": "If",
+          "condition": "self._supervisor.has_pending_route",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2793,
+          "kind": "If",
+          "condition": "self._pending_goal is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2807,
+          "kind": "If",
+          "condition": "self._edge_probe is not None and self._edge_probe.owned and self._request_probe_stop(StopCause.ROUTE_REPLACED)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2824,
+          "kind": "If",
+          "condition": "decision.state in terminal_decisions",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2866,
+          "kind": "If",
+          "condition": "self._interaction_approach_pending and decision.state is ActionRouteState.COMPLETE",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2795,
+          "kind": "If",
+          "condition": "self._state is NavigationSessionState.STOPPING",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2825,
+          "kind": "If",
+          "condition": "self._clear_active_execution()",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2868,
+          "kind": "If",
+          "condition": "self._clear_active_execution()",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2879,
+          "kind": "If",
+          "condition": "decision.state is ActionRouteState.NEEDS_REPLAN",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2830,
+          "kind": "If",
+          "condition": "replacement_failure is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2845,
+          "kind": "If",
+          "condition": "self._edge_probe is not None and self._edge_probe.owned and self._request_probe_stop(StopCause.MOTION_UNSOLVABLE)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2892,
+          "kind": "If",
+          "condition": "registration.first_seen",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2897,
+          "kind": "If",
+          "condition": "self._pending_retry is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 2904,
+          "kind": "If",
+          "condition": "self._state is NavigationSessionState.STOPPING and self._edge_probe is not None and self._edge_probe.ready and decision.submit_input and (decision.movement != MovementV1())",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session._proposal",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 3964,
+      "end_line": 4132,
+      "step": "1/5",
+      "current_owner": "navigation_session",
+      "target_owner": "Session只读报告",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 3980,
+          "kind": "If",
+          "condition": "self._source is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3981,
+          "kind": "If",
+          "condition": "self._frame is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3985,
+          "kind": "If",
+          "condition": "route_decision is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3989,
+          "kind": "If",
+          "condition": "route_decision is not None and (not route_decision.submit_input) and (not retain_body_input) and (self._edge_probe is None)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 4002,
+          "kind": "If",
+          "condition": "expires <= now",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 4013,
+          "kind": "If",
+          "condition": "route_decision is not None and executor_route is not None and (0 <= route_decision.action_index < len(executor_route.actions))",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 4089,
+          "kind": "If",
+          "condition": "information_look is not None",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session.diagnostics",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 885,
+      "end_line": 1017,
+      "step": "1/5",
+      "current_owner": "navigation_session",
+      "target_owner": "Session只读报告",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 890,
+          "kind": "If",
+          "condition": "self._edge_probe is not None and self._edge_probe.owned",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 902,
+          "kind": "If",
+          "condition": "self._executor is not None and (self._executor.state in {ActionRouteState.RUNNING, ActionRouteState.CANCELLING} or retained_route)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 914,
+          "kind": "If",
+          "condition": "self._edge_probe is not None and self._edge_probe.owned",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 922,
+          "kind": "If",
+          "condition": "self._control_anchor is not None and self._control_anchor.confirmed_control_tick_range is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 926,
+          "kind": "If",
+          "condition": "progress_owner is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 909,
+          "kind": "If",
+          "condition": "route is not None and 0 <= index < len(route.actions)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 919,
+          "kind": "If",
+          "condition": "self._active_route is not None",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session._request_probe_stop",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 3450,
+      "end_line": 3476,
+      "step": "1",
+      "current_owner": "navigation_session",
+      "target_owner": "ExecutionSupervisor",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 3455,
+          "kind": "If",
+          "condition": "not self._supervisor.request_probe_stop(cause)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3457,
+          "kind": "If",
+          "condition": "self._retry_ledger is not None and self._frame is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3472,
+          "kind": "If",
+          "condition": "terminal is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3462,
+          "kind": "Try",
+          "condition": null,
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session._finish_pending_probe_terminal",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 3493,
+      "end_line": 3513,
+      "step": "1",
+      "current_owner": "navigation_session",
+      "target_owner": "NavigationHandoffCoordinator",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 3507,
+          "kind": "If",
+          "condition": "terminal_action is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3512,
+          "kind": "If",
+          "condition": "terminal is NavigationSessionState.CLOSED",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session._wait_for_active_terminal",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 3682,
+      "end_line": 3691,
+      "step": "1",
+      "current_owner": "navigation_session",
+      "target_owner": "NavigationHandoffCoordinator",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 3685,
+          "kind": "If",
+          "condition": "self._executor is None",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session._fail_planning_or_preserve_incumbent",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 3279,
+      "end_line": 3299,
+      "step": "1/4",
+      "current_owner": "navigation_session",
+      "target_owner": "NavigationHandoffCoordinator",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 3281,
+          "kind": "If",
+          "condition": "self._planning_coordinator is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3287,
+          "kind": "If",
+          "condition": "current is not None and active is not None and (active.source_request_id != current.request_id)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3292,
+          "kind": "If",
+          "condition": "route_control is not None",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session._reissue_request_from_current",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 3693,
+      "end_line": 3772,
+      "step": "1/4",
+      "current_owner": "navigation_session",
+      "target_owner": "PlanningCoordinator",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 3705,
+          "kind": "If",
+          "condition": "request is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3712,
+          "kind": "If",
+          "condition": "retry_cause is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3731,
+          "kind": "If",
+          "condition": "planning.request is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3734,
+          "kind": "If",
+          "condition": "type(request) is SurfacePlanningRequest and surface_search_need(request) is SurfaceSearchNeed.SAME_SUPPORT_LOCAL_GOAL",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3744,
+          "kind": "If",
+          "condition": "update.kind is PlanningUpdateKind.FAILED",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3746,
+          "kind": "If",
+          "condition": "self._wait_for_active_terminal((), 'restart_waiting_for_safe_terminal')",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3751,
+          "kind": "If",
+          "condition": "self._state is NavigationSessionState.STOPPING",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3753,
+          "kind": "If",
+          "condition": "handoff is not None and handoff.disposition is HandoffDisposition.QUIESCENT and (handoff.world_session == frame.session) and (handoff.observation_sequence_id == frame.body.sequence_id)",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session._resolve_pending_retry",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 1923,
+      "end_line": 1949,
+      "step": "1/4",
+      "current_owner": "navigation_session",
+      "target_owner": "RetryLedger + Handoff",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 1926,
+          "kind": "If",
+          "condition": "not self._clear_active_execution()",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1940,
+          "kind": "If",
+          "condition": "verdict is RetryVerdict.RETRY",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1927,
+          "kind": "If",
+          "condition": "self._edge_probe is not None and self._edge_probe.owned and self._request_probe_stop(StopCause.DEPENDENCY_CHANGED)",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session._clear_active_execution",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 3439,
+      "end_line": 3448,
+      "step": "1",
+      "current_owner": "navigation_session",
+      "target_owner": "ExecutionSupervisor",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 3440,
+          "kind": "If",
+          "condition": "self._frame is None and self._supervisor.route is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3442,
+          "kind": "If",
+          "condition": "self._frame is not None and (not self._supervisor.retire_route(self._frame, self._control_ledger, self._control_anchor))",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session._retire_route",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 3677,
+      "end_line": 3680,
+      "step": "1",
+      "current_owner": "navigation_session",
+      "target_owner": "ExecutionSupervisor",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 3678,
+          "kind": "If",
+          "condition": "self._executor is not None",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session._activate_planning_route",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 3857,
+      "end_line": 3940,
+      "step": "1",
+      "current_owner": "navigation_session",
+      "target_owner": "ExecutionSupervisor",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 3865,
+          "kind": "If",
+          "condition": "current is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3868,
+          "kind": "If",
+          "condition": "self._route_expected_damage_points(route) > current_damage_budget.maximum_expected_damage_points + 1e-09",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3877,
+          "kind": "If",
+          "condition": "self._active_route is not None and self._active_route.source_request_id != current.request_id",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3887,
+          "kind": "If",
+          "condition": "self._edge_probe is not None and (not self._edge_probe.ready)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3898,
+          "kind": "If",
+          "condition": "any((type(action) in {JumpGapSegment, JumpUpSegment, ControlledDropSegment} for action in route.action_route.actions))",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3919,
+          "kind": "If",
+          "condition": "not self._supervisor.offer_route(RouteControl(route, executor, motion_coordinator), frame, input_ledger, state_anchor)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3937,
+          "kind": "If",
+          "condition": "self._planning_coordinator is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3880,
+          "kind": "If",
+          "condition": "self._executor.requires_safe_handoff(frame)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3901,
+          "kind": "If",
+          "condition": "self._motion_worker is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3924,
+          "kind": "If",
+          "condition": "incumbent is not None",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session._replace_request",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 3205,
+      "end_line": 3277,
+      "step": "3",
+      "current_owner": "navigation_session",
+      "target_owner": "GoalRequestLedger + PlanningCoordinator",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 3213,
+          "kind": "If",
+          "condition": "type(request) is SurfacePlanningRequest and surface_search_need(request) is SurfaceSearchNeed.SAME_SUPPORT_LOCAL_GOAL",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3228,
+          "kind": "If",
+          "condition": "self._edge_probe is not None and (not self._edge_probe.belongs_to(request.goal_id, request.goal_revision))",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3233,
+          "kind": "If",
+          "condition": "not preserve_active_route",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3256,
+          "kind": "If",
+          "condition": "self._state is NavigationSessionState.STOPPING",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3258,
+          "kind": "If",
+          "condition": "handoff is not None and handoff.disposition is HandoffDisposition.QUIESCENT and (handoff.world_session == frame.session) and (handoff.observation_sequence_id == frame.body.sequence_id)",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session._accept_goal_request",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 3301,
+      "end_line": 3326,
+      "step": "3",
+      "current_owner": "navigation_session",
+      "target_owner": "PlanningCoordinator",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 3305,
+          "kind": "If",
+          "condition": "surface_search_need(request) is SurfaceSearchNeed.GRAPH_SEARCH",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3319,
+          "kind": "If",
+          "condition": "self._planning_coordinator is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3325,
+          "kind": "If",
+          "condition": "self._executor is not None",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session._advance_planning",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 3774,
+      "end_line": 3855,
+      "step": "3",
+      "current_owner": "navigation_session",
+      "target_owner": "PlanningCoordinator",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 3781,
+          "kind": "If",
+          "condition": "self._state is NavigationSessionState.STOPPING",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3784,
+          "kind": "If",
+          "condition": "request is None or self._state is NavigationSessionState.NEEDS_INFORMATION",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3786,
+          "kind": "If",
+          "condition": "self._local_goal_request_id == request.request_id",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3788,
+          "kind": "If",
+          "condition": "self._active_route is not None and self._active_route.source_request_id == request.request_id",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3798,
+          "kind": "If",
+          "condition": "planning.request is not None and planning.request is not self._request",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3801,
+          "kind": "If",
+          "condition": "update.kind is PlanningUpdateKind.RUNNING",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3807,
+          "kind": "If",
+          "condition": "update.kind is PlanningUpdateKind.NEEDS_INFORMATION",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3836,
+          "kind": "If",
+          "condition": "update.kind is PlanningUpdateKind.REQUIRES_INTERACTION",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3845,
+          "kind": "If",
+          "condition": "update.kind is PlanningUpdateKind.FAILED",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3817,
+          "kind": "If",
+          "condition": "update.reason == 'landing_visual_evidence_missing' and len(self._snapshot_missing) == 1",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3820,
+          "kind": "If",
+          "condition": "self._edge_probe is None or not self._edge_probe.belongs_to(request.goal_id, request.goal_revision) or self._edge_probe.landing_cell != landing_cell",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3825,
+          "kind": "If",
+          "condition": "self._request_probe_stop(StopCause.ROUTE_REPLACED)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3833,
+          "kind": "If",
+          "condition": "self._retry_ledger is not None",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session._end_probe_waits",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 579,
+      "end_line": 581,
+      "step": "4",
+      "current_owner": "navigation_session",
+      "target_owner": "InformationAcquisitionState",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 580,
+          "kind": "If",
+          "condition": "probe is not None and self._retry_ledger is not None",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session._end_session_waits",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 583,
+      "end_line": 596,
+      "step": "4",
+      "current_owner": "navigation_session",
+      "target_owner": "RetryLedger",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 586,
+          "kind": "If",
+          "condition": "ledger is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 592,
+          "kind": "If",
+          "condition": "self._edge_probe is not None",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session._check_recovery_wait",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 3623,
+      "end_line": 3641,
+      "step": "4",
+      "current_owner": "navigation_session",
+      "target_owner": "RetryLedger",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 3624,
+          "kind": "If",
+          "condition": "self._retry_ledger is None or self._recovery_wait_capacity_exhausted",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3629,
+          "kind": "Try",
+          "condition": null,
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session._probe_movement",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 3643,
+      "end_line": 3675,
+      "step": "4",
+      "current_owner": "navigation_session",
+      "target_owner": "InformationAcquisitionState",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 3647,
+          "kind": "If",
+          "condition": "ledger is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 3658,
+          "kind": "Try",
+          "condition": null,
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session._information_look",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 4134,
+      "end_line": 4254,
+      "step": "4",
+      "current_owner": "navigation_session",
+      "target_owner": "InformationAcquisitionState",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 4136,
+          "kind": "If",
+          "condition": "self._state is not NavigationSessionState.NEEDS_INFORMATION or not self._snapshot_missing",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 4173,
+          "kind": "If",
+          "condition": "unresolved and self._retry_ledger is not None and (self._edge_probe is None)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 4147,
+          "kind": "If",
+          "condition": "result.position not in missing",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 4150,
+          "kind": "If",
+          "condition": "status == 'visible_air'",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 4180,
+          "kind": "Try",
+          "condition": null,
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 4205,
+          "kind": "If",
+          "condition": "wait_result is not WaitVerdict.WAITING",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 4151,
+          "kind": "If",
+          "condition": "not direct_drop_visual_evidence_sufficient(frame, result.position, edge_probe=self._edge_probe)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 4156,
+          "kind": "If",
+          "condition": "status == 'occluded' and self._landing_acquisition_pending()",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 4185,
+          "kind": "If",
+          "condition": "planning_need is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 4206,
+          "kind": "If",
+          "condition": "planning_need is not None and self._planning_coordinator is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 4247,
+          "kind": "If",
+          "condition": "capacity_exhausted",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 4249,
+          "kind": "If",
+          "condition": "not self._request_probe_stop(StopCause.INFORMATION_TIMED_OUT, terminal=NavigationSessionState.FAILED, terminal_reason=failure)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 4213,
+          "kind": "If",
+          "condition": "outcome_update is not None and outcome_update.kind is PlanningUpdateKind.NEEDS_INFORMATION",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 4226,
+          "kind": "If",
+          "condition": "outcome_update is not None and outcome_update.kind is PlanningUpdateKind.FAILED",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session._begin_action_acquisition",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 1886,
+      "end_line": 1921,
+      "step": "4",
+      "current_owner": "navigation_session",
+      "target_owner": "InformationAcquisitionState",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 1890,
+          "kind": "If",
+          "condition": "result.status is not ActionPreconditionStatus.NEEDS_ACQUISITION or spec is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1896,
+          "kind": "If",
+          "condition": "probe is not None and probe.belongs_to_action(spec.route_id, spec.route_revision, spec.action_index)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1901,
+          "kind": "If",
+          "condition": "probe is not None and probe.owned",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1919,
+          "kind": "If",
+          "condition": "self._retry_ledger is not None",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "navigation_session._transition",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "line": 602,
+      "end_line": 636,
+      "step": "1/5",
+      "current_owner": "navigation_session",
+      "target_owner": "NavigationLifecycle",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 609,
+          "kind": "If",
+          "condition": "not isinstance(reason, str) or not reason",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 611,
+          "kind": "If",
+          "condition": "action in {NavigationTransitionAction.RESUME_EXECUTION_AFTER_HANDOFF, NavigationTransitionAction.REPLAN_AFTER_HANDOFF}",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 626,
+          "kind": "If",
+          "condition": "transition.current in {NavigationSessionState.COMPLETE, NavigationSessionState.CANCELLED, NavigationSessionState.FAILED, NavigationSessionState.CLOSED}",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 615,
+          "kind": "If",
+          "condition": "handoff is None or handoff is not self._supervisor.last_handoff or self._frame is None or (handoff.world_session != self._frame.session) or (handoff.observation_sequence_id != self._frame.body.sequence_id)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 633,
+          "kind": "If",
+          "condition": "self._planning_coordinator is not None",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "planning_coordinator.advance",
+      "file": "mc2p/motion_nav/planning_coordinator.py",
+      "line": 901,
+      "end_line": 1268,
+      "step": "3",
+      "current_owner": "planning_coordinator",
+      "target_owner": "PlanningCoordinator + RetryLedger",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 910,
+          "kind": "If",
+          "condition": "request is None or self._attempt_id is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 912,
+          "kind": "If",
+          "condition": "type(remaining_damage_budget) is not TaskDamageBudget",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 914,
+          "kind": "If",
+          "condition": "self._terminal_update is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 916,
+          "kind": "If",
+          "condition": "frame.session.value != request.world_session",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 918,
+          "kind": "If",
+          "condition": "self._attempt_expired(frame)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 925,
+          "kind": "If",
+          "condition": "builder is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 978,
+          "kind": "If",
+          "condition": "candidate is None and (not self._planner.is_alive())",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 983,
+          "kind": "If",
+          "condition": "self._submission_expired(frame)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 988,
+          "kind": "If",
+          "condition": "candidate is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 995,
+          "kind": "If",
+          "condition": "not identity_matched or candidate.request_id != submitted_request.request_id or candidate.goal_id != submitted_request.goal_id or (candidate.goal_revision != submitted_request.goal_revision) or (candidate.world_session != submitted_request.world_session)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1013,
+          "kind": "If",
+          "condition": "basis_change is _BasisChange.CHECKING",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1017,
+          "kind": "If",
+          "condition": "basis_change is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1045,
+          "kind": "If",
+          "condition": "type(candidate) is SurfaceRouteCandidate and candidate.status is SurfacePlanningStatus.NO_KNOWN_ROUTE and (candidate.information_need is not None)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1077,
+          "kind": "If",
+          "condition": "no_route and self._interaction_approach_pending",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1079,
+          "kind": "If",
+          "condition": "no_route and self._bridge_policy is not None and (self._bridge_remaining > 0) and (type(request) is SurfacePlanningRequest) and (type(candidate) is SurfaceRouteCandidate) and (self._pipeline.snapshot is not None) and (self._pipeline.snapshot_request_id == request.request_id)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1152,
+          "kind": "If",
+          "condition": "not complete",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1167,
+          "kind": "If",
+          "condition": "type(candidate) is SurfaceRouteCandidate",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1186,
+          "kind": "If",
+          "condition": "admitted.status is not AdmissionStatus.ACCEPTED or admitted.route is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1252,
+          "kind": "If",
+          "condition": "self._attempt_expired(frame)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1254,
+          "kind": "If",
+          "condition": "not self._record_admission(AsyncAdmissionDisposition.APPLIED, facts_valid=True, identity_matched=True)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 927,
+          "kind": "If",
+          "condition": "progress.status is SnapshotBuildStatus.STALE",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 964,
+          "kind": "If",
+          "condition": "progress.status is SnapshotBuildStatus.BUILDING",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 966,
+          "kind": "If",
+          "condition": "progress.snapshot is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 968,
+          "kind": "If",
+          "condition": "type(request) is PlanningRequest and progress.missing_cells",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 973,
+          "kind": "If",
+          "condition": "not submitted",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1000,
+          "kind": "If",
+          "condition": "candidate.work_identity is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1023,
+          "kind": "If",
+          "condition": "basis_change is _BasisChange.PROGRESS",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1056,
+          "kind": "If",
+          "condition": "not self._record_admission(AsyncAdmissionDisposition.APPLIED, facts_valid=True, identity_matched=True)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1097,
+          "kind": "If",
+          "condition": "interaction is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1187,
+          "kind": "If",
+          "condition": "admitted.reason is AdmissionReason.LANDING_VISUAL_EVIDENCE_MISSING",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1234,
+          "kind": "If",
+          "condition": "admitted.reason is AdmissionReason.ROUTE_DEPENDENCIES_CHANGED",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 929,
+          "kind": "If",
+          "condition": "builder.accept_changes_outside_bounds(frame.world, exact_changes)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 936,
+          "kind": "If",
+          "condition": "progress.status is not SnapshotBuildStatus.STALE",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1099,
+          "kind": "If",
+          "condition": "interaction.work_node == request.start",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1128,
+          "kind": "If",
+          "condition": "not self._submit(approach, self._pipeline.snapshot, frame, state_anchor)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1135,
+          "kind": "If",
+          "condition": "not self._record_admission(AsyncAdmissionDisposition.APPLIED, facts_valid=True, identity_matched=True)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1221,
+          "kind": "If",
+          "condition": "not self._record_admission(AsyncAdmissionDisposition.APPLIED, facts_valid=True, identity_matched=True)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 937,
+          "kind": "If",
+          "condition": "progress.status is SnapshotBuildStatus.BUILDING",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 941,
+          "kind": "If",
+          "condition": "progress.snapshot is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 950,
+          "kind": "If",
+          "condition": "relevant_known_change",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1100,
+          "kind": "If",
+          "condition": "not self._record_admission(AsyncAdmissionDisposition.APPLIED, facts_valid=True, identity_matched=True)",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "planning_coordinator._submit",
+      "file": "mc2p/motion_nav/planning_coordinator.py",
+      "line": 1376,
+      "end_line": 1417,
+      "step": "3",
+      "current_owner": "planning_coordinator",
+      "target_owner": "PlanningCoordinator + RetryLedger",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 1377,
+          "kind": "If",
+          "condition": "type(request) is SurfacePlanningRequest",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1406,
+          "kind": "If",
+          "condition": "submitted",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1412,
+          "kind": "If",
+          "condition": "self._work_window is None",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "planning_coordinator._record_admission",
+      "file": "mc2p/motion_nav/planning_coordinator.py",
+      "line": 1833,
+      "end_line": 1866,
+      "step": "3",
+      "current_owner": "planning_coordinator",
+      "target_owner": "PlanningCoordinator + RetryLedger",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 1842,
+          "kind": "If",
+          "condition": "identity is None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1849,
+          "kind": "If",
+          "condition": "disposition is AsyncAdmissionDisposition.APPLIED",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1863,
+          "kind": "If",
+          "condition": "len(self._admission_records) >= 64",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1851,
+          "kind": "If",
+          "condition": "not applied",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "planning_coordinator.retry_from_current",
+      "file": "mc2p/motion_nav/planning_coordinator.py",
+      "line": 489,
+      "end_line": 512,
+      "step": "4",
+      "current_owner": "planning_coordinator",
+      "target_owner": "PlanningCoordinator + RetryLedger",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 499,
+          "kind": "If",
+          "condition": "registration.verdict is not RetryVerdict.RETRY",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "planning_coordinator._retry_or_fail",
+      "file": "mc2p/motion_nav/planning_coordinator.py",
+      "line": 1640,
+      "end_line": 1677,
+      "step": "4",
+      "current_owner": "planning_coordinator",
+      "target_owner": "PlanningCoordinator + RetryLedger",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 1650,
+          "kind": "If",
+          "condition": "registration.verdict is not RetryVerdict.RETRY",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 1655,
+          "kind": "If",
+          "condition": "request is None",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "retry_ledger.record_failure",
+      "file": "mc2p/motion_nav/retry_ledger.py",
+      "line": 175,
+      "end_line": 202,
+      "step": "4",
+      "current_owner": "retry_ledger",
+      "target_owner": "RetryLedger",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 177,
+          "kind": "If",
+          "condition": "type(cause) is not RetryCause",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 179,
+          "kind": "If",
+          "condition": "attempt_id in self._failure_verdicts",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 181,
+          "kind": "If",
+          "condition": "self._terminal_verdict is not None",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 186,
+          "kind": "If",
+          "condition": "self._total_failures > 12",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 196,
+          "kind": "If",
+          "condition": "verdict is RetryVerdict.RETRY",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 200,
+          "kind": "If",
+          "condition": "verdict is not RetryVerdict.RETRY",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 188,
+          "kind": "If",
+          "condition": "self._round_by_cause[cause] > 2",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 190,
+          "kind": "If",
+          "condition": "self._round_failures > 6",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "retry_ledger.record_progress",
+      "file": "mc2p/motion_nav/retry_ledger.py",
+      "line": 211,
+      "end_line": 250,
+      "step": "4",
+      "current_owner": "retry_ledger",
+      "target_owner": "RetryLedger",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 212,
+          "kind": "If",
+          "condition": "type(evidence) is not ProgressEvidence",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 214,
+          "kind": "If",
+          "condition": "evidence.observation_sequence < self._last_progress_sequence",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 217,
+          "kind": "If",
+          "condition": "evidence.kind is ProgressKind.ROUTE_FRONTIER",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 239,
+          "kind": "If",
+          "condition": "same_sample",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 219,
+          "kind": "If",
+          "condition": "key not in evidence.valid_corridor or key in self._visited_supports",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 221,
+          "kind": "If",
+          "condition": "self._progress_full()",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 224,
+          "kind": "If",
+          "condition": "evidence.kind is ProgressKind.ACTION_COMPLETED",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 226,
+          "kind": "If",
+          "condition": "key in self._completed_actions",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 228,
+          "kind": "If",
+          "condition": "self._progress_full()",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 233,
+          "kind": "If",
+          "condition": "key not in self._blockers or key in self._seen_facts",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 235,
+          "kind": "If",
+          "condition": "self._progress_full()",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    },
+    {
+      "id": "safe_ground_control.verified_ground_rollout",
+      "file": "mc2p/motion_nav/safe_ground_control.py",
+      "line": 24,
+      "end_line": 60,
+      "step": "2可选",
+      "current_owner": "safe_ground_control",
+      "target_owner": "保留物理、安全尾迹核验",
+      "status": "not_migrated",
+      "preserve": "领域事实、窗口、证明和身体责任不能因迁移删除",
+      "branches": [
+        {
+          "line": 30,
+          "kind": "If",
+          "condition": "state is None or state.session != frame.session or state.ruleset_id != JAVA_1_21_RULESET.ruleset_id or (math.dist(state.position, frame.body.position) > 0.02) or (not state.on_ground)",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 42,
+          "kind": "If",
+          "condition": "projected.status is not ProjectionStatus.READY",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 48,
+          "kind": "If",
+          "condition": "result.next_state is None or not result.next_state.on_ground",
+          "status": "requires_domain_mapping_before_migration"
+        },
+        {
+          "line": 54,
+          "kind": "If",
+          "condition": "sweep(current.body_box, delta, frame.world).status is not QueryStatus.FEASIBLE or support.status is not QueryStatus.FEASIBLE or support.support_fraction < minimum_support",
+          "status": "requires_domain_mapping_before_migration"
+        }
+      ]
+    }
+  ],
+  "coordination_scope_lines": 10977,
+  "limits": "AST counts are structural hints; multi-domain branches still need explicit owner/check mapping"
+}
