@@ -1,0 +1,75 @@
+1. History (motion_nav = mc2p/motion_nav/*.py; enums = StrEnum classes; reasons = distinct snake_case literals with >=3 parts)
+commit    date       motion_nav   tests docs(md)  session modules  enums  reasons contract decisions
+fdad6e3   2026-09-19       3486    1859     2438        0      15      9       89      155         8
+4977f18   2026-09-20       7578    4858     4033        0      24     18      172      398        10
+b381398   2026-09-21       9348    6733     4925        0      29     23      215      456        11
+7aa8483   2026-09-23      11959    8595     4767        0      34     31      279      560        12
+2dafa6d   2026-09-24      13557   18942     6228        0      48     33      339      603        18
+f097298   2026-09-25      16520   15028     7987     1142      50     37      380      704        19
+556381a   2026-09-25      16845   18889     8401     1312      50     38      391      708        22
+ba4acda   2026-09-25      17613   20191     8764     1452      52     41      418      744        25
+211af42   2026-09-26      17848   23698    10133     1560      52     41      422      750        32
+b740098   2026-09-27      18296   24356    11156     1738      53     41      434      755        35
+59c45bb   2026-09-27      20540   27248    12452     1872      56     43      483      839        36
+8898cf9   2026-09-28      21970   28732    12831     2167      57     44      501      863        38
+d34a674   2026-09-28      25215   32799    13421     3488      65     62      549      948        39
+eb4653c   2026-09-29      26350   34555    13765     3746      65     63      557      964        40
+340cac6   2026-09-29      27076   35423    14256     4064      67     63      567      978        41
+daa5cc4   2026-09-29      27253   36540    14576     4188      67     63      568      982        41
+8b4b64f   2026-09-30      27631   37138    15005     4274      68     65      572      998        42
+403a23f   2026-10-01      30891   41027    17049     4395      70     75      604     1101        47
+
+2. Coordination and planning modules at 403a23f
+module                        lines  defs    if  elif fields
+navigation_session.py          4395   130   448    26     64
+planning_coordinator.py        1875    66   169     2     36
+motion_coordination.py         1263    37   113     4     14
+action_route_executor.py       1032    25   115    11     12
+execution_supervisor.py         347    23    31     3      9
+async_work.py                   239    15    22     0      5
+navigation_handoff.py           152    10    14     1      2
+known_map_planner.py           3067   111   283     6     20
+motion_nav total: raise ContractViolation=1101, 'type(x) is not' checks=866, __post_init__=134, distinct enum values=250
+
+3. Decisions and stage plans about reopening, remediation or hardening (first added)
+2026-09-23 76e368b  docs/motion_navigation/decisions/0014-b10-audit-hardening.md
+2026-09-25 5c600cb  docs/motion_navigation/decisions/0020-c1r-rereview-hardening.md
+2026-09-25 dd38c6b  docs/motion_navigation/decisions/0026-b11-review-hardening-and-control-composition.md
+2026-09-29 eb4653c  docs/motion_navigation/decisions/0040-reopen-navigation-coordination-gates.md
+2026-09-29 340cac6  docs/motion_navigation/decisions/0041-enforce-event-admission-and-bounded-motion-finalization.md
+2026-10-01 403a23f  docs/motion_navigation/decisions/0043-reopen-s5-for-wait-planning-and-gate-ownership.md
+2026-10-01 403a23f  docs/motion_navigation/decisions/0045-reopen-s5-for-planning-behavior-ownership.md
+2026-10-01 403a23f  docs/motion_navigation/decisions/0046-reopen-s5-for-asynchronous-work-lifecycle.md
+2026-10-01 403a23f  docs/motion_navigation/decisions/0047-enforce-async-admission-and-test-formal-path.md
+2026-09-26 211af42  docs/motion_navigation/stages/B12-review-hardening-plan.md
+2026-09-27 b740098  docs/motion_navigation/stages/B12-surface-depth-remediation-plan.md
+2026-09-25 556381a  docs/motion_navigation/stages/C1R6-runtime-world-state-hardening.md
+2026-09-27 5fa2f33  docs/motion_navigation/stages/continuous-height-ground-movement-hardening-plan.md
+2026-10-01 403a23f  docs/motion_navigation/stages/navigation-async-work-lifecycle-r26-plan.md
+2026-10-01 403a23f  docs/motion_navigation/stages/navigation-async-work-r27-root-fix-plan.md
+2026-09-29 eb4653c  docs/motion_navigation/stages/navigation-coordination-hardening-plan.md
+2026-09-28 d34a674  docs/motion_navigation/stages/navigation-coordination-refactor-plan.md
+2026-09-29 340cac6  docs/motion_navigation/stages/navigation-coordination-review20-remediation-plan.md
+2026-09-29 daa5cc4  docs/motion_navigation/stages/navigation-coordination-review21-remediation-plan.md
+2026-09-30 8b4b64f  docs/motion_navigation/stages/navigation-coordination-review22-remediation-plan.md
+2026-10-01 403a23f  docs/motion_navigation/stages/navigation-coordination-review23-remediation-plan.md
+2026-10-01 403a23f  docs/motion_navigation/stages/navigation-coordination-review24-remediation-plan.md
+2026-10-01 403a23f  docs/motion_navigation/stages/navigation-planning-coordinator-r25-plan.md
+
+4. Published commits since 2026-09-26 (subject prefix shows feat/fix/refactor/release)
+2026-10-01 403a23f release: publish R27 async coordination hardening and evidence
+2026-09-30 8b4b64f release: publish navigation coordination S5 closure
+2026-09-29 daa5cc4 release: publish continuous-height S5 closure
+2026-09-29 340cac6 release: publish review-20 navigation coordination
+2026-09-29 eb4653c feat: publish navigation hardening and height matrix
+2026-09-28 d34a674 refactor: publish navigation coordination S0-S5
+2026-09-28 8898cf9 fix: publish continuous height hardening
+2026-09-27 5fa2f33 fix: harden surface visibility and continuous height movement
+2026-09-27 59c45bb feat: publish continuous height movement
+2026-09-27 4b9e73e feat: publish partial-visibility air correction
+2026-09-27 b740098 feat: publish profile4 surface-depth baseline
+2026-09-26 3e0c64b refactor: switch formal sensing to surface depth
+2026-09-26 cba2899 fix: close B12 pursuit review findings
+2026-09-26 3a1fdf0 fix: validate sustained combat pursuit
+2026-09-26 211af42 feat: publish reviewed B12 runtime
+2026-09-26 2c6401c feat: publish B12 combat movement snapshot
