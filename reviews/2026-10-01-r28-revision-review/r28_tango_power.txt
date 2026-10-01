@@ -1,0 +1,28 @@
+Sanity checks of the interval (delta = candidate - baseline)
+  b=0   c=0   n=200   -> [ -1.88,   1.88] pt  pass=False
+  b=0   c=0   n=1500  -> [ -0.26,   0.26] pt  pass=True
+  b=3   c=1   n=200   -> [ -3.88,   1.43] pt  pass=False
+  b=1   c=3   n=200   -> [ -1.43,   3.88] pt  pass=False
+  b=30  c=30  n=1500  -> [ -1.04,   1.04] pt  pass=False
+  b=60  c=60  n=3200  -> [ -0.68,   0.68] pt  pass=True
+
+Normal-approximation size for 80% decisiveness at margin 1 pt: n = 7.84 * d / 0.0001
+  d=0.02: ~1570 pairs
+  d=0.04: ~3140 pairs
+  d=0.08: ~6280 pairs
+  d=0.12: ~9419 pairs
+
+Simulated share of passing comparisons for an equally good candidate (Tango interval)
+  d=0.02: n=1500:  73.3%   n=3200:  97.6%   n=6400: 100.0%
+  d=0.04: n=1500:  48.0%   n=3200:  79.0%   n=6400:  98.0%
+  d=0.08: n=1500:  25.4%   n=3200:  53.1%   n=6400:  81.2%
+
+All-steps view: chance that k behaviour-changing steps are all decisive at 80% each
+  k=1:  80.0%
+  k=2:  64.0%
+  k=3:  51.2%
+  k=4:  41.0%
+
+Option: pre-declared two-look design (Pocock boundary z = 2.178 at each look, overall alpha 2.5% one-sided)
+  d=0.04, 3200 pairs per look: decided at look 1  72.4%, after look 2  97.3%
+  d=0.08, 6400 pairs per look: decided at look 1  72.8%, after look 2  96.8%

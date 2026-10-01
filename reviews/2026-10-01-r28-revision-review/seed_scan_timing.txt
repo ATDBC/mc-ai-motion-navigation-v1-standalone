@@ -1,0 +1,4 @@
+Seed-scan timing used for the run-cost estimate (container: 4 cores, single process)
+Manifest: tests/sim/manifests/navigation-coordination-s5-seeds.json with seed_end = seed_start + 19 (20 seeds x 2 families = 40 runs)
+Command: PYTHONPATH=. python -B -m tests.sim.run_navigation_seed_scan --manifest seeds20.json --output <dir>
+{"schema_version": "mc2p.navigation-seed-scan-result.v2", "counts": {"runs": 40, "within_declared_results": 40, "outside_declared_results": 0, "task_success": 39, "bounded_safe_failure": 1, "unexpected_result": 0}, "elapsed_seconds": 33.37461844800001, "output": "<dir>"}

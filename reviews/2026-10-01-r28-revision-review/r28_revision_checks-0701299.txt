@@ -1,0 +1,15 @@
+1. Migration inventory (stage plan section 6)
+  navigation_session.py      lines= 4395 functions=28 in_listed= 2115 missing=none
+    of which propose+observe (only partly in scope) = 1031; other listed helpers = 1084
+    largest functions in the file: [(785, 'propose'), (246, 'observe'), (169, '_proposal'), (144, 'update_goal'), (133, 'diagnostics'), (121, '_information_look')]
+  planning_coordinator.py    lines= 1875 functions= 5 in_listed=  506 missing=none
+  motion_coordination.py     lines= 1263 functions= 3 in_listed=  173 missing=none
+  retry_ledger.py            lines=  314 functions= 2 in_listed=   68 missing=none
+  safe_ground_control.py     lines=  122 functions= 1 in_listed=   37 missing=none
+
+2. Skill-layer reference: moving_melee_driver.py
+  file lines=1349; functions centred on successor/handoff/recovery/cancel: 15 with 600 lines (keyword heuristic)
+  spawn_successor calls: 1; transfer_to_successor calls: 1; replace_goal calls: 1
+
+3. Does reaching the goal end the navigation task?
+  navigation_session.py:3365: self._transition(NavigationTransitionAction.MARK_COMPLETE, 'goal_state_satisfied')
