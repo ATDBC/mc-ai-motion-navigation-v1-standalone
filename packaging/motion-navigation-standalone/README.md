@@ -4,6 +4,8 @@
 
 默认分支 `main` 是项目方唯一的公开发布线，只接收固定导出脚本生成并校验通过的整理后快照。主项目的完整开发分支和提交历史不会直接推入本仓库。三方审查分支可以单独存在，用于保存审查报告和复现材料；它们不改变 `main` 的正式状态。
 
+R28 协调收敛方案已写入四类文档，尚未实施。它先建立伙伴体验基线，再统一恢复与交接、按当前安全条件处理可恢复移动、简化有作用范围的计算世代和无进展预算，最后删除旧分支。五条安全规则与产品统计分别验收。下面的 R27、M3 数字仍是现有实现的证据，不能当作 R28 通过结果。
+
 当前已完成 B01 至 B10、C1-A 至 C1-C、C1-R 的 R0 至 R6、B11 固定放置与有限搭桥，以及 B12-A、B12-B。B12-A 固定了每次攻击的证据和分类重试，并接入 Minecraft 1.21 伤害来源事实。B12-B 让战斗先确定本帧视角，导航再按最终视角计算普通地面移动；追逐阶段会持续给出目标视角，导航同时记录每帧的移动决定原因。活动目标和真实墙体场景补齐了持续瞄准、遮挡后的导航、补看和权限撤销。动作证明的生效窗口修正和客户端额外推进一个 tick 时的局部安全恢复也已包含。正式 Fabric 结果与适用边界写在 `docs/motion_navigation/acceptance/`。
 
 导航协调的 S0 至 S5 已实施。2026-10-01，R27 复审整改 A0—A5 完成，S5 按本轮冻结范围重新关闭。规划、motion 和放置复用同一生命周期入口；业务终态后仍可请求身体停止；旧信息通知自行携带身份；四个模拟工具共同拒绝缺证据。完整运动导航 847/847，原 1000 序列及独立新增 256 个异步组合符合各自冻结检查，8 个旧错误副本均被行为断言发现。完整父层 B11 实机停止及正常对照 20/20、原正例 60/60、反例 24/24。当前分组、失败记录和实机边界写在协调验收第 20 节，原检查和独立复审保留在第 17、18 节。
@@ -19,15 +21,13 @@
 ## 先读什么
 
 1. `AGENTS.md`
-2. `docs/motion_navigation/stages/navigation-async-work-r27-root-fix-plan.md`
-3. `docs/motion_navigation/acceptance/navigation-coordination-refactor.md`
-4. `docs/motion_navigation/acceptance/defect-ledger.md`
-5. `docs/motion_navigation/architecture/navigation-coordination-v1.md`
-6. `docs/motion_navigation/decisions/0047-enforce-async-admission-and-test-formal-path.md`
-7. `docs/motion_navigation/stages/continuous-height-full-matrix-plan.md`
-8. `docs/motion_navigation/acceptance/continuous-height-ground-movement.md`
-9. `docs/motion_navigation/architecture/continuous-height-ground-movement-v1.md`
-10. 需要检查战斗或部分观察时，再读对应的 B12、C1 文档。
+2. `docs/motion_navigation/stages/navigation-coordination-convergence-r28-plan.md`
+3. `docs/motion_navigation/acceptance/navigation-coordination-convergence.md`
+4. `docs/motion_navigation/decisions/0048-converge-recovery-by-risk-and-product-evidence.md`
+5. `docs/motion_navigation/architecture/navigation-coordination-v1.md`（第 17 节为未实施目标）
+6. 当前实现和证据读 R27 阶段文档、`navigation-coordination-refactor.md` 第 20 节与 `defect-ledger.md`。
+7. 连续高度与物理范围读 M3、B09-R、B10 的对应 architecture 和 acceptance。
+8. 需要检查战斗或部分观察时，再读对应的 B12、C1 文档。
 
 ## 环境
 

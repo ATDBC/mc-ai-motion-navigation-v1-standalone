@@ -2,6 +2,8 @@
 
 本仓库是由主项目生成的只读源码快照。先读最新的 `docs/motion_navigation/stages/` 和对应的 `acceptance/`，再读取相关 `architecture/` 与 `decisions/`。
 
+当前新增 [R28 协调收敛计划](docs/motion_navigation/stages/navigation-coordination-convergence-r28-plan.md)，仅方案，尚未实施。目标接口见[协调架构第 17 节](docs/motion_navigation/architecture/navigation-coordination-v1.md#17-r28-协调收敛目标尚未实施)，验收见[R28 安全与伙伴体验](docs/motion_navigation/acceptance/navigation-coordination-convergence.md)，取舍见 [D048](docs/motion_navigation/decisions/0048-converge-recovery-by-risk-and-product-evidence.md)。不能把规划文档计入运行通过数字；现行实现仍按 R27 与 M3 证据声明能力。
+
 当前导航协调 S0 至 S5 已实施。2026-10-01，R27 复审整改 A0—A5 完成，S5 按本轮冻结范围重新关闭。停止请求保留业务终态和身体责任，信息通知携带完整身份，四个模拟关闭入口执行共同证据检查；测试走 Runtime 和正式 driver，不替实现生成身份。当前范围见 [R27](docs/motion_navigation/stages/navigation-async-work-r27-root-fix-plan.md)，结果和限制见[验收第 20 节](docs/motion_navigation/acceptance/navigation-coordination-refactor.md#20-r27-复审整改结果)与[缺陷台账](docs/motion_navigation/acceptance/defect-ledger.md)。连续高度 M3 的历史 Fabric 结论保留。
 
 项目方只通过默认分支 `main` 发布由固定导出清单生成、校验通过的公开快照。不得把主项目的完整开发分支或提交历史直接推入本仓库。三方审查分支可以保留，但只保存审查者自己的报告和复现材料，不代表正式发布状态。
