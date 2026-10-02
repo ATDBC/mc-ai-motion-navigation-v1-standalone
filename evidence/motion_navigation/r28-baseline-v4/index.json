@@ -1,0 +1,20 @@
+{
+  "schema_version": "mc2p.r28-baseline.v4",
+  "tasks": 2000,
+  "success": 1703,
+  "old_group_success": 1589,
+  "player_success": 114,
+  "strict_pairs": 800,
+  "strict_differences": 0,
+  "screenings": 0,
+  "lost_v3_successes": 3,
+  "repeated_pairs": 12,
+  "correct_support_change_variants": 12,
+  "fabric_tasks": 4,
+  "fabric_success": 4,
+  "limits": "Deterministic-screening removal baseline, not a non-regression release or completed R28-1. C02 and contact control remain open.",
+  "migration_cases": 1448,
+  "migration_passed": 1448,
+  "migration_signature_differences": 0,
+  "migration_outcome_differences": 0
+}

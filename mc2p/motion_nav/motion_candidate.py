@@ -1,11 +1,11 @@
 """B10-C task binding, admission and receipt-driven execution for verified motion."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from enum import StrEnum
 import math
 
-from mc2p.contracts.action_v1 import MovementV1
+from mc2p.contracts.action_v1 import LookV1, MovementV1
 from mc2p.contracts.common import (
     ContractViolation, require_identifier, require_nonnegative_int,
 )
@@ -74,6 +74,7 @@ class VerifiedMotionCandidate:
 class MotionCandidateStatus(StrEnum):
     ACCEPTED = "accepted"
     REJECTED = "rejected"
+    NEEDS_REVALIDATION = "needs_revalidation"
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,10 +105,13 @@ class MotionCandidateAdmission:
     status: MotionCandidateStatus
     reason: str
     candidate: AdmittedMotionCandidate | None = None
+    can_recompute: bool = False
 
     def __post_init__(self) -> None:
         if type(self.status) is not MotionCandidateStatus:
             raise ContractViolation("invalid motion candidate admission status")
+        if type(self.can_recompute) is not bool:
+            raise ContractViolation("candidate recomputation disposition must be boolean")
         if (self.status is MotionCandidateStatus.ACCEPTED) != (
                 type(self.candidate) is AdmittedMotionCandidate):
             raise ContractViolation("accepted admission must carry its candidate")
@@ -115,38 +119,82 @@ class MotionCandidateAdmission:
     @property
     def retryable(self) -> bool:
         """Whether a fresh candidate may repair this admission failure."""
-        return self.reason in {
-            "candidate_revalidation_failed", "world_dependency_changed",
-        }
+        return self.can_recompute
 
 
 def _angle_error(first: float, second: float) -> float:
     return abs((first - second + math.pi) % (2.0 * math.pi) - math.pi)
 
 
-def _state_fits_entry(actual: PhysicsState, expected: PhysicsState) -> bool:
-    if (actual.session != expected.session
-            or actual.ruleset_id != expected.ruleset_id
-            or actual.state_schema != expected.state_schema
-            or actual.pose != expected.pose
-            or actual.on_ground != expected.on_ground
-            or actual.swimming != expected.swimming
-            or actual.climbing != expected.climbing
-            or actual.fall_flying != expected.fall_flying
-            or actual.flying != expected.flying
-            or actual.is_using_item != expected.is_using_item
-            or actual.food_points < expected.food_points):
+def _physics_conditions_match(actual: PhysicsState, expected: PhysicsState) -> bool:
+    continuous = {"position", "velocity_blocks_per_tick", "yaw_radians"}
+    for field in fields(PhysicsState):
+        if field.name in continuous | {"movement_tick_id"}:
+            continue
+        first, second = getattr(actual, field.name), getattr(expected, field.name)
+        if first == second:
+            continue
+        # JSON/shape arithmetic can round the same attribute by one ULP.
+        # This is representational equality, not a larger physical envelope.
+        if (type(first) is float and type(second) is float
+                and abs(first - second) <= 4 * max(math.ulp(first), math.ulp(second))):
+            continue
         return False
-    if max(abs(a - b) for a, b in zip(actual.position, expected.position)) \
-            > _ENTRY_POSITION_TOLERANCE:
+    return True
+
+
+def _state_matches_verified_start(actual: PhysicsState, expected: PhysicsState) -> bool:
+    """Only numerical representation error; no new continuous entry envelope.
+
+    The aligned ordinary-ground audit measured <6e-9 block position error.
+    The 1e-7 limit is deliberately much narrower than the tracking envelope;
+    unknown rules, attributes, poses or input history are never covered by it.
+    """
+    return (
+        actual.movement_tick_id == expected.movement_tick_id
+        and _physics_conditions_match(actual, expected)
+        and all(abs(a - b) <= 1e-7 for a, b in zip(actual.position, expected.position))
+        and all(abs(a - b) <= 1e-7 for a, b in zip(
+            actual.velocity_blocks_per_tick, expected.velocity_blocks_per_tick))
+        and _angle_error(actual.yaw_radians, expected.yaw_radians) <= 1e-7
+    )
+
+
+def _proved_prelude_applied(proof, anchor, ledger) -> bool:
+    preparation = proof.preparation
+    first_tick = (proof.anchor_movement_tick_id + 1 if preparation is None
+                  else preparation.source_anchor.movement_tick_id + 1)
+    last_tick = anchor.movement_tick_id
+    if last_tick < first_tick:
+        return True
+    if ledger is None:
         return False
-    if max(abs(a - b) for a, b in zip(
-            actual.velocity_blocks_per_tick,
-            expected.velocity_blocks_per_tick,
-    )) > _ENTRY_VELOCITY_TOLERANCE_PER_TICK:
-        return False
-    return _angle_error(actual.yaw_radians, expected.yaw_radians) \
-        <= _ENTRY_YAW_TOLERANCE_RADIANS
+    # Sampled axes omit yaw. Exclude every look that may have affected this
+    # interval, including a pure-look command with a different request id.
+    for record in ledger.snapshot():
+        if (record.action.look != LookV1()
+                and record.requested_first_tick <= last_tick
+                and record.latest_allowed_first_tick
+                    + record.action.valid_for_ticks - 1 >= first_tick):
+            return False
+    for tick in range(first_tick, last_tick + 1):
+        sample = ledger.sample(tick)
+        if sample is None:
+            return False
+        index = tick - first_tick
+        if preparation is not None and index < len(preparation.tick_inputs):
+            expected = preparation.tick_inputs[index]
+            record = (None if sample.request_sequence_id is None else
+                      ledger.record(sample.request_sequence_id))
+            if record is None or record.session != anchor.session:
+                return False
+            values = (expected.forward, expected.strafe, expected.jump,
+                      expected.sneak, expected.sprint)
+        else:
+            values = (0.0, 0.0, False, False, False)
+        if (sample.forward, sample.strafe, sample.jump, sample.sneak, sample.sprint) != values:
+            return False
+    return True
 
 
 def verified_candidate_can_start(
@@ -161,7 +209,7 @@ def verified_candidate_can_start(
     return (
         variant is not None
         and anchor.session == variant.entry_state.session
-        and _state_fits_entry(anchor.physics_state, variant.entry_state)
+        and _state_matches_verified_start(anchor.physics_state, variant.entry_state)
     )
 
 
@@ -216,10 +264,13 @@ class MotionCandidateAdmitter:
             candidate_revision: int, damage_budget: TaskDamageBudget,
             intended_start_tick: int,
             changed_cells: tuple[BlockPos, ...],
+            input_ledger: InputApplicationLedger | None = None,
     ) -> MotionCandidateAdmission:
         if (type(candidate) is not VerifiedMotionCandidate
                 or type(anchor) is not StateAnchor
-                or type(changed_cells) is not tuple):
+                or type(changed_cells) is not tuple
+                or (input_ledger is not None
+                    and type(input_ledger) is not InputApplicationLedger)):
             raise ContractViolation("motion candidate admission requires typed inputs")
         require_nonnegative_int(intended_start_tick, "intended start tick")
         current = MotionCandidateContext(
@@ -271,28 +322,34 @@ class MotionCandidateAdmitter:
                 MotionCandidateStatus.REJECTED, "state_identity_changed",
             )
         if not proof.execution_window.allows_start(intended_start_tick):
+            retry = intended_start_tick == anchor.movement_tick_id + 1
             return MotionCandidateAdmission(
-                MotionCandidateStatus.REJECTED, "execution_window_expired",
-            )
-        if (anchor.observation_sequence_id
-                != proof.anchor_observation_sequence_id
-                or anchor.movement_tick_id != proof.anchor_movement_tick_id
-                or intended_start_tick != anchor.movement_tick_id + 1):
-            return MotionCandidateAdmission(
-                MotionCandidateStatus.REJECTED, "state_anchor_advanced",
+                (MotionCandidateStatus.NEEDS_REVALIDATION if retry
+                 else MotionCandidateStatus.REJECTED), "execution_window_expired",
+                can_recompute=retry,
             )
         if set(changed_cells).intersection(proof.world_dependencies):
             return MotionCandidateAdmission(
                 MotionCandidateStatus.REJECTED, "world_dependency_changed",
+                can_recompute=True,
             )
         if not set(proof.resource_incomplete_reasons).issubset(
                 expected.accepted_resource_incomplete_reasons):
             return MotionCandidateAdmission(
                 MotionCandidateStatus.REJECTED, "resource_evidence_incomplete",
             )
-        if not _state_fits_entry(anchor.physics_state, proof.entry_state):
+        variant = proof.start_variant(intended_start_tick)
+        if (intended_start_tick != anchor.movement_tick_id + 1
+                or variant is None
+                or not _proved_prelude_applied(proof, anchor, input_ledger)):
             return MotionCandidateAdmission(
-                MotionCandidateStatus.REJECTED, "entry_state_changed",
+                MotionCandidateStatus.NEEDS_REVALIDATION, "state_anchor_advanced",
+                can_recompute=True,
+            )
+        if not _state_matches_verified_start(anchor.physics_state, variant.entry_state):
+            return MotionCandidateAdmission(
+                MotionCandidateStatus.NEEDS_REVALIDATION, "entry_state_changed",
+                can_recompute=True,
             )
         return MotionCandidateAdmission(
             MotionCandidateStatus.ACCEPTED, "accepted",
@@ -876,11 +933,20 @@ class VerifiedMotionExecutor:
                         if self.state is VerifiedMotionExecutorState.INPUT_LOST
                         else None)
             return self._decision(movement, None, pending)
+        if self._command_index == 0 and self._pending is None:
+            variant = proof.start_variant(anchor.movement_tick_id + 1)
+            if (variant is not None
+                    and _state_matches_verified_start(anchor.physics_state, variant.entry_state)
+                    and _proved_prelude_applied(proof, anchor, ledger)):
+                # An unselected first intent has not started the action. Reuse
+                # only a published later start whose real neutral prelude matches.
+                self._start_tick = variant.start_tick
+                self._start_variant = variant
         if (self._command_index == 0 and self._pending is None
                 and self._start_variant is not None
-                and not _state_fits_entry(
+                and (not _state_matches_verified_start(
                     anchor.physics_state, self._start_variant.entry_state,
-                )):
+                ) or not _proved_prelude_applied(proof, anchor, ledger))):
             self.state = (
                 VerifiedMotionExecutorState.INPUT_LOST
                 if anchor.physics_state.on_ground else

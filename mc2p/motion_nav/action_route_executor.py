@@ -16,7 +16,8 @@ from mc2p.motion_nav.action_route import (
 )
 from mc2p.motion_nav.air_motion import AirMotionController, AirMotionProfile, AirMotionState
 from mc2p.motion_nav.fixed_route import (
-    FixedRouteConfig, FixedRouteController, FixedRouteState, terminal_route_config,
+    FixedRouteConfig, FixedRouteController, FixedRouteState, GroundHandoffTarget,
+    terminal_route_config,
 )
 from mc2p.motion_nav.ground_motion import GroundMotionProfile
 from mc2p.motion_nav.ground_modes import GroundModeProfiles
@@ -632,6 +633,11 @@ class ActionRouteExecutor:
             latest_movement_tick, requires_verified_motion,
         )
 
+    def prepare_ground_handoff(self, target: GroundHandoffTarget | None) -> None:
+        """Provide a tracking target without changing route or body ownership."""
+        if type(self._controller) is FixedRouteController:
+            self._controller.set_handoff_target(target)
+
     def decide(self, frame: NavigationFrame, *, input_confirmed: bool = True,
                state_anchor: StateAnchor | None = None,
                input_ledger: InputApplicationLedger | None = None,
@@ -684,6 +690,20 @@ class ActionRouteExecutor:
                                     "input_application_unconfirmed")
             return self._finish_goal(frame, started, input_ledger, state_anchor)
         action = self.route.actions[self.action_index]
+        if (type(action) is WalkSegment and not self._cancel_requested
+                and input_confirmed and state_anchor is not None
+                and input_ledger is not None):
+            successor = self._verified_motion.get(self.action_index + 1)
+            if (successor is not None
+                    and verified_candidate_can_start(successor, state_anchor)):
+                # A concrete proved entry can precede the graph's reference
+                # point. The route owner remains unchanged; only the winning
+                # first submission establishes the strict controller's input.
+                return self._advance(
+                    frame, started, state_anchor=state_anchor,
+                    input_ledger=input_ledger,
+                    movement_yaw_radians=movement_yaw_radians,
+                )
         self._commit_drop_damage_if_started(action, frame)
         if (self._cancel_requested
                 and self._stop_cause is StopCause.DEPENDENCY_CHANGED
@@ -758,8 +778,9 @@ class ActionRouteExecutor:
                     math.sin(verified.movement_yaw_radians - frame.body.yaw_radians),
                     math.cos(verified.movement_yaw_radians - frame.body.yaw_radians),
                 )
-                if abs(delta) > 1.0e-6:
-                    look = LookV1(math.degrees(delta), 0.0)
+                # Even an unchanged route yaw must win arbitration. Otherwise
+                # a simultaneous combat/safety look can invalidate this input.
+                look = LookV1(math.degrees(delta), 0.0)
             return self._result(
                 started, verified.movement or MovementV1(),
                 max(1, verified.input_lease_ticks), verified.reason,
@@ -820,12 +841,7 @@ class ActionRouteExecutor:
                 self.state = mapping[decision.state]
             return self._result(
                 started, decision.movement, decision.input_lease_ticks,
-                ("terminal_approach_control_unsupported" if (
-                    self.action_index+1 == len(self.route.actions)
-                    and self.route.goal_state is not None
-                    and action.traversal_plan is None
-                    and decision.reason == "fixed_route_has_no_forward_control")
-                 else decision.reason), decision.missing_cells,
+                decision.reason, decision.missing_cells,
             )
 
         decision = self._controller.decide(frame, input_confirmed=input_confirmed)

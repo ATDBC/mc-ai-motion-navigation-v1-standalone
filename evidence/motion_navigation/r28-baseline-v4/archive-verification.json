@@ -1,0 +1,17 @@
+{
+  "records": 2000,
+  "success": 1703,
+  "success_by_group": {
+    "point-normal": 200,
+    "point-late": 200,
+    "height-normal": 200,
+    "height-late": 200,
+    "target-normal": 200,
+    "target-late": 200,
+    "drop-normal": 200,
+    "drop-late": 189,
+    "player-normal": 57,
+    "player-late": 57
+  },
+  "record_and_transport_hashes_verified": true
+}

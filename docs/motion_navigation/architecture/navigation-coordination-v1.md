@@ -1,5 +1,7 @@
 # 导航协调与正式路径验证架构 V1
 
+本地只读演示补充：`NavigationSession.body_route_snapshot` 返回当前身体控制者拥有的不可变 `ActiveRoute`，无人拥有路线时返回空。它不推进工作、修改目标或授予输入权限；后台候选不进入此接口。显示端只将其投影为路线点，不能回写路线。改目标后，旧控制者仍负身体责任时，快照可以仍属于旧目标，直到正式交接完成。此读取不扩大 `NavigationSessionPort` 的控制契约。演示权限与证据见[本地可视演示](../acceptance/current-navigation-visual-demo.md)。
+
 日期：2026-09-28
 
 状态：S0 至 S5 已实施；2026-10-01，R27 复审整改 A0—A5 完成，异步协调 S5 按冻结范围重新关闭。共同停止、不可变信息通知和所需记录检查已进入正式入口。当前结果见[验收第 20 节](../acceptance/navigation-coordination-refactor.md#20-r27-复审整改结果)，现行范围见 [R27](../stages/navigation-async-work-r27-root-fix-plan.md) 和 [D047](../decisions/0047-enforce-async-admission-and-test-formal-path.md)。R26 与原复审的历史证据保留。

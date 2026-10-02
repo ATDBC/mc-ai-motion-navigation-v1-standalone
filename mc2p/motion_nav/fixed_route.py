@@ -345,6 +345,26 @@ def _directional_prediction_box(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class GroundHandoffTarget:
+    position: tuple[float, float, float]
+    first_tick: int
+    movements: tuple[MovementV1, ...]
+    latest_tick: int
+
+    def __post_init__(self) -> None:
+        if (type(self.position) is not tuple or len(self.position) != 3
+                or any(type(value) not in (int, float) or not math.isfinite(value)
+                       for value in self.position)
+                or type(self.first_tick) is not int or self.first_tick < 0
+                or type(self.latest_tick) is not int
+                or not self.first_tick <= self.latest_tick < self.first_tick + 20
+                or type(self.movements) is not tuple
+                or not 1 <= len(self.movements) <= 4
+                or any(type(value) is not MovementV1 for value in self.movements)):
+            raise ContractViolation("ground handoff target requires a bounded typed prefix")
+
+
 class FixedRouteController:
     """Owns one fixed route and proposes one safe ordinary-ground input per frame."""
 
@@ -369,6 +389,7 @@ class FixedRouteController:
         self._cross_track = 0.0
         self._cancel_requested = False
         self._previous_movement = MovementV1()
+        self._handoff_target_hint: GroundHandoffTarget | None = None
         self._progress_anchor = 0.0
         self._no_progress_frames = 0
         self._stall_detected = False
@@ -415,6 +436,7 @@ class FixedRouteController:
         self._cross_track = 0.0
         self._cancel_requested = False
         self._previous_movement = MovementV1()
+        self._handoff_target_hint = None
         self._progress_anchor = 0.0
         self._no_progress_frames = 0
         self._stall_detected = False
@@ -425,6 +447,12 @@ class FixedRouteController:
         self._traversal_tick_index = 0
         self._traversal_replan_pending = False
         self.state = FixedRouteState.RUNNING
+
+    def set_handoff_target(self, target: GroundHandoffTarget | None) -> None:
+        """Guide tracking toward a conditional entry; never authorize an action."""
+        if target is not None and type(target) is not GroundHandoffTarget:
+            raise ContractViolation("ground handoff target must be typed")
+        self._handoff_target_hint = target
 
     def cancel(self) -> None:
         if self.state in {FixedRouteState.RUNNING, FixedRouteState.BRAKING,
@@ -977,26 +1005,7 @@ class FixedRouteController:
 
         stop_distance = self._release_distance(body, completion_speed)
         remaining = max(0.0, self._geometry.total_length - self._progress)
-        handoff_reachable_after_release = False
-        if self.config.handoff_entry_window is not None:
-            window = self.config.handoff_entry_window
-            earliest_entry = max(
-                0.0, -window.minimum_longitudinal_offset_blocks,
-            )
-            next_active_speed = min(
-                self.profile.maximum_speed_blocks_per_second,
-                speed + self.profile.acceleration_blocks_per_second2
-                * self.profile.tick_seconds,
-            )
-            handoff_reachable_after_release = (
-                remaining <= earliest_entry + 1.0e-9
-                or (
-                    speed > self.config.stopped_speed_blocks_per_second
-                    and remaining <= earliest_entry
-                    + next_active_speed * self.profile.tick_seconds + 1.0e-9
-                )
-            )
-        if (at_goal or handoff_reachable_after_release
+        if (at_goal
                 or (speed > completion_speed
                     and remaining <= stop_distance
                     + self.config.endpoint_tolerance_blocks * 0.65)):
@@ -1026,6 +1035,30 @@ class FixedRouteController:
             max(self.config.lookahead_min_blocks, self.config.lookahead_min_blocks + speed * 0.18),
         )
         target = self._geometry.point_at(self._progress + lookahead)
+        if (self._handoff_target_hint is not None
+                and remaining <= lookahead + self.config.endpoint_tolerance_blocks):
+            hint = self._handoff_target_hint
+            tick = frame.body.movement_tick_id
+            if tick is not None:
+                index = tick + 1 - hint.first_tick
+                if 0 <= index and tick + 1 <= hint.latest_tick:
+                    target = (hint.position[0], hint.position[2])
+                    # This is a ground proposal, checked against the current
+                    # world and its full release tail. Admission separately
+                    # verifies the actually applied prefix before any jump.
+                    movement = (hint.movements[index] if index < len(hint.movements)
+                                else MovementV1())
+                    preferred = self._evaluate_candidate(
+                        frame, body, movement, target, braking=False,
+                        query_cache=query_cache,
+                    )
+                    if (not preferred.blocked and not preferred.unsupported
+                            and not preferred.missing):
+                        self.state = FixedRouteState.RUNNING
+                        return self._decision(started, movement,
+                                              "tracking_conditional_motion_entry")
+                elif tick + 1 > hint.latest_tick:
+                    self._handoff_target_hint = None
         if (mode_pending and self.mode_profile is not None
                 and self.mode_profile.mode is MovementMode.SPRINT):
             candidates = [self._evaluate_candidate(

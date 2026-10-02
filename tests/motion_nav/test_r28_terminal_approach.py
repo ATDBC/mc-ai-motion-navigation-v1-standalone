@@ -38,36 +38,15 @@ class BatchFiveTests(unittest.TestCase):
                          GoalSupport.SOLID,frozenset({MovementMode.WALK}),frozenset({'standing'}),.6)
         return world, node, goal, NavigationSessionProfiles.load(Path('config/motion-navigation')).ground, _ground_anchor(initial).physics_state
 
-    def test_terminal_screen_is_bounded_and_retains_the_chosen_endpoint(self):
-        import time
-        from mc2p.motion_nav.terminal_approach import select_terminal_approach, TerminalApproachStatus
-        world,node,goal,profile,state = self._terminal_inputs()
-        result = select_terminal_approach(world.view(),node,goal,(.5,1.,.5),profile,state,
-                                          deadline_ns=time.perf_counter_ns()+50_000_000)
-        self.assertIs(result.status,TerminalApproachStatus.FEASIBLE,result)
-        self.assertEqual(result.position,(1.5,1.,.5))
-        self.assertLessEqual(result.candidate_count,6)
-        self.assertLessEqual(result.rollout_ticks,128)
-        self.assertEqual(result.connection.points[-1].x,result.position[0])
-        self.assertIn((2,1,0),result.dependencies)
-        from dataclasses import replace
-        from mc2p.motion_nav.terminal_approach import query_terminal_approach, TerminalApproachReason
-        mismatched = replace(result.entry_window, reference_point=(20.,1.,.5))
-        refused = query_terminal_approach(world.view(),node,goal,result.connection,
-            mismatched,profile,deadline_ns=time.perf_counter_ns()+50_000_000,template=state)
-        self.assertIs(refused.reason,TerminalApproachReason.ENTRY_UNSUPPORTED)
-        self.assertEqual(refused.rollout_ticks,0)
-        expired = select_terminal_approach(world.view(),node,goal,(.5,1.,.5),profile,state,deadline_ns=0)
-        self.assertIs(expired.status,TerminalApproachStatus.BUDGET_EXHAUSTED)
-
-    def test_terminal_candidates_have_interior_stop_margin(self):
-        from dataclasses import replace
-        from mc2p.motion_nav.terminal_approach import terminal_points
-        from mc2p.motion_nav.world_model import Aabb
-        _,node,goal,_,_ = self._terminal_inputs()
-        for x,y,z in terminal_points(node,goal):
-            self.assertGreater(min(x-goal.region.min_x,goal.region.max_x-x,z-goal.region.min_z,goal.region.max_z-z),.035)
-        self.assertFalse(terminal_points(node,replace(goal,region=Aabb(1.49,.99,.49,1.51,1.01,.51))))
+    def test_static_terminal_keeps_an_interior_goal_point(self):
+        from mc2p.motion_nav.support_surfaces import standable_point_in_region
+        from mc2p.motion_nav.geometry import QueryStatus
+        world,node,goal,_,_ = self._terminal_inputs()
+        result = standable_point_in_region(world.view(),node,goal.region)
+        self.assertIs(result.status, QueryStatus.FEASIBLE)
+        x,y,z = result.position
+        self.assertGreater(min(x-goal.region.min_x,goal.region.max_x-x,
+                               z-goal.region.min_z,goal.region.max_z-z), .035)
 
     def test_exact_connection_never_reselects_a_goal_point_or_crosses_wall(self):
         from mc2p.motion_nav.support_surfaces import query_standable_connection
@@ -133,12 +112,12 @@ class BatchFiveTests(unittest.TestCase):
         self.assertEqual(metrics['net_stall_ticks']['walking'],0)
         self.assertEqual(metrics['net_stall_ticks']['strict_execution'],0)
 
-    def test_wall_target_is_early_typed_rejection_or_success(self):
+    def test_wall_target_retains_its_actual_control_failure(self):
         scene, start, goal = player_layout('player_wall_head')
         result = run(Scenario('wall-terminal',scene,start,goal,max_ticks=300))
         self.assertFalse(result.violations)
         if result.outcome != 'success':
-            self.assertIn('terminal_approach',result.reason)
+            self.assertEqual(result.reason, 'fixed_route_has_no_forward_control')
             self.assertLess(result.ticks,100)
 
 

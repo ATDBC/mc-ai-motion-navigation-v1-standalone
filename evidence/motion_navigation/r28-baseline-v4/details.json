@@ -1,0 +1,122 @@
+{
+  "stalls_by_group": {
+    "point-normal": {
+      "walking": 0,
+      "strict_preparation": 0,
+      "strict_execution": 0,
+      "planning_wait": 0,
+      "entry_recovery": 0,
+      "stopping": 0,
+      "unclassified": 0
+    },
+    "point-late": {
+      "walking": 0,
+      "strict_preparation": 0,
+      "strict_execution": 0,
+      "planning_wait": 0,
+      "entry_recovery": 0,
+      "stopping": 0,
+      "unclassified": 0
+    },
+    "height-normal": {
+      "walking": 0,
+      "strict_preparation": 0,
+      "strict_execution": 0,
+      "planning_wait": 0,
+      "entry_recovery": 0,
+      "stopping": 0,
+      "unclassified": 0
+    },
+    "height-late": {
+      "walking": 0,
+      "strict_preparation": 0,
+      "strict_execution": 0,
+      "planning_wait": 0,
+      "entry_recovery": 0,
+      "stopping": 0,
+      "unclassified": 0
+    },
+    "target-normal": {
+      "walking": 0,
+      "strict_preparation": 0,
+      "strict_execution": 0,
+      "planning_wait": 0,
+      "entry_recovery": 0,
+      "stopping": 0,
+      "unclassified": 0
+    },
+    "target-late": {
+      "walking": 8,
+      "strict_preparation": 0,
+      "strict_execution": 0,
+      "planning_wait": 0,
+      "entry_recovery": 0,
+      "stopping": 0,
+      "unclassified": 0
+    },
+    "drop-normal": {
+      "walking": 0,
+      "strict_preparation": 0,
+      "strict_execution": 0,
+      "planning_wait": 0,
+      "entry_recovery": 0,
+      "stopping": 0,
+      "unclassified": 0
+    },
+    "drop-late": {
+      "walking": 0,
+      "strict_preparation": 43,
+      "strict_execution": 0,
+      "planning_wait": 0,
+      "entry_recovery": 187,
+      "stopping": 9,
+      "unclassified": 0
+    },
+    "player-normal": {
+      "walking": 332,
+      "strict_preparation": 0,
+      "strict_execution": 0,
+      "planning_wait": 0,
+      "entry_recovery": 0,
+      "stopping": 0,
+      "unclassified": 0
+    },
+    "player-late": {
+      "walking": 202,
+      "strict_preparation": 0,
+      "strict_execution": 0,
+      "planning_wait": 0,
+      "entry_recovery": 0,
+      "stopping": 0,
+      "unclassified": 0
+    }
+  },
+  "fault_cases": 4,
+  "fault_passed": 4,
+  "required_functions": {
+    "navigation_session.handle_internal_contract_failure": {
+      "entered_by": [
+        "faults/driver_contract_containment"
+      ],
+      "migration_allowed": true
+    },
+    "navigation_session._wait_for_active_terminal": {
+      "entered_by": [
+        "faults/active_route_dependency_retry"
+      ],
+      "migration_allowed": true
+    },
+    "navigation_session._resolve_pending_retry": {
+      "entered_by": [
+        "faults/ground_stall_retry"
+      ],
+      "migration_allowed": true
+    },
+    "planning_coordinator._retry_or_fail": {
+      "entered_by": [
+        "faults/worker_death"
+      ],
+      "migration_allowed": true
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "cases": 1448,
+  "passed": 1448,
+  "input_pairs": 1448,
+  "signature_differences": [],
+  "outcome_differences": [],
+  "exceptions": [],
+  "old_summary_sha256": "08fcf7d377caa8139454b84b6715f21b57c3720593539a029ce7b2dec5e6862e",
+  "new_summary_sha256": "09ceafbede937b7e1fe9c6c49b2440169fc60b2401ba7ffabd2d3f8f07b114ff",
+  "harness_changes": [
+    "tests/sim/backend.py: reject sensor-only world edits",
+    "tests/sim/runner.py: remove terminal screening diagnostics"
+  ],
+  "limits": "Compared frozen inputs and common emitted signatures. Existing paired CLI rejects changed harness sources; no source identity bypass or product success-rate claim."
+}

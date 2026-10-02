@@ -760,10 +760,9 @@ class ContinuousDescentTests(unittest.TestCase):
                     changed_cells=(),
                 )
 
-            self.assertEqual(len(jobs), 1)
-            accepted_ahead = coordinator._accept_result(
-                _execute_job(jobs[0]), applied_anchor, world, (),
-            )
+            # An airborne predicted exit must not be treated as a new observed
+            # anchor, even when the first input has already been confirmed.
+            self.assertEqual(len(jobs), 0)
 
             current_anchor = applied_anchor
             for command_index in range(1, len(first.candidate.proof.commands)):
@@ -800,7 +799,25 @@ class ContinuousDescentTests(unittest.TestCase):
                     input_ledger=ledger,
                 )
 
-        self.assertTrue(accepted_ahead)
+            current_frame = VerifiedMotionRouteIntegrationTests.frame(
+                world._world, current_anchor.physics_state, 99,
+            )
+            with (
+                patch.object(worker, "is_alive", return_value=True),
+                patch.object(worker, "poll_available", return_value=()),
+                patch.object(worker, "submit", side_effect=lambda job: jobs.append(job) or True),
+            ):
+                coordinator.decide(current_frame, current_anchor, ledger, world, changed_cells=())
+            self.assertEqual(len(jobs), 1)
+            self.assertEqual(jobs[0].anchor, current_anchor)
+            accepted = coordinator._accept_result(
+                _execute_job(jobs[0]), current_anchor, world, (), ledger,
+            )
+            next_decision = executor.decide(
+                current_frame, state_anchor=current_anchor, input_ledger=ledger,
+            )
+
+        self.assertTrue(accepted)
         self.assertTrue(executor.has_verified_motion(1))
         self.assertEqual(next_decision.action_index, 1)
         self.assertTrue(next_decision.submit_input)

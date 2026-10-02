@@ -1,8 +1,12 @@
 # AGENTS.md
 
+2026-10-02：D052 的验证期限、后台重验证与连续入口已实施。限定跨隙四方向实机 4/4，运动导航 914/914；真实条件不匹配仍不能起跳，未获选与取消保留身体责任。当前结果见 [R28 验收第 12.6 节](docs/motion_navigation/acceptance/navigation-coordination-convergence.md#126-本轮实施与限定试点结果)。完整升降组合、长期控制期限、R28 共享协调及跟随未关闭，旧基线和失败保持原记录。
+
 本仓库是由主项目生成的只读源码快照。先读最新的 `docs/motion_navigation/stages/` 和对应的 `acceptance/`，再读取相关 `architecture/` 与 `decisions/`。
 
-当前 [R28 计划](docs/motion_navigation/stages/navigation-coordination-convergence-r28-plan.md)已完成批次 5 的实现和 v3 基线：原八层 1,589/1,600，新增玩家站位 117/400；883 项检查通过。56 场 Fabric 中 20 场完成、36 场未完成。有界拒绝不计为成功。原四个未覆盖函数已有正式路径场景，16 组历史扰动交付差异单列。结果与限制见[R28 验收第 10.7 节](docs/motion_navigation/acceptance/navigation-coordination-convergence.md#107-批次-5-实现与-v3-结果)。R28-1、持续预算、跟随和完整路线平滑尚未实施；两条既有世界变化协调缺口保留在台账中。现行 R27 和 M3 结论保持原范围。
+D051 的进入修正已移除正式筛选和失败改名，保留末段直连及证据工具；886 项检查通过。v4 原八层为 1,589/1,600，玩家站位为 114/400；比 v3 少完成三场，非退步比较未通过。800 个严格任务逐项不变，代表性 Fabric 绕墙 4/4。旧 R28-C-01 注入混用两份地形，修正后的 12 个变体有界退出但不代表恢复成功。R28-C-02、共享协调、终点接触和跟随尚未关闭；结果见验收第 11 节，原 v1—v3 保留。
+
+历史 v3 结果与失败保存在[R28 验收第 10.7 节](docs/motion_navigation/acceptance/navigation-coordination-convergence.md#107-批次-5-实现与-v3-结果)，不作为筛选可用的结论。原四个未覆盖函数已有正式路径场景，16 组历史扰动交付差异单列。R28-1、持续预算、跟随和完整路线平滑尚未实施。现行 R27 和 M3 结论保持原范围。
 
 当前导航协调 S0 至 S5 已实施。2026-10-01，R27 复审整改 A0—A5 完成，S5 按本轮冻结范围重新关闭。停止请求保留业务终态和身体责任，信息通知携带完整身份，四个模拟关闭入口执行共同证据检查；测试走 Runtime 和正式 driver，不替实现生成身份。当前范围见 [R27](docs/motion_navigation/stages/navigation-async-work-r27-root-fix-plan.md)，结果和限制见[验收第 20 节](docs/motion_navigation/acceptance/navigation-coordination-refactor.md#20-r27-复审整改结果)与[缺陷台账](docs/motion_navigation/acceptance/defect-ledger.md)。连续高度 M3 的历史 Fabric 结论保留。
 

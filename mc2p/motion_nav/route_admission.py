@@ -30,12 +30,11 @@ from mc2p.motion_nav.motion_candidate import (
     VerifiedMotionCandidate,
 )
 from mc2p.motion_nav.motion_solver import (
-    MotionSolveKind, SolveStatus, VerifiedMotionResult,
-    revalidate_air_transition,
+    MotionSolveKind, VerifiedMotionResult,
 )
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.motion_risk import MOVEMENT_DAMAGE_BUDGET_RESOURCE
-from mc2p.motion_nav.online_motion import CandidateExecutionWindow, StateAnchor
+from mc2p.motion_nav.online_motion import InputApplicationLedger, StateAnchor
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView
 from mc2p.motion_nav.known_map_planner import (
     PlanningStatus, RouteCandidate, WalkEdge, WalkNode, WalkNodeId,
@@ -49,7 +48,6 @@ from mc2p.motion_nav.segment_entry import (
     SegmentEntryWindow, body_fits_segment_entry,
 )
 from mc2p.motion_nav.world_model import BlockPos, CellKnowledge
-from mc2p.motion_nav.terminal_approach import TerminalApproachStatus
 
 
 class AdmissionStatus(StrEnum):
@@ -71,10 +69,6 @@ def _action_route_length(route: ActionRoute) -> float:
 
 
 class AdmissionReason(StrEnum):
-    TERMINAL_APPROACH_UNSUPPORTED = 'terminal_approach_control_unsupported'
-    TERMINAL_APPROACH_NEEDS_INFORMATION = 'terminal_approach_needs_information'
-    TERMINAL_APPROACH_BUDGET_EXHAUSTED = 'terminal_approach_budget_exhausted'
-    TERMINAL_APPROACH_BLOCKED = 'terminal_approach_geometry_blocked'
     GOAL_STANDING_POINT_UNAVAILABLE = "goal_standing_point_unavailable"
     GOAL_STANDING_POINT_NEEDS_INFORMATION = "goal_standing_point_needs_information"
     CANDIDATE_NOT_COMPLETE = "candidate_not_complete"
@@ -233,6 +227,7 @@ class RouteAdmitter:
             changed_cells: tuple[BlockPos, ...],
             damage_budget: TaskDamageBudget = TaskDamageBudget(),
             world: PhysicsWorldView | None = None,
+            input_ledger: InputApplicationLedger | None = None,
     ) -> MotionCandidateAdmission:
         if type(route) is not ActiveRoute:
             raise ContractViolation("verified motion admission requires an active route")
@@ -247,39 +242,11 @@ class RouteAdmitter:
             damage_budget=damage_budget,
             intended_start_tick=intended_start_tick,
             changed_cells=changed_cells,
+            input_ledger=input_ledger,
         )
-        if admission.status is MotionCandidateStatus.ACCEPTED or world is None:
-            return admission
-        if admission.reason not in {
-                "execution_window_expired", "state_anchor_advanced",
-                "entry_state_changed"}:
-            return admission
-        if set(changed_cells).intersection(candidate.proof.world_dependencies):
-            return MotionCandidateAdmission(
-                MotionCandidateStatus.REJECTED, "world_dependency_changed",
-            )
-        refreshed = revalidate_air_transition(
-            candidate.proof, anchor, world,
-            CandidateExecutionWindow(intended_start_tick, intended_start_tick + 1),
-        )
-        if refreshed.status is not SolveStatus.SOLVED or refreshed.proof is None:
-            return MotionCandidateAdmission(
-                MotionCandidateStatus.REJECTED,
-                "candidate_revalidation_failed",
-            )
-        rebound = VerifiedMotionCandidate(refreshed.proof, candidate.context)
-        return self._motion_admitter.admit(
-            rebound, anchor,
-            planning_request_id=route.source_request_id,
-            planning_generation=route.planning_generation,
-            goal_id=route.goal_id, goal_revision=route.goal_revision,
-            route_id=route.route_id, route_revision=route.route_revision,
-            action_index=candidate.context.action_index,
-            candidate_revision=candidate_revision,
-            damage_budget=damage_budget,
-            intended_start_tick=intended_start_tick,
-            changed_cells=changed_cells,
-        )
+        # A changed anchor is a domain result. The coordinator may submit a
+        # bounded worker revalidation; admission never rolls out physics here.
+        return admission
 
     @staticmethod
     def _route_id(candidate: RouteCandidate) -> str:
@@ -668,10 +635,7 @@ class RouteAdmitter:
                                                (candidate.path[-1].node_id,), terminal_target.dependencies))
                 else:
                     direct = None
-                    if len(pending_points) >= 2 and (
-                            candidate.terminal_approach is None
-                            or (candidate.terminal_approach.connection is not None
-                                and candidate.terminal_approach.connection.points[0] == pending_points[-2])):
+                    if len(pending_points) >= 2:
                         before = pending_points[-2]
                         direct = query_standable_connection(frame.world,
                             candidate.path[-1].surface, terminal_target.position,
@@ -792,27 +756,7 @@ class RouteAdmitter:
             )
         route_id = self._surface_route_id(candidate)
         terminal_target = None
-        if candidate.terminal_approach is not None:
-            terminal_target = candidate.terminal_approach
-            if (terminal_target.status is TerminalApproachStatus.BUDGET_EXHAUSTED
-                    and terminal_target.conventional_target is not None):
-                terminal_target = terminal_target.conventional_target
-            elif terminal_target.status is not TerminalApproachStatus.FEASIBLE:
-                reason = {TerminalApproachStatus.UNSUPPORTED: AdmissionReason.TERMINAL_APPROACH_UNSUPPORTED,
-                          TerminalApproachStatus.NEEDS_INFORMATION: AdmissionReason.TERMINAL_APPROACH_NEEDS_INFORMATION,
-                          TerminalApproachStatus.BUDGET_EXHAUSTED: AdmissionReason.TERMINAL_APPROACH_BUDGET_EXHAUSTED,
-                          TerminalApproachStatus.BLOCKED: AdmissionReason.TERMINAL_APPROACH_BLOCKED}[terminal_target.status]
-                return AdmissionResult(AdmissionStatus.REJECTED,reason,missing_cells=terminal_target.missing_cells)
-            source = (candidate.terminal_approach.connection.points[0]
-                      if candidate.terminal_approach.connection is not None
-                      else RoutePoint(*candidate.path[-1].position))
-            exact = query_standable_connection(frame.world,candidate.path[-1].surface,
-                terminal_target.position, (source.x,source.y,source.z))
-            if exact.status is not QueryStatus.FEASIBLE:
-                return AdmissionResult(AdmissionStatus.REJECTED,
-                    AdmissionReason.TERMINAL_APPROACH_NEEDS_INFORMATION if exact.missing_cells
-                    else AdmissionReason.TERMINAL_APPROACH_BLOCKED,missing_cells=exact.missing_cells)
-        elif candidate.goal_state is not None:
+        if candidate.goal_state is not None:
             terminal_target = standable_point_in_region(
                 frame.world, candidate.path[-1].surface, candidate.goal_state.region,
                 connection_from=candidate.path[-1].position)

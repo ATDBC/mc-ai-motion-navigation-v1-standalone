@@ -1,6 +1,6 @@
 # 终点接近与路线优化 V1
 
-日期：2026-10-02。状态：批次 5 已实现；具体表现与限制见 R28 验收第 10.7 节。依据 [D050](../decisions/0050-complete-terminal-approach-and-recovery-evidence.md)。
+日期：2026-10-02。状态：批次 5 的后台筛选接口已按 [D051](../decisions/0051-remove-terminal-screening-and-fix-contact-control.md) 撤回。本文第 2—4 节涉及筛选的接口只保留历史设计，不是正式实现要求。静态站位、末段直连、实际长度、依赖登记和在线闭环仍保留。原 v3 的实际表现见 R28 验收第 10.7 节。
 
 ## 1. 要达到的行为
 

@@ -12,12 +12,10 @@ from tests.sim.continuous_height_matrix import matrix_scenario
 
 
 class GoalRegionTests(unittest.TestCase):
-    def test_budget_fallback_tracker_measures_the_retained_center_connection(self):
+    def test_tracker_measures_the_actual_off_center_terminal_connection(self):
         from mc2p.motion_nav.known_map_planner import KnownMapBounds, SurfacePlanningRequest, astar_surface_plan, build_surface_graph
         from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, MovementMode
         from mc2p.motion_nav.route_admission import RouteAdmitter, ActiveRouteTracker
-        from mc2p.motion_nav.support_surfaces import standable_point_in_region
-        from mc2p.motion_nav.terminal_approach import TerminalApproachResult, TerminalApproachStatus, TerminalApproachReason
         from tests.motion_nav.test_b07_step_transition import frame, profile as step_profile
         from tests.motion_nav.test_b07_surface_planning import ordinary_profile
         from tests.motion_nav.test_navigation_session import _known_world
@@ -29,14 +27,10 @@ class GoalRegionTests(unittest.TestCase):
                          frozenset({MovementMode.WALK}), frozenset({"standing"}), .6)
         request = SurfacePlanningRequest(1, "budget-tail", "goal", 1, world.session.value,
                                          nodes[0].node_id, nodes[-1].node_id, goal_state=goal)
-        target = standable_point_in_region(world.view(), nodes[-1].surface, goal.region,
-                                          connection_from=nodes[-1].position)
-        candidate = replace(astar_surface_plan(graph, request), terminal_approach=TerminalApproachResult(
-            TerminalApproachStatus.BUDGET_EXHAUSTED, TerminalApproachReason.BUDGET_EXHAUSTED,
-            conventional_target=target))
+        candidate = astar_surface_plan(graph, request)
         admitted = RouteAdmitter().admit_surface(candidate, frame(world, 0, nodes[0].position),
             expected_request_id=request.request_id, goal_id="goal", goal_revision=1, changed_cells=())
-        self.assertEqual(len(admitted.route.action_route.actions[-1].fixed_route.points), 3)
+        self.assertEqual(len(admitted.route.action_route.actions[-1].fixed_route.points), 2)
         tracker = ActiveRouteTracker(admitted.route, candidate)
         self.assertAlmostEqual(tracker.update(0.).route.corridor.length_blocks,
                                admitted.route.fixed_route_length_blocks)

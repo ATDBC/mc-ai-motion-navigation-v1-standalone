@@ -54,7 +54,6 @@ class InlinePlannerWorker:
     def __init__(self):
         self._job = None
         self.activity = []
-        self.terminal_results = []
 
     def is_alive(self) -> bool:
         return True
@@ -71,8 +70,6 @@ class InlinePlannerWorker:
         if job is not None:
             self.activity.append(ObservedAsyncActivity(job.request.work_identity, "poll"))
         result = None if job is None else planner_worker._execute_job(job)
-        if result is not None and getattr(result, "terminal_approach", None) is not None:
-            self.terminal_results.append(result.terminal_approach)
         return result
 
     def close(self) -> None:
@@ -226,7 +223,8 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
         control_step: Callable[[Context], tuple[str, ...] | None] | None = None,
         risk_ledger: TaskRiskLedger | None = None,
         backend_factory=CalculatorBackend,
-        planner_factory=InlinePlannerWorker) -> Result:
+        planner_factory=InlinePlannerWorker,
+        motion_factory=InlineMotionWorker) -> Result:
     events = [replace(event, fired_at=None) for event in scenario.events]
     if event_ticks is not None:
         if set(event_ticks) != {event.name for event in events}:
@@ -252,7 +250,7 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
     seed_memory(runtime, backend.scene, exclude=scenario.initial_unknown_cells)
     profiles = NavigationSessionProfiles.load(CONFIG)
     planner = planner_factory()
-    motion = InlineMotionWorker()
+    motion = motion_factory()
     session = NavigationSession("sim", profiles, planner_worker=planner,
                                 motion_worker=motion,
                                 risk_ledger=risk_ledger,
@@ -474,13 +472,6 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                 "on_ground": backend.state.on_ground,
                 "controller_ids": diagnostics.controller_ids,
                 "body_control_activities": tuple(asdict(activity) for activity in diagnostics.body_control_activities),
-                "terminal_screening": tuple(dict(status=item.status,reason=item.reason,
-                    position=item.position,profile_id=item.profile_id,ruleset_id=item.ruleset_id,
-                    elapsed_ns=item.elapsed_ns,rollout_ticks=item.rollout_ticks,
-                    candidate_count=item.candidate_count,dependencies=item.dependencies,
-                    reference_speeds=item.reference_speeds,
-                    conventional_fallback=item.conventional_target is not None)
-                    for item in planner.terminal_results),
                 "submitted_body_activity": (None if frame_diagnostics is None or frame_diagnostics.movement_activity is None
                                              else asdict(frame_diagnostics.movement_activity)),
                 "applied_body_activity": None if applied_activity is None else asdict(applied_activity),

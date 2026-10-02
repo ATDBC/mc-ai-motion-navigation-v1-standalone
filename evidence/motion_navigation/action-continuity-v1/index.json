@@ -1,0 +1,106 @@
+{
+  "scope": "limited action continuity pilot; original R28 baselines unchanged",
+  "archives": [
+    {
+      "file": "fabric-preflight-missing-world.tar.gz",
+      "run_id": "20261002T122238498294Z-c602f2c5",
+      "raw_sha256": {
+        "result.json": "d7505b87c4119665e9c246590ab4d0cc802ca4d7c45b1a23617c25a3c23e336d",
+        "client-0/action-continuity-summary.json": "59b1666a8fdc7d738dc49520ce08f6327fc77ec7d7cb3ece7d6f8c8f00c299da",
+        "client-0/action-continuity-frames.jsonl": "b9fdf8ba309ada88774cedd1440ed14653a3ef1c1d284af98e06643fc7f2f491",
+        "client-0/trace.jsonl": "645595cc6dd3acb5964a8099c8f538ff81ab0da8953194b12eeb224ca7207bdd",
+        "client-0/diagnostics.jsonl": "5ab50ce186fc603edf1e480eaff758681165a301d0df47c93b75958eee097e8e",
+        "client-0/r25-fixture-commands.jsonl": "61afd0d9e5529bf6cf56eedd6f1ed16ab043fde2c9d7d255a8b3d123e0ac6383"
+      }
+    },
+    {
+      "file": "fabric-preflight-diagnostic.tar.gz",
+      "run_id": "20261002T122829505078Z-2d13efd3",
+      "raw_sha256": {
+        "result.json": "1266d066ad663f5dab7d4c01b505f88e60919895a3a1a4ce4b43088543ab31f9",
+        "client-0/action-continuity-summary.json": "f5aac763aab71932ed76986c2b63f7075fdca331a3eb1e07f1d2d79ff68d6921",
+        "client-0/action-continuity-frames.jsonl": "47103d9151367c8cc7c726c4628ecc668ab7e782c7ee58c5e74b1b99a35a2674",
+        "client-0/trace.jsonl": "a103e86735844213cb344f6747c7fab682478100764540e8f5beca79414ae922",
+        "client-0/diagnostics.jsonl": "6a13ffd6c63871ecc83037df3cbc315711cc14d6641aa38967d91542dbd47fc3",
+        "client-0/r25-fixture-commands.jsonl": "832b92b833fdd6e75d13f00274c301d310145605fc5675be33996b08e9ae7542"
+      }
+    },
+    {
+      "file": "fabric-four-directions.tar.gz",
+      "run_id": "20261002T123131022805Z-e6db26f5",
+      "raw_sha256": {
+        "result.json": "562c59ae2813b48ccdc0f78e598d24209898b2f0ca69c7fe6c5dc3ff00640f48",
+        "client-0/action-continuity-summary.json": "058c20ce6dc76d40929a74d0c6f40d650a2696f34374a0fa2ac6c819dd2d1ab4",
+        "client-0/action-continuity-frames.jsonl": "ca43b642ff852f3ae6bae689bd6f22ffd5663949781230e6d86e34891ce66a20",
+        "client-0/trace.jsonl": "69a2c7b00f2444d908a5c9a6f378dd7dea00c5adb221a259cb3779a6a8ea4aa5",
+        "client-0/diagnostics.jsonl": "13750914e8b05045b34e3390efc9f6ec0b36d8730f79646ceb347def97f4cef3",
+        "client-0/r25-fixture-commands.jsonl": "e1d57a962f77f86bbddd98b0ee201e887b0307d3e8472bb5fd1a676345632177"
+      }
+    }
+  ],
+  "formal_outcomes": {
+    "normal-0": "success",
+    "normal-1": "success",
+    "normal-2": "success",
+    "normal-3": "success",
+    "delivery-2": "success",
+    "delivery-3": "success",
+    "lost-first-move": "success",
+    "lost-first-look": "failed",
+    "air-cancel": "cancelled",
+    "cold-first-then-hot": "success",
+    "known-landing-blocked": "failed"
+  },
+  "source_hashes": {
+    "mc2p/motion_nav/motion_solver.py": "89af7ce35f172f92172d4dc5020722265318a1e1528cd580cd8168981e3fc3ec",
+    "mc2p/motion_nav/motion_coordination.py": "8c0365af22d398efbe25cce13060826fe16ce220fc2b584cda252a3e289ebd1e",
+    "mc2p/motion_nav/motion_candidate.py": "cf268ba432a91edc38cb3d939f22c75517cd23d8325f9c072ca5781c40068d6f",
+    "mc2p/motion_nav/fixed_route.py": "40e9cdfdf8034900af7315675a96e8d3cf90a1a4c13ca882cf6c2444c1138d32"
+  },
+  "jvm_sample_to_application": {
+    "samples": 216,
+    "p95_ns": 50488400,
+    "p99_ns": 50668100,
+    "maximum_ns": 51315000
+  },
+  "jump_source_ticks": [
+    {
+      "trial": "continuity-gap-0",
+      "source_tick": 48,
+      "application_tick": 49
+    },
+    {
+      "trial": "continuity-gap-1",
+      "source_tick": 134,
+      "application_tick": 135
+    },
+    {
+      "trial": "continuity-gap-2",
+      "source_tick": 221,
+      "application_tick": 222
+    },
+    {
+      "trial": "continuity-gap-3",
+      "source_tick": 307,
+      "application_tick": 308
+    }
+  ],
+  "formal_fault_cases": [
+    "lost-first-move",
+    "lost-first-look",
+    "air-cancel",
+    "known-landing-blocked"
+  ],
+  "driver_proposal_preparation": {
+    "samples": 216,
+    "p95_ns": 2133100,
+    "p99_ns": 8064800,
+    "maximum_ns": 8499700
+  },
+  "observation_ready_to_dispatch": {
+    "samples": 216,
+    "p95_ns": 5587400,
+    "p99_ns": 10524400,
+    "maximum_ns": 16015500
+  }
+}

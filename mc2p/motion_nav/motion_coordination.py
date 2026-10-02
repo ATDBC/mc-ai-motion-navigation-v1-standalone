@@ -31,7 +31,7 @@ from mc2p.motion_nav.motion_solver import (
     DEFAULT_AIR_TRANSITION_POLICIES, DEFAULT_GAP_SOLVER_POLICY,
     AirTransitionSolveRequest, AirTransitionSolverPolicy,
     GapSolveRequest, GapSolverPolicy, LandingRegion, MotionSolveKind,
-    SolveResult, SolveStatus, check_motion_entry,
+    MotionCommandTick, VerifiedMotionResult, SolveResult, SolveStatus, check_motion_entry,
     gap_entry_heading_delta_radians, gap_entry_heading_is_aligned,
     solve_air_transition, solve_one_cell_gap,
 )
@@ -41,7 +41,7 @@ from mc2p.motion_nav.retry_ledger import (
 )
 from mc2p.motion_nav.motion_worker import (
     GapMotionSolveJob, GapMotionSolveResult, MotionResultInbox,
-    MotionWorkerPort,
+    MotionJobOperation, MotionWorkerPort,
 )
 from mc2p.motion_nav.online_motion import (
     CandidateExecutionWindow, InputApplicationLedger, ProjectionStatus,
@@ -102,6 +102,7 @@ class GapPreparationStatus(StrEnum):
     UNSUPPORTED_ROUTE_ACTION = "unsupported_route_action"
     SOLVE_FAILED = "solve_failed"
     ADMISSION_REJECTED = "admission_rejected"
+    REVALIDATION_REQUIRED = "revalidation_required"
 
 
 @dataclass(frozen=True, slots=True)
@@ -234,6 +235,7 @@ def _planned_gap_request(
     return GapSolveRequest(
         direction, landing, execution_window,
         max_candidates=12, max_ticks=20,
+        recovery_horizon_ticks=20,
         exit_direction=exit_direction,
         exit_motion_ticks=1 if exit_direction is not None else 0,
         policy=policy,
@@ -266,6 +268,7 @@ def _planned_air_transition_request(
         kind, direction, landing, execution_window, damage_budget,
         max_candidates=min(64, len(policy.templates)),
         max_ticks=(80 if kind is MotionSolveKind.CONTROLLED_DROP else 40),
+        recovery_horizon_ticks=(80 if kind is MotionSolveKind.CONTROLLED_DROP else 40),
         exit_direction=exit_direction,
         exit_motion_ticks=1 if exit_direction is not None else 0,
         policy=policy,
@@ -281,6 +284,7 @@ def prepare_planned_gap_motion(
         admitter: RouteAdmitter | None = None,
         precomputed: SolveResult | None = None,
         policy: GapSolverPolicy = DEFAULT_GAP_SOLVER_POLICY,
+        input_ledger: InputApplicationLedger | None = None,
 ) -> GapPreparationResult:
     """Resolve one planned edge without recomputing the global route."""
     if (type(route) is not ActiveRoute or type(anchor) is not StateAnchor
@@ -331,10 +335,13 @@ def prepare_planned_gap_motion(
         intended_start_tick=intended_start_tick,
         changed_cells=changed_cells, damage_budget=damage_budget,
         world=world,
+        input_ledger=input_ledger,
     )
     if admitted.status is not MotionCandidateStatus.ACCEPTED:
         return GapPreparationResult(
-            GapPreparationStatus.ADMISSION_REJECTED,
+            (GapPreparationStatus.REVALIDATION_REQUIRED
+             if admitted.status is MotionCandidateStatus.NEEDS_REVALIDATION else
+             GapPreparationStatus.ADMISSION_REJECTED),
             solve_result=solved, reason=admitted.reason,
             retryable=admitted.retryable,
         )
@@ -353,6 +360,7 @@ def prepare_planned_air_transition(
         precomputed: SolveResult | None = None,
         policies: dict[MotionSolveKind, AirTransitionSolverPolicy]
         = DEFAULT_AIR_TRANSITION_POLICIES,
+        input_ledger: InputApplicationLedger | None = None,
 ) -> GapPreparationResult:
     if (type(route) is not ActiveRoute or type(anchor) is not StateAnchor
             or type(world) is not PhysicsWorldView
@@ -402,10 +410,13 @@ def prepare_planned_air_transition(
         reusable, route, anchor, candidate_revision=candidate_revision,
         intended_start_tick=intended_start_tick,
         changed_cells=changed_cells, damage_budget=damage_budget, world=world,
+        input_ledger=input_ledger,
     )
     if admitted.status is not MotionCandidateStatus.ACCEPTED:
         return GapPreparationResult(
-            GapPreparationStatus.ADMISSION_REJECTED,
+            (GapPreparationStatus.REVALIDATION_REQUIRED
+             if admitted.status is MotionCandidateStatus.NEEDS_REVALIDATION else
+             GapPreparationStatus.ADMISSION_REJECTED),
             solve_result=solved, reason=admitted.reason,
             retryable=admitted.retryable,
         )
@@ -460,7 +471,6 @@ class MotionRouteCoordinator:
         self._pending_connection: str | None = None
         self._pending_action_index: int | None = None
         self._pending_submitted_tick: int | None = None
-        self._pending_preparation_anchor: StateAnchor | None = None
         self._candidate_revision = 0
         from mc2p.motion_nav.async_work import AsyncWorkLifecycle
         self._work = AsyncWorkLifecycle()
@@ -536,7 +546,8 @@ class MotionRouteCoordinator:
 
     def _accept_result(
             self, result: GapMotionSolveResult, anchor: StateAnchor,
-            world: PhysicsWorldView, changed_cells: tuple[BlockPos, ...]) -> bool:
+            world: PhysicsWorldView, changed_cells: tuple[BlockPos, ...],
+            ledger: InputApplicationLedger | None = None) -> bool:
         identity_matched = (
             self._work_identity is not None
             and result.work_identity == self._work_identity
@@ -568,18 +579,21 @@ class MotionRouteCoordinator:
             if self._pending_action_index is not None
             else self.executor.action_index
         )
-        preparation_anchor = (
-            self._pending_preparation_anchor
-            if action_index > self.executor.action_index
-            and self._pending_preparation_anchor is not None
-            else anchor
-        )
+        preparation_anchor = anchor
         self._pending_connection = None
         self._pending_action_index = None
         self._pending_submitted_tick = None
-        self._pending_preparation_anchor = None
         self._pending_job = None
         action = self.route.action_route.actions[action_index]
+        proof = result.solve_result.proof
+        if proof is not None and self._solve_basis_job is not None:
+            changed = set(changed_cells)
+            for position in proof.world_dependencies:
+                before = self._solve_basis_job.world.cell(position)
+                current = world.cell(position)
+                if before.knowledge != current.knowledge or before.block != current.block:
+                    changed.add(position)
+            changed_cells = tuple(sorted(changed))
         negative_stale = (
             result.solve_result.status not in {
                 SolveStatus.SOLVED, SolveStatus.INTERNAL_ERROR, SolveStatus.BUDGET_EXHAUSTED,
@@ -610,6 +624,7 @@ class MotionRouteCoordinator:
                 damage_budget=self.damage_budget,
                 precomputed=result.solve_result,
                 policy=self.gap_solver_policy,
+                input_ledger=ledger,
             )
         else:
             prepared = prepare_planned_air_transition(
@@ -620,6 +635,7 @@ class MotionRouteCoordinator:
                 damage_budget=self.damage_budget,
                 precomputed=result.solve_result,
                 policies=self.air_transition_policies,
+                input_ledger=ledger,
             )
         if identity_matched and self._work.check(result.work_identity, self._clock()) is not WorkCheck.READY:
             self._expire_delivered_result(result)
@@ -633,10 +649,29 @@ class MotionRouteCoordinator:
             )
             self._retire_work("motion_result_rejected")
             self.last_failure_reason = prepared.reason
+            if prepared.status is GapPreparationStatus.REVALIDATION_REQUIRED:
+                attempt_id = f"{connection}/revalidate-{result.candidate_revision}"
+                registration = self.retry_ledger.record_failure(attempt_id, RetryCause.EXECUTION)
+                self.last_failure_attempt_id = attempt_id
+                if registration.verdict is RetryVerdict.RETRY:
+                    self._submit_action(
+                        action_index, anchor, world,
+                        revalidate_proof=result.solve_result.proof,
+                    )
+                else:
+                    self.last_failure_reason = f"motion_retry_exhausted:{prepared.reason}"
+                    self.executor.cancel()
+                return False
             if action_index > self.executor.action_index:
                 # An anticipated entry can differ from the next observation.
                 # Keep the still-valid ground segment and try again from the
                 # next applied state instead of cancelling the whole route.
+                if prepared.retryable:
+                    registration = self.retry_ledger.record_failure(
+                        f"{connection}/prepare-{result.candidate_revision}", RetryCause.EXECUTION,
+                    )
+                    if registration.verdict is not RetryVerdict.RETRY:
+                        self.executor.cancel()
                 return False
             if prepared.retryable:
                 attempt_id = (f"{connection}/candidate-"
@@ -711,7 +746,8 @@ class MotionRouteCoordinator:
     def _submit_action(
             self, index: int, anchor: StateAnchor,
             world: PhysicsWorldView, *,
-            preparation_anchor: StateAnchor | None = None) -> None:
+            revalidate_proof: VerifiedMotionResult | None = None,
+            entry_prefix: tuple[MotionCommandTick, ...] = ()) -> None:
         connection = self._connection_id(index)
         if (self._work_identity is not None
                 and self._pending_connection == connection
@@ -721,8 +757,8 @@ class MotionRouteCoordinator:
         if self._work_identity is not None:
             self._retire_work("motion_work_superseded")
         window = CandidateExecutionWindow(
-            anchor.movement_tick_id + 1,
-            anchor.movement_tick_id + 2,
+            anchor.movement_tick_id + len(entry_prefix) + 1,
+            anchor.movement_tick_id + len(entry_prefix) + 2,
         )
         action = self.route.action_route.actions[index]
         if type(action) is JumpGapSegment:
@@ -764,18 +800,26 @@ class MotionRouteCoordinator:
         self._pending_job = GapMotionSolveJob(
             connection, self._candidate_revision, anchor, solve_world, request,
             self._work_identity,
+            operation=(MotionJobOperation.SOLVE if revalidate_proof is None
+                       else MotionJobOperation.REVALIDATE),
+            proof=revalidate_proof, entry_prefix=entry_prefix,
         )
         self._solve_basis_job = self._pending_job
         self._pending_connection = connection
         self._pending_action_index = index
         self._pending_submitted_tick = anchor.movement_tick_id
-        self._pending_preparation_anchor = preparation_anchor
         submitted = self.worker.submit(self._pending_job)
         if submitted:
             self._pending_job = None
             self.last_failure_reason = ""
         else:
             self.last_failure_reason = "motion_solver_backpressure"
+        if revalidate_proof is not None:
+            from mc2p.motion_nav.fixed_route import GroundHandoffTarget
+            self.executor.prepare_ground_handoff(GroundHandoffTarget(
+                anchor.physics_state.position, anchor.movement_tick_id + 1,
+                (MovementV1(),), anchor.movement_tick_id + _MOTION_SOLVE_LIMIT_TICKS,
+            ))
 
     def _flush_pending_job(self) -> None:
         if self._pending_job is None:
@@ -806,6 +850,7 @@ class MotionRouteCoordinator:
         )
 
     def _retire_work(self, _cause: str) -> None:
+        self.executor.prepare_ground_handoff(None)
         identity = self._work_identity
         if identity is not None:
             self.result_inbox.retire(identity)
@@ -814,7 +859,6 @@ class MotionRouteCoordinator:
         self._pending_connection = None
         self._pending_action_index = None
         self._pending_submitted_tick = None
-        self._pending_preparation_anchor = None
         self._solve_basis_job = None
 
     def _record_admission(
@@ -887,38 +931,6 @@ class MotionRouteCoordinator:
             latest_movement_tick=None,
         )
 
-    @staticmethod
-    def _predict_applied_walk_state(
-            decision: ActionRouteDecision, anchor: StateAnchor,
-            world: PhysicsWorldView) -> StateAnchor | None:
-        if not decision.submit_input:
-            return None
-        movement_yaw = anchor.physics_state.yaw_radians
-        if decision.look is not None:
-            movement_yaw += math.radians(decision.look.yaw_delta_degrees)
-        projected = project_movement_command(
-            anchor.physics_state, decision.movement,
-            movement_yaw_radians=movement_yaw,
-        )
-        if (projected.status is not ProjectionStatus.READY
-                or projected.tick_input is None):
-            return None
-        calculated = step(
-            anchor.physics_state, projected.tick_input,
-            world, JAVA_1_21_RULESET,
-        )
-        if (calculated.status is not CalculationStatus.OK
-                or calculated.next_state is None):
-            return None
-        return replace(
-            anchor,
-            observation_sequence_id=anchor.observation_sequence_id + 1,
-            movement_tick_id=calculated.next_state.movement_tick_id,
-            confirmed_control_sequence=None,
-            confirmed_control_tick_range=None,
-            physics_state=calculated.next_state,
-        )
-
     def _upcoming_gap_index(self) -> int | None:
         index = self.executor.action_index
         actions = self.route.action_route.actions
@@ -946,24 +958,8 @@ class MotionRouteCoordinator:
             world: PhysicsWorldView) -> None:
         action_index = self._upcoming_gap_index()
         if action_index is None:
-            action_index = self._upcoming_air_index()
-            if action_index is None:
-                return
-            exit_state = self.executor.active_verified_exit_state()
-            if exit_state is None:
-                return
-            predicted = replace(
-                anchor,
-                observation_sequence_id=anchor.observation_sequence_id + 1,
-                movement_tick_id=exit_state.movement_tick_id,
-                confirmed_control_sequence=None,
-                confirmed_control_tick_range=None,
-                physics_state=exit_state,
-            )
-            self._submit_action(
-                action_index, predicted, world,
-                preparation_anchor=predicted,
-            )
+            # A future airborne exit is not a real observation or a start grant.
+            # Strict successors are prepared from their actual observed entry.
             return
         upcoming = self.route.action_route.actions[action_index]
         if (type(upcoming) is ControlledDropSegment
@@ -974,12 +970,10 @@ class MotionRouteCoordinator:
             # moving would allow an already-installed proof to bypass that
             # action-boundary check.
             return
-        predicted = self._predict_applied_walk_state(decision, anchor, world)
-        if predicted is None or not predicted.physics_state.on_ground:
+        if not decision.submit_input or decision.look is not None:
             return
         action = upcoming
         assert _air_action_kind(action) is not None
-        px, py, pz = predicted.physics_state.position
         if type(action) is JumpUpSegment:
             sx, sy, sz = (
                 action.edge.start[0] + .5,
@@ -988,10 +982,50 @@ class MotionRouteCoordinator:
             )
         else:
             sx, sy, sz = action.start_surface.position
-        if (math.hypot(px - sx, pz - sz) > .20
-                or abs(py - sy) > .10):
+        state = anchor.physics_state
+        speed = math.hypot(state.velocity_blocks_per_tick[0], state.velocity_blocks_per_tick[2])
+        # One conditional prefix, at most four ticks / 200 ms of preparation.
+        # Each real tick still passes arbitration, and the ledger must match it.
+        if math.hypot(state.position[0] - sx, state.position[2] - sz) > max(.20, speed * 4 + .20):
             return
-        self._submit_action(action_index, predicted, world)
+        prefix = []
+        selected = None
+        kind = _air_action_kind(upcoming)
+        policy = (self.gap_solver_policy if kind is MotionSolveKind.JUMP_GAP
+                  else self.air_transition_policies[kind])
+        for _ in range(4):
+            command = MotionCommandTick(decision.movement, anchor.physics_state.yaw_radians)
+            projected = project_movement_command(
+                state, command.movement, movement_yaw_radians=command.required_movement_yaw_radians,
+            )
+            if projected.status is not ProjectionStatus.READY or projected.tick_input is None:
+                break
+            calculated = step(state, projected.tick_input, world, JAVA_1_21_RULESET)
+            if calculated.status is not CalculationStatus.OK or calculated.next_state is None:
+                break
+            state = calculated.next_state
+            if not state.on_ground or state.horizontal_collision:
+                break
+            prefix.append(command)
+            px, py, pz = state.position
+            if (math.hypot(px - sx, pz - sz) <= .20 and abs(py - sy) <= .10
+                    and math.hypot(state.velocity_blocks_per_tick[0],
+                                   state.velocity_blocks_per_tick[2]) * 20
+                        <= policy.maximum_entry_speed_blocks_per_second):
+                selected = (tuple(prefix), state.position)
+        if selected is not None:
+            commands, position = selected
+            self._submit_action(action_index, anchor, world, entry_prefix=commands)
+            if self._pending_connection is not None:
+                # The local controller still checks support, collisions and its
+                # release tail each tick. This avoids steering back to the old
+                # graph centre while the conditional entry is being prepared.
+                from mc2p.motion_nav.fixed_route import GroundHandoffTarget
+                self.executor.prepare_ground_handoff(GroundHandoffTarget(
+                    position, anchor.movement_tick_id + 1,
+                    tuple(command.movement for command in commands),
+                    anchor.movement_tick_id + _MOTION_SOLVE_LIMIT_TICKS,
+                ))
 
     def decide(
             self, frame: NavigationFrame, anchor: StateAnchor,
@@ -1050,21 +1084,29 @@ class MotionRouteCoordinator:
         elif self._pending_job is not None:
             self._flush_pending_job()
         available_results = ()
-        if self._owns_result_inbox:
+        if self._owns_result_inbox and self._work_identity is None:
             available_results = self.worker.poll_available()
         else:
-            self.result_inbox.drain_once(
+            discarded = self.result_inbox.drain_once(
                 self.worker,
                 (frame.body.sequence_id if result_poll_sequence is None
                  else result_poll_sequence),
             )
+            for result in discarded:
+                if result.work_identity in self._known_work_windows:
+                    self._record_admission(
+                        AsyncAdmissionDisposition.DISCARDED_LATE,
+                        identity_matched=False, facts_valid=None,
+                        result_identity=result.work_identity,
+                    )
             if self._work_identity is not None:
-                available_results = self.result_inbox.take(
-                    self._work_identity,
-                )
+                result = self.result_inbox.peek(self._work_identity)
+                proof = None if result is None else result.solve_result.proof
+                if proof is None or anchor.movement_tick_id + 1 >= proof.execution_window.earliest_start_tick:
+                    available_results = self.result_inbox.take(self._work_identity)
         for result in available_results:
             installed = self._accept_result(
-                result, anchor, world, changed_cells,
+                result, anchor, world, changed_cells, ledger,
             ) or installed
         entry_ready = self.executor.current_verified_motion_can_start(anchor)
         if entry_ready is False:

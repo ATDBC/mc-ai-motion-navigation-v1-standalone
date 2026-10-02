@@ -1,0 +1,25 @@
+{
+  "source_difference_after_run": [
+    {
+      "domain": "production",
+      "file": "config/motion-navigation/standalone-export-v1.json",
+      "runtime_sha256": "29dbfdb367971778c9b1c5f8e50a4b1d024e531ca265e4775368811d49bc1c86",
+      "current_sha256": "686c628e18712a0747109f26f6a8cdc21d63806d868faecd14d0a4cebe1cebff"
+    }
+  ],
+  "explanation": "Only public export manifest added v4 evidence; runtime and simulation code remain byte-identical.",
+  "motion_tests": {
+    "tests": 886,
+    "passed": 886
+  },
+  "export_tests": {
+    "tests": 7,
+    "passed": 7
+  },
+  "old_v1_v2_v3_evidence_changed": false,
+  "invalid_reference_transport": {
+    "encoding": "gzip_original_bytes",
+    "original_sha256": "f7b52e3e1ed725bd2462d91bfe762277d1b4dffa25dcf926c821e6796de99b4d",
+    "compressed_sha256": "21e757e2545f9e48a54d1473e5631a4f7532d0695f6e60ee66967328c9a66907"
+  }
+}

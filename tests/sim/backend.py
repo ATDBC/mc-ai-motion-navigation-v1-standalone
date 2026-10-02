@@ -180,6 +180,7 @@ class CalculatorBackend:
         self.truth.observe_blocks(stamp, {p: self.scene.geometry(b) for p, b in self.scene.solids.items()})
         self.truth.confirm_air(stamp, self.scene.air_cells())
         self.world = PhysicsWorldView(self.truth.view(), JAVA_1_21_RULESET)
+        self._collision_solids = dict(self.scene.solids)
 
     def _initial_state(self, position, yaw_degrees) -> PhysicsState:
         x, y, z = position
@@ -359,6 +360,11 @@ class CalculatorBackend:
 
     def advance(self, movement: MovementV1, look_yaw: float = 0.0, look_pitch: float = 0.0) -> None:
         """One game tick with the given (already arbitrated) input."""
+        if self.scene.solids != self._collision_solids:
+            raise RuntimeError(
+                "sensor geometry differs from the collision world; "
+                "inject changes through Perturbations.world_edits"
+            )
         tick = self.movement_tick + 1
         perturbations_enabled = self._external_perturbations_enabled()
         world_edits = (

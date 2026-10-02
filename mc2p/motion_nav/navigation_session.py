@@ -562,6 +562,16 @@ class NavigationSession:
         return self._motion_result_inbox.active_identities
 
     @property
+    def body_route_snapshot(self) -> ActiveRoute | None:
+        """Read the immutable route currently owned by the body's controller.
+
+        A pending candidate is never returned. Reading does not advance work,
+        change a goal, or grant input authority.
+        """
+        controller = self._supervisor.route
+        return None if controller is None else controller.route
+
+    @property
     def _edge_probe(self) -> LandingEdgeProbe | None:
         return self._supervisor.probe
 

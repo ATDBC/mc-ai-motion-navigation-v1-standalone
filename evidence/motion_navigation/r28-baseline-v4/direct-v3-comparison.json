@@ -1,0 +1,12 @@
+{
+  "pairs": 2000,
+  "lost": [
+    "player-normal-000094",
+    "player-normal-000166",
+    "player-late-000166"
+  ],
+  "gained": [],
+  "success_v3": 1706,
+  "success_v4": 1703,
+  "limits": "Task success compared directly against all v3 rows, separately from the historical player-before subgroup in the general report."
+}

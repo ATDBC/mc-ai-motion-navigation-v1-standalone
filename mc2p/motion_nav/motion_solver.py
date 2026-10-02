@@ -1,7 +1,7 @@
 """B10-B bounded command search for the first one-cell gap capability."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 from enum import StrEnum
 import json
 import math
@@ -282,6 +282,7 @@ class GapSolveRequest:
     exit_direction: tuple[int, int] | None = None
     exit_motion_ticks: int = 0
     policy: GapSolverPolicy = DEFAULT_GAP_SOLVER_POLICY
+    recovery_horizon_ticks: int | None = None
 
     def __post_init__(self) -> None:
         if self.direction not in _CARDINAL_DIRECTIONS:
@@ -301,6 +302,13 @@ class GapSolveRequest:
             raise ContractViolation("gap solver candidate budget must be within 1..64")
         if type(self.max_ticks) is not int or not 12 <= self.max_ticks <= 60:
             raise ContractViolation("gap solver tick budget must be within 12..60")
+        recovery_ticks = (
+            self.max_ticks if self.recovery_horizon_ticks is None
+            else self.recovery_horizon_ticks
+        )
+        if type(recovery_ticks) is not int or not 1 <= recovery_ticks <= 60:
+            raise ContractViolation("gap recovery horizon must be within 1..60")
+        object.__setattr__(self, "recovery_horizon_ticks", recovery_ticks)
         if self.exit_direction is None:
             if self.exit_motion_ticks != 0:
                 raise ContractViolation("stable gap exit cannot request exit motion")
@@ -338,6 +346,7 @@ class GapSolveRequest:
             self.exit_direction,
             self.exit_motion_ticks,
             policy,
+            recovery_horizon_ticks=self.recovery_horizon_ticks,
         )
 
 
@@ -353,6 +362,7 @@ class AirTransitionSolveRequest:
     exit_direction: tuple[int, int] | None = None
     exit_motion_ticks: int = 0
     policy: AirTransitionSolverPolicy | None = None
+    recovery_horizon_ticks: int | None = None
 
     def __post_init__(self) -> None:
         if type(self.kind) is not MotionSolveKind:
@@ -375,6 +385,13 @@ class AirTransitionSolveRequest:
             raise ContractViolation("air transition candidate budget is invalid")
         if type(self.max_ticks) is not int or not 12 <= self.max_ticks <= 80:
             raise ContractViolation("air transition tick budget is invalid")
+        recovery_ticks = (
+            self.max_ticks if self.recovery_horizon_ticks is None
+            else self.recovery_horizon_ticks
+        )
+        if type(recovery_ticks) is not int or not 1 <= recovery_ticks <= 80:
+            raise ContractViolation("air recovery horizon must be within 1..80")
+        object.__setattr__(self, "recovery_horizon_ticks", recovery_ticks)
         if self.exit_direction is None:
             if self.exit_motion_ticks != 0:
                 raise ContractViolation("stable air transition cannot carry exit ticks")
@@ -447,6 +464,57 @@ class TrajectoryValidation:
 
 
 @dataclass(frozen=True, slots=True)
+class VerifiedMotionPreparation:
+    """A conditional ground prefix, bound to an actual observed source anchor.
+
+    These records describe a prediction, not an applied input or a new observed
+    anchor. Admission must check the real input ledger before using its entry.
+    """
+
+    source_anchor: StateAnchor
+    commands: tuple[MotionCommandTick, ...]
+    tick_inputs: tuple[TickInput, ...]
+    trajectory: tuple[PhysicsState, ...]
+    world_dependencies: tuple[BlockPos, ...]
+    resource_incomplete_reasons: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        count = len(self.commands)
+        if (type(self.source_anchor) is not StateAnchor
+                or type(self.commands) is not tuple or not 1 <= count <= 4
+                or any(type(command) is not MotionCommandTick
+                       for command in self.commands)
+                or type(self.tick_inputs) is not tuple
+                or len(self.tick_inputs) != count
+                or any(type(value) is not TickInput for value in self.tick_inputs)
+                or type(self.trajectory) is not tuple
+                or len(self.trajectory) != count + 1
+                or any(type(state) is not PhysicsState for state in self.trajectory)):
+            raise ContractViolation("verified preparation records disagree")
+        source = self.source_anchor
+        if (self.trajectory[0] != source.physics_state
+                or source.physics_state.movement_tick_id != source.movement_tick_id
+                or any(
+                    state.session != source.session
+                    or state.movement_tick_id != source.movement_tick_id + index
+                    or not state.on_ground
+                    for index, state in enumerate(self.trajectory)
+                )):
+            raise ContractViolation("verified preparation is detached from its source")
+        if any(
+                command.movement.jump
+                or _angle_error(command.required_movement_yaw_radians,
+                                source.physics_state.yaw_radians) > 1.0e-9
+                for command in self.commands):
+            raise ContractViolation("verified preparation is not a ground prefix")
+        if self.world_dependencies != tuple(sorted(set(self.world_dependencies))):
+            raise ContractViolation("verified preparation dependencies must be unique")
+        if (self.resource_incomplete_reasons
+                != tuple(sorted(set(self.resource_incomplete_reasons)))):
+            raise ContractViolation("verified preparation resource reasons must be unique")
+
+
+@dataclass(frozen=True, slots=True)
 class VerifiedMotionResult:
     solver_id: str
     solver_policy: GapSolverPolicy | AirTransitionSolverPolicy
@@ -472,9 +540,14 @@ class VerifiedMotionResult:
     kind: MotionSolveKind = MotionSolveKind.JUMP_GAP
     maximum_expected_damage_points: float = 0.0
     damage_budget: TaskDamageBudget = TaskDamageBudget()
+    recovery_horizon_ticks: int = field(kw_only=True)
+    preparation: VerifiedMotionPreparation | None = None
 
     def __post_init__(self) -> None:
         require_identifier(self.solver_id, "solver id")
+        if (type(self.recovery_horizon_ticks) is not int
+                or not 1 <= self.recovery_horizon_ticks <= 80):
+            raise ContractViolation("verified recovery horizon must be within 1..80")
         if (type(self.solver_policy) not in {
                 GapSolverPolicy, AirTransitionSolverPolicy}
                 or self.solver_policy.solver_id != self.solver_id):
@@ -505,6 +578,20 @@ class VerifiedMotionResult:
             raise ContractViolation("verified motion crosses world sessions")
         if self.anchor_movement_tick_id != self.entry_state.movement_tick_id:
             raise ContractViolation("verified motion anchor tick does not match entry")
+        if self.preparation is not None:
+            preparation = self.preparation
+            if (type(preparation) is not VerifiedMotionPreparation
+                    or preparation.trajectory[-1] != self.entry_state
+                    or preparation.source_anchor.observation_sequence_id
+                    != self.anchor_observation_sequence_id
+                    or preparation.source_anchor.ruleset_id != self.ruleset_id
+                    or preparation.source_anchor.input_projection_version
+                    != self.input_projection_version
+                    or not set(preparation.world_dependencies).issubset(
+                        self.world_dependencies)
+                    or not set(preparation.resource_incomplete_reasons).issubset(
+                        self.resource_incomplete_reasons)):
+                raise ContractViolation("verified motion preparation is detached")
         if (self.release_safe_command_indices
                 != tuple(sorted(set(self.release_safe_command_indices)))
                 or any(type(index) is not int or not 0 <= index < count
@@ -765,7 +852,7 @@ def _release_recovery_evidence(
             continue
         current = release_state
         recovered = False
-        for _ in range(request.max_ticks):
+        for _ in range(request.recovery_horizon_ticks):
             neutral = TickInput(
                 0.0, 0.0, False, False, False, current.yaw_radians,
             )
@@ -1036,6 +1123,7 @@ def revalidate_gap_motion(
                 exit_direction=proof.exit_direction,
                 exit_motion_ticks=proof.exit_motion_ticks,
                 policy=proof.solver_policy,
+                recovery_horizon_ticks=proof.recovery_horizon_ticks,
             )
     else:
         request = GapSolveRequest(
@@ -1044,6 +1132,7 @@ def revalidate_gap_motion(
             exit_direction=proof.exit_direction,
             exit_motion_ticks=proof.exit_motion_ticks,
             policy=proof.solver_policy,
+            recovery_horizon_ticks=proof.recovery_horizon_ticks,
         )
     rejected = check_motion_entry(anchor, world, request)
     if rejected is not None:
@@ -1095,6 +1184,7 @@ def revalidate_gap_motion(
             *(_trajectory_damage_points(variant.trajectory)
               for variant in delayed_variants),
         ), proof.damage_budget,
+        recovery_horizon_ticks=proof.recovery_horizon_ticks,
     )
     return SolveResult(SolveStatus.SOLVED, refreshed, candidates_evaluated=0)
 
@@ -1289,6 +1379,7 @@ def solve_air_transition(
             request.exit_direction, request.exit_motion_ticks,
             delayed_variants, request.kind, maximum_expected_damage,
             request.damage_budget,
+            recovery_horizon_ticks=request.recovery_horizon_ticks,
         )
         return SolveResult(
             SolveStatus.SOLVED, proof=proof, candidates_evaluated=evaluated,
@@ -1323,3 +1414,111 @@ def solve_one_cell_gap(anchor: StateAnchor, world: PhysicsWorldView,
     if type(request) is not GapSolveRequest:
         raise ContractViolation("gap solver requires a GapSolveRequest")
     return solve_air_transition(anchor, world, request.as_air_transition())
+
+
+def solve_prepared_air_transition(
+        anchor: StateAnchor,
+        world: PhysicsWorldView,
+        request: GapSolveRequest | AirTransitionSolveRequest,
+        entry_prefix: tuple[MotionCommandTick, ...]) -> SolveResult:
+    """Solve at the entry predicted by one already-selected short ground prefix.
+
+    The original anchor remains the only observation. The conditional anchor
+    below is local to pure calculation and never authorizes the prefix.
+    """
+    if (type(anchor) is not StateAnchor or type(world) is not PhysicsWorldView
+            or type(request) not in {GapSolveRequest, AirTransitionSolveRequest}
+            or type(entry_prefix) is not tuple or len(entry_prefix) > 4
+            or any(type(command) is not MotionCommandTick
+                   for command in entry_prefix)):
+        raise ContractViolation("motion preparation requires typed inputs and at most four ticks")
+    entry_check = check_motion_entry(anchor, world, request)
+    if entry_check is not None:
+        return entry_check
+    earliest = anchor.movement_tick_id + len(entry_prefix) + 1
+    if (request.execution_window.earliest_start_tick != earliest
+            or request.execution_window.latest_start_tick > earliest + 1):
+        return SolveResult(
+            SolveStatus.INVALID_INPUT,
+            reasons=("preparation_execution_window_detached",),
+        )
+    if not entry_prefix:
+        return (solve_one_cell_gap(anchor, world, request)
+                if type(request) is GapSolveRequest else
+                solve_air_transition(anchor, world, request))
+    current = anchor.physics_state
+    trajectory = [current]
+    inputs: list[TickInput] = []
+    dependencies: set[BlockPos] = set()
+    resource_reasons: set[str] = set()
+    for command in entry_prefix:
+        if (command.movement.jump
+                or _angle_error(command.required_movement_yaw_radians,
+                                anchor.physics_state.yaw_radians) > 1.0e-9):
+            return SolveResult(
+                SolveStatus.INVALID_INPUT,
+                reasons=("preparation_requires_ground_input_and_fixed_look",),
+            )
+        projected = project_movement_command(
+            current, command.movement,
+            movement_yaw_radians=command.required_movement_yaw_radians,
+        )
+        if projected.status is not ProjectionStatus.READY or projected.tick_input is None:
+            return SolveResult(SolveStatus.UNSUPPORTED, reasons=projected.reasons)
+        calculated = step(current, projected.tick_input, world, JAVA_1_21_RULESET)
+        dependencies.update(calculated.dependencies)
+        if calculated.status is CalculationStatus.NEEDS_WORLD:
+            return SolveResult(
+                SolveStatus.NEEDS_WORLD, missing_cells=calculated.missing_cells,
+                reasons=("preparation_world_incomplete",),
+            )
+        if calculated.status is CalculationStatus.UNSUPPORTED:
+            return SolveResult(
+                SolveStatus.UNSUPPORTED, reasons=calculated.unsupported_reasons,
+            )
+        if calculated.status is not CalculationStatus.OK or calculated.next_state is None:
+            return SolveResult(
+                SolveStatus.INVALID_INPUT,
+                reasons=calculated.invalid_reasons or ("preparation_physics_invalid",),
+            )
+        current = calculated.next_state
+        if not current.on_ground:
+            return SolveResult(
+                SolveStatus.NEEDS_STATE,
+                reasons=("preparation_left_ground_support",),
+            )
+        if current.horizontal_collision:
+            return SolveResult(
+                SolveStatus.HARD_CONFLICT,
+                reasons=("preparation_horizontal_collision",),
+            )
+        assert calculated.resource_update is not None
+        resource_reasons.update(calculated.resource_update.incomplete_reasons)
+        inputs.append(projected.tick_input)
+        trajectory.append(current)
+    preparation = VerifiedMotionPreparation(
+        anchor, entry_prefix, tuple(inputs), tuple(trajectory),
+        tuple(sorted(dependencies)), tuple(sorted(resource_reasons)),
+    )
+    # This conditional state is not published as a fresh observation and never
+    # increments the observation ID or the input ledger's actual applied range.
+    predicted_entry = replace(
+        anchor, movement_tick_id=current.movement_tick_id, physics_state=current,
+    )
+    solved = (solve_one_cell_gap(predicted_entry, world, request)
+              if type(request) is GapSolveRequest else
+              solve_air_transition(predicted_entry, world, request))
+    if solved.status is not SolveStatus.SOLVED:
+        return solved
+    assert solved.proof is not None
+    proof = replace(
+        solved.proof,
+        preparation=preparation,
+        world_dependencies=tuple(sorted(
+            set(solved.proof.world_dependencies) | dependencies,
+        )),
+        resource_incomplete_reasons=tuple(sorted(
+            set(solved.proof.resource_incomplete_reasons) | resource_reasons,
+        )),
+    )
+    return replace(solved, proof=proof)

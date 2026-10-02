@@ -150,7 +150,7 @@ class MotionCandidateAdmissionTests(unittest.TestCase):
 
         result = self.admit(moved, candidate)
 
-        self.assertIs(result.status, MotionCandidateStatus.REJECTED)
+        self.assertIs(result.status, MotionCandidateStatus.NEEDS_REVALIDATION)
         self.assertEqual(result.reason, "entry_state_changed")
 
     def test_same_body_values_at_a_later_tick_do_not_revive_old_proof(self):
@@ -167,7 +167,7 @@ class MotionCandidateAdmissionTests(unittest.TestCase):
 
         result = self.admit(later, candidate, intended_start_tick=12)
 
-        self.assertIs(result.status, MotionCandidateStatus.REJECTED)
+        self.assertIs(result.status, MotionCandidateStatus.NEEDS_REVALIDATION)
         self.assertEqual(result.reason, "state_anchor_advanced")
 
 
@@ -1310,10 +1310,13 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
             )
             self.assertFalse(decision.submit_input)
             deadline = time.perf_counter() + 5.0
+            poll_sequence = 1
             while not decision.submit_input and time.perf_counter() < deadline:
                 time.sleep(.01)
+                poll_sequence += 1
                 decision = coordinator.decide(
                     frame, anchor, ledger, physics_world, changed_cells=(),
+                    result_poll_sequence=poll_sequence,
                 )
 
         self.assertTrue(decision.submit_input)
@@ -1393,11 +1396,13 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
                 changed_cells=(),
             )
             deadline = time.perf_counter() + 5.0
+            poll_sequence = 2
             while not decision.submit_input and time.perf_counter() < deadline:
                 time.sleep(.01)
+                poll_sequence += 1
                 decision = coordinator.decide(
                     aligned_frame, aligned_anchor, ledger, physics_world,
-                    changed_cells=(),
+                    changed_cells=(), result_poll_sequence=poll_sequence,
                 )
 
         self.assertTrue(decision.submit_input)
@@ -1469,17 +1474,19 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
                 )
 
             self.assertEqual(len(jobs), 1)
-            predicted_anchor = jobs[0].anchor
+            self.assertEqual(jobs[0].anchor, anchor)
             solved = _execute_job(jobs[0])
             self.assertIsNotNone(solved.solve_result.proof)
+            preparation = solved.solve_result.proof.preparation
+            self.assertIsNotNone(preparation)
             delayed_variant = solved.solve_result.proof.start_variant(
-                predicted_anchor.movement_tick_id + 2,
+                solved.solve_result.proof.execution_window.latest_start_tick,
             )
             self.assertIsNotNone(delayed_variant)
             boundary_anchor = replace(
-                predicted_anchor,
+                anchor,
                 observation_sequence_id=(
-                    predicted_anchor.observation_sequence_id + 1
+                    anchor.observation_sequence_id + len(preparation.commands) + 1
                 ),
                 movement_tick_id=delayed_variant.entry_state.movement_tick_id,
                 physics_state=delayed_variant.entry_state,
@@ -1487,21 +1494,33 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
             predicted_frame = self.frame(
                 physics_world._world, boundary_anchor.physics_state, 2,
             )
+            ledger = InputApplicationLedger(max_records=64)
+            for index, command in enumerate(preparation.commands):
+                tick = anchor.movement_tick_id + index + 1
+                VerifiedMotionExecutorTests.applied(
+                    ledger, anchor, 90 + index, tick, command.movement,
+                    requested_tick=tick,
+                )
+            VerifiedMotionExecutorTests.applied(
+                ledger, boundary_anchor, 99, boundary_anchor.movement_tick_id,
+                MovementV1(), requested_tick=boundary_anchor.movement_tick_id,
+            )
             with (
                 patch.object(worker, "is_alive", return_value=True),
                 patch.object(worker, "poll_available", return_value=(solved,)),
             ):
                 handoff = coordinator.decide(
                     predicted_frame, boundary_anchor,
-                    InputApplicationLedger(max_records=64),
+                    ledger,
                     physics_world, changed_cells=(),
                 )
 
         self.assertEqual(decision.action_index, 0)
         self.assertTrue(decision.submit_input)
         self.assertEqual(jobs[0].connection_id, "predicted-gap/action-1")
-        self.assertEqual(jobs[0].anchor.movement_tick_id, 11)
-        self.assertGreater(jobs[0].anchor.physics_state.position[2], .2)
+        self.assertEqual(jobs[0].anchor.movement_tick_id, anchor.movement_tick_id)
+        self.assertEqual(jobs[0].anchor.physics_state.position[2], .2)
+        self.assertGreater(preparation.trajectory[-1].position[2], .2)
         self.assertEqual(
             jobs[0].request.policy.maximum_entry_speed_blocks_per_second,
             3.0,
@@ -1777,7 +1796,7 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
         self.assertEqual(wrong_connection.reason,
                          "precomputed_connection_mismatch")
 
-    def test_route_admitter_revalidates_a_delayed_background_result(self):
+    def test_route_admitter_requests_background_revalidation_of_delayed_result(self):
         anchor, physics_world, _, _ = fixture()
         start_id = SurfaceNodeId(0, 0, 64, 0)
         end_id = SurfaceNodeId(0, 2, 64, 0)
@@ -1823,9 +1842,22 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
             changed_cells=(), world=physics_world,
         )
 
+        self.assertIs(admission.status, MotionCandidateStatus.NEEDS_REVALIDATION)
+        self.assertIsNone(admission.candidate)
+        from mc2p.motion_nav.motion_worker import GapMotionSolveJob, MotionJobOperation
+        from mc2p.motion_nav.motion_solver import GapSolveRequest
+        from mc2p.motion_nav.online_motion import CandidateExecutionWindow
+        refreshed = _execute_job(GapMotionSolveJob(
+            "delayed-route/action-0", 1, later, physics_world,
+            GapSolveRequest((0, 1), reusable.proof.landing, CandidateExecutionWindow(14, 15)),
+            operation=MotionJobOperation.REVALIDATE, proof=reusable.proof,
+        ))
+        rebound = replace(reusable, proof=refreshed.solve_result.proof)
+        admission = RouteAdmitter().admit_verified_motion(
+            rebound, active, later, candidate_revision=1,
+            intended_start_tick=14, changed_cells=(), input_ledger=InputApplicationLedger(),
+        )
         self.assertIs(admission.status, MotionCandidateStatus.ACCEPTED)
-        self.assertEqual(admission.candidate.admitted_movement_tick_id, 13)
-        self.assertEqual(admission.candidate.intended_start_tick, 14)
         self.assertEqual(
             admission.candidate.proof.anchor_observation_sequence_id,
             later.observation_sequence_id,

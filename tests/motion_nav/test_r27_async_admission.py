@@ -277,6 +277,14 @@ class R27IdentityTests(unittest.TestCase):
 
     def _run_formal_successor_delivery(self, seed):
         class ClockedGapBackend(runtime_gap_fixtures._GapRuntimeBackend):
+            def observation(self, **kwargs):
+                observation = super().observation(**kwargs)
+                # This transport-only fixture remains stationary on support.
+                # Report the collision state that a real neutral tick produces.
+                return replace(observation, self_state=replace(observation.self_state,
+                    value=replace(observation.self_state.value,
+                                  vertical_collision=not self.airborne)))
+
             def step(self, action, deadline, **kwargs):
                 if action.movement == MovementV1():
                     self.movement_tick += 1
@@ -343,6 +351,17 @@ class R27IdentityTests(unittest.TestCase):
         deliveries = [new_result, old_failure, _execute_job(old), new_result]
         rng.shuffle(deliveries)
         worker.results.extend(deliveries)
+        result = driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
+        self.assertIsNone(result.report.failure)
+        # Two transport ticks have passed: the old start window is expired.
+        # The formal control path must request worker replay, never replay on
+        # the control thread or let an old duplicate cancel that new job.
+        from mc2p.motion_nav.motion_worker import MotionJobOperation
+        refresh = worker.jobs[-1]
+        self.assertIs(refresh.operation, MotionJobOperation.REVALIDATE)
+        self.assertNotEqual(refresh.work_identity, new.work_identity)
+        self.assertFalse(result.decision.action.movement.jump)
+        worker.results.extend((_execute_job(refresh), old_failure, new_result))
         result = driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
         self.assertIsNone(result.report.failure)
         self.assertTrue(result.decision.action.movement.jump)

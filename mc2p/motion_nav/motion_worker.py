@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
 import multiprocessing
 from queue import Empty, Full
 import time
@@ -13,10 +14,16 @@ from mc2p.contracts.common import (
 from mc2p.motion_nav.async_work import AsyncWorkIdentity
 from mc2p.motion_nav.motion_solver import (
     AirTransitionSolveRequest, GapSolveRequest, SolveResult, SolveStatus,
+    MotionCommandTick, VerifiedMotionResult, revalidate_air_transition,
     solve_air_transition, solve_one_cell_gap,
 )
 from mc2p.motion_nav.online_motion import StateAnchor
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView
+
+
+class MotionJobOperation(StrEnum):
+    SOLVE = "solve"
+    REVALIDATE = "revalidate"
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,6 +34,9 @@ class GapMotionSolveJob:
     world: PhysicsWorldView
     request: GapSolveRequest | AirTransitionSolveRequest
     work_identity: AsyncWorkIdentity | None = None
+    operation: MotionJobOperation = MotionJobOperation.SOLVE
+    proof: VerifiedMotionResult | None = None
+    entry_prefix: tuple[MotionCommandTick, ...] = ()
 
     def __post_init__(self) -> None:
         require_identifier(self.connection_id, "motion connection id")
@@ -39,6 +49,15 @@ class GapMotionSolveJob:
         if (self.work_identity is not None
                 and type(self.work_identity) is not AsyncWorkIdentity):
             raise ContractViolation("motion job work identity must be typed")
+        if type(self.operation) is not MotionJobOperation:
+            raise ContractViolation("motion job operation must be typed")
+        if (self.operation is MotionJobOperation.REVALIDATE) != (
+                type(self.proof) is VerifiedMotionResult):
+            raise ContractViolation("revalidation requires exactly one old proof")
+        if (type(self.entry_prefix) is not tuple or len(self.entry_prefix) > 4
+                or any(type(command) is not MotionCommandTick for command in self.entry_prefix)
+                or (self.operation is MotionJobOperation.REVALIDATE and self.entry_prefix)):
+            raise ContractViolation("motion preparation prefix must be bounded")
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,11 +96,21 @@ def _execute_job(job: GapMotionSolveJob) -> GapMotionSolveResult:
         raise ContractViolation("motion worker requires a typed job")
     started = time.perf_counter_ns()
     try:
-        solved = (
-            solve_one_cell_gap(job.anchor, job.world, job.request)
-            if type(job.request) is GapSolveRequest else
-            solve_air_transition(job.anchor, job.world, job.request)
-        )
+        if job.operation is MotionJobOperation.REVALIDATE:
+            solved = revalidate_air_transition(
+                job.proof, job.anchor, job.world, job.request.execution_window,
+            )
+        elif job.entry_prefix:
+            from mc2p.motion_nav.motion_solver import solve_prepared_air_transition
+            solved = solve_prepared_air_transition(
+                job.anchor, job.world, job.request, job.entry_prefix,
+            )
+        else:
+            solved = (
+                solve_one_cell_gap(job.anchor, job.world, job.request)
+                if type(job.request) is GapSolveRequest else
+                solve_air_transition(job.anchor, job.world, job.request)
+            )
     except Exception as error:
         solved = SolveResult(
             SolveStatus.INTERNAL_ERROR,
@@ -206,13 +235,14 @@ class MotionResultInbox:
         self,
         worker: MotionWorkerPort,
         observation_sequence: int,
-    ) -> None:
+    ) -> tuple[GapMotionSolveResult, ...]:
         if not isinstance(worker, MotionWorkerPort):
             raise ContractViolation("motion inbox requires a worker")
         require_nonnegative_int(observation_sequence, "motion inbox sequence")
         if self._last_drain_sequence == observation_sequence:
-            return
+            return ()
         self._last_drain_sequence = observation_sequence
+        discarded = []
         for result in worker.poll_available():
             identity = result.work_identity
             if identity is None:
@@ -222,15 +252,23 @@ class MotionResultInbox:
                 continue
             if identity not in self._active or identity in self._delivered:
                 self.discarded_results += 1
+                discarded.append(result)
                 continue
             self._results[identity] = result
             self._delivered.add(identity)
+        return tuple(discarded)
 
     def take(self, identity: AsyncWorkIdentity) -> tuple[GapMotionSolveResult, ...]:
         if type(identity) is not AsyncWorkIdentity:
             raise ContractViolation("motion inbox take requires typed identity")
         result = self._results.pop(identity, None)
         return () if result is None else (result,)
+
+    def peek(self, identity: AsyncWorkIdentity) -> GapMotionSolveResult | None:
+        """Keep an early result bounded in this inbox until its real entry tick."""
+        if type(identity) is not AsyncWorkIdentity:
+            raise ContractViolation("motion inbox peek requires typed identity")
+        return self._results.get(identity)
 
     def retire(self, identity: AsyncWorkIdentity) -> None:
         if type(identity) is not AsyncWorkIdentity:
