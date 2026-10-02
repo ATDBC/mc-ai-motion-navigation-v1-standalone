@@ -1,0 +1,8 @@
+flat 20                    success  goal_state_satisfied                 ticks to task end=99  damage=0.0
+gap 1                      success  goal_state_satisfied                 ticks to task end=75  damage=0.0
+gap 2                      failed   no_route_within_complete_scope       ticks to task end=0  damage=0.0
+gap 3                      failed   no_route_within_complete_scope       ticks to task end=0  damage=0.0
+gap 4                      failed   no_route_within_complete_scope       ticks to task end=0  damage=0.0
+gap 3 + 4 floor + gap 3    failed   no_route_within_complete_scope       ticks to task end=0  damage=0.0
+step up 1 at speed         success  goal_state_satisfied                 ticks to task end=87  damage=0.0
+turn then gap 3            failed   no_route_within_complete_scope       ticks to task end=0  damage=0.0

@@ -1,0 +1,20 @@
+exact primitive cache on top of the same weighted A* (cache is warm across courses, in order)
+
+flat 20                   nominal   ticks=60   expanded=125    steps=22320   ms=4639    real-calculator replay=ok cache={'hit': 2126, 'miss_new': 2355, 'miss_terrain': 229}
+flat 20                   robust    ticks=60   expanded=125    steps=11338   ms=2792    real-calculator replay=ok cache={'hit': 2347, 'miss_new': 269, 'miss_terrain': 277}
+gap 1                     nominal   ticks=42   expanded=28     steps=1975    ms=578     real-calculator replay=ok cache={'hit': 449, 'miss_new': 140, 'miss_terrain': 51}
+gap 1                     robust    ticks=42   expanded=28     steps=1567    ms=470     real-calculator replay=ok cache={'hit': 493, 'miss_new': 23, 'miss_terrain': 57}
+gap 2                     nominal   ticks=46   expanded=319    steps=56389   ms=11653   real-calculator replay=ok cache={'hit': 5841, 'miss_new': 6015, 'miss_terrain': 549}
+gap 2                     robust    ticks=46   expanded=319    steps=30588   ms=6015    real-calculator replay=ok cache={'hit': 6478, 'miss_new': 757, 'miss_terrain': 697}
+gap 3                     nominal   ticks=49   expanded=186    steps=23431   ms=5280    real-calculator replay=ok cache={'hit': 3225, 'miss_new': 2280, 'miss_terrain': 330}
+gap 3                     robust    ticks=49   expanded=186    steps=14947   ms=3304    real-calculator replay=ok cache={'hit': 3564, 'miss_new': 319, 'miss_terrain': 412}
+gap 4                     nominal   NOT FOUND (budget) expanded=782 steps=141035 ms=30042 cache={'hit': 14084, 'miss_new': 15050, 'miss_terrain': 1371}
+gap 4                     robust    ticks=54   expanded=845    steps=92111   ms=20031   real-calculator replay=FAIL cache={'hit': 16918, 'miss_new': 3315, 'miss_terrain': 1881}
+gap 3 + 4 floor + gap 3   nominal   NOT FOUND (budget) expanded=765 steps=138309 ms=30029 cache={'hit': 13791, 'miss_new': 14740, 'miss_terrain': 1354}
+gap 3 + 4 floor + gap 3   robust    NOT FOUND (budget) expanded=987 steps=132833 ms=30054 cache={'hit': 19927, 'miss_new': 6956, 'miss_terrain': 2203}
+step up 1 at speed        nominal   ticks=51   expanded=442    steps=81019   ms=19479   real-calculator replay=ok cache={'hit': 6840, 'miss_new': 8270, 'miss_terrain': 2005}
+step up 1 at speed        robust    ticks=51   expanded=442    steps=49541   ms=10904   real-calculator replay=ok cache={'hit': 7525, 'miss_new': 1102, 'miss_terrain': 2471}
+turn then gap 3           nominal   NOT FOUND (budget) expanded=507 steps=140650 ms=30035 cache={'hit': 6502, 'miss_new': 10080, 'miss_terrain': 3713}
+turn then gap 3           robust    NOT FOUND (budget) expanded=744 steps=138722 ms=30020 cache={'hit': 9191, 'miss_new': 4969, 'miss_terrain': 6003}
+
+cache entries: 76640

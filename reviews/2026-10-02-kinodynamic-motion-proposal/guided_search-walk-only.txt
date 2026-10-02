@@ -1,0 +1,26 @@
+route-guided weighted A* (w=1.5), budget 3000 expansions, primitives ('walk1', 'walk3', 'walkjump', 'release')
+
+flat 20                   nominal   ticks=103  expanded=11     steps=594     ms=104     replay=ok jumps=8 survive-1-tick-late=8/8
+                                   walk3@0x3 walkjump@0x96 walk3@0x3 walk1@0x1
+flat 20                   robust    ticks=103  expanded=11     steps=1023    ms=232     replay=ok jumps=8 survive-1-tick-late=8/8
+                                   walk3@0x3 walkjump@0x96 walk3@0x3 walk1@0x1
+gap 1                     nominal   ticks=75   expanded=7      steps=392     ms=73      replay=ok jumps=6 survive-1-tick-late=6/6
+                                   walk3@0x3 walkjump@0x72
+gap 1                     robust    ticks=75   expanded=7      steps=665     ms=127     replay=ok jumps=6 survive-1-tick-late=6/6
+                                   walk3@0x3 walkjump@0x72
+gap 2                     nominal   ticks=78   expanded=8      steps=466     ms=100     replay=ok jumps=6 survive-1-tick-late=6/6
+                                   walk3@0x3 walkjump@0x72 walk3@0x3
+gap 2                     robust    ticks=78   expanded=8      steps=752     ms=140     replay=ok jumps=6 survive-1-tick-late=6/6
+                                   walk3@0x3 walkjump@0x72 walk3@0x3
+gap 3                     nominal   NOT FOUND (3000 expansions) steps=572428
+gap 3                     robust    NOT FOUND (3000 expansions) steps=572811
+gap 4                     nominal   NOT FOUND (3000 expansions) steps=572428
+gap 4                     robust    NOT FOUND (3000 expansions) steps=572811
+gap 3 + 4 floor + gap 3   nominal   NOT FOUND (3000 expansions) steps=601777
+gap 3 + 4 floor + gap 3   robust    NOT FOUND (3000 expansions) steps=602090
+step up 1 at speed        nominal   ticks=84   expanded=16     steps=840     ms=166     replay=ok jumps=6 survive-1-tick-late=6/6
+                                   walk3@0x3 walkjump@0x36 walk3@0x6 walkjump@0x33 walk3@0x6
+step up 1 at speed        robust    ticks=84   expanded=16     steps=1427    ms=349     replay=ok jumps=6 survive-1-tick-late=6/6
+                                   walk3@0x3 walkjump@0x36 walk3@0x6 walkjump@0x33 walk3@0x6
+turn then gap 3           nominal   NOT FOUND (3000 expansions) steps=572925
+turn then gap 3           robust    NOT FOUND (3000 expansions) steps=574118

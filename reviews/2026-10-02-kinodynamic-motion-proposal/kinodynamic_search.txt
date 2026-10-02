@@ -1,0 +1,32 @@
+machine: 4 cores, single process per run, Python 3.11.15, code 7348b64
+calculator step cost reference: see 'steps' and 'ms' columns (weighted A*, w=1.5)
+
+flat 20                   nominal   ticks=60   expanded=125    steps=10152   ms=1976    replay=ok jumps=4 survive-1-tick-late=4/4
+                                   sprint1@0x1 sprint3@0x3 jump@0x48 sprint3@0x3 sprint1@0x2 sprint3@0x3
+flat 20                   robust    ticks=60   expanded=125    steps=13889   ms=2517    replay=ok jumps=4 survive-1-tick-late=4/4
+                                   sprint1@0x1 sprint3@0x3 jump@0x48 sprint3@0x3 sprint1@0x2 sprint3@0x3
+gap 1                     nominal   ticks=42   expanded=28     steps=2243    ms=411     replay=ok jumps=3 survive-1-tick-late=3/3
+                                   sprint1@0x1 sprint3@0x3 jump@0x36 sprint1@0x2
+gap 1                     robust    ticks=42   expanded=28     steps=2929    ms=519     replay=ok jumps=3 survive-1-tick-late=3/3
+                                   sprint1@0x1 sprint3@0x3 jump@0x36 sprint1@0x2
+gap 2                     nominal   ticks=46   expanded=319    steps=27241   ms=5487    replay=ok jumps=3 survive-1-tick-late=3/3
+                                   sprint1@0x1 sprint3@0x3 jump@0x36 sprint3@0x3 sprint3@-45x3
+gap 2                     robust    ticks=46   expanded=319    steps=38159   ms=7871    replay=ok jumps=3 survive-1-tick-late=3/3
+                                   sprint1@0x1 sprint3@0x3 jump@0x36 sprint3@0x3 sprint3@-45x3
+gap 3                     nominal   ticks=49   expanded=186    steps=15451   ms=3059    replay=ok jumps=3 survive-1-tick-late=3/3
+                                   sprint1@0x1 sprint3@0x3 jump@0x36 sprint3@0x9
+gap 3                     robust    ticks=49   expanded=186    steps=21320   ms=3878    replay=ok jumps=3 survive-1-tick-late=3/3
+                                   sprint1@0x1 sprint3@0x3 jump@0x36 sprint3@0x9
+gap 4                     nominal   ticks=54   expanded=466    steps=39498   ms=7880    replay=ok jumps=3 survive-1-tick-late=1/3
+                                   sprint1@0x1 sprint3@0x3 jump@0x24 sprint3@0x3 sprint1@0x1 jump@0x12 sprint3@0x3 sprint1@0x1 sprint3@0x6
+gap 4                     robust    NOT FOUND (budget) expanded=572 steps=147321 ms=30029 late-rejected jumps=193
+gap 3 + 4 floor + gap 3   nominal   ticks=69   expanded=602    steps=51666   ms=10782   replay=ok jumps=4 survive-1-tick-late=1/4
+                                   sprint1@0x1 sprint3@0x3 jump@0x12 sprint3@0x9 jump@0x36 sprint3@0x3 sprint1@0x2 sprint3@-45x3
+gap 3 + 4 floor + gap 3   robust    ticks=72   expanded=139    steps=14636   ms=3148    replay=ok jumps=4 survive-1-tick-late=4/4
+                                   sprint1@0x1 sprint3@0x3 jump@0x12 sprint3@0x9 jump@0x12 sprint3@0x3 sprint1@0x2 sprint3@0x6 jump@0x24
+step up 1 at speed        nominal   ticks=51   expanded=442    steps=36445   ms=7450    replay=ok jumps=3 survive-1-tick-late=3/3
+                                   sprint1@0x1 sprint3@0x3 jump@0x12 sprint3@0x3 sprint1@0x2 sprint3@0x3 jump@0x21 sprint3@0x3 sprint3@-45x3
+step up 1 at speed        robust    ticks=51   expanded=442    steps=51380   ms=10634   replay=ok jumps=3 survive-1-tick-late=3/3
+                                   sprint1@0x1 sprint3@0x3 jump@0x12 sprint3@0x3 sprint1@0x2 sprint3@0x3 jump@0x21 sprint3@0x3 sprint3@-45x3
+turn then gap 3           nominal   NOT FOUND (budget) expanded=934 steps=147267 ms=30022 late-rejected jumps=0
+turn then gap 3           robust    NOT FOUND (budget) expanded=933 steps=150477 ms=30001 late-rejected jumps=37
