@@ -1,0 +1,17 @@
+diff --git a/mc2p/motion_nav/fixed_route.py b/mc2p/motion_nav/fixed_route.py
+index c43f4e2..5c1e1e5 100644
+--- a/mc2p/motion_nav/fixed_route.py
++++ b/mc2p/motion_nav/fixed_route.py
+@@ -1415,6 +1415,12 @@ class FixedRouteController:
+                 unsupported = True
+                 break
+             if collision.status is QueryStatus.BLOCKED:
++                # Prototype: near the route end, touching a wall is harmless;
++                # the game clips the body.  Stop the predicted rollout at
++                # contact instead of rejecting the input.
++                if (self._geometry is not None
++                        and self._geometry.total_length - self._progress <= 1.0):
++                    break
+                 blocked = True
+                 break
+             if collision.status is QueryStatus.NEEDS_INFORMATION:

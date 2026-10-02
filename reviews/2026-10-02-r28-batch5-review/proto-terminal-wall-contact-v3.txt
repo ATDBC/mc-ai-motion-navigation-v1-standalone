@@ -1,0 +1,30 @@
+Same machine (Linux, 4 workers): unchanged 7348b64 vs 7348b64 + proto-terminal-wall-contact.diff, full v3 manifest.
+Small arrival differences in non-player layers are partly screening wall-clock noise (see determinism-7348b64.txt).
+
+layer             before     after   b    c  changed  arrival delta (both succeed) min/mean/max
+drop-late        189/200   189/200   0    0        0  0/+0.00/0
+drop-normal      200/200   200/200   0    0        0  0/+0.00/0
+height-late      200/200   200/200   0    0        0  0/+0.00/0
+height-normal    200/200   200/200   0    0        0  0/+0.00/0
+player-late       58/200   116/200   1   59       72  -5/-0.39/4
+player-normal     58/200   117/200   1   60       69  -3/+0.09/3
+point-late       200/200   200/200   0    0       24  -7/+0.03/5
+point-normal     200/200   200/200   0    0       28  -5/+0.02/5
+target-late      200/200   200/200   0    0        9  -5/-0.04/5
+target-normal    200/200   200/200   0    0        0  0/+0.00/0
+
+player-spot cases (normal + late together):
+  player_corner              0 -> 20   of 50
+  player_corridor_end        0 -> 26   of 50
+  player_corridor_middle    28 -> 26   of 50
+  player_ledge_0            50 -> 50   of 50
+  player_ledge_1            34 -> 34   of 50
+  player_ledge_2             0 -> 0    of 50
+  player_wall_head           2 -> 39   of 50
+  player_wall_parallel       2 -> 38   of 50
+
+success -> failure:
+  player-normal-000187 player_corridor_middle west -> terminal_approach_control_unsupported
+  player-late-000187 player_corridor_middle west -> terminal_approach_control_unsupported
+
+motion_nav tests with the prototype: Ran 883 tests in 247.627s OK
