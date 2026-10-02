@@ -2,7 +2,7 @@
 
 本仓库是由主项目生成的只读源码快照。先读最新的 `docs/motion_navigation/stages/` 和对应的 `acceptance/`，再读取相关 `architecture/` 与 `decisions/`。
 
-当前 [R28 计划](docs/motion_navigation/stages/navigation-coordination-convergence-r28-plan.md)已完成批次 2—4，修正工具、非格心目标与拐角并冻结 v2 基线：1,589/1,600，严格下降晚到的 11 个失败仍保留。旧清单 147 个失败转成功，没有成功转失败；1,448 组协调回归逐项一致。代表性 Fabric 12 个导航任务全部完成，原批次封装失败与原始流复核分开报告。结果与边界见[R28 验收第 9 节](docs/motion_navigation/acceptance/navigation-coordination-convergence.md#9-批次-24产品基线修正)。R28-1 迁移、持续任务预算、正式跟随及长时探针尚未实施，未覆盖函数不能迁移。现行 R27 和 M3 结论保持原范围。
+当前 [R28 计划](docs/motion_navigation/stages/navigation-coordination-convergence-r28-plan.md)已完成批次 5 的实现和 v3 基线：原八层 1,589/1,600，新增玩家站位 117/400；883 项检查通过。56 场 Fabric 中 20 场完成、36 场未完成。有界拒绝不计为成功。原四个未覆盖函数已有正式路径场景，16 组历史扰动交付差异单列。结果与限制见[R28 验收第 10.7 节](docs/motion_navigation/acceptance/navigation-coordination-convergence.md#107-批次-5-实现与-v3-结果)。R28-1、持续预算、跟随和完整路线平滑尚未实施；两条既有世界变化协调缺口保留在台账中。现行 R27 和 M3 结论保持原范围。
 
 当前导航协调 S0 至 S5 已实施。2026-10-01，R27 复审整改 A0—A5 完成，S5 按本轮冻结范围重新关闭。停止请求保留业务终态和身体责任，信息通知携带完整身份，四个模拟关闭入口执行共同证据检查；测试走 Runtime 和正式 driver，不替实现生成身份。当前范围见 [R27](docs/motion_navigation/stages/navigation-async-work-r27-root-fix-plan.md)，结果和限制见[验收第 20 节](docs/motion_navigation/acceptance/navigation-coordination-refactor.md#20-r27-复审整改结果)与[缺陷台账](docs/motion_navigation/acceptance/defect-ledger.md)。连续高度 M3 的历史 Fabric 结论保留。
 
@@ -16,6 +16,10 @@
 - 每类长期状态只有一个拥有者。不要复制地图、目标、路线、动作许可或输入账本。
 - 不为尚未进入当前阶段的能力建立空框架。
 - 当前仓库只包含独立 Fabric 正式路径。CraftGround 和旧射线兼容代码只在主仓库作历史参照。
+- 采用 fail fast（尽早发现失败）：先用低成本检查验证正式调用链和最容易暴露问题的代表性边界场景；专项检查稳定后，再扩大到完整矩阵和实机验收。
+- 出现未预期失败时，先停止扩大验收，保留失败证据，定位根因并检查共同规则；修复后先复跑直接相关场景，不带着已知问题继续批量运行。
+- 小范围接口或诊断修改按实际影响复查，并完成阶段要求的检查；没有新变化、失败或未决疑点时，复用仍有效的证据，不自动重跑全部。额外问题先登记并判断是否阻塞当前交付，避免无关扩展当前批次。
+- 快速发现失败不得降低验收门槛、删除失败样本或把有界失败计为成功；机器人已经承担的安全收尾责任必须继续履行。
 
 ## 文档
 

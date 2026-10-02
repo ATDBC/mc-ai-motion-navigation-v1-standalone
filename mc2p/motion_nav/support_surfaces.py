@@ -157,6 +157,20 @@ def standable_point_in_region(world: WorldView, surface: SupportSurface, region:
                                dependencies=tuple(sorted(dependencies)), missing_cells=tuple(sorted(missing)))
 
 
+def query_standable_connection(world: WorldView, surface: SupportSurface,
+                              position: tuple[float, float, float], connection_from,
+                              *, body_width=.6, body_height=1.8):
+    """Check exactly this endpoint; never select a different point."""
+    x, y, z = position
+    tiny = 1.e-8
+    result = standable_point_in_region(world, surface,
+        Aabb(x-tiny, y-tiny, z-tiny, x+tiny, y+tiny, z+tiny),
+        body_width=body_width, body_height=body_height, connection_from=connection_from)
+    return StandablePointResult(result.status,
+        position if result.status is QueryStatus.FEASIBLE else None,
+        result.dependencies, result.missing_cells)
+
+
 def _candidate_owner_cells(column_x: int, column_z: int,
                            minimum_y: float, maximum_y: float) -> tuple[BlockPos, ...]:
     low = math.floor(minimum_y) - COLLISION_OWNER_BELOW_REACH_CELLS

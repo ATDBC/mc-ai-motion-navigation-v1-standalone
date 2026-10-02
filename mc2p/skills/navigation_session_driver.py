@@ -24,7 +24,7 @@ from mc2p.contracts.task import (
     ComparisonOperatorV0, SuccessCriterionV0, TaskIntentV0,
 )
 from mc2p.motion_nav.movement_transition import GoalState
-from mc2p.motion_nav.body_control import HandoffDisposition
+from mc2p.motion_nav.body_control import HandoffDisposition, BodyControlActivity
 from mc2p.motion_nav.navigation_session import (
     NavigationSessionPort, NavigationSessionProposal, NavigationSessionState,
 )
@@ -51,6 +51,7 @@ class NavigationFrameDiagnostics:
     action_request_sequence: int | None
     action_movement: MovementV1 | None
     action_deadline_ns: int | None
+    movement_activity: BodyControlActivity | None = None
 
 
 class RuntimeNavigationDriver:
@@ -328,6 +329,9 @@ class RuntimeNavigationDriver:
             None if decision is None else decision.action.request_sequence_id,
             None if decision is None else decision.action.movement,
             None if decision is None else decision.action.deadline_monotonic_ns,
+            (proposal.body_activity if proposal is not None and decision is not None
+             and any(group == "movement" and intent in {i.intent.intent_id for i in intents}
+                     for group, intent in decision.selected_intents) else None),
         )
         if result.report.failure is not None:
             self._last_runtime_failure = (

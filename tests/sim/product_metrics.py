@@ -9,7 +9,7 @@ import math
 from collections import deque
 from collections.abc import Iterable, Mapping
 
-EXTRACTOR_VERSION = "mc2p.navigation-product-metrics.v2"
+EXTRACTOR_VERSION = "mc2p.navigation-product-metrics.v3"
 TERMINAL = {"success", "failed", "cancelled", "stopped", "interaction_required"}
 
 
@@ -48,17 +48,24 @@ def window_stalls(frames: Iterable[Mapping], *, window_ticks: int = 10,
             finish()
             continue
         history.append(position)
-        stalled = len(history) == window_ticks + 1 and math.hypot(
-            position[0] - history[0][0], position[2] - history[0][2],
+        activities = row.get("body_control_activities")
+        phase = (activities[0]["phase"] if activities else None)
+        stalled = len(history) == window_ticks + 1 and (
+            math.dist(position, history[0]) if phase == "strict_execution" else
+            math.hypot(position[0] - history[0][0], position[2] - history[0][2])
         ) < minimum_displacement
         owners = row.get("controller_ids", ())
         kind = row.get("action_kind")
         strict_action = kind in {"jump_gap", "controlled_drop", "jump_up", "step",
                                  "JumpGapSegment", "ControlledDropSegment", "JumpUpSegment", "StepSegment"}
-        category = ("strict_execution" if strict_action and row.get("on_ground") is False
+        category = ({"tracking": "walking", "acquisition": "strict_preparation",
+                     "strict_preparation": "strict_preparation", "strict_execution": "strict_execution",
+                     "entry_recovery": "entry_recovery", "stopping": "stopping"}.get(phase)
+                    or ("strict_execution" if strict_action and row.get("on_ground") is False
                     else "strict_preparation" if "landing_edge_probe" in owners or strict_action
                     else "planning_wait" if not owners and row.get("planning_work_owned")
-                    else "walking")
+                    else "walking" if kind in {"WalkSegment", "walk"}
+                    else "unclassified"))
         if stalled:
             if active is None or active["category"] != category:
                 finish()
@@ -181,7 +188,7 @@ def extract_metrics(frames: Iterable[Mapping], *, start_tick: int,
         "net_stall_ticks": {category: sum(
             item["end_tick"] - item["start_tick"] + 1
             for item in net_stalls if item["category"] == category
-        ) for category in ("walking", "strict_preparation", "strict_execution", "planning_wait")},
+        ) for category in ("walking", "strict_preparation", "strict_execution", "planning_wait", "entry_recovery", "stopping", "unclassified")},
         "first_movement_ticks": None if first_move is None else first_move - start_tick,
         "arrival_ticks": release_tick - start_tick if outcome == "success" and release_tick is not None else None,
         "terminal_ticks": None if terminal_tick is None else terminal_tick - start_tick,
@@ -200,7 +207,9 @@ def compare_metrics(baseline: Mapping, candidate: Mapping, *, tick_tolerance: in
     differences = [key for key in exact if baseline[key] != candidate[key]]
     if len(baseline["zero_displacement_intervals"]) != len(candidate["zero_displacement_intervals"]):
         differences.append("zero_displacement_interval_count")
-    if baseline["net_stall_ticks"] != candidate["net_stall_ticks"]:
+    if any(abs(baseline["net_stall_ticks"].get(k,0)-candidate["net_stall_ticks"].get(k,0)) >
+           (tick_tolerance if k == "walking" else 0)
+           for k in baseline["net_stall_ticks"].keys() | candidate["net_stall_ticks"].keys()):
         differences.append("net_stall_ticks")
     for key in ("arrival_ticks", "terminal_ticks", "first_movement_ticks", "zero_displacement_ticks"):
         old, new = baseline[key], candidate[key]

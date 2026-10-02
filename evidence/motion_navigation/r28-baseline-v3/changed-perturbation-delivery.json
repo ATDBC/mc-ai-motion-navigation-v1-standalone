@@ -1,0 +1,493 @@
+{
+  "cases": [
+    {
+      "id": "events/direct_drop_2-23009",
+      "old_applied": [
+        [
+          "remove_landing_support",
+          24
+        ]
+      ],
+      "new_applied": [
+        [
+          "remove_landing_support",
+          24
+        ],
+        [
+          "external_push",
+          36
+        ],
+        [
+          "late_input",
+          41
+        ]
+      ],
+      "old_outcome": "failed",
+      "new_outcome": "failed",
+      "old_reason": "landing_support_missing",
+      "new_reason": "landing_support_missing",
+      "delivery_differed": true
+    },
+    {
+      "id": "events/direct_drop_2-23016",
+      "old_applied": [
+        [
+          "external_push_backward",
+          30
+        ],
+        [
+          "external_push",
+          38
+        ]
+      ],
+      "new_applied": [
+        [
+          "external_push_backward",
+          30
+        ],
+        [
+          "external_push",
+          38
+        ],
+        [
+          "external_push_backward",
+          60
+        ]
+      ],
+      "old_outcome": "success",
+      "new_outcome": "success",
+      "old_reason": "goal_state_satisfied",
+      "new_reason": "goal_state_satisfied",
+      "delivery_differed": true
+    },
+    {
+      "id": "events/direct_drop_2-23059",
+      "old_applied": [
+        [
+          "remove_landing_support",
+          19
+        ]
+      ],
+      "new_applied": [
+        [
+          "remove_landing_support",
+          19
+        ],
+        [
+          "external_push_backward",
+          34
+        ]
+      ],
+      "old_outcome": "failed",
+      "new_outcome": "failed",
+      "old_reason": "landing_support_missing",
+      "new_reason": "landing_support_missing",
+      "delivery_differed": true
+    },
+    {
+      "id": "events/direct_drop_2-23123",
+      "old_applied": [
+        [
+          "external_push",
+          25
+        ],
+        [
+          "remove_landing_support",
+          26
+        ]
+      ],
+      "new_applied": [
+        [
+          "external_push",
+          25
+        ],
+        [
+          "remove_landing_support",
+          26
+        ],
+        [
+          "external_push",
+          34
+        ]
+      ],
+      "old_outcome": "failed",
+      "new_outcome": "failed",
+      "old_reason": "information_out_of_range",
+      "new_reason": "information_out_of_range",
+      "delivery_differed": true
+    },
+    {
+      "id": "events/direct_drop_2-23135",
+      "old_applied": [
+        [
+          "late_input",
+          13
+        ],
+        [
+          "omit_receipt",
+          46
+        ],
+        [
+          "late_input",
+          63
+        ]
+      ],
+      "new_applied": [
+        [
+          "late_input",
+          13
+        ],
+        [
+          "external_push",
+          37
+        ],
+        [
+          "omit_receipt",
+          46
+        ],
+        [
+          "late_input",
+          63
+        ]
+      ],
+      "old_outcome": "success",
+      "new_outcome": "success",
+      "old_reason": "goal_state_satisfied",
+      "new_reason": "goal_state_satisfied",
+      "delivery_differed": true
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23009",
+      "old_applied": [
+        [
+          "remove_landing_support",
+          24
+        ]
+      ],
+      "new_applied": [
+        [
+          "remove_landing_support",
+          24
+        ],
+        [
+          "external_push",
+          36
+        ],
+        [
+          "late_input",
+          41
+        ]
+      ],
+      "old_outcome": "failed",
+      "new_outcome": "failed",
+      "old_reason": "landing_support_missing",
+      "new_reason": "landing_support_missing",
+      "delivery_differed": true
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23016",
+      "old_applied": [
+        [
+          "external_push_backward",
+          30
+        ],
+        [
+          "external_push",
+          38
+        ]
+      ],
+      "new_applied": [
+        [
+          "external_push_backward",
+          30
+        ],
+        [
+          "external_push",
+          38
+        ],
+        [
+          "external_push_backward",
+          60
+        ]
+      ],
+      "old_outcome": "success",
+      "new_outcome": "success",
+      "old_reason": "goal_state_satisfied",
+      "new_reason": "goal_state_satisfied",
+      "delivery_differed": true
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23059",
+      "old_applied": [
+        [
+          "remove_landing_support",
+          19
+        ]
+      ],
+      "new_applied": [
+        [
+          "remove_landing_support",
+          19
+        ],
+        [
+          "external_push_backward",
+          34
+        ]
+      ],
+      "old_outcome": "failed",
+      "new_outcome": "failed",
+      "old_reason": "landing_support_missing",
+      "new_reason": "landing_support_missing",
+      "delivery_differed": true
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23123",
+      "old_applied": [
+        [
+          "external_push",
+          25
+        ],
+        [
+          "remove_landing_support",
+          26
+        ]
+      ],
+      "new_applied": [
+        [
+          "external_push",
+          25
+        ],
+        [
+          "remove_landing_support",
+          26
+        ],
+        [
+          "external_push",
+          34
+        ]
+      ],
+      "old_outcome": "failed",
+      "new_outcome": "failed",
+      "old_reason": "information_out_of_range",
+      "new_reason": "information_out_of_range",
+      "delivery_differed": true
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23135",
+      "old_applied": [
+        [
+          "late_input",
+          13
+        ],
+        [
+          "omit_receipt",
+          46
+        ],
+        [
+          "late_input",
+          63
+        ]
+      ],
+      "new_applied": [
+        [
+          "late_input",
+          13
+        ],
+        [
+          "external_push",
+          37
+        ],
+        [
+          "omit_receipt",
+          46
+        ],
+        [
+          "late_input",
+          63
+        ]
+      ],
+      "old_outcome": "success",
+      "new_outcome": "success",
+      "old_reason": "goal_state_satisfied",
+      "new_reason": "goal_state_satisfied",
+      "delivery_differed": true
+    },
+    {
+      "id": "events/far_landing_L_walkway-23031",
+      "old_applied": [
+        [
+          "remove_landing_support",
+          19
+        ],
+        [
+          "omit_receipt",
+          55
+        ]
+      ],
+      "new_applied": [
+        [
+          "remove_landing_support",
+          19
+        ],
+        [
+          "omit_receipt",
+          55
+        ],
+        [
+          "external_push_backward",
+          77
+        ]
+      ],
+      "old_outcome": "cancelled",
+      "new_outcome": "cancelled",
+      "old_reason": "generated_sequence_cancel",
+      "new_reason": "generated_sequence_cancel",
+      "delivery_differed": true
+    },
+    {
+      "id": "events/terrace_two_ledges-23016",
+      "old_applied": [
+        [
+          "external_push_backward",
+          30
+        ],
+        [
+          "external_push",
+          38
+        ]
+      ],
+      "new_applied": [
+        [
+          "external_push_backward",
+          30
+        ],
+        [
+          "external_push",
+          38
+        ],
+        [
+          "external_push_backward",
+          60
+        ]
+      ],
+      "old_outcome": "success",
+      "new_outcome": "success",
+      "old_reason": "goal_state_satisfied",
+      "new_reason": "goal_state_satisfied",
+      "delivery_differed": true
+    },
+    {
+      "id": "events/terrace_two_ledges-23116",
+      "old_applied": [
+        [
+          "remove_landing_support",
+          20
+        ]
+      ],
+      "new_applied": [
+        [
+          "remove_landing_support",
+          20
+        ],
+        [
+          "external_push_backward",
+          40
+        ]
+      ],
+      "old_outcome": "cancelled",
+      "new_outcome": "cancelled",
+      "old_reason": "generated_sequence_cancel",
+      "new_reason": "generated_sequence_cancel",
+      "delivery_differed": true
+    },
+    {
+      "id": "events/terrace_two_ledges-23123",
+      "old_applied": [
+        [
+          "external_push",
+          25
+        ],
+        [
+          "remove_landing_support",
+          26
+        ]
+      ],
+      "new_applied": [
+        [
+          "external_push",
+          25
+        ],
+        [
+          "remove_landing_support",
+          26
+        ],
+        [
+          "external_push",
+          34
+        ]
+      ],
+      "old_outcome": "failed",
+      "new_outcome": "failed",
+      "old_reason": "information_out_of_range",
+      "new_reason": "information_out_of_range",
+      "delivery_differed": true
+    },
+    {
+      "id": "events/terrace_two_ledges-23135",
+      "old_applied": [
+        [
+          "late_input",
+          13
+        ],
+        [
+          "omit_receipt",
+          46
+        ]
+      ],
+      "new_applied": [
+        [
+          "late_input",
+          13
+        ],
+        [
+          "external_push",
+          37
+        ],
+        [
+          "omit_receipt",
+          46
+        ]
+      ],
+      "old_outcome": "failed",
+      "new_outcome": "success",
+      "old_reason": "input_lost",
+      "new_reason": "goal_state_satisfied",
+      "delivery_differed": true
+    },
+    {
+      "id": "events/terrace_two_ledges-23168",
+      "old_applied": [
+        [
+          "remove_landing_support",
+          19
+        ]
+      ],
+      "new_applied": [
+        [
+          "remove_landing_support",
+          19
+        ],
+        [
+          "external_push_backward",
+          36
+        ]
+      ],
+      "old_outcome": "cancelled",
+      "new_outcome": "cancelled",
+      "old_reason": "generated_sequence_cancel",
+      "new_reason": "generated_sequence_cancel",
+      "delivery_differed": true
+    }
+  ],
+  "scope": "Historical diagnostic names suppressed owned recovery-phase impulses. Fixed ownership expanded actual delivery. These 16 cases are not identical applied-input pairs."
+}

@@ -17,6 +17,36 @@ def _platform():
     return {(x, 63, z): STONE for x in range(-3, 4) for z in range(15)}
 
 
+PLAYER_CASES = ("player_wall_head", "player_wall_parallel", "player_corner",
+                "player_corridor_middle", "player_corridor_end",
+                "player_ledge_0", "player_ledge_1", "player_ledge_2")
+
+
+def player_layout(case: str, *, tangent_offset: float = 0.):
+    """Known geometry shared by simulation and the Fabric fixture builder."""
+    solids = {(x, 63, z): STONE for x in range(-4, 5) for z in range(-1, 11)}
+    start, goal = (.5, 64., .5), (.5, 64., 8.5)
+    if case in {"player_wall_head", "player_wall_parallel", "player_corner"}:
+        solids.update({(2, y, z): STONE for y in (64, 65, 66) for z in range(4, 9)})
+        goal = (1.7, 64., 6.5 + tangent_offset)
+        if case == "player_wall_parallel":
+            start = (1.5, 64., .5)
+        if case == "player_corner":
+            solids.update({(x, y, 7): STONE for y in (64, 65, 66) for x in range(-1, 3)})
+            goal = (1.7, 64., 6.7)
+    elif case in {"player_corridor_middle", "player_corridor_end"}:
+        solids.update({(x, y, z): STONE for y in (64, 65, 66) for z in range(4, 11) for x in (-1, 1)})
+        goal = (.5 + tangent_offset, 64., 8.5)
+        if case == "player_corridor_end":
+            solids.update({(0, y, 10): STONE for y in (64, 65, 66)})
+            goal = (.5 + tangent_offset, 64., 9.7)
+    elif case.startswith("player_ledge_"):
+        goal = (.5 + tangent_offset, 64., 10.7 + .1 * int(case[-1]))
+    else:
+        raise ValueError(case)
+    return Scene(solids, ((-6, 6), (60, 68), (-3, 14))), start, goal
+
+
 def _revision(tick, revision, position):
     def change(context):
         goal = _goal(position, context.risk_policy_id)
@@ -32,7 +62,9 @@ def product_scenario(manifest: dict, group: dict, seed: int) -> tuple[Scenario, 
     case = group["cases"][index % len(group["cases"])]
     start, goal, events, damage = (.5, 64.0, .5), (.5, 64.0, 8.5), [], 0.0
     scene = lane([[63]] * 11, width=3)
-    if case in {"turn", "wall_detour"}:
+    if case in PLAYER_CASES:
+        scene, start, goal = player_layout(case, tangent_offset=random.Random(f"player:{seed}").uniform(-.08, .08))
+    elif case in {"turn", "wall_detour"}:
         solids = _platform()
         if case == "wall_detour":
             solids.update({(x, y, 5): STONE for x in (-1, 0, 1) for y in (64, 65, 66)})

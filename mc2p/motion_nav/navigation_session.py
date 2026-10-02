@@ -50,6 +50,7 @@ from mc2p.motion_nav.air_motion import load_air_motion_profiles
 from mc2p.motion_nav.block_motion_traits import BlockMotionCatalog
 from mc2p.motion_nav.environment_identity import load_frozen_environment
 from mc2p.motion_nav.execution_supervisor import ExecutionSupervisor, RouteControl
+from mc2p.motion_nav.body_control import BodyControlActivity
 from mc2p.motion_nav.body_control import (
     BodyControlProgress, HandoffDisposition, HandoffEvidence, StopCause,
 )
@@ -356,6 +357,7 @@ class NavigationDiagnostics:
     planning_work_identity_valid: bool = True
     planning_permit_identity_valid: bool = True
     planning_information_identity_valid: bool = True
+    body_control_activities: tuple[BodyControlActivity, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -365,6 +367,7 @@ class NavigationSessionProposal:
     route_decision: ActionRouteDecision | None = None
     route_owner_id: str | None = None
     risk_action_id: str | None = None
+    body_activity: BodyControlActivity | None = None
 
 
 @runtime_checkable
@@ -882,6 +885,11 @@ class NavigationSession:
         )
 
     @property
+    def has_owned_body_control(self) -> bool:
+        return self._supervisor.has_owned_body_control(
+            route_source_bound=self._source is not None)
+
+    @property
     def diagnostics(self) -> NavigationDiagnostics:
         holders: list[str] = []
         phase = None
@@ -890,22 +898,15 @@ class NavigationSession:
         if self._edge_probe is not None and self._edge_probe.owned:
             holders.append("landing_edge_probe")
             phase = self._edge_probe.state.value
-        retained_route = (
-            self._frame is not None
-            and self._supervisor.route is not None
-            and self._supervisor.last_handoff is not None
-            and self._supervisor.last_handoff.disposition
-                is HandoffDisposition.RETAIN
-            and self._supervisor.last_handoff.owner_id
-                == f"route/{self._supervisor.route.route.route_id}"
-        )
-        if self._executor is not None and (self._executor.state in {
-                ActionRouteState.RUNNING, ActionRouteState.CANCELLING}
-                or retained_route):
+        activities = (() if self._frame is None else
+                      self._supervisor.activities(self._frame, self._last_decision,
+                                                  source_bound=self._source is not None))
+        retained = self._supervisor.incumbent_route
+        if retained is not None and self._source is not None:
             holders.append("route_executor")
-            phase = self._executor.state.value if phase is None else "overlap"
-            route = self._executor.route
-            index = self._executor.action_index
+            phase = retained.executor.state.value if phase is None else "overlap"
+            route = retained.executor.route
+            index = retained.executor.action_index
             if route is not None and 0 <= index < len(route.actions):
                 kind = type(route.actions[index]).__name__
                 action_index = index
@@ -1014,6 +1015,7 @@ class NavigationSession:
              planning_diagnostics.permit_identity_valid),
             (True if planning_diagnostics is None else
              planning_diagnostics.information_identity_valid),
+            activities,
         )
 
     def bind_source(self, source: IntentSourceV1) -> None:
@@ -4129,6 +4131,9 @@ class NavigationSession:
             control, self.report, route_decision,
             None if route_owner is None else route_owner.route.route_id,
             risk_action_id,
+            (route_owner.activity(self._frame, route_decision)
+             if route_owner is not None else next(iter(
+                 self._supervisor.activities(self._frame, route_decision)), None)),
         )
 
     def _information_look(self, frame: NavigationFrame) -> LookV1 | None:

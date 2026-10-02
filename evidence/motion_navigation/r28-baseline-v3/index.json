@@ -1,0 +1,24 @@
+{
+  "schema_version": "mc2p.r28-baseline.v3",
+  "tasks": 2000,
+  "task_success": 1706,
+  "bounded_failures": 294,
+  "old_tasks": 1600,
+  "old_success": 1589,
+  "new_player_success": 117,
+  "new_player_tasks": 400,
+  "component_boundary_tasks": 192,
+  "component_boundary_success": 68,
+  "migration_cases": 1448,
+  "migration_supplement": 4,
+  "fabric_tasks": 56,
+  "fabric_success": 20,
+  "fabric_bounded_failures": 36,
+  "archive_encoding": "runs and metadata unchanged; per-case trace payloads are exact decompressed JSON bytes; trace-transport.json binds source gzip hashes and archive bytes",
+  "evidence_limits": [
+    "Fixed baseline comparisons are not statistical non-regression release gates.",
+    "Real Fabric fixtures use profile-4 observations; simulation is not a game physics difference check.",
+    "Tight wall/ledge control remains a product gap for R28-2.",
+    "R28-1 has not started; legacy world-change gaps remain recorded in the defect ledger."
+  ]
+}

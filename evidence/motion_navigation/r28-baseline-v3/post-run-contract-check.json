@@ -1,0 +1,32 @@
+{
+  "before_sha256": "f3bb030ce6804f4e5f367dbfdca05f13cec8b549b2467b2938233c38b7b1bf66",
+  "after_sha256": "a15bebf7133c37f918b84d287ebbc5b544cdd51b885098f8243960d865c9ff52",
+  "file": "mc2p/motion_nav/terminal_approach.py",
+  "scope": "Explicit optional entry check added after runs; formal selector passes entry=None, so the recorded actor path is unchanged; covered by targeted test.",
+  "additional_read_only_queries": [
+    {
+      "file": "mc2p/motion_nav/execution_supervisor.py",
+      "before_sha256": "c5680dbb3330840a77eb7712e3cc76402c46a72f2a943229337871504a8a2562",
+      "after_sha256": "a67e94966c13717a674825daec552a02d01118866f9ef89755607846ffbd3257",
+      "scope": "Read-only owner query; no new actor control branch",
+      "exact_source_bytes": true,
+      "recorded_run_sha256": "c5680dbb3330840a77eb7712e3cc76402c46a72f2a943229337871504a8a2562"
+    },
+    {
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "before_sha256": "b69fdfafa39f0d31ab18c7afa55a89e2e9abadaf5c8a42b3ab63b546180df2fe",
+      "after_sha256": "212145461198768545e9e542140d9c610b53f525fd7169178a5abd406f6a4197",
+      "scope": "Read-only owner query; no new actor control branch",
+      "exact_source_bytes": false,
+      "recorded_run_sha256": "4ec4339995df56886eb844559f71c9d836d1daaabe4d492740dd9498d35c3518"
+    },
+    {
+      "file": "tests/sim/runner.py",
+      "before_sha256": "2cfbe92bac11b8739ae199a330b6f2137f2fb3c7edcba31fadc1a884fe6c3e0b",
+      "after_sha256": "2a9f26fe6d5050da15df1a46d1a18743a814922d7164e72c8611985aff2ac10e",
+      "scope": "Guard reads real owners; boolean delivery is identical to corrected runtime diagnostics; label-independence component test passes",
+      "exact_source_bytes": true,
+      "recorded_run_sha256": "2cfbe92bac11b8739ae199a330b6f2137f2fb3c7edcba31fadc1a884fe6c3e0b"
+    }
+  ]
+}

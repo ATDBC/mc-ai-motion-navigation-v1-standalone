@@ -185,7 +185,10 @@ class _WorldChangeBackend:
             self.position_x = max(
                 0.2,
                 min(self.goal_x + 0.5,
-                    self.position_x + math.copysign(0.13, direction_x)),
+                    # This backend tests placement orchestration, not physics.
+                    # Keep its position lattice finer than the declared stop
+                    # margin; a 0.13-block lattice cannot reach interior targets.
+                    self.position_x + math.copysign(0.05, direction_x)),
             )
         self.movement_tick += 1
         self.sequence += 1

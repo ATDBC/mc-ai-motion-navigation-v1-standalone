@@ -10,8 +10,10 @@ from mc2p.motion_nav.action_route_executor import (
     ActionRouteExecutor, ActionRouteState,
 )
 from mc2p.motion_nav.body_control import (
-    BodyControlDecision, HandoffDisposition, HandoffEvidence, StopCause,
+    BodyControlDecision, BodyControlActivity, BodyControlPhase,
+    HandoffDisposition, HandoffEvidence, StopCause,
 )
+from mc2p.motion_nav.action_route import WalkSegment
 from mc2p.motion_nav.motion_coordination import MotionRouteCoordinator
 from mc2p.motion_nav.online_motion import (
     InputApplicationLedger, InputResponsibilityDisposition,
@@ -58,6 +60,22 @@ class RouteControl:
     @property
     def action_index(self) -> int:
         return self.executor.action_index
+
+    def activity(self, frame, decision=None) -> BodyControlActivity:
+        index = min(self.executor.action_index, len(self.route.action_route.actions)-1)
+        action = self.route.action_route.actions[index]
+        phase = (None if decision is None else decision.body_phase)
+        if phase is None:
+            if self.executor.state is ActionRouteState.CANCELLING or self.executor.state in _TERMINAL_ROUTE_STATES:
+                phase = BodyControlPhase.STOPPING
+            elif type(action) is WalkSegment:
+                phase = BodyControlPhase.TRACKING
+            elif frame.body.is_on_ground:
+                phase = BodyControlPhase.STRICT_PREPARATION
+            else:
+                phase = BodyControlPhase.STRICT_EXECUTION
+        return BodyControlActivity(frame.session, frame.body.sequence_id,
+            self.owner_id, self.route.route_id, self.route.route_revision, index, phase)
 
     def request_stop(self, cause: StopCause) -> None:
         if type(cause) is not StopCause:

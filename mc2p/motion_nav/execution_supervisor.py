@@ -7,11 +7,14 @@ from collections import deque
 from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.body_control import (
-    BodyControlDecision, BodyController, HandoffDisposition, HandoffEvidence,
+    BodyControlDecision, BodyControlActivity, BodyControlPhase,
+    BodyController, HandoffDisposition, HandoffEvidence,
     StopCause,
 )
 from mc2p.motion_nav.probe_body_controller import ProbeBodyController
 from mc2p.motion_nav.route_body_controller import RouteControl
+from mc2p.motion_nav.action_route_executor import ActionRouteState
+from mc2p.motion_nav.landing_edge_probe import LandingEdgeProbeState
 from mc2p.motion_nav.online_motion import (
     InputApplicationLedger, InputResponsibilityDisposition,
     StateAnchor, assess_input_responsibility,
@@ -52,6 +55,23 @@ class ExecutionSupervisor:
     @property
     def incumbent_route(self) -> RouteControl | None:
         return self._route
+
+    def has_owned_body_control(self, *, route_source_bound: bool) -> bool:
+        """Read actual retained objects, independent of diagnostic labels."""
+        return (self._probe is not None and self._probe.probe.owned) or (
+            self._route is not None and route_source_bound)
+
+    def activities(self, frame: NavigationFrame, decision=None, *, source_bound=True):
+        """Report current owned objects; past handoffs confer no ownership."""
+        result = []
+        if self._probe is not None and self._probe.probe.owned:
+            result.append(BodyControlActivity(frame.session, frame.body.sequence_id,
+                self._probe.owner_id, None, None, None,
+                BodyControlPhase.STOPPING if self._probe.probe.state is LandingEdgeProbeState.STOPPING
+                else BodyControlPhase.ACQUISITION))
+        if self._route is not None and source_bound:
+            result.append(self._route.activity(frame, decision))
+        return tuple(result)
 
     @property
     def has_pending_route(self) -> bool:

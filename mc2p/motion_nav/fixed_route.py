@@ -22,7 +22,7 @@ from mc2p.motion_nav.ground_modes import (
     GroundModeProfile, ModeReadiness, evaluate_ground_mode, movement_for_ground_mode,
     observed_ground_mode,
 )
-from mc2p.motion_nav.movement_transition import MovementMode
+from mc2p.motion_nav.movement_transition import MovementMode, GoalState
 from mc2p.motion_nav.online_motion import ProjectionStatus, project_movement_command
 from mc2p.motion_nav.physics_1_21 import step as physics_step
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView, build_physics_state
@@ -131,6 +131,20 @@ class FixedRouteConfig:
         if (self.handoff_entry_window is not None
                 and type(self.handoff_entry_window) is not SegmentEntryWindow):
             raise ContractViolation("handoff entry window must be typed")
+
+
+def terminal_route_config(config: FixedRouteConfig, profile: GroundMotionProfile,
+                          goal: GoalState, endpoint: RoutePoint) -> FixedRouteConfig:
+    """Use the same final stop domain during screening and actual tracking."""
+    margin = min(endpoint.x-goal.region.min_x, goal.region.max_x-endpoint.x,
+                 endpoint.z-goal.region.min_z, goal.region.max_z-endpoint.z)
+    if margin < 0:
+        return config
+    tolerance = max(1.e-4, margin-config.stopped_speed_blocks_per_second*profile.tick_seconds)
+    return replace(config, endpoint_tolerance_blocks=min(config.endpoint_tolerance_blocks,tolerance),
+                   traversal_endpoint_tolerance_blocks=min(config.traversal_endpoint_tolerance_blocks,tolerance),
+                   stopped_speed_blocks_per_second=min(config.stopped_speed_blocks_per_second,
+                                                       goal.maximum_terminal_speed_blocks_per_second))
 
 
 class FixedRouteState(StrEnum):
@@ -737,7 +751,8 @@ class FixedRouteController:
         )
 
     def decide(self, frame: NavigationFrame, *, input_confirmed: bool = True,
-               physics_state: PhysicsState | None = None) -> FixedRouteDecision:
+               physics_state: PhysicsState | None = None,
+               query_cache: WorldQueryCache | None = None) -> FixedRouteDecision:
         started = time.perf_counter_ns()
         if type(frame) is not NavigationFrame or type(input_confirmed) is not bool:
             raise ContractViolation("fixed route decision requires a navigation frame and confirmation")
@@ -759,7 +774,10 @@ class FixedRouteController:
             return self._decision(started, MovementV1(), "input_application_unconfirmed")
         if self._traversal_plan is not None:
             return self._decide_traversal(frame, started, physics_state)
-        query_cache = WorldQueryCache(frame.world)
+        if query_cache is None:
+            query_cache = WorldQueryCache(frame.world)
+        else:
+            query_cache.validate_for(frame.world)
         route_level = self._geometry.points[0].y
         current_support = query_support(
             frame.body.body_box, frame.world, query_cache=query_cache,

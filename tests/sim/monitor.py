@@ -6,7 +6,7 @@ import math
 
 from mc2p.contracts.action_v1 import MovementV1
 from mc2p.motion_nav.body_control import (
-    BodyControlProgress, HandoffDisposition, HandoffEvidence,
+    BodyControlProgress, BodyControlActivity, HandoffDisposition, HandoffEvidence,
 )
 from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, MovementMode
 from mc2p.motion_nav.motion_risk import RiskActionRecord, RiskActionState
@@ -70,6 +70,7 @@ class TickEvidence:
     planning_information_identity_valid: bool = True
     async_work_diagnostics: tuple | None = None
     active_motion_mailboxes: tuple = ()
+    applied_body_activity: BodyControlActivity | None = None
 
 
 class InvariantMonitor:
@@ -155,7 +156,9 @@ class InvariantMonitor:
                     self._record(e.tick, "I6", "transfer sequence lost arbitration")
             elif (handoff.disposition is HandoffDisposition.RETAIN
                   and handoff.owner_id.startswith("route/")
-                  and "route_executor" not in owners):
+                  and "route_executor" not in owners
+                  and (e.applied_body_activity is None
+                       or e.applied_body_activity.owner_id != handoff.owner_id)):
                 self._record(e.tick, "I1", "retained route has no controller")
             elif (handoff.disposition is HandoffDisposition.RETAIN
                   and handoff.owner_id.startswith("landing-edge-probe/")

@@ -12,6 +12,35 @@ from tests.sim.continuous_height_matrix import matrix_scenario
 
 
 class GoalRegionTests(unittest.TestCase):
+    def test_budget_fallback_tracker_measures_the_retained_center_connection(self):
+        from mc2p.motion_nav.known_map_planner import KnownMapBounds, SurfacePlanningRequest, astar_surface_plan, build_surface_graph
+        from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, MovementMode
+        from mc2p.motion_nav.route_admission import RouteAdmitter, ActiveRouteTracker
+        from mc2p.motion_nav.support_surfaces import standable_point_in_region
+        from mc2p.motion_nav.terminal_approach import TerminalApproachResult, TerminalApproachStatus, TerminalApproachReason
+        from tests.motion_nav.test_b07_step_transition import frame, profile as step_profile
+        from tests.motion_nav.test_b07_surface_planning import ordinary_profile
+        from tests.motion_nav.test_navigation_session import _known_world
+        world = _known_world({(x, 0, z): BlockGeometry.full_cube("minecraft:stone")
+                              for x in range(3) for z in range(2)})
+        graph = build_surface_graph(world.view(), KnownMapBounds(0, 1, 1, 1, 0, 0, True), ordinary_profile(), step_profile())
+        nodes = sorted(graph.nodes, key=lambda node: node.position[0])
+        goal = GoalState(Aabb(1.72, .99, .52, 1.92, 1.01, .72), GoalSupport.SOLID,
+                         frozenset({MovementMode.WALK}), frozenset({"standing"}), .6)
+        request = SurfacePlanningRequest(1, "budget-tail", "goal", 1, world.session.value,
+                                         nodes[0].node_id, nodes[-1].node_id, goal_state=goal)
+        target = standable_point_in_region(world.view(), nodes[-1].surface, goal.region,
+                                          connection_from=nodes[-1].position)
+        candidate = replace(astar_surface_plan(graph, request), terminal_approach=TerminalApproachResult(
+            TerminalApproachStatus.BUDGET_EXHAUSTED, TerminalApproachReason.BUDGET_EXHAUSTED,
+            conventional_target=target))
+        admitted = RouteAdmitter().admit_surface(candidate, frame(world, 0, nodes[0].position),
+            expected_request_id=request.request_id, goal_id="goal", goal_revision=1, changed_cells=())
+        self.assertEqual(len(admitted.route.action_route.actions[-1].fixed_route.points), 3)
+        tracker = ActiveRouteTracker(admitted.route, candidate)
+        self.assertAlmostEqual(tracker.update(0.).route.corridor.length_blocks,
+                               admitted.route.fixed_route_length_blocks)
+
     def test_noncentral_goal_and_small_center_margin_both_complete(self):
         scene = Scene({(x, 63, z): "minecraft:stone" for x in range(-3, 4) for z in range(13)},
                       ((-5, 5), (60, 68), (-2, 15)))

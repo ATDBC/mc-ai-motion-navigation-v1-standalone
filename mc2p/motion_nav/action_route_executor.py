@@ -9,14 +9,14 @@ import time
 from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.action_v1 import LookV1
 from mc2p.contracts.common import ContractViolation
-from mc2p.motion_nav.body_control import StopCause
+from mc2p.motion_nav.body_control import StopCause, BodyControlPhase
 from mc2p.motion_nav.action_route import (
     ActionRoute, ControlledDropSegment, JumpGapSegment, JumpUpSegment,
     StepSegment, WalkSegment,
 )
 from mc2p.motion_nav.air_motion import AirMotionController, AirMotionProfile, AirMotionState
 from mc2p.motion_nav.fixed_route import (
-    FixedRouteConfig, FixedRouteController, FixedRouteState,
+    FixedRouteConfig, FixedRouteController, FixedRouteState, terminal_route_config,
 )
 from mc2p.motion_nav.ground_motion import GroundMotionProfile
 from mc2p.motion_nav.ground_modes import GroundModeProfiles
@@ -75,6 +75,7 @@ class ActionRouteDecision:
     expected_movement_tick: int | None = None
     latest_movement_tick: int | None = None
     requires_verified_motion: bool = False
+    body_phase: BodyControlPhase | None = None
 
 
 class ActionRouteExecutor:
@@ -282,39 +283,8 @@ class ActionRouteExecutor:
                     )
             if (self.action_index + 1 == len(self.route.actions)
                     and self.route.goal_state is not None):
-                goal = self.route.goal_state
-                endpoint = action.fixed_route.points[-1]
-                horizontal_margin = min(
-                    endpoint.x - goal.region.min_x,
-                    goal.region.max_x - endpoint.x,
-                    endpoint.z - goal.region.min_z,
-                    goal.region.max_z - endpoint.z,
-                )
-                if horizontal_margin >= 0:
-                    # Completion uses the controller's stopped threshold, so
-                    # reserve the drift of that threshold instead of the
-                    # goal's usually much larger maximum allowed speed.  The
-                    # latter would shrink a valid goal region so far that an
-                    # already safe stop could no longer complete.
-                    release_margin = (
-                        config.stopped_speed_blocks_per_second
-                        * motion_profile.tick_seconds
-                    )
-                    config = replace(
-                        config,
-                        endpoint_tolerance_blocks=min(
-                            config.endpoint_tolerance_blocks,
-                            max(1.0e-4, horizontal_margin - release_margin),
-                        ),
-                        traversal_endpoint_tolerance_blocks=min(
-                            config.traversal_endpoint_tolerance_blocks,
-                            max(1.0e-4, horizontal_margin - release_margin),
-                        ),
-                        stopped_speed_blocks_per_second=min(
-                            config.stopped_speed_blocks_per_second,
-                            goal.maximum_terminal_speed_blocks_per_second,
-                        ),
-                    )
+                config = terminal_route_config(config, motion_profile,
+                    self.route.goal_state, action.fixed_route.points[-1])
             controller = FixedRouteController(
                 motion_profile, config, mode_profile=mode_profile,
             )
@@ -850,7 +820,12 @@ class ActionRouteExecutor:
                 self.state = mapping[decision.state]
             return self._result(
                 started, decision.movement, decision.input_lease_ticks,
-                decision.reason, decision.missing_cells,
+                ("terminal_approach_control_unsupported" if (
+                    self.action_index+1 == len(self.route.actions)
+                    and self.route.goal_state is not None
+                    and action.traversal_plan is None
+                    and decision.reason == "fixed_route_has_no_forward_control")
+                 else decision.reason), decision.missing_cells,
             )
 
         decision = self._controller.decide(frame, input_confirmed=input_confirmed)

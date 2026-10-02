@@ -1,0 +1,161 @@
+{
+  "schema_version": "mc2p.navigation-product-manifest.v1",
+  "baseline_commit": "3d1fe80",
+  "purpose": "保留 v2 八层全部输入，另加玩家真实站位；能力拒绝留在分母",
+  "parameter_generator": "continuous-v2",
+  "seed_start": 0,
+  "seed_count": 200,
+  "ground_tick_tolerance": 2,
+  "directions": [
+    "south",
+    "east",
+    "north",
+    "west"
+  ],
+  "entry_speeds_blocks_per_second": [
+    0.0,
+    1.0,
+    3.0
+  ],
+  "entry_offsets": [
+    0.0,
+    0.05,
+    0.12,
+    0.3
+  ],
+  "continuous_parameters": {
+    "maximum_speed": 3.0,
+    "maximum_offset": 0.25,
+    "maximum_goal_jitter": 0.4
+  },
+  "groups": [
+    {
+      "id": "point-normal",
+      "family": "point",
+      "cases": [
+        "flat",
+        "turn",
+        "wall_detour"
+      ],
+      "late_probability": 0.0,
+      "strict": false
+    },
+    {
+      "id": "point-late",
+      "family": "point",
+      "cases": [
+        "flat",
+        "turn",
+        "wall_detour"
+      ],
+      "late_probability": 0.2,
+      "strict": false
+    },
+    {
+      "id": "height-normal",
+      "family": "height",
+      "cases": [
+        "half_steps",
+        "path",
+        "stairs_down"
+      ],
+      "late_probability": 0.0,
+      "strict": true
+    },
+    {
+      "id": "height-late",
+      "family": "height",
+      "cases": [
+        "half_steps",
+        "path",
+        "stairs_down"
+      ],
+      "late_probability": 0.2,
+      "strict": true
+    },
+    {
+      "id": "target-normal",
+      "family": "target",
+      "cases": [
+        "target_away",
+        "target_lateral",
+        "target_repeat"
+      ],
+      "late_probability": 0.0,
+      "strict": false
+    },
+    {
+      "id": "target-late",
+      "family": "target",
+      "cases": [
+        "target_away",
+        "target_lateral",
+        "target_repeat"
+      ],
+      "late_probability": 0.2,
+      "strict": false
+    },
+    {
+      "id": "drop-normal",
+      "family": "strict_drop",
+      "cases": [
+        "drop_2",
+        "drop_5"
+      ],
+      "late_probability": 0.0,
+      "strict": true
+    },
+    {
+      "id": "drop-late",
+      "family": "strict_drop",
+      "cases": [
+        "drop_2",
+        "drop_5"
+      ],
+      "late_probability": 0.2,
+      "strict": true
+    },
+    {
+      "id": "player-normal",
+      "family": "player",
+      "cases": [
+        "player_wall_head",
+        "player_wall_parallel",
+        "player_corner",
+        "player_corridor_middle",
+        "player_corridor_end",
+        "player_ledge_0",
+        "player_ledge_1",
+        "player_ledge_2"
+      ],
+      "late_probability": 0.0,
+      "strict": false
+    },
+    {
+      "id": "player-late",
+      "family": "player",
+      "cases": [
+        "player_wall_head",
+        "player_wall_parallel",
+        "player_corner",
+        "player_corridor_middle",
+        "player_corridor_end",
+        "player_ledge_0",
+        "player_ledge_1",
+        "player_ledge_2"
+      ],
+      "late_probability": 0.2,
+      "strict": false
+    }
+  ],
+  "budgets": {
+    "finite_max_ticks": 400,
+    "finite_task_recoveries": 12
+  },
+  "boundary_reference_manifest": "tests/sim/manifests/navigation-product-r28.json",
+  "coverage_limits": [
+    "不包含实体感知或持续跟随",
+    "模拟时钟不能替代 Fabric 输入期限",
+    "200 个连续入口样本用于基线，不签署非退步统计发布门槛"
+  ]
+}

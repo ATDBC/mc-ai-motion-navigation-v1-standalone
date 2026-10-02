@@ -43,12 +43,13 @@ from mc2p.motion_nav.known_map_planner import (
     SurfaceControlledDropEdge, SurfaceJumpGapEdge, SurfaceJumpUpEdge,
 )
 from mc2p.motion_nav.step_transition import StepEdge
-from mc2p.motion_nav.support_surfaces import SurfaceNodeId, standable_point_in_region
+from mc2p.motion_nav.support_surfaces import SurfaceNodeId, standable_point_in_region, query_standable_connection
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.segment_entry import (
     SegmentEntryWindow, body_fits_segment_entry,
 )
 from mc2p.motion_nav.world_model import BlockPos, CellKnowledge
+from mc2p.motion_nav.terminal_approach import TerminalApproachStatus
 
 
 class AdmissionStatus(StrEnum):
@@ -56,7 +57,24 @@ class AdmissionStatus(StrEnum):
     REJECTED = "rejected"
 
 
+def _action_route_length(route: ActionRoute) -> float:
+    total = 0.
+    for action in route.actions:
+        if type(action) is WalkSegment:
+            points = action.fixed_route.points
+            total += sum(math.dist((a.x,a.y,a.z), (b.x,b.y,b.z)) for a,b in zip(points, points[1:]))
+        elif type(action) is JumpUpSegment:
+            total += math.dist(action.edge.start, action.edge.end)
+        else:
+            total += math.dist(action.start_surface.position, action.end_surface.position)
+    return total
+
+
 class AdmissionReason(StrEnum):
+    TERMINAL_APPROACH_UNSUPPORTED = 'terminal_approach_control_unsupported'
+    TERMINAL_APPROACH_NEEDS_INFORMATION = 'terminal_approach_needs_information'
+    TERMINAL_APPROACH_BUDGET_EXHAUSTED = 'terminal_approach_budget_exhausted'
+    TERMINAL_APPROACH_BLOCKED = 'terminal_approach_geometry_blocked'
     GOAL_STANDING_POINT_UNAVAILABLE = "goal_standing_point_unavailable"
     GOAL_STANDING_POINT_NEEDS_INFORMATION = "goal_standing_point_needs_information"
     CANDIDATE_NOT_COMPLETE = "candidate_not_complete"
@@ -649,7 +667,20 @@ class RouteAdmitter:
                     actions.append(WalkSegment(FixedRoute(f"{route_id}-goal-tail", (last, terminal)),
                                                (candidate.path[-1].node_id,), terminal_target.dependencies))
                 else:
-                    pending_points.append(terminal)
+                    direct = None
+                    if len(pending_points) >= 2 and (
+                            candidate.terminal_approach is None
+                            or (candidate.terminal_approach.connection is not None
+                                and candidate.terminal_approach.connection.points[0] == pending_points[-2])):
+                        before = pending_points[-2]
+                        direct = query_standable_connection(frame.world,
+                            candidate.path[-1].surface, terminal_target.position,
+                            (before.x, before.y, before.z))
+                    if direct is not None and direct.status is QueryStatus.FEASIBLE:
+                        pending_points[-1] = terminal
+                        pending_dependencies.update(direct.dependencies)
+                    else:
+                        pending_points.append(terminal)
         flush_walk()
         if terminal_target is not None and actions:
             actions[-1] = replace(actions[-1], dependencies=tuple(sorted(
@@ -761,7 +792,27 @@ class RouteAdmitter:
             )
         route_id = self._surface_route_id(candidate)
         terminal_target = None
-        if candidate.goal_state is not None:
+        if candidate.terminal_approach is not None:
+            terminal_target = candidate.terminal_approach
+            if (terminal_target.status is TerminalApproachStatus.BUDGET_EXHAUSTED
+                    and terminal_target.conventional_target is not None):
+                terminal_target = terminal_target.conventional_target
+            elif terminal_target.status is not TerminalApproachStatus.FEASIBLE:
+                reason = {TerminalApproachStatus.UNSUPPORTED: AdmissionReason.TERMINAL_APPROACH_UNSUPPORTED,
+                          TerminalApproachStatus.NEEDS_INFORMATION: AdmissionReason.TERMINAL_APPROACH_NEEDS_INFORMATION,
+                          TerminalApproachStatus.BUDGET_EXHAUSTED: AdmissionReason.TERMINAL_APPROACH_BUDGET_EXHAUSTED,
+                          TerminalApproachStatus.BLOCKED: AdmissionReason.TERMINAL_APPROACH_BLOCKED}[terminal_target.status]
+                return AdmissionResult(AdmissionStatus.REJECTED,reason,missing_cells=terminal_target.missing_cells)
+            source = (candidate.terminal_approach.connection.points[0]
+                      if candidate.terminal_approach.connection is not None
+                      else RoutePoint(*candidate.path[-1].position))
+            exact = query_standable_connection(frame.world,candidate.path[-1].surface,
+                terminal_target.position, (source.x,source.y,source.z))
+            if exact.status is not QueryStatus.FEASIBLE:
+                return AdmissionResult(AdmissionStatus.REJECTED,
+                    AdmissionReason.TERMINAL_APPROACH_NEEDS_INFORMATION if exact.missing_cells
+                    else AdmissionReason.TERMINAL_APPROACH_BLOCKED,missing_cells=exact.missing_cells)
+        elif candidate.goal_state is not None:
             terminal_target = standable_point_in_region(
                 frame.world, candidate.path[-1].surface, candidate.goal_state.region,
                 connection_from=candidate.path[-1].position)
@@ -809,10 +860,13 @@ class RouteAdmitter:
             for first, second in zip(candidate.path, candidate.path[1:])
         )
         if terminal_target is not None:
-            full_length += math.dist(candidate.path[-1].position, terminal_target.position)
+            # Execution length is measured from executable points, rather than
+            # adding an obsolete graph-centre detour to the search estimate.
+            full_length = _action_route_length(action_route)
         corridor = ExecutableCorridor(
             tuple(node.node_id for node in corridor_nodes), dependencies,
-            connection_length + length, corridor_nodes[-1].node_id,
+            (full_length if corridor_nodes[-1].node_id == candidate.path[-1].node_id
+             else connection_length + length), corridor_nodes[-1].node_id,
         )
         active = ActiveRoute(
             route_id, 1, candidate.request_id, candidate.goal_id,
@@ -859,15 +913,24 @@ class ActiveRouteTracker:
             0.0,self.route.connection_length_blocks-progress_blocks,
         )
         graph_progress=max(0.0,progress_blocks-self.route.connection_length_blocks)
+        positions = [node.position for node in self.candidate.path]
         lengths=[0.0]
-        for first,second in zip(self.candidate.path,self.candidate.path[1:]):
-            lengths.append(lengths[-1]+math.dist(first.position,second.position))
+        for first,second in zip(positions,positions[1:]):
+            lengths.append(lengths[-1]+math.dist(first,second))
+        final = self.route.action_route.actions[-1] if self.route.action_route is not None else None
+        if (type(final) is WalkSegment and final.traversal_plan is None
+                and len(lengths) >= 2):
+            # The final graph interval includes the actual terminal tail.
+            # A retained centre-then-target connection is longer than a direct
+            # chord; substituting only the endpoint loses that distinction.
+            lengths[-1] = max(lengths[-2],
+                self.route.fixed_route_length_blocks - self.route.connection_length_blocks)
         start=0
         while start+1<len(lengths) and lengths[start+1]<=graph_progress+1e-9:
             start+=1
         nodes=[self.candidate.path[start]];segments=[];length=0.0
-        for edge,node in zip(self.candidate.segments[start:],self.candidate.path[start+1:]):
-            segment_length=math.dist(nodes[-1].position,node.position)
+        for index,(edge,node) in enumerate(zip(self.candidate.segments[start:],self.candidate.path[start+1:]),start):
+            segment_length=lengths[index+1]-lengths[index]
             if (segments and remaining_connection+length+segment_length
                     > self.maximum_corridor_blocks):break
             segments.append(edge);nodes.append(node);length+=segment_length

@@ -28,6 +28,27 @@ class HandoffDisposition(StrEnum):
     TRANSFERABLE = "transferable"
 
 
+class BodyControlPhase(StrEnum):
+    TRACKING = "tracking"
+    ACQUISITION = "acquisition"
+    STRICT_PREPARATION = "strict_preparation"
+    STRICT_EXECUTION = "strict_execution"
+    ENTRY_RECOVERY = "entry_recovery"
+    STOPPING = "stopping"
+
+
+@dataclass(frozen=True, slots=True)
+class BodyControlActivity:
+    """Current read-only ownership, never a release or execution permit."""
+    world_session: WorldSessionId
+    observation_sequence_id: int
+    owner_id: str
+    route_id: str | None
+    route_revision: int | None
+    action_index: int | None
+    phase: BodyControlPhase
+
+
 @dataclass(frozen=True, slots=True)
 class BodyControlProgress:
     """Read-only progress facts; phase labels never grant control authority."""

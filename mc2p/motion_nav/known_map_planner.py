@@ -20,6 +20,7 @@ from mc2p.motion_nav.ground_traversal import (
     verify_ground_traversal,
 )
 from mc2p.motion_nav.fixed_route import FixedRoute, RoutePoint
+from mc2p.motion_nav.terminal_approach import TerminalApproachResult
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView
 from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET, PhysicsState
 from mc2p.motion_nav.jump_gap import JumpGapEdge, query_jump_gap
@@ -1561,6 +1562,7 @@ class SurfaceRouteCandidate:
     ground_traversal_plans: tuple[GroundTraversalPlan, ...] = ()
     information_need: PlanningInformationNeed | None = None
     work_identity: AsyncWorkIdentity | None = None
+    terminal_approach: TerminalApproachResult | None = None
 
     def __post_init__(self) -> None:
         if (self.total_cost_ticks is not None
@@ -2660,6 +2662,7 @@ def plan_known_surface_snapshot(
     ground_mode_profile: GroundModeProfile | None = None,
 ) -> SurfaceRouteCandidate:
     """Search a detached snapshot while expanding only reached surface columns."""
+    started_ns = time.perf_counter_ns()
     if (type(snapshot) is not KnownMapSnapshot
             or type(ground_profile) is not GroundMotionProfile
             or type(step_profile) is not StepProfile
@@ -3006,7 +3009,7 @@ def plan_known_surface_snapshot(
                     request, graph, SurfacePlanningStatus.UNSUPPORTED,
                     expanded=search.expanded,
                 )
-        return _surface_candidate(
+        candidate = _surface_candidate(
             request, graph, SurfacePlanningStatus.COMPLETE,
             tuple(state.node_id for state in search.path),
             search.segments,
@@ -3016,6 +3019,23 @@ def plan_known_surface_snapshot(
             tuple(search.path),
             ground_traversal_plans=traversal_plans,
         )
+        if (request.goal_state is not None and not traversal_plans
+                and all(type(edge) is SurfaceWalkEdge for edge in search.segments)
+                and expander.movement_mode is MovementMode.WALK
+                and ground_profile.motion_catalog is not None
+                and request.entry_physics_state is not None
+                and request.entry_physics_state.pose == "standing"):
+            from mc2p.motion_nav.terminal_approach import select_terminal_approach
+            result = select_terminal_approach(snapshot.world, candidate.path[-1].surface,
+                request.goal_state, candidate.path[-2].position,
+                ground_profile, request.entry_physics_state,
+                approach_points=(request.entry_physics_state.position, *(node.position for node in candidate.path)),
+                mode_profile=ground_mode_profile,
+                deadline_ns=min(started_ns+int(request.maximum_planning_seconds*1e9),
+                                time.perf_counter_ns()+50_000_000))
+            return replace(candidate, terminal_approach=result,
+                dependencies=tuple(sorted(set(candidate.dependencies)|set(result.dependencies))))
+        return candidate
     information_need = expander.information_need(request, snapshot)
     status = (
         SurfacePlanningStatus.NO_KNOWN_ROUTE if information_need is not None else

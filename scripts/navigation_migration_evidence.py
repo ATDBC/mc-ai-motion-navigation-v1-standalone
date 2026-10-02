@@ -49,6 +49,12 @@ def jobs():
 
 
 def _execute(kind, data):
+    if kind == "faults":
+        from tests.sim.migration_faults import run_fault_case
+        result = run_fault_case(data)
+        return {"passed": True, "task_outcome": result.outcome,
+                "reason": result.reason, "violations": result.violations,
+                "verification": asdict(result.verification), "trace": result.trace}
     if kind == "async":
         from tests.sim.async_work_sequences import run_gap_sequence, run_information_sequence, run_placement_sequence
         family, seed = data
@@ -121,11 +127,15 @@ def _encode(value):
     raise TypeError(f"unsupported evidence type: {type(value).__name__}")
 
 
-def collect(output, workers=4, limit=None, resume_from=None):
+def collect(output, workers=4, limit=None, resume_from=None, faults_only=False):
     if output.exists():
         raise FileExistsError(output)
     output.mkdir(parents=True)
-    tasks = list(jobs())
+    if faults_only:
+        from tests.sim.migration_faults import FAULT_CASES
+        tasks = [("faults/" + name, "faults", name) for name in FAULT_CASES]
+    else:
+        tasks = list(jobs())
     if limit is not None:
         tasks = tasks[:limit]
     rows, hits = [], {}
@@ -210,12 +220,13 @@ if __name__ == "__main__":
     parser.add_argument("--workers", type=int, default=4, choices=range(1, 5))
     parser.add_argument("--limit", type=int)
     parser.add_argument("--resume-from", type=Path)
+    parser.add_argument("--faults-only", action="store_true")
     parser.add_argument("--compare", type=Path, nargs=2)
     parser.add_argument("--check-coverage", type=Path)
-    parser.add_argument("--require-function", nargs="+", default=[])
+    parser.add_argument("--require-function", nargs="+", action="extend", default=[])
     args = parser.parse_args()
     report = (check_coverage(args.check_coverage, args.require_function) if args.check_coverage else
-              paired(*args.compare) if args.compare else collect(args.output, args.workers, args.limit, args.resume_from))
+              paired(*args.compare) if args.compare else collect(args.output, args.workers, args.limit, args.resume_from, args.faults_only))
     print(json.dumps(report, ensure_ascii=False))
     raise SystemExit(int(report.get("failed", 0) > 0 or bool(report.get("differences"))
                          or report.get("migration_allowed") is False))

@@ -395,6 +395,15 @@ class WorldQueryCache:
         self._boxes[position] = boxes
         return boxes
 
+    @property
+    def touched_cells(self) -> tuple[BlockPos, ...]:
+        return tuple(sorted(self._facts))
+
+    def validate_for(self, world: WorldView) -> None:
+        if world is not self.world:
+            raise ContractViolation("query cache belongs to another world view")
+        world.validate_sections({_block_section_from_valid_position(p) for p in self._facts})
+
 
 class WorldKnowledge:
     """Single owner of semantic cell facts for one world session."""

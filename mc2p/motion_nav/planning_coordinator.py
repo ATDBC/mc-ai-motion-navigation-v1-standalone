@@ -1184,18 +1184,22 @@ class PlanningCoordinator:
                 changed_cells=tuple(sorted(self._pipeline.changed_cells)),
             )
         if admitted.status is not AdmissionStatus.ACCEPTED or admitted.route is None:
-            if admitted.reason is AdmissionReason.LANDING_VISUAL_EVIDENCE_MISSING:
+            if admitted.reason in {
+                    AdmissionReason.LANDING_VISUAL_EVIDENCE_MISSING,
+                    AdmissionReason.TERMINAL_APPROACH_NEEDS_INFORMATION}:
+                landing_evidence = admitted.reason is AdmissionReason.LANDING_VISUAL_EVIDENCE_MISSING
                 snapshot = self._pipeline.snapshot
                 assert snapshot is not None
                 blockers = tuple(
                     PlanningBlocker(
                         position,
                         PlanningBlockerKind.ACTION_PRECONDITION,
-                        "landing-visual-evidence",
+                        "landing-visual-evidence" if landing_evidence else "terminal-collision-evidence",
                         PlanningFrontierKind.ACTION,
                         f"landing:{request.request_id}",
                         PlanningFactRequirement(
-                            PlanningFactRequirementKind.LANDING_VISUAL_EVIDENCE,
+                            (PlanningFactRequirementKind.LANDING_VISUAL_EVIDENCE if landing_evidence
+                             else PlanningFactRequirementKind.CELL_KNOWLEDGE),
                             position,
                         ),
                     )
@@ -1227,7 +1231,7 @@ class PlanningCoordinator:
                 self._begin_information_work(frame, need)
                 self._terminal_update = self._update(
                     PlanningUpdateKind.NEEDS_INFORMATION,
-                    "landing_visual_evidence_missing",
+                    admitted.reason.value,
                     information_need=need,
                 )
                 return self._terminal_update

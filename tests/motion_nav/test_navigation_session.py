@@ -125,6 +125,7 @@ class _DelayedCancelExecutor(ActionRouteExecutor):
 
     def __init__(self) -> None:
         self.cancel_requested = False
+        self.action_index = 0
         self.decisions = 0
         self.state = ActionRouteState.RUNNING
 

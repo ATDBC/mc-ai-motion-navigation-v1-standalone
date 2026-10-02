@@ -23,6 +23,7 @@ from mc2p.motion_nav.action_route import (
 from mc2p.motion_nav.action_route_executor import (
     ActionRouteDecision, ActionRouteExecutor, ActionRouteState,
 )
+from mc2p.motion_nav.body_control import BodyControlPhase
 from mc2p.motion_nav.motion_candidate import (
     AdmittedMotionCandidate, MotionCandidateStatus,
 )
@@ -523,6 +524,10 @@ class MotionRouteCoordinator:
 
     def _connection_id(self, action_index: int) -> str:
         return f"{self.route.route_id}/action-{action_index}"
+
+    @property
+    def recovering_grounded_entry(self) -> bool:
+        return self._grounded_recovery_wait_id is not None
 
     def _end_grounded_recovery_wait(self) -> None:
         if self._grounded_recovery_wait_id is not None:
@@ -1145,6 +1150,7 @@ class MotionRouteCoordinator:
                         look=None,
                         input_lease_ticks=1,
                         reason_code="recovering_grounded_verified_entry",
+                        body_phase=BodyControlPhase.ENTRY_RECOVERY,
                         submit_input=True,
                         verified_command_index=None,
                         expected_movement_tick=None,
@@ -1190,6 +1196,7 @@ class MotionRouteCoordinator:
                         look=None,
                         input_lease_ticks=1,
                         reason_code="settling_grounded_verified_entry",
+                        body_phase=BodyControlPhase.ENTRY_RECOVERY,
                         submit_input=True,
                         verified_command_index=None,
                         expected_movement_tick=None,
@@ -1204,6 +1211,7 @@ class MotionRouteCoordinator:
                         look=None,
                         input_lease_ticks=1,
                         reason_code="releasing_grounded_verified_entry",
+                        body_phase=BodyControlPhase.ENTRY_RECOVERY,
                         submit_input=True,
                         verified_command_index=None,
                         expected_movement_tick=None,
@@ -1220,6 +1228,7 @@ class MotionRouteCoordinator:
                     look=None,
                     input_lease_ticks=1,
                     reason_code="repreparing_grounded_verified_motion",
+                    body_phase=BodyControlPhase.STRICT_PREPARATION,
                     submit_input=True,
                     verified_command_index=None,
                     expected_movement_tick=None,

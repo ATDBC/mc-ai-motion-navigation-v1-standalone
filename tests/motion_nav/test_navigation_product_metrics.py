@@ -22,6 +22,7 @@ def frames():
         goal_revision=1, goal_position=(0.0, 64.0, 1.0),
         goal_revision_requests=[],
         goal_satisfied=tick == 8, on_ground=True,
+        action_kind="WalkSegment",
         applied_movement={"forward": 1, "strafe": 0, "jump": False, "sneak": False, "sprint": False},
     ) for tick, z in zip(range(2, 9), (.1, .2, .2, .2, .2, .5, 1.0))]
 

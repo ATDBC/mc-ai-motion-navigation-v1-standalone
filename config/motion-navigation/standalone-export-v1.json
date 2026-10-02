@@ -42,6 +42,7 @@
     "evidence/motion_navigation/r27-v1/**/*",
     "evidence/motion_navigation/r28-baseline-v1/**/*",
     "evidence/motion_navigation/r28-baseline-v2/**/*",
+    "evidence/motion_navigation/r28-baseline-v3/**/*",
     "experiments/navigation-floating-wall-mazes-v1/layouts/maze_03_floating.json",
     "scripts/fixtures/**/*",
     "tests/sim/**/*.py",
@@ -58,6 +59,8 @@
   ],
   "python_entry_globs": [
     "scripts/export_motion_navigation_standalone.py",
+    "scripts/run_r28_player_boundary.py",
+    "scripts/r28_batch5_report.py",
     "scripts/b10_gap_solver_runtime.py",
     "scripts/probe_fabric_deployment_observation.py",
     "scripts/c1_melee_evidence.py",

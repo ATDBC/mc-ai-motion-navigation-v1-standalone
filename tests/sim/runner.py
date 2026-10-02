@@ -54,6 +54,7 @@ class InlinePlannerWorker:
     def __init__(self):
         self._job = None
         self.activity = []
+        self.terminal_results = []
 
     def is_alive(self) -> bool:
         return True
@@ -69,7 +70,10 @@ class InlinePlannerWorker:
         job, self._job = self._job, None
         if job is not None:
             self.activity.append(ObservedAsyncActivity(job.request.work_identity, "poll"))
-        return None if job is None else planner_worker._execute_job(job)
+        result = None if job is None else planner_worker._execute_job(job)
+        if result is not None and getattr(result, "terminal_approach", None) is not None:
+            self.terminal_results.append(result.terminal_approach)
+        return result
 
     def close(self) -> None:
         self._job = None
@@ -221,7 +225,8 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
         event_ticks: dict[str, int] | None = None,
         control_step: Callable[[Context], tuple[str, ...] | None] | None = None,
         risk_ledger: TaskRiskLedger | None = None,
-        backend_factory=CalculatorBackend) -> Result:
+        backend_factory=CalculatorBackend,
+        planner_factory=InlinePlannerWorker) -> Result:
     events = [replace(event, fired_at=None) for event in scenario.events]
     if event_ticks is not None:
         if set(event_ticks) != {event.name for event in events}:
@@ -231,6 +236,7 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                                        context.tick >= at and predicate(context)))
                   for event in events]
     clock = [100_000_000]
+    command_activities = {}
     backend = backend_factory(clock, Scene(dict(scenario.scene.solids), scenario.scene.volume).with_floor(),
                                 scenario.start, scenario.yaw_degrees,
                                 perturbations=scenario.perturbations)
@@ -245,7 +251,7 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
         raise RuntimeError("reset failed")
     seed_memory(runtime, backend.scene, exclude=scenario.initial_unknown_cells)
     profiles = NavigationSessionProfiles.load(CONFIG)
-    planner = InlinePlannerWorker()
+    planner = planner_factory()
     motion = InlineMotionWorker()
     session = NavigationSession("sim", profiles, planner_worker=planner,
                                 motion_worker=motion,
@@ -264,7 +270,7 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
     # owners under test is active; otherwise the harness would manufacture an
     # unowned disturbance that the omitted outer layer is responsible for.
     backend.set_external_impulse_guard(
-        lambda: bool(session.diagnostics.controller_ids)
+        lambda: session.has_owned_body_control
     )
     policy = "sim-budget" if scenario.damage_points else "no_expected_damage"
     goal = _goal(scenario.goal, policy)
@@ -343,6 +349,13 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                 None if frame_diagnostics is None or frame_diagnostics.action_request_sequence is None
                 else runtime.input_ledger.record(frame_diagnostics.action_request_sequence)
             )
+            # Associate application with the actual winning submitted command,
+            # even when its former owner handed over in the meantime.
+            if frame_diagnostics is not None and frame_diagnostics.action_request_sequence is not None:
+                command_activities[frame_diagnostics.action_request_sequence] = frame_diagnostics.movement_activity
+                while len(command_activities) > 128:
+                    command_activities.pop(next(iter(command_activities)))
+            applied_activity = command_activities.get(applied_request)
             evidence = TickEvidence(
                 backend.movement_tick, clock[0], backend.state.position, backend.state.on_ground,
                 diagnostics.controller_ids,
@@ -394,6 +407,7 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                 planning_information_identity_valid=
                     diagnostics.planning_information_identity_valid,
                 async_work_diagnostics=session.async_work_diagnostics,
+                applied_body_activity=applied_activity,
                 active_motion_mailboxes=session.active_motion_mailboxes,
             )
             monitor.check(evidence)
@@ -459,6 +473,17 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                 "sneaking": backend.state.sneaking,
                 "on_ground": backend.state.on_ground,
                 "controller_ids": diagnostics.controller_ids,
+                "body_control_activities": tuple(asdict(activity) for activity in diagnostics.body_control_activities),
+                "terminal_screening": tuple(dict(status=item.status,reason=item.reason,
+                    position=item.position,profile_id=item.profile_id,ruleset_id=item.ruleset_id,
+                    elapsed_ns=item.elapsed_ns,rollout_ticks=item.rollout_ticks,
+                    candidate_count=item.candidate_count,dependencies=item.dependencies,
+                    reference_speeds=item.reference_speeds,
+                    conventional_fallback=item.conventional_target is not None)
+                    for item in planner.terminal_results),
+                "submitted_body_activity": (None if frame_diagnostics is None or frame_diagnostics.movement_activity is None
+                                             else asdict(frame_diagnostics.movement_activity)),
+                "applied_body_activity": None if applied_activity is None else asdict(applied_activity),
                 "controller_phase": diagnostics.controller_phase,
                 "action_kind": diagnostics.action_kind,
                 "action_index": diagnostics.action_index,
