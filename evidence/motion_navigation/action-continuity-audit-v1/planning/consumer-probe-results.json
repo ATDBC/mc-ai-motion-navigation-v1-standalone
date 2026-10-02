@@ -1,0 +1,59 @@
+[
+  {
+    "body_z": 5.05,
+    "support_fraction": 1.0,
+    "projection": {
+      "progress": 0.5499999999999998,
+      "distance": 0.0,
+      "segment_index": 0
+    },
+    "controller_state": "running",
+    "controller_reason": "tracking_fixed_route",
+    "controller_movement": {
+      "forward": 1,
+      "strafe": 0,
+      "jump": false,
+      "sneak": false,
+      "sprint": false
+    },
+    "old_destination_fallback_accepts": true
+  },
+  {
+    "body_z": 5.4,
+    "support_fraction": 1.0,
+    "projection": {
+      "progress": 0.9000000000000004,
+      "distance": 0.0,
+      "segment_index": 0
+    },
+    "controller_state": "running",
+    "controller_reason": "tracking_fixed_route",
+    "controller_movement": {
+      "forward": 1,
+      "strafe": 0,
+      "jump": false,
+      "sneak": false,
+      "sprint": false
+    },
+    "old_destination_fallback_accepts": false
+  },
+  {
+    "body_z": 6.8,
+    "support_fraction": 1.0,
+    "projection": {
+      "progress": 1.0,
+      "distance": 1.2999999999999998,
+      "segment_index": 0
+    },
+    "controller_state": "blocked",
+    "controller_reason": "no_safe_ground_candidate",
+    "controller_movement": {
+      "forward": 0,
+      "strafe": 0,
+      "jump": false,
+      "sneak": false,
+      "sprint": false
+    },
+    "old_destination_fallback_accepts": false
+  }
+]

@@ -1,0 +1,205 @@
+{
+  "scope": "D053 limited straight gap and ground goal-tail, not full R28 release",
+  "local_base_commit": "11b8f50fcc7e80134082ea8652b32d2ccfd8eef3",
+  "source_hashes": {
+    "mc2p/motion_nav/action_route_executor.py": "59e11870015443943441e3ae6bb8e421612959c96d57dd6a37f8efc5d5f1f331",
+    "mc2p/motion_nav/fixed_route.py": "354bccc2976898bbeba054347b40b698a05c89a9b7ffd650b40698f50714a793",
+    "mc2p/motion_nav/ground_traversal.py": "45b792b37adda956f3807ecd2b8fefe7d47b7218d8543d3c1cdc84e8c86b154b",
+    "mc2p/motion_nav/known_map_planner.py": "6072cafc70f1acdb33f0457308414f0ab3ba99368432dd82872ba182b4818e60",
+    "mc2p/motion_nav/motion_candidate.py": "d7dc4c01a28e458f93de1305db7ccde1f5eefee42b97f6901cff670144f19e4e",
+    "mc2p/motion_nav/motion_coordination.py": "3da23d983ec2e7d5bf303033d4a76febc004beeef0121faaab3ef63343dcf747",
+    "mc2p/motion_nav/motion_solver.py": "76a9491a82ec02b9c26f5de0daf8b14cd8f6ef10e1cdcf2fea447f58f9b29a53",
+    "mc2p/motion_nav/motion_worker.py": "cd7009d512a40e34c4f4ff129edda939b3408e2417885f435160ed85130d6cde",
+    "mc2p/motion_nav/navigation_session.py": "15a51393fe3c79a1e6846d3bae156b336e1b85ba22f5d68a0e58baef6345d90f",
+    "mc2p/motion_nav/route_admission.py": "7b82ccd334484ae9a8d25a02fe31c7b91e690998bd361bda8c91ff4d68912b40",
+    "mc2p/motion_nav/segment_entry.py": "0ed9a85e85b77c101c43d54a913c0993a8d400cd2fbe920176819a985e76cdb7",
+    "mc2p/skills/navigation_session_driver.py": "70b7422ed40ec96ff40b9369f4d2b819a56673e145ad70438ba32d587e599b46",
+    "scripts/action_continuity_fabric_runtime.py": "fadad0e60ae685ac66600dcb4061e214eab5a32afd1b237931a4d0f04c6fc857"
+  },
+  "final_fabric_batch": "20261002T144949534962Z-51fa0655",
+  "motion_nav_tests": {
+    "passed": 935,
+    "total": 935
+  },
+  "quality_specialties": {
+    "passed": 21,
+    "total": 21
+  },
+  "final_fabric_passed": 4,
+  "final_fabric_trials": [
+    {
+      "direction": 0,
+      "elapsed_ns": 3904255000,
+      "final_position": [
+        0.55,
+        100.0,
+        8.498534115065631
+      ],
+      "id": "continuity-gap-0",
+      "metrics": {
+        "airborne_neutral_ticks": [],
+        "airborne_reverse_ticks": [],
+        "first_landing_motion_speed_blocks_per_second": 5.048643224982984,
+        "first_landing_position": [
+          0.55,
+          100.0,
+          6.003558336171396
+        ],
+        "jump_entry_speed_blocks_per_second": [
+          2.3516309565796893
+        ],
+        "jump_ticks": [
+          51
+        ],
+        "landing_to_movement_gap_ticks": 0,
+        "movement_gap_before_jump_ticks": 0,
+        "outside_window_sequences": [],
+        "unowned_active_input_ticks": []
+      },
+      "movement_ticks": 45,
+      "outcome": "success",
+      "passed": true,
+      "reason": "goal_state_satisfied",
+      "source_released": true,
+      "task_elapsed_ns": 2237741900
+    },
+    {
+      "direction": 1,
+      "elapsed_ns": 3984590200,
+      "final_position": [
+        8.54676324421968,
+        100.0,
+        0.44999999999999996
+      ],
+      "id": "continuity-gap-1",
+      "metrics": {
+        "airborne_neutral_ticks": [],
+        "airborne_reverse_ticks": [],
+        "first_landing_motion_speed_blocks_per_second": 4.84207043883065,
+        "first_landing_position": [
+          5.858669536610256,
+          100.0,
+          0.44999999999999996
+        ],
+        "jump_entry_speed_blocks_per_second": [
+          1.2839906514313983
+        ],
+        "jump_ticks": [
+          130
+        ],
+        "landing_to_movement_gap_ticks": 0,
+        "movement_gap_before_jump_ticks": 1,
+        "outside_window_sequences": [],
+        "unowned_active_input_ticks": []
+      },
+      "movement_ticks": 47,
+      "outcome": "success",
+      "passed": true,
+      "reason": "goal_state_satisfied",
+      "source_released": true,
+      "task_elapsed_ns": 2336736700
+    },
+    {
+      "direction": 2,
+      "elapsed_ns": 3858976700,
+      "final_position": [
+        0.4499999999999999,
+        100.0,
+        -7.498534115065627
+      ],
+      "id": "continuity-gap-2",
+      "metrics": {
+        "airborne_neutral_ticks": [],
+        "airborne_reverse_ticks": [],
+        "first_landing_motion_speed_blocks_per_second": 5.048643224982984,
+        "first_landing_position": [
+          0.4499999999999999,
+          100.0,
+          -5.003558336171396
+        ],
+        "jump_entry_speed_blocks_per_second": [
+          2.3516309565796893
+        ],
+        "jump_ticks": [
+          208
+        ],
+        "landing_to_movement_gap_ticks": 0,
+        "movement_gap_before_jump_ticks": 0,
+        "outside_window_sequences": [],
+        "unowned_active_input_ticks": []
+      },
+      "movement_ticks": 45,
+      "outcome": "success",
+      "passed": true,
+      "reason": "goal_state_satisfied",
+      "source_released": true,
+      "task_elapsed_ns": 2244230100
+    },
+    {
+      "direction": 3,
+      "elapsed_ns": 3841576200,
+      "final_position": [
+        -7.498534115065627,
+        100.0,
+        0.55
+      ],
+      "id": "continuity-gap-3",
+      "metrics": {
+        "airborne_neutral_ticks": [],
+        "airborne_reverse_ticks": [],
+        "first_landing_motion_speed_blocks_per_second": 5.048643224982984,
+        "first_landing_position": [
+          -5.003558336171396,
+          100.0,
+          0.55
+        ],
+        "jump_entry_speed_blocks_per_second": [
+          2.3516309565796893
+        ],
+        "jump_ticks": [
+          285
+        ],
+        "landing_to_movement_gap_ticks": 0,
+        "movement_gap_before_jump_ticks": 0,
+        "outside_window_sequences": [],
+        "unowned_active_input_ticks": []
+      },
+      "movement_ticks": 45,
+      "outcome": "success",
+      "passed": true,
+      "reason": "goal_state_satisfied",
+      "source_released": true,
+      "task_elapsed_ns": 2240924100
+    }
+  ],
+  "driver_proposal_preparation": {
+    "samples": 182,
+    "p95_ns": 2514300,
+    "p99_ns": 7979800,
+    "maximum_ns": 8500200
+  },
+  "observation_ready_to_dispatch": {
+    "samples": 182,
+    "p95_ns": 6353600,
+    "p99_ns": 11663300,
+    "maximum_ns": 16553600
+  },
+  "jvm_sample_to_application": {
+    "samples": 182,
+    "p95_ns": 50392100,
+    "p99_ns": 50865600,
+    "maximum_ns": 50985300
+  },
+  "excluded_sample_ticks_without_source": [],
+  "original_recovery_horizon_ticks": 20,
+  "total_passive_verification_steps_per_release_at_most": 40,
+  "quality_prerequisite_failure_batch": "20261002T142717205026Z-83be604e",
+  "notes": [
+    "first real batch arrived safely but retained neutral flight; not a quality pass",
+    "second single direction used earlier recovery helper; preserved, not final evidence",
+    "intermediate full tests: 931/933; latest formal full run: 935/935",
+    "intermediate matrix diagnostics preserve jump failure; drop was already repaired at diagnostic time",
+    "simulator uses the same calculator; these are not independent physics validation",
+    "10-minute timing and full action combinations remain open"
+  ]
+}

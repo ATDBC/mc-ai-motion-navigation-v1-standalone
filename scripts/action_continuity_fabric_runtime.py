@@ -31,6 +31,8 @@ SOURCES = (
     "mc2p/motion_nav/action_route_executor.py", "mc2p/motion_nav/fixed_route.py",
     "mc2p/motion_nav/route_admission.py", "mc2p/motion_nav/navigation_session.py",
     "mc2p/skills/navigation_session_driver.py", "scripts/action_continuity_fabric_runtime.py",
+    "mc2p/motion_nav/segment_entry.py", "mc2p/motion_nav/ground_traversal.py",
+    "mc2p/motion_nav/known_map_planner.py",
 )
 TERMINAL = {"success", "failed", "cancelled", "stopped", "interaction_required"}
 
@@ -57,6 +59,8 @@ def _metrics(rows):
         before = next((row for row in reversed(rows) if row["movement_tick"] < tick), None)
         entries.append(None if before is None else math.hypot(before["velocity"][0], before["velocity"][2]))
     approach_gap = landing_gap = None
+    air_reverse_ticks, air_neutral_ticks = [], []
+    landing_position = landing_speed = None
     if jumps:
         active = [tick for tick in ordered if tick < jumps[0]
                   and any(samples[tick][0][name] for name in ("forward", "strafe", "jump", "sneak", "sprint"))]
@@ -64,6 +68,15 @@ def _metrics(rows):
             approach_gap = jumps[0] - active[-1] - 1
         landing = next((row["movement_tick"] for row in rows
                         if row["movement_tick"] > jumps[0] and row["on_ground"]), None)
+        if landing is not None:
+            air_reverse_ticks = [tick for tick in ordered if jumps[0] < tick < landing
+                                 and samples[tick][0]["forward"] < 0]
+            air_neutral_ticks = [tick for tick in ordered if jumps[0] < tick < landing
+                                 and not any(samples[tick][0][name]
+                                             for name in ("forward", "strafe", "jump", "sneak", "sprint"))]
+            landing_row = next(row for row in rows if row["movement_tick"] == landing)
+            landing_position = landing_row["position"]
+            landing_speed = math.hypot(landing_row["velocity"][0], landing_row["velocity"][2])
         following = [] if landing is None else [tick for tick in ordered if tick >= landing
                     and any(samples[tick][0][name] for name in ("forward", "strafe"))]
         if following:
@@ -71,6 +84,10 @@ def _metrics(rows):
     return dict(jump_ticks=jumps, jump_entry_speed_blocks_per_second=entries,
                 movement_gap_before_jump_ticks=approach_gap,
                 landing_to_movement_gap_ticks=landing_gap,
+                airborne_reverse_ticks=air_reverse_ticks,
+                airborne_neutral_ticks=air_neutral_ticks,
+                first_landing_position=landing_position,
+                first_landing_motion_speed_blocks_per_second=landing_speed,
                 unowned_active_input_ticks=sorted({tick for row in rows for tick in row["unowned_active_input_ticks"]}),
                 outside_window_sequences=sorted({seq for row in rows for seq in row["outside_window_sequences"]}))
 

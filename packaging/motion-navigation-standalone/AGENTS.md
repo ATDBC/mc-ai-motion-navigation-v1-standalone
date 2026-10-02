@@ -1,6 +1,6 @@
 # AGENTS.md
 
-2026-10-02：D052 的验证期限、后台重验证与连续入口已实施。限定跨隙四方向实机 4/4，运动导航 914/914；真实条件不匹配仍不能起跳，未获选与取消保留身体责任。当前结果见 [R28 验收第 12.6 节](docs/motion_navigation/acceptance/navigation-coordination-convergence.md#126-本轮实施与限定试点结果)。完整升降组合、长期控制期限、R28 共享协调及跟随未关闭，旧基线和失败保持原记录。
+2026-10-02：D053 的共同出口、有限跨隙择优及连续高度尾段已实施。运动导航 935/935，四方向 Fabric 跨隙 4/4，45—47 tick，空中无反向／松键。结果、原恢复期限与完整停止尾迹见 [R28 验收第 12.8 节](docs/motion_navigation/acceptance/navigation-coordination-convergence.md#128-d053-限定实现与运动质量)。完整组合、长期控制期限、拐角／墙接触、R28 共享协调及跟随未关闭，旧基线和失败保持原记录。
 
 本仓库是由主项目生成的只读源码快照。先读最新的 `docs/motion_navigation/stages/` 和对应的 `acceptance/`，再读取相关 `architecture/` 与 `decisions/`。
 

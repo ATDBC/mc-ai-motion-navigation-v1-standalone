@@ -1,0 +1,15 @@
+本文件转录第一次完整检查的终端结果，不是额外重跑或原始身体轨迹。
+运行期间后续修改已开始，因此它只作为发现问题的中间记录，不作为最终冻结验收。
+
+FAIL: test_late_jump_landing_on_destination_support_continues_route
+('failed', 'input_lost') != ('success', 'goal_state_satisfied')
+
+FAIL: test_no_input_frame_revokes_stale_navigation_movement
+('failed', 'motion_unsolvable:hard_conflict') != ('success', 'goal_state_satisfied')
+
+Ran 933 tests in 236.593s
+FAILED (failures=2)
+
+随后保存的 matrix-diagnostics.json.gz 记录了当时仍存在的上跳失败。
+下落在诊断时已随共线修正恢复成功，不能把它称为该项原失败的原始轨迹。
+最终完整检查另行运行：935/935，234.420s。

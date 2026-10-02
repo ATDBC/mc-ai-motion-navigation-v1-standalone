@@ -8,7 +8,8 @@ import math
 
 from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.common import ContractViolation
-from mc2p.motion_nav.fixed_route import FixedRoute
+from mc2p.motion_nav.fixed_route import FixedRoute, FixedRouteConfig, RoutePoint
+from mc2p.motion_nav.geometry import QueryStatus, query_support
 from mc2p.motion_nav.ground_motion import GroundMotionProfile
 from mc2p.motion_nav.movement_transition import MovementMode
 from mc2p.motion_nav.online_motion import ProjectionStatus, project_movement_command
@@ -17,7 +18,7 @@ from mc2p.motion_nav.physics_adapter import PhysicsWorldView
 from mc2p.motion_nav.physics_types import (
     CalculationStatus, JAVA_1_21_RULESET, PhysicsState, TickInput,
 )
-from mc2p.motion_nav.segment_entry import SegmentEntryWindow
+from mc2p.motion_nav.segment_entry import MotionContinuationRequirement, SegmentEntryWindow
 from mc2p.motion_nav.support_surfaces import SurfaceNodeId
 from mc2p.motion_nav.world_model import Aabb, BlockPos
 
@@ -46,6 +47,8 @@ class GroundTraversalPlan:
     profile_id: str
     maximum_cross_track_blocks: float
     surface_node_path: tuple[SurfaceNodeId, ...] = ()
+    continuation: MotionContinuationRequirement | None = None
+    neutral_stop_trajectory: tuple[PhysicsState, ...] = ()
 
     def __post_init__(self) -> None:
         if (type(self.route) is not FixedRoute
@@ -72,6 +75,19 @@ class GroundTraversalPlan:
             raise ContractViolation(
                 "ground traversal surface path must match its canonical route"
             )
+        if self.continuation is not None:
+            if (type(self.continuation) is not MotionContinuationRequirement
+                    or not self.continuation.accepts(self.trajectory[-1])
+                    or self.exit_window != self.continuation.entry_window
+                    or type(self.neutral_stop_trajectory) is not tuple
+                    or not 1 <= len(self.neutral_stop_trajectory) <= FixedRouteConfig().maximum_recovery_ticks + 1
+                    or any(type(state) is not PhysicsState for state in self.neutral_stop_trajectory)
+                    or self.neutral_stop_trajectory[0] != self.trajectory[-1]
+                    or not self.neutral_stop_trajectory[-1].on_ground
+                    or math.hypot(*self.neutral_stop_trajectory[-1].velocity_blocks_per_tick[::2]) > 1.0e-9):
+                raise ContractViolation("ground continuation must retain its proved exit and complete stop tail")
+        elif self.neutral_stop_trajectory:
+            raise ContractViolation("ground stop tail must belong to a continuation proof")
 
 
 @dataclass(frozen=True, slots=True)
@@ -194,6 +210,63 @@ def _inside_corridor(state: PhysicsState, corridor: tuple[Aabb, ...]) -> bool:
     )
 
 
+def _continuation_corridor(requirement: MotionContinuationRequirement, radius: float) -> Aabb:
+    window = requirement.entry_window
+    x, _, z = window.reference_point
+    dx, dz = window.horizontal_approach_direction
+    lateral = window.maximum_lateral_offset_blocks + radius
+    points = tuple((x + dx * longitudinal - dz * offset,
+                    z + dz * longitudinal + dx * offset)
+                   for longitudinal in (window.minimum_longitudinal_offset_blocks - radius,
+                                        window.maximum_longitudinal_offset_blocks + radius)
+                   for offset in (-lateral, lateral))
+    return Aabb(min(point[0] for point in points), window.minimum_feet_y - .65,
+                min(point[1] for point in points), max(point[0] for point in points),
+                window.maximum_feet_y + 2.4, max(point[1] for point in points))
+
+
+def verify_ground_continuation_stop_tail(
+    state: PhysicsState, world: PhysicsWorldView, corridor: tuple[Aabb, ...],
+    requirement: MotionContinuationRequirement,
+) -> tuple[GroundTraversalStatus, tuple[PhysicsState, ...], tuple[BlockPos, ...], tuple[BlockPos, ...]]:
+    """Return status, actual stop states, dependencies and any missing cells."""
+    trajectory = [state]
+    dependencies = set()
+    config = FixedRouteConfig()
+    for _ in range(config.maximum_recovery_ticks + 1):
+        support = query_support(state.body_box, world._world)
+        dependencies.update(support.dependencies)
+        if support.status is QueryStatus.NEEDS_INFORMATION:
+            return GroundTraversalStatus.NEEDS_WORLD, (), tuple(sorted(dependencies)), support.missing_cells
+        if support.status is QueryStatus.UNSUPPORTED:
+            return GroundTraversalStatus.UNSUPPORTED, (), tuple(sorted(dependencies)), ()
+        if (support.status is not QueryStatus.FEASIBLE
+                or support.support_fraction < config.minimum_support_fraction
+                or not state.on_ground or not _inside_corridor(state, corridor)
+                or not requirement.entry_window.minimum_feet_y <= state.position[1]
+                           <= requirement.entry_window.maximum_feet_y):
+            return GroundTraversalStatus.BLOCKED, (), tuple(sorted(dependencies)), ()
+        if math.hypot(*state.velocity_blocks_per_tick[::2]) <= 1.0e-9:
+            return GroundTraversalStatus.VERIFIED, tuple(trajectory), tuple(sorted(dependencies)), ()
+        if len(trajectory) > config.maximum_recovery_ticks:
+            break
+        projected = project_movement_command(state, MovementV1())
+        if projected.status is not ProjectionStatus.READY:
+            return GroundTraversalStatus.UNSUPPORTED, (), tuple(sorted(dependencies)), ()
+        calculated = step(state, projected.tick_input, world, JAVA_1_21_RULESET)
+        dependencies.update(calculated.dependencies)
+        if calculated.status is CalculationStatus.NEEDS_WORLD:
+            return GroundTraversalStatus.NEEDS_WORLD, (), tuple(sorted(dependencies)), calculated.missing_cells
+        if calculated.status is not CalculationStatus.OK:
+            status = (GroundTraversalStatus.UNSUPPORTED if calculated.status is CalculationStatus.UNSUPPORTED
+                      else GroundTraversalStatus.BLOCKED)
+            return status, (), tuple(sorted(dependencies)), ()
+        state = calculated.next_state
+        assert state is not None
+        trajectory.append(state)
+    return GroundTraversalStatus.BUDGET_EXHAUSTED, (), tuple(sorted(dependencies)), ()
+
+
 def verify_ground_traversal(
     entry_state: PhysicsState,
     route: FixedRoute,
@@ -202,6 +275,7 @@ def verify_ground_traversal(
     *,
     maximum_ticks: int,
     surface_node_path: tuple[SurfaceNodeId, ...] = (),
+    continuation: MotionContinuationRequirement | None = None,
 ) -> GroundTraversalResult:
     if (type(entry_state) is not PhysicsState or type(route) is not FixedRoute
             or type(world) is not PhysicsWorldView
@@ -214,6 +288,8 @@ def verify_ground_traversal(
         raise ContractViolation("ground traversal surface path is invalid")
     if entry_state.session != world.session:
         raise ContractViolation("ground traversal world belongs to another session")
+    if continuation is not None and type(continuation) is not MotionContinuationRequirement:
+        raise ContractViolation("ground continuation requirement must be typed")
     if (entry_state.ruleset_id != JAVA_1_21_RULESET.ruleset_id
             or entry_state.pose != "standing" or entry_state.sprinting
             or entry_state.sneaking):
@@ -258,8 +334,17 @@ def verify_ground_traversal(
             reasons=("support_height_change_exceeds_step_rule",),
         )
 
+    if continuation is not None and (
+            continuation.mode is not MovementMode.WALK
+            or "standing" not in continuation.entry_window.allowed_poses
+            or abs(continuation.entry_window.reference_point[1] - route.points[-1].y) > .10):
+        return GroundTraversalResult(GroundTraversalStatus.UNSUPPORTED,
+            reasons=("ordinary_same_height_ground_continuation_required",))
+
     radius = 0.45
     corridor = _corridor(route, radius)
+    if continuation is not None:
+        corridor += (_continuation_corridor(continuation, radius),)
     trajectory = [entry_state]
     inputs = []
     events = []
@@ -280,6 +365,33 @@ def verify_ground_traversal(
             dx = target.x - state.position[0]
             dz = target.z - state.position[2]
             distance = math.hypot(dx, dz)
+        if target_index == len(route.points) - 1 and continuation is not None:
+            window = continuation.entry_window
+            direction_x, direction_z = window.horizontal_approach_direction
+            target = RoutePoint(
+                window.reference_point[0] + direction_x * window.maximum_longitudinal_offset_blocks,
+                window.reference_point[1],
+                window.reference_point[2] + direction_z * window.maximum_longitudinal_offset_blocks,
+            )
+            dx, dz = target.x - state.position[0], target.z - state.position[2]
+            distance = math.hypot(dx, dz)
+            if continuation.accepts(state):
+                status, stop_tail, stop_dependencies, missing = verify_ground_continuation_stop_tail(
+                    state, world, corridor, continuation,
+                )
+                dependencies.update(stop_dependencies)
+                if status is not GroundTraversalStatus.VERIFIED:
+                    return GroundTraversalResult(status, dependencies=tuple(sorted(dependencies)),
+                        missing_cells=missing, reasons=("ground_continuation_stop_tail_unproven",))
+                plan = GroundTraversalPlan(
+                    route, _entry_window(route, profile, trajectory[0], exit=False),
+                    continuation.entry_window, tuple(trajectory), tuple(inputs), tuple(events), corridor,
+                    tuple(sorted(dependencies)), len(inputs), JAVA_1_21_RULESET.ruleset_id,
+                    "mc2p.input-projection.v1", profile.profile_id, radius, surface_node_path,
+                    continuation, stop_tail,
+                )
+                return GroundTraversalResult(GroundTraversalStatus.VERIFIED, plan,
+                                              dependencies=plan.dependencies)
         reached_terminal = (
             target_index == len(route.points) - 1
                 and distance <= 0.35
@@ -301,7 +413,7 @@ def verify_ground_traversal(
             state.velocity_blocks_per_tick[0],
             state.velocity_blocks_per_tick[2],
         ) * 20.0
-        if reached_terminal or approaching_terminal_descent:
+        if continuation is None and (reached_terminal or approaching_terminal_descent):
             braking = True
         if braking and horizontal_speed <= 0.10:
             plan = GroundTraversalPlan(

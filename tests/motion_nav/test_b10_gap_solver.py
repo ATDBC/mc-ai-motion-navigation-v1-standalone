@@ -344,7 +344,7 @@ class B10GapSolverTests(unittest.TestCase):
         self.assertIn("entry_speed_outside_trial", result.reasons)
 
     def test_release_recovery_does_not_call_moving_ground_state_safe(self):
-        from mc2p.motion_nav.motion_solver import _release_recovery_evidence
+        from mc2p.motion_nav.motion_solver import _release_recovery_evidence, SolveStatus
         anchor, world, target, _ = fixture()
         fast_edge_state = replace(
             anchor.physics_state,
@@ -358,7 +358,9 @@ class B10GapSolverTests(unittest.TestCase):
             self.request(target),
         )
 
-        self.assertIsNone(status)
+        # The final state's stop tail is now checked too. Neither a moving
+        # entry nor a moving exit may silently count as safe support.
+        self.assertIs(status, SolveStatus.NO_SOLUTION_WITHIN_SEARCH)
         self.assertEqual(safe, ())
 
     def test_missing_world_and_unsupported_body_are_not_called_blocked(self):

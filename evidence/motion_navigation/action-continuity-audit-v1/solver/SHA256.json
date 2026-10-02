@@ -1,0 +1,54 @@
+[
+  {
+    "path": ".tmp/continuity-root-audit/solver/report.md",
+    "sha256": "51adb8aa22f21da5cc8f98696a06862d4b8e503e99282dfe86d457cb1c4ff89e"
+  },
+  {
+    "path": ".tmp/continuity-root-audit/solver/counterfactual.py",
+    "sha256": "e4b73338ebd67b3451ea90d4a017641bb3a98d95b7db913af8dc2d03cc3f36ad"
+  },
+  {
+    "path": ".tmp/continuity-root-audit/solver/counterfactual.json",
+    "sha256": "79e6d37e70f15768257fb8f817836fb2c3abf70eb6b34cd07a71e7086b5062d7"
+  },
+  {
+    "path": ".tmp/continuity-root-audit/solver/counterfactual-first-match-relabelled-reconstruction.json",
+    "sha256": "51a8b0ec79a1e6984aa11787365895064d7b3f589b3312e50a5b6b91b5ad46a6"
+  },
+  {
+    "path": ".tmp/continuity-root-audit/solver/initial-source-error.md",
+    "sha256": "75129f6853ccee001c51813d068673eb81e84491ece17a6bffc788d69b44fe0d"
+  },
+  {
+    "path": "mc2p/motion_nav/motion_solver.py",
+    "sha256": "89af7ce35f172f92172d4dc5020722265318a1e1528cd580cd8168981e3fc3ec"
+  },
+  {
+    "path": "mc2p/motion_nav/motion_coordination.py",
+    "sha256": "8c0365af22d398efbe25cce13060826fe16ce220fc2b584cda252a3e289ebd1e"
+  },
+  {
+    "path": "mc2p/motion_nav/motion_candidate.py",
+    "sha256": "cf268ba432a91edc38cb3d939f22c75517cd23d8325f9c072ca5781c40068d6f"
+  },
+  {
+    "path": "mc2p/motion_nav/motion_worker.py",
+    "sha256": "cd7009d512a40e34c4f4ff129edda939b3408e2417885f435160ed85130d6cde"
+  },
+  {
+    "path": "config/motion-navigation/air-motions-b09-v1.json",
+    "sha256": "dd3dedc726a9d3f57aef16c0a7f55e0e59d6370169121b892a64c868c8eee818"
+  },
+  {
+    "path": "config/motion-navigation/verified-height-transitions-v1.json",
+    "sha256": "a056f107e48063798f33dd9d81d2ecf967d2d62f13856acc3bd77cf97e8f74eb"
+  },
+  {
+    "path": "artifacts/current-navigation-demo/20261002T130530628560Z-9880fb4f/navigation-frames.jsonl",
+    "sha256": "aaa21060a4a243bba7e198a62daf3e40db571c8d4626e5c3014ed14ae13b3e35"
+  },
+  {
+    "path": "artifacts/current-navigation-demo/20261002T130530628560Z-9880fb4f/game/MC2PFollower/trace.jsonl",
+    "sha256": "a065b848f09ce9f1accdd7a0a210a07d2de2b45e30a1328f6bdba09d952e2780"
+  }
+]

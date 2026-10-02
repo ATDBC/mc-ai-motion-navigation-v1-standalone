@@ -31,7 +31,7 @@ from mc2p.motion_nav.physics_types import (
 )
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.segment_entry import (
-    SegmentEntryWindow, body_fits_segment_entry,
+    MotionContinuationRequirement, SegmentEntryWindow, body_fits_segment_entry,
 )
 from mc2p.motion_nav.world_model import Aabb, BlockPos, WorldQueryCache, WorldView
 
@@ -162,6 +162,12 @@ class FixedRouteState(StrEnum):
     NEEDS_REPLAN = "needs_replan"
 
 
+class GroundHandoffDisposition(StrEnum):
+    NOT_REQUESTED = "not_requested"
+    CONSUMED = "consumed"
+    REJECTED = "rejected"
+
+
 @dataclass(frozen=True, slots=True)
 class FixedRouteDecision:
     state: FixedRouteState
@@ -172,6 +178,7 @@ class FixedRouteDecision:
     control_time_ns: int
     input_lease_ticks: int
     reason: str
+    handoff_disposition: GroundHandoffDisposition = GroundHandoffDisposition.NOT_REQUESTED
 
 
 @dataclass(frozen=True, slots=True)
@@ -351,6 +358,8 @@ class GroundHandoffTarget:
     first_tick: int
     movements: tuple[MovementV1, ...]
     latest_tick: int
+    movement_yaws_radians: tuple[float, ...] = ()
+    mode: MovementMode | None = None
 
     def __post_init__(self) -> None:
         if (type(self.position) is not tuple or len(self.position) != 3
@@ -361,7 +370,13 @@ class GroundHandoffTarget:
                 or not self.first_tick <= self.latest_tick < self.first_tick + 20
                 or type(self.movements) is not tuple
                 or not 1 <= len(self.movements) <= 4
-                or any(type(value) is not MovementV1 for value in self.movements)):
+                or any(type(value) is not MovementV1 for value in self.movements)
+                or type(self.movement_yaws_radians) is not tuple
+                or (self.movement_yaws_radians
+                    and len(self.movement_yaws_radians) != len(self.movements))
+                or any(type(value) not in (int, float) or not math.isfinite(value)
+                       for value in self.movement_yaws_radians)
+                or (self.mode is not None and type(self.mode) is not MovementMode)):
             raise ContractViolation("ground handoff target requires a bounded typed prefix")
 
 
@@ -399,10 +414,12 @@ class FixedRouteController:
         self._traversal_plan: GroundTraversalPlan | None = None
         self._traversal_tick_index = 0
         self._traversal_replan_pending = False
+        self._continuation: MotionContinuationRequirement | None = None
 
     def start(
         self, route: FixedRoute, frame: NavigationFrame, *,
         traversal_plan: GroundTraversalPlan | None = None,
+        continuation: MotionContinuationRequirement | None = None,
     ) -> None:
         from mc2p.motion_nav.ground_traversal import GroundTraversalPlan
         if type(route) is not FixedRoute or type(frame) is not NavigationFrame:
@@ -423,6 +440,10 @@ class FixedRouteController:
             raise ContractViolation(
                 "fixed route traversal proof does not match the route"
             )
+        if continuation is not None and type(continuation) is not MotionContinuationRequirement:
+            raise ContractViolation("fixed route continuation must be typed")
+        if traversal_plan is not None and traversal_plan.continuation != continuation:
+            raise ContractViolation("fixed route continuation must match its new traversal proof")
         if self.state not in {
             FixedRouteState.IDLE, FixedRouteState.CANCELLED, FixedRouteState.SUCCEEDED,
             FixedRouteState.INPUT_LOST, FixedRouteState.FAILED, FixedRouteState.UNSUPPORTED,
@@ -446,6 +467,7 @@ class FixedRouteController:
         self._traversal_plan = traversal_plan
         self._traversal_tick_index = 0
         self._traversal_replan_pending = False
+        self._continuation = continuation
         self.state = FixedRouteState.RUNNING
 
     def set_handoff_target(self, target: GroundHandoffTarget | None) -> None:
@@ -470,7 +492,8 @@ class FixedRouteController:
         )
 
     def _decision(self, started: int, movement: MovementV1, reason: str,
-                  missing: tuple[BlockPos, ...] = ()) -> FixedRouteDecision:
+                  missing: tuple[BlockPos, ...] = (), *,
+                  handoff_disposition: GroundHandoffDisposition | None = None) -> FixedRouteDecision:
         if (self.mode_profile is not None
                 and not (self.mode_profile.mode is MovementMode.SPRINT
                          and self.state in {
@@ -483,11 +506,65 @@ class FixedRouteController:
                 }):
             movement = movement_for_ground_mode(self.mode_profile, movement)
         self._previous_movement = movement
+        if handoff_disposition is None:
+            handoff_disposition = (
+                GroundHandoffDisposition.REJECTED
+                if self._handoff_target_hint is not None
+                else GroundHandoffDisposition.NOT_REQUESTED
+            )
         return FixedRouteDecision(
             self.state, movement, self._progress, self._cross_track,
             tuple(sorted(set(missing))), time.perf_counter_ns() - started,
-            self.config.input_lease_ticks, reason,
+            self.config.input_lease_ticks, reason, handoff_disposition,
         )
+
+    def _prepared_handoff_movement(self, frame: NavigationFrame) -> MovementV1 | None:
+        """Accept the original projected input, without changing its yaw or mode."""
+        hint = self._handoff_target_hint
+        tick = frame.body.movement_tick_id
+        if hint is None or tick is None or self._cancel_requested:
+            return None
+        index = tick + 1 - hint.first_tick
+        if index < 0 or tick + 1 > hint.latest_tick:
+            return None
+        mode = self.mode_profile.mode if self.mode_profile is not None else MovementMode.WALK
+        if (observed_ground_mode(frame.body) is not mode
+                or (hint.mode is not None and hint.mode is not mode)):
+            return None
+        if hint.movement_yaws_radians:
+            yaw = hint.movement_yaws_radians[min(index, len(hint.movements) - 1)]
+            delta = (frame.body.yaw_radians - yaw + math.pi) % (2.0 * math.pi) - math.pi
+            if abs(delta) > 1.0e-7:
+                return None
+        movement = hint.movements[index] if index < len(hint.movements) else MovementV1()
+        if movement.jump:
+            return None
+        if (self.mode_profile is not None
+                and movement_for_ground_mode(self.mode_profile, movement) != movement):
+            return None
+        return movement
+
+    def _continuation_projection(self, projection: _Projection, x: float, z: float) -> _Projection:
+        """Keep following the proved successor lane after the old reference end."""
+        if self._continuation is None:
+            return projection
+        assert self._geometry is not None
+        last_segment = len(self._geometry.lengths) - 1
+        if ((projection.segment_index != last_segment and self._segment_index != last_segment)
+                or max(projection.progress, self._progress)
+                < self._geometry.total_length - self.config.endpoint_tolerance_blocks):
+            return projection
+        window = self._continuation.entry_window
+        dx, dz = window.horizontal_approach_direction
+        offset_x, offset_z = x - window.reference_point[0], z - window.reference_point[2]
+        longitudinal = self._continuation.progress((x, window.reference_point[1], z))
+        outside = max(window.minimum_longitudinal_offset_blocks - longitudinal,
+                      longitudinal - window.maximum_longitudinal_offset_blocks, 0.0)
+        distance = min(projection.distance, math.hypot(outside, -offset_x * dz + offset_z * dx))
+        goal = self._geometry.goal
+        successor_progress = (self._geometry.total_length + longitudinal
+                              - self._continuation.progress((goal.x, goal.y, goal.z)))
+        return _Projection(max(projection.progress, successor_progress), distance, last_segment)
 
     @staticmethod
     def _axis(value: float) -> int:
@@ -567,53 +644,60 @@ class FixedRouteController:
         )
         missing: set[BlockPos] = set()
         saw_unsupported = False
-        world = PhysicsWorldView(frame.world, JAVA_1_21_RULESET)
         for rollout in rollouts:
             if rollout.unsupported or rollout.cross_track_blocked:
                 continue
-            simulated = state
-            safe = True
-            commands = (
-                (rollout.movement,) * self.config.input_lease_ticks
-                + (MovementV1(),) * self.config.maximum_recovery_ticks
+            safe, candidate_missing, unsupported = self._traversal_movement_safety(
+                frame, state, rollout.movement,
             )
-            for command_index, command in enumerate(commands):
-                speed = math.hypot(
-                    simulated.velocity_blocks_per_tick[0],
-                    simulated.velocity_blocks_per_tick[2],
-                ) * 20.0
-                if (command_index >= self.config.input_lease_ticks
-                        and speed <= self.config.stopped_speed_blocks_per_second):
-                    break
-                projected = project_movement_command(simulated, command)
-                if projected.status is not ProjectionStatus.READY:
-                    saw_unsupported = True
-                    safe = False
-                    break
-                assert projected.tick_input is not None
-                calculated = physics_step(
-                    simulated, projected.tick_input, world, JAVA_1_21_RULESET,
-                )
-                if calculated.status is CalculationStatus.NEEDS_WORLD:
-                    missing.update(calculated.missing_cells)
-                    safe = False
-                    break
-                if calculated.status is not CalculationStatus.OK:
-                    saw_unsupported = (
-                        saw_unsupported
-                        or calculated.status is CalculationStatus.UNSUPPORTED
-                    )
-                    safe = False
-                    break
-                assert calculated.next_state is not None
-                simulated = calculated.next_state
-                if not self._inside_traversal_corridor(
-                        simulated, self._traversal_plan.corridor):
-                    safe = False
-                    break
+            missing.update(candidate_missing)
+            saw_unsupported = saw_unsupported or unsupported
             if safe:
                 return rollout.movement, tuple(sorted(missing)), saw_unsupported
         return None, tuple(sorted(missing)), saw_unsupported
+
+    def _traversal_movement_safety(
+        self, frame: NavigationFrame, state: PhysicsState, movement: MovementV1,
+    ) -> tuple[bool, tuple[BlockPos, ...], bool]:
+        """Prove the actual lease and every remaining neutral drift tick."""
+        assert self._traversal_plan is not None
+        world = PhysicsWorldView(frame.world, JAVA_1_21_RULESET)
+        simulated = state
+        commands = ((movement,) * self.config.input_lease_ticks
+                    + (MovementV1(),) * self.config.maximum_recovery_ticks)
+        for command_index, command in enumerate(commands):
+            if (command_index == self.config.input_lease_ticks
+                    and self._continuation is not None
+                    and self._continuation.accepts(state)):
+                from mc2p.motion_nav.ground_traversal import (
+                    GroundTraversalStatus, verify_ground_continuation_stop_tail,
+                )
+                status, _, _, missing = verify_ground_continuation_stop_tail(
+                    simulated, world, self._traversal_plan.corridor, self._continuation,
+                )
+                return (status is GroundTraversalStatus.VERIFIED, missing,
+                        status is GroundTraversalStatus.UNSUPPORTED)
+            if (command_index >= self.config.input_lease_ticks and simulated.on_ground
+                    and math.hypot(simulated.velocity_blocks_per_tick[0],
+                                   simulated.velocity_blocks_per_tick[2]) <= _EPSILON):
+                return True, (), False
+            projected = project_movement_command(simulated, command)
+            if projected.status is not ProjectionStatus.READY:
+                return False, (), True
+            assert projected.tick_input is not None
+            calculated = physics_step(simulated, projected.tick_input, world, JAVA_1_21_RULESET)
+            if calculated.status is CalculationStatus.NEEDS_WORLD:
+                return False, calculated.missing_cells, False
+            if calculated.status is not CalculationStatus.OK:
+                return False, (), calculated.status is CalculationStatus.UNSUPPORTED
+            assert calculated.next_state is not None
+            simulated = calculated.next_state
+            if not self._inside_traversal_corridor(simulated, self._traversal_plan.corridor):
+                return False, (), False
+        stopped = (simulated.on_ground
+                   and math.hypot(simulated.velocity_blocks_per_tick[0],
+                                  simulated.velocity_blocks_per_tick[2]) <= _EPSILON)
+        return stopped, (), False
 
     def _decide_traversal(
         self, frame: NavigationFrame, started: int,
@@ -650,10 +734,11 @@ class FixedRouteController:
             self._progress, self._segment_index,
             self.config.maximum_cross_track_blocks,
         )
+        projection = self._continuation_projection(projection, state.position[0], state.position[2])
         self._progress = max(self._progress, projection.progress)
         self._segment_index = max(self._segment_index, projection.segment_index)
         self._cross_track = projection.distance
-        if (projection.distance > plan.maximum_cross_track_blocks
+        if (self._cross_track > plan.maximum_cross_track_blocks
                 or not self._inside_traversal_corridor(state, plan.corridor)):
             if frame.body.is_on_ground:
                 self.state = FixedRouteState.NEEDS_REPLAN
@@ -696,16 +781,18 @@ class FixedRouteController:
             frame.body.position[0] - goal.x,
             frame.body.position[2] - goal.z,
         )
+        entry_window = (plan.exit_window if self._continuation is not None
+                        else self.config.handoff_entry_window)
         entry_matches = (
             body_fits_segment_entry(
-                self.config.handoff_entry_window, frame.body,
+                entry_window, frame.body,
                 observed_ground_mode(frame.body),
             )
-            if self.config.handoff_entry_window is not None else None
+            if entry_window is not None else None
         )
         completion_speed = (
-            self.config.handoff_entry_window.maximum_speed_blocks_per_second
-            if self.config.handoff_entry_window is not None
+            entry_window.maximum_speed_blocks_per_second
+            if entry_window is not None
             else self.config.handoff_speed_blocks_per_second
             if self.config.handoff_speed_blocks_per_second is not None
             else self.config.stopped_speed_blocks_per_second
@@ -721,7 +808,11 @@ class FixedRouteController:
                  <= self.config.traversal_endpoint_tolerance_blocks)
             and abs(frame.body.position[1] - goal.y) <= 0.10
         )
-        if at_goal and speed <= completion_speed:
+        if (at_goal and speed <= completion_speed
+                and (self._continuation is None or (
+                    self._continuation.accepts(state)
+                    and self._traversal_movement_safety(frame, state, MovementV1())[0]
+                ))):
             self.state = FixedRouteState.SUCCEEDED
             self._progress = self._geometry.total_length
             return self._decision(
@@ -744,6 +835,23 @@ class FixedRouteController:
             (goal.x, goal.z) if braking
             else self._geometry.point_at(self._progress + lookahead)
         )
+        if (self._continuation is not None and not braking
+                and self._segment_index == len(self._geometry.lengths) - 1
+                and remaining <= lookahead + self.config.endpoint_tolerance_blocks):
+            window = self._continuation.entry_window
+            dx, dz = window.horizontal_approach_direction
+            target = (window.reference_point[0] + dx * window.maximum_longitudinal_offset_blocks,
+                      window.reference_point[2] + dz * window.maximum_longitudinal_offset_blocks)
+        if remaining <= lookahead + self.config.endpoint_tolerance_blocks:
+            prepared = self._prepared_handoff_movement(frame)
+            if prepared is not None:
+                safe, _, _ = self._traversal_movement_safety(frame, state, prepared)
+                if safe:
+                    self.state = FixedRouteState.RUNNING
+                    return self._decision(
+                        started, prepared, "tracking_conditional_motion_entry",
+                        handoff_disposition=GroundHandoffDisposition.CONSUMED,
+                    )
         movement, missing, unsupported = self._verified_traversal_movement(
             frame, state, target, braking=braking,
         )
@@ -1038,27 +1146,22 @@ class FixedRouteController:
         if (self._handoff_target_hint is not None
                 and remaining <= lookahead + self.config.endpoint_tolerance_blocks):
             hint = self._handoff_target_hint
-            tick = frame.body.movement_tick_id
-            if tick is not None:
-                index = tick + 1 - hint.first_tick
-                if 0 <= index and tick + 1 <= hint.latest_tick:
-                    target = (hint.position[0], hint.position[2])
-                    # This is a ground proposal, checked against the current
-                    # world and its full release tail. Admission separately
-                    # verifies the actually applied prefix before any jump.
-                    movement = (hint.movements[index] if index < len(hint.movements)
-                                else MovementV1())
-                    preferred = self._evaluate_candidate(
-                        frame, body, movement, target, braking=False,
-                        query_cache=query_cache,
+            movement = self._prepared_handoff_movement(frame)
+            if movement is not None:
+                target = (hint.position[0], hint.position[2])
+                # Admission separately verifies the applied prefix. This proposal
+                # must preserve its original projection and full release tail.
+                preferred = self._evaluate_candidate(
+                    frame, body, movement, target, braking=False,
+                    query_cache=query_cache,
+                )
+                if (not preferred.blocked and not preferred.unsupported
+                        and not preferred.missing):
+                    self.state = FixedRouteState.RUNNING
+                    return self._decision(
+                        started, movement, "tracking_conditional_motion_entry",
+                        handoff_disposition=GroundHandoffDisposition.CONSUMED,
                     )
-                    if (not preferred.blocked and not preferred.unsupported
-                            and not preferred.missing):
-                        self.state = FixedRouteState.RUNNING
-                        return self._decision(started, movement,
-                                              "tracking_conditional_motion_entry")
-                elif tick + 1 > hint.latest_tick:
-                    self._handoff_target_hint = None
         if (mode_pending and self.mode_profile is not None
                 and self.mode_profile.mode is MovementMode.SPRINT):
             candidates = [self._evaluate_candidate(
@@ -1380,6 +1483,7 @@ class FixedRouteController:
             end.x, end.z, self._progress, self._segment_index,
             self.config.maximum_cross_track_blocks,
         )  # type: ignore[union-attr]
+        projection = self._continuation_projection(projection, end.x, end.z)
         raw_progress_gain = projection.progress - self._progress
         cross_track_blocked = (
             not braking

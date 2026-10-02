@@ -236,7 +236,9 @@ def _state_satisfies_verified_exit(
             or actual.fall_flying != expected.fall_flying
             or actual.flying != expected.flying
             or actual.is_using_item != expected.is_using_item
-            or not proof.landing.contains(actual, epsilon=1.0e-6)):
+            or (not proof.continuation.accepts(actual)
+                if proof.continuation is not None else
+                not proof.landing.contains(actual, epsilon=1.0e-6))):
         return False
     horizontal_speed = math.hypot(
         actual.velocity_blocks_per_tick[0],
@@ -247,7 +249,7 @@ def _state_satisfies_verified_exit(
         if proof.exit_direction is None else .22
     )
     return (
-        horizontal_speed <= maximum_speed + 1.0e-9
+        (proof.continuation is not None or horizontal_speed <= maximum_speed + 1.0e-9)
         and _angle_error(actual.yaw_radians, expected.yaw_radians)
             <= _ENTRY_YAW_TOLERANCE_RADIANS
     )

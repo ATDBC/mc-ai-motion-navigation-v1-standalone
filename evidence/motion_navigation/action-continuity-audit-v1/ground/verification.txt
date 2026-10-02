@@ -1,0 +1,10 @@
+2026-10-02 只读审查：6项直接相关既有检查通过。
+
+运行命令：
+D:\Miniforge3\Scripts\conda.exe run --prefix D:\My_project\mc_ai\.venv --no-capture-output python -m unittest tests.motion_nav.test_fixed_route_walk.FixedRouteWalkTests.test_full_input_lease_and_release_horizon_are_safe_near_a_wall tests.motion_nav.test_fixed_route_walk.FixedRouteWalkTests.test_cancel_checks_the_full_stop_tail_without_soft_wall_cost tests.motion_nav.test_fixed_route_walk.FixedRouteWalkTests.test_cancel_is_not_complete_until_actual_body_is_stopped tests.motion_nav.test_b08_ground_modes.B08GroundModeTests.test_walk_to_sprint_handoff_does_not_brake_for_the_interface tests.motion_nav.test_b08_ground_modes.B08GroundModeTests.test_sprint_hands_to_jump_only_after_real_speed_enters_jump_range tests.motion_nav.test_ground_traversal.GroundTraversalVerificationTests.test_verifies_two_natural_half_block_steps_without_static_step_actions -v
+
+原输出结尾：
+Ran 6 tests in 0.136s
+OK
+
+没有运行完整专项/矩阵/Fabric，没有生产修改。

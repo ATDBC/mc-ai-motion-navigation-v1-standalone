@@ -1,0 +1,2543 @@
+[
+  {
+    "case": "jump-up",
+    "outcome": "success",
+    "reason": "goal_state_satisfied",
+    "violations": [],
+    "ticks": 71,
+    "requests": [
+      {
+        "kind": "jump_up",
+        "direction": [
+          0,
+          1
+        ],
+        "landing": {
+          "min_x": 0.30000000000000004,
+          "max_x": 0.7,
+          "min_z": 3.3,
+          "max_z": 3.7,
+          "surface_y": 65.0
+        },
+        "execution_window": {
+          "earliest_start_tick": 12,
+          "latest_start_tick": 13
+        },
+        "damage_budget": {
+          "risk_policy_id": "no_expected_damage",
+          "maximum_expected_damage_points": 0.0
+        },
+        "max_candidates": 60,
+        "max_ticks": 40,
+        "exit_direction": [
+          0,
+          1
+        ],
+        "exit_motion_ticks": 1,
+        "policy": {
+          "kind": "jump_up",
+          "solver_id": "r1-moving-one-cell-jump-up-command-search-v1",
+          "maximum_entry_speed_blocks_per_second": 3.0,
+          "direction_check_minimum_speed_blocks_per_second": 0.5,
+          "maximum_velocity_heading_error_degrees": 5.0,
+          "templates": [
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 0,
+              "post_action_ticks": 0
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 3
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 4
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 5
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 6
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 7
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 8
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 3
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 0,
+              "post_action_ticks": 0
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 3
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 4
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 5
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 6
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 7
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 8
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 3
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 0,
+              "post_action_ticks": 0
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 3
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 4
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 5
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 6
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 7
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 8
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 3
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 0,
+              "post_action_ticks": 0
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 3
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 4
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 5
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 6
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 7
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 8
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 3
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 0,
+              "post_action_ticks": 0
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 3
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 4
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 5
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 6
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 7
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 8
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 3
+            }
+          ]
+        },
+        "recovery_horizon_ticks": 40
+      },
+      {
+        "kind": "jump_up",
+        "direction": [
+          0,
+          1
+        ],
+        "landing": {
+          "min_x": 0.30000000000000004,
+          "max_x": 0.7,
+          "min_z": 3.3,
+          "max_z": 3.7,
+          "surface_y": 65.0
+        },
+        "execution_window": {
+          "earliest_start_tick": 12,
+          "latest_start_tick": 13
+        },
+        "damage_budget": {
+          "risk_policy_id": "no_expected_damage",
+          "maximum_expected_damage_points": 0.0
+        },
+        "max_candidates": 60,
+        "max_ticks": 40,
+        "exit_direction": [
+          0,
+          1
+        ],
+        "exit_motion_ticks": 1,
+        "policy": {
+          "kind": "jump_up",
+          "solver_id": "r1-moving-one-cell-jump-up-command-search-v1",
+          "maximum_entry_speed_blocks_per_second": 3.0,
+          "direction_check_minimum_speed_blocks_per_second": 0.5,
+          "maximum_velocity_heading_error_degrees": 5.0,
+          "templates": [
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 0,
+              "post_action_ticks": 0
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 3
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 4
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 5
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 6
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 7
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 8
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 3
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 0,
+              "post_action_ticks": 0
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 3
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 4
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 5
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 6
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 7
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 8
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 3
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 0,
+              "post_action_ticks": 0
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 3
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 4
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 5
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 6
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 7
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 8
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 3
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 0,
+              "post_action_ticks": 0
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 3
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 4
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 5
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 6
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 7
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 8
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 3
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 0,
+              "post_action_ticks": 0
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 3
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 4
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 5
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 6
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 7
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": 1,
+              "post_action_ticks": 8
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": true,
+              "sprint": true,
+              "post_action_axis": -1,
+              "post_action_ticks": 3
+            }
+          ]
+        },
+        "recovery_horizon_ticks": 40
+      }
+    ],
+    "proofs": [
+      {
+        "entry": [
+          0.55,
+          64.0,
+          2.549600365253716
+        ],
+        "exit": [
+          0.55,
+          65.0,
+          3.36792703572643
+        ],
+        "exit_speed": 1.912878921519555,
+        "command_count": 10,
+        "commands": [
+          {
+            "forward": 1,
+            "strafe": 0,
+            "jump": true,
+            "sneak": false,
+            "sprint": true
+          },
+          {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          }
+        ]
+      },
+      {
+        "entry": [
+          0.55,
+          64.0,
+          2.451600356179642
+        ],
+        "exit": [
+          0.55,
+          65.0,
+          3.3679270357264297
+        ],
+        "exit_speed": 1.912878921519555,
+        "command_count": 10,
+        "commands": [
+          {
+            "forward": 1,
+            "strafe": 0,
+            "jump": true,
+            "sneak": false,
+            "sprint": true
+          },
+          {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": true
+          },
+          {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          }
+        ]
+      }
+    ],
+    "boundary_trace": [
+      {
+        "movement_tick": 8,
+        "position": [
+          0.55,
+          64.0,
+          1.9051673366001105
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.11615409270206843
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "tracking_fixed_route"
+      },
+      {
+        "movement_tick": 9,
+        "position": [
+          0.55,
+          64.0,
+          2.119321438376253
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.11692813956977383
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "tracking_fixed_route"
+      },
+      {
+        "movement_tick": 10,
+        "position": [
+          0.55,
+          64.0,
+          2.3342495870201008
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.11735076915954097
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "tracking_conditional_motion_entry"
+      },
+      {
+        "movement_tick": 11,
+        "position": [
+          0.55,
+          64.0,
+          2.451600356179642
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.06407351996110938
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "awaiting_verified_motion"
+      },
+      {
+        "movement_tick": 12,
+        "position": [
+          0.55,
+          64.0,
+          2.515673876140751
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.034984141898765725
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "awaiting_verified_motion"
+      },
+      {
+        "movement_tick": 13,
+        "position": [
+          0.55,
+          64.42,
+          2.6999999999999997
+        ],
+        "velocity": [
+          0.0,
+          0.3332000064849853,
+          0.0
+        ],
+        "on_ground": false,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": true,
+          "sneak": false,
+          "sprint": true
+        },
+        "session_reason": "submit_verified_command"
+      },
+      {
+        "movement_tick": 14,
+        "position": [
+          0.55,
+          64.75320000648499,
+          2.6999999999999997
+        ],
+        "velocity": [
+          0.0,
+          0.24813601118469247,
+          0.0
+        ],
+        "on_ground": false,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": true
+        },
+        "session_reason": "submit_verified_command"
+      },
+      {
+        "movement_tick": 15,
+        "position": [
+          0.55,
+          65.00133601766969,
+          2.7196
+        ],
+        "velocity": [
+          0.0,
+          0.1647732941679385,
+          0.017836
+        ],
+        "on_ground": false,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": true
+        },
+        "session_reason": "submit_verified_command"
+      },
+      {
+        "movement_tick": 16,
+        "position": [
+          0.55,
+          65.16610931183763,
+          2.76291600023365
+        ],
+        "velocity": [
+          0.0,
+          0.083077829901502,
+          0.03941756021262169
+        ],
+        "on_ground": false,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": true
+        },
+        "session_reason": "submit_verified_command"
+      },
+      {
+        "movement_tick": 17,
+        "position": [
+          0.55,
+          65.24918714173913,
+          2.827813560679922
+        ],
+        "velocity": [
+          0.0,
+          0.0030162733621769086,
+          0.05905678000610743
+        ],
+        "on_ground": false,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": true
+        },
+        "session_reason": "submit_verified_command"
+      },
+      {
+        "movement_tick": 18,
+        "position": [
+          0.55,
+          65.2522034151013,
+          2.9123503409196796
+        ],
+        "velocity": [
+          0.0,
+          -0.07544405357341469,
+          0.07692847001817946
+        ],
+        "on_ground": false,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": true
+        },
+        "session_reason": "submit_verified_command"
+      },
+      {
+        "movement_tick": 19,
+        "position": [
+          0.55,
+          65.17675936152789,
+          3.014758811171509
+        ],
+        "velocity": [
+          0.0,
+          -0.15233517546680642,
+          0.09319170792916501
+        ],
+        "on_ground": false,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": true
+        },
+        "session_reason": "submit_verified_command"
+      },
+      {
+        "movement_tick": 20,
+        "position": [
+          0.55,
+          65.02442418606108,
+          3.107950519100674
+        ],
+        "velocity": [
+          0.0,
+          -0.2276884763889121,
+          0.08480445421554016
+        ],
+        "on_ground": false,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "submit_verified_command"
+      },
+      {
+        "movement_tick": 21,
+        "position": [
+          0.55,
+          65.0,
+          3.192754973316214
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.07717205333614155
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "submit_verified_command"
+      },
+      {
+        "movement_tick": 22,
+        "position": [
+          0.55,
+          65.0,
+          3.3679270357264297
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.09564394607597775
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "submit_verified_command"
+      },
+      {
+        "movement_tick": 23,
+        "position": [
+          0.55,
+          65.0,
+          3.5615709908764814
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.10572959951192831
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "tracking_fixed_route"
+      },
+      {
+        "movement_tick": 24,
+        "position": [
+          0.55,
+          65.0,
+          3.765300599462484
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.11123636628795731
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "tracking_fixed_route"
+      },
+      {
+        "movement_tick": 25,
+        "position": [
+          0.55,
+          65.0,
+          3.9745369748245154
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.11424306094766914
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "tracking_fixed_route"
+      }
+    ]
+  },
+  {
+    "case": "controlled-drop",
+    "outcome": "success",
+    "reason": "goal_state_satisfied",
+    "violations": [],
+    "ticks": 69,
+    "requests": [
+      {
+        "kind": "controlled_drop",
+        "direction": [
+          0,
+          1
+        ],
+        "landing": {
+          "min_x": 0.30000000000000004,
+          "max_x": 0.7,
+          "min_z": 3.3,
+          "max_z": 3.7,
+          "surface_y": 63
+        },
+        "execution_window": {
+          "earliest_start_tick": 12,
+          "latest_start_tick": 13
+        },
+        "damage_budget": {
+          "risk_policy_id": "no_expected_damage",
+          "maximum_expected_damage_points": 0.0
+        },
+        "max_candidates": 54,
+        "max_ticks": 80,
+        "exit_direction": [
+          0,
+          1
+        ],
+        "exit_motion_ticks": 1,
+        "policy": {
+          "kind": "controlled_drop",
+          "solver_id": "r1-moving-one-cell-controlled-drop-command-search-v1",
+          "maximum_entry_speed_blocks_per_second": 3.0,
+          "direction_check_minimum_speed_blocks_per_second": 0.5,
+          "maximum_velocity_heading_error_degrees": 5.0,
+          "templates": [
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": 0,
+              "post_action_ticks": 0
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 3
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 4
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 5
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 6
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 7
+            },
+            {
+              "pre_action_forward_ticks": 0,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 8
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": 0,
+              "post_action_ticks": 0
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 3
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 4
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 5
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 6
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 7
+            },
+            {
+              "pre_action_forward_ticks": 1,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 8
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": 0,
+              "post_action_ticks": 0
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 3
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 4
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 5
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 6
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 7
+            },
+            {
+              "pre_action_forward_ticks": 2,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 8
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": 0,
+              "post_action_ticks": 0
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 3
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 4
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 5
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 6
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 7
+            },
+            {
+              "pre_action_forward_ticks": 3,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 8
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": 0,
+              "post_action_ticks": 0
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 3
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 4
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 5
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 6
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 7
+            },
+            {
+              "pre_action_forward_ticks": 4,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 8
+            },
+            {
+              "pre_action_forward_ticks": 5,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": 0,
+              "post_action_ticks": 0
+            },
+            {
+              "pre_action_forward_ticks": 5,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 1
+            },
+            {
+              "pre_action_forward_ticks": 5,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 2
+            },
+            {
+              "pre_action_forward_ticks": 5,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 3
+            },
+            {
+              "pre_action_forward_ticks": 5,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 4
+            },
+            {
+              "pre_action_forward_ticks": 5,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 5
+            },
+            {
+              "pre_action_forward_ticks": 5,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 6
+            },
+            {
+              "pre_action_forward_ticks": 5,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 7
+            },
+            {
+              "pre_action_forward_ticks": 5,
+              "action_forward_axis": 1,
+              "jump": false,
+              "sprint": false,
+              "post_action_axis": -1,
+              "post_action_ticks": 8
+            }
+          ]
+        },
+        "recovery_horizon_ticks": 80
+      }
+    ],
+    "proofs": [
+      {
+        "entry": [
+          0.55,
+          64.0,
+          2.549600365253716
+        ],
+        "exit": [
+          0.55,
+          63.0,
+          3.623526197250171
+        ],
+        "exit_speed": 1.333168678208825,
+        "command_count": 10,
+        "commands": [
+          {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          }
+        ]
+      }
+    ],
+    "boundary_trace": [
+      {
+        "movement_tick": 8,
+        "position": [
+          0.55,
+          64.0,
+          1.9051673366001105
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.11615409270206843
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "tracking_fixed_route"
+      },
+      {
+        "movement_tick": 9,
+        "position": [
+          0.55,
+          64.0,
+          2.119321438376253
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.11692813956977383
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "tracking_fixed_route"
+      },
+      {
+        "movement_tick": 10,
+        "position": [
+          0.55,
+          64.0,
+          2.3342495870201008
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.11735076915954097
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "tracking_conditional_motion_entry"
+      },
+      {
+        "movement_tick": 11,
+        "position": [
+          0.55,
+          64.0,
+          2.549600365253716
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.11758152491555382
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "tracking_conditional_motion_entry"
+      },
+      {
+        "movement_tick": 12,
+        "position": [
+          0.55,
+          64.0,
+          2.765181899243344
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.11770751755833685
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "submit_verified_command"
+      },
+      {
+        "movement_tick": 13,
+        "position": [
+          0.55,
+          64.0,
+          2.980889425875755
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.11777630954129638
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "submit_verified_command"
+      },
+      {
+        "movement_tick": 14,
+        "position": [
+          0.55,
+          64.0,
+          3.1966657444911255
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.11781386996399228
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "submit_verified_command"
+      },
+      {
+        "movement_tick": 15,
+        "position": [
+          0.55,
+          64.0,
+          3.314479614455118
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.06432637300033979
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "submit_verified_command"
+      },
+      {
+        "movement_tick": 16,
+        "position": [
+          0.55,
+          63.92159999847412,
+          3.3788059874554577
+        ],
+        "velocity": [
+          0.0,
+          -0.1552320045166016,
+          0.03512219965818553
+        ],
+        "on_ground": false,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "submit_verified_command"
+      },
+      {
+        "movement_tick": 17,
+        "position": [
+          0.55,
+          63.76636799395752,
+          3.413928187113643
+        ],
+        "velocity": [
+          0.0,
+          -0.230527368912964,
+          0.03196120168894883
+        ],
+        "on_ground": false,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "submit_verified_command"
+      },
+      {
+        "movement_tick": 18,
+        "position": [
+          0.55,
+          63.53584062504456,
+          3.445889388802592
+        ],
+        "velocity": [
+          0.0,
+          -0.30431682745754424,
+          0.029084693536943436
+        ],
+        "on_ground": false,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "submit_verified_command"
+      },
+      {
+        "movement_tick": 19,
+        "position": [
+          0.55,
+          63.231523797587016,
+          3.4749740823395356
+        ],
+        "velocity": [
+          0.0,
+          -0.37663049823865513,
+          0.026467071118618526
+        ],
+        "on_ground": false,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "submit_verified_command"
+      },
+      {
+        "movement_tick": 20,
+        "position": [
+          0.55,
+          63.0,
+          3.501441153458154
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.02408503471794286
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "submit_verified_command"
+      },
+      {
+        "movement_tick": 21,
+        "position": [
+          0.55,
+          63.0,
+          3.623526197250171
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.06665843391044125
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "submit_verified_command"
+      },
+      {
+        "movement_tick": 22,
+        "position": [
+          0.55,
+          63.0,
+          3.7881846402346864
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.08990350986954537
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "tracking_fixed_route"
+      },
+      {
+        "movement_tick": 23,
+        "position": [
+          0.55,
+          63.0,
+          3.976088159178306
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.10259532134321622
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "session_reason": "tracking_fixed_route"
+      }
+    ]
+  }
+]

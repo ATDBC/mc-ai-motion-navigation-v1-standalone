@@ -1,0 +1,3244 @@
+{
+  "scope": "Diagnostic only; no actor admission; no game launched",
+  "source": {
+    "trace_line": 216,
+    "observation_sequence": 83,
+    "restored_observations": 84,
+    "state": {
+      "ruleset_id": "minecraft-java-1_21-player-motion-r1",
+      "state_schema": "mc2p.physics-state.v1",
+      "session": "fabric:follow-21001-MC2PFollower:jvm:5b9b985b-7dcd-4bcc-b25f-6914d4ab1d5b",
+      "movement_tick_id": 16526,
+      "position": [
+        224.55,
+        100.0,
+        2.549600454447249
+      ],
+      "velocity_blocks_per_tick": [
+        0.0,
+        -0.0784000015258789,
+        0.11758154782898447
+      ],
+      "yaw_radians": 0.0,
+      "pitch_radians": 0.0,
+      "pose": "standing",
+      "body_width": 0.6000000000000227,
+      "body_height": 1.7999999999999972,
+      "on_ground": true,
+      "horizontal_collision": false,
+      "vertical_collision": true,
+      "sprinting": false,
+      "sneaking": false,
+      "jumping_cooldown_ticks": 0,
+      "fall_distance_blocks": 0.0,
+      "movement_speed_attribute": 0.1,
+      "step_height_blocks": 0.6,
+      "food_points": 20,
+      "gravity_attribute": 0.08,
+      "jump_strength_attribute": 0.42,
+      "saturation_points": 20.0,
+      "game_mode": "survival",
+      "status_effects": [],
+      "swimming": false,
+      "submerged_in_water": false,
+      "climbing": false,
+      "fall_flying": false,
+      "flying": false,
+      "allow_flying": false,
+      "is_using_item": false
+    },
+    "own_movement_tick": 83,
+    "explicit_assumptions": {
+      "jumping_cooldown_ticks": 0,
+      "movement_speed_attribute": 0.1,
+      "step_height_blocks": 0.6,
+      "gravity_attribute": 0.08,
+      "jump_strength_attribute": 0.42
+    },
+    "raw_observation_sha256": "d145d46d73fe60330aaf1a463e73abf04b87f6137bdd62dad492c79b52ddb17e",
+    "source_consistent_tick": false,
+    "historical_first_match_reconstruction": true
+  },
+  "invariant": "same measured entry, profile-4 known facts, original entry domain, 20 tick recovery, late-one-tick variant, original 4.4 bps exit cap",
+  "variants": {
+    "A_original_region_original_templates": {
+      "status": "solved",
+      "reasons": [],
+      "missing": [],
+      "evaluated": 4,
+      "physics_step_calls": 293,
+      "elapsed_ns": 16295500,
+      "commands": [
+        {
+          "forward": 1,
+          "jump": true,
+          "sprint": true
+        },
+        {
+          "forward": -1,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": -1,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": false
+        }
+      ],
+      "command_count": 13,
+      "landing_index": 12,
+      "landing_position": [
+        224.55,
+        100.0,
+        4.463923421540352
+      ],
+      "landing_speed_bps": 1.4303841125261414,
+      "exit_position": [
+        224.55,
+        100.0,
+        4.6334426362407335
+      ],
+      "exit_speed_bps": 1.8511498245281621,
+      "expected_damage": 0.0,
+      "dependency_count": 21,
+      "dependencies": [
+        [
+          224,
+          98,
+          2
+        ],
+        [
+          224,
+          98,
+          3
+        ],
+        [
+          224,
+          98,
+          4
+        ],
+        [
+          224,
+          98,
+          5
+        ],
+        [
+          224,
+          99,
+          2
+        ],
+        [
+          224,
+          99,
+          3
+        ],
+        [
+          224,
+          99,
+          4
+        ],
+        [
+          224,
+          99,
+          5
+        ],
+        [
+          224,
+          100,
+          2
+        ],
+        [
+          224,
+          100,
+          3
+        ],
+        [
+          224,
+          100,
+          4
+        ],
+        [
+          224,
+          100,
+          5
+        ],
+        [
+          224,
+          101,
+          2
+        ],
+        [
+          224,
+          101,
+          3
+        ],
+        [
+          224,
+          101,
+          4
+        ],
+        [
+          224,
+          101,
+          5
+        ],
+        [
+          224,
+          102,
+          2
+        ],
+        [
+          224,
+          102,
+          3
+        ],
+        [
+          224,
+          102,
+          4
+        ],
+        [
+          224,
+          103,
+          3
+        ],
+        [
+          224,
+          103,
+          4
+        ]
+      ],
+      "delayed_variants": [
+        {
+          "start_tick": 16528,
+          "exit_position": [
+            224.55,
+            100.0,
+            4.478225212571466
+          ],
+          "exit_speed_bps": 1.7383611163902868,
+          "all_release_safe": true
+        }
+      ],
+      "all_release_safe": true,
+      "recovery_horizon_ticks": 20,
+      "validation_trace": [
+        {
+          "accepted": false,
+          "reasons": [
+            "landing_recovery_margin"
+          ],
+          "final_position": [
+            224.55,
+            100.0,
+            5.113411295162333
+          ],
+          "final_speed_bps": 2.108943675696638
+        },
+        {
+          "accepted": false,
+          "reasons": [
+            "landing_recovery_margin"
+          ],
+          "final_position": [
+            224.55,
+            100.0,
+            4.921596575840053
+          ],
+          "final_speed_bps": 2.010343569760897
+        },
+        {
+          "accepted": false,
+          "reasons": [
+            "landing_recovery_margin"
+          ],
+          "final_position": [
+            224.55,
+            100.0,
+            4.774046793099018
+          ],
+          "final_speed_bps": 1.9344973351212171
+        },
+        {
+          "accepted": true,
+          "reasons": [],
+          "final_position": [
+            224.55,
+            100.0,
+            4.6334426362407335
+          ],
+          "final_speed_bps": 1.8511498245281621
+        },
+        {
+          "accepted": true,
+          "reasons": [],
+          "final_position": [
+            224.55,
+            100.0,
+            4.478225212571466
+          ],
+          "final_speed_bps": 1.7383611163902868
+        }
+      ]
+    },
+    "B_known_platform_region_original_templates": {
+      "status": "solved",
+      "reasons": [],
+      "missing": [],
+      "evaluated": 1,
+      "physics_step_calls": 264,
+      "elapsed_ns": 14560300,
+      "commands": [
+        {
+          "forward": 1,
+          "jump": true,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": false
+        }
+      ],
+      "command_count": 13,
+      "landing_index": 12,
+      "landing_position": [
+        224.55,
+        100.0,
+        4.920284584933703
+      ],
+      "landing_speed_bps": 1.9025340230911156,
+      "exit_position": [
+        224.55,
+        100.0,
+        5.113411295162333
+      ],
+      "exit_speed_bps": 2.108943675696638,
+      "expected_damage": 0.0,
+      "dependency_count": 22,
+      "dependencies": [
+        [
+          224,
+          98,
+          2
+        ],
+        [
+          224,
+          98,
+          3
+        ],
+        [
+          224,
+          98,
+          4
+        ],
+        [
+          224,
+          98,
+          5
+        ],
+        [
+          224,
+          99,
+          2
+        ],
+        [
+          224,
+          99,
+          3
+        ],
+        [
+          224,
+          99,
+          4
+        ],
+        [
+          224,
+          99,
+          5
+        ],
+        [
+          224,
+          100,
+          2
+        ],
+        [
+          224,
+          100,
+          3
+        ],
+        [
+          224,
+          100,
+          4
+        ],
+        [
+          224,
+          100,
+          5
+        ],
+        [
+          224,
+          101,
+          2
+        ],
+        [
+          224,
+          101,
+          3
+        ],
+        [
+          224,
+          101,
+          4
+        ],
+        [
+          224,
+          101,
+          5
+        ],
+        [
+          224,
+          102,
+          2
+        ],
+        [
+          224,
+          102,
+          3
+        ],
+        [
+          224,
+          102,
+          4
+        ],
+        [
+          224,
+          102,
+          5
+        ],
+        [
+          224,
+          103,
+          3
+        ],
+        [
+          224,
+          103,
+          4
+        ]
+      ],
+      "delayed_variants": [
+        {
+          "start_tick": 16528,
+          "exit_position": [
+            224.55,
+            100.0,
+            4.958193871493064
+          ],
+          "exit_speed_bps": 1.9961549675587629,
+          "all_release_safe": true
+        }
+      ],
+      "all_release_safe": true,
+      "recovery_horizon_ticks": 20,
+      "validation_trace": [
+        {
+          "accepted": true,
+          "reasons": [],
+          "final_position": [
+            224.55,
+            100.0,
+            5.113411295162333
+          ],
+          "final_speed_bps": 2.108943675696638
+        },
+        {
+          "accepted": true,
+          "reasons": [],
+          "final_position": [
+            224.55,
+            100.0,
+            4.958193871493064
+          ],
+          "final_speed_bps": 1.9961549675587629
+        }
+      ]
+    },
+    "C_original_region_non_sprint_templates": {
+      "status": "needs_world",
+      "reasons": [
+        "trajectory_world_incomplete"
+      ],
+      "missing": [
+        [
+          224,
+          97,
+          3
+        ]
+      ],
+      "evaluated": 12,
+      "physics_step_calls": 169,
+      "elapsed_ns": 9406000,
+      "validation_trace": [
+        {
+          "accepted": false,
+          "reasons": [
+            "landing_recovery_margin"
+          ],
+          "final_position": [
+            224.55,
+            100.0,
+            3.328164668079618
+          ],
+          "final_speed_bps": 1.2748692004500741
+        },
+        {
+          "accepted": false,
+          "reasons": [
+            "landing_recovery_margin"
+          ],
+          "final_position": [
+            224.55,
+            100.0,
+            3.2035804912189936
+          ],
+          "final_speed_bps": 1.1742201114595479
+        },
+        {
+          "accepted": false,
+          "reasons": [
+            "landing_recovery_margin"
+          ],
+          "final_position": [
+            224.55,
+            100.0,
+            3.0938789269311098
+          ],
+          "final_speed_bps": 1.070160099088889
+        },
+        {
+          "accepted": false,
+          "reasons": [
+            "landing_recovery_margin"
+          ],
+          "final_position": [
+            224.55,
+            100.0,
+            3.9655155745038204
+          ],
+          "final_speed_bps": 1.5259197994235707
+        }
+      ]
+    },
+    "D_original_region_forward_through_air": {
+      "status": "no_solution_within_search",
+      "reasons": [
+        "validated_candidates_failed"
+      ],
+      "missing": [],
+      "evaluated": 1,
+      "physics_step_calls": 13,
+      "elapsed_ns": 787300,
+      "validation_trace": [
+        {
+          "accepted": false,
+          "reasons": [
+            "landing_recovery_margin"
+          ],
+          "final_position": [
+            224.55,
+            100.0,
+            4.813695294240508
+          ],
+          "final_speed_bps": 2.728096124196315
+        }
+      ]
+    },
+    "E_known_platform_forward_through_air": {
+      "status": "needs_world",
+      "reasons": [
+        "release_recovery_world_incomplete"
+      ],
+      "missing": [
+        [
+          224,
+          97,
+          3
+        ]
+      ],
+      "evaluated": 1,
+      "physics_step_calls": 31,
+      "elapsed_ns": 1694900,
+      "validation_trace": [
+        {
+          "accepted": true,
+          "reasons": [],
+          "final_position": [
+            224.55,
+            100.0,
+            4.813695294240508
+          ],
+          "final_speed_bps": 2.728096124196315
+        }
+      ]
+    }
+  },
+  "each_original_template": [
+    {
+      "index": 0,
+      "template": {
+        "pre": 0,
+        "sprint": true,
+        "post_axis": 1,
+        "post_ticks": 1
+      },
+      "status": "no_solution_within_search",
+      "reasons": [
+        "validated_candidates_failed"
+      ],
+      "missing": [],
+      "evaluated": 1,
+      "physics_step_calls": 13,
+      "elapsed_ns": 771600,
+      "validation_trace": [
+        {
+          "accepted": false,
+          "reasons": [
+            "landing_recovery_margin"
+          ],
+          "final_position": [
+            224.55,
+            100.0,
+            5.113411295162333
+          ],
+          "final_speed_bps": 2.108943675696638
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "template": {
+        "pre": 0,
+        "sprint": true,
+        "post_axis": 0,
+        "post_ticks": 0
+      },
+      "status": "no_solution_within_search",
+      "reasons": [
+        "validated_candidates_failed"
+      ],
+      "missing": [],
+      "evaluated": 1,
+      "physics_step_calls": 13,
+      "elapsed_ns": 766000,
+      "validation_trace": [
+        {
+          "accepted": false,
+          "reasons": [
+            "landing_recovery_margin"
+          ],
+          "final_position": [
+            224.55,
+            100.0,
+            4.921596575840053
+          ],
+          "final_speed_bps": 2.010343569760897
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "template": {
+        "pre": 0,
+        "sprint": true,
+        "post_axis": -1,
+        "post_ticks": 1
+      },
+      "status": "no_solution_within_search",
+      "reasons": [
+        "validated_candidates_failed"
+      ],
+      "missing": [],
+      "evaluated": 1,
+      "physics_step_calls": 13,
+      "elapsed_ns": 761100,
+      "validation_trace": [
+        {
+          "accepted": false,
+          "reasons": [
+            "landing_recovery_margin"
+          ],
+          "final_position": [
+            224.55,
+            100.0,
+            4.774046793099018
+          ],
+          "final_speed_bps": 1.9344973351212171
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "template": {
+        "pre": 0,
+        "sprint": true,
+        "post_axis": -1,
+        "post_ticks": 2
+      },
+      "status": "solved",
+      "reasons": [],
+      "missing": [],
+      "evaluated": 1,
+      "physics_step_calls": 254,
+      "elapsed_ns": 13558500,
+      "commands": [
+        {
+          "forward": 1,
+          "jump": true,
+          "sprint": true
+        },
+        {
+          "forward": -1,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": -1,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": false
+        }
+      ],
+      "command_count": 13,
+      "landing_index": 12,
+      "landing_position": [
+        224.55,
+        100.0,
+        4.463923421540352
+      ],
+      "landing_speed_bps": 1.4303841125261414,
+      "exit_position": [
+        224.55,
+        100.0,
+        4.6334426362407335
+      ],
+      "exit_speed_bps": 1.8511498245281621,
+      "expected_damage": 0.0,
+      "dependency_count": 21,
+      "dependencies": [
+        [
+          224,
+          98,
+          2
+        ],
+        [
+          224,
+          98,
+          3
+        ],
+        [
+          224,
+          98,
+          4
+        ],
+        [
+          224,
+          98,
+          5
+        ],
+        [
+          224,
+          99,
+          2
+        ],
+        [
+          224,
+          99,
+          3
+        ],
+        [
+          224,
+          99,
+          4
+        ],
+        [
+          224,
+          99,
+          5
+        ],
+        [
+          224,
+          100,
+          2
+        ],
+        [
+          224,
+          100,
+          3
+        ],
+        [
+          224,
+          100,
+          4
+        ],
+        [
+          224,
+          100,
+          5
+        ],
+        [
+          224,
+          101,
+          2
+        ],
+        [
+          224,
+          101,
+          3
+        ],
+        [
+          224,
+          101,
+          4
+        ],
+        [
+          224,
+          101,
+          5
+        ],
+        [
+          224,
+          102,
+          2
+        ],
+        [
+          224,
+          102,
+          3
+        ],
+        [
+          224,
+          102,
+          4
+        ],
+        [
+          224,
+          103,
+          3
+        ],
+        [
+          224,
+          103,
+          4
+        ]
+      ],
+      "delayed_variants": [
+        {
+          "start_tick": 16528,
+          "exit_position": [
+            224.55,
+            100.0,
+            4.478225212571466
+          ],
+          "exit_speed_bps": 1.7383611163902868,
+          "all_release_safe": true
+        }
+      ],
+      "all_release_safe": true,
+      "recovery_horizon_ticks": 20,
+      "validation_trace": [
+        {
+          "accepted": true,
+          "reasons": [],
+          "final_position": [
+            224.55,
+            100.0,
+            4.6334426362407335
+          ],
+          "final_speed_bps": 1.8511498245281621
+        },
+        {
+          "accepted": true,
+          "reasons": [],
+          "final_position": [
+            224.55,
+            100.0,
+            4.478225212571466
+          ],
+          "final_speed_bps": 1.7383611163902868
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "template": {
+        "pre": 0,
+        "sprint": true,
+        "post_axis": -1,
+        "post_ticks": 3
+      },
+      "status": "solved",
+      "reasons": [],
+      "missing": [],
+      "evaluated": 1,
+      "physics_step_calls": 254,
+      "elapsed_ns": 13713300,
+      "commands": [
+        {
+          "forward": 1,
+          "jump": true,
+          "sprint": true
+        },
+        {
+          "forward": -1,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": -1,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": -1,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": false
+        }
+      ],
+      "command_count": 13,
+      "landing_index": 12,
+      "landing_position": [
+        224.55,
+        100.0,
+        4.339339244679729
+      ],
+      "landing_speed_bps": 1.2626356308752642,
+      "exit_position": [
+        224.55,
+        100.0,
+        4.500471035297566
+      ],
+      "exit_speed_bps": 1.7595591535467834,
+      "expected_damage": 0.0,
+      "dependency_count": 21,
+      "dependencies": [
+        [
+          224,
+          98,
+          2
+        ],
+        [
+          224,
+          98,
+          3
+        ],
+        [
+          224,
+          98,
+          4
+        ],
+        [
+          224,
+          98,
+          5
+        ],
+        [
+          224,
+          99,
+          2
+        ],
+        [
+          224,
+          99,
+          3
+        ],
+        [
+          224,
+          99,
+          4
+        ],
+        [
+          224,
+          99,
+          5
+        ],
+        [
+          224,
+          100,
+          2
+        ],
+        [
+          224,
+          100,
+          3
+        ],
+        [
+          224,
+          100,
+          4
+        ],
+        [
+          224,
+          100,
+          5
+        ],
+        [
+          224,
+          101,
+          2
+        ],
+        [
+          224,
+          101,
+          3
+        ],
+        [
+          224,
+          101,
+          4
+        ],
+        [
+          224,
+          101,
+          5
+        ],
+        [
+          224,
+          102,
+          2
+        ],
+        [
+          224,
+          102,
+          3
+        ],
+        [
+          224,
+          102,
+          4
+        ],
+        [
+          224,
+          103,
+          3
+        ],
+        [
+          224,
+          103,
+          4
+        ]
+      ],
+      "delayed_variants": [
+        {
+          "start_tick": 16528,
+          "exit_position": [
+            224.55,
+            100.0,
+            4.3452536116283
+          ],
+          "exit_speed_bps": 1.6467704454089076,
+          "all_release_safe": true
+        }
+      ],
+      "all_release_safe": true,
+      "recovery_horizon_ticks": 20,
+      "validation_trace": [
+        {
+          "accepted": true,
+          "reasons": [],
+          "final_position": [
+            224.55,
+            100.0,
+            4.500471035297566
+          ],
+          "final_speed_bps": 1.7595591535467834
+        },
+        {
+          "accepted": true,
+          "reasons": [],
+          "final_position": [
+            224.55,
+            100.0,
+            4.3452536116283
+          ],
+          "final_speed_bps": 1.6467704454089076
+        }
+      ]
+    },
+    {
+      "index": 5,
+      "template": {
+        "pre": 0,
+        "sprint": true,
+        "post_axis": -1,
+        "post_ticks": 4
+      },
+      "status": "no_solution_within_search",
+      "reasons": [
+        "validated_candidates_failed"
+      ],
+      "missing": [],
+      "evaluated": 1,
+      "physics_step_calls": 138,
+      "elapsed_ns": 8207200,
+      "validation_trace": [
+        {
+          "accepted": true,
+          "reasons": [],
+          "final_position": [
+            224.55,
+            100.0,
+            4.375886858436943
+          ],
+          "final_speed_bps": 1.6589100645562564
+        },
+        {
+          "accepted": false,
+          "reasons": [
+            "landing_recovery_margin"
+          ],
+          "final_position": [
+            224.55,
+            100.0,
+            4.220669434767674
+          ],
+          "final_speed_bps": 1.5461213564183813
+        }
+      ]
+    },
+    {
+      "index": 6,
+      "template": {
+        "pre": 0,
+        "sprint": true,
+        "post_axis": -1,
+        "post_ticks": 5
+      },
+      "status": "no_solution_within_search",
+      "reasons": [
+        "validated_candidates_failed"
+      ],
+      "missing": [],
+      "evaluated": 1,
+      "physics_step_calls": 13,
+      "elapsed_ns": 796200,
+      "validation_trace": [
+        {
+          "accepted": false,
+          "reasons": [
+            "landing_recovery_margin"
+          ],
+          "final_position": [
+            224.55,
+            100.0,
+            4.2605196311175755
+          ],
+          "final_speed_bps": 1.548306670061173
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "template": {
+        "pre": 1,
+        "sprint": true,
+        "post_axis": 0,
+        "post_ticks": 0
+      },
+      "status": "no_solution_within_search",
+      "reasons": [
+        "validated_candidates_failed"
+      ],
+      "missing": [],
+      "evaluated": 1,
+      "physics_step_calls": 14,
+      "elapsed_ns": 866900,
+      "validation_trace": [
+        {
+          "accepted": false,
+          "reasons": [
+            "landing_recovery_margin"
+          ],
+          "final_position": [
+            224.55,
+            100.0,
+            5.249254783015007
+          ],
+          "final_speed_bps": 2.044526221137177
+        }
+      ]
+    },
+    {
+      "index": 8,
+      "template": {
+        "pre": 1,
+        "sprint": true,
+        "post_axis": -1,
+        "post_ticks": 1
+      },
+      "status": "no_solution_within_search",
+      "reasons": [
+        "validated_candidates_failed"
+      ],
+      "missing": [],
+      "evaluated": 1,
+      "physics_step_calls": 14,
+      "elapsed_ns": 863900,
+      "validation_trace": [
+        {
+          "accepted": false,
+          "reasons": [
+            "landing_recovery_margin"
+          ],
+          "final_position": [
+            224.55,
+            100.0,
+            5.1017050002739674
+          ],
+          "final_speed_bps": 1.9686799864974969
+        }
+      ]
+    },
+    {
+      "index": 9,
+      "template": {
+        "pre": 1,
+        "sprint": true,
+        "post_axis": -1,
+        "post_ticks": 2
+      },
+      "status": "no_solution_within_search",
+      "reasons": [
+        "validated_candidates_failed"
+      ],
+      "missing": [],
+      "evaluated": 1,
+      "physics_step_calls": 14,
+      "elapsed_ns": 826500,
+      "validation_trace": [
+        {
+          "accepted": false,
+          "reasons": [
+            "landing_recovery_margin"
+          ],
+          "final_position": [
+            224.55,
+            100.0,
+            4.961100843415687
+          ],
+          "final_speed_bps": 1.885332475904442
+        }
+      ]
+    },
+    {
+      "index": 10,
+      "template": {
+        "pre": 1,
+        "sprint": true,
+        "post_axis": -1,
+        "post_ticks": 3
+      },
+      "status": "no_solution_within_search",
+      "reasons": [
+        "validated_candidates_failed"
+      ],
+      "missing": [],
+      "evaluated": 1,
+      "physics_step_calls": 14,
+      "elapsed_ns": 847200,
+      "validation_trace": [
+        {
+          "accepted": false,
+          "reasons": [
+            "landing_recovery_margin"
+          ],
+          "final_position": [
+            224.55,
+            100.0,
+            4.828129242472519
+          ],
+          "final_speed_bps": 1.7937418049230633
+        }
+      ]
+    },
+    {
+      "index": 11,
+      "template": {
+        "pre": 1,
+        "sprint": true,
+        "post_axis": -1,
+        "post_ticks": 4
+      },
+      "status": "no_solution_within_search",
+      "reasons": [
+        "validated_candidates_failed"
+      ],
+      "missing": [],
+      "evaluated": 1,
+      "physics_step_calls": 14,
+      "elapsed_ns": 835400,
+      "validation_trace": [
+        {
+          "accepted": false,
+          "reasons": [
+            "landing_recovery_margin"
+          ],
+          "final_position": [
+            224.55,
+            100.0,
+            4.703545065611895
+          ],
+          "final_speed_bps": 1.693092715932537
+        }
+      ]
+    }
+  ],
+  "wider_sprint_forward_templates": [
+    {
+      "post_forward_ticks": 2,
+      "status": "solved",
+      "reasons": [],
+      "missing": [],
+      "evaluated": 1,
+      "physics_step_calls": 264,
+      "elapsed_ns": 14527300,
+      "commands": [
+        {
+          "forward": 1,
+          "jump": true,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": false
+        }
+      ],
+      "command_count": 13,
+      "landing_index": 12,
+      "landing_position": [
+        224.55,
+        100.0,
+        5.093147667744966
+      ],
+      "landing_speed_bps": 2.100980478703846,
+      "exit_position": [
+        224.55,
+        100.0,
+        5.2961967007542325
+      ],
+      "exit_speed_bps": 2.2172954404611893,
+      "expected_damage": 0.0,
+      "dependency_count": 22,
+      "dependencies": [
+        [
+          224,
+          98,
+          2
+        ],
+        [
+          224,
+          98,
+          3
+        ],
+        [
+          224,
+          98,
+          4
+        ],
+        [
+          224,
+          98,
+          5
+        ],
+        [
+          224,
+          99,
+          2
+        ],
+        [
+          224,
+          99,
+          3
+        ],
+        [
+          224,
+          99,
+          4
+        ],
+        [
+          224,
+          99,
+          5
+        ],
+        [
+          224,
+          100,
+          2
+        ],
+        [
+          224,
+          100,
+          3
+        ],
+        [
+          224,
+          100,
+          4
+        ],
+        [
+          224,
+          100,
+          5
+        ],
+        [
+          224,
+          101,
+          2
+        ],
+        [
+          224,
+          101,
+          3
+        ],
+        [
+          224,
+          101,
+          4
+        ],
+        [
+          224,
+          101,
+          5
+        ],
+        [
+          224,
+          102,
+          2
+        ],
+        [
+          224,
+          102,
+          3
+        ],
+        [
+          224,
+          102,
+          4
+        ],
+        [
+          224,
+          102,
+          5
+        ],
+        [
+          224,
+          103,
+          3
+        ],
+        [
+          224,
+          103,
+          4
+        ]
+      ],
+      "delayed_variants": [
+        {
+          "start_tick": 16528,
+          "exit_position": [
+            224.55,
+            100.0,
+            5.140979277084964
+          ],
+          "exit_speed_bps": 2.1045067323233133,
+          "all_release_safe": true
+        }
+      ],
+      "all_release_safe": true,
+      "recovery_horizon_ticks": 20,
+      "validation_trace": [
+        {
+          "accepted": true,
+          "reasons": [],
+          "final_position": [
+            224.55,
+            100.0,
+            5.2961967007542325
+          ],
+          "final_speed_bps": 2.2172954404611893
+        },
+        {
+          "accepted": true,
+          "reasons": [],
+          "final_position": [
+            224.55,
+            100.0,
+            5.140979277084964
+          ],
+          "final_speed_bps": 2.1045067323233133
+        }
+      ]
+    },
+    {
+      "post_forward_ticks": 4,
+      "status": "solved",
+      "reasons": [],
+      "missing": [],
+      "evaluated": 1,
+      "physics_step_calls": 281,
+      "elapsed_ns": 15158600,
+      "commands": [
+        {
+          "forward": 1,
+          "jump": true,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": false
+        }
+      ],
+      "command_count": 13,
+      "landing_index": 12,
+      "landing_position": [
+        224.55,
+        100.0,
+        5.405084496039398
+      ],
+      "landing_speed_bps": 2.5586941971198778,
+      "exit_position": [
+        224.55,
+        100.0,
+        5.631019214969466
+      ],
+      "exit_speed_bps": 2.4672071307163423,
+      "expected_damage": 0.0,
+      "dependency_count": 22,
+      "dependencies": [
+        [
+          224,
+          98,
+          2
+        ],
+        [
+          224,
+          98,
+          3
+        ],
+        [
+          224,
+          98,
+          4
+        ],
+        [
+          224,
+          98,
+          5
+        ],
+        [
+          224,
+          99,
+          2
+        ],
+        [
+          224,
+          99,
+          3
+        ],
+        [
+          224,
+          99,
+          4
+        ],
+        [
+          224,
+          99,
+          5
+        ],
+        [
+          224,
+          100,
+          2
+        ],
+        [
+          224,
+          100,
+          3
+        ],
+        [
+          224,
+          100,
+          4
+        ],
+        [
+          224,
+          100,
+          5
+        ],
+        [
+          224,
+          101,
+          2
+        ],
+        [
+          224,
+          101,
+          3
+        ],
+        [
+          224,
+          101,
+          4
+        ],
+        [
+          224,
+          101,
+          5
+        ],
+        [
+          224,
+          102,
+          2
+        ],
+        [
+          224,
+          102,
+          3
+        ],
+        [
+          224,
+          102,
+          4
+        ],
+        [
+          224,
+          102,
+          5
+        ],
+        [
+          224,
+          103,
+          3
+        ],
+        [
+          224,
+          103,
+          4
+        ]
+      ],
+      "delayed_variants": [
+        {
+          "start_tick": 16528,
+          "exit_position": [
+            224.55,
+            100.0,
+            5.4758017913001975
+          ],
+          "exit_speed_bps": 2.3544184225784672,
+          "all_release_safe": true
+        }
+      ],
+      "all_release_safe": true,
+      "recovery_horizon_ticks": 20,
+      "validation_trace": [
+        {
+          "accepted": true,
+          "reasons": [],
+          "final_position": [
+            224.55,
+            100.0,
+            5.631019214969466
+          ],
+          "final_speed_bps": 2.4672071307163423
+        },
+        {
+          "accepted": true,
+          "reasons": [],
+          "final_position": [
+            224.55,
+            100.0,
+            5.4758017913001975
+          ],
+          "final_speed_bps": 2.3544184225784672
+        }
+      ]
+    },
+    {
+      "post_forward_ticks": 6,
+      "status": "solved",
+      "reasons": [],
+      "missing": [],
+      "evaluated": 1,
+      "physics_step_calls": 281,
+      "elapsed_ns": 15307100,
+      "commands": [
+        {
+          "forward": 1,
+          "jump": true,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": false
+        }
+      ],
+      "command_count": 13,
+      "landing_index": 12,
+      "landing_position": [
+        224.55,
+        100.0,
+        5.664235839357701
+      ],
+      "landing_speed_bps": 3.1114217884929376,
+      "exit_position": [
+        224.55,
+        100.0,
+        5.917806937856422
+      ],
+      "exit_speed_bps": 2.7689963956060333,
+      "expected_damage": 0.0,
+      "dependency_count": 26,
+      "dependencies": [
+        [
+          224,
+          98,
+          2
+        ],
+        [
+          224,
+          98,
+          3
+        ],
+        [
+          224,
+          98,
+          4
+        ],
+        [
+          224,
+          98,
+          5
+        ],
+        [
+          224,
+          98,
+          6
+        ],
+        [
+          224,
+          99,
+          2
+        ],
+        [
+          224,
+          99,
+          3
+        ],
+        [
+          224,
+          99,
+          4
+        ],
+        [
+          224,
+          99,
+          5
+        ],
+        [
+          224,
+          99,
+          6
+        ],
+        [
+          224,
+          100,
+          2
+        ],
+        [
+          224,
+          100,
+          3
+        ],
+        [
+          224,
+          100,
+          4
+        ],
+        [
+          224,
+          100,
+          5
+        ],
+        [
+          224,
+          100,
+          6
+        ],
+        [
+          224,
+          101,
+          2
+        ],
+        [
+          224,
+          101,
+          3
+        ],
+        [
+          224,
+          101,
+          4
+        ],
+        [
+          224,
+          101,
+          5
+        ],
+        [
+          224,
+          101,
+          6
+        ],
+        [
+          224,
+          102,
+          2
+        ],
+        [
+          224,
+          102,
+          3
+        ],
+        [
+          224,
+          102,
+          4
+        ],
+        [
+          224,
+          102,
+          5
+        ],
+        [
+          224,
+          103,
+          3
+        ],
+        [
+          224,
+          103,
+          4
+        ]
+      ],
+      "delayed_variants": [
+        {
+          "start_tick": 16528,
+          "exit_position": [
+            224.55,
+            100.0,
+            5.762589514187155
+          ],
+          "exit_speed_bps": 2.656207687468158,
+          "all_release_safe": true
+        }
+      ],
+      "all_release_safe": true,
+      "recovery_horizon_ticks": 20,
+      "validation_trace": [
+        {
+          "accepted": true,
+          "reasons": [],
+          "final_position": [
+            224.55,
+            100.0,
+            5.917806937856422
+          ],
+          "final_speed_bps": 2.7689963956060333
+        },
+        {
+          "accepted": true,
+          "reasons": [],
+          "final_position": [
+            224.55,
+            100.0,
+            5.762589514187155
+          ],
+          "final_speed_bps": 2.656207687468158
+        }
+      ]
+    },
+    {
+      "post_forward_ticks": 8,
+      "status": "solved",
+      "reasons": [],
+      "missing": [],
+      "evaluated": 1,
+      "physics_step_calls": 281,
+      "elapsed_ns": 15341900,
+      "commands": [
+        {
+          "forward": 1,
+          "jump": true,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": false
+        }
+      ],
+      "command_count": 13,
+      "landing_index": 12,
+      "landing_position": [
+        224.55,
+        100.0,
+        5.859644295372387
+      ],
+      "landing_speed_bps": 3.7788865770125146,
+      "exit_position": [
+        224.55,
+        100.0,
+        6.146588633297087
+      ],
+      "exit_speed_bps": 3.133432170137722,
+      "expected_damage": 0.0,
+      "dependency_count": 26,
+      "dependencies": [
+        [
+          224,
+          98,
+          2
+        ],
+        [
+          224,
+          98,
+          3
+        ],
+        [
+          224,
+          98,
+          4
+        ],
+        [
+          224,
+          98,
+          5
+        ],
+        [
+          224,
+          98,
+          6
+        ],
+        [
+          224,
+          99,
+          2
+        ],
+        [
+          224,
+          99,
+          3
+        ],
+        [
+          224,
+          99,
+          4
+        ],
+        [
+          224,
+          99,
+          5
+        ],
+        [
+          224,
+          99,
+          6
+        ],
+        [
+          224,
+          100,
+          2
+        ],
+        [
+          224,
+          100,
+          3
+        ],
+        [
+          224,
+          100,
+          4
+        ],
+        [
+          224,
+          100,
+          5
+        ],
+        [
+          224,
+          100,
+          6
+        ],
+        [
+          224,
+          101,
+          2
+        ],
+        [
+          224,
+          101,
+          3
+        ],
+        [
+          224,
+          101,
+          4
+        ],
+        [
+          224,
+          101,
+          5
+        ],
+        [
+          224,
+          101,
+          6
+        ],
+        [
+          224,
+          102,
+          2
+        ],
+        [
+          224,
+          102,
+          3
+        ],
+        [
+          224,
+          102,
+          4
+        ],
+        [
+          224,
+          102,
+          5
+        ],
+        [
+          224,
+          103,
+          3
+        ],
+        [
+          224,
+          103,
+          4
+        ]
+      ],
+      "delayed_variants": [
+        {
+          "start_tick": 16528,
+          "exit_position": [
+            224.55,
+            100.0,
+            5.991371209627818
+          ],
+          "exit_speed_bps": 3.020643461999847,
+          "all_release_safe": true
+        }
+      ],
+      "all_release_safe": true,
+      "recovery_horizon_ticks": 20,
+      "validation_trace": [
+        {
+          "accepted": true,
+          "reasons": [],
+          "final_position": [
+            224.55,
+            100.0,
+            6.146588633297087
+          ],
+          "final_speed_bps": 3.133432170137722
+        },
+        {
+          "accepted": true,
+          "reasons": [],
+          "final_position": [
+            224.55,
+            100.0,
+            5.991371209627818
+          ],
+          "final_speed_bps": 3.020643461999847
+        }
+      ]
+    },
+    {
+      "post_forward_ticks": 10,
+      "status": "solved",
+      "reasons": [],
+      "missing": [],
+      "evaluated": 1,
+      "physics_step_calls": 286,
+      "elapsed_ns": 15581800,
+      "commands": [
+        {
+          "forward": 1,
+          "jump": true,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 0,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": false
+        }
+      ],
+      "command_count": 13,
+      "landing_index": 12,
+      "landing_position": [
+        224.55,
+        100.0,
+        5.978077884458417
+      ],
+      "landing_speed_bps": 4.58490612600367,
+      "exit_position": [
+        224.55,
+        100.0,
+        6.305323199832674
+      ],
+      "exit_speed_bps": 3.5735188438868932,
+      "expected_damage": 0.0,
+      "dependency_count": 27,
+      "dependencies": [
+        [
+          224,
+          98,
+          2
+        ],
+        [
+          224,
+          98,
+          3
+        ],
+        [
+          224,
+          98,
+          4
+        ],
+        [
+          224,
+          98,
+          5
+        ],
+        [
+          224,
+          98,
+          6
+        ],
+        [
+          224,
+          99,
+          2
+        ],
+        [
+          224,
+          99,
+          3
+        ],
+        [
+          224,
+          99,
+          4
+        ],
+        [
+          224,
+          99,
+          5
+        ],
+        [
+          224,
+          99,
+          6
+        ],
+        [
+          224,
+          100,
+          2
+        ],
+        [
+          224,
+          100,
+          3
+        ],
+        [
+          224,
+          100,
+          4
+        ],
+        [
+          224,
+          100,
+          5
+        ],
+        [
+          224,
+          100,
+          6
+        ],
+        [
+          224,
+          101,
+          2
+        ],
+        [
+          224,
+          101,
+          3
+        ],
+        [
+          224,
+          101,
+          4
+        ],
+        [
+          224,
+          101,
+          5
+        ],
+        [
+          224,
+          101,
+          6
+        ],
+        [
+          224,
+          102,
+          2
+        ],
+        [
+          224,
+          102,
+          3
+        ],
+        [
+          224,
+          102,
+          4
+        ],
+        [
+          224,
+          102,
+          5
+        ],
+        [
+          224,
+          102,
+          6
+        ],
+        [
+          224,
+          103,
+          3
+        ],
+        [
+          224,
+          103,
+          4
+        ]
+      ],
+      "delayed_variants": [
+        {
+          "start_tick": 16528,
+          "exit_position": [
+            224.55,
+            100.0,
+            6.1501057761634055
+          ],
+          "exit_speed_bps": 3.460730135749017,
+          "all_release_safe": true
+        }
+      ],
+      "all_release_safe": true,
+      "recovery_horizon_ticks": 20,
+      "validation_trace": [
+        {
+          "accepted": true,
+          "reasons": [],
+          "final_position": [
+            224.55,
+            100.0,
+            6.305323199832674
+          ],
+          "final_speed_bps": 3.5735188438868932
+        },
+        {
+          "accepted": true,
+          "reasons": [],
+          "final_position": [
+            224.55,
+            100.0,
+            6.1501057761634055
+          ],
+          "final_speed_bps": 3.460730135749017
+        }
+      ]
+    }
+  ],
+  "continuous_forward_replays": [
+    {
+      "airborne_sprint": false,
+      "command_count": 13,
+      "physics_step_calls": 280,
+      "elapsed_ns": 15208300,
+      "recovery_horizon_ticks": 20,
+      "generated_candidate_count": 1,
+      "production_admitted": false,
+      "status": "diagnostic_all_original_checks_passed",
+      "maximum_expected_damage": 0.0,
+      "all_release_safe": true,
+      "landing_index": 12,
+      "landing_position": [
+        224.55,
+        100.0,
+        5.7113904822191675
+      ],
+      "landing_speed_bps": 4.280943403304275,
+      "exit_position": [
+        224.55,
+        100.0,
+        6.0234376614584555
+      ],
+      "exit_speed_bps": 3.4075551972930236,
+      "dependencies": [
+        [
+          224,
+          98,
+          2
+        ],
+        [
+          224,
+          98,
+          3
+        ],
+        [
+          224,
+          98,
+          4
+        ],
+        [
+          224,
+          98,
+          5
+        ],
+        [
+          224,
+          98,
+          6
+        ],
+        [
+          224,
+          99,
+          2
+        ],
+        [
+          224,
+          99,
+          3
+        ],
+        [
+          224,
+          99,
+          4
+        ],
+        [
+          224,
+          99,
+          5
+        ],
+        [
+          224,
+          99,
+          6
+        ],
+        [
+          224,
+          100,
+          2
+        ],
+        [
+          224,
+          100,
+          3
+        ],
+        [
+          224,
+          100,
+          4
+        ],
+        [
+          224,
+          100,
+          5
+        ],
+        [
+          224,
+          100,
+          6
+        ],
+        [
+          224,
+          101,
+          2
+        ],
+        [
+          224,
+          101,
+          3
+        ],
+        [
+          224,
+          101,
+          4
+        ],
+        [
+          224,
+          101,
+          5
+        ],
+        [
+          224,
+          101,
+          6
+        ],
+        [
+          224,
+          102,
+          2
+        ],
+        [
+          224,
+          102,
+          3
+        ],
+        [
+          224,
+          102,
+          4
+        ],
+        [
+          224,
+          102,
+          5
+        ],
+        [
+          224,
+          103,
+          3
+        ],
+        [
+          224,
+          103,
+          4
+        ]
+      ],
+      "dependency_count": 26,
+      "delayed_variants": [
+        {
+          "start_tick": 16528,
+          "exit_position": [
+            224.55,
+            100.0,
+            5.868220237789188
+          ],
+          "exit_speed_bps": 3.2947664891551485,
+          "all_release_safe": true
+        }
+      ],
+      "commands": [
+        {
+          "forward": 1,
+          "jump": true,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": false
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": false
+        }
+      ]
+    },
+    {
+      "airborne_sprint": true,
+      "command_count": 13,
+      "physics_step_calls": 286,
+      "elapsed_ns": 15505000,
+      "recovery_horizon_ticks": 20,
+      "generated_candidate_count": 1,
+      "production_admitted": false,
+      "status": "diagnostic_all_original_checks_passed",
+      "maximum_expected_damage": 0.0,
+      "all_release_safe": true,
+      "landing_index": 12,
+      "landing_position": [
+        224.55,
+        100.0,
+        6.003557884692067
+      ],
+      "landing_speed_bps": 5.048642130256104,
+      "exit_position": [
+        224.55,
+        100.0,
+        6.353990000278946
+      ],
+      "exit_speed_bps": 3.826718702208722,
+      "dependencies": [
+        [
+          224,
+          98,
+          2
+        ],
+        [
+          224,
+          98,
+          3
+        ],
+        [
+          224,
+          98,
+          4
+        ],
+        [
+          224,
+          98,
+          5
+        ],
+        [
+          224,
+          98,
+          6
+        ],
+        [
+          224,
+          99,
+          2
+        ],
+        [
+          224,
+          99,
+          3
+        ],
+        [
+          224,
+          99,
+          4
+        ],
+        [
+          224,
+          99,
+          5
+        ],
+        [
+          224,
+          99,
+          6
+        ],
+        [
+          224,
+          100,
+          2
+        ],
+        [
+          224,
+          100,
+          3
+        ],
+        [
+          224,
+          100,
+          4
+        ],
+        [
+          224,
+          100,
+          5
+        ],
+        [
+          224,
+          100,
+          6
+        ],
+        [
+          224,
+          101,
+          2
+        ],
+        [
+          224,
+          101,
+          3
+        ],
+        [
+          224,
+          101,
+          4
+        ],
+        [
+          224,
+          101,
+          5
+        ],
+        [
+          224,
+          101,
+          6
+        ],
+        [
+          224,
+          102,
+          2
+        ],
+        [
+          224,
+          102,
+          3
+        ],
+        [
+          224,
+          102,
+          4
+        ],
+        [
+          224,
+          102,
+          5
+        ],
+        [
+          224,
+          102,
+          6
+        ],
+        [
+          224,
+          103,
+          3
+        ],
+        [
+          224,
+          103,
+          4
+        ]
+      ],
+      "dependency_count": 27,
+      "delayed_variants": [
+        {
+          "start_tick": 16528,
+          "exit_position": [
+            224.55,
+            100.0,
+            6.198772576609677
+          ],
+          "exit_speed_bps": 3.713929994070846,
+          "all_release_safe": true
+        }
+      ],
+      "commands": [
+        {
+          "forward": 1,
+          "jump": true,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": true
+        },
+        {
+          "forward": 1,
+          "jump": false,
+          "sprint": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,306 @@
+{
+  "outcome": "success",
+  "reason": "goal_state_satisfied",
+  "violations": [],
+  "ticks": 65,
+  "following_points": [
+    {
+      "x": 0.5,
+      "y": 64,
+      "z": 4.5
+    },
+    {
+      "x": 0.5,
+      "y": 64,
+      "z": 5.5
+    },
+    {
+      "x": 0.5,
+      "y": 64,
+      "z": 6.5
+    },
+    {
+      "x": 0.5,
+      "y": 64,
+      "z": 7.5
+    },
+    {
+      "x": 0.5,
+      "y": 64,
+      "z": 8.5
+    }
+  ],
+  "actual_continuation": {
+    "entry_window": {
+      "reference_point": [
+        0.5,
+        64.0,
+        4.5
+      ],
+      "horizontal_approach_direction": [
+        0.0,
+        1.0
+      ],
+      "minimum_longitudinal_offset_blocks": -0.2,
+      "maximum_longitudinal_offset_blocks": 0.6,
+      "maximum_lateral_offset_blocks": 0.2,
+      "minimum_feet_y": 63.9999999,
+      "maximum_feet_y": 64.0000001,
+      "minimum_speed_blocks_per_second": 0.0,
+      "maximum_speed_blocks_per_second": 4.370969732409911,
+      "maximum_velocity_direction_error_radians": 0.08726646259971647,
+      "allowed_poses": "frozenset({'standing'})",
+      "allowed_modes": "frozenset({<MovementMode.WALK: 'walk'>})",
+      "required_yaw_radians": null,
+      "maximum_yaw_error_radians": null,
+      "profile_id": "d053-ordinary-successor-entry-v1"
+    },
+    "mode": "walk",
+    "following_route_id": "23bd6f7d0cc4aa844b7741a9-walk-2"
+  },
+  "proof_commands": [
+    {
+      "forward": 1,
+      "strafe": 0,
+      "jump": true,
+      "sneak": false,
+      "sprint": true
+    },
+    {
+      "forward": 0,
+      "strafe": 0,
+      "jump": false,
+      "sneak": false,
+      "sprint": false
+    },
+    {
+      "forward": 0,
+      "strafe": 0,
+      "jump": false,
+      "sneak": false,
+      "sprint": false
+    },
+    {
+      "forward": 0,
+      "strafe": 0,
+      "jump": false,
+      "sneak": false,
+      "sprint": false
+    },
+    {
+      "forward": 0,
+      "strafe": 0,
+      "jump": false,
+      "sneak": false,
+      "sprint": false
+    },
+    {
+      "forward": 0,
+      "strafe": 0,
+      "jump": false,
+      "sneak": false,
+      "sprint": false
+    },
+    {
+      "forward": 0,
+      "strafe": 0,
+      "jump": false,
+      "sneak": false,
+      "sprint": false
+    },
+    {
+      "forward": 0,
+      "strafe": 0,
+      "jump": false,
+      "sneak": false,
+      "sprint": false
+    },
+    {
+      "forward": 0,
+      "strafe": 0,
+      "jump": false,
+      "sneak": false,
+      "sprint": false
+    },
+    {
+      "forward": 0,
+      "strafe": 0,
+      "jump": false,
+      "sneak": false,
+      "sprint": false
+    },
+    {
+      "forward": 0,
+      "strafe": 0,
+      "jump": false,
+      "sneak": false,
+      "sprint": false
+    },
+    {
+      "forward": 0,
+      "strafe": 0,
+      "jump": false,
+      "sneak": false,
+      "sprint": false
+    },
+    {
+      "forward": 1,
+      "strafe": 0,
+      "jump": false,
+      "sneak": false,
+      "sprint": false
+    }
+  ],
+  "proof_exit": [
+    0.55,
+    64.0,
+    4.921596369551663
+  ],
+  "proof_exit_speed": 2.0103435213480396,
+  "ranked_nominal_rollouts": [
+    {
+      "exit": [
+        0.55,
+        64.0,
+        4.921596369551663
+      ],
+      "speed": 2.0103435213480396,
+      "sustained_forward": false,
+      "accepted": true,
+      "reasons": []
+    },
+    {
+      "exit": [
+        0.55,
+        64.0,
+        4.774046586810626
+      ],
+      "speed": 1.9344972867083596,
+      "sustained_forward": false,
+      "accepted": true,
+      "reasons": []
+    },
+    {
+      "exit": [
+        0.55,
+        64.0,
+        4.961100667374932
+      ],
+      "speed": 1.885332449471022,
+      "sustained_forward": false,
+      "accepted": true,
+      "reasons": []
+    },
+    {
+      "exit": [
+        0.55,
+        64.0,
+        4.633442429952344
+      ],
+      "speed": 1.851149776115305,
+      "sustained_forward": false,
+      "accepted": true,
+      "reasons": []
+    },
+    {
+      "exit": [
+        0.55,
+        64.0,
+        4.500470829009175
+      ],
+      "speed": 1.7595591051339257,
+      "sustained_forward": false,
+      "accepted": true,
+      "reasons": []
+    },
+    {
+      "exit": [
+        0.55,
+        64.0,
+        4.3758866521485515
+      ],
+      "speed": 1.6589100161433998,
+      "sustained_forward": false,
+      "accepted": true,
+      "reasons": []
+    },
+    {
+      "exit": [
+        0.55,
+        64.0,
+        6.023437455170065
+      ],
+      "speed": 3.4075551488801663,
+      "sustained_forward": true,
+      "accepted": false,
+      "reasons": [
+        "successor_entry"
+      ]
+    },
+    {
+      "exit": [
+        0.55,
+        64.0,
+        6.3539897939905545
+      ],
+      "speed": 3.826718653795864,
+      "sustained_forward": true,
+      "accepted": false,
+      "reasons": [
+        "successor_entry"
+      ]
+    },
+    {
+      "exit": [
+        0.55,
+        64.0,
+        5.113411088873942
+      ],
+      "speed": 2.108943627283781,
+      "sustained_forward": false,
+      "accepted": false,
+      "reasons": [
+        "successor_entry"
+      ]
+    },
+    {
+      "exit": [
+        0.55,
+        64.0,
+        5.249254606974252
+      ],
+      "speed": 2.0445261947037565,
+      "sustained_forward": false,
+      "accepted": false,
+      "reasons": [
+        "successor_entry"
+      ]
+    },
+    {
+      "exit": [
+        0.55,
+        64.0,
+        5.101704824233214
+      ],
+      "speed": 1.968679960064077,
+      "sustained_forward": false,
+      "accepted": false,
+      "reasons": [
+        "successor_entry"
+      ]
+    },
+    {
+      "exit": [
+        0.55,
+        64.0,
+        4.2605194248291856
+      ],
+      "speed": 1.5483066216483155,
+      "sustained_forward": false,
+      "accepted": false,
+      "reasons": [
+        "successor_entry"
+      ]
+    }
+  ]
+}

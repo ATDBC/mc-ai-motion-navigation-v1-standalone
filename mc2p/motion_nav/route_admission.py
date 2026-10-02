@@ -630,8 +630,13 @@ class RouteAdmitter:
                 if has_proof:
                     # Preserve the proved trajectory; its final same-height
                     # connection is a separate ordinary closed-loop walk.
+                    tail_proof = next(plan for plan in candidate.ground_traversal_plans
+                        if canonical_surface_node_path(plan.surface_node_path)
+                        == tuple(node.node_id for node in pending_nodes))
+                    tail_id = (tail_proof.continuation.following_route_id
+                               if tail_proof.continuation is not None else f"{route_id}-goal-tail")
                     flush_walk()
-                    actions.append(WalkSegment(FixedRoute(f"{route_id}-goal-tail", (last, terminal)),
+                    actions.append(WalkSegment(FixedRoute(tail_id, (last, terminal)),
                                                (candidate.path[-1].node_id,), terminal_target.dependencies))
                 else:
                     direct = None

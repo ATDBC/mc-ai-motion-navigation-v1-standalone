@@ -1,0 +1,495 @@
+{
+  "source_run": "20261002T130530628560Z-9880fb4f",
+  "source_commit": "11b8f50",
+  "scope": "read-only original Fabric application receipts; no new experiment",
+  "trials": [
+    {
+      "case": "demo-2-gap",
+      "jump_tick": 84,
+      "landing_tick": 95,
+      "entry_speed": 2.3516309565796893,
+      "post_jump_speed": 4.859199202215051,
+      "landing_speed": 1.4303847690872782,
+      "airborne_reverse_ticks": 2,
+      "airborne_neutral_ticks": 8,
+      "forward_first_tick_after_landing": 1.0,
+      "input_sample_spacing_ms": [
+        50.3023,
+        49.9732,
+        49.8842,
+        51.2033,
+        50.8823,
+        50.395,
+        50.0567,
+        50.2426,
+        50.3038,
+        50.5238,
+        33.9507
+      ],
+      "actual_input_sequence": [
+        {
+          "movement_tick_id": 84,
+          "forward": 1.0,
+          "strafe": 0.0,
+          "jump": true,
+          "sprint": true,
+          "state": "leased"
+        },
+        {
+          "movement_tick_id": 85,
+          "forward": -1.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "leased"
+        },
+        {
+          "movement_tick_id": 86,
+          "forward": -1.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "leased"
+        },
+        {
+          "movement_tick_id": 87,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 88,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 89,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 90,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 91,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 92,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 93,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 94,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 95,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        }
+      ]
+    },
+    {
+      "case": "demo-3-gap",
+      "jump_tick": 16149,
+      "landing_tick": 16160,
+      "entry_speed": 2.3516309565796893,
+      "post_jump_speed": 4.859199202215051,
+      "landing_speed": 1.4303847690872782,
+      "airborne_reverse_ticks": 2,
+      "airborne_neutral_ticks": 8,
+      "forward_first_tick_after_landing": 1.0,
+      "input_sample_spacing_ms": [
+        51.0412,
+        50.7791,
+        50.3892,
+        50.5442,
+        50.0137,
+        50.0165,
+        50.2933,
+        50.0013,
+        50.26,
+        50.4241,
+        50.3824
+      ],
+      "actual_input_sequence": [
+        {
+          "movement_tick_id": 16149,
+          "forward": 1.0,
+          "strafe": 0.0,
+          "jump": true,
+          "sprint": true,
+          "state": "leased"
+        },
+        {
+          "movement_tick_id": 16150,
+          "forward": -1.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "leased"
+        },
+        {
+          "movement_tick_id": 16151,
+          "forward": -1.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "leased"
+        },
+        {
+          "movement_tick_id": 16152,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 16153,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 16154,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 16155,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 16156,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 16157,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 16158,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 16159,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 16160,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        }
+      ]
+    },
+    {
+      "case": "demo-4-gap",
+      "jump_tick": 16310,
+      "landing_tick": 16321,
+      "entry_speed": 2.3516309565796893,
+      "post_jump_speed": 4.859199202215051,
+      "landing_speed": 1.4303847690872782,
+      "airborne_reverse_ticks": 2,
+      "airborne_neutral_ticks": 8,
+      "forward_first_tick_after_landing": 1.0,
+      "input_sample_spacing_ms": [
+        50.4106,
+        50.4233,
+        50.806,
+        50.0052,
+        49.9944,
+        50.0202,
+        50.8202,
+        50.7412,
+        50.1043,
+        50.0187,
+        34.0341
+      ],
+      "actual_input_sequence": [
+        {
+          "movement_tick_id": 16310,
+          "forward": 1.0,
+          "strafe": 0.0,
+          "jump": true,
+          "sprint": true,
+          "state": "leased"
+        },
+        {
+          "movement_tick_id": 16311,
+          "forward": -1.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "leased"
+        },
+        {
+          "movement_tick_id": 16312,
+          "forward": -1.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "leased"
+        },
+        {
+          "movement_tick_id": 16313,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 16314,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 16315,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 16316,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 16317,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 16318,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 16319,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 16320,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 16321,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        }
+      ]
+    },
+    {
+      "case": "demo-5-gap",
+      "jump_tick": 16527,
+      "landing_tick": 16538,
+      "entry_speed": 2.3516309565796893,
+      "post_jump_speed": 4.859199202215051,
+      "landing_speed": 1.4303847690872782,
+      "airborne_reverse_ticks": 2,
+      "airborne_neutral_ticks": 8,
+      "forward_first_tick_after_landing": 1.0,
+      "input_sample_spacing_ms": [
+        50.4767,
+        51.0214,
+        49.5419,
+        50.3461,
+        50.7842,
+        50.1583,
+        49.9897,
+        50.4229,
+        49.9937,
+        51.1003,
+        49.9853
+      ],
+      "actual_input_sequence": [
+        {
+          "movement_tick_id": 16527,
+          "forward": 1.0,
+          "strafe": 0.0,
+          "jump": true,
+          "sprint": true,
+          "state": "leased"
+        },
+        {
+          "movement_tick_id": 16528,
+          "forward": -1.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "leased"
+        },
+        {
+          "movement_tick_id": 16529,
+          "forward": -1.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "leased"
+        },
+        {
+          "movement_tick_id": 16530,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 16531,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 16532,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 16533,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 16534,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 16535,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 16536,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 16537,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        },
+        {
+          "movement_tick_id": 16538,
+          "forward": 0.0,
+          "strafe": 0.0,
+          "jump": false,
+          "sprint": false,
+          "state": "neutral"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,239 @@
+{
+  "mode_boundaries": [
+    {
+      "source": "walk",
+      "destination": "sprint",
+      "speed": 1.0,
+      "action_index": 1,
+      "reason": "ground_mode_confirmation_pending",
+      "movement": {
+        "forward": 1,
+        "strafe": 0,
+        "sprint": true,
+        "sneak": false
+      }
+    },
+    {
+      "source": "sprint",
+      "destination": "walk",
+      "speed": 1.0,
+      "action_index": 0,
+      "reason": "goal_braking",
+      "movement": {
+        "forward": 0,
+        "strafe": 0,
+        "sprint": false,
+        "sneak": false
+      }
+    },
+    {
+      "source": "walk",
+      "destination": "walk",
+      "speed": 1.0,
+      "action_index": 0,
+      "reason": "goal_braking",
+      "movement": {
+        "forward": 0,
+        "strafe": 0,
+        "sprint": false,
+        "sneak": false
+      }
+    },
+    {
+      "source": "walk",
+      "destination": "crouch",
+      "speed": 1.0,
+      "action_index": 0,
+      "reason": "goal_braking",
+      "movement": {
+        "forward": 0,
+        "strafe": 0,
+        "sprint": false,
+        "sneak": false
+      }
+    },
+    {
+      "source": "crouch",
+      "destination": "walk",
+      "speed": 1.0,
+      "action_index": 0,
+      "reason": "goal_braking",
+      "movement": {
+        "forward": -1,
+        "strafe": 0,
+        "sprint": false,
+        "sneak": true
+      }
+    }
+  ],
+  "open_corner": {
+    "reason": "corner_speed_control",
+    "movement": {
+      "forward": 0,
+      "strafe": 0
+    },
+    "speed": 2.35,
+    "corner_distance": 1.5,
+    "forward_candidate": {
+      "blocked": false,
+      "unsupported": false,
+      "missing_count": 0,
+      "progress_gain": 0.4360484885029523,
+      "score": -1.73843639652657
+    }
+  },
+  "ordinary_wall_tail": {
+    "controller_candidate": {
+      "blocked": true,
+      "unsupported": false,
+      "missing_count": 0
+    },
+    "lease_end_z": 1.5860484885029524,
+    "lease_end_body_front": 1.8860484885029525,
+    "wall_face_z": 2,
+    "uncollided_infinite_tail_z": 1.848884400890337,
+    "physics_rows": [
+      {
+        "tick": 1,
+        "z": 1.3655000090740739,
+        "vz": 2.3532600990888892,
+        "horizontal_collision": false,
+        "on_ground": true,
+        "events": [
+          "vertical_collision"
+        ]
+      },
+      {
+        "tick": 2,
+        "z": 1.5811630231025924,
+        "vz": 2.3550401131914227,
+        "horizontal_collision": false,
+        "on_ground": true,
+        "events": [
+          "vertical_collision"
+        ]
+      },
+      {
+        "tick": 3,
+        "z": 1.6989150287621635,
+        "vz": 1.285851901802517,
+        "horizontal_collision": false,
+        "on_ground": true,
+        "events": [
+          "vertical_collision"
+        ]
+      },
+      {
+        "tick": 4,
+        "z": 1.7,
+        "vz": 0.0,
+        "horizontal_collision": true,
+        "on_ground": true,
+        "events": [
+          "horizontal_collision",
+          "vertical_collision"
+        ]
+      },
+      {
+        "tick": 5,
+        "z": 1.7,
+        "vz": 0.0,
+        "horizontal_collision": false,
+        "on_ground": true,
+        "events": [
+          "vertical_collision"
+        ]
+      },
+      {
+        "tick": 6,
+        "z": 1.7,
+        "vz": 0.0,
+        "horizontal_collision": false,
+        "on_ground": true,
+        "events": [
+          "vertical_collision"
+        ]
+      },
+      {
+        "tick": 7,
+        "z": 1.7,
+        "vz": 0.0,
+        "horizontal_collision": false,
+        "on_ground": true,
+        "events": [
+          "vertical_collision"
+        ]
+      },
+      {
+        "tick": 8,
+        "z": 1.7,
+        "vz": 0.0,
+        "horizontal_collision": false,
+        "on_ground": true,
+        "events": [
+          "vertical_collision"
+        ]
+      },
+      {
+        "tick": 9,
+        "z": 1.7,
+        "vz": 0.0,
+        "horizontal_collision": false,
+        "on_ground": true,
+        "events": [
+          "vertical_collision"
+        ]
+      },
+      {
+        "tick": 10,
+        "z": 1.7,
+        "vz": 0.0,
+        "horizontal_collision": false,
+        "on_ground": true,
+        "events": [
+          "vertical_collision"
+        ]
+      },
+      {
+        "tick": 11,
+        "z": 1.7,
+        "vz": 0.0,
+        "horizontal_collision": false,
+        "on_ground": true,
+        "events": [
+          "vertical_collision"
+        ]
+      },
+      {
+        "tick": 12,
+        "z": 1.7,
+        "vz": 0.0,
+        "horizontal_collision": false,
+        "on_ground": true,
+        "events": [
+          "vertical_collision"
+        ]
+      },
+      {
+        "tick": 13,
+        "z": 1.7,
+        "vz": 0.0,
+        "horizontal_collision": false,
+        "on_ground": true,
+        "events": [
+          "vertical_collision"
+        ]
+      },
+      {
+        "tick": 14,
+        "z": 1.7,
+        "vz": 0.0,
+        "horizontal_collision": false,
+        "on_ground": true,
+        "events": [
+          "vertical_collision"
+        ]
+      }
+    ]
+  }
+}

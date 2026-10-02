@@ -18,6 +18,7 @@ from mc2p.motion_nav.air_motion import AirMotionController, AirMotionProfile, Ai
 from mc2p.motion_nav.fixed_route import (
     FixedRouteConfig, FixedRouteController, FixedRouteState, GroundHandoffTarget,
     terminal_route_config,
+    GroundHandoffDisposition,
 )
 from mc2p.motion_nav.ground_motion import GroundMotionProfile
 from mc2p.motion_nav.ground_modes import GroundModeProfiles
@@ -77,6 +78,7 @@ class ActionRouteDecision:
     latest_movement_tick: int | None = None
     requires_verified_motion: bool = False
     body_phase: BodyControlPhase | None = None
+    ground_handoff_disposition: GroundHandoffDisposition = GroundHandoffDisposition.NOT_REQUESTED
 
 
 class ActionRouteExecutor:
@@ -289,9 +291,38 @@ class ActionRouteExecutor:
             controller = FixedRouteController(
                 motion_profile, config, mode_profile=mode_profile,
             )
+            tracking_route = action.fixed_route
+            previous = self._verified_motion.get(self.action_index - 1)
+            previous_continuation = (previous.proof.continuation if previous is not None else None)
+            if previous_continuation is None and self.action_index > 0:
+                previous_action = self.route.actions[self.action_index - 1]
+                if type(previous_action) is WalkSegment and previous_action.traversal_plan is not None:
+                    previous_continuation = previous_action.traversal_plan.continuation
+            if (previous_continuation is not None
+                    and previous_continuation.following_route_id == tracking_route.route_id
+                    and action.traversal_plan is None):
+                # The completed proof established this actual entry on the
+                # first straight leg. Do not route back through its old centre
+                # or let projection clip progress to the discarded point.
+                from mc2p.motion_nav.fixed_route import FixedRoute, RoutePoint
+                progress = previous_continuation.progress(frame.body.position)
+                remaining = tracking_route.points[1:]
+                window = previous_continuation.entry_window
+                dx, dz = window.horizontal_approach_direction
+                for point_index, point in enumerate(remaining):
+                    lateral = (-(point.x - window.reference_point[0]) * dz
+                               + (point.z - window.reference_point[2]) * dx)
+                    if (abs(lateral) > 1.0e-7 or abs(point.y - window.reference_point[1]) > 1.0e-7
+                            or previous_continuation.progress((point.x, point.y, point.z)) > progress + 1.0e-7):
+                        remaining = remaining[point_index:]
+                        break
+                tracking_route = FixedRoute(tracking_route.route_id,
+                    (RoutePoint(*frame.body.position), *remaining))
             controller.start(
-                action.fixed_route, frame,
+                tracking_route, frame,
                 traversal_plan=action.traversal_plan,
+                continuation=(None if action.traversal_plan is None
+                              else action.traversal_plan.continuation),
             )
         elif type(action) is JumpUpSegment:
             admitted = self._verified_motion.get(self.action_index)
@@ -339,6 +370,7 @@ class ActionRouteExecutor:
     def _landed_on_current_action_destination(
         action,
         frame: NavigationFrame,
+        continuation=None,
     ) -> bool:
         """Accept a lost proof once the observed body is on its end support.
 
@@ -351,6 +383,18 @@ class ActionRouteExecutor:
         """
         if not frame.body.is_on_ground:
             return False
+        if continuation is not None:
+            from mc2p.motion_nav.segment_entry import body_fits_segment_entry
+            from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
+            window = continuation.recovery_entry_window or continuation.entry_window
+            if not body_fits_segment_entry(window, frame.body, continuation.mode):
+                return False
+            support = query_support(frame.body.body_box, frame.world)
+            clearance = sweep(frame.body.body_box, (0., 0., 0.), frame.world)
+            return (support.status is QueryStatus.FEASIBLE
+                    and clearance.status is QueryStatus.FEASIBLE
+                    and support.support_fraction + 1.0e-9
+                        >= continuation.minimum_recovery_support_fraction)
         if type(action) is JumpUpSegment:
             end_x, end_y, end_z = action.edge.end
             min_x, max_x = float(end_x), float(end_x + 1)
@@ -625,12 +669,14 @@ class ActionRouteExecutor:
                 verified_command_index: int | None = None,
                 expected_movement_tick: int | None = None,
                 latest_movement_tick: int | None = None,
-                requires_verified_motion: bool = False) -> ActionRouteDecision:
+                requires_verified_motion: bool = False,
+                ground_handoff_disposition=GroundHandoffDisposition.NOT_REQUESTED) -> ActionRouteDecision:
         return ActionRouteDecision(
             self.state, movement, look, lease, self.action_index, reason, missing,
             time.perf_counter_ns() - started, submit_input,
             verified_command_index, expected_movement_tick,
             latest_movement_tick, requires_verified_motion,
+            ground_handoff_disposition=ground_handoff_disposition,
         )
 
     def prepare_ground_handoff(self, target: GroundHandoffTarget | None) -> None:
@@ -749,6 +795,7 @@ class ActionRouteExecutor:
                         )
                         or self._landed_on_current_action_destination(
                             action, frame,
+                            self._verified_motion[self.action_index].proof.continuation,
                         )
                     )):
                 return self._advance(
@@ -765,6 +812,7 @@ class ActionRouteExecutor:
                 return self._advance(
                     frame, started, state_anchor=state_anchor,
                     input_ledger=input_ledger,
+                    movement_yaw_radians=movement_yaw_radians,
                 )
             if verified.state in terminal:
                 self.state = terminal[verified.state]
@@ -842,6 +890,7 @@ class ActionRouteExecutor:
             return self._result(
                 started, decision.movement, decision.input_lease_ticks,
                 decision.reason, decision.missing_cells,
+                ground_handoff_disposition=decision.handoff_disposition,
             )
 
         decision = self._controller.decide(frame, input_confirmed=input_confirmed)

@@ -165,3 +165,47 @@ def physics_fits_segment_entry(
         velocity=tuple(value * 20.0 for value in state.velocity_blocks_per_tick),
         yaw=state.yaw_radians, pose=state.pose, mode=mode,
     )
+
+
+@dataclass(frozen=True, slots=True)
+class MotionContinuationRequirement:
+    """One successor's bounded entry corridor, shared by proof and execution.
+
+    The window grants no world knowledge. Every candidate still has to prove
+    collision, support, release safety and all affected world dependencies.
+    """
+
+    entry_window: SegmentEntryWindow
+    mode: MovementMode
+    following_route_id: str
+    recovery_entry_window: SegmentEntryWindow | None = None
+    minimum_recovery_support_fraction: float = .15
+
+    def __post_init__(self) -> None:
+        if (type(self.entry_window) is not SegmentEntryWindow
+                or type(self.mode) is not MovementMode
+                or self.mode not in self.entry_window.allowed_modes):
+            raise ContractViolation("motion continuation requires a typed successor entry")
+        require_identifier(self.following_route_id, "following route id")
+        if (self.recovery_entry_window is not None
+                and type(self.recovery_entry_window) is not SegmentEntryWindow):
+            raise ContractViolation("recovery entry must be typed")
+        if not 0.0 < self.minimum_recovery_support_fraction <= 1.0:
+            raise ContractViolation("recovery support fraction must be within 0..1")
+
+    def accepts(self, state: PhysicsState) -> bool:
+        return state.on_ground and physics_fits_segment_entry(
+            self.entry_window, state, self.mode,
+        )
+
+    def accepts_recovery(self, state: PhysicsState) -> bool:
+        """Geometric necessary condition; actual support must be checked live."""
+        return state.on_ground and physics_fits_segment_entry(
+            self.recovery_entry_window or self.entry_window, state, self.mode,
+        )
+
+    def progress(self, position: tuple[float, float, float]) -> float:
+        window = self.entry_window
+        dx, dz = window.horizontal_approach_direction
+        return ((position[0] - window.reference_point[0]) * dx
+                + (position[2] - window.reference_point[2]) * dz)

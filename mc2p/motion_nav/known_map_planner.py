@@ -37,9 +37,10 @@ from mc2p.motion_nav.motion_risk import (
     conservative_plain_fall_damage_points,
 )
 from mc2p.motion_nav.step_transition import StepEdge, StepProfile, query_step
-from mc2p.motion_nav.segment_entry import SegmentEntryWindow
+from mc2p.motion_nav.segment_entry import SegmentEntryWindow, MotionContinuationRequirement
 from mc2p.motion_nav.support_surfaces import (
     SupportSurface, SurfaceNodeId, query_support_surfaces, surface_overlaps_region,
+    standable_point_in_region,
 )
 
 
@@ -2942,6 +2943,27 @@ def plan_known_surface_snapshot(
             snapshot, ground_profile, request.entry_physics_state,
             route, dependencies,
         )
+        continuation = None
+        if (request.goal_state is not None and last == len(search.segments) - 1
+                and expander.movement_mode is MovementMode.WALK):
+            goal_surface = expander.nodes[search.path[-1].node_id].surface
+            terminal = standable_point_in_region(snapshot.world, goal_surface,
+                request.goal_state.region, connection_from=goal_surface.position)
+            final = route.points[-1]
+            if (terminal.status is QueryStatus.FEASIBLE
+                    and math.dist(terminal.position, (final.x, final.y, final.z)) > 1.0e-6):
+                before = route.points[-2]
+                dx, dz = final.x - before.x, final.z - before.z
+                length = math.hypot(dx, dz)
+                if length > 1.0e-7:
+                    continuation = MotionContinuationRequirement(SegmentEntryWindow(
+                        (final.x, final.y, final.z), (dx / length, dz / length),
+                        -.25, .10, .25, final.y - .10, final.y + .10,
+                        .1, ground_profile.maximum_speed_blocks_per_second + .10,
+                        math.pi, frozenset({"standing"}), frozenset({MovementMode.WALK}),
+                        None, None, "d053-ground-goal-tail-entry-v1",
+                    ), MovementMode.WALK, f"{request.request_id}-ground-goal-tail")
+        key += (continuation,)
         verified = _GROUND_TRAVERSAL_PROOF_CACHE.get(key)
         if verified is None:
             verified = verify_ground_traversal(
@@ -2949,6 +2971,7 @@ def plan_known_surface_snapshot(
                 PhysicsWorldView(snapshot.world, JAVA_1_21_RULESET),
                 ground_profile, maximum_ticks=200,
                 surface_node_path=proof_node_path,
+                continuation=continuation,
             )
             _GROUND_TRAVERSAL_PROOF_CACHE.put(key, verified)
         disabled = {

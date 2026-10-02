@@ -1,0 +1,52 @@
+{
+  "schema_version": "mc2p.action-continuity-audit.v1",
+  "source_commit": "11b8f50",
+  "scope": "Read-only audit, existing formal-chain simulations and diagnostic counterfactuals; no new Fabric run or actor permission",
+  "raw_demo_run": "20261002T130530628560Z-9880fb4f",
+  "sources": {
+    "mc2p/motion_nav/known_map_planner.py": "8a89e59be6de352f58d8c88e85f164b4a446b647105a28ce047979821c63980c",
+    "mc2p/motion_nav/support_surfaces.py": "3b802352fb365c4c0584c5ee25f368684557e9be538f06b83caabdb1b495ead1",
+    "mc2p/motion_nav/route_admission.py": "a0760fc49258b9eb96c6840b937c58136cac289588cb837d2e54b82b31fc6c53",
+    "mc2p/motion_nav/action_route_executor.py": "0f3defa78388b3c81ee0e091119921d605f5db033e2273272c9c67a37018e0f2",
+    "mc2p/motion_nav/fixed_route.py": "40e9cdfdf8034900af7315675a96e8d3cf90a1a4c13ca882cf6c2444c1138d32",
+    "mc2p/motion_nav/ground_traversal.py": "2afa4cef574b5f3e66e75175711d486e79d09bca765f30486e894d4927e246cd",
+    "mc2p/motion_nav/motion_solver.py": "89af7ce35f172f92172d4dc5020722265318a1e1528cd580cd8168981e3fc3ec",
+    "mc2p/motion_nav/motion_coordination.py": "8c0365af22d398efbe25cce13060826fe16ce220fc2b584cda252a3e289ebd1e",
+    "mc2p/motion_nav/motion_candidate.py": "cf268ba432a91edc38cb3d939f22c75517cd23d8325f9c072ca5781c40068d6f",
+    "mc2p/motion_nav/motion_worker.py": "cd7009d512a40e34c4f4ff129edda939b3408e2417885f435160ed85130d6cde",
+    "config/motion-navigation/air-motions-b09-v1.json": "dd3dedc726a9d3f57aef16c0a7f55e0e59d6370169121b892a64c868c8eee818",
+    "config/motion-navigation/verified-height-transitions-v1.json": "a056f107e48063798f33dd9d81d2ecf967d2d62f13856acc3bd77cf97e8f74eb"
+  },
+  "files": [
+    "README.md",
+    "demo-input-evidence.json",
+    "ground/diagnose.py",
+    "ground/diagnosis.json",
+    "ground/formal-tail.json",
+    "ground/formal_tail.py",
+    "ground/report.md",
+    "ground/verification.txt",
+    "planning/air-probe-results.json",
+    "planning/air-probe.py",
+    "planning/consumer-probe-results.json",
+    "planning/consumer-probe.py",
+    "planning/plan-review.md",
+    "planning/probe-results.json",
+    "planning/probe.py",
+    "planning/report.md",
+    "solver/SHA256.json",
+    "solver/check_source.py",
+    "solver/counterfactual-first-match-relabelled-reconstruction.json",
+    "solver/counterfactual.json",
+    "solver/counterfactual.py",
+    "solver/initial-source-error.md",
+    "solver/inspect_evidence.py",
+    "solver/report.md"
+  ],
+  "limits": [
+    "No complete product matrix",
+    "No new Fabric acceptance",
+    "Hypotheses remain separately marked",
+    "Counterfactual commands are not released capabilities"
+  ]
+}

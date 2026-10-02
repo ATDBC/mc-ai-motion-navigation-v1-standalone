@@ -57,6 +57,9 @@ from mc2p.motion_nav.safe_ground_control import (
     verified_ground_target_movement,
 )
 from mc2p.motion_nav.world_model import BlockPos
+from mc2p.motion_nav.segment_entry import MotionContinuationRequirement, SegmentEntryWindow
+from mc2p.motion_nav.movement_transition import MovementMode
+from mc2p.motion_nav.fixed_route import GroundHandoffDisposition
 
 
 _RESOURCE_ASSUMPTIONS = ("server_hunger_clock_not_in_physics_state",)
@@ -79,16 +82,29 @@ def _gap_physics_bounds(
     half = state.body_width / 2.0
     horizontal_margin = 2.0
     vertical_margin = 2.0
+    min_x, max_x = request.landing.min_x, request.landing.max_x
+    min_z, max_z = request.landing.min_z, request.landing.max_z
+    if request.continuation is not None:
+        window = request.continuation.entry_window
+        dx, dz = window.horizontal_approach_direction
+        corners = tuple((window.reference_point[0] + dx * along - dz * lateral,
+                         window.reference_point[2] + dz * along + dx * lateral)
+                        for along in (window.minimum_longitudinal_offset_blocks,
+                                      window.maximum_longitudinal_offset_blocks)
+                        for lateral in (-window.maximum_lateral_offset_blocks,
+                                        window.maximum_lateral_offset_blocks))
+        min_x, max_x = min(min_x, *(p[0] for p in corners)), max(max_x, *(p[0] for p in corners))
+        min_z, max_z = min(min_z, *(p[1] for p in corners)), max(max_z, *(p[1] for p in corners))
     bounds = PhysicsWorldBounds(
-        math.floor(min(x - half, request.landing.min_x) - horizontal_margin),
-        math.ceil(max(x + half, request.landing.max_x) + horizontal_margin) - 1,
+        math.floor(min(x - half, min_x) - horizontal_margin),
+        math.ceil(max(x + half, max_x) + horizontal_margin) - 1,
         math.floor(min(y, request.landing.surface_y) - vertical_margin),
         math.ceil(max(
             y + state.body_height,
             request.landing.surface_y + state.body_height,
         ) + vertical_margin) - 1,
-        math.floor(min(z - half, request.landing.min_z) - horizontal_margin),
-        math.ceil(max(z + half, request.landing.max_z) + horizontal_margin) - 1,
+        math.floor(min(z - half, min_z) - horizontal_margin),
+        math.ceil(max(z + half, max_z) + horizontal_margin) - 1,
     )
     return bounds
 
@@ -239,6 +255,7 @@ def _planned_gap_request(
         exit_direction=exit_direction,
         exit_motion_ticks=1 if exit_direction is not None else 0,
         policy=policy,
+        continuation=_planned_continuation(route, action_index, anchor),
     ), "ready"
 
 
@@ -272,7 +289,69 @@ def _planned_air_transition_request(
         exit_direction=exit_direction,
         exit_motion_ticks=1 if exit_direction is not None else 0,
         policy=policy,
+        continuation=_planned_continuation(route, action_index, anchor),
     ), "ready"
+
+
+def _planned_continuation(route, action_index, anchor):
+    """Bound the next ordinary straight leg without crossing a turn or action.
+
+    Geometry defines candidate search space only. The calculator must establish
+    actual known support, collision clearance, recovery and dependencies there.
+    Other modes and proved height legs retain their existing entry contracts.
+    """
+    following_index = action_index + 1
+    if following_index >= len(route.action_route.actions):
+        return None
+    following = route.action_route.actions[following_index]
+    if type(following) is not WalkSegment or following.traversal_plan is not None:
+        return None
+    transition = following.transition
+    mode = transition.mode if transition is not None else MovementMode.WALK
+    if mode is not MovementMode.WALK:
+        return None
+    points = following.fixed_route.points
+    if len(points) < 2:
+        return None
+    first, second = points[:2]
+    dx, dz = second.x - first.x, second.z - first.z
+    distance = math.hypot(dx, dz)
+    direction = _air_action_direction(route.action_route.actions[action_index])
+    if (distance <= .6 or abs(second.y - first.y) > 1.0e-7
+            or direction is None
+            or abs(dx / distance - direction[0]) > 1.0e-7
+            or abs(dz / distance - direction[1]) > 1.0e-7):
+        return None
+    # Search nodes on one straight leg are reference samples, not turns. The
+    # permission stops before the first real corner, height or segment boundary.
+    for point in points[2:]:
+        offset_x, offset_z = point.x - first.x, point.z - first.z
+        progress = offset_x * direction[0] + offset_z * direction[1]
+        lateral = -offset_x * direction[1] + offset_z * direction[0]
+        if (abs(lateral) > 1.0e-7 or abs(point.y - first.y) > 1.0e-7
+                or progress <= distance + 1.0e-7):
+            break
+        distance = progress
+    maximum_speed = (transition.entry.maximum_speed_blocks_per_second
+                     if transition is not None else 4.4)
+    window = SegmentEntryWindow(
+        (first.x, first.y, first.z), (float(direction[0]), float(direction[1])),
+        -.2, min(4.0, distance - .4), .2,
+        first.y - 1.0e-7, first.y + 1.0e-7,
+        0.0, maximum_speed, math.radians(5),
+        frozenset({"standing"}), frozenset({mode}), None, None,
+        "d053-ordinary-successor-entry-v1",
+    )
+    width = anchor.physics_state.body_width
+    recovery_window = replace(window,
+        minimum_longitudinal_offset_blocks=-.5 - width / 2.0 + .15 * width,
+        maximum_lateral_offset_blocks=.5 + width / 2.0 - .15 * width,
+        minimum_feet_y=first.y - .10, maximum_feet_y=first.y + .10,
+        minimum_speed_blocks_per_second=0.0,
+        maximum_velocity_direction_error_radians=math.pi,
+    )
+    return MotionContinuationRequirement(window, mode, following.fixed_route.route_id,
+                                         recovery_window)
 
 
 def prepare_planned_gap_motion(
@@ -318,7 +397,8 @@ def prepare_planned_gap_motion(
                 solved.proof.landing, request.landing,
             )
             or solved.proof.exit_direction != request.exit_direction
-            or solved.proof.exit_motion_ticks != request.exit_motion_ticks):
+            or solved.proof.exit_motion_ticks != request.exit_motion_ticks
+            or solved.proof.continuation != request.continuation):
         return GapPreparationResult(
             GapPreparationStatus.SOLVE_FAILED,
             solve_result=solved, reason="precomputed_connection_mismatch",
@@ -394,6 +474,7 @@ def prepare_planned_air_transition(
             or not _same_landing_region(proof.landing, request.landing)
             or proof.exit_direction != request.exit_direction
             or proof.exit_motion_ticks != request.exit_motion_ticks
+            or proof.continuation != request.continuation
             or proof.damage_budget != damage_budget):
         return GapPreparationResult(
             GapPreparationStatus.SOLVE_FAILED,
@@ -819,6 +900,8 @@ class MotionRouteCoordinator:
             self.executor.prepare_ground_handoff(GroundHandoffTarget(
                 anchor.physics_state.position, anchor.movement_tick_id + 1,
                 (MovementV1(),), anchor.movement_tick_id + _MOTION_SOLVE_LIMIT_TICKS,
+                movement_yaws_radians=(anchor.physics_state.yaw_radians,),
+                mode=MovementMode.WALK,
             ))
 
     def _flush_pending_job(self) -> None:
@@ -1025,6 +1108,11 @@ class MotionRouteCoordinator:
                     position, anchor.movement_tick_id + 1,
                     tuple(command.movement for command in commands),
                     anchor.movement_tick_id + _MOTION_SOLVE_LIMIT_TICKS,
+                    movement_yaws_radians=tuple(command.required_movement_yaw_radians
+                                                for command in commands),
+                    mode=(self.route.action_route.actions[self.executor.action_index].transition.mode
+                          if self.route.action_route.actions[self.executor.action_index].transition is not None
+                          else MovementMode.WALK),
                 ))
 
     def decide(
@@ -1129,6 +1217,12 @@ class MotionRouteCoordinator:
             state_anchor=anchor, input_ledger=ledger,
             movement_yaw_radians=movement_yaw_radians,
         )
+        if (decision.ground_handoff_disposition is GroundHandoffDisposition.REJECTED
+                and self._solve_basis_job is not None
+                and self._solve_basis_job.entry_prefix):
+            # The controller refused the exact projected prefix. Its result
+            # cannot authorize that unrealized entry, even if it arrives later.
+            self._retire_work("ground_preparation_input_rejected")
         grounded_recovery = (
             allow_grounded_reprepare
             and decision.state is ActionRouteState.INPUT_LOST
