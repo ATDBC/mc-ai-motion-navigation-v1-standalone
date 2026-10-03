@@ -225,7 +225,7 @@ def math_speed(velocity):
     return (velocity[0] ** 2 + velocity[2] ** 2) ** .5 * 20
 
 
-def run_gap_sequence(seed):
+def run_gap_sequence(seed, *, service_followup=True):
     from mc2p.motion_nav.motion_worker import GapMotionSolveResult, _execute_job
     from mc2p.motion_nav.motion_solver import SolveResult, SolveStatus
     from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
@@ -268,6 +268,8 @@ def run_gap_sequence(seed):
     new = None
     old_delivered = False
     delivered = False
+    serviced_job_count = 0
+    followup_operations = []
     after_release = 0
     try:
         for tick in range(1, 161):
@@ -293,7 +295,16 @@ def run_gap_sequence(seed):
                     rng.shuffle(deliveries)
                     worker.deliveries.extend(deliveries)
                     delivered = True
+                    serviced_job_count = len(worker.jobs)
                     events.append("interleaved_results_delivered")
+                elif delivered and service_followup and len(worker.jobs) > serviced_job_count:
+                    # Interleaving is the injected fault, not permanent worker
+                    # starvation. Service later solve/revalidation jobs through
+                    # the same real implementation, on the following frame.
+                    pending = worker.jobs[serviced_job_count:]
+                    worker.deliveries.extend(_execute_job(job) for job in pending)
+                    followup_operations.extend(job.operation.value for job in pending)
+                    serviced_job_count = len(worker.jobs)
                 result = driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
                 if result is not None and result.report.failure is not None:
                     raise AssertionError(result.report.failure)
@@ -323,7 +334,8 @@ def run_gap_sequence(seed):
                   and backend.state.on_ground and verification.complete
                   and old.work_identity != new.work_identity)
         return {"seed": seed, "passed": passed, "task_outcome": driver.state,
-                "events": events, "verification": asdict(verification), "trace": trace}
+                "events": events, "followup_operations": followup_operations,
+                "verification": asdict(verification), "trace": trace}
     finally:
         current.close()
         if current is not original:

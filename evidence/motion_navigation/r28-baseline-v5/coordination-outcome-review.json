@@ -1,0 +1,1101 @@
+[
+  {
+    "id": "events/direct_drop_5_budget_2-23091",
+    "input": {
+      "seed": 23091,
+      "scenario": "direct_drop_5_budget_2",
+      "max_ticks": 400,
+      "events": [
+        {
+          "kind": "omit_receipt",
+          "tick": 30
+        },
+        {
+          "kind": "late_input",
+          "tick": 43
+        },
+        {
+          "kind": "external_push",
+          "tick": 54
+        },
+        {
+          "kind": "external_push",
+          "tick": 56
+        },
+        {
+          "kind": "cancel",
+          "tick": 62
+        },
+        {
+          "kind": "late_input",
+          "tick": 78
+        }
+      ]
+    },
+    "outcomes": [
+      "cancelled",
+      "failed"
+    ],
+    "current_replay_reason": "verified_exit_not_observed",
+    "current_replay_passed": true,
+    "current_replay_violations": [],
+    "current_tail": {
+      "planning_submissions": [],
+      "goal_revision_requests": [],
+      "goal_position": [
+        0.5,
+        59.0,
+        4.5
+      ],
+      "goal_satisfied": true,
+      "input_window": null,
+      "async_events": [],
+      "async_coverage": {
+        "begun": 2,
+        "finished": 2,
+        "applied": 2
+      },
+      "loop_tick": 82,
+      "tick": 83,
+      "clock_ns": 4200000000,
+      "observation_sequence": 62,
+      "movement_tick": 83,
+      "submitted_request": 61,
+      "applied_request": null,
+      "sample_state": "expired",
+      "command_event": {
+        "tick": 83,
+        "ready": [],
+        "accepted": null,
+        "superseded": [],
+        "sample_state": "expired",
+        "applied_request": null,
+        "receipt_request": 61
+      },
+      "proposed_intents": [],
+      "proposed_movement_intents": [],
+      "selected_intents": [],
+      "candidate_intents": [],
+      "suppressed_intents": [],
+      "action_request_sequence": null,
+      "action_deadline_ns": null,
+      "applied_movement": {
+        "forward": 0,
+        "strafe": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false
+      },
+      "sampled_input": {
+        "forward": 0.0,
+        "strafe": 0.0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false
+      },
+      "position": [
+        0.47823987218197805,
+        59.0,
+        4.66717036193517
+      ],
+      "velocity": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "yaw_radians": 0.0,
+      "pitch_radians": 0.0,
+      "pose": "standing",
+      "sneaking": false,
+      "on_ground": true,
+      "controller_ids": [],
+      "body_control_activities": [],
+      "submitted_body_activity": null,
+      "applied_body_activity": null,
+      "controller_phase": null,
+      "action_kind": null,
+      "action_index": null,
+      "source_bound": false,
+      "request_generation": 1,
+      "goal_revision": 1,
+      "route_id": "67b92e139e8bd5703aee5324",
+      "damage": 2.0,
+      "damage_spent": 2.0,
+      "risk_available_points": 0.0,
+      "risk_policy_revision": 0,
+      "risk_submission_capacity_exhausted": false,
+      "support_fraction": 1.0,
+      "transition_count": 45,
+      "illegal_transition_count": 0,
+      "active_waits": [],
+      "planning_work_owned": false,
+      "planning_work_identity_valid": false,
+      "planning_permit_identity_valid": true,
+      "planning_information_identity_valid": true,
+      "body_control_progress": {
+        "owner_id": "route/67b92e139e8bd5703aee5324",
+        "phase_label": "verified_exit_not_observed",
+        "progress_revision": 3,
+        "action_index": null,
+        "last_confirmed_application_tick": null,
+        "stall_limit_ticks": null
+      },
+      "retry_round_failures": 0,
+      "retry_total_failures": 0,
+      "retry_approved_round": 0,
+      "retry_approved_total": 0,
+      "retry_approved_cause_counts": [
+        [
+          "execution",
+          0
+        ],
+        [
+          "dependency",
+          0
+        ],
+        [
+          "information",
+          0
+        ],
+        [
+          "acquisition",
+          0
+        ],
+        [
+          "planning",
+          0
+        ]
+      ],
+      "retry_last_failure_attempt_id": null,
+      "retry_cause_counts": [
+        [
+          "execution",
+          0
+        ],
+        [
+          "dependency",
+          0
+        ],
+        [
+          "information",
+          0
+        ],
+        [
+          "acquisition",
+          0
+        ],
+        [
+          "planning",
+          0
+        ]
+      ],
+      "retry_progress_version": 3,
+      "recovery_wait_status": null,
+      "recovery_wait_capacity_exhausted": false,
+      "retry_progress_evidence": {
+        "kind": "route_frontier",
+        "observation_sequence": 54,
+        "support": [
+          0,
+          59,
+          3
+        ],
+        "action_id": null,
+        "fact_id": null
+      },
+      "risk_actions": [
+        {
+          "action_id": "goal/risk-1",
+          "state": "settled",
+          "expected_damage": 2.0,
+          "authorized_limit": 2.0,
+          "available_at_reservation": 2.0,
+          "policy_revision": 0,
+          "submitted_sequences": [
+            38
+          ],
+          "commit_kind": "applied_command",
+          "observed_damage": 2.0,
+          "observed_damage_lower_bound": 2.0,
+          "health_evidence_complete": true
+        }
+      ],
+      "session_state": "failed",
+      "session_reason": "verified_exit_not_observed",
+      "driver_state": "failed",
+      "driver_reason": "verified_exit_not_observed",
+      "runtime_failure": null,
+      "body_handoff": {
+        "owner": "route/67b92e139e8bd5703aee5324",
+        "disposition": "quiescent",
+        "reason": "supported_released_input_tail_verified",
+        "observation_sequence": 62,
+        "movement_tick": 63,
+        "movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "successor": null,
+        "control_sequence": null
+      }
+    },
+    "original_tail": {
+      "movement_tick": 84,
+      "tick": 84,
+      "position": [
+        0.47823987218197805,
+        59.0,
+        4.4522422132913215
+      ],
+      "velocity": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": true,
+      "pose": "standing",
+      "applied_movement": {
+        "forward": 0,
+        "strafe": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false
+      },
+      "input_window": null,
+      "source_bound": false,
+      "controller_ids": [],
+      "controller_phase": null,
+      "action_kind": null
+    }
+  },
+  {
+    "id": "events/terrace_two_ledges-23005",
+    "input": {
+      "seed": 23005,
+      "scenario": "terrace_two_ledges",
+      "max_ticks": 400,
+      "events": [
+        {
+          "kind": "late_input",
+          "tick": 21
+        },
+        {
+          "kind": "external_push_backward",
+          "tick": 33
+        },
+        {
+          "kind": "external_push",
+          "tick": 36
+        },
+        {
+          "kind": "external_push",
+          "tick": 52
+        },
+        {
+          "kind": "late_input",
+          "tick": 61
+        },
+        {
+          "kind": "omit_receipt",
+          "tick": 75
+        }
+      ]
+    },
+    "outcomes": [
+      "failed",
+      "success"
+    ],
+    "current_replay_reason": "goal_state_satisfied",
+    "current_replay_passed": true,
+    "current_replay_violations": [],
+    "current_tail": {
+      "planning_submissions": [],
+      "goal_revision_requests": [],
+      "goal_position": [
+        0.5,
+        58.0,
+        10.5
+      ],
+      "goal_satisfied": true,
+      "input_window": null,
+      "async_events": [],
+      "async_coverage": {
+        "begun": 3,
+        "finished": 3,
+        "applied": 3
+      },
+      "loop_tick": 152,
+      "tick": 153,
+      "clock_ns": 7700000000,
+      "observation_sequence": 132,
+      "movement_tick": 153,
+      "submitted_request": 131,
+      "applied_request": null,
+      "sample_state": "expired",
+      "command_event": {
+        "tick": 153,
+        "ready": [],
+        "accepted": null,
+        "superseded": [],
+        "sample_state": "expired",
+        "applied_request": null,
+        "receipt_request": 131
+      },
+      "proposed_intents": [],
+      "proposed_movement_intents": [],
+      "selected_intents": [],
+      "candidate_intents": [],
+      "suppressed_intents": [],
+      "action_request_sequence": null,
+      "action_deadline_ns": null,
+      "applied_movement": {
+        "forward": 0,
+        "strafe": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false
+      },
+      "sampled_input": {
+        "forward": 0.0,
+        "strafe": 0.0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false
+      },
+      "position": [
+        0.46791440694437947,
+        58.0,
+        10.380461556643741
+      ],
+      "velocity": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "yaw_radians": 0.0,
+      "pitch_radians": 0.0,
+      "pose": "standing",
+      "sneaking": false,
+      "on_ground": true,
+      "controller_ids": [],
+      "body_control_activities": [],
+      "submitted_body_activity": null,
+      "applied_body_activity": null,
+      "controller_phase": null,
+      "action_kind": null,
+      "action_index": null,
+      "source_bound": false,
+      "request_generation": 1,
+      "goal_revision": 1,
+      "route_id": "42056794a18bb8cdf22d7d87",
+      "damage": 0.0,
+      "damage_spent": 0.0,
+      "risk_available_points": 0.0,
+      "risk_policy_revision": 0,
+      "risk_submission_capacity_exhausted": false,
+      "support_fraction": 1.0,
+      "transition_count": 95,
+      "illegal_transition_count": 0,
+      "active_waits": [],
+      "planning_work_owned": false,
+      "planning_work_identity_valid": false,
+      "planning_permit_identity_valid": true,
+      "planning_information_identity_valid": true,
+      "body_control_progress": {
+        "owner_id": "route/42056794a18bb8cdf22d7d87",
+        "phase_label": "goal_state_satisfied",
+        "progress_revision": 7,
+        "action_index": null,
+        "last_confirmed_application_tick": null,
+        "stall_limit_ticks": null
+      },
+      "retry_round_failures": 0,
+      "retry_total_failures": 0,
+      "retry_approved_round": 0,
+      "retry_approved_total": 0,
+      "retry_approved_cause_counts": [
+        [
+          "execution",
+          0
+        ],
+        [
+          "dependency",
+          0
+        ],
+        [
+          "information",
+          0
+        ],
+        [
+          "acquisition",
+          0
+        ],
+        [
+          "planning",
+          0
+        ]
+      ],
+      "retry_last_failure_attempt_id": null,
+      "retry_cause_counts": [
+        [
+          "execution",
+          0
+        ],
+        [
+          "dependency",
+          0
+        ],
+        [
+          "information",
+          0
+        ],
+        [
+          "acquisition",
+          0
+        ],
+        [
+          "planning",
+          0
+        ]
+      ],
+      "retry_progress_version": 7,
+      "recovery_wait_status": null,
+      "recovery_wait_capacity_exhausted": false,
+      "retry_progress_evidence": {
+        "kind": "action_completed",
+        "observation_sequence": 121,
+        "support": null,
+        "action_id": "ControlledDropSegment/aef1a48a0c967d6e7808d96a",
+        "fact_id": null
+      },
+      "risk_actions": [
+        {
+          "action_id": "goal/risk-1",
+          "state": "settled",
+          "expected_damage": 0.0,
+          "authorized_limit": 0.0,
+          "available_at_reservation": 0.0,
+          "policy_revision": 0,
+          "submitted_sequences": [
+            47
+          ],
+          "commit_kind": "applied_command",
+          "observed_damage": 0.0,
+          "observed_damage_lower_bound": 0.0,
+          "health_evidence_complete": true
+        },
+        {
+          "action_id": "goal/risk-2",
+          "state": "settled",
+          "expected_damage": 0.0,
+          "authorized_limit": 0.0,
+          "available_at_reservation": 0.0,
+          "policy_revision": 0,
+          "submitted_sequences": [
+            104
+          ],
+          "commit_kind": "applied_command",
+          "observed_damage": 0.0,
+          "observed_damage_lower_bound": 0.0,
+          "health_evidence_complete": true
+        }
+      ],
+      "session_state": "complete",
+      "session_reason": "goal_state_satisfied",
+      "driver_state": "success",
+      "driver_reason": "simulation_terminal_release",
+      "runtime_failure": null,
+      "body_handoff": {
+        "owner": "route/42056794a18bb8cdf22d7d87",
+        "disposition": "quiescent",
+        "reason": "supported_released_input_tail_verified",
+        "observation_sequence": 132,
+        "movement_tick": 133,
+        "movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "successor": null,
+        "control_sequence": null
+      }
+    },
+    "original_tail": {
+      "movement_tick": 87,
+      "tick": 87,
+      "position": [
+        0.48837813554847326,
+        61.0,
+        4.459755226303968
+      ],
+      "velocity": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": true,
+      "pose": "standing",
+      "applied_movement": {
+        "forward": 0,
+        "strafe": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false
+      },
+      "input_window": null,
+      "source_bound": false,
+      "controller_ids": [],
+      "controller_phase": null,
+      "action_kind": null
+    }
+  },
+  {
+    "id": "events/terrace_two_ledges-23085",
+    "input": {
+      "seed": 23085,
+      "scenario": "terrace_two_ledges",
+      "max_ticks": 400,
+      "events": [
+        {
+          "kind": "late_input",
+          "tick": 25
+        },
+        {
+          "kind": "external_push_backward",
+          "tick": 50
+        },
+        {
+          "kind": "lose_arbitration",
+          "tick": 53
+        },
+        {
+          "kind": "omit_receipt",
+          "tick": 59
+        },
+        {
+          "kind": "external_push_backward",
+          "tick": 60
+        },
+        {
+          "kind": "late_input",
+          "tick": 67
+        }
+      ]
+    },
+    "outcomes": [
+      "success",
+      "failed"
+    ],
+    "current_replay_reason": "verified_exit_not_observed",
+    "current_replay_passed": true,
+    "current_replay_violations": [],
+    "current_tail": {
+      "planning_submissions": [],
+      "goal_revision_requests": [],
+      "goal_position": [
+        0.5,
+        58.0,
+        10.5
+      ],
+      "goal_satisfied": false,
+      "input_window": null,
+      "async_events": [],
+      "async_coverage": {
+        "begun": 2,
+        "finished": 2,
+        "applied": 2
+      },
+      "loop_tick": 74,
+      "tick": 75,
+      "clock_ns": 3800000000,
+      "observation_sequence": 54,
+      "movement_tick": 75,
+      "submitted_request": 53,
+      "applied_request": null,
+      "sample_state": "expired",
+      "command_event": {
+        "tick": 75,
+        "ready": [],
+        "accepted": null,
+        "superseded": [],
+        "sample_state": "expired",
+        "applied_request": null,
+        "receipt_request": 53
+      },
+      "proposed_intents": [],
+      "proposed_movement_intents": [],
+      "selected_intents": [],
+      "candidate_intents": [],
+      "suppressed_intents": [],
+      "action_request_sequence": null,
+      "action_deadline_ns": null,
+      "applied_movement": {
+        "forward": 0,
+        "strafe": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false
+      },
+      "sampled_input": {
+        "forward": 0.0,
+        "strafe": 0.0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false
+      },
+      "position": [
+        0.47919434677351075,
+        61.0,
+        3.5364287015477434
+      ],
+      "velocity": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "yaw_radians": 0.0,
+      "pitch_radians": 0.0,
+      "pose": "standing",
+      "sneaking": false,
+      "on_ground": true,
+      "controller_ids": [],
+      "body_control_activities": [],
+      "submitted_body_activity": null,
+      "applied_body_activity": null,
+      "controller_phase": null,
+      "action_kind": null,
+      "action_index": null,
+      "source_bound": false,
+      "request_generation": 1,
+      "goal_revision": 1,
+      "route_id": "42056794a18bb8cdf22d7d87",
+      "damage": 0.0,
+      "damage_spent": 0.0,
+      "risk_available_points": 0.0,
+      "risk_policy_revision": 0,
+      "risk_submission_capacity_exhausted": false,
+      "support_fraction": 1.0,
+      "transition_count": 38,
+      "illegal_transition_count": 0,
+      "active_waits": [],
+      "planning_work_owned": false,
+      "planning_work_identity_valid": false,
+      "planning_permit_identity_valid": true,
+      "planning_information_identity_valid": true,
+      "body_control_progress": {
+        "owner_id": "route/42056794a18bb8cdf22d7d87",
+        "phase_label": "verified_exit_not_observed",
+        "progress_revision": 3,
+        "action_index": null,
+        "last_confirmed_application_tick": null,
+        "stall_limit_ticks": null
+      },
+      "retry_round_failures": 0,
+      "retry_total_failures": 0,
+      "retry_approved_round": 0,
+      "retry_approved_total": 0,
+      "retry_approved_cause_counts": [
+        [
+          "execution",
+          0
+        ],
+        [
+          "dependency",
+          0
+        ],
+        [
+          "information",
+          0
+        ],
+        [
+          "acquisition",
+          0
+        ],
+        [
+          "planning",
+          0
+        ]
+      ],
+      "retry_last_failure_attempt_id": null,
+      "retry_cause_counts": [
+        [
+          "execution",
+          0
+        ],
+        [
+          "dependency",
+          0
+        ],
+        [
+          "information",
+          0
+        ],
+        [
+          "acquisition",
+          0
+        ],
+        [
+          "planning",
+          0
+        ]
+      ],
+      "retry_progress_version": 3,
+      "recovery_wait_status": null,
+      "recovery_wait_capacity_exhausted": false,
+      "retry_progress_evidence": {
+        "kind": "route_frontier",
+        "observation_sequence": 48,
+        "support": [
+          0,
+          61,
+          3
+        ],
+        "action_id": null,
+        "fact_id": null
+      },
+      "risk_actions": [
+        {
+          "action_id": "goal/risk-1",
+          "state": "settled",
+          "expected_damage": 0.0,
+          "authorized_limit": 0.0,
+          "available_at_reservation": 0.0,
+          "policy_revision": 0,
+          "submitted_sequences": [
+            35
+          ],
+          "commit_kind": "applied_command",
+          "observed_damage": 0.0,
+          "observed_damage_lower_bound": 0.0,
+          "health_evidence_complete": true
+        }
+      ],
+      "session_state": "failed",
+      "session_reason": "verified_exit_not_observed",
+      "driver_state": "failed",
+      "driver_reason": "verified_exit_not_observed",
+      "runtime_failure": null,
+      "body_handoff": {
+        "owner": "route/42056794a18bb8cdf22d7d87",
+        "disposition": "quiescent",
+        "reason": "supported_released_input_tail_verified",
+        "observation_sequence": 54,
+        "movement_tick": 55,
+        "movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "successor": null,
+        "control_sequence": null
+      }
+    },
+    "original_tail": {
+      "movement_tick": 146,
+      "tick": 146,
+      "position": [
+        0.4181729338501041,
+        58.0,
+        10.376438555017312
+      ],
+      "velocity": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": true,
+      "pose": "standing",
+      "applied_movement": {
+        "forward": 0,
+        "strafe": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false
+      },
+      "input_window": null,
+      "source_bound": false,
+      "controller_ids": [],
+      "controller_phase": null,
+      "action_kind": null
+    }
+  },
+  {
+    "id": "events/terrace_two_ledges-23239",
+    "input": {
+      "seed": 23239,
+      "scenario": "terrace_two_ledges",
+      "max_ticks": 400,
+      "events": [
+        {
+          "kind": "remove_landing_support",
+          "tick": 15
+        },
+        {
+          "kind": "omit_receipt",
+          "tick": 16
+        },
+        {
+          "kind": "remove_landing_support",
+          "tick": 18
+        },
+        {
+          "kind": "external_push_backward",
+          "tick": 47
+        },
+        {
+          "kind": "late_input",
+          "tick": 55
+        },
+        {
+          "kind": "cancel",
+          "tick": 70
+        }
+      ]
+    },
+    "outcomes": [
+      "cancelled",
+      "failed"
+    ],
+    "current_replay_reason": "verified_exit_not_observed",
+    "current_replay_passed": true,
+    "current_replay_violations": [],
+    "current_tail": {
+      "planning_submissions": [],
+      "goal_revision_requests": [],
+      "goal_position": [
+        0.5,
+        58.0,
+        10.5
+      ],
+      "goal_satisfied": false,
+      "input_window": null,
+      "async_events": [],
+      "async_coverage": {
+        "begun": 2,
+        "finished": 2,
+        "applied": 2
+      },
+      "loop_tick": 70,
+      "tick": 71,
+      "clock_ns": 3600000000,
+      "observation_sequence": 50,
+      "movement_tick": 71,
+      "submitted_request": 49,
+      "applied_request": null,
+      "sample_state": "expired",
+      "command_event": {
+        "tick": 71,
+        "ready": [],
+        "accepted": null,
+        "superseded": [],
+        "sample_state": "expired",
+        "applied_request": null,
+        "receipt_request": 49
+      },
+      "proposed_intents": [],
+      "proposed_movement_intents": [],
+      "selected_intents": [],
+      "candidate_intents": [],
+      "suppressed_intents": [],
+      "action_request_sequence": null,
+      "action_deadline_ns": null,
+      "applied_movement": {
+        "forward": 0,
+        "strafe": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false
+      },
+      "sampled_input": {
+        "forward": 0.0,
+        "strafe": 0.0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false
+      },
+      "position": [
+        0.47823987218197805,
+        61.0,
+        3.4148489715236834
+      ],
+      "velocity": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "yaw_radians": 0.0,
+      "pitch_radians": 0.0,
+      "pose": "standing",
+      "sneaking": false,
+      "on_ground": true,
+      "controller_ids": [],
+      "body_control_activities": [],
+      "submitted_body_activity": null,
+      "applied_body_activity": null,
+      "controller_phase": null,
+      "action_kind": null,
+      "action_index": null,
+      "source_bound": false,
+      "request_generation": 1,
+      "goal_revision": 1,
+      "route_id": "42056794a18bb8cdf22d7d87",
+      "damage": 0.0,
+      "damage_spent": 0.0,
+      "risk_available_points": 0.0,
+      "risk_policy_revision": 0,
+      "risk_submission_capacity_exhausted": false,
+      "support_fraction": 1.0,
+      "transition_count": 38,
+      "illegal_transition_count": 0,
+      "active_waits": [],
+      "planning_work_owned": false,
+      "planning_work_identity_valid": false,
+      "planning_permit_identity_valid": true,
+      "planning_information_identity_valid": true,
+      "body_control_progress": {
+        "owner_id": "route/42056794a18bb8cdf22d7d87",
+        "phase_label": "verified_exit_not_observed",
+        "progress_revision": 3,
+        "action_index": null,
+        "last_confirmed_application_tick": null,
+        "stall_limit_ticks": null
+      },
+      "retry_round_failures": 0,
+      "retry_total_failures": 0,
+      "retry_approved_round": 0,
+      "retry_approved_total": 0,
+      "retry_approved_cause_counts": [
+        [
+          "execution",
+          0
+        ],
+        [
+          "dependency",
+          0
+        ],
+        [
+          "information",
+          0
+        ],
+        [
+          "acquisition",
+          0
+        ],
+        [
+          "planning",
+          0
+        ]
+      ],
+      "retry_last_failure_attempt_id": null,
+      "retry_cause_counts": [
+        [
+          "execution",
+          0
+        ],
+        [
+          "dependency",
+          0
+        ],
+        [
+          "information",
+          0
+        ],
+        [
+          "acquisition",
+          0
+        ],
+        [
+          "planning",
+          0
+        ]
+      ],
+      "retry_progress_version": 3,
+      "recovery_wait_status": null,
+      "recovery_wait_capacity_exhausted": false,
+      "retry_progress_evidence": {
+        "kind": "route_frontier",
+        "observation_sequence": 47,
+        "support": [
+          0,
+          61,
+          3
+        ],
+        "action_id": null,
+        "fact_id": null
+      },
+      "risk_actions": [
+        {
+          "action_id": "goal/risk-1",
+          "state": "settled",
+          "expected_damage": 0.0,
+          "authorized_limit": 0.0,
+          "available_at_reservation": 0.0,
+          "policy_revision": 0,
+          "submitted_sequences": [
+            34
+          ],
+          "commit_kind": "applied_command",
+          "observed_damage": 0.0,
+          "observed_damage_lower_bound": 0.0,
+          "health_evidence_complete": true
+        }
+      ],
+      "session_state": "failed",
+      "session_reason": "verified_exit_not_observed",
+      "driver_state": "failed",
+      "driver_reason": "verified_exit_not_observed",
+      "runtime_failure": null,
+      "body_handoff": {
+        "owner": "route/42056794a18bb8cdf22d7d87",
+        "disposition": "quiescent",
+        "reason": "supported_released_input_tail_verified",
+        "observation_sequence": 50,
+        "movement_tick": 51,
+        "movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "successor": null,
+        "control_sequence": null
+      }
+    },
+    "original_tail": {
+      "movement_tick": 94,
+      "tick": 94,
+      "position": [
+        0.47823987218197805,
+        61.0,
+        7.381948323010766
+      ],
+      "velocity": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": true,
+      "pose": "standing",
+      "applied_movement": {
+        "forward": 0,
+        "strafe": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false
+      },
+      "input_window": null,
+      "source_bound": false,
+      "controller_ids": [],
+      "controller_phase": null,
+      "action_kind": null
+    }
+  }
+]

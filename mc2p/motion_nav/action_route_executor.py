@@ -45,6 +45,9 @@ from mc2p.motion_nav.online_motion import (
 )
 from mc2p.motion_nav.physics_types import PhysicsState
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
+from mc2p.motion_nav.safe_ground_control import (
+    verified_ground_recovery_movement, verified_ground_rollout,
+)
 from mc2p.motion_nav.world_model import BlockPos
 
 
@@ -708,6 +711,26 @@ class ActionRouteExecutor:
             ActionRouteState.FAILED, ActionRouteState.UNSUPPORTED,
             ActionRouteState.INPUT_LOST,
         }:
+            # A business terminal is not permission to release a body perched
+            # on an edge. Keep the same owner and prove each retreat tick until
+            # its neutral tail meets the supervisor's existing support gate.
+            if (state_anchor is not None
+                    and state_anchor.observation_sequence_id == frame.body.sequence_id
+                    and frame.body.is_on_ground
+                    and verified_ground_rollout(
+                        frame, state_anchor.physics_state, MovementV1(),
+                        control_ticks=0, tail_ticks=8, minimum_support=.01,
+                    ) is None):
+                recovery = verified_ground_recovery_movement(
+                    frame, (state_anchor.physics_state
+                            if movement_yaw_radians is None else
+                            replace(state_anchor.physics_state,
+                                    yaw_radians=movement_yaw_radians)),
+                )
+                if recovery is not None:
+                    return replace(self._result(
+                        started, recovery, 1, "recovering_terminal_ground_support",
+                    ), body_phase=BodyControlPhase.STOPPING)
             return self._result(
                 started, MovementV1(), 1, self.state.value,
                 submit_input=False,

@@ -1,0 +1,610 @@
+{
+  "pairs": 80,
+  "full_original_denominator": false,
+  "groups": {
+    "point-normal": {
+      "pairs": 8,
+      "baseline_success": 8,
+      "candidate_success": 8,
+      "paired_arrival_before": {
+        "samples": 8,
+        "p95": 72,
+        "mean": 60.625
+      },
+      "paired_arrival_after": {
+        "samples": 8,
+        "p95": 72,
+        "mean": 60.625
+      }
+    },
+    "point-late": {
+      "pairs": 8,
+      "baseline_success": 8,
+      "candidate_success": 8,
+      "paired_arrival_before": {
+        "samples": 8,
+        "p95": 81,
+        "mean": 67.25
+      },
+      "paired_arrival_after": {
+        "samples": 8,
+        "p95": 81,
+        "mean": 67.25
+      }
+    },
+    "height-normal": {
+      "pairs": 8,
+      "baseline_success": 8,
+      "candidate_success": 8,
+      "paired_arrival_before": {
+        "samples": 8,
+        "p95": 42,
+        "mean": 38.75
+      },
+      "paired_arrival_after": {
+        "samples": 8,
+        "p95": 42,
+        "mean": 38.75
+      }
+    },
+    "height-late": {
+      "pairs": 8,
+      "baseline_success": 8,
+      "candidate_success": 8,
+      "paired_arrival_before": {
+        "samples": 8,
+        "p95": 47,
+        "mean": 43.375
+      },
+      "paired_arrival_after": {
+        "samples": 8,
+        "p95": 47,
+        "mean": 43.375
+      }
+    },
+    "target-normal": {
+      "pairs": 8,
+      "baseline_success": 8,
+      "candidate_success": 8,
+      "paired_arrival_before": {
+        "samples": 8,
+        "p95": 84,
+        "mean": 67.75
+      },
+      "paired_arrival_after": {
+        "samples": 8,
+        "p95": 84,
+        "mean": 67.75
+      }
+    },
+    "target-late": {
+      "pairs": 8,
+      "baseline_success": 8,
+      "candidate_success": 8,
+      "paired_arrival_before": {
+        "samples": 8,
+        "p95": 93,
+        "mean": 82.625
+      },
+      "paired_arrival_after": {
+        "samples": 8,
+        "p95": 93,
+        "mean": 82.625
+      }
+    },
+    "drop-normal": {
+      "pairs": 8,
+      "baseline_success": 8,
+      "candidate_success": 8,
+      "paired_arrival_before": {
+        "samples": 8,
+        "p95": 64,
+        "mean": 60.875
+      },
+      "paired_arrival_after": {
+        "samples": 8,
+        "p95": 64,
+        "mean": 60.25
+      }
+    },
+    "drop-late": {
+      "pairs": 8,
+      "baseline_success": 7,
+      "candidate_success": 8,
+      "paired_arrival_before": {
+        "samples": 7,
+        "p95": 86,
+        "mean": 68.85714285714286
+      },
+      "paired_arrival_after": {
+        "samples": 7,
+        "p95": 86,
+        "mean": 68.71428571428571
+      }
+    },
+    "player-normal": {
+      "pairs": 8,
+      "baseline_success": 3,
+      "candidate_success": 3,
+      "paired_arrival_before": {
+        "samples": 3,
+        "p95": 55,
+        "mean": 51.666666666666664
+      },
+      "paired_arrival_after": {
+        "samples": 3,
+        "p95": 55,
+        "mean": 51.666666666666664
+      }
+    },
+    "player-late": {
+      "pairs": 8,
+      "baseline_success": 3,
+      "candidate_success": 3,
+      "paired_arrival_before": {
+        "samples": 3,
+        "p95": 62,
+        "mean": 58.0
+      },
+      "paired_arrival_after": {
+        "samples": 3,
+        "p95": 62,
+        "mean": 58.0
+      }
+    }
+  },
+  "lost_successes": [],
+  "gained_successes": [
+    "drop-late-000001"
+  ],
+  "blocking_evidence": [],
+  "difference_count": 16,
+  "difference_families": {
+    "strict_drop": 16
+  },
+  "differences": [
+    {
+      "id": "drop-normal-000000",
+      "family": "strict_drop",
+      "case": "drop_2",
+      "metric_comparison": {
+        "status": "equivalent",
+        "differences": []
+      },
+      "physical_trace_changed": true,
+      "strict_trace_changed": true,
+      "first_physical_difference_index": 35,
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "baseline_reason": "goal_state_satisfied",
+      "candidate_reason": "goal_state_satisfied",
+      "arrival_ticks": [
+        58,
+        58
+      ],
+      "terminal_ticks": [
+        57,
+        57
+      ],
+      "trace_file": "traces/drop-normal-000000.json.gz"
+    },
+    {
+      "id": "drop-normal-000001",
+      "family": "strict_drop",
+      "case": "drop_5",
+      "metric_comparison": {
+        "status": "different",
+        "differences": [
+          "zero_displacement_interval_count",
+          "zero_displacement_ticks"
+        ]
+      },
+      "physical_trace_changed": true,
+      "strict_trace_changed": true,
+      "first_physical_difference_index": 34,
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "baseline_reason": "goal_state_satisfied",
+      "candidate_reason": "goal_state_satisfied",
+      "arrival_ticks": [
+        63,
+        62
+      ],
+      "terminal_ticks": [
+        62,
+        61
+      ],
+      "trace_file": "traces/drop-normal-000001.json.gz"
+    },
+    {
+      "id": "drop-normal-000002",
+      "family": "strict_drop",
+      "case": "drop_2",
+      "metric_comparison": {
+        "status": "equivalent",
+        "differences": []
+      },
+      "physical_trace_changed": true,
+      "strict_trace_changed": true,
+      "first_physical_difference_index": 35,
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "baseline_reason": "goal_state_satisfied",
+      "candidate_reason": "goal_state_satisfied",
+      "arrival_ticks": [
+        58,
+        58
+      ],
+      "terminal_ticks": [
+        57,
+        57
+      ],
+      "trace_file": "traces/drop-normal-000002.json.gz"
+    },
+    {
+      "id": "drop-normal-000003",
+      "family": "strict_drop",
+      "case": "drop_5",
+      "metric_comparison": {
+        "status": "different",
+        "differences": [
+          "zero_displacement_interval_count",
+          "zero_displacement_ticks"
+        ]
+      },
+      "physical_trace_changed": true,
+      "strict_trace_changed": true,
+      "first_physical_difference_index": 35,
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "baseline_reason": "goal_state_satisfied",
+      "candidate_reason": "goal_state_satisfied",
+      "arrival_ticks": [
+        64,
+        63
+      ],
+      "terminal_ticks": [
+        63,
+        62
+      ],
+      "trace_file": "traces/drop-normal-000003.json.gz"
+    },
+    {
+      "id": "drop-normal-000004",
+      "family": "strict_drop",
+      "case": "drop_2",
+      "metric_comparison": {
+        "status": "equivalent",
+        "differences": []
+      },
+      "physical_trace_changed": true,
+      "strict_trace_changed": true,
+      "first_physical_difference_index": 35,
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "baseline_reason": "goal_state_satisfied",
+      "candidate_reason": "goal_state_satisfied",
+      "arrival_ticks": [
+        62,
+        62
+      ],
+      "terminal_ticks": [
+        61,
+        61
+      ],
+      "trace_file": "traces/drop-normal-000004.json.gz"
+    },
+    {
+      "id": "drop-normal-000005",
+      "family": "strict_drop",
+      "case": "drop_5",
+      "metric_comparison": {
+        "status": "different",
+        "differences": [
+          "zero_displacement_interval_count",
+          "zero_displacement_ticks"
+        ]
+      },
+      "physical_trace_changed": true,
+      "strict_trace_changed": true,
+      "first_physical_difference_index": 36,
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "baseline_reason": "goal_state_satisfied",
+      "candidate_reason": "goal_state_satisfied",
+      "arrival_ticks": [
+        64,
+        64
+      ],
+      "terminal_ticks": [
+        63,
+        63
+      ],
+      "trace_file": "traces/drop-normal-000005.json.gz"
+    },
+    {
+      "id": "drop-normal-000006",
+      "family": "strict_drop",
+      "case": "drop_2",
+      "metric_comparison": {
+        "status": "equivalent",
+        "differences": []
+      },
+      "physical_trace_changed": true,
+      "strict_trace_changed": true,
+      "first_physical_difference_index": 34,
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "baseline_reason": "goal_state_satisfied",
+      "candidate_reason": "goal_state_satisfied",
+      "arrival_ticks": [
+        57,
+        57
+      ],
+      "terminal_ticks": [
+        56,
+        56
+      ],
+      "trace_file": "traces/drop-normal-000006.json.gz"
+    },
+    {
+      "id": "drop-normal-000007",
+      "family": "strict_drop",
+      "case": "drop_5",
+      "metric_comparison": {
+        "status": "different",
+        "differences": [
+          "zero_displacement_interval_count",
+          "arrival_ticks",
+          "terminal_ticks",
+          "zero_displacement_ticks"
+        ]
+      },
+      "physical_trace_changed": true,
+      "strict_trace_changed": true,
+      "first_physical_difference_index": 33,
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "baseline_reason": "goal_state_satisfied",
+      "candidate_reason": "goal_state_satisfied",
+      "arrival_ticks": [
+        61,
+        58
+      ],
+      "terminal_ticks": [
+        60,
+        57
+      ],
+      "trace_file": "traces/drop-normal-000007.json.gz"
+    },
+    {
+      "id": "drop-late-000000",
+      "family": "strict_drop",
+      "case": "drop_2",
+      "metric_comparison": {
+        "status": "equivalent",
+        "differences": []
+      },
+      "physical_trace_changed": true,
+      "strict_trace_changed": true,
+      "first_physical_difference_index": 36,
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "baseline_reason": "goal_state_satisfied",
+      "candidate_reason": "goal_state_satisfied",
+      "arrival_ticks": [
+        59,
+        59
+      ],
+      "terminal_ticks": [
+        58,
+        58
+      ],
+      "trace_file": "traces/drop-late-000000.json.gz"
+    },
+    {
+      "id": "drop-late-000001",
+      "family": "strict_drop",
+      "case": "drop_5",
+      "metric_comparison": {
+        "status": "different",
+        "differences": [
+          "outcome",
+          "body_tail_ticks",
+          "zero_displacement_interval_count",
+          "net_stall_ticks",
+          "arrival_ticks",
+          "terminal_ticks"
+        ]
+      },
+      "physical_trace_changed": true,
+      "strict_trace_changed": true,
+      "first_physical_difference_index": 39,
+      "baseline_outcome": "failed",
+      "candidate_outcome": "success",
+      "baseline_reason": "input_lost",
+      "candidate_reason": "goal_state_satisfied",
+      "arrival_ticks": [
+        null,
+        73
+      ],
+      "terminal_ticks": [
+        78,
+        72
+      ],
+      "trace_file": "traces/drop-late-000001.json.gz"
+    },
+    {
+      "id": "drop-late-000002",
+      "family": "strict_drop",
+      "case": "drop_2",
+      "metric_comparison": {
+        "status": "equivalent",
+        "differences": []
+      },
+      "physical_trace_changed": true,
+      "strict_trace_changed": true,
+      "first_physical_difference_index": 38,
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "baseline_reason": "goal_state_satisfied",
+      "candidate_reason": "goal_state_satisfied",
+      "arrival_ticks": [
+        63,
+        63
+      ],
+      "terminal_ticks": [
+        62,
+        62
+      ],
+      "trace_file": "traces/drop-late-000002.json.gz"
+    },
+    {
+      "id": "drop-late-000003",
+      "family": "strict_drop",
+      "case": "drop_5",
+      "metric_comparison": {
+        "status": "different",
+        "differences": [
+          "zero_displacement_interval_count",
+          "zero_displacement_ticks"
+        ]
+      },
+      "physical_trace_changed": true,
+      "strict_trace_changed": true,
+      "first_physical_difference_index": 40,
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "baseline_reason": "goal_state_satisfied",
+      "candidate_reason": "goal_state_satisfied",
+      "arrival_ticks": [
+        69,
+        68
+      ],
+      "terminal_ticks": [
+        68,
+        67
+      ],
+      "trace_file": "traces/drop-late-000003.json.gz"
+    },
+    {
+      "id": "drop-late-000004",
+      "family": "strict_drop",
+      "case": "drop_2",
+      "metric_comparison": {
+        "status": "equivalent",
+        "differences": []
+      },
+      "physical_trace_changed": true,
+      "strict_trace_changed": true,
+      "first_physical_difference_index": 42,
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "baseline_reason": "goal_state_satisfied",
+      "candidate_reason": "goal_state_satisfied",
+      "arrival_ticks": [
+        86,
+        86
+      ],
+      "terminal_ticks": [
+        85,
+        85
+      ],
+      "trace_file": "traces/drop-late-000004.json.gz"
+    },
+    {
+      "id": "drop-late-000005",
+      "family": "strict_drop",
+      "case": "drop_5",
+      "metric_comparison": {
+        "status": "equivalent",
+        "differences": []
+      },
+      "physical_trace_changed": true,
+      "strict_trace_changed": true,
+      "first_physical_difference_index": 41,
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "baseline_reason": "goal_state_satisfied",
+      "candidate_reason": "goal_state_satisfied",
+      "arrival_ticks": [
+        71,
+        71
+      ],
+      "terminal_ticks": [
+        70,
+        70
+      ],
+      "trace_file": "traces/drop-late-000005.json.gz"
+    },
+    {
+      "id": "drop-late-000006",
+      "family": "strict_drop",
+      "case": "drop_2",
+      "metric_comparison": {
+        "status": "equivalent",
+        "differences": []
+      },
+      "physical_trace_changed": true,
+      "strict_trace_changed": true,
+      "first_physical_difference_index": 35,
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "baseline_reason": "goal_state_satisfied",
+      "candidate_reason": "goal_state_satisfied",
+      "arrival_ticks": [
+        58,
+        58
+      ],
+      "terminal_ticks": [
+        57,
+        57
+      ],
+      "trace_file": "traces/drop-late-000006.json.gz"
+    },
+    {
+      "id": "drop-late-000007",
+      "family": "strict_drop",
+      "case": "drop_5",
+      "metric_comparison": {
+        "status": "equivalent",
+        "differences": []
+      },
+      "physical_trace_changed": true,
+      "strict_trace_changed": true,
+      "first_physical_difference_index": 44,
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "baseline_reason": "goal_state_satisfied",
+      "candidate_reason": "goal_state_satisfied",
+      "arrival_ticks": [
+        76,
+        76
+      ],
+      "terminal_ticks": [
+        75,
+        75
+      ],
+      "trace_file": "traces/drop-late-000007.json.gz"
+    }
+  ],
+  "harness_review": {
+    "changed_files": [
+      "tests/sim/async_work_sequences.py",
+      "tests/sim/runner.py"
+    ],
+    "original_metadata_preserved": true,
+    "review": "The runner retains its existing default worker. The separate async fixture now services follow-up jobs. Original hashes are reconstructed before allowing comparison.",
+    "source_hashes": {
+      "tests/sim/async_work_sequences.py": {
+        "baseline": "5975b4f7f6df5a4bfa513ed91c56c5e0ce0c434c3dad15ba210f07dfb0f3a64a",
+        "candidate": "a21708060e0e97c0f77e355e9305ff37badeb5a4bb0d801282c0a5f8a343906c"
+      },
+      "tests/sim/runner.py": {
+        "baseline": "c215bb110002ffd971f52556d91950ba21a0e772bff0df3c1b3d2d8dcbb69dd8",
+        "candidate": "289dbf69e79c0a746c176aef2bce2506b1fd36a1eac2fdddfe32387c62dd997b"
+      }
+    }
+  },
+  "scope": "Fixed baseline bridge. Changed traces require review; no behaviour-preserving or statistical release claim."
+}

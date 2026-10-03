@@ -1,0 +1,28 @@
+..................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................FF................................................................................................................................................
+======================================================================
+FAIL: test_current_entry_rejection_does_not_retry_each_settling_velocity_sample (test_r27_async_admission.R27IdentityTests.test_current_entry_rejection_does_not_retry_each_settling_velocity_sample) (scenario='direct_drop_2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_r27_async_admission.py", line 197, in test_current_entry_rejection_does_not_retry_each_settling_velocity_sample
+    self.assertEqual(result.result.reason, "motion_unsolvable:needs_state")
+AssertionError: 'motion_unsolvable:motion_retry_exhausted:needs_state' != 'motion_unsolvable:needs_state'
+- motion_unsolvable:motion_retry_exhausted:needs_state
++ motion_unsolvable:needs_state
+
+
+======================================================================
+FAIL: test_current_entry_rejection_does_not_retry_each_settling_velocity_sample (test_r27_async_admission.R27IdentityTests.test_current_entry_rejection_does_not_retry_each_settling_velocity_sample) (scenario='direct_drop_5_budget_2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_r27_async_admission.py", line 197, in test_current_entry_rejection_does_not_retry_each_settling_velocity_sample
+    self.assertEqual(result.result.reason, "motion_unsolvable:needs_state")
+AssertionError: 'motion_unsolvable:motion_retry_exhausted:needs_state' != 'motion_unsolvable:needs_state'
+- motion_unsolvable:motion_retry_exhausted:needs_state
++ motion_unsolvable:needs_state
+
+
+----------------------------------------------------------------------
+Ran 947 tests in 219.403s
+
+FAILED (failures=2)
+ERROR conda.cli.main_run:execute(148): `conda run python -m unittest discover -s tests/motion_nav -p test_*.py` failed. (See above for error)

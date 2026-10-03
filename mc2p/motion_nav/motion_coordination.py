@@ -718,6 +718,18 @@ class MotionRouteCoordinator:
                 policies=self.air_transition_policies,
                 input_ledger=ledger,
             )
+        if (prepared.status is GapPreparationStatus.SOLVE_FAILED
+                and result.solve_result.status is SolveStatus.NEEDS_STATE
+                and self._solve_basis_job is not None
+                and self._solve_basis_job.operation is MotionJobOperation.REVALIDATE
+                and not gap_entry_heading_is_aligned(
+                    preparation_anchor.physics_state.yaw_radians,
+                    self._solve_basis_job.request.direction,
+                )):
+            # A look command can change the observed yaw while old commands
+            # are revalidated. Re-enter the existing bounded alignment path;
+            # a current velocity/pose rejection does not gain blanket retries.
+            prepared = replace(prepared, retryable=True)
         if identity_matched and self._work.check(result.work_identity, self._clock()) is not WorkCheck.READY:
             self._expire_delivered_result(result)
             return False

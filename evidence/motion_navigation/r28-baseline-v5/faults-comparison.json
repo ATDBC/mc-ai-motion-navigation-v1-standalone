@@ -1,0 +1,27 @@
+{
+  "pairs": 4,
+  "failed": [],
+  "difference_count": 0,
+  "differences": [],
+  "difference_kinds": {},
+  "harness_review": {
+    "changed_files": [
+      "tests/sim/async_work_sequences.py",
+      "tests/sim/runner.py"
+    ],
+    "original_metadata_preserved": true,
+    "review": "The runner retains its existing default worker. The separate async fixture now services follow-up jobs. Original hashes are reconstructed before allowing comparison.",
+    "source_hashes": {
+      "tests/sim/async_work_sequences.py": {
+        "baseline": "5975b4f7f6df5a4bfa513ed91c56c5e0ce0c434c3dad15ba210f07dfb0f3a64a",
+        "candidate": "a21708060e0e97c0f77e355e9305ff37badeb5a4bb0d801282c0a5f8a343906c"
+      },
+      "tests/sim/runner.py": {
+        "baseline": "c215bb110002ffd971f52556d91950ba21a0e772bff0df3c1b3d2d8dcbb69dd8",
+        "candidate": "289dbf69e79c0a746c176aef2bce2506b1fd36a1eac2fdddfe32387c62dd997b"
+      }
+    }
+  },
+  "product_denominator": false,
+  "scope": "Same injected events; differences include declared motion changes and serviced follow-up validation. Original records remain immutable."
+}

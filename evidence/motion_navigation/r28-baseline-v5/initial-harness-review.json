@@ -1,0 +1,8 @@
+{
+  "changed_harness_file": "tests/sim/runner.py",
+  "baseline_sha256": "c215bb110002ffd971f52556d91950ba21a0e772bff0df3c1b3d2d8dcbb69dd8",
+  "current_sha256": "289dbf69e79c0a746c176aef2bce2506b1fd36a1eac2fdddfe32387c62dd997b",
+  "restored_default_matches_original_bytes": true,
+  "changes": "Existing inline motion worker is now an injectable default; baseline calls do not pass motion_factory.",
+  "not_a_metadata_rewrite": true
+}

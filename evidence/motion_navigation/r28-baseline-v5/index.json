@@ -1,0 +1,82 @@
+{
+  "schema_version": "mc2p.r28-baseline.v5",
+  "date": "2026-10-03",
+  "source_base_commit": "1a67050a6abff5a1dc13493fc707fa344486c121",
+  "source_working_changes": "D054; exact production files are fixed by metadata.json",
+  "tasks": 2000,
+  "success": 1699,
+  "baseline_success": 1703,
+  "lost_successes": [
+    "drop-late-000009",
+    "drop-late-000014",
+    "drop-late-000056",
+    "drop-late-000072",
+    "drop-late-000097",
+    "drop-late-000146"
+  ],
+  "gained_successes": [
+    "drop-late-000001",
+    "drop-late-000130"
+  ],
+  "product_non_regression_passed": false,
+  "product_exceptions_safety_or_evidence_gaps": 0,
+  "migration_cases": 1448,
+  "migration_passed": 1448,
+  "migration_signature_differences": 408,
+  "migration_outcome_differences": 4,
+  "supplemental_fault_cases": 4,
+  "supplemental_fault_passed": 4,
+  "migration_functions_entered": 41,
+  "function_entry_is_branch_coverage": false,
+  "unit_tests_passed": 951,
+  "targeted_tests_passed": 46,
+  "new_fabric_runs": 0,
+  "r28_1_started": false,
+  "initial_failed_tasks": 2000,
+  "initial_failed_success": 1695,
+  "archives": [
+    {
+      "file": "baseline.tar.gz",
+      "sha256": "9e8112c14504c771a4927344ba391e2f60f58405c6816a07de8b5975f28a5246",
+      "bytes": 24470390,
+      "members_verified": 2005
+    },
+    {
+      "file": "migration.tar.gz",
+      "sha256": "68a095600cd8b6e3e75b016e2170369289622dbd2cb85da6aea82723e7be732f",
+      "bytes": 4095413,
+      "members_verified": 1450
+    },
+    {
+      "file": "migration-faults.tar.gz",
+      "sha256": "fc476b8365e2c7f73e2610768e85ac63beb234ac9c944d5782832eb8699baee4",
+      "bytes": 20524,
+      "members_verified": 6
+    },
+    {
+      "file": "smoke.tar.gz",
+      "sha256": "3d48095d7efde3601eeeef07059df1880d4845210650794994f6807b0a1d6373",
+      "bytes": 992178,
+      "members_verified": 85
+    },
+    {
+      "file": "initial-failed-baseline.tar.gz",
+      "sha256": "b016a3784c10f699f5f0fbd781b4ef6469f82fcf4c3e19c254d28e290f3b97f3",
+      "bytes": 24492974,
+      "members_verified": 2005
+    },
+    {
+      "file": "coordination-smoke-failure.tar.gz",
+      "sha256": "291238c1de978e53072bf5657fb040888b28851898ab0245fd89999d49aa0041",
+      "bytes": 63218,
+      "members_verified": 21
+    },
+    {
+      "file": "coordination-smoke-passed.tar.gz",
+      "sha256": "5076e8f90b224b8701c559689930932ee7657f279f1701bd62838af739f81613",
+      "bytes": 65984,
+      "members_verified": 26
+    }
+  ],
+  "limits": "Complete current-source fixed migration reference. Product non-regression failed; no behaviour-equivalence, release or new Fabric claim. All old and failed evidence is preserved."
+}

@@ -1,0 +1,24 @@
+{
+  "baseline_root": "D:\\My_project\\mc_ai\\.tmp\\r28-alignment-1a67050\\baseline-v4",
+  "archive_sha256": "de0ddff45b1cbf2b41555dfc3c4dfd1f0b8c95aca365263a84ac536081703a77",
+  "same_manifest": true,
+  "harness_changes": [
+    "tests/sim/runner.py"
+  ],
+  "production_changes": [
+    "config/motion-navigation/standalone-export-v1.json",
+    "mc2p/motion_nav/action_route_executor.py",
+    "mc2p/motion_nav/fixed_route.py",
+    "mc2p/motion_nav/ground_traversal.py",
+    "mc2p/motion_nav/known_map_planner.py",
+    "mc2p/motion_nav/motion_candidate.py",
+    "mc2p/motion_nav/motion_coordination.py",
+    "mc2p/motion_nav/motion_solver.py",
+    "mc2p/motion_nav/motion_worker.py",
+    "mc2p/motion_nav/navigation_session.py",
+    "mc2p/motion_nav/route_admission.py",
+    "mc2p/motion_nav/segment_entry.py"
+  ],
+  "migration-v4": "D:\\My_project\\mc_ai\\.tmp\\r28-alignment-1a67050\\migration-v4",
+  "faults-v4": "D:\\My_project\\mc_ai\\.tmp\\r28-alignment-1a67050\\faults-v4"
+}

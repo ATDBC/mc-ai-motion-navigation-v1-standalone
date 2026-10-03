@@ -745,3 +745,66 @@ D:/Miniforge3/Scripts/conda.exe run --prefix D:/My_project/mc_ai/.venv --no-capt
 D:/Miniforge3/Scripts/conda.exe run --prefix D:/My_project/mc_ai/.venv --no-capture-output python scripts/benchmark_action_continuity.py --output <新的性能文件.json>
 D:/Miniforge3/Scripts/conda.exe run --prefix D:/My_project/mc_ai/.venv --no-capture-output python scripts/run_action_continuity_fabric.py --timeout-seconds 300
 ```
+
+## 13. D052／D053 后的迁移基线对齐
+
+日期：2026-10-03。生产来源为 `1a67050` 加 D054 的两处修正，实际字节由 v5 `metadata.json` 的 `production` 指纹固定。原 v1—v4、D052／D053 专项和失败批次保持原记录。R28-1 尚未实施。
+
+### 13.1 输入、量尺与失败保留
+
+沿用 v4 的原二千任务、十层、每层二百种子。参数、晚到序列、物理模拟、观察和共同提取器不变。比较工具先核对输入身份、轨迹原字节与哈希，再比较终态、实际输入、位置、计时和身体归属。
+
+测试入口有两项已核对的差异：正式链 runner 可以注入 worker，但产品场景仍使用原默认 worker；独立异步夹具现在会继续服务新提交的后台复核。比较工具逆向还原这两项修改，核对旧源码哈希，不改写旧 metadata，也不忽略其他模拟器差异。
+
+预检八十任务没有新增未完成，代表性协调检查却发现夹具在交错投递旧结果后不再服务新任务。原十九项记录保留，其中一项失败；修复后代表检查为 24/24，故意不服务的负对照仍有界失败。
+
+最初完整产品结果为 **1,695/2,000**，出现十项原成功转为未完成，其中一项在坑边永久等待。随即停止协调扩测，保留已写出的七百项记录。中间将所有 `NEEDS_STATE` 都允许重试的修正又违反了原外力入口拒绝检查，947 项中两项失败；该失败和中断记录也保留。最终只对后台复核时当前朝向未对齐重新对齐，身体收尾则由原执行器用现有计算器证明退回支撑。依据见 D054。
+
+### 13.2 当前产品结果
+
+| 分组 | v4 完成 | v5 完成 |
+|---|---:|---:|
+| 指定点，正常与晚到 | 400/400 | 400/400 |
+| 连续高度，正常与晚到 | 400/400 | 400/400 |
+| 目标修订，正常与晚到 | 400/400 | 400/400 |
+| 下降，正常输入 | 200/200 | 200/200 |
+| 下降，20% 晚一 tick | 189/200 | 185/200 |
+| 玩家常站位置，正常与晚到 | 114/400 | 114/400 |
+| 总计 | 1,703/2,000 | **1,699/2,000** |
+
+异常、监视器违规和证据不足均为零。任务未完成仍保留在分母，不因安全退出改记成功。
+
+一千六百项非下降任务的实际输入、身体轨迹与外部指标逐项相同。下降四百项中有 398 项发生变化，涉及 D052 后台交付、D053 出口及收尾。正常下降全部完成，同成对任务到达 P95 从 66 减至 65 tick；晚到下降的同成对完成任务 P95 从 96 减至 93 tick。这里使用模拟运动时钟，不能换算为真实端到端性能结论。
+
+两项原未完成变为完成：`drop-late-000001`、`drop-late-000130`。六项原成功变为未完成：种子 9、14、56、72、97、146，均属于晚到下降，最终为输入失联并安全释放。差异清单明确保留这些失败，比较命令按设计返回非零。因此，**产品非退步门槛没有通过**，本次冻结不能作为能力发布通过。
+
+原坑边种子 56 已消除无界等待，最终退回原上层安全支撑并释放来源，但没有完成下降。四项后台复核朝向变化的失败恢复为成功。前者证明安全收尾修复，后者证明任务修复，二者不混写。
+
+### 13.3 协调、迁移覆盖与性能边界
+
+最终协调集合 **1,448/1,448** 符合各自预设判定，异常和监视器违规为零。其中 1,040 项公共签名与 v4 相同，408 项变化：132 项中断、212 项事件序列、64 项后台跨隙组合。后者还包含已说明的夹具服务修正，不能全部当作 actor 改善。四项补充迁移故障通过，公共签名与 v4 相同；这些检查不加入产品成功率。
+
+有四项业务终态变化，并已单独复跑：两项旧取消变为失败，一项旧失败变为成功，一项旧成功变为失败。三个新失败均为 `verified_exit_not_observed`，实际身体已经安全结束。它们是扰动后没有满足当前出口契约的有界结果，仍属接续与恢复的产品缺口；不能以“允许有界失败”签署行为等价。具体输入及旧、新终态保存在 `coordination-outcome-review.json`。
+
+41 个迁移函数都有正式路径入口记录，其中四个需依靠补充故障覆盖。清单只是进入过函数的证据，不能替代其关键分支检查。当前 `NavigationSession` 为 4,409 行，选定协调范围总计 11,172 行；行为迁移和 `propose` 拆分尚未开始。最终二千项产品、1,448 项协调及四项故障均按同一当前源码完整运行。中间批次曾复用 175 条同源前缀；该前缀和中断记录保留，不拼入最终批次。
+
+完整运动导航 **951/951**，直接相关专项 **46/46**。原执行器的五类终态都检查坑边退回；缺当前锚点或空中不能据此授权地面输入。已绑定战斗视角的退回按同一朝向计算，三个朝向反例均检查实际输入后支撑增加。必要条件拒绝、当前输入归属和原释放门槛仍有负对照。
+
+单个静止坑边组件的 41 次耗时记录为冷首次 10.056 ms，后四十次 P95 9.744 ms、P99 10.162 ms。它只测新增退回分支，不含 Runtime、通信、后台求解和实际身体变化，不能据此宣布整帧 P95 或客户端期限通过。普通活动路线的跟踪分支未修改，完整在线期限仍按原范围另验。
+
+本轮没有运行新的 Fabric 批次。D053 四方向跨隙 4/4 继续作为其原源码的历史专项，不能写成 D054 两处修正的新实机证据。室内贴墙、边缘精确接近、正式跟随、长期期限和完整升降组合仍打开。
+
+在仓库根目录运行：
+
+```powershell
+D:/Miniforge3/Scripts/conda.exe run --prefix D:/My_project/mc_ai/.venv --no-capture-output python -m unittest tests.motion_nav.test_motion_baseline_recovery tests.motion_nav.test_r27_async_admission tests.motion_nav.test_execution_supervisor tests.motion_nav.test_r28_baseline_alignment tests.motion_nav.test_async_gap_revalidation_delivery -q
+D:/Miniforge3/Scripts/conda.exe run --prefix D:/My_project/mc_ai/.venv --no-capture-output python scripts/navigation_coordination_metrics.py baseline --manifest tests/sim/manifests/navigation-product-r28-v4.json --output <新产品目录> --workers 4
+D:/Miniforge3/Scripts/conda.exe run --prefix D:/My_project/mc_ai/.venv --no-capture-output python scripts/navigation_migration_evidence.py --output <新协调目录> --workers 4
+D:/Miniforge3/Scripts/conda.exe run --prefix D:/My_project/mc_ai/.venv --no-capture-output python scripts/navigation_migration_evidence.py --output <新故障目录> --workers 1 --faults-only
+D:/Miniforge3/Scripts/conda.exe run --prefix D:/My_project/mc_ai/.venv --no-capture-output python scripts/r28_baseline_alignment.py --baseline <解包的v4产品目录> --candidate <解包的v5产品目录> --output <新差异文件.json>
+D:/Miniforge3/Scripts/conda.exe run --prefix D:/My_project/mc_ai/.venv --no-capture-output python scripts/r28_baseline_alignment.py --baseline <解包的v4协调目录> --candidate <解包的v5协调目录> --output <新协调差异文件.json> --migration
+```
+
+归档将原 gzip 记录还原为原 JSON 字节以减少重复压缩，并保存 `trace-transport.json` 对应关系。比较工具同时验证原压缩哈希、解压后哈希和记录身份。旧记录与当前记录不回填字段。
+
+整理版已通过导出校验：907 个文件完整，224 个项目模块能独立导入，十六项新增专项通过。v5 的七个归档核对实际写入字节，二十八个文件核对哈希。公开版由固定导出清单生成，发布来源提交以 `EXPORT-METADATA.json` 为准。
