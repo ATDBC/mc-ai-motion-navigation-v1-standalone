@@ -1,0 +1,2 @@
+drop-late    motion jobs per task: 0 job(s): 2, 1 job(s): 130, 2 job(s): 60, 3 job(s): 8
+drop-normal  motion jobs per task: 1 job(s): 196, 2 job(s): 4

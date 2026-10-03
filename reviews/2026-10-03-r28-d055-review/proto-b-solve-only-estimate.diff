@@ -1,0 +1,32 @@
+diff --git a/mc2p/motion_nav/motion_coordination.py b/mc2p/motion_nav/motion_coordination.py
+index ec2da69..000e157 100644
+--- a/mc2p/motion_nav/motion_coordination.py
++++ b/mc2p/motion_nav/motion_coordination.py
+@@ -663,8 +663,12 @@ class MotionRouteCoordinator:
+                 and self._delivery_identity != result.work_identity):
+             # Keep the last observed source-to-delivery span across grounded
+             # retries. The predicted future entry is not a latency sample.
+-            self._delivery_ticks = min(4, max(1, anchor.movement_tick_id
+-                - self._solve_basis_job.anchor.movement_tick_id))
++            if (self._solve_basis_job.operation is MotionJobOperation.SOLVE
++                    and result.solve_result.status is SolveStatus.SOLVED):
++                # Only a completed full solve measures solve latency; a cheap
++                # rejection or replay must not shrink the next solve's prefix.
++                self._delivery_ticks = min(4, max(1, anchor.movement_tick_id
++                    - self._solve_basis_job.anchor.movement_tick_id))
+             self._delivery_identity = result.work_identity
+         action_index = (
+             self._pending_action_index
+@@ -1238,8 +1242,10 @@ class MotionRouteCoordinator:
+                         and self._delivery_identity != result.work_identity):
+                     # Sample arrival before holding an early result for its
+                     # predicted entry; preparation waiting is not worker time.
+-                    self._delivery_ticks = min(4, max(1, anchor.movement_tick_id
+-                        - self._solve_basis_job.anchor.movement_tick_id))
++                    if (self._solve_basis_job.operation is MotionJobOperation.SOLVE
++                            and result.solve_result.status is SolveStatus.SOLVED):
++                        self._delivery_ticks = min(4, max(1, anchor.movement_tick_id
++                            - self._solve_basis_job.anchor.movement_tick_id))
+                     self._delivery_identity = result.work_identity
+                 proof = None if result is None else result.solve_result.proof
+                 if proof is None or anchor.movement_tick_id + 1 >= proof.execution_window.earliest_start_tick:

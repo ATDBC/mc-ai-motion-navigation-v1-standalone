@@ -1,0 +1,58 @@
+machine: 4 cores, Python 3.11.15, Linux; archive: evidence/motion_navigation/r28-baseline-v6/baseline.tar.gz; re-run: 7260f42, navigation_coordination_metrics.py baseline --workers 4
+
+group            archive   re-run  same metrics  same trace
+drop-late        198/200  198/200       200/200       0/200
+drop-normal      200/200  200/200       200/200       0/200
+height-late      200/200  200/200       200/200       0/200
+height-normal    200/200  200/200       200/200       0/200
+player-late       57/200   57/200       200/200       0/200
+player-normal     57/200   57/200       200/200       0/200
+point-late       200/200  200/200       200/200       0/200
+point-normal     200/200  200/200       200/200       0/200
+target-late      200/200  200/200       200/200       0/200
+target-normal    200/200  200/200       200/200       0/200
+total           1712/2000 1712/2000     2000/2000      0/2000
+
+tasks with any difference: 2000
+note: raw traces embed uuid4 intent/work ids, so 'same trace' is expected to be 0 here;
+      trace_field_diff.py masks those ids and reports the remaining numeric differences.
+   ('drop-late-000000', True, False)
+   ('drop-late-000001', True, False)
+   ('drop-late-000002', True, False)
+   ('drop-late-000003', True, False)
+   ('drop-late-000004', True, False)
+   ('drop-late-000005', True, False)
+   ('drop-late-000006', True, False)
+   ('drop-late-000007', True, False)
+   ('drop-late-000008', True, False)
+   ('drop-late-000009', True, False)
+   ('drop-late-000010', True, False)
+   ('drop-late-000011', True, False)
+   ('drop-late-000012', True, False)
+   ('drop-late-000013', True, False)
+   ('drop-late-000014', True, False)
+   ('drop-late-000015', True, False)
+   ('drop-late-000016', True, False)
+   ('drop-late-000017', True, False)
+   ('drop-late-000018', True, False)
+   ('drop-late-000019', True, False)
+   ('drop-late-000020', True, False)
+   ('drop-late-000021', True, False)
+   ('drop-late-000022', True, False)
+   ('drop-late-000023', True, False)
+   ('drop-late-000024', True, False)
+   ('drop-late-000025', True, False)
+   ('drop-late-000026', True, False)
+   ('drop-late-000027', True, False)
+   ('drop-late-000028', True, False)
+   ('drop-late-000029', True, False)
+   ('drop-late-000030', True, False)
+   ('drop-late-000031', True, False)
+   ('drop-late-000032', True, False)
+   ('drop-late-000033', True, False)
+   ('drop-late-000034', True, False)
+   ('drop-late-000035', True, False)
+   ('drop-late-000036', True, False)
+   ('drop-late-000037', True, False)
+   ('drop-late-000038', True, False)
+   ('drop-late-000039', True, False)

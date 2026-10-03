@@ -1,0 +1,9 @@
+proto-b-solve-only-estimate.diff on 7260f42, Linux 4 cores, Python 3.11.15
+
+targeted tests (start delivery, action continuity formal, async gap revalidation, baseline recovery):
+Ran 25 tests in 45.399s
+
+OK
+
+400 product drop tasks (drop-normal, drop-late), default inline worker, compared with r28-baseline-v6:
+  tasks 400, identical metrics and reason 400, completed 398 (v6: 398)

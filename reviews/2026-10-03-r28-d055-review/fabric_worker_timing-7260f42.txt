@@ -1,0 +1,122 @@
+== failed-diagnostic-flat-view: 1 trials
+   drop_2           solved 'solve' jobs:   2, compute median   117.4 ms, max   117.9 ms; job sequences per trial: {'solve -> revalidate -> solve': 1}
+   start-delivery-drop_2-0-normal
+      solve      prefix=1 source=76 window=(78, 79) -> solved       compute  117.92 ms, round trip  150.1 ms
+      revalidate prefix=3 source=79 window=(83, 84) -> needs_state  compute    0.04 ms, round trip   46.5 ms
+      solve      prefix=1 source=81 window=(83, 84) -> solved       compute  116.91 ms, round trip  148.9 ms
+== passed-with-natural-regeneration: 40 trials
+   cold_gap         solved 'solve' jobs:   8, compute median    29.5 ms, max    29.6 ms; job sequences per trial: {'solve -> revalidate': 8}
+   drop_2           solved 'solve' jobs:   8, compute median   116.8 ms, max   118.2 ms; job sequences per trial: {'solve -> revalidate': 8}
+   drop_5           solved 'solve' jobs:   8, compute median   126.8 ms, max   128.2 ms; job sequences per trial: {'solve -> revalidate': 8}
+   jump_up          solved 'solve' jobs:   8, compute median    18.9 ms, max    19.0 ms; job sequences per trial: {'solve': 8}
+   moving_gap       solved 'solve' jobs:   8, compute median    30.9 ms, max    31.0 ms; job sequences per trial: {'solve': 8}
+   start-delivery-drop_2-0-normal
+      solve      prefix=1 source=2086 window=(2088, 2089) -> solved       compute  118.08 ms, round trip  148.2 ms
+      revalidate prefix=3 source=2089 window=(2093, 2094) -> solved       compute   14.82 ms, round trip   47.9 ms
+   start-delivery-drop_2-0-late
+      solve      prefix=1 source=2207 window=(2209, 2210) -> solved       compute  116.88 ms, round trip  148.9 ms
+      revalidate prefix=3 source=2210 window=(2214, 2215) -> solved       compute   14.82 ms, round trip   46.9 ms
+   start-delivery-drop_2-1-normal
+      solve      prefix=1 source=2330 window=(2332, 2333) -> solved       compute  115.59 ms, round trip  149.9 ms
+      revalidate prefix=3 source=2333 window=(2337, 2338) -> solved       compute   14.54 ms, round trip   31.5 ms
+   start-delivery-drop_2-1-late
+      solve      prefix=1 source=2454 window=(2456, 2457) -> solved       compute  116.97 ms, round trip  148.6 ms
+      revalidate prefix=3 source=2457 window=(2461, 2462) -> solved       compute   14.66 ms, round trip   46.6 ms
+   start-delivery-drop_2-2-normal
+      solve      prefix=1 source=2577 window=(2579, 2580) -> solved       compute  118.16 ms, round trip  148.9 ms
+      revalidate prefix=3 source=2580 window=(2584, 2585) -> solved       compute   14.84 ms, round trip   46.9 ms
+   start-delivery-drop_2-2-late
+      solve      prefix=1 source=2700 window=(2702, 2703) -> solved       compute  116.71 ms, round trip  148.6 ms
+      revalidate prefix=3 source=2703 window=(2707, 2708) -> solved       compute   15.44 ms, round trip   46.6 ms
+   start-delivery-drop_2-3-normal
+      solve      prefix=1 source=2822 window=(2824, 2825) -> solved       compute  116.66 ms, round trip  147.9 ms
+      revalidate prefix=3 source=2825 window=(2829, 2830) -> solved       compute   14.58 ms, round trip   46.7 ms
+   start-delivery-drop_2-3-late
+      solve      prefix=1 source=2945 window=(2947, 2948) -> solved       compute  116.80 ms, round trip  149.7 ms
+      revalidate prefix=3 source=2948 window=(2952, 2953) -> solved       compute   14.77 ms, round trip   46.6 ms
+   start-delivery-drop_5-0-normal
+      solve      prefix=1 source=3071 window=(3073, 3074) -> solved       compute  126.45 ms, round trip  149.9 ms
+      revalidate prefix=3 source=3074 window=(3078, 3079) -> solved       compute   25.16 ms, round trip   45.7 ms
+   start-delivery-drop_5-0-late
+      solve      prefix=1 source=3201 window=(3203, 3204) -> solved       compute  126.98 ms, round trip  149.4 ms
+      revalidate prefix=3 source=3204 window=(3208, 3209) -> solved       compute   25.08 ms, round trip   46.4 ms
+   start-delivery-drop_5-1-normal
+      solve      prefix=1 source=3337 window=(3339, 3340) -> solved       compute  126.61 ms, round trip  147.3 ms
+      revalidate prefix=3 source=3340 window=(3344, 3345) -> solved       compute   24.48 ms, round trip   46.5 ms
+   start-delivery-drop_5-1-late
+      solve      prefix=1 source=3469 window=(3471, 3472) -> solved       compute  126.00 ms, round trip  149.2 ms
+      revalidate prefix=3 source=3472 window=(3476, 3477) -> solved       compute   24.46 ms, round trip   45.7 ms
+   start-delivery-drop_5-2-normal
+      solve      prefix=1 source=3601 window=(3603, 3604) -> solved       compute  127.24 ms, round trip  133.2 ms
+      revalidate prefix=3 source=3604 window=(3608, 3609) -> solved       compute   25.27 ms, round trip   46.9 ms
+   start-delivery-drop_5-2-late
+      solve      prefix=1 source=3734 window=(3736, 3737) -> solved       compute  127.19 ms, round trip  148.4 ms
+      revalidate prefix=3 source=3737 window=(3741, 3742) -> solved       compute   25.46 ms, round trip   29.8 ms
+   start-delivery-drop_5-3-normal
+      solve      prefix=1 source=3867 window=(3869, 3870) -> solved       compute  126.69 ms, round trip  150.5 ms
+      revalidate prefix=3 source=3870 window=(3874, 3875) -> solved       compute   24.89 ms, round trip   46.2 ms
+   start-delivery-drop_5-3-late
+      solve      prefix=1 source=3998 window=(4000, 4001) -> solved       compute  128.18 ms, round trip  148.5 ms
+      revalidate prefix=3 source=4001 window=(4005, 4006) -> solved       compute   24.63 ms, round trip   46.1 ms
+== release-no-natural-regeneration: 40 trials
+   cold_gap         solved 'solve' jobs:   8, compute median    29.4 ms, max    29.8 ms; job sequences per trial: {'solve -> revalidate': 8}
+   drop_2           solved 'solve' jobs:   8, compute median    93.7 ms, max    94.9 ms; job sequences per trial: {'solve -> revalidate': 8}
+   drop_5           solved 'solve' jobs:   8, compute median   101.9 ms, max   103.2 ms; job sequences per trial: {'solve -> revalidate': 8}
+   jump_up          solved 'solve' jobs:   8, compute median    19.1 ms, max    19.5 ms; job sequences per trial: {'solve': 8}
+   moving_gap       solved 'solve' jobs:   8, compute median    30.9 ms, max    31.2 ms; job sequences per trial: {'solve': 8}
+   start-delivery-drop_2-0-normal
+      solve      prefix=1 source=2059 window=(2061, 2062) -> solved       compute   94.28 ms, round trip   99.4 ms
+      revalidate prefix=2 source=2061 window=(2064, 2065) -> solved       compute   11.99 ms, round trip   47.2 ms
+   start-delivery-drop_2-0-late
+      solve      prefix=1 source=2179 window=(2181, 2182) -> solved       compute   93.22 ms, round trip   98.2 ms
+      revalidate prefix=2 source=2181 window=(2184, 2185) -> solved       compute   11.83 ms, round trip   48.2 ms
+   start-delivery-drop_2-1-normal
+      solve      prefix=1 source=2300 window=(2302, 2303) -> solved       compute   93.43 ms, round trip   99.1 ms
+      revalidate prefix=2 source=2302 window=(2305, 2306) -> solved       compute   11.64 ms, round trip   48.5 ms
+   start-delivery-drop_2-1-late
+      solve      prefix=1 source=2419 window=(2421, 2422) -> solved       compute   93.70 ms, round trip   98.7 ms
+      revalidate prefix=2 source=2421 window=(2424, 2425) -> solved       compute   11.61 ms, round trip   47.2 ms
+   start-delivery-drop_2-2-normal
+      solve      prefix=1 source=2540 window=(2542, 2543) -> solved       compute   94.87 ms, round trip   98.6 ms
+      revalidate prefix=2 source=2542 window=(2545, 2546) -> solved       compute   11.83 ms, round trip   47.5 ms
+   start-delivery-drop_2-2-late
+      solve      prefix=1 source=2660 window=(2662, 2663) -> solved       compute   93.41 ms, round trip   98.7 ms
+      revalidate prefix=2 source=2662 window=(2665, 2666) -> solved       compute   12.05 ms, round trip   47.3 ms
+   start-delivery-drop_2-3-normal
+      solve      prefix=1 source=2780 window=(2782, 2783) -> solved       compute   93.65 ms, round trip   99.3 ms
+      revalidate prefix=2 source=2782 window=(2785, 2786) -> solved       compute   11.54 ms, round trip   47.5 ms
+   start-delivery-drop_2-3-late
+      solve      prefix=1 source=2900 window=(2902, 2903) -> solved       compute   93.91 ms, round trip   98.5 ms
+      revalidate prefix=2 source=2902 window=(2905, 2906) -> solved       compute   11.60 ms, round trip   47.3 ms
+   start-delivery-drop_5-0-normal
+      solve      prefix=1 source=3025 window=(3027, 3028) -> solved       compute  101.52 ms, round trip  148.8 ms
+      revalidate prefix=3 source=3028 window=(3032, 3033) -> solved       compute   20.35 ms, round trip   47.7 ms
+   start-delivery-drop_5-0-late
+      solve      prefix=1 source=3156 window=(3158, 3159) -> solved       compute  101.79 ms, round trip  149.0 ms
+      revalidate prefix=3 source=3159 window=(3163, 3164) -> solved       compute   20.23 ms, round trip   47.0 ms
+   start-delivery-drop_5-1-normal
+      solve      prefix=1 source=3288 window=(3290, 3291) -> solved       compute  101.23 ms, round trip  148.4 ms
+      revalidate prefix=3 source=3291 window=(3295, 3296) -> solved       compute   19.66 ms, round trip   47.4 ms
+   start-delivery-drop_5-1-late
+      solve      prefix=1 source=3419 window=(3421, 3422) -> solved       compute  101.45 ms, round trip  147.1 ms
+      revalidate prefix=3 source=3422 window=(3426, 3427) -> solved       compute   19.90 ms, round trip   46.6 ms
+   start-delivery-drop_5-2-normal
+      solve      prefix=1 source=3551 window=(3553, 3554) -> solved       compute  103.23 ms, round trip  148.4 ms
+      revalidate prefix=3 source=3554 window=(3558, 3559) -> solved       compute   20.50 ms, round trip   47.0 ms
+   start-delivery-drop_5-2-late
+      solve      prefix=1 source=3682 window=(3684, 3685) -> solved       compute  101.99 ms, round trip  108.8 ms
+      revalidate prefix=2 source=3684 window=(3687, 3688) -> solved       compute   20.39 ms, round trip   36.8 ms
+   start-delivery-drop_5-3-normal
+      solve      prefix=1 source=3812 window=(3814, 3815) -> solved       compute  102.28 ms, round trip  149.1 ms
+      revalidate prefix=3 source=3815 window=(3819, 3820) -> solved       compute   20.02 ms, round trip   46.5 ms
+   start-delivery-drop_5-3-late
+      solve      prefix=1 source=3943 window=(3945, 3946) -> solved       compute  101.97 ms, round trip  148.4 ms
+      revalidate prefix=3 source=3946 window=(3950, 3951) -> solved       compute   19.62 ms, round trip   30.7 ms
+== scoped-downward-view: 2 trials
+   drop_2           solved 'solve' jobs:   2, compute median   117.6 ms, max   118.2 ms; job sequences per trial: {'solve -> revalidate': 2}
+   start-delivery-drop_2-0-normal
+      solve      prefix=1 source=75 window=(77, 78) -> solved       compute  116.94 ms, round trip  148.1 ms
+      revalidate prefix=3 source=78 window=(82, 83) -> solved       compute   15.17 ms, round trip   47.0 ms
+   start-delivery-drop_2-0-late
+      solve      prefix=1 source=198 window=(200, 201) -> solved       compute  118.17 ms, round trip  132.1 ms
+      revalidate prefix=3 source=201 window=(205, 206) -> solved       compute   14.98 ms, round trip   46.6 ms

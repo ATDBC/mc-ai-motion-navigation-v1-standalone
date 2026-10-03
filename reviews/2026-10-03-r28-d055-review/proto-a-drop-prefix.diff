@@ -1,0 +1,65 @@
+diff --git a/mc2p/motion_nav/motion_coordination.py b/mc2p/motion_nav/motion_coordination.py
+index ec2da69..10abddf 100644
+--- a/mc2p/motion_nav/motion_coordination.py
++++ b/mc2p/motion_nav/motion_coordination.py
+@@ -560,7 +560,9 @@ class MotionRouteCoordinator:
+         self._known_work_windows: dict[AsyncWorkIdentity, AsyncWorkWindow] = {}
+         self._pending_job: GapMotionSolveJob | None = None
+         self._solve_basis_job: GapMotionSolveJob | None = None
+-        self._delivery_ticks = 1
++        # Expected source-to-delivery span of a full solve, per motion kind.
++        # Drops cost ~100-130 ms of worker compute on Fabric (two to three ticks).
++        self._delivery_ticks_by_kind = {MotionSolveKind.CONTROLLED_DROP: 3}
+         self._delivery_identity: AsyncWorkIdentity | None = None
+         self.last_admission: AsyncAdmissionRecord | None = None
+         self._admission_records: list[AsyncAdmissionRecord] = []
+@@ -663,8 +665,12 @@ class MotionRouteCoordinator:
+                 and self._delivery_identity != result.work_identity):
+             # Keep the last observed source-to-delivery span across grounded
+             # retries. The predicted future entry is not a latency sample.
+-            self._delivery_ticks = min(4, max(1, anchor.movement_tick_id
+-                - self._solve_basis_job.anchor.movement_tick_id))
++            if (self._solve_basis_job.operation is MotionJobOperation.SOLVE
++                    and result.solve_result.status is SolveStatus.SOLVED):
++                # Only a completed full solve measures solve latency; a cheap
++                # rejection or replay must not shrink the next solve's prefix.
++                self._delivery_ticks_by_kind[getattr(self._solve_basis_job.request, "kind", MotionSolveKind.JUMP_GAP)] = min(4, max(1,
++                    anchor.movement_tick_id - self._solve_basis_job.anchor.movement_tick_id))
+             self._delivery_identity = result.work_identity
+         action_index = (
+             self._pending_action_index
+@@ -761,7 +767,8 @@ class MotionRouteCoordinator:
+                 identity_matched=True,
+                 facts_valid=False,
+             )
+-            preparation_ticks = self._delivery_ticks
++            preparation_ticks = self._delivery_ticks_by_kind.get(
++                getattr(self._solve_basis_job.request, "kind", MotionSolveKind.JUMP_GAP), 1)
+             self._retire_work("motion_result_rejected")
+             self.last_failure_reason = prepared.reason
+             if prepared.status is GapPreparationStatus.REVALIDATION_REQUIRED:
+@@ -869,9 +876,10 @@ class MotionRouteCoordinator:
+         if entry_prefix is None:
+             # The existing one-tick waiting input is part of the prediction,
+             # rather than silently consuming the first action's delay variant.
++            kind = _air_action_kind(self.route.action_route.actions[index])
+             entry_prefix = tuple(MotionCommandTick(
+                 MovementV1(), anchor.physics_state.yaw_radians,
+-            ) for _ in range(self._delivery_ticks))
++            ) for _ in range(self._delivery_ticks_by_kind.get(kind, 1)))
+         connection = self._connection_id(index)
+         if (self._work_identity is not None
+                 and self._pending_connection == connection
+@@ -1238,8 +1246,10 @@ class MotionRouteCoordinator:
+                         and self._delivery_identity != result.work_identity):
+                     # Sample arrival before holding an early result for its
+                     # predicted entry; preparation waiting is not worker time.
+-                    self._delivery_ticks = min(4, max(1, anchor.movement_tick_id
+-                        - self._solve_basis_job.anchor.movement_tick_id))
++                    if (self._solve_basis_job.operation is MotionJobOperation.SOLVE
++                            and result.solve_result.status is SolveStatus.SOLVED):
++                        self._delivery_ticks_by_kind[getattr(self._solve_basis_job.request, "kind", MotionSolveKind.JUMP_GAP)] = min(4, max(1,
++                            anchor.movement_tick_id - self._solve_basis_job.anchor.movement_tick_id))
+                     self._delivery_identity = result.work_identity
+                 proof = None if result is None else result.solve_result.proof
+                 if proof is None or anchor.movement_tick_id + 1 >= proof.execution_window.earliest_start_tick:

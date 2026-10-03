@@ -1,0 +1,10 @@
+archive: r28-baseline-v6/baseline.tar.gz (Windows, per metadata); re-run: 7260f42 on Linux, 4 cores, Python 3.11.15
+
+tasks: 2000; identical after masking random ids: 1908
+tasks whose trace length differs: 0
+
+field                          rows differing   non-numeric differences   largest numeric gap
+position                                 3706                         0             1.776e-15
+yaw_radians                              1490                         0             4.441e-16
+velocity                                 1185                         0             2.949e-17
+support_fraction                          783                         0             2.331e-15

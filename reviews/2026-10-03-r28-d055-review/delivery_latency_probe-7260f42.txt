@@ -1,0 +1,57 @@
+code 7260f42 (unchanged), 4 cores, Python 3.11.15
+
+product scenarios, first 40 seeds per group, only the motion worker's delivery changed
+
+group          case            inline        +1        +2        +3        +6    cold+6
+height-normal  half_steps       14/14     14/14     14/14     14/14     14/14     14/14
+height-normal  path             13/13     13/13     13/13     13/13     13/13     13/13
+height-normal  stairs_down      13/13     13/13     13/13     13/13     13/13     13/13
+height-late    half_steps       14/14     14/14     14/14     14/14     14/14     14/14
+height-late    path             13/13     13/13     13/13     13/13     13/13     13/13
+height-late    stairs_down      13/13     13/13     13/13     13/13     13/13     13/13
+drop-normal    drop_2           20/20     20/20     20/20     20/20      0/20     20/20
+drop-normal    drop_5           20/20     20/20     20/20     20/20      0/20     20/20
+drop-late      drop_2           20/20     18/20     18/20     19/20      0/20     20/20
+drop-late      drop_5           19/20     18/20     19/20     17/20      0/20     19/20
+
+mean background motion jobs per task:
+group          case            inline        +1        +2        +3        +6    cold+6
+height-normal  half_steps        0.00      0.00      0.00      0.00      0.00      0.00
+height-normal  path              0.00      0.00      0.00      0.00      0.00      0.00
+height-normal  stairs_down       0.00      0.00      0.00      0.00      0.00      0.00
+height-late    half_steps        0.00      0.00      0.00      0.00      0.00      0.00
+height-late    path              0.00      0.00      0.00      0.00      0.00      0.00
+height-late    stairs_down       0.00      0.00      0.00      0.00      0.00      0.00
+drop-normal    drop_2            1.00      2.00      2.00      2.00      3.00      2.00
+drop-normal    drop_5            1.00      2.00      2.00      2.00      3.00      2.00
+drop-late      drop_2            1.40      2.40      2.20      2.30      3.00      2.40
+drop-late      drop_5            1.50      2.15      2.30      2.30      2.85      2.10
+
+median arrival ticks of completed tasks:
+group          case            inline        +1        +2        +3        +6    cold+6
+height-normal  half_steps          41        41        41        41        41        41
+height-normal  path                35        35        35        35        35        35
+height-normal  stairs_down         39        39        39        39        39        39
+height-late    half_steps          46        46        46        46        46        46
+height-late    path                40        40        40        40        40        40
+height-late    stairs_down         44        44        44        44        44        44
+drop-normal    drop_2              58        61        63        65         -        68
+drop-normal    drop_5              62        65        67        69         -        72
+drop-late      drop_2              65        68        68        72         -        74
+drop-late      drop_5              70        74        76        78         -        78
+
+failure reasons (group, case, mode):
+  ('drop-late', 'drop_2', '+1'): {'input_lost': 2}
+  ('drop-late', 'drop_2', '+2'): {'input_lost': 2}
+  ('drop-late', 'drop_2', '+3'): {'input_lost': 1}
+  ('drop-late', 'drop_2', '+6'): {'motion_unsolvable:motion_retry_exhausted:execution_window_expired': 20}
+  ('drop-late', 'drop_5', '+1'): {'input_lost': 1, 'edge_probe_acquisition_timeout': 1}
+  ('drop-late', 'drop_5', '+2'): {'edge_probe_acquisition_timeout': 1}
+  ('drop-late', 'drop_5', '+3'): {'input_lost': 2, 'edge_probe_acquisition_timeout': 1}
+  ('drop-late', 'drop_5', '+6'): {'motion_unsolvable:motion_retry_exhausted:execution_window_expired': 19, 'edge_probe_acquisition_timeout': 1}
+  ('drop-late', 'drop_5', 'cold+6'): {'edge_probe_acquisition_timeout': 1}
+  ('drop-late', 'drop_5', 'inline'): {'edge_probe_acquisition_timeout': 1}
+  ('drop-normal', 'drop_2', '+6'): {'motion_unsolvable:motion_retry_exhausted:execution_window_expired': 20}
+  ('drop-normal', 'drop_5', '+6'): {'motion_unsolvable:motion_retry_exhausted:execution_window_expired': 20}
+
+'!' marks a run with safety-monitor violations.
