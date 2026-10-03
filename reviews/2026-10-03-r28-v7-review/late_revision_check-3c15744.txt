@@ -1,0 +1,3 @@
+task outcome: cancelled (late_revision_probe)
+  first at tick    13: session stopping   -> returned False
+  first at tick after: session cancelled  -> raised ContractViolation: navigation lifecycle event revise_goal is reject in cancelled

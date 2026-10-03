@@ -1,0 +1,2 @@
+v6 drop groups: Windows archive (r28-baseline-v6/baseline.tar.gz) vs Linux re-run of 7260f42 (--groups drop-normal drop-late); hashing code from 3c15744
+tasks 400: exact strict_trace hash equal 308, after rounding floats to 1e-9 equal 400

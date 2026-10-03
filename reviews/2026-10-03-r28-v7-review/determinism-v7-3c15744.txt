@@ -1,0 +1,16 @@
+archive: evidence/motion_navigation/r28-baseline-v7/runs.jsonl (Windows); re-run: 3c15744 on Linux, 4 cores, Python 3.11.15, navigation_coordination_metrics.py baseline --manifest navigation-product-r28-v7.json --workers 4
+
+group            archive   re-run             reason            metrics        motion_jobs  trajectory_sha256      inputs_sha256
+drop-late        191/200  191/200            200/200            200/200            200/200            155/200            200/200
+drop-normal      200/200  200/200            200/200            200/200            200/200            153/200            200/200
+height-late      200/200  200/200            200/200            200/200            200/200            200/200            200/200
+height-normal    200/200  200/200            200/200            200/200            200/200            200/200            200/200
+player-late       57/200   57/200            200/200            200/200            200/200            200/200            200/200
+player-normal     57/200   57/200            200/200            200/200            200/200            200/200            200/200
+point-late       200/200  200/200            200/200            200/200            200/200            200/200            200/200
+point-normal     200/200  200/200            200/200            200/200            200/200            200/200            200/200
+target-late      200/200  200/200            200/200            200/200            200/200            200/200            200/200
+target-normal    200/200  200/200            200/200            200/200            200/200            200/200            200/200
+total           1705/2000 1705/2000          2000/2000          2000/2000          2000/2000          1908/2000          2000/2000
+
+trajectory_sha256 differs in 92 tasks, e.g. ['drop-late-000004', 'drop-late-000005', 'drop-late-000010', 'drop-late-000012', 'drop-late-000019', 'drop-late-000020', 'drop-late-000021', 'drop-late-000028']

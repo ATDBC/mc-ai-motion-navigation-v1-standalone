@@ -1,0 +1,23 @@
+code 3c15744, Linux 4 cores, Python 3.11.15
+
+drop groups, first 200 seeds; v7 frozen delivery vs warm-only first job
+
+group       model           completed  jobs/task  arrival p50  violations  failure reasons
+drop-normal v7 (cold 7)       200/200       2.02           71           0  {}
+drop-normal warm-only         200/200       2.02           66           0  {}
+drop-late   v7 (cold 7)       191/200       2.30           78           0  {'edge_probe_acquisition_timeout': 2, 'input_lost': 5, 'motion_unsolvable:motion_retry_exhausted:entry_state_changed': 1, 'motion_unsolvable:needs_state': 1}
+drop-late   warm-only         193/200       2.27           72           0  {'input_lost': 4, 'edge_probe_acquisition_timeout': 2, 'motion_unsolvable:needs_state': 1}
+
+tasks whose completion differs between the two models: 12
+   ('drop-late-000000', True, False)
+   ('drop-late-000026', False, True)
+   ('drop-late-000038', True, False)
+   ('drop-late-000045', False, True)
+   ('drop-late-000056', False, True)
+   ('drop-late-000069', False, True)
+   ('drop-late-000119', False, True)
+   ('drop-late-000134', True, False)
+   ('drop-late-000135', False, True)
+   ('drop-late-000177', False, True)
+   ('drop-late-000178', True, False)
+   ('drop-late-000191', True, False)

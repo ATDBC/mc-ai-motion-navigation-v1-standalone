@@ -1,0 +1,9 @@
+re-run: 3c15744 on Linux, navigation_migration_evidence.py --workers 4 (32 min) and --faults-only --workers 1
+coordination cases: re-run 1448, passed 1448, exceptions 0
+archive summary:    1448, passed 1448; same case ids: True; same pass/fail per case: 1448/1448
+the 14 cases the archive lists as changed: re-run outcome equals archived 'after' outcome in 14/14
+uncovered by the 1,448 set: ['navigation_session.handle_internal_contract_failure', 'navigation_session._wait_for_active_terminal', 'navigation_session._resolve_pending_retry']
+supplementary faults: 4 cases, passed 4
+  navigation_session.handle_internal_contract_failure: entered by ['faults/driver_contract_containment'], migration_allowed=True
+  navigation_session._wait_for_active_terminal: entered by ['faults/active_route_dependency_retry'], migration_allowed=True
+  navigation_session._resolve_pending_retry: entered by ['faults/ground_stall_retry'], migration_allowed=True
