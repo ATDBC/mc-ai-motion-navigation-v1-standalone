@@ -1,0 +1,314 @@
+{
+  "cases": 1448,
+  "failed": 77,
+  "failures": [
+    {
+      "id": "events/direct_drop_2-23008",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23015",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23017",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23018",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23021",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23041",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23058",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23059",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23064",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23067",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23079",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23089",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23092",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23109",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23121",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23125",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23140",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23141",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23143",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23147",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23154",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23155",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23167",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23173",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23187",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23189",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23207",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23212",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23221",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23234",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_2-23247",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23008",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23015",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23017",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23018",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23021",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23041",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23058",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23059",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23064",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23067",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23079",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23089",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23092",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23109",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23121",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23125",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23140",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23141",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23143",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23147",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23154",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23155",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23167",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23173",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23187",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23189",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23207",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23212",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23221",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23234",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23236",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23247",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/far_landing_L_walkway-23013",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/far_landing_L_walkway-23030",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/far_landing_L_walkway-23031",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/far_landing_L_walkway-23099",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/far_landing_L_walkway-23109",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/terrace_two_ledges-23013",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/terrace_two_ledges-23058",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/terrace_two_ledges-23089",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/terrace_two_ledges-23092",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/terrace_two_ledges-23102",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/terrace_two_ledges-23109",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/terrace_two_ledges-23155",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/terrace_two_ledges-23168",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    },
+    {
+      "id": "events/terrace_two_ledges-23234",
+      "exception": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 106, in observe\n    result = _execute(kind, data)\n             ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\My_project\\mc_ai\\scripts\\navigation_migration_evidence.py\", line 76, in _execute\n    raise RuntimeError(outcome.exception)\nRuntimeError: ContractViolation: navigation task is already ending\n"
+    }
+  ]
+}

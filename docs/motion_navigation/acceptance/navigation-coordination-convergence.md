@@ -183,7 +183,7 @@ D:\Miniforge3\Scripts\conda.exe run --prefix D:\My_project\mc_ai\.venv --no-capt
 
 Fabric 依影响选场景：R28-1 复跑 B11 终态停止、空中取消和改目标；R28-3／4 先用正式路径模拟覆盖 successor、延迟交付、取消后效果确认和额度，实际输入链变化时补相应代表实机；跟随探针实机覆盖目标远离／横移、停止和迟到修订；R28-2 仅在修改行为时复跑普通长路线、窄桥、连续高度代表例和 C1 持续追击；R28-5 做受影响组合回归。物理／局部控制若改变，扩到对应 M3 分层；无法说明影响范围时不能直接沿用其 800 场结论。
 
-当前记录：R28-0 组件基线已归档，汇总、外部等价检查、串行／进程池和 Tango 纯计算已实现。R28-1 至 5、持续任务预算和正式跟随未实施；行为修改的两次查看批次调度及样本校准仍待相应候选范围冻结。现有工具不签署这些未运行门槛。
+当前记录：R28-0 组件基线已归档，汇总、外部等价检查、串行／进程池和 Tango 纯计算已实现。R28-1 的共同恢复与持续目标语义两个切片见第 16 节，其余迁移仍打开；R28-2 至 5、持续任务预算和正式跟随未实施。行为修改的两次查看批次调度及样本校准仍待相应候选范围冻结。现有工具不签署这些未运行门槛。
 
 ### 7.1 持续任务的预算检查
 
@@ -939,3 +939,127 @@ D:/Miniforge3/Scripts/conda.exe run --prefix D:/My_project/mc_ai/.venv --no-capt
 实机低成本定位可在同一入口加 `--kind drop_2 --direction 0`，只跑该方向正常与首条晚到两场。归档、源码指纹和实际应用 tick 需同时检查，不能只读 summary 的通过数。
 
 发布整理另补导出清单与公开入口。运行时指纹包含 `standalone-export-v1.json`，该清单仅为纳入 v6 证据和必需测试而变化；`publication-verification.json` 单列差异，核对其余生产文件及实机源码未变。原 metadata 与原归档不回填，公开来源仍由 `EXPORT-METADATA.json` 指向整理提交。
+
+## 15. 后台交付延迟整改与 v7 量尺
+
+日期：2026-10-03。状态：A—C 已通过，v7 已冻结，R28-1 已开始。范围见[阶段第 12 节](../stages/navigation-coordination-convergence-r28-plan.md#12-补齐交付延迟量尺然后回到-r28-1)。本节不修改第 14 节和 v6。
+
+### 15.1 已确认的基线事实
+
+Linux 对 v6 二千场的外部指标和业务原因与 Windows 归档 2,000/2,000 一致。屏蔽随机身份后，1,908 场逐帧相同；其余 92 场只有不超过约 `2.3e-15` 的浮点尾差。确定性问题保持关闭。
+
+v6 最终 Fabric 的完整求解记录为：一格上升中位 19.1 ms、带速跨隙 30.9 ms、二格下降 93.7 ms、五格下降 101.9 ms。二格和五格下降的十六场均先求解、再复核；同步产品清单的二百场正常下降中，196 场只运行一次作业。因此 v6 能证明既有结果和安全条件，不能充分评价后台延迟下的效率和失败边界。
+
+平视失败记录的作业序列是：三 tick 往返的完整求解交付过晚；一 tick 内返回的 `NEEDS_STATE` 复核把估计改回一 tick；下一次完整求解再次交付过晚并耗尽额度。修正前必须用正式链检查复现这条顺序。
+
+### 15.2 A 的检查
+
+- 新测试在旧实现上失败，能证明快速复核缩短了下一次完整求解前缀。
+- 修正后，三 tick 的完整求解估计经快速 `REVALIDATE/NEEDS_STATE` 后仍为三 tick；下一份 `SOLVE` 作业的前缀也是三 tick。
+- `SOLVE/SOLVED` 的 1、2、4 tick 样本仍能更新估计；同一工作身份不会重复采样。
+- 现有 D054、D055、取消、视角失选、依赖变化、超范围和安全收尾专项通过。
+- 完整运动导航通过。同步 v6 的四百场下降逐项保持同一业务结果和指标；这只证明 A 没改变同步路径。
+
+### 15.3 v7 清单与汇总
+
+v7 的输入身份由 v6 清单哈希、交付模型版本和冻结参数共同组成。每条记录新增：交付模型 ID、每项运动工作的操作、动作种类、提交 tick、可交付 tick、实际交付 tick及本任务工作数。正式 actor 的字段不为测试量尺增加。
+
+低成本门槛：每组前八个种子连续运行两次，两次逐项任务结果、业务原因、运动作业数、到达 tick、实际输入和轨迹摘要一致；异常、安全违规和证据缺失为零。通过后运行完整二千场。
+
+完整报告至少给出：十组成功率、各动作的作业数分布、正常与晚到的到达 P50/P95、首次冷启动后再次求解／复核比例、重试耗尽原因、与 v6 的逐项差异。正常失败不能因“保守冷启动”移出分母。
+
+v7 不预设完成率必须高于 v6。它是更接近实机时序的量尺。若每任务冷启动导致大量有界失败，先报告 worker 生命周期和准备策略缺口，不能通过提高上限让数字变好。
+
+### 15.4 Fabric 门槛
+
+二格下降方向 0，平视起步，正常和首条晚一 tick 各一次。两场都需满足：
+
+- 目标完成，零伤害，来源安全释放；
+- 无未归属输入、无窗口外输入；
+- 首次求解与复核的操作、计算时间、往返 tick、采用的准备长度全部记录；
+- 快速拒绝不改变完整求解估计；
+- 迟到场首条输入确实晚一 tick 应用，而不是只在脚本中声明。
+
+任一场未完成就保留失败，并停止声明 R28-C-06 的交付估计子缺陷已关闭。本门槛只验证该子缺陷，不代表任意视角、任意信息缺口或长期下降通过。
+
+### 15.5 回到 R28 主线
+
+A—C 达标后，不再新增动作质量决定。R28-1 按现有迁移清单开始，并将 D052—D055 折算为两批写入 2026-10-15 的复核材料。新的工作若不能明确属于 R28-1、R28-4 或 R28-3，先登记，不在剩余三批内实施。
+
+本轮直接检查命令：
+
+```powershell
+D:/Miniforge3/Scripts/conda.exe run --prefix D:/My_project/mc_ai/.venv --no-capture-output python -m unittest tests.motion_nav.test_motion_start_delivery tests.motion_nav.test_action_continuity_formal tests.motion_nav.test_async_gap_revalidation_delivery tests.motion_nav.test_motion_baseline_recovery -q
+D:/Miniforge3/Scripts/conda.exe run --prefix D:/My_project/mc_ai/.venv --no-capture-output python -m unittest discover -s tests/motion_nav -p 'test_*.py' -q
+D:/Miniforge3/Scripts/conda.exe run --prefix D:/My_project/mc_ai/.venv --no-capture-output python scripts/navigation_coordination_metrics.py baseline --manifest tests/sim/manifests/navigation-product-r28-v7.json --output <新目录> --workers 4
+D:/Miniforge3/Scripts/conda.exe run --prefix D:/My_project/mc_ai/.venv --no-capture-output python scripts/run_action_continuity_fabric.py --start-delivery --kind drop_2 --direction 0 --flat-drop-view --timeout-seconds 300
+```
+
+v7 低成本重复、完整差异及精简证据命令在实现时写入同一节，不新增平行验收文档。
+
+### 15.6 实际结果
+
+延迟采样的正式链红测在旧逻辑上得到准备前缀 `1、3、1`；修正后为 `1、3、3`。完整 `SOLVE/SOLVED` 的 1、2、4、7 tick 样本分别保存为 1、2、4、4 tick，同一工作身份只采样一次。同步清单中的下降 400 项与 v6 的业务结果、指标、事件和归一化逐帧轨迹完全一致。
+
+每组前八个种子的两次 v7 运行共比较 80 对，结果、原因、作业记录、输入和身体轨迹全部一致。完整 v7 为 **1,705/2,000**：
+
+| 组别 | 完成 | 作业情况 |
+|---|---:|---|
+| 指定点、连续高度、移动目标六组 | 1,200/1,200 | 没有运动求解作业，逐项保持 v6 |
+| 正常下降 | 200/200 | 196 项两次作业，4 项三次作业 |
+| 晚到下降 | 191/200 | 198 项产生作业；134 项两次，64 项三次 |
+| 玩家常站位置两组 | 114/400 | 沿用既有贴墙、墙角和走廊终点缺口 |
+
+相对 v6，398 个下降任务的输入、轨迹或指标发生变化；少完成 7 项，均属于晚到下降。其中 5 项为 `input_lost`，1 项为重试耗尽后的入口变化，1 项为 `needs_state`。没有新增完成项，也没有异常、安全违规或证据缺口。v7 使用保守冷启动输入，因此这 7 项是量尺揭示的交付敏感性，不称为 A 的同步回归。
+
+完整运动导航为 **969/969**。Fabric 批次 `20261003T052654922472Z-54f75b98` 的平视二格下降正常与首条晚一 tick 为 **2/2**。两场初始俯仰角均为 0°，伤害为零，来源安全释放；没有窗口外输入、未归属输入、空中反向或空中中性滑行。迟到场的注入窗口为 tick 205—206，脚本确认迟到实际生效。
+
+精简证据保存在 `evidence/motion_navigation/r28-baseline-v7/`。Git 中只保存清单、元数据、逐任务结果、轨迹哈希、精简差异和 Fabric 摘要；完整逐帧轨迹保留在本地不可变目录。
+
+补充复查命令：
+
+```powershell
+D:/Miniforge3/Scripts/conda.exe run --prefix D:/My_project/mc_ai/.venv --no-capture-output python scripts/navigation_coordination_metrics.py verify-repeat --baseline <第一次80项目录> --candidate <第二次80项目录> --output <新重复检查目录>
+D:/Miniforge3/Scripts/conda.exe run --prefix D:/My_project/mc_ai/.venv --no-capture-output python scripts/navigation_coordination_metrics.py delivery-compare --baseline <v6产品目录> --candidate <v7产品目录> --output <新差异目录>
+```
+
+## 16. R28-1 共同恢复前两个切片
+
+日期：2026-10-03。范围包括规划截止退场、共同结束请求、已验证的执行恢复去向，以及持续目标的通用到达策略。完整 R28-1 尚未完成，没有运行本阶段的 Fabric 组合验收。
+
+### 16.1 先发现的失败
+
+定向检查先复现 R28-C-02：每 tick 改材质时，规划工作在观察到截止边界后仍活动。修正后由 `PlanningCoordinator` 退场并保留本观察的有类型超时结论；新重试从下一观察开始，不在同一帧重复推进。
+
+首次完整协调运行为 1,371/1,448。77 项全部是结束请求已接受后又收到目标修订，公开接口抛出 `ContractViolation`。这属于正常生命周期竞态，不能让整项任务异常。最终契约改为返回是否接受：未接受时 Session、driver 和测试事件拥有者都不更新目标修订，原身体收尾继续进行。
+
+### 16.2 最终结果
+
+- 定向共同恢复、持续目标、交接、B11 终态停止和 C1 边界：213/213；
+- 完整运动导航：984/984；
+- 全新协调迁移集合：1,448/1,448；
+- 当前源码下的 v7 产品清单：1,705/2,000，与第 15 节候选的任务结果、原因、作业记录、输入和身体轨迹 2,000/2,000 相同；
+- 整片支撑真实降低半格：身体落到 63.5，有界失败并安全释放；不把失败记作恢复成功；
+- R28-C-02：不再出现过期规划工作仍活动；
+- 没有新增安全违规、异常或证据缺口。
+
+与上一份协调记录相比有 14 项签名变化，全部属于多个结束原因竞争。旧版允许较晚的取消覆盖已经开始的失败；本切片保留先接受的结束请求。14 项都仍为有界、安全结果。由于事件生成器现在只在目标修订被接受时更新外部目标，这一比较明确标记测试入口差异，不称为逐帧等价证明。
+
+第二个切片增加 `COMPLETE_ON_REACH` 和 `KEEP_ACTIVE_ON_REACH`。前者是默认值，并与未显式传参的旧调用逐帧一致。后者已验证：目标满足后保持活动且不占用身体；目标再次移动后沿用同一任务、同一重试和伤害余额；取消仍走共同收尾；空中或仍有停止输入在途时不提前释放身体。策略只能在任务开始时设置，同一任务的目标修订不能切换策略。当前 v7 的 2,000 项一次性任务与该切片前任务结果、原因、作业、输入和轨迹逐项一致。
+
+`spawn_successor` 仍表示开始一个新任务，因此会建立新的 `GoalRequestLedger`。持续目标不会通过 successor 反复续命；长期跟随的速率预算属于 R28-4，本切片没有提前实现。
+
+### 16.3 尚未完成
+
+完整 R28-1 仍缺：`_restart_after_active_terminal` 和修订重锚；探边自然完成／超时去向；替代规划失败去向；`propose` 的领域推进拆分。迁移集合仍未进入 `handle_internal_contract_failure`、`_wait_for_active_terminal`、`_resolve_pending_retry` 三个函数，定向测试通过不能替代迁移清单覆盖。正式跟随探针、30 分钟持续任务和速率预算也尚未开始。
+
+本切片的精简证据位于 `evidence/motion_navigation/r28-1-slice-v1/`。完整协调轨迹和首次 77 项失败保留在本地不可变目录，不写入 Git。
+
+检查命令：
+
+```powershell
+D:/Miniforge3/Scripts/conda.exe run --prefix D:/My_project/mc_ai/.venv --no-capture-output python -m unittest tests.motion_nav.test_goal_reach_policy tests.motion_nav.test_r28_shared_recovery tests.motion_nav.test_navigation_handoff tests.motion_nav.test_navigation_route_handoff tests.motion_nav.test_r28_migration_faults tests.motion_nav.test_navigation_session tests.motion_nav.test_planning_coordinator tests.motion_nav.test_r27_async_admission tests.motion_nav.test_action_continuity_formal tests.motion_nav.test_motion_baseline_recovery tests.test_c1_navigation_session -q
+D:/Miniforge3/Scripts/conda.exe run --prefix D:/My_project/mc_ai/.venv --no-capture-output python -m unittest discover -s tests/motion_nav -p 'test_*.py' -q
+D:/Miniforge3/Scripts/conda.exe run --prefix D:/My_project/mc_ai/.venv --no-capture-output python scripts/navigation_migration_evidence.py --output <新协调目录> --workers 4
+D:/Miniforge3/Scripts/conda.exe run --prefix D:/My_project/mc_ai/.venv --no-capture-output python scripts/navigation_coordination_metrics.py baseline --manifest tests/sim/manifests/navigation-product-r28-v7.json --output <新产品目录> --workers 4
+```

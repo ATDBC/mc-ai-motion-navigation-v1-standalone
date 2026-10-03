@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
 import gzip
 import hashlib
@@ -28,6 +29,7 @@ from tests.sim.product_metrics import (
     EXTRACTOR_VERSION, compare_metrics, extract_metrics, strict_trace,
 )
 from tests.sim.runner import run
+from tests.sim.motion_delivery import DeterministicMotionWorker, validate_profile
 
 SCHEMA = "mc2p.navigation-product-run.v1"
 
@@ -52,6 +54,8 @@ def load_manifest(path):
     groups = manifest.get("groups", [])
     if not groups or len({g["id"] for g in groups}) != len(groups):
         raise ValueError("product groups must be present and unique")
+    if "motion_delivery_profile" in manifest:
+        validate_profile(manifest["motion_delivery_profile"])
     return manifest, digest(raw)
 
 
@@ -60,15 +64,29 @@ def quantile(values, probability=.95):
     return None if not values else values[math.ceil(probability * len(values)) - 1]
 
 
+def trace_signatures(trace):
+    normalized = strict_trace(trace)
+    inputs = [{key: row[key] for key in ("movement_tick", "applied_movement", "input_window")}
+              for row in normalized]
+    return {"trajectory_sha256": digest(json.dumps(normalized, sort_keys=True).encode()),
+            "inputs_sha256": digest(json.dumps(inputs, sort_keys=True).encode())}
+
+
 def _run_one(job):
     manifest, group, seed, output = job
     started = time.perf_counter()
     identifier = f"{group['id']}-{seed:06d}"
     result, parameters, error = None, None, None
     raw_trace = []
+    delivery = None
     try:
         scenario, parameters = product_scenario(manifest, group, seed)
-        result = run(scenario, trace_sink=raw_trace.append)
+        if "motion_delivery_profile" in manifest:
+            delivery = DeterministicMotionWorker(manifest["motion_delivery_profile"])
+            result = run(scenario, trace_sink=raw_trace.append,
+                         motion_factory=lambda: delivery, control_step=delivery.control_step)
+        else:
+            result = run(scenario, trace_sink=raw_trace.append)
         metrics = extract_metrics(result.trace, start_tick=1, start_position=scenario.start,
                                   outcome=result.outcome, violations=result.violations)
         if not result.verification_complete:
@@ -90,6 +108,10 @@ def _run_one(job):
         "wall_elapsed_seconds": time.perf_counter() - started,
         "trace_file": f"traces/{identifier}.json.gz",
     }
+    if delivery is not None:
+        record.update(motion_delivery_profile=delivery.profile,
+                      motion_job_count=len(delivery.records), motion_jobs=delivery.records)
+        record.update(trace_signatures(raw_trace))
     path = Path(output) / record["trace_file"]
     with gzip.open(path, "wt", encoding="utf-8", compresslevel=3) as stream:
         json.dump({"record": record, "trace": raw_trace,
@@ -216,6 +238,13 @@ def baseline(manifest_path, output, workers=1, *, seed_count=None, groups=None):
         "complete_manifest": count == manifest["seed_count"] and len(selected) == len(manifest["groups"]),
         "timing_scope": "fake movement clock; wall elapsed measures simulator throughput only",
     }
+    if "motion_delivery_profile" in manifest:
+        metadata["motion_delivery_profile"] = validate_profile(manifest["motion_delivery_profile"])
+        metadata["input_identity"] = {
+            "base_manifest_sha256": manifest["motion_delivery_profile"]["base_manifest_sha256"],
+            "delivery_profile_sha256": digest(json.dumps(metadata["motion_delivery_profile"], sort_keys=True).encode()),
+            "manifest_sha256": manifest_hash,
+        }
     (output / "metadata.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", "utf-8")
     (output / "migration-inventory.json").write_text(json.dumps(coordination_inventory(), ensure_ascii=False, indent=2) + "\n", "utf-8")
     jobs = [(manifest, group, seed, str(output)) for group in selected
@@ -230,11 +259,15 @@ def baseline(manifest_path, output, workers=1, *, seed_count=None, groups=None):
                 stream.write(json.dumps(record, ensure_ascii=False) + "\n")
                 stream.flush()
                 records.append(record)
+                if "motion_delivery_profile" in manifest and (
+                        record["exception"] or record["metrics"]["safety_events"]
+                        or not record["metrics"]["evidence_complete"]):
+                    raise RuntimeError(f"v7 stopped at invalid evidence: {record['id']}")
                 if len(records) % 100 == 0:
                     print(f"recorded {len(records)}/{len(jobs)} tasks", flush=True)
     finally:
         if pool is not None:
-            pool.shutdown()
+            pool.shutdown(cancel_futures="motion_delivery_profile" in manifest)
     summary = {"schema_version": SCHEMA, "elapsed_seconds": time.perf_counter() - started,
                "groups": [], "records": len(records)}
     for group in selected:
@@ -252,8 +285,121 @@ def baseline(manifest_path, output, workers=1, *, seed_count=None, groups=None):
             "zero_displacement_ticks": sum(r["metrics"]["zero_displacement_ticks"] for r in rows),
             "controller_switches": sum(r["metrics"]["controller_switches"] for r in rows),
         })
+        if "motion_delivery_profile" in manifest:
+            group_summary = summary["groups"][-1]
+            group_summary["arrival_ticks_p50"] = quantile(arrival, .5)
+            group_summary["motion_job_count_distribution"] = dict(Counter(r["motion_job_count"] for r in rows))
+            group_summary["motion_operations"] = dict(Counter(
+                job["operation"] for r in rows for job in r["motion_jobs"]))
+            group_summary["followup_after_cold_tasks"] = sum(r["motion_job_count"] > 1 for r in rows)
+            group_summary["tasks_with_motion_work"] = sum(r["motion_job_count"] > 0 for r in rows)
+            group_summary["failure_reasons"] = dict(Counter(r["reason"] for r in rows if not r["metrics"]["success"]))
+            group_summary["jobs_by_action"] = {
+                action: dict(Counter(sum(job["action"] == action for job in row["motion_jobs"])
+                                     for row in rows if any(job["action"] == action for job in row["motion_jobs"])))
+                for action in sorted({job["action"] for row in rows for job in row["motion_jobs"]})}
     (output / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", "utf-8")
     return summary
+
+
+def _delivery_evidence(root):
+    # Reuse checksum/transport validation, without the old equivalence claim.
+    from scripts.r28_baseline_alignment import records
+    metadata, rows = records(root)
+    transport_path = root / "trace-transport.json"
+    transport = json.loads(transport_path.read_text("utf-8")) if transport_path.exists() else None
+    return metadata, rows, transport
+
+
+def compare_delivery(old_dir, new_dir, output):
+    if output.exists():
+        raise FileExistsError(f"refusing to overwrite comparison: {output}")
+    before, old, old_transport = _delivery_evidence(old_dir)
+    after, new, new_transport = _delivery_evidence(new_dir)
+    manifest = dict(after["manifest"])
+    profile = validate_profile(manifest.pop("motion_delivery_profile", None))
+    if manifest != before["manifest"]:
+        raise ValueError("delivery comparison task parameters differ beyond the model")
+    if before["manifest_sha256"] != profile["base_manifest_sha256"]:
+        raise ValueError("delivery comparison does not use the declared v6 input hash")
+    for key in ("extractor_version", "start_clock_ns", "tick_seconds"):
+        if before[key] != after[key]:
+            raise ValueError(f"delivery comparison basis differs: {key}")
+    if not new.keys() <= old.keys():
+        raise ValueError("delivery comparison has unpaired tasks")
+    changed = {name for name in before["harness"]["files"].keys() | after["harness"]["files"].keys()
+               if before["harness"]["files"].get(name) != after["harness"]["files"].get(name)}
+    allowed = {"tests/sim/motion_delivery.py", "scripts/navigation_coordination_metrics.py"}
+    legacy = changed - allowed
+    if legacy:
+        from scripts.r28_baseline_alignment import review_harness_files
+        review_harness_files({name: before["harness"]["files"].get(name) for name in legacy},
+                             {name: after["harness"]["files"].get(name) for name in legacy})
+    for name in changed & allowed:
+        if digest((ROOT / name).read_bytes()) != after["harness"]["files"].get(name):
+            raise ValueError(f"delivery harness source changed after collection: {name}")
+    from scripts.r28_baseline_alignment import raw_record
+    pairs, blocked = [], []
+    for identity, current in new.items():
+        previous = old[identity]
+        if any(previous[key] != current[key] for key in ("parameters", "strict", "family", "group", "seed")):
+            raise ValueError(f"paired task inputs/injections differ: {identity}")
+        if current.get("motion_delivery_profile") != profile:
+            raise ValueError(f"record delivery profile differs: {identity}")
+        first = raw_record(old_dir, previous, old_transport)
+        second = raw_record(new_dir, current, new_transport)
+        old_trace, new_trace = trace_signatures(first["trace"]), trace_signatures(second["trace"])
+        if (current["exception"] or current["metrics"]["safety_events"]
+                or not current["metrics"]["evidence_complete"]):
+            blocked.append(identity)
+        pairs.append({"id": identity, "baseline_outcome": previous["metrics"]["outcome"],
+                      "candidate_outcome": current["metrics"]["outcome"],
+                      "reason": [previous["reason"], current["reason"]],
+                      "arrival_ticks": [previous["metrics"]["arrival_ticks"], current["metrics"]["arrival_ticks"]],
+                      "motion_job_count": [previous.get("motion_job_count"), current["motion_job_count"]],
+                      "motion_jobs": current["motion_jobs"],
+                      "inputs_changed": old_trace["inputs_sha256"] != new_trace["inputs_sha256"],
+                      "trajectory_changed": old_trace["trajectory_sha256"] != new_trace["trajectory_sha256"],
+                      "metrics_changed": previous["metrics"] != current["metrics"]})
+    report = {"pairs": len(pairs), "input_parameters_verified": True,
+              "full_original_denominator": old.keys() == new.keys(), "blocking_evidence": blocked,
+              "motion_delivery_profile": profile, "harness_changed_files": sorted(changed),
+              "baseline_motion_job_count_available": all("motion_job_count" in row for row in old.values()),
+              "differences": pairs,
+              "scope": "Changed deterministic transport; reports timing differences without an equivalence/regression claim."}
+    output.mkdir(parents=True)
+    (output / "comparison.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", "utf-8")
+    return report
+
+
+def verify_repeat(old_dir, new_dir, output):
+    if output.exists():
+        raise FileExistsError(f"refusing to overwrite repeat check: {output}")
+    before, old, old_transport = _delivery_evidence(old_dir)
+    after, new, new_transport = _delivery_evidence(new_dir)
+    for key in ("manifest_sha256", "extractor_version", "groups", "seed_count", "harness", "environment"):
+        if before[key] != after[key]:
+            raise ValueError(f"repeat check basis differs: {key}")
+    if old.keys() != new.keys():
+        raise ValueError("repeat check task denominator differs")
+    from scripts.r28_baseline_alignment import raw_record
+    differences = []
+    fields = ("parameters", "metrics", "reason", "exception", "verification_complete",
+              "event_dispatches", "motion_delivery_profile", "motion_job_count", "motion_jobs")
+    for identity, previous in old.items():
+        current = new[identity]
+        first = raw_record(old_dir, previous, old_transport)
+        second = raw_record(new_dir, current, new_transport)
+        changed = [key for key in fields if previous.get(key) != current.get(key)]
+        if trace_signatures(first["trace"]) != trace_signatures(second["trace"]):
+            changed.append("inputs_or_trajectory")
+        if changed:
+            differences.append({"id": identity, "fields": changed})
+    report = {"pairs": len(new), "differences": differences,
+              "scope": "Exact task results, reasons, delivery records, input and physical trajectory after random-ID normalization."}
+    output.mkdir(parents=True)
+    (output / "repeat.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", "utf-8")
+    return report
 
 
 def compare(old_dir, new_dir, output):
@@ -360,16 +506,25 @@ def main(argv=None):
     pair.add_argument("--baseline", type=Path, required=True)
     pair.add_argument("--candidate", type=Path, required=True)
     pair.add_argument("--output", type=Path, required=True)
+    for command in ("delivery-compare", "verify-repeat"):
+        timing = sub.add_parser(command)
+        timing.add_argument("--baseline", type=Path, required=True)
+        timing.add_argument("--candidate", type=Path, required=True)
+        timing.add_argument("--output", type=Path, required=True)
     ruler = sub.add_parser("reextract")
     ruler.add_argument("--source", type=Path, required=True)
     ruler.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     if args.command == "reextract":
         result = reextract(args.source, args.output)
+    elif args.command in {"delivery-compare", "verify-repeat"}:
+        operation = compare_delivery if args.command == "delivery-compare" else verify_repeat
+        result = operation(args.baseline, args.candidate, args.output)
     else:
         result = baseline(args.manifest, args.output, args.workers, seed_count=args.seed_count, groups=args.groups) if args.command == "baseline" else compare(args.baseline, args.candidate, args.output)
     print(json.dumps(result, ensure_ascii=False, indent=2))
-    return int(bool(result["differences"])) if args.command == "compare" else 0
+    return (int(bool(result["differences"])) if args.command in {"compare", "verify-repeat"}
+            else int(bool(result["blocking_evidence"])) if args.command == "delivery-compare" else 0)
 
 
 if __name__ == "__main__":

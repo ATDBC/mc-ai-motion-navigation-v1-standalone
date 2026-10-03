@@ -24,6 +24,7 @@ from mc2p.contracts.task import (
     ComparisonOperatorV0, SuccessCriterionV0, TaskIntentV0,
 )
 from mc2p.motion_nav.movement_transition import GoalState
+from mc2p.motion_nav.goal_reach_policy import GoalReachPolicy
 from mc2p.motion_nav.body_control import HandoffDisposition, BodyControlActivity
 from mc2p.motion_nav.navigation_session import (
     NavigationSessionPort, NavigationSessionProposal, NavigationSessionState,
@@ -125,6 +126,7 @@ class RuntimeNavigationDriver:
         *,
         damage_budget: TaskDamageBudget | None = None,
         task_id: str | None = None,
+        reach_policy: GoalReachPolicy = GoalReachPolicy.COMPLETE_ON_REACH,
     ) -> None:
         require_nonnegative_int(now_ns, "runtime navigation start time")
         if self.source is not None or self.state not in {"ready", "stopped"}:
@@ -141,8 +143,11 @@ class RuntimeNavigationDriver:
                     goal_id, goal_revision, goal, frame,
                     damage_budget=damage_budget,
                     task_id=task_id,
+                    reach_policy=reach_policy,
                 )
             else:
+                if reach_policy is not report.reach_policy:
+                    raise ContractViolation("navigation start cannot change task reach policy")
                 self.session.update_goal(
                     goal_id, goal_revision, goal,
                     damage_budget=damage_budget,
@@ -164,7 +169,7 @@ class RuntimeNavigationDriver:
         now_ns: int,
         *,
         damage_budget: TaskDamageBudget | None = None,
-    ) -> None:
+    ) -> bool:
         require_nonnegative_int(now_ns, "runtime navigation goal update time")
         if self.source is None or self._goal_id is None:
             raise ContractViolation("runtime navigation driver has no active goal")
@@ -179,11 +184,15 @@ class RuntimeNavigationDriver:
         # waiting for a world interaction.  Re-anchor before querying support
         # for the revised goal so an expired immutable view is never reused.
         self.session.ingest(self.runtime.observation)
-        self.session.update_goal(
+        accepted = self.session.update_goal(
             goal_id, goal_revision, goal, damage_budget=damage_budget,
         )
+        if not accepted:
+            self._sync_report()
+            return False
         self._goal_revision, self._goal = goal_revision, goal
         self._sync_report()
+        return True
 
     def tick(
         self,
@@ -366,6 +375,10 @@ class RuntimeNavigationDriver:
                     self.session.reject_unselected_route_proposal(
                         proposal, self.session.ingest(result.observation),
                     )
+            planning_deadline = self.session.report.planning_deadline_monotonic_ns
+            if (planning_deadline is not None and self._clock() >= planning_deadline
+                    and type(result.observation) is ObservationSnapshotV3):
+                self.session.ingest(result.observation)
             self._sync_report()
         if self.state in {"failed", "cancelled"}:
             if not self._release_if_quiescent():

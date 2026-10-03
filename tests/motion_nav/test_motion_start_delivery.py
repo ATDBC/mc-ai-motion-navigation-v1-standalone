@@ -109,6 +109,83 @@ class PreparedRevalidationTests(unittest.TestCase):
 
 
 class StartDeliveryFormalTests(unittest.TestCase):
+    def test_complete_solve_samples_once_at_delivery_before_entry_wait(self):
+        from mc2p.motion_nav.motion_coordination import MotionRouteCoordinator
+        original = MotionRouteCoordinator._sample_solve_delivery
+        for delay in (1, 2, 4, 7):
+            with self.subTest(delay=delay):
+                samples = []
+                worker = continuity._DeliveryWorker(delivery_polls=delay)
+                case = recovery_cases.MotionBaselineRecoveryTests().scenario(72)
+                case = replace(case, perturbations=replace(case.perturbations, late_ticks=frozenset()))
+
+                def record_sample(owner, result, anchor):
+                    before = owner._delivery_identity, owner._delivery_ticks
+                    original(owner, result, anchor)
+                    after = owner._delivery_identity, owner._delivery_ticks
+                    if before != after:
+                        samples.append((result.work_identity, owner._delivery_ticks,
+                                        owner._solve_basis_job.operation, result.solve_result.status))
+
+                with patch.object(MotionRouteCoordinator, '_sample_solve_delivery', record_sample):
+                    result = run(case, motion_factory=lambda: worker)
+                self.assertTrue(samples)
+                self.assertEqual(samples[0][1], min(4, delay))
+                self.assertEqual(len({sample[0] for sample in samples}), len(samples))
+                self.assertTrue(all(sample[2:] == (MotionJobOperation.SOLVE, SolveStatus.SOLVED)
+                                    for sample in samples))
+                self.assertFalse(result.violations)
+
+    def test_fast_alignment_revalidation_keeps_complete_solve_preparation(self):
+        from mc2p.contracts.action import ActionPriorityV0
+        from mc2p.contracts.action_v1 import ActionIntentV1, LookV1
+        from mc2p.contracts.intent_source import ControlFrameProposalV1, OrderedIntentV1, ordered_intent_id
+
+        class AlignmentDeliveryWorker(continuity._DeliveryWorker):
+            def submit(self, job):
+                self.delivery_polls = (1 if job.operation is MotionJobOperation.REVALIDATE else 3)
+                return super().submit(job)
+
+        worker = AlignmentDeliveryWorker()
+        case = recovery_cases.MotionBaselineRecoveryTests().scenario(72)
+        case = replace(case, perturbations=replace(case.perturbations, late_ticks=frozenset()))
+        stolen = []
+        source = None
+
+        def turn_before_delivery(context):
+            nonlocal source
+            runtime, driver = context.driver.runtime, context.driver
+            deadline = context.clock[0] + 500_000_000
+            if source is not None:
+                runtime.cancel_source(source.source_id)
+            proposals = driver.prepare_proposals(deadline)
+            external = ()
+            if (len(worker.jobs) == 1 and worker._pending
+                    and worker.poll_count == worker._pending[0][0] - 1 and not stolen):
+                source = runtime.register_ordered_source('delivery-alignment-look')
+                intent = ActionIntentV1(ordered_intent_id(source, 1), source.source_id,
+                    source.episode_id, runtime.observation.sequence_id, ActionPriorityV0.SAFETY,
+                    context.clock[0], deadline, look=LookV1(15., 0.))
+                proposals += (ControlFrameProposalV1((OrderedIntentV1(source, 1, intent),)),)
+                stolen.append(context.backend.movement_tick + 1)
+                external = (intent.intent_id,)
+            result = runtime.control_frame(driver._task(deadline), BehaviorProfileV0(),
+                                           deadline, proposals=proposals)
+            driver.adopt_result(result)
+            return external
+
+        result = run(case, motion_factory=lambda: worker, control_step=turn_before_delivery)
+        self.assertTrue(stolen)
+        self.assertGreaterEqual(len(worker.jobs), 3)
+        self.assertEqual([job.operation for job in worker.jobs[:3]],
+                         [MotionJobOperation.SOLVE, MotionJobOperation.REVALIDATE,
+                          MotionJobOperation.SOLVE])
+        self.assertIs(worker.results[0].solve_result.status, SolveStatus.SOLVED)
+        self.assertIs(worker.results[1].solve_result.status, SolveStatus.NEEDS_STATE)
+        self.assertEqual([len(job.entry_prefix) for job in worker.jobs[:3]], [1, 3, 3])
+        self.assertFalse(result.violations)
+        self.assertFalse(result.trace[-1]['source_bound'])
+
     def test_changed_look_during_preparation_cannot_authorize_predicted_entry(self):
         from mc2p.contracts.action import ActionPriorityV0
         from mc2p.contracts.action_v1 import ActionIntentV1, LookV1

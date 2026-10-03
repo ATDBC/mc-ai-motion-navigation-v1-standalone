@@ -4,9 +4,11 @@
 
 默认分支 `main` 是项目方唯一的公开发布线，只接收固定导出脚本生成并校验通过的整理后快照。主项目的完整开发分支和提交历史不会直接推入本仓库。三方审查分支可以单独存在，用于保存审查报告和复现材料；它们不改变 `main` 的正式状态。
 
-2026-10-03 的当前迁移参照为 **v6**。D055 让实际准备、后台证明和首次接纳使用共同时间线，首次交付保留一 tick 的已验证迟到余量，完整复核继续在后台。产品为 **1,712/2,000**，晚到下降由 v5 的 185/200 提升至 **198/200**；原六场回归全部恢复，没有原成功转失败，其余 1,600 项逐项不变。运动导航 **960/960**，协调 1,448 项及四个补充故障通过，41 个迁移函数有入口证据。数据、源码指纹和原失败在 `evidence/motion_navigation/r28-baseline-v6/`，结果与命令见 [R28 验收第 14 节](docs/motion_navigation/acceptance/navigation-coordination-convergence.md#14-d055-启动交付修正的验收计划)。固定清单非退步通过，不签署统计发布结论。
+2026-10-03 的当前迁移参照为 **v7**。产品清单加入按运动 tick 驱动的确定性交付延迟，结果为 **1,705/2,000**；减少的七项都属于“下降＋随机晚一 tick”。没有安全违规、异常或证据缺口。D055 的快速拒绝不再缩短完整求解测得的准备长度；平视二格下降正常和首条晚一 tick 的 Fabric 复验为 **2/2**。数据、源码指纹和失败保存在 `evidence/motion_navigation/r28-baseline-v7/`，结果与命令见 [R28 验收第 15 节](docs/motion_navigation/acceptance/navigation-coordination-convergence.md#15-后台交付延迟整改与-v7-量尺)。
 
-最终 Fabric **40/40**，五类场景各四方向，正常与首条晚一 tick 各一次；二十次迟到均由实际应用账本核实。控制准备 P95 为 1.792 ms，客户端采样到应用 P99 为 99.561 ms。下降限定持续向下观察已知落点；平视时取证与准备互相打断的失败保留为 R28-C-06，尚未修复。R28-1、室内接近、正式跟随、长期期限和完整动作组合仍打开。
+R28-1 已完成共同恢复和持续目标语义两个切片。规划截止退场和结束请求进入同一交接协调器；`GoalReachPolicy` 支持一次性到达和到达后保持活动，目标修订不能更换策略或补回额度。运动导航 **984/984**，协调 **1,448/1,448**，当前源码下的一次性 v7 产品任务与第二个切片前 **2,000/2,000** 相同。精简证据位于 `evidence/motion_navigation/r28-1-slice-v1/`。完整 R28-1 仍缺剩余交接去向、迁移覆盖和 `propose` 拆分；R28-4、R28-3、室内接近、正式跟随和长期期限仍打开。
+
+历史 v6 为 **1,712/2,000**，晚到下降 198/200。该轮运动导航 960/960，最终 Fabric 40/40；二十次首条晚到由实际应用账本核实。原结果、限制和失败继续保存在 `evidence/motion_navigation/r28-baseline-v6/`，没有用 v7 回填。
 
 历史 v5 为 **1,699/2,000**，晚到下降 185/200，固定非退步未通过。D054 的原修正及当时运动导航 951/951、协调结果和失败保持原范围，证据仍在 `evidence/motion_navigation/r28-baseline-v5/` 与验收第 13 节；没有用 v6 回填旧结果。
 
@@ -38,7 +40,7 @@ D051 已撤回终点推演筛选和按失败文案改名，保留目标几何、
 2. `docs/motion_navigation/stages/navigation-coordination-convergence-r28-plan.md`
 3. `docs/motion_navigation/acceptance/navigation-coordination-convergence.md`
 4. `docs/motion_navigation/decisions/0048-converge-recovery-by-risk-and-product-evidence.md`
-5. `docs/motion_navigation/architecture/navigation-coordination-v1.md`（第 17 节为未实施目标）
+5. `docs/motion_navigation/architecture/navigation-coordination-v1.md`（第 17 节包含当前 R28 目标和已实施的持续目标语义）
 6. 当前实现和证据读 R27 阶段文档、`navigation-coordination-refactor.md` 第 20 节与 `defect-ledger.md`。
 7. 连续高度与物理范围读 M3、B09-R、B10 的对应 architecture 和 acceptance。
 8. 需要检查战斗或部分观察时，再读对应的 B12、C1 文档。

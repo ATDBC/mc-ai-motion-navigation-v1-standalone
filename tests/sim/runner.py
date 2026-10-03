@@ -22,6 +22,7 @@ from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.reset import ResetRequestV0
 from mc2p.motion_nav import motion_worker, planner_worker
 from mc2p.motion_nav.motion_risk import TaskDamageBudget, TaskRiskLedger
+from mc2p.motion_nav.goal_reach_policy import GoalReachPolicy
 from mc2p.motion_nav.navigation_session import NavigationSession, NavigationSessionProfiles
 from mc2p.motion_nav.world_model import Aabb
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1
@@ -222,6 +223,7 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
         event_ticks: dict[str, int] | None = None,
         control_step: Callable[[Context], tuple[str, ...] | None] | None = None,
         risk_ledger: TaskRiskLedger | None = None,
+        reach_policy: GoalReachPolicy = GoalReachPolicy.COMPLETE_ON_REACH,
         backend_factory=CalculatorBackend,
         planner_factory=InlinePlannerWorker,
         motion_factory=InlineMotionWorker) -> Result:
@@ -279,7 +281,8 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
             maximum_yaw_error_radians=math.radians(2.0),
         )
     driver.start("goal", 1, goal, clock[0],
-                 damage_budget=TaskDamageBudget(policy, scenario.damage_points))
+                 damage_budget=TaskDamageBudget(policy, scenario.damage_points),
+                 reach_policy=reach_policy)
     monitor = InvariantMonitor()
     context = Context(0, backend, session, driver, clock,
                       scenario.damage_points, policy, goal, scenario.goal)

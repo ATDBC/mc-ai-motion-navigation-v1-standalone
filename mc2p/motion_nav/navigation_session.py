@@ -58,8 +58,9 @@ from mc2p.motion_nav.fixed_route import (
     FixedRoute, RoutePoint,
 )
 from mc2p.motion_nav.goal_observation import (
-    ObservedGoalStatus, evaluate_observed_goal,
+    ObservedGoal, ObservedGoalStatus, evaluate_observed_goal,
 )
+from mc2p.motion_nav.goal_reach_policy import GoalReachPolicy
 from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
 from mc2p.motion_nav.ground_modes import GroundModeProfiles
 from mc2p.motion_nav.ground_modes import load_ground_mode_profiles
@@ -305,6 +306,9 @@ class NavigationSessionReport:
     terminal: bool
     required_interaction_id: str | None = None
     schema_version: str = "mc2p.navigation-session-report.v1"
+    planning_deadline_monotonic_ns: int | None = None
+    reach_policy: GoalReachPolicy = GoalReachPolicy.COMPLETE_ON_REACH
+    observed_goal_status: ObservedGoalStatus | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -409,12 +413,13 @@ class NavigationSessionPort(Protocol):
         maximum_planning_seconds: float = .5,
         damage_budget: TaskDamageBudget | None = None,
         task_id: str | None = None,
+        reach_policy: GoalReachPolicy = GoalReachPolicy.COMPLETE_ON_REACH,
     ) -> None: ...
     def update_goal(
         self, goal_id: str, goal_revision: int, goal_state: GoalState, *,
         damage_budget: TaskDamageBudget | None = None,
         task_id: str | None = None,
-    ) -> None: ...
+    ) -> bool: ...
     def propose(
         self, frame: NavigationFrame, state_anchor: StateAnchor | None,
         deadline_ns: int, *, input_ledger: InputApplicationLedger | None = None,
@@ -508,9 +513,6 @@ class NavigationSession:
         self._control_ledger: InputApplicationLedger | None = None
         self._control_anchor: StateAnchor | None = None
         self._supervisor = ExecutionSupervisor()
-        self._pending_probe_stop_cause: StopCause | None = None
-        self._pending_probe_terminal: NavigationSessionState | None = None
-        self._pending_probe_terminal_reason: str | None = None
         self._required_interaction: BridgeInteractionPlan | None = None
         self._interaction_approach_pending = False
         self._local_goal_request_id: str | None = None
@@ -531,13 +533,9 @@ class NavigationSession:
         self._risk_submission_capacity_exhausted = False
         self._recovery_wait_status: WaitVerdict | None = None
         self._recovery_wait_capacity_exhausted = False
-        self._pending_retry: tuple[
-            str, RetryVerdict, str, tuple[BlockPos, ...],
-        ] | None = None
         self._last_retry_route_id: str | None = None
         self._last_retry_action_index: int | None = None
         self._last_retry_body_cell: tuple[int, int, int] | None = None
-        self._cancel_reason: str | None = None
         self._closed = False
         self._close_requested = False
 
@@ -642,6 +640,8 @@ class NavigationSession:
             NavigationSessionState.FAILED,
             NavigationSessionState.CLOSED,
         }:
+            if self._handoff.ending:
+                self._handoff.finish_ending()
             self._end_session_waits()
             if self._planning_coordinator is not None:
                 self._planning_coordinator.cancel_work(
@@ -665,22 +665,7 @@ class NavigationSession:
             NavigationSessionState.CLOSED,
         }:
             return
-        if self._edge_probe is not None and self._edge_probe.owned:
-            self._request_probe_stop(
-                StopCause.CLOSED,
-                terminal=NavigationSessionState.FAILED,
-                terminal_reason=reason,
-            )
-            return
-        if self._executor is not None:
-            self._risk_failure_reason = reason
-            self._supervisor.route.request_stop(StopCause.CANCELLED)
-            self._transition(
-                NavigationTransitionAction.BEGIN_STOPPING,
-                reason,
-            )
-            return
-        self._transition(NavigationTransitionAction.MARK_FAILED, reason)
+        self._request_ending(HandoffDestination.FAIL, StopCause.CANCELLED, reason)
 
     def _admit_command_event(self, event: NavigationSessionEvent) -> None:
         """Reject an invalid synchronous command before it mutates the task."""
@@ -725,6 +710,11 @@ class NavigationSession:
     @property
     def _pending_goal(self) -> PendingGoalRevision | None:
         return self._handoff.pending_goal
+
+    @property
+    def _pending_retry(self):
+        request = self._handoff.stop_request
+        return request if request is not None and request.retry_cause is not None else None
 
     @_pending_goal.setter
     def _pending_goal(self, value: PendingGoalRevision | None) -> None:
@@ -871,6 +861,11 @@ class NavigationSession:
         request = self._request
         route = self._active_route
         pending = self._pending_goal
+        observed = None
+        if self._goal_requests.reach_policy is GoalReachPolicy.KEEP_ACTIVE_ON_REACH:
+            current = self._adapter.latest_frame or self._frame
+            if current is not None:
+                observed = self._observed_goal(current)
         return NavigationSessionReport(
             self.session_id,
             self._state,
@@ -892,7 +887,42 @@ class NavigationSession:
             },
             (None if self._required_interaction is None else
              self._required_interaction.requirement.interaction_id),
+            planning_deadline_monotonic_ns=(
+                self._planning_coordinator.work_window.deadline_monotonic_ns
+                if self._planning_coordinator is not None
+                and self._planning_coordinator.has_owned_work
+                and self._planning_coordinator.work_window is not None else None),
+            reach_policy=self._goal_requests.reach_policy,
+            observed_goal_status=None if observed is None else observed.status,
         )
+
+    def _observed_goal(self, frame: NavigationFrame) -> ObservedGoal | None:
+        goal = (self._pending_goal.goal_state if self._pending_goal is not None else
+                None if self._request is None else self._request.goal_state)
+        if goal is None:
+            return None
+        return evaluate_observed_goal(frame, goal, self._task_damage_budget.risk_policy_id)
+
+    def _retain_satisfied_goal(
+        self, frame: NavigationFrame, input_ledger: InputApplicationLedger | None,
+        state_anchor: StateAnchor | None,
+    ) -> bool:
+        """Release an old body owner, while the same task continues to exist."""
+        if (self._goal_requests.reach_policy is not GoalReachPolicy.KEEP_ACTIVE_ON_REACH
+                or self._task_stop_requested() or self._pending_goal is not None):
+            return False
+        observed = self._observed_goal(frame)
+        if observed is None or observed.status is not ObservedGoalStatus.SATISFIED:
+            return False
+        if self._supervisor.route is None:
+            handoff = self._supervisor.evaluate_quiescence(frame, input_ledger, state_anchor)
+            if handoff.disposition is not HandoffDisposition.QUIESCENT:
+                return False
+        if not self._clear_active_execution():
+            return False
+        self._end_session_waits()
+        self._continue_execution("goal_state_satisfied")
+        return True
 
     @property
     def has_owned_body_control(self) -> bool:
@@ -981,7 +1011,7 @@ class NavigationSession:
              self._retry_ledger.round_failures),
             (0 if self._retry_ledger is None else
              self._retry_ledger.total_failures),
-            (None if self._pending_retry is None else self._pending_retry[0]),
+            (None if self._pending_retry is None else self._pending_retry.request_id),
             (False if self._retry_ledger is None else
              self._retry_ledger.progress_capacity_exhausted),
             (() if self._risk_ledger is None else
@@ -1283,6 +1313,7 @@ class NavigationSession:
             raise ContractViolation("navigation request belongs to another world")
         if self._request is not None and request.sequence <= self._request.sequence:
             raise ContractViolation("navigation request generation did not advance")
+        self._goal_requests.select_reach_policy(request.reach_policy)
         if type(request) is SurfacePlanningRequest:
             self._task_damage_budget = request.damage_budget
             self._movement_damage_spent_points = 0.0
@@ -1311,6 +1342,7 @@ class NavigationSession:
         maximum_planning_seconds: float = .5,
         damage_budget: TaskDamageBudget | None = None,
         task_id: str | None = None,
+        reach_policy: GoalReachPolicy = GoalReachPolicy.COMPLETE_ON_REACH,
     ) -> None:
         self._admit_command_event(NavigationSessionEvent.START_GOAL)
         self._start_goal_after_admission(
@@ -1319,6 +1351,7 @@ class NavigationSession:
             maximum_planning_seconds=maximum_planning_seconds,
             damage_budget=damage_budget,
             task_id=task_id,
+            reach_policy=reach_policy,
         )
 
     def _start_goal_after_admission(
@@ -1332,6 +1365,7 @@ class NavigationSession:
         maximum_planning_seconds: float = .5,
         damage_budget: TaskDamageBudget | None = None,
         task_id: str | None = None,
+        reach_policy: GoalReachPolicy | None = None,
     ) -> None:
         """Resolve current and goal support without creating point-goal state."""
         if self._request is not None:
@@ -1341,6 +1375,8 @@ class NavigationSession:
             raise ContractViolation("navigation goal revision is invalid")
         if type(goal_state) is not GoalState or type(frame) is not NavigationFrame:
             raise ContractViolation("navigation goal requires typed state and frame")
+        if reach_policy is not None and type(reach_policy) is not GoalReachPolicy:
+            raise ContractViolation("navigation goal reach policy must be typed")
         if damage_budget is None:
             damage_budget = (TaskDamageBudget() if self._risk_ledger is None
                              else self._risk_ledger.budget)
@@ -1348,6 +1384,8 @@ class NavigationSession:
             raise ContractViolation("navigation goal damage budget must be typed")
         identity = goal_id if task_id is None else task_id
         require_identifier(identity, "navigation task id")
+        if reach_policy is not None:
+            self._goal_requests.select_reach_policy(reach_policy)
         if self._retry_ledger is None:
             self._retry_ledger = RetryLedger(identity, initial_support=(
                 math.floor(frame.body.position[0]),
@@ -1412,7 +1450,12 @@ class NavigationSession:
         *,
         damage_budget: TaskDamageBudget | None = None,
         task_id: str | None = None,
-    ) -> None:
+    ) -> bool:
+        # A task whose ending request was already accepted must not revive,
+        # but a late update is an expected lifecycle race. Reject it without
+        # mutating either side's authoritative goal revision.
+        if self._handoff.ending:
+            return False
         self._admit_command_event(NavigationSessionEvent.REVISE_GOAL)
         if self._frame is None:
             raise ContractViolation("surface goal update requires an active request")
@@ -1443,7 +1486,7 @@ class NavigationSession:
                                else damage_budget),
                 task_id=self._retry_ledger.task_id,
             )
-            return
+            return True
         if type(self._request) is not SurfacePlanningRequest:
             raise ContractViolation("surface goal update requires an active request")
         if (goal_id != self._request.goal_id
@@ -1490,7 +1533,7 @@ class NavigationSession:
                     ("goal_surface_requires_information"
                      if missing else "goal_surface_unavailable"),
                 )
-            return
+            return True
         if self._current_risk_action_has_started():
             # A submitted damaging action already owns the body's immediate
             # future.  Planning from the pre-landing pose would either count
@@ -1509,7 +1552,7 @@ class NavigationSession:
                 pending, (),
                 "goal_revision_waits_for_risk_action_terminal",
             )
-            return
+            return True
         start_node, start_missing = self._surface_for_body(self._frame)
         if start_node is None:
             self._request = replace(next_request, goal=goal_node)
@@ -1526,7 +1569,7 @@ class NavigationSession:
                     ("current_surface_requires_information"
                      if start_missing else "current_surface_unavailable"),
                 )
-            return
+            return True
         request = replace(
             next_request,
             start=start_node,
@@ -1537,12 +1580,13 @@ class NavigationSession:
             self._stage_goal_revision_for_body_release(
                 pending, (), "goal_revision_waits_for_body_owner",
             )
-            return
+            return True
         self._pending_goal = None
         self._accept_goal_request(
             request, self._frame, "goal_revised",
             preserve_active_route=self._executor is not None,
         )
+        return True
 
     def _goal_request(
         self,
@@ -1567,6 +1611,7 @@ class NavigationSession:
             goal_state=goal_state,
             damage_budget=damage_budget,
             maximum_planning_seconds=maximum_planning_seconds,
+            reach_policy=self._goal_requests.reach_policy,
         )
 
     def _remaining_damage_budget(self) -> TaskDamageBudget:
@@ -1761,8 +1806,8 @@ class NavigationSession:
                       RiskReservationStatus.EXISTING}:
             return decision, action_id
         self._risk_failure_reason = f"risk_{status.value}"
-        route_control.request_stop(StopCause.CANCELLED)
-        self._transition(NavigationTransitionAction.BEGIN_STOPPING, self._risk_failure_reason)
+        self._request_ending(HandoffDestination.FAIL, StopCause.CANCELLED,
+                             self._risk_failure_reason)
         # The incumbent still owns the body. Its cancel path must provide the
         # protective input until Runtime verifies that it can be retired.
         return route_control.executor.decide(
@@ -1947,18 +1992,27 @@ class NavigationSession:
                 "route_release_waiting_for_evidence",
             )
             return
-        self._pending_retry = None
-        attempt_id, verdict, reason, missing = pending
-        if verdict is RetryVerdict.RETRY:
+        start, missing = self._surface_for_body(frame)
+        resolution = self._handoff.advance(
+            frame, handoff=self._supervisor.last_handoff,
+            goal_ready=True, start_ready=start is not None,
+            missing_cells=missing, unavailable_reason="current_surface_unavailable",
+        )
+        if resolution is None:
+            return
+        if resolution.destination is HandoffDestination.REPLAN:
             self._reissue_request_from_current(
                 frame,
-                reason,
+                resolution.reason,
                 permit_kind=PlanningAttemptPermitKind.RETRY,
-                source_event_id=attempt_id,
+                source_event_id=resolution.request_id,
             )
+        elif resolution.destination is HandoffDestination.WAIT_FOR_INFORMATION:
+            self._snapshot_missing = resolution.missing_cells
+            self._transition(NavigationTransitionAction.WAIT_FOR_INFORMATION, resolution.reason)
         else:
-            self._transition(NavigationTransitionAction.MARK_FAILED, 'replan_retry_exhausted')
-            self._snapshot_missing = missing
+            self._transition(NavigationTransitionAction.MARK_FAILED, resolution.reason)
+            self._snapshot_missing = resolution.missing_cells or pending.missing_cells
 
     def observe(
         self,
@@ -2009,6 +2063,12 @@ class NavigationSession:
         )
         if self._planning_coordinator is not None:
             self._planning_coordinator.observe_changes(changed_cells)
+            expired = self._planning_coordinator.expire_at_observation(
+                frame, remaining_damage_budget=self._remaining_damage_budget(),
+            )
+            if expired is not None and expired.kind is PlanningUpdateKind.FAILED:
+                self._fail_planning_or_preserve_incumbent(expired.failure.reason)
+                return
         interaction_invalid = False
         if self._required_interaction is not None:
             requirement = self._required_interaction.requirement
@@ -2196,10 +2256,8 @@ class NavigationSession:
                         terminal=NavigationSessionState.FAILED,
                         terminal_reason=departure.reason.value,
                     )
-                self._transition(
-                    NavigationTransitionAction.BEGIN_STOPPING,
-                    departure.reason.value,
-                )
+                self._request_ending(HandoffDestination.FAIL, StopCause.DEPENDENCY_CHANGED,
+                                     departure.reason.value)
                 return
             self._reissue_request_from_current(
                 self._frame,
@@ -2254,9 +2312,8 @@ class NavigationSession:
                 retired_probe = self._edge_probe
                 self._supervisor.retire_quiescent_probe(frame)
                 self._end_probe_waits(retired_probe)
-                terminal = self._pending_probe_terminal
-                terminal_reason = self._pending_probe_terminal_reason
-                self._pending_probe_stop_cause = None
+                terminal = self._handoff.stop_request if self._handoff.ending else None
+                terminal_reason = None if terminal is None else terminal.reason
                 if terminal is not None:
                     # S3 can pause an admitted route at the drop boundary
                     # while the probe owns the body.  Once a cancellation or
@@ -2273,11 +2330,11 @@ class NavigationSession:
                         )
                         self._transition(
                             NavigationTransitionAction.BEGIN_STOPPING,
-                            terminal_reason or terminal.value,
+                            terminal_reason,
                         )
                     else:
                         self._finish_pending_probe_terminal(
-                            terminal_reason or terminal.value,
+                            terminal_reason,
                         )
                 elif stop_cause is StopCause.ACQUISITION_TIMED_OUT:
                     route_control = self._supervisor.route
@@ -2433,6 +2490,8 @@ class NavigationSession:
                 self._reissue_request_from_current(
                     frame, "landing_edge_probe_complete",
                 )
+        if self._retain_satisfied_goal(frame, input_ledger, state_anchor):
+            return self._proposal(MovementV1(), None, 1, deadline_ns, movement_required=False)
         if (self._local_goal_request_id is not None
                 and self._executor is None
                 and not self._task_stop_requested()):
@@ -2442,10 +2501,7 @@ class NavigationSession:
         if self._active_route is None:
             if (self._state is NavigationSessionState.STOPPING
                     and self._task_stop_requested()):
-                self._transition(
-                    NavigationTransitionAction.MARK_CANCELLED,
-                    self._cancel_reason or "cancelled",
-                )
+                self._finish_pending_probe_terminal("stopped_without_route")
             information_look = self._information_look(frame)
             information_movement = MovementV1()
             if conditioned_look_intent_id is not None and self._edge_probe is None:
@@ -2574,11 +2630,8 @@ class NavigationSession:
                         safety_guard=True,
                     )
                 self._risk_failure_reason = precondition.reason.value
-                self._supervisor.route.request_stop(StopCause.CANCELLED)
-                self._transition(
-                    NavigationTransitionAction.BEGIN_STOPPING,
-                    precondition.reason.value,
-                )
+                self._request_ending(HandoffDestination.FAIL, StopCause.CANCELLED,
+                                     precondition.reason.value)
                 return self._proposal(MovementV1(), None, 1, deadline_ns)
         current_action = None
         executor_route = getattr(self._executor, "route", None)
@@ -2724,59 +2777,21 @@ class NavigationSession:
             self._resolve_pending_retry(frame)
         elif (self._state is NavigationSessionState.STOPPING
               and self._task_stop_requested()):
-            if decision.state in {
-                ActionRouteState.CANCELLED, ActionRouteState.COMPLETE,
-            }:
+            if decision.state in terminal_decisions:
                 if self._clear_active_execution():
-                    if self._pending_probe_terminal is not None:
-                        self._finish_pending_probe_terminal(
-                            decision.reason_code,
-                        )
-                    elif self._close_requested:
-                        self._transition(
-                            NavigationTransitionAction.MARK_CLOSED,
-                            "closed",
-                        )
-                    else:
-                        self._transition(
-                            (NavigationTransitionAction.MARK_FAILED
-                             if self._risk_failure_reason is not None else
-                             NavigationTransitionAction.MARK_CANCELLED),
-                            (self._risk_failure_reason or self._cancel_reason
-                             or decision.reason_code),
-                        )
-                    self._risk_failure_reason = None
-                else:
-                    self._reason = "route_release_waiting_for_evidence"
-            elif decision.state in {
-                ActionRouteState.FAILED, ActionRouteState.BLOCKED,
-                ActionRouteState.UNSUPPORTED, ActionRouteState.INPUT_LOST,
-            }:
-                if self._clear_active_execution():
-                    if self._pending_probe_terminal is not None:
-                        self._finish_pending_probe_terminal(
-                            decision.reason_code,
-                        )
-                    else:
-                        self._transition(
-                            (NavigationTransitionAction.MARK_CLOSED
-                             if self._close_requested else
-                             NavigationTransitionAction.MARK_FAILED
-                             if (self._risk_failure_reason is not None
-                                 or self._cancel_reason is None) else
-                             NavigationTransitionAction.MARK_CANCELLED),
-                            ("closed" if self._close_requested else
-                             self._risk_failure_reason or self._cancel_reason
-                             or decision.reason_code),
-                        )
+                    self._finish_pending_probe_terminal(decision.reason_code)
                     self._risk_failure_reason = None
                 else:
                     self._reason = "route_release_waiting_for_evidence"
             else:
                 self._transition(NavigationTransitionAction.BEGIN_STOPPING, decision.reason_code)
         elif decision.state is ActionRouteState.INPUT_LOST:
+            self._handoff.request_recovery(
+                request_id=f"{self.session_id}/end", destination=HandoffDestination.FAIL,
+                reason=decision.reason_code, cause=StopCause.INPUT_LOST, budget=self._retry_ledger,
+            )
             if self._clear_active_execution():
-                self._transition(NavigationTransitionAction.MARK_FAILED, decision.reason_code)
+                self._finish_pending_probe_terminal(decision.reason_code)
                 self._snapshot_missing = decision.missing_cells
             else:
                 self._transition(
@@ -2898,14 +2913,11 @@ class NavigationSession:
                 f"{self._active_route.route_id}:"
                 f"{decision.action_index}:{decision.reason_code}"
             )
-            registration = self._retry_ledger.record_failure(
-                attempt_id, RetryCause.EXECUTION,
+            self._handoff.request_recovery(
+                request_id=attempt_id, destination=HandoffDestination.REPLAN,
+                reason=decision.reason_code, budget=self._retry_ledger,
+                missing_cells=decision.missing_cells,
             )
-            if registration.first_seen:
-                self._pending_retry = (
-                    attempt_id, registration.verdict,
-                    decision.reason_code, decision.missing_cells,
-                )
             if self._pending_retry is None:
                 self._transition(
                     NavigationTransitionAction.MARK_FAILED,
@@ -3018,8 +3030,8 @@ class NavigationSession:
             if status is RiskSubmissionStatus.CAPACITY_EXHAUSTED:
                 self._risk_submission_capacity_exhausted = True
                 self._risk_failure_reason = "risk_submission_capacity_exhausted"
-                route_control.request_stop(StopCause.CANCELLED)
-                self._transition(NavigationTransitionAction.BEGIN_STOPPING, self._risk_failure_reason)
+                self._request_ending(HandoffDestination.FAIL, StopCause.CANCELLED,
+                                     self._risk_failure_reason)
         if (self._supervisor.has_pending_route
                 and self._supervisor.route is route_control
                 and self._frame is not None
@@ -3103,38 +3115,13 @@ class NavigationSession:
         if self._closed:
             raise ContractViolation("navigation session is closed")
         self._admit_command_event(NavigationSessionEvent.CANCEL)
-        self._supervisor.request_route_stop(StopCause.CANCELLED)
-        if self._planning_coordinator is not None:
-            self._planning_coordinator.cancel_work("session_cancelled")
-        if self._request_probe_stop(
-            StopCause.CANCELLED, terminal=NavigationSessionState.CANCELLED,
-            terminal_reason=reason.strip(),
-        ):
-            self._cancel_reason = reason.strip()
-            return
-        if self._executor is not None:
-            self._supervisor.route.request_stop(StopCause.CANCELLED)
-            self._cancel_reason = reason.strip()
-            self._transition(
-                NavigationTransitionAction.BEGIN_STOPPING,
-                "cancellation_requested",
-            )
-            if self._planning_coordinator is not None:
-                self._planning_coordinator.cancel_work()
-            return
-        self._cancel_reason = reason.strip()
-        self._transition(
-            NavigationTransitionAction.MARK_CANCELLED,
-            self._cancel_reason,
-        )
-        self._required_interaction = None
-        self._interaction_approach_pending = False
+        self._request_ending(HandoffDestination.CANCEL, StopCause.CANCELLED,
+                             reason.strip(), stopping_reason="cancellation_requested")
 
     def close(self) -> None:
         if self._closed:
             return
         self._admit_command_event(NavigationSessionEvent.CLOSE)
-        self._supervisor.request_route_stop(StopCause.CLOSED)
         self._close_requested = True
         if self._state in {
             NavigationSessionState.COMPLETE,
@@ -3147,16 +3134,8 @@ class NavigationSession:
             # that outcome or re-enter body-control states.
             self._finalize_close()
             return
-        if self._request_probe_stop(
-            StopCause.CLOSED, terminal=NavigationSessionState.CLOSED,
-            terminal_reason="closed",
-        ):
-            return
-        if self._executor is not None:
-            self._supervisor.route.request_stop(StopCause.CANCELLED)
-            self._transition(NavigationTransitionAction.BEGIN_STOPPING, 'closing_after_body_control')
-            return
-        self._finalize_close()
+        self._request_ending(HandoffDestination.CLOSE, StopCause.CLOSED, "closed",
+                             stopping_reason="closing_after_body_control")
 
     def spawn_successor(self, session_id: str) -> "NavigationSession":
         """Move reusable workers into a fresh, independent goal lifecycle."""
@@ -3374,7 +3353,10 @@ class NavigationSession:
             self._continue_execution('waiting_for_previous_input')
             return
         if observed.status is ObservedGoalStatus.SATISFIED:
-            self._transition(NavigationTransitionAction.MARK_COMPLETE, 'goal_state_satisfied')
+            if self._goal_requests.reach_policy is GoalReachPolicy.KEEP_ACTIVE_ON_REACH:
+                self._continue_execution("goal_state_settling")
+            else:
+                self._transition(NavigationTransitionAction.MARK_COMPLETE, 'goal_state_satisfied')
             return
         if (MovementMode.WALK not in goal.allowed_modes
                 or "standing" not in goal.allowed_poses):
@@ -3464,6 +3446,19 @@ class NavigationSession:
         terminal: NavigationSessionState | None = None,
         terminal_reason: str | None = None,
     ) -> bool:
+        if terminal is not None:
+            destination = {
+                NavigationSessionState.COMPLETE: HandoffDestination.COMPLETE,
+                NavigationSessionState.CANCELLED: HandoffDestination.CANCEL,
+                NavigationSessionState.FAILED: HandoffDestination.FAIL,
+                NavigationSessionState.CLOSED: HandoffDestination.CLOSE,
+            }.get(terminal)
+            if destination is None:
+                raise ContractViolation("probe stop requires a terminal destination")
+            self._handoff.request_recovery(
+                request_id=f"{self.session_id}/end", destination=destination,
+                reason=terminal_reason or cause.value, cause=cause, budget=self._retry_ledger,
+            )
         if not self._supervisor.request_probe_stop(cause):
             return False
         if self._retry_ledger is not None and self._frame is not None:
@@ -3480,12 +3475,30 @@ class NavigationSession:
                 )
             except RetryLedgerCapacityExceeded:
                 self._recovery_wait_capacity_exhausted = True
-        self._pending_probe_stop_cause = cause
-        if terminal is not None:
-            self._pending_probe_terminal = terminal
-            self._pending_probe_terminal_reason = terminal_reason
         self._transition(NavigationTransitionAction.BEGIN_STOPPING, 'edge_probe_stopping')
         return True
+
+    def _request_ending(
+        self, destination: HandoffDestination, cause: StopCause, reason: str,
+        *, stopping_reason: str | None = None,
+    ) -> None:
+        self._handoff.request_recovery(
+            request_id=f"{self.session_id}/end", destination=destination,
+            reason=reason, cause=cause, budget=self._retry_ledger,
+        )
+        request = self._handoff.stop_request
+        self._supervisor.request_route_stop(request.cause)
+        if self._planning_coordinator is not None:
+            self._planning_coordinator.cancel_work("navigation_ending")
+        if self._request_probe_stop(request.cause):
+            return
+        if self._executor is not None:
+            self._transition(NavigationTransitionAction.BEGIN_STOPPING,
+                             stopping_reason or request.reason)
+        else:
+            self._finish_pending_probe_terminal(request.reason)
+            self._required_interaction = None
+            self._interaction_approach_pending = False
 
     def _has_body_owner(self) -> bool:
         return (
@@ -3495,33 +3508,25 @@ class NavigationSession:
         )
 
     def _task_stop_requested(self) -> bool:
-        return (
-            self._cancel_reason is not None
-            or self._close_requested
-            or self._risk_failure_reason is not None
-            or self._pending_probe_terminal is not None
-        )
+        return self._handoff.ending
 
     def _finish_pending_probe_terminal(self, fallback_reason: str) -> None:
         """Publish a deferred terminal only after every body owner has left."""
-        terminal = self._pending_probe_terminal
-        reason = self._pending_probe_terminal_reason or fallback_reason
+        resolution = self._handoff.finish_ending()
         terminal_action = {
-            NavigationSessionState.COMPLETE:
+            HandoffDestination.COMPLETE:
                 NavigationTransitionAction.MARK_COMPLETE,
-            NavigationSessionState.CANCELLED:
+            HandoffDestination.CANCEL:
                 NavigationTransitionAction.MARK_CANCELLED,
-            NavigationSessionState.FAILED:
+            HandoffDestination.FAIL:
                 NavigationTransitionAction.MARK_FAILED,
-            NavigationSessionState.CLOSED:
+            HandoffDestination.CLOSE:
                 NavigationTransitionAction.MARK_CLOSED,
-        }.get(terminal)
+        }.get(resolution.destination)
         if terminal_action is None:
             raise ContractViolation("pending probe terminal state must be terminal")
-        self._pending_probe_terminal = None
-        self._pending_probe_terminal_reason = None
-        self._transition(terminal_action, reason)
-        if terminal is NavigationSessionState.CLOSED:
+        self._transition(terminal_action, resolution.reason)
+        if resolution.destination is HandoffDestination.CLOSE:
             self._finalize_close()
 
     def _stage_goal_revision_for_body_release(
@@ -3563,6 +3568,7 @@ class NavigationSession:
                 frame,
                 damage_budget=pending.damage_budget,
                 task_id=self._retry_ledger.task_id,
+                reach_policy=self._goal_requests.reach_policy,
             )
             return
         goal_node, goal_missing = self._surface_for_goal(
@@ -3952,6 +3958,11 @@ class NavigationSession:
         self._continue_execution("route_admitted")
 
     def _apply_decision_state(self, decision: ActionRouteDecision) -> None:
+        if (decision.state is ActionRouteState.COMPLETE
+                and self._goal_requests.reach_policy is GoalReachPolicy.KEEP_ACTIVE_ON_REACH):
+            self._continue_execution(decision.reason_code)
+            self._snapshot_missing = decision.missing_cells
+            return
         mapping = {
             ActionRouteState.COMPLETE:
                 NavigationTransitionAction.MARK_COMPLETE,
@@ -3987,6 +3998,7 @@ class NavigationSession:
         route_control: RouteControl | None = None,
         risk_action_id: str | None = None,
         retain_body_input: bool = False,
+        movement_required: bool = True,
     ) -> NavigationSessionProposal:
         control = None
         if self._source is not None:
@@ -3998,9 +4010,9 @@ class NavigationSession:
                 decision_events += (self._route_decision_event(
                     route_decision, conditioned_look_intent_id,
                 ),)
-            if (route_decision is not None and not route_decision.submit_input
+            if (not movement_required or (route_decision is not None and not route_decision.submit_input
                     and not retain_body_input
-                    and self._edge_probe is None):
+                    and self._edge_probe is None)):
                 return NavigationSessionProposal(
                     ControlFrameProposalV1(
                         observation_request=observation_request,

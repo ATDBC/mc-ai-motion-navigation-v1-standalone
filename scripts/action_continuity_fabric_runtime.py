@@ -135,8 +135,22 @@ def _metrics(rows):
                 outside_window_sequences=sorted({seq for row in rows for seq in row["outside_window_sequences"]}))
 
 
+def _start_delivery_configuration():
+    delivery_probe = os.environ.get('MC2P_MOTION_START_DELIVERY_PROBE') == '1'
+    selected_kind = os.environ.get('MC2P_MOTION_START_DELIVERY_KIND')
+    flat_view = os.environ.get('MC2P_MOTION_FLAT_DROP_VIEW') == '1'
+    kinds = (selected_kind,) if selected_kind is not None else ('moving_gap', 'cold_gap', 'jump_up', 'drop_2', 'drop_5')
+    if any(kind not in {'moving_gap', 'cold_gap', 'jump_up', 'drop_2', 'drop_5'} for kind in kinds):
+        raise ValueError('undeclared start-delivery family')
+    if flat_view and (not delivery_probe or selected_kind not in {'drop_2', 'drop_5'}):
+        raise ValueError('flat drop view requires the selected start-delivery drop')
+    pitch = {kind: 45. if kind.startswith('drop_') and not flat_view else 0. for kind in kinds}
+    return delivery_probe, kinds, pitch
+
+
 def run_action_continuity_runtime(runtime, backend, episode, directory, deadline_ns,
                                  fixture_writer, *, trace_owns_diagnostics=False):
+    delivery_probe, kinds, pitch_by_kind = _start_delivery_configuration()
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
     source_hashes = _hashes()
@@ -176,11 +190,6 @@ def run_action_continuity_runtime(runtime, backend, episode, directory, deadline
         raise RuntimeError("fixture teleport was not observed on its support")
 
     diagnostic()  # Include reset observation zero in the continuous chain.
-    delivery_probe = os.environ.get('MC2P_MOTION_START_DELIVERY_PROBE') == '1'
-    selected_kind = os.environ.get('MC2P_MOTION_START_DELIVERY_KIND')
-    kinds = (selected_kind,) if selected_kind is not None else ('moving_gap', 'cold_gap', 'jump_up', 'drop_2', 'drop_5')
-    if any(kind not in {'moving_gap', 'cold_gap', 'jump_up', 'drop_2', 'drop_5'} for kind in kinds):
-        raise ValueError('undeclared start-delivery family')
     cases = (tuple((kind, direction, late) for kind in kinds
                    for direction in directions for late in (False, True))
              if delivery_probe else tuple(('moving_gap', direction, False) for direction in directions))
@@ -229,9 +238,9 @@ def run_action_continuity_runtime(runtime, backend, episode, directory, deadline
                     for offset in range(0, len(requested), 128):
                         observe(ObservationRequestV3("navigation_v1", requested[offset:offset + 128]))
                 sx, sz = _rot(.5, 2.5, direction) if kind == 'cold_gap' else _rot(.55, .65, direction)
-                # Direct-drop startup requires the landing support to remain
-                # freshly visible. Looking down preserves that existing gate.
-                initial_pitch = 45. if drop else 0.
+                # The explicit flat-view regression keeps the same evidence
+                # and damage gates; all other drops retain their 45-degree view.
+                initial_pitch = pitch_by_kind[kind]
                 trial['initial_pitch_degrees'] = initial_pitch
                 teleport(sx, sz, -90 * direction, initial_pitch)
                 for _ in range(4):

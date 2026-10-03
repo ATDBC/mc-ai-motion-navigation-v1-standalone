@@ -1,0 +1,439 @@
+{
+  "pairs": 2000,
+  "input_parameters_verified": true,
+  "full_original_denominator": true,
+  "blocking_evidence": [],
+  "motion_delivery_profile": {
+    "id": "mc2p.navigation-motion-delivery.r28-v7.v1",
+    "base_manifest_sha256": "9571d30dafc93608806dff04e10a1042caf3a7a0421958e44ee3f9467b2a192e",
+    "clock": "movement_tick",
+    "cold_first_job_ticks": 7,
+    "warm_ticks": {
+      "jump_gap": 1,
+      "jump_up": 1,
+      "drop_2": 2,
+      "drop_5": 3
+    },
+    "revalidation": "corresponding_action_warm_ticks",
+    "max_pending": 8
+  },
+  "harness_changed_files": [
+    "scripts/navigation_coordination_metrics.py",
+    "tests/sim/motion_delivery.py"
+  ],
+  "changed_tasks": 398,
+  "lost_successes": [
+    {
+      "id": "drop-late-000026",
+      "reason": [
+        "goal_state_satisfied",
+        "input_lost"
+      ],
+      "arrival_ticks": [
+        62,
+        null
+      ],
+      "motion_jobs": [
+        {
+          "index": 1,
+          "operation": "solve",
+          "action": "drop_2",
+          "cold_start": true,
+          "delay_ticks": 7,
+          "source_tick": 36,
+          "submission_tick": 36,
+          "ready_tick": 43,
+          "delivery_tick": 43,
+          "submission_poll": 11,
+          "delivery_poll": 18,
+          "status": "solved",
+          "preparation_ticks": 1
+        },
+        {
+          "index": 2,
+          "operation": "revalidate",
+          "action": "drop_2",
+          "cold_start": false,
+          "delay_ticks": 2,
+          "source_tick": 43,
+          "submission_tick": 43,
+          "ready_tick": 45,
+          "delivery_tick": 45,
+          "submission_poll": 18,
+          "delivery_poll": 20,
+          "status": "solved",
+          "preparation_ticks": 4
+        },
+        {
+          "index": 3,
+          "operation": "solve",
+          "action": "drop_2",
+          "cold_start": false,
+          "delay_ticks": 2,
+          "source_tick": 52,
+          "submission_tick": 52,
+          "ready_tick": 54,
+          "delivery_tick": 54,
+          "submission_poll": 27,
+          "delivery_poll": 29,
+          "status": "solved",
+          "preparation_ticks": 4
+        }
+      ]
+    },
+    {
+      "id": "drop-late-000045",
+      "reason": [
+        "goal_state_satisfied",
+        "input_lost"
+      ],
+      "arrival_ticks": [
+        75,
+        null
+      ],
+      "motion_jobs": [
+        {
+          "index": 1,
+          "operation": "solve",
+          "action": "drop_5",
+          "cold_start": true,
+          "delay_ticks": 7,
+          "source_tick": 45,
+          "submission_tick": 45,
+          "ready_tick": 52,
+          "delivery_tick": 52,
+          "submission_poll": 17,
+          "delivery_poll": 24,
+          "status": "solved",
+          "preparation_ticks": 1
+        },
+        {
+          "index": 2,
+          "operation": "revalidate",
+          "action": "drop_5",
+          "cold_start": false,
+          "delay_ticks": 3,
+          "source_tick": 52,
+          "submission_tick": 52,
+          "ready_tick": 55,
+          "delivery_tick": 55,
+          "submission_poll": 24,
+          "delivery_poll": 27,
+          "status": "solved",
+          "preparation_ticks": 4
+        },
+        {
+          "index": 3,
+          "operation": "solve",
+          "action": "drop_5",
+          "cold_start": false,
+          "delay_ticks": 3,
+          "source_tick": 60,
+          "submission_tick": 60,
+          "ready_tick": 63,
+          "delivery_tick": 63,
+          "submission_poll": 32,
+          "delivery_poll": 35,
+          "status": "solved",
+          "preparation_ticks": 4
+        }
+      ]
+    },
+    {
+      "id": "drop-late-000056",
+      "reason": [
+        "goal_state_satisfied",
+        "input_lost"
+      ],
+      "arrival_ticks": [
+        66,
+        null
+      ],
+      "motion_jobs": [
+        {
+          "index": 1,
+          "operation": "solve",
+          "action": "drop_2",
+          "cold_start": true,
+          "delay_ticks": 7,
+          "source_tick": 39,
+          "submission_tick": 39,
+          "ready_tick": 46,
+          "delivery_tick": 46,
+          "submission_poll": 11,
+          "delivery_poll": 18,
+          "status": "solved",
+          "preparation_ticks": 1
+        },
+        {
+          "index": 2,
+          "operation": "revalidate",
+          "action": "drop_2",
+          "cold_start": false,
+          "delay_ticks": 2,
+          "source_tick": 46,
+          "submission_tick": 46,
+          "ready_tick": 48,
+          "delivery_tick": 48,
+          "submission_poll": 18,
+          "delivery_poll": 20,
+          "status": "solved",
+          "preparation_ticks": 4
+        },
+        {
+          "index": 3,
+          "operation": "solve",
+          "action": "drop_2",
+          "cold_start": false,
+          "delay_ticks": 2,
+          "source_tick": 55,
+          "submission_tick": 55,
+          "ready_tick": 57,
+          "delivery_tick": 57,
+          "submission_poll": 27,
+          "delivery_poll": 29,
+          "status": "solved",
+          "preparation_ticks": 4
+        }
+      ]
+    },
+    {
+      "id": "drop-late-000069",
+      "reason": [
+        "goal_state_satisfied",
+        "motion_unsolvable:motion_retry_exhausted:entry_state_changed"
+      ],
+      "arrival_ticks": [
+        71,
+        null
+      ],
+      "motion_jobs": [
+        {
+          "index": 1,
+          "operation": "solve",
+          "action": "drop_5",
+          "cold_start": true,
+          "delay_ticks": 7,
+          "source_tick": 36,
+          "submission_tick": 36,
+          "ready_tick": 43,
+          "delivery_tick": 43,
+          "submission_poll": 11,
+          "delivery_poll": 18,
+          "status": "solved",
+          "preparation_ticks": 1
+        },
+        {
+          "index": 2,
+          "operation": "revalidate",
+          "action": "drop_5",
+          "cold_start": false,
+          "delay_ticks": 3,
+          "source_tick": 43,
+          "submission_tick": 43,
+          "ready_tick": 46,
+          "delivery_tick": 46,
+          "submission_poll": 18,
+          "delivery_poll": 21,
+          "status": "needs_state",
+          "preparation_ticks": 4
+        },
+        {
+          "index": 3,
+          "operation": "solve",
+          "action": "drop_5",
+          "cold_start": false,
+          "delay_ticks": 3,
+          "source_tick": 48,
+          "submission_tick": 48,
+          "ready_tick": 51,
+          "delivery_tick": 51,
+          "submission_poll": 23,
+          "delivery_poll": 26,
+          "status": "solved",
+          "preparation_ticks": 4
+        }
+      ]
+    },
+    {
+      "id": "drop-late-000119",
+      "reason": [
+        "goal_state_satisfied",
+        "input_lost"
+      ],
+      "arrival_ticks": [
+        69,
+        null
+      ],
+      "motion_jobs": [
+        {
+          "index": 1,
+          "operation": "solve",
+          "action": "drop_5",
+          "cold_start": true,
+          "delay_ticks": 7,
+          "source_tick": 37,
+          "submission_tick": 37,
+          "ready_tick": 44,
+          "delivery_tick": 44,
+          "submission_poll": 12,
+          "delivery_poll": 19,
+          "status": "solved",
+          "preparation_ticks": 1
+        },
+        {
+          "index": 2,
+          "operation": "revalidate",
+          "action": "drop_5",
+          "cold_start": false,
+          "delay_ticks": 3,
+          "source_tick": 44,
+          "submission_tick": 44,
+          "ready_tick": 47,
+          "delivery_tick": 47,
+          "submission_poll": 19,
+          "delivery_poll": 22,
+          "status": "needs_state",
+          "preparation_ticks": 4
+        },
+        {
+          "index": 3,
+          "operation": "solve",
+          "action": "drop_5",
+          "cold_start": false,
+          "delay_ticks": 3,
+          "source_tick": 48,
+          "submission_tick": 48,
+          "ready_tick": 51,
+          "delivery_tick": 51,
+          "submission_poll": 23,
+          "delivery_poll": 26,
+          "status": "solved",
+          "preparation_ticks": 4
+        }
+      ]
+    },
+    {
+      "id": "drop-late-000135",
+      "reason": [
+        "goal_state_satisfied",
+        "input_lost"
+      ],
+      "arrival_ticks": [
+        73,
+        null
+      ],
+      "motion_jobs": [
+        {
+          "index": 1,
+          "operation": "solve",
+          "action": "drop_5",
+          "cold_start": true,
+          "delay_ticks": 7,
+          "source_tick": 38,
+          "submission_tick": 38,
+          "ready_tick": 45,
+          "delivery_tick": 45,
+          "submission_poll": 14,
+          "delivery_poll": 21,
+          "status": "solved",
+          "preparation_ticks": 1
+        },
+        {
+          "index": 2,
+          "operation": "revalidate",
+          "action": "drop_5",
+          "cold_start": false,
+          "delay_ticks": 3,
+          "source_tick": 45,
+          "submission_tick": 45,
+          "ready_tick": 48,
+          "delivery_tick": 48,
+          "submission_poll": 21,
+          "delivery_poll": 24,
+          "status": "solved",
+          "preparation_ticks": 4
+        },
+        {
+          "index": 3,
+          "operation": "solve",
+          "action": "drop_5",
+          "cold_start": false,
+          "delay_ticks": 3,
+          "source_tick": 53,
+          "submission_tick": 53,
+          "ready_tick": 56,
+          "delivery_tick": 56,
+          "submission_poll": 29,
+          "delivery_poll": 32,
+          "status": "solved",
+          "preparation_ticks": 4
+        }
+      ]
+    },
+    {
+      "id": "drop-late-000177",
+      "reason": [
+        "goal_state_satisfied",
+        "motion_unsolvable:needs_state"
+      ],
+      "arrival_ticks": [
+        69,
+        null
+      ],
+      "motion_jobs": [
+        {
+          "index": 1,
+          "operation": "solve",
+          "action": "drop_5",
+          "cold_start": true,
+          "delay_ticks": 7,
+          "source_tick": 37,
+          "submission_tick": 37,
+          "ready_tick": 44,
+          "delivery_tick": 44,
+          "submission_poll": 11,
+          "delivery_poll": 18,
+          "status": "solved",
+          "preparation_ticks": 1
+        },
+        {
+          "index": 2,
+          "operation": "revalidate",
+          "action": "drop_5",
+          "cold_start": false,
+          "delay_ticks": 3,
+          "source_tick": 44,
+          "submission_tick": 44,
+          "ready_tick": 47,
+          "delivery_tick": 47,
+          "submission_poll": 18,
+          "delivery_poll": 21,
+          "status": "solved",
+          "preparation_ticks": 4
+        },
+        {
+          "index": 3,
+          "operation": "solve",
+          "action": "drop_5",
+          "cold_start": false,
+          "delay_ticks": 3,
+          "source_tick": 55,
+          "submission_tick": 55,
+          "ready_tick": 58,
+          "delivery_tick": 58,
+          "submission_poll": 29,
+          "delivery_poll": 32,
+          "status": "needs_state",
+          "preparation_ticks": 4
+        }
+      ]
+    }
+  ],
+  "gained_successes": [],
+  "changed_groups": {
+    "drop-normal": 200,
+    "drop-late": 198
+  },
+  "scope": "Changed deterministic transport; reports timing differences without an equivalence/regression claim."
+}

@@ -629,6 +629,19 @@ class MotionRouteCoordinator:
             self.retry_ledger.end_wait(self._grounded_recovery_wait_id)
             self._grounded_recovery_wait_id = None
 
+    def _sample_solve_delivery(
+            self, result: GapMotionSolveResult, anchor: StateAnchor) -> None:
+        job = self._solve_basis_job
+        if (job is None or job.operation is not MotionJobOperation.SOLVE
+                or result.solve_result.status is not SolveStatus.SOLVED
+                or result.work_identity != job.work_identity
+                or self._delivery_identity == result.work_identity):
+            return
+        # Sample first arrival from the real source, before any entry wait.
+        self._delivery_ticks = min(4, max(1, anchor.movement_tick_id
+            - job.anchor.movement_tick_id))
+        self._delivery_identity = result.work_identity
+
     def _accept_result(
             self, result: GapMotionSolveResult, anchor: StateAnchor,
             world: PhysicsWorldView, changed_cells: tuple[BlockPos, ...],
@@ -659,13 +672,7 @@ class MotionRouteCoordinator:
             self._expire_delivered_result(result)
             return False
         connection = result.connection_id
-        if (self._solve_basis_job is not None
-                and self._delivery_identity != result.work_identity):
-            # Keep the last observed source-to-delivery span across grounded
-            # retries. The predicted future entry is not a latency sample.
-            self._delivery_ticks = min(4, max(1, anchor.movement_tick_id
-                - self._solve_basis_job.anchor.movement_tick_id))
-            self._delivery_identity = result.work_identity
+        self._sample_solve_delivery(result, anchor)
         action_index = (
             self._pending_action_index
             if self._pending_action_index is not None
@@ -1234,13 +1241,8 @@ class MotionRouteCoordinator:
                     )
             if self._work_identity is not None:
                 result = self.result_inbox.peek(self._work_identity)
-                if (result is not None and self._solve_basis_job is not None
-                        and self._delivery_identity != result.work_identity):
-                    # Sample arrival before holding an early result for its
-                    # predicted entry; preparation waiting is not worker time.
-                    self._delivery_ticks = min(4, max(1, anchor.movement_tick_id
-                        - self._solve_basis_job.anchor.movement_tick_id))
-                    self._delivery_identity = result.work_identity
+                if result is not None:
+                    self._sample_solve_delivery(result, anchor)
                 proof = None if result is None else result.solve_result.proof
                 if proof is None or anchor.movement_tick_id + 1 >= proof.execution_window.earliest_start_tick:
                     available_results = self.result_inbox.take(self._work_identity)

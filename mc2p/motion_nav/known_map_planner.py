@@ -9,6 +9,7 @@ import time
 
 from mc2p.contracts.common import ContractViolation, require_identifier, require_nonnegative_int
 from mc2p.motion_nav.async_work import AsyncWorkIdentity
+from mc2p.motion_nav.goal_reach_policy import GoalReachPolicy
 from mc2p.motion_nav.block_motion_traits import unsupported_motion_cells
 from mc2p.motion_nav.air_motion import AirMotionProfile
 from mc2p.motion_nav.controlled_drop import ControlledDropEdge, query_controlled_drop
@@ -437,8 +438,11 @@ class PlanningRequest:
     goal_state: GoalState | None = None
     maximum_planning_seconds: float = .5
     work_identity: AsyncWorkIdentity | None = None
+    reach_policy: GoalReachPolicy = GoalReachPolicy.COMPLETE_ON_REACH
 
     def __post_init__(self) -> None:
+        if type(self.reach_policy) is not GoalReachPolicy:
+            raise ContractViolation("planning goal reach policy must be typed")
         require_nonnegative_int(self.sequence, "planning request sequence")
         require_identifier(self.request_id, "planning request id")
         require_identifier(self.goal_id, "planning goal id")
@@ -1463,8 +1467,11 @@ class SurfacePlanningRequest:
     damage_budget: TaskDamageBudget = TaskDamageBudget()
     entry_physics_state: PhysicsState | None = None
     work_identity: AsyncWorkIdentity | None = None
+    reach_policy: GoalReachPolicy = GoalReachPolicy.COMPLETE_ON_REACH
 
     def __post_init__(self) -> None:
+        if type(self.reach_policy) is not GoalReachPolicy:
+            raise ContractViolation("surface planning goal reach policy must be typed")
         require_nonnegative_int(self.sequence, "surface planning request sequence")
         require_identifier(self.request_id, "surface planning request id")
         require_identifier(self.goal_id, "surface planning goal id")

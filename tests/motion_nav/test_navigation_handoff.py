@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import unittest
+from dataclasses import replace
 
 from mc2p.contracts.action_v1 import MovementV1
+from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.body_control import (
     HandoffDisposition, HandoffEvidence, StopCause,
 )
@@ -16,6 +18,7 @@ from mc2p.motion_nav.navigation_handoff import (
 )
 from mc2p.motion_nav.navigation_owners import PendingGoalRevision
 from mc2p.motion_nav.world_model import WorldSessionId
+from mc2p.motion_nav.retry_ledger import RetryLedger
 
 
 def _goal(revision: int) -> PendingGoalRevision:
@@ -42,6 +45,53 @@ def _quiescent() -> HandoffEvidence:
 
 
 class NavigationHandoffTests(unittest.TestCase):
+    def test_recovery_is_charged_once_and_waits_for_current_release(self):
+        from tests.motion_nav.test_r27_async_admission import DeferredMotionWorker, gap_owner
+        _, frame, _, _, _ = gap_owner(DeferredMotionWorker())
+        coordinator = NavigationHandoffCoordinator()
+        budget = RetryLedger("goal")
+        arguments = dict(request_id="route/deviation", destination=HandoffDestination.REPLAN,
+                         reason="needs_replan", budget=budget)
+        self.assertTrue(coordinator.request_recovery(**arguments))
+        self.assertFalse(coordinator.request_recovery(**arguments))
+        self.assertFalse(coordinator.request_recovery(**dict(arguments, request_id="route/another-label")))
+        self.assertEqual(budget.total_failures, 1)
+        handoff = replace(_quiescent(), world_session=frame.session,
+                          observation_sequence_id=frame.body.sequence_id)
+        facts = dict(goal_ready=True, start_ready=True, missing_cells=(),
+                     unavailable_reason="current_surface_unavailable")
+        self.assertIsNone(coordinator.advance(frame, handoff=replace(handoff,
+            observation_sequence_id=frame.body.sequence_id + 1), **facts))
+        resolution = coordinator.advance(frame, handoff=handoff, **facts)
+        self.assertIs(resolution.destination, HandoffDestination.REPLAN)
+        self.assertEqual(resolution.request_id, "route/deviation")
+        self.assertIsNone(coordinator.advance(frame, handoff=handoff, **facts))
+
+    def test_recovery_waits_for_missing_support_and_keeps_unavailable_support_as_failure(self):
+        from tests.motion_nav.test_r27_async_admission import DeferredMotionWorker, gap_owner
+        _, frame, _, _, _ = gap_owner(DeferredMotionWorker())
+        handoff = replace(_quiescent(), world_session=frame.session,
+                          observation_sequence_id=frame.body.sequence_id)
+        for missing, expected in (((), HandoffDestination.FAIL),
+                                  (((0, 63, 0),), HandoffDestination.WAIT_FOR_INFORMATION)):
+            with self.subTest(destination=expected):
+                coordinator = NavigationHandoffCoordinator()
+                coordinator.request_recovery(request_id="route/deviation", destination=HandoffDestination.REPLAN,
+                                             reason="needs_replan", budget=RetryLedger("goal"))
+                result = coordinator.advance(frame, handoff=handoff, goal_ready=True, start_ready=False,
+                                             missing_cells=missing, unavailable_reason="current_surface_unavailable")
+                self.assertIs(result.destination, expected)
+                self.assertEqual(result.missing_cells, missing)
+
+    def test_cancel_does_not_spend_retry_and_cannot_be_revised_into_recovery(self):
+        coordinator = NavigationHandoffCoordinator()
+        budget = RetryLedger("goal")
+        coordinator.request_recovery(request_id="task/cancel", destination=HandoffDestination.CANCEL,
+                                     reason="cancelled", budget=budget)
+        self.assertEqual(budget.total_failures, 0)
+        with self.assertRaisesRegex(ContractViolation, "ending"):
+            coordinator.stage_goal(_goal(2), StopCause.GOAL_REVISED, "revision-2")
+
     def test_newer_goal_revision_atomically_replaces_uncommitted_revision(self):
         coordinator = NavigationHandoffCoordinator()
         coordinator.stage_goal(

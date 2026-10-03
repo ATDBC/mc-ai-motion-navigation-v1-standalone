@@ -1290,7 +1290,7 @@ class NavigationSessionTests(unittest.TestCase):
         )
         session._reason = AdmissionReason.LANDING_VISUAL_EVIDENCE_MISSING
         session._snapshot_missing = (landing,)
-        session._request = Mock()
+        session._request = Mock(reach_policy=session._goal_requests.reach_policy)
         session._edge_probe = LandingEdgeProbe(
             "edge-probe-goal", 1, landing, 0,
         )

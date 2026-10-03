@@ -1,0 +1,113 @@
+{
+  "pairs": 1448,
+  "input_parameters_verified": true,
+  "changed_signatures": 14,
+  "changes": [
+    {
+      "id": "events/direct_drop_2-23050",
+      "before_outcome": "failed",
+      "after_outcome": "failed",
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "events/direct_drop_2-23075",
+      "before_outcome": "cancelled",
+      "after_outcome": "failed",
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "events/direct_drop_2-23107",
+      "before_outcome": "failed",
+      "after_outcome": "failed",
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "events/direct_drop_2-23116",
+      "before_outcome": "cancelled",
+      "after_outcome": "failed",
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "events/direct_drop_2-23131",
+      "before_outcome": "failed",
+      "after_outcome": "failed",
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "events/direct_drop_2-23144",
+      "before_outcome": "failed",
+      "after_outcome": "failed",
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "events/direct_drop_2-23168",
+      "before_outcome": "cancelled",
+      "after_outcome": "failed",
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "events/direct_drop_2-23223",
+      "before_outcome": "cancelled",
+      "after_outcome": "failed",
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23075",
+      "before_outcome": "cancelled",
+      "after_outcome": "failed",
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23116",
+      "before_outcome": "cancelled",
+      "after_outcome": "failed",
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23144",
+      "before_outcome": "failed",
+      "after_outcome": "failed",
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23168",
+      "before_outcome": "cancelled",
+      "after_outcome": "failed",
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "events/far_landing_L_walkway-23050",
+      "before_outcome": "failed",
+      "after_outcome": "failed",
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "events/far_landing_L_walkway-23179",
+      "before_outcome": "cancelled",
+      "after_outcome": "failed",
+      "before_passed": true,
+      "after_passed": true
+    }
+  ],
+  "blocking_failures": [],
+  "scope": "The event harness records a goal revision only when the public driver accepts it. All changed cases remain bounded and safe.",
+  "second_slice_comparison": {
+    "baseline": "r28-1 shared recovery slice",
+    "candidate": "GoalReachPolicy slice",
+    "pairs": 1448,
+    "signature_differences": 0
+  }
+}

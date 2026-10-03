@@ -1,0 +1,35 @@
+{
+  "motion_navigation_tests": {
+    "passed": 984,
+    "failed": 0
+  },
+  "targeted_shared_recovery_and_goal_policy_tests": {
+    "passed": 213,
+    "failed": 0
+  },
+  "coordination_cases": {
+    "passed": 1448,
+    "failed": 0,
+    "uncovered_functions": [
+      "navigation_session.handle_internal_contract_failure",
+      "navigation_session._wait_for_active_terminal",
+      "navigation_session._resolve_pending_retry"
+    ]
+  },
+  "product_v7": {
+    "pairs": 2000,
+    "differences_from_pre_slice": 0,
+    "success": 1705,
+    "exceptions": 0,
+    "safety_violations": 0,
+    "insufficient_evidence": 0
+  },
+  "goal_reach_policy": {
+    "default_matches_implicit_behavior": true,
+    "keep_active_after_reach": true,
+    "revision_preserves_task_ledgers": true,
+    "airborne_and_inflight_body_responsibility_preserved": true,
+    "successor_boundary_unchanged": true
+  },
+  "fabric_run": "not_run_for_partial_r28_1_slice"
+}

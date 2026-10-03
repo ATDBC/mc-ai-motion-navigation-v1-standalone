@@ -11,6 +11,7 @@ from typing import Any
 
 from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.action_preconditions import AcquisitionGrant
+from mc2p.motion_nav.goal_reach_policy import GoalReachPolicy
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.movement_transition import GoalState
 from mc2p.motion_nav.world_model import BlockPos
@@ -41,8 +42,26 @@ class GoalRequestLedger:
     """Own the one planning request currently visible to the planner."""
 
     request: Any | None = None
+    _reach_policy: GoalReachPolicy | None = field(default=None, init=False)
+
+    def __post_init__(self) -> None:
+        if self.request is not None:
+            self.accept(self.request)
+
+    @property
+    def reach_policy(self) -> GoalReachPolicy:
+        return self._reach_policy or GoalReachPolicy.COMPLETE_ON_REACH
+
+    def select_reach_policy(self, policy: GoalReachPolicy) -> None:
+        if type(policy) is not GoalReachPolicy:
+            raise ContractViolation("goal reach policy must be typed")
+        if self._reach_policy is not None and policy is not self._reach_policy:
+            raise ContractViolation("goal revision cannot change task reach policy")
+        self._reach_policy = policy
 
     def accept(self, request: Any | None) -> None:
+        if request is not None:
+            self.select_reach_policy(request.reach_policy)
         self.request = request
 
     def advance(self, session_id: str, **changes: Any) -> Any:
@@ -58,7 +77,7 @@ class GoalRequestLedger:
             request_id=f"{session_id}-request-{sequence}",
             **changes,
         )
-        self.request = advanced
+        self.accept(advanced)
         return advanced
 
 

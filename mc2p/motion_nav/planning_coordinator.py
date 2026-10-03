@@ -648,6 +648,31 @@ class PlanningCoordinator:
             raise ContractViolation("planning world changes must be immutable")
         self._pipeline.changed_cells.update(changed_cells)
 
+    def expire_at_observation(
+        self, frame: NavigationFrame, *, remaining_damage_budget: TaskDamageBudget,
+    ) -> PlanningUpdate | None:
+        """Retire expired planning before the newly observed frame is reported."""
+        if (not self._work_active or self._boundary_update(frame) is not None
+                or not self._attempt_expired(frame)):
+            return None
+        update = self._retry_or_fail(
+            frame, RetryCause.PLANNING, "planning_timeout", remaining_damage_budget,
+        )
+        if update.kind is PlanningUpdateKind.RUNNING:
+            # Starting a retry is this observation's result. Do not advance
+            # the new job again when propose consumes the same boundary.
+            self._terminal_update = update
+        return update
+
+    def _boundary_update(self, frame: NavigationFrame) -> PlanningUpdate | None:
+        update = self._terminal_update
+        if (update is not None and update.kind is PlanningUpdateKind.RUNNING
+                and self._work_window is not None
+                and self._movement_tick(frame) > self._work_window.started_movement_tick):
+            self._terminal_update = None
+            return None
+        return update
+
     def cancel(self, request_id: str) -> None:
         require_identifier(request_id, "cancelled planning request")
         if self.request is not None and self.request.request_id == request_id:
@@ -911,8 +936,9 @@ class PlanningCoordinator:
             raise ContractViolation("planning advance has no active attempt")
         if type(remaining_damage_budget) is not TaskDamageBudget:
             raise ContractViolation("planning advance requires a damage budget")
-        if self._terminal_update is not None:
-            return self._terminal_update
+        boundary = self._boundary_update(frame)
+        if boundary is not None:
+            return boundary
         if frame.session.value != request.world_session:
             return self._finish_failure("world_session_changed")
         if self._attempt_expired(frame):

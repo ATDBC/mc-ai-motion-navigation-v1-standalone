@@ -161,14 +161,15 @@ def _revision_event(
 
     def revise(context) -> None:
         goal = _goal(position, context.risk_policy_id)
-        context.driver.replace_goal(
+        accepted = context.driver.replace_goal(
             "goal", revision, goal, context.clock[0],
             damage_budget=TaskDamageBudget(
                 context.risk_policy_id, context.damage_points,
             ),
         )
-        context.goal_state = goal
-        context.goal_position = position
+        if accepted:
+            context.goal_state = goal
+            context.goal_position = position
 
     return Event(
         f"{kind.value}-{revision}",

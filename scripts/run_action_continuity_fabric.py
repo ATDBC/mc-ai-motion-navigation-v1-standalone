@@ -7,23 +7,35 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-from scripts.probe_fabric_deployment_observation import main
+from scripts.probe_fabric_deployment_observation import main as launcher_main
 
 
-if __name__ == '__main__':
+def main(argv=None):
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('--direction', type=int, choices=range(4))
     parser.add_argument('--start-delivery', action='store_true',
                         help='run D055 five-action startup/window checks')
     parser.add_argument('--kind', choices=('moving_gap', 'cold_gap', 'jump_up', 'drop_2', 'drop_5'))
-    extra, rest = parser.parse_known_args()
+    parser.add_argument('--flat-drop-view', action='store_true',
+                        help='start the selected drop with a horizontal view')
+    extra, rest = parser.parse_known_args(argv)
+    if extra.kind is not None and not extra.start_delivery:
+        parser.error('--kind requires --start-delivery')
+    if extra.flat_drop_view and (not extra.start_delivery or extra.kind not in {'drop_2', 'drop_5'}):
+        parser.error('--flat-drop-view requires --start-delivery and --kind drop_2/drop_5')
     os.environ['MC2P_ACTION_CONTINUITY_PROBE'] = '1'
     if extra.direction is not None:
         os.environ['MC2P_ACTION_CONTINUITY_DIRECTION'] = str(extra.direction)
     if extra.start_delivery:
         os.environ['MC2P_MOTION_START_DELIVERY_PROBE'] = '1'
     if extra.kind is not None:
-        if not extra.start_delivery:
-            parser.error('--kind requires --start-delivery')
         os.environ['MC2P_MOTION_START_DELIVERY_KIND'] = extra.kind
-    raise SystemExit(main(['--r25-planning-information-probe', *rest]))
+    if extra.flat_drop_view:
+        os.environ['MC2P_MOTION_FLAT_DROP_VIEW'] = '1'
+    else:
+        os.environ.pop('MC2P_MOTION_FLAT_DROP_VIEW', None)
+    return launcher_main(['--r25-planning-information-probe', *rest])
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())
