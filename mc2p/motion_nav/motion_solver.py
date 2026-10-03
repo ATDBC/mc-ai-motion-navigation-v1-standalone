@@ -1139,17 +1139,19 @@ def _trajectory_damage_points(
 def revalidate_gap_motion(
         proof: VerifiedMotionResult, anchor: StateAnchor,
         world: PhysicsWorldView,
-        execution_window: CandidateExecutionWindow) -> SolveResult:
+        execution_window: CandidateExecutionWindow, *,
+        entry_prefix: tuple[MotionCommandTick, ...] = ()) -> SolveResult:
     """Replay one old verified air command sequence without searching.
 
-    This is the bounded control-side check used when a background result arrives
-    after its source observation.  It never changes the command sequence and it
-    never explores alternative timings.
+    The worker uses the same preparation predictor as an initial solve. It
+    keeps the command sequence and only proves its declared start variants.
     """
     if (type(proof) is not VerifiedMotionResult
             or type(anchor) is not StateAnchor
             or type(world) is not PhysicsWorldView
-            or type(execution_window) is not CandidateExecutionWindow):
+            or type(execution_window) is not CandidateExecutionWindow
+            or type(entry_prefix) is not tuple or len(entry_prefix) > 4
+            or any(type(command) is not MotionCommandTick for command in entry_prefix)):
         raise ContractViolation("gap revalidation requires proof, anchor, world and window")
     if (anchor.session != world.session
             or anchor.ruleset_id != proof.ruleset_id
@@ -1180,6 +1182,10 @@ def revalidate_gap_motion(
             policy=proof.solver_policy,
             recovery_horizon_ticks=proof.recovery_horizon_ticks,
             continuation=proof.continuation,
+        )
+    if entry_prefix:
+        return _prepare_air_transition(
+            anchor, world, request, entry_prefix, revalidate_proof=proof,
         )
     rejected = check_motion_entry(anchor, world, request)
     if rejected is not None:
@@ -1240,8 +1246,11 @@ def revalidate_gap_motion(
 def revalidate_air_transition(
         proof: VerifiedMotionResult, anchor: StateAnchor,
         world: PhysicsWorldView,
-        execution_window: CandidateExecutionWindow) -> SolveResult:
-    return revalidate_gap_motion(proof, anchor, world, execution_window)
+        execution_window: CandidateExecutionWindow, *,
+        entry_prefix: tuple[MotionCommandTick, ...] = ()) -> SolveResult:
+    return revalidate_gap_motion(
+        proof, anchor, world, execution_window, entry_prefix=entry_prefix,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -1542,7 +1551,17 @@ def solve_prepared_air_transition(
         world: PhysicsWorldView,
         request: GapSolveRequest | AirTransitionSolveRequest,
         entry_prefix: tuple[MotionCommandTick, ...]) -> SolveResult:
-    """Solve at the entry predicted by one already-selected short ground prefix.
+    """Solve at the entry predicted by one already-selected short ground prefix."""
+    return _prepare_air_transition(anchor, world, request, entry_prefix)
+
+
+def _prepare_air_transition(
+        anchor: StateAnchor,
+        world: PhysicsWorldView,
+        request: GapSolveRequest | AirTransitionSolveRequest,
+        entry_prefix: tuple[MotionCommandTick, ...], *,
+        revalidate_proof: VerifiedMotionResult | None = None) -> SolveResult:
+    """Predict one prefix for either search or unchanged-command revalidation.
 
     The original anchor remains the only observation. The conditional anchor
     below is local to pure calculation and never authorizes the prefix.
@@ -1626,7 +1645,10 @@ def solve_prepared_air_transition(
     predicted_entry = replace(
         anchor, movement_tick_id=current.movement_tick_id, physics_state=current,
     )
-    solved = (solve_one_cell_gap(predicted_entry, world, request)
+    solved = (revalidate_air_transition(
+                  revalidate_proof, predicted_entry, world, request.execution_window)
+              if revalidate_proof is not None else
+              solve_one_cell_gap(predicted_entry, world, request)
               if type(request) is GapSolveRequest else
               solve_air_transition(predicted_entry, world, request))
     if solved.status is not SolveStatus.SOLVED:

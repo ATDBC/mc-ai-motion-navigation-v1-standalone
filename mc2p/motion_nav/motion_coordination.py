@@ -342,7 +342,9 @@ def _planned_continuation(route, action_index, anchor):
         frozenset({"standing"}), frozenset({mode}), None, None,
         "d053-ordinary-successor-entry-v1",
     )
-    width = anchor.physics_state.body_width
+    # Subtracting world-space AABB coordinates can vary by an ULP as the body
+    # moves. Keep this same geometric contract stable, below physics tolerance.
+    width = round(anchor.physics_state.body_width, 12)
     recovery_window = replace(window,
         minimum_longitudinal_offset_blocks=-.5 - width / 2.0 + .15 * width,
         maximum_lateral_offset_blocks=.5 + width / 2.0 - .15 * width,
@@ -558,6 +560,8 @@ class MotionRouteCoordinator:
         self._known_work_windows: dict[AsyncWorkIdentity, AsyncWorkWindow] = {}
         self._pending_job: GapMotionSolveJob | None = None
         self._solve_basis_job: GapMotionSolveJob | None = None
+        self._delivery_ticks = 1
+        self._delivery_identity: AsyncWorkIdentity | None = None
         self.last_admission: AsyncAdmissionRecord | None = None
         self._admission_records: list[AsyncAdmissionRecord] = []
         self.unidentified_results = 0
@@ -655,6 +659,13 @@ class MotionRouteCoordinator:
             self._expire_delivered_result(result)
             return False
         connection = result.connection_id
+        if (self._solve_basis_job is not None
+                and self._delivery_identity != result.work_identity):
+            # Keep the last observed source-to-delivery span across grounded
+            # retries. The predicted future entry is not a latency sample.
+            self._delivery_ticks = min(4, max(1, anchor.movement_tick_id
+                - self._solve_basis_job.anchor.movement_tick_id))
+            self._delivery_identity = result.work_identity
         action_index = (
             self._pending_action_index
             if self._pending_action_index is not None
@@ -730,6 +741,16 @@ class MotionRouteCoordinator:
             # are revalidated. Re-enter the existing bounded alignment path;
             # a current velocity/pose rejection does not gain blanket retries.
             prepared = replace(prepared, retryable=True)
+        if (prepared.status is GapPreparationStatus.READY
+                and proof.execution_window.latest_start_tick
+                    - (anchor.movement_tick_id + 1) < 1):
+            # Only a new grant needs fresh slack. An already admitted action
+            # keeps its original variants and is never re-anchored in flight.
+            prepared = GapPreparationResult(
+                GapPreparationStatus.REVALIDATION_REQUIRED,
+                solve_result=result.solve_result,
+                reason="new_motion_grant_has_no_start_slack", retryable=True,
+            )
         if identity_matched and self._work.check(result.work_identity, self._clock()) is not WorkCheck.READY:
             self._expire_delivered_result(result)
             return False
@@ -740,6 +761,7 @@ class MotionRouteCoordinator:
                 identity_matched=True,
                 facts_valid=False,
             )
+            preparation_ticks = self._delivery_ticks
             self._retire_work("motion_result_rejected")
             self.last_failure_reason = prepared.reason
             if prepared.status is GapPreparationStatus.REVALIDATION_REQUIRED:
@@ -750,6 +772,9 @@ class MotionRouteCoordinator:
                     self._submit_action(
                         action_index, anchor, world,
                         revalidate_proof=result.solve_result.proof,
+                        entry_prefix=tuple(MotionCommandTick(
+                            MovementV1(), anchor.physics_state.yaw_radians,
+                        ) for _ in range(preparation_ticks)),
                     )
                 else:
                     self.last_failure_reason = f"motion_retry_exhausted:{prepared.reason}"
@@ -840,7 +865,13 @@ class MotionRouteCoordinator:
             self, index: int, anchor: StateAnchor,
             world: PhysicsWorldView, *,
             revalidate_proof: VerifiedMotionResult | None = None,
-            entry_prefix: tuple[MotionCommandTick, ...] = ()) -> None:
+            entry_prefix: tuple[MotionCommandTick, ...] | None = None) -> None:
+        if entry_prefix is None:
+            # The existing one-tick waiting input is part of the prediction,
+            # rather than silently consuming the first action's delay variant.
+            entry_prefix = tuple(MotionCommandTick(
+                MovementV1(), anchor.physics_state.yaw_radians,
+            ) for _ in range(self._delivery_ticks))
         connection = self._connection_id(index)
         if (self._work_identity is not None
                 and self._pending_connection == connection
@@ -911,8 +942,10 @@ class MotionRouteCoordinator:
             from mc2p.motion_nav.fixed_route import GroundHandoffTarget
             self.executor.prepare_ground_handoff(GroundHandoffTarget(
                 anchor.physics_state.position, anchor.movement_tick_id + 1,
-                (MovementV1(),), anchor.movement_tick_id + _MOTION_SOLVE_LIMIT_TICKS,
-                movement_yaws_radians=(anchor.physics_state.yaw_radians,),
+                tuple(command.movement for command in entry_prefix),
+                anchor.movement_tick_id + _MOTION_SOLVE_LIMIT_TICKS,
+                movement_yaws_radians=tuple(command.required_movement_yaw_radians
+                                           for command in entry_prefix),
                 mode=MovementMode.WALK,
             ))
 
@@ -1201,6 +1234,13 @@ class MotionRouteCoordinator:
                     )
             if self._work_identity is not None:
                 result = self.result_inbox.peek(self._work_identity)
+                if (result is not None and self._solve_basis_job is not None
+                        and self._delivery_identity != result.work_identity):
+                    # Sample arrival before holding an early result for its
+                    # predicted entry; preparation waiting is not worker time.
+                    self._delivery_ticks = min(4, max(1, anchor.movement_tick_id
+                        - self._solve_basis_job.anchor.movement_tick_id))
+                    self._delivery_identity = result.work_identity
                 proof = None if result is None else result.solve_result.proof
                 if proof is None or anchor.movement_tick_id + 1 >= proof.execution_window.earliest_start_tick:
                     available_results = self.result_inbox.take(self._work_identity)
@@ -1280,8 +1320,22 @@ class MotionRouteCoordinator:
             self.last_failure_reason = decision.reason_code
             if registration.verdict is RetryVerdict.RETRY:
                 entry_state = self.executor.active_verified_entry_state()
+                horizontal_speed = math.hypot(
+                    anchor.physics_state.velocity_blocks_per_tick[0],
+                    anchor.physics_state.velocity_blocks_per_tick[2],
+                )
+                stopped_on_entry_support = (
+                    entry_state is not None
+                    and abs(anchor.physics_state.position[1] - entry_state.position[1]) < 1.0e-7
+                    and horizontal_speed <= .01
+                    and verified_ground_rollout(
+                        frame, anchor.physics_state, MovementV1(),
+                        control_ticks=0, tail_ticks=8,
+                        minimum_support=.01,
+                    ) is not None
+                )
                 recovery_movement = (
-                    None if entry_state is None else
+                    None if entry_state is None or stopped_on_entry_support else
                     verified_ground_target_movement(
                         frame, anchor.physics_state, entry_state.position,
                     )
@@ -1305,10 +1359,6 @@ class MotionRouteCoordinator:
                         latest_movement_tick=None,
                         requires_verified_motion=True,
                     )
-                horizontal_speed = math.hypot(
-                    anchor.physics_state.velocity_blocks_per_tick[0],
-                    anchor.physics_state.velocity_blocks_per_tick[2],
-                )
                 neutral_ground = verified_ground_rollout(
                     frame, anchor.physics_state, MovementV1(),
                     control_ticks=1, tail_ticks=0,
@@ -1417,4 +1467,27 @@ class MotionRouteCoordinator:
                 state=ActionRouteState.UNSUPPORTED,
                 reason_code=f"motion_unsolvable:{self.last_failure_reason}",
             )
+        if (self._pending_action_index == self.executor.action_index
+                and self._solve_basis_job is not None
+                and self._solve_basis_job.entry_prefix
+                and decision.state is ActionRouteState.RUNNING
+                and decision.requires_verified_motion
+                and not decision.submit_input):
+            # The existing route owner submits preparation through the normal
+            # arbiter/ledger. It is not a strict command or a risk commitment.
+            source_tick = self._solve_basis_job.anchor.movement_tick_id
+            offset = anchor.movement_tick_id - source_tick
+            prefix = self._solve_basis_job.entry_prefix
+            if 0 <= offset < len(prefix):
+                movement = prefix[offset].movement
+                if (decision.look is None
+                        and verified_ground_rollout(
+                            frame, anchor.physics_state, movement,
+                            control_ticks=1, tail_ticks=0,
+                            minimum_support=1.0e-4) is not None):
+                    return replace(
+                        decision, movement=movement, input_lease_ticks=1,
+                        submit_input=True,
+                        body_phase=BodyControlPhase.STRICT_PREPARATION,
+                    )
         return decision

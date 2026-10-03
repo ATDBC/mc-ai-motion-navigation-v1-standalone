@@ -309,8 +309,23 @@ def _drive_until_verified_command(session, current, anchor):
         decision = proposal.route_decision
         if decision is not None and decision.reason_code == "awaiting_verified_motion":
             saw_motion_wait = True
+        if (decision is not None and decision.submit_input
+                and decision.verified_command_index is not None):
+            return proposal, ledger, saw_motion_wait, current, anchor
         if decision is not None and decision.submit_input:
-            return proposal, ledger, saw_motion_wait
+            from tests.motion_nav.preparation_fixture import apply_tick
+            from mc2p.motion_nav.physics_adapter import PhysicsWorldView
+            anchor = apply_tick(anchor, PhysicsWorldView(current.world, JAVA_1_21_RULESET), ledger,
+                                decision.movement, 100 + anchor.movement_tick_id)
+            state = anchor.physics_state
+            current = replace(current, body=replace(
+                current.body, sequence_id=anchor.observation_sequence_id,
+                stamp=ObservationStamp(state.session, anchor.observation_sequence_id,
+                    anchor.movement_tick_id, "test", 1_000_000_000),
+                position=state.position, body_box=state.body_box,
+                velocity_blocks_per_second=tuple(value * 20 for value in state.velocity_blocks_per_tick),
+                is_on_ground=state.on_ground, horizontal_collision=state.horizontal_collision,
+                vertical_collision=state.vertical_collision))
         time.sleep(.01)
     raise AssertionError("verified jump command was not submitted")
 
@@ -2227,7 +2242,7 @@ class NavigationSessionTests(unittest.TestCase):
 
     def test_gap_route_is_solved_by_the_session_coordinator(self):
         session, current, anchor = _gap_session()
-        proposal, _, saw_motion_wait = _drive_until_verified_command(
+        proposal, _, saw_motion_wait, current, anchor = _drive_until_verified_command(
             session, current, anchor,
         )
 
@@ -2250,7 +2265,7 @@ class NavigationSessionTests(unittest.TestCase):
             session_id="gap-missing-anchor-session",
         )
         try:
-            _, ledger, _ = _drive_until_verified_command(
+            _, ledger, _, current, anchor = _drive_until_verified_command(
                 session, current, anchor,
             )
             executor = session._executor
@@ -2280,7 +2295,7 @@ class NavigationSessionTests(unittest.TestCase):
             session_id="gap-dependency-session",
         )
         try:
-            _drive_until_verified_command(session, current, anchor)
+            _, _, _, current, anchor = _drive_until_verified_command(session, current, anchor)
             executor = session._executor
             dependency = session.active_route.action_route.dependencies[0]
             gap_position = (.5, 64.0, 1.5)
@@ -2324,7 +2339,7 @@ class NavigationSessionTests(unittest.TestCase):
             session_id="gap-ground-handoff-session",
         )
         try:
-            submitted, ledger, _ = _drive_until_verified_command(
+            submitted, ledger, _, current, anchor = _drive_until_verified_command(
                 session, current, anchor,
             )
             session.register_verified_submission(

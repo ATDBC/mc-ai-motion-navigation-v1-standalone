@@ -810,6 +810,11 @@ class ContinuousDescentTests(unittest.TestCase):
                 coordinator.decide(current_frame, current_anchor, ledger, world, changed_cells=())
             self.assertEqual(len(jobs), 1)
             self.assertEqual(jobs[0].anchor, current_anchor)
+            from tests.motion_nav.preparation_fixture import apply_tick
+            current_anchor = apply_tick(current_anchor, world, ledger, MovementV1(), 100)
+            current_frame = VerifiedMotionRouteIntegrationTests.frame(
+                world._world, current_anchor.physics_state, 100,
+            )
             accepted = coordinator._accept_result(
                 _execute_job(jobs[0]), current_anchor, world, (), ledger,
             )

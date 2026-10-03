@@ -286,8 +286,6 @@ class R27IdentityTests(unittest.TestCase):
                                   vertical_collision=not self.airborne)))
 
             def step(self, action, deadline, **kwargs):
-                if action.movement == MovementV1():
-                    self.movement_tick += 1
                 result = super().step(action, deadline, **kwargs)
                 receipt = asdict(result.receipt)
                 receipt["input_applications"] = list(receipt["input_applications"])
@@ -364,6 +362,11 @@ class R27IdentityTests(unittest.TestCase):
         worker.results.extend((_execute_job(refresh), old_failure, new_result))
         result = driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
         self.assertIsNone(result.report.failure)
+        for _ in range(4):
+            if result.decision.action.movement.jump:
+                break
+            result = driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
+            self.assertIsNone(result.report.failure)
         self.assertTrue(result.decision.action.movement.jump)
         monitor = AsyncInvariantMonitor()
         monitor.check(successor.async_work_diagnostics, successor.active_motion_mailboxes)

@@ -172,6 +172,13 @@ def _proved_prelude_applied(proof, anchor, ledger) -> bool:
     # Sampled axes omit yaw. Exclude every look that may have affected this
     # interval, including a pure-look command with a different request id.
     for record in ledger.snapshot():
+        if (record.status is InputApplicationStatus.APPLIED
+                and record.action.valid_for_ticks == 1
+                and record.applied_ticks
+                and record.applied_ticks[-1] < first_tick):
+            # A confirmed view change before the real source is already in
+            # that observation. Its old allowed window is not a future change.
+            continue
         if (record.action.look != LookV1()
                 and record.requested_first_tick <= last_tick
                 and record.latest_allowed_first_tick

@@ -101,10 +101,10 @@ class _GapRuntimeBackend:
         self.sequence += 1
         self.clock[0] += 50_000_000
         active = action.movement != MovementV1()
-        if active:
-            self.movement_tick += (
-                2 if action.movement.jump and self.apply_jump_one_tick_late else 1
-            )
+        # Real client ticks and samples continue during neutral preparation.
+        self.movement_tick += (
+            2 if action.movement.jump and self.apply_jump_one_tick_late else 1
+        )
         if action.movement.jump:
             self.airborne = True
             if self.change_landing_on_jump:
@@ -125,7 +125,7 @@ class _GapRuntimeBackend:
             "jump": action.movement.jump,
             "sneak": action.movement.sneak,
             "sprint": action.movement.sprint,
-        }] if active else [])
+        }])
         if active and self.airborne:
             self.airborne_commands += 1
         if (

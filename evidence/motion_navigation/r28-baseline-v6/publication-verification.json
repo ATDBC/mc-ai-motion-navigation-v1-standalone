@@ -1,0 +1,14 @@
+{
+  "schema_version": "mc2p.d055-publication-verification.v1",
+  "implementation_commit": "82d9753",
+  "original_run_metadata_unchanged": true,
+  "non_export_production_files_unchanged": true,
+  "fabric_source_files_unchanged": true,
+  "post_run_packaging_changes": {
+    "config/motion-navigation/standalone-export-v1.json": {
+      "at_run": "a4c978e4caaf7f310ab4c8031d4c218288ea8ed65d205bec333451bd4bee5e77",
+      "at_publication": "675d9fc8ec65c2668179e382da60714effd428f2d958f6485869ed60185425a4"
+    }
+  },
+  "scope": "Only the export file list changed after the run. No actor, physics, runtime or test injection changes. Original evidence and metadata remain immutable."
+}

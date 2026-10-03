@@ -96,9 +96,11 @@ class BatchFiveTests(unittest.TestCase):
             scenario, _ = product_scenario(manifest, group, seed)
             result = run(scenario)
             for row in result.trace:
-                if row['driver_reason'] in {'recovering_grounded_verified_entry','settling_grounded_verified_entry','releasing_grounded_verified_entry'}:
+                phase = (None if not row['body_control_activities'] else
+                         row['body_control_activities'][0]['phase'])
+                if (row['retry_total_failures'] > 0
+                        and phase in {'entry_recovery', 'strict_preparation'}):
                     self.assertTrue(row['body_control_activities'], row)
-                    self.assertEqual(row['body_control_activities'][0]['phase'], 'entry_recovery')
                     self.assertTrue(row['body_control_activities'][0]['owner_id'].startswith('route/'))
                     found.append(row)
         self.assertTrue(found, 'fixture must reach the real recovery path')

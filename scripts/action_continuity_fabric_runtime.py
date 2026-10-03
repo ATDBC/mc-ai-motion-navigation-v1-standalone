@@ -6,7 +6,7 @@ No fixture geometry or TEST_ORACLE memory is supplied to the navigation session.
 """
 from __future__ import annotations
 
-from dataclasses import asdict
+from dataclasses import asdict, replace
 import hashlib
 import json
 import math
@@ -19,6 +19,8 @@ from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, MovementMode
 from mc2p.motion_nav.navigation_session import NavigationSession, NavigationSessionProfiles
 from mc2p.motion_nav.world_model import Aabb
+from mc2p.motion_nav.motion_risk import TaskDamageBudget
+from mc2p.motion_nav.motion_worker import MotionSolverWorker
 from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
 from scripts.control_probe_core import write_json_atomic
 from scripts.r25_planning_information_runtime import _task
@@ -35,6 +37,47 @@ SOURCES = (
     "mc2p/motion_nav/known_map_planner.py",
 )
 TERMINAL = {"success", "failed", "cancelled", "stopped", "interaction_required"}
+
+
+class _ObservedMotionWorker:
+    """Read-only transport timing through the existing real worker port."""
+
+    def __init__(self, path, trial, *, cold):
+        self.path, self.trial = path, trial
+        self.worker = None if cold else MotionSolverWorker(max_pending=4)
+
+    def _record(self, **values):
+        with self.path.open('a', encoding='utf8') as stream:
+            stream.write(json.dumps(dict(trial=self.trial, at_ns=time.perf_counter_ns(), **values))+'\n')
+
+    def submit(self, job):
+        if self.worker is None:
+            self.worker = MotionSolverWorker(max_pending=4)
+        submitted = self.worker.submit(job)
+        self._record(event='submit', submitted=submitted,
+            identity=asdict(job.work_identity), source_tick=job.anchor.movement_tick_id,
+            source_state=asdict(job.anchor.physics_state), prefix=[asdict(c) for c in job.entry_prefix],
+            window=asdict(job.request.execution_window), operation=job.operation.value)
+        return submitted
+
+    def poll_available(self):
+        results = () if self.worker is None else self.worker.poll_available()
+        for result in results:
+            proof = result.solve_result.proof
+            self._record(event='result', identity=asdict(result.work_identity),
+                status=result.solve_result.status.value, reasons=result.solve_result.reasons,
+                compute_ns=result.elapsed_ns, window=None if proof is None else asdict(proof.execution_window),
+                preparation=None if proof is None or proof.preparation is None else
+                dict(source_tick=proof.preparation.source_anchor.movement_tick_id,
+                     prefix_ticks=len(proof.preparation.commands), entry_tick=proof.anchor_movement_tick_id))
+        return results
+
+    def is_alive(self):
+        return self.worker is None or self.worker.is_alive()
+
+    def close(self):
+        if self.worker is not None:
+            self.worker.close()
 
 
 def _rot(x, z, direction):
@@ -123,22 +166,40 @@ def run_action_continuity_runtime(runtime, backend, episode, directory, deadline
         if result.report.failure is not None:
             raise RuntimeError(result.report.failure)
 
-    def teleport(x, z, yaw, pitch):
-        fixture_writer((f"tp MC2PProbe {x} 100 {z} {yaw} {pitch}",))
+    def teleport(x, z, yaw, pitch, feet_y=100.):
+        fixture_writer((f"tp MC2PProbe {x} {feet_y} {z} {yaw} {pitch}",))
         for _ in range(10):
             observe()
             body = runtime.navigation_observation_adapter.latest_frame.body
-            if math.dist(body.position, (x, 100., z)) < .08 and body.is_on_ground:
+            if math.dist(body.position, (x, feet_y, z)) < .08 and body.is_on_ground:
                 return
         raise RuntimeError("fixture teleport was not observed on its support")
 
     diagnostic()  # Include reset observation zero in the continuous chain.
+    delivery_probe = os.environ.get('MC2P_MOTION_START_DELIVERY_PROBE') == '1'
+    selected_kind = os.environ.get('MC2P_MOTION_START_DELIVERY_KIND')
+    kinds = (selected_kind,) if selected_kind is not None else ('moving_gap', 'cold_gap', 'jump_up', 'drop_2', 'drop_5')
+    if any(kind not in {'moving_gap', 'cold_gap', 'jump_up', 'drop_2', 'drop_5'} for kind in kinds):
+        raise ValueError('undeclared start-delivery family')
+    cases = (tuple((kind, direction, late) for kind in kinds
+                   for direction in directions for late in (False, True))
+             if delivery_probe else tuple(('moving_gap', direction, False) for direction in directions))
+    summary['frozen_cases'] = cases
     with (directory / "action-continuity-frames.jsonl").open("a", encoding="utf-8", newline="\n") as stream:
-        for direction in directions:
-            name = f"continuity-gap-{direction}"
-            session = driver = None
+        for kind, direction, late_first in cases:
+            name = (f"start-delivery-{kind}-{direction}-{'late' if late_first else 'normal'}"
+                    if delivery_probe else f"continuity-gap-{direction}")
+            session = driver = worker = None
+            # Warm-process trials start transport before fixture observation.
+            # Cold-gap trials deliberately let the session start its worker.
+            if delivery_probe:
+                worker = _ObservedMotionWorker(directory / 'motion-start-timing.jsonl', name,
+                                               cold=kind == 'cold_gap')
             rows, activity_by_sequence = [], {}
-            trial = dict(id=name, direction=direction, outcome="not_started", passed=False)
+            trial = dict(id=name, kind=kind, direction=direction, late_first=late_first,
+                         worker_start='cold-on-demand' if kind == 'cold_gap' else 'before-fixture',
+                         outcome="not_started", passed=False)
+            delay_injected = False
             started = time.perf_counter_ns()
             try:
                 if deadline_ns - started < 15_000_000_000:
@@ -146,39 +207,65 @@ def run_action_continuity_runtime(runtime, backend, episode, directory, deadline
                 fixture_writer(("forceload add -16 -16 16 16",
                     "fill -18 88 -18 18 107 18 minecraft:air replace",
                     "fill -18 89 -18 18 89 18 minecraft:stone replace",
-                    "difficulty peaceful", "gamemode survival MC2PProbe", "effect clear MC2PProbe"))
-                supports = [_rot(x + .5, z + .5, direction) for x in range(-2, 3)
-                            for z in range(-2, 10) if z != 3]
-                fixture_writer(tuple(f"setblock {math.floor(x)} 99 {math.floor(z)} minecraft:grass_block"
-                                     for x, z in supports))
+                    "difficulty peaceful", "gamerule naturalRegeneration false",
+                    "gamemode survival MC2PProbe",
+                    "effect give MC2PProbe minecraft:instant_health 1 8 true",
+                    "effect clear MC2PProbe"))
+                drop = int(kind[-1]) if kind.startswith('drop_') else 0
+                def feet_at(z):
+                    return 100 + (1 if kind == 'jump_up' and z >= 3 else 0) - (drop if drop and z >= 3 else 0)
+                supports = [(px, feet_at(z), pz) for x in range(-2, 3)
+                            for z in range(-2, 10) if kind not in {'cold_gap', 'moving_gap'} or z != 3
+                            for px, pz in (_rot(x + .5, z + .5, direction),)]
+                fixture_writer(tuple(f"setblock {math.floor(x)} {y-1} {math.floor(z)} minecraft:grass_block"
+                                     for x, y, z in supports))
                 requested = tuple((math.floor(px), y, math.floor(pz))
                     for x in range(-2, 3) for z in range(-2, 10)
-                    for px, pz in (_rot(x + .5, z + .5, direction),) for y in range(98, 105))
+                    for px, pz in (_rot(x + .5, z + .5, direction),) for y in range(98-drop, 105))
                 for x, z, yaw, pitch in ((-1.5, 2.5, -45, 45), (1.5, 4.5, 135, 45),
                                           (-1.5, 2.5, -45, -30), (1.5, 4.5, 135, -30)):
                     px, pz = _rot(x, z, direction)
-                    teleport(px, pz, yaw - 90 * direction, pitch)
+                    teleport(px, pz, yaw - 90 * direction, pitch, feet_at(math.floor(z)))
                     for offset in range(0, len(requested), 128):
                         observe(ObservationRequestV3("navigation_v1", requested[offset:offset + 128]))
-                sx, sz = _rot(.55, .65, direction)
-                teleport(sx, sz, -90 * direction, 0)
+                sx, sz = _rot(.5, 2.5, direction) if kind == 'cold_gap' else _rot(.55, .65, direction)
+                # Direct-drop startup requires the landing support to remain
+                # freshly visible. Looking down preserves that existing gate.
+                initial_pitch = 45. if drop else 0.
+                trial['initial_pitch_degrees'] = initial_pitch
+                teleport(sx, sz, -90 * direction, initial_pitch)
                 for _ in range(4):
                     observe()
                 gx, gz = _rot(.5, 8.5, direction)
-                goal = GoalState(Aabb(gx-.2, 99.92, gz-.2, gx+.2, 100.08, gz+.2),
+                goal_y = feet_at(8)
+                policy = 'd055-declared-fall-damage' if drop == 5 else 'no_expected_damage'
+                budget = TaskDamageBudget(policy, 2. if drop == 5 else 0.)
+                goal = GoalState(Aabb(gx-.2, goal_y-.08, gz-.2, gx+.2, goal_y+.08, gz+.2),
                     GoalSupport.SOLID, frozenset({MovementMode.WALK}), frozenset({"standing"}), .6)
+                goal = replace(goal, risk_policy_id=policy)
                 session = NavigationSession(name, profiles,
-                    observation_adapter=runtime.navigation_observation_adapter)
+                    observation_adapter=runtime.navigation_observation_adapter,
+                    motion_worker=worker)
                 driver = RuntimeNavigationDriver(runtime, session)
-                driver.start(name, 1, goal, time.perf_counter_ns())
+                driver.start(name, 1, goal, time.perf_counter_ns(), damage_budget=budget)
                 first_tick = runtime.navigation_observation_adapter.latest_frame.body.movement_tick_id
                 task_started = time.perf_counter_ns()
 
                 def tick(phase):
+                    nonlocal delay_injected
                     before = runtime.navigation_observation_adapter.latest_frame.body.movement_tick_id
                     begun = time.perf_counter_ns()
                     controls = driver.prepare_proposals(next_deadline())
                     prepared = time.perf_counter_ns()
+                    windows = [envelope.intent.movement_tick_window
+                               for proposal in controls for envelope in proposal.intents
+                               if envelope.intent.movement_tick_window is not None]
+                    if late_first and not delay_injected and windows:
+                        if windows[0].latest_tick - windows[0].earliest_tick != 1:
+                            raise RuntimeError('new motion grant lost first-input delay slack')
+                        trial['injected_first_window'] = asdict(windows[0])
+                        time.sleep(.055)
+                        delay_injected = True
                     result = runtime.control_frame(task, profile, next_deadline(), proposals=controls)
                     driver.adopt_result(result)
                     finished = time.perf_counter_ns()
@@ -212,6 +299,9 @@ def run_action_continuity_runtime(runtime, backend, episode, directory, deadline
                         prepare_ns=prepared-begun, roundtrip_ns=finished-begun,
                         unowned_active_input_ticks=unowned, outside_window_sequences=outside,
                         runtime_failure=None if result.report.failure is None else str(result.report.failure))
+                    if delivery_probe:
+                        row['motion_admissions'] = [asdict(record) for owner in
+                            session.async_work_diagnostics for record in owner.admissions]
                     rows.append(row)
                     stream.write(json.dumps(row, ensure_ascii=False, allow_nan=False, separators=(",", ":")) + "\n")
                     if len(rows) % 20 == 0:
@@ -224,6 +314,7 @@ def run_action_continuity_runtime(runtime, backend, episode, directory, deadline
                         break
                     tick("navigation")
                 trial.update(outcome=driver.state, reason=driver.reason, passed=driver.state == "success",
+                    late_injection_applied=delay_injected,
                     movement_ticks=runtime.navigation_observation_adapter.latest_frame.body.movement_tick_id-first_tick,
                     task_elapsed_ns=time.perf_counter_ns()-task_started)
             except Exception as error:
@@ -244,11 +335,15 @@ def run_action_continuity_runtime(runtime, backend, episode, directory, deadline
                         trial.update(passed=False, cleanup_error=f"{type(error).__name__}:{error}")
                 if session is not None and (driver is None or driver.source is None):
                     session.close()
+                if worker is not None and (driver is None or driver.source is None):
+                    worker.close()
                 stream.flush()
                 trial.update(metrics=_metrics(rows), elapsed_ns=time.perf_counter_ns()-started,
                              final_position=runtime.navigation_observation_adapter.latest_frame.body.position,
                              source_released=driver is None or driver.source is None)
-                if trial["passed"] and (not trial["metrics"]["jump_ticks"] or not trial["source_released"]):
+                if trial["passed"] and (((not drop and not trial["metrics"]["jump_ticks"])
+                                         or not trial["source_released"])
+                                        or (late_first and not delay_injected)):
                     trial.update(passed=False, evidence_error="arrival lacked actual jump or safe source release")
                 trials.append(trial)
                 summary.update(passed=all(value["passed"] for value in trials), sources_after=_hashes())

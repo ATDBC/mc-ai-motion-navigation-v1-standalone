@@ -945,7 +945,8 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
                 coordinator._work_identity, jobs[1].work_identity,
             )
             self.assertIs(executor.state, ActionRouteState.RUNNING)
-            self.assertFalse(decision.submit_input)
+            self.assertTrue(decision.submit_input)
+            self.assertIsNone(decision.verified_command_index)
             self.assertIs(
                 coordinator.last_admission.disposition,
                 AsyncAdmissionDisposition.DISCARDED_LATE,
@@ -1308,10 +1309,14 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
             decision = coordinator.decide(
                 frame, anchor, ledger, physics_world, changed_cells=(),
             )
-            self.assertFalse(decision.submit_input)
+            self.assertTrue(decision.submit_input)
+            self.assertIsNone(decision.verified_command_index)
+            from tests.motion_nav.preparation_fixture import apply_tick
+            anchor = apply_tick(anchor, physics_world, ledger, decision.movement)
+            frame = self.frame(physics_world._world, anchor.physics_state, 2)
             deadline = time.perf_counter() + 5.0
             poll_sequence = 1
-            while not decision.submit_input and time.perf_counter() < deadline:
+            while decision.verified_command_index is None and time.perf_counter() < deadline:
                 time.sleep(.01)
                 poll_sequence += 1
                 decision = coordinator.decide(
@@ -1395,9 +1400,12 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
                 aligned_frame, aligned_anchor, ledger, physics_world,
                 changed_cells=(),
             )
+            from tests.motion_nav.preparation_fixture import apply_tick
+            aligned_anchor = apply_tick(aligned_anchor, physics_world, ledger, decision.movement)
+            aligned_frame = self.frame(physics_world._world, aligned_anchor.physics_state, 3)
             deadline = time.perf_counter() + 5.0
             poll_sequence = 2
-            while not decision.submit_input and time.perf_counter() < deadline:
+            while decision.verified_command_index is None and time.perf_counter() < deadline:
                 time.sleep(.01)
                 poll_sequence += 1
                 decision = coordinator.decide(
@@ -1480,7 +1488,7 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
             preparation = solved.solve_result.proof.preparation
             self.assertIsNotNone(preparation)
             delayed_variant = solved.solve_result.proof.start_variant(
-                solved.solve_result.proof.execution_window.latest_start_tick,
+                solved.solve_result.proof.execution_window.earliest_start_tick,
             )
             self.assertIsNotNone(delayed_variant)
             boundary_anchor = replace(
@@ -1501,10 +1509,6 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
                     ledger, anchor, 90 + index, tick, command.movement,
                     requested_tick=tick,
                 )
-            VerifiedMotionExecutorTests.applied(
-                ledger, boundary_anchor, 99, boundary_anchor.movement_tick_id,
-                MovementV1(), requested_tick=boundary_anchor.movement_tick_id,
-            )
             with (
                 patch.object(worker, "is_alive", return_value=True),
                 patch.object(worker, "poll_available", return_value=(solved,)),

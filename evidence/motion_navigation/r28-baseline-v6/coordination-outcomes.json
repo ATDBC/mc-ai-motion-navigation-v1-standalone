@@ -1,0 +1,13 @@
+[
+  {
+    "id": "events/terrace_two_ledges-23212",
+    "kind": "events",
+    "fields": [
+      "outcome",
+      "trace"
+    ],
+    "baseline_outcome": "failed",
+    "candidate_outcome": "success",
+    "trace_file": "case-1154.json.gz"
+  }
+]

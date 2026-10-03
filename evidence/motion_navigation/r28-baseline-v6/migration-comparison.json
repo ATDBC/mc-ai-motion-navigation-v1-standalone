@@ -1,0 +1,4099 @@
+{
+  "pairs": 1448,
+  "failed": [],
+  "difference_count": 408,
+  "differences": [
+    {
+      "id": "interrupt/direct_drop_2-revise-at-36-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0019.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-36-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0020.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-36-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0021.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-37-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0022.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-37-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0023.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-37-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0024.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-38-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0025.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-38-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0026.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-38-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0027.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-39-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0028.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-39-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0029.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-39-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0030.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-40-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0031.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-40-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0032.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-40-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0033.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-41-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0034.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-41-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0035.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-41-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0036.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-42-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0037.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-42-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0038.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-42-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0039.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-43-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0040.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-43-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0041.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-43-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0042.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-44-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0043.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-44-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0044.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-44-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0045.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-45-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0046.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-45-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0047.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-revise-at-45-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0048.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-36-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0067.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-36-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0068.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-36-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0069.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-37-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0070.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-37-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0071.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-37-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0072.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-38-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0073.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-38-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0074.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-38-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0075.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-39-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0076.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-39-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0077.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-39-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0078.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-40-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0079.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-40-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0080.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-40-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0081.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-41-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0082.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-41-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0083.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-41-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0084.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-42-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0085.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-42-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0086.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-42-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0087.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-43-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0088.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-43-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0089.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-43-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0090.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-44-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0091.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-44-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0092.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-44-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0093.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-45-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0094.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-45-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0095.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_2-cancel-at-45-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0096.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-30-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0097.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-30-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0098.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-30-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0099.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-31-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0100.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-31-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0101.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-31-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0102.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-32-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0103.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-32-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0104.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-32-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0105.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-33-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0106.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-33-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0107.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-33-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0108.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-36-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0115.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-36-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0116.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-36-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0117.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-37-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0118.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-37-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0119.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-37-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0120.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-38-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0121.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-38-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0122.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-38-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0123.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-39-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0124.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-39-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0125.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-39-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0126.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-40-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0127.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-40-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0128.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-40-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0129.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-41-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0130.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-41-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0131.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-41-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0132.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-42-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0133.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-42-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0134.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-42-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0135.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-43-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0136.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-43-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0137.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-43-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0138.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-44-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0139.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-44-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0140.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-44-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0141.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-45-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0142.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-45-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0143.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-revise-at-45-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0144.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-36-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0163.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-36-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0164.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-36-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0165.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-37-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0166.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-37-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0167.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-37-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0168.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-38-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0169.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-38-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0170.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-38-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0171.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-39-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0172.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-39-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0173.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-39-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0174.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-40-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0175.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-40-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0176.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-40-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0177.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-41-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0178.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-41-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0179.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-41-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0180.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-42-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0181.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-42-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0182.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-42-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0183.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-43-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0184.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-43-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0185.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-43-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0186.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-44-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0187.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-44-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0188.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-44-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0189.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-45-late-none",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0190.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-45-late-1",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0191.json.gz"
+    },
+    {
+      "id": "interrupt/direct_drop_5_budget_2-cancel-at-45-late-2",
+      "kind": "interrupt",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0192.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23001",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0193.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23005",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0197.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23010",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0202.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23012",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0204.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23027",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0219.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23028",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0220.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23029",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0221.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23038",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0230.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23040",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0232.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23043",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0235.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23051",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0243.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23053",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0245.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23058",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0250.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23060",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0252.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23063",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0255.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23069",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0261.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23072",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0264.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23083",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0275.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23084",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0276.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23085",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0277.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23090",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0282.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23091",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0283.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23097",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0289.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23101",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0293.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23113",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0305.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23126",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0318.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23138",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0330.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23148",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0340.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23150",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0342.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23153",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0345.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23156",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0348.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23164",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0356.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23170",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0362.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23175",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0367.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23180",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0372.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23184",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0376.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23188",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0380.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23190",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0382.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23192",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0384.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23198",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0390.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23202",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0394.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23215",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0407.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23216",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0408.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23217",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0409.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23224",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0416.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23225",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0417.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23231",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0423.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23233",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0425.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23236",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0428.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23238",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0430.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23245",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0437.json.gz"
+    },
+    {
+      "id": "events/direct_drop_2-23250",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0442.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23001",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0443.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23005",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0447.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23010",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0452.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23012",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0454.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23027",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0469.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23028",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0470.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23029",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0471.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23038",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0480.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23040",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0482.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23043",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0485.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23051",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0493.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23053",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0495.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23058",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0500.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23060",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0502.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23063",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0505.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23069",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0511.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23072",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0514.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23083",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0525.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23084",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0526.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23085",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0527.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23090",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0532.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23091",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0533.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23097",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0539.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23101",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0543.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23113",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0555.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23126",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0568.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23138",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0580.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23148",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0590.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23150",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0592.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23153",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0595.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23156",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0598.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23164",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0606.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23170",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0612.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23175",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0617.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23180",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0622.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23184",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0626.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23188",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0630.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23190",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0632.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23192",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0634.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23198",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0640.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23202",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0644.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23215",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0657.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23216",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0658.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23217",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0659.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23224",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0666.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23225",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0667.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23231",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0673.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23233",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0675.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23236",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0678.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23238",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0680.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23245",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0687.json.gz"
+    },
+    {
+      "id": "events/direct_drop_5_budget_2-23250",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0692.json.gz"
+    },
+    {
+      "id": "events/far_landing_L_walkway-23005",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0697.json.gz"
+    },
+    {
+      "id": "events/far_landing_L_walkway-23012",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0704.json.gz"
+    },
+    {
+      "id": "events/far_landing_L_walkway-23053",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0745.json.gz"
+    },
+    {
+      "id": "events/far_landing_L_walkway-23083",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0775.json.gz"
+    },
+    {
+      "id": "events/far_landing_L_walkway-23085",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0777.json.gz"
+    },
+    {
+      "id": "events/far_landing_L_walkway-23090",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0782.json.gz"
+    },
+    {
+      "id": "events/far_landing_L_walkway-23122",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0814.json.gz"
+    },
+    {
+      "id": "events/far_landing_L_walkway-23153",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0845.json.gz"
+    },
+    {
+      "id": "events/far_landing_L_walkway-23184",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0876.json.gz"
+    },
+    {
+      "id": "events/far_landing_L_walkway-23202",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0894.json.gz"
+    },
+    {
+      "id": "events/far_landing_L_walkway-23225",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0917.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23001",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0943.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23005",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-0947.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23009",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0951.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23010",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0952.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23011",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0953.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23012",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0954.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23013",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0955.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23027",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0969.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23028",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0970.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23029",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0971.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23030",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0972.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23031",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0973.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23032",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0974.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23037",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0979.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23038",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0980.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23039",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-0981.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23040",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0982.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23043",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0985.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23051",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0993.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23053",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0995.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23055",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-0997.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23058",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-1000.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23060",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1002.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23062",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1004.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23063",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1005.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23068",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-1010.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23069",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1011.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23072",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1014.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23074",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-1016.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23078",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-1020.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23081",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-1023.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23082",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1024.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23083",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1025.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23084",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-1026.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23085",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1027.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23086",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1028.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23087",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1029.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23090",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1032.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23091",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1033.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23097",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1039.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23099",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1041.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23101",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1043.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23103",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-1045.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23105",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1047.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23113",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-1055.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23114",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1056.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23119",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1061.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23120",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-1062.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23125",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1067.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23126",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1068.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23130",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1072.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23136",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1078.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23138",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1080.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23147",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1089.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23148",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1090.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23149",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1091.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23150",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1092.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23153",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1095.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23154",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1096.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23156",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1098.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23158",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1100.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23164",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1106.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23165",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1107.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23167",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1109.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23170",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1112.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23171",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1113.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23175",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1117.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23180",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-1122.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23182",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1124.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23184",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1126.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23188",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1130.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23190",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1132.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23192",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1134.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23198",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1140.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23201",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1143.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23202",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1144.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23209",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1151.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23212",
+      "kind": "events",
+      "fields": [
+        "outcome",
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "success",
+      "trace_file": "case-1154.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23214",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1156.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23215",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1157.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23216",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1158.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23217",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1159.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23218",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1160.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23221",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1163.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23222",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1164.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23223",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-1165.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23224",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1166.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23225",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-1167.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23231",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-1173.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23233",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-1175.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23236",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1178.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23238",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1180.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23239",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1181.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23245",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1187.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23247",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1189.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23249",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "cancelled",
+      "candidate_outcome": "cancelled",
+      "trace_file": "case-1191.json.gz"
+    },
+    {
+      "id": "events/terrace_two_ledges-23250",
+      "kind": "events",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "failed",
+      "candidate_outcome": "failed",
+      "trace_file": "case-1192.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270001",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1257.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270002",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1258.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270003",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1259.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270004",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1260.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270005",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1261.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270006",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1262.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270007",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1263.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270008",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1264.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270009",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1265.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270010",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1266.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270011",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1267.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270012",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1268.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270013",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1269.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270014",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1270.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270015",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1271.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270016",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1272.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270017",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1273.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270018",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1274.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270019",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1275.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270020",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1276.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270021",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1277.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270022",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1278.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270023",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1279.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270024",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1280.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270025",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1281.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270026",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1282.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270027",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1283.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270028",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1284.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270029",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1285.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270030",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1286.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270031",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1287.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270032",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1288.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270033",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1289.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270034",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1290.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270035",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1291.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270036",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1292.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270037",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1293.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270038",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1294.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270039",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1295.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270040",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1296.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270041",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1297.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270042",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1298.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270043",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1299.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270044",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1300.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270045",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1301.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270046",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1302.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270047",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1303.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270048",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1304.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270049",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1305.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270050",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1306.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270051",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1307.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270052",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1308.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270053",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1309.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270054",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1310.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270055",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1311.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270056",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1312.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270057",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1313.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270058",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1314.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270059",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1315.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270060",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1316.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270061",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1317.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270062",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1318.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270063",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1319.json.gz"
+    },
+    {
+      "id": "async/gap_successor-270064",
+      "kind": "async",
+      "fields": [
+        "trace"
+      ],
+      "baseline_outcome": "success",
+      "candidate_outcome": "success",
+      "trace_file": "case-1320.json.gz"
+    }
+  ],
+  "difference_kinds": {
+    "interrupt": 132,
+    "events": 212,
+    "async": 64
+  },
+  "harness_review": {
+    "changed_files": [],
+    "original_metadata_preserved": true
+  },
+  "product_denominator": false,
+  "scope": "Same injected events; differences include declared motion changes and serviced follow-up validation. Original records remain immutable."
+}

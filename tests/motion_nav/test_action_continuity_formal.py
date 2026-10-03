@@ -325,7 +325,7 @@ class ActionContinuityFormalTests(unittest.TestCase):
         )
         self._assert_complete(result, metrics)
         self.assertEqual(metrics.worker_calls, 2, metrics)
-        self.assertEqual(metrics.prefix_calls, 1, metrics)
+        self.assertEqual(metrics.prefix_calls, 2, metrics)
         self.assertEqual(metrics.revalidation_calls, 1, metrics)
         first_job, revalidation = worker.jobs
         self.assertIs(revalidation.operation, motion_worker.MotionJobOperation.REVALIDATE)
@@ -339,8 +339,10 @@ class ActionContinuityFormalTests(unittest.TestCase):
                              (0., 0., False, False, False))
         refreshed = worker.results[1].solve_result.proof
         self.assertIsNotNone(refreshed)
-        self.assertEqual(refreshed.entry_state, revalidation.anchor.physics_state)
-        self.assertIsNone(refreshed.preparation)
+        self.assertEqual(refreshed.preparation.source_anchor, revalidation.anchor)
+        self.assertEqual(refreshed.entry_state, refreshed.preparation.trajectory[-1])
+        self.assertEqual(len(refreshed.preparation.commands), 4)
+        self._assert_executed_preparation(result, worker)
 
     def test_first_jump_loses_arbitration_without_false_application(self):
         arbitration = _LoseFirstJump()

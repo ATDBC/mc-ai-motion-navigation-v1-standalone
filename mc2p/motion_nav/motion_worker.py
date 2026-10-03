@@ -55,8 +55,7 @@ class GapMotionSolveJob:
                 type(self.proof) is VerifiedMotionResult):
             raise ContractViolation("revalidation requires exactly one old proof")
         if (type(self.entry_prefix) is not tuple or len(self.entry_prefix) > 4
-                or any(type(command) is not MotionCommandTick for command in self.entry_prefix)
-                or (self.operation is MotionJobOperation.REVALIDATE and self.entry_prefix)):
+                or any(type(command) is not MotionCommandTick for command in self.entry_prefix)):
             raise ContractViolation("motion preparation prefix must be bounded")
 
 
@@ -99,6 +98,7 @@ def _execute_job(job: GapMotionSolveJob) -> GapMotionSolveResult:
         if job.operation is MotionJobOperation.REVALIDATE:
             solved = revalidate_air_transition(
                 job.proof, job.anchor, job.world, job.request.execution_window,
+                entry_prefix=job.entry_prefix,
             )
         elif job.entry_prefix:
             from mc2p.motion_nav.motion_solver import solve_prepared_air_transition
