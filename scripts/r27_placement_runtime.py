@@ -1,4 +1,6 @@
 """Narrow real-Fabric R27 cases using public prepare/adopt and real observations."""
+
+from mc2p.motion_nav.navigation_owners import GoalRequestLedger
 from dataclasses import asdict, replace
 import math
 import time
@@ -54,7 +56,9 @@ def run_r27_placement_cases(runtime, backend, directory, deadline_ns, profiles, 
         fixture_writer(_fixture_commands(trial), trial)
         task, profile, frame = _ready_fixture(runtime, trial, deadline_ns, diagnostic, fixture_writer)
         requirement = replace(_fixed_requirement(trial, frame, edge=True), maximum_attempts=1)
-        transaction = BlockPlacementTransaction(requirement)
+        ledger = GoalRequestLedger()
+        scope = ledger.bind_computation_scope(requirement.goal_id, requirement.world_session)
+        transaction = BlockPlacementTransaction(requirement, computation_scope=scope)
         driver = RuntimeBlockPlacementDriver(runtime, transaction,
             approach_mode=profiles.ground_modes.require(MovementMode.CROUCH))
         driver.start()

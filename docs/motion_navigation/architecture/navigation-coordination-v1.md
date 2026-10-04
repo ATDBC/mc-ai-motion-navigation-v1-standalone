@@ -325,9 +325,9 @@ owner 通过只读 `async_diagnostics` 暴露开始、生效、终结、当前�
 
 实际接口为 `InvariantMonitor.finalize(required_coverage, observed_activity)`，返回 `VerificationAssessment`。结果包含状态、各类 begin／apply／finish 数量和带规则编号的缺口。`Result.verification_complete` 在无结论时为 false；`Result.verdict` 与四个命令入口均执行该门槛。任务成功统计仍独立保留。I7／I8 的历史逐帧诊断缺口单独记录，不纳入已经补齐的 I18—I22 声明。
 
-## 17. R28 协调收敛目标（尚未实施）
+## 17. R28 协调收敛契约与后续目标
 
-日期：2026-10-01。本节是目标接口，未替换第 15、16 节的现行实现。依据见 [D048](../decisions/0048-converge-recovery-by-risk-and-product-evidence.md)，实施顺序见 [R28](../stages/navigation-coordination-convergence-r28-plan.md)。
+日期：2026-10-04。R28-1 与 R28-4 的职责和接口已经成为现行实现；R28-3、正式跟随和 R28-5 仍是后续目标。第 15、16 节的异步安全不变量继续有效。依据见 [D048](../decisions/0048-converge-recovery-by-risk-and-product-evidence.md)，实施顺序见 [R28](../stages/navigation-coordination-convergence-r28-plan.md)。
 
 ### 17.1 三种责任分别推进
 
@@ -343,7 +343,7 @@ owner 通过只读 `async_diagnostics` 暴露开始、生效、终结、当前�
 
 复用 `NavigationHandoffCoordinator`，扩展其当前停止请求与目标交接职责。不得另建一个与它同时写状态的 RecoveryCoordinator。
 
-拟定新增方法如下，类型复用现有契约；当前代码尚无这些方法：
+现行入口的核心参数与结果如下；完整签名以代码中的有类型结果为准：
 
 ```python
 NavigationHandoffCoordinator.request_recovery(
@@ -351,7 +351,9 @@ NavigationHandoffCoordinator.request_recovery(
     destination: HandoffDestination,
     reason: str,
     budget: RetryLedger,
-) -> bool
+    activity_permit: RecoveryActivityPermit,
+    recovery_identity: RecoveryIdentity,
+) -> RecoveryRequestResult
 
 NavigationHandoffCoordinator.advance(
     frame: NavigationFrame,
@@ -363,7 +365,7 @@ NavigationHandoffCoordinator.advance(
 ) -> NavigationHandoffResolution | None
 ```
 
-`request_id` 标识一次真实恢复，不是每帧生成的新编号。返回 true 表示新收尾开始；需要恢复后重规划时，由该入口向同一预算登记一次。重复请求沿用原起点与期限，不重复计费。纯取消仍须被接收，不受重试余额限制；它有收尾期限，但不申请重试许可。`reason` 只报告，`destination` 才表达停止后的去向。
+`request_id` 标识一次真实恢复，不是每帧生成的新编号。`RecoveryRequestResult` 区分接受、重复、忙、活动许可缺失、迟到和额度耗尽；需要恢复后重规划时，由该入口向同一预算登记一次。重复请求沿用原起点与期限，不重复计费。纯取消仍须被接收，不受重试余额限制；它有收尾期限，但不申请重试许可。`reason` 只报告，`destination` 才表达停止后的去向。
 
 目标修订继续由现有 `stage_goal()` 和请求账本保存最新值。非终结目的的恢复／交接中修订目标，不新建恢复或补回预算；结束请求已接收后不再恢复该任务的目标行动。新任务有独立请求身份，先等待已有身体与效果责任完成交接。
 
@@ -405,15 +407,34 @@ NavigationHandoffCoordinator.advance(
 
 ### 17.5 预算只在真实恢复开始时消费
 
-RetryLedger 继续是任务预算的唯一拥有者。目标、路线、世代和 successor 修订不清零总量。收口为恢复次数、任务总时长和连续无进展窗口；按失败原因统计只放诊断。
+`RetryLedger` 是任务恢复预算的唯一拥有者。任务开始时由 `GoalReachPolicy` 固定 `RecoveryBudgetPolicy`：`RecoveryBudgetKind.FINITE` 表示有限任务，`PERSISTENT` 表示持续任务。有限任务整项任务最多开始 12 次恢复；持续任务在 `(now - 60s, now]` 内最多开始 12 次恢复，同时限制单次恢复 10 秒、目标未满足时连续无真实进展 30 秒。任务总期限仍来自请求入参。
 
-有限任务沿用整项任务最多 12 次恢复。持续目标任务使用速率预算：同一单调时钟上的滚动时间窗限制恢复开始次数，并限制单次恢复和连续无进展时长。窗口取 `(now - window, now]`，边界与幂等收费由 RetryLedger 统一处理；目标修订、进展或更换实例不会改变其中记录的开始时间。冻结测试配置见产品清单，R28-4 实施前不得宣称已支持。任务总期限使用请求入参，不另造一个常驻默认期限。
+一次恢复由任务内单调的 `RecoveryIdentity` 标识。同一身份重复到达只返回原结果，不重复计费；窗口外重放、序号缺口、目标修订和 work revision 也不能重新购买额度。`RecoveryLimitStatus` 至少区分允许继续、有限总量耗尽、持续速率耗尽、单次恢复超时、无进展超时和已停止新目标行动。原因计数只用于诊断。
 
-同一恢复每帧推进只计费一次。新的有效路线前移、动作完成或当前阻塞事实取得可以重置连续无进展计时；转头、重发请求、来源切换和来回移动不能重置。当前目标已满足且身体稳定的正常等待不计为无进展。有限任务总恢复次数不因进展补回；持续任务仅按真实时间移除窗口外的记录。伤害预留、承诺及结算仍按整项任务累计，绝不随恢复时间窗补回。
+每个观察帧按固定顺序处理：
 
-任务期限包住全部内部工作；单动作和计算窗口可以更短，但内部阶段变化不刷新原起点。输入实际生效窗口、已点击确认期限及伤害预留／承诺／结算继续独立，不能换成恢复计数。
+1. `begin_task_activity()` 打开本帧，记录正式需求状态；
+2. `record_task_progress()` 收集本帧全部有类型的真实进展；
+3. `finalize_task_activity()` 只作一次期限判断，生成绑定任务、观察序号和 permit 序号的 `RecoveryActivityPermit`；
+4. F8 的 `NavigationHandoffCoordinator.request_recovery()` 只有在消费这份一次性 permit 后，才可调用 `RetryLedger.begin_recovery()`。
 
-诊断历史有容量上限，活动等待只由当前拥有者保存并在退出时结束。额度耗尽停止新目标行动，仍完成已承担的有界身体与效果收尾。连接或模型条件不足时如实报告控制不可用或责任未验证，不能伪造 QUIESCENT。
+permit 不能跨观察、跨任务或重复消费。这样，同帧到达的真实进展会先进入账本，再判断期限；已经过期的帧也不能先购买恢复再报告耗尽。
+
+`finish_recovery()` 在清除活动恢复身份前，用同一个单调时钟值检查任务期限。即使身体恰好在 10 秒之后首次满足交接条件，安全交接仍然完成，`SINGLE_RECOVERY_EXHAUSTED` 也必须保留并交给现有终态流程。诊断读取只返回已经由正式控制入口判定的状态，不得调用会推进期限的接口；是否开启日志或监视器不能改变边界帧结果。
+
+F8 是唯一任务恢复购买入口。F1—F7、F9 和 F10 的规划、动作复核、后台结果过期及局部等待不会购买任务恢复。规划 owner 和 motion owner 各用 `LocalAttemptChain(maximum_failures=3)` 限制自身重建；candidate、attempt、work revision 和失败原因都不能刷新次数。第三次局部失败返回原领域的有类型结果。只有现实已经偏离、需要从当前观察重锚时，才由 F8 购买一次任务恢复。`RECOVERY_REANCHOR` 还必须携带 F8 签发的一次性许可。
+
+恢复周期内的新原因通过 `record_recovery_cause()` 记录。只有身体合法交接、安全释放，或责任已经转给另一个有界 owner 时，才能用匹配身份和有类型证据调用 `finish_recovery()`。业务终态不自动结束恢复。额度耗尽会停止新目标行动，但原身体 owner、在途输入和已经派发的世界操作仍须完成安全收尾；诊断和 I5 读取有类型的策略、窗口次数、累计次数与 `RecoveryLimitStatus`，不能再解释旧的原因／轮次批准字段。持续速率耗尽还保存作出决定时的窗口次数；I5 核对这份快照，不拿终态后自然滑动的当前窗口反推当时是否合法。
+
+活动等待由创建它的 owner 结束。正式代码使用 `end_wait_owned()` 或 owner 退出时的批量清理；不允许只凭 `wait_id` 删除另一个 owner 的期限。单动作确认期限、输入生效窗口、信息获取期限和伤害预留／承诺／结算保持各自语义。伤害额度始终按整项任务累计，不随恢复窗口补回。
+
+真实进展只重新开始持续任务的无进展计时，不结束恢复，也不补回额度。有效的新支撑、动作完成和当前阻塞事实得到回答可以成为进展；转头、重发请求、来源切换、目标修订和 A／B 往返不能成为进展。目标正式满足且身体稳定时进入 `STABLE_SATISFIED`，暂停无进展计时；目标再次不满足后开始新的 unmet 区间。业务终态进入 `TERMINAL_CLEANUP`，停止新目标行动并暂停目标无进展时钟，但活动恢复的 10 秒期限和 owner 局部期限继续有效。
+
+同一任务换 Session 壳时，`same_task_continuation_evidence()` 和 `rebuild_same_task()` 保留 `RetryLedger`、`TaskRiskLedger`、到达策略、已花伤害及未满足区间已经消耗的时间。签发和消费 continuation 都重新核对期限。`spawn_successor()` 只用于真正的新任务，只复用 worker，并建立新的目标、恢复和风险账本。持续任务不得反复创建 successor 来补额度。
+
+`spawn_successor(session_id, *, task_id)` 已显式要求非空且不同于原任务的新任务 ID。错误输入在转移 worker 前拒绝。合法 successor 保存不可变任务声明，首次 `start()`／`start_goal()` 在建账本、选到达策略、提交工作或改生命周期前核对它；错 ID 不消费首次启动，正确 ID 可重试。已关闭的原 Session 不取回 worker。同任务继续只用 `rebuild_same_task()`，保留恢复、风险、伤害及未满足区间时钟，并产生新锚点世代。
+
+恢复与进展历史使用固定容量。容量不足、时钟倒退、身份冲突和错误 owner 都明确失败，不能静默当作新进展或安全释放。
 
 ### 17.6 迁移只保留一个决定者
 
@@ -493,3 +514,64 @@ Session 保留调用顺序、事件路由和报告汇总。迁移每一块时，
 结束请求一旦由交接协调器接受，任务不再接受目标修订。这个情况是正常的调用竞态，公共 `update_goal`／driver `replace_goal` 返回是否接受，不抛程序异常。返回未接受时，Session、driver 和目标提供者都保留原修订；已经承担的身体与操作收尾继续执行。
 
 参数类型错误、目标身份变化和非递增修订仍是契约错误。这里不允许调用者通过重复提交修订让已结束任务复活，也不允许通过换 driver 补回预算。多个结束原因竞争时，先接受的有类型结果保持不变；后续原因只可进入诊断，不能覆盖业务结果。
+
+## 18. R28-1 完成后的正式协调链
+
+日期：2026-10-03。R28-1 冻结范围已实现。本节把第 17 节中的目标接口收口为当前正式职责。
+
+### 18.1 每帧只走一条顺序
+
+`NavigationSession.propose()` 只按下面的顺序工作：
+
+1. 吸收观察、输入应用记录和已经发生的风险；
+2. 推进已有的停止或交接责任；
+3. 让信息 owner 更新缺失事实、观察视角和探边需求；
+4. 让规划协调器交付本帧唯一规划结果；
+5. 让执行监督者选择本帧身体控制者；
+6. 组装一个 Runtime 提案。
+
+Session 可以把有类型结果路由到生命周期、风险账本和路线激活入口，但不再直接推进路线 executor 或 motion coordinator，也不再逐格维护信息状态。`propose()` 当前为 105 行；长度只是结构检查，行为仍以正式链测试和逐帧对照为准。
+
+### 18.2 owner 返回事实，Session 不补第二份判断
+
+`InformationAcquisitionState` 拥有当前缺失格、查询状态、下部可见要求、等待进度和取得事实。它返回观察视角、探边需求和等待结果，不改变任务生命周期，也不提交规划或输入。
+
+`PlanningCoordinator` 返回 `RUNNING`、`NEEDS_INFORMATION`、`REQUIRES_INTERACTION`、`FAILED` 或 `ROUTE_READY`。结果携带本次请求、缺失格和落点探边事实。Session 不再在收到结果后读取协调器的另一份可变状态来补齐决定。
+
+`ExecutionSupervisor` 推进 incumbent、pending route 和 probe 的身体选择。候选路线准备好不等于已经接管；只有 Runtime 实际选中的非中性移动或当前有效的 Q 证据可以完成交接。
+
+### 18.3 停止中的身体 owner 优先
+
+规划失败、取消或目标修订可能在本帧把探边标为 `STOPPING`。如果探边仍持有身体，它的停止保护优先于路线的中性取消提案，即使路线决定仍是 `RUNNING`。监督者返回 `PROBE_STOP`，Session 只消费该选择；不能先发一帧中性输入，再在下一帧恢复潜行。
+
+同一条规则适用于所有延期终态：只要仍有身体 owner，业务结果可以保持待发布，身体保护不能被终态提案压掉。已进入终态后仍允许原 owner 完成合法收尾，但不能开始新的目标行动。
+
+### 18.4 R28-1 范围未覆盖的事项
+
+R28-1 范围没有实现持续任务速率预算或后台异步世代；前者后来由 R28-4 实施，后者的现行接口见第 19 节。室内终点接近、正式跟随和 R28-5 的旧路径核销仍按 R28 总计划推进。B11 显式取消后是否继续确认已派发放置，仍由放置事务契约决定，不由导航 Session 改写。
+
+## 19. R28-3 已实施的异步接口
+
+计算世代表示同一任务当前仍有效的一版计算依据。`GoalRequestLedger.current_computation_scope` 唯一提供 `AsyncComputationScope(world_session_id, task_id, generation)`；普通目标修订只修改请求，取消、世界变化、新锚点和相关依据失效才换代。`AsyncWorkIdentity` 保存 scope 及 owner、work kind、subject 和工作 revision。实例分配器的 generation 不作为任务计算世代。
+
+### 19.1 原计算依据与当前请求分开保存
+
+`PlanningCoordinator.revise_request()` 只接受同世界更新后的目标请求，不重建快照，不刷新原窗口，也不取消在途工作。每项 `_PlanningWork` 保存不可变 `PlanningCalculationBasis`、单项 `AsyncWorkLifecycle`、pipeline、candidate 和 receipt identity。当前目标、许可、LocalAttemptChain、恢复、风险和桥接业务仍只有原 owner 一份。
+
+`advance(..., current_scope=..., state_anchor=..., remaining_damage_budget=...)` 显式接收当前 scope；两个旧 work 不能互相证明仍合法。结果先核对完整工作身份、原生产者及不可变请求，再核对当前身体入口、实际依赖、能力／规则、食物、资源、剩余伤害和完整 GoalState。通过后，路线绑定当前请求，保留原工作身份；不截断前段、不延长尾段、不刷新期限。终端朝向等条件缺证明时保守重算。
+
+旧无路、缺信息、超时和桥接中间结论只退场原项。最新工作已存在时不重复创建，也不购买任务恢复。最新内部失败不清掉仍合法的旧工作；延后失败保存原 basis／identity 和通知，handoff 按真实活动或退场身份接纳一次，不借 `_selected` 游标补身份。观察入口的 RUNNING 缓存只用于当前运动 tick。
+
+### 19.2 两项容量与逐项结果交付
+
+Coordinator 逻辑 work 上限二；目标修订有空位时立即准备最新 work。容量满时只保留账本最新请求，真实回执释放后跳过中间修订。两个快照构造和事实扫描共用原每帧访问预算；同帧最多安装一条路线，不递归推进、不在控制侧同步搜索。
+
+`PlannerWorker` 仍只用一个后台进程串行搜索，已接纳提交、请求队列和结果队列上限均为二。正式入口使用 `poll_available()` 逐项读出，按完整 identity 释放对应提交；BUSY 不删队列，请求序号和返回顺序不决定资格。`poll_latest()` 的兼容入口不承担正式双 work 的选择。逻辑退场撤销接纳资格；已提交项保留 receipt 占用，真实回执到达才释放。首条路线接纳后，其他工作撤销接纳资格，仍结清实际回执。
+
+### 19.3 有界历史与真实责任
+
+`050c10b` 后退场历史与已知工作窗口各最多 64 条，事件历史最多 128 条。淘汰保护活动、待真实回执、延后失败及终态失败来源。没有可淘汰项时返回 `PlanningHistoryCapacityExceeded`；在新 work、许可登记和 attempt 递增前拒绝，原窗口及责任不变，不购买恢复。
+
+motion 入口显式核对当前 scope，删除无 identity 的兼容授权和指定重复活动比较；原 proof、negative basis、REVALIDATE、实际输入窗口和 LocalAttemptChain 保留。scope 失效只撤销准备，空中 owner、在途输入和落地责任继续推进。已实际派发的放置确认按原事务 identity／窗口结算，不因修订或取消丢弃已发生效果。
+
+公共接入者只提交目标、修订和结束请求，不管理世代或接纳许可。正式 Runtime／driver 路径已有检查，正式跟随技能尚未实施。以上接口完成不等于 R28-3 全阶段关闭；结构、统计、绝对响应和扩展边界见[验收第 19 节](../acceptance/navigation-coordination-convergence.md#19-r28-3-异步计算世代与当前目标绑定)。

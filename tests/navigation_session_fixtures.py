@@ -1,6 +1,8 @@
 """Small deterministic NavigationSession port used by C1 driver tests."""
 from __future__ import annotations
 
+from mc2p.contracts.common import ContractViolation, require_identifier
+
 from mc2p.contracts.action import ActionPriorityV0
 from mc2p.contracts.action_v1 import ActionIntentV1, LookV1, MovementV1
 from mc2p.contracts.intent_source import (
@@ -54,6 +56,9 @@ class FakeNavigationSession:
         self.route_look_after_propose = False
         self.handoff_ready = True
         self.closed = False
+        self.same_task_rebuilds = 0
+        self.task_id = None
+        self._declared_successor_task_id = None
 
     def attach_observation_adapter(self, adapter):
         if self.frames and adapter is not self.observation_adapter:
@@ -170,6 +175,13 @@ class FakeNavigationSession:
         return self.route_look_required
 
     def start_goal(self, goal_id, revision, goal_state, frame, **options):
+        task_id = options.get("task_id")
+        task_id = goal_id if task_id is None else task_id
+        require_identifier(task_id, "fake navigation task id")
+        if (self._declared_successor_task_id is not None
+                and task_id != self._declared_successor_task_id):
+            raise ContractViolation("fake successor start changed declared task identity")
+        self.task_id = task_id
         self.goal_id, self.goal_revision = goal_id, revision
         self.starts.append((goal_id, revision, goal_state))
         self.start_options.append(options)
@@ -253,11 +265,32 @@ class FakeNavigationSession:
         else:
             self.state = NavigationSessionState.CANCELLED
 
-    def spawn_successor(self, session_id):
+    def spawn_successor(self, session_id, *, task_id):
+        require_identifier(session_id, "fake successor session id")
+        require_identifier(task_id, "fake successor task id")
+        if task_id == self.task_id:
+            raise ContractViolation("fake successor requires a different task identity")
         if not self.report.terminal or self.source is not None:
             raise AssertionError("fake successor requires released terminal session")
         self.closed = True
-        return FakeNavigationSession(cancel_steps=self.cancel_steps)
+        successor = FakeNavigationSession(cancel_steps=self.cancel_steps)
+        successor._declared_successor_task_id = task_id
+        return successor
+
+    def same_task_continuation_evidence(self):
+        if not self.report.terminal or self.source is not None:
+            return None
+        return self
+
+    def rebuild_same_task(self, session_id, evidence):
+        if evidence is not self or not self.report.terminal or self.source is not None:
+            raise AssertionError("fake continuation requires released same task")
+        self.same_task_rebuilds += 1
+        self.closed = True
+        continuation = FakeNavigationSession(cancel_steps=self.cancel_steps)
+        continuation.task_id = self.task_id
+        continuation.same_task_rebuilds = self.same_task_rebuilds
+        return continuation
 
     def close(self):
         self.closed = True

@@ -1,4 +1,6 @@
 """Formal owner creation and independent delivery/time regression cases."""
+
+from mc2p.motion_nav.async_work import AsyncComputationScope
 from dataclasses import replace, asdict
 import unittest
 import math
@@ -13,6 +15,7 @@ from mc2p.motion_nav.motion_worker import (
 )
 from mc2p.motion_nav.motion_solver import SolveResult, SolveStatus
 from mc2p.motion_nav.motion_coordination import MotionRouteCoordinator
+from mc2p.motion_nav.retry_ledger import RetryLedger
 from mc2p.motion_nav.action_route import ActionRoute, JumpGapSegment
 from mc2p.motion_nav.action_route_executor import ActionRouteExecutor
 from mc2p.motion_nav.jump_gap import JumpGapEdge
@@ -97,7 +100,9 @@ def gap_owner(worker, *, inbox=None, clock_ns=lambda: 100_000_000):
     )
     frame = candidate_fixtures.VerifiedMotionRouteIntegrationTests.frame(world._world, anchor.physics_state, 1)
     owner = MotionRouteCoordinator(
-        route, executor, worker, result_inbox=inbox, clock_ns=clock_ns,
+        route, executor, worker, retry_ledger=RetryLedger(route.goal_id),
+        result_inbox=inbox, clock_ns=clock_ns,
+        computation_scope=AsyncComputationScope((route).world_session, (RetryLedger(route.goal_id)).task_id, 1),
     )
     owner.start(frame)
     return owner, frame, anchor, world, InputApplicationLedger(max_records=64)
@@ -113,7 +118,7 @@ class R27IdentityTests(unittest.TestCase):
         coordinator.begin(request, current, permit=planning_fixtures._permit(), state_anchor=None,
                           remaining_damage_budget=request.damage_budget)
         notification = coordinator.advance(current, state_anchor=None, edge_probe=None,
-                                           remaining_damage_budget=request.damage_budget)
+                                           remaining_damage_budget=request.damage_budget, current_scope=coordinator._request_ledger.current_computation_scope)
         world.observe_blocks(ObservationStamp(world.session, 2, 2, "clock", clock[0]),
                              {(0, 0, 0): BlockGeometry.full_cube("minecraft:stone")})
         original = coordinator.information_fact_is_acquired
@@ -122,7 +127,7 @@ class R27IdentityTests(unittest.TestCase):
             clock[0] += 2_100_000_000
             return result
         with patch.object(coordinator, "information_fact_is_acquired", expensive_query):
-            result = coordinator.reconcile_information(notification, planning_fixtures.frame(world, 1, (-.5, 1., .5)))
+            result = coordinator.reconcile_information(notification, planning_fixtures.frame(world, 1, (-.5, 1., .5)), current_scope=coordinator._request_ledger.current_computation_scope)
         self.assertIs(result.kind, PlanningUpdateKind.FAILED)
         self.assertFalse(coordinator.has_owned_work)
         self.assertFalse(any(r.disposition is AsyncAdmissionDisposition.APPLIED
@@ -134,7 +139,7 @@ class R27IdentityTests(unittest.TestCase):
         clock = [100_000_000]
         worker = DeferredMotionWorker()
         owner, frame, anchor, world, ledger = gap_owner(worker, clock_ns=lambda: clock[0])
-        owner.decide(frame, anchor, ledger, world, changed_cells=())
+        owner.decide(frame, anchor, ledger, world, changed_cells=(), current_scope=owner.computation_scope)
         worker.results.append(_execute_job(worker.jobs[-1]))
         original = coordination.prepare_planned_gap_motion
         def expensive_verify(*args, **kwargs):
@@ -142,14 +147,14 @@ class R27IdentityTests(unittest.TestCase):
             clock[0] += 1_000_000_000
             return result
         with patch.object(coordination, "prepare_planned_gap_motion", expensive_verify):
-            decision = owner.decide(frame, anchor, ledger, world, changed_cells=())
+            decision = owner.decide(frame, anchor, ledger, world, changed_cells=(), current_scope=owner.computation_scope)
         self.assertFalse(decision.movement.jump)
         self.assertFalse(any(r.disposition is AsyncAdmissionDisposition.APPLIED for r in owner.admission_records))
 
     def test_retirement_history_eviction_does_not_allow_identity_restart(self):
         from mc2p.contracts.common import ContractViolation
         lifecycle = AsyncWorkLifecycle(history_limit=2)
-        old = AsyncWorkIdentity("world", "task", "owner", AsyncWorkKind.MOTION_SOLVE, "edge", 1)
+        old = AsyncWorkIdentity(AsyncComputationScope("world", "task", 1), "owner", AsyncWorkKind.MOTION_SOLVE, "edge", 1)
         for revision in range(1, 12):
             identity = replace(old, revision=revision)
             lifecycle.begin(identity, AsyncWorkWindow(revision, revision * 100, revision * 100 + 99))
@@ -165,17 +170,17 @@ class R27IdentityTests(unittest.TestCase):
         coordinator.begin(request, current, permit=planning_fixtures._permit(), state_anchor=None,
                           remaining_damage_budget=request.damage_budget)
         coordinator.advance(current, state_anchor=None, edge_probe=None,
-                            remaining_damage_budget=request.damage_budget)
+                            remaining_damage_budget=request.damage_budget, current_scope=coordinator._request_ledger.current_computation_scope)
         revision = world.view().geometry_revision
         world.confirm_air(ObservationStamp(world.session, 2, 2, "clock", 2),
                           tuple((10_000 + index, 0, 0) for index in range(4100)))
         self.assertIsNone(world.changes_since(revision))
         result = coordinator.advance(planning_fixtures.frame(world, 1, (-.5, 1., .5)),
-                                     state_anchor=None, edge_probe=None, remaining_damage_budget=request.damage_budget)
+                                     state_anchor=None, edge_probe=None, remaining_damage_budget=request.damage_budget, current_scope=coordinator._request_ledger.current_computation_scope)
         self.assertIs(result.kind, PlanningUpdateKind.ROUTE_READY)
 
     def test_monitor_rejects_information_apply_without_determined_query(self):
-        identity = AsyncWorkIdentity("world", "task", "owner", AsyncWorkKind.INFORMATION, "fact", 1)
+        identity = AsyncWorkIdentity(AsyncComputationScope("world", "task", 1), "owner", AsyncWorkKind.INFORMATION, "fact", 1)
         window = AsyncWorkWindow(1, 100, 200)
         evidence = AsyncOwnerDiagnostics("owner", identity, window, (
             AsyncWorkEvent(identity, window, "begin", 100),
@@ -255,13 +260,13 @@ class R27IdentityTests(unittest.TestCase):
                 coordinator.begin(request, current, permit=permit, state_anchor=None,
                                   remaining_damage_budget=request.damage_budget)
                 update = coordinator.advance(current, state_anchor=None, edge_probe=None,
-                                             remaining_damage_budget=request.damage_budget)
+                                             remaining_damage_budget=request.damage_budget, current_scope=coordinator._request_ledger.current_computation_scope)
                 self.assertIs(update.kind, PlanningUpdateKind.NEEDS_INFORMATION)
                 need = update.information_need
                 self.assertEqual(len(need.blockers), 64 if large else 3)
                 clock[0] += 2_100_000_000
                 result = coordinator.reconcile_information(update, current,
-                    outcomes=tuple((b.blocker_key, InformationOutcome.TIMED_OUT) for b in need.blockers))
+                    outcomes=tuple((b.blocker_key, InformationOutcome.TIMED_OUT) for b in need.blockers), current_scope=coordinator._request_ledger.current_computation_scope)
                 self.assertIs(result.kind, PlanningUpdateKind.FAILED)
                 info_finishes = [e for e in coordinator.async_diagnostics.events
                                  if e.operation == "finish" and e.identity.work_kind is AsyncWorkKind.INFORMATION]
@@ -328,9 +333,9 @@ class R27IdentityTests(unittest.TestCase):
                 break
             driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
         self.assertIsNone(driver.source)
-        successor = session.spawn_successor("successor")
+        successor = session.spawn_successor("successor", task_id="successor-task")
         driver = RuntimeNavigationDriver(runtime, successor, clock_ns=lambda: clock[0])
-        driver.start("same-goal", 1, goal, clock[0])
+        driver.start("same-goal", 1, goal, clock[0], task_id="successor-task")
         for _ in range(10):
             driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
             if len(worker.jobs) > 1:
@@ -374,7 +379,7 @@ class R27IdentityTests(unittest.TestCase):
         self.assertGreater(monitor.coverage["applied"], 0)
 
     def test_monitor_detects_expired_retired_application_and_orphan_mailbox(self):
-        identity = AsyncWorkIdentity("world", "task", "owner", AsyncWorkKind.MOTION_SOLVE, "edge", 1)
+        identity = AsyncWorkIdentity(AsyncComputationScope("world", "task", 1), "owner", AsyncWorkKind.MOTION_SOLVE, "edge", 1)
         window = AsyncWorkWindow(1, 100, 200)
         evidence = AsyncOwnerDiagnostics("owner", None, None, (
             AsyncWorkEvent(identity, window, "begin", 100),
@@ -424,7 +429,8 @@ class R27IdentityTests(unittest.TestCase):
                     self.assertTrue(reset.succeeded, reset.failure)
                     self.addCleanup(runtime.close)
                     transaction = BlockPlacementTransaction(placement_fixtures.requirement(
-                        world_session=runtime.navigation_observation_adapter.latest_frame.session.value))
+                        world_session=runtime.navigation_observation_adapter.latest_frame.session.value), computation_scope=placement_fixtures.placement_scope(placement_fixtures.requirement(
+                        world_session=runtime.navigation_observation_adapter.latest_frame.session.value)))
                     driver = RuntimeBlockPlacementDriver(runtime, transaction, clock_ns=lambda: clock[0])
                     driver.start()
                     driver.cancel("cancel-with-inertia")
@@ -449,7 +455,7 @@ class R27IdentityTests(unittest.TestCase):
         clock = [100_000_000]
         runtime = PlayerRuntimeV1(MovingBackend(clock), _RecordingTrace(), lambda: clock[0])
         runtime.reset(ResetRequestV0("reset", "episode-1", "test", 1, 10_000_000_000))
-        transaction = BlockPlacementTransaction(placement_fixtures.requirement())
+        transaction = BlockPlacementTransaction(placement_fixtures.requirement(), computation_scope=placement_fixtures.placement_scope(placement_fixtures.requirement()))
         driver = RuntimeBlockPlacementDriver(runtime, transaction, clock_ns=lambda: clock[0])
         self.addCleanup(runtime.close)
         driver.start()
@@ -464,7 +470,7 @@ class R27IdentityTests(unittest.TestCase):
                 clock = [1_000_000_000]
                 adapter = NavigationObservationAdapter()
                 transaction = BlockPlacementTransaction(placement_fixtures.requirement(maximum_attempts=1),
-                                                        clock_ns=lambda: clock[0])
+                                                        clock_ns=lambda: clock[0], computation_scope=placement_fixtures.placement_scope(placement_fixtures.requirement(maximum_attempts=1)))
                 old = placement_fixtures.observation(1)
                 proposal = transaction.propose(old, adapter.ingest(old))
                 transaction.register_dispatch(proposal, selected=True,
@@ -482,7 +488,7 @@ class R27IdentityTests(unittest.TestCase):
         for world_first in (True, False):
             with self.subTest(world_first=world_first):
                 adapter = NavigationObservationAdapter()
-                transaction = BlockPlacementTransaction(placement_fixtures.requirement())
+                transaction = BlockPlacementTransaction(placement_fixtures.requirement(), computation_scope=placement_fixtures.placement_scope(placement_fixtures.requirement()))
                 first = placement_fixtures.observation(1)
                 proposal = transaction.propose(first, adapter.ingest(first))
                 transaction.register_dispatch(proposal, selected=True,
@@ -506,13 +512,13 @@ class R27IdentityTests(unittest.TestCase):
         current = planning_fixtures.frame(world, 0, (-.5, 1., .5))
         coordinator.begin(request, current, permit=planning_fixtures._permit(),
                           state_anchor=None, remaining_damage_budget=request.damage_budget)
-        coordinator.advance(current, state_anchor=None, edge_probe=None, remaining_damage_budget=request.damage_budget)
+        coordinator.advance(current, state_anchor=None, edge_probe=None, remaining_damage_budget=request.damage_budget, current_scope=coordinator._request_ledger.current_computation_scope)
         position = (-2, 2, -1)
         world.observe_blocks(ObservationStamp(world.session, 2, 2, "clock", 2),
                              {position: BlockGeometry.full_cube("minecraft:stone")})
         coordinator.observe_changes((position,))
         result = coordinator.advance(planning_fixtures.frame(world, 1, (-.5, 1., .5)),
-                                     state_anchor=None, edge_probe=None, remaining_damage_budget=request.damage_budget)
+                                     state_anchor=None, edge_probe=None, remaining_damage_budget=request.damage_budget, current_scope=coordinator._request_ledger.current_computation_scope)
         self.assertIs(result.kind, PlanningUpdateKind.ROUTE_READY)
 
     def test_negative_planning_detects_world_change_even_when_caller_drops_exact_change_list(self):
@@ -523,11 +529,11 @@ class R27IdentityTests(unittest.TestCase):
         current = planning_fixtures.frame(world, 0, (-.5, 1., .5))
         coordinator.begin(request, current, permit=planning_fixtures._permit(),
                           state_anchor=None, remaining_damage_budget=request.damage_budget)
-        coordinator.advance(current, state_anchor=None, edge_probe=None, remaining_damage_budget=request.damage_budget)
+        coordinator.advance(current, state_anchor=None, edge_probe=None, remaining_damage_budget=request.damage_budget, current_scope=coordinator._request_ledger.current_computation_scope)
         world.observe_blocks(ObservationStamp(world.session, 3, 3, "clock", 3),
                              {(0, 0, 0): BlockGeometry.full_cube("minecraft:stone")})
         result = coordinator.advance(planning_fixtures.frame(world, 1, (-.5, 1., .5)),
-                                     state_anchor=None, edge_probe=None, remaining_damage_budget=request.damage_budget)
+                                     state_anchor=None, edge_probe=None, remaining_damage_budget=request.damage_budget, current_scope=coordinator._request_ledger.current_computation_scope)
         self.assertIs(result.kind, PlanningUpdateKind.RUNNING)
         self.assertTrue(coordinator.has_owned_work)
 
@@ -540,16 +546,16 @@ class R27IdentityTests(unittest.TestCase):
         coordinator.begin(request, current, permit=planning_fixtures._permit(),
                           state_anchor=None, remaining_damage_budget=request.damage_budget)
         update = coordinator.advance(current, state_anchor=None, edge_probe=None,
-                                     remaining_damage_budget=request.damage_budget)
+                                     remaining_damage_budget=request.damage_budget, current_scope=coordinator._request_ledger.current_computation_scope)
         need = update.information_need
         self.assertIsNotNone(need)
         clock[0] += 2_100_000_000
         outcomes = tuple((b.blocker_key, InformationOutcome.TIMED_OUT) for b in need.blockers)
-        result = coordinator.reconcile_information(update, current, outcomes=outcomes)
+        result = coordinator.reconcile_information(update, current, outcomes=outcomes, current_scope=coordinator._request_ledger.current_computation_scope)
         self.assertIs(result.kind, PlanningUpdateKind.FAILED)
         self.assertEqual(result.failure.reason, "information_timeout")
         for _ in range(3):
-            late = coordinator.reconcile_information(update, current, outcomes=outcomes)
+            late = coordinator.reconcile_information(update, current, outcomes=outcomes, current_scope=coordinator._request_ledger.current_computation_scope)
             self.assertIs(late.kind, PlanningUpdateKind.DISCARDED)
         self.assertFalse(coordinator.has_owned_work)
 
@@ -557,7 +563,7 @@ class R27IdentityTests(unittest.TestCase):
         clock = [100_000_000]
         worker = DeferredMotionWorker()
         owner, frame, anchor, world, ledger = gap_owner(worker, clock_ns=lambda: clock[0])
-        owner.decide(frame, anchor, ledger, world, changed_cells=())
+        owner.decide(frame, anchor, ledger, world, changed_cells=(), current_scope=owner.computation_scope)
         result = _execute_job(worker.jobs[-1])
         worker.results.append(result)
         original = worker.poll_available
@@ -565,7 +571,7 @@ class R27IdentityTests(unittest.TestCase):
             clock[0] += 1_000_000_000
             return original()
         worker.poll_available = late_delivery
-        decision = owner.decide(frame, anchor, ledger, world, changed_cells=())
+        decision = owner.decide(frame, anchor, ledger, world, changed_cells=(), current_scope=owner.computation_scope)
         self.assertFalse(decision.movement.jump)
         self.assertFalse(any(r.disposition.value == "applied" for r in owner.admission_records))
 
@@ -576,23 +582,23 @@ class R27IdentityTests(unittest.TestCase):
             anchor.physics_state, velocity_blocks_per_tick=(0., 0., .30),
         ))
         old_frame = candidate_fixtures.VerifiedMotionRouteIntegrationTests.frame(world._world, old_anchor.physics_state, 1)
-        owner.decide(old_frame, old_anchor, ledger, world, changed_cells=())
+        owner.decide(old_frame, old_anchor, ledger, world, changed_cells=(), current_scope=owner.computation_scope)
         job = worker.jobs[-1]
         worker.results.append(GapMotionSolveResult(
             job.connection_id, job.candidate_revision,
             SolveResult(SolveStatus.NEEDS_STATE, reasons=("entry_speed_outside_trial",)),
             1, job.work_identity,
         ))
-        decision = owner.decide(frame, anchor, ledger, world, changed_cells=())
+        decision = owner.decide(frame, anchor, ledger, world, changed_cells=(), current_scope=owner.computation_scope)
         self.assertEqual(decision.state.value, "running")
         self.assertGreaterEqual(len(worker.jobs), 2)
 
     def test_lifecycle_checks_actual_time_and_old_finish_does_not_touch_new_work(self):
         owner = AsyncWorkLifecycle(history_limit=2)
-        identity = AsyncWorkIdentity("world", "task", "owner", AsyncWorkKind.MOTION_SOLVE, "edge", 1)
+        identity = AsyncWorkIdentity(AsyncComputationScope("world", "task", 1), "owner", AsyncWorkKind.MOTION_SOLVE, "edge", 1)
         owner.begin(identity, AsyncWorkWindow(1, 100, 200))
-        self.assertIs(owner.check(identity, 199), WorkCheck.READY)
-        self.assertIs(owner.check(identity, 200), WorkCheck.EXPIRED)
+        self.assertIs(owner.check(identity, 199, current_scope=identity.scope), WorkCheck.READY)
+        self.assertIs(owner.check(identity, 200, current_scope=identity.scope), WorkCheck.EXPIRED)
         self.assertFalse(owner.finish(identity, "timeout", 200).already_retired)
         next_identity = replace(identity, revision=2)
         owner.begin(next_identity, AsyncWorkWindow(2, 200, 300))
@@ -604,7 +610,7 @@ class R27IdentityTests(unittest.TestCase):
         identities = []
         for _ in range(2):
             owner, frame, anchor, world, ledger = gap_owner(worker)
-            owner.decide(frame, anchor, ledger, world, changed_cells=())
+            owner.decide(frame, anchor, ledger, world, changed_cells=(), current_scope=owner.computation_scope)
             identities.append(worker.jobs[-1].work_identity)
             owner.cancel_work()
         self.assertNotEqual(identities[0], identities[1])
@@ -612,8 +618,8 @@ class R27IdentityTests(unittest.TestCase):
     def test_same_owner_name_in_different_worlds_never_shares_mail(self):
         worker = DeferredMotionWorker()
         inbox = MotionResultInbox(max_results=2)
-        first = AsyncWorkIdentity("world-a", "task", "owner", AsyncWorkKind.MOTION_SOLVE, "edge", 1)
-        second = replace(first, world_session_id="world-b")
+        first = AsyncWorkIdentity(AsyncComputationScope("world-a", "task", 1), "owner", AsyncWorkKind.MOTION_SOLVE, "edge", 1)
+        second = replace(first, scope=replace(first.scope, world_session_id="world-b"))
         for identity in (first, second):
             self.assertTrue(inbox.register(identity))
             worker.results.append(GapMotionSolveResult(
@@ -626,7 +632,7 @@ class R27IdentityTests(unittest.TestCase):
     def test_unknown_duplicates_and_retired_results_cannot_evict_active_result(self):
         inbox = MotionResultInbox(max_results=1)
         worker = DeferredMotionWorker()
-        identity = AsyncWorkIdentity("world", "task", "owner", AsyncWorkKind.MOTION_SOLVE, "edge", 1)
+        identity = AsyncWorkIdentity(AsyncComputationScope("world", "task", 1), "owner", AsyncWorkKind.MOTION_SOLVE, "edge", 1)
         self.assertTrue(inbox.register(identity))
         current = GapMotionSolveResult("edge", 1, SolveResult(SolveStatus.INTERNAL_ERROR), 0, identity)
         worker.results.extend([current, current])

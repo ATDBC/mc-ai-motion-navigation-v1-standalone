@@ -90,6 +90,69 @@ def request():
 
 
 class BridgePlanningTests(unittest.TestCase):
+    def test_approach_has_its_own_work_with_parent_window_and_rejects_old_duplicates(self):
+        class ReplayPlanner(_InlinePlanner):
+            def __init__(self):
+                super().__init__()
+                self.original_result = None
+                self.replays = []
+
+            def poll_latest(self):
+                if self.replays:
+                    return self.replays.pop(0)
+                candidate = super().poll_latest()
+                if self.original_result is None and candidate is not None:
+                    self.original_result = candidate
+                return candidate
+
+        world, planner = bridge_world(gap=(2, 3)), ReplayPlanner()
+        clock = [1_000_000_000]
+        initial = NavigationFrame(SESSION, self._body(.5), world.view(), 'fixture')
+        session = NavigationSession('bridge-work-identity',
+            NavigationSessionProfiles(ordinary_profile(), jump_profile(), step_profile()),
+            planner_worker=planner, bridge_policy=BridgePlacementPolicy(maximum_blocks=3),
+            clock_ns=lambda: clock[0])
+        self.addCleanup(session.close)
+        session.start(request(), initial)
+        owner = session._planning_coordinator
+        basis, window, attempt = owner.calculation_basis, owner.work_window, owner.attempt_id
+        chain = owner._local_attempts
+        clock[0] += 50_000_000
+        session.propose(initial, None, 2_000_000_000)
+        approach = owner.work_identity
+        self.assertNotEqual(approach, basis.work_identity)
+        self.assertEqual(approach.scope, basis.scope)
+        self.assertGreater(approach.revision, basis.work_identity.revision)
+        self.assertEqual(owner.work_window, window)
+        self.assertIs(owner.calculation_basis.permit, basis.permit)
+        self.assertEqual(owner.calculation_basis.request.goal, SurfaceNodeId(1, 0, 64, 0))
+        self.assertEqual(owner.calculation_basis.work_identity, approach)
+        self.assertEqual(owner.attempt_id, attempt)
+        self.assertIs(owner._local_attempts, chain)
+        self.assertEqual(owner.local_attempt_failures, 0)
+        self.assertEqual(session._retry_ledger.total_recovery_starts, 0)
+        planner.replays.extend((planner.original_result, planner.original_result))
+        for sequence in (2, 3):
+            clock[0] += 50_000_000
+            session.propose(NavigationFrame(SESSION, self._body(.5, sequence=sequence), world.view(), 'fixture'),
+                            None, 2_000_000_000)
+            self.assertEqual(owner.work_identity, approach)
+            self.assertEqual(owner.work_window, window)
+            self.assertEqual(session.report.reason, 'stale_result_discarded')
+        clock[0] += 50_000_000
+        session.propose(NavigationFrame(SESSION, self._body(.5, sequence=4), world.view(), 'fixture'),
+                        None, 2_000_000_000)
+        self.assertIs(session.report.state, NavigationSessionState.EXECUTING)
+        self.assertIsNotNone(session.required_interaction)
+        events = owner.async_diagnostics.events
+        self.assertTrue(any(e.operation == 'finish' and e.identity == basis.work_identity for e in events))
+        applied = [e.identity for e in events if e.operation == 'apply']
+        self.assertEqual(applied, [basis.work_identity, approach])
+        self.assertTrue(all(e.window.deadline_monotonic_ns == window.deadline_monotonic_ns for e in events))
+        self.assertEqual(owner.local_attempt_failures, 0)
+        self.assertEqual(session._retry_ledger.total_recovery_starts, 0)
+        self.assertEqual(session.bridge_remaining, 3)
+
     @staticmethod
     def _body(x: float, *, sequence: int = 1) -> BodyState:
         stamp = ObservationStamp(SESSION, sequence, sequence, "clock", sequence)
@@ -220,8 +283,12 @@ class BridgePlanningTests(unittest.TestCase):
         )
         self.addCleanup(session.close)
         session.start(request(), frame)
-        for _ in range(8):
-            session.propose(frame, None, 1_000_000)
+        for sequence in range(1, 9):
+            current = NavigationFrame(
+                SESSION, self._body(0.5, sequence=sequence),
+                world.view(), "fixture",
+            )
+            session.propose(current, None, 1_000_000)
             if session.report.state is NavigationSessionState.EXECUTING:
                 break
         self.assertEqual(session.report.state, NavigationSessionState.EXECUTING)
@@ -231,10 +298,11 @@ class BridgePlanningTests(unittest.TestCase):
             SurfaceNodeId(1, 0, 64, 0),
         )
 
-        arrived = NavigationFrame(
-            SESSION, self._body(1.5, sequence=2), world.view(), "fixture",
-        )
-        for _ in range(4):
+        for sequence in range(20, 24):
+            arrived = NavigationFrame(
+                SESSION, self._body(1.5, sequence=sequence),
+                world.view(), "fixture",
+            )
             session.propose(
                 arrived, _ground_anchor(arrived), 1_000_000,
                 input_ledger=InputApplicationLedger(),

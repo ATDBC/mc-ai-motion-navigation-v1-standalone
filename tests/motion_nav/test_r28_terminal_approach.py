@@ -98,8 +98,7 @@ class BatchFiveTests(unittest.TestCase):
             for row in result.trace:
                 phase = (None if not row['body_control_activities'] else
                          row['body_control_activities'][0]['phase'])
-                if (row['retry_total_failures'] > 0
-                        and phase in {'entry_recovery', 'strict_preparation'}):
+                if phase in {'entry_recovery', 'strict_preparation'}:
                     self.assertTrue(row['body_control_activities'], row)
                     self.assertTrue(row['body_control_activities'][0]['owner_id'].startswith('route/'))
                     found.append(row)

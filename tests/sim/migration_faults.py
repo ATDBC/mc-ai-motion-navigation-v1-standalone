@@ -15,6 +15,15 @@ class DeadPlanner(InlinePlannerWorker):
     def poll_latest(self):
         return None
 
+    def poll_available(self):
+        from mc2p.motion_nav.planner_worker import _failure_candidate
+        from tests.sim.async_monitor import ObservedAsyncActivity
+        jobs = (() if self._job is None else (self._job,)) + tuple(self._queued_jobs)
+        self._job = None
+        self._queued_jobs.clear()
+        self.activity.extend(ObservedAsyncActivity(job.request.work_identity, "poll") for job in jobs)
+        return tuple(_failure_candidate(job, "planner_worker_died") for job in jobs)
+
 
 class FaultingPlanner(InlinePlannerWorker):
     def poll_latest(self):

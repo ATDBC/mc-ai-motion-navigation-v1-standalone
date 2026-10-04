@@ -22,7 +22,7 @@ from mc2p.motion_nav.motion_risk import (
     TaskDamageBudget, TaskRiskLedger,
 )
 from mc2p.motion_nav.retry_ledger import (
-    ProgressEvidence, ProgressKind, RetryCause, RetryLedger, RetryVerdict,
+    RecoveryBudgetKind, RecoveryLimitStatus,
 )
 from mc2p.motion_nav.world_model import WorldSessionId
 from mc2p.motion_nav.runtime_adapter import NavigationObservationAdapter, TEST_ORACLE
@@ -189,101 +189,66 @@ class InvariantNegativeTests(unittest.TestCase):
                    for i in range(7)]
         self.check_code("I5", *samples)
 
-    def test_i5_denied_failure_is_not_an_approved_retry(self):
-        ledger = RetryLedger("task")
+    def test_i5_finite_recoveries_ignore_diagnostic_cause_counts(self):
         monitor = InvariantMonitor()
-        for index in range(3):
-            result = ledger.record_failure(
-                f"attempt-{index}", RetryCause.EXECUTION,
-            )
-            monitor.check(evidence(
-                tick=index + 2,
-                state="failed" if index == 2 else "executing",
-                retry_attempt_id=ledger.last_failure_attempt_id,
-                retry_round_failures=ledger.round_failures,
-                retry_total_failures=ledger.total_failures,
-                retry_cause_counts=tuple(
-                    (cause.value, count) for cause, count
-                    in ledger.cause_counts
-                ),
-                retry_approved_round=ledger.approved_round_retries,
-                retry_approved_total=ledger.approved_total_retries,
-                retry_approved_cause_counts=tuple(
-                    (cause.value, count) for cause, count
-                    in ledger.approved_cause_counts
-                ),
-            ))
-        self.assertIs(result.verdict, RetryVerdict.CAUSE_EXHAUSTED)
-        self.assertEqual((ledger.total_failures,
-                          ledger.approved_total_retries), (3, 2))
-        self.assertNotIn("I5", {item[1] for item in monitor.violations})
-        self.check_code("I5", evidence(
-            retry_round_failures=3, retry_total_failures=3,
-            retry_approved_round=3, retry_approved_total=3,
-            retry_approved_cause_counts=(("execution", 3),),
+        monitor.check(evidence(
+            recovery_budget_kind=RecoveryBudgetKind.FINITE,
+            recovery_maximum_starts=12,
+            recovery_window_starts=3,
+            recovery_total_starts=3,
+            recovery_limit_status=RecoveryLimitStatus.ALLOWED,
+            retry_cause_counts=(("execution", 3),),
         ))
 
-    def test_i5_six_and_twelve_approved_boundaries(self):
-        ledger = RetryLedger("task")
+        self.assertNotIn("I5", {item[1] for item in monitor.violations})
+
+    def test_i5_persistent_total_can_exceed_twelve_outside_window(self):
         monitor = InvariantMonitor()
-        tick = 2
-        causes = (RetryCause.EXECUTION, RetryCause.INFORMATION,
-                  RetryCause.DEPENDENCY)
-        for round_index in range(2):
-            for cause in causes:
-                for item in range(2):
-                    verdict = ledger.record_failure(
-                        f"{round_index}/{cause.value}/{item}", cause,
-                    )
-                    self.assertIs(verdict.verdict, RetryVerdict.RETRY)
-                    monitor.check(evidence(
-                        tick=tick,
-                        retry_attempt_id=ledger.last_failure_attempt_id,
-                        retry_round_failures=ledger.round_failures,
-                        retry_total_failures=ledger.total_failures,
-                        retry_approved_round=ledger.approved_round_retries,
-                        retry_approved_total=ledger.approved_total_retries,
-                        retry_approved_cause_counts=tuple(
-                            (name.value, count) for name, count
-                            in ledger.approved_cause_counts
-                        ),
-                        retry_progress_version=ledger.progress_version,
-                        retry_progress_evidence=ledger.last_progress_evidence,
-                    ))
-                    tick += 1
-            if round_index == 0:
-                self.assertTrue(ledger.record_progress(ProgressEvidence(
-                    ProgressKind.ACTION_COMPLETED, tick,
-                    action_id="completed-first-action",
-                )))
-                monitor.check(evidence(
-                    tick=tick,
-                    retry_round_failures=ledger.round_failures,
-                    retry_total_failures=ledger.total_failures,
-                    retry_approved_round=ledger.approved_round_retries,
-                    retry_approved_total=ledger.approved_total_retries,
-                    retry_progress_version=ledger.progress_version,
-                    retry_progress_evidence=ledger.last_progress_evidence,
-                ))
-                tick += 1
-        self.assertEqual(ledger.approved_total_retries, 12)
-        denied = ledger.record_failure("thirteenth", RetryCause.PLANNING)
-        self.assertIs(denied.verdict, RetryVerdict.TASK_EXHAUSTED)
         monitor.check(evidence(
-            tick=tick, state="failed",
-            retry_attempt_id=ledger.last_failure_attempt_id,
-            retry_round_failures=ledger.round_failures,
-            retry_total_failures=ledger.total_failures,
-            retry_approved_round=ledger.approved_round_retries,
-            retry_approved_total=ledger.approved_total_retries,
-            retry_progress_version=ledger.progress_version,
-            retry_progress_evidence=ledger.last_progress_evidence,
+            recovery_budget_kind=RecoveryBudgetKind.PERSISTENT,
+            recovery_maximum_starts=12,
+            recovery_window_starts=1,
+            recovery_total_starts=13,
+            recovery_limit_status=RecoveryLimitStatus.ALLOWED,
+            retry_cause_counts=(("execution", 13),),
+        ))
+
+        self.assertNotIn("I5", {item[1] for item in monitor.violations})
+
+    def test_i5_persistent_thirteenth_in_window_must_be_typed_exhausted(self):
+        monitor = InvariantMonitor()
+        monitor.check(evidence(
+            recovery_budget_kind=RecoveryBudgetKind.PERSISTENT,
+            recovery_maximum_starts=12,
+            recovery_window_starts=12,
+            recovery_total_starts=12,
+            recovery_limit_status=RecoveryLimitStatus.PERSISTENT_RATE_EXHAUSTED,
+            recovery_limit_window_starts=12,
         ))
         self.assertNotIn("I5", {item[1] for item in monitor.violations})
-        self.check_code("I5", evidence(
-            retry_round_failures=7, retry_total_failures=13,
-            retry_approved_round=7, retry_approved_total=13,
+
+        invalid = InvariantMonitor()
+        invalid.check(evidence(
+            recovery_budget_kind=RecoveryBudgetKind.PERSISTENT,
+            recovery_maximum_starts=12,
+            recovery_window_starts=13,
+            recovery_total_starts=13,
+            recovery_limit_status=RecoveryLimitStatus.ALLOWED,
         ))
+        self.assertIn("I5", {item[1] for item in invalid.violations})
+
+    def test_i5_rate_exhaustion_uses_decision_count_after_window_slides(self):
+        monitor = InvariantMonitor()
+        monitor.check(evidence(
+            recovery_budget_kind=RecoveryBudgetKind.PERSISTENT,
+            recovery_maximum_starts=12,
+            recovery_window_starts=0,
+            recovery_total_starts=12,
+            recovery_limit_status=RecoveryLimitStatus.PERSISTENT_RATE_EXHAUSTED,
+            recovery_limit_window_starts=12,
+        ))
+
+        self.assertNotIn("I5", {item[1] for item in monitor.violations})
 
     def test_i6_applied_identity_must_match_issued_command(self):
         self.check_code("I6", evidence(applied_request=9,
@@ -371,7 +336,7 @@ class ClosedLoopToolTests(unittest.TestCase):
         result = run(scenario)
 
         self.assertEqual(result.verdict, "PASS", result.reason)
-        self.assertEqual(result.trace[0]["retry_total_failures"], 0)
+        self.assertEqual(result.trace[0]["recovery_total_starts"], 0)
         self.assertIsNotNone(result.trace[0]["route_id"])
 
     def test_constant_late_input_has_a_bounded_typed_result(self):
@@ -528,6 +493,10 @@ class ClosedLoopToolTests(unittest.TestCase):
                 == "repreparing_grounded_verified_motion"
             for row in result.trace
         ))
+        self.assertEqual(
+            max(row["recovery_total_starts"] for row in result.trace), 0,
+            "grounded-entry wait is local and must not buy task recovery",
+        )
 
     def test_late_neutral_confirmation_after_landing_completes_drop(self):
         base = next(

@@ -43,6 +43,7 @@ from tests.motion_nav.test_navigation_session import _InlinePlanner
 class _DeferredPlanner:
     def __init__(self, *, expand_information: bool = False) -> None:
         self._candidate = None
+        self._queued_candidates = []
         self._defer = False
         self.expand_information = expand_information
 
@@ -74,8 +75,11 @@ class _DeferredPlanner:
                     truncated=False,
                 ),
             )
-        self._candidate = candidate
-        self._defer = True
+        if self._candidate is None:
+            self._candidate = candidate
+            self._defer = True
+        else:
+            self._queued_candidates.append(candidate)
         return True
 
     def submit_snapshot(self, *_args, **_kwargs) -> bool:
@@ -86,8 +90,13 @@ class _DeferredPlanner:
             self._defer = False
             return None
         candidate = self._candidate
-        self._candidate = None
+        self._candidate = self._queued_candidates.pop(0) if self._queued_candidates else None
+        self._defer = self._candidate is not None
         return candidate
+
+    def poll_available(self):
+        candidate = self.poll_latest()
+        return () if candidate is None else (candidate,)
 
     def is_alive(self) -> bool:
         return True
@@ -99,6 +108,26 @@ class _DeferredPlanner:
 class _NeverResultPlanner(_DeferredPlanner):
     def poll_latest(self):
         return None
+
+
+class _DeadlineResultPlanner(_DeferredPlanner):
+    """A real receipt frees transport capacity after the fixed work window."""
+    def __init__(self, clock):
+        super().__init__()
+        self.clock = clock
+        self.deadline = None
+
+    def submit_surface_snapshot(self, *args, **kwargs):
+        accepted = super().submit_surface_snapshot(*args, **kwargs)
+        self.deadline = self.clock[0] + int(args[3].maximum_planning_seconds * 1_000_000_000)
+        return accepted
+
+    def poll_available(self):
+        if self.deadline is None or self.clock[0] < self.deadline:
+            return ()
+        self.deadline = None
+        candidate, self._candidate = self._candidate, None
+        return (candidate,)
 
 
 def _world(*, unknown: frozenset[tuple[int, int, int]] = frozenset()):
@@ -140,6 +169,42 @@ def _permit() -> PlanningAttemptPermit:
 
 
 class PlanningCoordinatorTests(unittest.TestCase):
+    def test_revision_cannot_reuse_calculation_request_id_or_relabel_old_no_route(self):
+        from mc2p.motion_nav.known_map_planner import SurfacePlanningStatus
+
+        class NoRoutePlanner(_DeferredPlanner):
+            def submit_surface_snapshot(self, *args, **kwargs):
+                accepted = super().submit_surface_snapshot(*args, **kwargs)
+                self._candidate = replace(self._candidate,
+                    status=SurfacePlanningStatus.NO_ROUTE_WITHIN_COMPLETE_SCOPE,
+                    path=(), segments=(), ground_traversal_plans=(), planner_states=(),
+                    total_cost_seconds=None, total_cost_ticks=None, final_resources=None)
+                return accepted
+
+        world = _world()
+        request = _request(world)
+        owner = self.coordinator(NoRoutePlanner())
+        current = frame(world, 0, (-.5, 1., .5))
+        owner.begin(request, current, permit=_permit(), state_anchor=None,
+                    remaining_damage_budget=request.damage_budget)
+        original = owner.request
+        builder, identity, window = owner.pipeline.builder, owner.work_identity, owner.work_window
+        revised = replace(original, sequence=2, goal_revision=2)
+        with self.assertRaises(ContractViolation):
+            owner.revise_request(revised)
+        self.assertIs(owner.request, original)
+        self.assertIs(owner.pipeline.builder, builder)
+        self.assertEqual(owner.work_identity, identity)
+        self.assertEqual(owner.work_window, window)
+        for tick in (0, 1):
+            update = owner.advance(frame(world, tick, (-.5, 1., .5)),
+                state_anchor=None, edge_probe=None, remaining_damage_budget=request.damage_budget,
+                current_scope=identity.scope)
+        self.assertIs(update.kind, PlanningUpdateKind.FAILED)
+        self.assertEqual(update.goal_revision, original.goal_revision)
+        self.assertEqual(update.failure.goal_revision, original.goal_revision)
+        self.assertEqual(update.request_id, original.request_id)
+
     def coordinator(
         self, planner=None, *, snapshot_cells_per_step=10_000,
         clock_ns=lambda: 1_000_000_000,
@@ -172,6 +237,7 @@ class PlanningCoordinatorTests(unittest.TestCase):
         update = coordinator.advance(
             current, state_anchor=None, edge_probe=None,
             remaining_damage_budget=request.damage_budget,
+            current_scope=coordinator._request_ledger.current_computation_scope,
         )
 
         self.assertIs(update.kind, PlanningUpdateKind.ROUTE_READY)
@@ -197,6 +263,7 @@ class PlanningCoordinatorTests(unittest.TestCase):
         update = coordinator.advance(
             current, state_anchor=None, edge_probe=None,
             remaining_damage_budget=request.damage_budget,
+            current_scope=coordinator._request_ledger.current_computation_scope,
         )
 
         self.assertIs(update.kind, PlanningUpdateKind.NEEDS_INFORMATION)
@@ -213,6 +280,42 @@ class PlanningCoordinatorTests(unittest.TestCase):
                                                      request_id="foreign-request"))
         self.assertIs(coordinator.current_information_update, update)
         self.assertTrue(coordinator.diagnostics(current).information_identity_valid)
+
+    def test_information_failure_carries_original_identity_and_retires_work(self):
+        world = _world(unknown=frozenset({(0, 0, 0)}))
+        request = _request(world)
+        current = frame(world, 0, query_support_surfaces(
+            world.view(), -1, 0, 1, 1).surfaces[0].position)
+        coordinator = self.coordinator()
+        coordinator.begin(request, current, permit=_permit(), state_anchor=None,
+                          remaining_damage_budget=request.damage_budget)
+        selected = coordinator.advance(current, state_anchor=None, edge_probe=None,
+                                       remaining_damage_budget=request.damage_budget, current_scope=coordinator._request_ledger.current_computation_scope)
+        failed = coordinator.reconcile_information(
+            selected, current, outcomes=tuple(
+                (blocker.blocker_key, InformationOutcome.TIMED_OUT)
+                for blocker in selected.information_need.blockers), current_scope=coordinator._request_ledger.current_computation_scope)
+        self.assertIs(failed.kind, PlanningUpdateKind.FAILED)
+        self.assertEqual((failed.failure.world_session_id, failed.failure.attempt_id,
+                          failed.failure.request_id, failed.failure.goal_revision),
+                         (selected.world_session_id, selected.attempt_id,
+                          request.request_id, request.goal_revision))
+        self.assertFalse(coordinator.has_owned_work)
+        self.assertIsNone(coordinator.work_identity)
+        self.assertIsNone(coordinator.snapshot)
+        self.assertTrue(coordinator.failure_matches_retired_work(failed.failure))
+        self.assertTrue(coordinator.failure_matches_retired_work(
+            replace(failed.failure, reason="more-specific-diagnostic")))
+        self.assertFalse(coordinator.failure_matches_retired_work(
+            replace(failed.failure, attempt_id=selected.request_id)))
+        for changed in (dict(request_id="other-request"), dict(attempt_id="old-attempt"),
+                        dict(world_session_id="other-world"), dict(goal_revision=2)):
+            with self.subTest(changed=changed), self.assertRaises(ContractViolation):
+                replace(failed, failure=replace(failed.failure, **changed))
+        self.assertIs(coordinator.advance(current, state_anchor=None, edge_probe=None,
+                                         remaining_damage_budget=request.damage_budget, current_scope=coordinator._request_ledger.current_computation_scope), failed)
+        coordinator.cancel_work()
+        self.assertFalse(coordinator.failure_matches_retired_work(failed.failure))
 
     def test_information_acquired_can_only_enter_through_typed_fact_query(self):
         gap = (0, 0, 0)
@@ -231,6 +334,7 @@ class PlanningCoordinatorTests(unittest.TestCase):
         update = coordinator.advance(
             current, state_anchor=None, edge_probe=None,
             remaining_damage_budget=request.damage_budget,
+            current_scope=coordinator._request_ledger.current_computation_scope,
         )
         blocker = update.information_need.blockers[0]
 
@@ -327,6 +431,7 @@ class PlanningCoordinatorTests(unittest.TestCase):
         coordinator.advance(
             current, state_anchor=None, edge_probe=None,
             remaining_damage_budget=request.damage_budget,
+            current_scope=coordinator._request_ledger.current_computation_scope,
         )
         submitted = coordinator.diagnostics(current)
         self.assertTrue(submitted.has_owned_work)
@@ -350,12 +455,13 @@ class PlanningCoordinatorTests(unittest.TestCase):
             coordinator.advance(
                 current, state_anchor=None, edge_probe=None,
                 remaining_damage_budget=request.damage_budget,
-            ).kind,
+            current_scope=coordinator._request_ledger.current_computation_scope).kind,
             PlanningUpdateKind.RUNNING,
         )
         update = coordinator.advance(
             current, state_anchor=None, edge_probe=None,
             remaining_damage_budget=request.damage_budget,
+            current_scope=coordinator._request_ledger.current_computation_scope,
         )
         self.assertEqual(len(update.information_need.blockers), 64)
 
@@ -370,7 +476,7 @@ class PlanningCoordinatorTests(unittest.TestCase):
         self.assertEqual(len(update.information_need.blockers), 1)
         self.assertEqual(update.information_need.blockers[0].position, (64, 2, 0))
 
-    def test_dependency_changes_consume_shared_retry_limit(self):
+    def test_dependency_changes_consume_local_planning_chain(self):
         world = _world()
         request = _request(world)
         planner = _DeferredPlanner()
@@ -389,6 +495,7 @@ class PlanningCoordinatorTests(unittest.TestCase):
             submitted = coordinator.advance(
                 current, state_anchor=None, edge_probe=None,
                 remaining_damage_budget=request.damage_budget,
+                current_scope=coordinator._request_ledger.current_computation_scope,
             )
             self.assertIs(submitted.kind, PlanningUpdateKind.RUNNING)
             world.observe_blocks(ObservationStamp(
@@ -402,6 +509,7 @@ class PlanningCoordinatorTests(unittest.TestCase):
             last = coordinator.advance(
                 current, state_anchor=None, edge_probe=None,
                 remaining_damage_budget=request.damage_budget,
+                current_scope=coordinator._request_ledger.current_computation_scope,
             )
             if index < 2:
                 self.assertIs(last.kind, PlanningUpdateKind.RUNNING)
@@ -412,15 +520,16 @@ class PlanningCoordinatorTests(unittest.TestCase):
             "route_dependencies_changed_retry_exhausted",
         )
         self.assertEqual(
-            coordinator._retry_ledger.count_for(RetryCause.DEPENDENCY), 3,
+            coordinator.local_attempt_failures, 3,
         )
+        self.assertEqual(coordinator._retry_ledger.total_recovery_starts, 0)
 
-    def test_planning_timeout_uses_shared_limit_and_has_typed_terminal(self):
+    def test_planning_timeout_uses_local_chain_and_has_typed_terminal(self):
         clock = [1_000_000_000]
         world = _world()
         request = _request(world)
         coordinator = self.coordinator(
-            _NeverResultPlanner(), clock_ns=lambda: clock[0],
+            _DeadlineResultPlanner(clock), clock_ns=lambda: clock[0],
         )
         current = frame(
             world, 0,
@@ -436,12 +545,14 @@ class PlanningCoordinatorTests(unittest.TestCase):
             submitted = coordinator.advance(
                 current, state_anchor=None, edge_probe=None,
                 remaining_damage_budget=request.damage_budget,
+                current_scope=coordinator._request_ledger.current_computation_scope,
             )
             self.assertIs(submitted.kind, PlanningUpdateKind.RUNNING)
             clock[0] += 1_000_000_000
             last = coordinator.advance(
                 current, state_anchor=None, edge_probe=None,
                 remaining_damage_budget=request.damage_budget,
+                current_scope=coordinator._request_ledger.current_computation_scope,
             )
             if index < 2:
                 self.assertEqual(last.reason, "planning_timeout_retry_started")
@@ -449,8 +560,9 @@ class PlanningCoordinatorTests(unittest.TestCase):
         self.assertIs(last.kind, PlanningUpdateKind.FAILED)
         self.assertEqual(last.failure.reason, "planning_timeout_retry_exhausted")
         self.assertEqual(
-            coordinator._retry_ledger.count_for(RetryCause.PLANNING), 3,
+            coordinator.local_attempt_failures, 3,
         )
+        self.assertEqual(coordinator._retry_ledger.total_recovery_starts, 0)
 
     def test_snapshot_unknown_becoming_known_restarts_without_retry(self):
         first_cell = (-2, -1, -1)
@@ -469,7 +581,7 @@ class PlanningCoordinatorTests(unittest.TestCase):
             coordinator.advance(
                 current, state_anchor=None, edge_probe=None,
                 remaining_damage_budget=request.damage_budget,
-            ).reason,
+            current_scope=coordinator._request_ledger.current_computation_scope).reason,
             "snapshot_building",
         )
         world.confirm_air(ObservationStamp(
@@ -481,11 +593,12 @@ class PlanningCoordinatorTests(unittest.TestCase):
         update = coordinator.advance(
             current, state_anchor=None, edge_probe=None,
             remaining_damage_budget=request.damage_budget,
+            current_scope=coordinator._request_ledger.current_computation_scope,
         )
 
         self.assertEqual(update.reason, "snapshot_restarted")
         self.assertEqual(
-            coordinator._retry_ledger.count_for(RetryCause.DEPENDENCY), 0,
+            coordinator.local_attempt_failures, 0,
         )
 
     def test_same_section_change_outside_bounds_does_not_consume_retry(self):
@@ -503,6 +616,7 @@ class PlanningCoordinatorTests(unittest.TestCase):
         coordinator.advance(
             current, state_anchor=None, edge_probe=None,
             remaining_damage_budget=request.damage_budget,
+            current_scope=coordinator._request_ledger.current_computation_scope,
         )
         outside = (5, 0, 0)
         world.observe_blocks(ObservationStamp(
@@ -514,11 +628,12 @@ class PlanningCoordinatorTests(unittest.TestCase):
         update = coordinator.advance(
             current, state_anchor=None, edge_probe=None,
             remaining_damage_budget=request.damage_budget,
+            current_scope=coordinator._request_ledger.current_computation_scope,
         )
 
         self.assertEqual(update.reason, "snapshot_building")
         self.assertEqual(
-            coordinator._retry_ledger.count_for(RetryCause.DEPENDENCY), 0,
+            coordinator.local_attempt_failures, 0,
         )
 
     def test_snapshot_building_uses_attempt_deadline_despite_restarts(self):
@@ -540,7 +655,7 @@ class PlanningCoordinatorTests(unittest.TestCase):
             coordinator.advance(
                 current, state_anchor=None, edge_probe=None,
                 remaining_damage_budget=request.damage_budget,
-            ).reason,
+            current_scope=coordinator._request_ledger.current_computation_scope).reason,
             "snapshot_building",
         )
 
@@ -555,11 +670,12 @@ class PlanningCoordinatorTests(unittest.TestCase):
         expired = coordinator.advance(
             current, state_anchor=None, edge_probe=None,
             remaining_damage_budget=request.damage_budget,
+            current_scope=coordinator._request_ledger.current_computation_scope,
         )
 
         self.assertEqual(expired.reason, "planning_timeout_retry_started")
         self.assertEqual(
-            coordinator._retry_ledger.count_for(RetryCause.PLANNING), 1,
+            coordinator.local_attempt_failures, 1,
         )
 
     def test_information_result_is_rebased_when_fact_became_known(self):
@@ -580,7 +696,7 @@ class PlanningCoordinatorTests(unittest.TestCase):
             coordinator.advance(
                 current, state_anchor=None, edge_probe=None,
                 remaining_damage_budget=request.damage_budget,
-            ).reason,
+            current_scope=coordinator._request_ledger.current_computation_scope).reason,
             "planning_submitted",
         )
 
@@ -592,6 +708,7 @@ class PlanningCoordinatorTests(unittest.TestCase):
         rebased = coordinator.advance(
             current, state_anchor=None, edge_probe=None,
             remaining_damage_budget=request.damage_budget,
+            current_scope=coordinator._request_ledger.current_computation_scope,
         )
 
         self.assertIs(rebased.kind, PlanningUpdateKind.RUNNING)
@@ -619,7 +736,7 @@ class PlanningCoordinatorTests(unittest.TestCase):
             coordinator.advance(
                 current, state_anchor=None, edge_probe=None,
                 remaining_damage_budget=request.damage_budget,
-            ).reason,
+            current_scope=coordinator._request_ledger.current_computation_scope).reason,
             "planning_submitted",
         )
 
@@ -631,12 +748,13 @@ class PlanningCoordinatorTests(unittest.TestCase):
         rebased = coordinator.advance(
             current, state_anchor=None, edge_probe=None,
             remaining_damage_budget=request.damage_budget,
+            current_scope=coordinator._request_ledger.current_computation_scope,
         )
 
         self.assertIs(rebased.kind, PlanningUpdateKind.RUNNING)
         self.assertEqual(rebased.reason, "route_dependencies_changed_retry_started")
         self.assertEqual(
-            coordinator._retry_ledger.count_for(RetryCause.DEPENDENCY), 1,
+            coordinator.local_attempt_failures, 1,
         )
 
     def test_cancel_work_retires_all_attempt_owned_state(self):
@@ -749,11 +867,13 @@ class PlanningCoordinatorTests(unittest.TestCase):
         coordinator.advance(
             current, state_anchor=None, edge_probe=None,
             remaining_damage_budget=request.damage_budget,
+            current_scope=coordinator._request_ledger.current_computation_scope,
         )
 
         completed = coordinator.advance(
             current, state_anchor=None, edge_probe=None,
             remaining_damage_budget=request.damage_budget,
+            current_scope=coordinator._request_ledger.current_computation_scope,
         )
 
         self.assertIs(completed.kind, PlanningUpdateKind.ROUTE_READY)

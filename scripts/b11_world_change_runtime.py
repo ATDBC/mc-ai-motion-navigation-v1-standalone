@@ -1,6 +1,8 @@
 """Frozen real-Fabric B11 placement and bounded bridge trials."""
 from __future__ import annotations
 
+from mc2p.motion_nav.navigation_owners import GoalRequestLedger
+
 from dataclasses import asdict, replace
 import math
 from pathlib import Path
@@ -242,7 +244,9 @@ def _run_fixed(runtime, trial: dict, profile: BehaviorProfileV0,
         requires_sneak=True,
         work_position_tolerance=0.08,
     )
-    transaction = BlockPlacementTransaction(requirement)
+    ledger = GoalRequestLedger()
+    scope = ledger.bind_computation_scope(requirement.goal_id, requirement.world_session)
+    transaction = BlockPlacementTransaction(requirement, computation_scope=scope)
     assert profiles.ground_modes is not None
     driver = RuntimeBlockPlacementDriver(
         runtime, transaction,
@@ -379,9 +383,10 @@ def _run_negative(
         "destination_occupied",
         "cancel_before_submit",
     }:
-        transaction = BlockPlacementTransaction(
-            _fixed_requirement(trial, frame, edge=False),
-        )
+        requirement = _fixed_requirement(trial, frame, edge=False)
+        ledger = GoalRequestLedger()
+        scope = ledger.bind_computation_scope(requirement.goal_id, requirement.world_session)
+        transaction = BlockPlacementTransaction(requirement, computation_scope=scope)
         if case == "cancel_before_submit":
             transaction.cancel("negative_cancel_before_submit")
         proposal = transaction.propose(runtime.observation, frame)
@@ -403,9 +408,10 @@ def _run_negative(
         }
 
     if case == "confirmation_timeout":
-        transaction = BlockPlacementTransaction(
-            _fixed_requirement(trial, frame, edge=True),
-        )
+        requirement = _fixed_requirement(trial, frame, edge=True)
+        ledger = GoalRequestLedger()
+        scope = ledger.bind_computation_scope(requirement.goal_id, requirement.world_session)
+        transaction = BlockPlacementTransaction(requirement, computation_scope=scope)
         assert profiles.ground_modes is not None
         placement = RuntimeBlockPlacementDriver(
             runtime,

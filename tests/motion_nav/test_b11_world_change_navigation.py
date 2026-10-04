@@ -4,6 +4,7 @@ from dataclasses import replace
 import math
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 from mc2p.contracts.action_receipt import behavior_receipt_from_mapping
 from mc2p.contracts.action_v1 import ActionSnapshotV1, InteractBlockV1, MovementV1
@@ -16,6 +17,7 @@ from mc2p.motion_nav.bridge_planner import BridgePlacementPolicy
 from mc2p.motion_nav.body_control import HandoffDisposition, HandoffEvidence
 from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, MovementMode
 from mc2p.motion_nav.navigation_session import NavigationSession, NavigationSessionProfiles
+from mc2p.motion_nav.planning_coordinator import PlanningCoordinator, PlanningUpdateKind
 from mc2p.motion_nav.world_model import Aabb
 from mc2p.motion_nav.world_interaction import PlacementState
 from mc2p.runtime.backend_v1 import BackendStepResultV1
@@ -235,6 +237,53 @@ class _WorldChangeBackend:
 
 
 class WorldChangeNavigationIntegrationTests(unittest.TestCase):
+    def test_interaction_delivery_contains_complete_routing_facts(self):
+        clock, _, driver = self._fixture(maximum_blocks=1)
+        delivered = []
+        original = PlanningCoordinator.advance
+        def advance(owner, *args, **kwargs):
+            update = original(owner, *args, **kwargs)
+            if update.kind is PlanningUpdateKind.REQUIRES_INTERACTION:
+                delivered.append(update)
+            return update
+        with patch.object(PlanningCoordinator, "advance", advance):
+            for _ in range(80):
+                driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
+                if delivered:
+                    break
+        self.assertEqual(len(delivered), 1)
+        update = delivered[0]
+        self.assertEqual(update.request.request_id, update.request_id)
+        self.assertEqual(update.request.goal_revision, update.goal_revision)
+        self.assertEqual(update.missing_cells, ())
+        self.assertIsNotNone(update.interaction)
+        self.assertEqual(driver.session.required_interaction, update.interaction)
+
+    def test_navigation_terminal_does_not_retire_active_b11_confirmation_owner(self):
+        clock, backend, driver = self._fixture(maximum_blocks=1)
+        for _ in range(80):
+            driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
+            if (driver.placement is not None and driver.placement.transaction.report.state
+                    is PlacementState.AWAITING_CONFIRMATION):
+                break
+        placement = driver.placement
+        self.assertIsNotNone(placement)
+        self.assertIs(placement.transaction.report.state, PlacementState.AWAITING_CONFIRMATION)
+        driver.session.cancel("session_terminal_after_dispatch")
+        self.assertTrue(driver.session.report.terminal)
+        self.assertIs(driver.placement, placement)
+        # The independent B11 owner continues its already-dispatched effect.
+        # Explicit driver.cancel() has a separate existing transaction policy.
+        for _ in range(8):
+            placement.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
+            if placement.transaction.report.terminal and placement.source is None:
+                break
+        self.assertIs(placement.transaction.report.state, PlacementState.COMPLETE)
+        self.assertEqual(len(backend.placed_cells), 1)
+        self.assertIsNone(placement.source)
+        self.assertTrue(driver.session.report.terminal)
+        self.assertEqual(driver.session.report.reason, "session_terminal_after_dispatch")
+
     @staticmethod
     def _delay_one_body_handoff(driver):
         original = driver.session.body_handoff

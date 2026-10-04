@@ -23,6 +23,7 @@ class PlanningOwnershipGateTests(unittest.TestCase):
         offenders = []
         pattern = re.compile(
             r"\.(?:submit_surface_snapshot|submit_snapshot|poll_latest)\("
+            r"|\b(?:self\.)?_planner\.poll_available\("
         )
         for path, source in self.production_sources().items():
             if path != COORDINATOR and pattern.search(source):
@@ -50,6 +51,11 @@ class PlanningOwnershipGateTests(unittest.TestCase):
                 offenders.append(path.name)
         self.assertEqual(offenders, [])
 
+    def test_computation_scope_is_created_only_by_goal_ledger(self):
+        offenders = [path.name for path, source in self.production_sources().items()
+                     if path != OWNERS and re.search(r"\bAsyncComputationScope\(", source)]
+        self.assertEqual(offenders, [])
+
     def test_navigation_session_has_no_legacy_planning_writes(self):
         source = (PACKAGE / "navigation_session.py").read_text(encoding="utf-8")
         forbidden = (
@@ -57,6 +63,7 @@ class PlanningOwnershipGateTests(unittest.TestCase):
             "submit_surface_snapshot(",
             "submit_snapshot(",
             "poll_latest(",
+            "poll_available(",
             "_snapshot_builder",
             "_planning_submission_expired",
             "_record_planning_submission",

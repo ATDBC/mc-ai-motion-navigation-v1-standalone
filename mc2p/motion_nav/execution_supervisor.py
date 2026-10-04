@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import math
 from collections import deque
+from dataclasses import dataclass
+from enum import StrEnum
 
 from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.common import ContractViolation
@@ -11,16 +13,59 @@ from mc2p.motion_nav.body_control import (
     BodyController, HandoffDisposition, HandoffEvidence,
     StopCause,
 )
-from mc2p.motion_nav.probe_body_controller import ProbeBodyController
-from mc2p.motion_nav.route_body_controller import RouteControl
-from mc2p.motion_nav.action_route_executor import ActionRouteState
+from mc2p.motion_nav.probe_body_controller import ProbeBodyController, ProbeOutcome
+from mc2p.motion_nav.route_body_controller import RouteAdvance, RouteControl
+from mc2p.motion_nav.action_route_executor import ActionRouteDecision, ActionRouteState
 from mc2p.motion_nav.landing_edge_probe import LandingEdgeProbeState
 from mc2p.motion_nav.online_motion import (
     InputApplicationLedger, InputResponsibilityDisposition,
     StateAnchor, assess_input_responsibility,
 )
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
+from mc2p.motion_nav.async_work import AsyncComputationScope
 from mc2p.motion_nav.safe_ground_control import verified_ground_rollout
+
+
+_TERMINAL_DECISIONS = frozenset({
+    ActionRouteState.COMPLETE, ActionRouteState.CANCELLED,
+    ActionRouteState.FAILED, ActionRouteState.BLOCKED,
+    ActionRouteState.UNSUPPORTED, ActionRouteState.INPUT_LOST,
+    ActionRouteState.NEEDS_REPLAN,
+})
+_REJECTED_CANDIDATE_STATES = _TERMINAL_DECISIONS - {
+    ActionRouteState.COMPLETE, ActionRouteState.CANCELLED,
+}
+
+
+class BodySelectionKind(StrEnum):
+    ROUTE = "route"
+    INCUMBENT_PREFIX = "incumbent_prefix"
+    CANDIDATE_WAIT = "candidate_wait"
+    PROBE_STOP = "probe_stop"
+
+
+@dataclass(frozen=True, slots=True)
+class BodyFrameAdvance:
+    """Raw route facts; Session still owns candidate recovery and risk."""
+
+    route_advance: RouteAdvance
+    waiting_candidate: RouteAdvance | None = None
+    rejected_candidate: RouteAdvance | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class BodyFrameResult:
+    """The one controller chosen for this frame; selection is not takeover."""
+
+    kind: BodySelectionKind
+    controller: RouteControl | ProbeBodyController
+    route_advance: RouteAdvance
+    decision: ActionRouteDecision
+    incumbent_route: RouteControl | None
+    pending_route: RouteControl | None
+    handoff: HandoffEvidence | None = None
+    waiting_candidate: RouteAdvance | None = None
+
 
 class ExecutionSupervisor:
     """Own the active acquisition while an admitted route remains queued."""
@@ -88,6 +133,147 @@ class ExecutionSupervisor:
             self._retire_control_work(self._pending_route, StopCause.ROUTE_REPLACED)
         self._pending_route = None
         self._pending_route_input_floor = 0
+
+    def advance_body(
+        self, frame: NavigationFrame,
+        ledger: InputApplicationLedger | None,
+        anchor: StateAnchor | None, *,
+        conditioned_yaw_delta_degrees: float | None = None,
+        allow_grounded_reprepare: bool = False,
+        result_poll_sequence: int | None = None,
+        current_scope: AsyncComputationScope | None = None,
+    ) -> BodyFrameAdvance:
+        control = self.route
+        if control is None:
+            raise ContractViolation("body advancement requires an admitted route")
+        if self._probe is not None and self._probe.probe.owned:
+            # Probe control is proved under the observed view, including the
+            # route's first command that has yet to win Runtime selection.
+            conditioned_yaw_delta_degrees = None
+        advance = control.advance(
+            frame, ledger, anchor,
+            conditioned_yaw_delta_degrees=conditioned_yaw_delta_degrees,
+            allow_grounded_reprepare=(allow_grounded_reprepare
+                                     and not self.has_pending_route),
+            result_poll_sequence=result_poll_sequence,
+            current_scope=current_scope,
+        )
+        if self._pending_route is None or advance.decision.submit_input:
+            return BodyFrameAdvance(advance)
+        if advance.decision.state in _REJECTED_CANDIDATE_STATES:
+            self.discard_pending_route()
+            # Session must route this fact before the incumbent advances:
+            # denied recovery may have requested stopping in the same frame.
+            return BodyFrameAdvance(advance, advance, advance)
+        return self._advance_incumbent_prefix(
+            advance, frame, ledger, anchor,
+            conditioned_yaw_delta_degrees=conditioned_yaw_delta_degrees,
+            result_poll_sequence=result_poll_sequence,
+            current_scope=current_scope,
+        )
+
+    def continue_rejected_candidate(
+        self, advance: BodyFrameAdvance, frame: NavigationFrame,
+        ledger: InputApplicationLedger | None,
+        anchor: StateAnchor | None, *,
+        conditioned_yaw_delta_degrees: float | None = None,
+        result_poll_sequence: int | None = None,
+        current_scope: AsyncComputationScope | None = None,
+    ) -> BodyFrameAdvance:
+        """Resume only after Session routes the typed candidate rejection."""
+        if (advance.rejected_candidate is None
+                or advance.route_advance is not advance.rejected_candidate):
+            raise ContractViolation("continuation requires an unadvanced rejection")
+        if self._probe is not None and self._probe.probe.owned:
+            conditioned_yaw_delta_degrees = None
+        return self._advance_incumbent_prefix(
+            advance.rejected_candidate, frame, ledger, anchor,
+            conditioned_yaw_delta_degrees=conditioned_yaw_delta_degrees,
+            result_poll_sequence=result_poll_sequence,
+            current_scope=current_scope,
+            rejected=advance.rejected_candidate,
+        )
+
+    def _advance_incumbent_prefix(
+        self, candidate: RouteAdvance, frame: NavigationFrame,
+        ledger: InputApplicationLedger | None,
+        anchor: StateAnchor | None, *,
+        conditioned_yaw_delta_degrees: float | None,
+        result_poll_sequence: int | None,
+        rejected: RouteAdvance | None = None,
+        current_scope: AsyncComputationScope | None = None,
+    ) -> BodyFrameAdvance:
+        incumbent = self._route
+        assert incumbent is not None
+        # A waiting successor never retires the existing input owner.
+        prefix = incumbent.advance(
+            frame, ledger, anchor,
+            conditioned_yaw_delta_degrees=conditioned_yaw_delta_degrees,
+            allow_grounded_reprepare=False,
+            result_poll_sequence=result_poll_sequence,
+            current_scope=current_scope,
+        )
+        return BodyFrameAdvance(prefix, candidate, rejected)
+
+    def select_body(
+        self, advance: BodyFrameAdvance, checked_decision: ActionRouteDecision,
+        frame: NavigationFrame,
+        ledger: InputApplicationLedger | None,
+        anchor: StateAnchor | None,
+    ) -> BodyFrameResult:
+        """Select after Session applies task risk; never publish task results."""
+        if (advance.rejected_candidate is not None
+                and advance.route_advance is advance.rejected_candidate):
+            raise ContractViolation("candidate rejection must be routed before body selection")
+        control = advance.route_advance.control
+        if (self._probe is not None and self._probe.probe.owned
+                and self._probe.probe.state is LandingEdgeProbeState.STOPPING):
+            # Planning can request a probe stop after this frame's initial
+            # handoff pass. Its protection takes precedence over route facts,
+            # including a neutral RUNNING route without a waiting candidate.
+            return BodyFrameResult(BodySelectionKind.PROBE_STOP, self._probe,
+                advance.route_advance, checked_decision,
+                self._route, self._pending_route,
+                waiting_candidate=advance.waiting_candidate)
+        if advance.waiting_candidate is None:
+            return BodyFrameResult(BodySelectionKind.ROUTE, control,
+                advance.route_advance, checked_decision,
+                self._route, self._pending_route)
+        release = None
+        if checked_decision.state in _TERMINAL_DECISIONS:
+            if self._probe is not None and self._probe.probe.owned:
+                return BodyFrameResult(BodySelectionKind.PROBE_STOP, self._probe,
+                    advance.route_advance, checked_decision,
+                    self._route, self._pending_route,
+                    waiting_candidate=advance.waiting_candidate)
+            release = self.incumbent_release_evidence(frame, ledger, anchor)
+            if release.disposition is HandoffDisposition.QUIESCENT:
+                return BodyFrameResult(BodySelectionKind.CANDIDATE_WAIT, control,
+                    advance.route_advance, checked_decision,
+                    self._route, self._pending_route, release,
+                    advance.waiting_candidate)
+        return BodyFrameResult(BodySelectionKind.INCUMBENT_PREFIX, control,
+            advance.route_advance, checked_decision,
+            self._route, self._pending_route, release,
+            advance.waiting_candidate)
+
+    def stop_protection(
+        self, advance: BodyFrameAdvance, frame: NavigationFrame,
+        ledger: InputApplicationLedger | None,
+        anchor: StateAnchor | None, *,
+        current_scope: AsyncComputationScope | None = None,
+    ) -> BodyFrameAdvance:
+        """Keep the real incumbent after Session accepts the ending request."""
+        incumbent = self._route
+        if incumbent is None:
+            raise ContractViolation("stop protection requires a retained incumbent")
+        if incumbent is advance.route_advance.control:
+            protected = incumbent.stop_protection(advance.route_advance, frame, anchor)
+        else:
+            # A refused pending route never owned input.  Its predecessor was
+            # not advanced this frame and now supplies its normal cancel step.
+            protected = incumbent.advance(frame, ledger, anchor, current_scope=current_scope)
+        return BodyFrameAdvance(protected)
 
     def request_route_stop(self, cause: StopCause) -> None:
         self.discard_pending_route()
@@ -315,6 +501,14 @@ class ExecutionSupervisor:
         self._last_handoff_controller = controller
         return decision
 
+    def probe_outcome(self, frame: NavigationFrame) -> ProbeOutcome | None:
+        return None if self._probe is None else self._probe.outcome(frame)
+
+    def finish_probe_release(self, frame: NavigationFrame) -> ProbeOutcome | None:
+        if self._probe is None or not self._probe.probe.finish_release(frame):
+            return None
+        return self._probe.outcome(frame)
+
     def retire_quiescent_probe(self, frame: NavigationFrame) -> None:
         if self._probe is None:
             return
@@ -327,6 +521,7 @@ class ExecutionSupervisor:
                 or self._last_handoff.disposition is not
                     HandoffDisposition.QUIESCENT):
             raise ContractViolation("edge acquisition has no release evidence")
+        self._probe.probe.end(self._last_handoff.reason)
         self._probe = None
         self._last_handoff_controller = None
 

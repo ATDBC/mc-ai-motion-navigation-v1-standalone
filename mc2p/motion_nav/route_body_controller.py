@@ -1,13 +1,13 @@
 """Thin body-controller adapter for one admitted action route."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import math
 
 from mc2p.contracts.action_v1 import LookV1, MovementV1
 from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.action_route_executor import (
-    ActionRouteExecutor, ActionRouteState,
+    ActionRouteDecision, ActionRouteExecutor, ActionRouteState,
 )
 from mc2p.motion_nav.body_control import (
     BodyControlDecision, BodyControlActivity, BodyControlPhase,
@@ -15,12 +15,16 @@ from mc2p.motion_nav.body_control import (
 )
 from mc2p.motion_nav.action_route import WalkSegment
 from mc2p.motion_nav.motion_coordination import MotionRouteCoordinator
+from mc2p.motion_nav.async_work import AsyncComputationScope
 from mc2p.motion_nav.online_motion import (
     InputApplicationLedger, InputResponsibilityDisposition,
     StateAnchor, assess_input_responsibility,
 )
 from mc2p.motion_nav.route_admission import ActiveRoute
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
+from mc2p.motion_nav.movement_transition import MovementMode
+from mc2p.motion_nav.physics_adapter import PhysicsWorldView
+from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET
 from mc2p.motion_nav.safe_ground_control import verified_ground_rollout
 
 
@@ -34,6 +38,15 @@ _TERMINAL_ROUTE_STATES = frozenset({
     ActionRouteState.NEEDS_REPLAN,
     ActionRouteState.IDLE,
 })
+
+
+@dataclass(frozen=True, slots=True)
+class RouteAdvance:
+    """One route's raw frame facts, before task risk and Runtime selection."""
+
+    control: RouteControl
+    decision: ActionRouteDecision
+    conditioned_ordinary_walk: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -86,6 +99,59 @@ class RouteControl:
 
     def requires_safe_handoff(self, frame: NavigationFrame) -> bool:
         return self.executor.requires_safe_handoff(frame)
+
+    def advance(
+        self, frame: NavigationFrame,
+        ledger: InputApplicationLedger | None,
+        anchor: StateAnchor | None, *,
+        conditioned_yaw_delta_degrees: float | None = None,
+        allow_grounded_reprepare: bool = False,
+        result_poll_sequence: int | None = None,
+        current_scope: AsyncComputationScope | None = None,
+    ) -> RouteAdvance:
+        """Advance the installed movement owner exactly once for this frame."""
+        executor_route = getattr(self.executor, "route", None)
+        action = (None if executor_route is None
+                  or not 0 <= self.action_index < len(executor_route.actions)
+                  else executor_route.actions[self.action_index])
+        conditioned_walk = (
+            conditioned_yaw_delta_degrees is not None
+            and type(action) is WalkSegment
+            and (action.transition is None
+                 or action.transition.mode is MovementMode.WALK)
+        )
+        movement_yaw = None
+        if conditioned_walk:
+            yaw = frame.body.yaw_radians + math.radians(
+                conditioned_yaw_delta_degrees,
+            )
+            movement_yaw = math.atan2(math.sin(yaw), math.cos(yaw))
+        if self.coordinator is not None and anchor is not None and ledger is not None:
+            decision = self.coordinator.decide(
+                frame, anchor, ledger,
+                PhysicsWorldView(frame.world, JAVA_1_21_RULESET),
+                changed_cells=frame.changed_cells,
+                current_scope=current_scope,
+                movement_yaw_radians=movement_yaw,
+                allow_grounded_reprepare=allow_grounded_reprepare,
+                result_poll_sequence=result_poll_sequence,
+            )
+        else:
+            decision = self.executor.decide(
+                frame, state_anchor=anchor, input_ledger=ledger,
+                movement_yaw_radians=movement_yaw,
+            )
+        return RouteAdvance(self, decision, conditioned_walk)
+
+    def stop_protection(
+        self, previous: RouteAdvance, frame: NavigationFrame,
+        anchor: StateAnchor | None,
+    ) -> RouteAdvance:
+        if previous.control is not self:
+            raise ContractViolation("stop protection belongs to another route")
+        return replace(previous, decision=self.executor.stop_protection(
+            previous.decision, frame, state_anchor=anchor,
+        ), conditioned_ordinary_walk=False)
 
     def decide(
         self, frame: NavigationFrame,

@@ -21,6 +21,7 @@ from mc2p.motion_nav.navigation_session import NavigationSession, NavigationSess
 from mc2p.motion_nav.world_model import Aabb
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.motion_worker import MotionSolverWorker
+from mc2p.motion_nav.planner_worker import PlannerWorker
 from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
 from scripts.control_probe_core import write_json_atomic
 from scripts.r25_planning_information_runtime import _task
@@ -35,6 +36,7 @@ SOURCES = (
     "mc2p/skills/navigation_session_driver.py", "scripts/action_continuity_fabric_runtime.py",
     "mc2p/motion_nav/segment_entry.py", "mc2p/motion_nav/ground_traversal.py",
     "mc2p/motion_nav/known_map_planner.py",
+    "mc2p/motion_nav/planner_worker.py", "mc2p/motion_nav/planning_coordinator.py",
 )
 TERMINAL = {"success", "failed", "cancelled", "stopped", "interaction_required"}
 
@@ -78,6 +80,52 @@ class _ObservedMotionWorker:
     def close(self):
         if self.worker is not None:
             self.worker.close()
+
+
+class _ObservedPlannerWorker:
+    """Record real serial-worker receipts; only the existing debug delay is injected."""
+    def __init__(self, path, trial, delay):
+        self.path, self.trial = path, trial
+        started = time.perf_counter_ns()
+        self.worker = PlannerWorker(debug_delay_seconds=delay)
+        self._record(event='startup', startup_ns=time.perf_counter_ns()-started,
+                     debug_delay_seconds=delay)
+
+    def _record(self, **values):
+        with self.path.open('a', encoding='utf8') as stream:
+            stream.write(json.dumps(dict(trial=self.trial, at_ns=time.perf_counter_ns(),
+                                         pid=self.worker.pid, **values))+'\n')
+
+    def submit_surface_snapshot(self, *args, **kwargs):
+        status = self.worker.submit_surface_snapshot(*args, **kwargs)
+        request = args[3]
+        self._record(event='submit', status=str(status), identity=asdict(request.work_identity),
+                     request_id=request.request_id, goal_revision=request.goal_revision,
+                     outstanding=len(self.worker.outstanding_identities))
+        return status
+
+    def poll_available(self):
+        results = self.worker.poll_available()
+        for result in results:
+            self._record(event='result', identity=asdict(result.work_identity),
+                         request_id=result.request_id, status=str(result.status),
+                         outstanding=len(self.worker.outstanding_identities))
+        return results
+
+    def poll_latest(self):
+        result = self.worker.poll_latest()
+        if result is not None:
+            self._record(event='result', identity=asdict(result.work_identity),
+                         request_id=result.request_id, status=str(result.status),
+                         outstanding=len(self.worker.outstanding_identities))
+        return result
+
+    def is_alive(self):
+        return self.worker.is_alive()
+
+    def close(self):
+        self._record(event='close', outstanding=len(self.worker.outstanding_identities))
+        self.worker.close()
 
 
 def _rot(x, z, direction):
@@ -124,7 +172,11 @@ def _metrics(rows):
                     and any(samples[tick][0][name] for name in ("forward", "strafe"))]
         if following:
             landing_gap = following[0] - landing
-    return dict(jump_ticks=jumps, jump_entry_speed_blocks_per_second=entries,
+    preparation = sorted(row['prepare_ns'] for row in rows if row['phase'] == 'navigation')
+    return dict(prepare_samples=len(preparation),
+                prepare_p95_ms=None if not preparation else preparation[math.ceil(.95*len(preparation))-1]/1e6,
+                prepare_max_ms=None if not preparation else preparation[-1]/1e6,
+                jump_ticks=jumps, jump_entry_speed_blocks_per_second=entries,
                 movement_gap_before_jump_ticks=approach_gap,
                 landing_to_movement_gap_ticks=landing_gap,
                 airborne_reverse_ticks=air_reverse_ticks,
@@ -151,6 +203,9 @@ def _start_delivery_configuration():
 def run_action_continuity_runtime(runtime, backend, episode, directory, deadline_ns,
                                  fixture_writer, *, trace_owns_diagnostics=False):
     delivery_probe, kinds, pitch_by_kind = _start_delivery_configuration()
+    generation_operation = os.environ.get('MC2P_R28_3_OPERATION')
+    if generation_operation not in {None, 'planning', 'revision', 'cancel', 'double'}:
+        raise ValueError('undeclared R28-3 operation')
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
     source_hashes = _hashes()
@@ -198,17 +253,21 @@ def run_action_continuity_runtime(runtime, backend, episode, directory, deadline
         for kind, direction, late_first in cases:
             name = (f"start-delivery-{kind}-{direction}-{'late' if late_first else 'normal'}"
                     if delivery_probe else f"continuity-gap-{direction}")
-            session = driver = worker = None
+            session = driver = worker = planner = None
             # Warm-process trials start transport before fixture observation.
             # Cold-gap trials deliberately let the session start its worker.
             if delivery_probe:
                 worker = _ObservedMotionWorker(directory / 'motion-start-timing.jsonl', name,
                                                cold=kind == 'cold_gap')
+            if generation_operation:
+                planner = _ObservedPlannerWorker(directory / 'planning-work-timing.jsonl', name,
+                    .10 if generation_operation in {'planning', 'double'} else 0.)
             rows, activity_by_sequence = [], {}
             trial = dict(id=name, kind=kind, direction=direction, late_first=late_first,
                          worker_start='cold-on-demand' if kind == 'cold_gap' else 'before-fixture',
                          outcome="not_started", passed=False)
             delay_injected = False
+            generation_events = []
             started = time.perf_counter_ns()
             try:
                 if deadline_ns - started < 15_000_000_000:
@@ -254,7 +313,7 @@ def run_action_continuity_runtime(runtime, backend, episode, directory, deadline
                 goal = replace(goal, risk_policy_id=policy)
                 session = NavigationSession(name, profiles,
                     observation_adapter=runtime.navigation_observation_adapter,
-                    motion_worker=worker)
+                    motion_worker=worker, planner_worker=planner)
                 driver = RuntimeNavigationDriver(runtime, session)
                 driver.start(name, 1, goal, time.perf_counter_ns(), damage_budget=budget)
                 first_tick = runtime.navigation_observation_adapter.latest_frame.body.movement_tick_id
@@ -262,6 +321,28 @@ def run_action_continuity_runtime(runtime, backend, episode, directory, deadline
 
                 def tick(phase):
                     nonlocal delay_injected
+                    if generation_operation and phase == 'navigation':
+                        current = runtime.navigation_observation_adapter.latest_frame
+                        outstanding = planner.worker.outstanding_identities
+                        expected_events = 2 if generation_operation == 'double' else 1
+                        trigger = ((bool(outstanding) if not generation_events else len(outstanding) == 2)
+                            if generation_operation in {'planning', 'double'} else not current.body.is_on_ground)
+                        if len(generation_events) < expected_events and trigger:
+                            old_scope = session.current_computation_scope
+                            if generation_operation == 'cancel':
+                                driver.release('r28-3-airborne-cancel')
+                            elif not driver.replace_goal(name, len(generation_events)+2, goal, time.perf_counter_ns(),
+                                                         damage_budget=budget):
+                                raise RuntimeError('R28-3 goal revision rejected')
+                            generation_events.append(dict(operation=generation_operation,
+                                revision=len(generation_events)+2,
+                                movement_tick=current.body.movement_tick_id,
+                                outstanding=[asdict(identity) for identity in outstanding],
+                                old_scope=asdict(old_scope), new_scope=asdict(session.current_computation_scope),
+                                source_retained=driver.source is not None,
+                                body_owner_retained=session.has_owned_body_control))
+                            if generation_operation not in {'planning', 'double'} and not session.has_owned_body_control:
+                                raise RuntimeError('airborne event lost body owner')
                     before = runtime.navigation_observation_adapter.latest_frame.body.movement_tick_id
                     begun = time.perf_counter_ns()
                     controls = driver.prepare_proposals(next_deadline())
@@ -322,7 +403,11 @@ def run_action_continuity_runtime(runtime, backend, episode, directory, deadline
                     if driver.state in TERMINAL or deadline_ns - time.perf_counter_ns() < 8_000_000_000:
                         break
                     tick("navigation")
-                trial.update(outcome=driver.state, reason=driver.reason, passed=driver.state == "success",
+                expected = 'cancelled' if generation_operation == 'cancel' else 'success'
+                required_events = 2 if generation_operation == 'double' else 1
+                trial.update(outcome=driver.state, reason=driver.reason,
+                    passed=driver.state == expected and (not generation_operation or len(generation_events) == required_events),
+                    generation_events=generation_events,
                     late_injection_applied=delay_injected,
                     movement_ticks=runtime.navigation_observation_adapter.latest_frame.body.movement_tick_id-first_tick,
                     task_elapsed_ns=time.perf_counter_ns()-task_started)
@@ -346,6 +431,8 @@ def run_action_continuity_runtime(runtime, backend, episode, directory, deadline
                     session.close()
                 if worker is not None and (driver is None or driver.source is None):
                     worker.close()
+                if planner is not None and (driver is None or driver.source is None):
+                    planner.close()
                 stream.flush()
                 trial.update(metrics=_metrics(rows), elapsed_ns=time.perf_counter_ns()-started,
                              final_position=runtime.navigation_observation_adapter.latest_frame.body.position,

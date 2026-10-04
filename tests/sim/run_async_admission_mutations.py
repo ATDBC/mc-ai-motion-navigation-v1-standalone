@@ -17,7 +17,7 @@ MUTATIONS = (
      (("owner_instance_id=self._execution_instances.allocate(),", 'owner_instance_id="reused-route-owner",'),),
      "test_formal_runtime_successor_rejects_old_same_goal_gap_failure"),
     ("receipt_time_as_processing_time", "mc2p/motion_nav/world_interaction.py",
-     (("self._work.check(self._work_identity, self._clock())", "self._work.check(self._work_identity, frame.body.stamp.received_monotonic_ns)"),),
+     (("self._work.check(self._work_identity, self._clock(),", "self._work.check(self._work_identity, frame.body.stamp.received_monotonic_ns,"),),
      "test_placement_uses_dispatch_and_processing_clock_even_without_new_observation"),
     ("ignored_information_failure", "mc2p/motion_nav/navigation_session.py",
      (("if outcome.kind is PlanningUpdateKind.FAILED:", "if False and outcome.kind is PlanningUpdateKind.FAILED:"),),

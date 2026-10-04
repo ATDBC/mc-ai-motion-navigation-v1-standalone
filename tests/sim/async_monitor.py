@@ -3,7 +3,7 @@ from collections import Counter
 from dataclasses import dataclass
 from enum import StrEnum
 
-from mc2p.motion_nav.async_work import AsyncAdmissionDisposition, AsyncWorkKind
+from mc2p.motion_nav.async_work import AsyncAdmissionDisposition, AsyncWorkKind, AsyncComputationScope
 from mc2p.motion_nav.world_model import CellKnowledge
 
 
@@ -61,20 +61,28 @@ class AsyncInvariantMonitor:
         self._windows = {}
         self._finished = {}
         self._applications = set()
+        self._applied_identities = set()
         self._seen = set()
         self.last_events = []
         self.by_kind = Counter()
 
     def check(self, owners, mailboxes=()):
         self.last_events = []
-        active = Counter(owner.active_identity for owner in owners if owner.active_identity is not None)
+        def active_work(owner):
+            return owner.planning_work or (() if owner.active_identity is None
+                else ((owner.active_identity, owner.active_window),))
+        active = Counter(identity for owner in owners for identity, _ in active_work(owner))
         for identity, count in active.items():
             if count != 1:
                 self.violations.append(("I22", "identity has multiple active receivers"))
         for owner in owners:
-            if (owner.active_identity is not None
-                    and owner.owner_instance_id != owner.active_identity.owner_instance_id):
+            if any(owner.owner_instance_id != identity.owner_instance_id
+                   for identity, _ in active_work(owner)):
                 self.violations.append(("I22", "active identity belongs to a foreign owner"))
+            if len(owner.planning_work) > 2 or len(
+                    {identity for identity, _ in owner.planning_work}
+                    | set(owner.pending_planning_receipts)) > 2:
+                self.violations.append(("I22", "planning work capacity exceeds two"))
         for identity in mailboxes:
             if active[identity] != 1:
                 self.violations.append(("I22", "mailbox requires exactly one active receiving owner"))
@@ -86,6 +94,8 @@ class AsyncInvariantMonitor:
                 self._seen.add(key)
                 self.last_events.append(event)
                 identity = event.identity
+                if type(identity.scope) is not AsyncComputationScope:
+                    self.violations.append(("I18", "work has no typed computation scope"))
                 if event.operation == "begin":
                     previous = self._windows.get(identity)
                     if previous is not None:
@@ -100,17 +110,20 @@ class AsyncInvariantMonitor:
                     self.coverage["finished"] += 1
                     self.by_kind[(identity.work_kind.value, "finish")] += 1
                 elif event.operation == "apply":
+                    if identity in self._applied_identities:
+                        self.violations.append(("I19", "work was applied more than once"))
+                    self._applied_identities.add(identity)
                     if (identity in self._finished or event.window.expired(event.monotonic_ns)
                             or self._windows.get(identity) != event.window):
                         self.violations.append(("I19", "application event followed retirement or expiry"))
                     self._applications.add((identity, event.monotonic_ns))
             for identity, _resource in owner.resources:
-                if identity is None or identity != owner.active_identity or identity in self._finished:
+                if identity is None or active[identity] != 1 or identity in self._finished:
                     self.violations.append(("I20", "retired or foreign work still owns a resource"))
-            if owner.active_identity is not None:
-                if owner.active_identity in self._finished:
+            for identity, window in active_work(owner):
+                if identity in self._finished:
                     self.violations.append(("I20", "retired identity is active"))
-                if self._windows.get(owner.active_identity) != owner.active_window:
+                if self._windows.get(identity) != window:
                     self.violations.append(("I18", "active window differs from creation record"))
             for record in owner.admissions:
                 key = (record.identity, "admission", record.accepted_monotonic_ns, record.disposition)

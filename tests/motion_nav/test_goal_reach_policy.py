@@ -10,6 +10,10 @@ from mc2p.motion_nav.goal_observation import ObservedGoalStatus
 from mc2p.motion_nav.known_map_planner import PlanningRequest
 from mc2p.motion_nav.navigation_owners import GoalRequestLedger
 from mc2p.motion_nav.navigation_session import NavigationSession
+from mc2p.motion_nav.retry_ledger import (
+    ProgressEvidence, ProgressKind, RecoveryBudgetKind, RecoveryBudgetPolicy,
+    RecoveryLimitStatus, RetryLedger, TaskDemandState,
+)
 from tests.motion_nav.test_action_continuity_formal import _gap_case
 from tests.sim.backend import Perturbations
 from tests.sim.product_metrics import strict_trace
@@ -47,6 +51,10 @@ class GoalReachPolicyFormalTests(unittest.TestCase):
                 self.assertFalse(diagnostics.body_control_activities)
                 self.assertFalse(diagnostics.active_waits)
                 self.assertFalse(diagnostics.planning_work_owned)
+                request = context.session.observation_request()
+                self.assertFalse(request.air_positions)
+                self.assertFalse(context.session._information.missing_cells)
+                self.assertIsNone(context.session.planning_information_update)
                 self.assertTrue(context.backend.state.on_ground)
                 self.assertLessEqual(math.hypot(*context.backend.state.velocity_blocks_per_tick[::2]) * 20, .1)
             if step is None:
@@ -59,14 +67,14 @@ class GoalReachPolicyFormalTests(unittest.TestCase):
 
         def revise(context):
             before = (context.session._retry_ledger, context.session._risk_ledger,
-                      context.diagnostics.retry_total_failures,
+                      context.diagnostics.recovery_total_starts,
                       context.diagnostics.damage_spent, context.diagnostics.risk_available_points)
             context.goal_position = next_goal
             context.goal_state = _goal(next_goal, context.risk_policy_id)
             self.assertTrue(context.driver.replace_goal("goal", 2, context.goal_state, context.clock[0]))
             self.assertIs(context.session._retry_ledger, before[0])
             self.assertIs(context.session._risk_ledger, before[1])
-            self.assertEqual(context.diagnostics.retry_total_failures, before[2])
+            self.assertEqual(context.diagnostics.recovery_total_starts, before[2])
             self.assertEqual(context.diagnostics.damage_spent, before[3])
             self.assertEqual(context.diagnostics.risk_available_points, before[4])
             owners.append(before)
@@ -85,6 +93,7 @@ class GoalReachPolicyFormalTests(unittest.TestCase):
         self.assertTrue(any(event.startswith("cancel-satisfied-goal@") for event in result.events))
         for tick, _ in held:
             row = next(row for row in result.trace if row["loop_tick"] == tick)
+            self.assertFalse(row["planning_submissions"])
             self.assertFalse(row["proposed_movement_intents"])
             self.assertFalse(any(row["sampled_input"].values()))
         if next_goal is not None:
@@ -181,6 +190,156 @@ class GoalReachPolicyFormalTests(unittest.TestCase):
         self.assertIs(owner.request, request)
         self.assertIs(owner.reach_policy, keep)
         self.assertNotIn("reach_policy", inspect.signature(NavigationSession.update_goal).parameters)
+
+    def test_task_start_selects_recovery_policy_once(self):
+        complete = self.flat()
+        complete_context = None
+
+        def capture_complete(context):
+            nonlocal complete_context
+            complete_context = context
+            context.session.cancel("captured")
+
+        run(replace(complete, events=[Event("capture", lambda c: c.tick >= 1,
+                                           capture_complete)], expect="cancelled"))
+        self.assertIs(
+            complete_context.session._retry_ledger.policy.kind,
+            RecoveryBudgetKind.FINITE,
+        )
+
+        keep_context = None
+
+        def capture_keep(context):
+            nonlocal keep_context
+            keep_context = context
+            context.session.cancel("captured")
+
+        run(replace(complete, events=[Event("capture", lambda c: c.tick >= 1,
+                                           capture_keep)], expect="cancelled"),
+            reach_policy=policy("KEEP_ACTIVE_ON_REACH"))
+        self.assertIs(
+            keep_context.session._retry_ledger.policy.kind,
+            RecoveryBudgetKind.PERSISTENT,
+        )
+
+    def test_injected_retry_ledger_must_match_task_reach_policy(self):
+        from tests.motion_nav import test_navigation_session as fixtures
+
+        current = fixtures.frame(
+            fixtures._known_world({
+                (x, 0, 0): fixtures.BlockGeometry.full_cube("minecraft:stone")
+                for x in range(3)
+            }),
+            0,
+            (.5, 1., .5),
+        )
+        goal = fixtures._goal((2.5, 1., .5))
+        cases = (
+            (RetryLedger("task", policy=RecoveryBudgetPolicy.finite()),
+             policy("KEEP_ACTIVE_ON_REACH")),
+            (RetryLedger("task", policy=RecoveryBudgetPolicy.persistent()),
+             policy("COMPLETE_ON_REACH")),
+        )
+        for ledger, reach_policy in cases:
+            with self.subTest(policy=reach_policy):
+                session = NavigationSession(
+                    "policy-mismatch",
+                    fixtures.NavigationSessionTests().profiles(),
+                    planner_worker=fixtures._InlinePlanner(),
+                    retry_ledger=ledger,
+                )
+                session.bind_source(fixtures._source())
+                with self.assertRaisesRegex(ContractViolation, "recovery policy"):
+                    session.start_goal(
+                        "goal", 1, goal, current,
+                        task_id="task", reach_policy=reach_policy,
+                    )
+
+    def test_reading_diagnostics_cannot_change_boundary_progress_result(self):
+        from tests.motion_nav import test_navigation_session as fixtures
+
+        def boundary_result(*, read_diagnostics: bool):
+            clock = [0]
+            ledger = RetryLedger(
+                "diagnostic-boundary",
+                policy=RecoveryBudgetPolicy.persistent(),
+                clock_ns=lambda: clock[0],
+            )
+            session = NavigationSession(
+                "diagnostic-boundary",
+                fixtures.NavigationSessionTests().profiles(),
+                planner_worker=fixtures._InlinePlanner(),
+                retry_ledger=ledger,
+                clock_ns=lambda: clock[0],
+            )
+            clock[0] = 30_000_000_000
+            if read_diagnostics:
+                self.assertIs(
+                    session.diagnostics.recovery_limit_status,
+                    RecoveryLimitStatus.ALLOWED,
+                )
+            accepted = ledger.record_task_activity(
+                TaskDemandState.UNMET,
+                ProgressEvidence(
+                    ProgressKind.ACTION_COMPLETED,
+                    1,
+                    action_id="boundary-progress",
+                ),
+            )
+            status = ledger.finalize_task_activity()
+            return accepted, status, session.report.state, session.report.reason
+
+        without_read = boundary_result(read_diagnostics=False)
+        with_read = boundary_result(read_diagnostics=True)
+
+        self.assertEqual(with_read, without_read)
+        self.assertEqual(
+            with_read[:2],
+            (True, RecoveryLimitStatus.ALLOWED),
+        )
+
+    def test_formal_persistent_goal_stops_target_movement_at_no_progress_limit(self):
+        jumped = []
+
+        def advance_task_clock(context):
+            if (not jumped
+                    and context.diagnostics.route_id is not None
+                    and "route_executor" in context.diagnostics.controller_ids):
+                context.clock[0] += 31_000_000_000
+                jumped.append(context.tick)
+            context.driver.tick(
+                BehaviorProfileV0(), context.clock[0] + 500_000_000,
+            )
+
+        case = replace(
+            self.flat(), max_ticks=80,
+            expect="failed",
+        )
+        result = run(
+            case, reach_policy=policy("KEEP_ACTIVE_ON_REACH"),
+            control_step=advance_task_clock,
+        )
+        self.assertTrue(jumped)
+        self.assertEqual(result.outcome, "failed", result.reason)
+        self.assertEqual(result.reason, "task_no_progress_deadline_exhausted")
+        limit_row = next(
+            row for row in result.trace if row["loop_tick"] == jumped[0]
+        )
+        self.assertEqual(limit_row["session_state"], "stopping")
+        self.assertTrue(limit_row["controller_ids"])
+        exhausted_rows = [
+            row for row in result.trace
+            if row["loop_tick"] >= jumped[0]
+        ]
+        self.assertTrue(exhausted_rows)
+        self.assertTrue(all(
+            row["controller_ids"] or not row["source_bound"]
+            for row in exhausted_rows
+        ))
+        self.assertTrue(all(
+            not row["sampled_input"]["forward"]
+            for row in exhausted_rows[1:]
+        ))
 
 
 if __name__ == "__main__":

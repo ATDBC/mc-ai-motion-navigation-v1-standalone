@@ -665,6 +665,99 @@ class ActionRouteExecutor:
             if type(self._controller) is not VerifiedMotionExecutor:
                 self._controller.cancel()
 
+    def stop_protection(
+        self, previous: ActionRouteDecision, frame: NavigationFrame, *,
+        state_anchor: StateAnchor | None,
+    ) -> ActionRouteDecision:
+        """Apply an accepted stop to this frame's result without advancing it.
+
+        The ordinary decide already consumed this observation.  Only start
+        cancellation and replace an unsubmitted departure; do not poll input,
+        increment the action/command index or decide a controller again.
+        """
+        if (type(previous) is not ActionRouteDecision
+                or previous.action_index != self.action_index
+                or self._stop_cause is None):
+            raise ContractViolation("stop protection requires the current stopped action")
+        started = time.perf_counter_ns()
+        if self.state in {
+            ActionRouteState.COMPLETE, ActionRouteState.CANCELLED,
+            ActionRouteState.FAILED, ActionRouteState.UNSUPPORTED,
+            ActionRouteState.INPUT_LOST,
+        }:
+            return self._terminal_decision(frame, started, state_anchor)
+        controller = self._controller
+        if (self._stop_cause is StopCause.DEPENDENCY_CHANGED
+                and type(self.route.actions[self.action_index]) is ControlledDropSegment
+                and frame.body.is_on_ground
+                and math.hypot(frame.body.velocity_blocks_per_second[0],
+                               frame.body.velocity_blocks_per_second[2]) > .10):
+            return self._result(started, MovementV1(sneak=True), 1,
+                                "grounded_dependency_stop")
+        if type(controller) is VerifiedMotionExecutor:
+            if (state_anchor is None or state_anchor.session != frame.session
+                    or state_anchor.observation_sequence_id != frame.body.sequence_id):
+                recovery = controller.recover_without_anchor()
+                self.state = ActionRouteState.CANCELLING
+                return self._result(started, recovery.movement or MovementV1(), 1,
+                                    recovery.reason, submit_input=recovery.movement is not None)
+            was_running = controller.state is VerifiedMotionExecutorState.RUNNING
+            controller.cancel(state_anchor,
+                preserve_verified_remainder=self._stop_cause is not StopCause.DEPENDENCY_CHANGED)
+            if not was_running:
+                return replace(previous, state=self.state, body_phase=None)
+            self.state = ActionRouteState.CANCELLING
+            if not state_anchor.physics_state.on_ground:
+                # decide already checked this exact command and its window.
+                # Keep that legal remainder; cancel has recorded this tick.
+                if self._stop_cause is StopCause.DEPENDENCY_CHANGED:
+                    return self._result(started, MovementV1(), 1,
+                                        "retain_landing_responsibility")
+                return replace(previous, state=self.state, body_phase=None,
+                    reason_code="complete_verified_landing_after_cancel")
+            speed = math.hypot(state_anchor.physics_state.velocity_blocks_per_tick[0],
+                               state_anchor.physics_state.velocity_blocks_per_tick[2])
+            return self._result(started, MovementV1(), 1,
+                "awaiting_cancel_observation" if speed <= .01
+                else "retain_landing_responsibility")
+        if type(controller) is AirMotionController:
+            speed = math.hypot(frame.body.velocity_blocks_per_second[0],
+                               frame.body.velocity_blocks_per_second[2])
+            if frame.body.is_on_ground and not controller._departure_observed:
+                stopped = speed <= controller.profile.maximum_exit_speed_blocks_per_second
+                controller.state = AirMotionState.CANCELLED if stopped else AirMotionState.CANCELLING
+                self.state = ActionRouteState.CANCELLED if stopped else ActionRouteState.CANCELLING
+                return self._result(started, MovementV1(), 1,
+                    "cancelled_before_departure" if stopped else "stopping_before_departure")
+            return replace(previous, state=self.state, body_phase=None)
+        raise ContractViolation("same-frame stop protection requires the current air action")
+
+    def _terminal_decision(
+        self, frame: NavigationFrame, started: int,
+        state_anchor: StateAnchor | None,
+        movement_yaw_radians: float | None = None,
+    ) -> ActionRouteDecision:
+        # A business terminal does not release a body perched on an edge.
+        if (state_anchor is not None
+                and state_anchor.observation_sequence_id == frame.body.sequence_id
+                and frame.body.is_on_ground
+                and verified_ground_rollout(
+                    frame, state_anchor.physics_state, MovementV1(),
+                    control_ticks=0, tail_ticks=8, minimum_support=.01,
+                ) is None):
+            recovery = verified_ground_recovery_movement(
+                frame, (state_anchor.physics_state
+                        if movement_yaw_radians is None else
+                        replace(state_anchor.physics_state,
+                                yaw_radians=movement_yaw_radians)),
+            )
+            if recovery is not None:
+                return replace(self._result(
+                    started, recovery, 1, "recovering_terminal_ground_support",
+                ), body_phase=BodyControlPhase.STOPPING)
+        return self._result(started, MovementV1(), 1, self.state.value,
+                            submit_input=False)
+
     def _result(self, started: int, movement: MovementV1, lease: int,
                 reason: str, missing: tuple[BlockPos, ...] = (),
                 look: LookV1 | None = None, *,
@@ -711,29 +804,8 @@ class ActionRouteExecutor:
             ActionRouteState.FAILED, ActionRouteState.UNSUPPORTED,
             ActionRouteState.INPUT_LOST,
         }:
-            # A business terminal is not permission to release a body perched
-            # on an edge. Keep the same owner and prove each retreat tick until
-            # its neutral tail meets the supervisor's existing support gate.
-            if (state_anchor is not None
-                    and state_anchor.observation_sequence_id == frame.body.sequence_id
-                    and frame.body.is_on_ground
-                    and verified_ground_rollout(
-                        frame, state_anchor.physics_state, MovementV1(),
-                        control_ticks=0, tail_ticks=8, minimum_support=.01,
-                    ) is None):
-                recovery = verified_ground_recovery_movement(
-                    frame, (state_anchor.physics_state
-                            if movement_yaw_radians is None else
-                            replace(state_anchor.physics_state,
-                                    yaw_radians=movement_yaw_radians)),
-                )
-                if recovery is not None:
-                    return replace(self._result(
-                        started, recovery, 1, "recovering_terminal_ground_support",
-                    ), body_phase=BodyControlPhase.STOPPING)
-            return self._result(
-                started, MovementV1(), 1, self.state.value,
-                submit_input=False,
+            return self._terminal_decision(
+                frame, started, state_anchor, movement_yaw_radians,
             )
         if self._controller is None:
             if self.action_index in self._required_verified_motion:

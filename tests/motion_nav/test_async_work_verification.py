@@ -1,4 +1,6 @@
 """R27 review regressions through public notification and driver interfaces."""
+
+from mc2p.motion_nav.async_work import AsyncComputationScope
 from dataclasses import replace
 import unittest
 from unittest.mock import patch
@@ -36,12 +38,12 @@ class AsyncWorkVerificationTests(unittest.TestCase):
         owner.begin(request, current, permit=planning._permit(), state_anchor=None,
                     remaining_damage_budget=request.damage_budget)
         notification = owner.advance(current, state_anchor=None, edge_probe=None,
-                                     remaining_damage_budget=request.damage_budget)
+                                     remaining_damage_budget=request.damage_budget, current_scope=owner._request_ledger.current_computation_scope)
         foreign = WorldKnowledge(WorldSessionId("foreign-world"))
         foreign.observe_blocks(ObservationStamp(foreign.session, 1, 1, "clock", 1),
                                {(0, 0, 0): BlockGeometry.full_cube("minecraft:stone")})
         before = owner.async_diagnostics
-        result = owner.reconcile_information(notification, planning.frame(foreign, 1, (-.5, 1., .5)))
+        result = owner.reconcile_information(notification, planning.frame(foreign, 1, (-.5, 1., .5)), current_scope=owner._request_ledger.current_computation_scope)
         self.assertIs(result.kind, PlanningUpdateKind.DISCARDED)
         self.assertEqual(owner.async_diagnostics, before)
 
@@ -86,10 +88,10 @@ class AsyncWorkVerificationTests(unittest.TestCase):
         owner.begin(request, current, permit=planning._permit(), state_anchor=None,
                     remaining_damage_budget=request.damage_budget)
         notification = owner.advance(current, state_anchor=None, edge_probe=None,
-                                     remaining_damage_budget=request.damage_budget)
+                                     remaining_damage_budget=request.damage_budget, current_scope=owner._request_ledger.current_computation_scope)
         self.assertIs(notification.kind, PlanningUpdateKind.NEEDS_INFORMATION)
         owner.cancel_work("user_cancel")
-        result = owner.reconcile_information(notification, current)
+        result = owner.reconcile_information(notification, current, current_scope=owner._request_ledger.current_computation_scope)
         self.assertIs(result.kind, PlanningUpdateKind.DISCARDED)
         self.assertEqual(result.attempt_id, notification.attempt_id)
         self.assertIsNone(owner.current_information_update)
@@ -175,7 +177,7 @@ class AsyncWorkVerificationTests(unittest.TestCase):
         self.assertEqual(missing.verdict, "FAIL")
 
     def test_duplicate_receivers_are_detected_before_event_deduplication(self):
-        identity = AsyncWorkIdentity("world", "task", "owner", AsyncWorkKind.MOTION_SOLVE, "edge", 1)
+        identity = AsyncWorkIdentity(AsyncComputationScope("world", "task", 1), "owner", AsyncWorkKind.MOTION_SOLVE, "edge", 1)
         window = AsyncWorkWindow(1, 100, 200)
         owner = AsyncOwnerDiagnostics("owner", identity, window,
             (AsyncWorkEvent(identity, window, "begin", 100),), ())
@@ -188,7 +190,7 @@ class AsyncWorkVerificationTests(unittest.TestCase):
         self.assertTrue(any(rule == "I22" for rule, _ in monitor.violations))
 
     def test_foreign_receiver_is_rejected(self):
-        identity = AsyncWorkIdentity("world", "task", "owner", AsyncWorkKind.MOTION_SOLVE, "edge", 1)
+        identity = AsyncWorkIdentity(AsyncComputationScope("world", "task", 1), "owner", AsyncWorkKind.MOTION_SOLVE, "edge", 1)
         window = AsyncWorkWindow(1, 100, 200)
         owner = AsyncOwnerDiagnostics("foreign", identity, window,
             (AsyncWorkEvent(identity, window, "begin", 100),), ())
@@ -220,7 +222,7 @@ class AsyncWorkVerificationTests(unittest.TestCase):
         self.assertFalse(monitor.finalize(None, ()).complete)
         with self.assertRaises(ValueError):
             AsyncCoverageRequirement(required_kinds=())
-        identity = AsyncWorkIdentity("world", "task", "owner", AsyncWorkKind.PLANNING, "request", 1)
+        identity = AsyncWorkIdentity(AsyncComputationScope("world", "task", 1), "owner", AsyncWorkKind.PLANNING, "request", 1)
         self.assertFalse(monitor.finalize(no_work, (ObservedAsyncActivity(identity, "submit"),)).complete)
 
     def test_all_four_top_level_commands_reject_missing_evidence(self):
@@ -267,17 +269,17 @@ class AsyncWorkVerificationTests(unittest.TestCase):
         owner.begin(request, current, permit=planning._permit(), state_anchor=None,
                     remaining_damage_budget=request.damage_budget)
         old = owner.advance(current, state_anchor=None, edge_probe=None,
-                            remaining_damage_budget=request.damage_budget)
+                            remaining_damage_budget=request.damage_budget, current_scope=owner._request_ledger.current_computation_scope)
         owner.cancel_work("replacement")
         successor = replace(request, sequence=request.sequence + 1, request_id="replacement-request")
         permit = replace(planning._permit(), permit_id="replacement-permit")
         owner.begin(successor, current, permit=permit, state_anchor=None,
                     remaining_damage_budget=successor.damage_budget)
         new = owner.advance(current, state_anchor=None, edge_probe=None,
-                            remaining_damage_budget=successor.damage_budget)
+                            remaining_damage_budget=successor.damage_budget, current_scope=owner._request_ledger.current_computation_scope)
         before = owner.async_diagnostics
         for _ in range(3):
-            discarded = owner.reconcile_information(old, current)
+            discarded = owner.reconcile_information(old, current, current_scope=owner._request_ledger.current_computation_scope)
             self.assertIs(discarded.kind, PlanningUpdateKind.DISCARDED)
             self.assertEqual(discarded.attempt_id, old.attempt_id)
             self.assertEqual(discarded.information_identity, old.information_identity)
@@ -296,10 +298,10 @@ class AsyncWorkVerificationTests(unittest.TestCase):
                     owner.begin(request, current, permit=planning._permit(), state_anchor=None,
                                 remaining_damage_budget=request.damage_budget)
                     old = owner.advance(current, state_anchor=None, edge_probe=None,
-                                        remaining_damage_budget=request.damage_budget)
+                                        remaining_damage_budget=request.damage_budget, current_scope=owner._request_ledger.current_computation_scope)
                     if cause == "expired":
                         clock[0] += 2_100_000_000
-                        self.assertIs(owner.reconcile_information(old, current).kind, PlanningUpdateKind.FAILED)
+                        self.assertIs(owner.reconcile_information(old, current, current_scope=owner._request_ledger.current_computation_scope).kind, PlanningUpdateKind.FAILED)
                     else:
                         owner.cancel_work(cause)
                     if receiver != "cleared":
@@ -308,10 +310,10 @@ class AsyncWorkVerificationTests(unittest.TestCase):
                                     state_anchor=None, remaining_damage_budget=successor.damage_budget)
                         if receiver == "information":
                             owner.advance(current, state_anchor=None, edge_probe=None,
-                                          remaining_damage_budget=successor.damage_budget)
+                                          remaining_damage_budget=successor.damage_budget, current_scope=owner._request_ledger.current_computation_scope)
                     before = owner.async_diagnostics
                     for _ in range(3):
-                        result = owner.reconcile_information(old, current)
+                        result = owner.reconcile_information(old, current, current_scope=owner._request_ledger.current_computation_scope)
                         self.assertIs(result.kind, PlanningUpdateKind.DISCARDED)
                         self.assertEqual(result.attempt_id, old.attempt_id)
                         self.assertEqual(result.information_identity, old.information_identity)
@@ -327,17 +329,17 @@ class AsyncWorkVerificationTests(unittest.TestCase):
         owner.begin(request, current, permit=planning._permit(), state_anchor=None,
                     remaining_damage_budget=request.damage_budget)
         notification = owner.advance(current, state_anchor=None, edge_probe=None,
-                                     remaining_damage_budget=request.damage_budget)
+                                     remaining_damage_budget=request.damage_budget, current_scope=owner._request_ledger.current_computation_scope)
         foreign_id = replace(notification.information_identity, owner_instance_id="foreign")
         foreign = replace(notification, attempt_id=foreign_id.key, information_identity=foreign_id)
         before = owner.async_diagnostics
-        self.assertIs(owner.reconcile_information(foreign, current).kind, PlanningUpdateKind.DISCARDED)
+        self.assertIs(owner.reconcile_information(foreign, current, current_scope=owner._request_ledger.current_computation_scope).kind, PlanningUpdateKind.DISCARDED)
         self.assertEqual(owner.async_diagnostics, before)
         with self.assertRaises(ContractViolation):
-            owner.reconcile_information(notification.information_need, current)
+            owner.reconcile_information(notification.information_need, current, current_scope=owner._request_ledger.current_computation_scope)
         world.observe_blocks(ObservationStamp(world.session, 2, 2, "clock", 2),
                              {(0, 0, 0): BlockGeometry.full_cube("minecraft:stone")})
-        acquired = owner.reconcile_information(notification, planning.frame(world, 1, (-.5, 1., .5)))
+        acquired = owner.reconcile_information(notification, planning.frame(world, 1, (-.5, 1., .5)), current_scope=owner._request_ledger.current_computation_scope)
         self.assertIs(acquired.kind, PlanningUpdateKind.INFORMATION_ACQUIRED)
         self.assertFalse(owner.has_owned_work)
 

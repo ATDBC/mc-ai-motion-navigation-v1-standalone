@@ -169,7 +169,7 @@ class RuntimeWorldChangeNavigationDriver:
                 self._state = "navigating"
                 self._reason = "interaction_body_handoff_pending"
                 return self.navigation.tick(profile, owner_deadline_ns)
-            transaction = BlockPlacementTransaction(interaction.requirement)
+            transaction = BlockPlacementTransaction(interaction.requirement, computation_scope=self.session.current_computation_scope)
             modes = self.session.profiles.ground_modes
             approach_mode = (
                 None if modes is None else modes.require(MovementMode.CROUCH)

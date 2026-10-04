@@ -6,14 +6,19 @@ session router.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from enum import StrEnum
 import hashlib
 import math
+from itertools import chain
 from typing import Callable
 
 from mc2p.contracts.common import ContractViolation, require_identifier
 from mc2p.motion_nav.async_work import (
+    AsyncWorkLifecycle,
+    AsyncComputationScope,
+    ComputationInvalidationCause,
+    WorkCheck,
     AsyncAdmissionDisposition,
     AsyncAdmissionRecord,
     AsyncWorkIdentity,
@@ -54,16 +59,18 @@ from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.navigation_owners import (
     GoalRequestLedger,
     PlanningPipelineState,
-    ReplacementPlanningFailure,
 )
 from mc2p.motion_nav.online_motion import StateAnchor
-from mc2p.motion_nav.planner_worker import PlannerWorkerPort
+from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET
+from mc2p.motion_nav.planner_worker import PlannerWorkerPort, PlanningSubmissionStatus
 from mc2p.motion_nav.retry_ledger import (
+    LocalAttemptChain,
+    LocalAttemptVerdict,
     ProgressEvidence,
     ProgressKind,
+    RecoveryIdentity,
     RetryCause,
     RetryLedger,
-    RetryVerdict,
 )
 from mc2p.motion_nav.route_admission import (
     ActiveRoute,
@@ -82,12 +89,25 @@ from mc2p.motion_nav.world_model import (
 
 
 _INFORMATION_WORK_LIMIT_NS = 2_000_000_000
+_PLANNING_HISTORY_LIMIT = 64
+
+
+class PlanningHistoryCapacityExceeded(ContractViolation):
+    """Planning history cannot discard an identity still owned by the coordinator."""
 
 
 class PlanningAttemptPermitKind(StrEnum):
     TASK_UPDATE = "task_update"
     PROGRESS = "progress"
     RETRY = "retry"
+
+
+class PlanningRetryTrigger(StrEnum):
+    """Typed reason why an existing task asks planning to rebuild locally."""
+
+    WORK_FAILURE = "work_failure"
+    LOCAL_RESULT_INVALID = "local_result_invalid"
+    RECOVERY_REANCHOR = "recovery_reanchor"
 
 
 @dataclass(frozen=True, slots=True)
@@ -97,6 +117,7 @@ class PlanningAttemptPermit:
     goal_revision: int
     source_event_id: str
     kind: PlanningAttemptPermitKind
+    recovery_identity: RecoveryIdentity | None = None
 
     def __post_init__(self) -> None:
         require_identifier(self.permit_id, "planning permit id")
@@ -106,6 +127,25 @@ class PlanningAttemptPermit:
         require_identifier(self.source_event_id, "planning permit source event")
         if type(self.kind) is not PlanningAttemptPermitKind:
             raise ContractViolation("planning permit kind must be typed")
+        if (self.recovery_identity is not None
+                and type(self.recovery_identity) is not RecoveryIdentity):
+            raise ContractViolation("planning recovery identity must be typed")
+
+
+@dataclass(frozen=True, slots=True)
+class PlanningCalculationBasis:
+    """Frozen producer facts; the lifecycle alone owns the work window."""
+
+    request: PlanningRequest | SurfacePlanningRequest
+    permit: PlanningAttemptPermit
+    bounds: KnownMapBounds
+    work_identity: AsyncWorkIdentity
+    capabilities: PlanningCapabilities
+    submitted_request: PlanningRequest | SurfacePlanningRequest | None = None
+
+    @property
+    def scope(self) -> AsyncComputationScope:
+        return self.work_identity.scope
 
 
 @dataclass(frozen=True, slots=True)
@@ -156,9 +196,18 @@ class _BasisChange(StrEnum):
 @dataclass(frozen=True, slots=True)
 class PlanningFailure:
     reason: str
+    world_session_id: str
+    attempt_id: str
+    request_id: str
+    goal_revision: int
 
     def __post_init__(self) -> None:
         require_identifier(self.reason, "planning failure reason")
+        require_identifier(self.world_session_id, "planning failure world")
+        require_identifier(self.attempt_id, "planning failure attempt")
+        require_identifier(self.request_id, "planning failure request")
+        if type(self.goal_revision) is not int or self.goal_revision < 0:
+            raise ContractViolation("planning failure goal revision is invalid")
 
 
 @dataclass(frozen=True, slots=True)
@@ -169,11 +218,18 @@ class PlanningUpdate:
     request_id: str
     goal_revision: int
     reason: str
+    request: PlanningRequest | SurfacePlanningRequest
     route: ActiveRoute | None = None
     information_need: PlanningInformationNeed | None = None
     interaction: BridgeInteractionPlan | None = None
     failure: PlanningFailure | None = None
     information_identity: AsyncWorkIdentity | None = None
+    landing_probe_cell: tuple[int, int, int] | None = None
+
+    @property
+    def missing_cells(self) -> tuple[tuple[int, int, int], ...]:
+        return (() if self.information_need is None else tuple(dict.fromkeys(
+            blocker.position for blocker in self.information_need.blockers))[:64])
 
     def __post_init__(self) -> None:
         if type(self.kind) is not PlanningUpdateKind:
@@ -184,6 +240,11 @@ class PlanningUpdate:
         if type(self.goal_revision) is not int or self.goal_revision < 0:
             raise ContractViolation("planning update goal revision is invalid")
         require_identifier(self.reason, "planning update reason")
+        if (type(self.request) not in (PlanningRequest, SurfacePlanningRequest)
+                or self.request.world_session != self.world_session_id
+                or self.request.request_id != self.request_id
+                or self.request.goal_revision != self.goal_revision):
+            raise ContractViolation("planning update and delivered request disagree")
         if self.kind is PlanningUpdateKind.ROUTE_READY and self.route is None:
             raise ContractViolation("route-ready planning update requires a route")
         if (self.kind is PlanningUpdateKind.NEEDS_INFORMATION
@@ -206,6 +267,13 @@ class PlanningUpdate:
             raise ContractViolation("interaction planning update requires an action")
         if self.kind is PlanningUpdateKind.FAILED and self.failure is None:
             raise ContractViolation("failed planning update requires a failure")
+        if self.failure is not None:
+            if (type(self.failure) is not PlanningFailure
+                    or self.failure.world_session_id != self.world_session_id
+                    or self.failure.attempt_id != self.attempt_id
+                    or self.failure.request_id != self.request_id
+                    or self.failure.goal_revision != self.goal_revision):
+                raise ContractViolation("planning failure and notification identity disagree")
 
 
 @dataclass(frozen=True, slots=True)
@@ -222,6 +290,23 @@ class PlanningWorkDiagnostics:
     submitted_request_id: str | None
     movement_tick: int
     result_deadline_monotonic_ns: int | None
+
+
+@dataclass(slots=True)
+class _PlanningWork:
+    lifecycle: AsyncWorkLifecycle = field(default_factory=AsyncWorkLifecycle)
+    pipeline: PlanningPipelineState = field(default_factory=PlanningPipelineState)
+    basis: PlanningCalculationBasis | None = None
+    attempt_id: str | None = None
+    candidate: object | None = None
+    basis_scan: object | None = None
+    basis_scan_revision: int | None = None
+    basis_scan_progress: bool = False
+    receipt_identity: AsyncWorkIdentity | None = None
+
+    @property
+    def active(self) -> bool:
+        return self.lifecycle.identity is not None
 
 
 class PlanningCoordinator:
@@ -271,27 +356,29 @@ class PlanningCoordinator:
         self._planning_margin = planning_margin_cells
         if pipeline is not None and type(pipeline) is not PlanningPipelineState:
             raise ContractViolation("planning pipeline owner must be typed")
-        self._pipeline = pipeline or PlanningPipelineState()
+        self._selected = _PlanningWork(pipeline=pipeline or PlanningPipelineState())
+        self._works: list[_PlanningWork] = []
+        self._event_history = []
+        self._retired: dict[AsyncWorkIdentity, WorkRetirementSummary] = {}
+        self._remaining_accesses = snapshot_cells_per_step
+        self._discarded_result = False
         if request_ledger is not None and type(request_ledger) is not GoalRequestLedger:
             raise ContractViolation("planning request ledger must be typed")
         self._request_ledger = request_ledger or GoalRequestLedger()
         self._request_id_prefix = request_id_prefix or task_id
         require_identifier(self._request_id_prefix, "planning request prefix")
         self._attempt_sequence = 0
-        self._attempt_id: str | None = None
-        from mc2p.motion_nav.async_work import AsyncWorkLifecycle, AsyncOwnerScope
-        self._work = AsyncWorkLifecycle()
+        from mc2p.motion_nav.async_work import AsyncOwnerScope
         self._owner_instance_id = AsyncOwnerScope().allocate()
         self._last_admission: AsyncAdmissionRecord | None = None
         self._admission_records: list[AsyncAdmissionRecord] = []
         self._known_work_windows: dict[AsyncWorkIdentity, AsyncWorkWindow] = {}
         self._unidentified_results = 0
-        self._retired = self._work.retirements
-        self._work_active = False
-        self._active_permit: PlanningAttemptPermit | None = None
         self._used_permits: set[str] = set()
         self._terminal_update: PlanningUpdate | None = None
-        self._submitted_request: PlanningRequest | SurfacePlanningRequest | None = None
+        self._deferred_failure: tuple[PlanningCalculationBasis | AsyncWorkIdentity, PlanningUpdate] | None = None
+        self._terminal_failure_origin: PlanningCalculationBasis | AsyncWorkIdentity | None = None
+        self._observation_update: tuple[int, PlanningUpdate] | None = None
         self._bridge_policy = bridge_policy
         default_bridge_remaining = (
             0 if bridge_policy is None else bridge_policy.maximum_blocks
@@ -314,38 +401,71 @@ class PlanningCoordinator:
         self._pending_information_progress: tuple[
             tuple[tuple[int, int, int], str, str], int
         ] | None = None
-        self._basis_candidate = None
-        self._basis_scan = None
-        self._basis_scan_revision = None
-        self._basis_scan_progress = False
         self._fact_queries: list[AsyncFactQueryEvidence] = []
+        self._local_attempts = LocalAttemptChain(maximum_failures=3)
 
     @property
     def pipeline(self) -> PlanningPipelineState:
-        return self._pipeline
+        self._select_live_work()
+        return self._selected.pipeline
 
     @property
     def request(self) -> PlanningRequest | SurfacePlanningRequest | None:
         return self._request_ledger.request
 
     @property
+    def calculation_basis(self) -> PlanningCalculationBasis | None:
+        self._select_live_work()
+        return self._selected.basis
+
+    @property
+    def _active_permit(self):
+        return None if self._selected.basis is None else self._selected.basis.permit
+
+    @property
+    def _submitted_request(self):
+        return None if self._selected.basis is None else self._selected.basis.submitted_request
+
+    @property
+    def _calculation_request(self):
+        return (self.request if self._selected.basis is None
+                else self._selected.basis.request)
+
+    def revise_request(self, request: PlanningRequest | SurfacePlanningRequest) -> None:
+        """Update the business request without touching the running producer."""
+        previous = self.request
+        if (type(request) not in (PlanningRequest, SurfacePlanningRequest)
+                or previous is None or type(previous) is not type(request)
+                or request.world_session != previous.world_session
+                or request.goal_id != previous.goal_id
+                or request.goal_revision < previous.goal_revision
+                or (self._selected.basis is not None
+                    and (request.request_id == self._selected.basis.request.request_id
+                         or request.goal_revision <= self._selected.basis.request.goal_revision))):
+            raise ContractViolation("planning revision requires a newer same-world goal")
+        self._request_ledger.accept(request)
+
+    @property
     def attempt_id(self) -> str | None:
-        return self._attempt_id
+        self._select_live_work()
+        return self._selected.attempt_id
 
     @property
     def work_identity(self) -> AsyncWorkIdentity | None:
+        self._select_live_work()
         return self._work_identity
 
     @property
     def _work_identity(self):
-        return self._work.identity
+        return self._selected.lifecycle.identity
 
     @property
     def _work_window(self):
-        return self._work.window
+        return self._selected.lifecycle.window
 
     @property
     def work_window(self) -> AsyncWorkWindow | None:
+        self._select_live_work()
         return self._work_window
 
     @property
@@ -358,16 +478,29 @@ class PlanningCoordinator:
 
     @property
     def async_diagnostics(self) -> AsyncOwnerDiagnostics:
-        resources = tuple((self._work_identity, name) for name, value in (
-            ("builder", self._pipeline.builder),
-            ("snapshot", self._pipeline.snapshot),
-            ("submitted_request", self._submitted_request),
-            ("candidate", self._basis_candidate),
-            ("information_batch", self.current_information_need),
-        ) if value is not None)
+        records = tuple(self._works) or (self._selected,)
+        active = tuple((work.lifecycle.identity, work.lifecycle.window)
+            for work in records if work.lifecycle.identity is not None)
+        resources = tuple((work.lifecycle.identity, name)
+            for work in records if work.lifecycle.identity is not None
+            for name, value in (
+                ("builder", work.pipeline.builder),
+                ("snapshot", work.pipeline.snapshot),
+                ("submitted_request", None if work.basis is None else work.basis.submitted_request),
+                ("candidate", work.candidate),
+            ) if value is not None)
+        if self.current_information_need is not None:
+            resources += ((self._work_identity, "information_batch"),)
+        events = tuple(sorted(dict.fromkeys((*self._event_history,
+            *(event for work in records for event in work.lifecycle.events))),
+            key=lambda event: (event.monotonic_ns, event.identity.revision)))
         return AsyncOwnerDiagnostics(self._owner_instance_id, self._work_identity,
-                                    self._work_window, self._work.events,
-                                    self.admission_records, resources, tuple(self._fact_queries))
+                                    self._work_window, events,
+                                    self.admission_records, resources, tuple(self._fact_queries),
+                                    planning_work=active,
+                                    pending_planning_receipts=tuple(
+                                        work.receipt_identity for work in records
+                                        if work.receipt_identity is not None))
 
     @property
     def unidentified_results(self) -> int:
@@ -394,14 +527,38 @@ class PlanningCoordinator:
 
     @property
     def snapshot(self):
-        return self._pipeline.snapshot
+        return self._selected.pipeline.snapshot
 
     @property
     def has_owned_work(self) -> bool:
-        return self._work_active
+        return any(work.active for work in self._works)
+
+    @property
+    def local_attempt_failures(self) -> int:
+        return self._local_attempts.failure_count
+
+    def failure_matches_retired_work(self, failure: PlanningFailure) -> bool:
+        """Validate against our produced terminal notification, never the incoming identity."""
+        if type(failure) is not PlanningFailure:
+            raise ContractViolation("planning failure verification requires a typed fact")
+        update = self._terminal_update
+        request = self.request
+        origin = self._terminal_failure_origin
+        identity = origin.work_identity if type(origin) is PlanningCalculationBasis else origin
+        if (self.has_owned_work or identity is None
+                or update is None or update.kind is not PlanningUpdateKind.FAILED
+                or request is None or identity.key != update.attempt_id
+                or identity not in self._retired):
+            return False
+        return (
+            failure.world_session_id == update.world_session_id == request.world_session
+            and failure.request_id == update.request_id == request.request_id
+            and failure.goal_revision == update.goal_revision == request.goal_revision
+            and failure.attempt_id == update.attempt_id
+        )
 
     def clear_submission(self) -> None:
-        self._pipeline.clear_submission()
+        self._selected.pipeline.clear_submission()
 
     def retire(
         self,
@@ -416,16 +573,15 @@ class PlanningCoordinator:
             return WorkRetirementSummary(identity, previous.cause, True)
         if self._work_identity != identity:
             return WorkRetirementSummary(identity, cause, True)
-        self._pipeline.clear()
-        self._attempt_id = None
-        self._basis_candidate = None
-        self._basis_scan = None
-        self._basis_scan_revision = None
-        summary = self._work.finish(identity, cause, self._clock())
-        self._work_active = False
-        self._active_permit = None
+        self._selected.pipeline.clear()
+        self._selected.attempt_id = None
+        self._selected.candidate = None
+        self._selected.basis_scan = None
+        self._selected.basis_scan_revision = None
+        summary = self._selected.lifecycle.finish(identity, cause, self._clock())
+        self._remember_history(self._retired, identity, summary)
+        self._selected.basis = None
         self._terminal_update = None
-        self._submitted_request = None
         self._required_interaction = None
         self._confirmed_interaction_id = None
         self._interaction_approach_pending = False
@@ -436,16 +592,22 @@ class PlanningCoordinator:
         return summary
 
     def cancel_work(self, cause: str = "planning_cancelled") -> None:
+        self._deferred_failure = None
+        self._terminal_failure_origin = None
+        self._observation_update = None
+        for work in tuple(self._works):
+            self._selected = work
+            self._retire_active_identity(cause)
+        self._prune_work()
         identity = self._work_identity
         if identity is None:
-            self._pipeline.clear()
-            self._basis_candidate = None
-            self._basis_scan = None
-            self._basis_scan_revision = None
-            self._attempt_id = None
-            self._work_active = False
+            self._selected.pipeline.clear()
+            self._selected.candidate = None
+            self._selected.basis_scan = None
+            self._selected.basis_scan_revision = None
+            self._selected.attempt_id = None
             self._terminal_update = None
-            self._submitted_request = None
+            self._selected.basis = None
             self._information_need = None
             self._information_offset = 0
             self._information_unavailable.clear()
@@ -454,15 +616,7 @@ class PlanningCoordinator:
         self.retire(identity, cause)
 
     def clear_changes(self) -> None:
-        self._pipeline.changed_cells.clear()
-
-    def preserve_replacement_failure(self, reason: str) -> None:
-        self._pipeline.replacement_failure = ReplacementPlanningFailure(reason)
-
-    def consume_replacement_failure(self) -> str | None:
-        failure = self._pipeline.replacement_failure
-        self._pipeline.replacement_failure = None
-        return None if failure is None else failure.reason
+        self._selected.pipeline.changed_cells.clear()
 
     def restart_from_current(
         self,
@@ -490,26 +644,58 @@ class PlanningCoordinator:
         self,
         frame: NavigationFrame,
         *,
+        trigger: PlanningRetryTrigger,
         cause: RetryCause,
         failure_id: str,
         remaining_damage_budget: TaskDamageBudget,
+        permit: PlanningAttemptPermit | None = None,
     ) -> PlanningUpdate:
         require_identifier(failure_id, "planning retry failure id")
-        registration = self._retry_ledger.record_failure(failure_id, cause)
-        if registration.verdict is not RetryVerdict.RETRY:
+        if type(trigger) is not PlanningRetryTrigger:
+            raise ContractViolation("planning retry trigger must be typed")
+        if type(cause) is not RetryCause:
+            raise ContractViolation("planning retry cause must be typed")
+        if trigger is PlanningRetryTrigger.RECOVERY_REANCHOR:
+            if (type(permit) is not PlanningAttemptPermit
+                    or permit.kind is not PlanningAttemptPermitKind.RETRY
+                    or permit.recovery_identity is None
+                    or permit.source_event_id != failure_id):
+                raise ContractViolation(
+                    "recovery reanchor requires its F8 handoff permit"
+                )
+        elif permit is not None:
+            raise ContractViolation(
+                "local planning retry cannot consume a handoff permit"
+            )
+        registration = self._local_attempts.record(failure_id)
+        if registration.verdict is LocalAttemptVerdict.EXHAUSTED:
             return self._finish_failure("planning_retry_exhausted")
         assert self.request is not None
+        retry_permit = permit or PlanningAttemptPermit(
+            f"{failure_id}/retry",
+            self.task_id,
+            self.request.goal_revision,
+            failure_id,
+            PlanningAttemptPermitKind.RETRY,
+        )
         return self.restart_from_current(
             frame,
-            permit=PlanningAttemptPermit(
-                f"{failure_id}/retry",
-                self.task_id,
-                self.request.goal_revision,
-                failure_id,
-                PlanningAttemptPermitKind.RETRY,
-            ),
+            permit=retry_permit,
             remaining_damage_budget=remaining_damage_budget,
         )
+
+    def confirm_route_admitted(self, route: ActiveRoute) -> None:
+        """Reset the local chain only after Session installs this exact route."""
+        if type(route) is not ActiveRoute:
+            raise ContractViolation("planning admission confirmation must be typed")
+        delivered = self._terminal_update
+        if (delivered is None
+                or delivered.kind is not PlanningUpdateKind.ROUTE_READY
+                or delivered.route != route):
+            raise ContractViolation(
+                "planning admission confirmation is stale or foreign"
+            )
+        self._local_attempts.reset()
 
     def confirm_interaction(self, interaction_id: str) -> None:
         require_identifier(interaction_id, "confirmed planning interaction")
@@ -543,6 +729,7 @@ class PlanningCoordinator:
         ))
         if not progressed:
             return self._finish_failure("interaction_progress_not_fresh")
+        self._local_attempts.reset()
         request = self._replacement_request(frame, remaining_damage_budget)
         if request is None:
             return self._finish_failure("current_surface_unavailable")
@@ -573,6 +760,7 @@ class PlanningCoordinator:
         permit: PlanningAttemptPermit,
         state_anchor: StateAnchor | None,
         remaining_damage_budget: TaskDamageBudget,
+        _append: bool = False,
     ) -> None:
         if type(request) not in (PlanningRequest, SurfacePlanningRequest):
             raise ContractViolation("planning begin requires a typed request")
@@ -592,17 +780,25 @@ class PlanningCoordinator:
             raise ContractViolation("planning request belongs to another world")
         if len(self._used_permits) >= 4096:
             raise ContractViolation("planning permit ledger is full")
-        self._retire_active_identity("planning_work_replaced")
-        self._used_permits.add(permit.permit_id)
-        self._active_permit = permit
-        self._attempt_sequence += 1
+        if not _append:
+            self._deferred_failure = None
+            self._terminal_failure_origin = None
+            self._observation_update = None
+            self._retire_all_work("planning_work_replaced")
+        self._prune_work()
+        if len(self._works) >= 2:
+            # Accepted transport identities keep their slots until a real
+            # receipt. Keep only the ledger's latest request while waiting.
+            self._request_ledger.accept(request)
+            self._used_permits.add(permit.permit_id)
+            self._terminal_update = None
+            return
         identity = AsyncWorkIdentity(
-            request.world_session,
-            self.task_id,
+            self._request_ledger.bind_computation_scope(self.task_id, request.world_session),
             self._owner_instance_id,
             AsyncWorkKind.PLANNING,
             request.request_id,
-            self._attempt_sequence,
+            self._attempt_sequence + 1,
         )
         started_ns = self._clock()
         window = AsyncWorkWindow(
@@ -612,16 +808,21 @@ class PlanningCoordinator:
                 request.maximum_planning_seconds * 1_000_000_000
             ),
         )
-        self._work.begin(identity, window)
-        self._attempt_id = identity.key
-        self._remember_work_window(self._work_identity, self._work_window)
-        self._work_active = True
+        self._remember_work_window(identity, window)
+        self._selected = _PlanningWork()
+        self._works.append(self._selected)
+        self._used_permits.add(permit.permit_id)
+        self._attempt_sequence += 1
+        self._selected.lifecycle.begin(identity, window)
+        self._selected.attempt_id = identity.key
         request = replace(request, work_identity=self._work_identity)
         if type(request) is SurfacePlanningRequest:
             request = replace(request, damage_budget=remaining_damage_budget)
+        self._selected.basis = PlanningCalculationBasis(
+            request, permit, self._bounds(request), identity, self.capabilities,
+        )
         self._request_ledger.accept(request)
         self._terminal_update = None
-        self._submitted_request = None
         self._required_interaction = None
         self._confirmed_interaction_id = None
         self._interaction_approach_pending = False
@@ -629,30 +830,31 @@ class PlanningCoordinator:
         self._information_offset = 0
         self._information_unavailable.clear()
         self._pending_information_progress = None
-        self._pipeline.clear()
-        self._pipeline.attempt_started_movement_tick = (
+        self._selected.pipeline.clear()
+        self._selected.pipeline.attempt_started_movement_tick = (
             self._work_window.started_movement_tick
         )
-        self._pipeline.attempt_started_monotonic_ns = (
+        self._selected.pipeline.attempt_started_monotonic_ns = (
             self._work_window.started_monotonic_ns
         )
-        self._pipeline.attempt_deadline_monotonic_ns = (
+        self._selected.pipeline.attempt_deadline_monotonic_ns = (
             self._work_window.deadline_monotonic_ns
         )
-        self._pipeline.builder = KnownMapSnapshotBuilder(
-            frame.world, self._bounds(request),
+        self._selected.pipeline.builder = KnownMapSnapshotBuilder(
+            frame.world, self._selected.basis.bounds,
         )
 
     def observe_changes(self, changed_cells: tuple[tuple[int, int, int], ...]) -> None:
         if type(changed_cells) is not tuple:
             raise ContractViolation("planning world changes must be immutable")
-        self._pipeline.changed_cells.update(changed_cells)
+        for work in self._works:
+            work.pipeline.changed_cells.update(changed_cells)
 
     def expire_at_observation(
         self, frame: NavigationFrame, *, remaining_damage_budget: TaskDamageBudget,
     ) -> PlanningUpdate | None:
         """Retire expired planning before the newly observed frame is reported."""
-        if (not self._work_active or self._boundary_update(frame) is not None
+        if (not self._selected.active or self._boundary_update(frame) is not None
                 or not self._attempt_expired(frame)):
             return None
         update = self._retry_or_fail(
@@ -661,14 +863,17 @@ class PlanningCoordinator:
         if update.kind is PlanningUpdateKind.RUNNING:
             # Starting a retry is this observation's result. Do not advance
             # the new job again when propose consumes the same boundary.
-            self._terminal_update = update
+            self._observation_update = (self._movement_tick(frame), update)
         return update
 
     def _boundary_update(self, frame: NavigationFrame) -> PlanningUpdate | None:
+        observation = self._observation_update
+        if observation is not None:
+            if observation[0] == self._movement_tick(frame):
+                return observation[1]
+            self._observation_update = None
         update = self._terminal_update
-        if (update is not None and update.kind is PlanningUpdateKind.RUNNING
-                and self._work_window is not None
-                and self._movement_tick(frame) > self._work_window.started_movement_tick):
+        if update is not None and update.kind is PlanningUpdateKind.RUNNING:
             self._terminal_update = None
             return None
         return update
@@ -736,6 +941,7 @@ class PlanningCoordinator:
 
     def reconcile_information(
         self, selection: PlanningUpdate, frame: NavigationFrame, *,
+        current_scope: AsyncComputationScope,
         edge_probe: LandingEdgeProbe | None = None,
         outcomes: tuple = (),
     ) -> PlanningUpdate:
@@ -747,9 +953,11 @@ class PlanningCoordinator:
             raise ContractViolation("information reconciliation requires a complete notification and frame")
         current = self.current_information_need
         if (current is None or frame.session.value != selection.world_session_id
+                or self._selected.lifecycle.check(selection.information_identity, self._clock(),
+                                    current_scope=current_scope) is WorkCheck.STALE_SCOPE
                 or current != selection.information_need
                 or self._work_identity != selection.information_identity
-                or self._attempt_id != selection.attempt_id
+                or self._selected.attempt_id != selection.attempt_id
                 or self.current_information_update != selection):
             # A delivered notification outlives the coordinator's active state.
             # Discard it using its original identity, without borrowing a successor.
@@ -830,6 +1038,7 @@ class PlanningCoordinator:
             )
             if not progressed:
                 return self._terminal_update
+            self._local_attempts.reset()
             self._pending_information_progress = (
                 blocker_key, observation_sequence,
             )
@@ -923,19 +1132,182 @@ class PlanningCoordinator:
             "planning_information_updated",
         )
 
+    def _prune_work(self) -> None:
+        for work in tuple(self._works):
+            if work.lifecycle.identity is None and work.receipt_identity is None:
+                self._event_history.extend(work.lifecycle.events)
+                self._event_history = self._event_history[-2 * _PLANNING_HISTORY_LIMIT:]
+                for identity, summary in work.lifecycle.retirements.items():
+                    self._remember_history(self._retired, identity, summary)
+                self._works.remove(work)
+
+    def _select_live_work(self) -> None:
+        if not self._selected.active:
+            self._selected = next((work for work in self._works if work.active), self._selected)
+
+    def _retire_all_work(self, cause: str) -> None:
+        selected = self._selected
+        for work in tuple(self._works):
+            self._selected = work
+            self._retire_active_identity(cause)
+        self._selected = selected
+        self._prune_work()
+
+    def _poll_results(self) -> None:
+        for candidate in self._planner.poll_available():
+            work = next((item for item in self._works
+                if candidate.work_identity is not None
+                and candidate.work_identity in (
+                    item.lifecycle.identity, item.receipt_identity)), None)
+            if work is None:
+                self._discarded_result = True
+                if candidate.work_identity is None:
+                    self._unidentified_results += 1
+                    continue
+                self._record_admission(AsyncAdmissionDisposition.DISCARDED_LATE,
+                    facts_valid=None, identity_matched=False,
+                    result_identity=candidate.work_identity)
+                continue
+            work.receipt_identity = None
+            if work.lifecycle.identity is None:
+                self._discarded_result = True
+                self._record_admission(AsyncAdmissionDisposition.DISCARDED_LATE,
+                    facts_valid=None, identity_matched=False,
+                    result_identity=candidate.work_identity)
+            elif work.candidate is None:
+                work.candidate = candidate
+        self._prune_work()
+
+    def _ensure_latest_work(self, frame, state_anchor, remaining_damage_budget) -> None:
+        request = self.request
+        failure = self._current_deferred_failure()
+        if failure is not None:
+            return
+        if request is None or len(self._works) >= 2 or any(
+                work.basis is not None and work.basis.request.request_id == request.request_id
+                and work.active for work in self._works):
+            return
+        selected = self._selected
+        permit_id = f"{request.request_id}/task-update"
+        if permit_id in self._used_permits:
+            if any(work.active for work in self._works):
+                # A failed speculative revision cannot repeatedly restart
+                # while the older, still legal computation can satisfy it.
+                return
+            permit_id += f"/capacity-release-{self._attempt_sequence + 1}"
+        self.begin(request, frame,
+            permit=PlanningAttemptPermit(
+                permit_id, self.task_id,
+                request.goal_revision, f"request/{request.request_id}",
+                PlanningAttemptPermitKind.TASK_UPDATE),
+            state_anchor=state_anchor, remaining_damage_budget=remaining_damage_budget,
+            _append=True)
+        if selected.active:
+            self._selected = selected
+
+    def _claim_access_budget(self) -> int:
+        builders = sum(work.pipeline.builder is not None and work.active
+            for work in self._works)
+        budget = min(self._remaining_accesses,
+            max(1, self._snapshot_cells_per_step // max(1, builders)))
+        self._remaining_accesses -= budget
+        return budget
+
     def advance(
+        self, frame: NavigationFrame, *, current_scope: AsyncComputationScope,
+        state_anchor: StateAnchor | None, edge_probe: LandingEdgeProbe | None,
+        remaining_damage_budget: TaskDamageBudget,
+    ) -> PlanningUpdate:
+        if type(current_scope) is not AsyncComputationScope:
+            raise ContractViolation("planning advance requires current computation scope")
+        if type(remaining_damage_budget) is not TaskDamageBudget:
+            raise ContractViolation("planning advance requires a damage budget")
+        boundary = self._boundary_update(frame)
+        if boundary is not None:
+            return boundary
+        if self.request is None or self._selected.attempt_id is None:
+            raise ContractViolation("planning advance has no active attempt")
+        self._remaining_accesses = self._snapshot_cells_per_step
+        self._discarded_result = False
+        self._poll_results()
+        if frame.session.value != self.request.world_session:
+            return self._finish_task_failure("world_session_changed")
+        scope_invalidated = False
+        for work in tuple(self._works):
+            if work.active and work.lifecycle.identity.scope != current_scope:
+                scope_invalidated = True
+                self._selected = work
+                if work.candidate is not None:
+                    self._record_admission(AsyncAdmissionDisposition.DISCARDED_LATE,
+                        facts_valid=None, identity_matched=False,
+                        result_identity=work.candidate.work_identity)
+                self._retire_active_identity("planning_scope_invalidated")
+        self._prune_work()
+        self._ensure_latest_work(frame, state_anchor, remaining_damage_budget)
+        if scope_invalidated:
+            return self._update(PlanningUpdateKind.RUNNING, "stale_result_discarded")
+        # A ready latest result is checked first. An old complete result remains
+        # a valid fallback and can avoid submitting the newly prepared work.
+        ordered = sorted((work for work in self._works if work.active),
+            key=lambda work: (work.candidate is None,
+                -(work.basis.request.goal_revision if work.candidate is not None
+                  and work.basis is not None else 0)))
+        update = None
+        processed = set()
+        for _ in range(2):
+            work = next((work for work in ordered if id(work) not in processed
+                and work.active), None)
+            if work is None:
+                break
+            processed.add(id(work))
+            self._selected = work
+            update = self._advance_work(frame, current_scope=current_scope,
+                state_anchor=state_anchor, edge_probe=edge_probe,
+                remaining_damage_budget=remaining_damage_budget)
+            if update.kind is not PlanningUpdateKind.RUNNING:
+                return update
+            if (self._selected is not work and self._selected.basis is not None
+                    and self._selected.basis.permit.kind in {
+                        PlanningAttemptPermitKind.RETRY, PlanningAttemptPermitKind.PROGRESS}):
+                return update
+            self._prune_work()
+            self._ensure_latest_work(frame, state_anchor, remaining_damage_budget)
+            ordered.extend(work for work in self._works
+                if all(work is not existing for existing in ordered))
+            ordered.sort(key=lambda work: (work.candidate is None,
+                work.pipeline.builder is None,
+                -(work.basis.request.goal_revision if work.candidate is not None
+                  and work.basis is not None else 0)))
+        active = next((work for work in self._works if work.active), None)
+        if active is not None:
+            self._selected = active
+        else:
+            failure = self._current_deferred_failure()
+            if failure is not None:
+                self._terminal_failure_origin = self._deferred_failure[0]
+                self._terminal_update = failure
+                self._complete_active_work("planning_failed")
+                return failure
+        return self._update(PlanningUpdateKind.RUNNING,
+            "planning_capacity_wait" if active is None else
+            ("goal_revision_planning_started" if update is None else update.reason))
+
+    def _advance_work(
         self,
         frame: NavigationFrame,
         *,
+        current_scope: AsyncComputationScope,
         state_anchor: StateAnchor | None,
         edge_probe: LandingEdgeProbe | None,
         remaining_damage_budget: TaskDamageBudget,
     ) -> PlanningUpdate:
-        request = self.request
-        if request is None or self._attempt_id is None:
+        request = self._calculation_request
+        if request is None or self._selected.attempt_id is None:
             raise ContractViolation("planning advance has no active attempt")
         if type(remaining_damage_budget) is not TaskDamageBudget:
             raise ContractViolation("planning advance requires a damage budget")
+        if type(current_scope) is not AsyncComputationScope:
+            raise ContractViolation("planning advance requires current computation scope")
         boundary = self._boundary_update(frame)
         if boundary is not None:
             return boundary
@@ -947,17 +1319,20 @@ class PlanningCoordinator:
                 remaining_damage_budget,
             )
 
-        builder = self._pipeline.builder
+        builder = self._selected.pipeline.builder
         if builder is not None:
-            progress = builder.advance(frame.world, self._snapshot_cells_per_step)
+            budget = self._claim_access_budget()
+            if budget == 0:
+                return self._update(PlanningUpdateKind.RUNNING, "snapshot_budget_wait")
+            progress = builder.advance(frame.world, budget)
             if progress.status is SnapshotBuildStatus.STALE:
-                exact_changes = tuple(self._pipeline.changed_cells)
+                exact_changes = tuple(self._selected.pipeline.changed_cells)
                 if builder.accept_changes_outside_bounds(
                     frame.world, exact_changes,
                 ):
-                    self._pipeline.changed_cells.clear()
+                    self._selected.pipeline.changed_cells.clear()
                     progress = builder.advance(
-                        frame.world, self._snapshot_cells_per_step,
+                        frame.world, budget,
                     )
                 if progress.status is not SnapshotBuildStatus.STALE:
                     if progress.status is SnapshotBuildStatus.BUILDING:
@@ -965,14 +1340,20 @@ class PlanningCoordinator:
                             PlanningUpdateKind.RUNNING, "snapshot_building",
                         )
                     if progress.snapshot is None:
-                        return self._finish_failure(
-                            "snapshot_missing_after_completion"
+                        return self._finish_calculation_failure(
+                            frame, "snapshot_missing_after_completion", remaining_damage_budget,
                         )
                     # Continue below and submit the completed snapshot.
                 else:
+                    # STALE copied no cells. Its unused reservation is shared
+                    # with the bounded check of the already copied facts.
+                    self._remaining_accesses += budget
                     relevant_known_change = self._stale_builder_has_known_change(
                         builder, frame,
                     )
+                    if relevant_known_change is _BasisChange.CHECKING:
+                        return self._update(PlanningUpdateKind.RUNNING,
+                            "snapshot_basis_verifying")
                     if relevant_known_change:
                         return self._retry_or_fail(
                             frame,
@@ -980,27 +1361,41 @@ class PlanningCoordinator:
                             "snapshot_dependency_changed",
                             remaining_damage_budget,
                         )
-                    self._pipeline.builder = KnownMapSnapshotBuilder(
-                        frame.world, self._bounds(request),
+                    self._selected.pipeline.builder = KnownMapSnapshotBuilder(
+                        frame.world, self._selected.basis.bounds,
                     )
-                    self._pipeline.changed_cells.clear()
+                    self._selected.pipeline.changed_cells.clear()
                     return self._update(
                         PlanningUpdateKind.RUNNING, "snapshot_restarted"
                     )
             if progress.status is SnapshotBuildStatus.BUILDING:
                 return self._update(PlanningUpdateKind.RUNNING, "snapshot_building")
             if progress.snapshot is None:
-                return self._finish_failure("snapshot_missing_after_completion")
+                return self._finish_calculation_failure(
+                    frame, "snapshot_missing_after_completion", remaining_damage_budget)
             if type(request) is PlanningRequest and progress.missing_cells:
-                return self._finish_failure("legacy_requires_complete_snapshot")
-            self._pipeline.snapshot = progress.snapshot
-            self._pipeline.snapshot_request_id = request.request_id
+                return self._finish_calculation_failure(
+                    frame, "legacy_requires_complete_snapshot", remaining_damage_budget)
+            self._selected.pipeline.snapshot = progress.snapshot
+            self._selected.pipeline.snapshot_request_id = request.request_id
+            self._selected.pipeline.builder = None
             submitted = self._submit(request, progress.snapshot, frame, state_anchor)
+            if submitted is PlanningSubmissionStatus.BUSY:
+                return self._update(PlanningUpdateKind.RUNNING, "planner_capacity_wait")
             if not submitted:
-                return self._finish_failure("planner_submission_rejected")
-            self._pipeline.builder = None
+                return self._finish_calculation_failure(
+                    frame, "planner_submission_rejected", remaining_damage_budget)
 
-        candidate = self._basis_candidate or self._planner.poll_latest()
+        if (self._selected.pipeline.builder is None
+                and self._selected.pipeline.snapshot is not None
+                and self._selected.basis.submitted_request is None):
+            submitted = self._submit(request, self._selected.pipeline.snapshot, frame, state_anchor)
+            if submitted is PlanningSubmissionStatus.BUSY:
+                return self._update(PlanningUpdateKind.RUNNING, "planner_capacity_wait")
+            if not submitted:
+                return self._finish_calculation_failure(
+                    frame, "planner_submission_rejected", remaining_damage_budget)
+        candidate = self._selected.candidate
         if candidate is None and not self._planner.is_alive():
             return self._retry_or_fail(
                 frame, RetryCause.PLANNING, "planner_worker_died",
@@ -1012,11 +1407,13 @@ class PlanningCoordinator:
                 remaining_damage_budget,
             )
         if candidate is None:
-            return self._update(PlanningUpdateKind.RUNNING, "planning_submitted")
+            return self._update(PlanningUpdateKind.RUNNING,
+                "stale_result_discarded" if self._discarded_result else "planning_submitted")
         submitted_request = self._submitted_request or request
         identity_matched = (
             candidate.work_identity is not None
-            and candidate.work_identity == self._work_identity
+            and self._selected.lifecycle.check(candidate.work_identity, self._clock(),
+                                 current_scope=current_scope) is WorkCheck.READY
         )
         if (not identity_matched
                 or candidate.request_id != submitted_request.request_id
@@ -1033,13 +1430,13 @@ class PlanningCoordinator:
                     result_identity=candidate.work_identity,
                 )
             return self._update(PlanningUpdateKind.RUNNING, "stale_result_discarded")
-        self._pipeline.clear_submission()
+        self._selected.pipeline.clear_submission()
 
         basis_change = self._candidate_basis_change(frame, candidate)
         if basis_change is _BasisChange.CHECKING:
-            self._basis_candidate = candidate
+            self._selected.candidate = candidate
             return self._update(PlanningUpdateKind.RUNNING, "planning_basis_verifying")
-        self._basis_candidate = None
+        self._selected.candidate = None
         if basis_change is not None:
             self._record_admission(
                 AsyncAdmissionDisposition.RECOMPUTE,
@@ -1067,6 +1464,15 @@ class PlanningCoordinator:
             )
         # This candidate's actual fact basis has been checked against this view.
         candidate = replace(candidate, geometry_revision=frame.world.geometry_revision)
+
+        if self._has_revised_request() and (
+                candidate.status not in {SurfacePlanningStatus.COMPLETE, PlanningStatus.COMPLETE}
+                or self._interaction_approach_pending):
+            # Only a complete positive route may be checked for the current
+            # goal. Old negative conclusions retain their original scope.
+            self._record_admission(AsyncAdmissionDisposition.RECOMPUTE,
+                                   facts_valid=True, identity_matched=True)
+            return self._start_revised_request(frame, remaining_damage_budget)
 
         if (type(candidate) is SurfaceRouteCandidate
                 and candidate.status is SurfacePlanningStatus.NO_KNOWN_ROUTE
@@ -1107,10 +1513,10 @@ class PlanningCoordinator:
                 and self._bridge_remaining > 0
                 and type(request) is SurfacePlanningRequest
                 and type(candidate) is SurfaceRouteCandidate
-                and self._pipeline.snapshot is not None
-                and self._pipeline.snapshot_request_id == request.request_id):
+                and self._selected.pipeline.snapshot is not None
+                and self._selected.pipeline.snapshot_request_id == request.request_id):
             interaction = plan_next_bridge_interaction(
-                self._pipeline.snapshot,
+                self._selected.pipeline.snapshot,
                 request,
                 replace(
                     self._bridge_policy,
@@ -1132,10 +1538,11 @@ class PlanningCoordinator:
                     self._terminal_update = PlanningUpdate(
                         PlanningUpdateKind.REQUIRES_INTERACTION,
                         request.world_session,
-                        self._attempt_id,
+                        self._selected.attempt_id,
                         request.request_id,
                         request.goal_revision,
                         "world_interaction_required",
+                        request=request,
                         interaction=interaction,
                     )
                     self._complete_active_work("interaction_result_transferred")
@@ -1151,19 +1558,25 @@ class PlanningCoordinator:
                         else None
                     ),
                 )
-                if not self._submit(
-                    approach, self._pipeline.snapshot, frame, state_anchor,
-                ):
-                    return self._finish_failure(
-                        "interaction_work_submission_rejected"
-                    )
-                self._interaction_approach_pending = True
                 if not self._record_admission(
                     AsyncAdmissionDisposition.APPLIED,
                     facts_valid=True,
                     identity_matched=True,
                 ):
                     return self._finish_failure("planning_timeout")
+                approach = self._begin_bridge_approach_work(approach)
+                submission = self._submit(
+                    approach, self._selected.pipeline.snapshot, frame, state_anchor,
+                    poll_result=False,
+                )
+                if submission is PlanningSubmissionStatus.BUSY:
+                    self._interaction_approach_pending = True
+                    return self._update(PlanningUpdateKind.RUNNING, "planner_capacity_wait")
+                if not submission:
+                    return self._finish_failure(
+                        "interaction_work_submission_rejected"
+                    )
+                self._interaction_approach_pending = True
                 return self._update(
                     PlanningUpdateKind.RUNNING,
                     "interaction_work_route_submitted",
@@ -1176,6 +1589,12 @@ class PlanningCoordinator:
             else status is PlanningStatus.COMPLETE
         )
         if not complete:
+            if (status in {SurfacePlanningStatus.INTERNAL_ERROR, PlanningStatus.INTERNAL_ERROR}
+                    and not self._planner.is_alive()):
+                self._record_admission(AsyncAdmissionDisposition.TERMINATED,
+                    facts_valid=True, identity_matched=True)
+                return self._retry_or_fail(frame, RetryCause.PLANNING,
+                    "planner_worker_died", remaining_damage_budget)
             self._record_admission(
                 AsyncAdmissionDisposition.TERMINATED,
                 facts_valid=True,
@@ -1190,28 +1609,39 @@ class PlanningCoordinator:
                 else f"planning_{status.value}"
             )
             return self._finish_failure(failure_reason)
-        if type(candidate) is SurfaceRouteCandidate:
-            admitted = self._admitter.admit_surface(
-                candidate,
-                frame,
-                expected_request_id=request.request_id,
-                goal_id=request.goal_id,
-                goal_revision=request.goal_revision,
-                changed_cells=tuple(sorted(self._pipeline.changed_cells)),
-                edge_probe=edge_probe,
-            )
-        else:
-            admitted = self._admitter.admit(
-                candidate,
-                frame,
-                expected_request_id=request.request_id,
-                goal_id=request.goal_id,
-                goal_revision=request.goal_revision,
-                changed_cells=tuple(sorted(self._pipeline.changed_cells)),
-            )
+        basis = self._selected.basis
+        assert basis is not None and self.request is not None
+        if not self._candidate_capabilities_current(candidate, state_anchor):
+            self._record_admission(AsyncAdmissionDisposition.RECOMPUTE,
+                facts_valid=False, identity_matched=True)
+            if self._has_revised_request():
+                return self._start_revised_request(frame, remaining_damage_budget)
+            return self._retry_or_fail(frame, RetryCause.DEPENDENCY,
+                AdmissionReason.ROUTE_CAPABILITIES_CHANGED.value, remaining_damage_budget)
+        admitted = self._admitter.admit_current_request(
+            candidate, submitted_request,
+            (submitted_request if self._interaction_approach_pending else self.request), frame,
+            remaining_damage_budget=remaining_damage_budget,
+            changed_cells=tuple(sorted(self._selected.pipeline.changed_cells)),
+            edge_probe=edge_probe,
+        )
         if admitted.status is not AdmissionStatus.ACCEPTED or admitted.route is None:
+            if self._has_revised_request():
+                self._record_admission(AsyncAdmissionDisposition.RECOMPUTE,
+                    facts_valid=False, identity_matched=True)
+                return self._start_revised_request(frame, remaining_damage_budget)
+            if (type(request) is SurfacePlanningRequest
+                    and request.damage_budget != remaining_damage_budget
+                    and admitted.reason in {
+                        AdmissionReason.ROUTE_RISK_POLICY_CHANGED,
+                        AdmissionReason.ROUTE_RESOURCES_UNAVAILABLE,
+                    }):
+                self._record_admission(AsyncAdmissionDisposition.RECOMPUTE,
+                    facts_valid=False, identity_matched=True)
+                return self._retry_or_fail(frame, RetryCause.PLANNING,
+                    "damage_budget_changed_before_admission", remaining_damage_budget)
             if admitted.reason is AdmissionReason.LANDING_VISUAL_EVIDENCE_MISSING:
-                snapshot = self._pipeline.snapshot
+                snapshot = self._selected.pipeline.snapshot
                 assert snapshot is not None
                 blockers = tuple(
                     PlanningBlocker(
@@ -1255,6 +1685,8 @@ class PlanningCoordinator:
                     PlanningUpdateKind.NEEDS_INFORMATION,
                     admitted.reason.value,
                     information_need=need,
+                    landing_probe_cell=(admitted.missing_cells[0]
+                                        if len(admitted.missing_cells) == 1 else None),
                 )
                 return self._terminal_update
             if admitted.reason is AdmissionReason.ROUTE_DEPENDENCIES_CHANGED:
@@ -1293,24 +1725,49 @@ class PlanningCoordinator:
         self._complete_active_work("route_result_transferred")
         return self._terminal_update
 
+    def _candidate_capabilities_current(self, candidate, state_anchor) -> bool:
+        basis = self._selected.basis
+        assert basis is not None
+        if basis.capabilities != self.capabilities:
+            return False
+        profiles = (self.capabilities.ground, self.capabilities.step,
+                    self.capabilities.jump_up, *self.capabilities.air)
+        if self.capabilities.ground_modes is not None:
+            profiles += tuple(profile.motion for profile in self.capabilities.ground_modes.modes.values())
+        available = {(profile.environment_id, profile.profile_id) for profile in profiles}
+        if any(edge.transition is not None and (
+                edge.transition.environment_id, edge.transition.trajectory_profile_id) not in available
+                for edge in candidate.segments):
+            return False
+        ruleset_id = (state_anchor.ruleset_id if state_anchor is not None
+                      else JAVA_1_21_RULESET.ruleset_id)
+        return all(plan.ruleset_id == ruleset_id
+            and (state_anchor is None or plan.input_projection_version == state_anchor.input_projection_version)
+            and plan.profile_id in {profile.profile_id for profile in profiles}
+            for plan in getattr(candidate, 'ground_traversal_plans', ()))
+
     def diagnostics(self, frame: NavigationFrame) -> PlanningWorkDiagnostics:
-        request = self.request
+        self._select_live_work()
+        request = self._calculation_request
         movement_tick = self._movement_tick(frame)
         now = self._clock()
-        has_builder = self._pipeline.builder is not None
-        has_submission = self._pipeline.submitted_request_id is not None
+        has_builder = self._selected.pipeline.builder is not None
+        has_submission = self._selected.pipeline.submitted_request_id is not None
         retained = self._terminal_update
         has_retained_route = (
             retained is not None
             and retained.kind is PlanningUpdateKind.ROUTE_READY
         )
-        has_owned_work = self._work_active
+        has_owned_work = self.has_owned_work or any(
+            work.receipt_identity is not None for work in self._works)
+        capacity_wait_valid = (has_owned_work and not any(work.active for work in self._works)
+            and all(work.receipt_identity is not None for work in self._works))
         builder_valid = (
             has_builder
-            and self._pipeline.submitted_request_id is None
+            and self._selected.pipeline.submitted_request_id is None
             and self._work_identity is not None
             and self._work_window is not None
-            and self._pipeline.attempt_deadline_monotonic_ns
+            and self._selected.pipeline.attempt_deadline_monotonic_ns
                 == self._work_window.deadline_monotonic_ns
             and not self._attempt_expired(frame)
         )
@@ -1322,12 +1779,12 @@ class PlanningCoordinator:
             has_submission
             and request is not None
             and self._submitted_request is not None
-            and self._pipeline.submitted_request_id == request.request_id
+            and self._selected.pipeline.submitted_request_id == request.request_id
             and self._submitted_request.request_id == request.request_id
-            and self._pipeline.submitted_movement_tick is not None
-            and self._pipeline.result_deadline_monotonic_ns is not None
-            and now < self._pipeline.result_deadline_monotonic_ns
-            and movement_tick - self._pipeline.submitted_movement_tick
+            and self._selected.pipeline.submitted_movement_tick is not None
+            and self._selected.pipeline.result_deadline_monotonic_ns is not None
+            and now < self._selected.pipeline.result_deadline_monotonic_ns
+            and movement_tick - self._selected.pipeline.submitted_movement_tick
                 < maximum_ticks
         )
         retained_route_valid = (
@@ -1337,7 +1794,7 @@ class PlanningCoordinator:
             and retained.world_session_id == request.world_session
             and retained.request_id == request.request_id
             and retained.goal_revision == request.goal_revision
-            and retained.attempt_id == self._attempt_id
+            and retained.attempt_id == self._selected.attempt_id
             and retained.route is not None
         )
         permit = self._active_permit
@@ -1348,11 +1805,9 @@ class PlanningCoordinator:
             and permit.task_id == self.task_id
             and permit.goal_revision == request.goal_revision
             and self._work_identity is not None
-            and self._attempt_id == self._work_identity.key
-            and self._work_identity.owner_instance_id
-                == self._owner_instance_id
-            and self._work_identity.subject_id == request.request_id
-            and self._work_identity.revision == self._attempt_sequence
+            and self._selected.lifecycle.check(self._work_identity, now,
+                current_scope=self._request_ledger.current_computation_scope)
+                in (WorkCheck.READY, WorkCheck.DUPLICATE)
         )
         need = self.current_information_need
         information_valid = True
@@ -1384,22 +1839,46 @@ class PlanningCoordinator:
             and need is not None
             and information_valid
         )
-        planning_work_valid = builder_valid or submission_valid
+        candidate_valid = (self._selected.candidate is not None
+            and self._selected.active and self._work_window is not None
+            and not self._attempt_expired(frame))
+        prepared_valid = (self._selected.pipeline.snapshot is not None
+            and self._selected.basis is not None
+            and self._selected.basis.submitted_request is None
+            and self._selected.active and not self._attempt_expired(frame))
+        planning_work_valid = builder_valid or submission_valid or candidate_valid or prepared_valid
         return PlanningWorkDiagnostics(
-            self._attempt_id,
+            self._selected.attempt_id,
             None if request is None else request.request_id,
             None if request is None else request.goal_revision,
             has_owned_work,
-            planning_work_valid or information_work_valid,
-            permit_valid or information_work_valid or not has_owned_work,
+            planning_work_valid or information_work_valid or capacity_wait_valid,
+            permit_valid or information_work_valid or capacity_wait_valid or not has_owned_work,
             information_valid,
-            self._pipeline.submitted_request_id,
+            self._selected.pipeline.submitted_request_id,
             movement_tick,
             (None if self._work_window is None
              else self._work_window.deadline_monotonic_ns),
         )
 
-    def _submit(self, request, snapshot, frame, state_anchor) -> bool:
+    def _begin_bridge_approach_work(self, request: SurfacePlanningRequest) -> SurfacePlanningRequest:
+        """Transfer the consumed result to fresh work within its parent window."""
+        basis, window = self._selected.basis, self._work_window
+        assert basis is not None and window is not None
+        self._selected.lifecycle.finish(basis.work_identity, "planning_result_transferred_to_bridge_approach", self._clock())
+        self._attempt_sequence += 1
+        identity = AsyncWorkIdentity(basis.scope, self._owner_instance_id,
+            AsyncWorkKind.PLANNING, request.request_id, self._attempt_sequence)
+        self._selected.lifecycle.begin(identity, window)
+        self._remember_work_window(identity, window)
+        request = replace(request, work_identity=identity)
+        self._selected.basis = replace(basis, request=request,
+            work_identity=identity, submitted_request=None)
+        return request
+
+    def _submit(self, request, snapshot, frame, state_anchor, *, poll_result=True):
+        assert self._selected.basis is not None
+        capabilities = self._selected.basis.capabilities
         if type(request) is SurfacePlanningRequest:
             planning_request = replace(
                 request,
@@ -1410,41 +1889,47 @@ class PlanningCoordinator:
                 ),
             )
             mode = (
-                None if self.capabilities.ground_modes is None
-                else self.capabilities.ground_modes.require(MovementMode.WALK)
+                None if capabilities.ground_modes is None
+                else capabilities.ground_modes.require(MovementMode.WALK)
             )
             submitted = self._planner.submit_surface_snapshot(
                 snapshot,
-                self.capabilities.ground,
-                self.capabilities.step,
+                capabilities.ground,
+                capabilities.step,
                 planning_request,
-                self.capabilities.jump_up,
-                air_profiles=self.capabilities.air,
+                capabilities.jump_up,
+                air_profiles=capabilities.air,
                 ground_mode_profile=mode,
             )
         else:
             submitted = self._planner.submit_snapshot(
                 snapshot,
-                self.capabilities.ground,
+                capabilities.ground,
                 request,
-                self.capabilities.jump_up,
+                capabilities.jump_up,
             )
         if submitted:
-            self._submitted_request = request
+            self._selected.receipt_identity = request.work_identity
+            self._selected.basis = replace(
+                self._selected.basis,
+                submitted_request=(planning_request if type(request) is SurfacePlanningRequest else request),
+            )
             now = self._clock()
-            self._pipeline.submitted_request_id = request.request_id
-            self._pipeline.submitted_movement_tick = self._movement_tick(frame)
-            self._pipeline.submitted_monotonic_ns = now
+            self._selected.pipeline.submitted_request_id = request.request_id
+            self._selected.pipeline.submitted_movement_tick = self._movement_tick(frame)
+            self._selected.pipeline.submitted_monotonic_ns = now
             if self._work_window is None:
                 raise ContractViolation("planning submission has no work window")
-            self._pipeline.result_deadline_monotonic_ns = (
+            self._selected.pipeline.result_deadline_monotonic_ns = (
                 self._work_window.deadline_monotonic_ns
             )
+            if poll_result:
+                self._poll_results()
         return submitted
 
     def _submission_expired(self, frame: NavigationFrame) -> bool:
-        request = self.request
-        pipeline = self._pipeline
+        request = self._calculation_request
+        pipeline = self._selected.pipeline
         if (request is None
                 or pipeline.submitted_request_id != request.request_id
                 or pipeline.submitted_movement_tick is None
@@ -1453,7 +1938,7 @@ class PlanningCoordinator:
         return self._attempt_expired(frame)
 
     def _attempt_expired(self, frame: NavigationFrame) -> bool:
-        request = self.request
+        request = self._calculation_request
         window = self._work_window
         if request is None or window is None:
             return False
@@ -1470,13 +1955,25 @@ class PlanningCoordinator:
         self,
         builder: KnownMapSnapshotBuilder,
         frame: NavigationFrame,
-    ) -> bool:
-        changes = tuple(self._pipeline.changed_cells)
+    ) -> bool | _BasisChange:
+        changes = tuple(self._selected.pipeline.changed_cells)
         if not changes:
             # The section revision changed without an exact change list.  It
             # is unsafe to label that as harmless knowledge gain.
             return True
-        for position in changes:
+        if self._selected.basis_scan_revision != frame.world.geometry_revision:
+            self._selected.basis_scan = iter(position for position in changes
+                if builder.contains_position(position) and builder.was_scanned(position)
+                and builder.copied_fact(position) is not None)
+            self._selected.basis_scan_revision = frame.world.geometry_revision
+        limit = max(1, self._snapshot_cells_per_step
+            // max(1, sum(work.active for work in self._works)))
+        for _ in range(limit):
+            position = next(self._selected.basis_scan, None)
+            if position is None:
+                self._selected.basis_scan = None
+                self._selected.basis_scan_revision = None
+                return False
             if (not builder.contains_position(position)
                     or not builder.was_scanned(position)):
                 continue
@@ -1485,18 +1982,32 @@ class PlanningCoordinator:
                 # A scanned UNKNOWN becoming known is progress, not a failed
                 # attempt.  The restarted snapshot will include it.
                 continue
+            if self._remaining_accesses == 0:
+                self._selected.basis_scan = chain((position,), self._selected.basis_scan)
+                return _BasisChange.CHECKING
+            self._remaining_accesses -= 1
             current = frame.world.cell(position)
             if (old.knowledge is not current.knowledge
                     or old.block != current.block):
+                self._selected.basis_scan = None
+                self._selected.basis_scan_revision = None
                 return True
-        return False
+        position = next(self._selected.basis_scan, None)
+        if position is None:
+            self._selected.basis_scan = None
+            self._selected.basis_scan_revision = None
+            return False
+        self._selected.basis_scan = chain((position,), self._selected.basis_scan)
+        return _BasisChange.CHECKING
 
     def _candidate_basis_change(self, frame: NavigationFrame, candidate):
-        snapshot = self._pipeline.snapshot
+        snapshot = self._selected.pipeline.snapshot
         if snapshot is None:
             return None
+        if snapshot.world.geometry_revision == frame.world.geometry_revision:
+            return None
         complete = candidate.status in {SurfacePlanningStatus.COMPLETE, PlanningStatus.COMPLETE}
-        if self._basis_scan_revision != frame.world.geometry_revision:
+        if self._selected.basis_scan_revision != frame.world.geometry_revision:
             changes = frame.world.changes_since(snapshot.world.geometry_revision)
             dependencies = set(candidate.dependencies) if complete else set()
             if changes is not None:
@@ -1512,15 +2023,23 @@ class PlanningCoordinator:
                              for y in range(bounds.min_feet_y - 1 - COLLISION_OWNER_BELOW_REACH_CELLS,
                                             bounds.max_feet_y + 2 + bounds.extra_top_clearance_cells)
                              for z in range(bounds.min_z, bounds.max_z + 1))
-            self._basis_scan = iter(positions)
-            self._basis_scan_revision = frame.world.geometry_revision
-            self._basis_scan_progress = False
-        for _ in range(self._snapshot_cells_per_step):
-            position = next(self._basis_scan, None)
+            self._selected.basis_scan = iter(positions)
+            self._selected.basis_scan_revision = frame.world.geometry_revision
+            self._selected.basis_scan_progress = False
+        checked = 0
+        limit = max(1, self._snapshot_cells_per_step
+            // max(1, sum(work.active for work in self._works)))
+        while True:
+            position = next(self._selected.basis_scan, None)
             if position is None:
-                self._basis_scan = None
-                self._basis_scan_revision = None
-                return _BasisChange.PROGRESS if self._basis_scan_progress else None
+                self._selected.basis_scan = None
+                self._selected.basis_scan_revision = None
+                return _BasisChange.PROGRESS if self._selected.basis_scan_progress else None
+            if self._remaining_accesses == 0 or checked >= limit:
+                self._selected.basis_scan = chain((position,), self._selected.basis_scan)
+                return _BasisChange.CHECKING
+            self._remaining_accesses -= 1
+            checked += 1
             before = snapshot.world.cell(position)
             current = frame.world.cell(position)
             if (before.knowledge is current.knowledge
@@ -1528,10 +2047,10 @@ class PlanningCoordinator:
                 continue
             if (before.knowledge is CellKnowledge.UNKNOWN
                     and current.knowledge is not CellKnowledge.UNKNOWN):
-                self._basis_scan_progress = True
+                self._selected.basis_scan_progress = True
                 continue
-            self._basis_scan = None
-            self._basis_scan_revision = None
+            self._selected.basis_scan = None
+            self._selected.basis_scan_revision = None
             return _BasisChange.DEPENDENCY
         return _BasisChange.CHECKING
 
@@ -1553,6 +2072,8 @@ class PlanningCoordinator:
         reason: str,
         remaining_damage_budget: TaskDamageBudget,
     ) -> PlanningUpdate:
+        if self._has_revised_request():
+            return self._start_revised_request(frame, remaining_damage_budget)
         blockers = (
             () if type(candidate) is not SurfaceRouteCandidate
             or candidate.information_need is None
@@ -1561,7 +2082,7 @@ class PlanningCoordinator:
         fact_id = (
             self._blocker_id(blockers[0].blocker_key)
             if blockers else
-            f"planning-world/{self._attempt_id}/{frame.body.sequence_id}"
+            f"planning-world/{self._selected.attempt_id}/{frame.body.sequence_id}"
         )
         if blockers:
             self._retry_ledger.set_blockers(tuple(
@@ -1577,6 +2098,7 @@ class PlanningCoordinator:
         ))
         if not progressed:
             return self._finish_failure("planning_progress_not_fresh")
+        self._local_attempts.reset()
         request = self._replacement_request(frame, remaining_damage_budget)
         if request is None:
             return self._finish_failure("current_surface_unavailable")
@@ -1631,35 +2153,71 @@ class PlanningCoordinator:
 
     def _update(
         self, kind, reason, *, route=None, information_need=None,
-        interaction=None,
+        interaction=None, landing_probe_cell=None,
     ):
-        assert self.request is not None and self._attempt_id is not None
+        assert self.request is not None and self._selected.attempt_id is not None
         return PlanningUpdate(
             kind,
             self.request.world_session,
-            self._attempt_id,
+            self._selected.attempt_id,
             self.request.request_id,
             self.request.goal_revision,
             reason,
+            request=self.request,
             route=route,
             information_need=information_need,
             interaction=interaction,
+            landing_probe_cell=landing_probe_cell,
             information_identity=(self._work_identity
                                   if kind is PlanningUpdateKind.NEEDS_INFORMATION else None),
         )
 
-    def _finish_failure(self, failure_reason: str, *, reason: str | None = None):
-        self._pipeline.clear()
-        assert self.request is not None and self._attempt_id is not None
-        self._terminal_update = PlanningUpdate(
+    def _failure_update(self, failure_reason: str, reason: str | None):
+        assert self.request is not None and self._selected.attempt_id is not None
+        return PlanningUpdate(
             PlanningUpdateKind.FAILED,
             self.request.world_session,
-            self._attempt_id,
+            self._selected.attempt_id,
             self.request.request_id,
             self.request.goal_revision,
             reason or failure_reason,
-            failure=PlanningFailure(failure_reason),
+            request=self.request,
+            failure=PlanningFailure(failure_reason, self.request.world_session,
+                                    self._selected.attempt_id, self.request.request_id,
+                                    self.request.goal_revision),
         )
+    def _current_deferred_failure(self) -> PlanningUpdate | None:
+        deferred = self._deferred_failure
+        if deferred is None:
+            return None
+        origin, update = deferred
+        identity = origin.work_identity if type(origin) is PlanningCalculationBasis else origin
+        if (self.request is None or update.request_id != self.request.request_id
+                or update.goal_revision != self.request.goal_revision
+                or identity.scope != self._request_ledger.current_computation_scope):
+            self._deferred_failure = None
+            return None
+        return update
+
+    def _finish_failure(self, failure_reason: str, *, reason: str | None = None):
+        if self._work_identity is not None and any(
+                work is not self._selected and work.active
+                and work.lifecycle.identity.scope == self._request_ledger.current_computation_scope
+                and not work.lifecycle.window.expired(self._clock())
+                for work in self._works):
+            self._deferred_failure = (self._selected.basis or self._work_identity,
+                self._failure_update(failure_reason, reason))
+            self._retire_active_identity("planning_work_failed_waiting_for_alternative")
+            self._terminal_update = None
+            return self._update(PlanningUpdateKind.RUNNING, "planning_waits_for_other_work")
+        return self._finish_task_failure(failure_reason, reason=reason)
+
+    def _finish_task_failure(self, failure_reason: str, *, reason: str | None = None):
+        self._selected.pipeline.clear()
+        self._terminal_failure_origin = (self._selected.basis or self._work_identity
+            or next((identity for identity in self._known_work_windows
+                if identity.key == self._selected.attempt_id), None))
+        self._terminal_update = self._failure_update(failure_reason, reason)
         self._complete_active_work("planning_failed")
         return self._terminal_update
 
@@ -1670,10 +2228,20 @@ class PlanningCoordinator:
         failure_reason: str,
         remaining_damage_budget: TaskDamageBudget,
     ) -> PlanningUpdate:
-        assert self._attempt_id is not None and self.request is not None
-        failed_attempt = self._attempt_id
-        registration = self._retry_ledger.record_failure(failed_attempt, cause)
-        if registration.verdict is not RetryVerdict.RETRY:
+        assert self._selected.attempt_id is not None and self.request is not None
+        if cause is RetryCause.DEPENDENCY:
+            self._request_ledger.invalidate_computation(ComputationInvalidationCause.BASIS_INVALIDATED)
+        if self._has_revised_request():
+            return self._start_revised_request(frame, remaining_damage_budget)
+        failed_attempt = self._selected.attempt_id
+        registration = self._local_attempts.record(failed_attempt)
+        if cause is RetryCause.PLANNING and any(
+                work is not self._selected and work.active
+                for work in self._works):
+            self._retire_active_identity(failure_reason)
+            return self._update(PlanningUpdateKind.RUNNING,
+                f"{failure_reason}_waits_for_other_work")
+        if registration.verdict is LocalAttemptVerdict.EXHAUSTED:
             return self._finish_failure(
                 f"{failure_reason}_retry_exhausted",
             )
@@ -1701,6 +2269,22 @@ class PlanningCoordinator:
             PlanningUpdateKind.RUNNING,
             f"{failure_reason}_retry_started",
         )
+
+    def _has_revised_request(self) -> bool:
+        return (self._selected.basis is not None and self.request is not None
+                and self.request.request_id != self._selected.basis.request.request_id)
+
+    def _finish_calculation_failure(self, frame, reason, remaining_damage_budget):
+        if self._has_revised_request():
+            return self._start_revised_request(frame, remaining_damage_budget)
+        return self._finish_failure(reason)
+
+    def _start_revised_request(self, frame, remaining_damage_budget) -> PlanningUpdate:
+        """Retire the old conclusion and consume a task-update permit only."""
+        self._retire_active_identity("planning_revision_result_unusable")
+        self._prune_work()
+        self._ensure_latest_work(frame, None, remaining_damage_budget)
+        return self._update(PlanningUpdateKind.RUNNING, "goal_revision_planning_started")
 
     def _replacement_request(
         self,
@@ -1819,8 +2403,7 @@ class PlanningCoordinator:
         )
         now = self._clock()
         identity = AsyncWorkIdentity(
-            need.world_session_id,
-            self.task_id,
+            self._request_ledger.current_computation_scope,
             self._owner_instance_id,
             AsyncWorkKind.INFORMATION,
             f"{need.request_id}:{need.selection_revision}",
@@ -1831,30 +2414,32 @@ class PlanningCoordinator:
             now,
             now + _INFORMATION_WORK_LIMIT_NS,
         )
-        self._work.begin(identity, window)
-        self._attempt_id = identity.key
+        self._selected.lifecycle.begin(identity, window)
+        self._selected.attempt_id = identity.key
         self._remember_work_window(self._work_identity, self._work_window)
-        self._work_active = True
-        self._active_permit = None
-        self._submitted_request = None
-        self._pipeline.clear()
+        self._selected.basis = None
+        self._selected.pipeline.clear()
 
     def _complete_active_work(self, cause: str) -> None:
         require_identifier(cause, "planning completion cause")
+        self._deferred_failure = None
+        if self._terminal_update is None or self._terminal_update.kind is not PlanningUpdateKind.FAILED:
+            self._terminal_failure_origin = None
+        self._observation_update = None
         self._retire_active_identity(cause)
+        self._retire_all_work("planning_result_already_delivered")
 
     def _retire_active_identity(self, cause: str) -> None:
         require_identifier(cause, "planning retirement cause")
         identity = self._work_identity
-        self._pipeline.clear()
-        self._basis_candidate = None
-        self._basis_scan = None
-        self._basis_scan_revision = None
+        self._selected.pipeline.clear()
+        self._selected.candidate = None
+        self._selected.basis_scan = None
+        self._selected.basis_scan_revision = None
         if identity is not None:
-            self._work.finish(identity, cause, self._clock())
-        self._work_active = False
-        self._active_permit = None
-        self._submitted_request = None
+            summary = self._selected.lifecycle.finish(identity, cause, self._clock())
+            self._remember_history(self._retired, identity, summary)
+        self._selected.basis = None
 
     def _record_admission(
         self,
@@ -1873,7 +2458,8 @@ class PlanningCoordinator:
         now = self._clock()
         applied = True
         if disposition is AsyncAdmissionDisposition.APPLIED:
-            applied = self._work.try_apply(identity, now)
+            applied = self._selected.lifecycle.try_apply(identity, now,
+                current_scope=self._request_ledger.current_computation_scope)
             if not applied:
                 disposition = AsyncAdmissionDisposition.TERMINATED
                 facts_valid = None
@@ -1896,6 +2482,20 @@ class PlanningCoordinator:
         identity: AsyncWorkIdentity,
         window: AsyncWorkWindow,
     ) -> None:
-        if len(self._known_work_windows) >= 64 and identity not in self._known_work_windows:
-            del self._known_work_windows[next(iter(self._known_work_windows))]
-        self._known_work_windows[identity] = window
+        self._remember_history(self._known_work_windows, identity, window)
+
+    def _remember_history(self, history: dict, identity: AsyncWorkIdentity, value) -> None:
+        if identity not in history and len(history) >= _PLANNING_HISTORY_LIMIT:
+            protected = {identity for work in self._works
+                for identity in (work.lifecycle.identity, work.receipt_identity)
+                if identity is not None}
+            for origin in (self._terminal_failure_origin,
+                    None if self._deferred_failure is None else self._deferred_failure[0]):
+                if origin is not None:
+                    protected.add(origin.work_identity
+                        if type(origin) is PlanningCalculationBasis else origin)
+            oldest = next((item for item in history if item not in protected), None)
+            if oldest is None:
+                raise PlanningHistoryCapacityExceeded("planning history retains only owned identities")
+            del history[oldest]
+        history[identity] = value

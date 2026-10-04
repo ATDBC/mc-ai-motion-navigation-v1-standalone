@@ -16,6 +16,7 @@ from mc2p.contracts.common import (
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.contracts.observation_v3 import ObservationSnapshotV3, TargetingStateV3
 from mc2p.motion_nav.async_work import (
+    AsyncComputationScope,
     AsyncAdmissionDisposition,
     AsyncAdmissionRecord,
     AsyncWorkIdentity,
@@ -169,12 +170,17 @@ class PlacementProposal:
 class BlockPlacementTransaction:
     """One bounded block placement; success comes only from later observation."""
 
-    def __init__(self, requirement: RequiredInteraction, *, clock_ns=time.monotonic_ns) -> None:
+    def __init__(self, requirement: RequiredInteraction, *,
+                 computation_scope: AsyncComputationScope, clock_ns=time.monotonic_ns) -> None:
         if type(requirement) is not RequiredInteraction:
             raise ContractViolation("block placement requires a typed interaction")
         if requirement.kind is not InteractionKind.PLACE_BLOCK:
             raise ContractViolation("block placement received another interaction kind")
         self.requirement = requirement
+        if (type(computation_scope) is not AsyncComputationScope
+                or computation_scope.world_session_id != requirement.world_session):
+            raise ContractViolation("placement requires its original computation scope")
+        self.computation_scope = computation_scope
         if not callable(clock_ns):
             raise ContractViolation("placement clock must be callable")
         self._clock = clock_ns
@@ -338,8 +344,7 @@ class BlockPlacementTransaction:
         self._submitted_control_sequence = control_sequence
         self._work_revision += 1
         identity = AsyncWorkIdentity(
-            self.requirement.world_session,
-            self.requirement.goal_id,
+            self.computation_scope,
             self._owner_instance_id,
             AsyncWorkKind.PLACEMENT_CONFIRMATION,
             self.requirement.interaction_id,
@@ -497,7 +502,8 @@ class BlockPlacementTransaction:
                 self._finish_confirmation_timeout(frame)
                 return
             accepted_ns = self._clock()
-            if not self._work.try_apply(self._work_identity, accepted_ns):
+            if not self._work.try_apply(self._work_identity, accepted_ns,
+                                        current_scope=self._work_identity.scope):
                 self._finish_confirmation_timeout(frame)
                 return
             self._record_admission(
@@ -537,7 +543,8 @@ class BlockPlacementTransaction:
             self._movement_tick(frame)
             >= self._work_window.started_movement_tick
             + self.requirement.confirmation_timeout_ticks
-            or self._work.check(self._work_identity, self._clock()) is not WorkCheck.READY
+            or self._work.check(self._work_identity, self._clock(),
+                               current_scope=self._work_identity.scope) is not WorkCheck.READY
         )
 
     @staticmethod

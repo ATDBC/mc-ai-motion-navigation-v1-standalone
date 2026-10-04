@@ -171,6 +171,9 @@ class RuntimeNavigationDriver:
         damage_budget: TaskDamageBudget | None = None,
     ) -> bool:
         require_nonnegative_int(now_ns, "runtime navigation goal update time")
+        if self.session.report.terminal:
+            self._sync_report()
+            return False
         if self.source is None or self._goal_id is None:
             raise ContractViolation("runtime navigation driver has no active goal")
         if (goal_id != self._goal_id or type(goal_revision) is not int

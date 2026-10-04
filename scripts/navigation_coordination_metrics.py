@@ -157,7 +157,7 @@ def coordination_inventory():
                                  for name in ("advance", "_submit", "_record_admission", "retry_from_current", "_retry_or_fail")},
         "motion_coordination": {name: ("3", "共同异步接纳 + 动作领域核验")
                                 for name in ("_accept_result", "_retire_work", "_record_admission")},
-        "retry_ledger": {name: ("4", "RetryLedger") for name in ("record_failure", "record_progress")},
+        "retry_ledger": {name: ("4", "RetryLedger") for name in ("begin_recovery", "record_progress")},
         "safe_ground_control": {"verified_ground_rollout": ("2可选", "保留物理、安全尾迹核验")},
     }
     rows, sizes = [], {}

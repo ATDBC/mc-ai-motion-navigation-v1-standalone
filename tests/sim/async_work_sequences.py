@@ -54,7 +54,7 @@ def run_information_sequence(seed):
         context.driver.release("async_information_cancel")
         dispatched.append("cancel_information_work")
         for _ in range(1 + seed % 3):
-            result = owner.reconcile_information(old, context.runtime_frame)
+            result = owner.reconcile_information(old, context.runtime_frame, current_scope=owner._request_ledger.current_computation_scope)
             if result.kind is not PlanningUpdateKind.DISCARDED or result.information_identity != old.information_identity:
                 raise AssertionError("old information notification was not independently discarded")
             dispatched.append("old_notification_discarded")
@@ -276,9 +276,9 @@ def run_gap_sequence(seed, *, service_followup=True):
             before_tick = backend.movement_tick
             if driver.source is None:
                 if old is not None and current is original:
-                    current = original.spawn_successor("new-gap")
+                    current = original.spawn_successor("new-gap", task_id="new-gap-task")
                     driver = RuntimeNavigationDriver(runtime, current, clock_ns=lambda: clock[0])
-                    driver.start("same-goal", 1, goal, clock[0])
+                    driver.start("same-goal", 1, goal, clock[0], task_id="new-gap-task")
                     events.append("same_goal_successor_started")
                 else:
                     backend.free_tick()

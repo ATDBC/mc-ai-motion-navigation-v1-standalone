@@ -12,6 +12,7 @@ from mc2p.motion_nav.action_route import (
     ActionRoute, ControlledDropSegment, JumpGapSegment, JumpUpSegment,
     StepSegment, WalkSegment, canonical_surface_node_path,
 )
+from mc2p.motion_nav.async_work import AsyncWorkIdentity
 from mc2p.motion_nav.fixed_route import FixedRoute, RoutePoint
 from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
 from mc2p.motion_nav.ground_modes import observed_ground_mode
@@ -22,7 +23,7 @@ from mc2p.motion_nav.landing_edge_probe import (
     LandingEdgeProbe,
 )
 from mc2p.motion_nav.movement_transition import compose_movement_transitions
-from mc2p.motion_nav.movement_transition import GoalState, ResourceState
+from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, ResourceState
 from mc2p.motion_nav.movement_transition import MovementTransition
 from mc2p.motion_nav.motion_candidate import (
     MotionCandidateAdmission, MotionCandidateAdmitter, MotionCandidateContext,
@@ -37,6 +38,7 @@ from mc2p.motion_nav.motion_risk import MOVEMENT_DAMAGE_BUDGET_RESOURCE
 from mc2p.motion_nav.online_motion import InputApplicationLedger, StateAnchor
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView
 from mc2p.motion_nav.known_map_planner import (
+    PlanningRequest, SurfacePlanningRequest,
     PlanningStatus, RouteCandidate, WalkEdge, WalkNode, WalkNodeId,
     SurfacePlanningStatus, SurfaceRouteCandidate, SurfaceWalkEdge,
     SurfaceControlledDropEdge, SurfaceJumpGapEdge, SurfaceJumpUpEdge,
@@ -75,6 +77,10 @@ class AdmissionReason(StrEnum):
     PLANNING_REQUEST_REPLACED = "planning_request_replaced"
     WORLD_SESSION_CHANGED = "world_session_changed"
     GOAL_REVISION_CHANGED = "goal_revision_changed"
+    CANDIDATE_BASIS_MISMATCH = "candidate_basis_mismatch"
+    CURRENT_GOAL_NOT_SATISFIED = "current_goal_not_satisfied"
+    ROUTE_RISK_POLICY_CHANGED = "route_risk_policy_changed"
+    ROUTE_CAPABILITIES_CHANGED = "route_capabilities_changed"
     WORLD_DELTA_MISSING = "world_delta_missing"
     ROUTE_DEPENDENCIES_CHANGED = "route_dependencies_changed"
     CURRENT_BODY_CANNOT_CONNECT = "current_body_cannot_connect"
@@ -115,6 +121,7 @@ class ActiveRoute:
     action_route: ActionRoute
     goal_state: GoalState | None = None
     planning_generation: int = 0
+    work_identity: AsyncWorkIdentity | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -448,8 +455,182 @@ class RouteAdmitter:
         active=ActiveRoute(route_id,1,candidate.request_id,candidate.goal_id,
                            candidate.goal_revision,candidate.world_session,fixed_route,
                            full_length,connection_length,connection_dependencies,corridor,
-                           action_route,candidate.goal_state,candidate.request_sequence)
+                           action_route,candidate.goal_state,candidate.request_sequence,
+                           candidate.work_identity)
         return AdmissionResult(AdmissionStatus.ACCEPTED,AdmissionReason.CANDIDATE_ADMITTED,active)
+
+    @staticmethod
+    def _replay_resources(candidate, initial: ResourceState, minimum: ResourceState,
+                          frame: NavigationFrame) -> ResourceState | AdmissionReason:
+        names = set(initial.as_dict()) | set(minimum.as_dict())
+        for edge in candidate.segments:
+            names.update(name for name, _ in edge.resource_change.deltas)
+            if edge.transition is not None:
+                names.update(name for name, _ in edge.transition.minimum_entry_resources.values)
+        observed = []
+        for name in sorted(names):
+            if name == MOVEMENT_DAMAGE_BUDGET_RESOURCE:
+                if name not in initial.as_dict():
+                    return AdmissionReason.ROUTE_RESOURCES_UNAVAILABLE
+                value = initial.as_dict()[name]
+            elif name == "food_points":
+                value = float(frame.body.food_points)
+            else:
+                return AdmissionReason.ROUTE_RESOURCE_UNOBSERVABLE
+            observed.append((name, value))
+        resources = capacity = ResourceState(tuple(observed))
+        if not resources.at_least(minimum):
+            return AdmissionReason.ROUTE_RESOURCES_BELOW_MINIMUM
+        for edge in candidate.segments:
+            if edge.transition is not None and not resources.at_least(edge.transition.minimum_entry_resources):
+                return AdmissionReason.ROUTE_ENTRY_RESOURCES_UNAVAILABLE
+            updated = resources.apply(edge.resource_change, minimum, capacity)
+            if updated is None:
+                return AdmissionReason.ROUTE_RESOURCES_UNAVAILABLE
+            resources = updated
+        return resources
+
+    def admit_current_request(
+        self, candidate: RouteCandidate | SurfaceRouteCandidate,
+        calculation_request: PlanningRequest | SurfacePlanningRequest,
+        current_request: PlanningRequest | SurfacePlanningRequest,
+        frame: NavigationFrame, *, remaining_damage_budget: TaskDamageBudget,
+        changed_cells: tuple[BlockPos, ...],
+        edge_probe: LandingEdgeProbe | None = None,
+    ) -> AdmissionResult:
+        """Recheck the whole original positive route, then bind its proven exit.
+
+        Identity/time eligibility belongs to the caller's AsyncWorkLifecycle.
+        This boundary never cuts a path or rebuilds a tail for the new goal.
+        """
+        surface = type(candidate) is SurfaceRouteCandidate
+        request_type = SurfacePlanningRequest if surface else PlanningRequest
+        if (type(candidate) not in (RouteCandidate, SurfaceRouteCandidate)
+                or type(calculation_request) is not request_type
+                or type(current_request) is not request_type
+                or type(frame) is not NavigationFrame
+                or type(remaining_damage_budget) is not TaskDamageBudget
+                or type(changed_cells) is not tuple):
+            raise ContractViolation("current route binding requires typed producer and current facts")
+        complete = SurfacePlanningStatus.COMPLETE if surface else PlanningStatus.COMPLETE
+        if candidate.status is not complete or not candidate.path:
+            return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.CANDIDATE_NOT_COMPLETE)
+        if (candidate.request_id != calculation_request.request_id
+                or candidate.request_sequence != calculation_request.sequence
+                or candidate.goal_id != calculation_request.goal_id
+                or candidate.goal_revision != calculation_request.goal_revision
+                or candidate.world_session != calculation_request.world_session
+                or candidate.planning_start != calculation_request.start
+                or candidate.planning_goal != calculation_request.goal
+                or candidate.goal_state != calculation_request.goal_state
+                or candidate.work_identity != calculation_request.work_identity
+                or (surface and (
+                    candidate.initial_resources != calculation_request.initial_resources
+                    or candidate.minimum_resources != calculation_request.minimum_resources))):
+            return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.CANDIDATE_BASIS_MISMATCH)
+        if current_request.world_session != frame.session.value:
+            return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.WORLD_SESSION_CHANGED)
+        original_policy = (calculation_request.damage_budget.risk_policy_id if surface
+            else (candidate.goal_state.risk_policy_id if candidate.goal_state else "no_expected_damage"))
+        if (original_policy != remaining_damage_budget.risk_policy_id
+                or (surface and current_request.damage_budget.risk_policy_id != original_policy)):
+            return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.ROUTE_RISK_POLICY_CHANGED)
+        minimum = current_request.minimum_resources
+        if current_request.goal_state is not None:
+            if current_request.goal_state.risk_policy_id != remaining_damage_budget.risk_policy_id:
+                return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.ROUTE_RISK_POLICY_CHANGED)
+            values = minimum.as_dict()
+            for name, value in current_request.goal_state.minimum_resources.values:
+                values[name] = max(values.get(name, 0.), value)
+            minimum = ResourceState(tuple(sorted(values.items())))
+        initial_values = calculation_request.initial_resources.as_dict()
+        initial_values.update(current_request.initial_resources.as_dict())
+        if (MOVEMENT_DAMAGE_BUDGET_RESOURCE in initial_values
+                or remaining_damage_budget.maximum_expected_damage_points > 0):
+            initial_values[MOVEMENT_DAMAGE_BUDGET_RESOURCE] = remaining_damage_budget.maximum_expected_damage_points
+        initial = ResourceState(tuple(sorted(initial_values.items())))
+        predicted_damage = sum(getattr(edge, "predicted_damage_points", 0.) for edge in candidate.segments)
+        # Health/absorption evidence remains the motion proof's responsibility;
+        # route admission rechecks the task's remaining damage capacity here.
+        if predicted_damage > remaining_damage_budget.maximum_expected_damage_points:
+            return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.ROUTE_RESOURCES_UNAVAILABLE)
+        if surface:
+            checked = replace(candidate, initial_resources=initial, minimum_resources=minimum)
+            admitted = self.admit_surface(checked, frame,
+                expected_request_id=calculation_request.request_id,
+                goal_id=calculation_request.goal_id, goal_revision=calculation_request.goal_revision,
+                changed_cells=changed_cells, edge_probe=edge_probe)
+        else:
+            resources = self._replay_resources(candidate, initial, minimum, frame)
+            if type(resources) is AdmissionReason:
+                return AdmissionResult(AdmissionStatus.REJECTED, resources)
+            admitted = self.admit(replace(candidate, final_resources=resources), frame,
+                expected_request_id=calculation_request.request_id,
+                goal_id=calculation_request.goal_id, goal_revision=calculation_request.goal_revision,
+                changed_cells=changed_cells)
+        if admitted.status is not AdmissionStatus.ACCEPTED:
+            return admitted
+        route = admitted.route
+        assert route is not None
+        resources = route.action_route.final_resources
+        if current_request.request_id != calculation_request.request_id:
+            if not self._body_meets_route_entry(route, frame):
+                return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.CURRENT_BODY_CANNOT_CONNECT)
+            if not self._terminal_meets_current_goal(route, candidate, current_request, resources,
+                    remaining_damage_budget):
+                return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.CURRENT_GOAL_NOT_SATISFIED)
+        route = replace(route, source_request_id=current_request.request_id,
+            goal_id=current_request.goal_id, goal_revision=current_request.goal_revision,
+            planning_generation=current_request.sequence, goal_state=current_request.goal_state,
+            action_route=replace(route.action_route, goal_state=current_request.goal_state,
+                                 final_resources=resources))
+        return AdmissionResult(AdmissionStatus.ACCEPTED, AdmissionReason.CANDIDATE_ADMITTED, route)
+
+    @staticmethod
+    def _body_meets_route_entry(route: ActiveRoute, frame: NavigationFrame) -> bool:
+        if not frame.body.is_on_ground:
+            return False
+        mode = observed_ground_mode(frame.body)
+        if mode is None:
+            return False
+        first = route.action_route.actions[0]
+        window = (first.traversal_plan.entry_window
+                  if type(first) is WalkSegment and first.traversal_plan is not None
+                  else getattr(first, 'entry_window', None))
+        if window is not None:
+            return body_fits_segment_entry(window, frame.body, mode)
+        if type(first) is not WalkSegment or first.transition is None:
+            return False
+        entry = first.transition.entry
+        speed = math.hypot(frame.body.velocity_blocks_per_second[0],
+                           frame.body.velocity_blocks_per_second[2])
+        return (mode is entry.mode and frame.body.pose == entry.pose
+            and entry.minimum_speed_blocks_per_second <= speed + 1.e-12
+            and speed <= entry.maximum_speed_blocks_per_second + 1.e-12)
+
+    @staticmethod
+    def _terminal_meets_current_goal(route, candidate, request, resources, damage_budget) -> bool:
+        goal = request.goal_state
+        if goal is None:
+            return candidate.planning_goal == request.goal
+        last = route.action_route.actions[-1]
+        if type(last) is WalkSegment:
+            point = last.fixed_route.points[-1]
+            position = (point.x, point.y, point.z)
+        elif type(last) is JumpUpSegment:
+            position = last.edge.end
+        else:
+            position = last.end_surface.position
+        transition = last.transition
+        if transition is None or goal.required_yaw_radians is not None:
+            # The current route contract has no yaw exit range. A path's
+            # direction alone is not evidence of the player's final yaw.
+            return False
+        return all(goal.accepts(position=position, support=GoalSupport.SOLID,
+            mode=exit_state.mode, pose=exit_state.pose,
+            speed_blocks_per_second=exit_state.maximum_speed_blocks_per_second,
+            resources=resources, applied_risk_policy_id=damage_budget.risk_policy_id)
+            for exit_state in transition.exits)
 
     @staticmethod
     def _surface_route_id(candidate: SurfaceRouteCandidate) -> str:
@@ -688,49 +869,11 @@ class RouteAdmitter:
             return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.WORLD_DELTA_MISSING)
         if set(candidate.dependencies).intersection(changed_cells):
             return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.ROUTE_DEPENDENCIES_CHANGED)
-        resource_names = {
-            name for name, _ in candidate.initial_resources.values
-        } | {
-            name for name, _ in candidate.minimum_resources.values
-        } | {
-            name
-            for edge in candidate.segments
-            if edge.transition is not None
-            for name, _ in edge.transition.minimum_entry_resources.values
-        }
-        observed_values = []
-        for name in sorted(resource_names):
-            if name == MOVEMENT_DAMAGE_BUDGET_RESOURCE:
-                observed_values.append((
-                    name, candidate.initial_resources.as_dict()[name],
-                ))
-                continue
-            if name != "food_points":
-                return AdmissionResult(
-                    AdmissionStatus.REJECTED, AdmissionReason.ROUTE_RESOURCE_UNOBSERVABLE,
-                )
-            observed_values.append((name, float(frame.body.food_points)))
-        resources = ResourceState(tuple(observed_values))
-        if not resources.at_least(candidate.minimum_resources):
-            return AdmissionResult(
-                AdmissionStatus.REJECTED, AdmissionReason.ROUTE_RESOURCES_BELOW_MINIMUM,
-            )
-        capacity = resources
-        for edge in candidate.segments:
-            if (edge.transition is not None
-                    and not resources.at_least(
-                        edge.transition.minimum_entry_resources)):
-                return AdmissionResult(
-                    AdmissionStatus.REJECTED, AdmissionReason.ROUTE_ENTRY_RESOURCES_UNAVAILABLE,
-                )
-            updated = resources.apply(
-                edge.resource_change, candidate.minimum_resources, capacity,
-            )
-            if updated is None:
-                return AdmissionResult(
-                    AdmissionStatus.REJECTED, AdmissionReason.ROUTE_RESOURCES_UNAVAILABLE,
-                )
-            resources = updated
+        resources = self._replay_resources(candidate, candidate.initial_resources,
+                                           candidate.minimum_resources, frame)
+        if type(resources) is AdmissionReason:
+            return AdmissionResult(AdmissionStatus.REJECTED, resources)
+        candidate = replace(candidate, final_resources=resources)
         first_edge = candidate.segments[0] if candidate.segments else None
         body_mode = observed_ground_mode(frame.body)
         starts_at_first_action = (
@@ -822,6 +965,7 @@ class RouteAdmitter:
             candidate.goal_revision, candidate.world_session, None,
             full_length, connection_length, connection_dependencies, corridor,
             action_route, candidate.goal_state, candidate.request_sequence,
+            candidate.work_identity,
         )
         return AdmissionResult(AdmissionStatus.ACCEPTED,
                                AdmissionReason.CANDIDATE_ADMITTED, active)

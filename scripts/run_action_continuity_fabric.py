@@ -18,11 +18,19 @@ def main(argv=None):
     parser.add_argument('--kind', choices=('moving_gap', 'cold_gap', 'jump_up', 'drop_2', 'drop_5'))
     parser.add_argument('--flat-drop-view', action='store_true',
                         help='start the selected drop with a horizontal view')
+    parser.add_argument('--r28-3-operation', choices=('planning', 'revision', 'cancel', 'double'),
+                        help='run a bounded real-worker revision/cancellation representative')
     extra, rest = parser.parse_known_args(argv)
     if extra.kind is not None and not extra.start_delivery:
         parser.error('--kind requires --start-delivery')
     if extra.flat_drop_view and (not extra.start_delivery or extra.kind not in {'drop_2', 'drop_5'}):
         parser.error('--flat-drop-view requires --start-delivery and --kind drop_2/drop_5')
+    if extra.r28_3_operation and not extra.start_delivery:
+        parser.error('--r28-3-operation requires --start-delivery')
+    if extra.r28_3_operation:
+        os.environ['MC2P_R28_3_OPERATION'] = extra.r28_3_operation
+    else:
+        os.environ.pop('MC2P_R28_3_OPERATION', None)
     os.environ['MC2P_ACTION_CONTINUITY_PROBE'] = '1'
     if extra.direction is not None:
         os.environ['MC2P_ACTION_CONTINUITY_DIRECTION'] = str(extra.direction)

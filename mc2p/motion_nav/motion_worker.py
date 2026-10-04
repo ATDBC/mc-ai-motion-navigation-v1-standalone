@@ -246,9 +246,8 @@ class MotionResultInbox:
         for result in worker.poll_available():
             identity = result.work_identity
             if identity is None:
-                # Compatibility-only worker calls do not participate in the
-                # shared formal routing contract.
                 self.discarded_results += 1
+                discarded.append(result)
                 continue
             if identity not in self._active or identity in self._delivered:
                 self.discarded_results += 1

@@ -1,0 +1,39 @@
+{
+  "schema_version": "mc2p.r28-migration-fault-coverage.v1",
+  "command": "python -m unittest tests.motion_nav.test_r28_migration_faults -v",
+  "cases": [
+    {
+      "id": "faults/worker_death",
+      "passed": true,
+      "exception": null,
+      "expected_function": "planning_coordinator._retry_or_fail",
+      "function_entered": true
+    },
+    {
+      "id": "faults/driver_contract_containment",
+      "passed": true,
+      "exception": null,
+      "expected_function": "navigation_session.handle_internal_contract_failure",
+      "function_entered": true
+    },
+    {
+      "id": "faults/ground_stall_retry",
+      "passed": true,
+      "exception": null,
+      "expected_function": "navigation_session._resolve_pending_retry",
+      "function_entered": true
+    },
+    {
+      "id": "faults/active_route_dependency_retry",
+      "passed": true,
+      "exception": null,
+      "expected_function": "navigation_session._wait_for_active_terminal",
+      "function_entered": true
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "total": 4,
+    "all_released_safely": true
+  }
+}

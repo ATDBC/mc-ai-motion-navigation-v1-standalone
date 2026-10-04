@@ -54,6 +54,7 @@ class InlinePlannerWorker:
 
     def __init__(self):
         self._job = None
+        self._queued_jobs = []
         self.activity = []
 
     def is_alive(self) -> bool:
@@ -61,20 +62,32 @@ class InlinePlannerWorker:
 
     def submit_surface_snapshot(self, snapshot, ground_profile, step_profile, request,
                                 jump_profile=None, *, air_profiles=(), ground_mode_profile=None) -> bool:
-        self._job = planner_worker._PlanningJob(None, snapshot, ground_profile, ground_mode_profile,
-                                                step_profile, jump_profile, air_profiles, request)
+        job = planner_worker._PlanningJob(None, snapshot, ground_profile, ground_mode_profile,
+                                          step_profile, jump_profile, air_profiles, request)
+        if self._job is None:
+            self._job = job
+        else:
+            if self._queued_jobs:
+                return planner_worker.PlanningSubmissionStatus.BUSY
+            self._queued_jobs.append(job)
         self.activity.append(ObservedAsyncActivity(request.work_identity, "submit"))
         return True
 
     def poll_latest(self):
-        job, self._job = self._job, None
+        job = self._job
+        self._job = self._queued_jobs.pop(0) if self._queued_jobs else None
         if job is not None:
             self.activity.append(ObservedAsyncActivity(job.request.work_identity, "poll"))
         result = None if job is None else planner_worker._execute_job(job)
         return result
 
+    def poll_available(self):
+        result = self.poll_latest()
+        return () if result is None else (result,)
+
     def close(self) -> None:
         self._job = None
+        self._queued_jobs.clear()
 
 
 class InlineMotionWorker:
@@ -213,7 +226,7 @@ class Result:
     @property
     def recovery_failures(self) -> int:
         return max(
-            (int(row["retry_total_failures"]) for row in self.trace),
+            (int(row["recovery_total_starts"]) for row in self.trace),
             default=0,
         )
 
@@ -410,6 +423,14 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                 async_work_diagnostics=session.async_work_diagnostics,
                 applied_body_activity=applied_activity,
                 active_motion_mailboxes=session.active_motion_mailboxes,
+                recovery_budget_kind=diagnostics.recovery_budget_kind,
+                recovery_maximum_starts=diagnostics.recovery_maximum_starts,
+                recovery_window_starts=diagnostics.recovery_window_starts,
+                recovery_total_starts=diagnostics.recovery_total_starts,
+                recovery_limit_status=diagnostics.recovery_limit_status,
+                recovery_limit_window_starts=(
+                    diagnostics.recovery_limit_window_starts
+                ),
             )
             monitor.check(evidence)
             row = {
@@ -532,6 +553,20 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                     for cause, count in diagnostics.retry_cause_counts
                 ),
                 "retry_progress_version": diagnostics.retry_progress_version,
+                "recovery_budget_kind": (
+                    None if diagnostics.recovery_budget_kind is None else
+                    diagnostics.recovery_budget_kind.value
+                ),
+                "recovery_maximum_starts": diagnostics.recovery_maximum_starts,
+                "recovery_window_starts": diagnostics.recovery_window_starts,
+                "recovery_total_starts": diagnostics.recovery_total_starts,
+                "recovery_limit_status": (
+                    None if diagnostics.recovery_limit_status is None else
+                    diagnostics.recovery_limit_status.value
+                ),
+                "recovery_limit_window_starts": (
+                    diagnostics.recovery_limit_window_starts
+                ),
                 "recovery_wait_status": (
                     None if diagnostics.recovery_wait_status is None else
                     diagnostics.recovery_wait_status.value

@@ -562,9 +562,17 @@ class MovingMeleeDriver:
         self._navigation_goal_revision += 1
         if self.navigation_session.report.terminal:
             self._navigation_session_generation += 1
-            self.navigation_session = self.navigation_session.spawn_successor(
+            continuation = (
+                self.navigation_session.same_task_continuation_evidence()
+            )
+            if continuation is None:
+                self._phase = MovingMeleePhase.FAILED
+                self._reason = "navigation_task_continuation_unavailable"
+                return
+            self.navigation_session = self.navigation_session.rebuild_same_task(
                 f"{self._navigation_session_root_id}-pursuit-"
-                f"{self._navigation_session_generation}"
+                f"{self._navigation_session_generation}",
+                continuation,
             )
         self.approach_driver = RuntimeNavigationDriver(
             self.runtime, self.navigation_session, clock_ns=self._clock,

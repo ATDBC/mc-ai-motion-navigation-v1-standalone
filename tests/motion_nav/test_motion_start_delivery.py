@@ -119,9 +119,9 @@ class StartDeliveryFormalTests(unittest.TestCase):
                 case = recovery_cases.MotionBaselineRecoveryTests().scenario(72)
                 case = replace(case, perturbations=replace(case.perturbations, late_ticks=frozenset()))
 
-                def record_sample(owner, result, anchor):
+                def record_sample(owner, result, anchor, *, current_scope):
                     before = owner._delivery_identity, owner._delivery_ticks
-                    original(owner, result, anchor)
+                    original(owner, result, anchor, current_scope=current_scope)
                     after = owner._delivery_identity, owner._delivery_ticks
                     if before != after:
                         samples.append((result.work_identity, owner._delivery_ticks,

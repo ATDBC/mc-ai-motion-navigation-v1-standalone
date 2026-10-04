@@ -1,0 +1,28 @@
+{
+  "schema_version": "mc2p.r28-1-completion-comparison.v1",
+  "coordination": {
+    "baseline": ".tmp/r28-1-policy-root-coordination",
+    "candidate": ".tmp/r28-1-completion-coordination-f6ab92",
+    "pairs": 1448,
+    "differences": 0
+  },
+  "product_v7": {
+    "baseline": ".tmp/r28-v7-r28-1-policy-root",
+    "candidate": ".tmp/r28-v7-r28-1-completion-f6ab92",
+    "pairs": 2000,
+    "differences": 0,
+    "compared_fields": [
+      "parameters",
+      "strict",
+      "metrics",
+      "reason",
+      "exception",
+      "verification_complete",
+      "event_dispatches",
+      "motion_delivery_profile",
+      "motion_job_count",
+      "motion_jobs",
+      "inputs_or_trajectory"
+    ]
+  }
+}

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
 from queue import Empty, Full
 import math
 import multiprocessing
@@ -69,22 +70,22 @@ def _replace(queue, value) -> bool:
         except Full:return False
 
 
-def _publish_latest(queue, value) -> None:
-    """Reliably replace a stale result from the background process.
-
-    ``multiprocessing.Queue`` can report ``Full`` before its feeder thread has
-    made the old item readable.  The worker may wait for that hand-off; the
-    control thread never calls this function.
-    """
+def _publish(queue, value) -> None:
+    """Wait only in the worker process; never overwrite an accepted result."""
     while True:
         try:
             queue.put(value, timeout=.01)
             return
         except Full:
-            try:
-                queue.get(timeout=.01)
-            except Empty:
-                continue
+            continue
+
+
+class PlanningSubmissionStatus(StrEnum):
+    ACCEPTED = "accepted"
+    BUSY = "busy"
+
+    def __bool__(self) -> bool:
+        return self is PlanningSubmissionStatus.ACCEPTED
 
 
 def _failure_candidate(job: _PlanningJob, reason: str):
@@ -138,14 +139,9 @@ def _worker(requests, results, delay_seconds: float) -> None:
     while True:
         job=requests.get()
         if job is None:return
-        while True:
-            try:latest=requests.get_nowait()
-            except Empty:break
-            if latest is None:return
-            job=latest
         if delay_seconds:time.sleep(delay_seconds)
         candidate = _execute_job(job)
-        _publish_latest(results,candidate)
+        _publish(results,candidate)
 
 
 @runtime_checkable
@@ -158,7 +154,8 @@ class PlannerWorkerPort(Protocol):
         jump_profile: JumpUpProfile | None = None, *,
         air_profiles: tuple[AirMotionProfile, ...] = (),
         ground_mode_profile: GroundModeProfile | None = None,
-    ) -> bool: ...
+    ) -> PlanningSubmissionStatus: ...
+    def poll_available(self) -> tuple[RouteCandidate | SurfaceRouteCandidate, ...]: ...
     def poll_latest(self) -> RouteCandidate | SurfaceRouteCandidate | None: ...
     def close(self) -> None: ...
     def is_alive(self) -> bool: ...
@@ -173,16 +170,15 @@ class PlannerWorker:
                 or not 0<=debug_delay_seconds<=2):
             raise ContractViolation("planner debug delay must be within 0..2 seconds")
         self._context=multiprocessing.get_context("spawn")
-        self._requests=self._context.Queue(maxsize=1)
-        self._results=self._context.Queue(maxsize=1)
+        self._requests=self._context.Queue(maxsize=2)
+        self._results=self._context.Queue(maxsize=2)
         self._process=self._context.Process(
             target=_worker,args=(self._requests,self._results,float(debug_delay_seconds)),
             name="mc2p-route-planner",daemon=True,
         )
         self._process.start();self._closed=False
-        self._pending:_PlanningJob|None=None
-        self._last_submitted:_PlanningJob|None=None
-        self._death_reported=False
+        self._submitted: list[_PlanningJob] = []
+        self._diagnostic_deliveries = []
 
     @property
     def pid(self) -> int | None:
@@ -191,30 +187,26 @@ class PlannerWorker:
     def is_alive(self) -> bool:
         return self._process.is_alive()
 
-    def submit(self, graph: WalkGraph, request: PlanningRequest) -> bool:
+    def submit(self, graph: WalkGraph, request: PlanningRequest) -> PlanningSubmissionStatus:
         """Submit a frozen materialized graph for compatibility tests only."""
         if self._closed:raise ContractViolation("planner worker is closed")
         if type(graph) is not WalkGraph or type(request) is not PlanningRequest:
             raise ContractViolation("planner submission requires graph and request")
-        self._pending=_PlanningJob(graph,None,None,None,None,None,(),request)
-        self._flush_pending()
-        return True
+        return self._enqueue(_PlanningJob(graph,None,None,None,None,None,(),request))
 
     def submit_surface(self, graph: SurfaceGraph,
-                       request: SurfacePlanningRequest) -> bool:
+                       request: SurfacePlanningRequest) -> PlanningSubmissionStatus:
         """Submit a materialized surface graph for diagnostics only."""
         if self._closed:
             raise ContractViolation("planner worker is closed")
         if type(graph) is not SurfaceGraph or type(request) is not SurfacePlanningRequest:
             raise ContractViolation("surface planner submission requires graph and request")
-        self._pending = _PlanningJob(graph, None, None, None, None, None, (), request)
-        self._flush_pending()
-        return True
+        return self._enqueue(_PlanningJob(graph, None, None, None, None, None, (), request))
 
     def submit_snapshot(self, snapshot: KnownMapSnapshot,
                         profile: GroundMotionProfile,
                         request: PlanningRequest,
-                        jump_profile: JumpUpProfile | None = None) -> bool:
+                        jump_profile: JumpUpProfile | None = None) -> PlanningSubmissionStatus:
         if self._closed:raise ContractViolation("planner worker is closed")
         if (type(snapshot) is not KnownMapSnapshot
                 or type(profile) is not GroundMotionProfile
@@ -222,9 +214,7 @@ class PlannerWorker:
             raise ContractViolation("snapshot submission requires snapshot, profile and request")
         if jump_profile is not None and type(jump_profile) is not JumpUpProfile:
             raise ContractViolation("snapshot submission requires a JumpUp profile or None")
-        self._pending=_PlanningJob(None,snapshot,profile,None,None,jump_profile,(),request)
-        self._flush_pending()
-        return True
+        return self._enqueue(_PlanningJob(None,snapshot,profile,None,None,jump_profile,(),request))
 
     def submit_surface_snapshot(
         self,
@@ -236,7 +226,7 @@ class PlannerWorker:
         *,
         air_profiles: tuple[AirMotionProfile, ...] = (),
         ground_mode_profile: GroundModeProfile | None = None,
-    ) -> bool:
+    ) -> PlanningSubmissionStatus:
         if self._closed:
             raise ContractViolation("planner worker is closed")
         if (type(snapshot) is not KnownMapSnapshot
@@ -260,44 +250,63 @@ class PlannerWorker:
             raise ContractViolation(
                 "surface snapshot submission requires a typed ground mode profile"
             )
-        self._pending = _PlanningJob(
+        return self._enqueue(_PlanningJob(
             None, snapshot, ground_profile, ground_mode_profile,
             step_profile, jump_profile,
             air_profiles, request,
-        )
-        self._flush_pending()
-        return True
+        ))
 
-    def _flush_pending(self) -> None:
-        if self._pending is not None and _replace(self._requests,self._pending):
-            self._last_submitted=self._pending
-            self._death_reported=False
-            self._pending=None
+    def _enqueue(self, job: _PlanningJob) -> PlanningSubmissionStatus:
+        if len(self._submitted) >= 2:
+            return PlanningSubmissionStatus.BUSY
+        try:
+            self._requests.put_nowait(job)
+        except Full:
+            return PlanningSubmissionStatus.BUSY
+        self._submitted.append(job)
+        return PlanningSubmissionStatus.ACCEPTED
+
+    @property
+    def outstanding_identities(self):
+        return tuple(job.request.work_identity for job in self._submitted)
 
     def poll_latest(self) -> RouteCandidate | SurfaceRouteCandidate | None:
-        self._flush_pending()
-        latest=None
-        while True:
+        """Compatibility read for diagnostics; formal owners use poll_available."""
+        if not self._diagnostic_deliveries:
+            self._diagnostic_deliveries.extend(self.poll_available())
+        if not self._diagnostic_deliveries:
+            return None
+        return self._diagnostic_deliveries.pop(0)
+
+    def poll_available(self) -> tuple[RouteCandidate | SurfaceRouteCandidate, ...]:
+        delivered = []
+        for _ in range(2):
             try:candidate=self._results.get_nowait()
             except Empty:
-                self._flush_pending()
-                if latest is not None:
-                    if (self._last_submitted is not None
-                            and latest.request_sequence >= self._last_submitted.request.sequence):
-                        self._last_submitted=None
-                    return latest
-                if (not self._closed and not self._process.is_alive()
-                        and self._last_submitted is not None
-                        and not self._death_reported):
-                    self._death_reported=True
-                    failed=_failure_candidate(
-                        self._last_submitted, "planner_worker_died",
-                    )
-                    self._last_submitted=None
-                    return failed
-                return None
-            if latest is None or candidate.request_sequence>=latest.request_sequence:
-                latest=candidate
+                break
+            delivered.append(candidate)
+            matched = next((job for job in self._submitted
+                if self._matches_submission(candidate, job)), None)
+            if matched is not None:
+                self._submitted.remove(matched)
+        if not self._closed and not self._process.is_alive():
+            for job in tuple(self._submitted)[:2 - len(delivered)]:
+                delivered.append(_failure_candidate(job, "planner_worker_died"))
+                self._submitted.remove(job)
+        return tuple(delivered)
+
+    @staticmethod
+    def _matches_submission(candidate, job: _PlanningJob) -> bool:
+        request = job.request
+        if request.work_identity is not None:
+            return candidate.work_identity == request.work_identity
+        # Diagnostic jobs have no computation scope. Match their explicit
+        # producer fields; never manufacture a generation for them.
+        return (candidate.work_identity is None
+                and (candidate.world_session, candidate.request_id,
+                     candidate.request_sequence, candidate.goal_id, candidate.goal_revision)
+                == (request.world_session, request.request_id,
+                    request.sequence, request.goal_id, request.goal_revision))
 
     def terminate(self) -> None:
         if self._process.is_alive():self._process.terminate()
@@ -308,7 +317,8 @@ class PlannerWorker:
     def close(self) -> None:
         if self._closed:return
         self._closed=True
-        self._pending=None
+        self._submitted.clear()
+        self._diagnostic_deliveries.clear()
         if self._process.is_alive():
             _replace(self._requests,None)
             self._process.join(2)

@@ -26,7 +26,7 @@ class MigrationFaultTests(unittest.TestCase):
         expected = ("planning_coordinator._retry_or_fail",
                     "navigation_session.handle_internal_contract_failure",
                     "navigation_session._resolve_pending_retry",
-                    "navigation_session._wait_for_active_terminal")
+                    "retry_ledger.begin_recovery")
         for name, function in zip(FAULT_CASES, expected):
             with self.subTest(name=name):
                 record = observe(("faults/" + name, "faults", name))

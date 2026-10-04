@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from mc2p.motion_nav.navigation_owners import GoalRequestLedger
+
 from dataclasses import replace
 from pathlib import Path
 import unittest
@@ -115,6 +117,10 @@ def without_inventory(snapshot):
     )
 
 
+def placement_scope(interaction):
+    return GoalRequestLedger().bind_computation_scope(interaction.goal_id, interaction.world_session)
+
+
 def requirement(**changes) -> RequiredInteraction:
     values = dict(
         interaction_id="placement-1",
@@ -157,7 +163,7 @@ class BlockPlacementTransactionTests(unittest.TestCase):
     def setUp(self):
         self.adapter = NavigationObservationAdapter()
         self.clock = [150_000_000]
-        self.transaction = BlockPlacementTransaction(requirement(), clock_ns=lambda: self.clock[0])
+        self.transaction = BlockPlacementTransaction(requirement(), clock_ns=lambda: self.clock[0], computation_scope=placement_scope(requirement()))
 
     def _propose(self, snapshot):
         self.clock[0] = snapshot.received_at_monotonic_ns
@@ -170,7 +176,7 @@ class BlockPlacementTransactionTests(unittest.TestCase):
         self.assertEqual(proposal.operation, InteractBlockV1(*SUPPORT, "east"))
         self.assertEqual(proposal.observation_request.air_positions, (DESTINATION,))
 
-        other = BlockPlacementTransaction(requirement(interaction_id="placement-2"))
+        other = BlockPlacementTransaction(requirement(interaction_id="placement-2"), computation_scope=placement_scope(requirement(interaction_id="placement-2")))
         snapshot = observation(2, targeted=False)
         frame = self.adapter.ingest(snapshot)
         rejected = other.propose(snapshot, frame)
@@ -180,7 +186,10 @@ class BlockPlacementTransactionTests(unittest.TestCase):
         edge = BlockPlacementTransaction(requirement(
             interaction_id="placement-sneak",
             requires_sneak=True,
-        ))
+        ), computation_scope=placement_scope(requirement(
+            interaction_id="placement-sneak",
+            requires_sneak=True,
+        )))
         not_sneaking = edge.propose(observation(3), self.adapter.ingest(observation(3)))
         self.assertIsNone(not_sneaking.operation)
         self.assertEqual(not_sneaking.reason, "sneak_not_confirmed")
@@ -238,7 +247,7 @@ class BlockPlacementTransactionTests(unittest.TestCase):
         self.assertIsNone(wrong_item.operation)
         self.assertTrue(self.transaction.report.terminal)
 
-        overlapping = BlockPlacementTransaction(requirement(interaction_id="placement-3"))
+        overlapping = BlockPlacementTransaction(requirement(interaction_id="placement-3"), computation_scope=placement_scope(requirement(interaction_id="placement-3")))
         snapshot = observation(2, position=(1.5, 63.0, 0.5))
         frame = self.adapter.ingest(snapshot)
         blocked = overlapping.propose(snapshot, frame)
@@ -247,7 +256,9 @@ class BlockPlacementTransactionTests(unittest.TestCase):
 
         occupied = BlockPlacementTransaction(requirement(
             interaction_id="placement-occupied",
-        ))
+        ), computation_scope=placement_scope(requirement(
+            interaction_id="placement-occupied",
+        )))
         snapshot = observation(3, destination="minecraft:stone")
         occupied_result = occupied.propose(snapshot, self.adapter.ingest(snapshot))
         self.assertEqual(occupied_result.reason, "destination_not_known_air")
@@ -258,7 +269,7 @@ class BlockPlacementTransactionTests(unittest.TestCase):
         self.assertTrue(occupied.report.terminal)
 
         with self.assertRaises(ContractViolation):
-            BlockPlacementTransaction(requirement(world_session="other/session")).propose(
+            BlockPlacementTransaction(requirement(world_session="other/session"), computation_scope=placement_scope(requirement(world_session="other/session"))).propose(
                 snapshot, frame,
             )
 
@@ -291,7 +302,7 @@ class BlockPlacementTransactionTests(unittest.TestCase):
         )
 
     def test_world_confirmation_without_inventory_still_reaches_fixed_deadline(self):
-        transaction = BlockPlacementTransaction(requirement(maximum_attempts=1), clock_ns=lambda: self.clock[0])
+        transaction = BlockPlacementTransaction(requirement(maximum_attempts=1), clock_ns=lambda: self.clock[0], computation_scope=placement_scope(requirement(maximum_attempts=1)))
         snapshot = observation(1)
         proposal = transaction.propose(snapshot, self.adapter.ingest(snapshot))
         transaction.register_dispatch(
@@ -339,7 +350,7 @@ class BlockPlacementTransactionTests(unittest.TestCase):
         self.assertEqual(confirmed.state, PlacementState.COMPLETE)
 
     def test_complete_evidence_at_deadline_cannot_revive_confirmation(self):
-        transaction = BlockPlacementTransaction(requirement(maximum_attempts=1), clock_ns=lambda: self.clock[0])
+        transaction = BlockPlacementTransaction(requirement(maximum_attempts=1), clock_ns=lambda: self.clock[0], computation_scope=placement_scope(requirement(maximum_attempts=1)))
         snapshot = observation(1, count=3)
         proposal = transaction.propose(snapshot, self.adapter.ingest(snapshot))
         transaction.register_dispatch(
@@ -504,7 +515,7 @@ class RuntimeBlockPlacementDriverTests(unittest.TestCase):
         )
         driver = RuntimeBlockPlacementDriver(
             runtime,
-            BlockPlacementTransaction(edge),
+            BlockPlacementTransaction(edge, computation_scope=placement_scope(edge)),
             approach_mode=profiles.ground_modes.require(MovementMode.CROUCH),
             clock_ns=lambda: clock[0],
         )
@@ -529,7 +540,7 @@ class RuntimeBlockPlacementDriverTests(unittest.TestCase):
         ))
         self.assertTrue(reset.succeeded)
         self.addCleanup(runtime.close)
-        transaction = BlockPlacementTransaction(requirement())
+        transaction = BlockPlacementTransaction(requirement(), computation_scope=placement_scope(requirement()))
         driver = RuntimeBlockPlacementDriver(
             runtime, transaction, clock_ns=lambda: clock[0],
         )
@@ -593,7 +604,7 @@ class RuntimeBlockPlacementDriverTests(unittest.TestCase):
         ))
         self.assertTrue(reset.succeeded)
         self.addCleanup(runtime.close)
-        transaction = BlockPlacementTransaction(requirement())
+        transaction = BlockPlacementTransaction(requirement(), computation_scope=placement_scope(requirement()))
         driver = RuntimeBlockPlacementDriver(
             runtime,
             transaction,
@@ -657,7 +668,7 @@ class RuntimeBlockPlacementDriverTests(unittest.TestCase):
         ))
         self.assertTrue(reset.succeeded)
         self.addCleanup(runtime.close)
-        transaction = BlockPlacementTransaction(requirement())
+        transaction = BlockPlacementTransaction(requirement(), computation_scope=placement_scope(requirement()))
         driver = RuntimeBlockPlacementDriver(
             runtime,
             transaction,

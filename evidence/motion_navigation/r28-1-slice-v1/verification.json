@@ -10,11 +10,12 @@
   "coordination_cases": {
     "passed": 1448,
     "failed": 0,
-    "uncovered_functions": [
-      "navigation_session.handle_internal_contract_failure",
-      "navigation_session._wait_for_active_terminal",
-      "navigation_session._resolve_pending_retry"
-    ]
+    "uncovered_functions": []
+  },
+  "supplemental_fault_coverage": {
+    "passed": 4,
+    "failed": 0,
+    "evidence": "supplemental-fault-coverage.json"
   },
   "product_v7": {
     "pairs": 2000,

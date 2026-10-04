@@ -1,3 +1,7 @@
+
+from mc2p.motion_nav.async_work import (
+    AsyncComputationScope, AsyncWorkIdentity, AsyncWorkKind, AsyncWorkWindow,
+)
 from dataclasses import replace
 import math
 import unittest
@@ -8,7 +12,10 @@ from mc2p.contracts.action_receipt import ClientInputApplicationV1
 from mc2p.contracts.action_v1 import ActionSnapshotV1, MovementV1
 from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.action_route import ActionRoute, JumpGapSegment, WalkSegment
-from mc2p.motion_nav.action_route_executor import ActionRouteExecutor, ActionRouteState
+from mc2p.motion_nav.action_route_executor import (
+    ActionRouteDecision, ActionRouteExecutor, ActionRouteState,
+)
+from mc2p.motion_nav.body_control import StopCause
 from mc2p.motion_nav.fixed_route import FixedRoute, RoutePoint
 from mc2p.motion_nav.jump_gap import JumpGapEdge
 from mc2p.motion_nav.online_motion import InputApplicationLedger
@@ -32,7 +39,8 @@ from mc2p.motion_nav.support_surfaces import (
 )
 from mc2p.motion_nav.world_model import Aabb, ObservationStamp
 from mc2p.motion_nav.route_admission import ActiveRoute, ExecutableCorridor, RouteAdmitter
-from mc2p.motion_nav.retry_ledger import RetryCause
+from mc2p.motion_nav.retry_ledger import LocalAttemptVerdict, RetryLedger
+from mc2p.motion_nav.route_body_controller import RouteControl
 from tests.motion_nav.test_b10_gap_solver import fixture
 from tests.motion_nav.test_b09_air_transitions import air_profile
 from tests.motion_nav.test_b07_step_transition import profile as step_profile
@@ -70,6 +78,19 @@ def solved_candidate():
         ),
     )
     return anchor, candidate
+
+
+def pending_domain_result(coordinator, connection, revision, result, anchor):
+    """Isolate domain rejection behind the same typed work gate as production."""
+    now = coordinator._clock()
+    identity = AsyncWorkIdentity(coordinator.computation_scope,
+        coordinator._owner_instance_id, AsyncWorkKind.MOTION_SOLVE, connection, revision)
+    window = AsyncWorkWindow(anchor.movement_tick_id, now, now + 1_000_000_000)
+    coordinator._work.begin(identity, window)
+    coordinator._remember_work_window(identity, window)
+    coordinator._pending_connection = connection
+    coordinator._candidate_revision = revision
+    return GapMotionSolveResult(connection, revision, result, 0, identity)
 
 
 class MotionCandidateAdmissionTests(unittest.TestCase):
@@ -896,6 +917,247 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
         )
         return anchor, physics_world, active, executor
 
+    def test_motion_coordinator_requires_explicit_task_ledger(self):
+        _, _, active, executor = self.coordinator_fixture("explicit-ledger")
+        with MotionSolverWorker(max_pending=1) as worker:
+            with self.assertRaises(TypeError):
+                MotionRouteCoordinator(active, executor, worker)
+
+    def test_action_index_advancement_starts_a_new_local_attempt_chain(self):
+        _, _, active, executor = self.coordinator_fixture("local-chain-reset")
+        ledger = RetryLedger("motion-task")
+        with MotionSolverWorker(max_pending=1) as worker:
+            coordinator = MotionRouteCoordinator(
+                active, executor, worker, retry_ledger=ledger,
+                computation_scope=AsyncComputationScope((active).world_session, (ledger).task_id, 1),
+            )
+            coordinator._record_local_failure("candidate-a")
+            coordinator._record_local_failure("worker-b")
+            self.assertEqual(coordinator._local_attempts.failure_count, 2)
+
+            executor.action_index = 1
+            coordinator._record_local_failure("new-action-a")
+
+            self.assertEqual(coordinator._local_attempts.failure_count, 1)
+            self.assertEqual(ledger.total_recovery_starts, 0)
+
+    def test_stop_request_does_not_reset_attempts_while_route_owner_remains(self):
+        anchor, physics_world, active, executor = self.coordinator_fixture(
+            "stop-retains-local-chain",
+        )
+        ledger = RetryLedger("motion-task")
+        frame = self.frame(physics_world._world, anchor.physics_state, 1)
+        with MotionSolverWorker(max_pending=1) as worker:
+            coordinator = MotionRouteCoordinator(
+                active, executor, worker, retry_ledger=ledger,
+                computation_scope=AsyncComputationScope((active).world_session, (ledger).task_id, 1),
+            )
+            coordinator.start(frame)
+            coordinator._record_local_failure("candidate-a")
+            coordinator._record_local_failure("worker-b")
+
+            RouteControl(active, executor, coordinator).request_stop(
+                StopCause.CANCELLED,
+            )
+
+            self.assertEqual(coordinator._local_attempts.failure_count, 2)
+            third = coordinator._record_local_failure("entry-c")
+            self.assertIs(third.verdict, LocalAttemptVerdict.EXHAUSTED)
+            self.assertEqual(coordinator._local_attempts.failure_count, 3)
+            self.assertEqual(ledger.total_recovery_starts, 0)
+
+    def test_anticipated_entry_failures_share_one_chain_across_candidate_revisions(self):
+        anchor, physics_world, active, executor = self.coordinator_fixture(
+            "anticipated-entry-chain",
+        )
+        first = active.action_route.actions[0]
+        final_id = SurfaceNodeId(0, 4, 64, 0)
+        final_surface = SupportSurface(
+            final_id, (.5, 64.0, 4.5), HorizontalRegion(0, 4, 1, 5),
+            1.0, ("minecraft:grass_block",), (),
+        )
+        second = JumpGapSegment(
+            JumpGapEdge(
+                first.end_surface.node_id, final_id,
+                "test-second-jump-gap", .9, (),
+            ),
+            first.end_surface, final_surface, (),
+        )
+        active = replace(
+            active,
+            action_route=ActionRoute(active.route_id, (first, second)),
+            corridor=ExecutableCorridor(
+                (*active.corridor.node_ids, final_id), (), 4.0, final_id,
+            ),
+        )
+        failure = SolveResult(
+            SolveStatus.NO_SOLUTION_WITHIN_SEARCH,
+            reasons=("anticipated_entry_changed",),
+        )
+        rejected = GapPreparationResult(
+            GapPreparationStatus.ADMISSION_REJECTED,
+            solve_result=failure,
+            reason="anticipated_entry_changed",
+            retryable=True,
+        )
+        ledger = RetryLedger("motion-task")
+        frame = self.frame(physics_world._world, anchor.physics_state, 1)
+        with MotionSolverWorker(max_pending=1) as worker:
+            coordinator = MotionRouteCoordinator(
+                active, executor, worker, retry_ledger=ledger,
+                computation_scope=AsyncComputationScope((active).world_session, (ledger).task_id, 1),
+            )
+            coordinator.start(frame)
+            connection = coordinator._connection_id(1)
+            with patch(
+                "mc2p.motion_nav.motion_coordination.prepare_planned_gap_motion",
+                return_value=rejected,
+            ):
+                for revision in (1, 2, 3):
+                    coordinator._pending_connection = connection
+                    coordinator._pending_action_index = 1
+                    coordinator._accept_result(
+                        pending_domain_result(coordinator, connection, revision, failure, anchor),
+                        anchor, physics_world, (),
+                        current_scope=coordinator.computation_scope,
+                    )
+
+            self.assertEqual(coordinator._local_attempts.failure_count, 3)
+            self.assertTrue(executor._cancel_requested)
+            self.assertEqual(
+                coordinator.last_failure_reason,
+                "motion_retry_exhausted:anticipated_entry_changed",
+            )
+            self.assertEqual(ledger.total_recovery_starts, 0)
+
+    def test_delivered_expired_results_share_one_local_chain(self):
+        anchor, physics_world, active, executor = self.coordinator_fixture(
+            "delivered-expiry-chain",
+        )
+        clock = [1]
+        jobs = []
+        ledger = RetryLedger("motion-task")
+        frame = self.frame(physics_world._world, anchor.physics_state, 1)
+        with MotionSolverWorker(max_pending=1) as worker:
+            coordinator = MotionRouteCoordinator(
+                active, executor, worker, retry_ledger=ledger,
+                clock_ns=lambda: clock[0],
+                computation_scope=AsyncComputationScope((active).world_session, (ledger).task_id, 1),
+            )
+            coordinator.start(frame)
+            with patch.object(worker, "is_alive", return_value=True), \
+                    patch.object(worker, "poll_available", return_value=()), \
+                    patch.object(
+                        worker, "submit",
+                        side_effect=lambda job: jobs.append(job) or True,
+                    ):
+                coordinator.decide(
+                    frame, anchor, InputApplicationLedger(max_records=64),
+                    physics_world, changed_cells=(),
+                    current_scope=coordinator.computation_scope,
+                )
+
+            for sequence in (2, 3, 4):
+                expired = _execute_job(jobs[-1])
+                clock[0] += 1_100_000_000
+                with patch.object(worker, "is_alive", return_value=True), \
+                        patch.object(
+                            worker, "poll_available", return_value=(expired,),
+                        ), patch.object(
+                            worker, "submit",
+                            side_effect=lambda job: jobs.append(job) or True,
+                        ):
+                    coordinator.decide(
+                        self.frame(
+                            physics_world._world,
+                            anchor.physics_state,
+                            sequence,
+                        ),
+                        anchor, InputApplicationLedger(max_records=64),
+                        physics_world, changed_cells=(),
+                        current_scope=coordinator.computation_scope,
+                    )
+
+            self.assertEqual(coordinator._local_attempts.failure_count, 3)
+            self.assertTrue(executor._cancel_requested)
+            self.assertEqual(
+                coordinator.last_failure_reason,
+                "motion_solver_retry_exhausted",
+            )
+            self.assertEqual(ledger.total_recovery_starts, 0)
+
+    def test_entry_change_before_submission_shares_one_local_chain(self):
+        anchor, physics_world, active, executor = self.coordinator_fixture(
+            "submission-entry-chain",
+        )
+        ledger = RetryLedger("motion-task")
+        frame = self.frame(physics_world._world, anchor.physics_state, 1)
+        neutral = ActionRouteDecision(
+            ActionRouteState.RUNNING,
+            MovementV1(),
+            None,
+            1,
+            0,
+            "waiting_for_verified_motion",
+            (),
+            0,
+            submit_input=False,
+        )
+        with MotionSolverWorker(max_pending=1) as worker:
+            coordinator = MotionRouteCoordinator(
+                active, executor, worker, retry_ledger=ledger,
+                computation_scope=AsyncComputationScope((active).world_session, (ledger).task_id, 1),
+            )
+            coordinator.start(frame)
+            with patch.object(
+                    executor, "current_verified_motion_can_start",
+                    return_value=False,
+                ), patch.object(
+                    executor, "discard_unstarted_verified_motion",
+                ), patch.object(
+                    coordinator, "_submit_current",
+                ), patch.object(
+                    executor, "decide", return_value=neutral,
+                ):
+                for revision in (1, 2, 3):
+                    coordinator._candidate_revision = revision
+                    coordinator.decide(
+                        self.frame(
+                            physics_world._world,
+                            anchor.physics_state,
+                            revision,
+                        ),
+                        anchor, InputApplicationLedger(max_records=64),
+                        physics_world, changed_cells=(),
+                        current_scope=coordinator.computation_scope,
+                    )
+
+            self.assertEqual(coordinator._local_attempts.failure_count, 3)
+            self.assertTrue(executor._cancel_requested)
+            self.assertEqual(
+                coordinator.last_failure_reason,
+                "verified_entry_changed_before_submission",
+            )
+            self.assertEqual(ledger.total_recovery_starts, 0)
+
+    def test_two_motion_routes_can_only_use_the_same_explicit_task_ledger(self):
+        _, _, first_route, first_executor = self.coordinator_fixture("route-one")
+        _, _, second_route, second_executor = self.coordinator_fixture("route-two")
+        ledger = RetryLedger("shared-motion-task")
+        with MotionSolverWorker(max_pending=2) as worker:
+            first = MotionRouteCoordinator(
+                first_route, first_executor, worker, retry_ledger=ledger,
+                computation_scope=AsyncComputationScope((first_route).world_session, (ledger).task_id, 1),
+            )
+            second = MotionRouteCoordinator(
+                second_route, second_executor, worker, retry_ledger=ledger,
+                computation_scope=AsyncComputationScope((second_route).world_session, (ledger).task_id, 1),
+            )
+
+            self.assertIs(first.retry_ledger, ledger)
+            self.assertIs(second.retry_ledger, ledger)
+            self.assertEqual(first.retry_ledger.task_id, "shared-motion-task")
+
     def test_old_motion_revision_cannot_terminate_new_revision(self):
         from mc2p.motion_nav.async_work import AsyncAdmissionDisposition
         anchor, physics_world, active, executor = self.coordinator_fixture(
@@ -906,7 +1168,9 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
         jobs = []
         try:
             coordinator = MotionRouteCoordinator(
-                active, executor, worker, clock_ns=lambda: clock[0],
+                active, executor, worker, retry_ledger=RetryLedger(active.goal_id),
+                clock_ns=lambda: clock[0],
+                computation_scope=AsyncComputationScope((active).world_session, (RetryLedger(active.goal_id)).task_id, 1),
             )
             current_frame = self.frame(
                 physics_world._world, anchor.physics_state, 1,
@@ -922,6 +1186,7 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
                     current_frame, anchor,
                     InputApplicationLedger(max_records=64),
                     physics_world, changed_cells=(),
+                    current_scope=coordinator.computation_scope,
                 )
             old_result = _execute_job(jobs[0])
             old_identity = jobs[0].work_identity
@@ -937,6 +1202,7 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
                     self.frame(physics_world._world, anchor.physics_state, 2),
                     anchor, InputApplicationLedger(max_records=64),
                     physics_world, changed_cells=(),
+                    current_scope=coordinator.computation_scope,
                 )
 
             self.assertEqual(len(jobs), 2)
@@ -972,7 +1238,9 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
         worker = MotionSolverWorker(max_pending=1)
         try:
             coordinator = MotionRouteCoordinator(
-                active, executor, worker, clock_ns=lambda: clock[0],
+                active, executor, worker, retry_ledger=RetryLedger(active.goal_id),
+                clock_ns=lambda: clock[0],
+                computation_scope=AsyncComputationScope((active).world_session, (RetryLedger(active.goal_id)).task_id, 1),
             )
             coordinator.start(self.frame(
                 physics_world._world, anchor.physics_state, 1,
@@ -989,6 +1257,7 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
                         ),
                         anchor, InputApplicationLedger(max_records=64),
                         physics_world, changed_cells=(),
+                        current_scope=coordinator.computation_scope,
                     )
                     clock[0] += 1_100_000_000
 
@@ -997,9 +1266,8 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
                 decision.reason_code,
                 "motion_unsolvable:motion_solver_retry_exhausted",
             )
-            self.assertEqual(
-                coordinator.retry_ledger.count_for(RetryCause.PLANNING), 3,
-            )
+            self.assertEqual(coordinator.retry_ledger.total_recovery_starts, 0)
+            self.assertEqual(coordinator._local_attempts.failure_count, 3)
         finally:
             worker.close()
 
@@ -1304,10 +1572,14 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
         frame = self.frame(physics_world._world, anchor.physics_state, 1)
         ledger = InputApplicationLedger(max_records=64)
         with MotionSolverWorker(max_pending=4) as worker:
-            coordinator = MotionRouteCoordinator(active, executor, worker)
+            coordinator = MotionRouteCoordinator(
+                active, executor, worker, retry_ledger=RetryLedger(active.goal_id),
+                computation_scope=AsyncComputationScope((active).world_session, (RetryLedger(active.goal_id)).task_id, 1),
+            )
             coordinator.start(frame)
             decision = coordinator.decide(
                 frame, anchor, ledger, physics_world, changed_cells=(),
+                current_scope=coordinator.computation_scope,
             )
             self.assertTrue(decision.submit_input)
             self.assertIsNone(decision.verified_command_index)
@@ -1322,6 +1594,7 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
                 decision = coordinator.decide(
                     frame, anchor, ledger, physics_world, changed_cells=(),
                     result_poll_sequence=poll_sequence,
+                    current_scope=coordinator.computation_scope,
                 )
 
         self.assertTrue(decision.submit_input)
@@ -1375,11 +1648,15 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
         frame = self.frame(physics_world._world, misaligned_state, 1)
         ledger = InputApplicationLedger(max_records=64)
         with MotionSolverWorker(max_pending=4) as worker:
-            coordinator = MotionRouteCoordinator(active, executor, worker)
+            coordinator = MotionRouteCoordinator(
+                active, executor, worker, retry_ledger=RetryLedger(active.goal_id),
+                computation_scope=AsyncComputationScope((active).world_session, (RetryLedger(active.goal_id)).task_id, 1),
+            )
             coordinator.start(frame)
 
             aligning = coordinator.decide(
                 frame, anchor, ledger, physics_world, changed_cells=(),
+                current_scope=coordinator.computation_scope,
             )
 
             self.assertTrue(aligning.submit_input)
@@ -1399,6 +1676,7 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
             decision = coordinator.decide(
                 aligned_frame, aligned_anchor, ledger, physics_world,
                 changed_cells=(),
+                current_scope=coordinator.computation_scope,
             )
             from tests.motion_nav.preparation_fixture import apply_tick
             aligned_anchor = apply_tick(aligned_anchor, physics_world, ledger, decision.movement)
@@ -1411,6 +1689,7 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
                 decision = coordinator.decide(
                     aligned_frame, aligned_anchor, ledger, physics_world,
                     changed_cells=(), result_poll_sequence=poll_sequence,
+                    current_scope=coordinator.computation_scope,
                 )
 
         self.assertTrue(decision.submit_input)
@@ -1465,7 +1744,10 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
         )
         jobs = []
         with MotionSolverWorker(max_pending=1) as worker:
-            coordinator = MotionRouteCoordinator(active, executor, worker)
+            coordinator = MotionRouteCoordinator(
+                active, executor, worker, retry_ledger=RetryLedger(active.goal_id),
+                computation_scope=AsyncComputationScope((active).world_session, (RetryLedger(active.goal_id)).task_id, 1),
+            )
             coordinator.start(current_frame)
             with (
                 patch.object(worker, "is_alive", return_value=True),
@@ -1479,6 +1761,7 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
                     current_frame, anchor,
                     InputApplicationLedger(max_records=64),
                     physics_world, changed_cells=(),
+                    current_scope=coordinator.computation_scope,
                 )
 
             self.assertEqual(len(jobs), 1)
@@ -1517,6 +1800,7 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
                     predicted_frame, boundary_anchor,
                     ledger,
                     physics_world, changed_cells=(),
+                    current_scope=coordinator.computation_scope,
                 )
 
         self.assertEqual(decision.action_index, 0)
@@ -1571,13 +1855,17 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
         ledger = InputApplicationLedger(max_records=64)
         worker = MotionSolverWorker(max_pending=4)
         try:
-            coordinator = MotionRouteCoordinator(active, executor, worker)
+            coordinator = MotionRouteCoordinator(
+                active, executor, worker, retry_ledger=RetryLedger(active.goal_id),
+                computation_scope=AsyncComputationScope((active).world_session, (RetryLedger(active.goal_id)).task_id, 1),
+            )
             coordinator.start(frame)
             worker._process.terminate()
             worker._process.join(2)
 
             decision = coordinator.decide(
                 frame, anchor, ledger, physics_world, changed_cells=(),
+                current_scope=coordinator.computation_scope,
             )
 
             self.assertFalse(decision.submit_input)
@@ -1618,7 +1906,10 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
         worker = MotionSolverWorker(max_pending=4)
         ledger = InputApplicationLedger(max_records=64)
         try:
-            coordinator = MotionRouteCoordinator(active, executor, worker)
+            coordinator = MotionRouteCoordinator(
+                active, executor, worker, retry_ledger=RetryLedger(active.goal_id),
+                computation_scope=AsyncComputationScope((active).world_session, (RetryLedger(active.goal_id)).task_id, 1),
+            )
             coordinator.start(self.frame(
                 physics_world._world, anchor.physics_state, 1,
             ))
@@ -1638,6 +1929,7 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
                             current.observation_sequence_id,
                         ),
                         current, ledger, physics_world, changed_cells=(),
+                        current_scope=coordinator.computation_scope,
                     )
                     self.assertIs(decision.state, ActionRouteState.RUNNING)
                     self.assertEqual(
@@ -1653,6 +1945,7 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
                         exhausted.observation_sequence_id,
                     ),
                     exhausted, ledger, physics_world, changed_cells=(),
+                    current_scope=coordinator.computation_scope,
                 )
 
             self.assertIs(decision.state, ActionRouteState.UNSUPPORTED)
@@ -1660,9 +1953,8 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
                 decision.reason_code,
                 "motion_unsolvable:motion_solver_retry_exhausted",
             )
-            self.assertEqual(
-                coordinator.retry_ledger.count_for(RetryCause.PLANNING), 3,
-            )
+            self.assertEqual(coordinator.retry_ledger.total_recovery_starts, 0)
+            self.assertEqual(coordinator._local_attempts.failure_count, 3)
         finally:
             worker.close()
 
@@ -1704,7 +1996,10 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
             reasons=("revalidated_commands_failed",),
         )
         try:
-            coordinator = MotionRouteCoordinator(active, executor, worker)
+            coordinator = MotionRouteCoordinator(
+                active, executor, worker, retry_ledger=RetryLedger(active.goal_id),
+                computation_scope=AsyncComputationScope((active).world_session, (RetryLedger(active.goal_id)).task_id, 1),
+            )
             coordinator.start(current_frame)
             connection = coordinator._connection_id(0)
             rejected = GapPreparationResult(
@@ -1720,17 +2015,17 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
                 for revision in (1, 2):
                     coordinator._pending_connection = connection
                     coordinator._accept_result(
-                        GapMotionSolveResult(
-                            connection, revision, failure, 0,
-                        ),
+                        pending_domain_result(coordinator, connection, revision, failure, anchor),
                         anchor, physics_world, (),
+                        current_scope=coordinator.computation_scope,
                     )
                     self.assertIs(executor.state, ActionRouteState.RUNNING)
 
                 coordinator._pending_connection = connection
                 coordinator._accept_result(
-                    GapMotionSolveResult(connection, 3, failure, 0),
+                    pending_domain_result(coordinator, connection, 3, failure, anchor),
                     anchor, physics_world, (),
+                    current_scope=coordinator.computation_scope,
                 )
 
             self.assertIs(executor.state, ActionRouteState.CANCELLED)
@@ -1738,6 +2033,8 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
                 coordinator.last_failure_reason,
                 "motion_retry_exhausted:candidate_revalidation_failed",
             )
+            self.assertEqual(coordinator.retry_ledger.total_recovery_starts, 0)
+            self.assertEqual(coordinator._local_attempts.failure_count, 3)
         finally:
             worker.close()
 

@@ -1,4 +1,6 @@
 """Recovery evidence keeps its own horizon across short moving air actions."""
+
+from mc2p.motion_nav.async_work import AsyncComputationScope
 from dataclasses import replace
 from pathlib import Path
 import pickle
@@ -16,6 +18,7 @@ from mc2p.motion_nav.motion_solver import (
     revalidate_gap_motion, solve_air_transition, solve_one_cell_gap,
 )
 from mc2p.motion_nav.online_motion import CandidateExecutionWindow
+from mc2p.motion_nav.retry_ledger import RetryLedger
 from tests.motion_nav.test_air_transition_solver import fixture as air_fixture
 from tests.motion_nav.test_b10_gap_solver import fixture as gap_fixture
 
@@ -403,12 +406,14 @@ class ActionContinuitySolverLimitsTests(unittest.TestCase):
         )
         worker = HeldWorker()
         coordinator = MotionRouteCoordinator(
-            route, executor, worker, clock_ns=lambda: 1,
+            route, executor, worker, retry_ledger=RetryLedger(route.goal_id),
+            clock_ns=lambda: 1,
+            computation_scope=AsyncComputationScope((route).world_session, (RetryLedger(route.goal_id)).task_id, 1),
         )
         first_frame = fixture.frame(old_world._world, anchor.physics_state, 1)
         coordinator.start(first_frame)
         ledger = InputApplicationLedger()
-        coordinator.decide(first_frame, anchor, ledger, old_world, changed_cells=())
+        coordinator.decide(first_frame, anchor, ledger, old_world, changed_cells=(), current_scope=coordinator.computation_scope)
         result = _execute_job(worker.jobs[0])
         self.assertIs(result.solve_result.status, SolveStatus.SOLVED)
         changed = (0, 63, 2)
@@ -425,12 +430,14 @@ class ActionContinuitySolverLimitsTests(unittest.TestCase):
             fixture.frame(current._world, anchor.physics_state, 2),
             replace(anchor, observation_sequence_id=4), ledger, current,
             changed_cells=(changed,),
+            current_scope=coordinator.computation_scope,
         )
         worker.ready = (result,)
         decision = coordinator.decide(
             fixture.frame(current._world, anchor.physics_state, 3),
             replace(anchor, observation_sequence_id=5), ledger, current,
             changed_cells=(),
+            current_scope=coordinator.computation_scope,
         )
 
         self.assertFalse(executor.has_verified_motion(0))

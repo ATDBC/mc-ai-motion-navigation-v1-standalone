@@ -22,17 +22,36 @@ class AsyncWorkKind(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
-class AsyncWorkIdentity:
+class AsyncComputationScope:
     world_session_id: str
     task_id: str
+    generation: int
+
+    def __post_init__(self) -> None:
+        require_identifier(self.world_session_id, "computation world session")
+        require_identifier(self.task_id, "computation task")
+        if type(self.generation) is not int or self.generation < 1:
+            raise ContractViolation("computation generation must be positive")
+
+
+class ComputationInvalidationCause(StrEnum):
+    WORLD_CHANGED = "world_changed"
+    CANCELLED = "cancelled"
+    NEW_STATE_ANCHOR = "new_state_anchor"
+    BASIS_INVALIDATED = "basis_invalidated"
+
+
+@dataclass(frozen=True, slots=True)
+class AsyncWorkIdentity:
+    scope: AsyncComputationScope
     owner_instance_id: str
     work_kind: AsyncWorkKind
     subject_id: str
     revision: int
 
     def __post_init__(self) -> None:
-        require_identifier(self.world_session_id, "async work world session")
-        require_identifier(self.task_id, "async work task")
+        if type(self.scope) is not AsyncComputationScope:
+            raise ContractViolation("async work computation scope must be typed")
         require_identifier(self.owner_instance_id, "async work owner")
         if type(self.work_kind) is not AsyncWorkKind:
             raise ContractViolation("async work kind must be typed")
@@ -41,11 +60,20 @@ class AsyncWorkIdentity:
             raise ContractViolation("async work revision must be positive")
 
     @property
+    def world_session_id(self) -> str:
+        return self.scope.world_session_id
+
+    @property
+    def task_id(self) -> str:
+        return self.scope.task_id
+
+    @property
     def key(self) -> str:
         value = json.dumps((
             self.world_session_id,
             self.work_kind.value,
             self.task_id,
+            self.scope.generation,
             self.owner_instance_id,
             self.subject_id,
             self.revision,
@@ -138,6 +166,9 @@ class WorkCheck(StrEnum):
     MISMATCH = "mismatch"
     FINISHED = "finished"
     EXPIRED = "expired"
+    STALE_SCOPE = "stale_scope"
+    OTHER_WORK = "other_work"
+    DUPLICATE = "duplicate"
 
 
 @dataclass(frozen=True, slots=True)
@@ -168,6 +199,8 @@ class AsyncOwnerDiagnostics:
     admissions: tuple[AsyncAdmissionRecord, ...]
     resources: tuple[tuple[AsyncWorkIdentity | None, str], ...] = ()
     fact_queries: tuple[AsyncFactQueryEvidence, ...] = ()
+    planning_work: tuple[tuple[AsyncWorkIdentity, AsyncWorkWindow], ...] = ()
+    pending_planning_receipts: tuple[AsyncWorkIdentity, ...] = ()
 
 
 class AsyncWorkLifecycle:
@@ -181,8 +214,9 @@ class AsyncWorkLifecycle:
         self.retirements: dict[AsyncWorkIdentity, WorkRetirementSummary] = {}
         self._history_limit = history_limit
         self._events: list[AsyncWorkEvent] = []
-        self._scope: tuple[str, str, str] | None = None
+        self._scope: tuple[str, str] | None = None
         self._last_revisions: dict[AsyncWorkKind, int] = {}
+        self._applied = False
 
     @property
     def events(self) -> tuple[AsyncWorkEvent, ...]:
@@ -191,29 +225,39 @@ class AsyncWorkLifecycle:
     def begin(self, identity: AsyncWorkIdentity, window: AsyncWorkWindow) -> None:
         if type(identity) is not AsyncWorkIdentity or type(window) is not AsyncWorkWindow:
             raise ContractViolation("async work begin requires identity and window")
-        scope = (identity.world_session_id, identity.task_id, identity.owner_instance_id)
+        scope = (identity.task_id, identity.owner_instance_id)
         if (self.identity is not None or identity in self.retirements
                 or identity.revision <= self._last_revisions.get(identity.work_kind, 0)
                 or (self._scope is not None and scope != self._scope)):
             raise ContractViolation("async work cannot restart an active or retired identity")
         self.identity, self.window = identity, window
+        self._applied = False
         self._scope = scope
         self._last_revisions[identity.work_kind] = identity.revision
         self._append(AsyncWorkEvent(identity, window, "begin", window.started_monotonic_ns))
 
-    def check(self, identity: AsyncWorkIdentity, now_ns: int) -> WorkCheck:
+    def check(self, identity: AsyncWorkIdentity, now_ns: int, *,
+              current_scope: AsyncComputationScope) -> WorkCheck:
         if type(identity) is not AsyncWorkIdentity:
             raise ContractViolation("async work check requires identity")
         if type(now_ns) is not int or now_ns < 0:
             raise ContractViolation("async work processing clock is invalid")
+        if type(current_scope) is not AsyncComputationScope:
+            raise ContractViolation("async work check requires current computation scope")
+        if identity.scope != current_scope:
+            return WorkCheck.STALE_SCOPE
         if identity != self.identity:
-            return WorkCheck.FINISHED if identity in self.retirements else WorkCheck.MISMATCH
+            if identity in self.retirements:
+                return WorkCheck.FINISHED
+            return WorkCheck.OTHER_WORK if self.identity is not None else WorkCheck.MISMATCH
         assert self.window is not None
-        return WorkCheck.EXPIRED if self.window.expired(now_ns) else WorkCheck.READY
+        if self.window.expired(now_ns):
+            return WorkCheck.EXPIRED
+        return WorkCheck.DUPLICATE if self._applied else WorkCheck.READY
 
     def finish(self, identity: AsyncWorkIdentity, cause: str, now_ns: int) -> WorkRetirementSummary:
         require_identifier(cause, "async work completion cause")
-        self.check(identity, now_ns)
+        self.check(identity, now_ns, current_scope=identity.scope)
         previous = self.retirements.get(identity)
         if identity != self.identity:
             return WorkRetirementSummary(identity, previous.cause if previous else cause, True)
@@ -226,10 +270,12 @@ class AsyncWorkLifecycle:
         self.identity, self.window = None, None
         return summary
 
-    def try_apply(self, identity: AsyncWorkIdentity, now_ns: int) -> bool:
-        if self.check(identity, now_ns) is not WorkCheck.READY:
+    def try_apply(self, identity: AsyncWorkIdentity, now_ns: int, *,
+                  current_scope: AsyncComputationScope) -> bool:
+        if self.check(identity, now_ns, current_scope=current_scope) is not WorkCheck.READY:
             return False
         assert self.window is not None
+        self._applied = True
         self._append(AsyncWorkEvent(identity, self.window, "apply", now_ns))
         return True
 

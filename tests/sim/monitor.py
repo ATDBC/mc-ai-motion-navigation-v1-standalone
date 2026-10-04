@@ -10,7 +10,9 @@ from mc2p.motion_nav.body_control import (
 )
 from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, MovementMode
 from mc2p.motion_nav.motion_risk import RiskActionRecord, RiskActionState
-from mc2p.motion_nav.retry_ledger import ProgressEvidence, ProgressKind
+from mc2p.motion_nav.retry_ledger import (
+    ProgressEvidence, ProgressKind, RecoveryBudgetKind, RecoveryLimitStatus,
+)
 from tests.sim.async_monitor import AsyncInvariantMonitor, VerificationAssessment, VerificationGap, VerificationStatus
 
 
@@ -71,6 +73,12 @@ class TickEvidence:
     async_work_diagnostics: tuple | None = None
     active_motion_mailboxes: tuple = ()
     applied_body_activity: BodyControlActivity | None = None
+    recovery_budget_kind: RecoveryBudgetKind | None = None
+    recovery_maximum_starts: int = 0
+    recovery_window_starts: int = 0
+    recovery_total_starts: int = 0
+    recovery_limit_status: RecoveryLimitStatus | None = None
+    recovery_limit_window_starts: int | None = None
 
 
 class InvariantMonitor:
@@ -303,7 +311,37 @@ class InvariantMonitor:
             self._record(e.tick, "I12", "active risk record capacity exceeded")
         if e.illegal_transition_count:
             self._record(e.tick, "I13", "navigation attempted an illegal transition")
-        if e.retry_total_failures is not None and e.retry_round_failures is not None:
+        if e.recovery_budget_kind is not None:
+            if (type(e.recovery_budget_kind) is not RecoveryBudgetKind
+                    or type(e.recovery_limit_status) is not RecoveryLimitStatus
+                    or e.recovery_maximum_starts <= 0
+                    or e.recovery_window_starts < 0
+                    or e.recovery_total_starts < e.recovery_window_starts
+                    or (e.recovery_limit_window_starts is not None
+                        and (type(e.recovery_limit_window_starts) is not int
+                             or e.recovery_limit_window_starts < 0))):
+                self._record(e.tick, "I5", "typed recovery diagnostics are invalid")
+            elif e.recovery_budget_kind is RecoveryBudgetKind.FINITE:
+                if (e.recovery_total_starts > e.recovery_maximum_starts
+                        or e.recovery_window_starts != e.recovery_total_starts
+                        or e.recovery_limit_status
+                            is RecoveryLimitStatus.PERSISTENT_RATE_EXHAUSTED):
+                    self._record(e.tick, "I5", "finite recovery budget was exceeded")
+            elif (e.recovery_window_starts > e.recovery_maximum_starts
+                    or e.recovery_limit_status
+                        is RecoveryLimitStatus.FINITE_TOTAL_EXHAUSTED):
+                self._record(e.tick, "I5", "persistent recovery window was exceeded")
+            if (e.recovery_limit_status
+                    is RecoveryLimitStatus.FINITE_TOTAL_EXHAUSTED
+                    and e.recovery_total_starts < e.recovery_maximum_starts):
+                self._record(e.tick, "I5", "finite recovery exhausted before its limit")
+            if (e.recovery_limit_status
+                    is RecoveryLimitStatus.PERSISTENT_RATE_EXHAUSTED
+                    and (e.recovery_limit_window_starts is None
+                         or e.recovery_limit_window_starts
+                            < e.recovery_maximum_starts)):
+                self._record(e.tick, "I5", "persistent recovery exhausted before its window limit")
+        elif e.retry_total_failures is not None and e.retry_round_failures is not None:
             if (e.retry_approved_round is not None
                     and e.retry_approved_total is not None
                     and (e.retry_approved_total > 12

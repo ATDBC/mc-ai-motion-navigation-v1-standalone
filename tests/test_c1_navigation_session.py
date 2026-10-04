@@ -266,6 +266,30 @@ class C1NavigationSessionTests(unittest.TestCase):
         self.assertIsNone(session.source)
         self.assertEqual(self.runtime.ordered_source_stats["active_sources"], 0)
 
+    def test_terminal_driver_rejects_late_goal_revision(self):
+        session = FakeNavigationSession()
+        driver = RuntimeNavigationDriver(
+            self.runtime, session, clock_ns=lambda: self.clock[0],
+        )
+        from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, MovementMode
+        from mc2p.motion_nav.world_model import Aabb
+        goal = GoalState(
+            Aabb(0, 64, 1, 1, 64.2, 2), GoalSupport.SOLID,
+            frozenset({MovementMode.WALK}), frozenset({"standing"}), .6,
+        )
+        driver.start("combat-goal", 1, goal, self.clock[0])
+        session.state, session.reason = NavigationSessionState.FAILED, "test_terminal"
+        driver._sync_report()
+
+        accepted = driver.replace_goal(
+            "combat-goal", 2, goal, self.clock[0],
+        )
+
+        self.assertFalse(accepted)
+        self.assertEqual(driver.goal_revision, 1)
+        self.assertFalse(session.updates)
+        self.assertTrue(driver.release("test_cleanup"))
+
     def test_stop_keeps_input_owner_until_session_finishes_safe_cancellation(self):
         session = FakeNavigationSession(cancel_steps=2)
         driver = RuntimeNavigationDriver(

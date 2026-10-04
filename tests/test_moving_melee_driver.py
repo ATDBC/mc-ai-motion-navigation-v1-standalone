@@ -198,6 +198,7 @@ class MovingMeleeDriverTests(unittest.TestCase):
         self.assertIsNotNone(driver.approach_driver)
         self.assertTrue(session.closed)
         self.assertIsNot(driver.navigation_session, session)
+        self.assertEqual(driver.navigation_session.same_task_rebuilds, 1)
         self.assertEqual(len(driver.navigation_session.starts), 1)
         self.assertEqual(
             driver.navigation_session.state,

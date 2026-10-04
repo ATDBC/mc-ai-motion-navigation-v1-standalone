@@ -4,7 +4,7 @@
 
 2026-10-02，[D052](../decisions/0052-share-action-entry-and-preserve-verification-limits.md) 的首个连续跨隙试点已经实施并取得四方向实机证据，旧演示失败保留。后续只读审查发现动作内部仍有单块出口和选优缺口，[D053](../decisions/0053-separate-safe-landing-continuation-and-motion-quality.md) 将安全落地、后续要求和运动质量分开。已实施范围见第 8 节，共同修正及剩余范围见第 9 节；验收只维护在第 12 节。
 
-日期：2026-10-02。状态：批次 5 的 v3 及原失败保留。按 [D051](../decisions/0051-remove-terminal-screening-and-fix-contact-control.md) 已撤回筛选；R28-C-01 查明旧注入混用了观察与碰撞地形，正式变化入口有界退出。共享协调和 R28-C-02 仍未关闭。终点接近先于开阔地跟随探针；R28 整体仍打开。
+日期：2026-10-04。状态：R28-1 与 R28-4 已按冻结范围完成；R28-3 已完成限定安全与功能交付，最终审查无未关闭 P0／P1／P2。结构净减少未通过、统计非退步未签署、响应 P95 七 tick 未达五 tick，R28-3 全阶段仍打开。下一步先完成结构收敛取舍，再进入正式跟随；当前未批准提前执行 R28-5。室内接近、正式跟随、长期产品门槛、R28-5、可选 R28-2 和整体 R28 仍打开，旧结果与失败不改写。
 
 三方复审后的批次 2—4 按 [D049](../decisions/0049-repair-product-baseline-before-r28-migration.md) 执行，分别保存于 `9cdd8a1`、`6dbb6a0`、`90bb0e0`。新 v2 清单为 1,589/1,600，旧清单复跑为 1,585/1,600，旧失败中 147 场转为成功、没有成功转失败。1,448 组协调回归逐项一致。代表性 Fabric 导航任务 12/12 完成；原总批次因记录封装失败，保留原结果并用完整原始流独立复核。结果和证据边界见[验收第 9 节](../acceptance/navigation-coordination-convergence.md#9-批次-24产品基线修正)。
 
@@ -14,7 +14,7 @@
 
 运行基线：本地 `56bd120`，对应公开整理版 `403a23f`。该基线的 R27、连续高度 M3 结论保留；本阶段不因方向评审而撤销旧证据，也不把旧通过数字当作 R28 结果。
 
-入口：[D048](../decisions/0048-converge-recovery-by-risk-and-product-evidence.md)、[目标接口](../architecture/navigation-coordination-v1.md#17-r28-协调收敛目标尚未实施)、[验收口径](../acceptance/navigation-coordination-convergence.md)。职责与接口只维护在 architecture；阈值、样本和统计定义只维护在 acceptance。
+入口：[D048](../decisions/0048-converge-recovery-by-risk-and-product-evidence.md)、[协调契约](../architecture/navigation-coordination-v1.md#17-r28-协调收敛契约与后续目标)、[验收口径](../acceptance/navigation-coordination-convergence.md)。职责与接口只维护在 architecture；阈值、样本和统计定义只维护在 acceptance。
 
 ## 1. 目标与范围
 
@@ -110,7 +110,11 @@ R28-1 的进入条件是：本批真实归属证据完整、严格安全门槛�
 
 完成条件：successor、世界切换、多工作同世代、旧否定结果和重复交付全部被正确处理；频繁修订不会反复取消计算，也不会把不适用的结果强行接纳。覆盖终点位置相同但终态或风险要求改变、身体入口改变及目标持续远离。身份检查只保留在明确边界，删去重复比较和已无消费者的退场状态；诊断仍可追溯实际开始、生效和终结。
 
+R28-4 结束后新增一项明确门槛：`spawn_successor()` 必须取得显式的新 `task_id`，或由任务管理层证明新任务身份；继续使用原任务身份只能走 `rebuild_same_task()`。正式跟随探针同时验证技能层没有用 successor 刷新持续任务预算。
+
 ### R28-4：统一无进展预算，结束重复等待
+
+状态：2026-10-04 已按冻结范围完成。最终接口和结果见 [R28-4 实施计划第 9 节](navigation-coordination-r28-4-budget-plan.md#9-实施结果)与[验收第 18 节](../acceptance/navigation-coordination-convergence.md#18-r28-4-持续任务恢复预算)。
 
 主要文件：`retry_ledger.py`、`navigation_handoff.py`、规划与信息拥有者；`motion_risk.py` 只调整调用，不重做账本。
 
@@ -158,7 +162,7 @@ R28-1 的进入条件是：本批真实归属证据完整、严格安全门槛�
 
 现有检查仍使用 AGENTS 指定环境。v1、v2、v3 已有清单和归档，结果及证据边界见验收第 8—10 节。v3 的工具证据保留；筛选的可复现性和失败性质不满足要求，修正版须另存，不能改写原 v3。
 
-首批于 2026-10-01 开工，批次 5 已交付并复审，累计五批。初始复核日期仍为 2026-10-15（按周一至周五计，不含开工日），按批次上限与日期先到者复核，用户明确暂停的期间顺延。D051 将剩余五批确定为 1、4、3、终点接近与开阔地跟随、5。室内跟随、疾跑跟随和全面路线平滑不扩大到这五批中。本文件不延长时间盒。
+首批于 2026-10-01 开工。R28-1 和 R28-4 已完成，下一批为 R28-3。初始复核日期仍为 2026-10-15（按周一至周五计，不含开工日），按批次上限与日期先到者复核，用户明确暂停的期间顺延。室内跟随、疾跑跟随和全面路线平滑不扩大到现行范围中。本文件不延长时间盒。
 
 ## 6. 旧路径迁移与删除清单
 
@@ -178,10 +182,10 @@ R28-1 的进入条件是：本批真实归属证据完整、严格安全门槛�
 | `_replace_request`、`_accept_goal_request`、`_advance_planning` 与 `propose` 的请求／修订比较 | 正式结果入口与当前任务候选接纳接替；删除转发前后的同义比较 | R28-3 |
 | `planning_coordinator.py`：`advance`、`_submit`、`_record_admission` | 作用范围、世代、工作关联在共同入口核对；当前目标、事实和身体接纳仍由领域核对 | R28-3 |
 | `motion_coordination.py`：`_accept_result`、`_retire_work`、`_record_admission` | 迁移重复的工作身份核对；保留动作证明、否定依据与实际窗口检查 | R28-3 |
-| `navigation_session.py`：`_end_probe_waits`、`_end_session_waits`、`_check_recovery_wait` | 活动等待由对应 owner 开始和结束，RetryLedger 统一核账 | R28-4 |
-| `_probe_movement`、`_information_look`、`_begin_action_acquisition`、`propose` 的等待计数与容量分支 | 迁到现有探边／信息拥有者和任务预算；删除重复刷新与计费 | R28-4 |
-| `retry_ledger.py`：`record_failure`、`record_progress` 的按原因配额 | 改为真实恢复与无进展的共同上限；原因计数只保留诊断，总期限不刷新 | R28-4 |
-| `planning_coordinator.py`：`retry_from_current`、`_retry_or_fail`；动作协调器的地面恢复等待 | 消费同一本任务预算；删除各域独立批准重试和重复等待记录 | R28-4 |
+| `navigation_session.py`：旧的 probe／Session wait 清理与恢复期限分支 | 已核销：活动等待由对应 owner 开始和结束；生产代码不再直接调用 `RetryLedger.end_wait()` | R28-4 完成 |
+| `_probe_movement`、`_information_look`、`_begin_action_acquisition`、`propose` 的等待计数与容量分支 | 已核销：探边、信息与任务预算各有唯一 owner；Session 只按固定顺序消费结果 | R28-4 完成 |
+| `retry_ledger.py`：`record_failure`、`record_progress` 的按原因配额 | 已核销：生产 `record_failure()` 已删除；原因只作诊断，正式流程读取有类型的恢复与期限状态 | R28-4 完成 |
+| `planning_coordinator.py`：`retry_from_current`、`_retry_or_fail`；动作协调器的地面恢复等待 | 已核销：任务恢复只由 F8 购买；规划与运动重建由各自 `LocalAttemptChain` 有界处理 | R28-4 完成 |
 | `navigation_lifecycle.py` 的转移表及 Session 的 `_transition` | 按架构第 17.6 节逐项归并；保留单一状态写入和合法转移检查 | R28-1／5 |
 | `navigation_session_driver.py` 的结束／接替公共接口与技能层调用者 | 共享入口接替生命周期编排；跟随仅提交业务请求，近战旧逻辑只作规模参照，首轮不顺带改战斗策略 | R28-1／跟随探针 |
 | `motion_candidate.py` 的 VerifiedMotionExecutor；`action_route_executor.py` 的在途输入／落地处理 | 保留严格迟到、丢样本、窗口过期和落地责任；只删除 Session 的重复处理 | 保留 |
@@ -426,6 +430,40 @@ Fabric 批次 `20261003T052654922472Z-54f75b98` 的平视二格下降为 2/2：�
 
 两个切片合并后，完整运动导航 984/984，协调集合 1,448/1,448。当前源码下的 v7 与第二个切片前 2,000/2,000 逐项一致。持续任务的专项检查覆盖到达后保持活动、再次修订、取消、在途停止输入、空中责任和伤害余额不补回。新任务 successor 仍按现行规则创建新的账本；持续目标不靠 successor 延长任务，这一边界没有在本切片改动。
 
-仍未迁移 `_restart_after_active_terminal`、探边自然完成／超时去向、替代规划失败去向，也未拆完 `propose`。`handle_internal_contract_failure`、`_wait_for_active_terminal`、`_resolve_pending_retry` 仍缺完整迁移清单入口覆盖。R28-1 不能标为完成，也不进入 R28-4。
+仍未迁移 `_restart_after_active_terminal`、探边自然完成／超时去向、替代规划失败去向，也未拆完 `propose`。四个补充故障场景已经覆盖先前缺失的四个迁移函数，当前 41 个登记函数都有入口证据；入口覆盖仍不替代关键分支的行为检查。R28-1 不能标为完成，也不进入 R28-4。
 
 实际结果和证据边界见[验收第 16 节](../acceptance/navigation-coordination-convergence.md#16-r28-1-共同恢复前两个切片)。
+
+剩余迁移按照[R28-1 剩余协调迁移实施计划](navigation-coordination-r28-1-completion-plan.md)的 A—E 五个串行任务推进。该计划不改变 R28-4、R28-3、正式跟随和动作质量的既定顺序。
+
+## 14. R28-1 完成与下一阶段
+
+日期：2026-10-03。R28-1 的冻结范围已完成。剩余交接去向、替代规划失败、探边退出、逐帧身体选择、信息推进和规划结果消费均已迁到既有 owner；没有新增生命周期状态或第二套恢复器。
+
+完整运动导航、协调集合、v7 和受影响 Fabric 均达到原门槛。第一次协调对照发现的两项探边潜行空档已经根治并恢复冻结轨迹。结果见[验收第 17 节](../acceptance/navigation-coordination-convergence.md#17-r28-1-剩余协调迁移完成)。
+
+下一批按既定顺序进入 **R28-4**：统一长期持续任务的速率预算、单次恢复期限和连续无进展期限。具体接口、串行任务和门槛见 [R28-4 持续任务恢复预算实施计划](navigation-coordination-r28-4-budget-plan.md)。R28-4 完成后再做 R28-3。室内终点接近与开阔地正式跟随仍按原计划作为扩展探针；不得在 R28-4 中顺手修改动作质量或终点控制。
+
+## 15. R28-4 完成与下一阶段
+
+日期：2026-10-04。R28-4 已按[R28-4 实施计划](navigation-coordination-r28-4-budget-plan.md)的冻结范围完成。有限任务继续按整项任务最多 12 次恢复；持续任务采用 60 秒内最多 12 次、单次恢复 10 秒和连续无进展 30 秒的统一预算。目标稳定满足、任务终态收尾、同任务重建和真正新任务已有不同契约。
+
+任务恢复只能从 F8 共同交接入口购买。规划和运动内部重建由各自的 `LocalAttemptChain` 限制，第三次局部失败有界结束；修改原因、候选、attempt 或 work identity 都不能刷新次数。所有生产 `record_failure()` 和直接调用 `RetryLedger.end_wait()` 的路径已经删除。
+
+新增 8 个正式链场景，加上复用的组件、分支和正式链证据，共覆盖 11 组要求。完整运动导航 1,124/1,124，协调集合 1,448/1,448，补充故障 4/4。冻结 v7 仍是 1,705/2,000；本轮新运行是 1,710/2,000，其中 1,995 项逐项一致，5 项既有晚到下降改善，没有成功转失败或安全违规。详细证据边界见[验收第 18 节](../acceptance/navigation-coordination-convergence.md#18-r28-4-持续任务恢复预算)。
+
+最终审查修正了结束恢复前遗漏期限检查、诊断读取会写状态和 I5 使用滑动后的窗口计数三项边界。最终直接受影响检查 242/242。Fabric 批次 `20261003T203156813297Z-ff291252` 的平视二格下降正常与首条晚一 tick 为 2/2；两场零伤害、来源释放，迟到实际生效，窗口外和无人负责输入为空。F8 世界偏离尚未在 Fabric 中稳定触发，保留为证据边界。
+
+本轮 9 个核心协调／driver 文件相对 `5536dea` 净增 1,250 行，R28 的协调代码总量净减少目标尚未完成。`spawn_successor()` 在 R28-4 关闭时仍由调用者保证使用新的 `task_id`；该显式接口约束后来由 R28-3 实施，见第 16 节。
+
+下一批按既定顺序进入 **R28-3**。室内终点接近、正式跟随、R28-5 和可选 R28-2 仍未完成；R28 整体保持打开。
+
+## 16. R28-3 限定交付与结构取舍
+
+2026-10-04，计算世代、普通目标修订保留计算、旧否定只退场原项、完整正结果绑定、两项有界 work 和显式新任务身份已实施。取消、世界变化、新锚点及相关依据失效撤销旧计算资格，原身体 owner 和已派发效果仍负责收尾。`050c10b` 已修复退场历史无界增长，定向复审通过；没有未关闭 P0／P1／P2。
+
+E2 完整运动导航 1,202/1,202、协调 1,448/1,448、补充故障 4/4、固定 v7 1,710/2,000。目标晚到层停顿恢复基线，规划提交增加 1.98%；八项代表 Fabric 符合各自判定，总体准备 P95 2.5268 ms。完整固定集合引用修复前候选，修复后的历史直接检查为 4/4，不混写为全量重跑。结果见[验收第 19 节](../acceptance/navigation-coordination-convergence.md#19-r28-3-异步计算世代与当前目标绑定)。
+
+结构净减少未通过。按 A0 十文件口径，`050c10b` 后为 14,729 行、字段 683、身份比较 210、退场调用 28、决定分支 1,708；相对 A0 为 +830／+22／+41／+7／+139。两次统计查看未做，产品非退步未签署，绝对响应 P95 为 7 tick，未达 5 tick。删除清单和必要状态的保留边界见[R28-3 计划第 8.10 节](navigation-coordination-r28-3-async-generation-plan.md#810-最终审查历史窗口修复与开放门槛)。
+
+下一步先确定结构收敛怎样完成。若要把剩余结构目标交给 R28-5，须先对 D048 和四类文档作显式范围／顺序决定，不能通过修改完成标签或移动代码解决。当前仍保留原顺序，未批准提前执行 R28-5；也不能在这个取舍完成前进入正式跟随验收。R28-3 全阶段、正式跟随、室内接近、长期门槛及整体 R28 均继续打开。

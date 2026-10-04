@@ -90,10 +90,11 @@ def run_successor_gap_case(runtime, task, profile, profiles, directory, deadline
             diagnostic()
         if driver.source is not None:
             raise RuntimeError("R27 original did not safely release")
-        successor = original.spawn_successor("r27-successor")
+        successor = original.spawn_successor("r27-successor", task_id="r27-successor-task")
         sessions.append(successor)
         driver = RuntimeNavigationDriver(runtime, successor)
-        driver.start("r27-same-goal", 1, goal, time.perf_counter_ns())
+        driver.start("r27-same-goal", 1, goal, time.perf_counter_ns(),
+                     task_id="r27-successor-task")
         for _ in range(60):
             result = driver.tick(profile, min(deadline_ns, time.perf_counter_ns() + 500_000_000))
             diagnostic()

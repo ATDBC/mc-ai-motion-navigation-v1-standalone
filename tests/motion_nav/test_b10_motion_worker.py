@@ -1,3 +1,5 @@
+
+from mc2p.motion_nav.async_work import AsyncComputationScope
 import time
 import unittest
 from unittest.mock import patch
@@ -22,11 +24,11 @@ class B10MotionWorkerTests(unittest.TestCase):
             (0, 1), LandingRegion(*target), CandidateExecutionWindow(11, 12),
         )
         first_identity = AsyncWorkIdentity(
-            anchor.session.value, "task", "owner-a",
+            AsyncComputationScope(anchor.session.value, "task", 1), "owner-a",
             AsyncWorkKind.MOTION_SOLVE, "edge", 1,
         )
         second_identity = AsyncWorkIdentity(
-            anchor.session.value, "task", "owner-b",
+            AsyncComputationScope(anchor.session.value, "task", 1), "owner-b",
             AsyncWorkKind.MOTION_SOLVE, "edge", 1,
         )
         results = tuple(_execute_job(GapMotionSolveJob(

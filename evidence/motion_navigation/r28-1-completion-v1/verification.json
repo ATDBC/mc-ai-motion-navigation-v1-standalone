@@ -1,0 +1,30 @@
+{
+  "schema_version": "mc2p.r28-1-completion-verification.v1",
+  "final_source_commit": "f6ab92de63525779564eacab42a5455f20334c10",
+  "unit_tests": {
+    "motion_navigation": {"passed": 1058, "failed": 0},
+    "task_a_to_e_direct": {"passed": 262, "failed": 0}
+  },
+  "simulation": {
+    "coordination_cases": {"passed": 1448, "failed": 0},
+    "supplemental_fault_cases": {"passed": 4, "failed": 0},
+    "product_v7": {"completed": 1705, "tasks": 2000, "safety_violations": 0, "exceptions": 0},
+    "coordination_frozen_pair_differences": 0,
+    "product_v7_frozen_pair_differences": 0
+  },
+  "fabric": {
+    "b11_run": "20261003T142354726601Z-e3982874",
+    "b11_positive": {"passed": 60, "tasks": 60},
+    "b11_negative": {"passed": 24, "tasks": 24},
+    "b11_parent_terminal_stop": {"passed": 20, "tasks": 20},
+    "review20_run": "20261003T143041165298Z-0493bf42",
+    "airborne_revision_cancel_matrix": {"passed": 24, "tasks": 24}
+  },
+  "known_open_scope": [
+    "R28-4 long-lived rate budgets",
+    "R28-3 asynchronous generation simplification",
+    "indoor terminal approach",
+    "formal follow probe",
+    "R28-5 final legacy-path retirement"
+  ]
+}

@@ -1,3 +1,5 @@
+
+from mc2p.motion_nav.async_work import AsyncComputationScope
 from dataclasses import replace
 import math
 import unittest
@@ -5,6 +7,7 @@ from unittest.mock import patch
 
 from mc2p.contracts.action_v1 import MovementV1
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
+from mc2p.motion_nav.retry_ledger import RetryLedger
 from mc2p.motion_nav.landing_edge_probe import LandingEdgeProbe
 from mc2p.motion_nav.online_motion import (
     CandidateExecutionWindow, MotionTickPhase, StateAnchor,
@@ -722,11 +725,15 @@ class ContinuousDescentTests(unittest.TestCase):
         ledger = InputApplicationLedger(max_records=64)
         jobs = []
         with MotionSolverWorker(max_pending=1) as worker:
-            coordinator = MotionRouteCoordinator(route, executor, worker)
+            coordinator = MotionRouteCoordinator(
+                route, executor, worker, retry_ledger=RetryLedger(route.goal_id),
+                computation_scope=AsyncComputationScope((route).world_session, (RetryLedger(route.goal_id)).task_id, 1),
+            )
             coordinator.start(initial_frame)
             executor.install_verified_motion(first.candidate)
             first_decision = coordinator.decide(
                 initial_frame, anchor, ledger, world, changed_cells=(),
+                current_scope=coordinator.computation_scope,
             )
             executor.register_verified_submission(
                 0, control_sequence=20,
@@ -758,6 +765,7 @@ class ContinuousDescentTests(unittest.TestCase):
                 next_decision = coordinator.decide(
                     applied_frame, applied_anchor, ledger, world,
                     changed_cells=(),
+                    current_scope=coordinator.computation_scope,
                 )
 
             # An airborne predicted exit must not be treated as a new observed
@@ -807,7 +815,7 @@ class ContinuousDescentTests(unittest.TestCase):
                 patch.object(worker, "poll_available", return_value=()),
                 patch.object(worker, "submit", side_effect=lambda job: jobs.append(job) or True),
             ):
-                coordinator.decide(current_frame, current_anchor, ledger, world, changed_cells=())
+                coordinator.decide(current_frame, current_anchor, ledger, world, changed_cells=(), current_scope=coordinator.computation_scope)
             self.assertEqual(len(jobs), 1)
             self.assertEqual(jobs[0].anchor, current_anchor)
             from tests.motion_nav.preparation_fixture import apply_tick
@@ -817,6 +825,7 @@ class ContinuousDescentTests(unittest.TestCase):
             )
             accepted = coordinator._accept_result(
                 _execute_job(jobs[0]), current_anchor, world, (), ledger,
+                current_scope=coordinator.computation_scope,
             )
             next_decision = executor.decide(
                 current_frame, state_anchor=current_anchor, input_ledger=ledger,

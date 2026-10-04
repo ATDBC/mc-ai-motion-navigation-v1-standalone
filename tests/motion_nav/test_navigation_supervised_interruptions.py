@@ -9,11 +9,14 @@ from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.intent_source import (
     ControlFrameProposalV1, OrderedIntentV1, ordered_intent_id,
 )
+from mc2p.contracts.report import ExecutionStatusV0, FailureCodeV0, FailureV0
+from mc2p.motion_nav.body_control import HandoffDisposition
 from tests.sim.backend import Perturbations
 from tests.sim.runner import Event, late_ticks, run
 from tests.sim.runner import _goal
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
-from mc2p.motion_nav.retry_ledger import WaitVerdict
+from mc2p.motion_nav.retry_ledger import RetryLedgerCapacityExceeded, WaitVerdict
+from mc2p.motion_nav.landing_edge_probe import LandingEdgeProbe
 from tests.sim.runner import Scenario
 from tests.sim.scenarios import (
     SCENARIOS, airborne_in_drop, drop_ledge, revise_goal_back,
@@ -42,6 +45,221 @@ def request_close(context):
 
 
 class SupervisedInterruptionTests(unittest.TestCase):
+    def test_direct_client_failure_release_checks_suspended_route_after_probe_exit(self):
+        self._assert_direct_client_failure_with_suspended_route(False)
+
+    def test_direct_client_failure_retains_source_until_suspended_route_has_evidence(self):
+        self._assert_direct_client_failure_with_suspended_route(True)
+
+    def _assert_direct_client_failure_with_suspended_route(self, missing_route_evidence):
+        stopped = False
+        injected = False
+        saw_probe = None
+        released_session = None
+
+        def control(context):
+            nonlocal stopped, injected, saw_probe, released_session
+            driver, session = context.driver, context.session
+            runtime = driver.runtime
+            deadline = context.clock[0] + 500_000_000
+            proposals = driver.prepare_proposals(deadline)
+            probe = session._edge_probe
+            if (not stopped and probe is not None and probe.ready
+                    and session._supervisor.incumbent_route is not None):
+                driver.discard_prepared()
+                driver.release("direct_release_suspended_route")
+                proposals = driver.prepare_proposals(deadline)
+                stopped = True
+                saw_probe = probe
+            result = runtime.control_frame(_task(deadline), BehaviorProfileV0(),
+                                           deadline, proposals=proposals)
+            if stopped and not injected and probe is not None and probe.owned:
+                frame = session.ingest(result.observation)
+                anchor = session.execution_anchor(result.observation, runtime.input_ledger)
+                evidence = session._supervisor.evaluate_quiescence(frame, runtime.input_ledger, anchor)
+                if evidence.disposition is HandoffDisposition.QUIESCENT:
+                    route = session._supervisor.incumbent_route
+                    self.assertIsNotNone(route, "suspended route must remain at probe release")
+                    result = replace(result, report=replace(result.report,
+                        status=ExecutionStatusV0.FAILED,
+                        failure=FailureV0(FailureCodeV0.CONTRACT,
+                            "injected suspended-route client failure", True, "client_behavior")))
+                    if missing_route_evidence:
+                        retained = replace(evidence, owner_id=route.owner_id,
+                            disposition=HandoffDisposition.RETAIN,
+                            reason="current_body_or_input_evidence_missing")
+                        with patch.object(type(route), "safe_to_release", return_value=retained):
+                            driver.adopt_result(result)
+                        self.assertIsNotNone(driver.source)
+                    else:
+                        driver.adopt_result(result)
+                    injected = True
+                    released_session = session
+                    self.assertFalse(probe.owned)
+                    self.assertEqual(session._retry_ledger.active_waits(probe.owner_id), ())
+                    if driver.source is None:
+                        self.assertIsNone(session._supervisor.incumbent_route)
+                        self.assertFalse(session.has_owned_body_control)
+                    else:
+                        self.assertIs(session._supervisor.incumbent_route, route)
+                        self.assertTrue(session.has_owned_body_control)
+                    return
+            driver.adopt_result(result)
+
+        result = run(replace(scenario("direct_drop_2"), name="direct_failure_probe_and_route"),
+                     control_step=control)
+        self.assertTrue(stopped)
+        self.assertTrue(injected)
+        self.assertFalse(saw_probe.owned)
+        self.assertFalse(released_session.has_owned_body_control)
+        self.assertEqual([entry for entry in result.violations
+            if entry[1] in {"I1", "I2", "I3", "I6"}], [])
+
+    def test_client_failure_at_probe_quiescence_finalizes_owner_before_source_release(self):
+        for evidence_kind in ("current", "missing", "stale"):
+            with self.subTest(evidence=evidence_kind):
+                injected = False
+
+                def control(context):
+                    nonlocal injected
+                    driver, session = context.driver, context.session
+                    runtime = driver.runtime
+                    deadline = context.clock[0] + 500_000_000
+                    proposals = driver.prepare_proposals(deadline)
+                    result = runtime.control_frame(_task(deadline), BehaviorProfileV0(),
+                                                   deadline, proposals=proposals)
+                    probe = session._edge_probe
+                    anchor = None
+                    evidence = None
+                    if not injected and probe is not None and probe.state.value == "stopping":
+                        frame = session.ingest(result.observation)
+                        anchor = session.execution_anchor(result.observation, runtime.input_ledger)
+                        evidence = session._supervisor.evaluate_quiescence(
+                            frame, runtime.input_ledger, anchor)
+                    if evidence is not None and evidence.disposition is HandoffDisposition.QUIESCENT:
+                        waits = session._retry_ledger.active_waits(probe.owner_id)
+                        self.assertIn("recovery", {wait.wait_id for wait in waits})
+                        self.assertTrue(any(wait.wait_id != "recovery" for wait in waits))
+                        result = replace(result, report=replace(result.report,
+                            status=ExecutionStatusV0.FAILED,
+                            failure=FailureV0(FailureCodeV0.CONTRACT,
+                                "injected structured client failure", True, "client_behavior")))
+                        if evidence_kind == "current":
+                            driver.adopt_result(result)
+                            self.assertIsNone(driver.source)
+                            self.assertFalse(probe.owned)
+                            self.assertIsNone(session._edge_probe)
+                            self.assertFalse(session.has_owned_body_control)
+                            self.assertEqual(session._retry_ledger.active_waits(probe.owner_id), ())
+                        else:
+                            unavailable = (None if evidence_kind == "missing" else
+                                replace(anchor, observation_sequence_id=anchor.observation_sequence_id - 1))
+                            with patch.object(session, "execution_anchor", return_value=unavailable):
+                                driver.adopt_result(result)
+                            self.assertIsNotNone(driver.source)
+                            self.assertIs(session._edge_probe, probe)
+                            self.assertTrue(probe.owned)
+                            self.assertEqual(session._retry_ledger.active_waits(probe.owner_id), waits)
+                        injected = True
+                    else:
+                        driver.adopt_result(result)
+
+                configured = replace(scenario("direct_drop_2"),
+                    name=f"client_failure_probe_quiescent_{evidence_kind}",
+                    events=[Event("cancel_exposed_probe", exposed_edge, request_release)])
+                result = run(configured, control_step=control)
+                self.assertTrue(injected, "current probe release boundary was not exercised")
+                self.assertEqual([entry for entry in result.violations
+                    if entry[1] in {"I1", "I2", "I3", "I6"}], [])
+
+    def test_cancel_failure_or_revision_stops_probe_and_suspended_route(self):
+        for interrupt in ("cancel", "failure", "revision"):
+            with self.subTest(interrupt=interrupt):
+                injected = False
+
+                def control(context):
+                    nonlocal injected
+                    driver = context.driver
+                    deadline = context.clock[0] + 500_000_000
+                    proposals = driver.prepare_proposals(deadline)
+                    probe = context.session._edge_probe
+                    if (not injected and probe is not None and probe.ready
+                            and context.session._supervisor.incumbent_route is not None):
+                        driver.discard_prepared()
+                        injected = True
+                        if interrupt == "cancel":
+                            driver.release("suspended_probe_cancel")
+                        elif interrupt == "failure":
+                            context.session.handle_internal_contract_failure("suspended_probe_failure")
+                        else:
+                            revise_goal_back(context)
+                        self.assertIs(context.session._edge_probe, probe)
+                        self.assertTrue(probe.owned)
+                        proposals = driver.prepare_proposals(deadline)
+                    result = driver.runtime.control_frame(_task(deadline), BehaviorProfileV0(),
+                                                          deadline, proposals=proposals)
+                    driver.adopt_result(result)
+
+                result = run(replace(scenario("direct_drop_2"),
+                    name=f"suspended_probe_{interrupt}"), control_step=control)
+                self.assertTrue(injected, "suspended route boundary was not exercised")
+                self.assert_safe_settled_result(result)
+                self.assertEqual(result.outcome,
+                    {"cancel": "cancelled", "failure": "failed", "revision": "success"}[interrupt])
+                if interrupt == "failure":
+                    self.assertEqual(result.reason, "suspended_probe_failure")
+
+    def test_releasing_view_or_pose_keeps_original_acquisition_deadline(self):
+        for missing in ("view", "pose"):
+            with self.subTest(missing=missing):
+                releasing_seen = False
+                original_ready = LandingEdgeProbe.handoff_ready
+
+                def blocked_release(probe, frame):
+                    nonlocal releasing_seen
+                    releasing_seen |= probe.releasing
+                    if missing == "view":
+                        body = replace(frame.body, pitch_radians=frame.body.pitch_radians + .1)
+                    else:
+                        body = replace(frame.body, is_sneaking=True, pose="crouching")
+                    return original_ready(probe, replace(frame, body=body))
+
+                with patch.object(LandingEdgeProbe, "handoff_ready", blocked_release):
+                    result = run(replace(scenario("direct_drop_2"),
+                        name=f"probe_releasing_missing_{missing}", expect="failed"))
+                self.assertTrue(releasing_seen)
+                self.assert_safe_settled_result(result)
+                self.assertEqual(result.reason, "edge_probe_acquisition_timeout")
+
+    def test_acquisition_wait_capacity_exhaustion_keeps_safe_retreat(self):
+        injected = False
+
+        def control(context):
+            nonlocal injected
+            deadline = context.clock[0] + 500_000_000
+            if injected or not exposed_edge(context):
+                context.driver.tick(BehaviorProfileV0(), deadline)
+                return
+            ledger = context.session._retry_ledger
+            original_begin = ledger.begin_wait
+
+            def full_acquisition(wait_id, *args):
+                if wait_id != "recovery":
+                    raise RetryLedgerCapacityExceeded("test acquisition capacity")
+                return original_begin(wait_id, *args)
+
+            with patch.object(ledger, "begin_wait", side_effect=full_acquisition):
+                context.driver.tick(BehaviorProfileV0(), deadline)
+            injected = True
+            self.assertIn("landing_edge_probe", context.session.diagnostics.controller_ids)
+            self.assertEqual(context.session.diagnostics.state.value, "stopping")
+
+        result = run(replace(scenario("direct_drop_2"),
+            name="probe_acquisition_capacity_full", expect="failed"), control_step=control)
+        self.assertTrue(injected)
+        self.assert_safe_settled_result(result)
+        self.assertEqual(result.reason, "acquisition_wait_capacity_exhausted")
+
     def test_goal_revision_during_probe_stop_is_committed_without_partial_state(self):
         revised_position = (.5, 62.0, 30.5)
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from mc2p.motion_nav.async_work import ComputationInvalidationCause
 import math
 from pathlib import Path
 import time
@@ -35,7 +36,7 @@ from mc2p.motion_nav.motion_residual import (
 )
 from mc2p.motion_nav.motion_risk import TaskDamageBudget, TaskRiskLedger
 from mc2p.motion_nav.motion_risk import RiskCommitEvidence, RiskCommitKind
-from mc2p.motion_nav.retry_ledger import RetryCause, RetryLedger, WaitPolicy
+from mc2p.motion_nav.retry_ledger import RetryLedger, WaitPolicy
 from mc2p.motion_nav.runtime_adapter import BodyState, NavigationFrame
 from mc2p.motion_nav.navigation_session import (
     NavigationSession,
@@ -112,6 +113,10 @@ class _InlinePlanner:
             air_profiles=air_profiles,
             ground_mode_profile=ground_mode,
         )
+
+    def poll_available(self):
+        candidate = self.poll_latest()
+        return () if candidate is None else (candidate,)
 
     def is_alive(self) -> bool:
         return True
@@ -489,9 +494,9 @@ class NavigationSessionTests(unittest.TestCase):
         self.assertIs(completed.report.state, NavigationSessionState.COMPLETE)
         before = session.report
 
-        with self.assertRaisesRegex(ContractViolation, "lifecycle event"):
-            session.update_goal("goal", 2, _goal(node.position))
+        accepted = session.update_goal("goal", 2, _goal(node.position))
 
+        self.assertFalse(accepted)
         self.assertEqual(session.report, before)
 
     def test_replan_after_reaching_goal_support_skips_graph_search(self):
@@ -513,7 +518,8 @@ class NavigationSessionTests(unittest.TestCase):
         ), initial)
         arrived = frame(world, 1, goal.position)
         session.observe(arrived, ())
-        session._reissue_request_from_current(arrived, "arrived_and_replanned")
+        session._reissue_request_from_current(arrived, "arrived_and_replanned",
+            computation_invalidation=ComputationInvalidationCause.NEW_STATE_ANCHOR)
         result = session.propose(arrived, None, 2_000_000_000)
         self.assertIs(result.report.state, NavigationSessionState.COMPLETE)
         self.assertFalse(planner.jobs)
@@ -1224,15 +1230,15 @@ class NavigationSessionTests(unittest.TestCase):
         self.assertIsNone(session._information_look(current))
         self.assertEqual(
             information_probe_movement(
-                current, frozenset(session._information_lower_required),
+                current, frozenset(session._information.lower_required),
             ),
             MovementV1(),
         )
 
         session._reason = "no_known_route_requires_information"
-        session._information_lower_required.clear()
+        session._information.lower_required.clear()
         session._information_look(current)
-        self.assertEqual(session._information_lower_required, set())
+        self.assertEqual(session._information.lower_required, set())
 
     def test_edge_probe_hold_keeps_sneak_while_verified_motion_is_pending(self):
         world = _known_world({
@@ -1555,7 +1561,7 @@ class NavigationSessionTests(unittest.TestCase):
         self.assertIs(proposal.report.state, NavigationSessionState.FAILED)
         self.assertEqual(proposal.report.reason, "old_air_input_unconfirmed")
 
-    def test_same_replan_cause_is_bounded_to_two_retries(self):
+    def test_finite_task_recovery_is_bounded_to_twelve_cycles(self):
         world = _known_world({
             (x, 0, 0): BlockGeometry.full_cube("minecraft:stone")
             for x in range(4)
@@ -1571,7 +1577,7 @@ class NavigationSessionTests(unittest.TestCase):
         )
         terminal = None
         ledger = InputApplicationLedger()
-        for sequence in range(1, 10):
+        for sequence in range(1, 40):
             if session._executor is not None:
                 _replace_route_executor(session, _RepeatingRecoveryExecutor(
                     ActionRouteState.NEEDS_REPLAN,
@@ -1588,8 +1594,8 @@ class NavigationSessionTests(unittest.TestCase):
         self.assertIsNotNone(terminal)
         self.assertIs(terminal.report.state, NavigationSessionState.FAILED,
                       session._supervisor.last_handoff)
-        self.assertEqual(terminal.report.reason, "replan_retry_exhausted")
-        self.assertEqual(session._request.sequence, 3)
+        self.assertEqual(terminal.report.reason, "task_recovery_budget_exhausted")
+        self.assertEqual(session._retry_ledger.total_recovery_starts, 12)
 
     def test_structurally_occluded_information_wait_is_bounded(self):
         world, unknown_gap = _known_endpoints_with_unknown_gap()
@@ -1777,13 +1783,18 @@ class NavigationSessionTests(unittest.TestCase):
         self.assertIs(type(session.active_route.action_route.actions[0]), StepSegment)
 
     def test_goal_revision_rejects_a_late_old_result_before_it_can_own_input(self):
+        class OldThenHeldPlanner(_InlinePlanner):
+            def poll_available(self):
+                if self.jobs and self.jobs[0][3].goal_revision > 1:
+                    return ()
+                return super().poll_available()
         world = _known_world({
             (x, 0, 0): BlockGeometry.full_cube("minecraft:stone")
             for x in range(-1, 2)
         })
         start, old_goal, new_goal = _nodes(world, (-1, 0, 1))
         initial = frame(world, 0, start.position)
-        planner = _InlinePlanner(hold_first=True)
+        planner = OldThenHeldPlanner(hold_first=True)
         session = NavigationSession(
             "revision-session", self.profiles(), planner_worker=planner,
             clock_ns=lambda: 1_000_000_000,
@@ -2068,7 +2079,7 @@ class NavigationSessionTests(unittest.TestCase):
             "test_terminal",
         )
 
-        successor = session.spawn_successor("terminal-session-successor")
+        successor = session.spawn_successor("terminal-session-successor", task_id="new-task")
 
         self.assertTrue(session._closed)
         self.assertFalse(planner.closed)
@@ -2077,7 +2088,7 @@ class NavigationSessionTests(unittest.TestCase):
         successor.close()
         self.assertTrue(planner.closed)
 
-    def test_terminal_session_retires_owned_waits_before_successor_reuses_ledger(self):
+    def test_terminal_session_retires_owned_waits_before_fresh_successor(self):
         planner = _InlinePlanner()
         ledger = RetryLedger("goal")
         session = NavigationSession(
@@ -2109,18 +2120,9 @@ class NavigationSessionTests(unittest.TestCase):
         )
 
         self.assertEqual(ledger.active_waits(), ())
-        successor = session.spawn_successor("wait-owner-second")
-        ledger.begin_wait(
-            "information",
-            "navigation-session/wait-owner-second/information",
-            policy,
-            2,
-            1_050_000_000,
-        )
-        self.assertEqual(
-            ledger.active_waits()[0].owner_id,
-            "navigation-session/wait-owner-second/information",
-        )
+        successor = session.spawn_successor("wait-owner-second", task_id="new-task")
+        self.assertIsNone(successor._retry_ledger)
+        self.assertIsNone(successor._risk_ledger)
         successor.close()
 
     def test_alive_planner_that_never_returns_has_a_caller_side_deadline(self):
@@ -2164,8 +2166,9 @@ class NavigationSessionTests(unittest.TestCase):
         self.assertIs(expired.report.state, NavigationSessionState.PLANNING)
         self.assertEqual(expired.report.reason, "planning_timeout_retry_started")
         self.assertEqual(
-            session._retry_ledger.count_for(RetryCause.PLANNING), 1,
+            session._planning_coordinator.local_attempt_failures, 1,
         )
+        self.assertEqual(session._retry_ledger.total_recovery_starts, 0)
 
         planner.hold_first = False
         late = session.propose(
@@ -2239,6 +2242,8 @@ class NavigationSessionTests(unittest.TestCase):
 
         self.assertIs(rejected.report.state, NavigationSessionState.PLANNING)
         self.assertTrue(session.diagnostics.planning_work_owned)
+        self.assertEqual(session._retry_ledger.total_recovery_starts, 0)
+        self.assertEqual(session._planning_coordinator.local_attempt_failures, 1)
 
     def test_gap_route_is_solved_by_the_session_coordinator(self):
         session, current, anchor = _gap_session()

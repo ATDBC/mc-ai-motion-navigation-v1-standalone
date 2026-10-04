@@ -9,6 +9,7 @@ import time
 from mc2p.contracts.action_v1 import LookV1, MovementV1
 from mc2p.contracts.common import ContractViolation, require_nonnegative_int
 from mc2p.motion_nav.async_work import (
+    AsyncComputationScope,
     AsyncAdmissionDisposition,
     AsyncAdmissionRecord,
     AsyncWorkIdentity,
@@ -37,7 +38,8 @@ from mc2p.motion_nav.motion_solver import (
 )
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.retry_ledger import (
-    RetryCause, RetryLedger, RetryVerdict, WaitPolicy, WaitVerdict,
+    LocalAttemptChain, LocalAttemptRegistration, LocalAttemptVerdict,
+    RetryLedger, WaitPolicy, WaitVerdict,
 )
 from mc2p.motion_nav.motion_worker import (
     GapMotionSolveJob, GapMotionSolveResult, MotionResultInbox,
@@ -514,7 +516,8 @@ class MotionRouteCoordinator:
     def __init__(self, route: ActiveRoute, executor: ActionRouteExecutor,
                  worker: MotionWorkerPort, *,
                  damage_budget: TaskDamageBudget = TaskDamageBudget(),
-                 retry_ledger: RetryLedger | None = None,
+                 retry_ledger: RetryLedger,
+                 computation_scope: AsyncComputationScope,
                  result_inbox: MotionResultInbox | None = None,
                  owner_instance_id: str | None = None,
                  clock_ns=time.monotonic_ns,
@@ -526,8 +529,10 @@ class MotionRouteCoordinator:
                 or type(executor) is not ActionRouteExecutor
                 or not isinstance(worker, MotionWorkerPort)
                 or type(damage_budget) is not TaskDamageBudget
-                or (retry_ledger is not None
-                    and type(retry_ledger) is not RetryLedger)
+                or type(retry_ledger) is not RetryLedger
+                or type(computation_scope) is not AsyncComputationScope
+                or computation_scope.world_session_id != route.world_session
+                or computation_scope.task_id != retry_ledger.task_id
                 or (result_inbox is not None
                     and type(result_inbox) is not MotionResultInbox)
                 or not callable(clock_ns)
@@ -544,8 +549,8 @@ class MotionRouteCoordinator:
         self.gap_solver_policy = gap_solver_policy
         self.air_transition_policies = dict(air_transition_policies)
         self.damage_budget = damage_budget
-        self.retry_ledger = (retry_ledger if retry_ledger is not None else
-                             RetryLedger(route.goal_id))
+        self.retry_ledger = retry_ledger
+        self.computation_scope = computation_scope
         self._owns_result_inbox = result_inbox is None
         self.result_inbox = result_inbox or MotionResultInbox()
         self._clock = clock_ns
@@ -568,6 +573,8 @@ class MotionRouteCoordinator:
         self.last_failure_attempt_id: str | None = None
         self.last_failure_reason = ""
         self._grounded_recovery_wait_id: str | None = None
+        self._local_attempts = LocalAttemptChain(maximum_failures=3)
+        self._local_attempt_action_index = executor.action_index
 
     def start(self, frame: NavigationFrame) -> None:
         if type(frame) is not NavigationFrame:
@@ -577,6 +584,7 @@ class MotionRouteCoordinator:
         self.last_failure_attempt_id = None
         self.last_failure_reason = ""
         self._end_grounded_recovery_wait()
+        self._local_attempts.reset()
         self.executor.start(
             self.route.action_route, frame,
             damage_budget=self.damage_budget,
@@ -587,6 +595,7 @@ class MotionRouteCoordinator:
                 ) if _air_action_kind(action) is not None
             ),
         )
+        self._local_attempt_action_index = self.executor.action_index
 
     @property
     def admission_records(self) -> tuple[AsyncAdmissionRecord, ...]:
@@ -626,15 +635,34 @@ class MotionRouteCoordinator:
 
     def _end_grounded_recovery_wait(self) -> None:
         if self._grounded_recovery_wait_id is not None:
-            self.retry_ledger.end_wait(self._grounded_recovery_wait_id)
+            self.retry_ledger.end_wait_owned(
+                self._grounded_recovery_wait_id,
+                f"motion-route/{self.route.route_id}",
+            )
             self._grounded_recovery_wait_id = None
 
+    def _sync_local_attempt_chain(self) -> None:
+        action_index = self.executor.action_index
+        if action_index != self._local_attempt_action_index:
+            self._local_attempts.reset()
+            self._local_attempt_action_index = action_index
+
+    def _record_local_failure(self, attempt_id: str) -> LocalAttemptRegistration:
+        self._sync_local_attempt_chain()
+        self.last_failure_attempt_id = attempt_id
+        return self._local_attempts.record(attempt_id)
+
     def _sample_solve_delivery(
-            self, result: GapMotionSolveResult, anchor: StateAnchor) -> None:
+            self, result: GapMotionSolveResult, anchor: StateAnchor, *,
+            current_scope: AsyncComputationScope) -> None:
         job = self._solve_basis_job
         if (job is None or job.operation is not MotionJobOperation.SOLVE
                 or result.solve_result.status is not SolveStatus.SOLVED
-                or result.work_identity != job.work_identity
+                or result.work_identity is None
+                or self._work.check(result.work_identity, self._clock(),
+                                    current_scope=current_scope) is not WorkCheck.READY
+                or result.connection_id != self._pending_connection
+                or result.candidate_revision != self._candidate_revision
                 or self._delivery_identity == result.work_identity):
             return
         # Sample first arrival from the real source, before any entry wait.
@@ -645,34 +673,27 @@ class MotionRouteCoordinator:
     def _accept_result(
             self, result: GapMotionSolveResult, anchor: StateAnchor,
             world: PhysicsWorldView, changed_cells: tuple[BlockPos, ...],
-            ledger: InputApplicationLedger | None = None) -> bool:
-        identity_matched = (
-            self._work_identity is not None
-            and result.work_identity == self._work_identity
-            and result.connection_id == self._pending_connection
-            and result.candidate_revision == self._candidate_revision
-        )
-        legacy_matched = (
-            self._work_identity is None
-            and result.work_identity is None
-            and result.connection_id == self._pending_connection
-        )
-        if not (identity_matched or legacy_matched):
-            if result.work_identity is None:
-                self.unidentified_results += 1
-            else:
-                self._record_admission(
-                    AsyncAdmissionDisposition.DISCARDED_LATE,
-                    identity_matched=False,
-                    facts_valid=None,
-                    result_identity=result.work_identity,
-                )
+            ledger: InputApplicationLedger | None = None, *,
+            current_scope: AsyncComputationScope) -> bool:
+        if result.work_identity is None:
+            self.unidentified_results += 1
             return False
-        if identity_matched and self._work.check(result.work_identity, self._clock()) is not WorkCheck.READY:
-            self._expire_delivered_result(result)
+        check = self._work.check(result.work_identity, self._clock(), current_scope=current_scope)
+        if check is not WorkCheck.READY:
+            if check is WorkCheck.EXPIRED:
+                self._expire_delivered_result(result)
+            else:
+                self._record_admission(AsyncAdmissionDisposition.DISCARDED_LATE,
+                    identity_matched=False, facts_valid=None,
+                    result_identity=result.work_identity)
+            return False
+        if (result.connection_id != self._pending_connection
+                or result.candidate_revision != self._candidate_revision):
+            self._record_admission(AsyncAdmissionDisposition.DISCARDED_LATE,
+                identity_matched=True, facts_valid=False, result_identity=result.work_identity)
             return False
         connection = result.connection_id
-        self._sample_solve_delivery(result, anchor)
+        self._sample_solve_delivery(result, anchor, current_scope=current_scope)
         action_index = (
             self._pending_action_index
             if self._pending_action_index is not None
@@ -758,7 +779,7 @@ class MotionRouteCoordinator:
                 solve_result=result.solve_result,
                 reason="new_motion_grant_has_no_start_slack", retryable=True,
             )
-        if identity_matched and self._work.check(result.work_identity, self._clock()) is not WorkCheck.READY:
+        if self._work.check(result.work_identity, self._clock(), current_scope=current_scope) is not WorkCheck.READY:
             self._expire_delivered_result(result)
             return False
         if prepared.status is not GapPreparationStatus.READY:
@@ -773,9 +794,8 @@ class MotionRouteCoordinator:
             self.last_failure_reason = prepared.reason
             if prepared.status is GapPreparationStatus.REVALIDATION_REQUIRED:
                 attempt_id = f"{connection}/revalidate-{result.candidate_revision}"
-                registration = self.retry_ledger.record_failure(attempt_id, RetryCause.EXECUTION)
-                self.last_failure_attempt_id = attempt_id
-                if registration.verdict is RetryVerdict.RETRY:
+                registration = self._record_local_failure(attempt_id)
+                if registration.verdict is LocalAttemptVerdict.RETRY:
                     self._submit_action(
                         action_index, anchor, world,
                         revalidate_proof=result.solve_result.proof,
@@ -792,21 +812,20 @@ class MotionRouteCoordinator:
                 # Keep the still-valid ground segment and try again from the
                 # next applied state instead of cancelling the whole route.
                 if prepared.retryable:
-                    registration = self.retry_ledger.record_failure(
-                        f"{connection}/prepare-{result.candidate_revision}", RetryCause.EXECUTION,
+                    registration = self._record_local_failure(
+                        f"{connection}/prepare-{result.candidate_revision}"
                     )
-                    if registration.verdict is not RetryVerdict.RETRY:
+                    if registration.verdict is not LocalAttemptVerdict.RETRY:
+                        self.last_failure_reason = (
+                            f"motion_retry_exhausted:{prepared.reason}"
+                        )
                         self.executor.cancel()
                 return False
             if prepared.retryable:
                 attempt_id = (f"{connection}/candidate-"
                               f"{result.candidate_revision}/{prepared.reason}")
-                registration = self.retry_ledger.record_failure(
-                    attempt_id, RetryCause.EXECUTION,
-                )
-                self.last_failure_attempt_id = attempt_id
-                if (registration.verdict is not RetryVerdict.RETRY
-                        or not registration.first_seen):
+                registration = self._record_local_failure(attempt_id)
+                if registration.verdict is not LocalAttemptVerdict.RETRY:
                     self.last_failure_reason = (
                         f"motion_retry_exhausted:{prepared.reason}"
                     )
@@ -815,7 +834,7 @@ class MotionRouteCoordinator:
                 self.executor.cancel()
             return False
         accepted_ns = self._clock()
-        if identity_matched and not self._work.try_apply(result.work_identity, accepted_ns):
+        if not self._work.try_apply(result.work_identity, accepted_ns, current_scope=current_scope):
             self._expire_delivered_result(result)
             return False
         self.executor.install_verified_motion(prepared.candidate)
@@ -861,10 +880,9 @@ class MotionRouteCoordinator:
         )
         attempt_id = f"{result.connection_id}/candidate-{result.candidate_revision}/solver-request-expired"
         self._retire_work("motion_solver_request_expired")
-        registration = self.retry_ledger.record_failure(attempt_id, RetryCause.PLANNING)
-        self.last_failure_attempt_id = attempt_id
+        registration = self._record_local_failure(attempt_id)
         self.last_failure_reason = ""
-        if registration.verdict is not RetryVerdict.RETRY:
+        if registration.verdict is not LocalAttemptVerdict.RETRY:
             self.last_failure_reason = "motion_solver_retry_exhausted"
             self.executor.cancel()
 
@@ -908,8 +926,7 @@ class MotionRouteCoordinator:
         self._candidate_revision += 1
         now = self._clock()
         identity = AsyncWorkIdentity(
-            self.route.world_session,
-            self.retry_ledger.task_id,
+            self.computation_scope,
             self._owner_instance_id,
             AsyncWorkKind.MOTION_SOLVE,
             connection,
@@ -1171,11 +1188,13 @@ class MotionRouteCoordinator:
             self, frame: NavigationFrame, anchor: StateAnchor,
             ledger: InputApplicationLedger, world: PhysicsWorldView, *,
             changed_cells: tuple[BlockPos, ...],
+            current_scope: AsyncComputationScope,
             input_confirmed: bool = True,
             movement_yaw_radians: float | None = None,
             allow_grounded_reprepare: bool = True,
             result_poll_sequence: int | None = None) -> ActionRouteDecision:
         if (type(frame) is not NavigationFrame
+                or type(current_scope) is not AsyncComputationScope
                 or type(anchor) is not StateAnchor
                 or type(ledger) is not InputApplicationLedger
                 or type(world) is not PhysicsWorldView
@@ -1187,8 +1206,16 @@ class MotionRouteCoordinator:
             raise ContractViolation("motion route decision requires current typed state")
         installed = False
         worker_available = True
+        self._sync_local_attempt_chain()
         starting_action_index = self.executor.action_index
-        if not self.worker.is_alive():
+        if current_scope != self.computation_scope:
+            # Invalidation removes calculation eligibility only. cancel()
+            # keeps the executor responsible for in-flight inputs and landing.
+            self._retire_work("motion_scope_invalidated")
+            self.last_failure_reason = "motion_scope_invalidated"
+            self.executor.cancel()
+            worker_available = False
+        elif not self.worker.is_alive():
             worker_available = False
             self._retire_work("motion_solver_worker_died")
             self.last_failure_reason = "motion_solver_worker_died"
@@ -1207,14 +1234,11 @@ class MotionRouteCoordinator:
                 f"{expired_connection}/candidate-{expired_revision}/"
                 "solver-request-expired"
             )
-            registration = self.retry_ledger.record_failure(
-                attempt_id, RetryCause.PLANNING,
-            )
-            self.last_failure_attempt_id = attempt_id
-            if (registration.first_seen
-                    and registration.verdict is RetryVerdict.RETRY):
+            registration = self._record_local_failure(attempt_id)
+            if registration.verdict is LocalAttemptVerdict.RETRY:
                 self.last_failure_reason = ""
-                if expired_action_index == self.executor.action_index:
+                if (registration.first_seen
+                        and expired_action_index == self.executor.action_index):
                     self._submit_action(
                         expired_action_index, anchor, world,
                     )
@@ -1242,13 +1266,14 @@ class MotionRouteCoordinator:
             if self._work_identity is not None:
                 result = self.result_inbox.peek(self._work_identity)
                 if result is not None:
-                    self._sample_solve_delivery(result, anchor)
+                    self._sample_solve_delivery(result, anchor, current_scope=current_scope)
                 proof = None if result is None else result.solve_result.proof
                 if proof is None or anchor.movement_tick_id + 1 >= proof.execution_window.earliest_start_tick:
                     available_results = self.result_inbox.take(self._work_identity)
         for result in available_results:
             installed = self._accept_result(
                 result, anchor, world, changed_cells, ledger,
+                current_scope=current_scope,
             ) or installed
         entry_ready = self.executor.current_verified_motion_can_start(anchor)
         if entry_ready is False:
@@ -1256,12 +1281,9 @@ class MotionRouteCoordinator:
                 f"{self._connection_id(self.executor.action_index)}:"
                 f"entry-reanchor:{self._candidate_revision}"
             )
-            registration = self.retry_ledger.record_failure(
-                attempt_id, RetryCause.EXECUTION,
-            )
-            self.last_failure_attempt_id = attempt_id
+            registration = self._record_local_failure(attempt_id)
             self.last_failure_reason = "verified_entry_changed_before_submission"
-            if registration.verdict is not RetryVerdict.RETRY:
+            if registration.verdict is not LocalAttemptVerdict.RETRY:
                 self.executor.cancel()
             else:
                 self.executor.discard_unstarted_verified_motion()
@@ -1271,6 +1293,7 @@ class MotionRouteCoordinator:
             state_anchor=anchor, input_ledger=ledger,
             movement_yaw_radians=movement_yaw_radians,
         )
+        self._sync_local_attempt_chain()
         if (decision.ground_handoff_disposition is GroundHandoffDisposition.REJECTED
                 and self._solve_basis_job is not None
                 and self._solve_basis_job.entry_prefix):
@@ -1315,111 +1338,106 @@ class MotionRouteCoordinator:
                 f"{self._connection_id(self.executor.action_index)}:"
                 f"grounded-input-reanchor:{self._candidate_revision}"
             )
-            registration = self.retry_ledger.record_failure(
-                attempt_id, RetryCause.EXECUTION,
-            )
             self.last_failure_attempt_id = attempt_id
             self.last_failure_reason = decision.reason_code
-            if registration.verdict is RetryVerdict.RETRY:
-                entry_state = self.executor.active_verified_entry_state()
-                horizontal_speed = math.hypot(
-                    anchor.physics_state.velocity_blocks_per_tick[0],
-                    anchor.physics_state.velocity_blocks_per_tick[2],
-                )
-                stopped_on_entry_support = (
-                    entry_state is not None
-                    and abs(anchor.physics_state.position[1] - entry_state.position[1]) < 1.0e-7
-                    and horizontal_speed <= .01
-                    and verified_ground_rollout(
-                        frame, anchor.physics_state, MovementV1(),
-                        control_ticks=0, tail_ticks=8,
-                        minimum_support=.01,
-                    ) is not None
-                )
-                recovery_movement = (
-                    None if entry_state is None or stopped_on_entry_support else
-                    verified_ground_target_movement(
-                        frame, anchor.physics_state, entry_state.position,
-                    )
-                )
-                if recovery_movement is None and entry_state is None:
-                    recovery_movement = verified_ground_recovery_movement(
-                        frame, anchor.physics_state,
-                    )
-                if recovery_movement is not None:
-                    return replace(
-                        decision,
-                        state=ActionRouteState.RUNNING,
-                        movement=recovery_movement,
-                        look=None,
-                        input_lease_ticks=1,
-                        reason_code="recovering_grounded_verified_entry",
-                        body_phase=BodyControlPhase.ENTRY_RECOVERY,
-                        submit_input=True,
-                        verified_command_index=None,
-                        expected_movement_tick=None,
-                        latest_movement_tick=None,
-                        requires_verified_motion=True,
-                    )
-                neutral_ground = verified_ground_rollout(
+            entry_state = self.executor.active_verified_entry_state()
+            horizontal_speed = math.hypot(
+                anchor.physics_state.velocity_blocks_per_tick[0],
+                anchor.physics_state.velocity_blocks_per_tick[2],
+            )
+            stopped_on_entry_support = (
+                entry_state is not None
+                and abs(anchor.physics_state.position[1] - entry_state.position[1]) < 1.0e-7
+                and horizontal_speed <= .01
+                and verified_ground_rollout(
                     frame, anchor.physics_state, MovementV1(),
-                    control_ticks=1, tail_ticks=0,
-                    minimum_support=1.0e-4,
+                    control_ticks=0, tail_ticks=8,
+                    minimum_support=.01,
+                ) is not None
+            )
+            recovery_movement = (
+                None if entry_state is None or stopped_on_entry_support else
+                verified_ground_target_movement(
+                    frame, anchor.physics_state, entry_state.position,
                 )
-                if (horizontal_speed > .01 and neutral_ground is None
-                        and self.executor
-                            .retain_landing_after_verified_input_loss(anchor)):
-                    return replace(
-                        decision,
-                        state=ActionRouteState.CANCELLING,
-                        movement=MovementV1(),
-                        look=None,
-                        input_lease_ticks=1,
-                        reason_code="retain_landing_after_grounded_input_loss",
-                        submit_input=True,
-                        verified_command_index=None,
-                        expected_movement_tick=None,
-                        latest_movement_tick=None,
-                        requires_verified_motion=True,
-                    )
-                settle_movement = MovementV1(sneak=True)
-                if (horizontal_speed > .01
-                        and verified_ground_rollout(
-                            frame, anchor.physics_state, settle_movement,
-                            control_ticks=1, tail_ticks=8,
-                            minimum_support=1.0e-4,
-                        ) is not None):
-                    return replace(
-                        decision,
-                        state=ActionRouteState.RUNNING,
-                        movement=settle_movement,
-                        look=None,
-                        input_lease_ticks=1,
-                        reason_code="settling_grounded_verified_entry",
-                        body_phase=BodyControlPhase.ENTRY_RECOVERY,
-                        submit_input=True,
-                        verified_command_index=None,
-                        expected_movement_tick=None,
-                        latest_movement_tick=None,
-                        requires_verified_motion=True,
-                    )
-                if frame.body.is_sneaking or frame.body.pose == "crouching":
-                    return replace(
-                        decision,
-                        state=ActionRouteState.RUNNING,
-                        movement=MovementV1(),
-                        look=None,
-                        input_lease_ticks=1,
-                        reason_code="releasing_grounded_verified_entry",
-                        body_phase=BodyControlPhase.ENTRY_RECOVERY,
-                        submit_input=True,
-                        verified_command_index=None,
-                        expected_movement_tick=None,
-                        latest_movement_tick=None,
-                        requires_verified_motion=True,
-                    )
-            if (registration.verdict is RetryVerdict.RETRY
-                    and self.executor.reprepare_grounded_verified_motion(frame)):
+            )
+            if recovery_movement is None and entry_state is None:
+                recovery_movement = verified_ground_recovery_movement(
+                    frame, anchor.physics_state,
+                )
+            if recovery_movement is not None:
+                return replace(
+                    decision,
+                    state=ActionRouteState.RUNNING,
+                    movement=recovery_movement,
+                    look=None,
+                    input_lease_ticks=1,
+                    reason_code="recovering_grounded_verified_entry",
+                    body_phase=BodyControlPhase.ENTRY_RECOVERY,
+                    submit_input=True,
+                    verified_command_index=None,
+                    expected_movement_tick=None,
+                    latest_movement_tick=None,
+                    requires_verified_motion=True,
+                )
+            neutral_ground = verified_ground_rollout(
+                frame, anchor.physics_state, MovementV1(),
+                control_ticks=1, tail_ticks=0,
+                minimum_support=1.0e-4,
+            )
+            if (horizontal_speed > .01 and neutral_ground is None
+                    and self.executor
+                        .retain_landing_after_verified_input_loss(anchor)):
+                return replace(
+                    decision,
+                    state=ActionRouteState.CANCELLING,
+                    movement=MovementV1(),
+                    look=None,
+                    input_lease_ticks=1,
+                    reason_code="retain_landing_after_grounded_input_loss",
+                    submit_input=True,
+                    verified_command_index=None,
+                    expected_movement_tick=None,
+                    latest_movement_tick=None,
+                    requires_verified_motion=True,
+                )
+            settle_movement = MovementV1(sneak=True)
+            if (horizontal_speed > .01
+                    and verified_ground_rollout(
+                        frame, anchor.physics_state, settle_movement,
+                        control_ticks=1, tail_ticks=8,
+                        minimum_support=1.0e-4,
+                    ) is not None):
+                return replace(
+                    decision,
+                    state=ActionRouteState.RUNNING,
+                    movement=settle_movement,
+                    look=None,
+                    input_lease_ticks=1,
+                    reason_code="settling_grounded_verified_entry",
+                    body_phase=BodyControlPhase.ENTRY_RECOVERY,
+                    submit_input=True,
+                    verified_command_index=None,
+                    expected_movement_tick=None,
+                    latest_movement_tick=None,
+                    requires_verified_motion=True,
+                )
+            if frame.body.is_sneaking or frame.body.pose == "crouching":
+                return replace(
+                    decision,
+                    state=ActionRouteState.RUNNING,
+                    movement=MovementV1(),
+                    look=None,
+                    input_lease_ticks=1,
+                    reason_code="releasing_grounded_verified_entry",
+                    body_phase=BodyControlPhase.ENTRY_RECOVERY,
+                    submit_input=True,
+                    verified_command_index=None,
+                    expected_movement_tick=None,
+                    latest_movement_tick=None,
+                    requires_verified_motion=True,
+                )
+            if self.executor.reprepare_grounded_verified_motion(frame):
                 self._submit_current(anchor, world)
                 return replace(
                     decision,
