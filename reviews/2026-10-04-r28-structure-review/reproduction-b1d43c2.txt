@@ -1,0 +1,24 @@
+b1d43c2 on Linux, 4 cores, Python 3.11.15
+
+== motion-navigation unit tests
+Ran 1207 tests in 485.614s
+OK
+
+== v7 product manifest vs frozen r28-baseline-v7 (published at 3c15744)
+frozen v7 completed 1705/2000; b1d43c2 re-run completed 1710/2000
+
+drop-late      tasks with any difference   5: failure->success 5, reason 5, motion_jobs 5, inputs 5, arrival 5
+target-late    tasks with any difference  19: planning_requests 19
+  drop-late outcome changes: [('drop-late-000026', ['failure->success', 'reason', 'motion_jobs', 'inputs', 'arrival']), ('drop-late-000045', ['failure->success', 'reason', 'motion_jobs', 'inputs', 'arrival']), ('drop-late-000056', ['failure->success', 'reason', 'motion_jobs', 'inputs', 'arrival']), ('drop-late-000119', ['failure->success', 'reason', 'motion_jobs', 'inputs', 'arrival']), ('drop-late-000135', ['failure->success', 'reason', 'motion_jobs', 'inputs', 'arrival'])]
+
+== coordination set (navigation_migration_evidence.py --workers 4, 27m56s)
+{"cases": 1448, "failed": 0, "uncovered_functions": ["navigation_session.handle_internal_contract_failure", "navigation_session._wait_for_active_terminal", "planning_coordinator.retry_from_current", "planning_coordinator._retry_or_fail", "retry_ledger.begin_recovery"]}
+
+== supplementary faults (--faults-only)
+{"cases": 4, "failed": 0, "uncovered_functions": ["motion_coordination._accept_result", "motion_coordination._retire_work", "motion_coordination._record_admission", "navigation_session.update_goal", "navigation_session._stage_goal_revision_for_body_release", "navigation_session._resume_pending_goal", "navigation_session.cancel", "navigation_session._wait_for_active_terminal", "navigation_session._end_probe_waits", "navigation_session._check_recovery_wait", "navigation_session._probe_movement", "navigation_session._begin_action_acquisition", "retry_ledger.record_progress"]}
+
+== migration coverage, union of both runs
+registered migration functions: 41
+entered by neither the 1,448 set nor the 4 faults: ['navigation_session._wait_for_active_terminal']
+  navigation_session._wait_for_active_terminal: main={'entered_by': [], 'migration_allowed': False}, faults={'entered_by': [], 'migration_allowed': False}
+published r28-1-completion-v1 faults summary for the same function: {'navigation_session._wait_for_active_terminal': {'entered_by': ['faults/active_route_dependency_retry'], 'migration_allowed': True}}

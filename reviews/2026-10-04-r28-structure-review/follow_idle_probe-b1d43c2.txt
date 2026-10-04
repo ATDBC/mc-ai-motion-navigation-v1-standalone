@@ -1,0 +1,9 @@
+code b1d43c2, simulator only, Linux Python 3.11.15
+
+idle from tick 140 to 940; run ended at tick 1100
+outcome executing, reason goal_state_satisfied, final position (0.5, 64.0, 34.38), goal (0.5, 64.0, 34.5)
+first tick of each (session state, reason):
+       2  ('executing', 'tracking_fixed_route')
+      20  ('executing', 'goal_braking')
+     146  ('executing', 'goal_state_satisfied')
+monitor violations: 1; kinds [(244, 'I4')]; first [(244, 'I4', 'unbounded wait in executing/goal_state_satisfied')]

@@ -1,0 +1,13 @@
+code b1d43c2, simulator only (InlineMotionWorker, inline planner), Linux Python 3.11.15
+
+case                 pace b/s             end state  lag mean  lag p95  lag max final lag  accepted  plans recoveries violations
+follow-10                 2.0     executing/running      0.31     0.93     3.90      0.12    56/56      57          0          1
+    reason: goal_state_satisfied [(678, 'I4', 'unbounded wait in executing/goal_state_satisfied')]
+follow-6                  3.3     executing/running      0.39     1.02     3.90      0.01    56/56      57          0          1
+    reason: goal_state_satisfied [(460, 'I4', 'unbounded wait in executing/goal_state_satisfied')]
+follow-5                  4.0     executing/running      0.43     1.07     3.90      0.01    56/56      57          0          1
+    reason: goal_state_satisfied [(405, 'I4', 'unbounded wait in executing/goal_state_satisfied')]
+follow-4                  5.0     executing/running      6.46    16.44    17.60      0.01    56/56      57          0          1
+    reason: goal_state_satisfied [(432, 'I4', 'unbounded wait in executing/goal_state_satisfied')]
+follow-6-lateral          3.3     executing/running      1.70     3.49     4.10      0.06    56/56      57          0          1
+    reason: goal_state_satisfied [(481, 'I4', 'unbounded wait in executing/goal_state_satisfied')]

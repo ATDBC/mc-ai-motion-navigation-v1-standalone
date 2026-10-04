@@ -1,0 +1,25 @@
+12 coordination files: navigation_session, navigation_handoff, navigation_owners, planning_coordinator, motion_coordination, execution_supervisor, retry_ledger, async_work, route_body_controller, probe_body_controller, route_admission, planner_worker
+
+commit       lines  branches  contract  validation  dataclass  session  propose
+403a23f      10103      1147       237         719         35     4395      779
+7348b64      10260      1182       237         719         35     4399      779
+3c15744      10594      1244       250         752         35     4421      733
+b1d43c2      13169      1585       357        1118         52     4653      156
+
+per file, 403a23f -> b1d43c2 (lines / branches / validation lines)
+  navigation_session        4395 -> 4653  (  +258)     +35     +68
+  navigation_handoff         152 -> 717   (  +565)     +80    +102
+  navigation_owners          124 -> 411   (  +287)     +41     +28
+  planning_coordinator      1875 -> 2501  (  +626)     +98     +62
+  motion_coordination       1263 -> 1513  (  +250)     +34      +3
+  execution_supervisor       347 -> 562   (  +215)     +19     +10
+  retry_ledger               314 -> 769   (  +455)     +61     +89
+  async_work                 239 -> 285   (   +46)      +6      +7
+  route_body_controller      138 -> 222   (   +84)      +9      +2
+  probe_body_controller       77 -> 152   (   +75)     +10     +21
+  route_admission            857 -> 1052  (  +195)     +45      +7
+  planner_worker             322 -> 332   (   +10)      +0      +0
+
+NavigationSession class: methods, class lines, methods over 100 lines, five longest
+  403a23f: 106 methods, 3962 lines, 9 over 100; [('propose', 779), ('observe', 246), ('_proposal', 169), ('update_goal', 139), ('diagnostics', 133)]
+  b1d43c2: 132 methods, 4201 lines, 9 over 100; [('observe', 197), ('_proposal', 181), ('propose', 156), ('update_goal', 154), ('_consume_route_decision', 150)]
