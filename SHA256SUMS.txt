@@ -642,7 +642,7 @@ c5323896b4a2473a89d62af75c878dc6231038a18664830469dbd6c63ff1a5d1  reviews/2026-1
 2effd880c917e5604fddfb7cfdaa48d4c6d264788d3c8714a38dc1bce6d4c25b  reviews/2026-10-06-structure-repair-plan/unit-suite-with-prototypes.txt
 bdddb82692534d454bc0ccc58f334480ef63ed537c8f48f92ff0cf076f710ee6  reviews/2026-10-06-structure-repair-plan/world_change_exercise_probe-1f0fefe.txt
 232170c1f2551d2f0466f2136cf9a3374e14229917c17abe476e95749aff0bb5  reviews/2026-10-06-structure-repair-plan/world_change_exercise_probe.py
-bf1de9f16da9a52c77986143281c978970e3affbc06def76be5076ed88f551bd  reviews/2026-10-06-structure-s0-review.md
+fc8310ed761d0150e93e567e18c3916239674cc3981d7349324b0d4e2fb53b8d  reviews/2026-10-06-structure-s0-review.md
 3fa85c29f567a25e8f9e45c0f4d9ec35eaddf5fdb676bd26d0c4f8c8c0ec491e  reviews/2026-10-06-structure-s0-review/admission_guard_overlap-1f0fefe.txt
 7353bd4d9b44ecf7243bdd28b1e2f640cbd272712d500be45ed31bade0d79502  reviews/2026-10-06-structure-s0-review/admission_guard_overlap.py
 d5d30c6fa714eafcc9145a8aa2b328f2e39eb74679146c737837503d6348ed77  reviews/2026-10-06-structure-s0-review/path_exercise_probe-1f0fefe.txt
