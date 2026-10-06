@@ -1,0 +1,7 @@
+## e108a32, three consecutive runs while the old-schema coordination set ran with 4 workers
+test_planning_never_runs_in_control_process          none=pass parent_plans=FAIL blocking_poll=FAIL
+test_control_side_queue_operations_never_block       none=pass parent_plans=pass blocking_poll=FAIL
+test_planning_never_runs_in_control_process          none=pass parent_plans=FAIL blocking_poll=FAIL
+test_control_side_queue_operations_never_block       none=pass parent_plans=pass blocking_poll=FAIL
+test_planning_never_runs_in_control_process          none=pass parent_plans=FAIL blocking_poll=FAIL
+test_control_side_queue_operations_never_block       none=pass parent_plans=pass blocking_poll=FAIL

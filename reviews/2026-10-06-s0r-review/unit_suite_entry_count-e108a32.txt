@@ -1,0 +1,6 @@
+tests run 1499, failures 0, errors 0
+  ExecutionSupervisor._advance_incumbent_prefix      calls=    18  test modules=['test_navigation_route_handoff.py', 'test_navigation_session.py', 'test_navigation_supervised_interruptions.py', 'test_r28_information_planning_updates.py', 'test_route_body_advance.py']
+  ExecutionSupervisor.continue_rejected_candidate    calls=     6  test modules=['test_navigation_route_handoff.py', 'test_route_body_advance.py']
+  NavigationSession._wait_for_active_terminal        calls=     7  test modules=['test_r28_planning_failure_handoff.py', 'test_r28_reanchor_handoff.py']
+  RouteAdmitter.admit                                calls=    16  test modules=['test_b06_movement_contracts.py', 'test_jump_up.py', 'test_known_map_planning.py', 'test_planner_worker.py']
+  RouteAdmitter.admit_local_direct                   calls=    26  test modules=['test_d062_direct_walk_validation.py', 'test_d064_ground_direct_handoff.py', 'test_navigation_closed_loop.py']

@@ -1,0 +1,25 @@
+Linux reproduction of S0-R at e108a32 (4 cores, Python 3.11.15); formal commands from acceptance sections 9-10
+
+## full motion-navigation checks (ran while behaviour sets ran in parallel)
+forward tests 1499 passed True failures 0 errors 0 xfail 0 skipped 0 scene_hash 05cfbd29ba3067b4 -> 05cfbd29ba3067b4
+real	9m4.577s
+reverse tests 1499 passed True failures 0 errors 0 xfail 0 skipped 0 scene_hash 05cfbd29ba3067b4 -> 05cfbd29ba3067b4
+real	8m59.964s
+
+## five behaviour sets: Linux single run vs committed Windows index
+product        vs product-v7-index.json            {"cases": 2000, "differences": [], "equivalent": true}
+real	22m27.154s
+coordination   vs coordination-1448-index.json     {"cases": 1448, "differences": [], "equivalent": true}
+real	8m19.267s
+faults         vs faults-16-index.json             {"cases": 16, "differences": [], "equivalent": true}
+real	0m3.834s
+follow         vs follow-10-index.json             {"cases": 10, "differences": [], "equivalent": true}
+real	0m38.448s
+world_changes  vs world-changes-19-index.json      {"cases": 19, "differences": [], "equivalent": true}
+real	0m10.276s
+
+## S0 product index vs S0-R product index
+{"cases": 2000, "differences": [], "equivalent": true}
+
+## evidence package
+{"verified": true, "files_checked": 18, "sets": 5}

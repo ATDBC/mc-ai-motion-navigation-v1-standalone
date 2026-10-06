@@ -1,0 +1,6 @@
+## v4 drop-late, seeds 0-199, formal simulator chain (Linux)
+1f0fefe: success/goal_state_satisfied 196, failed/edge_probe_acquisition_timeout 2, failed/motion_unsolvable:needs_state 2; violations 0
+e108a32: success/goal_state_satisfied 198, failed/edge_probe_acquisition_timeout 2; violations 0
+changed outcomes: 2 of 200
+  seed 91: failed/motion_unsolvable:needs_state -> success/goal_state_satisfied
+  seed 163: failed/motion_unsolvable:needs_state -> success/goal_state_satisfied

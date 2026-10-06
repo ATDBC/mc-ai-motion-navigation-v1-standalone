@@ -1,0 +1,8 @@
+point flat_walk      I/O failure at movement tick   5: outcome=failed reason=control_unavailable violations=0
+                     right after the failed step: driver=failed/control_unavailable runtime=failed disposition=recreate_runtime
+point flat_walk      I/O failure at movement tick  20: outcome=failed reason=control_unavailable violations=0
+                     right after the failed step: driver=failed/control_unavailable runtime=failed disposition=recreate_runtime
+follow straight_2_0  I/O failure at movement tick  30: passed=False driver=failed session=failed
+                     right after the failed step: driver=failed/control_unavailable runtime=failed disposition=recreate_runtime
+follow straight_2_0  I/O failure at movement tick 120: passed=False driver=failed session=failed
+                     right after the failed step: -

@@ -1,0 +1,12 @@
+## 1f0fefe
+test_surface_snapshot_graph_construction_also_runs_in_worker             none=pass submit_blocks=FAIL poll_blocks=pass
+test_snapshot_graph_construction_and_search_both_run_in_worker           none=pass submit_blocks=FAIL poll_blocks=pass
+test_background_delay_never_blocks_submit_or_poll                        none=pass submit_blocks=FAIL poll_blocks=FAIL
+test_fixed_route_control_continues_during_five_hundred_ms_search         none=pass submit_blocks=pass poll_blocks=FAIL
+
+## e108a32
+test_surface_snapshot_graph_construction_also_runs_in_worker             none=pass submit_blocks=pass poll_blocks=pass
+test_snapshot_graph_construction_and_search_both_run_in_worker           none=pass submit_blocks=pass poll_blocks=pass
+test_background_delay_never_blocks_submit_or_poll                        none=pass submit_blocks=pass poll_blocks=pass
+test_fixed_route_control_continues_during_five_hundred_ms_search         none=pass submit_blocks=pass poll_blocks=pass
+

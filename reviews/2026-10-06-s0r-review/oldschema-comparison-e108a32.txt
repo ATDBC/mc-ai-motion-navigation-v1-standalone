@@ -1,0 +1,10 @@
+Old-schema (S0) comparison at e108a32, Linux
+pipeline: scripts/navigation_migration_evidence.py (unchanged since 1f0fefe) --workers 4, then the 1f0fefe version of
+scripts/navigation_structure_baseline.py 'index migration' and 'compare' against evidence/motion_navigation/post-f1-structure-s0/
+
+## coordination 1,448 vs S0 coordination-1448-index.json
+{"cases": 1448, "differences": [], "equivalent": true}
+real	14m59.295s
+
+## supplementary faults 4 vs S0 faults-4-index.json (R1-2 changed this case's material to a bottom slab)
+{"cases": 4, "differences": ["faults/active_route_dependency_retry"], "equivalent": false}

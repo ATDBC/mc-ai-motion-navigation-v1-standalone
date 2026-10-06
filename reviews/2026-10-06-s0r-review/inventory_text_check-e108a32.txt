@@ -1,0 +1,56 @@
+candidates: 16  mutation_checks_executed=False
+
+lifecycle: 4 distinct values over 16 candidates
+   8 x record construction/body candidate selection and release
+   3 x unused old facade
+   3 x direct request classification/admission
+   2 x first admission versus changed-world replay
+
+risk: 2 distinct values over 16 candidates
+  13 x goal revisions, proof identity, changed-world validation and incumbent body continuity
+   3 x async disposition identity/body-release safety
+
+detecting_check: 8 distinct values over 16 candidates
+   6 x ('test_r28_reanchor_handoff', 'test_f1_known_world_following', 'coordination-1448')
+   3 x ('full motion_nav forward/reverse', 'all five S0-R behavior indexes')
+   2 x ('tests.motion_nav.test_b07_step_route', 'tests.motion_nav.test_d062_direct_walk_validation', 'product-v7-2000
+   1 x ('tests.motion_nav.test_known_map_planning', 'tests.motion_nav.test_b07_step_route')
+   1 x ('tests.motion_nav.test_d062_direct_walk_validation', 'tests.motion_nav.test_d064_ground_direct_handoff', 'F1
+   1 x ('test_f1_known_world_following', 'follow-10', 'world_changes-19')
+   1 x ('tests.motion_nav.test_d058_runtime_validation', 'world_changes-19')
+   1 x ('tests.motion_nav.test_d058_validation_plan', 'tests.motion_nav.test_d062_direct_walk_validation')
+
+owner_review stance per candidate (pending S2 unless noted):
+  navigation_session._admit_async_event         pending:S1_deletion_mutation         typed owner admissions replace this unused facade
+  navigation_session._cell_fact_id              pending:S1_deletion_mutation         blocking facts are constructed at their owned use sites
+  motion_coordination._upcoming_air_index       pending:S1_deletion_mutation         _upcoming_gap_index and observed successor solving replace this unused scan
+  K1.admit-vs-surface                           pending:S2_owner_and_mutation_review legacy WalkGraph candidate and surface candidate are distinct typed protocols
+  K2.local-vs-ground-direct                     pending:S2_owner_and_mutation_review same-support reach and different-support proved corridor have distinct geometric entry con
+  K3.direct-request-classification              pending:S2_owner_and_mutation_review five common eligibility facts share request-time owner; SurfaceSearchNeed distinguishes th
+  K4.connection-vs-surface-edge                 pending:S2_owner_and_mutation_review both sweep then sample support; actual-body-to-first-node connection uses 0.10 height/0.80
+  validation.first-proof-vs-replay              pending:S2_owner_and_mutation_review first construction and changed-cell replay occur at different times; replay is required af
+  K5.proof-record-construction                  pending:S2_owner_and_mutation_review admission context and transported replay recipe protect distinct boundary records
+  K6.surface-admission                          audit_only:review_boundary           large function alone is no deletion evidence; typed metadata, entry and capability checks
+  K6.ground-admission                           audit_only:review_boundary           large function alone is no deletion evidence; current-body connection and proof constructi
+  F1.revised-direct-information                 pending:S2_owner_and_mutation_review candidate information wait must preserve incumbent body ownership during revisions
+  F1.revised-request-reissue                    pending:S2_owner_and_mutation_review current-anchor planning and old-body terminal wait are different responsibilities
+  F1.body-revision-selection                    pending:S2_owner_and_mutation_review pending candidate ownership and incumbent safe prefix protect different bodies in the same
+  F1.route-world-revalidation                   pending:S2_owner_and_mutation_review incumbent and pending route may have different changed dependencies and outcomes
+  navigation_session._wait_for_active_terminal  retained:unprotected                 one production reissue caller retains terminal-stop responsibility even if frozen sets nev
+
+F1 function review: 45 functions
+  24 x reviewed:no_deletion_proposed            F1 goal revision, information resume or typed-result consumption within existing Session order; no e
+   7 x inventory_candidate                      see candidate owner/fact/lifecycle review
+   5 x retained:independent_responsibility      owned state initialization or read-only report; deleting fields does not remove a repeated decision
+   5 x retained:independent_responsibility      action-boundary fact acquisition and current verified-window responsibility, rather than goal/candid
+   3 x retained:independent_responsibility      body owner advances/stops/transfers the selected incumbent; Session goal/planning decisions cannot r
+   1 x pending:S2_owner_and_mutation_review     request-time direct eligibility and current-body qualification; investigate common facts before any
+
+targets with zero calls in all five behaviour sets:
+  execution_supervisor.ExecutionSupervisor._advance_incumbent_prefix
+  execution_supervisor.ExecutionSupervisor.continue_rejected_candidate
+  motion_coordination.MotionRouteCoordinator._upcoming_air_index
+  navigation_session.NavigationSession._admit_async_event
+  navigation_session.NavigationSession._cell_fact_id
+  navigation_session.NavigationSession._wait_for_active_terminal
+  route_admission.RouteAdmitter.admit
