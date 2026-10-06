@@ -10,12 +10,6 @@ ROOT = Path(__file__).resolve().parents[1]
 # Each target names the actual Python binding used by formal calls. Targets
 # overlap across review clues; path collection wraps each binding only once.
 SPECS = (
-    ("navigation_session._admit_async_event", "dead_path", "dead", "navigation_session.NavigationSession._admit_async_event",
-     "async work owners", "typed owner admissions replace this unused facade"),
-    ("navigation_session._cell_fact_id", "dead_path", "dead", "navigation_session.NavigationSession._cell_fact_id",
-     "information/planning fact creator", "blocking facts are constructed at their owned use sites"),
-    ("motion_coordination._upcoming_air_index", "dead_path", "dead", "motion_coordination.MotionRouteCoordinator._upcoming_air_index",
-     "MotionRouteCoordinator", "_upcoming_gap_index and observed successor solving replace this unused scan"),
     ("K1.admit-vs-surface", "legacy_adapter", "K1", "route_admission.RouteAdmitter.admit|route_admission.RouteAdmitter.admit_surface",
      "RouteAdmitter", "legacy WalkGraph candidate and surface candidate are distinct typed protocols"),
     ("K2.local-vs-ground-direct", "duplicate_check", "K2", (

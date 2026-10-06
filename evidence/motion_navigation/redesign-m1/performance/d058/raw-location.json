@@ -1,0 +1,9 @@
+{
+  "raw_directory": "D:\\My_project\\mc_ai\\.tmp\\redesign-m1-d058",
+  "raw_files_sha256": {
+    "COMMAND.txt": "42d9b141a67f0e7a00e45266a25424bd145ee4042f61a93b0bede726b2b49dc5",
+    "performance.json": "83cb5ac50a39170ecd09799c7a82fda9046a7e056c8439d1dfdf74bb33a1bb2a",
+    "SHA256SUMS": "f2acda7371c858e8e77359c2aefd28738fef05c69f52c5af10a33c7515106625"
+  },
+  "raw_trajectories_published": false
+}

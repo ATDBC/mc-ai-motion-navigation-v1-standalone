@@ -22,7 +22,7 @@ HASH_FILE = "SHA256SUMS.txt"
 METADATA_FILE = "EXPORT-METADATA.json"
 _LOCAL_IMPORT_ROOTS = frozenset({"mc2p", "scripts", "tests", "tools"})
 _FORBIDDEN_PARTS = frozenset({
-    ".git", ".gradle", ".venv", "__pycache__", "artifacts", "build",
+    ".git", ".gradle", ".venv", ".tmp", "__pycache__", "artifacts", "build",
     "logs", "output", "run",
 })
 _FORBIDDEN_SUFFIXES = frozenset({
@@ -257,7 +257,7 @@ def _write_hashes(root: Path) -> None:
     lines = []
     for path in sorted(
             (path for path in root.rglob("*")
-             if path.is_file() and path.name != HASH_FILE),
+             if path.is_file() and path != root / HASH_FILE),
             key=lambda item: item.relative_to(root).as_posix()):
         relative = path.relative_to(root).as_posix()
         lines.append(f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {relative}\n")
@@ -322,7 +322,7 @@ def verify_tree(root: Path, *,
     expected = _parse_hashes(target / HASH_FILE)
     actual_paths = {}
     for path in target.rglob("*"):
-        if not path.is_file() or path.name == HASH_FILE:
+        if not path.is_file() or path == target / HASH_FILE:
             continue
         relative = path.relative_to(target)
         if (set(relative.parts).intersection(_FORBIDDEN_PARTS)

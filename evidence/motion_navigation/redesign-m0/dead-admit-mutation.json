@@ -1,0 +1,12 @@
+{
+  "target": "navigation_session.NavigationSession._admit_async_event",
+  "mutation": "asserted_entry",
+  "cases": {
+    "product": 2000,
+    "coordination": 1448,
+    "faults": 16,
+    "follow": 10,
+    "world_changes": 19
+  },
+  "calls": 0
+}

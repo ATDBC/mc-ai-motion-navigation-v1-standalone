@@ -1,6 +1,9 @@
 """Sequential Walk/JumpUp execution without merging their state machines."""
 from __future__ import annotations
 
+from mc2p.motion_nav.actions.registry import action_spec
+from mc2p.motion_nav.actions.contracts import BodyCommitment, ControllerFamily
+
 from dataclasses import dataclass, replace
 from enum import StrEnum
 import math
@@ -11,7 +14,7 @@ from mc2p.contracts.action_v1 import LookV1
 from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.body_control import StopCause, BodyControlPhase
 from mc2p.motion_nav.action_route import (
-    ActionRoute, ControlledDropSegment, JumpGapSegment, JumpUpSegment,
+    ActionRoute, JumpGapSegment, JumpUpSegment,
     StepSegment, WalkSegment,
 )
 from mc2p.motion_nav.air_motion import AirMotionController, AirMotionProfile, AirMotionState
@@ -34,7 +37,7 @@ from mc2p.motion_nav.motion_candidate import (
     VerifiedMotionExecutorState, verified_candidate_can_start,
 )
 from mc2p.motion_nav.motion_risk import (
-    TaskDamageBudget, conservative_plain_fall_damage_points,
+    TaskDamageBudget,
 )
 from mc2p.motion_nav.motion_solver import (
     DEFAULT_AIR_TRANSITION_POLICIES, DEFAULT_GAP_SOLVER_POLICY,
@@ -200,8 +203,7 @@ class ActionRouteExecutor:
                 or next_index != self.action_index + 1
                 or next_index >= len(self.route.actions)
                 or type(self.route.actions[self.action_index]) is not WalkSegment
-                or type(self.route.actions[next_index]) is not
-                    ControlledDropSegment
+                or action_spec(self.route.actions[next_index]).entry_observation(self.route.actions[next_index], frame) is None
                 or not frame.body.is_on_ground):
             return False
         upcoming = self.route.actions[next_index]
@@ -257,14 +259,13 @@ class ActionRouteExecutor:
                     ),
                 )
             elif (next_index < len(self.route.actions)
-                    and type(self.route.actions[self.action_index + 1])
-                    in (JumpUpSegment, StepSegment, JumpGapSegment,
-                        ControlledDropSegment)):
+                    and action_spec(self.route.actions[self.action_index + 1]).body_commitment
+                    is BodyCommitment.TRANSITION):
                 next_action = self.route.actions[self.action_index + 1]
                 if type(next_action) is JumpUpSegment:
                     entry_tolerance = self.jump_profile.entry_center_tolerance_blocks
                     entry_speed = self.jump_profile.maximum_entry_speed_blocks_per_second
-                elif type(next_action) in (JumpGapSegment, ControlledDropSegment):
+                elif action_spec(next_action).controller_family is ControllerFamily.AIR:
                     profile = self.air_profiles.get(next_action.edge.profile_id)
                     if profile is None:
                         raise ContractViolation("air segment requires a calibrated profile")
@@ -282,11 +283,7 @@ class ActionRouteExecutor:
                     ),
                     handoff_entry_window=next_action.entry_window,
                 )
-                verified_kind = {
-                    JumpGapSegment: MotionSolveKind.JUMP_GAP,
-                    JumpUpSegment: MotionSolveKind.JUMP_UP,
-                    ControlledDropSegment: MotionSolveKind.CONTROLLED_DROP,
-                }.get(type(next_action))
+                verified_kind = action_spec(next_action).solve_kind
                 if (next_index in self._required_verified_motion
                         and verified_kind is not None):
                     # The R4 solver validates the continuous entry state.  The
@@ -385,7 +382,7 @@ class ActionRouteExecutor:
                 raise ContractViolation("JumpUp segment uses another calibrated profile")
             controller = JumpUpController(self.jump_profile)
             controller.start(action.edge.start, action.edge.end, frame)
-        elif type(action) in (JumpGapSegment, ControlledDropSegment):
+        elif action_spec(action).controller_family is ControllerFamily.AIR:
             admitted = self._verified_motion.get(self.action_index)
             if admitted is not None:
                 controller = VerifiedMotionExecutor()
@@ -395,14 +392,7 @@ class ActionRouteExecutor:
             if self.action_index in self._required_verified_motion:
                 self._controller = None
                 return
-            profile = self.air_profiles.get(action.edge.profile_id)
-            if profile is None:
-                raise ContractViolation("air segment requires a calibrated profile")
-            if (action.transition is not None
-                    and action.transition.trajectory_profile_id != profile.profile_id):
-                raise ContractViolation("air segment uses another trajectory profile")
-            controller = AirMotionController(profile)
-            controller.start(action.start_surface, action.end_surface, frame)
+            controller = action_spec(action).controller_factory(action, frame, self.air_profiles)
         else:
             assert type(action) is StepSegment
             if self.step_profile is None:
@@ -442,29 +432,7 @@ class ActionRouteExecutor:
                     and clearance.status is QueryStatus.FEASIBLE
                     and support.support_fraction + 1.0e-9
                         >= continuation.minimum_recovery_support_fraction)
-        if type(action) is JumpUpSegment:
-            end_x, end_y, end_z = action.edge.end
-            min_x, max_x = float(end_x), float(end_x + 1)
-            min_z, max_z = float(end_z), float(end_z + 1)
-            feet_y = float(end_y)
-        elif type(action) in (JumpGapSegment, ControlledDropSegment):
-            region = action.end_surface.region
-            min_x, max_x = region.min_x, region.max_x
-            min_z, max_z = region.min_z, region.max_z
-            feet_y = action.end_surface.position[1]
-        else:
-            return False
-        x, y, z = frame.body.position
-        if abs(y - feet_y) > .10:
-            return False
-        half_width = .30
-        overlap_x = max(
-            0.0, min(x + half_width, max_x) - max(x - half_width, min_x),
-        )
-        overlap_z = max(
-            0.0, min(z + half_width, max_z) - max(z - half_width, min_z),
-        )
-        return overlap_x * overlap_z >= .01
+        return action_spec(action).completed(action, frame)
 
     def start(self, route: ActionRoute, frame: NavigationFrame, *,
               damage_budget: TaskDamageBudget = TaskDamageBudget(),
@@ -490,8 +458,7 @@ class ActionRouteExecutor:
         if (type(require_verified_motion_actions) is not frozenset
                 or any(type(index) is not int
                        or not 0 <= index < len(route.actions)
-                       or type(route.actions[index]) not in {
-                           JumpGapSegment, JumpUpSegment, ControlledDropSegment}
+                       or not action_spec(route.actions[index]).requires_verified_motion
                        for index in require_verified_motion_actions)):
             raise ContractViolation("required verified motion indices are invalid")
         if self.state in {ActionRouteState.RUNNING, ActionRouteState.CANCELLING}:
@@ -534,11 +501,7 @@ class ActionRouteExecutor:
         if not 0 <= context.action_index < len(route.actions):
             raise ContractViolation("verified motion action is outside the route")
         action = route.actions[context.action_index]
-        expected_kind = {
-            JumpGapSegment: MotionSolveKind.JUMP_GAP,
-            JumpUpSegment: MotionSolveKind.JUMP_UP,
-            ControlledDropSegment: MotionSolveKind.CONTROLLED_DROP,
-        }.get(type(action))
+        expected_kind = action_spec(action).solve_kind
         if expected_kind is None or candidate.proof.kind is not expected_kind:
             raise ContractViolation(
                 "verified motion kind does not match its route action"
@@ -675,7 +638,7 @@ class ActionRouteExecutor:
                 VerifiedMotionExecutorState.RUNNING,
                 VerifiedMotionExecutorState.RECOVERING,
             }
-        return type(self.route.actions[self.action_index]) is not WalkSegment
+        return action_spec(self.route.actions[self.action_index]).body_commitment is BodyCommitment.TRANSITION
 
     def register_verified_submission(
             self, command_index: int, *, control_sequence: int,
@@ -734,11 +697,11 @@ class ActionRouteExecutor:
             return self._terminal_decision(frame, started, state_anchor)
         controller = self._controller
         if (self._stop_cause is StopCause.DEPENDENCY_CHANGED
-                and type(self.route.actions[self.action_index]) is ControlledDropSegment
+                and action_spec(self.route.actions[self.action_index]).stop_hold.dependency_movement is not None
                 and frame.body.is_on_ground
                 and math.hypot(frame.body.velocity_blocks_per_second[0],
                                frame.body.velocity_blocks_per_second[2]) > .10):
-            return self._result(started, MovementV1(sneak=True), 1,
+            return self._result(started, action_spec(self.route.actions[self.action_index]).stop_hold.dependency_movement, 1,
                                 "grounded_dependency_stop")
         if type(controller) is VerifiedMotionExecutor:
             if (state_anchor is None or state_anchor.session != frame.session
@@ -880,10 +843,10 @@ class ActionRouteExecutor:
                                     "input_application_unconfirmed")
             return self._finish_goal(frame, started, input_ledger, state_anchor)
         action = self.route.actions[self.action_index]
-        self._commit_drop_damage_if_started(action, frame)
+        self._commit_action_damage_if_started(action, frame)
         if (self._cancel_requested
                 and self._stop_cause is StopCause.DEPENDENCY_CHANGED
-                and type(action) is ControlledDropSegment
+                and action_spec(action).stop_hold.dependency_movement is not None
                 and frame.body.is_on_ground
                 and math.hypot(
                     frame.body.velocity_blocks_per_second[0],
@@ -895,7 +858,7 @@ class ActionRouteExecutor:
             # then finish cancellation without replaying the stale proof.
             self.state = ActionRouteState.CANCELLING
             return self._result(
-                started, MovementV1(sneak=True), 1,
+                started, action_spec(action).stop_hold.dependency_movement, 1,
                 "grounded_dependency_stop",
             )
         if type(self._controller) is VerifiedMotionExecutor:
@@ -1103,7 +1066,7 @@ class ActionRouteExecutor:
                 started, decision.movement, decision.input_lease_ticks,
                 decision.reason_code, decision.missing_cells,
             )
-        if type(action) in (JumpGapSegment, ControlledDropSegment):
+        if action_spec(action).controller_family is ControllerFamily.AIR:
             terminal = {
                 AirMotionState.BLOCKED: ActionRouteState.BLOCKED,
                 AirMotionState.NEEDS_INFORMATION: ActionRouteState.NEEDS_INFORMATION,
@@ -1153,7 +1116,7 @@ class ActionRouteExecutor:
                  movement_yaw_radians: float | None = None) -> ActionRouteDecision:
         assert self.route is not None
         completed = self.route.actions[self.action_index]
-        self._commit_drop_damage_if_started(completed, frame, force=True)
+        self._commit_action_damage_if_started(completed, frame, force=True)
         self.clear_pending_action_boundary()
         self.action_index += 1
         if self.action_index >= len(self.route.actions):
@@ -1186,7 +1149,7 @@ class ActionRouteExecutor:
             movement_yaw_radians=movement_yaw_radians,
         )
 
-    def _commit_drop_damage_if_started(
+    def _commit_action_damage_if_started(
         self,
         action,
         frame: NavigationFrame,
@@ -1194,17 +1157,12 @@ class ActionRouteExecutor:
         force: bool = False,
     ) -> None:
         """Book a fall once leaving support makes its risk unavoidable."""
-        if (type(action) is not ControlledDropSegment
+        spec = action_spec(action)
+        if (not spec.tracks_damage
                 or self.action_index in self._committed_damage_actions
-                or (not force and frame.body.is_on_ground)):
+                or not spec.damage_committed(action, frame, force=force)):
             return
-        self._completed_movement_damage_points += (
-            conservative_plain_fall_damage_points(max(
-                0.0,
-                action.start_surface.position[1]
-                - action.end_surface.position[1],
-            ))
-        )
+        self._completed_movement_damage_points += spec.expected_damage_points(action)
         self._committed_damage_actions.add(self.action_index)
 
     def _finish_goal(

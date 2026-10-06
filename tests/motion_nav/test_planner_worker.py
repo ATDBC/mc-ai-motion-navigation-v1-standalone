@@ -6,6 +6,7 @@ import time
 import unittest
 from dataclasses import replace
 from queue import Empty, Full, Queue
+from unittest.mock import patch
 
 from mc2p.contracts.action_v1 import MovementV1
 from mc2p.motion_nav.fixed_route import FixedRouteController, FixedRouteState
@@ -86,6 +87,63 @@ def cross_task_sequence_probe(*, deliver_current: bool,
 
 
 class PlannerWorkerTests(unittest.TestCase):
+    def test_control_process_never_executes_planning(self):
+        graph, start, goal = grid_graph(2)
+        worker = PlannerWorker()
+        try:
+            with patch('mc2p.motion_nav.planner_worker._execute_job',
+                       side_effect=AssertionError('planning ran on the control side')):
+                worker.submit(graph, PlanningRequest(1, 'process-location', 'goal',
+                                                    1, 'random', start, goal))
+                result = None
+                for _ in range(500):
+                    result = worker.poll_latest()
+                    if result is not None:
+                        break
+                    time.sleep(.01)
+                self.assertIsNotNone(result)
+                self.assertIs(result.status, PlanningStatus.COMPLETE)
+        finally:
+            worker.close()
+
+    def test_control_transport_uses_only_nonblocking_queue_operations(self):
+        class QueueGuard:
+            def __init__(self): self.queue = Queue(2)
+            def put_nowait(self, value): self.queue.put_nowait(value)
+            def get_nowait(self): return self.queue.get_nowait()
+            def put(self, *args, **kwargs):
+                raise AssertionError('blocking queue put on control side')
+            def get(self, *args, **kwargs):
+                raise AssertionError('blocking queue get on control side')
+        class LiveProcess:
+            def is_alive(self): return True
+        worker = PlannerWorker.__new__(PlannerWorker)
+        worker._closed = False
+        worker._submitted, worker._diagnostic_deliveries = [], []
+        worker._process = LiveProcess()
+        worker._requests, worker._results = QueueGuard(), QueueGuard()
+        graph, start, goal = grid_graph(2)
+        request = PlanningRequest(1, 'queue-api', 'goal', 1, 'random', start, goal)
+        self.assertIs(worker.submit(graph, request), PlanningSubmissionStatus.ACCEPTED)
+        worker._results.put_nowait(astar_plan(graph, request))
+        self.assertEqual(worker.poll_latest().request_id, request.request_id)
+        self.assertIsNone(worker.poll_latest())
+
+    def test_invariant_checks_detect_both_wrong_control_side_copies(self):
+        from mc2p.motion_nav import planner_worker
+        enqueue = PlannerWorker._enqueue
+        def inline(owner, job):
+            planner_worker._execute_job(job)
+            return enqueue(owner, job)
+        with patch.object(PlannerWorker, '_enqueue', inline):
+            with self.assertRaisesRegex(AssertionError, 'planning ran'):
+                self.test_control_process_never_executes_planning()
+        def blocking(owner):
+            return (owner._results.get(),)
+        with patch.object(PlannerWorker, 'poll_available', blocking):
+            with self.assertRaisesRegex(AssertionError, 'blocking queue get'):
+                self.test_control_transport_uses_only_nonblocking_queue_operations()
+
     def test_full_identity_wins_for_both_sequence_orders_and_delivery_orders(self):
         for old_sequence, current_sequence in ((99, 1), (1, 99)):
             for current_first in (False, True):

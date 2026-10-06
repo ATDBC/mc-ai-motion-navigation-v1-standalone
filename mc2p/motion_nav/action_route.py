@@ -170,11 +170,11 @@ class ActionRoute:
 
     def __post_init__(self) -> None:
         require_identifier(self.route_id, "action route id")
-        if (type(self.actions) is not tuple or not self.actions
-                or any(type(action) not in (WalkSegment, JumpUpSegment, StepSegment)
-                       and type(action) not in (JumpGapSegment, ControlledDropSegment)
-                       for action in self.actions)):
+        if type(self.actions) is not tuple or not self.actions:
             raise ContractViolation("action route requires typed immutable actions")
+        from mc2p.motion_nav.actions.registry import action_spec
+        for action in self.actions:
+            action_spec(action)
         if self.goal_state is not None and type(self.goal_state) is not GoalState:
             raise ContractViolation("action route goal state must be typed")
         if type(self.final_resources) is not ResourceState:

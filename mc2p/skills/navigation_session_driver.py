@@ -24,7 +24,6 @@ from mc2p.contracts.observation_v3 import ObservationSnapshotV3
 from mc2p.contracts.task import (
     ComparisonOperatorV0, SuccessCriterionV0, TaskIntentV0,
 )
-from mc2p.contracts.report import FailureV0
 from mc2p.motion_nav.movement_transition import GoalState
 from mc2p.motion_nav.goal_reach_policy import GoalReachPolicy
 from mc2p.motion_nav.goal_planning_policy import GoalPlanningPolicy
@@ -365,7 +364,12 @@ class RuntimeNavigationDriver:
             if self.runtime.state is not RuntimeStateV1.READY:
                 self._finish_control_unavailable()
                 return
-            self._sync_report(runtime_failure=result.report.failure)
+            if not self.session.report.terminal:
+                self.session.handle_internal_contract_failure("runtime_failure")
+            # Consume the current verified stop evidence even when the task
+            # was already ending. The Session owns probe/route finalization.
+            self.session.body_handoff(self.runtime.observation, self.runtime.input_ledger)
+            self._sync_report()
         else:
             if (not self.session.report.terminal
                     and proposal is not None
@@ -594,8 +598,7 @@ class RuntimeNavigationDriver:
         self.session.unbind_source(source)
         self.source = None
 
-    def _sync_report(self, *, runtime_failure: FailureV0 | None = None,
-                     unavailable_runtime: RuntimeStateV1 | None = None) -> None:
+    def _sync_report(self, *, unavailable_runtime: RuntimeStateV1 | None = None) -> None:
         report = self.session.report
         mapping = {
             NavigationSessionState.CANCELLING: "stopping",
@@ -607,8 +610,6 @@ class RuntimeNavigationDriver:
         }
         self.state = mapping.get(report.state, "running")
         self.reason = report.reason
-        if runtime_failure is not None:
-            self.state, self.reason = "failed", "runtime_failure"
         if unavailable_runtime is not None:
             if unavailable_runtime is RuntimeStateV1.READY:
                 raise ContractViolation("ready Runtime still has control")

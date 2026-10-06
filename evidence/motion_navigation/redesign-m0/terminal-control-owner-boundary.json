@@ -1,0 +1,7 @@
+{
+  "state": "failed",
+  "reason": "control_unavailable",
+  "source_retained": true,
+  "body_owner_retained": true,
+  "new_input_writes": 0
+}

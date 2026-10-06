@@ -6,6 +6,9 @@ the request and goal revision that produced them.
 """
 from __future__ import annotations
 
+from mc2p.motion_nav.actions.registry import action_spec
+from mc2p.motion_nav.action_preconditions import select_current_boundary, select_upcoming_boundary
+
 from dataclasses import dataclass, replace
 from enum import StrEnum
 import hashlib
@@ -31,7 +34,7 @@ from mc2p.contracts.observation_request_v3 import (
 )
 from mc2p.contracts.observation_v3 import ObservationSnapshotV3
 from mc2p.motion_nav.action_route import (
-    ControlledDropSegment, JumpGapSegment, JumpUpSegment, WalkSegment,
+    JumpGapSegment, JumpUpSegment, WalkSegment,
 )
 from mc2p.motion_nav.action_route_executor import (
     ActionRouteDecision,
@@ -97,7 +100,7 @@ from mc2p.motion_nav.motion_risk import (
     RiskActionRecord, RiskActionState, RiskCommitEvidence, RiskCommitKind,
     RiskReleaseEvidence, RiskReservationStatus, RiskSubmissionStatus,
     TaskDamageBudget,
-    TaskRiskLedger, conservative_plain_fall_damage_points,
+    TaskRiskLedger,
 )
 from mc2p.motion_nav.retry_ledger import (
     ProgressEvidence, ProgressKind, RecoveryBudgetKind,
@@ -454,6 +457,7 @@ class NavigationSessionPort(Protocol):
     ) -> None: ...
     def cancel(self, reason: str) -> None: ...
     def handle_control_unavailable(self) -> None: ...
+    def handle_internal_contract_failure(self, reason: str) -> None: ...
     def contract_stop_proposal(self, frame: NavigationFrame, state_anchor: StateAnchor | None,
                               deadline_ns: int, *, input_ledger: InputApplicationLedger) -> NavigationSessionProposal: ...
     def spawn_successor(
@@ -786,29 +790,6 @@ class NavigationSession:
                 "navigation lifecycle event "
                 f"{event.value} is {policy.value} in {self._state.value}"
             )
-
-    def _admit_async_event(self, event: NavigationSessionEvent) -> bool:
-        """Drop stale async work; turn an impossible active event into failure."""
-        policy = self._lifecycle.admit_event(event)
-        if policy is SessionEventPolicy.HANDLE:
-            return True
-        if policy is SessionEventPolicy.IGNORE:
-            return False
-        if self._state not in {
-            NavigationSessionState.COMPLETE,
-            NavigationSessionState.CANCELLED,
-            NavigationSessionState.FAILED,
-            NavigationSessionState.CLOSED,
-        }:
-            self._transition(
-                NavigationTransitionAction.MARK_FAILED,
-                f"rejected_async_event_{event.value}",
-            )
-            return False
-        raise ContractViolation(
-            "navigation lifecycle event "
-            f"{event.value} is rejected in {self._state.value}"
-        )
 
     @property
     def _request(self) -> PlanningRequest | SurfacePlanningRequest | None:
@@ -1449,7 +1430,7 @@ class NavigationSession:
             if (route is not None and type(action_index) is int
                     and 0 <= action_index < len(route.actions)):
                 action = route.actions[action_index]
-                if type(action) is ControlledDropSegment:
+                if action_spec(action).entry_observation(action, self._frame) is not None:
                     # Until the body really leaves the starting support, a
                     # changed landing support can still be answered by
                     # sneaking or stopping.  Recheck this small dependency set
@@ -1941,19 +1922,8 @@ class NavigationSession:
 
     @staticmethod
     def _route_expected_damage_points(route: ActiveRoute) -> float:
-        return sum(
-            conservative_plain_fall_damage_points(max(
-                0.0,
-                action.start_surface.position[1]
-                - action.end_surface.position[1],
-            ))
-            for action in route.action_route.actions
-            if type(action) is ControlledDropSegment
-        )
-
-    @staticmethod
-    def _cell_fact_id(position: BlockPos) -> str:
-        return f"cell/{position[0]}/{position[1]}/{position[2]}"
+        return sum(action_spec(action).expected_damage_points(action)
+                   for action in route.action_route.actions)
 
     def _record_retry_route_progress(
         self, frame: NavigationFrame, decision: ActionRouteDecision,
@@ -2033,7 +2003,8 @@ class NavigationSession:
         if not 0 <= decision.action_index < len(route.action_route.actions):
             return None, None
         action = route.action_route.actions[decision.action_index]
-        if type(action) is not ControlledDropSegment:
+        spec = action_spec(action)
+        if not spec.tracks_damage:
             return None, None
         key = (f"{route.source_request_id}/{route.route_id}",
                decision.action_index)
@@ -2043,10 +2014,7 @@ class NavigationSession:
                 or record.state is RiskActionState.RELEASED):
             self._risk_action_key = key
             self._risk_action_id = ledger.next_action_id()
-        expected = conservative_plain_fall_damage_points(max(
-            0.0, action.start_surface.position[1]
-            - action.end_surface.position[1],
-        ))
+        expected = spec.expected_damage_points(action)
         result = ledger.reserve(
             self._risk_action_id, expected,
             policy_revision=ledger.policy_revision,
@@ -2083,7 +2051,7 @@ class NavigationSession:
         action = route.actions[index]
         return (
             executor.active_verified_entry_state() is not None
-            or type(action) in {JumpGapSegment, ControlledDropSegment}
+            or action_spec(action).stop_hold.same_frame_protection
         )
 
     def _current_risk_action_has_started(self) -> bool:
@@ -2210,39 +2178,20 @@ class NavigationSession:
         if (route is None or executor is None
                 or self._state is NavigationSessionState.STOPPING):
             return None
-        current_action_index = getattr(executor, "action_index", None)
-        if action_index is None:
-            action_index = current_action_index
-        if (type(action_index) is not int
-                or not 0 <= action_index < len(route.action_route.actions)):
+        choice = select_current_boundary(
+            route, getattr(executor, "action_index", None), action_index, frame,
+            started=(hasattr(executor, "current_verified_action_started")
+                     and executor.current_verified_action_started()),
+            through_grounded_departure=through_grounded_departure,
+        )
+        if choice is None:
             return None
-        action = route.action_route.actions[action_index]
-        if (action_index == current_action_index
-                and hasattr(executor, "current_verified_action_started")
-                and executor.current_verified_action_started()):
-            # Entry evidence is checked once, before the first verified
-            # command is submitted.  Once airborne, the executor owns landing
-            # and handles late or missing receipts without restarting
-            # acquisition.  A controlled drop that is still grounded is the
-            # exception: a changed landing support can still be answered by
-            # stopping before departure, so that dependency remains live.
-            still_on_departure_support = (
-                type(action) is ControlledDropSegment
-                and frame.body.is_on_ground
-                and abs(
-                    frame.body.position[1]
-                    - action.start_surface.position[1]
-                ) <= .25
-            )
-            if (not through_grounded_departure
-                    or not still_on_departure_support):
-                return None
         task_id = (
             self._retry_ledger.task_id
             if self._retry_ledger is not None else route.goal_id
         )
         return check_action_precondition(
-            route, action_index, frame,
+            route, choice.action_index, frame,
             task_id=task_id, edge_probe=self._edge_probe,
             acquisition_grant=self._completed_acquisition,
         )
@@ -2259,38 +2208,14 @@ class NavigationSession:
         if (executor is None or active_route is None or action_route is None
                 or action_route is not active_route.action_route):
             return None
-        index = executor.action_index
-        if not 0 <= index + 1 < len(action_route.actions):
-            return None
-        next_index = index + 1
-        upcoming = action_route.actions[next_index]
-        if (type(upcoming) is not ControlledDropSegment
-                or upcoming.start_surface.position[1]
-                    - upcoming.end_surface.position[1] <= 1.0 + 1.0e-6):
-            return None
         probe = self._edge_probe
-        if (probe is not None and probe.belongs_to_action(
-                active_route.route_id,
-                active_route.route_revision,
-                next_index,
-        )):
-            return next_index
-        grant = self._completed_acquisition
-        if (grant is not None
-                and (grant.route_id, grant.route_revision, grant.action_index)
-                    == (active_route.route_id,
-                        active_route.route_revision,
-                        next_index)):
-            return next_index
-        if not frame.body.is_on_ground:
-            return None
-        region = upcoming.start_surface.region
-        x, y, z = frame.body.position
-        if (abs(y - upcoming.start_surface.position[1]) <= .10
-                and region.min_x + .05 <= x <= region.max_x - .05
-                and region.min_z + .05 <= z <= region.max_z - .05):
-            return next_index
-        return None
+        binding = (None if probe is None or not probe.owned else
+                   (probe.route_id, probe.route_revision, probe.action_index))
+        choice = select_upcoming_boundary(
+            active_route, executor.action_index, frame,
+            probe_binding=binding, grant=self._completed_acquisition,
+        )
+        return None if choice is None else choice.action_index
 
     def _clear_pending_action_boundary(self) -> None:
         """Revoke staged strict entry when its owning intent is withdrawn."""
@@ -2331,10 +2256,10 @@ class NavigationSession:
                 "action acquisition does not match the active route"
             )
         action = route.action_route.actions[spec.action_index]
-        if (type(action) is not ControlledDropSegment
-                or action.entry_window is None):
+        entry = action_spec(action).entry_observation(action, frame)
+        if entry is None or entry.entry_window is None:
             raise ContractViolation(
-                "action acquisition requires a controlled-drop entry window"
+                "action acquisition requires an observation entry window"
             )
         self._edge_probe = LandingEdgeProbe(
             spec.goal_id,
@@ -2348,7 +2273,7 @@ class NavigationSession:
             world_session=spec.world_session,
             geometry_revision=spec.geometry_revision,
             dependencies=spec.dependencies,
-            entry_window=action.entry_window,
+            entry_window=entry.entry_window,
         )
         self._snapshot_missing = result.missing_cells
         self._transition(NavigationTransitionAction.WAIT_FOR_INFORMATION, result.reason)
@@ -3044,18 +2969,16 @@ class NavigationSession:
                     deadline_ns, safety_guard=True,
                 )
             if precondition.status is ActionPreconditionStatus.NEEDS_INFORMATION:
+                hold = (None if current_executor_action is None else
+                        action_spec(current_executor_action).stop_hold.information_movement)
+                guard = frame.body.is_on_ground and hold is not None
                 self._transition(NavigationTransitionAction.WAIT_FOR_INFORMATION, precondition.reason)
                 self._snapshot_missing = precondition.missing_cells
                 return self._proposal(
-                    (MovementV1(sneak=True)
-                     if frame.body.is_on_ground
-                     and type(current_executor_action) is ControlledDropSegment
-                     else MovementV1()),
+                    hold if guard else MovementV1(),
                     None, 1, deadline_ns,
                     information_look=self._information_look(frame),
-                    safety_guard=(frame.body.is_on_ground
-                                  and type(current_executor_action)
-                                      is ControlledDropSegment),
+                    safety_guard=guard,
                 )
             if precondition.status is ActionPreconditionStatus.REJECTED:
                 if (self._edge_probe is not None
@@ -4610,8 +4533,7 @@ class NavigationSession:
             gap_solver_policy=self.profiles.gap_solver,
         )
         motion_coordinator = None
-        if any(type(action) in {
-                   JumpGapSegment, JumpUpSegment, ControlledDropSegment}
+        if any(action_spec(action).needs_background_solving
                for action in route.action_route.actions):
             if self._motion_worker is None:
                 self._motion_worker = MotionSolverWorker(max_pending=4)

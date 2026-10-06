@@ -1,0 +1,13 @@
+{
+  "target": "navigation_session.NavigationSession._cell_fact_id",
+  "mutation": "asserted_entry",
+  "representative_only": true,
+  "cases": {
+    "product": 10,
+    "coordination": 6,
+    "faults": 16,
+    "follow": 10,
+    "world_changes": 19
+  },
+  "calls": 0
+}

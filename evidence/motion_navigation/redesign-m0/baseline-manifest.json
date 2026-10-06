@@ -1,0 +1,104 @@
+{
+  "schema_version": "mc2p.redesign-m0-baseline.v1",
+  "platform": "Windows",
+  "sets": {
+    "product": {
+      "cases": 2000,
+      "differences": [],
+      "equivalent": true,
+      "results": {
+        "success": 1718,
+        "exceptions": 0,
+        "safety_violation_tasks": 0
+      },
+      "runs": 1,
+      "source_commit": "51f3759356d7920cff3da4e0bf22e09edccb9ad4",
+      "source_worktree_clean": true
+    },
+    "coordination": {
+      "cases": 1448,
+      "differences": [],
+      "equivalent": true,
+      "results": {
+        "passed": 1448,
+        "failed": 0
+      },
+      "runs": 1,
+      "source_commit": "51f3759356d7920cff3da4e0bf22e09edccb9ad4",
+      "source_worktree_clean": true
+    },
+    "faults": {
+      "cases": 16,
+      "differences": [],
+      "equivalent": true,
+      "results": {
+        "passed": 16,
+        "failed": 0
+      },
+      "runs": 1,
+      "source_commit": "51f3759356d7920cff3da4e0bf22e09edccb9ad4",
+      "source_worktree_clean": true
+    },
+    "follow": {
+      "cases": 10,
+      "differences": [],
+      "equivalent": true,
+      "results": {
+        "passed": 10,
+        "failed": 0
+      },
+      "runs": 1,
+      "source_commit": "51f3759356d7920cff3da4e0bf22e09edccb9ad4",
+      "source_worktree_clean": true
+    },
+    "world_changes": {
+      "cases": 19,
+      "differences": [],
+      "equivalent": true,
+      "results": {
+        "passed": 19,
+        "failed": 0
+      },
+      "runs": 1,
+      "source_commit": "51f3759356d7920cff3da4e0bf22e09edccb9ad4",
+      "source_worktree_clean": true
+    }
+  },
+  "production_sha256": "34fd00f3af5ba12fb4c446e6dd02811aa1fecb8cd4735f7707ffa02111b80338",
+  "metrics": "metrics-baseline.json",
+  "metrics_schema": "navigation-design-metrics-v2",
+  "checks": [
+    "checks-forward-final.json",
+    "checks-reverse-final.json"
+  ],
+  "historical_failed_check": "checks-forward.json",
+  "sha256": {
+    "checks-forward-final.json": "8ca5ec63da59fd4b4ac46092a404d60ae44476ab44ebbedabe86c86101b7e547",
+    "checks-forward.json": "576e7d06fb9f76013f5203caac5fe4523321df935a9a374d7c10b8bb393b82b1",
+    "checks-reverse-final.json": "a8e0a1b69d537698fcb259919f32fe96bf5e90a07e7770cff25136ec7104c91a",
+    "coordination-index.json": "e94296eb4dbc6e7945b1b68574d3767f24309a28309b2c069b3fb33d5bd45f9a",
+    "coordination-summary.json": "a19fe3d59c02bfcb5a8a5d08dfa3608fc8740d01ba974b39b64a180954b17405",
+    "dead-admit-counted-representative.json": "2c9fab52dc620c8ee1eecbd9cbfe143e387a9a9b221a4374f5f614f6d0594263",
+    "dead-admit-mutation.json": "743ddac1bdf0a8f8641caf05138736ea123a95cc179a6c5d749b7b0581fb7e26",
+    "dead-cell-counted-mutation.json": "d82ba4f31ab482243e5737774934896215229e3adc48504e1235c1397eaff4dd",
+    "dead-cell-mutation.json": "d82ba4f31ab482243e5737774934896215229e3adc48504e1235c1397eaff4dd",
+    "dead-upcoming-counted-mutation.json": "068bc7d9b7192572c9791f19f20204ed3a74d7c076ddba8f3e9b075bfa14a62b",
+    "faults-index.json": "e96b7fa0e84fdf1280bfbc21bca4801d690bed53850c2fa419b0414e0966794a",
+    "faults-summary.json": "2da4027c143e3988b7e4089ece2996cb3daedd1bd1bc42c09f5667fbbd257d3a",
+    "follow-index.json": "601c3fb0170cc77af888d8ede985862196d5e54181e5b5d691fc170d2f761693",
+    "follow-summary.json": "054fdd7f10a82f47522c547594772c0a2b489af78d33f781c2eb6d78261544df",
+    "historical-seeds.json": "cb13bb0054156c75e71dea7a1fd6d79be8358963fa50b9c1256e178a8e039415",
+    "metrics-after.json": "cfd0e0adf817282145e74fb040c53c4a5439580b67c81c8f77dc135a62b4e185",
+    "metrics-baseline.json": "bd3e28e0dd4acddf6aabf3ad8adc1ce2e1acd5a41582a3f6fd9f30932fe57833",
+    "metrics-before.json": "16a0b4157d4599a869ee786c953de3a0cec647daa921c7bd9ca897b58dbda750",
+    "metrics-canonical.json": "332b74a67562be07aecc7a712d9e977ce04090b470bf0fe7a6defb7a3a79de96",
+    "metrics-current.json": "6e4965bdb53ac32aff4bbc5174cbc33c6245f976266cf8f4c59e5a1979d0ddd0",
+    "product-index.json": "666382d8ea288eb40e1654e9dba95eb6b9dd97198be2f0ef26d3588649d18367",
+    "product-summary.json": "91a459ee52501fa80827c9dd218f0b0e45d759899a6f4b3669c30b05903a6686",
+    "terminal-control-owner-boundary.json": "d4846edb2ac24850325cb51fc10da9216f3e8ea78f8d24868921357becbbb1cf",
+    "world_changes-index.json": "5d07a37cc2f942561da29c5e565ed47e83a0126ae542c9bb22f0df18f60ac444",
+    "world_changes-summary.json": "d123cb21553db85a22f20265c1b65d9da781bb430b81310740eeae84083cdf83"
+  },
+  "mutation_boundary": "assertion-only full run is not zero-call proof; counted representative runs plus original S0R full call matrix and static zero references prove deletion",
+  "prior_full_path_matrix_sha256": "928308f41a408e876af218325d71d3c468fcbd9c58fc125ba539692337960a36"
+}

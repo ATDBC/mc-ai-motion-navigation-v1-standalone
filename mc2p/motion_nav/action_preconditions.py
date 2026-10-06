@@ -4,15 +4,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 import hashlib
-import math
 
 from mc2p.contracts.common import ContractViolation, require_identifier
-from mc2p.motion_nav.action_route import ControlledDropSegment
-from mc2p.motion_nav.geometry import QueryStatus, query_support
+from mc2p.motion_nav.actions.registry import action_spec
 from mc2p.motion_nav.landing_edge_probe import LandingEdgeProbe
-from mc2p.motion_nav.route_admission import (
-    ActiveRoute, direct_drop_visual_evidence_sufficient,
-)
+from mc2p.motion_nav.route_admission import ActiveRoute
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.world_model import BlockPos, CellKnowledge
 
@@ -142,14 +138,6 @@ class ActionPreconditionResult:
             )
 
 
-def _landing_cell(action: ControlledDropSegment) -> BlockPos:
-    return (
-        action.end_surface.node_id.column_x,
-        math.floor(action.end_surface.position[1]),
-        action.end_surface.node_id.column_z,
-    )
-
-
 def _acquisition_id(
     route: ActiveRoute, action_index: int, landing_cell: BlockPos,
 ) -> str:
@@ -158,20 +146,6 @@ def _acquisition_id(
         f"{landing_cell[0]}:{landing_cell[1]}:{landing_cell[2]}"
     )
     return "landing-" + hashlib.sha256(raw.encode("utf-8")).hexdigest()[:20]
-
-
-def _landing_support_result(
-    action: ControlledDropSegment,
-    frame: NavigationFrame,
-):
-    target = action.end_surface.position
-    current = frame.body.position
-    body = frame.body.body_box.moved(
-        target[0] - current[0],
-        target[1] - current[1],
-        target[2] - current[2],
-    )
-    return query_support(body, frame.world)
 
 
 def check_action_precondition(
@@ -193,80 +167,42 @@ def check_action_precondition(
             ActionPreconditionStatus.REJECTED,
             ActionPreconditionReason.ACTION_INDEX_INVALID,
         )
-    action = route.action_route.actions[action_index]
-    if (type(action) is not ControlledDropSegment
-            or action.start_surface.position[1]
-                - action.end_surface.position[1] <= 1.0 + 1.0e-6):
-        return ActionPreconditionResult(
-            ActionPreconditionStatus.READY,
-            ActionPreconditionReason.READY,
-        )
-    landing_cell = _landing_cell(action)
-    landing_support = _landing_support_result(action, frame)
-    if landing_support.status is QueryStatus.NEEDS_INFORMATION:
-        return ActionPreconditionResult(
-            ActionPreconditionStatus.NEEDS_INFORMATION,
-            ActionPreconditionReason.LANDING_SUPPORT_INFORMATION_REQUIRED,
-            missing_cells=landing_support.missing_cells,
-        )
-    if landing_support.status is QueryStatus.UNSUPPORTED:
-        return ActionPreconditionResult(
-            ActionPreconditionStatus.REJECTED,
-            ActionPreconditionReason.LANDING_SUPPORT_UNSUPPORTED,
-        )
-    if (landing_support.status is not QueryStatus.FEASIBLE
-            or landing_support.support_fraction <= 0.0):
-        return ActionPreconditionResult(
-            ActionPreconditionStatus.REJECTED,
-            ActionPreconditionReason.LANDING_SUPPORT_MISSING,
-        )
-    stale_support_cells: list[BlockPos] = []
-    for position in landing_support.dependencies:
-        support_fact = frame.world.cell(position)
-        if (support_fact.knowledge is CellKnowledge.BLOCK
-                and support_fact.stamp is not None
-                and frame.body.sequence_id - support_fact.stamp.sequence_id
-                    > DIRECT_DROP_SUPPORT_MAX_AGE_TICKS):
-            stale_support_cells.append(position)
-    stale_support = tuple(sorted(stale_support_cells))
-    fact = frame.world.cell(landing_cell)
-    if (fact.knowledge is CellKnowledge.BLOCK
-            or (acquisition_grant is not None
-                and acquisition_grant.applies(route, action_index, frame))
-            or direct_drop_visual_evidence_sufficient(
-                frame, landing_cell, edge_probe=edge_probe,
-            )):
-        if stale_support:
-            return ActionPreconditionResult(
-                ActionPreconditionStatus.NEEDS_INFORMATION,
-                ActionPreconditionReason.LANDING_SUPPORT_INFORMATION_REQUIRED,
-                missing_cells=stale_support,
-            )
-        return ActionPreconditionResult(
-            ActionPreconditionStatus.READY,
-            ActionPreconditionReason.READY,
-        )
-    dependencies = tuple(sorted(
-        set(action.dependencies)
-        | set(landing_support.dependencies)
-        | {landing_cell}
-    ))
-    spec = AcquisitionSpec(
-        _acquisition_id(route, action_index, landing_cell),
-        task_id,
-        route.goal_id,
-        route.goal_revision,
-        route.route_id,
-        route.route_revision,
-        action_index,
-        landing_cell,
-        route.world_session,
-        frame.world.geometry_revision,
-        dependencies,
+    return action_spec(route.action_route.actions[action_index]).precondition(
+        route, action_index, frame, task_id=task_id, edge_probe=edge_probe,
+        acquisition_grant=acquisition_grant,
     )
-    return ActionPreconditionResult(
-        ActionPreconditionStatus.NEEDS_ACQUISITION,
-        ActionPreconditionReason.LANDING_LOWER_EVIDENCE_REQUIRED,
-        spec,
-        (landing_cell,),
-    )
+
+
+@dataclass(frozen=True, slots=True)
+class ActionBoundarySelection:
+    action_index: int
+
+
+def select_current_boundary(route, current_index, requested_index, frame, *,
+                            started, through_grounded_departure):
+    """Select a boundary from immutable snapshots without starting acquisition."""
+    index = current_index if requested_index is None else requested_index
+    if type(index) is not int or not 0 <= index < len(route.action_route.actions):
+        return None
+    if index == current_index and started:
+        entry = action_spec(route.action_route.actions[index]).entry_observation(
+            route.action_route.actions[index], frame)
+        if not through_grounded_departure or entry is None or not entry.recheck_started_action:
+            return None
+    return ActionBoundarySelection(index)
+
+
+def select_upcoming_boundary(route, current_index, frame, *, probe_binding, grant):
+    """Keep an existing acquisition binding or choose an observed next entry."""
+    index = current_index + 1
+    if not 0 <= index < len(route.action_route.actions):
+        return None
+    action = route.action_route.actions[index]
+    entry = action_spec(action).entry_observation(action, frame)
+    if entry is None or not entry.needs_acquisition_before_solve:
+        return None
+    binding = (route.route_id, route.route_revision, index)
+    grant_binding = None if grant is None else (grant.route_id, grant.route_revision, grant.action_index)
+    if probe_binding == binding or grant_binding == binding or entry.can_begin_acquisition:
+        return ActionBoundarySelection(index)
+    return None

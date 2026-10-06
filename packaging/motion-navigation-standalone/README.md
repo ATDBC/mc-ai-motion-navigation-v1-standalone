@@ -4,9 +4,13 @@
 
 默认分支 `main` 是项目方唯一的公开发布线，只接收固定导出脚本生成并校验通过的整理后快照。主项目的完整开发分支和提交历史不会直接推入本仓库。三方审查分支可以单独存在，用于保存审查报告和复现材料；它们不改变 `main` 的正式状态。
 
-2026-10-06，S0-R 已在正式 Windows 环境完成，S1 可以开始但尚未实施。最终完整正序、逆序均为 1,499/1,499；产品 2,000 项、协调 1,448 项、扩充故障 16 项、正式跟随 10 项和世界变化 19 项均连续两次一致。产品仍为 1,718/2,000，零异常、零安全事件。v2 清单保留 14 个待审候选和 2 个仅审查项，S1／S2 变异尚未执行。三方使用 Linux 是审查方的环境限制；Linux 复跑只用于补充检查可移植性，不阻塞本项目阶段关闭。结果见[结构整理验收](docs/motion_navigation/acceptance/post-F1-navigation-structure-cleanup.md)，紧凑签名、路径矩阵和清单位于 `evidence/motion_navigation/post-f1-structure-s0r/`。
+2026-10-07，M0 通过，M1 结构止损，未通过。下降规则迁移经行为验证予以保留：新版类型位置 79→42、下降 30→0，Session 5,046→4,994，只减少 52 行，未达到 100 行门槛；运动导航包净增 152 行。最终正式 Windows 完整正序、逆序均为 1,528/1,528，五组连续两轮与 M0 逐项一致，产品仍为 1,718/2,000，零异常和安全事件，D058/D061 性能全部通过。等待落地、NEEDS_STATE 重锚、信息等待、作业身份和身体责任仍由原 owner 管理。M2—M5 未授权；原 S1—S4 不再实施。结果见 [M0—M1 验收](docs/motion_navigation/acceptance/motion-navigation-middle-layer-M0-M1.md)，范围见[阶段方案](docs/motion_navigation/stages/motion-navigation-middle-layer-M0-M1-plan.md)、[D072](docs/motion_navigation/decisions/0072-end-post-f1-cleanup-and-validate-action-spec.md)和[动作接口](docs/motion_navigation/architecture/action-spec-v1.md)。紧凑证据位于 `evidence/motion_navigation/redesign-m0/` 和 `redesign-m1/`。
 
-2026-10-04，R28 已按时间盒结束，正式批次为 **10／10**。R28-1、R28-4 按冻结范围完成；R28-3 完成限定安全与功能交付，但原完整阶段未通过；R28-5 未执行。协调代码净减少、两次统计查看、产品统计非退步、五 tick 修订响应、正式跟随和室内终点接近仍未通过。三方在 Linux 上对最终代码复跑运动导航 **1,207／1,207**、协调集合 **1,448／1,448**、补充故障 **4／4** 和 v7 **1,710／2,000**。迁移入口实际覆盖 **40／41**；`_wait_for_active_terminal` 没有场景进入，尚未证明可达或不可达。R28-4 的五个晚到下降结果是时序敏感变化，不记为产品能力提升。精简证据位于 `evidence/motion_navigation/r28-4-budget-v1/` 和 `evidence/motion_navigation/r28-3-generation-v1/`，收尾结论见 [R28 验收第 20 节](docs/motion_navigation/acceptance/navigation-coordination-convergence.md#20-r28-时间盒收尾)。下一阶段是正式跟随。
+Windows 是正式开发、自动验收和 Fabric 实机平台；Linux 仅作补充可移植性复核，不作为阶段关闭门槛。公开快照保存完整紧凑索引与原字节哈希，不包含本地 `.tmp` 或原始大型轨迹；D061 保留全部计时样本和 Gen2 事件，其他 GC 明细由主项目保管。
+
+历史 S0-R 已在 Windows 通过，原始结果仍保存在[结构整理验收](docs/motion_navigation/acceptance/post-F1-navigation-structure-cleanup.md)和 `evidence/motion_navigation/post-f1-structure-s0r/`。它当时使 S1 具备开始条件，该顺序现由 D072 取代。
+
+2026-10-04，R28 已按时间盒结束，正式批次为 **10／10**。R28-1、R28-4 按冻结范围完成；R28-3 完成限定安全与功能交付，但原完整阶段未通过；R28-5 未执行。协调代码净减少、两次统计查看、产品统计非退步、五 tick 修订响应、正式跟随和室内终点接近仍未通过。三方在 Linux 上对最终代码复跑运动导航 **1,207／1,207**、协调集合 **1,448／1,448**、补充故障 **4／4** 和 v7 **1,710／2,000**。迁移入口实际覆盖 **40／41**；`_wait_for_active_terminal` 没有场景进入，尚未证明可达或不可达。R28-4 的五个晚到下降结果是时序敏感变化，不记为产品能力提升。精简证据位于 `evidence/motion_navigation/r28-4-budget-v1/` 和 `evidence/motion_navigation/r28-3-generation-v1/`，收尾结论见 [R28 验收第 20 节](docs/motion_navigation/acceptance/navigation-coordination-convergence.md#20-r28-时间盒收尾)。当时下一阶段为正式跟随，后续结果见 F1 和 D072。
 
 历史 v7 冻结参照为 **1,705／2,000**。产品清单加入按运动 tick 驱动的确定性交付延迟；减少的七项都属于“下降＋随机晚一 tick”。没有安全违规、异常或证据缺口。D055 的快速拒绝不再缩短完整求解测得的准备长度；平视二格下降正常和首条晚一 tick 的 Fabric 复验为 **2／2**。数据、源码指纹和失败保存在 `evidence/motion_navigation/r28-baseline-v7/`，结果与命令见 [R28 验收第 15 节](docs/motion_navigation/acceptance/navigation-coordination-convergence.md#15-后台交付延迟整改与-v7-量尺)。
 
@@ -39,8 +43,8 @@ D051 已撤回终点推演筛选和按失败文案改名，保留目标几何、
 ## 先读什么
 
 1. `AGENTS.md`
-2. `docs/motion_navigation/stages/navigation-coordination-convergence-r28-plan.md`
-3. `docs/motion_navigation/acceptance/navigation-coordination-convergence.md`
+2. `docs/motion_navigation/stages/motion-navigation-middle-layer-M0-M1-plan.md`
+3. `docs/motion_navigation/acceptance/motion-navigation-middle-layer-M0-M1.md`
 4. `docs/motion_navigation/decisions/0048-converge-recovery-by-risk-and-product-evidence.md`
 5. `docs/motion_navigation/architecture/navigation-coordination-v1.md`（第 17 节包含当前 R28 目标和已实施的持续目标语义）
 6. 当前实现和证据读 R27 阶段文档、`navigation-coordination-refactor.md` 第 20 节与 `defect-ledger.md`。

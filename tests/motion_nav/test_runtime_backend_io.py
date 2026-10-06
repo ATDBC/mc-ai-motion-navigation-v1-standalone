@@ -1,5 +1,6 @@
 """Backend loss on the formal point/follow path does not reuse an old frame."""
 import unittest
+from dataclasses import replace
 from unittest.mock import patch
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.action_v1 import MovementV1
@@ -34,6 +35,64 @@ class RuntimeBackendIOTests(unittest.TestCase):
         self.assertTrue(result.report.failure.retryable)
         self.assertEqual(runtime.last_failure_disposition.disposition.value, "recreate_runtime")
         self.assertEqual(driver.reason, "control_unavailable")
+
+    def test_ready_runtime_task_rejection_stops_the_session_and_keeps_body_owner(self):
+        from mc2p.runtime.player_runtime_v1 import RuntimeStateV1
+        for airborne in (False, True):
+            with self.subTest(airborne=airborne):
+                clock, backend, runtime, session, driver, _ = self.fixture(gap=airborne)
+                for _ in range(150):
+                    velocity = backend.state.velocity_blocks_per_tick
+                    if ((airborne and not backend.state.on_ground)
+                            or (not airborne and abs(velocity[2]) > .02)):
+                        break
+                    driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
+                else:
+                    self.fail('required body phase not reached')
+                step = backend.step
+                def reject(*args, **kwargs):
+                    result = step(*args, **kwargs)
+                    return replace(result, receipt=replace(result.receipt,
+                                   status='rejected', reason='task_rejected'))
+                with patch.object(backend, 'step', reject):
+                    rejected = driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
+                self.assertIsNotNone(rejected.report.failure)
+                self.assertIs(runtime.state, RuntimeStateV1.READY)
+                self.assertIn(session.report.state, {NavigationSessionState.CANCELLING,
+                                                    NavigationSessionState.FAILED})
+                self.assertIsNotNone(driver.source)
+                for _ in range(100):
+                    if driver.state in TERMINAL:
+                        break
+                    driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
+                self.assertIs(session.report.state, NavigationSessionState.FAILED)
+                self.assertEqual(session.report.reason, 'runtime_failure')
+                self.assertIsNone(driver.source)
+                self.assertTrue(backend.state.on_ground)
+                writes = backend.attempted_writes
+                with self.assertRaises(ContractViolation):
+                    driver.prepare_proposals(clock[0] + 500_000_000)
+                self.assertEqual(backend.attempted_writes, writes)
+
+    def test_control_unavailable_preserves_existing_business_result_and_source(self):
+        clock, backend, runtime, session, driver, _ = self.fixture()
+        for _ in range(12):
+            driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
+        session.handle_internal_contract_failure('prior_business_failure')
+        for _ in range(100):
+            if session.report.terminal:
+                break
+            driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
+        self.assertTrue(session.report.terminal)
+        report, source = session.report, driver.source
+        runtime.close()
+        writes = backend.attempted_writes
+        driver._finish_control_unavailable()
+        self.assertEqual(session.report.state, report.state)
+        self.assertEqual(session.report.reason, report.reason)
+        self.assertEqual(driver.source, source)
+        self.assertEqual(backend.attempted_writes, writes)
+        self.assertEqual(driver.reason, 'control_unavailable')
 
     def test_unchanged_frame_is_not_proposed_twice_after_contract_failure(self):
         clock, backend, runtime, session, driver, _ = self.fixture()

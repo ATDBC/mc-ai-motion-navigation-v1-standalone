@@ -38,7 +38,7 @@ def main(argv=None):
         cases.reverse()
     result = unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(cases))
     after = shared_scenario_hash()
-    sources = sorted(Path("mc2p/motion_nav").glob("*.py")) + [Path(name) for name in (
+    sources = sorted(Path("mc2p/motion_nav").rglob("*.py")) + [Path(name) for name in (
         "mc2p/skills/navigation_session_driver.py",
         "mc2p/runtime/player_runtime_v1.py", "mc2p/runtime/backend_v1.py",
     )]

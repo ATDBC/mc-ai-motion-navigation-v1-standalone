@@ -1,0 +1,22 @@
+{
+  "raw_directory": "D:\\My_project\\mc_ai\\.tmp\\redesign-m1-d061",
+  "raw_files_sha256": {
+    "COMMAND.txt": "b580d871ad40cad9d9a93e4f605657d5fc6c6b1b204b7c3ac5bf140c3a58ca2c",
+    "performance.json": "241b113374b732b97c45121b431ee1f916d1abf82d71a2fcb669f6ab43a48554",
+    "SHA256SUMS": "573422866bc32fc3d24405f92e573d0e38f0cb4f324d317492777608cd0751ad",
+    "trace/complete.json": "a7a7afebcd61b56bc7782ae217314a133a70b3e888fb8a13e4470e93a73a23ab",
+    "trace/manifest.jsonl": "108655b18401267942a28445fc919cce32f020e164a871579afc51a92c640790",
+    "trace/segment-00000000.jsonl": "15cbf9d55e71d7e9ed195f83d7730ba44275017482bb6520eb12ba692336e6e8",
+    "trace/segment-00000001.jsonl": "ed622e7cda60d0176b54154b6d5534992af51438de636468a93f10ef70debd61",
+    "trace/segment-00000002.jsonl": "69487f3ebc2799b3d3f1bca3daeb975848583bf07a9bc47380f7a4e7460808ef",
+    "trace/segment-00000003.jsonl": "dc50a516e7ef402a900df27ea84d0af52c88d14adcb5b51151340d4c3f8525c9",
+    "trace/segment-00000004.jsonl": "c7996dd2324e330810de4d2fad79a66f6a899d4066f2fa80d475f22734a765d5",
+    "trace/segment-00000005.jsonl": "6c614e4c386e5f0161d968323eee518024393c422f6101f0e703f484d0f8d8ff",
+    "trace/segment-00000006.jsonl": "bff54fa62213cae169634517c4679d05f874525b77b5890e3ed7acc59653b375",
+    "trace/segment-00000007.jsonl": "22a437bedc7fbbb9a2595f156104d82dd065597bb6673c3655d81b3b2258abf7",
+    "trace/segment-00000008.jsonl": "6a3e259b0e010e53fb35b582c585d825b54b0ca6816725086e4e5bbc5647d1b3",
+    "trace/segment-00000009.jsonl": "cfc1755df4a23dd13da9ba80cd8fe17e02d9c23d10fbd956ac3dc6da7cf6be10",
+    "trace/segment-00000010.jsonl": "5867bd976256f858675a01b43f3aaa8867e9bfca12f36f1d58fb549a180d0ff6"
+  },
+  "raw_trajectories_published": false
+}

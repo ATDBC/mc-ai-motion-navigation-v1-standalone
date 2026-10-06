@@ -1,0 +1,234 @@
+{
+  "schema_version": "mc2p.redesign-m1-retained-candidate.v1",
+  "platform": "Windows",
+  "source_commit": "b39da9a7acaa0b6d8ac4f7945dc29f8b7921746c",
+  "production_sha256": "611e00f79d6d0c1fbc59086cb794589c89d0e2c55f851f5359ee309958de063e",
+  "sets": {
+    "round1": {
+      "product": {
+        "comparison": {
+          "cases": 2000,
+          "differences": [],
+          "equivalent": true
+        },
+        "results": {
+          "success": 1718,
+          "exceptions": 0,
+          "safety_violation_tasks": 0
+        },
+        "index_sha256": "666382d8ea288eb40e1654e9dba95eb6b9dd97198be2f0ef26d3588649d18367",
+        "m0_index_sha256": "666382d8ea288eb40e1654e9dba95eb6b9dd97198be2f0ef26d3588649d18367",
+        "source_commit": "b39da9a7acaa0b6d8ac4f7945dc29f8b7921746c",
+        "source_worktree_clean": true,
+        "raw_directory": "D:\\My_project\\mc_ai\\.tmp\\redesign-m1-round1-product"
+      },
+      "coordination": {
+        "comparison": {
+          "cases": 1448,
+          "differences": [],
+          "equivalent": true
+        },
+        "results": {
+          "passed": 1448,
+          "failed": 0
+        },
+        "index_sha256": "e94296eb4dbc6e7945b1b68574d3767f24309a28309b2c069b3fb33d5bd45f9a",
+        "m0_index_sha256": "e94296eb4dbc6e7945b1b68574d3767f24309a28309b2c069b3fb33d5bd45f9a",
+        "source_commit": "b39da9a7acaa0b6d8ac4f7945dc29f8b7921746c",
+        "source_worktree_clean": true,
+        "raw_directory": "D:\\My_project\\mc_ai\\.tmp\\redesign-m1-round1-coordination"
+      },
+      "faults": {
+        "comparison": {
+          "cases": 16,
+          "differences": [],
+          "equivalent": true
+        },
+        "results": {
+          "passed": 16,
+          "failed": 0
+        },
+        "index_sha256": "e96b7fa0e84fdf1280bfbc21bca4801d690bed53850c2fa419b0414e0966794a",
+        "m0_index_sha256": "e96b7fa0e84fdf1280bfbc21bca4801d690bed53850c2fa419b0414e0966794a",
+        "source_commit": "b39da9a7acaa0b6d8ac4f7945dc29f8b7921746c",
+        "source_worktree_clean": true,
+        "raw_directory": "D:\\My_project\\mc_ai\\.tmp\\redesign-m1-round1-faults"
+      },
+      "follow": {
+        "comparison": {
+          "cases": 10,
+          "differences": [],
+          "equivalent": true
+        },
+        "results": {
+          "passed": 10,
+          "failed": 0
+        },
+        "index_sha256": "601c3fb0170cc77af888d8ede985862196d5e54181e5b5d691fc170d2f761693",
+        "m0_index_sha256": "601c3fb0170cc77af888d8ede985862196d5e54181e5b5d691fc170d2f761693",
+        "source_commit": "b39da9a7acaa0b6d8ac4f7945dc29f8b7921746c",
+        "source_worktree_clean": true,
+        "raw_directory": "D:\\My_project\\mc_ai\\.tmp\\redesign-m1-round1-follow"
+      },
+      "world_changes": {
+        "comparison": {
+          "cases": 19,
+          "differences": [],
+          "equivalent": true
+        },
+        "results": {
+          "passed": 19,
+          "failed": 0
+        },
+        "index_sha256": "5d07a37cc2f942561da29c5e565ed47e83a0126ae542c9bb22f0df18f60ac444",
+        "m0_index_sha256": "5d07a37cc2f942561da29c5e565ed47e83a0126ae542c9bb22f0df18f60ac444",
+        "source_commit": "b39da9a7acaa0b6d8ac4f7945dc29f8b7921746c",
+        "source_worktree_clean": true,
+        "raw_directory": "D:\\My_project\\mc_ai\\.tmp\\redesign-m1-round1-world_changes"
+      }
+    },
+    "round2": {
+      "product": {
+        "comparison": {
+          "cases": 2000,
+          "differences": [],
+          "equivalent": true
+        },
+        "results": {
+          "success": 1718,
+          "exceptions": 0,
+          "safety_violation_tasks": 0
+        },
+        "index_sha256": "666382d8ea288eb40e1654e9dba95eb6b9dd97198be2f0ef26d3588649d18367",
+        "m0_index_sha256": "666382d8ea288eb40e1654e9dba95eb6b9dd97198be2f0ef26d3588649d18367",
+        "source_commit": "b39da9a7acaa0b6d8ac4f7945dc29f8b7921746c",
+        "source_worktree_clean": true,
+        "raw_directory": "D:\\My_project\\mc_ai\\.tmp\\redesign-m1-round2-product"
+      },
+      "coordination": {
+        "comparison": {
+          "cases": 1448,
+          "differences": [],
+          "equivalent": true
+        },
+        "results": {
+          "passed": 1448,
+          "failed": 0
+        },
+        "index_sha256": "e94296eb4dbc6e7945b1b68574d3767f24309a28309b2c069b3fb33d5bd45f9a",
+        "m0_index_sha256": "e94296eb4dbc6e7945b1b68574d3767f24309a28309b2c069b3fb33d5bd45f9a",
+        "source_commit": "b39da9a7acaa0b6d8ac4f7945dc29f8b7921746c",
+        "source_worktree_clean": true,
+        "raw_directory": "D:\\My_project\\mc_ai\\.tmp\\redesign-m1-round2-coordination"
+      },
+      "faults": {
+        "comparison": {
+          "cases": 16,
+          "differences": [],
+          "equivalent": true
+        },
+        "results": {
+          "passed": 16,
+          "failed": 0
+        },
+        "index_sha256": "e96b7fa0e84fdf1280bfbc21bca4801d690bed53850c2fa419b0414e0966794a",
+        "m0_index_sha256": "e96b7fa0e84fdf1280bfbc21bca4801d690bed53850c2fa419b0414e0966794a",
+        "source_commit": "b39da9a7acaa0b6d8ac4f7945dc29f8b7921746c",
+        "source_worktree_clean": true,
+        "raw_directory": "D:\\My_project\\mc_ai\\.tmp\\redesign-m1-round2-faults"
+      },
+      "follow": {
+        "comparison": {
+          "cases": 10,
+          "differences": [],
+          "equivalent": true
+        },
+        "results": {
+          "passed": 10,
+          "failed": 0
+        },
+        "index_sha256": "601c3fb0170cc77af888d8ede985862196d5e54181e5b5d691fc170d2f761693",
+        "m0_index_sha256": "601c3fb0170cc77af888d8ede985862196d5e54181e5b5d691fc170d2f761693",
+        "source_commit": "b39da9a7acaa0b6d8ac4f7945dc29f8b7921746c",
+        "source_worktree_clean": true,
+        "raw_directory": "D:\\My_project\\mc_ai\\.tmp\\redesign-m1-round2-follow"
+      },
+      "world_changes": {
+        "comparison": {
+          "cases": 19,
+          "differences": [],
+          "equivalent": true
+        },
+        "results": {
+          "passed": 19,
+          "failed": 0
+        },
+        "index_sha256": "5d07a37cc2f942561da29c5e565ed47e83a0126ae542c9bb22f0df18f60ac444",
+        "m0_index_sha256": "5d07a37cc2f942561da29c5e565ed47e83a0126ae542c9bb22f0df18f60ac444",
+        "source_commit": "b39da9a7acaa0b6d8ac4f7945dc29f8b7921746c",
+        "source_worktree_clean": true,
+        "raw_directory": "D:\\My_project\\mc_ai\\.tmp\\redesign-m1-round2-world_changes"
+      }
+    }
+  },
+  "structure": {
+    "passed": false,
+    "reason": "Session reduced 52 lines; frozen minimum is 100",
+    "before": {
+      "branches": 79,
+      "drop_branches": 30,
+      "session_lines": 5046,
+      "production_lines": 38279
+    },
+    "after": {
+      "branches": 42,
+      "drop_branches": 0,
+      "session_lines": 4994,
+      "production_lines": 38431
+    }
+  },
+  "stage_status": "M1 stopped on structural gate; retain only if behavior and responsibility evidence pass; M2 not authorized",
+  "equivalence_scope": "459 cases: all 61 representatives plus both 200-case drop families, deduplicated; direct geometric replay of 9 unique fixtures",
+  "sha256": {
+    "checks-forward.json": "61f14dcf5e5c070d785888a00768e72237a3b48c55aff5bc650235eccfb1e7f0",
+    "checks-reverse.json": "f4a58a39e65b3c09b8ffd173fccbb6ed948f01df766bbfde864116efb1a48418",
+    "controlled-drop-corpus.json": "d13a5626e0245e2c797b6988bbdd35b96996030b7b39a5f4309eb2ea6b52c448",
+    "equivalence-report.json": "ebaa13312533dd5d094d685f4a714cb99dfdceb756e96302094e7c4f2873c68e",
+    "metrics-execution.json": "b19834f06ac2416d1e9b385ea47f71d9077d7bc2fc4d811378d575cfeaf44ba6",
+    "metrics-final.json": "b15761cf03aaac46f86260bbb67c56291dd73e719b3a76a07628be6ccabea0f1",
+    "metrics-risk-entry.json": "b20458ef2e160e71d1fab8f228893a90614a0521903a5e34acb28865f7f2cf49",
+    "metrics-solving.json": "6d6a97033a110d1b35c48d8994833b99d510e3df59dd07ff4913991481c2ed9e",
+    "performance/d058/COMMAND.txt": "42d9b141a67f0e7a00e45266a25424bd145ee4042f61a93b0bede726b2b49dc5",
+    "performance/d058/performance.json": "83cb5ac50a39170ecd09799c7a82fda9046a7e056c8439d1dfdf74bb33a1bb2a",
+    "performance/d058/raw-location.json": "e960631933d0195ffed59171ae3c375575dcd161bd43fcf9eb61f5be7484f7c5",
+    "performance/d061/COMMAND.txt": "b580d871ad40cad9d9a93e4f605657d5fc6c6b1b204b7c3ac5bf140c3a58ca2c",
+    "performance/d061/performance.json": "f0b26ad1f9f3bc5a6618af76fb571dbcab10e2848086b98adf4ea0506bae3567",
+    "performance/d061/raw-location.json": "980ae69d9297275383dd92c736104311f349bbf5f9003a669052407d9fb1d07b",
+    "round1/coordination-index.json": "e94296eb4dbc6e7945b1b68574d3767f24309a28309b2c069b3fb33d5bd45f9a",
+    "round1/coordination-summary.json": "bc4d26cab496b6cb3decf1536aba2ea1fe4a2bc34d4a53de12477add670f7f14",
+    "round1/faults-index.json": "e96b7fa0e84fdf1280bfbc21bca4801d690bed53850c2fa419b0414e0966794a",
+    "round1/faults-summary.json": "38feddb01173bb9a867c63bb8a57ee2d292c452c1718c07cf41523655d9d7ed7",
+    "round1/follow-index.json": "601c3fb0170cc77af888d8ede985862196d5e54181e5b5d691fc170d2f761693",
+    "round1/follow-summary.json": "f9b2620cc41a643c7c9cde2b05e037c7a2fbe2196276ed30eca12af8de6b3ce7",
+    "round1/product-index.json": "666382d8ea288eb40e1654e9dba95eb6b9dd97198be2f0ef26d3588649d18367",
+    "round1/product-summary.json": "1ae518f16447077f4586bbfe49c504f3b21921cbda8fd32d9e02d0c35ec8973d",
+    "round1/world_changes-index.json": "5d07a37cc2f942561da29c5e565ed47e83a0126ae542c9bb22f0df18f60ac444",
+    "round1/world_changes-summary.json": "722fa04cdbc17ce7035bc0156bf032b93c63cc4e11af1be5ece4f4b97e8dd161",
+    "round2/coordination-index.json": "e94296eb4dbc6e7945b1b68574d3767f24309a28309b2c069b3fb33d5bd45f9a",
+    "round2/coordination-summary.json": "897393cb2ec0b58d4ad1d17313f0d1806f96aba7b2bee1aa9a6e3b8f1602eab8",
+    "round2/faults-index.json": "e96b7fa0e84fdf1280bfbc21bca4801d690bed53850c2fa419b0414e0966794a",
+    "round2/faults-summary.json": "a81068057db45db285e7e6f72e9d58621719e557655314096c693587002c2577",
+    "round2/follow-index.json": "601c3fb0170cc77af888d8ede985862196d5e54181e5b5d691fc170d2f761693",
+    "round2/follow-summary.json": "5134af0079b70394110bc70f6af6f37948caf14734f5ac5c2b339f3d0c480231",
+    "round2/product-index.json": "666382d8ea288eb40e1654e9dba95eb6b9dd97198be2f0ef26d3588649d18367",
+    "round2/product-summary.json": "b4a5f612c591afbb530dbaa4a569b227b6a056500f428cf52a9653cbd96f0509",
+    "round2/world_changes-index.json": "5d07a37cc2f942561da29c5e565ed47e83a0126ae542c9bb22f0df18f60ac444",
+    "round2/world_changes-summary.json": "78a88984dd6dd31d95f6a9359d9f61040df946310d2185f664227acf992a3b97"
+  },
+  "evidence_byte_preservation": {
+    "git_attributes": "-text for both redesign evidence directories",
+    "tracked_original_files_semantically_unchanged": 32,
+    "staged_original_byte_files_verified": 61,
+    "manifest_blob_hashes_verified": 59
+  }
+}

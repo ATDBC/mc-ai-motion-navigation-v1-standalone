@@ -1,6 +1,8 @@
 """B10-C bounded local preparation of a planned JumpGap action."""
 from __future__ import annotations
 
+from mc2p.motion_nav.actions.registry import action_spec
+
 from dataclasses import dataclass, replace
 from enum import StrEnum
 import math
@@ -19,7 +21,7 @@ from mc2p.motion_nav.async_work import (
     AsyncOwnerDiagnostics,
 )
 from mc2p.motion_nav.action_route import (
-    ControlledDropSegment, JumpGapSegment, JumpUpSegment, WalkSegment,
+    JumpGapSegment, JumpUpSegment, WalkSegment,
 )
 from mc2p.motion_nav.action_route_executor import (
     ActionRouteDecision, ActionRouteExecutor, ActionRouteState,
@@ -140,49 +142,17 @@ class GapPreparationResult:
 
 
 def _air_action_kind(action) -> MotionSolveKind | None:
-    return {
-        JumpGapSegment: MotionSolveKind.JUMP_GAP,
-        JumpUpSegment: MotionSolveKind.JUMP_UP,
-        ControlledDropSegment: MotionSolveKind.CONTROLLED_DROP,
-    }.get(type(action))
+    return action_spec(action).solve_kind
 
 
 def _air_action_direction(action) -> tuple[int, int] | None:
-    if type(action) is JumpUpSegment:
-        return action.edge.direction
-    if type(action) not in (JumpGapSegment, ControlledDropSegment):
-        return None
-    dx = action.end_surface.position[0] - action.start_surface.position[0]
-    dz = action.end_surface.position[2] - action.start_surface.position[2]
-    expected_distance = 2.0 if type(action) is JumpGapSegment else 1.0
-    if math.isclose(abs(dx), expected_distance, abs_tol=1.0e-7) and math.isclose(
-            dz, 0.0, abs_tol=1.0e-7):
-        return (1 if dx > 0 else -1, 0)
-    if math.isclose(abs(dz), expected_distance, abs_tol=1.0e-7) and math.isclose(
-            dx, 0.0, abs_tol=1.0e-7):
-        return (0, 1 if dz > 0 else -1)
-    return None
+    geometry = action_spec(action).solve_geometry
+    return None if geometry is None else geometry(action, None).direction
 
 
 def _air_action_landing(action, anchor: StateAnchor) -> LandingRegion | None:
-    half_width = anchor.physics_state.body_width / 2.0
-    if type(action) is JumpUpSegment:
-        x, y, z = action.edge.end
-        return LandingRegion(
-            x + half_width, x + 1.0 - half_width,
-            z + half_width, z + 1.0 - half_width,
-            float(y),
-        )
-    if type(action) not in (JumpGapSegment, ControlledDropSegment):
-        return None
-    region = action.end_surface.region
-    min_x, max_x = region.min_x + half_width, region.max_x - half_width
-    min_z, max_z = region.min_z + half_width, region.max_z - half_width
-    if max_x <= min_x or max_z <= min_z:
-        return None
-    return LandingRegion(
-        min_x, max_x, min_z, max_z, action.end_surface.position[1],
-    )
+    geometry = action_spec(action).solve_geometry
+    return None if geometry is None else geometry(action, anchor).landing
 
 
 def _same_landing_region(
@@ -286,8 +256,8 @@ def _planned_air_transition_request(
     return AirTransitionSolveRequest(
         kind, direction, landing, execution_window, damage_budget,
         max_candidates=min(64, len(policy.templates)),
-        max_ticks=(80 if kind is MotionSolveKind.CONTROLLED_DROP else 40),
-        recovery_horizon_ticks=(80 if kind is MotionSolveKind.CONTROLLED_DROP else 40),
+        max_ticks=action_spec(action).solve_geometry(action, anchor).maximum_ticks,
+        recovery_horizon_ticks=action_spec(action).solve_geometry(action, anchor).maximum_ticks,
         exit_direction=exit_direction,
         exit_motion_ticks=1 if exit_direction is not None else 0,
         policy=policy,
@@ -1109,17 +1079,6 @@ class MotionRouteCoordinator:
             return None
         return index + 1
 
-    def _upcoming_air_index(self) -> int | None:
-        index = self.executor.action_index
-        actions = self.route.action_route.actions
-        if (not 0 <= index < len(actions)
-                or _air_action_kind(actions[index]) is None
-                or index + 1 >= len(actions)
-                or _air_action_kind(actions[index + 1]) is None
-                or self.executor.has_verified_motion(index + 1)):
-            return None
-        return index + 1
-
     def _prepare_upcoming_from_applied_state(
             self, decision: ActionRouteDecision, anchor: StateAnchor,
             world: PhysicsWorldView) -> None:
@@ -1129,9 +1088,8 @@ class MotionRouteCoordinator:
             # Strict successors are prepared from their actual observed entry.
             return
         upcoming = self.route.action_route.actions[action_index]
-        if (type(upcoming) is ControlledDropSegment
-                and upcoming.start_surface.position[1]
-                    - upcoming.end_surface.position[1] > 1.0 + 1.0e-6):
+        entry = action_spec(upcoming).entry_observation(upcoming, None)
+        if entry is not None and entry.needs_acquisition_before_solve:
             # A multi-block drop needs fresh lower-volume evidence at its
             # actual entry.  Solving it while the preceding segment is still
             # moving would allow an already-installed proof to bypass that
@@ -1141,14 +1099,7 @@ class MotionRouteCoordinator:
             return
         action = upcoming
         assert _air_action_kind(action) is not None
-        if type(action) is JumpUpSegment:
-            sx, sy, sz = (
-                action.edge.start[0] + .5,
-                float(action.edge.start[1]),
-                action.edge.start[2] + .5,
-            )
-        else:
-            sx, sy, sz = action.start_surface.position
+        sx, sy, sz = action_spec(action).solve_geometry(action, anchor).start
         state = anchor.physics_state
         speed = math.hypot(state.velocity_blocks_per_tick[0], state.velocity_blocks_per_tick[2])
         # One conditional prefix, at most four ticks / 200 ms of preparation.
@@ -1492,10 +1443,9 @@ class MotionRouteCoordinator:
             current = self.route.action_route.actions[
                 self.executor.action_index
             ]
+            entry = action_spec(current).entry_observation(current, None)
             if (self.executor.action_index != starting_action_index
-                    and type(current) is ControlledDropSegment
-                    and current.start_surface.position[1]
-                        - current.end_surface.position[1] > 1.0 + 1.0e-6):
+                    and entry is not None and entry.needs_acquisition_before_solve):
                 # The executor crossed the action boundary in this call.
                 # Give the session one frame to run the immediate landing
                 # evidence check before any proof is solved or installed.

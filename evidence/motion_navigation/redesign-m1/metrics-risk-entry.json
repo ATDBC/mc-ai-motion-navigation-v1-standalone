@@ -1,0 +1,1333 @@
+{
+  "schema_version": "navigation-design-metrics-v2",
+  "excluded_concrete_implementations": [
+    "actions/controlled_drop.py"
+  ],
+  "action_branch_count": 64,
+  "branches_by_action": {
+    "ControlledDropSegment": 16,
+    "JumpGapSegment": 18,
+    "JumpUpSegment": 17,
+    "StepSegment": 4,
+    "WalkSegment": 31
+  },
+  "action_branches": [
+    {
+      "file": "action_route.py",
+      "line": 174,
+      "syntax": "comparison",
+      "actions": [
+        "JumpUpSegment",
+        "StepSegment",
+        "WalkSegment"
+      ],
+      "category": "route contract",
+      "source": "type(action) not in (WalkSegment, JumpUpSegment, StepSegment)"
+    },
+    {
+      "file": "action_route.py",
+      "line": 175,
+      "syntax": "comparison",
+      "actions": [
+        "ControlledDropSegment",
+        "JumpGapSegment"
+      ],
+      "category": "route contract",
+      "source": "type(action) not in (JumpGapSegment, ControlledDropSegment)"
+    },
+    {
+      "file": "action_route_executor.py",
+      "line": 224,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "execution and body safety",
+      "source": "type(action) is WalkSegment"
+    },
+    {
+      "file": "action_route_executor.py",
+      "line": 448,
+      "syntax": "comparison",
+      "actions": [
+        "JumpUpSegment"
+      ],
+      "category": "execution and body safety",
+      "source": "type(action) is JumpUpSegment"
+    },
+    {
+      "file": "action_route_executor.py",
+      "line": 982,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "execution and body safety",
+      "source": "type(action) is WalkSegment"
+    },
+    {
+      "file": "action_route_executor.py",
+      "line": 1087,
+      "syntax": "comparison",
+      "actions": [
+        "StepSegment"
+      ],
+      "category": "execution and body safety",
+      "source": "type(action) is StepSegment"
+    },
+    {
+      "file": "action_route_executor.py",
+      "line": 1109,
+      "syntax": "comparison",
+      "actions": [
+        "ControlledDropSegment",
+        "JumpGapSegment"
+      ],
+      "category": "execution and body safety",
+      "source": "type(action) in (JumpGapSegment, ControlledDropSegment)"
+    },
+    {
+      "file": "action_route_executor.py",
+      "line": 205,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "execution and body safety",
+      "source": "type(self.route.actions[self.action_index]) is not WalkSegment"
+    },
+    {
+      "file": "action_route_executor.py",
+      "line": 206,
+      "syntax": "comparison",
+      "actions": [
+        "ControlledDropSegment"
+      ],
+      "category": "execution and body safety",
+      "source": "type(self.route.actions[next_index]) is not\n                    ControlledDropSegment"
+    },
+    {
+      "file": "action_route_executor.py",
+      "line": 377,
+      "syntax": "comparison",
+      "actions": [
+        "JumpUpSegment"
+      ],
+      "category": "execution and body safety",
+      "source": "type(action) is JumpUpSegment"
+    },
+    {
+      "file": "action_route_executor.py",
+      "line": 453,
+      "syntax": "comparison",
+      "actions": [
+        "ControlledDropSegment",
+        "JumpGapSegment"
+      ],
+      "category": "execution and body safety",
+      "source": "type(action) in (JumpGapSegment, ControlledDropSegment)"
+    },
+    {
+      "file": "action_route_executor.py",
+      "line": 247,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "execution and body safety",
+      "source": "type(self.route.actions[next_index]) is WalkSegment"
+    },
+    {
+      "file": "action_route_executor.py",
+      "line": 391,
+      "syntax": "comparison",
+      "actions": [
+        "ControlledDropSegment",
+        "JumpGapSegment"
+      ],
+      "category": "execution and body safety",
+      "source": "type(action) in (JumpGapSegment, ControlledDropSegment)"
+    },
+    {
+      "file": "action_route_executor.py",
+      "line": 540,
+      "syntax": "mapping",
+      "actions": [
+        "ControlledDropSegment",
+        "JumpGapSegment",
+        "JumpUpSegment"
+      ],
+      "category": "execution and body safety",
+      "source": "{\n            JumpGapSegment: MotionSolveKind.JUMP_GAP,\n            JumpUpSegment: MotionSolveKind.JUMP_UP,\n            ControlledDropSegment: MotionSolveKind.CONTROLLED_DROP,\n        }"
+    },
+    {
+      "file": "action_route_executor.py",
+      "line": 263,
+      "syntax": "comparison",
+      "actions": [
+        "ControlledDropSegment",
+        "JumpGapSegment",
+        "JumpUpSegment",
+        "StepSegment"
+      ],
+      "category": "execution and body safety",
+      "source": "type(self.route.actions[self.action_index + 1])\n                    in (JumpUpSegment, StepSegment, JumpGapSegment,\n                        ControlledDropSegment)"
+    },
+    {
+      "file": "action_route_executor.py",
+      "line": 267,
+      "syntax": "comparison",
+      "actions": [
+        "JumpUpSegment"
+      ],
+      "category": "execution and body safety",
+      "source": "type(next_action) is JumpUpSegment"
+    },
+    {
+      "file": "action_route_executor.py",
+      "line": 349,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "execution and body safety",
+      "source": "type(previous_action) is WalkSegment"
+    },
+    {
+      "file": "action_route_executor.py",
+      "line": 410,
+      "syntax": "comparison",
+      "actions": [
+        "StepSegment"
+      ],
+      "category": "execution and body safety",
+      "source": "type(action) is StepSegment"
+    },
+    {
+      "file": "action_route_executor.py",
+      "line": 270,
+      "syntax": "comparison",
+      "actions": [
+        "ControlledDropSegment",
+        "JumpGapSegment"
+      ],
+      "category": "execution and body safety",
+      "source": "type(next_action) in (JumpGapSegment, ControlledDropSegment)"
+    },
+    {
+      "file": "action_route_executor.py",
+      "line": 496,
+      "syntax": "comparison",
+      "actions": [
+        "ControlledDropSegment",
+        "JumpGapSegment",
+        "JumpUpSegment"
+      ],
+      "category": "execution and body safety",
+      "source": "type(route.actions[index]) not in {\n                           JumpGapSegment, JumpUpSegment, ControlledDropSegment}"
+    },
+    {
+      "file": "action_route_executor.py",
+      "line": 288,
+      "syntax": "mapping",
+      "actions": [
+        "ControlledDropSegment",
+        "JumpGapSegment",
+        "JumpUpSegment"
+      ],
+      "category": "execution and body safety",
+      "source": "{\n                    JumpGapSegment: MotionSolveKind.JUMP_GAP,\n                    JumpUpSegment: MotionSolveKind.JUMP_UP,\n                    ControlledDropSegment: MotionSolveKind.CONTROLLED_DROP,\n                }"
+    },
+    {
+      "file": "action_route_executor.py",
+      "line": 516,
+      "syntax": "comparison",
+      "actions": [
+        "JumpGapSegment"
+      ],
+      "category": "execution and body safety",
+      "source": "type(action) is JumpGapSegment"
+    },
+    {
+      "file": "motion_coordination.py",
+      "line": 151,
+      "syntax": "comparison",
+      "actions": [
+        "JumpUpSegment"
+      ],
+      "category": "solve request and motion coordination",
+      "source": "type(action) is JumpUpSegment"
+    },
+    {
+      "file": "motion_coordination.py",
+      "line": 153,
+      "syntax": "comparison",
+      "actions": [
+        "ControlledDropSegment",
+        "JumpGapSegment"
+      ],
+      "category": "solve request and motion coordination",
+      "source": "type(action) not in (JumpGapSegment, ControlledDropSegment)"
+    },
+    {
+      "file": "motion_coordination.py",
+      "line": 169,
+      "syntax": "comparison",
+      "actions": [
+        "JumpUpSegment"
+      ],
+      "category": "solve request and motion coordination",
+      "source": "type(action) is JumpUpSegment"
+    },
+    {
+      "file": "motion_coordination.py",
+      "line": 176,
+      "syntax": "comparison",
+      "actions": [
+        "ControlledDropSegment",
+        "JumpGapSegment"
+      ],
+      "category": "solve request and motion coordination",
+      "source": "type(action) not in (JumpGapSegment, ControlledDropSegment)"
+    },
+    {
+      "file": "motion_coordination.py",
+      "line": 209,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "solve request and motion coordination",
+      "source": "type(following) is not WalkSegment"
+    },
+    {
+      "file": "motion_coordination.py",
+      "line": 211,
+      "syntax": "comparison",
+      "actions": [
+        "JumpUpSegment"
+      ],
+      "category": "solve request and motion coordination",
+      "source": "type(action) is JumpUpSegment"
+    },
+    {
+      "file": "motion_coordination.py",
+      "line": 238,
+      "syntax": "comparison",
+      "actions": [
+        "JumpGapSegment"
+      ],
+      "category": "solve request and motion coordination",
+      "source": "type(action) is not JumpGapSegment"
+    },
+    {
+      "file": "motion_coordination.py",
+      "line": 157,
+      "syntax": "comparison",
+      "actions": [
+        "JumpGapSegment"
+      ],
+      "category": "solve request and motion coordination",
+      "source": "type(action) is JumpGapSegment"
+    },
+    {
+      "file": "motion_coordination.py",
+      "line": 309,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "solve request and motion coordination",
+      "source": "type(following) is not WalkSegment"
+    },
+    {
+      "file": "motion_coordination.py",
+      "line": 928,
+      "syntax": "comparison",
+      "actions": [
+        "JumpGapSegment"
+      ],
+      "category": "solve request and motion coordination",
+      "source": "type(action) is JumpGapSegment"
+    },
+    {
+      "file": "motion_coordination.py",
+      "line": 1133,
+      "syntax": "comparison",
+      "actions": [
+        "JumpUpSegment"
+      ],
+      "category": "solve request and motion coordination",
+      "source": "type(action) is JumpUpSegment"
+    },
+    {
+      "file": "motion_coordination.py",
+      "line": 143,
+      "syntax": "mapping",
+      "actions": [
+        "ControlledDropSegment",
+        "JumpGapSegment",
+        "JumpUpSegment"
+      ],
+      "category": "solve request and motion coordination",
+      "source": "{\n        JumpGapSegment: MotionSolveKind.JUMP_GAP,\n        JumpUpSegment: MotionSolveKind.JUMP_UP,\n        ControlledDropSegment: MotionSolveKind.CONTROLLED_DROP,\n    }"
+    },
+    {
+      "file": "motion_coordination.py",
+      "line": 740,
+      "syntax": "comparison",
+      "actions": [
+        "JumpGapSegment"
+      ],
+      "category": "solve request and motion coordination",
+      "source": "type(action) is JumpGapSegment"
+    },
+    {
+      "file": "motion_coordination.py",
+      "line": 1105,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "solve request and motion coordination",
+      "source": "type(actions[index]) is not WalkSegment"
+    },
+    {
+      "file": "motion_coordination.py",
+      "line": 1121,
+      "syntax": "comparison",
+      "actions": [
+        "ControlledDropSegment"
+      ],
+      "category": "solve request and motion coordination",
+      "source": "type(upcoming) is ControlledDropSegment"
+    },
+    {
+      "file": "motion_coordination.py",
+      "line": 1485,
+      "syntax": "comparison",
+      "actions": [
+        "ControlledDropSegment"
+      ],
+      "category": "solve request and motion coordination",
+      "source": "type(current) is ControlledDropSegment"
+    },
+    {
+      "file": "navigation_session.py",
+      "line": 2916,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "session coordination",
+      "source": "type(current_executor_action) is not WalkSegment"
+    },
+    {
+      "file": "navigation_session.py",
+      "line": 3763,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "session coordination",
+      "source": "type(action) is WalkSegment"
+    },
+    {
+      "file": "navigation_session.py",
+      "line": 943,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "session coordination",
+      "source": "type(action) is WalkSegment"
+    },
+    {
+      "file": "navigation_session.py",
+      "line": 1947,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "session coordination",
+      "source": "type(action) is WalkSegment"
+    },
+    {
+      "file": "navigation_session.py",
+      "line": 4686,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "session coordination",
+      "source": "type(current_action) is WalkSegment"
+    },
+    {
+      "file": "navigation_session.py",
+      "line": 1956,
+      "syntax": "comparison",
+      "actions": [
+        "JumpUpSegment"
+      ],
+      "category": "session coordination",
+      "source": "type(action) is JumpUpSegment"
+    },
+    {
+      "file": "route_admission.py",
+      "line": 98,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "admission and planning edge conversion",
+      "source": "type(action) is WalkSegment"
+    },
+    {
+      "file": "route_admission.py",
+      "line": 1482,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "admission and planning edge conversion",
+      "source": "type(last) is WalkSegment"
+    },
+    {
+      "file": "route_admission.py",
+      "line": 101,
+      "syntax": "comparison",
+      "actions": [
+        "JumpUpSegment"
+      ],
+      "category": "admission and planning edge conversion",
+      "source": "type(action) is JumpUpSegment"
+    },
+    {
+      "file": "route_admission.py",
+      "line": 1467,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "admission and planning edge conversion",
+      "source": "type(first) is not WalkSegment"
+    },
+    {
+      "file": "route_admission.py",
+      "line": 1485,
+      "syntax": "comparison",
+      "actions": [
+        "JumpUpSegment"
+      ],
+      "category": "admission and planning edge conversion",
+      "source": "type(last) is JumpUpSegment"
+    },
+    {
+      "file": "route_admission.py",
+      "line": 2065,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "admission and planning edge conversion",
+      "source": "type(action) is not WalkSegment"
+    },
+    {
+      "file": "route_admission.py",
+      "line": 2781,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "admission and planning edge conversion",
+      "source": "type(final) is WalkSegment"
+    },
+    {
+      "file": "route_admission.py",
+      "line": 279,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "admission and planning edge conversion",
+      "source": "type(action) is not WalkSegment"
+    },
+    {
+      "file": "route_admission.py",
+      "line": 320,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "admission and planning edge conversion",
+      "source": "type(action) is not WalkSegment"
+    },
+    {
+      "file": "route_admission.py",
+      "line": 1075,
+      "syntax": "mapping",
+      "actions": [
+        "ControlledDropSegment",
+        "JumpGapSegment",
+        "JumpUpSegment"
+      ],
+      "category": "admission and planning edge conversion",
+      "source": "{\n            JumpGapSegment: MotionSolveKind.JUMP_GAP,\n            JumpUpSegment: MotionSolveKind.JUMP_UP,\n            ControlledDropSegment: MotionSolveKind.CONTROLLED_DROP,\n        }"
+    },
+    {
+      "file": "route_admission.py",
+      "line": 1314,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "admission and planning edge conversion",
+      "source": "type(action_route.actions[0]) is WalkSegment"
+    },
+    {
+      "file": "route_admission.py",
+      "line": 1463,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "admission and planning edge conversion",
+      "source": "type(first) is WalkSegment"
+    },
+    {
+      "file": "route_admission.py",
+      "line": 2008,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "admission and planning edge conversion",
+      "source": "type(first_action) is WalkSegment"
+    },
+    {
+      "file": "route_admission.py",
+      "line": 342,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "admission and planning edge conversion",
+      "source": "type(action) is not WalkSegment"
+    },
+    {
+      "file": "route_admission.py",
+      "line": 1736,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "admission and planning edge conversion",
+      "source": "type(final_action) is WalkSegment"
+    },
+    {
+      "file": "route_admission.py",
+      "line": 1760,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "admission and planning edge conversion",
+      "source": "type(final_action) is WalkSegment"
+    },
+    {
+      "file": "route_admission.py",
+      "line": 2290,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "admission and planning edge conversion",
+      "source": "type(action) is WalkSegment"
+    },
+    {
+      "file": "route_admission.py",
+      "line": 2040,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "admission and planning edge conversion",
+      "source": "type(first_action) is WalkSegment"
+    },
+    {
+      "file": "route_body_controller.py",
+      "line": 164,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "body ownership and walk dispatch",
+      "source": "type(action) is WalkSegment"
+    },
+    {
+      "file": "route_body_controller.py",
+      "line": 129,
+      "syntax": "comparison",
+      "actions": [
+        "WalkSegment"
+      ],
+      "category": "body ownership and walk dispatch",
+      "source": "type(action) is WalkSegment"
+    }
+  ],
+  "unclassified": [],
+  "action_declarations": [
+    {
+      "file": "action_route.py",
+      "line": 34,
+      "kind": "segment_record",
+      "actions": [
+        "WalkSegment"
+      ]
+    },
+    {
+      "file": "action_route.py",
+      "line": 65,
+      "kind": "segment_record",
+      "actions": [
+        "JumpUpSegment"
+      ]
+    },
+    {
+      "file": "action_route.py",
+      "line": 83,
+      "kind": "segment_record",
+      "actions": [
+        "StepSegment"
+      ]
+    },
+    {
+      "file": "action_route.py",
+      "line": 109,
+      "kind": "segment_record",
+      "actions": [
+        "JumpGapSegment"
+      ]
+    },
+    {
+      "file": "action_route.py",
+      "line": 134,
+      "kind": "segment_record",
+      "actions": [
+        "ControlledDropSegment"
+      ]
+    },
+    {
+      "file": "action_route.py",
+      "line": 158,
+      "kind": "route_type_union",
+      "actions": [
+        "ControlledDropSegment",
+        "JumpGapSegment",
+        "JumpUpSegment",
+        "StepSegment",
+        "WalkSegment"
+      ]
+    }
+  ],
+  "action_files": {
+    "ControlledDropSegment": [
+      "action_route.py",
+      "action_route_executor.py",
+      "motion_coordination.py",
+      "route_admission.py"
+    ],
+    "JumpGapSegment": [
+      "action_route.py",
+      "action_route_executor.py",
+      "actions/existing.py",
+      "motion_coordination.py",
+      "route_admission.py"
+    ],
+    "JumpUpSegment": [
+      "action_route.py",
+      "action_route_executor.py",
+      "actions/existing.py",
+      "motion_coordination.py",
+      "navigation_session.py",
+      "route_admission.py"
+    ],
+    "MotionSegment": [
+      "physics_1_21.py",
+      "physics_types.py"
+    ],
+    "StepSegment": [
+      "action_route.py",
+      "action_route_executor.py",
+      "actions/existing.py",
+      "route_admission.py"
+    ],
+    "WalkSegment": [
+      "action_route.py",
+      "action_route_executor.py",
+      "actions/existing.py",
+      "motion_coordination.py",
+      "navigation_session.py",
+      "route_admission.py",
+      "route_body_controller.py"
+    ]
+  },
+  "session": {
+    "lines": 4994,
+    "methods": 107,
+    "fields": [
+      "_adapter",
+      "_admitter",
+      "_bridge_policy",
+      "_bridge_remaining",
+      "_clock",
+      "_close_requested",
+      "_closed",
+      "_control_anchor",
+      "_control_ledger",
+      "_declared_successor_task_id",
+      "_direct_goal_request_id",
+      "_direct_planning_permit",
+      "_execution_instances",
+      "_executor_reported_damage_points",
+      "_frame",
+      "_goal_requests",
+      "_handoff",
+      "_information",
+      "_intent_sequence",
+      "_interaction_approach_pending",
+      "_last_decision",
+      "_last_local_direct_admission",
+      "_last_retry_action_index",
+      "_last_retry_body_cell",
+      "_last_retry_route_id",
+      "_lifecycle",
+      "_local_goal_request_id",
+      "_local_input_floor",
+      "_local_mode_wait_frames",
+      "_motion_residual",
+      "_motion_result_inbox",
+      "_motion_result_poll_sequence",
+      "_motion_worker",
+      "_movement_damage_spent_points",
+      "_owns_motion_worker",
+      "_owns_planner_worker",
+      "_pending_planning_recovery",
+      "_planner",
+      "_planning_coordinator",
+      "_planning_margin",
+      "_reason",
+      "_recovery_wait_capacity_exhausted",
+      "_recovery_wait_status",
+      "_required_interaction",
+      "_retry_ledger",
+      "_risk_action_id",
+      "_risk_action_key",
+      "_risk_failure_reason",
+      "_risk_ledger",
+      "_risk_submission_capacity_exhausted",
+      "_route_validation",
+      "_snapshot_cells_per_step",
+      "_source",
+      "_supervisor",
+      "_task_damage_budget",
+      "profiles",
+      "session_id"
+    ],
+    "field_count": 57,
+    "assigned_properties": [
+      "_completed_acquisition",
+      "_edge_probe",
+      "_pending_goal",
+      "_request",
+      "_residual_missing",
+      "_snapshot_missing"
+    ],
+    "property_accessors": 30,
+    "long_methods": [
+      {
+        "name": "__init__",
+        "line": 478,
+        "lines": 103
+      },
+      {
+        "name": "observation_request",
+        "line": 1416,
+        "lines": 106
+      },
+      {
+        "name": "_start_goal_after_admission",
+        "line": 1584,
+        "lines": 93
+      },
+      {
+        "name": "update_goal",
+        "line": 1678,
+        "lines": 181
+      },
+      {
+        "name": "_record_retry_route_progress",
+        "line": 1928,
+        "lines": 66
+      },
+      {
+        "name": "_begin_action_acquisition",
+        "line": 2232,
+        "lines": 51
+      },
+      {
+        "name": "_resolve_pending_retry",
+        "line": 2284,
+        "lines": 65
+      },
+      {
+        "name": "observe",
+        "line": 2350,
+        "lines": 195
+      },
+      {
+        "name": "propose",
+        "line": 2545,
+        "lines": 187
+      },
+      {
+        "name": "_advance_existing_handoff",
+        "line": 2733,
+        "lines": 96
+      },
+      {
+        "name": "_information_proposal",
+        "line": 2830,
+        "lines": 51
+      },
+      {
+        "name": "_prepare_route_action",
+        "line": 2883,
+        "lines": 120
+      },
+      {
+        "name": "_consume_route_decision",
+        "line": 3050,
+        "lines": 156
+      },
+      {
+        "name": "_route_proposal",
+        "line": 3207,
+        "lines": 67
+      },
+      {
+        "name": "register_verified_submission",
+        "line": 3275,
+        "lines": 78
+      },
+      {
+        "name": "_replace_request",
+        "line": 3566,
+        "lines": 76
+      },
+      {
+        "name": "_accept_goal_request",
+        "line": 3661,
+        "lines": 50
+      },
+      {
+        "name": "_activate_ground_direct_route",
+        "line": 3768,
+        "lines": 62
+      },
+      {
+        "name": "_activate_local_route",
+        "line": 3831,
+        "lines": 113
+      },
+      {
+        "name": "_resume_pending_goal",
+        "line": 4143,
+        "lines": 109
+      },
+      {
+        "name": "_reissue_request_from_current",
+        "line": 4317,
+        "lines": 88
+      },
+      {
+        "name": "_advance_planning",
+        "line": 4406,
+        "lines": 83
+      },
+      {
+        "name": "_activate_planning_route",
+        "line": 4490,
+        "lines": 103
+      },
+      {
+        "name": "_proposal",
+        "line": 4621,
+        "lines": 180
+      },
+      {
+        "name": "_information_look",
+        "line": 4802,
+        "lines": 52
+      }
+    ]
+  },
+  "driver_flow_strings": {
+    "../skills/block_placement_driver.py": [],
+    "../skills/external_motion_recovery_driver.py": [
+      "braking",
+      "cancelled",
+      "complete",
+      "failed",
+      "ready",
+      "releasing",
+      "running"
+    ],
+    "../skills/fixed_melee_driver.py": [
+      "approaching",
+      "blocked",
+      "cancelled",
+      "cancelling",
+      "complete",
+      "failed",
+      "ready",
+      "stopped",
+      "stopping_approach",
+      "success"
+    ],
+    "../skills/follow_driver.py": [],
+    "../skills/follow_playground_driver.py": [
+      "arbitration_selected_other_or_filtered",
+      "cancelled",
+      "failed",
+      "holding_distance",
+      "preempted",
+      "ready",
+      "stopped"
+    ],
+    "../skills/known_world_follow_driver.py": [],
+    "../skills/melee_strike_driver.py": [
+      "acquiring_interaction",
+      "aligning",
+      "cancelled",
+      "complete",
+      "confirming_hit",
+      "failed",
+      "needs_approach",
+      "observing_after_submit",
+      "operation_rejected",
+      "ready",
+      "unconfirmed",
+      "waiting"
+    ],
+    "../skills/moving_melee_driver.py": [
+      "blocked",
+      "cancelled",
+      "failed",
+      "stopped",
+      "success"
+    ],
+    "../skills/navigation_session_driver.py": [
+      "braking",
+      "cancelled",
+      "failed",
+      "interaction_required",
+      "interaction_suspended",
+      "ready",
+      "running",
+      "stopped",
+      "stopping",
+      "success"
+    ],
+    "../skills/point_goal_driver.py": [
+      "blocked",
+      "cancelled",
+      "failed",
+      "preempted",
+      "ready",
+      "running",
+      "stopped",
+      "success"
+    ],
+    "../skills/world_change_navigation_driver.py": [
+      "cancelled",
+      "failed",
+      "interaction_required",
+      "navigating",
+      "placing",
+      "ready",
+      "running",
+      "stopping",
+      "success"
+    ]
+  },
+  "driver_report_mapping_strings": {
+    "../skills/block_placement_driver.py": [],
+    "../skills/external_motion_recovery_driver.py": [],
+    "../skills/fixed_melee_driver.py": [],
+    "../skills/follow_driver.py": [],
+    "../skills/follow_playground_driver.py": [],
+    "../skills/known_world_follow_driver.py": [],
+    "../skills/melee_strike_driver.py": [],
+    "../skills/moving_melee_driver.py": [],
+    "../skills/navigation_session_driver.py": [
+      "cancelled",
+      "failed",
+      "interaction_required",
+      "stopping",
+      "success"
+    ],
+    "../skills/point_goal_driver.py": [],
+    "../skills/world_change_navigation_driver.py": [
+      "cancelled",
+      "failed",
+      "interaction_required",
+      "success"
+    ]
+  },
+  "lifecycle_review_sites": {
+    "planning_coordinator.py": [
+      {
+        "name": "_submitted_request",
+        "line": 426
+      },
+      {
+        "name": "work_identity",
+        "line": 454
+      },
+      {
+        "name": "_work_identity",
+        "line": 459
+      },
+      {
+        "name": "failure_matches_retired_work",
+        "line": 540
+      },
+      {
+        "name": "retire",
+        "line": 563
+      },
+      {
+        "name": "cancel_work",
+        "line": 594
+      },
+      {
+        "name": "cancel",
+        "line": 912
+      },
+      {
+        "name": "_retire_all_work",
+        "line": 1179
+      },
+      {
+        "name": "_poll_results",
+        "line": 1187
+      },
+      {
+        "name": "_submit",
+        "line": 1910
+      },
+      {
+        "name": "_retire_active_identity",
+        "line": 2463
+      }
+    ],
+    "motion_coordination.py": [
+      {
+        "name": "_work_identity",
+        "line": 618
+      },
+      {
+        "name": "cancel_work",
+        "line": 625
+      },
+      {
+        "name": "_accept_result",
+        "line": 675
+      },
+      {
+        "name": "_submit_action",
+        "line": 904
+      },
+      {
+        "name": "_submit_current",
+        "line": 998
+      },
+      {
+        "name": "_retire_work",
+        "line": 1019
+      }
+    ]
+  },
+  "coordination_modules": {
+    "execution_supervisor.py": {
+      "lines": 689,
+      "imports": [
+        "__future__",
+        "collections",
+        "dataclasses",
+        "enum",
+        "mc2p.contracts.action_v1",
+        "mc2p.contracts.common",
+        "mc2p.motion_nav.action_route_executor",
+        "mc2p.motion_nav.async_work",
+        "mc2p.motion_nav.body_control",
+        "mc2p.motion_nav.landing_edge_probe",
+        "mc2p.motion_nav.online_motion",
+        "mc2p.motion_nav.probe_body_controller",
+        "mc2p.motion_nav.route_body_controller",
+        "mc2p.motion_nav.route_validation",
+        "mc2p.motion_nav.runtime_adapter",
+        "mc2p.motion_nav.safe_ground_control",
+        "mc2p.motion_nav.world_model"
+      ]
+    },
+    "motion_coordination.py": {
+      "lines": 1535,
+      "imports": [
+        "__future__",
+        "dataclasses",
+        "enum",
+        "mc2p.contracts.action_v1",
+        "mc2p.contracts.common",
+        "mc2p.motion_nav.action_route",
+        "mc2p.motion_nav.action_route_executor",
+        "mc2p.motion_nav.async_work",
+        "mc2p.motion_nav.body_control",
+        "mc2p.motion_nav.fixed_route",
+        "mc2p.motion_nav.motion_candidate",
+        "mc2p.motion_nav.motion_risk",
+        "mc2p.motion_nav.motion_solver",
+        "mc2p.motion_nav.motion_worker",
+        "mc2p.motion_nav.movement_transition",
+        "mc2p.motion_nav.online_motion",
+        "mc2p.motion_nav.physics_1_21",
+        "mc2p.motion_nav.physics_adapter",
+        "mc2p.motion_nav.physics_types",
+        "mc2p.motion_nav.retry_ledger",
+        "mc2p.motion_nav.route_admission",
+        "mc2p.motion_nav.runtime_adapter",
+        "mc2p.motion_nav.safe_ground_control",
+        "mc2p.motion_nav.segment_entry",
+        "mc2p.motion_nav.world_model"
+      ]
+    },
+    "navigation_handoff.py": {
+      "lines": 729,
+      "imports": [
+        "__future__",
+        "dataclasses",
+        "enum",
+        "mc2p.contracts.common",
+        "mc2p.motion_nav.body_control",
+        "mc2p.motion_nav.known_map_planner",
+        "mc2p.motion_nav.navigation_owners",
+        "mc2p.motion_nav.planning_coordinator",
+        "mc2p.motion_nav.probe_body_controller",
+        "mc2p.motion_nav.retry_ledger",
+        "mc2p.motion_nav.route_admission",
+        "mc2p.motion_nav.runtime_adapter",
+        "mc2p.motion_nav.world_model"
+      ]
+    },
+    "navigation_lifecycle.py": {
+      "lines": 240,
+      "imports": [
+        "__future__",
+        "dataclasses",
+        "enum",
+        "mc2p.contracts.common",
+        "mc2p.motion_nav.body_control"
+      ]
+    },
+    "navigation_session.py": {
+      "lines": 4994,
+      "imports": [
+        "__future__",
+        "dataclasses",
+        "enum",
+        "mc2p.contracts.action",
+        "mc2p.contracts.action_v1",
+        "mc2p.contracts.common",
+        "mc2p.contracts.intent_source",
+        "mc2p.contracts.observation_request_v3",
+        "mc2p.contracts.observation_v3",
+        "mc2p.motion_nav.action_preconditions",
+        "mc2p.motion_nav.action_route",
+        "mc2p.motion_nav.action_route_executor",
+        "mc2p.motion_nav.actions.registry",
+        "mc2p.motion_nav.air_motion",
+        "mc2p.motion_nav.async_work",
+        "mc2p.motion_nav.block_motion_traits",
+        "mc2p.motion_nav.body_control",
+        "mc2p.motion_nav.bridge_planner",
+        "mc2p.motion_nav.environment_identity",
+        "mc2p.motion_nav.execution_supervisor",
+        "mc2p.motion_nav.geometry",
+        "mc2p.motion_nav.goal_observation",
+        "mc2p.motion_nav.goal_planning_policy",
+        "mc2p.motion_nav.goal_reach_policy",
+        "mc2p.motion_nav.ground_modes",
+        "mc2p.motion_nav.ground_motion",
+        "mc2p.motion_nav.jump_up",
+        "mc2p.motion_nav.known_map_planner",
+        "mc2p.motion_nav.landing_edge_probe",
+        "mc2p.motion_nav.motion_coordination",
+        "mc2p.motion_nav.motion_residual",
+        "mc2p.motion_nav.motion_risk",
+        "mc2p.motion_nav.motion_solver",
+        "mc2p.motion_nav.motion_worker",
+        "mc2p.motion_nav.movement_transition",
+        "mc2p.motion_nav.navigation_handoff",
+        "mc2p.motion_nav.navigation_lifecycle",
+        "mc2p.motion_nav.navigation_owners",
+        "mc2p.motion_nav.online_motion",
+        "mc2p.motion_nav.planner_worker",
+        "mc2p.motion_nav.planning_coordinator",
+        "mc2p.motion_nav.probe_body_controller",
+        "mc2p.motion_nav.retry_ledger",
+        "mc2p.motion_nav.route_admission",
+        "mc2p.motion_nav.route_validation",
+        "mc2p.motion_nav.runtime_adapter",
+        "mc2p.motion_nav.safe_ground_control",
+        "mc2p.motion_nav.step_transition",
+        "mc2p.motion_nav.support_surfaces",
+        "mc2p.motion_nav.world_model",
+        "pathlib",
+        "typing"
+      ]
+    },
+    "planning_coordinator.py": {
+      "lines": 2532,
+      "imports": [
+        "__future__",
+        "dataclasses",
+        "enum",
+        "itertools",
+        "mc2p.contracts.common",
+        "mc2p.motion_nav.air_motion",
+        "mc2p.motion_nav.async_work",
+        "mc2p.motion_nav.bridge_planner",
+        "mc2p.motion_nav.ground_modes",
+        "mc2p.motion_nav.ground_motion",
+        "mc2p.motion_nav.jump_up",
+        "mc2p.motion_nav.known_map_planner",
+        "mc2p.motion_nav.landing_edge_probe",
+        "mc2p.motion_nav.motion_risk",
+        "mc2p.motion_nav.movement_transition",
+        "mc2p.motion_nav.navigation_owners",
+        "mc2p.motion_nav.online_motion",
+        "mc2p.motion_nav.physics_types",
+        "mc2p.motion_nav.planner_worker",
+        "mc2p.motion_nav.retry_ledger",
+        "mc2p.motion_nav.route_admission",
+        "mc2p.motion_nav.runtime_adapter",
+        "mc2p.motion_nav.step_transition",
+        "mc2p.motion_nav.support_surfaces",
+        "mc2p.motion_nav.world_model",
+        "typing"
+      ]
+    }
+  },
+  "production_lines": 38511
+}

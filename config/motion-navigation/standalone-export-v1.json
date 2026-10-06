@@ -84,7 +84,10 @@
     "tests/java/*.java",
     "tests/java/stubs/**/*.java",
     "tools/navigation_layer_live/**/*",
-    "tools/navigation_replay/**/*"
+    "tools/navigation_replay/**/*",
+    "evidence/motion_navigation/redesign-m0/**/*",
+    "evidence/motion_navigation/redesign-m1/**/*",
+    "docs/superpowers/plans/2026-10-06-motion-navigation-m0-m1.md"
   ],
   "python_entry_globs": [
     "scripts/export_motion_navigation_standalone.py",
@@ -161,7 +164,10 @@
     "tests/test_client_block_observation_v3.py",
     "tests/test_client_observation_payload_v3.py",
     "tests/test_visual_air_runtime.py",
-    "tests/test_public_runtime_evidence.py"
+    "tests/test_public_runtime_evidence.py",
+    "scripts/navigation_design_metrics.py",
+    "scripts/navigation_dead_path_probe.py",
+    "scripts/navigation_historical_seed_probe.py"
   ],
   "required_paths": [
     "README.md",
@@ -373,6 +379,31 @@
     "tests/test_moving_melee_driver.py",
     "tests/test_c1_navigation_session.py",
     "docs/motion_navigation/stages/C1R-runtime-navigation-convergence.md",
-    "docs/motion_navigation/acceptance/C1R-runtime-navigation-convergence.md"
+    "docs/motion_navigation/acceptance/C1R-runtime-navigation-convergence.md",
+    "mc2p/motion_nav/actions/contracts.py",
+    "mc2p/motion_nav/actions/registry.py",
+    "mc2p/motion_nav/actions/controlled_drop.py",
+    "mc2p/motion_nav/actions/existing.py",
+    "scripts/navigation_design_metrics.py",
+    "scripts/navigation_dead_path_probe.py",
+    "scripts/navigation_historical_seed_probe.py",
+    "tests/motion_nav/test_action_specs.py",
+    "tests/motion_nav/test_action_spec_integration.py",
+    "tests/motion_nav/action_spec_fixtures.py",
+    "tests/motion_nav/test_navigation_design_metrics.py",
+    "tests/motion_nav/test_navigation_dead_path_probe.py",
+    "docs/motion_navigation/architecture/action-spec-v1.md",
+    "docs/motion_navigation/decisions/0072-end-post-f1-cleanup-and-validate-action-spec.md",
+    "docs/motion_navigation/stages/motion-navigation-middle-layer-M0-M1-plan.md",
+    "docs/motion_navigation/acceptance/motion-navigation-middle-layer-M0-M1.md",
+    "docs/superpowers/plans/2026-10-06-motion-navigation-m0-m1.md",
+    "evidence/motion_navigation/redesign-m0/baseline-manifest.json",
+    "evidence/motion_navigation/redesign-m0/metrics-baseline.json",
+    "evidence/motion_navigation/redesign-m1/final-manifest.json",
+    "evidence/motion_navigation/redesign-m1/metrics-final.json",
+    "evidence/motion_navigation/redesign-m1/controlled-drop-corpus.json",
+    "evidence/motion_navigation/redesign-m1/equivalence-report.json",
+    "evidence/motion_navigation/redesign-m1/performance/d058/performance.json",
+    "evidence/motion_navigation/redesign-m1/performance/d061/performance.json"
   ]
 }

@@ -12,6 +12,7 @@ from scripts.export_motion_navigation_standalone import (
     export_tree,
     load_manifest,
     verify_tree,
+    _allowed_source,
 )
 
 
@@ -65,6 +66,40 @@ class StandaloneExportTests(unittest.TestCase):
         self.assertIn("psutil", requirements)
         self.assertIn("numpy", requirements)
 
+    def test_m0_m1_snapshot_contains_reproduction_tools_and_compact_evidence(self):
+        required = (
+            'mc2p/motion_nav/actions/contracts.py',
+            'mc2p/motion_nav/actions/registry.py',
+            'mc2p/motion_nav/actions/controlled_drop.py',
+            'scripts/navigation_design_metrics.py',
+            'scripts/navigation_dead_path_probe.py',
+            'scripts/navigation_historical_seed_probe.py',
+            'tests/motion_nav/test_action_specs.py',
+            'tests/motion_nav/test_action_spec_integration.py',
+            'tests/motion_nav/action_spec_fixtures.py',
+            'docs/motion_navigation/architecture/action-spec-v1.md',
+            'docs/motion_navigation/decisions/0072-end-post-f1-cleanup-and-validate-action-spec.md',
+            'docs/motion_navigation/stages/motion-navigation-middle-layer-M0-M1-plan.md',
+            'docs/motion_navigation/acceptance/motion-navigation-middle-layer-M0-M1.md',
+            'docs/superpowers/plans/2026-10-06-motion-navigation-m0-m1.md',
+            'evidence/motion_navigation/redesign-m0/baseline-manifest.json',
+            'evidence/motion_navigation/redesign-m1/final-manifest.json',
+        )
+        self.assertEqual(tuple(p for p in required if not (self.root/p).is_file()), ())
+        for name in ('README.md', 'AGENTS.md'):
+            text = (self.root/name).read_text('utf-8')
+            self.assertIn('M1', text)
+            self.assertIn('结构止损', text)
+            self.assertIn('M2', text)
+        self.assertFalse(any('.tmp' in p.relative_to(self.root).parts
+                             for p in self.root.rglob('*') if p.is_file()))
+        for directory in ('redesign-m0', 'redesign-m1'):
+            self.assertTrue(all(p.stat().st_size < 1_000_000 for p in
+                (self.root/'evidence/motion_navigation'/directory).rglob('*') if p.is_file()))
+
+    def test_workspace_tmp_cannot_be_selected_as_export_source(self):
+        self.assertFalse(_allowed_source(self.root/'README.md'))
+
     def test_exported_first_party_modules_all_import(self) -> None:
         script = """
 import importlib
@@ -111,6 +146,17 @@ print(f"IMPORTED_FIRST_PARTY_MODULES={len(modules)}")
         finally:
             target.write_bytes(original)
             extra.unlink(missing_ok=True)
+
+    def test_nested_evidence_hash_manifest_is_protected_by_snapshot_hashes(self):
+        target = self.root/'evidence/motion_navigation/representative-v1/SHA256SUMS.txt'
+        original = target.read_bytes()
+        try:
+            target.write_bytes(original+b'\ntampered inner manifest\n')
+            with self.assertRaises(ExportViolation) as raised:
+                verify_tree(self.root, manifest=self.manifest)
+            self.assertIn('representative-v1/SHA256SUMS.txt', str(raised.exception))
+        finally:
+            target.write_bytes(original)
 
     def test_verifier_ignores_generated_python_cache(self) -> None:
         cache = self.root / "mc2p" / "__pycache__"

@@ -1,6 +1,8 @@
 """Control-thread admission boundary for B04 background route candidates."""
 from __future__ import annotations
 
+from mc2p.motion_nav.actions.registry import action_spec
+
 from dataclasses import dataclass, replace
 from enum import StrEnum
 import hashlib
@@ -1072,11 +1074,7 @@ class RouteAdmitter:
                 route.action_route.actions):
             raise ContractViolation("verified motion action index is outside the route")
         action = route.action_route.actions[action_index]
-        expected_kind = {
-            JumpGapSegment: MotionSolveKind.JUMP_GAP,
-            JumpUpSegment: MotionSolveKind.JUMP_UP,
-            ControlledDropSegment: MotionSolveKind.CONTROLLED_DROP,
-        }.get(type(action))
+        expected_kind = action_spec(action).solve_kind
         if expected_kind is None or proof.kind is not expected_kind:
             raise ContractViolation(
                 "verified motion kind does not match its route action"

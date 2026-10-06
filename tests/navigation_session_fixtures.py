@@ -86,6 +86,11 @@ class FakeNavigationSession:
             raise AssertionError("wrong source")
         self.source = None
 
+    def handle_internal_contract_failure(self, reason):
+        if not self.report.terminal:
+            self.state = NavigationSessionState.FAILED
+            self.reason = reason
+
     def handle_control_unavailable(self):
         if not self.report.terminal:
             self.state = NavigationSessionState.FAILED
