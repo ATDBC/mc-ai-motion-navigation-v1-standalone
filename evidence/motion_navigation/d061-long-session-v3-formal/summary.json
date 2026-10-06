@@ -1,0 +1,208 @@
+{
+  "artifact_path": "artifacts/d061-long-session-v3-formal",
+  "artifact_segments_in_public_evidence": false,
+  "benchmark_schema_version": "mc2p.d061-long-session-performance.v3",
+  "classification": "passed",
+  "control_path": {
+    "captured_frames": 4196,
+    "deadline_miss_count": 0,
+    "gen2_coverage": {
+      "first_retained_gen2_ordinal": 23,
+      "passed": true,
+      "post_gen2_complete": true,
+      "retained_gen2_observed": true,
+      "sample_limit_reached": false
+    },
+    "minimum_deadline_slack_ns": 450000000,
+    "missing_deadline_count": 0,
+    "retained_frames": 4096,
+    "retained_statistics": {
+      "maximum_ms": 41.2163,
+      "maximum_ns": 41216300,
+      "p50_ms": 10.6188,
+      "p50_ns": 10618800,
+      "p95_ms": 11.205,
+      "p95_ns": 11205000,
+      "p99_ms": 30.568,
+      "p99_ns": 30568000,
+      "samples": 4096
+    },
+    "statistics": {
+      "maximum_ms": 41.2163,
+      "maximum_ns": 41216300,
+      "p50_ms": 10.6118,
+      "p50_ns": 10611800,
+      "p95_ms": 11.2243,
+      "p95_ns": 11224300,
+      "p99_ms": 30.5366,
+      "p99_ns": 30536600,
+      "samples": 4196
+    }
+  },
+  "gates": {
+    "behavior": true,
+    "control_path_integrity": true,
+    "control_path_maximum": true,
+    "gc_diagnostic_integrity": true,
+    "gen2_coverage": true,
+    "identity": true,
+    "input_deadline_miss": true,
+    "minimum_deadline_slack": true,
+    "pacing": true,
+    "prepare_control_alignment": true,
+    "prepare_maximum": true,
+    "prepare_p95": true,
+    "prepare_p99": true,
+    "safety": true,
+    "sample_maximum": true,
+    "sample_minimum": true,
+    "terminal": true,
+    "trace": true
+  },
+  "gc": {
+    "capacity": 65536,
+    "event_count": 17306,
+    "first_gen2_anywhere": {
+      "active_control_ordinal": null,
+      "active_prepare_ordinal": null,
+      "collected": 0,
+      "completed_control_frames_before_event": 0,
+      "control_path_phase": "outside",
+      "duration_ns": 4762800,
+      "end_ns": 184438174177500,
+      "event_ordinal": 26,
+      "followup_start_control_ordinal": 0,
+      "generation": 2,
+      "last_completed_control_ordinal": null,
+      "last_completed_prepare_ordinal": null,
+      "measurement_phase": "before_samples",
+      "origin": "outside_control_thread",
+      "start_ns": 184438169414700,
+      "thread_id": 21436
+    },
+    "first_retained_production_gen2": {
+      "active_control_ordinal": null,
+      "active_prepare_ordinal": null,
+      "collected": 0,
+      "completed_control_frames_before_event": 123,
+      "control_path_phase": "outside",
+      "duration_ns": 14672500,
+      "end_ns": 184444805562000,
+      "event_ordinal": 968,
+      "followup_start_control_ordinal": 123,
+      "generation": 2,
+      "last_completed_control_ordinal": 122,
+      "last_completed_prepare_ordinal": 122,
+      "measurement_phase": "retained",
+      "origin": "trace_thread",
+      "start_ns": 184444790889500,
+      "thread_id": 39384
+    },
+    "generation_counts": {
+      "0": 15803,
+      "1": 1437,
+      "2": 66
+    },
+    "overflowed": false,
+    "start_stop_mismatch": false,
+    "unmatched_start": false
+  },
+  "prepare": {
+    "captured_samples": 4196,
+    "retained_samples": 4096,
+    "statistics": {
+      "maximum_ms": 10.1588,
+      "maximum_ns": 10158800,
+      "p50_ms": 5.0581,
+      "p50_ns": 5058100,
+      "p95_ms": 5.2493,
+      "p95_ns": 5249300,
+      "p99_ms": 5.3928,
+      "p99_ns": 5392800,
+      "samples": 4096
+    }
+  },
+  "recorded_passed": true,
+  "schema_version": "mc2p.d061-tracked-evidence-summary.v1",
+  "source": {
+    "commit": "a6d823bc567330ff2f29fa13a612759fc53887cc",
+    "files": [
+      {
+        "path": "scripts/benchmark_d061_long_session.py",
+        "sha256": "dac114cff66be92da35806d20e0ed6d08a22563d2bb67894421b11b2f106f88c"
+      },
+      {
+        "path": "tests/sim/known_world_following.py",
+        "sha256": "a3fb55240fc1831b00d1962ba4d07eea8d13508e2ce8736a6facd685530c4a49"
+      },
+      {
+        "path": "mc2p/runtime/async_trace.py",
+        "sha256": "0688d9f53da07a2e3f9184b29f79f2770fb8623feb43e9a3e322dd91d2010001"
+      },
+      {
+        "path": "mc2p/runtime/segmented_trace.py",
+        "sha256": "eb07294badb8d58f8d8072eabae6661e462157eee48e213920728fafca744bf2"
+      },
+      {
+        "path": "mc2p/runtime/player_runtime_v1.py",
+        "sha256": "a73abdc045c43286767d4a72ce7041ae9801b82aa28e02f3ca9f80cfd79db76b"
+      },
+      {
+        "path": "mc2p/skills/known_world_follow_driver.py",
+        "sha256": "61e95e759b9b84a72c272a3cba9115b5597dc78bb1a8c331ae144d694efeb834"
+      },
+      {
+        "path": "mc2p/skills/navigation_session_driver.py",
+        "sha256": "b8e0202e37003e1fdfe72922f625651c1f78a8375c0f7f8a6ccd91e156dcf450"
+      },
+      {
+        "path": "mc2p/motion_nav/navigation_session.py",
+        "sha256": "9810301eacd686a3b07793cbfb3ee9cc0a1500a46a66b4ab8a6350939908ed08"
+      },
+      {
+        "path": "mc2p/motion_nav/route_admission.py",
+        "sha256": "13b6e6bb1af0be5e9255347479b0dcf628ac77fa21397097fa7a619d55ffaf19"
+      }
+    ],
+    "git_dirty": false,
+    "git_status": [],
+    "scope_sha256": "2360842642f6aa9fa4ff9b3795b9dbeffe4ad6802925fe373b4800d5b0ce0f5c"
+  },
+  "trace": {
+    "complete": {
+      "byte_count": 167714901,
+      "manifest_sha256": "311757ff08ed47721ad3c53a445713d779e0b4f031cfe2b715382a5cbe3c2a64",
+      "record_count": 16956,
+      "schema_version": "mc2p.segment-complete.v1",
+      "segment_count": 11
+    },
+    "delivery_summary": {
+      "accepted_records": 16955,
+      "capacity": 2048,
+      "dropped_by_record_type": {},
+      "dropped_records": 0,
+      "peak_depth": 5,
+      "projection_timing_ns": {
+        "count": 16955,
+        "maximum": 15524300,
+        "p95": 348200,
+        "p99": 396800,
+        "sample_count": 4096,
+        "total": 1815525100
+      },
+      "schema_version": "mc2p.trace-delivery-summary.v1",
+      "worker_failed": false,
+      "written_records": 16955
+    },
+    "verified_records": 16956
+  },
+  "verification": {
+    "artifact_sha256_entries": 15,
+    "artifact_sha256s_verified": true,
+    "control_statistics_applicable": true,
+    "control_statistics_recomputed": true,
+    "gc_generation_counts_recomputed": true,
+    "prepare_statistics_recomputed": true,
+    "segmented_trace_fully_iterated": true
+  }
+}

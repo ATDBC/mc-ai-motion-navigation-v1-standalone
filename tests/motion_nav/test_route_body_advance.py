@@ -6,15 +6,24 @@ import unittest
 from unittest.mock import patch
 
 from mc2p.contracts.action_v1 import LookV1, MovementV1
+from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.action_route_executor import (
     ActionRouteDecision, ActionRouteExecutor, ActionRouteState,
 )
-from mc2p.motion_nav.action_route import ActionRoute, JumpUpSegment
+from mc2p.motion_nav.action_route import (
+    ActionRoute,
+    ControlledDropSegment,
+    JumpUpSegment,
+)
 from mc2p.motion_nav.body_control import HandoffDisposition, StopCause
 from mc2p.motion_nav.execution_supervisor import BodyFrameAdvance, ExecutionSupervisor
 from mc2p.motion_nav.motion_coordination import MotionRouteCoordinator
 from mc2p.motion_nav.jump_up import JumpUpEdge
-from mc2p.motion_nav.landing_edge_probe import LandingEdgeProbe
+from mc2p.motion_nav.landing_edge_probe import (
+    LandingEdgeProbe, LandingEdgeProbeState,
+)
+from mc2p.motion_nav.ground_modes import observed_ground_mode
+from mc2p.motion_nav.segment_entry import body_fits_segment_entry
 from mc2p.motion_nav.online_motion import InputApplicationLedger
 from mc2p.motion_nav.route_body_controller import RouteControl
 from mc2p.motion_nav.motion_risk import (
@@ -47,6 +56,246 @@ class _FrameExecutor(_RepeatingRecoveryExecutor):
 
 
 class RouteBodyAdvanceTests(unittest.TestCase):
+    def _run_direct_drop_acquisition(self, scenario_name):
+        strict_entries = []
+        probe_frames = []
+        context_now = None
+        original_enter = ActionRouteExecutor.enter_upcoming_action_boundary
+
+        def control(context):
+            nonlocal context_now
+            context_now = context
+            context.driver.tick(
+                BehaviorProfileV0(), context.clock[0] + 500_000_000,
+            )
+            session = context.session
+            probe = session._edge_probe
+            control = session._supervisor.route
+            if (probe is not None and control is not None
+                    and probe.state.value in {
+                        "approaching", "holding_edge",
+                        "positioning_entry", "releasing",
+                    }):
+                action = control.route.action_route.actions[
+                    probe.action_index
+                ]
+                probe_frames.append((
+                    control.executor.action_index,
+                    control.tracker.identity.action_index,
+                    control.effective_dependencies,
+                    probe.belongs_to_action(
+                        control.route.route_id,
+                        control.route.route_revision,
+                        probe.action_index,
+                    ),
+                    probe.entry_window is action.entry_window,
+                ))
+
+        def enter(executor, next_index, frame):
+            entered = original_enter(executor, next_index, frame)
+            if not entered:
+                return False
+            session = context_now.session
+            action = executor.route.actions[next_index]
+            mode = observed_ground_mode(frame.body)
+            grant = session._completed_acquisition
+            active_route = session._active_route
+            strict_entries.append((
+                frame.body.sequence_id,
+                grant is not None
+                    and active_route is not None
+                    and grant.applies(
+                        active_route, next_index, frame,
+                    ),
+                type(action) is ControlledDropSegment
+                    and action.entry_window is not None
+                    and mode is not None
+                    and body_fits_segment_entry(
+                        action.entry_window, frame.body, mode,
+                    ),
+                session._edge_probe is not None
+                    and session._edge_probe.ready,
+            ))
+            return True
+
+        scenario = next(
+            item for item in SCENARIOS
+            if item.name == scenario_name
+        )
+
+        with patch.object(
+            ActionRouteExecutor,
+            "enter_upcoming_action_boundary",
+            enter,
+        ):
+            result = run(scenario, control_step=control)
+
+        return result, strict_entries, probe_frames
+
+    def test_direct_drop_acquisition_enters_strict_only_from_typed_entry(self):
+        result, strict_entries, probe_frames = (
+            self._run_direct_drop_acquisition("direct_drop_5_budget_2")
+        )
+
+        self.assertEqual(result.outcome, "success", result.reason)
+        self.assertEqual(result.violations, [])
+        self.assertTrue(strict_entries)
+        self.assertTrue(strict_entries[0][1], strict_entries[0])
+        self.assertTrue(strict_entries[0][2], strict_entries[0])
+        self.assertTrue(probe_frames)
+        self.assertTrue(all(item[0] == 0 for item in probe_frames))
+        self.assertTrue(all(item[1] == 0 for item in probe_frames))
+        self.assertTrue(all(
+            item[2] == probe_frames[0][2] for item in probe_frames
+        ))
+        self.assertTrue(all(item[3] and item[4] for item in probe_frames))
+
+    def test_two_block_direct_drop_uses_the_same_typed_entry(self):
+        result, strict_entries, probe_frames = (
+            self._run_direct_drop_acquisition("direct_drop_2")
+        )
+
+        self.assertEqual(result.outcome, "success", result.reason)
+        self.assertEqual(result.violations, [])
+        self.assertTrue(strict_entries)
+        self.assertTrue(strict_entries[0][1], strict_entries[0])
+        self.assertTrue(strict_entries[0][2], strict_entries[0])
+        self.assertTrue(probe_frames)
+
+    def test_far_landing_probe_enters_strict_on_its_ready_frame(self):
+        result, strict_entries, _ = self._run_direct_drop_acquisition(
+            "far_landing_L_walkway",
+        )
+
+        self.assertEqual(
+            (result.outcome, result.reason),
+            ("success", "goal_state_satisfied"),
+        )
+        self.assertEqual(result.violations, [])
+        self.assertTrue(strict_entries)
+        self.assertTrue(strict_entries[0][1], strict_entries[0])
+        self.assertTrue(strict_entries[0][2], strict_entries[0])
+        self.assertTrue(strict_entries[0][3], strict_entries[0])
+        self.assertNotIn(
+            "fixed_route_stalled",
+            {row["session_reason"] for row in result.trace},
+        )
+
+    def test_probe_transfer_rejects_the_preceding_action_identity(self):
+        supervisor, incumbent, _, frame, _, _ = self._routes()
+        probe = LandingEdgeProbe(
+            "goal", 1, (0, 0, 0), 0,
+            acquisition_id="probe-action-one",
+            route_id=incumbent.route.route_id,
+            route_revision=incumbent.route.route_revision,
+            action_index=1,
+            state=LandingEdgeProbeState.READY,
+        )
+        supervisor.probe = probe
+
+        with self.assertRaises(ContractViolation):
+            supervisor.transfer_probe_to_route(
+                frame,
+                route_id=incumbent.route.route_id,
+                route_revision=incumbent.route.route_revision,
+                action_index=0,
+                movement=MovementV1(forward=1),
+                control_sequence=1,
+                movement_tick_id=frame.body.movement_tick_id,
+            )
+
+        self.assertIs(supervisor.probe, probe)
+        self.assertTrue(probe.owned)
+
+    def test_ready_probe_stays_owner_when_boundary_staging_defers_once(self):
+        original_enter = ActionRouteExecutor.enter_upcoming_action_boundary
+        context = None
+        deferred = False
+        retained = False
+        entered = False
+
+        def enter(executor, next_index, frame):
+            nonlocal deferred, entered
+            probe = context.session._edge_probe
+            if not deferred and probe is not None and probe.ready:
+                deferred = True
+                return False
+            result = original_enter(executor, next_index, frame)
+            entered |= result
+            return result
+
+        def control_step(current):
+            nonlocal context, retained
+            context = current
+            current.driver.tick(
+                BehaviorProfileV0(), current.clock[0] + 500_000_000,
+            )
+            if deferred and not entered:
+                probe = current.session._edge_probe
+                retained = (
+                    probe is not None
+                    and probe.ready
+                    and current.session._executor.action_index == 0
+                    and current.backend.actions[-1].movement == MovementV1()
+                )
+
+        scenario = next(
+            item for item in SCENARIOS
+            if item.name == "far_landing_L_walkway"
+        )
+        with patch.object(
+            ActionRouteExecutor, "enter_upcoming_action_boundary", enter,
+        ):
+            result = run(scenario, control_step=control_step)
+
+        self.assertTrue(deferred)
+        self.assertTrue(retained)
+        self.assertTrue(entered)
+        self.assertEqual(
+            (result.outcome, result.reason),
+            ("success", "goal_state_satisfied"),
+        )
+
+    def test_ready_probe_boundary_refusal_is_bounded_by_acquisition_wait(self):
+        original_enter = ActionRouteExecutor.enter_upcoming_action_boundary
+        context = None
+        ready_deferrals = 0
+
+        def enter(executor, next_index, frame):
+            nonlocal ready_deferrals
+            probe = context.session._edge_probe
+            if probe is not None and probe.ready:
+                ready_deferrals += 1
+                return False
+            return original_enter(executor, next_index, frame)
+
+        def control_step(current):
+            nonlocal context
+            context = current
+            current.driver.tick(
+                BehaviorProfileV0(), current.clock[0] + 500_000_000,
+            )
+
+        base = next(
+            item for item in SCENARIOS
+            if item.name == "far_landing_L_walkway"
+        )
+        scenario = replace(base, max_ticks=260, expect="failed")
+        with patch.object(
+            ActionRouteExecutor, "enter_upcoming_action_boundary", enter,
+        ):
+            result = run(scenario, control_step=control_step)
+
+        self.assertGreater(ready_deferrals, 1)
+        self.assertEqual(
+            (result.outcome, result.reason),
+            ("failed", "edge_probe_acquisition_timeout"),
+        )
+        self.assertLess(result.ticks, scenario.max_ticks)
+        self.assertEqual(result.violations, [])
+        self.assertTrue(result.trace[-1]["on_ground"])
+        self.assertFalse(result.trace[-1]["source_bound"])
+
     def _run_risk_refusal(self, status, *, airborne=False):
         context_now = None
         refused = None
@@ -79,7 +328,13 @@ class RouteBodyAdvanceTests(unittest.TestCase):
             context_now = context
             context.driver.tick(BehaviorProfileV0(), context.clock[0] + 500_000_000)
 
-        scenario = next(s for s in SCENARIOS if s.name == "direct_drop_5_budget_2")
+        # Start on the proved drop boundary so this test isolates risk
+        # refusal.  The full acquisition chain is covered separately above.
+        scenario = replace(
+            next(s for s in SCENARIOS
+                 if s.name == "direct_drop_5_budget_2"),
+            start=(.5, 64.0, 2.5),
+        )
         with patch.object(TaskRiskLedger, "reserve", reject), \
                 patch.object(ActionRouteExecutor, "decide", observe):
             result = run(scenario, control_step=control)
@@ -183,10 +438,14 @@ class RouteBodyAdvanceTests(unittest.TestCase):
     def _routes(self, incumbent_state=ActionRouteState.RUNNING,
                 candidate_state=ActionRouteState.RUNNING, *, candidate_submit=False):
         original, current, anchor = test_execution_supervisor.ExecutionSupervisorTests()._control()
-        incumbent = RouteControl(original.route,
-            _FrameExecutor(original.route.action_route, incumbent_state))
-        candidate = RouteControl(replace(original.route, route_id="candidate"),
-            _FrameExecutor(original.route.action_route, candidate_state,
+        # These selection tests hand-author frame decisions and therefore do
+        # not claim D058 FixedRoute progress proof metadata.
+        synthetic = replace(original.route, validation_plan=None)
+        incumbent = RouteControl(synthetic,
+            _FrameExecutor(synthetic.action_route, incumbent_state))
+        candidate_route = replace(synthetic, route_id="candidate")
+        candidate = RouteControl(candidate_route,
+            _FrameExecutor(candidate_route.action_route, candidate_state,
                            submit=candidate_submit))
         ledger = InputApplicationLedger()
         supervisor = ExecutionSupervisor()
@@ -285,8 +544,14 @@ class RouteBodyAdvanceTests(unittest.TestCase):
             with self.subTest(coordinator=coordinator):
                 control = incumbent
                 if coordinator:
-                    control = replace(incumbent,
-                        coordinator=object.__new__(MotionRouteCoordinator))
+                    coordinator_owner = object.__new__(
+                        MotionRouteCoordinator,
+                    )
+                    coordinator_owner.route = incumbent.route
+                    coordinator_owner.executor = incumbent.executor
+                    control = replace(
+                        incumbent, coordinator=coordinator_owner,
+                    )
                 target = MotionRouteCoordinator if coordinator else _FrameExecutor
                 expected = math.atan2(math.sin(frame.body.yaw_radians + math.pi / 2),
                                       math.cos(frame.body.yaw_radians + math.pi / 2))
@@ -312,7 +577,11 @@ class RouteBodyAdvanceTests(unittest.TestCase):
             JumpUpEdge((0, 0, 0), (1, 1, 0), "jump", (1, 0), 1, ()), ()),))
         for route in (step, jump):
             with self.subTest(route=route.route_id):
-                control = RouteControl(replace(original.route, action_route=route),
+                # This hand-built strict route is not a RouteAdmitter product
+                # and must not retain the original Walk revalidation plan.
+                control = RouteControl(replace(
+                    original.route, action_route=route, validation_plan=None,
+                ),
                                        _FrameExecutor(route))
                 result = control.advance(current, InputApplicationLedger(), anchor,
                                          conditioned_yaw_delta_degrees=90)

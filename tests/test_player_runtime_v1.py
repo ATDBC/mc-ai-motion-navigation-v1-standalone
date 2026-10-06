@@ -18,7 +18,10 @@ from mc2p.runtime.backend import BackendStepResultV0
 from mc2p.runtime.failure_disposition import FailureDisposition
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1
 from mc2p.motion_nav.world_model import CellKnowledge
-from mc2p.motion_nav.online_motion import CandidateExecutionWindow
+from mc2p.motion_nav.online_motion import (
+    CandidateExecutionWindow,
+    InputApplicationStatus,
+)
 from tests.observation_v2_fixtures import valid_snapshot_v2
 from tests.test_action_receipt import receipt_value
 from tests.observation_v3_fixtures import valid_snapshot_v3
@@ -145,6 +148,57 @@ class V3WorldBackend:
         self.close_calls += 1
 
 
+class LateFirstInputV3WorldBackend(V3WorldBackend):
+    """Report the first one-tick movement at the latest admitted start tick."""
+
+    def step(self, action, deadline, *, observation_request=None):
+        from mc2p.runtime.backend_v1 import BackendStepResultV1
+        self.sequence += 1
+        observation = replace(
+            self._observation(request_sequence_id=action.request_sequence_id),
+            episode_id=action.episode_id,
+        )
+        observation = replace(
+            observation,
+            self_state=replace(
+                observation.self_state,
+                value=replace(
+                    observation.self_state.value,
+                    movement_tick_id=3,
+                ),
+            ),
+        )
+        receipt = behavior_receipt_from_mapping({
+            **receipt_value(
+                episode_id=action.episode_id,
+                generation_id=self.sequence,
+                request_sequence_id=action.request_sequence_id,
+                world_tick=observation.world_time_ticks.value,
+                input_samples=3,
+                leased_input_samples=1,
+            ),
+            "schema_version": "mc2p.client_action_receipt.v3",
+            "dropped_input_samples": 0,
+            "oldest_retained_input_tick": 3,
+            "input_applications": [{
+                "schema_version": "mc2p.input-application.v1",
+                "movement_tick_id": 3,
+                "episode_id": action.episode_id,
+                "request_sequence_id": action.request_sequence_id,
+                "sampled_at_jvm_ns": 3,
+                "state": "leased",
+                "forward": float(action.movement.forward),
+                "strafe": float(action.movement.strafe),
+                "jump": action.movement.jump,
+                "sneak": action.movement.sneak,
+                "sprint": action.movement.sprint,
+            }],
+        })
+        return BackendStepResultV1(
+            observation, 0, False, False, receipt,
+        )
+
+
 class RuntimeV1Tests(unittest.TestCase):
     def setUp(self):
         self.clock = [10]
@@ -217,6 +271,48 @@ class RuntimeV1Tests(unittest.TestCase):
         self.assertIsNotNone(record)
         self.assertEqual(record.requested_first_tick, 2)
         self.assertEqual(record.latest_allowed_first_tick, 3)
+
+    def test_v3_runtime_ledger_accepts_one_tick_late_ordinary_intent_window(self):
+        from mc2p.contracts.intent_source import ControlFrameProposalV1
+
+        backend = LateFirstInputV3WorldBackend()
+        runtime = PlayerRuntimeV1(
+            backend, legacy._RecordingTrace(), clock_ns=lambda: 10,
+        )
+        reset = runtime.reset(ResetRequestV0(
+            "reset-v3-late-ordinary", "episode-v3-world", "test", 1, 1_000,
+        ))
+        self.assertTrue(reset.succeeded)
+        self.addCleanup(runtime.close)
+        source = runtime.register_ordered_source("ordinary-walk")
+        intent = ActionIntentV1(
+            "placeholder",
+            source.source_id,
+            "episode-v3-world",
+            runtime.observation.sequence_id,
+            ActionPriorityV0.TASK,
+            1,
+            900,
+            movement=MovementV1(forward=1),
+            movement_tick_window=MovementTickWindowV1(2, 3),
+        )
+        from mc2p.contracts.intent_source import OrderedIntentV1, ordered_intent_id
+        intent = replace(intent, intent_id=ordered_intent_id(source, 1))
+
+        result = runtime.control_frame(
+            legacy._task(), BehaviorProfileV0(), 1_000,
+            proposals=(ControlFrameProposalV1((
+                OrderedIntentV1(source, 1, intent),
+            )),),
+        )
+
+        record = runtime.input_ledger.record(
+            result.decision.action.request_sequence_id,
+        )
+        self.assertIs(record.status, InputApplicationStatus.APPLIED)
+        self.assertEqual(record.requested_first_tick, 2)
+        self.assertEqual(record.latest_allowed_first_tick, 3)
+        self.assertEqual(record.applied_ticks, (3,))
 
     def test_v3_runtime_suppresses_expired_movement_window_without_failing(self):
         backend = V3WorldBackend()

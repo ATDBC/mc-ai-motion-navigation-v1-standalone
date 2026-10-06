@@ -194,6 +194,7 @@ class FakeNavigationSession:
         self.updates.append((goal_id, revision, goal_state))
         self.update_options.append(options)
         self.state, self.reason = NavigationSessionState.EXECUTING, "goal_revised"
+        return True
 
     def propose(
         self, frame, anchor, deadline_ns, *, input_ledger=None,

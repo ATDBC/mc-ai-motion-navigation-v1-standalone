@@ -1,0 +1,36 @@
+{
+  "schema_version": "mc2p.r28-3-generation-complexity.v1",
+  "baseline_commit": "67461f76120861c36ee43454961cb9fcfcf1685c",
+  "candidate_commit": "050c10ba5910a8629fb17c3a442cadbf4ff48e57",
+  "scope": "A0 冻结的十个生产文件",
+  "baseline": {
+    "lines": 13899,
+    "state_fields": 661,
+    "identity_comparisons": 169,
+    "retirement_calls": 21,
+    "decision_branches": 1569
+  },
+  "candidate": {
+    "lines": 14729,
+    "state_fields": 683,
+    "identity_comparisons": 210,
+    "retirement_calls": 28,
+    "decision_branches": 1708
+  },
+  "delta": {
+    "lines": 830,
+    "state_fields": 22,
+    "identity_comparisons": 41,
+    "retirement_calls": 7,
+    "decision_branches": 139
+  },
+  "navigation_session": {
+    "lines": 4653,
+    "state_fields": 152,
+    "decision_branches": 584,
+    "delta_from_a0": {"lines": 66, "state_fields": 1, "decision_branches": 10}
+  },
+  "coordination_code_net_reduction_passed": false,
+  "source": ".tmp/r28-3/E2-complexity-after-050c10b.json",
+  "source_sha256": "548b9aff07d283ece78c0594ad41053c74aa2a76551aa2a9b8e322a455b32ccc"
+}

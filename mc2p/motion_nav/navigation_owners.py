@@ -13,6 +13,7 @@ from mc2p.contracts.common import ContractViolation
 from mc2p.contracts.action_v1 import LookV1
 from mc2p.motion_nav.action_preconditions import AcquisitionGrant
 from mc2p.motion_nav.goal_reach_policy import GoalReachPolicy
+from mc2p.motion_nav.goal_planning_policy import GoalPlanningPolicy
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.movement_transition import GoalState
 from mc2p.motion_nav.world_model import BlockPos, CellKnowledge
@@ -54,6 +55,7 @@ class GoalRequestLedger:
 
     request: Any | None = None
     _reach_policy: GoalReachPolicy | None = field(default=None, init=False)
+    _planning_policy: GoalPlanningPolicy | None = field(default=None, init=False)
     _computation_scope: AsyncComputationScope | None = field(default=None, init=False)
 
     def __post_init__(self) -> None:
@@ -99,6 +101,8 @@ class GoalRequestLedger:
         if previous._computation_scope is not None:
             self._computation_scope = previous._computation_scope
             self.invalidate_computation(ComputationInvalidationCause.NEW_STATE_ANCHOR)
+        self.select_reach_policy(previous.reach_policy)
+        self.select_planning_policy(previous.planning_policy)
 
     @property
     def reach_policy(self) -> GoalReachPolicy:
@@ -110,6 +114,17 @@ class GoalRequestLedger:
         if self._reach_policy is not None and policy is not self._reach_policy:
             raise ContractViolation("goal revision cannot change task reach policy")
         self._reach_policy = policy
+
+    @property
+    def planning_policy(self) -> GoalPlanningPolicy:
+        return self._planning_policy or GoalPlanningPolicy.BACKGROUND_PLANNER
+
+    def select_planning_policy(self, policy: GoalPlanningPolicy) -> None:
+        if type(policy) is not GoalPlanningPolicy:
+            raise ContractViolation("goal planning policy must be typed")
+        if self._planning_policy is not None and policy is not self._planning_policy:
+            raise ContractViolation("goal revision cannot change task planning policy")
+        self._planning_policy = policy
 
     def accept(self, request: Any | None) -> None:
         if request is not None:

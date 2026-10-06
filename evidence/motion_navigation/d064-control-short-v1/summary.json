@@ -1,0 +1,386 @@
+{
+  "behavior": {
+    "accepted_revisions": 3,
+    "applied_perturbations": [],
+    "configuration": {
+      "cancel_tick": 567,
+      "delay_first_input": false,
+      "final_hold_ticks": 0,
+      "in_scope_speed": true,
+      "initial_unknown_cells": [],
+      "missing_observation_ticks": [],
+      "move_ticks": 2,
+      "name": "d061_long_session_test",
+      "path": "straight",
+      "pause_ticks": 2,
+      "resume_ticks": 2,
+      "speed_blocks_per_second": 3.3,
+      "update_calls_per_tick": 1
+    },
+    "controller_switches": 2,
+    "distance_sampling_windows": {
+      "overall": {
+        "definition": "initial pre-control distance through the final observed movement tick",
+        "includes_initial_distance": true,
+        "sample_count": 38
+      },
+      "stable": {
+        "definition": "moving target phases after a 40-tick warmup; pause and final hold samples excluded",
+        "includes_initial_distance": false,
+        "sample_count": 0
+      }
+    },
+    "duplicate_updates": 0,
+    "excess_lag_definition": "max(0,horizontal_target_distance-2.5_hold_distance)",
+    "final_excess_lag_blocks": 0.0,
+    "final_raw_distance_blocks": 0.130715,
+    "first_delayed_input_tick": null,
+    "formal_chain": "PlayerRuntimeV1->RuntimeNavigationDriver->KnownWorldFollowDriver",
+    "fresh_observation_updates": 35,
+    "gates": {
+      "final_within_hold": null,
+      "planning_ratio": null,
+      "revision_response": null,
+      "safety": true,
+      "stable_lag": null,
+      "terminal": true
+    },
+    "i4_violations": 0,
+    "initial_raw_distance_blocks": 4.0,
+    "observation_gap_updates": 0,
+    "observed_ticks": 37,
+    "overall_excess_lag": {
+      "final_blocks": 0.0,
+      "max_blocks": 1.580492,
+      "mean_blocks": 0.313345,
+      "p95_blocks": 1.51005,
+      "sample_count": 38
+    },
+    "overall_raw_distance": {
+      "final_blocks": 0.130715,
+      "max_blocks": 4.080492,
+      "mean_blocks": 1.522601,
+      "p95_blocks": 4.01005,
+      "sample_count": 38
+    },
+    "passed": true,
+    "planning_submissions": 0,
+    "planning_submissions_per_accepted_revision": 0.0,
+    "rejected_revisions": 0,
+    "revision_information_movement_gap_ticks": [],
+    "revision_information_waits": [],
+    "revision_response_details": [
+      {
+        "end": "effective",
+        "evidence": "movement",
+        "response_ticks": 1,
+        "revision": 2
+      },
+      {
+        "end": "effective",
+        "evidence": "movement",
+        "response_ticks": 1,
+        "revision": 3
+      }
+    ],
+    "revision_response_outcomes": {
+      "effective": 2,
+      "superseded": 0,
+      "unanswered": 0
+    },
+    "revision_response_p95_ticks": 1,
+    "safety_violations": [],
+    "scenario": "d061_long_session_test",
+    "schema_version": "mc2p.f1-known-world-following.v2",
+    "source_released": true,
+    "stable_excess_lag": {
+      "final_blocks": null,
+      "max_blocks": null,
+      "mean_blocks": null,
+      "p95_blocks": null,
+      "sample_count": 0
+    },
+    "stable_raw_distance": {
+      "final_blocks": null,
+      "max_blocks": null,
+      "mean_blocks": null,
+      "p95_blocks": null,
+      "sample_count": 0
+    },
+    "state_history": [
+      {
+        "goal_revision": 1,
+        "reason": "tracking_fixed_route",
+        "state": "executing",
+        "tick": 1
+      },
+      {
+        "goal_revision": 3,
+        "reason": "goal_braking",
+        "state": "executing",
+        "tick": 22
+      },
+      {
+        "goal_revision": 3,
+        "reason": "goal_state_satisfied",
+        "state": "executing",
+        "tick": 28
+      },
+      {
+        "goal_revision": 3,
+        "reason": "known_world_follow_cancelled",
+        "state": "cancelled",
+        "tick": 37
+      }
+    ],
+    "target_speed_semantics": "constant straight-line speed during moving phases",
+    "task_recoveries": 0,
+    "terminal_driver_reason": "known_world_follow_cancelled",
+    "terminal_driver_state": "cancelled",
+    "terminal_session_reason": "known_world_follow_cancelled",
+    "terminal_session_state": "cancelled",
+    "throttled_revisions": 8,
+    "unanswered_revisions": 0,
+    "unchanged_updates": 25,
+    "update_status_counts": {
+      "cancelled": 1,
+      "revised": 2,
+      "throttled": 8,
+      "unchanged": 25
+    },
+    "zero_displacement_intervals": [
+      [
+        28,
+        36
+      ]
+    ],
+    "zero_displacement_ticks": 9
+  },
+  "behavior_gates": {
+    "timeline_completed": true
+  },
+  "command": "D:\\Miniforge3\\Scripts\\conda.exe run --prefix D:\\My_project\\mc_ai\\.venv --no-capture-output python -m scripts.benchmark_d061_long_session --output .tmp/d064-d061-short-v3 --test-mode --warmup 5 --minimum-retained 20 --maximum-retained 50 --post-gen2-samples 5",
+  "complete_prepare": {
+    "captured_samples": 36,
+    "gc_coverage": {
+      "event_count": 586,
+      "first_gen2_anywhere": {
+        "active_control_ordinal": null,
+        "active_prepare_ordinal": null,
+        "collected": 0,
+        "completed_control_frames_before_event": 0,
+        "control_path_phase": "outside",
+        "duration_ns": 4798600,
+        "end_ns": 215212567218700,
+        "event_ordinal": 26,
+        "followup_start_control_ordinal": 0,
+        "generation": 2,
+        "last_completed_control_ordinal": null,
+        "last_completed_prepare_ordinal": null,
+        "measurement_phase": "before_samples",
+        "origin": "outside_control_thread",
+        "start_ns": 215212562420100,
+        "thread_id": 34360
+      },
+      "overflowed": false,
+      "start_stop_mismatch": false
+    },
+    "retained_samples": 31,
+    "statistics": {
+      "maximum_ms": 3.9725,
+      "maximum_ns": 3972500,
+      "p50_ms": 1.4224,
+      "p50_ns": 1422400,
+      "p95_ms": 3.9066,
+      "p95_ns": 3906600,
+      "p99_ms": 3.9725,
+      "p99_ns": 3972500,
+      "samples": 31
+    },
+    "warmup_samples": 5
+  },
+  "configuration": {
+    "control_path_maximum_ms": 50.0,
+    "maximum_retained_samples": 50,
+    "minimum_retained_samples": 20,
+    "move_ticks": 2,
+    "pause_ticks": 2,
+    "post_gen2_samples": 5,
+    "resume_ticks": 2,
+    "test_mode": true,
+    "trace_capacity": 2048,
+    "trace_projection_sample_capacity": 4096,
+    "warmup_samples": 5
+  },
+  "formal_control_path": {
+    "deadline_miss_count": 0,
+    "gen2_coverage": {
+      "first_retained_gen2_ordinal": 25,
+      "passed": true,
+      "post_gen2_complete": true,
+      "retained_gen2_observed": true,
+      "sample_limit_reached": false
+    },
+    "minimum_slack_ns": 26720500,
+    "retained_statistics": {
+      "maximum_ms": 23.2795,
+      "maximum_ns": 23279500,
+      "p50_ms": 5.1406,
+      "p50_ns": 5140600,
+      "p95_ms": 21.5256,
+      "p95_ns": 21525600,
+      "p99_ms": 23.2795,
+      "p99_ns": 23279500,
+      "samples": 31
+    }
+  },
+  "gates": {
+    "behavior": true,
+    "control_path_integrity": true,
+    "control_path_maximum": true,
+    "gc_diagnostic_integrity": true,
+    "gen2_coverage": true,
+    "identity": true,
+    "input_deadline_miss": true,
+    "minimum_deadline_slack": true,
+    "pacing": true,
+    "prepare_control_alignment": true,
+    "prepare_maximum": true,
+    "prepare_p95": true,
+    "prepare_p99": true,
+    "safety": true,
+    "sample_maximum": true,
+    "sample_minimum": true,
+    "terminal": true,
+    "trace": true
+  },
+  "identity": {
+    "consistent": true,
+    "goal_id": "f1-goal/d061_long_session_test",
+    "samples_checked": 36,
+    "session_id": "f1/d061_long_session_test",
+    "task_id": "f1-task/d061_long_session_test",
+    "violations": [],
+    "world_session": "fixture:episode-sim:jvm-test"
+  },
+  "pacing": {
+    "effective_hz": null,
+    "elapsed_ns": null,
+    "maximum_lateness_ns": 0,
+    "overruns": 0,
+    "paced_ticks": 37,
+    "period_ns": 50000000
+  },
+  "passed": true,
+  "preliminary_inconclusive_run": {
+    "command": "D:\\Miniforge3\\Scripts\\conda.exe run --prefix D:\\My_project\\mc_ai\\.venv --no-capture-output python -m scripts.benchmark_d061_long_session --output .tmp/d064-d061-short-v2 --test-mode --warmup 1 --minimum-retained 8 --maximum-retained 16 --post-gen2-samples 2",
+    "configuration": {
+      "control_path_maximum_ms": 50.0,
+      "maximum_retained_samples": 16,
+      "minimum_retained_samples": 8,
+      "move_ticks": 2,
+      "pause_ticks": 2,
+      "post_gen2_samples": 2,
+      "resume_ticks": 2,
+      "test_mode": true,
+      "trace_capacity": 2048,
+      "trace_projection_sample_capacity": 4096,
+      "warmup_samples": 1
+    },
+    "gates": {
+      "behavior": true,
+      "control_path_integrity": true,
+      "control_path_maximum": true,
+      "gc_diagnostic_integrity": true,
+      "gen2_coverage": false,
+      "identity": true,
+      "input_deadline_miss": true,
+      "minimum_deadline_slack": true,
+      "pacing": true,
+      "prepare_control_alignment": true,
+      "prepare_maximum": true,
+      "prepare_p95": true,
+      "prepare_p99": true,
+      "safety": true,
+      "sample_maximum": true,
+      "sample_minimum": true,
+      "terminal": true,
+      "trace": true
+    },
+    "passed": false,
+    "reason": "16 retained frames did not contain a retained gen2; gen2_coverage=false"
+  },
+  "schema_version": "mc2p.d064-control-short-summary.v1",
+  "source": {
+    "commit": "546e6e668d30ab22fa84df57d92fe3630dbf6f7b",
+    "files": [
+      {
+        "path": "scripts/benchmark_d061_long_session.py",
+        "sha256": "7e2f3a332de0002b094054d729d39cd899c20c686d7f583fc2583ff2546c8fd9"
+      },
+      {
+        "path": "tests/sim/known_world_following.py",
+        "sha256": "0eae8a9f9933846d641b2c91521fe4f3c2076467f9fb0dad45f9ac74803e2b30"
+      },
+      {
+        "path": "mc2p/runtime/async_trace.py",
+        "sha256": "0688d9f53da07a2e3f9184b29f79f2770fb8623feb43e9a3e322dd91d2010001"
+      },
+      {
+        "path": "mc2p/runtime/segmented_trace.py",
+        "sha256": "eb07294badb8d58f8d8072eabae6661e462157eee48e213920728fafca744bf2"
+      },
+      {
+        "path": "mc2p/runtime/player_runtime_v1.py",
+        "sha256": "a73abdc045c43286767d4a72ce7041ae9801b82aa28e02f3ca9f80cfd79db76b"
+      },
+      {
+        "path": "mc2p/skills/known_world_follow_driver.py",
+        "sha256": "8bbc48e871e1bf9e9e5339c47d2501a7e67d7afaf03b523a4222125d9b631868"
+      },
+      {
+        "path": "mc2p/skills/navigation_session_driver.py",
+        "sha256": "d5237bbe335fb7de01dae67319ba9eee7086830eef5868b112bf311928a19568"
+      },
+      {
+        "path": "mc2p/motion_nav/navigation_session.py",
+        "sha256": "3187ede957266f485333127d93bf1bb1162b07bab8979c89f0b718b404150079"
+      },
+      {
+        "path": "mc2p/motion_nav/route_admission.py",
+        "sha256": "b5080adb865d3eed33446f86811950a24ec4c565e7d34b94defa0c06953a7ccb"
+      }
+    ],
+    "git_dirty": false,
+    "git_status": [],
+    "scope_sha256": "7fda79b41b50acd0f7e0394ef8e287e2290d96b7e1c59e87ae20226b609431ed"
+  },
+  "trace": {
+    "accepted_records": 179,
+    "capacity": 2048,
+    "delivery_summary": {
+      "accepted_records": 179,
+      "capacity": 2048,
+      "dropped_by_record_type": {},
+      "dropped_records": 0,
+      "peak_depth": 171,
+      "projection_timing_ns": {
+        "count": 179,
+        "maximum": 282100,
+        "p95": 190700,
+        "p99": 226000,
+        "sample_count": 179,
+        "total": 8752000
+      },
+      "schema_version": "mc2p.trace-delivery-summary.v1",
+      "worker_failed": false,
+      "written_records": 179
+    },
+    "dropped_records": 0,
+    "peak_depth": 171,
+    "projection_sample_capacity": 4096,
+    "verified_records": 180,
+    "worker_failed": false,
+    "written_records": 179
+  }
+}

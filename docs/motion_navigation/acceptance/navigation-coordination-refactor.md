@@ -518,6 +518,14 @@ python scripts/export_motion_navigation_standalone.py verify --root .tmp/r27-pub
 
 本轮未改变连续高度物理、路径代价或地面控制，沿用 M3 既有实机结论，没有重跑其 800 场矩阵。R27 的关闭以本节的实际记录为依据，不把历史 R26 或 M3 批次当成本轮异步交付测试。
 
+### 17.6 固定 smoke 的取消事件时刻修正
+
+2026-10-05 复查 `direct_drop_2_cancel_in_air` 时确认，原清单把事件时刻写成 tick 40，实际是一个 off-by-one。模拟器先判断事件谓词，再执行本 tick 的控制和物理。tick 40 判断时身体仍在地面；tick 41 才是第一次观察到空中，因此“在空中取消”的冻结时刻应为 41。
+
+旧 `navigation-coordination-smoke.json` 已按原字节保存为 `navigation-coordination-smoke-pre-d058.json`，两者在复制时的 SHA-256 都是 `1995a1581282b99946020688f5a557780b2fc488722603c8a3e87ae79f8e2496`。现行清单只把该事件改为 tick 41，并把来源提交更新为 `571af2e3`，阶段更新为 `D058_strict_entry_alignment_and_bounded_probe_handoff`，`previous_manifest` 指向上述历史文件。旧 tick 40 记录继续作为历史证据，不改写为当时已经按空中谓词触发。
+
+新的正式矩阵保存在 `.tmp/navigation-coordination-smoke-d058-current-571af2e3/`：14/14 与冻结结果一致，实际为 13 个任务成功、1 个有界安全取消、0 个未登记差异。定向诊断还验证了强制在 tick 40 取消和按谓词在 tick 41 取消都由已经接管的 strict owner 安全收尾；前者取消时仍在地面，所以不能代表“空中取消”。现行场景采用 tick 41，以保持场景名称、谓词和实际身体状态一致。
+
 ## 18. R27 独立复审：停止入口与门禁遗漏
 
 日期：2026-10-01。审查者为 GPT-6.1 Sol / max，审查范围是基线 `57b5628` 上的 R27 未提交工作树。结论为 **1 项 P1、3 项 P2，S5 重新打开**。主代理独立运行了复现脚本，结果一致。本次只更新审查记录，没有修复生产代码，没有启动 Fabric，也没有提交或推送。

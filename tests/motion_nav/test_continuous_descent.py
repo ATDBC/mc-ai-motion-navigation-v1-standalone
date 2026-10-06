@@ -9,11 +9,16 @@ from mc2p.contracts.action_v1 import MovementV1
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.retry_ledger import RetryLedger
 from mc2p.motion_nav.landing_edge_probe import LandingEdgeProbe
+from mc2p.motion_nav.landing_edge_probe import LandingEdgeProbeState
+from mc2p.motion_nav.movement_transition import MovementMode
 from mc2p.motion_nav.online_motion import (
     CandidateExecutionWindow, MotionTickPhase, StateAnchor,
 )
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView
 from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET, PhysicsState
+from mc2p.motion_nav.segment_entry import (
+    SegmentEntryWindow, body_fits_segment_entry,
+)
 from mc2p.motion_nav.world_model import (
     BlockGeometry, ObservationStamp, VisualAirEvidence, WorldKnowledge,
     WorldSessionId,
@@ -62,6 +67,54 @@ def world_and_anchor(*, direct_height=1, stair_count=0, speed=1.5,
 
 
 class ContinuousDescentTests(unittest.TestCase):
+    def test_probe_ready_requires_the_bound_strict_entry_window(self):
+        from tests.motion_nav.test_b09_air_transitions import frame
+
+        _, physics_world = world_and_anchor(
+            direct_height=6, material="minecraft:stone",
+        )
+        owner = physics_world._world._owner
+        self.assertIsNotNone(owner)
+        window = SegmentEntryWindow(
+            (.5, 64.0, .5), (1.0, 0.0), -.01, .8, .08,
+            63.9, 64.1, 0.0, .1, math.radians(2.0),
+            frozenset({"standing", "crouching"}),
+            frozenset({MovementMode.WALK, MovementMode.CROUCH}),
+            -math.pi / 2, math.radians(2.0), "test-drop-entry",
+        )
+        probe = LandingEdgeProbe(
+            "goal", 1, (0, 58, 1), 1,
+            acquisition_id="landing-entry",
+            route_id="route-entry", route_revision=1, action_index=1,
+            entry_window=window,
+            state=LandingEdgeProbeState.RELEASING,
+            home_yaw_radians=0.0, home_pitch_radians=0.0,
+            entry_position=(.8149, .5), evidence_sequence_id=1,
+        )
+        off_window = frame(
+            owner, 2, (.8149, 64.0, .5848), (0.0, 0.0, 0.0),
+            on_ground=True, yaw_radians=0.0,
+        )
+
+        self.assertFalse(probe.finish_release(off_window))
+        self.assertIs(probe.state, LandingEdgeProbeState.RELEASING)
+        self.assertNotEqual(probe.movement(off_window), MovementV1())
+        self.assertIsNotNone(probe.release_look(off_window))
+        probe.state = LandingEdgeProbeState.READY
+        self.assertNotEqual(probe.movement(off_window), MovementV1())
+        self.assertIsNotNone(probe.release_look(off_window))
+        probe.state = LandingEdgeProbeState.RELEASING
+
+        aligned = frame(
+            owner, 3, (.8149, 64.0, .5), (0.0, 0.0, 0.0),
+            on_ground=True, yaw_radians=-math.pi / 2,
+        )
+        self.assertTrue(body_fits_segment_entry(
+            window, aligned.body, MovementMode.WALK,
+        ))
+        self.assertTrue(probe.finish_release(aligned))
+        self.assertTrue(probe.ready)
+
     def request(self, anchor, height, *, budget=TaskDamageBudget(),
                 keep_moving=False):
         from mc2p.motion_nav.motion_solver import (

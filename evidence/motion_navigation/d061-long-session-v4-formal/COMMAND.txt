@@ -1,0 +1,1 @@
+D:\Miniforge3\Scripts\conda.exe run --prefix D:\My_project\mc_ai\.venv --no-capture-output python -m scripts.benchmark_d061_long_session --output artifacts\d061-long-session-v4-formal

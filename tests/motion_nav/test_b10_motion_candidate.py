@@ -1429,9 +1429,10 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
             verified_motion=(prepared.candidate,),
         )
 
+        ledger = InputApplicationLedger(max_records=64)
         decision = executor.decide(
             current_frame, state_anchor=anchor,
-            input_ledger=InputApplicationLedger(max_records=64),
+            input_ledger=ledger,
         )
 
         self.assertIs(decision.state, ActionRouteState.RUNNING)
@@ -1440,6 +1441,17 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
         self.assertTrue(decision.movement.jump)
         self.assertEqual(decision.verified_command_index, 0)
         self.assertNotIn(decision.reason_code, {"goal_braking", "awaiting_verified_motion"})
+        self.assertIsNotNone(decision.route_progress_evidence)
+        self.assertEqual(decision.route_progress_evidence.action_index, 0)
+        self.assertEqual(
+            decision.route_progress_evidence.fixed_route_id,
+            "moving-gap-approach",
+        )
+        self.assertEqual(
+            decision.route_progress_evidence.observation_sequence_id,
+            current_frame.body.sequence_id,
+        )
+        self.assertEqual(ledger.snapshot(), ())
 
     def test_action_route_rejects_raw_or_wrong_route_proofs(self):
         anchor, reusable = solved_candidate()

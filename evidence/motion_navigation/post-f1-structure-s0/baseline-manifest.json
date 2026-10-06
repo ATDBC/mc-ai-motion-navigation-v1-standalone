@@ -1,0 +1,47 @@
+{
+  "schema_version": "mc2p.navigation-structure-s0.v1",
+  "source_commit": "a1649c227bb508a85d4957f926442dfb2d04a7a2",
+  "production_parent_commit": "2f0e46b",
+  "source_worktree_clean": true,
+  "normalizer_version": "r28-structure-trajectory-v1",
+  "production_sha256": "0a795b858711b9503b08b67a1b0e1588bf3896a3151b8070f33040390a864110",
+  "sets": {
+    "product_v7": {
+      "cases": 2000,
+      "success": 1718,
+      "exceptions": 0,
+      "safety_violation_tasks": 0,
+      "index": "product-v7-index.json",
+      "index_sha256": "63642c2d130dc35921ff95038e63df107d5d0724b83defc2d03358039cba4f07"
+    },
+    "coordination": {
+      "cases": 1448,
+      "failed": 0,
+      "index": "coordination-1448-index.json",
+      "index_sha256": "a66cfb6bf3daf5ba228215bb5e59a77033c7dacd13b9c0ce399bbfa990316058",
+      "uncovered_inventory_functions": [
+        "navigation_session._wait_for_active_terminal",
+        "planning_coordinator.retry_from_current",
+        "retry_ledger.begin_recovery"
+      ]
+    },
+    "supplemental_faults": {
+      "cases": 4,
+      "failed": 0,
+      "index": "faults-4-index.json",
+      "index_sha256": "24c005f582aff20fa4e0bd2b79bbd1d22b134dd9f384e10f78878f81f0933672"
+    }
+  },
+  "commands": [
+    "python scripts/navigation_coordination_metrics.py baseline --manifest tests/sim/manifests/navigation-product-r28-v7.json --output <product> --workers 4",
+    "python scripts/navigation_migration_evidence.py --output <coordination> --workers 4",
+    "python scripts/navigation_migration_evidence.py --output <faults> --workers 1 --faults-only",
+    "python scripts/navigation_structure_baseline.py index <product|migration> --source <source> --output <index>",
+    "python scripts/navigation_structure_baseline.py compare --baseline <baseline-index> --candidate <candidate-index>"
+  ],
+  "limits": [
+    "Indexes preserve behavior signatures, not full raw traces.",
+    "Original v7 archives and hashes are unchanged.",
+    "This baseline does not close product capability gaps or authorize Fabric reruns."
+  ]
+}

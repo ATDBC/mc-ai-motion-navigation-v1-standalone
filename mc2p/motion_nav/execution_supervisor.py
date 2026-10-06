@@ -24,6 +24,12 @@ from mc2p.motion_nav.online_motion import (
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.async_work import AsyncComputationScope
 from mc2p.motion_nav.safe_ground_control import verified_ground_rollout
+from mc2p.motion_nav.route_validation import (
+    ActiveRouteValidation,
+    ActiveRouteValidationDisposition,
+    RouteValidationBudget,
+)
+from mc2p.motion_nav.world_model import BlockPos, WorldQueryCache
 
 
 _TERMINAL_DECISIONS = frozenset({
@@ -51,6 +57,14 @@ class BodyFrameAdvance:
     route_advance: RouteAdvance
     waiting_candidate: RouteAdvance | None = None
     rejected_candidate: RouteAdvance | None = None
+    route_validation: BodyRouteValidation | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class BodyRouteValidation:
+    observation_sequence_id: int
+    incumbent: ActiveRouteValidation | None
+    pending: ActiveRouteValidation | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -101,6 +115,15 @@ class ExecutionSupervisor:
     def incumbent_route(self) -> RouteControl | None:
         return self._route
 
+    @property
+    def effective_dependencies(self) -> tuple[BlockPos, ...]:
+        return tuple(sorted({
+            position
+            for control in (self._route, self._pending_route)
+            if control is not None
+            for position in control.effective_dependencies
+        }))
+
     def has_owned_body_control(self, *, route_source_bound: bool) -> bool:
         """Read actual retained objects, independent of diagnostic labels."""
         return (self._probe is not None and self._probe.probe.owned) or (
@@ -143,6 +166,7 @@ class ExecutionSupervisor:
         result_poll_sequence: int | None = None,
         current_scope: AsyncComputationScope | None = None,
     ) -> BodyFrameAdvance:
+        validation = self._validate_routes(frame)
         control = self.route
         if control is None:
             raise ContractViolation("body advancement requires an admitted route")
@@ -158,18 +182,100 @@ class ExecutionSupervisor:
             result_poll_sequence=result_poll_sequence,
             current_scope=current_scope,
         )
+        progress = advance.progress_validation
+        if (progress is not None
+                and progress.disposition
+                    is ActiveRouteValidationDisposition.STOP):
+            if control is self._pending_route:
+                self._retire_control_work(
+                    control, StopCause.DEPENDENCY_CHANGED,
+                )
+                self._pending_route = None
+                self._pending_route_input_floor = 0
+                validation = BodyRouteValidation(
+                    frame.body.sequence_id, validation.incumbent, progress,
+                )
+                return self._advance_incumbent_prefix(
+                    advance, frame, ledger, anchor,
+                    conditioned_yaw_delta_degrees=(
+                        conditioned_yaw_delta_degrees
+                    ),
+                    result_poll_sequence=result_poll_sequence,
+                    current_scope=current_scope,
+                    route_validation=validation,
+                )
+            control.request_stop(StopCause.DEPENDENCY_CHANGED)
+            advance = control.stop_protection(advance, frame, anchor)
+            validation = BodyRouteValidation(
+                frame.body.sequence_id, progress, validation.pending,
+            )
         if self._pending_route is None or advance.decision.submit_input:
-            return BodyFrameAdvance(advance)
+            return BodyFrameAdvance(advance, route_validation=validation)
         if advance.decision.state in _REJECTED_CANDIDATE_STATES:
             self.discard_pending_route()
             # Session must route this fact before the incumbent advances:
             # denied recovery may have requested stopping in the same frame.
-            return BodyFrameAdvance(advance, advance, advance)
+            return BodyFrameAdvance(
+                advance, advance, advance, validation,
+            )
         return self._advance_incumbent_prefix(
             advance, frame, ledger, anchor,
             conditioned_yaw_delta_degrees=conditioned_yaw_delta_degrees,
             result_poll_sequence=result_poll_sequence,
             current_scope=current_scope,
+            route_validation=validation,
+        )
+
+    def _validate_routes(self, frame: NavigationFrame) -> BodyRouteValidation:
+        """Validate incumbent then pending under one per-frame query budget."""
+        if type(frame) is not NavigationFrame:
+            raise ContractViolation("route validation requires a navigation frame")
+        incumbent_control = self._route
+        pending_control = self._pending_route
+        budget = (
+            None if not frame.changed_cells else RouteValidationBudget(4)
+        )
+        cache = (
+            None if not frame.changed_cells else WorldQueryCache(frame.world)
+        )
+
+        def validate(
+            control: RouteControl | None,
+        ) -> ActiveRouteValidation | None:
+            if control is None:
+                return None
+            assert control.tracker is not None
+            kwargs = {
+                "ground_profile": getattr(
+                    control.executor, "ground_profile", None,
+                ),
+                "action_index": control.action_index,
+                "expected_identity": control.validation_identity,
+            }
+            if frame.changed_cells:
+                kwargs.update(query_cache=cache, budget=budget)
+            return control.tracker.validate(
+                frame.world, frame.changed_cells, **kwargs,
+            )
+
+        incumbent = validate(incumbent_control)
+        if (incumbent is not None
+                and incumbent.disposition
+                    is ActiveRouteValidationDisposition.STOP):
+            assert incumbent_control is not None
+            incumbent_control.request_stop(StopCause.DEPENDENCY_CHANGED)
+        pending = validate(pending_control)
+        if (pending is not None
+                and pending.disposition
+                    is ActiveRouteValidationDisposition.STOP):
+            assert pending_control is not None
+            self._retire_control_work(
+                pending_control, StopCause.DEPENDENCY_CHANGED,
+            )
+            self._pending_route = None
+            self._pending_route_input_floor = 0
+        return BodyRouteValidation(
+            frame.body.sequence_id, incumbent, pending,
         )
 
     def continue_rejected_candidate(
@@ -192,6 +298,7 @@ class ExecutionSupervisor:
             result_poll_sequence=result_poll_sequence,
             current_scope=current_scope,
             rejected=advance.rejected_candidate,
+            route_validation=advance.route_validation,
         )
 
     def _advance_incumbent_prefix(
@@ -202,6 +309,7 @@ class ExecutionSupervisor:
         result_poll_sequence: int | None,
         rejected: RouteAdvance | None = None,
         current_scope: AsyncComputationScope | None = None,
+        route_validation: BodyRouteValidation | None = None,
     ) -> BodyFrameAdvance:
         incumbent = self._route
         assert incumbent is not None
@@ -213,7 +321,21 @@ class ExecutionSupervisor:
             result_poll_sequence=result_poll_sequence,
             current_scope=current_scope,
         )
-        return BodyFrameAdvance(prefix, candidate, rejected)
+        progress = prefix.progress_validation
+        if (progress is not None
+                and progress.disposition
+                    is ActiveRouteValidationDisposition.STOP):
+            incumbent.request_stop(StopCause.DEPENDENCY_CHANGED)
+            prefix = incumbent.stop_protection(prefix, frame, anchor)
+            route_validation = BodyRouteValidation(
+                frame.body.sequence_id,
+                progress,
+                (None if route_validation is None
+                 else route_validation.pending),
+            )
+        return BodyFrameAdvance(
+            prefix, candidate, rejected, route_validation,
+        )
 
     def select_body(
         self, advance: BodyFrameAdvance, checked_decision: ActionRouteDecision,
@@ -273,7 +395,9 @@ class ExecutionSupervisor:
             # A refused pending route never owned input.  Its predecessor was
             # not advanced this frame and now supplies its normal cancel step.
             protected = incumbent.advance(frame, ledger, anchor, current_scope=current_scope)
-        return BodyFrameAdvance(protected)
+        return BodyFrameAdvance(
+            protected, route_validation=advance.route_validation,
+        )
 
     def request_route_stop(self, cause: StopCause) -> None:
         self.discard_pending_route()
@@ -534,7 +658,10 @@ class ExecutionSupervisor:
         controller = self._probe
         if (controller is None or not controller.probe.ready
                 or type(movement) is not MovementV1
-                or movement == MovementV1()):
+                or movement == MovementV1()
+                or not controller.probe.belongs_to_action(
+                    route_id, route_revision, action_index,
+                )):
             raise ContractViolation("probe transfer requires a selected route movement")
         handoff = HandoffEvidence(
             controller.owner_id,

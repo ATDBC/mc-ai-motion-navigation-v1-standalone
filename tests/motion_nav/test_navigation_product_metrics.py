@@ -7,7 +7,10 @@ import unittest
 from unittest.mock import patch
 import gzip
 
-from tests.sim.product_metrics import extract_metrics, compare_metrics, tango_interval, sequential_verdict
+from tests.sim.product_metrics import (
+    RevisionResponseMode, compare_metrics, extract_metrics,
+    revision_responses, sequential_verdict, tango_interval,
+)
 from scripts.navigation_coordination_metrics import baseline, compare, load_manifest, quantile, _run_one
 from tests.sim.product_cases import product_scenario
 from scripts.navigation_migration_evidence import jobs, observe
@@ -159,6 +162,127 @@ class ProductMetricTests(unittest.TestCase):
             row["goal_revision"] = 2
         metrics = measure(rows)
         self.assertEqual(metrics["revision_responses"], [{"revision": 2, "response_ticks": 1, "end": "movement"}])
+
+    def test_terminal_tick_can_complete_the_pending_revision_response(self):
+        rows = [
+            dict(frames()[0], movement_tick=2, position=(0., 64., 0.),
+                 driver_state="running", goal_revision=2,
+                 goal_revision_requests=[{"revision": 2, "movement_tick": 2}],
+                 goal_position=(2., 64., 0.), goal_satisfied=False),
+            dict(frames()[0], movement_tick=3, position=(1., 64., 0.),
+                 driver_state="success", goal_revision=2,
+                 goal_revision_requests=[], goal_position=(2., 64., 0.),
+                 goal_satisfied=False),
+            dict(frames()[-1], movement_tick=4, position=(1., 64., 0.),
+                 driver_state="success", goal_revision=2,
+                 goal_revision_requests=[], goal_position=(2., 64., 0.),
+                 goal_satisfied=True),
+        ]
+        expected = [{"revision": 2, "response_ticks": 1, "end": "movement"}]
+        self.assertEqual(
+            revision_responses(
+                rows, start_tick=1, start_position=(0., 64., 0.),
+            ),
+            expected,
+        )
+        self.assertEqual(measure(rows)["revision_responses"], expected)
+
+    def test_optional_response_mode_settles_matching_satisfied_revision(self):
+        rows = [
+            dict(frames()[0], movement_tick=2, position=(0., 64., 0.),
+                 driver_state="running", goal_revision=2,
+                 goal_revision_requests=[{"revision": 2, "movement_tick": 2}],
+                 goal_position=(2., 64., 0.), goal_satisfied=False,
+                 applied_movement={"forward": 0, "strafe": 0}),
+            dict(frames()[0], movement_tick=3, position=(0., 64., 0.),
+                 driver_state="running", goal_revision=2,
+                 goal_revision_requests=[], goal_position=(2., 64., 0.),
+                 goal_satisfied=True,
+                 applied_movement={"forward": 0, "strafe": 0}),
+        ]
+
+        self.assertEqual(
+            revision_responses(
+                rows, start_tick=1, start_position=(0., 64., 0.),
+            ),
+            [{"revision": 2, "response_ticks": None, "end": "unanswered"}],
+        )
+        self.assertEqual(
+            revision_responses(
+                rows, start_tick=1, start_position=(0., 64., 0.),
+                mode=(RevisionResponseMode
+                      .MOVEMENT_OR_MATCHING_SATISFACTION),
+            ),
+            [{"revision": 2, "response_ticks": 1, "end": "satisfied"}],
+        )
+
+    def test_satisfied_response_requires_current_revision_and_continuous_tick(self):
+        request = dict(
+            frames()[0], movement_tick=2, position=(0., 64., 0.),
+            driver_state="running", goal_revision=2,
+            goal_revision_requests=[{"revision": 2, "movement_tick": 2}],
+            goal_position=(2., 64., 0.), goal_satisfied=False,
+            applied_movement={"forward": 0, "strafe": 0},
+        )
+        cases = {
+            "old_revision": dict(
+                request, movement_tick=3, goal_revision=1,
+                goal_revision_requests=[], goal_satisfied=True,
+            ),
+            "tick_gap": dict(
+                request, movement_tick=4, goal_revision=2,
+                goal_revision_requests=[], goal_satisfied=True,
+            ),
+            "unmet": dict(
+                request, movement_tick=3, goal_revision=2,
+                goal_revision_requests=[], goal_satisfied=False,
+            ),
+        }
+        for name, later in cases.items():
+            with self.subTest(name=name):
+                self.assertEqual(
+                    revision_responses(
+                        [request, later], start_tick=1,
+                        start_position=(0., 64., 0.),
+                        mode=(RevisionResponseMode
+                              .MOVEMENT_OR_MATCHING_SATISFACTION),
+                    ),
+                    [{"revision": 2, "response_ticks": None,
+                      "end": "unanswered"}],
+                )
+
+    def test_new_revision_still_supersedes_before_satisfaction(self):
+        rows = [
+            dict(frames()[0], movement_tick=2, position=(0., 64., 0.),
+                 driver_state="running", goal_revision=2,
+                 goal_revision_requests=[{"revision": 2, "movement_tick": 2}],
+                 goal_position=(2., 64., 0.), goal_satisfied=False,
+                 applied_movement={"forward": 0, "strafe": 0}),
+            dict(frames()[0], movement_tick=3, position=(0., 64., 0.),
+                 driver_state="running", goal_revision=3,
+                 goal_revision_requests=[{"revision": 3, "movement_tick": 3}],
+                 goal_position=(3., 64., 0.), goal_satisfied=True,
+                 applied_movement={"forward": 0, "strafe": 0}),
+            dict(frames()[0], movement_tick=4, position=(0., 64., 0.),
+                 driver_state="running", goal_revision=3,
+                 goal_revision_requests=[], goal_position=(3., 64., 0.),
+                 goal_satisfied=True,
+                 applied_movement={"forward": 0, "strafe": 0}),
+        ]
+
+        self.assertEqual(
+            revision_responses(
+                rows, start_tick=1, start_position=(0., 64., 0.),
+                mode=(RevisionResponseMode
+                      .MOVEMENT_OR_MATCHING_SATISFACTION),
+            ),
+            [
+                {"revision": 2, "response_ticks": None,
+                 "end": "superseded"},
+                {"revision": 3, "response_ticks": 1,
+                 "end": "satisfied"},
+            ],
+        )
 
     def test_official_runtime_trace_can_be_extracted_and_compared(self):
         manifest_path = Path("tests/sim/manifests/navigation-product-r28.json")

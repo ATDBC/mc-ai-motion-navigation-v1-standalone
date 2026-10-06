@@ -361,7 +361,7 @@ class NavigationEventSequenceTests(unittest.TestCase):
             max_ticks=300,
             events=(
                 GeneratedEvent(EventKind.REMOVE_LANDING_SUPPORT, 33),
-                GeneratedEvent(EventKind.GOAL_BACK, 43),
+                GeneratedEvent(EventKind.GOAL_BACK, 80),
             ),
         )
 
@@ -370,7 +370,15 @@ class NavigationEventSequenceTests(unittest.TestCase):
         self.assertIsNone(outcome.exception)
         self.assertIsNotNone(outcome.result)
         self.assertEqual(outcome.result.outcome, "failed")
-        self.assertNotIn("goal_back-2@43", outcome.result.events)
+        self.assertLess(outcome.result.ticks, 80)
+        self.assertEqual(
+            [(item.kind, item.status) for item in outcome.event_applications],
+            [
+                (EventKind.REMOVE_LANDING_SUPPORT, "applied"),
+                (EventKind.GOAL_BACK, "skipped"),
+            ],
+        )
+        self.assertNotIn("goal_back-2@80", outcome.result.events)
 
     def test_same_tick_post_completion_push_does_not_create_a_false_violation(self):
         sequence = GeneratedSequence(

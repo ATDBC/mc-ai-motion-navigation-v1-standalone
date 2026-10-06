@@ -196,7 +196,10 @@ def _replace_route_executor(session: NavigationSession,
                             executor: ActionRouteExecutor) -> None:
     control = session._supervisor.incumbent_route
     assert control is not None
-    session._supervisor._route = replace(control, executor=executor)
+    executor.route = control.route.action_route
+    session._supervisor._route = replace(
+        control, executor=executor, coordinator=None,
+    )
 
 
 def _ground_anchor(current: NavigationFrame) -> StateAnchor:
@@ -1888,24 +1891,32 @@ class NavigationSessionTests(unittest.TestCase):
         session.propose(initial, None, 2_000_000_000)
         incumbent = session._supervisor.incumbent_route
         self.assertIsNotNone(incumbent)
+        terminal_executor = _RepeatingRecoveryExecutor(
+            ActionRouteState.UNSUPPORTED,
+            "ordinary_ground_state_lost",
+        )
+        terminal_executor.route = incumbent.route.action_route
         session._supervisor._route = replace(
             incumbent,
-            executor=_RepeatingRecoveryExecutor(
-                ActionRouteState.UNSUPPORTED,
-                "ordinary_ground_state_lost",
-            ),
+            executor=terminal_executor,
+            coordinator=None,
         )
         successor = replace(
             incumbent.route,
             route_id="pending-successor",
             source_request_id="request-2",
             goal_revision=2,
+            # This synthetic waiting executor does not produce the admitted
+            # Walk controller's typed progress evidence.
+            validation_plan=None,
         )
         current = frame(world, 1, start.position)
         anchor = _ground_anchor(current)
         ledger = InputApplicationLedger()
+        waiting_executor = _WaitingRouteExecutor()
+        waiting_executor.route = successor.action_route
         self.assertTrue(session._supervisor.offer_route(
-            RouteControl(successor, _WaitingRouteExecutor()),
+            RouteControl(successor, waiting_executor),
             current, ledger, anchor,
         ))
         session._request = replace(

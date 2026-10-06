@@ -62,6 +62,7 @@ class NavigationTransitionAction(StrEnum):
     MARK_FAILED = "mark_failed"
     MARK_CLOSED = "mark_closed"
     RESUME_EXECUTION_AFTER_HANDOFF = "resume_execution_after_handoff"
+    RESUME_ACTIVE_IDLE_AFTER_HANDOFF = "resume_active_idle_after_handoff"
     REPLAN_AFTER_HANDOFF = "replan_after_handoff"
 
 
@@ -150,6 +151,9 @@ def _transition_table() -> dict[
           NavigationTransitionAction.RESUME_EXECUTION_AFTER_HANDOFF,
           NavigationSessionState.EXECUTING)
     allow((NavigationSessionState.STOPPING,),
+          NavigationTransitionAction.RESUME_ACTIVE_IDLE_AFTER_HANDOFF,
+          NavigationSessionState.EXECUTING)
+    allow((NavigationSessionState.STOPPING,),
           NavigationTransitionAction.REPLAN_AFTER_HANDOFF,
           NavigationSessionState.PLANNING)
     allow((NavigationSessionState.COMPLETE,),
@@ -200,6 +204,8 @@ class NavigationLifecycle:
         expected_handoff = {
             NavigationTransitionAction.RESUME_EXECUTION_AFTER_HANDOFF:
                 HandoffDisposition.TRANSFERABLE,
+            NavigationTransitionAction.RESUME_ACTIVE_IDLE_AFTER_HANDOFF:
+                HandoffDisposition.QUIESCENT,
             NavigationTransitionAction.REPLAN_AFTER_HANDOFF:
                 HandoffDisposition.QUIESCENT,
         }.get(action)

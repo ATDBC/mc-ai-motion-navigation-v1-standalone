@@ -172,7 +172,7 @@ STOPPING 带待发布的任务结果，例如取消、失败或关闭。`RECOVER
 | 任意活动状态 + AdmissionResult(当前代次接纳) | 有原控制者则 HANDOFF；无原控制者且入口成立则 EXECUTING |
 | HANDOFF + ControllerReport(TRANSFERABLE) | 同帧检查并换入接替者，进入 EXECUTING；失效时保持旧控制者 |
 | 任意非终态 + Cancel / Close / 不可重试失败 | STOPPING，结果待定；无人负责且已可释放时可以立即发布对应终态 |
-| STOPPING + ControllerReport(QUIESCENT) | 依待发布结果进入 CANCELLED、FAILED 或 CLOSED，然后释放来源 |
+| STOPPING + ControllerReport(QUIESCENT) | 有待发布结果时进入 CANCELLED、FAILED 或 CLOSED；持续目标已满足、没有结束请求且身体责任已清空时，经专用 typed action 回到 EXECUTING 活动待命；其余情况按有类型去向推进 |
 | EXECUTING + ControllerReport(NEEDS_REPLAN) | 登记失败；安全可释放且允许重试时 PLANNING，否则先 STOPPING；耗尽则安全收尾后 FAILED |
 | NEEDS_INFORMATION + InformationArrived / TimedOut | 重查对应前置条件后 EXECUTING、PLANNING 或进入失败收尾；不重置任务账本 |
 | 任意活动状态 + DependencyChanged | 仅失效受影响证明，保留负责人；按同一恢复／重试入口处理 |
@@ -181,7 +181,7 @@ STOPPING 带待发布的任务结果，例如取消、失败或关闭。`RECOVER
 
 实施时使用两张表。事件准入表先根据“当前状态＋事件”返回处理、忽略或拒绝，阻止终态继续消费旧结果，也阻止不适用于当前阶段的事件进入业务逻辑。事件获准后，业务处理才能选择有类型的转移动作；状态转移表再根据“当前状态＋转移动作”给出唯一下一状态。两张表不能互相代替。
 
-从 `STOPPING` 返回执行或规划还要提供新鲜交接证据。继续执行要求当前控制者给出 `TRANSFERABLE`；重新规划要求旧控制者已经 `QUIESCENT`。证据必须属于当前世界会话、当前观察和监督者当前保存的控制者。`reason` 和诊断文本只用于展示；控制流读取事件、执行状态、失败类别、前置条件和交接证据。检查范围是现行正式链路，隔离旧实现和报告格式不为形式上的“零字符串”重写。
+从 `STOPPING` 返回运动执行或规划还要提供新鲜交接证据。新控制者接管运动要求当前控制者给出 `TRANSFERABLE`；重新规划要求旧控制者已经 `QUIESCENT`。持续目标已经满足、没有结束请求、路线和等待已经清空时，可以用专用 `RESUME_ACTIVE_IDLE_AFTER_HANDOFF` 消费当前帧 `QUIESCENT` 证据，回到没有身体 owner 的 `EXECUTING` 活动待命。它不能接收 `RETAIN`／`TRANSFERABLE`，也不能代替取消或失败收尾。证据必须属于当前世界会话、当前观察和监督者当前保存的控制者。`reason` 和诊断文本只用于展示；控制流读取事件、执行状态、失败类别、前置条件和交接证据。检查范围是现行正式链路，隔离旧实现和报告格式不为形式上的“零字符串”重写。
 
 ## 8. 正式路径模拟的边界
 
@@ -464,7 +464,7 @@ R28-0 提交旧转移到目标语义的映射，R28-1 迁移行为，R28-5 核�
 
 本节的通用持续目标语义已经在 R28-1 第二个切片实现。任务请求使用 `reach_policy: GoalReachPolicy`，枚举为 `COMPLETE_ON_REACH`（默认）和 `KEEP_ACTIVE_ON_REACH`，由 `GoalRequestLedger` 保存；它不进入表示几何与身体要求的 `GoalState`，也不通过任务名称选择。首次任务提交与 `start_goal` 消费同一字段，现有调用不传时沿用默认；`update_goal` 不接收可变策略。策略在任务开始时固定，同一任务修订不能切换策略或补回预算，需要结束时提交有类型结束请求。
 
-一次性任务按原规则到达即完成。持续目标任务使用既有 ObservedGoalStatus.SATISFIED 报告当前目标满足，任务保持活动并继续接受修订；不新增跟随专用生命周期状态，不另存一份“已到达”权威布尔值。进入区域后，原控制者仍按支撑、在途输入和停止尾迹完成必要停止；能够释放移动控制时由共享入口释放，跟随层不代替监督者判断。
+一次性任务按原规则到达即完成。持续目标任务使用既有 ObservedGoalStatus.SATISFIED 报告当前目标满足，任务保持活动并继续接受修订；不新增跟随专用生命周期状态，不另存一份“已到达”权威布尔值。进入区域后，原控制者仍按支撑、在途输入和停止尾迹完成必要停止；能够释放移动控制时由共享入口释放。若 Session 此前因收尾进入 `STOPPING`，只有当前帧 `QUIESCENT` 证据、没有结束请求且责任已经清空时，才能回到 `EXECUTING` 活动待命。跟随层不代替监督者判断。
 
 目标满足期间没有移动需求，不新建获取动作等待、不计为停滞或恢复；原任务总期限仍推进。目标再次移动时，从当前观察和同一任务余额接纳修订。现有一次性 driver 默认兼容，不能作为隐藏的跟随适配。`spawn_successor` 仍表示新任务并建立新账本；持续目标不能靠反复创建 successor 补回额度。
 
@@ -575,3 +575,46 @@ Coordinator 逻辑 work 上限二；目标修订有空位时立即准备最新 w
 motion 入口显式核对当前 scope，删除无 identity 的兼容授权和指定重复活动比较；原 proof、negative basis、REVALIDATE、实际输入窗口和 LocalAttemptChain 保留。scope 失效只撤销准备，空中 owner、在途输入和落地责任继续推进。已实际派发的放置确认按原事务 identity／窗口结算，不因修订或取消丢弃已发生效果。
 
 公共接入者只提交目标、修订和结束请求，不管理世代或接纳许可。正式 Runtime／driver 路径已有检查，正式跟随技能尚未实施。以上接口完成不等于 R28-3 全阶段关闭；结构、统计、绝对响应和扩展边界见[验收第 19 节](../acceptance/navigation-coordination-convergence.md#19-r28-3-异步计算世代与当前目标绑定)。
+
+## 20. D058：活动普通 Walk 的依赖重验草案
+
+本节是待实施契约。完整取舍、白名单和验收边界见 [D058](../decisions/0058-revalidate-ordinary-walk-before-stopping.md)。
+
+`WorldKnowledge` 继续把 `UNKNOWN -> AIR` 记为导航语义变化，并通过 `NavigationFrame.changed_cells` 交给协调链。世界事实层不判断某条路线能否继续，也不为普通 Walk 隐藏变化。
+
+路线接纳、路线跟踪、身体监督和生命周期各自只做一项决定：
+
+| owner | 保存什么 | 返回什么 | 不做什么 |
+|---|---|---|---|
+| `RouteAdmitter` | 最终 ActionRoute、typed owner 表与不可变 validation plan | 带 plan 的 admitted route | 不复制材质、trait、sweep、支撑或碰撞算法 |
+| `ActiveRouteTracker` | 单个 RouteControl 的 plan、typed owner 表、依赖 provenance、当前有效依赖和完整路线身份 | `UNAFFECTED`、`CONTINUE` 或 `STOP`，以及刷新后的依赖 | 不提交规划、不控制身体、不发布任务结果 |
+| `ExecutionSupervisor` | incumbent、pending 及各自 tracker | 两条路线分别验证后的有类型汇总和身体处置 | 不解释目标业务，不根据 reason 文本购买恢复 |
+| `NavigationSession` | 原生命周期、交接和恢复路由 | 消费 supervisor 汇总后的既有事件 | 不读 recipe，不调用几何，不维护第二份依赖 |
+
+`ActiveRoute.validation_plan` 保存 RouteAdmitter 在最终 ActionRoute 构造完成后生成的不可变计划；它沿现有 `AdmissionResult -> PlanningUpdate -> NavigationSession` 随路线传递，不另传可变 tracker。Session 创建控制者时使用 `RouteControl(active_route, executor, ..., ActiveRouteTracker(active_route))`。每个 `RouteControl` 必须和一个 tracker 一起创建；plan 缺失时 tracker 仍存在，并在相关变化到来时失败关闭。
+
+tracker 身份绑定 world session、route id／revision、source request、goal id／revision、planning generation、原 work identity 和当前 action index。验证结果只有完整身份仍匹配时才能应用。pending 尚未拥有身体；它验证失败时只丢弃 pending。incumbent 验证失败时由 supervisor 请求原 `DEPENDENCY_CHANGED` 安全停止。Session 只收到结果，不重新判断哪条路线应该停。
+
+plan 按最终 action index 保存多个 Walk action。`DependencyOwner` 表为每个 owner 保存不透明 `owner_id`、`kind` enum、`action_index`、可选 `fixed_route_id` 和可选 `recipe_ref`；provenance 只保存 `position -> owner_refs`。Walk leg binding 保存 point indices 和累计 start/end progress，recipe 保存查询类型、原查询参数和 ground capability identity；initial connection 单独保存退役 progress，不伪造路线 point。这样可表示 `Walk -> strict -> Walk`、终点替换和 D057 跳首边，且不会把候选阶段已经删除或替换的边带进执行。所有引用在接纳时校验；执行时不解析 id，也不从 ActionRoute 重猜归属。
+
+recipe 的 typed query kind 只有两种。`SURFACE_EDGE` 严格重放现有 surface edge 查询，包括原 sweep 和 `.25/.5/.75/1.0` 四个支撑采样；`STANDABLE_CONNECTION` 严格重放现有 `query_standable_connection`，包括精确 endpoint region 和不超过 0.1 格间隔的整段支撑采样。两者不合并成新几何算法。共同外围只核对实际 GroundMotionProfile、材质、trait 与 capability identity，并复用当前 WorldView 的 cache。cache 不改变采样、状态、依赖或成本口径；命中 cache 仍占一次 recipe 重放预算。无法精确重放首次证明时，对应腿没有继续资格。
+
+每条 recipe 保存首次查询实际使用的冻结 GroundMotionProfile，以及其 profile／environment／ground model、support materials、BlockMotionCatalog environment 和 Minecraft version 身份。RouteAdmitter、规划器和 RouteControl 使用同一个正式 profile，不按字符串临时重查配置。现有 surface edge 只生成 `SURFACE_EDGE`；首次由 standable connection 证明的 D057 接入或终点 tail 只生成 `STANDABLE_CONNECTION`。RouteControl 当前 capability identity 不一致时失败关闭。
+
+初始 connection 单列，`retire_after_progress` 等于 `ActiveRoute.connection_length_blocks`。不能由两类原查询之一精确重放的通用 connection 在退役前变化时停止，确认走完后依赖退出。每个 dependency 保存全部 owner provenance；strict action、traversal plan 和 non-recipe owner 不会被一个 Walk 查询结果覆盖。
+
+tracker 先求 `changed_cells ∩ effective_dependencies`。无交集时不创建 `WorldQueryCache`，也不重放 recipe。存在交集时展开 affected cell 的全部活动 owner；所有 owner 都以 typed 字段指向当前 action 的可重验 recipe，且各自按 query kind 重放通过，才能继续。任一 strict／non-recipe owner 命中就停止。同一控制者最多重放两条 recipe，incumbent 与 pending 合计每帧最多四次，并复用一个只活在当前 `WorldView` 的 `WorldQueryCache`。预算耗尽、缺信息、阻塞、不支持、capability 变化、悬空引用或身份不一致都返回 `STOP`。
+
+成功重验只替换被查询 recipe 对应 owner 自己的 dependency 引用；其他 owner 的引用保持。新 dependencies 也登记到该 typed owner，不能覆盖共享格上的 strict／non-recipe provenance。世界保护、下帧交集和诊断都读取 tracker 汇总的 `effective_dependencies`。
+
+tracker 使用原 `FixedRouteDecision.progress_blocks` 退役已经走完的腿，不另算路线投影。它按 owner 的 `action_index`、`kind`、`fixed_route_id` 和 plan 内的 typed binding 退役 initial connection、Walk 腿及前一 action 的全部 owner；不解析 `owner_id`，也不回读 ActionRoute 猜测。进度缺失、回退、引用悬空或身份不符时失败关闭。
+
+白名单不包含 Step、JumpUp、JumpGap、ControlledDrop、连续高度 Walk 或任何带 traversal plan 的动作。它们继续沿用原停止、落地和重新规划契约。D058 不改变动作证明、恢复预算、目标修订或输入交接。
+
+## 21. 待补事实的目标修订与局部入口
+
+`PendingGoalRevision` 表示最新目标已经通过身份和修订检查，但当前观察还不足以确定起点或目标支撑面。它存在时，旧 revision 留下的 same-support local direct 和 ground direct 都没有建立替代路线的资格。
+
+Session 仍推进已有身体 owner；这条限制只阻止旧局部入口创建新路线。信息 owner 继续产生正式 Observation 请求。事实到达后，只有 `_resume_pending_goal()` 从当前观察重新求 start／goal 节点，再调用共同请求接纳入口。缺信息、事实齐但无支撑、已知阻塞和能力不支持继续使用各自的 typed 结果，不互相改名。
+
+完整决定和实机根因见 [D067](../decisions/0067-pending-goal-blocks-stale-direct-activation.md)。

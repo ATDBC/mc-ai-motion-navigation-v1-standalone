@@ -9,9 +9,13 @@ from mc2p.contracts.action_v1 import LookV1, MovementV1
 from mc2p.contracts.common import ContractViolation, require_identifier
 from mc2p.motion_nav.body_control import StopCause
 from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
+from mc2p.motion_nav.ground_modes import observed_ground_mode
 from mc2p.motion_nav.physics_types import PhysicsState
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.safe_ground_control import verified_ground_rollout
+from mc2p.motion_nav.segment_entry import (
+    SegmentEntryWindow, body_fits_segment_entry,
+)
 from mc2p.motion_nav.support_surfaces import query_support_surfaces
 from mc2p.motion_nav.world_model import BlockPos, CellKnowledge
 
@@ -54,6 +58,7 @@ class LandingEdgeProbe:
     world_session: str | None = None
     geometry_revision: int | None = None
     dependencies: tuple[BlockPos, ...] = ()
+    entry_window: SegmentEntryWindow | None = None
     state: LandingEdgeProbeState = LandingEdgeProbeState.APPROACHING
     edge_sequence_id: int | None = None
     ended_reason: str | None = None
@@ -106,6 +111,12 @@ class LandingEdgeProbe:
                 or self.dependencies != tuple(sorted(set(self.dependencies)))):
             raise ContractViolation(
                 "landing edge probe dependencies must be sorted and unique"
+            )
+        if (self.entry_window is not None
+                and (type(self.entry_window) is not SegmentEntryWindow
+                     or self.route_id is None)):
+            raise ContractViolation(
+                "landing edge probe entry window requires an action identity"
             )
         if type(self.state) is not LandingEdgeProbeState:
             raise ContractViolation("landing edge probe state must be typed")
@@ -298,6 +309,10 @@ class LandingEdgeProbe:
             frame.body.velocity_blocks_per_second[0],
             frame.body.velocity_blocks_per_second[2],
         ) if type(frame) is NavigationFrame else math.inf
+        mode = (
+            observed_ground_mode(frame.body)
+            if type(frame) is NavigationFrame else None
+        )
         return (
             type(frame) is NavigationFrame
             and self.releasing
@@ -309,18 +324,24 @@ class LandingEdgeProbe:
                 <= DIRECT_DROP_EDGE_PROBE_ENTRY_SPEED_BLOCKS_PER_SECOND
                    + 1.0e-9
             and self._look_restored(frame)
+            and (
+                self.entry_window is None
+                or (mode is not None and body_fits_segment_entry(
+                    self.entry_window, frame.body, mode,
+                ))
+            )
         )
 
     def release_look(self, frame: NavigationFrame) -> LookV1 | None:
-        """Restore the view owned by the route before the probe hands off."""
+        """Align the bound entry view before the probe hands off."""
         if (type(frame) is not NavigationFrame
-                or not self.releasing
+                or not (self.releasing or self.ready)
                 or self.home_yaw_radians is None
                 or self.home_pitch_radians is None
                 or self._look_restored(frame)):
             return None
         yaw_delta = math.degrees(_angle_delta(
-            self.home_yaw_radians, frame.body.yaw_radians,
+            self._release_yaw_radians(), frame.body.yaw_radians,
         ))
         pitch_delta = math.degrees(
             self.home_pitch_radians - frame.body.pitch_radians
@@ -339,12 +360,69 @@ class LandingEdgeProbe:
         )
         return (
             abs(_angle_delta(
-                self.home_yaw_radians, frame.body.yaw_radians,
+                self._release_yaw_radians(), frame.body.yaw_radians,
             )) <= tolerance
             and abs(
                 self.home_pitch_radians - frame.body.pitch_radians
             ) <= tolerance
         )
+
+    def _release_yaw_radians(self) -> float:
+        assert self.home_yaw_radians is not None
+        if (self.entry_window is not None
+                and self.entry_window.required_yaw_radians is not None):
+            return self.entry_window.required_yaw_radians
+        return self.home_yaw_radians
+
+    def _entry_window_movement(self, frame: NavigationFrame) -> MovementV1:
+        window = self.entry_window
+        if window is None:
+            return MovementV1()
+        mode = observed_ground_mode(frame.body)
+        if (mode is not None
+                and body_fits_segment_entry(window, frame.body, mode)):
+            return MovementV1()
+        dx, dz = window.horizontal_approach_direction
+        offset_x = frame.body.position[0] - window.reference_point[0]
+        offset_z = frame.body.position[2] - window.reference_point[2]
+        longitudinal = offset_x * dx + offset_z * dz
+        lateral = abs(-offset_x * dz + offset_z * dx)
+        position_fits = (
+            window.minimum_longitudinal_offset_blocks <= longitudinal
+                <= window.maximum_longitudinal_offset_blocks
+            and lateral <= window.maximum_lateral_offset_blocks
+        )
+        speed = math.hypot(
+            frame.body.velocity_blocks_per_second[0],
+            frame.body.velocity_blocks_per_second[2],
+        )
+        if not position_fits:
+            target_x = window.reference_point[0]
+            target_z = window.reference_point[2]
+            if self.entry_position is not None:
+                candidate_x, candidate_z = self.entry_position
+                candidate_offset_x = candidate_x - window.reference_point[0]
+                candidate_offset_z = candidate_z - window.reference_point[2]
+                candidate_longitudinal = (
+                    candidate_offset_x * dx + candidate_offset_z * dz
+                )
+                candidate_lateral = abs(
+                    -candidate_offset_x * dz + candidate_offset_z * dx
+                )
+                if (window.minimum_longitudinal_offset_blocks
+                        <= candidate_longitudinal
+                        <= window.maximum_longitudinal_offset_blocks
+                        and candidate_lateral
+                            <= window.maximum_lateral_offset_blocks):
+                    target_x, target_z = candidate_x, candidate_z
+            return _movement_toward(
+                target_x - frame.body.position[0],
+                target_z - frame.body.position[2],
+                frame.body.yaw_radians,
+            )
+        if speed > window.maximum_speed_blocks_per_second:
+            return MovementV1(sneak=True)
+        return MovementV1()
 
     def movement(self, frame: NavigationFrame,
                  state: PhysicsState | None = None, *,
@@ -366,12 +444,12 @@ class LandingEdgeProbe:
                 >= DIRECT_DROP_EDGE_PROBE_MAX_FRAMES
             if acquisition_expired is None else acquisition_expired
         )
-        if not self.ready and expired:
+        if expired:
             self.request_stop(StopCause.ACQUISITION_TIMED_OUT)
             self.ended_reason = "landing_edge_probe_timed_out"
             return self._stopping_movement(frame, state)
         if self.ready or self.releasing:
-            return MovementV1()
+            return self._entry_window_movement(frame)
         if (not frame.body.is_on_ground
                 or frame.body.pose not in {"standing", "crouching"}
                 or not _has_known_support(frame)):

@@ -348,6 +348,7 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                     "the event and every application sample must be recorded"
                 )
             diagnostics = session.diagnostics
+            report = session.report
             information = session.planning_information_update
             if information is not None:
                 information_activity[information.information_identity] = ObservedAsyncActivity(
@@ -431,6 +432,11 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                 recovery_limit_window_starts=(
                     diagnostics.recovery_limit_window_starts
                 ),
+                reach_policy=report.reach_policy,
+                observed_goal_status=report.observed_goal_status,
+                body_control_activities=diagnostics.body_control_activities,
+                recovery_wait_status=diagnostics.recovery_wait_status,
+                session_state=report.state,
             )
             monitor.check(evidence)
             row = {
@@ -506,6 +512,14 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                 "request_generation": diagnostics.request_generation,
                 "goal_revision": diagnostics.goal_revision,
                 "route_id": diagnostics.route_id,
+                "route_validation": (
+                    None if diagnostics.route_validation is None else
+                    asdict(diagnostics.route_validation)
+                ),
+                "local_direct_admission": (
+                    None if diagnostics.local_direct_admission is None else
+                    asdict(diagnostics.local_direct_admission)
+                ),
                 "damage": backend.damage_taken,
                 "damage_spent": diagnostics.damage_spent,
                 "risk_available_points": diagnostics.risk_available_points,

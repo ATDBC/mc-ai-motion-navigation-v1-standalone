@@ -1,0 +1,53 @@
+{
+  "schema_version": "mc2p.r28-3-generation-comparison.v1",
+  "candidate": ".tmp/r28-3/E2-product-final",
+  "tasks": 2000,
+  "completed": 1710,
+  "against_r28_4": {
+    "behavior_fields_equal": 2000,
+    "planning_submission_equal": 1981,
+    "target_late_with_more_submissions": 19,
+    "submission_delta": 21,
+    "submission_relative_change": 0.0197554,
+    "source": ".tmp/r28-3/E2-product-pair-r28-4.json",
+    "source_sha256": "d83ccf017d69f1b6bcf019a5bbc50b34d9381257f6a699d01586c0001bc7ddc3"
+  },
+  "against_frozen_v7": {
+    "full_signature_equal": 1976,
+    "target_late_planning_submission_changes": 19,
+    "timing_sensitive_drop_changes": 5,
+    "success_to_failure": 0,
+    "source": ".tmp/r28-3/E2-product-pair-frozen.json",
+    "source_sha256": "a96a6920f5eeb7a1be6c4107006918c15a69890e414c74bf48946629a1bb9f46"
+  },
+  "target_late": {
+    "completed": 200,
+    "tasks": 200,
+    "arrival_mean_ticks": 79.685,
+    "arrival_p95_ticks": 95,
+    "planning_submissions": 1084,
+    "controller_switches": 613,
+    "zero_displacement_ticks": 22,
+    "zero_displacement_intervals": 5,
+    "demand_ticks": 14392,
+    "stall_rate": 0.00152863,
+    "tasks_with_stall": 5,
+    "effective_responses": 731,
+    "superseded_responses": 65,
+    "unanswered_responses": 0,
+    "revision_response_p95_ticks": 7
+  },
+  "coordination": {
+    "pairs": 1448,
+    "outcome_failures": 0,
+    "display_phase_differences": 5,
+    "source": ".tmp/r28-3/E2-migration-pair.json",
+    "source_sha256": "f0a7c80a2d2ab0d5535b5914c023ba2fcf3de19ebb92a1a17b74a7c164064e8a"
+  },
+  "unsigned_gates": {
+    "two_statistical_looks": false,
+    "product_statistical_non_regression": false,
+    "revision_response_within_five_ticks": false,
+    "coordination_code_net_reduction": false
+  }
+}

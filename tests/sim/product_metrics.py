@@ -8,9 +8,109 @@ from __future__ import annotations
 import math
 from collections import deque
 from collections.abc import Iterable, Mapping
+from enum import StrEnum
 
 EXTRACTOR_VERSION = "mc2p.navigation-product-metrics.v3"
 TERMINAL = {"success", "failed", "cancelled", "stopped", "interaction_required"}
+
+
+class RevisionResponseMode(StrEnum):
+    MOVEMENT_ONLY = "movement_only"
+    MOVEMENT_OR_MATCHING_SATISFACTION = "movement_or_matching_satisfaction"
+
+
+def revision_responses(frames: Iterable[Mapping], *, start_tick: int,
+                       start_position: tuple[float, float, float],
+                       mode: RevisionResponseMode = (
+                           RevisionResponseMode.MOVEMENT_ONLY
+                       )) -> list[dict]:
+    """Measure one current revision request against its submitted target.
+
+    A newer accepted revision supersedes the pending one.  The default R28
+    ruler accepts only later physical movement toward the submitted target.
+    Callers may explicitly accept a continuous, matching formal satisfaction.
+    """
+    if type(mode) is not RevisionResponseMode:
+        raise TypeError("revision response mode must be typed")
+    current_revision = None
+    pending = None
+    responses = []
+    last_tick, last_position = start_tick, start_position
+    terminal = False
+    for row in frames:
+        tick, position = row.get("movement_tick"), row.get("position")
+        if (type(tick) is not int or not isinstance(position, (list, tuple))
+                or len(position) != 3
+                or not all(math.isfinite(value) for value in position)):
+            continue
+        if tick <= last_tick:
+            continue
+        consecutive = tick == last_tick + 1
+        if pending is not None and not consecutive:
+            pending["continuous"] = False
+        if current_revision is None:
+            current_revision = row.get("goal_revision")
+        for request in row.get("goal_revision_requests", ()):
+            if pending is not None:
+                responses.append({
+                    "revision": pending["revision"],
+                    "response_ticks": None,
+                    "end": "superseded",
+                })
+            current_revision = request["revision"]
+            target_position = row.get("goal_position")
+            pending = {
+                "revision": current_revision,
+                "movement_tick": request["movement_tick"],
+                "continuous": True,
+                "target_position": (
+                    tuple(target_position)
+                    if isinstance(target_position, (list, tuple))
+                    else target_position
+                ),
+            }
+        distance = math.hypot(
+            position[0] - last_position[0], position[2] - last_position[2],
+        )
+        applied = row.get("applied_movement", {})
+        demand = (row.get("source_bound")
+                  and not row.get("goal_satisfied", False)
+                  and not terminal)
+        terminal |= row.get("driver_state") in TERMINAL
+        if (pending is not None and demand and consecutive and distance > .005
+                and (applied.get("forward", 0) or applied.get("strafe", 0))):
+            target = pending["target_position"]
+            if (target is not None
+                    and math.dist(position, target)
+                    < math.dist(last_position, target)):
+                responses.append({
+                    "revision": pending["revision"],
+                    "response_ticks": tick - pending["movement_tick"],
+                    "end": "movement",
+                })
+                pending = None
+        if (pending is not None
+                and mode is (
+                    RevisionResponseMode.MOVEMENT_OR_MATCHING_SATISFACTION
+                )
+                and pending["continuous"] and consecutive
+                and tick > pending["movement_tick"]
+                and row.get("goal_revision") == pending["revision"]
+                and row.get("goal_satisfied") is True):
+            responses.append({
+                "revision": pending["revision"],
+                "response_ticks": tick - pending["movement_tick"],
+                "end": "satisfied",
+            })
+            pending = None
+        last_tick, last_position = tick, position
+    if pending is not None:
+        responses.append({
+            "revision": pending["revision"],
+            "response_ticks": None,
+            "end": "unanswered",
+        })
+    return responses
 
 
 def window_stalls(frames: Iterable[Mapping], *, window_ticks: int = 10,
@@ -90,8 +190,6 @@ def extract_metrics(frames: Iterable[Mapping], *, start_tick: int,
     pauses, pause_start, pause_last = [], None, None
     requests = switches = acquisitions = releases = 0
     revision = None
-    responses = []
-    pending_response = None
 
     def finish_pause():
         nonlocal pause_start, pause_last
@@ -129,22 +227,13 @@ def extract_metrics(frames: Iterable[Mapping], *, start_tick: int,
         if revision is None:
             revision = row.get("goal_revision")
         for request in row.get("goal_revision_requests", ()):
-            if pending_response is not None:
-                responses.append({"revision": revision, "response_ticks": None, "end": "superseded"})
-            revision, pending_response = request["revision"], request["movement_tick"]
+            revision = request["revision"]
         if row.get("goal_revision") != revision:
             gaps.add("goal_revision_request_not_recorded_or_not_accepted")
         if demand and consecutive and distance > .005 and (
                 applied.get("forward", 0) or applied.get("strafe", 0)):
             if first_move is None:
                 first_move = tick
-            if pending_response is not None:
-                # Displacement must make progress toward the revised target.
-                target = row.get("goal_position")
-                if target is not None and math.dist(position, target) < math.dist(last_position, target):
-                    responses.append({"revision": revision, "response_ticks": tick - pending_response,
-                                      "end": "movement"})
-                    pending_response = None
         if demand and consecutive and distance <= .005:
             if pause_start is None:
                 pause_start = tick
@@ -166,8 +255,9 @@ def extract_metrics(frames: Iterable[Mapping], *, start_tick: int,
             release_tick = tick
         last_tick, last_position = tick, position
     finish_pause()
-    if pending_response is not None:
-        responses.append({"revision": revision, "response_ticks": None, "end": "unanswered"})
+    responses = revision_responses(
+        frames, start_tick=start_tick, start_position=start_position,
+    )
     if not count:
         gaps.add("empty_trace")
     if terminal_tick is None:

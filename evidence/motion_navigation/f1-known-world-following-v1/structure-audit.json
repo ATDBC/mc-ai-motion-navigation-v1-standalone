@@ -1,0 +1,164 @@
+{
+  "schema_version": "mc2p.f1-known-world-following-structure-audit.v1",
+  "source_head": "f418649",
+  "f1_start_parent": "931ea8b",
+  "d058_completion": "8e9c8a1",
+  "thin_follower": {
+    "path": "mc2p/skills/known_world_follow_driver.py",
+    "physical_lines": 347,
+    "if_nodes": 35,
+    "states": {
+      "KnownWorldFollowState": [
+        "READY",
+        "FOLLOWING",
+        "NEEDS_TARGET_OBSERVATION",
+        "STOPPING",
+        "ENDED"
+      ],
+      "KnownWorldFollowStatus": [
+        "STARTED",
+        "REVISED",
+        "UNCHANGED",
+        "THROTTLED",
+        "DUPLICATE_OBSERVATION",
+        "STALE_OBSERVATION",
+        "OBSERVATION_REWRITTEN",
+        "OBSERVATION_UNAVAILABLE",
+        "NEEDS_TARGET_OBSERVATION",
+        "TARGET_INVALID",
+        "TARGET_DEAD",
+        "SESSION_CHANGED",
+        "NAVIGATION_ENDED",
+        "CANCELLED",
+        "CANCEL_PENDING",
+        "NOT_ACTIVE"
+      ]
+    },
+    "assigned_fields": [
+      "_controller_clock_id",
+      "_last_now_ns",
+      "_last_observation",
+      "_last_submitted_at_ns",
+      "_last_submitted_position",
+      "_navigation",
+      "_pending_end_reason",
+      "_pending_end_status",
+      "_revision",
+      "_state",
+      "_world_session",
+      "goal_id",
+      "target_track_id",
+      "task_id"
+    ],
+    "navigation_calls": [
+      "release",
+      "replace_goal",
+      "start"
+    ],
+    "forbidden_owned_state_fields": [],
+    "imports_legacy_follower": false
+  },
+  "core_files": [
+    "mc2p/motion_nav/navigation_session.py",
+    "mc2p/motion_nav/navigation_handoff.py",
+    "mc2p/motion_nav/navigation_owners.py",
+    "mc2p/motion_nav/planning_coordinator.py",
+    "mc2p/motion_nav/motion_coordination.py",
+    "mc2p/motion_nav/execution_supervisor.py",
+    "mc2p/motion_nav/retry_ledger.py",
+    "mc2p/motion_nav/async_work.py",
+    "mc2p/motion_nav/route_body_controller.py",
+    "mc2p/motion_nav/probe_body_controller.py",
+    "mc2p/motion_nav/route_admission.py",
+    "mc2p/motion_nav/planner_worker.py"
+  ],
+  "initial_zero_modification_gate_passed": false,
+  "from_f1_start": {
+    "files": [
+      {
+        "path": "mc2p/motion_nav/execution_supervisor.py",
+        "added": 132,
+        "deleted": 5,
+        "net": 127
+      },
+      {
+        "path": "mc2p/motion_nav/navigation_owners.py",
+        "added": 15,
+        "deleted": 0,
+        "net": 15
+      },
+      {
+        "path": "mc2p/motion_nav/navigation_session.py",
+        "added": 527,
+        "deleted": 129,
+        "net": 398
+      },
+      {
+        "path": "mc2p/motion_nav/planning_coordinator.py",
+        "added": 31,
+        "deleted": 0,
+        "net": 31
+      },
+      {
+        "path": "mc2p/motion_nav/route_admission.py",
+        "added": 1796,
+        "deleted": 27,
+        "net": 1769
+      },
+      {
+        "path": "mc2p/motion_nav/route_body_controller.py",
+        "added": 61,
+        "deleted": 2,
+        "net": 59
+      }
+    ],
+    "added": 2562,
+    "deleted": 163,
+    "net": 2399
+  },
+  "after_d058": {
+    "files": [
+      {
+        "path": "mc2p/motion_nav/execution_supervisor.py",
+        "added": 10,
+        "deleted": 3,
+        "net": 7
+      },
+      {
+        "path": "mc2p/motion_nav/navigation_owners.py",
+        "added": 15,
+        "deleted": 0,
+        "net": 15
+      },
+      {
+        "path": "mc2p/motion_nav/navigation_session.py",
+        "added": 362,
+        "deleted": 66,
+        "net": 296
+      },
+      {
+        "path": "mc2p/motion_nav/planning_coordinator.py",
+        "added": 31,
+        "deleted": 0,
+        "net": 31
+      },
+      {
+        "path": "mc2p/motion_nav/route_admission.py",
+        "added": 928,
+        "deleted": 12,
+        "net": 916
+      },
+      {
+        "path": "mc2p/motion_nav/route_body_controller.py",
+        "added": 30,
+        "deleted": 1,
+        "net": 29
+      }
+    ],
+    "added": 1376,
+    "deleted": 82,
+    "net": 1294
+  },
+  "follow_specific_core_hits": [],
+  "interpretation": "The original zero-modification gate failed. Shared fixes changed six core files, but no core file contains a follow-specific branch or state token. Cleanup remains a separate stage."
+}

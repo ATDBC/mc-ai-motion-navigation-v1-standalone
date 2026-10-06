@@ -1,0 +1,86 @@
+{
+  "schema_version": "mc2p.r28-4-budget-verification.v1",
+  "final_source_commit": "d26e3df697deccbabebfcd6f46026d47fbaea1cd",
+  "documentation_commit": "bfe9c077466ecd5da92a4b5cbc242cf1f966ab01",
+  "checks": {
+    "formal_chain": {
+      "passed": 8,
+      "failed": 0,
+      "scope_groups": 11,
+      "source": ".tmp/r28-4/task-d-report.md",
+      "final_code": true
+    },
+    "focused": {
+      "passed": 80,
+      "failed": 0,
+      "source": ".tmp/r28-4/task-d-report.md",
+      "final_code": true
+    },
+    "motion_navigation": {
+      "passed": 1124,
+      "failed": 0,
+      "source": ".tmp/r28-4/task-d-report.md",
+      "final_code": false,
+      "note": "完整集合早于最终三项代码修正；修正后另跑直接受影响检查。"
+    },
+    "direct_after_final_fixes": {
+      "passed": 242,
+      "failed": 0,
+      "source": ".tmp/r28-4/final-fix-report.md",
+      "final_code": true
+    },
+    "coordination": {
+      "passed": 1448,
+      "failed": 0,
+      "source": ".tmp/r28-4/task-d-coordination/summary.json",
+      "source_sha256": "a9bb6e1098139534694b90de6d4fda5f4a5a8c3446f95293d8bd8c4180497c31",
+      "final_code": false
+    },
+    "supplemental_faults": {
+      "passed": 4,
+      "failed": 0,
+      "source": ".tmp/r28-4/task-d-faults/summary.json",
+      "source_sha256": "4f7ce9505042ad1c8d2c4a3a512ba6b487d49e5163b1cfab8d090a69a4b5560b",
+      "final_code": false
+    },
+    "product_v7": {
+      "completed": 1710,
+      "tasks": 2000,
+      "exceptions": 0,
+      "insufficient_evidence": 0,
+      "safety_violations": 0,
+      "source": ".tmp/r28-4/task-d-v7/summary.json",
+      "source_sha256": "c4034390b20dbd949da37d511008ad636d05c5806ebf5cc076305ed347e3de2e",
+      "runs_source_sha256": "3e0ffbed54ecd2ecb6f1bdd060ba7878212debc8f478152eab559812971db520",
+      "final_code": false
+    },
+    "fabric": {
+      "passed": 2,
+      "tasks": 2,
+      "batch": "20261003T203156813297Z-ff291252",
+      "final_code": true
+    }
+  },
+  "review": {
+    "source": ".tmp/r28-4/final-review.md",
+    "source_sha256": "47ee9ea52eda8ef5b899e7cf77fa983deca4f860e99486cd9ac75ae777ed5881",
+    "open_p0_p1": 0
+  },
+  "linux_final_code_reproduction": {
+    "review_commit": "1040ac0dbb5c2ef5f960899bee6f3905bdb9b9f4",
+    "scope": "包含后续 R28-3 与 050c10b 的最终代码；用于确认 R28-4 没有回归，不回写为 R28-4 候选运行。",
+    "motion_navigation": {"passed": 1207, "failed": 0},
+    "coordination": {"passed": 1448, "failed": 0},
+    "supplemental_faults": {"passed": 4, "failed": 0},
+    "product_v7": {"completed": 1710, "tasks": 2000},
+    "final_code": true
+  },
+  "known_open_scope": [
+    "R28 coordination code net reduction",
+    "two-look statistical non-regression",
+    "five-tick revision response",
+    "formal following",
+    "indoor terminal approach",
+    "R28-5"
+  ]
+}

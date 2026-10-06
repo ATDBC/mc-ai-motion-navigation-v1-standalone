@@ -697,6 +697,37 @@ class PlanningCoordinator:
             )
         self._local_attempts.reset()
 
+    def confirm_nonplanner_route_admitted(
+        self,
+        route: ActiveRoute,
+        *,
+        current_scope: AsyncComputationScope,
+    ) -> None:
+        """Record progress from an exact route built outside PlannerWorker."""
+        if (type(route) is not ActiveRoute
+                or type(current_scope) is not AsyncComputationScope):
+            raise ContractViolation(
+                "non-planner admission confirmation must be typed"
+            )
+        request = self.request
+        expected_scope = self._request_ledger.current_computation_scope
+        if (type(request) is not SurfacePlanningRequest
+                or current_scope != expected_scope
+                or current_scope.task_id != self.task_id
+                or current_scope.world_session_id != route.world_session
+                or self.has_owned_work
+                or request.work_identity is not None
+                or route.work_identity is not None
+                or route.source_request_id != request.request_id
+                or route.goal_id != request.goal_id
+                or route.goal_revision != request.goal_revision
+                or route.world_session != request.world_session
+                or route.planning_generation != request.sequence):
+            raise ContractViolation(
+                "non-planner admission confirmation is stale or foreign"
+            )
+        self._local_attempts.reset()
+
     def confirm_interaction(self, interaction_id: str) -> None:
         require_identifier(interaction_id, "confirmed planning interaction")
         if (self._required_interaction is None

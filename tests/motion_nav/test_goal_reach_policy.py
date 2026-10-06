@@ -9,6 +9,9 @@ from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.goal_observation import ObservedGoalStatus
 from mc2p.motion_nav.known_map_planner import PlanningRequest
 from mc2p.motion_nav.navigation_owners import GoalRequestLedger
+from mc2p.motion_nav.navigation_lifecycle import (
+    NavigationSessionState, NavigationTransitionAction,
+)
 from mc2p.motion_nav.navigation_session import NavigationSession
 from mc2p.motion_nav.retry_ledger import (
     ProgressEvidence, ProgressKind, RecoveryBudgetKind, RecoveryBudgetPolicy,
@@ -119,6 +122,170 @@ class GoalReachPolicyFormalTests(unittest.TestCase):
 
     def test_revised_satisfied_goal_keeps_task_and_balances(self):
         self.hold_and_cancel(self.flat(), next_goal=(.5, 64., 4.5))
+
+    def satisfied_cross_node_revision(self, *, hold_submitted_result=False):
+        from mc2p.motion_nav.movement_transition import (
+            GoalState, GoalSupport, MovementMode,
+        )
+        from mc2p.motion_nav.online_motion import InputApplicationLedger
+        from mc2p.motion_nav.world_model import Aabb, BlockGeometry
+        from tests.motion_nav import test_navigation_session as fixtures
+
+        world = fixtures._known_world({
+            (0, 0, z): BlockGeometry.full_cube("minecraft:stone")
+            for z in range(12)
+        })
+        current = fixtures.frame(world, 1, (.5, 1., 5.159))
+        half = 2.5 / math.sqrt(2.0)
+
+        def hold_goal(z):
+            return GoalState(
+                Aabb(.5 - half, .9, z - half,
+                     .5 + half, 1.1, z + half),
+                GoalSupport.SOLID,
+                frozenset({MovementMode.WALK}),
+                frozenset({"standing"}),
+                .6,
+            )
+
+        clock = [100_000_000]
+        planner = fixtures._InlinePlanner(hold_first=hold_submitted_result)
+        session = NavigationSession(
+            "satisfied-cross-node",
+            fixtures.NavigationSessionTests().profiles(),
+            planner_worker=planner,
+            clock_ns=lambda: clock[0],
+        )
+        session.bind_source(fixtures._source())
+        session.start_goal(
+            "goal", 24, hold_goal(6.0), current,
+            task_id="persistent-task",
+            reach_policy=policy("KEEP_ACTIVE_ON_REACH"),
+        )
+        self.assertIs(
+            session.report.observed_goal_status,
+            ObservedGoalStatus.SATISFIED,
+        )
+        self.assertFalse(session.diagnostics.planning_work_owned)
+        self.assertTrue(session.update_goal("goal", 25, hold_goal(6.5)))
+        self.assertIs(
+            session.report.observed_goal_status,
+            ObservedGoalStatus.SATISFIED,
+        )
+        coordinator = session._planning_coordinator
+        self.assertIsNotNone(coordinator)
+        self.assertTrue(coordinator.has_owned_work)
+        self.assertFalse(planner.jobs)
+        return (
+            session, coordinator, planner, current, hold_goal, clock,
+            InputApplicationLedger(), fixtures._ground_anchor(current),
+        )
+
+    def test_satisfied_cross_node_revision_retires_planning_and_can_leave_hold(self):
+        (session, coordinator, planner, current, hold_goal, clock,
+         ledger, anchor) = self.satisfied_cross_node_revision()
+        identity = coordinator.work_identity
+        before = session.diagnostics
+        try:
+            self.assertTrue(
+                session._retain_satisfied_goal(current, ledger, anchor)
+            )
+
+            self.assertFalse(coordinator.has_owned_work)
+            self.assertFalse(session.diagnostics.planning_work_owned)
+            self.assertEqual(session.report.state.value, "executing")
+            self.assertEqual(session.report.reason, "goal_state_satisfied")
+            self.assertEqual(coordinator.local_attempt_failures, 0)
+            self.assertEqual(
+                session.diagnostics.recovery_total_starts,
+                before.recovery_total_starts,
+            )
+            self.assertEqual(
+                session.diagnostics.retry_total_failures,
+                before.retry_total_failures,
+            )
+            self.assertIn(
+                (identity, "finish", "goal_state_satisfied"),
+                tuple(
+                    (event.identity, event.operation, event.cause)
+                    for event in coordinator.async_diagnostics.events
+                ),
+            )
+
+            self.assertTrue(session.update_goal("goal", 26, hold_goal(9.5)))
+            self.assertIs(
+                session.report.observed_goal_status,
+                ObservedGoalStatus.NOT_SATISFIED,
+            )
+            self.assertTrue(coordinator.has_owned_work)
+            session.propose(
+                current, anchor, clock[0] + 500_000_000,
+                input_ledger=ledger,
+            )
+            self.assertGreater(planner.polls, 0)
+            self.assertFalse(session.report.terminal)
+        finally:
+            session.close()
+
+    def test_quiescent_satisfied_hold_leaves_stopping_for_active_idle(self):
+        (session, _coordinator, _planner, current, _hold_goal, _clock,
+         ledger, anchor) = self.satisfied_cross_node_revision()
+        try:
+            session._transition(
+                NavigationTransitionAction.BEGIN_STOPPING,
+                "route_release_waiting_for_evidence",
+            )
+            self.assertIs(session.report.state, NavigationSessionState.STOPPING)
+
+            self.assertTrue(
+                session._retain_satisfied_goal(current, ledger, anchor)
+            )
+
+            self.assertIs(session.report.state, NavigationSessionState.EXECUTING)
+            self.assertEqual(session.report.reason, "goal_state_satisfied")
+            self.assertFalse(session.has_owned_body_control)
+            self.assertFalse(session.diagnostics.active_waits)
+        finally:
+            session.close()
+
+    def test_satisfied_goal_retains_submitted_receipt_identity_and_history(self):
+        (session, coordinator, planner, current, _hold_goal, _clock,
+         ledger, anchor) = self.satisfied_cross_node_revision(
+             hold_submitted_result=True,
+         )
+        identity = coordinator.work_identity
+        try:
+            session._advance_planning(current, anchor, ledger)
+            self.assertEqual(
+                coordinator.async_diagnostics.pending_planning_receipts,
+                (identity,),
+            )
+            self.assertTrue(coordinator.has_owned_work)
+
+            self.assertTrue(
+                session._retain_satisfied_goal(current, ledger, anchor)
+            )
+
+            diagnostics = coordinator.async_diagnostics
+            self.assertFalse(coordinator.has_owned_work)
+            self.assertEqual(diagnostics.planning_work, ())
+            self.assertEqual(
+                diagnostics.pending_planning_receipts,
+                (identity,),
+            )
+            self.assertIn(
+                (identity, "finish", "goal_state_satisfied"),
+                tuple(
+                    (event.identity, event.operation, event.cause)
+                    for event in diagnostics.events
+                ),
+            )
+            self.assertEqual(coordinator.local_attempt_failures, 0)
+            self.assertEqual(session.diagnostics.recovery_total_starts, 0)
+            self.assertEqual(session.diagnostics.retry_total_failures, 0)
+            self.assertFalse(session.report.terminal)
+        finally:
+            session.close()
 
     def test_real_five_block_drop_keeps_spent_risk_on_revision(self):
         case = Scenario("persistent-five-block-drop", drop_ledge(5), (.5, 64., .5),

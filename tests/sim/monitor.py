@@ -8,10 +8,14 @@ from mc2p.contracts.action_v1 import MovementV1
 from mc2p.motion_nav.body_control import (
     BodyControlProgress, BodyControlActivity, HandoffDisposition, HandoffEvidence,
 )
+from mc2p.motion_nav.goal_observation import ObservedGoalStatus
+from mc2p.motion_nav.goal_reach_policy import GoalReachPolicy
 from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, MovementMode
 from mc2p.motion_nav.motion_risk import RiskActionRecord, RiskActionState
+from mc2p.motion_nav.navigation_lifecycle import NavigationSessionState
 from mc2p.motion_nav.retry_ledger import (
     ProgressEvidence, ProgressKind, RecoveryBudgetKind, RecoveryLimitStatus,
+    WaitVerdict,
 )
 from tests.sim.async_monitor import AsyncInvariantMonitor, VerificationAssessment, VerificationGap, VerificationStatus
 
@@ -79,6 +83,11 @@ class TickEvidence:
     recovery_total_starts: int = 0
     recovery_limit_status: RecoveryLimitStatus | None = None
     recovery_limit_window_starts: int | None = None
+    reach_policy: GoalReachPolicy = GoalReachPolicy.COMPLETE_ON_REACH
+    observed_goal_status: ObservedGoalStatus | None = None
+    body_control_activities: tuple[BodyControlActivity, ...] = ()
+    recovery_wait_status: WaitVerdict | None = None
+    session_state: NavigationSessionState = NavigationSessionState.EXECUTING
 
 
 class InvariantMonitor:
@@ -224,9 +233,21 @@ class InvariantMonitor:
                 "I17",
                 "information need is foreign or lacks search-frontier identity",
             )
+        normal_satisfied_hold = (
+            e.session_state is NavigationSessionState.EXECUTING
+            and e.reach_policy is GoalReachPolicy.KEEP_ACTIVE_ON_REACH
+            and e.observed_goal_status is ObservedGoalStatus.SATISFIED
+            and not e.active_waits
+            and e.recovery_wait_status is None
+            and e.wait_frames == 0
+            and not e.body_control_activities
+        )
         if self._last_position is not None:
             moved = math.dist(e.position, self._last_position)
-            self._still_ticks = 0 if moved > .01 or terminal else self._still_ticks + 1
+            self._still_ticks = (
+                0 if moved > .01 or terminal or normal_satisfied_hold
+                else self._still_ticks + 1
+            )
         if self._origin is None:
             self._origin = e.position
             self._original_goal = e.goal_position

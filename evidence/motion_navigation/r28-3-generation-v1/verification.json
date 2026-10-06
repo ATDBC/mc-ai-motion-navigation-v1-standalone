@@ -1,0 +1,56 @@
+{
+  "schema_version": "mc2p.r28-3-generation-verification.v1",
+  "e2_source_commit": "2eb5f61f8f80456eb747594e36dee0ed7e53c29c",
+  "e2_reviewed_commit": "2d5a4ec1d1a97f6631205e0c80ec8c418751587d",
+  "final_source_commit": "050c10ba5910a8629fb17c3a442cadbf4ff48e57",
+  "e2_candidate_checks": {
+    "formal_runtime_driver_chain": {"passed": 11, "failed": 0, "final_code": false},
+    "direct_double_work_worker_b11_patch": {"passed": 31, "failed": 0, "final_code": false},
+    "motion_navigation": {"passed": 1202, "failed": 0, "final_code": false},
+    "coordination": {
+      "passed": 1448,
+      "failed": 0,
+      "source": ".tmp/r28-3/E2-migration-final/summary.json",
+      "source_sha256": "78f2c2c02f49cce5dc3597366df77eb9ec04f525b1778769b9d1e34f8804b333",
+      "final_code": false
+    },
+    "supplemental_faults": {
+      "passed": 4,
+      "failed": 0,
+      "source": ".tmp/r28-3/E2-faults-final/summary.json",
+      "source_sha256": "eb700d7c2cddf18b5f0b027f037fb5f7655b1e339cf333da3d8c98acdff39570",
+      "final_code": false
+    },
+    "product_v7": {
+      "completed": 1710,
+      "tasks": 2000,
+      "exceptions": 0,
+      "insufficient_evidence": 0,
+      "safety_violations": 0,
+      "source": ".tmp/r28-3/E2-product-final/summary.json",
+      "source_sha256": "667e4a884bf750cc4e8641c4d707a7c7070b6ca4ce5d55d80bfe0e4d194be325",
+      "runs_source_sha256": "816cef316e40289490b5b24aba84f77cf5a24b845dafc99728b75e6c4b905102",
+      "final_code": false
+    },
+    "fabric": {"passed": 8, "tasks": 8, "final_code": false}
+  },
+  "after_050c10b": {
+    "planning_history_direct": {"passed": 4, "failed": 0, "final_code": true},
+    "complete_e2_suite_rerun": false
+  },
+  "linux_final_code_reproduction": {
+    "review_commit": "1040ac0dbb5c2ef5f960899bee6f3905bdb9b9f4",
+    "motion_navigation": {"passed": 1207, "failed": 0},
+    "coordination": {"passed": 1448, "failed": 0},
+    "supplemental_faults": {"passed": 4, "failed": 0},
+    "product_v7": {"completed": 1710, "tasks": 2000},
+    "migration_function_entry_coverage": {"entered": 40, "registered": 41, "missing": "navigation_session._wait_for_active_terminal"},
+    "final_code": true
+  },
+  "review": {
+    "source": ".tmp/r28-3/final-review.md",
+    "source_sha256": "0d4a7692f5102d4fdfe295ce3cc3070f115ba967874b814b58aa99eec61a928e",
+    "open_p0_p1_p2": 0
+  },
+  "stage_status": "限定安全与功能交付完成；原完整阶段未通过"
+}

@@ -16,6 +16,7 @@ from mc2p.motion_nav.async_work import AsyncWorkIdentity
 from mc2p.motion_nav.fixed_route import FixedRoute, RoutePoint
 from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
 from mc2p.motion_nav.ground_modes import observed_ground_mode
+from mc2p.motion_nav.ground_motion import GroundMotionProfile
 from mc2p.motion_nav.jump_up import JumpUpEdge
 from mc2p.motion_nav.landing_edge_probe import (
     DIRECT_DROP_EVIDENCE_DISTANCE_BLOCKS,
@@ -23,7 +24,9 @@ from mc2p.motion_nav.landing_edge_probe import (
     LandingEdgeProbe,
 )
 from mc2p.motion_nav.movement_transition import compose_movement_transitions
-from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, ResourceState
+from mc2p.motion_nav.movement_transition import (
+    GoalState, GoalSupport, MovementMode, ResourceState,
+)
 from mc2p.motion_nav.movement_transition import MovementTransition
 from mc2p.motion_nav.motion_candidate import (
     MotionCandidateAdmission, MotionCandidateAdmitter, MotionCandidateContext,
@@ -37,6 +40,28 @@ from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.motion_risk import MOVEMENT_DAMAGE_BUDGET_RESOURCE
 from mc2p.motion_nav.online_motion import InputApplicationLedger, StateAnchor
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView
+from mc2p.motion_nav.route_validation import (
+    ActiveRouteValidation,
+    ActiveRouteValidationDisposition,
+    ActiveRouteValidationIdentity,
+    ActiveRouteValidationPlan,
+    ActiveRouteValidationReason,
+    DependencyOwner,
+    DependencyOwnerKind,
+    DependencyProvenance,
+    GroundCapabilityIdentity,
+    InitialConnectionValidation,
+    StandableConnectionQueryArgs,
+    SurfaceEdgeQueryArgs,
+    WalkActionValidationPlan,
+    WalkLegValidationBinding,
+    WalkValidationQueryKind,
+    WalkValidationRecipe,
+    RouteProgressEvidence,
+    RouteValidationBudget,
+    ground_profile_allows_dependency_blocks,
+    replay_walk_validation_recipe,
+)
 from mc2p.motion_nav.known_map_planner import (
     PlanningRequest, SurfacePlanningRequest,
     PlanningStatus, RouteCandidate, WalkEdge, WalkNode, WalkNodeId,
@@ -44,16 +69,26 @@ from mc2p.motion_nav.known_map_planner import (
     SurfaceControlledDropEdge, SurfaceJumpGapEdge, SurfaceJumpUpEdge,
 )
 from mc2p.motion_nav.step_transition import StepEdge
-from mc2p.motion_nav.support_surfaces import SurfaceNodeId, standable_point_in_region, query_standable_connection
+from mc2p.motion_nav.support_surfaces import (
+    SupportSurface,
+    SurfaceNodeId,
+    query_standable_connection,
+    query_support_surfaces,
+    standable_point_in_region,
+)
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.segment_entry import (
     SegmentEntryWindow, body_fits_segment_entry,
 )
-from mc2p.motion_nav.world_model import BlockPos, CellKnowledge
+from mc2p.motion_nav.world_model import (
+    Aabb, BlockPos, CellKnowledge, WorldQueryCache, WorldView,
+)
 
 
 class AdmissionStatus(StrEnum):
     ACCEPTED = "accepted"
+    NEEDS_INFORMATION = "needs_information"
+    NOT_APPLICABLE = "not_applicable"
     REJECTED = "rejected"
 
 
@@ -94,6 +129,78 @@ class AdmissionReason(StrEnum):
     CANDIDATE_ADMITTED = "candidate_admitted"
 
 
+class LocalDirectAdmissionPhase(StrEnum):
+    REQUEST = "request"
+    BODY_SURFACE = "body_surface"
+    SURFACE_IDENTITY = "surface_identity"
+    GOAL_SELECTION = "goal_selection"
+    EXACT_CONNECTION = "exact_connection"
+    MATERIAL_CAPABILITY = "material_capability"
+    ROUTE_BUILD = "route_build"
+
+
+@dataclass(frozen=True, slots=True)
+class LocalDirectAdmissionEvidence:
+    """Bounded facts from one local-direct admission attempt."""
+
+    request_id: str
+    goal_revision: int
+    start: SurfaceNodeId
+    goal: SurfaceNodeId
+    goal_region: Aabb | None
+    body_position: tuple[float, float, float]
+    phase: LocalDirectAdmissionPhase
+    phase_query_status: QueryStatus | None
+    final_status: AdmissionStatus
+    final_reason: AdmissionReason
+    body_surface_node: SurfaceNodeId | None = None
+    selected_position: tuple[float, float, float] | None = None
+    selector_status: QueryStatus | None = None
+    exact_status: QueryStatus | None = None
+    missing_count: int = 0
+    exact_dependency_count: int = 0
+
+    def __post_init__(self) -> None:
+        if type(self.request_id) is not str or not self.request_id:
+            raise ContractViolation("local admission evidence request is invalid")
+        if type(self.goal_revision) is not int or self.goal_revision < 0:
+            raise ContractViolation("local admission evidence revision is invalid")
+        if (type(self.start) is not SurfaceNodeId
+                or type(self.goal) is not SurfaceNodeId
+                or (self.goal_region is not None
+                    and type(self.goal_region) is not Aabb)):
+            raise ContractViolation("local admission evidence goal is invalid")
+        for position, name in (
+            (self.body_position, "body position"),
+            (self.selected_position, "selected position"),
+        ):
+            if position is None:
+                continue
+            if (type(position) is not tuple or len(position) != 3
+                    or any(type(value) not in (int, float)
+                           or not math.isfinite(float(value))
+                           for value in position)):
+                raise ContractViolation(
+                    f"local admission evidence {name} is invalid"
+                )
+        if (type(self.phase) is not LocalDirectAdmissionPhase
+                or (self.phase_query_status is not None
+                    and type(self.phase_query_status) is not QueryStatus)
+                or type(self.final_status) is not AdmissionStatus
+                or type(self.final_reason) is not AdmissionReason
+                or (self.body_surface_node is not None
+                    and type(self.body_surface_node) is not SurfaceNodeId)
+                or (self.selector_status is not None
+                    and type(self.selector_status) is not QueryStatus)
+                or (self.exact_status is not None
+                    and type(self.exact_status) is not QueryStatus)):
+            raise ContractViolation("local admission evidence types are invalid")
+        if (type(self.missing_count) is not int or self.missing_count < 0
+                or type(self.exact_dependency_count) is not int
+                or self.exact_dependency_count < 0):
+            raise ContractViolation("local admission evidence counts are invalid")
+
+
 @dataclass(frozen=True, slots=True)
 class ExecutableCorridor:
     node_ids: tuple[WalkNodeId | SurfaceNodeId, ...]
@@ -122,6 +229,206 @@ class ActiveRoute:
     goal_state: GoalState | None = None
     planning_generation: int = 0
     work_identity: AsyncWorkIdentity | None = None
+    validation_plan: ActiveRouteValidationPlan | None = None
+
+    def __post_init__(self) -> None:
+        if (self.validation_plan is not None
+                and type(self.validation_plan) is not ActiveRouteValidationPlan):
+            raise ContractViolation("active route validation plan must be typed")
+        if self.validation_plan is None:
+            return
+        action_count = len(self.action_route.actions)
+        if any(not 0 <= owner.action_index < action_count
+               for owner in self.validation_plan.owners):
+            raise ContractViolation("validation owner action is outside active route")
+        for action_index, action in enumerate(self.action_route.actions):
+            owner_refs = tuple(
+                owner.owner_id for owner in self.validation_plan.owners
+                if owner.action_index == action_index
+            )
+            covered = {
+                position
+                for owner_ref in owner_refs
+                for position in self.validation_plan.dependencies_for_owner(
+                    owner_ref
+                )
+            }
+            if covered != set(action.dependencies):
+                raise ContractViolation(
+                    "validation owners do not exactly cover action dependencies"
+                )
+        has_initial_connection = self.connection_length_blocks > 1.0e-9
+        if has_initial_connection != (
+                self.validation_plan.initial_connection is not None):
+            raise ContractViolation(
+                "validation initial connection metadata differs from active route"
+            )
+        if self.validation_plan.initial_connection is not None:
+            initial_owner_ref = (
+                self.validation_plan.initial_connection.owner_ref
+            )
+            if set(self.validation_plan.dependencies_for_owner(
+                    initial_owner_ref)) != set(self.connection_dependencies):
+                raise ContractViolation(
+                    "validation initial owner differs from connection dependencies"
+                )
+        for action_plan in self.validation_plan.action_plans:
+            if not 0 <= action_plan.action_index < action_count:
+                raise ContractViolation("validation action plan is outside active route")
+            action = self.action_route.actions[action_plan.action_index]
+            if (type(action) is not WalkSegment
+                    or action.fixed_route.route_id != action_plan.fixed_route_id):
+                raise ContractViolation("validation action plan differs from active route")
+            points = action.fixed_route.points
+            progress = [0.0]
+            for first, second in zip(points, points[1:]):
+                progress.append(progress[-1] + math.dist(
+                    (first.x, first.y, first.z),
+                    (second.x, second.y, second.z),
+                ))
+            for leg in action_plan.legs:
+                if leg.end_point_index >= len(points):
+                    raise ContractViolation("validation leg is outside its fixed route")
+                if (abs(progress[leg.start_point_index]
+                        - leg.start_progress_blocks) > 1.0e-9
+                        or abs(progress[leg.end_point_index]
+                               - leg.end_progress_blocks) > 1.0e-9):
+                    raise ContractViolation("validation leg progress differs from fixed route")
+                recipe = self.validation_plan.recipe(leg.recipe_ref)
+                start = points[leg.start_point_index]
+                end = points[leg.end_point_index]
+                start_position = start.x, start.y, start.z
+                end_position = end.x, end.y, end.z
+                if recipe.query_kind is WalkValidationQueryKind.SURFACE_EDGE:
+                    assert recipe.surface_edge is not None
+                    if (recipe.surface_edge.start_surface.position != start_position
+                            or recipe.surface_edge.end_surface.position != end_position):
+                        raise ContractViolation(
+                            "surface validation recipe differs from fixed route"
+                        )
+                else:
+                    assert recipe.standable_connection is not None
+                    if (recipe.standable_connection.connection_from != start_position
+                            or recipe.standable_connection.position != end_position):
+                        raise ContractViolation(
+                            "standable validation recipe differs from fixed route"
+                        )
+        for owner in self.validation_plan.owners:
+            if owner.fixed_route_id is None:
+                continue
+            action = self.action_route.actions[owner.action_index]
+            if (type(action) is not WalkSegment
+                    or action.fixed_route.route_id != owner.fixed_route_id):
+                raise ContractViolation("validation owner fixed route differs")
+        if (self.validation_plan.initial_connection is not None
+                and abs(
+                    self.validation_plan.initial_connection
+                    .retire_after_progress_blocks
+                    - self.connection_length_blocks
+                ) > 1.0e-9):
+            raise ContractViolation("validation initial connection length differs")
+        if self.validation_plan.initial_connection is not None:
+            owner = self.validation_plan.owner(
+                self.validation_plan.initial_connection.owner_ref
+            )
+            if owner.recipe_ref is not None:
+                recipe = self.validation_plan.recipe(owner.recipe_ref)
+                if (recipe.query_kind
+                        is not WalkValidationQueryKind.STANDABLE_CONNECTION):
+                    raise ContractViolation(
+                        "initial connection requires a standable recipe"
+                    )
+                action = self.action_route.actions[owner.action_index]
+                if type(action) is not WalkSegment or len(
+                        action.fixed_route.points) < 2:
+                    raise ContractViolation(
+                        "initial connection lacks fixed route points"
+                    )
+                first, second = action.fixed_route.points[:2]
+                assert recipe.standable_connection is not None
+                if (recipe.standable_connection.connection_from
+                        != (first.x, first.y, first.z)
+                        or recipe.standable_connection.position
+                        != (second.x, second.y, second.z)):
+                    raise ContractViolation(
+                        "initial connection recipe differs from fixed route"
+                    )
+
+
+@dataclass(frozen=True, slots=True)
+class _StandableQueryProof:
+    args: StandableConnectionQueryArgs
+    dependencies: tuple[BlockPos, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class _ExactTerminalExecutionDependencies:
+    """Keep terminal proof sources separate from the preceding route."""
+
+    action_index: int
+    preterminal_dependencies: tuple[BlockPos, ...]
+    exact_dependencies: tuple[BlockPos, ...]
+    uses_initial_connection: bool = False
+
+    def __post_init__(self) -> None:
+        if type(self.action_index) is not int or self.action_index < 0:
+            raise ContractViolation("exact terminal action index is invalid")
+        if type(self.uses_initial_connection) is not bool:
+            raise ContractViolation("exact terminal proof source must be typed")
+        for values, name in (
+            (self.preterminal_dependencies, "preterminal dependencies"),
+            (self.exact_dependencies, "exact terminal dependencies"),
+        ):
+            if (type(values) is not tuple
+                    or values != tuple(sorted(set(values)))):
+                raise ContractViolation(f"{name} must be sorted and unique")
+
+    @property
+    def execution_dependencies(self) -> tuple[BlockPos, ...]:
+        return tuple(sorted(
+            set(self.preterminal_dependencies) | set(self.exact_dependencies)
+        ))
+
+
+@dataclass(frozen=True, slots=True)
+class _ForwardGroundEntry:
+    length_blocks: float
+    proof: _StandableQueryProof
+
+
+@dataclass(frozen=True, slots=True)
+class _DirectWalkProofContext:
+    """One admission-stack binding for a proved ordinary Walk leg."""
+
+    world_session: str
+    route_id: str
+    action_index: int
+    fixed_route_id: str
+    connection_from: tuple[float, float, float]
+    position: tuple[float, float, float]
+    ground_profile: GroundMotionProfile
+    capability_identity: GroundCapabilityIdentity
+    proof: _StandableQueryProof
+
+    def __post_init__(self) -> None:
+        if (type(self.world_session) is not str or not self.world_session
+                or type(self.route_id) is not str or not self.route_id
+                or type(self.fixed_route_id) is not str
+                or not self.fixed_route_id
+                or type(self.action_index) is not int
+                or self.action_index < 0):
+            raise ContractViolation("direct Walk proof identity is invalid")
+        if (type(self.ground_profile) is not GroundMotionProfile
+                or type(self.capability_identity)
+                    is not GroundCapabilityIdentity
+                or self.capability_identity
+                    != GroundCapabilityIdentity.from_profile(
+                        self.ground_profile
+                    )):
+            raise ContractViolation("direct Walk proof capability is invalid")
+        if (self.proof.args.connection_from != self.connection_from
+                or self.proof.args.position != self.position):
+            raise ContractViolation("direct Walk proof differs from its fixed leg")
 
 
 @dataclass(frozen=True, slots=True)
@@ -130,6 +437,7 @@ class AdmissionResult:
     reason: AdmissionReason
     route: ActiveRoute | None = None
     missing_cells: tuple[BlockPos, ...] = ()
+    local_direct_evidence: LocalDirectAdmissionEvidence | None = None
 
     def __post_init__(self) -> None:
         if type(self.status) is not AdmissionStatus \
@@ -138,6 +446,14 @@ class AdmissionResult:
         if (type(self.missing_cells) is not tuple
                 or self.missing_cells != tuple(sorted(set(self.missing_cells)))):
             raise ContractViolation("route admission missing cells must be sorted and unique")
+        if (self.local_direct_evidence is not None
+                and (type(self.local_direct_evidence)
+                     is not LocalDirectAdmissionEvidence
+                     or self.local_direct_evidence.final_status is not self.status
+                     or self.local_direct_evidence.final_reason is not self.reason)):
+            raise ContractViolation(
+                "local admission evidence differs from admission result"
+            )
 
 
 def direct_drop_visual_evidence_sufficient(
@@ -193,6 +509,555 @@ class RouteAdmitter:
             raise ContractViolation("corridor length must be positive and finite")
         self.maximum_corridor_blocks=float(maximum_corridor_blocks)
         self._motion_admitter = MotionCandidateAdmitter()
+
+    @staticmethod
+    def _direct_walk_recipe(
+        context: _DirectWalkProofContext,
+        recipe_id: str,
+    ) -> WalkValidationRecipe:
+        if type(context) is not _DirectWalkProofContext:
+            raise ContractViolation("direct Walk recipe requires typed context")
+        return WalkValidationRecipe(
+            recipe_id,
+            WalkValidationQueryKind.STANDABLE_CONNECTION,
+            None,
+            context.proof.args,
+            context.ground_profile,
+            context.capability_identity,
+            context.proof.dependencies,
+        )
+
+    @staticmethod
+    def _surface_for_local_body(
+        request: SurfacePlanningRequest,
+        frame: NavigationFrame,
+    ) -> tuple[
+        QueryStatus,
+        SupportSurface | None,
+        tuple[BlockPos, ...],
+        tuple[BlockPos, ...],
+    ]:
+        start = request.start
+        y = frame.body.position[1]
+        result = query_support_surfaces(
+            frame.world,
+            start.column_x,
+            start.column_z,
+            y - 1.0,
+            y + 1.0,
+        )
+        if result.status is not QueryStatus.FEASIBLE:
+            return (
+                result.status,
+                None,
+                result.dependencies,
+                result.missing_cells,
+            )
+        body = frame.body.body_box
+        surface = next((
+            item for item in result.surfaces
+            if item.node_id == start
+            and abs(item.position[1] - body.min_y) <= .1 + 1.0e-9
+            and min(body.max_x, item.region.max_x)
+                > max(body.min_x, item.region.min_x) + 1.0e-9
+            and min(body.max_z, item.region.max_z)
+                > max(body.min_z, item.region.min_z) + 1.0e-9
+        ), None)
+        return (
+            QueryStatus.FEASIBLE if surface is not None
+            else QueryStatus.BLOCKED,
+            surface,
+            result.dependencies,
+            (),
+        )
+
+    @staticmethod
+    def _local_result(
+        request: SurfacePlanningRequest,
+        frame: NavigationFrame,
+        phase: LocalDirectAdmissionPhase,
+        status: AdmissionStatus,
+        reason: AdmissionReason,
+        *,
+        phase_query_status: QueryStatus | None = None,
+        route: ActiveRoute | None = None,
+        missing_cells: tuple[BlockPos, ...] = (),
+        body_surface_node: SurfaceNodeId | None = None,
+        selected_position: tuple[float, float, float] | None = None,
+        selector_status: QueryStatus | None = None,
+        exact_status: QueryStatus | None = None,
+        exact_dependency_count: int = 0,
+    ) -> AdmissionResult:
+        goal_state = request.goal_state
+        evidence = LocalDirectAdmissionEvidence(
+            request.request_id,
+            request.goal_revision,
+            request.start,
+            request.goal,
+            None if goal_state is None else goal_state.region,
+            frame.body.position,
+            phase,
+            phase_query_status,
+            status,
+            reason,
+            body_surface_node,
+            selected_position,
+            selector_status,
+            exact_status,
+            len(missing_cells),
+            exact_dependency_count,
+        )
+        return AdmissionResult(
+            status,
+            reason,
+            route,
+            missing_cells,
+            evidence,
+        )
+
+    @staticmethod
+    def _local_rejection(
+        request: SurfacePlanningRequest,
+        frame: NavigationFrame,
+        phase: LocalDirectAdmissionPhase,
+        status: QueryStatus,
+        *,
+        missing_cells: tuple[BlockPos, ...] = (),
+        body_surface_node: SurfaceNodeId | None = None,
+        selected_position: tuple[float, float, float] | None = None,
+        selector_status: QueryStatus | None = None,
+        exact_status: QueryStatus | None = None,
+        exact_dependency_count: int = 0,
+    ) -> AdmissionResult:
+        reason = {
+            QueryStatus.NEEDS_INFORMATION:
+                AdmissionReason.GOAL_STANDING_POINT_NEEDS_INFORMATION,
+            QueryStatus.BLOCKED:
+                AdmissionReason.CURRENT_BODY_CANNOT_CONNECT,
+            QueryStatus.UNSUPPORTED:
+                AdmissionReason.ROUTE_CAPABILITIES_CHANGED,
+        }.get(status)
+        if reason is None:
+            raise ContractViolation("local direct rejection requires failed query")
+        return RouteAdmitter._local_result(
+            request,
+            frame,
+            phase,
+            AdmissionStatus.REJECTED,
+            reason,
+            phase_query_status=status,
+            missing_cells=missing_cells,
+            body_surface_node=body_surface_node,
+            selected_position=selected_position,
+            selector_status=selector_status,
+            exact_status=exact_status,
+            exact_dependency_count=exact_dependency_count,
+        )
+
+    @staticmethod
+    def _direct_walk_result(
+        request: SurfacePlanningRequest,
+        frame: NavigationFrame,
+        *,
+        endpoint_surface: SupportSurface,
+        endpoint: tuple[float, float, float],
+        dependencies: tuple[BlockPos, ...],
+        ground_profile: GroundMotionProfile,
+        capability_identity: GroundCapabilityIdentity,
+        route_suffix: str,
+        node_ids: tuple[SurfaceNodeId, ...],
+    ) -> AdmissionResult:
+        route_id = f"{request.request_id}-{route_suffix}"
+        fixed_route = FixedRoute(route_id, (
+            RoutePoint(*frame.body.position),
+            RoutePoint(*endpoint),
+        ))
+        length = math.dist(frame.body.position, endpoint)
+        if length <= 1.0e-9:
+            return AdmissionResult(
+                AdmissionStatus.REJECTED,
+                AdmissionReason.CANDIDATE_HAS_NO_ACTIONS,
+            )
+        proof = _StandableQueryProof(
+            StandableConnectionQueryArgs(
+                endpoint_surface,
+                endpoint,
+                frame.body.position,
+                .6,
+                1.8,
+            ),
+            dependencies,
+        )
+        context = _DirectWalkProofContext(
+            request.world_session,
+            route_id,
+            0,
+            fixed_route.route_id,
+            frame.body.position,
+            endpoint,
+            ground_profile,
+            capability_identity,
+            proof,
+        )
+        recipe = RouteAdmitter._direct_walk_recipe(
+            context, f"{route_id}/validation/recipe/001",
+        )
+        owner = DependencyOwner(
+            f"{route_id}/validation/owner/001",
+            DependencyOwnerKind.WALK_LEG,
+            0,
+            fixed_route.route_id,
+            recipe.recipe_id,
+        )
+        leg = WalkLegValidationBinding(
+            owner.owner_id,
+            recipe.recipe_id,
+            0,
+            1,
+            0.0,
+            length,
+        )
+        plan = ActiveRouteValidationPlan(
+            (WalkActionValidationPlan(
+                0, fixed_route.route_id, (leg,),
+            ),),
+            (recipe,),
+            (owner,),
+            None,
+            tuple(
+                DependencyProvenance(position, (owner.owner_id,))
+                for position in dependencies
+            ),
+        )
+        action_route = ActionRoute(
+            route_id,
+            (WalkSegment(
+                fixed_route,
+                node_ids,
+                dependencies,
+            ),),
+            request.goal_state,
+            request.initial_resources,
+        )
+        route = ActiveRoute(
+            route_id,
+            1,
+            request.request_id,
+            request.goal_id,
+            request.goal_revision,
+            request.world_session,
+            fixed_route,
+            length,
+            0.0,
+            (),
+            ExecutableCorridor(
+                node_ids,
+                dependencies,
+                length,
+                request.goal,
+            ),
+            action_route,
+            request.goal_state,
+            request.sequence,
+            request.work_identity,
+            plan,
+        )
+        return AdmissionResult(
+            AdmissionStatus.ACCEPTED,
+            AdmissionReason.CANDIDATE_ADMITTED,
+            route,
+        )
+
+    def admit_ground_direct(
+        self,
+        request: SurfacePlanningRequest,
+        frame: NavigationFrame,
+        *,
+        ground_profile: GroundMotionProfile,
+        capability_identity: GroundCapabilityIdentity,
+    ) -> AdmissionResult:
+        """Try one bounded, ordinary same-height direct Walk."""
+        if (type(request) is not SurfacePlanningRequest
+                or type(frame) is not NavigationFrame
+                or type(ground_profile) is not GroundMotionProfile
+                or type(capability_identity)
+                    is not GroundCapabilityIdentity):
+            raise ContractViolation(
+                "ground direct admission requires typed request, frame, and profile"
+            )
+        if capability_identity != GroundCapabilityIdentity.from_profile(
+                ground_profile):
+            return AdmissionResult(
+                AdmissionStatus.REJECTED,
+                AdmissionReason.ROUTE_CAPABILITIES_CHANGED,
+            )
+        if request.world_session != frame.session.value:
+            return AdmissionResult(
+                AdmissionStatus.REJECTED,
+                AdmissionReason.WORLD_SESSION_CHANGED,
+            )
+        goal = request.goal_state
+        if (goal is None
+                or not frame.body.is_on_ground
+                or frame.body.pose != "standing"
+                or observed_ground_mode(frame.body) is not MovementMode.WALK
+                or MovementMode.WALK not in goal.allowed_modes
+                or "standing" not in goal.allowed_poses):
+            return AdmissionResult(
+                AdmissionStatus.NOT_APPLICABLE,
+                AdmissionReason.CANDIDATE_BASIS_MISMATCH,
+            )
+        start_status, start_surface, _, start_missing = (
+            self._surface_for_local_body(request, frame)
+        )
+        if start_status is QueryStatus.NEEDS_INFORMATION:
+            return AdmissionResult(
+                AdmissionStatus.NEEDS_INFORMATION,
+                AdmissionReason.GOAL_STANDING_POINT_NEEDS_INFORMATION,
+                missing_cells=start_missing,
+            )
+        if start_status is not QueryStatus.FEASIBLE:
+            return AdmissionResult(
+                AdmissionStatus.NOT_APPLICABLE,
+                AdmissionReason.CURRENT_BODY_CANNOT_CONNECT,
+            )
+        assert start_surface is not None
+        target_surfaces = query_support_surfaces(
+            frame.world,
+            request.goal.column_x,
+            request.goal.column_z,
+            goal.region.min_y,
+            goal.region.max_y,
+        )
+        if target_surfaces.status is QueryStatus.NEEDS_INFORMATION:
+            return AdmissionResult(
+                AdmissionStatus.NEEDS_INFORMATION,
+                AdmissionReason.GOAL_STANDING_POINT_NEEDS_INFORMATION,
+                missing_cells=target_surfaces.missing_cells,
+            )
+        if target_surfaces.status is not QueryStatus.FEASIBLE:
+            return AdmissionResult(
+                AdmissionStatus.NOT_APPLICABLE,
+                AdmissionReason.GOAL_STANDING_POINT_UNAVAILABLE,
+            )
+        target_surface = next((
+            surface for surface in target_surfaces.surfaces
+            if surface.node_id == request.goal
+        ), None)
+        if (target_surface is None
+                or abs(target_surface.position[1]
+                       - start_surface.position[1]) > 1.0e-9):
+            return AdmissionResult(
+                AdmissionStatus.NOT_APPLICABLE,
+                AdmissionReason.CANDIDATE_BASIS_MISMATCH,
+            )
+        selected = standable_point_in_region(
+            frame.world,
+            target_surface,
+            goal.region,
+        )
+        if selected.status is QueryStatus.NEEDS_INFORMATION:
+            return AdmissionResult(
+                AdmissionStatus.NEEDS_INFORMATION,
+                AdmissionReason.GOAL_STANDING_POINT_NEEDS_INFORMATION,
+                missing_cells=selected.missing_cells,
+            )
+        if selected.status is not QueryStatus.FEASIBLE:
+            return AdmissionResult(
+                AdmissionStatus.NOT_APPLICABLE,
+                AdmissionReason.GOAL_STANDING_POINT_UNAVAILABLE,
+            )
+        assert selected.position is not None
+        if math.dist(frame.body.position, selected.position) \
+                > self.maximum_corridor_blocks + 1.0e-9:
+            return AdmissionResult(
+                AdmissionStatus.NOT_APPLICABLE,
+                AdmissionReason.CANDIDATE_BASIS_MISMATCH,
+            )
+        direct = query_standable_connection(
+            frame.world,
+            target_surface,
+            selected.position,
+            frame.body.position,
+        )
+        if direct.status is QueryStatus.NEEDS_INFORMATION:
+            return AdmissionResult(
+                AdmissionStatus.NEEDS_INFORMATION,
+                AdmissionReason.GOAL_STANDING_POINT_NEEDS_INFORMATION,
+                missing_cells=direct.missing_cells,
+            )
+        if direct.status is not QueryStatus.FEASIBLE:
+            return AdmissionResult(
+                AdmissionStatus.NOT_APPLICABLE,
+                AdmissionReason.CURRENT_BODY_CANNOT_CONNECT,
+            )
+        if not ground_profile_allows_dependency_blocks(
+                ground_profile, frame.world, direct.dependencies):
+            return AdmissionResult(
+                AdmissionStatus.NOT_APPLICABLE,
+                AdmissionReason.ROUTE_CAPABILITIES_CHANGED,
+            )
+        return self._direct_walk_result(
+            request,
+            frame,
+            endpoint_surface=target_surface,
+            endpoint=selected.position,
+            dependencies=direct.dependencies,
+            ground_profile=ground_profile,
+            capability_identity=capability_identity,
+            route_suffix="direct",
+            node_ids=(request.start, request.goal),
+        )
+
+    def admit_local_direct(
+        self,
+        request: SurfacePlanningRequest,
+        frame: NavigationFrame,
+        *,
+        ground_profile: GroundMotionProfile,
+        capability_identity: GroundCapabilityIdentity,
+    ) -> AdmissionResult:
+        """Build one proved same-support direct Walk through admission."""
+        if (type(request) is not SurfacePlanningRequest
+                or type(frame) is not NavigationFrame
+                or type(ground_profile) is not GroundMotionProfile
+                or type(capability_identity)
+                    is not GroundCapabilityIdentity):
+            raise ContractViolation(
+                "local direct admission requires typed request, frame, and profile"
+            )
+        if capability_identity != GroundCapabilityIdentity.from_profile(
+                ground_profile):
+            return self._local_result(
+                request, frame, LocalDirectAdmissionPhase.REQUEST,
+                AdmissionStatus.REJECTED,
+                AdmissionReason.ROUTE_CAPABILITIES_CHANGED,
+            )
+        if request.world_session != frame.session.value:
+            return self._local_result(
+                request, frame, LocalDirectAdmissionPhase.REQUEST,
+                AdmissionStatus.REJECTED,
+                AdmissionReason.WORLD_SESSION_CHANGED,
+            )
+        if request.start != request.goal or request.goal_state is None:
+            return self._local_result(
+                request, frame, LocalDirectAdmissionPhase.REQUEST,
+                AdmissionStatus.REJECTED,
+                AdmissionReason.CANDIDATE_BASIS_MISMATCH,
+            )
+        status, surface, _, missing = self._surface_for_local_body(
+            request, frame,
+        )
+        if status is not QueryStatus.FEASIBLE:
+            return self._local_rejection(
+                request,
+                frame,
+                LocalDirectAdmissionPhase.BODY_SURFACE,
+                status,
+                missing_cells=missing,
+            )
+        assert surface is not None
+        if surface.node_id != request.goal:
+            return self._local_result(
+                request,
+                frame,
+                LocalDirectAdmissionPhase.SURFACE_IDENTITY,
+                AdmissionStatus.REJECTED,
+                AdmissionReason.CURRENT_BODY_CANNOT_CONNECT,
+                body_surface_node=surface.node_id,
+            )
+        goal = request.goal_state
+        selected = standable_point_in_region(
+            frame.world,
+            surface,
+            goal.region,
+            connection_from=frame.body.position,
+        )
+        if selected.status is not QueryStatus.FEASIBLE:
+            return self._local_rejection(
+                request,
+                frame,
+                LocalDirectAdmissionPhase.GOAL_SELECTION,
+                selected.status,
+                missing_cells=selected.missing_cells,
+                body_surface_node=surface.node_id,
+                selected_position=selected.position,
+                selector_status=selected.status,
+            )
+        assert selected.position is not None
+        endpoint = selected.position
+        direct = query_standable_connection(
+            frame.world,
+            surface,
+            endpoint,
+            frame.body.position,
+        )
+        if direct.status is not QueryStatus.FEASIBLE:
+            return self._local_rejection(
+                request,
+                frame,
+                LocalDirectAdmissionPhase.EXACT_CONNECTION,
+                direct.status,
+                missing_cells=direct.missing_cells,
+                body_surface_node=surface.node_id,
+                selected_position=endpoint,
+                selector_status=selected.status,
+                exact_status=direct.status,
+                exact_dependency_count=len(direct.dependencies),
+            )
+        if not ground_profile_allows_dependency_blocks(
+                ground_profile, frame.world, direct.dependencies):
+            return self._local_rejection(
+                request,
+                frame,
+                LocalDirectAdmissionPhase.MATERIAL_CAPABILITY,
+                QueryStatus.UNSUPPORTED,
+                body_surface_node=surface.node_id,
+                selected_position=endpoint,
+                selector_status=selected.status,
+                exact_status=direct.status,
+                exact_dependency_count=len(direct.dependencies),
+            )
+
+        length = math.dist(frame.body.position, endpoint)
+        if length <= 1.0e-9:
+            return self._local_result(
+                request,
+                frame,
+                LocalDirectAdmissionPhase.ROUTE_BUILD,
+                AdmissionStatus.REJECTED,
+                AdmissionReason.CANDIDATE_HAS_NO_ACTIONS,
+                body_surface_node=surface.node_id,
+                selected_position=endpoint,
+                selector_status=selected.status,
+                exact_status=direct.status,
+                exact_dependency_count=len(direct.dependencies),
+            )
+        result = self._direct_walk_result(
+            request,
+            frame,
+            endpoint_surface=surface,
+            endpoint=endpoint,
+            dependencies=direct.dependencies,
+            ground_profile=ground_profile,
+            capability_identity=capability_identity,
+            route_suffix="local",
+            node_ids=(request.start,),
+        )
+        return self._local_result(
+            request,
+            frame,
+            LocalDirectAdmissionPhase.ROUTE_BUILD,
+            result.status,
+            result.reason,
+            route=result.route,
+            missing_cells=result.missing_cells,
+            body_surface_node=surface.node_id,
+            selected_position=endpoint,
+            selector_status=selected.status,
+            exact_status=direct.status,
+            exact_dependency_count=len(direct.dependencies),
+        )
 
     @staticmethod
     def bind_verified_motion(
@@ -671,6 +1536,12 @@ class RouteAdmitter:
         connection_dependencies: tuple[BlockPos, ...],
         route_id: str,
         terminal_target=None,
+        skip_first_walk_start: bool = False,
+        forward_entry: _ForwardGroundEntry | None = None,
+        terminal_proofs: list[_StandableQueryProof] | None = None,
+        terminal_execution_dependencies: list[
+            _ExactTerminalExecutionDependencies
+        ] | None = None,
     ) -> ActionRoute | None:
         def entry_window(previous, next_node, transition) -> SegmentEntryWindow:
             if type(transition) is not MovementTransition:
@@ -711,16 +1582,17 @@ class RouteAdmitter:
             )
 
         actions = []
-        pending_nodes = [candidate.path[0]]
+        entry_index = 1 if skip_first_walk_start else 0
+        pending_nodes = [candidate.path[entry_index]]
         pending_points = []
         pending_dependencies = set(connection_dependencies)
         pending_transitions = []
         if connection_length > 1.0e-9:
             pending_points.append(RoutePoint(
-                frame.body.position[0], candidate.path[0].position[1],
+                frame.body.position[0], candidate.path[entry_index].position[1],
                 frame.body.position[2],
             ))
-        pending_points.append(RoutePoint(*candidate.path[0].position))
+        pending_points.append(RoutePoint(*candidate.path[entry_index].position))
 
         def flush_walk() -> None:
             nonlocal pending_nodes, pending_points, pending_dependencies, pending_transitions
@@ -757,6 +1629,8 @@ class RouteAdmitter:
 
         for index, (edge, next_node) in enumerate(zip(
                 candidate.segments, candidate.path[1:])):
+            if skip_first_walk_start and index == 0:
+                continue
             if type(edge) is SurfaceWalkEdge:
                 if (pending_transitions
                         and edge.transition.mode is not pending_transitions[-1].mode):
@@ -800,15 +1674,18 @@ class RouteAdmitter:
                 pending_nodes = [next_node]
                 pending_points = [RoutePoint(*next_node.position)]
                 pending_dependencies = set(next_node.dependencies)
+        exact_terminal_execution = None
+        terminal_matches_last = False
         if terminal_target is not None:
             terminal = RoutePoint(*terminal_target.position)
             last = pending_points[-1]
-            pending_dependencies.update(terminal_target.dependencies)
+            preterminal_dependencies = tuple(sorted(pending_dependencies))
             if math.dist((last.x, last.y, last.z), terminal_target.position) > 1.0e-6:
                 has_proof = any(canonical_surface_node_path(plan.surface_node_path)
                                 == tuple(node.node_id for node in pending_nodes)
                                 for plan in candidate.ground_traversal_plans)
                 if has_proof:
+                    pending_dependencies.update(terminal_target.dependencies)
                     # Preserve the proved trajectory; its final same-height
                     # connection is a separate ordinary closed-loop walk.
                     tail_proof = next(plan for plan in candidate.ground_traversal_plans
@@ -829,17 +1706,491 @@ class RouteAdmitter:
                     if direct is not None and direct.status is QueryStatus.FEASIBLE:
                         pending_points[-1] = terminal
                         pending_dependencies.update(direct.dependencies)
+                        exact_terminal_execution = (
+                            _ExactTerminalExecutionDependencies(
+                                len(actions),
+                                preterminal_dependencies,
+                                tuple(sorted(set(direct.dependencies))),
+                            )
+                        )
+                        if terminal_proofs is not None:
+                            terminal_proofs.append(_StandableQueryProof(
+                                StandableConnectionQueryArgs(
+                                    candidate.path[-1].surface,
+                                    terminal_target.position,
+                                    (before.x, before.y, before.z),
+                                    .6,
+                                    1.8,
+                                ),
+                                direct.dependencies,
+                            ))
                     else:
+                        pending_dependencies.update(terminal_target.dependencies)
                         pending_points.append(terminal)
+            else:
+                terminal_matches_last = True
         flush_walk()
         if terminal_target is not None and actions:
-            actions[-1] = replace(actions[-1], dependencies=tuple(sorted(
-                set(actions[-1].dependencies) | set(terminal_target.dependencies))))
+            if terminal_matches_last and exact_terminal_execution is None:
+                final_action = actions[-1]
+                if (type(final_action) is WalkSegment
+                        and final_action.traversal_plan is None
+                        and len(final_action.fixed_route.points) == 2
+                        and len(final_action.node_ids) == 1
+                        and skip_first_walk_start
+                        and forward_entry is not None):
+                    first, last = final_action.fixed_route.points
+                    args = forward_entry.proof.args
+                    initial_leg_maps = (
+                        args.connection_from == (first.x, first.y, first.z)
+                        and args.position == (last.x, last.y, last.z)
+                        and args.position == terminal_target.position
+                        and abs(forward_entry.length_blocks
+                                - connection_length) <= 1.0e-9
+                    )
+                    if initial_leg_maps:
+                        exact_terminal_execution = (
+                            _ExactTerminalExecutionDependencies(
+                                len(actions) - 1,
+                                (),
+                                forward_entry.proof.dependencies,
+                                True,
+                            )
+                        )
+                if (type(final_action) is WalkSegment
+                        and exact_terminal_execution is None
+                        and final_action.traversal_plan is None
+                        and len(final_action.fixed_route.points) >= 2
+                        and len(final_action.node_ids) >= 2):
+                    points = final_action.fixed_route.points
+                    start_id, end_id = final_action.node_ids[-2:]
+                    nodes = {node.node_id: node for node in candidate.path}
+                    final_edge = next((
+                        edge for edge in candidate.segments
+                        if type(edge) is SurfaceWalkEdge
+                        and edge.start == start_id
+                        and edge.end == end_id
+                    ), None)
+                    before = points[-2]
+                    last = points[-1]
+                    final_leg_maps = (
+                        final_edge is not None
+                        and not final_edge.requires_ground_traversal_proof
+                        and final_edge.transition.mode is MovementMode.WALK
+                        and start_id in nodes
+                        and end_id in nodes
+                        and (before.x, before.y, before.z)
+                            == nodes[start_id].position
+                        and (last.x, last.y, last.z)
+                            == nodes[end_id].position
+                        and (last.x, last.y, last.z)
+                            == terminal_target.position
+                    )
+                    if final_leg_maps:
+                        direct = query_standable_connection(
+                            frame.world,
+                            candidate.path[-1].surface,
+                            terminal_target.position,
+                            (before.x, before.y, before.z),
+                        )
+                        if direct.status is QueryStatus.FEASIBLE:
+                            exact_terminal_execution = (
+                                _ExactTerminalExecutionDependencies(
+                                    len(actions) - 1,
+                                    tuple(sorted(set(final_action.dependencies))),
+                                    tuple(sorted(set(direct.dependencies))),
+                                )
+                            )
+                            if terminal_proofs is not None:
+                                terminal_proofs.append(_StandableQueryProof(
+                                    StandableConnectionQueryArgs(
+                                        candidate.path[-1].surface,
+                                        terminal_target.position,
+                                        (before.x, before.y, before.z),
+                                        .6,
+                                        1.8,
+                                    ),
+                                    direct.dependencies,
+                                ))
+            if exact_terminal_execution is None:
+                actions[-1] = replace(actions[-1], dependencies=tuple(sorted(
+                    set(actions[-1].dependencies)
+                    | set(terminal_target.dependencies))))
+            else:
+                if exact_terminal_execution.action_index != len(actions) - 1:
+                    raise ContractViolation(
+                        "exact terminal proof does not belong to final action"
+                    )
+                actions[-1] = replace(
+                    actions[-1],
+                    dependencies=(
+                        exact_terminal_execution.execution_dependencies
+                    ),
+                )
+                if terminal_execution_dependencies is not None:
+                    terminal_execution_dependencies.append(
+                        exact_terminal_execution
+                    )
         return (ActionRoute(
             route_id, tuple(actions), candidate.goal_state,
             candidate.final_resources if candidate.final_resources is not None
             else ResourceState(),
         ) if actions else None)
+
+    @staticmethod
+    def _forward_ground_entry(
+        candidate: SurfaceRouteCandidate,
+        frame: NavigationFrame,
+    ) -> _ForwardGroundEntry | None:
+        if len(candidate.path) < 2 or not candidate.segments:
+            return None
+        edge = candidate.segments[0]
+        if (type(edge) is not SurfaceWalkEdge
+                or edge.requires_ground_traversal_proof
+                or edge.transition.mode is not MovementMode.WALK
+                or not frame.body.is_on_ground
+                or observed_ground_mode(frame.body) is not MovementMode.WALK):
+            return None
+        first, following = candidate.path[:2]
+        if abs(first.position[1] - following.position[1]) > 1.0e-9:
+            return None
+        first_ids = (first.node_id, following.node_id)
+        if any(
+            canonical_surface_node_path(plan.surface_node_path)[:2] == first_ids
+            for plan in candidate.ground_traversal_plans
+        ):
+            return None
+        dx = following.position[0] - first.position[0]
+        dz = following.position[2] - first.position[2]
+        edge_length = math.hypot(dx, dz)
+        if edge_length <= 1.0e-9:
+            return None
+        along = (
+            (frame.body.position[0] - first.position[0]) * dx
+            + (frame.body.position[2] - first.position[2]) * dz
+        ) / edge_length
+        if not 1.0e-9 < along < edge_length - 1.0e-9:
+            return None
+        direct = query_standable_connection(
+            frame.world, following.surface, following.position,
+            frame.body.position,
+        )
+        if direct.status is not QueryStatus.FEASIBLE:
+            return None
+        return _ForwardGroundEntry(
+            math.dist(frame.body.position, following.position),
+            _StandableQueryProof(
+                StandableConnectionQueryArgs(
+                    following.surface,
+                    following.position,
+                    frame.body.position,
+                    .6,
+                    1.8,
+                ),
+                direct.dependencies,
+            ),
+        )
+
+    @staticmethod
+    def _surface_validation_plan(
+        candidate: SurfaceRouteCandidate,
+        action_route: ActionRoute,
+        *,
+        connection_length: float,
+        connection_dependencies: tuple[BlockPos, ...],
+        forward_entry: _ForwardGroundEntry | None,
+        terminal_proof: _StandableQueryProof | None,
+        terminal_execution: _ExactTerminalExecutionDependencies | None,
+    ) -> ActiveRouteValidationPlan:
+        """Describe proofs for the final route without authorizing execution."""
+        recipes: list[WalkValidationRecipe] = []
+        owners: list[DependencyOwner] = []
+        action_plans: list[WalkActionValidationPlan] = []
+        owner_dependencies: dict[str, set[BlockPos]] = {}
+        recipe_sequence = 0
+        owner_sequence = 0
+        profile = candidate.ground_profile
+        capability = (
+            None if profile is None
+            else GroundCapabilityIdentity.from_profile(profile)
+        )
+
+        def next_recipe_id() -> str:
+            nonlocal recipe_sequence
+            recipe_sequence += 1
+            return (
+                f"{action_route.route_id}/validation/recipe/"
+                f"{recipe_sequence:03d}"
+            )
+
+        def next_owner_id() -> str:
+            nonlocal owner_sequence
+            owner_sequence += 1
+            return (
+                f"{action_route.route_id}/validation/owner/"
+                f"{owner_sequence:03d}"
+            )
+
+        def add_recipe(
+            *,
+            query_kind: WalkValidationQueryKind,
+            surface_edge: SurfaceEdgeQueryArgs | None = None,
+            standable: StandableConnectionQueryArgs | None = None,
+            dependencies: tuple[BlockPos, ...],
+        ) -> WalkValidationRecipe:
+            assert profile is not None and capability is not None
+            recipe = WalkValidationRecipe(
+                next_recipe_id(),
+                query_kind,
+                surface_edge,
+                standable,
+                profile,
+                capability,
+                tuple(sorted(set(dependencies))),
+            )
+            recipes.append(recipe)
+            return recipe
+
+        def add_owner(
+            kind: DependencyOwnerKind,
+            action_index: int,
+            dependencies: tuple[BlockPos, ...] | set[BlockPos],
+            *,
+            fixed_route_id: str | None = None,
+            recipe: WalkValidationRecipe | None = None,
+        ) -> DependencyOwner | None:
+            dependency_set = set(dependencies)
+            if not dependency_set:
+                return None
+            owner = DependencyOwner(
+                next_owner_id(),
+                kind,
+                action_index,
+                fixed_route_id,
+                None if recipe is None else recipe.recipe_id,
+            )
+            owners.append(owner)
+            owner_dependencies[owner.owner_id] = dependency_set
+            return owner
+
+        initial_connection = None
+        covered_by_action: dict[int, set[BlockPos]] = {
+            index: set() for index in range(len(action_route.actions))
+        }
+        preterminal_covered_by_action: dict[int, set[BlockPos]] = {
+            index: set() for index in range(len(action_route.actions))
+        }
+        if terminal_execution is not None:
+            uses_initial = terminal_execution.uses_initial_connection
+            if ((terminal_proof is None and not uses_initial)
+                    or terminal_execution.action_index
+                        >= len(action_route.actions)
+                    or set(action_route.actions[
+                        terminal_execution.action_index
+                    ].dependencies) != set(
+                        terminal_execution.execution_dependencies
+                    )
+                    or (uses_initial and (
+                        forward_entry is None
+                        or terminal_execution.action_index != 0
+                        or set(terminal_execution.exact_dependencies)
+                            != set(forward_entry.proof.dependencies)
+                    ))):
+                raise ContractViolation(
+                    "exact terminal dependency sources differ from final route"
+                )
+        if connection_length > 1.0e-9 and connection_dependencies:
+            initial_recipe = None
+            initial_dependencies = connection_dependencies
+            first_action = action_route.actions[0]
+            forward_maps_to_final_route = False
+            if (forward_entry is not None
+                    and type(first_action) is WalkSegment
+                    and len(first_action.fixed_route.points) >= 2):
+                first, second = first_action.fixed_route.points[:2]
+                args = forward_entry.proof.args
+                forward_maps_to_final_route = (
+                    args.connection_from == (first.x, first.y, first.z)
+                    and args.position == (second.x, second.y, second.z)
+                )
+            if (forward_entry is not None and profile is not None
+                    and forward_maps_to_final_route):
+                context = _DirectWalkProofContext(
+                    candidate.world_session,
+                    action_route.route_id,
+                    0,
+                    first_action.fixed_route.route_id,
+                    forward_entry.proof.args.connection_from,
+                    forward_entry.proof.args.position,
+                    profile,
+                    capability,
+                    forward_entry.proof,
+                )
+                initial_recipe = RouteAdmitter._direct_walk_recipe(
+                    context, next_recipe_id(),
+                )
+                recipes.append(initial_recipe)
+                initial_dependencies = forward_entry.proof.dependencies
+            initial_owner = add_owner(
+                DependencyOwnerKind.INITIAL_CONNECTION,
+                0,
+                initial_dependencies,
+                fixed_route_id=(
+                    first_action.fixed_route.route_id
+                    if type(first_action) is WalkSegment else None
+                ),
+                recipe=initial_recipe,
+            )
+            if initial_owner is not None:
+                initial_connection = InitialConnectionValidation(
+                    initial_owner.owner_id,
+                    connection_length,
+                )
+                covered_by_action[0].update(initial_dependencies)
+                preterminal_covered_by_action[0].update(
+                    initial_dependencies
+                )
+
+        nodes = {node.node_id: node for node in candidate.path}
+        edges = {
+            (edge.start, edge.end): edge
+            for edge in candidate.segments
+            if type(edge) is SurfaceWalkEdge
+        }
+
+        def point_value(point: RoutePoint) -> tuple[float, float, float]:
+            return point.x, point.y, point.z
+
+        for action_index, action in enumerate(action_route.actions):
+            if type(action) is not WalkSegment:
+                add_owner(
+                    DependencyOwnerKind.STRICT_ACTION,
+                    action_index,
+                    action.dependencies,
+                )
+                covered_by_action[action_index].update(action.dependencies)
+                continue
+            if action.traversal_plan is not None:
+                add_owner(
+                    DependencyOwnerKind.STRICT_ACTION,
+                    action_index,
+                    action.dependencies,
+                    fixed_route_id=action.fixed_route.route_id,
+                )
+                covered_by_action[action_index].update(action.dependencies)
+                continue
+
+            points = action.fixed_route.points
+            progress = [0.0]
+            for first, second in zip(points, points[1:]):
+                progress.append(progress[-1] + math.dist(
+                    point_value(first), point_value(second),
+                ))
+            point_offset = (
+                1 if action_index == 0 and connection_length > 1.0e-9
+                else 0
+            )
+            legs: list[WalkLegValidationBinding] = []
+            terminal_proof_mapped = False
+            for node_index, (start_id, end_id) in enumerate(zip(
+                    action.node_ids, action.node_ids[1:])):
+                edge = edges.get((start_id, end_id))
+                start_point_index = node_index + point_offset
+                end_point_index = start_point_index + 1
+                if (edge is None or end_point_index >= len(points)
+                        or edge.requires_ground_traversal_proof
+                        or edge.transition.mode is not MovementMode.WALK
+                        or profile is None):
+                    continue
+                start_point = point_value(points[start_point_index])
+                end_point = point_value(points[end_point_index])
+                recipe = None
+                maps_terminal_proof = False
+                if (terminal_proof is not None
+                        and end_point_index == len(points) - 1
+                        and start_point == terminal_proof.args.connection_from
+                        and end_point == terminal_proof.args.position):
+                    recipe = add_recipe(
+                        query_kind=WalkValidationQueryKind.STANDABLE_CONNECTION,
+                        standable=terminal_proof.args,
+                        dependencies=terminal_proof.dependencies,
+                    )
+                    maps_terminal_proof = True
+                    terminal_proof_mapped = True
+                elif (start_point == nodes[start_id].position
+                        and end_point == nodes[end_id].position
+                        and abs(start_point[1] - end_point[1]) <= 1.0e-9):
+                    recipe = add_recipe(
+                        query_kind=WalkValidationQueryKind.SURFACE_EDGE,
+                        surface_edge=SurfaceEdgeQueryArgs(
+                            nodes[start_id].surface,
+                            nodes[end_id].surface,
+                            edge.body_height_blocks,
+                        ),
+                        dependencies=edge.dependencies,
+                    )
+                if recipe is None:
+                    continue
+                owner = add_owner(
+                    DependencyOwnerKind.WALK_LEG,
+                    action_index,
+                    recipe.dependencies,
+                    fixed_route_id=action.fixed_route.route_id,
+                    recipe=recipe,
+                )
+                assert owner is not None
+                covered_by_action[action_index].update(recipe.dependencies)
+                if not maps_terminal_proof:
+                    preterminal_covered_by_action[action_index].update(
+                        recipe.dependencies
+                    )
+                legs.append(WalkLegValidationBinding(
+                    owner.owner_id,
+                    recipe.recipe_id,
+                    start_point_index,
+                    end_point_index,
+                    progress[start_point_index],
+                    progress[end_point_index],
+                ))
+            if legs:
+                action_plans.append(WalkActionValidationPlan(
+                    action_index,
+                    action.fixed_route.route_id,
+                    tuple(legs),
+                ))
+            if (terminal_execution is not None
+                    and terminal_execution.action_index == action_index
+                    and (terminal_proof_mapped
+                         or terminal_execution.uses_initial_connection)):
+                remaining = (
+                    set(terminal_execution.preterminal_dependencies)
+                    - preterminal_covered_by_action[action_index]
+                )
+            else:
+                remaining = (
+                    set(action.dependencies) - covered_by_action[action_index]
+                )
+            add_owner(
+                DependencyOwnerKind.NON_RECIPE,
+                action_index,
+                remaining,
+                fixed_route_id=action.fixed_route.route_id,
+            )
+
+        provenance: dict[BlockPos, set[str]] = {}
+        for owner in owners:
+            for position in owner_dependencies[owner.owner_id]:
+                provenance.setdefault(position, set()).add(owner.owner_id)
+        return ActiveRouteValidationPlan(
+            tuple(sorted(action_plans, key=lambda item: item.action_index)),
+            tuple(sorted(recipes, key=lambda item: item.recipe_id)),
+            tuple(sorted(owners, key=lambda item: item.owner_id)),
+            initial_connection,
+            tuple(
+                DependencyProvenance(position, tuple(sorted(owner_refs)))
+                for position, owner_refs in sorted(provenance.items())
+            ),
+        )
 
     def admit_surface(
         self,
@@ -884,6 +2235,7 @@ class RouteAdmitter:
                 first_edge.entry_window, frame.body, body_mode,
             )
         )
+        skip_first_walk_start = False
         if starts_at_first_action:
             connected, connection_length, connection_dependencies = True, 0.0, ()
         else:
@@ -893,6 +2245,14 @@ class RouteAdmitter:
         if not connected:
             return AdmissionResult(AdmissionStatus.REJECTED,
                                    AdmissionReason.CURRENT_BODY_CANNOT_CONNECT)
+        forward_entry = self._forward_ground_entry(candidate, frame)
+        if forward_entry is not None:
+            connection_length = forward_entry.length_blocks
+            direct_dependencies = forward_entry.proof.dependencies
+            connection_dependencies = tuple(sorted(
+                set(connection_dependencies) | set(direct_dependencies)
+            ))
+            skip_first_walk_start = True
         if (any(
                 type(edge) is SurfaceWalkEdge
                 and edge.requires_ground_traversal_proof
@@ -913,8 +2273,16 @@ class RouteAdmitter:
                     AdmissionReason.GOAL_STANDING_POINT_NEEDS_INFORMATION if terminal_target.missing_cells
                     else AdmissionReason.GOAL_STANDING_POINT_UNAVAILABLE,
                     missing_cells=terminal_target.missing_cells)
+        terminal_proofs: list[_StandableQueryProof] = []
+        terminal_execution_dependencies: list[
+            _ExactTerminalExecutionDependencies
+        ] = []
         action_route = self._surface_action_route(
             candidate, frame, connection_length, connection_dependencies, route_id, terminal_target,
+            skip_first_walk_start=skip_first_walk_start,
+            forward_entry=forward_entry,
+            terminal_proofs=terminal_proofs,
+            terminal_execution_dependencies=terminal_execution_dependencies,
         )
         if action_route is None:
             return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.CANDIDATE_HAS_NO_ACTIONS)
@@ -929,10 +2297,13 @@ class RouteAdmitter:
                 AdmissionReason.GROUND_TRAVERSAL_PROOF_MISSING,
             )
 
+        corridor_start = 1 if skip_first_walk_start else 0
         length = 0.0
-        corridor_nodes = [candidate.path[0]]
+        corridor_nodes = [candidate.path[corridor_start]]
         corridor_segments = []
-        for edge, node in zip(candidate.segments, candidate.path[1:]):
+        for edge, node in zip(
+                candidate.segments[corridor_start:],
+                candidate.path[corridor_start + 1:]):
             segment_length = math.dist(corridor_nodes[-1].position, node.position)
             if (corridor_segments and connection_length + length + segment_length
                     > self.maximum_corridor_blocks):
@@ -940,16 +2311,42 @@ class RouteAdmitter:
             corridor_segments.append(edge)
             corridor_nodes.append(node)
             length += segment_length
+        terminal_execution = (
+            terminal_execution_dependencies[0]
+            if terminal_execution_dependencies else None
+        )
+        if len(terminal_execution_dependencies) > 1:
+            raise ContractViolation(
+                "surface route produced multiple exact terminal proofs"
+            )
+        if (terminal_execution is not None
+                and terminal_execution.uses_initial_connection):
+            if (forward_entry is None
+                    or set(terminal_execution.exact_dependencies)
+                        != set(forward_entry.proof.dependencies)):
+                raise ContractViolation(
+                    "terminal initial proof differs from admitted connection"
+                )
+            connection_dependencies = (
+                terminal_execution.exact_dependencies
+            )
         dependencies = tuple(sorted(
             {cell for node in corridor_nodes for cell in node.dependencies}
             | {cell for edge in corridor_segments for cell in edge.dependencies}
             | set(connection_dependencies)
-            | (set(terminal_target.dependencies) if terminal_target is not None
-               and corridor_nodes[-1].node_id == candidate.path[-1].node_id else set())
+            | ((set(terminal_execution.exact_dependencies)
+                if terminal_execution is not None
+                else set(terminal_target.dependencies))
+               if terminal_target is not None
+               and corridor_nodes[-1].node_id == candidate.path[-1].node_id
+               else set())
         ))
         full_length = connection_length + sum(
             math.dist(first.position, second.position)
-            for first, second in zip(candidate.path, candidate.path[1:])
+            for first, second in zip(
+                candidate.path[corridor_start:],
+                candidate.path[corridor_start + 1:],
+            )
         )
         if terminal_target is not None:
             # Execution length is measured from executable points, rather than
@@ -960,27 +2357,38 @@ class RouteAdmitter:
             (full_length if corridor_nodes[-1].node_id == candidate.path[-1].node_id
              else connection_length + length), corridor_nodes[-1].node_id,
         )
+        validation_plan = self._surface_validation_plan(
+            candidate,
+            action_route,
+            connection_length=connection_length,
+            connection_dependencies=connection_dependencies,
+            forward_entry=forward_entry,
+            terminal_proof=(terminal_proofs[0] if terminal_proofs else None),
+            terminal_execution=terminal_execution,
+        )
         active = ActiveRoute(
             route_id, 1, candidate.request_id, candidate.goal_id,
             candidate.goal_revision, candidate.world_session, None,
             full_length, connection_length, connection_dependencies, corridor,
             action_route, candidate.goal_state, candidate.request_sequence,
-            candidate.work_identity,
+            candidate.work_identity, validation_plan,
         )
         return AdmissionResult(AdmissionStatus.ACCEPTED,
                                AdmissionReason.CANDIDATE_ADMITTED, active)
 
 
 class ActiveRouteTracker:
-    """Own corridor progress and remembered route changes for one admitted route."""
+    """Own runtime proof progress and legacy corridor facts for one route."""
 
     def __init__(self, route: ActiveRoute,
-                 candidate: RouteCandidate | SurfaceRouteCandidate,
+                 candidate: RouteCandidate | SurfaceRouteCandidate | None = None,
                  *, maximum_corridor_blocks: float = 8.0) -> None:
         if (type(route) is not ActiveRoute
-                or type(candidate) not in (RouteCandidate, SurfaceRouteCandidate)):
-            raise ContractViolation("route tracker requires an active route and source candidate")
-        if route.source_request_id!=candidate.request_id:
+                or (candidate is not None and type(candidate) not in (
+                    RouteCandidate, SurfaceRouteCandidate,
+                ))):
+            raise ContractViolation("route tracker requires an active route")
+        if candidate is not None and route.source_request_id!=candidate.request_id:
             raise ContractViolation("active route and candidate identities differ")
         if (type(maximum_corridor_blocks) not in (int,float)
                 or not math.isfinite(float(maximum_corridor_blocks))
@@ -988,11 +2396,366 @@ class ActiveRouteTracker:
             raise ContractViolation("corridor length must be positive and finite")
         self.route=route;self.candidate=candidate
         self.maximum_corridor_blocks=float(maximum_corridor_blocks)
+        self._route_start_index = None
+        if candidate is not None:
+            first_corridor_node = route.corridor.node_ids[0]
+            self._route_start_index = next(
+                index for index, node in enumerate(candidate.path)
+                if node.node_id == first_corridor_node
+            )
         self._invalidated:set[BlockPos]=set()
+        self._plan = route.validation_plan
+        self._current_action_index = 0
+        self._last_progress: dict[int, float] = {}
+        self._progress_failure: ActiveRouteValidationReason | None = None
+        if self._plan is None:
+            self._active_owner_dependencies: dict[str, set[BlockPos]] = {}
+            self._fallback_dependencies = set(route.connection_dependencies) | set(
+                route.action_route.dependencies
+            )
+        else:
+            self._active_owner_dependencies = {
+                owner.owner_id: set(
+                    self._plan.dependencies_for_owner(owner.owner_id)
+                )
+                for owner in self._plan.owners
+            }
+            self._fallback_dependencies = set()
+
+    @property
+    def identity(self) -> ActiveRouteValidationIdentity:
+        return ActiveRouteValidationIdentity(
+            self.route.world_session,
+            self.route.route_id,
+            self.route.route_revision,
+            self.route.source_request_id,
+            self.route.goal_id,
+            self.route.goal_revision,
+            self.route.planning_generation,
+            self.route.work_identity,
+            self._current_action_index,
+        )
+
+    @property
+    def effective_dependencies(self) -> tuple[BlockPos, ...]:
+        if self._plan is None:
+            return tuple(sorted(self._fallback_dependencies))
+        return tuple(sorted({
+            position
+            for positions in self._active_owner_dependencies.values()
+            for position in positions
+        }))
+
+    def unaffected(self) -> ActiveRouteValidation:
+        return self._validation(
+            ActiveRouteValidationDisposition.UNAFFECTED,
+            ActiveRouteValidationReason.NO_INTERSECTION,
+        )
+
+    def _validation(
+        self,
+        disposition: ActiveRouteValidationDisposition,
+        reason: ActiveRouteValidationReason,
+        *,
+        affected: tuple[BlockPos, ...] = (),
+        refreshed: tuple[BlockPos, ...] = (),
+        missing: tuple[BlockPos, ...] = (),
+        queries_used: int = 0,
+    ) -> ActiveRouteValidation:
+        return ActiveRouteValidation(
+            disposition, reason, self.identity,
+            tuple(sorted(set(affected))),
+            tuple(sorted(set(refreshed))),
+            tuple(sorted(set(missing))),
+            queries_used,
+        )
+
+    def _fail_progress(
+        self, reason: ActiveRouteValidationReason,
+    ) -> ActiveRouteValidation:
+        self._progress_failure = reason
+        return self._validation(ActiveRouteValidationDisposition.STOP, reason)
+
+    def record_progress(
+        self,
+        action_index: int,
+        evidence: RouteProgressEvidence | None,
+        *,
+        observation_sequence_id: int,
+    ) -> ActiveRouteValidation:
+        """Retire proof owners only from this frame's typed controller fact."""
+        if (type(action_index) is not int or action_index < 0
+                or type(observation_sequence_id) is not int
+                or observation_sequence_id < 0):
+            raise ContractViolation("route progress update requires typed indices")
+        if self._progress_failure is not None:
+            return self._validation(
+                ActiveRouteValidationDisposition.STOP,
+                self._progress_failure,
+            )
+        action_count = len(self.route.action_route.actions)
+        if (action_index >= action_count
+                or action_index > self._current_action_index + 1):
+            return self._fail_progress(
+                ActiveRouteValidationReason.PROGRESS_ACTION_INDEX_INVALID,
+            )
+        if action_index < self._current_action_index:
+            return self._fail_progress(
+                ActiveRouteValidationReason.PROGRESS_REWOUND,
+            )
+        if self._plan is None:
+            self._current_action_index = action_index
+            return self._validation(
+                ActiveRouteValidationDisposition.CONTINUE,
+                ActiveRouteValidationReason.PROGRESS_RECORDED,
+            )
+        action_plans = {
+            plan.action_index: plan for plan in self._plan.action_plans
+        }
+        fixed_routes_by_action = {
+            index: {
+                owner.fixed_route_id
+                for owner in self._plan.owners
+                if owner.action_index == index
+                and owner.fixed_route_id is not None
+            }
+            for index in range(len(self.route.action_route.actions))
+        }
+        leaving_current_action = action_index > self._current_action_index
+        current_fixed_routes = fixed_routes_by_action.get(
+            self._current_action_index, set()
+        )
+        if evidence is None:
+            if current_fixed_routes:
+                return self._fail_progress(
+                    ActiveRouteValidationReason.PROGRESS_EVIDENCE_MISSING,
+                )
+        else:
+            if type(evidence) is not RouteProgressEvidence:
+                raise ContractViolation("route progress evidence must be typed")
+            if evidence.observation_sequence_id != observation_sequence_id:
+                return self._fail_progress(
+                    ActiveRouteValidationReason.PROGRESS_EVIDENCE_STALE,
+                )
+            expected_routes = fixed_routes_by_action.get(
+                evidence.action_index, set()
+            )
+            if (expected_routes != {evidence.fixed_route_id}
+                    or evidence.action_index not in {
+                        self._current_action_index, action_index,
+                    }
+                    or (leaving_current_action and current_fixed_routes
+                        and evidence.action_index
+                            != self._current_action_index)):
+                return self._fail_progress(
+                    ActiveRouteValidationReason.PROGRESS_IDENTITY_MISMATCH,
+                )
+            prior = self._last_progress.get(evidence.action_index, 0.0)
+            if evidence.progress_blocks + 1.0e-9 < prior:
+                return self._fail_progress(
+                    ActiveRouteValidationReason.PROGRESS_REWOUND,
+                )
+            self._last_progress[evidence.action_index] = float(
+                evidence.progress_blocks
+            )
+
+        for owner in self._plan.owners:
+            if owner.action_index < action_index:
+                self._active_owner_dependencies.pop(owner.owner_id, None)
+        if evidence is not None:
+            action_plan = action_plans.get(evidence.action_index)
+            if action_plan is not None:
+                for leg in action_plan.legs:
+                    if (evidence.progress_blocks + 1.0e-9
+                            >= leg.end_progress_blocks):
+                        self._active_owner_dependencies.pop(leg.owner_ref, None)
+            initial = self._plan.initial_connection
+            if (evidence.action_index == 0 and initial is not None
+                    and evidence.progress_blocks + 1.0e-9
+                        >= initial.retire_after_progress_blocks):
+                self._active_owner_dependencies.pop(initial.owner_ref, None)
+        self._current_action_index = action_index
+        return self._validation(
+            ActiveRouteValidationDisposition.CONTINUE,
+            ActiveRouteValidationReason.PROGRESS_RECORDED,
+        )
+
+    def validate(
+        self,
+        world: WorldView,
+        changed_cells: tuple[BlockPos, ...],
+        *,
+        ground_profile: GroundMotionProfile | None = None,
+        action_index: int | None = None,
+        expected_identity: ActiveRouteValidationIdentity | None = None,
+        query_cache: WorldQueryCache | None = None,
+        budget: RouteValidationBudget | None = None,
+    ) -> ActiveRouteValidation:
+        """Replay every proof owner for an affected cell, atomically."""
+        if type(world) is not WorldView or type(changed_cells) is not tuple:
+            raise ContractViolation("route validation requires world and changes")
+        if (action_index is not None
+                and (type(action_index) is not int or action_index < 0)):
+            raise ContractViolation("route validation action index must be typed")
+        if (expected_identity is not None
+                and type(expected_identity)
+                    is not ActiveRouteValidationIdentity):
+            raise ContractViolation(
+                "route validation expected identity must be typed"
+            )
+        if (expected_identity is not None
+                and expected_identity != self.identity):
+            return self._validation(
+                ActiveRouteValidationDisposition.STOP,
+                ActiveRouteValidationReason.ROUTE_IDENTITY_CHANGED,
+            )
+        if world.session.value != self.route.world_session:
+            return self._validation(
+                ActiveRouteValidationDisposition.STOP,
+                ActiveRouteValidationReason.ROUTE_IDENTITY_CHANGED,
+            )
+        if self._progress_failure is not None:
+            return self._validation(
+                ActiveRouteValidationDisposition.STOP,
+                self._progress_failure,
+            )
+        if (not 0 <= self._current_action_index
+                    < len(self.route.action_route.actions)
+                or (action_index is not None
+                    and action_index != self._current_action_index)):
+            return self._validation(
+                ActiveRouteValidationDisposition.STOP,
+                ActiveRouteValidationReason.PROGRESS_IDENTITY_MISMATCH,
+            )
+        if not changed_cells:
+            return self._validation(
+                ActiveRouteValidationDisposition.UNAFFECTED,
+                ActiveRouteValidationReason.NO_INTERSECTION,
+            )
+        effective_dependencies = self.effective_dependencies
+        affected = tuple(sorted(
+            set(changed_cells).intersection(effective_dependencies)
+        ))
+        if not affected:
+            return self._validation(
+                ActiveRouteValidationDisposition.UNAFFECTED,
+                ActiveRouteValidationReason.NO_INTERSECTION,
+            )
+        if self._plan is None:
+            return self._validation(
+                ActiveRouteValidationDisposition.STOP,
+                ActiveRouteValidationReason.PLAN_UNAVAILABLE,
+                affected=affected,
+            )
+        owner_refs = tuple(sorted({
+            owner_ref
+            for owner_ref, dependencies in self._active_owner_dependencies.items()
+            if set(affected).intersection(dependencies)
+        }))
+        owners = {owner.owner_id: owner for owner in self._plan.owners}
+        if not owner_refs or any(owner_ref not in owners for owner_ref in owner_refs):
+            return self._validation(
+                ActiveRouteValidationDisposition.STOP,
+                ActiveRouteValidationReason.OWNER_REFERENCE_INVALID,
+                affected=affected,
+            )
+        for owner_ref in owner_refs:
+            owner = owners[owner_ref]
+            if owner.kind is DependencyOwnerKind.STRICT_ACTION:
+                return self._validation(
+                    ActiveRouteValidationDisposition.STOP,
+                    ActiveRouteValidationReason.STRICT_OWNER_CHANGED,
+                    affected=affected,
+                )
+            if owner.kind is DependencyOwnerKind.NON_RECIPE:
+                return self._validation(
+                    ActiveRouteValidationDisposition.STOP,
+                    ActiveRouteValidationReason.NON_RECIPE_OWNER_CHANGED,
+                    affected=affected,
+                )
+            if owner.recipe_ref is None:
+                return self._validation(
+                    ActiveRouteValidationDisposition.STOP,
+                    ActiveRouteValidationReason.OWNER_REFERENCE_INVALID,
+                    affected=affected,
+                )
+        recipe_refs = tuple(sorted({owners[ref].recipe_ref for ref in owner_refs}))
+        if len(recipe_refs) > 2:
+            return self._validation(
+                ActiveRouteValidationDisposition.STOP,
+                ActiveRouteValidationReason.QUERY_LIMIT_EXCEEDED,
+                affected=affected,
+            )
+        if budget is None:
+            budget = RouteValidationBudget()
+        if type(budget) is not RouteValidationBudget:
+            raise ContractViolation("route validation budget must be typed")
+        if query_cache is None:
+            query_cache = WorldQueryCache(world)
+        if (type(query_cache) is not WorldQueryCache
+                or query_cache.world is not world):
+            raise ContractViolation("route validation cache belongs to another world")
+        updates: dict[str, tuple[BlockPos, ...]] = {}
+        before_queries = budget.queries_used
+        status_reason = {
+            QueryStatus.NEEDS_INFORMATION:
+                ActiveRouteValidationReason.NEEDS_INFORMATION,
+            QueryStatus.BLOCKED: ActiveRouteValidationReason.BLOCKED,
+            QueryStatus.UNSUPPORTED: ActiveRouteValidationReason.UNSUPPORTED,
+        }
+        for recipe_ref in recipe_refs:
+            recipe = self._plan.recipe(recipe_ref)
+            if (ground_profile is None
+                    or ground_profile != recipe.ground_profile
+                    or GroundCapabilityIdentity.from_profile(ground_profile)
+                        != recipe.capability):
+                return self._validation(
+                    ActiveRouteValidationDisposition.STOP,
+                    ActiveRouteValidationReason.CAPABILITY_IDENTITY_CHANGED,
+                    affected=affected,
+                    queries_used=budget.queries_used - before_queries,
+                )
+            if not budget.consume():
+                return self._validation(
+                    ActiveRouteValidationDisposition.STOP,
+                    ActiveRouteValidationReason.QUERY_LIMIT_EXCEEDED,
+                    affected=affected,
+                    queries_used=budget.queries_used - before_queries,
+                )
+            status, dependencies = replay_walk_validation_recipe(
+                recipe, world, query_cache=query_cache,
+            )
+            if status is not QueryStatus.FEASIBLE:
+                reason = status_reason[status]
+                return self._validation(
+                    ActiveRouteValidationDisposition.STOP, reason,
+                    affected=affected,
+                    missing=(dependencies if status is QueryStatus.NEEDS_INFORMATION
+                             else ()),
+                    queries_used=budget.queries_used - before_queries,
+                )
+            for owner_ref in owner_refs:
+                if owners[owner_ref].recipe_ref == recipe_ref:
+                    updates[owner_ref] = dependencies
+        refreshed: set[BlockPos] = set()
+        for owner_ref, dependencies in updates.items():
+            prior = self._active_owner_dependencies[owner_ref]
+            current = set(dependencies)
+            refreshed.update(prior.symmetric_difference(current))
+            self._active_owner_dependencies[owner_ref] = current
+        return self._validation(
+            ActiveRouteValidationDisposition.CONTINUE,
+            ActiveRouteValidationReason.REVALIDATED,
+            affected=affected,
+            refreshed=tuple(sorted(refreshed)),
+            queries_used=budget.queries_used - before_queries,
+        )
 
     def apply_changes(self, changed_cells: tuple[BlockPos,...]) -> None:
         if type(changed_cells) is not tuple:
             raise ContractViolation("route tracker changes must be immutable")
+        if self.candidate is None:
+            raise ContractViolation("legacy corridor changes require a source candidate")
         dependencies=(set(self.candidate.dependencies)
                       | set(self.route.connection_dependencies)
                       | set(self.route.action_route.dependencies))
@@ -1002,11 +2765,15 @@ class ActiveRouteTracker:
         if (type(progress_blocks) not in (int,float)
                 or not math.isfinite(float(progress_blocks)) or progress_blocks<0):
             raise ContractViolation("route progress must be finite and nonnegative")
+        if self.candidate is None or self._route_start_index is None:
+            raise ContractViolation("legacy corridor update requires a source candidate")
         remaining_connection=max(
             0.0,self.route.connection_length_blocks-progress_blocks,
         )
         graph_progress=max(0.0,progress_blocks-self.route.connection_length_blocks)
-        positions = [node.position for node in self.candidate.path]
+        path = self.candidate.path[self._route_start_index:]
+        segments = self.candidate.segments[self._route_start_index:]
+        positions = [node.position for node in path]
         lengths=[0.0]
         for first,second in zip(positions,positions[1:]):
             lengths.append(lengths[-1]+math.dist(first,second))
@@ -1021,15 +2788,15 @@ class ActiveRouteTracker:
         start=0
         while start+1<len(lengths) and lengths[start+1]<=graph_progress+1e-9:
             start+=1
-        nodes=[self.candidate.path[start]];segments=[];length=0.0
-        for index,(edge,node) in enumerate(zip(self.candidate.segments[start:],self.candidate.path[start+1:]),start):
+        nodes=[path[start]];corridor_segments=[];length=0.0
+        for index,(edge,node) in enumerate(zip(segments[start:],path[start+1:]),start):
             segment_length=lengths[index+1]-lengths[index]
-            if (segments and remaining_connection+length+segment_length
+            if (corridor_segments and remaining_connection+length+segment_length
                     > self.maximum_corridor_blocks):break
-            segments.append(edge);nodes.append(node);length+=segment_length
+            corridor_segments.append(edge);nodes.append(node);length+=segment_length
         dependencies=tuple(sorted(
             {cell for node in nodes for cell in node.dependencies}
-            | {cell for edge in segments for cell in edge.dependencies}
+            | {cell for edge in corridor_segments for cell in edge.dependencies}
             | (set(self.route.connection_dependencies)
                if remaining_connection>1e-9 else set())
             | (set(self.route.action_route.actions[-1].dependencies)
@@ -1044,7 +2811,9 @@ class ActiveRouteTracker:
                           self.route.connection_length_blocks,
                           self.route.connection_dependencies,corridor,
                           self.route.action_route,self.route.goal_state,
-                          self.route.planning_generation)
+                          self.route.planning_generation,
+                          self.route.work_identity,
+                          self.route.validation_plan)
         self.route=route
         if self._invalidated.intersection(dependencies):
             return CorridorUpdate(CorridorStatus.BLOCKED_BY_CHANGE,route,

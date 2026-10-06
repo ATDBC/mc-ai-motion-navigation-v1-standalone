@@ -1,0 +1,23 @@
+{
+  "schema_version": "mc2p.r28-4-budget-fabric.v1",
+  "batch": "20261003T203156813297Z-ff291252",
+  "scope": "平视、方向 0、二格严格下降；正常输入和首条晚一 tick。",
+  "passed": 2,
+  "tasks": 2,
+  "minimum_health": 20.0,
+  "source_released": 2,
+  "late_injection": {
+    "declared_window": [209, 210],
+    "actual_application_tick": 210,
+    "applied": true
+  },
+  "outside_window_sequences": 0,
+  "unowned_active_input_ticks": 0,
+  "source_files": {
+    "launch.json": "d1f7bca847d32202f2fd0af578b65acfd11108a41a1182ac548ee8baee257d44",
+    "result.json": "b5e2ab668d6599b33ead5ec26073519bb74fe2e04cb6680c125c35082e9eb2c9",
+    "client-0/action-continuity-summary.json": "73836cd4fabeef8f3d3b87173d1c2a9d07e5a22a16e3765fdf78c3b1dda3f0e9",
+    "client-0/action-continuity-frames.jsonl": "772fdb5e03e7afbe1b555e87556e1b69fb0a73022007a3c79af211eee644fa7d"
+  },
+  "limits": "未稳定触发 F8 世界依赖变化；不能外推为正式跟随或任意长期任务的实机通过。"
+}

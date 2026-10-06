@@ -21,7 +21,13 @@ from mc2p.motion_nav.online_motion import (
     StateAnchor, assess_input_responsibility,
 )
 from mc2p.motion_nav.route_admission import ActiveRoute
+from mc2p.motion_nav.route_admission import ActiveRouteTracker
+from mc2p.motion_nav.route_validation import (
+    ActiveRouteValidation,
+    ActiveRouteValidationIdentity,
+)
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
+from mc2p.motion_nav.world_model import BlockPos
 from mc2p.motion_nav.movement_transition import MovementMode
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView
 from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET
@@ -47,6 +53,7 @@ class RouteAdvance:
     control: RouteControl
     decision: ActionRouteDecision
     conditioned_ordinary_walk: bool
+    progress_validation: ActiveRouteValidation | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,15 +63,33 @@ class RouteControl:
     route: ActiveRoute
     executor: ActionRouteExecutor
     coordinator: MotionRouteCoordinator | None = None
+    tracker: ActiveRouteTracker | None = None
 
     def __post_init__(self) -> None:
         if (type(self.route) is not ActiveRoute
                 or not isinstance(self.executor, ActionRouteExecutor)
                 or (self.coordinator is not None
-                    and type(self.coordinator) is not MotionRouteCoordinator)):
+                    and type(self.coordinator) is not MotionRouteCoordinator)
+                or (self.tracker is not None
+                    and type(self.tracker) is not ActiveRouteTracker)):
             raise ContractViolation(
                 "route control requires admitted route and executor"
             )
+        if getattr(self.executor, "route", None) is not self.route.action_route:
+            raise ContractViolation(
+                "route control executor belongs to another route"
+            )
+        if (self.coordinator is not None
+                and (getattr(self.coordinator, "route", None) is not self.route
+                     or getattr(self.coordinator, "executor", None)
+                        is not self.executor)):
+            raise ContractViolation(
+                "route control coordinator belongs to another owner"
+            )
+        if self.tracker is None:
+            object.__setattr__(self, "tracker", ActiveRouteTracker(self.route))
+        elif self.tracker.route is not self.route:
+            raise ContractViolation("route control tracker belongs to another route")
 
     @property
     def owner_id(self) -> str:
@@ -73,6 +98,26 @@ class RouteControl:
     @property
     def action_index(self) -> int:
         return self.executor.action_index
+
+    @property
+    def effective_dependencies(self) -> tuple[BlockPos, ...]:
+        assert self.tracker is not None
+        return self.tracker.effective_dependencies
+
+    @property
+    def validation_identity(self) -> ActiveRouteValidationIdentity:
+        route = self.route
+        return ActiveRouteValidationIdentity(
+            route.world_session,
+            route.route_id,
+            route.route_revision,
+            route.source_request_id,
+            route.goal_id,
+            route.goal_revision,
+            route.planning_generation,
+            route.work_identity,
+            self.action_index,
+        )
 
     def activity(self, frame, decision=None) -> BodyControlActivity:
         index = min(self.executor.action_index, len(self.route.action_route.actions)-1)
@@ -141,7 +186,21 @@ class RouteControl:
                 frame, state_anchor=anchor, input_ledger=ledger,
                 movement_yaw_radians=movement_yaw,
             )
-        return RouteAdvance(self, decision, conditioned_walk)
+        progress_validation = None
+        executor_route = getattr(self.executor, "route", None)
+        if (executor_route is self.route.action_route
+                and (decision.state is ActionRouteState.RUNNING
+                     or (decision.state is ActionRouteState.COMPLETE
+                         and decision.route_progress_evidence is not None))):
+            assert self.tracker is not None
+            progress_validation = self.tracker.record_progress(
+                decision.action_index,
+                decision.route_progress_evidence,
+                observation_sequence_id=frame.body.sequence_id,
+            )
+        return RouteAdvance(
+            self, decision, conditioned_walk, progress_validation,
+        )
 
     def stop_protection(
         self, previous: RouteAdvance, frame: NavigationFrame,

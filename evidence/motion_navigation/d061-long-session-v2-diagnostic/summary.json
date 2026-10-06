@@ -1,0 +1,145 @@
+{
+  "artifact_path": "artifacts/d061-long-session-v2-diagnostic",
+  "artifact_segments_in_public_evidence": false,
+  "benchmark_schema_version": "mc2p.d061-long-session-performance.v2",
+  "classification": "diagnostic_failed",
+  "control_path": null,
+  "gates": {
+    "behavior": true,
+    "gc_diagnostic_integrity": false,
+    "gen2_coverage": false,
+    "identity": true,
+    "pacing": true,
+    "prepare_maximum": true,
+    "prepare_p95": true,
+    "prepare_p99": true,
+    "safety": true,
+    "sample_maximum": true,
+    "sample_minimum": true,
+    "terminal": true,
+    "trace": true
+  },
+  "gc": {
+    "capacity": 32768,
+    "event_count": 32768,
+    "first_gen2_anywhere": {
+      "active_prepare_ordinal": null,
+      "collected": 0,
+      "duration_ns": 4416700,
+      "end_ns": 183231260944500,
+      "event_ordinal": 26,
+      "generation": 2,
+      "last_completed_prepare_ordinal": null,
+      "phase": "before_samples",
+      "start_ns": 183231256527800,
+      "thread_id": 30428
+    },
+    "first_retained_production_gen2": null,
+    "generation_counts": {
+      "0": 29931,
+      "1": 2721,
+      "2": 116
+    },
+    "overflowed": true,
+    "start_stop_mismatch": false,
+    "unmatched_start": false
+  },
+  "prepare": {
+    "captured_samples": 8292,
+    "retained_samples": 8192,
+    "statistics": {
+      "maximum_ms": 7.0613,
+      "maximum_ns": 7061300,
+      "p50_ms": 4.1738,
+      "p50_ns": 4173800,
+      "p95_ms": 5.1944,
+      "p95_ns": 5194400,
+      "p99_ms": 5.3794,
+      "p99_ns": 5379400,
+      "samples": 8192
+    }
+  },
+  "recorded_passed": false,
+  "schema_version": "mc2p.d061-tracked-evidence-summary.v1",
+  "source": {
+    "commit": "179d30c6b0d8c5512e076f3360a62932671c1eba",
+    "files": [
+      {
+        "path": "scripts/benchmark_d061_long_session.py",
+        "sha256": "f3cff2ec38d3edf3293de505d87f2e8c1a634230ccb633fa14f1d51b159e7fd8"
+      },
+      {
+        "path": "tests/sim/known_world_following.py",
+        "sha256": "152a706a66c1caf93b258870348395e5bab033d4b2e3f0c2a3bf11a6898d14b3"
+      },
+      {
+        "path": "mc2p/runtime/async_trace.py",
+        "sha256": "0688d9f53da07a2e3f9184b29f79f2770fb8623feb43e9a3e322dd91d2010001"
+      },
+      {
+        "path": "mc2p/runtime/segmented_trace.py",
+        "sha256": "eb07294badb8d58f8d8072eabae6661e462157eee48e213920728fafca744bf2"
+      },
+      {
+        "path": "mc2p/runtime/player_runtime_v1.py",
+        "sha256": "a73abdc045c43286767d4a72ce7041ae9801b82aa28e02f3ca9f80cfd79db76b"
+      },
+      {
+        "path": "mc2p/skills/known_world_follow_driver.py",
+        "sha256": "61e95e759b9b84a72c272a3cba9115b5597dc78bb1a8c331ae144d694efeb834"
+      },
+      {
+        "path": "mc2p/skills/navigation_session_driver.py",
+        "sha256": "b8e0202e37003e1fdfe72922f625651c1f78a8375c0f7f8a6ccd91e156dcf450"
+      },
+      {
+        "path": "mc2p/motion_nav/navigation_session.py",
+        "sha256": "9810301eacd686a3b07793cbfb3ee9cc0a1500a46a66b4ab8a6350939908ed08"
+      },
+      {
+        "path": "mc2p/motion_nav/route_admission.py",
+        "sha256": "13b6e6bb1af0be5e9255347479b0dcf628ac77fa21397097fa7a619d55ffaf19"
+      }
+    ],
+    "git_dirty": false,
+    "git_status": [],
+    "scope_sha256": "8c9c6df229cc9bb593b61fc0f960c9bf226f18775804ce0d1606f0a0a3d15423"
+  },
+  "trace": {
+    "complete": {
+      "byte_count": 331251797,
+      "manifest_sha256": "b989e0a714798acec73e8ea17755d29888dccc7739e8a05c86013f8b0bd8e7dc",
+      "record_count": 33340,
+      "schema_version": "mc2p.segment-complete.v1",
+      "segment_count": 20
+    },
+    "delivery_summary": {
+      "accepted_records": 33339,
+      "capacity": 2048,
+      "dropped_by_record_type": {},
+      "dropped_records": 0,
+      "peak_depth": 5,
+      "projection_timing_ns": {
+        "count": 33339,
+        "maximum": 26214700,
+        "p95": 331000,
+        "p99": 355000,
+        "sample_count": 4096,
+        "total": 3727373600
+      },
+      "schema_version": "mc2p.trace-delivery-summary.v1",
+      "worker_failed": false,
+      "written_records": 33339
+    },
+    "verified_records": 33340
+  },
+  "verification": {
+    "artifact_sha256_entries": 24,
+    "artifact_sha256s_verified": true,
+    "control_statistics_applicable": false,
+    "control_statistics_recomputed": null,
+    "gc_generation_counts_recomputed": true,
+    "prepare_statistics_recomputed": true,
+    "segmented_trace_fully_iterated": true
+  }
+}

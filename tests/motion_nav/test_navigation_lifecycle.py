@@ -113,6 +113,41 @@ class NavigationLifecycleTests(unittest.TestCase):
         )
         self.assertIs(lifecycle.state, NavigationSessionState.PLANNING)
 
+    def test_active_idle_resume_requires_quiescent_stopping_handoff(self):
+        retain = HandoffEvidence(
+            "route/old", WorldSessionId("world"),
+            HandoffDisposition.RETAIN, 3, 8,
+            MovementV1(), "current_body_still_moving",
+        )
+        transferable = HandoffEvidence(
+            "route/old", WorldSessionId("world"),
+            HandoffDisposition.TRANSFERABLE, 3, 8,
+            MovementV1(forward=1), "selected_successor_route_command",
+            "route/new", 10, 2, 0,
+        )
+        quiescent = HandoffEvidence(
+            "route/old", WorldSessionId("world"),
+            HandoffDisposition.QUIESCENT, 3, 8,
+            MovementV1(), "supported_released_input_tail_verified",
+        )
+        action = NavigationTransitionAction.RESUME_ACTIVE_IDLE_AFTER_HANDOFF
+
+        for handoff in (None, retain, transferable):
+            with self.subTest(handoff=handoff):
+                lifecycle = NavigationLifecycle(NavigationSessionState.STOPPING)
+                with self.assertRaisesRegex(Exception, "handoff|quiescent"):
+                    lifecycle.transition(action, handoff=handoff)
+                self.assertIs(lifecycle.state, NavigationSessionState.STOPPING)
+
+        lifecycle = NavigationLifecycle(NavigationSessionState.EXECUTING)
+        with self.assertRaisesRegex(Exception, "not allowed"):
+            lifecycle.transition(action, handoff=quiescent)
+        self.assertIs(lifecycle.state, NavigationSessionState.EXECUTING)
+
+        lifecycle = NavigationLifecycle(NavigationSessionState.STOPPING)
+        lifecycle.transition(action, handoff=quiescent)
+        self.assertIs(lifecycle.state, NavigationSessionState.EXECUTING)
+
     def test_stopping_cannot_use_the_ordinary_planning_entry(self):
         lifecycle = NavigationLifecycle(NavigationSessionState.STOPPING)
 

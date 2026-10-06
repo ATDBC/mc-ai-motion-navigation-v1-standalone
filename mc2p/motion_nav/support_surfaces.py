@@ -10,7 +10,7 @@ from mc2p.motion_nav.geometry import (
 )
 from mc2p.motion_nav.world_model import (
     Aabb, BlockPos, COLLISION_OWNER_BELOW_REACH_CELLS, CellKnowledge,
-    WorldView,
+    WorldQueryCache, WorldView,
 )
 
 
@@ -109,8 +109,13 @@ def surface_overlaps_region(surface: SupportSurface, region: Aabb) -> bool:
 def standable_point_in_region(world: WorldView, surface: SupportSurface, region: Aabb,
                               *, body_width: float = .6, body_height: float = 1.8,
                               minimum_support_fraction: float = .5,
-                              connection_from: tuple[float, float, float] | None = None) -> StandablePointResult:
+                              connection_from: tuple[float, float, float] | None = None,
+                              query_cache: WorldQueryCache | None = None) -> StandablePointResult:
     """Select a concrete goal position with the existing clearance/support rules."""
+    if query_cache is not None and (
+            type(query_cache) is not WorldQueryCache
+            or query_cache.world is not world):
+        raise ContractViolation("standable point query cache belongs to another world view")
     overlap = _region_overlap(surface, region)
     if overlap is None:
         return StandablePointResult(QueryStatus.BLOCKED)
@@ -125,8 +130,8 @@ def standable_point_in_region(world: WorldView, surface: SupportSurface, region:
     y, half = surface.position[1], body_width / 2
     for x, z in candidates:
         body = Aabb(x - half, y, z - half, x + half, y + body_height, z + half)
-        clearance = sweep(body, (0., 0., 0.), world)
-        support = query_support(body, world)
+        clearance = sweep(body, (0., 0., 0.), world, query_cache=query_cache)
+        support = query_support(body, world, query_cache=query_cache)
         dependencies.update((*clearance.dependencies, *support.dependencies))
         missing.update((*clearance.missing_cells, *support.missing_cells))
         unsupported |= QueryStatus.UNSUPPORTED in (clearance.status, support.status)
@@ -135,7 +140,9 @@ def standable_point_in_region(world: WorldView, surface: SupportSurface, region:
             if connection_from is not None:
                 dx, dy, dz = x - connection_from[0], y - connection_from[1], z - connection_from[2]
                 start = body.moved(-dx, -dy, -dz)
-                connection = sweep(start, (dx, dy, dz), world)
+                connection = sweep(
+                    start, (dx, dy, dz), world, query_cache=query_cache,
+                )
                 dependencies.update(connection.dependencies)
                 missing.update(connection.missing_cells)
                 unsupported |= connection.status is QueryStatus.UNSUPPORTED
@@ -144,7 +151,11 @@ def standable_point_in_region(world: WorldView, surface: SupportSurface, region:
                 count = max(1, math.ceil(math.hypot(dx, dz) / .1))
                 supported = True
                 for index in range(count + 1):
-                    checked = query_support(start.moved(dx * index / count, 0., dz * index / count), world)
+                    checked = query_support(
+                        start.moved(dx * index / count, 0., dz * index / count),
+                        world,
+                        query_cache=query_cache,
+                    )
                     dependencies.update(checked.dependencies)
                     missing.update(checked.missing_cells)
                     unsupported |= checked.status is QueryStatus.UNSUPPORTED
@@ -159,13 +170,15 @@ def standable_point_in_region(world: WorldView, surface: SupportSurface, region:
 
 def query_standable_connection(world: WorldView, surface: SupportSurface,
                               position: tuple[float, float, float], connection_from,
-                              *, body_width=.6, body_height=1.8):
+                              *, body_width=.6, body_height=1.8,
+                              query_cache: WorldQueryCache | None = None):
     """Check exactly this endpoint; never select a different point."""
     x, y, z = position
     tiny = 1.e-8
     result = standable_point_in_region(world, surface,
         Aabb(x-tiny, y-tiny, z-tiny, x+tiny, y+tiny, z+tiny),
-        body_width=body_width, body_height=body_height, connection_from=connection_from)
+        body_width=body_width, body_height=body_height,
+        connection_from=connection_from, query_cache=query_cache)
     return StandablePointResult(result.status,
         position if result.status is QueryStatus.FEASIBLE else None,
         result.dependencies, result.missing_cells)
@@ -246,6 +259,7 @@ def query_support_surfaces(
     body_width: float = 0.6,
     body_height: float = 1.8,
     minimum_support_fraction: float = 0.5,
+    collect_complete_missing: bool = False,
 ) -> SupportSurfaceResult:
     """Return stable standable representatives for one horizontal column."""
     if type(world) is not WorldView or type(column_x) is not int or type(column_z) is not int:
@@ -258,6 +272,8 @@ def query_support_surfaces(
     if (minimum_feet_y > maximum_feet_y or body_width <= 0 or body_height <= 0
             or not 0 < minimum_support_fraction <= 1):
         raise ContractViolation("surface query range and body dimensions are invalid")
+    if type(collect_complete_missing) is not bool:
+        raise ContractViolation("complete missing selection must be boolean")
 
     owner_cells = _candidate_owner_cells(
         column_x, column_z, minimum_feet_y, maximum_feet_y,
@@ -267,7 +283,7 @@ def query_support_surfaces(
         if (world.cell(position).knowledge is CellKnowledge.UNKNOWN
             and not unknown_shape_owner_is_fully_covered(world, position))
     )
-    if missing:
+    if missing and not collect_complete_missing:
         return SupportSurfaceResult(
             QueryStatus.NEEDS_INFORMATION, (), owner_cells, missing,
         )
@@ -328,7 +344,7 @@ def query_support_surfaces(
 
     provisional: list[tuple[tuple[float, float, float], HorizontalRegion,
                             float, tuple[str, ...], tuple[BlockPos, ...]]] = []
-    query_missing: set[BlockPos] = set()
+    query_missing: set[BlockPos] = set(missing)
     query_dependencies: set[BlockPos] = set(owner_cells)
     def axis_candidates(minimum: float, maximum: float) -> tuple[float, ...]:
         center = (minimum + maximum) / 2.0

@@ -15,14 +15,20 @@ from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, MovementMode, ResourceState
 from mc2p.motion_nav.online_motion import InputApplicationLedger
 from mc2p.motion_nav.body_control import (
-    BodyControlProgress, HandoffDisposition, HandoffEvidence,
+    BodyControlActivity, BodyControlPhase, BodyControlProgress,
+    HandoffDisposition, HandoffEvidence,
 )
+from mc2p.motion_nav.goal_observation import ObservedGoalStatus
+from mc2p.motion_nav.goal_reach_policy import GoalReachPolicy
+from mc2p.motion_nav.navigation_handoff import StopCause
+from mc2p.motion_nav.navigation_lifecycle import NavigationSessionState
+from mc2p.motion_nav.navigation_session import PendingPlanningRecovery
 from mc2p.motion_nav.motion_risk import (
     RiskCommitEvidence, RiskCommitKind, RiskReservationStatus,
     TaskDamageBudget, TaskRiskLedger,
 )
 from mc2p.motion_nav.retry_ledger import (
-    RecoveryBudgetKind, RecoveryLimitStatus,
+    RecoveryBudgetKind, RecoveryLimitStatus, RetryCause, WaitVerdict,
 )
 from mc2p.motion_nav.world_model import WorldSessionId
 from mc2p.motion_nav.runtime_adapter import NavigationObservationAdapter, TEST_ORACLE
@@ -150,6 +156,95 @@ class InvariantNegativeTests(unittest.TestCase):
                 body_control_progress=progress,
             ))
         self.assertIn("I4", {item[1] for item in monitor.violations})
+
+    def test_i4_keep_active_satisfied_idle_is_not_waiting(self):
+        monitor = InvariantMonitor()
+        for tick in range(2, 802):
+            monitor.check(evidence(
+                tick=tick,
+                controller_ids=(),
+                reach_policy=GoalReachPolicy.KEEP_ACTIVE_ON_REACH,
+                observed_goal_status=ObservedGoalStatus.SATISFIED,
+            ))
+
+        self.assertNotIn("I4", {item[1] for item in monitor.violations})
+
+    def test_i4_keep_active_restarts_when_goal_becomes_unmet(self):
+        monitor = InvariantMonitor()
+        for tick in range(2, 202):
+            monitor.check(evidence(
+                tick=tick,
+                controller_ids=(),
+                reach_policy=GoalReachPolicy.KEEP_ACTIVE_ON_REACH,
+                observed_goal_status=ObservedGoalStatus.SATISFIED,
+            ))
+        for tick in range(202, 301):
+            monitor.check(evidence(
+                tick=tick,
+                controller_ids=(),
+                reach_policy=GoalReachPolicy.KEEP_ACTIVE_ON_REACH,
+                observed_goal_status=ObservedGoalStatus.NOT_SATISFIED,
+            ))
+        self.assertNotIn("I4", {item[1] for item in monitor.violations})
+
+        monitor.check(evidence(
+            tick=301,
+            controller_ids=(),
+            reach_policy=GoalReachPolicy.KEEP_ACTIVE_ON_REACH,
+            observed_goal_status=ObservedGoalStatus.NOT_SATISFIED,
+        ))
+        self.assertIn("I4", {item[1] for item in monitor.violations})
+
+    def test_i4_keep_active_satisfied_does_not_exempt_active_recovery(self):
+        monitor = InvariantMonitor()
+        for tick in range(2, 103):
+            monitor.check(evidence(
+                tick=tick,
+                controller_ids=(),
+                reach_policy=GoalReachPolicy.KEEP_ACTIVE_ON_REACH,
+                observed_goal_status=ObservedGoalStatus.SATISFIED,
+                active_waits=(("recovery", "navigation-session/test"),),
+                recovery_wait_status=WaitVerdict.WAITING,
+            ))
+
+        self.assertIn("I4", {item[1] for item in monitor.violations})
+
+    def test_i4_keep_active_satisfied_only_exempts_executing_session(self):
+        for session_state in (
+            NavigationSessionState.STOPPING,
+            NavigationSessionState.PLANNING,
+            NavigationSessionState.NEEDS_INFORMATION,
+        ):
+            with self.subTest(session_state=session_state):
+                monitor = InvariantMonitor()
+                for tick in range(2, 103):
+                    monitor.check(evidence(
+                        tick=tick,
+                        controller_ids=(),
+                        reach_policy=GoalReachPolicy.KEEP_ACTIVE_ON_REACH,
+                        observed_goal_status=ObservedGoalStatus.SATISFIED,
+                        session_state=session_state,
+                    ))
+
+                self.assertIn("I4", {item[1] for item in monitor.violations})
+
+    def test_i4_keep_active_satisfied_does_not_exempt_strict_or_stopping_body(self):
+        for phase in (BodyControlPhase.STRICT_EXECUTION, BodyControlPhase.STOPPING):
+            with self.subTest(phase=phase):
+                monitor = InvariantMonitor()
+                activity = BodyControlActivity(
+                    WorldSessionId("test-world"), 2, "route/test", "route", 1, 0,
+                    phase,
+                )
+                for tick in range(2, 103):
+                    monitor.check(evidence(
+                        tick=tick,
+                        reach_policy=GoalReachPolicy.KEEP_ACTIVE_ON_REACH,
+                        observed_goal_status=ObservedGoalStatus.SATISFIED,
+                        body_control_activities=(activity,),
+                    ))
+
+                self.assertIn("I4", {item[1] for item in monitor.violations})
 
     def test_i10_terminal_source_release_has_a_deadline(self):
         monitor = InvariantMonitor()
@@ -327,6 +422,72 @@ class InvariantNegativeTests(unittest.TestCase):
 
 
 class ClosedLoopToolTests(unittest.TestCase):
+    def test_executing_recovery_exposes_typed_monitor_activity(self):
+        scenario = replace(
+            next(item for item in SCENARIOS if item.name == "flat_walk"),
+            name="executing_recovery_monitor_activity",
+            perturbations=Perturbations(),
+            max_ticks=180,
+        )
+        injected: list[int] = []
+        observed = []
+
+        def step(context):
+            session = context.session
+            if (not injected and session.active_route is not None
+                    and session.has_owned_body_control):
+                session._pending_planning_recovery = PendingPlanningRecovery(
+                    "active_route_dependency_changed",
+                    RetryCause.DEPENDENCY,
+                )
+                session._supervisor.route.request_stop(
+                    StopCause.DEPENDENCY_CHANGED,
+                )
+                injected.append(context.tick)
+            context.driver.tick(
+                BehaviorProfileV0(), context.clock[0] + 500_000_000,
+            )
+            diagnostics = session.diagnostics
+            if (session._retry_ledger.active_recovery_id is not None
+                    and diagnostics.state is NavigationSessionState.EXECUTING):
+                observed.append(diagnostics)
+
+        run(
+            scenario,
+            reach_policy=GoalReachPolicy.KEEP_ACTIVE_ON_REACH,
+            control_step=step,
+        )
+
+        self.assertTrue(injected)
+        self.assertTrue(observed)
+        self.assertTrue(all(
+            item.active_waits
+            or item.recovery_wait_status is not None
+            or item.body_control_activities
+            for item in observed
+        ))
+
+    def test_keep_active_satisfied_idle_does_not_trigger_i4(self):
+        scenario = replace(
+            next(item for item in SCENARIOS if item.name == "flat_walk"),
+            name="keep_active_satisfied_idle",
+            perturbations=Perturbations(),
+            max_ticks=900,
+        )
+
+        result = run(
+            scenario,
+            reach_policy=GoalReachPolicy.KEEP_ACTIVE_ON_REACH,
+        )
+
+        satisfied_idle = [
+            row for row in result.trace
+            if row["goal_satisfied"] and not row["body_control_activities"]
+        ]
+        self.assertEqual(result.outcome, "executing", result.reason)
+        self.assertGreaterEqual(len(satisfied_idle), 800)
+        self.assertNotIn("I4", {item[1] for item in result.violations})
+
     def test_initial_live_observation_precedes_height_route_planning(self):
         scenario = next(
             item for item in SCENARIOS
@@ -467,7 +628,7 @@ class ClosedLoopToolTests(unittest.TestCase):
                             for record in records))
         self.assertEqual(result.damage, 2.0)
 
-    def test_grounded_drop_reprepares_after_one_late_active_command(self):
+    def test_grounded_drop_handles_one_late_active_command_locally(self):
         base = next(
             scenario for scenario in SCENARIOS
             if scenario.name == "direct_drop_2_20pct_late"
@@ -488,15 +649,31 @@ class ClosedLoopToolTests(unittest.TestCase):
             (result.outcome, result.reason),
             ("success", "goal_state_satisfied"),
         )
+        delayed = next(row for row in result.trace if row["tick"] == 37)
+        delayed_request = delayed["submitted_request"]
+        delivered = next(
+            row for row in result.trace
+            if row["tick"] > delayed["tick"]
+            and delayed_request in row["command_event"]["ready"]
+        )
+        self.assertIsNone(delayed["applied_request"])
+        self.assertGreater(delivered["tick"], delayed["tick"])
+        self.assertTrue(delayed["on_ground"])
+        self.assertTrue(delivered["on_ground"])
         self.assertTrue(any(
-            row["session_reason"]
-                == "repreparing_grounded_verified_motion"
+            row["session_reason"] in {
+                "resubmit_verified_command_within_window",
+                "repreparing_grounded_verified_motion",
+            }
             for row in result.trace
+            if row["tick"] >= delayed["tick"]
         ))
         self.assertEqual(
             max(row["recovery_total_starts"] for row in result.trace), 0,
             "grounded-entry wait is local and must not buy task recovery",
         )
+        self.assertTrue(result.trace[-1]["on_ground"])
+        self.assertFalse(result.trace[-1]["source_bound"])
 
     def test_late_neutral_confirmation_after_landing_completes_drop(self):
         base = next(
@@ -595,7 +772,20 @@ class ClosedLoopToolTests(unittest.TestCase):
         ))
 
     def test_goal_revision_after_risk_commit_finishes_drop_before_replanning(self):
+        submitted_before_revision = []
+
+        def risk_action_was_submitted(context):
+            return any(
+                action.submitted_sequences
+                for action in context.diagnostics.risk_actions
+            )
+
         def revise_after_first_submission(context):
+            submitted_before_revision.extend(
+                sequence
+                for action in context.diagnostics.risk_actions
+                for sequence in action.submitted_sequences
+            )
             goal = _goal((1.5, 59.0, 4.5), context.risk_policy_id)
             context.driver.replace_goal(
                 "goal", 2, goal, context.clock[0],
@@ -615,19 +805,96 @@ class ClosedLoopToolTests(unittest.TestCase):
             name="drop_revision_after_risk_commit",
             events=[Event(
                 "revise",
-                lambda context: context.tick >= 36,
+                risk_action_was_submitted,
                 revise_after_first_submission,
             )],
             max_ticks=300,
         )
         result = run(scenario)
-        self.assertEqual(result.events, ["revise@36"])
+        self.assertEqual(len(result.events), 1)
+        self.assertTrue(submitted_before_revision)
         self.assertEqual(result.violations, [])
         self.assertEqual(
             (result.outcome, result.reason),
             ("success", "goal_state_satisfied"),
         )
         self.assertEqual(result.damage, 2.0)
+        revised_airborne = [
+            row for row in result.trace
+            if row["goal_revision"] == 2 and not row["on_ground"]
+        ]
+        self.assertTrue(revised_airborne)
+        self.assertTrue(all(
+            row["source_bound"] and row["controller_ids"]
+            for row in revised_airborne
+        ))
+
+    def test_goal_revision_before_strict_submission_revokes_old_drop(self):
+        old_route_ids = []
+
+        def awaiting_unsubmitted_strict(context):
+            control = context.session._supervisor.incumbent_route
+            probe = context.session._edge_probe
+            return (
+                control is not None
+                and control.executor.action_index == 1
+                and not control.executor.current_verified_action_started()
+                and probe is not None
+                and probe.ready
+                and all(
+                    not action.submitted_sequences
+                    for action in context.diagnostics.risk_actions
+                )
+            )
+
+        def revise_before_submission(context):
+            control = context.session._supervisor.incumbent_route
+            self.assertIsNotNone(control)
+            old_route_ids.append(control.route.route_id)
+            revise_goal_back(context)
+
+        base = next(
+            item for item in SCENARIOS
+            if item.name == "direct_drop_5_budget_2"
+        )
+        scenario = replace(
+            base,
+            name="drop_revision_before_strict_submission",
+            events=[Event(
+                "revise_before_submission",
+                awaiting_unsubmitted_strict,
+                revise_before_submission,
+            )],
+            max_ticks=300,
+        )
+
+        result = run(scenario)
+
+        self.assertEqual(len(result.events), 1)
+        self.assertEqual(len(old_route_ids), 1)
+        self.assertEqual(result.violations, [])
+        self.assertEqual(
+            (result.outcome, result.reason),
+            ("success", "goal_state_satisfied"),
+        )
+        old_route_rows = [
+            row for row in result.trace
+            if row["route_id"] == old_route_ids[0]
+        ]
+        self.assertTrue(old_route_rows)
+        self.assertTrue(all(
+            not any(
+                action["submitted_sequences"]
+                for action in row["risk_actions"]
+            )
+            for row in old_route_rows
+        ))
+        self.assertTrue(any(
+            row["goal_revision"] == 2
+            and row["route_id"] not in {None, old_route_ids[0]}
+            for row in result.trace
+        ))
+        self.assertFalse(result.trace[-1]["source_bound"])
 
     def test_observed_health_overrun_locks_future_risk_on_formal_path(self):
         ledger = TaskRiskLedger("goal", TaskDamageBudget("sim-budget", 4))

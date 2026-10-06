@@ -131,6 +131,60 @@ class ActionPreconditionTests(unittest.TestCase):
         self.assertIs(result.status, ActionPreconditionStatus.READY)
         self.assertIs(result.reason, ActionPreconditionReason.READY)
 
+    def test_old_or_wrong_acquisition_grant_cannot_make_drop_ready(self):
+        anchor, physics_world = world_and_anchor(direct_height=6, speed=0.0)
+        owner = physics_world._world._owner
+        self.assertIsNotNone(owner)
+        route = _drop_route()
+        current_stamp = ObservationStamp(
+            SESSION, 100, 100, "ordinary-view", 5_000_000_000,
+        )
+        support = owner.view().cell((0, 57, 1)).block
+        self.assertIsNotNone(support)
+        owner.observe_blocks(current_stamp, {(0, 57, 1): support})
+        owner.confirm_air(
+            current_stamp, ((0, 58, 1),),
+            {(0, 58, 1): VisualAirEvidence(
+                current_stamp, 4.0, False,
+            )},
+        )
+        frame = VerifiedMotionRouteIntegrationTests.frame(
+            owner.view(),
+            replace(anchor.physics_state, movement_tick_id=100),
+            100,
+        )
+        grants = (
+            AcquisitionGrant(
+                "old-route", "another-route", route.route_revision, 0,
+                (0, 58, 1), 100, (),
+            ),
+            AcquisitionGrant(
+                "old-revision", route.route_id, route.route_revision + 1, 0,
+                (0, 58, 1), 100, (),
+            ),
+            AcquisitionGrant(
+                "old-action", route.route_id, route.route_revision, 1,
+                (0, 58, 1), 100, (),
+            ),
+            AcquisitionGrant(
+                "expired-evidence", route.route_id, route.route_revision, 0,
+                (0, 58, 1), 1, (),
+            ),
+        )
+
+        for grant in grants:
+            with self.subTest(grant=grant.acquisition_id):
+                result = check_action_precondition(
+                    route, 0, frame, task_id="navigation-task",
+                    acquisition_grant=grant,
+                )
+
+                self.assertIs(
+                    result.status,
+                    ActionPreconditionStatus.NEEDS_ACQUISITION,
+                )
+                self.assertIsNotNone(result.acquisition)
+
     def test_fresh_air_where_landing_support_was_rejects_drop(self):
         anchor, physics_world = world_and_anchor(direct_height=6, speed=0.0)
         owner = physics_world._world._owner

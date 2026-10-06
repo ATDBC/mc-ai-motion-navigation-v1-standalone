@@ -27,6 +27,12 @@ from tests.motion_nav.test_navigation_session import (
 
 
 class ExecutionSupervisorTests(unittest.TestCase):
+    @staticmethod
+    def _executor(route, state, reason):
+        executor = _RepeatingRecoveryExecutor(state, reason)
+        executor.route = route.action_route
+        return executor
+
     def test_supervisor_does_not_import_concrete_body_controllers(self):
         source = Path("mc2p/motion_nav/execution_supervisor.py").read_text(
             encoding="utf-8",
@@ -63,7 +69,7 @@ class ExecutionSupervisorTests(unittest.TestCase):
         self.assertIsNotNone(route)
         control = RouteControl(
             route,
-            _RepeatingRecoveryExecutor(ActionRouteState.CANCELLED, "cancelled"),
+            self._executor(route, ActionRouteState.CANCELLED, "cancelled"),
         )
         current = frame(world, 6, start.position)
         return control, current, _ground_anchor(current)
@@ -126,14 +132,18 @@ class ExecutionSupervisorTests(unittest.TestCase):
         self.assertTrue(supervisor.offer_route(
             incumbent, current, ledger, anchor,
         ))
-        first = RouteControl(
-            replace(incumbent.route, source_request_id="request-2"),
-            _RepeatingRecoveryExecutor(ActionRouteState.RUNNING, "first"),
+        first_route = replace(
+            incumbent.route, source_request_id="request-2",
         )
-        second = RouteControl(
-            replace(incumbent.route, source_request_id="request-3"),
-            _RepeatingRecoveryExecutor(ActionRouteState.RUNNING, "second"),
+        first = RouteControl(first_route, self._executor(
+            first_route, ActionRouteState.RUNNING, "first",
+        ))
+        second_route = replace(
+            incumbent.route, source_request_id="request-3",
         )
+        second = RouteControl(second_route, self._executor(
+            second_route, ActionRouteState.RUNNING, "second",
+        ))
         self.assertTrue(supervisor.offer_route(first, current, ledger, anchor))
 
         self.assertTrue(supervisor.offer_route(second, current, ledger, anchor))

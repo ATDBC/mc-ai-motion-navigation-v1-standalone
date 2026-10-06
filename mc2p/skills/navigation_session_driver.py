@@ -25,6 +25,7 @@ from mc2p.contracts.task import (
 )
 from mc2p.motion_nav.movement_transition import GoalState
 from mc2p.motion_nav.goal_reach_policy import GoalReachPolicy
+from mc2p.motion_nav.goal_planning_policy import GoalPlanningPolicy
 from mc2p.motion_nav.body_control import HandoffDisposition, BodyControlActivity
 from mc2p.motion_nav.navigation_session import (
     NavigationSessionPort, NavigationSessionProposal, NavigationSessionState,
@@ -127,6 +128,9 @@ class RuntimeNavigationDriver:
         damage_budget: TaskDamageBudget | None = None,
         task_id: str | None = None,
         reach_policy: GoalReachPolicy = GoalReachPolicy.COMPLETE_ON_REACH,
+        planning_policy: GoalPlanningPolicy = (
+            GoalPlanningPolicy.BACKGROUND_PLANNER
+        ),
     ) -> None:
         require_nonnegative_int(now_ns, "runtime navigation start time")
         if self.source is not None or self.state not in {"ready", "stopped"}:
@@ -144,10 +148,15 @@ class RuntimeNavigationDriver:
                     damage_budget=damage_budget,
                     task_id=task_id,
                     reach_policy=reach_policy,
+                    planning_policy=planning_policy,
                 )
             else:
                 if reach_policy is not report.reach_policy:
                     raise ContractViolation("navigation start cannot change task reach policy")
+                if planning_policy is not report.planning_policy:
+                    raise ContractViolation(
+                        "navigation start cannot change task planning policy"
+                    )
                 self.session.update_goal(
                     goal_id, goal_revision, goal,
                     damage_budget=damage_budget,

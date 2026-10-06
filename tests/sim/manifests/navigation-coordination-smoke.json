@@ -1,6 +1,6 @@
 {
   "schema_version": "mc2p.navigation-sim-manifest.v1",
-  "source_commit": "df3e093",
+  "source_commit": "571af2e3",
   "review_baseline_commit": "eae4419",
   "late_tick_model": "whole_command_arrival_then_latest_acceptance_with_sample_consumed_lease",
   "cases": [
@@ -246,7 +246,7 @@
         "cancel_in_air"
       ],
       "event_ticks": {
-        "cancel_in_air": 40
+        "cancel_in_air": 41
       }
     },
     {
@@ -419,7 +419,7 @@
   ],
   "input_sample_model": "client_behavior_input_sneak_axes_0_3",
   "previous_frozen_manifest": "navigation-coordination-s0-before-sneak.json",
-  "stage": "S0a_calibrated_baseline",
+  "stage": "D058_strict_entry_alignment_and_bounded_probe_handoff",
   "baseline_phase": "S1 supervised body handoff; uncommitted implementation based on source_commit",
-  "previous_manifest": "tests/sim/manifests/navigation-coordination-s0a-calibrated.json"
+  "previous_manifest": "tests/sim/manifests/navigation-coordination-smoke-pre-d058.json"
 }

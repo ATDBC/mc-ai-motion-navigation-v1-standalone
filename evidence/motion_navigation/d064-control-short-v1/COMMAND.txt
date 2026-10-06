@@ -1,0 +1,1 @@
+D:\Miniforge3\Scripts\conda.exe run --prefix D:\My_project\mc_ai\.venv --no-capture-output python -m scripts.benchmark_d061_long_session --output .tmp/d064-d061-short-v3 --test-mode --warmup 5 --minimum-retained 20 --maximum-retained 50 --post-gen2-samples 5

@@ -1,0 +1,24 @@
+{
+  "schema_version": "mc2p.navigation-structure-baseline.v1",
+  "normalizer_version": "r28-structure-trajectory-v1",
+  "source": ".tmp\\post-f1-structure-s0-a1649c2\\faults-4",
+  "kind": "migration",
+  "cases": [
+    {
+      "id": "faults/worker_death",
+      "signature": "bfe98a48bb5d9d6bbe3e74de98e0c843efed2c5726dcd0257ded24725a580bfe"
+    },
+    {
+      "id": "faults/driver_contract_containment",
+      "signature": "85bea26c064515550c391e80f942e47f53fe3e785368ca33736ffa627222c6cf"
+    },
+    {
+      "id": "faults/ground_stall_retry",
+      "signature": "9f2331222b68391b7cc1447ef9af3fef9aa2a9186bc05f40d354e9ff132af449"
+    },
+    {
+      "id": "faults/active_route_dependency_retry",
+      "signature": "1d0723abf4f40992cdf340913ace3e199186d62124df4420b6075206116fa571"
+    }
+  ]
+}

@@ -4,9 +4,11 @@
 
 默认分支 `main` 是项目方唯一的公开发布线，只接收固定导出脚本生成并校验通过的整理后快照。主项目的完整开发分支和提交历史不会直接推入本仓库。三方审查分支可以单独存在，用于保存审查报告和复现材料；它们不改变 `main` 的正式状态。
 
-2026-10-03 的当前迁移参照为 **v7**。产品清单加入按运动 tick 驱动的确定性交付延迟，结果为 **1,705/2,000**；减少的七项都属于“下降＋随机晚一 tick”。没有安全违规、异常或证据缺口。D055 的快速拒绝不再缩短完整求解测得的准备长度；平视二格下降正常和首条晚一 tick 的 Fabric 复验为 **2/2**。数据、源码指纹和失败保存在 `evidence/motion_navigation/r28-baseline-v7/`，结果与命令见 [R28 验收第 15 节](docs/motion_navigation/acceptance/navigation-coordination-convergence.md#15-后台交付延迟整改与-v7-量尺)。
+2026-10-06，F1 已知世界正式跟随的功能交付通过，五个代表 Fabric 场景逐场通过，修订响应 P95 不超过 4 tick，task recovery 和安全违规均为 0。薄跟随层只调用导航的开始、目标修订和释放接口。原结构门槛未通过，因此当前只做行为不变的结构整理。S0 已冻结三个删除候选和 `r28-structure-trajectory-v1` 基线：v7 2,000 项、协调 1,448/1,448、补充故障 4/4；当前产品完成 1,718/2,000，零异常、零安全事件。`_wait_for_active_terminal` 等有正式职责或证据不足的入口明确保留。结果见[结构整理验收](docs/motion_navigation/acceptance/post-F1-navigation-structure-cleanup.md)，紧凑签名和清单位于 `evidence/motion_navigation/post-f1-structure-s0/`。
 
-R28-1 已完成共同恢复和持续目标语义两个切片。规划截止退场和结束请求进入同一交接协调器；`GoalReachPolicy` 支持一次性到达和到达后保持活动，目标修订不能更换策略或补回额度。结束请求已接受或任务已经终结时，迟到修订统一返回未接受。运动导航 **984/984**，协调 **1,448/1,448**，四个补充故障场景覆盖全部 41 个登记函数；当前源码下的一次性 v7 产品任务与第二个切片前 **2,000/2,000** 相同。精简证据位于 `evidence/motion_navigation/r28-1-slice-v1/`。完整 R28-1 仍缺剩余交接去向和 `propose` 拆分；R28-4、R28-3、室内接近、正式跟随和长期期限仍打开。
+2026-10-04，R28 已按时间盒结束，正式批次为 **10／10**。R28-1、R28-4 按冻结范围完成；R28-3 完成限定安全与功能交付，但原完整阶段未通过；R28-5 未执行。协调代码净减少、两次统计查看、产品统计非退步、五 tick 修订响应、正式跟随和室内终点接近仍未通过。三方在 Linux 上对最终代码复跑运动导航 **1,207／1,207**、协调集合 **1,448／1,448**、补充故障 **4／4** 和 v7 **1,710／2,000**。迁移入口实际覆盖 **40／41**；`_wait_for_active_terminal` 没有场景进入，尚未证明可达或不可达。R28-4 的五个晚到下降结果是时序敏感变化，不记为产品能力提升。精简证据位于 `evidence/motion_navigation/r28-4-budget-v1/` 和 `evidence/motion_navigation/r28-3-generation-v1/`，收尾结论见 [R28 验收第 20 节](docs/motion_navigation/acceptance/navigation-coordination-convergence.md#20-r28-时间盒收尾)。下一阶段是正式跟随。
+
+历史 v7 冻结参照为 **1,705／2,000**。产品清单加入按运动 tick 驱动的确定性交付延迟；减少的七项都属于“下降＋随机晚一 tick”。没有安全违规、异常或证据缺口。D055 的快速拒绝不再缩短完整求解测得的准备长度；平视二格下降正常和首条晚一 tick 的 Fabric 复验为 **2／2**。数据、源码指纹和失败保存在 `evidence/motion_navigation/r28-baseline-v7/`，结果与命令见 [R28 验收第 15 节](docs/motion_navigation/acceptance/navigation-coordination-convergence.md#15-后台交付延迟整改与-v7-量尺)。
 
 历史 v6 为 **1,712/2,000**，晚到下降 198/200。该轮运动导航 960/960，最终 Fabric 40/40；二十次首条晚到由实际应用账本核实。原结果、限制和失败继续保存在 `evidence/motion_navigation/r28-baseline-v6/`，没有用 v7 回填。
 

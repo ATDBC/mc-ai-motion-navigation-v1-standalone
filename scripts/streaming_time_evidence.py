@@ -185,7 +185,7 @@ def _parse_action(raw: dict):
 
 
 def _validated_observations(directory: Path, errors: _Errors) -> Iterator[dict]:
-    from mc2p.contracts.action_receipt import ClientBehaviorReceiptV2
+    from mc2p.contracts.action_receipt import behavior_receipt_from_mapping
     from mc2p.runtime.segmented_trace import iter_segmented_jsonl
     from scripts.formal_observation_v3_trace import restore_observation_v3_trace
 
@@ -236,7 +236,9 @@ def _validated_observations(directory: Path, errors: _Errors) -> Iterator[dict]:
                     if previous is None or closed:
                         raise ValueError('action sample outside an active reset episode')
                     action = _parse_action(payload['decision']['action'] if kind == 'step' else payload['action'])
-                    receipt = ClientBehaviorReceiptV2.from_mapping(payload['backend_result']['receipt'])
+                    receipt = behavior_receipt_from_mapping(
+                        payload['backend_result']['receipt']
+                    )
                     if (observation['episode_id'] != previous['episode_id']
                             or observation['sequence_id'] != previous['sequence_id'] + 1
                             or action.episode_id != observation['episode_id']

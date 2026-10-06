@@ -1,0 +1,17 @@
+{
+  "schema_version": "mc2p.r28-4-budget-complexity.v1",
+  "baseline_commit": "5536deaf97c3fe0c33e499440e9987a959897f8f",
+  "candidate_commit": "d26e3df697deccbabebfcd6f46026d47fbaea1cd",
+  "scope": "9 个核心协调和 driver 文件",
+  "baseline_lines": 11169,
+  "candidate_lines": 12419,
+  "line_delta": 1250,
+  "largest_file_deltas": {
+    "mc2p/motion_nav/navigation_session.py": 411,
+    "mc2p/motion_nav/navigation_handoff.py": 317,
+    "mc2p/motion_nav/retry_ledger.py": 444
+  },
+  "coordination_code_net_reduction_passed": false,
+  "source": ".tmp/r28-4/final-review.md",
+  "source_sha256": "47ee9ea52eda8ef5b899e7cf77fa983deca4f860e99486cd9ac75ae777ed5881"
+}

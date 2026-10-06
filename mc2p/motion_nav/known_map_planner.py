@@ -15,6 +15,9 @@ from mc2p.motion_nav.air_motion import AirMotionProfile
 from mc2p.motion_nav.controlled_drop import ControlledDropEdge, query_controlled_drop
 from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
 from mc2p.motion_nav.ground_motion import GroundMotionProfile
+from mc2p.motion_nav.route_validation import (
+    query_surface_walk_edge,
+)
 from mc2p.motion_nav.ground_modes import GroundModeProfile
 from mc2p.motion_nav.ground_traversal import (
     GroundTraversalPlan, GroundTraversalProofCache, GroundTraversalStatus,
@@ -1104,6 +1107,7 @@ class SurfaceWalkEdge:
     dependencies: tuple[BlockPos, ...]
     transition: MovementTransition
     requires_ground_traversal_proof: bool = False
+    body_height_blocks: float = 1.8
 
     def __post_init__(self) -> None:
         if type(self.start) is not SurfaceNodeId or type(self.end) is not SurfaceNodeId:
@@ -1116,6 +1120,10 @@ class SurfaceWalkEdge:
             raise ContractViolation("surface walk edge requires immutable typed facts")
         if type(self.requires_ground_traversal_proof) is not bool:
             raise ContractViolation("surface walk proof requirement must be explicit")
+        if (type(self.body_height_blocks) not in (int, float)
+                or not math.isfinite(float(self.body_height_blocks))
+                or self.body_height_blocks <= 0):
+            raise ContractViolation("surface walk body height must be positive")
 
     @property
     def resource_change(self) -> ResourceChange:
@@ -1300,6 +1308,7 @@ class SurfaceGraph:
     nodes: tuple[SurfaceNode, ...]
     edges: tuple[SurfaceEdge, ...]
     has_unsupported: bool
+    ground_profile: GroundMotionProfile | None = None
 
     def __post_init__(self) -> None:
         require_identifier(self.world_session, "surface graph world session")
@@ -1324,6 +1333,9 @@ class SurfaceGraph:
             raise ContractViolation("surface graph edges must be sorted and unique")
         if type(self.has_unsupported) is not bool:
             raise ContractViolation("surface graph unsupported flag must be explicit")
+        if (self.ground_profile is not None
+                and type(self.ground_profile) is not GroundMotionProfile):
+            raise ContractViolation("surface graph ground profile must be typed")
 
     @property
     def complete_scope(self) -> bool:
@@ -1569,6 +1581,7 @@ class SurfaceRouteCandidate:
     ground_traversal_plans: tuple[GroundTraversalPlan, ...] = ()
     information_need: PlanningInformationNeed | None = None
     work_identity: AsyncWorkIdentity | None = None
+    ground_profile: GroundMotionProfile | None = None
 
     def __post_init__(self) -> None:
         if (self.total_cost_ticks is not None
@@ -1590,40 +1603,16 @@ class SurfaceRouteCandidate:
             raise ContractViolation(
                 "only a no-known-route result may carry planning information"
             )
+        if (self.ground_profile is not None
+                and type(self.ground_profile) is not GroundMotionProfile):
+            raise ContractViolation("surface route ground profile must be typed")
 
 
 def _surface_edge_cost_ticks(edge: SurfaceEdge) -> int:
     return seconds_to_planning_ticks(edge.cost_seconds)
 
 
-def _surface_walk_query(
-    world: WorldView,
-    start: SupportSurface,
-    end: SupportSurface,
-    *,
-    body_height_blocks: float = 1.8,
-) -> tuple[QueryStatus, tuple[BlockPos, ...]]:
-    if abs(end.position[1] - start.position[1]) > 1.0e-6:
-        return QueryStatus.UNSUPPORTED, tuple(sorted(
-            set(start.dependencies) | set(end.dependencies)
-        ))
-    body = Aabb(start.position[0] - .3, start.position[1], start.position[2] - .3,
-                start.position[0] + .3, start.position[1] + body_height_blocks,
-                start.position[2] + .3)
-    dx = end.position[0] - start.position[0]
-    dz = end.position[2] - start.position[2]
-    movement = sweep(body, (dx, 0.0, dz), world)
-    dependencies = set(start.dependencies) | set(end.dependencies) | set(movement.dependencies)
-    if movement.status is not QueryStatus.FEASIBLE:
-        return movement.status, tuple(sorted(dependencies))
-    for fraction in (.25, .5, .75, 1.0):
-        support = query_support(body.moved(dx * fraction, 0.0, dz * fraction), world)
-        dependencies.update(support.dependencies)
-        if support.status is not QueryStatus.FEASIBLE:
-            return support.status, tuple(sorted(dependencies))
-        if support.support_fraction < .5:
-            return QueryStatus.BLOCKED, tuple(sorted(dependencies))
-    return QueryStatus.FEASIBLE, tuple(sorted(dependencies))
+_surface_walk_query = query_surface_walk_edge
 
 
 def _provisional_direct_drop_query(
@@ -1989,6 +1978,7 @@ class _SurfaceExpander:
                         mode_profile=self.ground_mode_profile,
                     ),
                     abs(delta_y) > 1.0e-6,
+                    self.body_height,
                 ))
         if (self.movement_mode is MovementMode.WALK
                 and abs(delta_y) > 1.0e-6 and distance <= 1):
@@ -2329,6 +2319,7 @@ def build_surface_graph(world: WorldView, bounds: KnownMapBounds,
         world.session.value, world.geometry_revision, expander.actual_bounds(),
         tuple(expander.nodes[node_id] for node_id in sorted(expander.nodes)),
         edges, expander.has_unsupported,
+        expander.ground_profile,
     )
 
 def _surface_candidate(request: SurfacePlanningRequest, graph: SurfaceGraph,
@@ -2359,7 +2350,7 @@ def _surface_candidate(request: SurfacePlanningRequest, graph: SurfaceGraph,
         dependencies, expanded, final_resources, request.goal_state,
         request.initial_resources, request.minimum_resources,
         planner_states, reasons, cost_ticks, ground_traversal_plans,
-        information_need, request.work_identity,
+        information_need, request.work_identity, graph.ground_profile,
     )
 
 
@@ -2698,6 +2689,7 @@ def plan_known_surface_snapshot(
             expander.actual_bounds(),
             tuple(expander.nodes[node_id] for node_id in sorted(expander.nodes)),
             edges, expander.has_unsupported,
+            expander.ground_profile,
         )
 
     required_top_clearance = max((

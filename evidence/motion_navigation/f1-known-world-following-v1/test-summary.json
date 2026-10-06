@@ -1,0 +1,16 @@
+{
+  "schema_version": "mc2p.f1-known-world-following-test-summary.v1",
+  "source_head": "f418649",
+  "command": "python -m unittest discover -s tests/motion_nav -p 'test_*.py' -v",
+  "ran": 1474,
+  "passed": 1469,
+  "failed": 5,
+  "failures": [
+    "test_motion_baseline_recovery.MotionBaselineRecoveryTests.test_changed_heading_during_background_revalidation_can_realign(seed=163)",
+    "test_navigation_supervised_interruptions.SupervisedInterruptionTests.test_removed_landing_support_is_rechecked_four_ticks_before_departure",
+    "test_public_repository_completeness.PublicRepositoryCompletenessTests.test_standalone_manifest_contains_formal_probe_sources_not_old_ray_evidence",
+    "test_r28_migration_faults.MigrationFaultTests.test_public_faults_enter_the_migration_function_and_release_body(name='active_route_dependency_retry')",
+    "test_r28_shared_recovery.SharedRecoveryFormalTests.test_expired_planning_work_is_retired_at_every_observed_boundary"
+  ],
+  "comparison": "Same five frozen failures recorded in acceptance section 12.5; no new failure name or assertion class."
+}

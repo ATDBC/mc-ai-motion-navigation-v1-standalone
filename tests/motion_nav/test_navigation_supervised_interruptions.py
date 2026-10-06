@@ -4,19 +4,21 @@ import unittest
 from unittest.mock import patch
 
 from mc2p.contracts.action import ActionPriorityV0
-from mc2p.contracts.action_v1 import ActionIntentV1, LookV1
+from mc2p.contracts.action_v1 import ActionIntentV1, LookV1, MovementV1
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.intent_source import (
     ControlFrameProposalV1, OrderedIntentV1, ordered_intent_id,
 )
 from mc2p.contracts.report import ExecutionStatusV0, FailureCodeV0, FailureV0
 from mc2p.motion_nav.body_control import HandoffDisposition
+from mc2p.motion_nav.action_route_executor import ActionRouteState
 from tests.sim.backend import Perturbations
 from tests.sim.runner import Event, late_ticks, run
 from tests.sim.runner import _goal
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.retry_ledger import RetryLedgerCapacityExceeded, WaitVerdict
 from mc2p.motion_nav.landing_edge_probe import LandingEdgeProbe
+from mc2p.motion_nav.navigation_session import NavigationSession
 from tests.sim.runner import Scenario
 from tests.sim.scenarios import (
     SCENARIOS, airborne_in_drop, drop_ledge, revise_goal_back,
@@ -119,9 +121,10 @@ class SupervisedInterruptionTests(unittest.TestCase):
         for evidence_kind in ("current", "missing", "stale"):
             with self.subTest(evidence=evidence_kind):
                 injected = False
+                observed_session = None
 
                 def control(context):
-                    nonlocal injected
+                    nonlocal injected, observed_session
                     driver, session = context.driver, context.session
                     runtime = driver.runtime
                     deadline = context.clock[0] + 500_000_000
@@ -146,10 +149,21 @@ class SupervisedInterruptionTests(unittest.TestCase):
                                 "injected structured client failure", True, "client_behavior")))
                         if evidence_kind == "current":
                             driver.adopt_result(result)
-                            self.assertIsNone(driver.source)
+                            observed_session = session
+                            route = session._supervisor.incumbent_route
+                            self.assertIsNotNone(driver.source)
                             self.assertFalse(probe.owned)
                             self.assertIsNone(session._edge_probe)
-                            self.assertFalse(session.has_owned_body_control)
+                            self.assertIsNotNone(route)
+                            self.assertIs(
+                                route.executor.state,
+                                ActionRouteState.CANCELLING,
+                            )
+                            self.assertIs(session._supervisor.route, route)
+                            self.assertFalse(
+                                session._supervisor.has_pending_route,
+                            )
+                            self.assertTrue(session.has_owned_body_control)
                             self.assertEqual(session._retry_ledger.active_waits(probe.owner_id), ())
                         else:
                             unavailable = (None if evidence_kind == "missing" else
@@ -171,6 +185,9 @@ class SupervisedInterruptionTests(unittest.TestCase):
                 self.assertTrue(injected, "current probe release boundary was not exercised")
                 self.assertEqual([entry for entry in result.violations
                     if entry[1] in {"I1", "I2", "I3", "I6"}], [])
+                self.assertFalse(result.trace[-1]["source_bound"])
+                if observed_session is not None:
+                    self.assertFalse(observed_session.has_owned_body_control)
 
     def test_cancel_failure_or_revision_stops_probe_and_suspended_route(self):
         for interrupt in ("cancel", "failure", "revision"):
@@ -322,6 +339,102 @@ class SupervisedInterruptionTests(unittest.TestCase):
                 self.assertNotEqual(result.outcome, "not_terminal")
                 self.assertEqual(result.violations, [])
 
+    def test_action_zero_winner_keeps_probe_until_bound_action_wins(self):
+        positions = ((-.5, 62.0, 4.5), (.5, 62.0, 4.5))
+        events = []
+        for index, tick in enumerate(range(12, 160, 5)):
+            position = positions[index % 2]
+
+            def revise(context, revision=index + 2, target=position):
+                revised = _goal(target, context.risk_policy_id)
+                context.driver.replace_goal(
+                    "goal", revision, revised, context.clock[0],
+                    damage_budget=TaskDamageBudget(
+                        context.risk_policy_id, context.damage_points,
+                    ),
+                )
+                context.goal_state = revised
+                context.goal_position = target
+
+            events.append(Event(
+                f"revise_{index}",
+                lambda context, at=tick: context.tick >= at,
+                revise,
+            ))
+
+        original_register = NavigationSession.register_verified_submission
+        mismatched_action_zero = False
+        matching_action_one = False
+
+        def register(session, proposal, **kwargs):
+            nonlocal mismatched_action_zero, matching_action_one
+            decision = proposal.route_decision
+            route_control = (
+                None if proposal.route_owner_id is None else
+                session._supervisor.control_by_id(proposal.route_owner_id)
+            )
+            probe = session._edge_probe
+            candidate = (
+                probe is not None and probe.ready
+                and decision is not None and route_control is not None
+                and decision.submit_input
+                and decision.movement != MovementV1()
+            )
+            if not candidate:
+                return original_register(session, proposal, **kwargs)
+            waits = session._retry_ledger.active_waits(probe.owner_id)
+            self.assertTrue(waits)
+            matches = probe.belongs_to_action(
+                route_control.route.route_id,
+                route_control.route.route_revision,
+                decision.action_index,
+            )
+
+            result = original_register(session, proposal, **kwargs)
+
+            if matches:
+                matching_action_one = True
+                self.assertEqual(decision.action_index, 1)
+                self.assertIsNone(session._edge_probe)
+                self.assertEqual(
+                    session._retry_ledger.active_waits(probe.owner_id), (),
+                )
+            else:
+                mismatched_action_zero = True
+                self.assertEqual(decision.action_index, 0)
+                self.assertIs(session._edge_probe, probe)
+                self.assertTrue(probe.owned)
+                self.assertEqual(
+                    session._retry_ledger.active_waits(probe.owner_id), waits,
+                )
+            return result
+
+        configured = replace(
+            scenario("direct_drop_2"),
+            name="direct_drop_goal_flaps_every_5_ticks_probe_identity",
+            events=events,
+            max_ticks=400,
+        )
+        with patch.object(
+            NavigationSession, "register_verified_submission", register,
+        ):
+            result = run(configured)
+            far_landing = run(scenario("far_landing_L_walkway"))
+
+        self.assertTrue(mismatched_action_zero)
+        self.assertTrue(matching_action_one)
+        self.assertLess(result.ticks, configured.max_ticks)
+        self.assertIn(
+            result.outcome_class,
+            {"task_success", "bounded_safe_failure"},
+        )
+        self.assertEqual(result.violations, [])
+        self.assertEqual(
+            (far_landing.outcome, far_landing.reason),
+            ("success", "goal_state_satisfied"),
+        )
+        self.assertEqual(far_landing.violations, [])
+
     def test_probe_displaced_to_lower_safe_support_replans_from_current_body(self):
         configured = replace(
             scenario("direct_drop_2"),
@@ -369,11 +482,33 @@ class SupervisedInterruptionTests(unittest.TestCase):
                 )
                 result = run(configured)
                 self.assertEqual(result.violations, [])
+                self.assertEqual(result.outcome, "failed")
                 self.assertEqual(
-                    (result.outcome, result.reason, result.damage),
-                    ("failed", "landing_support_missing", 0.0),
+                    result.outcome_class, "bounded_safe_failure",
                 )
+                after_removal = [
+                    row for row in result.trace
+                    if row["tick"] >= removal_tick
+                ]
+                self.assertTrue(after_removal)
+                self.assertFalse(any(
+                    row["applied_movement"]["forward"] > 0
+                    for row in after_removal
+                ))
+                self.assertTrue(all(
+                    row["on_ground"] for row in result.trace
+                ))
+                self.assertFalse(any(
+                    action["submitted_sequences"]
+                    for row in result.trace
+                    for action in row["risk_actions"]
+                ))
+                self.assertEqual(result.damage, 0.0)
+                self.assertEqual(max(
+                    row["recovery_total_starts"] for row in result.trace
+                ), 0)
                 self.assertTrue(result.trace[-1]["on_ground"])
+                self.assertFalse(result.trace[-1]["source_bound"])
 
     def test_removed_landing_support_is_rechecked_four_ticks_before_departure(self):
         clean = run(replace(
@@ -403,7 +538,7 @@ class SupervisedInterruptionTests(unittest.TestCase):
         )
         self.assertTrue(result.trace[-1]["on_ground"])
 
-    def test_unsolved_side_landing_stops_probe_and_reports_motion_failure(self):
+    def test_unsolved_side_landing_times_out_acquisition_and_releases(self):
         result = run(Scenario(
             "side_landing_unsolved",
             drop_ledge(2),
@@ -412,8 +547,12 @@ class SupervisedInterruptionTests(unittest.TestCase):
             max_ticks=300,
         ))
         self.assert_safe_settled_result(result)
-        self.assertEqual(result.outcome, "failed")
-        self.assertTrue(result.reason.startswith("motion_unsolvable:"))
+        self.assertEqual(
+            (result.outcome, result.reason),
+            ("failed", "edge_probe_acquisition_timeout"),
+        )
+        self.assertEqual(result.outcome_class, "bounded_safe_failure")
+        self.assertFalse(result.trace[-1]["source_bound"])
 
     def test_edge_probe_handoff_finishes_with_constant_one_tick_latency(self):
         configured = replace(
@@ -527,6 +666,8 @@ class SupervisedInterruptionTests(unittest.TestCase):
         result = run(configured)
         self.assert_safe_settled_result(result)
         self.assertEqual(result.reason, "edge_probe_acquisition_timeout")
+        self.assertNotIn("I10", {entry[1] for entry in result.violations})
+        self.assertFalse(result.trace[-1]["source_bound"])
 
     def test_probe_goal_revision_keeps_body_until_safe(self):
         result = run(scenario("direct_drop_2_goal_revised_during_probe"))

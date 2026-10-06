@@ -16,12 +16,13 @@ from mc2p.motion_nav.action_route import (
 )
 from mc2p.motion_nav.air_motion import AirMotionController, AirMotionProfile, AirMotionState
 from mc2p.motion_nav.fixed_route import (
-    FixedRouteConfig, FixedRouteController, FixedRouteState, GroundHandoffTarget,
+    FixedRouteConfig, FixedRouteController, FixedRouteDecision, FixedRouteState,
+    GroundHandoffTarget,
     terminal_route_config,
     GroundHandoffDisposition,
 )
 from mc2p.motion_nav.ground_motion import GroundMotionProfile
-from mc2p.motion_nav.ground_modes import GroundModeProfiles
+from mc2p.motion_nav.ground_modes import GroundModeProfiles, observed_ground_mode
 from mc2p.motion_nav.jump_up import JumpUpController, JumpUpProfile, JumpUpState
 from mc2p.motion_nav.step_transition import StepController, StepProfile, StepState
 from mc2p.motion_nav.goal_observation import (
@@ -45,6 +46,8 @@ from mc2p.motion_nav.online_motion import (
 )
 from mc2p.motion_nav.physics_types import PhysicsState
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
+from mc2p.motion_nav.route_validation import RouteProgressEvidence
+from mc2p.motion_nav.segment_entry import body_fits_segment_entry
 from mc2p.motion_nav.safe_ground_control import (
     verified_ground_recovery_movement, verified_ground_rollout,
 )
@@ -82,6 +85,41 @@ class ActionRouteDecision:
     requires_verified_motion: bool = False
     body_phase: BodyControlPhase | None = None
     ground_handoff_disposition: GroundHandoffDisposition = GroundHandoffDisposition.NOT_REQUESTED
+    route_progress_evidence: RouteProgressEvidence | None = None
+
+
+def _ordinary_walk_start_window(
+    action: WalkSegment,
+    decision: FixedRouteDecision,
+    frame: NavigationFrame,
+) -> tuple[int, int] | None:
+    """Allow one late start only for a stopped, straight ordinary Walk.
+
+    This is a start-time tolerance, not a lease extension.  Corners, proved
+    height traversal, braking, non-Walk transitions and moving bodies keep the
+    exact-tick contract until they have their own evidence.
+    """
+    movement_tick = frame.body.movement_tick_id
+    if (
+        len(action.fixed_route.points) != 2
+        or action.traversal_plan is not None
+        or (
+            action.transition is not None
+            and action.transition.mode is not MovementMode.WALK
+        )
+        or decision.state is not FixedRouteState.RUNNING
+        or decision.movement == MovementV1()
+        or decision.input_lease_ticks < 2
+        or not frame.body.is_on_ground
+        or frame.body.pose != "standing"
+        or movement_tick is None
+        or math.hypot(
+            frame.body.velocity_blocks_per_second[0],
+            frame.body.velocity_blocks_per_second[2],
+        ) > 1.0e-6
+    ):
+        return None
+    return movement_tick + 1, movement_tick + 2
 
 
 class ActionRouteExecutor:
@@ -139,15 +177,24 @@ class ActionRouteExecutor:
         self._completed_movement_damage_points = 0.0
         self._committed_damage_actions: set[int] = set()
         self._input_scope_floor: int | None = None
+        self._pending_action_boundary_index: int | None = None
 
     @property
     def completed_movement_damage_points(self) -> float:
         return self._completed_movement_damage_points
 
+    @property
+    def pending_action_boundary_index(self) -> int | None:
+        return self._pending_action_boundary_index
+
+    def clear_pending_action_boundary(self) -> None:
+        self._pending_action_boundary_index = None
+
     def enter_upcoming_action_boundary(
         self, next_index: int, frame: NavigationFrame,
     ) -> bool:
-        """Finish a Walk once the body is already on the next action support."""
+        """Stage a proved next-action boundary until Walk progress is observed."""
+        self.clear_pending_action_boundary()
         if (self.route is None
                 or type(next_index) is not int
                 or next_index != self.action_index + 1
@@ -158,17 +205,14 @@ class ActionRouteExecutor:
                 or not frame.body.is_on_ground):
             return False
         upcoming = self.route.actions[next_index]
-        region = upcoming.start_surface.region
-        x, y, z = frame.body.position
-        if (abs(y - upcoming.start_surface.position[1]) > .10
-                or x < region.min_x + .05
-                or x > region.max_x - .05
-                or z < region.min_z + .05
-                or z > region.max_z - .05):
+        mode = observed_ground_mode(frame.body)
+        if (upcoming.entry_window is None
+                or mode is None
+                or not body_fits_segment_entry(
+                    upcoming.entry_window, frame.body, mode,
+                )):
             return False
-        self.action_index = next_index
-        self._controller = None
-        self.state = ActionRouteState.RUNNING
+        self._pending_action_boundary_index = next_index
         return True
 
     def _activate(self, frame: NavigationFrame) -> None:
@@ -471,6 +515,7 @@ class ActionRouteExecutor:
         self._completed_movement_damage_points = 0.0
         self._committed_damage_actions.clear()
         self._input_scope_floor = None
+        self.clear_pending_action_boundary()
         for candidate in verified_motion:
             self._validate_verified_motion(route, candidate, damage_budget)
             index = candidate.context.action_index
@@ -651,6 +696,7 @@ class ActionRouteExecutor:
         self.cancel()
 
     def cancel(self) -> None:
+        self.clear_pending_action_boundary()
         if self.state in {
             ActionRouteState.RUNNING,
             ActionRouteState.NEEDS_INFORMATION,
@@ -766,13 +812,16 @@ class ActionRouteExecutor:
                 expected_movement_tick: int | None = None,
                 latest_movement_tick: int | None = None,
                 requires_verified_motion: bool = False,
-                ground_handoff_disposition=GroundHandoffDisposition.NOT_REQUESTED) -> ActionRouteDecision:
+                ground_handoff_disposition=GroundHandoffDisposition.NOT_REQUESTED,
+                route_progress_evidence: RouteProgressEvidence | None = None,
+                ) -> ActionRouteDecision:
         return ActionRouteDecision(
             self.state, movement, look, lease, self.action_index, reason, missing,
             time.perf_counter_ns() - started, submit_input,
             verified_command_index, expected_movement_tick,
             latest_movement_tick, requires_verified_motion,
             ground_handoff_disposition=ground_handoff_disposition,
+            route_progress_evidence=route_progress_evidence,
         )
 
     def prepare_ground_handoff(self, target: GroundHandoffTarget | None) -> None:
@@ -831,20 +880,6 @@ class ActionRouteExecutor:
                                     "input_application_unconfirmed")
             return self._finish_goal(frame, started, input_ledger, state_anchor)
         action = self.route.actions[self.action_index]
-        if (type(action) is WalkSegment and not self._cancel_requested
-                and input_confirmed and state_anchor is not None
-                and input_ledger is not None):
-            successor = self._verified_motion.get(self.action_index + 1)
-            if (successor is not None
-                    and verified_candidate_can_start(successor, state_anchor)):
-                # A concrete proved entry can precede the graph's reference
-                # point. The route owner remains unchanged; only the winning
-                # first submission establishes the strict controller's input.
-                return self._advance(
-                    frame, started, state_anchor=state_anchor,
-                    input_ledger=input_ledger,
-                    movement_yaw_radians=movement_yaw_radians,
-                )
         self._commit_drop_damage_if_started(action, frame)
         if (self._cancel_requested
                 and self._stop_cause is StopCause.DEPENDENCY_CHANGED
@@ -961,15 +996,60 @@ class ActionRouteExecutor:
                     )
                 ),
             )
-            assert hasattr(decision, "state")
+            if type(decision) is not FixedRouteDecision:
+                raise ContractViolation(
+                    "ordinary Walk requires a typed fixed-route decision"
+                )
+            progress_evidence = RouteProgressEvidence(
+                self.action_index,
+                action.fixed_route.route_id,
+                decision.progress_blocks,
+                frame.body.sequence_id,
+            )
+            successor = (
+                None if self._cancel_requested or not input_confirmed
+                or state_anchor is None or input_ledger is None
+                else self._verified_motion.get(self.action_index + 1)
+            )
+            verified_successor_ready = (
+                successor is not None
+                and verified_candidate_can_start(successor, state_anchor)
+            )
+            boundary_ready = (
+                self._pending_action_boundary_index == self.action_index + 1
+            )
+            if ((verified_successor_ready or boundary_ready)
+                    and decision.state in {
+                        FixedRouteState.RUNNING,
+                        FixedRouteState.BRAKING,
+                        FixedRouteState.SUCCEEDED,
+                    }
+                    and decision.handoff_disposition
+                        is not GroundHandoffDisposition.REJECTED):
+                # The verified successor may start before the graph reference
+                # point, but retirement still uses this frame's real Walk
+                # decision. Only the successor command is returned.
+                advanced = self._advance(
+                    frame, started, state_anchor=state_anchor,
+                    input_ledger=input_ledger,
+                    movement_yaw_radians=movement_yaw_radians,
+                )
+                return replace(
+                    advanced,
+                    route_progress_evidence=progress_evidence,
+                )
             if decision.state is FixedRouteState.SUCCEEDED:
                 if self._cancel_requested:
                     self.state = ActionRouteState.CANCELLED
                     return self._result(started, MovementV1(), 1, "cancelled_on_ground")
-                return self._advance(
+                advanced = self._advance(
                     frame, started, state_anchor=state_anchor,
                     input_ledger=input_ledger,
                     movement_yaw_radians=movement_yaw_radians,
+                )
+                return replace(
+                    advanced,
+                    route_progress_evidence=progress_evidence,
                 )
             mapping = {
                 FixedRouteState.BLOCKED: ActionRouteState.BLOCKED,
@@ -982,10 +1062,22 @@ class ActionRouteExecutor:
             }
             if decision.state in mapping:
                 self.state = mapping[decision.state]
+            ordinary_start_window = _ordinary_walk_start_window(
+                action, decision, frame,
+            )
             return self._result(
                 started, decision.movement, decision.input_lease_ticks,
                 decision.reason, decision.missing_cells,
+                expected_movement_tick=(
+                    None if ordinary_start_window is None
+                    else ordinary_start_window[0]
+                ),
+                latest_movement_tick=(
+                    None if ordinary_start_window is None
+                    else ordinary_start_window[1]
+                ),
                 ground_handoff_disposition=decision.handoff_disposition,
+                route_progress_evidence=progress_evidence,
             )
 
         decision = self._controller.decide(frame, input_confirmed=input_confirmed)
@@ -1062,6 +1154,7 @@ class ActionRouteExecutor:
         assert self.route is not None
         completed = self.route.actions[self.action_index]
         self._commit_drop_damage_if_started(completed, frame, force=True)
+        self.clear_pending_action_boundary()
         self.action_index += 1
         if self.action_index >= len(self.route.actions):
             self.action_index = len(self.route.actions) - 1

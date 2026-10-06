@@ -1,0 +1,100 @@
+{
+  "schema_version": "mc2p.navigation-structure-deletion-inventory.v1",
+  "source_commit": "a1649c227bb508a85d4957f926442dfb2d04a7a2",
+  "candidates": [
+    {
+      "id": "navigation_session._admit_async_event",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "lines": [
+        769,
+        790
+      ],
+      "production_callers": [],
+      "test_callers": [],
+      "state_owner": "NavigationLifecycle and each async work owner",
+      "existing_replacement": [
+        "NavigationSession._admit_command_event keeps synchronous lifecycle admission",
+        "PlanningCoordinator and MotionRouteCoordinator validate typed async identity, window, facts and disposition"
+      ],
+      "formal_checks": [
+        "tests/motion_nav/test_navigation_lifecycle.py",
+        "tests/motion_nav/test_r27_async_admission.py",
+        "coordination-1448",
+        "supplemental-faults-4"
+      ],
+      "decision": "delete_candidate"
+    },
+    {
+      "id": "navigation_session._cell_fact_id",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "lines": [
+        1934,
+        1935
+      ],
+      "production_callers": [],
+      "test_callers": [],
+      "state_owner": "the owner that creates the blocking fact",
+      "existing_replacement": [
+        "InformationAcquisitionState and PlanningCoordinator create their own typed blocker IDs",
+        "the remaining session path creates its current cell ID at the use site"
+      ],
+      "formal_checks": [
+        "tests/motion_nav/test_retry_ledger.py",
+        "coordination-1448",
+        "product-v7-2000"
+      ],
+      "decision": "delete_candidate"
+    },
+    {
+      "id": "motion_coordination._upcoming_air_index",
+      "file": "mc2p/motion_nav/motion_coordination.py",
+      "lines": [
+        1097,
+        1106
+      ],
+      "production_callers": [],
+      "test_callers": [],
+      "state_owner": "MotionRouteCoordinator",
+      "existing_replacement": [
+        "Walk-to-air prefetch uses _upcoming_gap_index",
+        "air-to-air successors are solved from the later observed entry state"
+      ],
+      "formal_checks": [
+        "tests/motion_nav/test_continuous_descent.py::VerifiedMotionRouteIntegrationTests.test_next_stair_drop_is_solved_from_the_confirmed_moving_exit",
+        "tests/motion_nav/test_b10_motion_candidate.py",
+        "product-v7-2000"
+      ],
+      "decision": "delete_candidate"
+    }
+  ],
+  "retained": [
+    {
+      "id": "navigation_session._wait_for_active_terminal",
+      "reason": "one production caller and three direct tests; the 1,448 set does not execute it, so deletion evidence is insufficient",
+      "production_callers": [
+        "navigation_session._reissue_request_from_current"
+      ],
+      "checks": [
+        "tests/motion_nav/test_r28_reanchor_handoff.py"
+      ]
+    },
+    {
+      "id": "planning_coordinator.retry_from_current",
+      "reason": "active production recovery path; uncovered by this 1,448 run is a coverage gap, not deletion evidence"
+    },
+    {
+      "id": "retry_ledger.begin_recovery",
+      "reason": "active F8 recovery purchase entry; uncovered by this 1,448 run is a coverage gap, not deletion evidence"
+    },
+    {
+      "id": "navigation_session.active_motion_mailboxes",
+      "reason": "formal async monitor observation API used by tests/sim; no ordinary product caller is expected"
+    },
+    {
+      "id": "navigation_session.active_route",
+      "reason": "diagnostic/test observation API used by formal runtime checks and current demo"
+    }
+  ],
+  "method": "AST load-reference scan over mc2p, scripts and tests, followed by manual owner and formal-check review",
+  "limit": "Zero static callers is necessary, not sufficient. S1 deletes one candidate group at a time and requires exact baseline equality."
+}

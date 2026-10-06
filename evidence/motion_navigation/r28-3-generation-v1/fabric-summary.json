@@ -1,0 +1,60 @@
+{
+  "schema_version": "mc2p.r28-3-generation-fabric.v1",
+  "trials": 8,
+  "passed": 8,
+  "outcomes": {"success": 6, "cancelled": 2},
+  "preparation_samples": 465,
+  "preparation_p95_ms": 2.5268,
+  "preparation_max_ms": 4.2138,
+  "worker_submissions": 16,
+  "worker_results": 16,
+  "minimum_health": 20.0,
+  "outside_window_sequences": 0,
+  "unowned_active_input_ticks": 0,
+  "batches": [
+    {
+      "id": "20261004T052542012314Z-a2751d48",
+      "operation": "planning",
+      "result": "2/2 success",
+      "source_hashes": {
+        "result.json": "4c19077f67ef623215480680a1f266981d4986031e0069d3038b5ce471b81d42",
+        "action-continuity-summary.json": "43c927336468a2a8c23c9f98b81612a59c83edb03cdae6cf9d88c11d416d5731",
+        "action-continuity-frames.jsonl": "006ab332f8da1f32da9fb30069c5b9f0d5cd4b6502042cfc7f107abd150fc31d"
+      }
+    },
+    {
+      "id": "20261004T052853443448Z-ce639ff9",
+      "operation": "revision",
+      "result": "2/2 success",
+      "source_hashes": {
+        "result.json": "de60116bed817b97035b8cd0c92cf8559080f311872f5337d988d21664680cc8",
+        "action-continuity-summary.json": "28798de60ba5ffd89207f3aa3f8753f0b0d9e47bae9ab7b083473155eff8e751",
+        "action-continuity-frames.jsonl": "d746b2b1cba4562eab8394868a312c4c0ef43df22e1a164fc4e2e270580b51fd"
+      }
+    },
+    {
+      "id": "20261004T053229416787Z-a5d45462",
+      "operation": "cancel",
+      "result": "2/2 cancelled with body cleanup",
+      "source_hashes": {
+        "result.json": "3c5022f653236a09bb9cb2304dd3496f428d59b4db604338567e674bcfebafdb",
+        "action-continuity-summary.json": "523c3b9be4cac0777acc617d71c5d80e18d5115674f1f82df62ad3d4287deb4d",
+        "action-continuity-frames.jsonl": "7e0d9d83f73ff23824ccde4e80905023ec1fc5c5e734e44f1296c72b8768de24"
+      }
+    },
+    {
+      "id": "20261004T053510205519Z-949bdc62",
+      "operation": "double",
+      "result": "2/2 success",
+      "source_hashes": {
+        "result.json": "283f5c9c31db49fcea29dad3b098fe22370da2ae5a8169c0a6852e83dc31532c",
+        "action-continuity-summary.json": "363decdf8e5dc8efb14d4ab5da44ab8f748f717ccd70c24ff6940f9a4e48504a",
+        "action-continuity-frames.jsonl": "2f0546a19a18da46d6ec8976e5da768becb2247436c9e862feb854e5d271a36f"
+      }
+    }
+  ],
+  "late_application_ticks": ["123->124", "198->199", "166->167", "130->131"],
+  "source_summary": ".tmp/r28-3/E2-fabric-final/summary.json",
+  "source_summary_sha256": "52c7b02800171d56a6f24e810b5b83de76e0aa8fb9ad7a719d1cf3f2a2baf161",
+  "limits": "方向 0、热 worker 的四类代表场景；不代表冷启动、全方向或正式跟随。"
+}

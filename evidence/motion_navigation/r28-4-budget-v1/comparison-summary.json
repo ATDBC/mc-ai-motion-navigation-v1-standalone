@@ -1,0 +1,36 @@
+{
+  "schema_version": "mc2p.r28-4-budget-comparison.v1",
+  "baseline": "evidence/motion_navigation/r28-baseline-v7",
+  "candidate": ".tmp/r28-4/task-d-v7",
+  "baseline_completed": 1705,
+  "candidate_completed": 1710,
+  "tasks": 2000,
+  "exact_matches": 1995,
+  "success_to_failure": 0,
+  "timing_sensitive_changes": [
+    "drop-late-000026",
+    "drop-late-000045",
+    "drop-late-000056",
+    "drop-late-000119",
+    "drop-late-000135"
+  ],
+  "timing_sensitive_change": {
+    "from": "failed/input_lost",
+    "to": "success/goal_state_satisfied",
+    "claim": "结果变化，不作为产品能力提升"
+  },
+  "groups": {
+    "point-normal": {"completed": 200, "tasks": 200},
+    "point-late": {"completed": 200, "tasks": 200},
+    "height-normal": {"completed": 200, "tasks": 200},
+    "height-late": {"completed": 200, "tasks": 200},
+    "target-normal": {"completed": 200, "tasks": 200},
+    "target-late": {"completed": 200, "tasks": 200},
+    "drop-normal": {"completed": 200, "tasks": 200},
+    "drop-late": {"completed": 196, "tasks": 200},
+    "player-normal": {"completed": 57, "tasks": 200},
+    "player-late": {"completed": 57, "tasks": 200}
+  },
+  "statistical_non_regression_signed": false,
+  "scope": "固定集合逐项比较；不是统计发布结论。"
+}

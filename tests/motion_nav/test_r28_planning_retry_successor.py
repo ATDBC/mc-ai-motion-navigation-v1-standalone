@@ -4,7 +4,9 @@ import unittest
 from dataclasses import replace
 
 from mc2p.contracts.common import ContractViolation
+from mc2p.motion_nav.async_work import AsyncComputationScope
 from mc2p.motion_nav.goal_reach_policy import GoalReachPolicy
+from mc2p.motion_nav.goal_planning_policy import GoalPlanningPolicy
 from mc2p.motion_nav.motion_risk import (
     RiskCommitEvidence,
     RiskCommitKind,
@@ -37,9 +39,17 @@ from tests.motion_nav.test_planning_coordinator import _permit, _request, _world
 from tests.motion_nav.test_b07_step_route import frame, step_profile
 from tests.motion_nav.test_b07_surface_planning import ordinary_profile
 from tests.motion_nav.test_jump_up import jump_profile
-from mc2p.motion_nav.support_surfaces import query_support_surfaces
-from mc2p.motion_nav.route_admission import RouteAdmitter
+from mc2p.motion_nav.support_surfaces import SurfaceNodeId, query_support_surfaces
+from mc2p.motion_nav.route_admission import AdmissionStatus, RouteAdmitter
+from mc2p.motion_nav.route_validation import GroundCapabilityIdentity
 from mc2p.motion_nav.world_model import BlockGeometry, ObservationStamp
+from tests.motion_nav.test_d060_terminal_node_exact_proof import (
+    _world as direct_world,
+)
+from tests.motion_nav.test_d064_ground_direct_handoff import (
+    _goal as direct_goal,
+    _request as direct_request,
+)
 
 
 class PlanningRetryChainContractTests(unittest.TestCase):
@@ -192,6 +202,116 @@ class PlanningRetryChainContractTests(unittest.TestCase):
         self.coordinator.confirm_route_admitted(delivered.route)
 
         self.assertEqual(self.coordinator.local_attempt_failures, 0)
+
+    def test_confirmed_nonplanner_route_resets_chain_before_background_resumes(self):
+        world = direct_world(281, 16)
+        profile = ordinary_profile()
+        current = frame(world, 0, (.5, -60.0, 1.5))
+        request = direct_request(world, goal_z=12)
+        coordinator = PlanningCoordinator(
+            "coordinator-task",
+            PlanningCapabilities(
+                profile, step_profile(), jump_profile(), (), None,
+            ),
+            planner_worker=_InlinePlanner(hold_first=True),
+            route_admitter=RouteAdmitter(),
+            retry_ledger=RetryLedger("coordinator-task"),
+            clock_ns=lambda: 1_000_000_000,
+            snapshot_cells_per_step=10_000,
+        )
+        coordinator.begin(
+            request,
+            current,
+            permit=PlanningAttemptPermit(
+                "coordinator-direct-sequence-permit",
+                "coordinator-task",
+                request.goal_revision,
+                "background-before-direct",
+                PlanningAttemptPermitKind.TASK_UPDATE,
+            ),
+            state_anchor=None,
+            remaining_damage_budget=request.damage_budget,
+        )
+        for index in range(2):
+            retried = coordinator.retry_from_current(
+                current,
+                trigger=PlanningRetryTrigger.LOCAL_RESULT_INVALID,
+                cause=RetryCause.DEPENDENCY,
+                failure_id=f"before-direct-{index}",
+                remaining_damage_budget=request.damage_budget,
+            )
+            self.assertIs(retried.kind, PlanningUpdateKind.RUNNING)
+        self.assertEqual(coordinator.local_attempt_failures, 2)
+
+        previous = coordinator.request
+        direct = replace(
+            previous,
+            sequence=previous.sequence + 1,
+            request_id="coordinator-direct-revision",
+            goal_revision=previous.goal_revision + 1,
+            goal=SurfaceNodeId(0, 7, -60, 0),
+            goal_state=direct_goal(7.5),
+            work_identity=None,
+        )
+        coordinator.revise_request(direct)
+        coordinator.cancel_work("ground_direct_precedes_background_planning")
+        admitted = RouteAdmitter().admit_ground_direct(
+            direct,
+            current,
+            ground_profile=profile,
+            capability_identity=GroundCapabilityIdentity.from_profile(profile),
+        )
+        self.assertIs(admitted.status, AdmissionStatus.ACCEPTED)
+        self.assertIsNone(admitted.route.work_identity)
+
+        scope = coordinator._request_ledger.current_computation_scope
+        with self.assertRaises(ContractViolation):
+            coordinator.confirm_nonplanner_route_admitted(
+                admitted.route,
+                current_scope=AsyncComputationScope(
+                    scope.world_session_id,
+                    scope.task_id,
+                    scope.generation + 1,
+                ),
+            )
+        coordinator.confirm_nonplanner_route_admitted(
+            admitted.route,
+            current_scope=scope,
+        )
+        self.assertEqual(coordinator.local_attempt_failures, 0)
+
+        background = replace(
+            direct,
+            sequence=direct.sequence + 1,
+            request_id="coordinator-background-revision",
+            goal_revision=direct.goal_revision + 1,
+            goal=SurfaceNodeId(0, 12, -60, 0),
+            goal_state=direct_goal(12.5),
+        )
+        coordinator.revise_request(background)
+        coordinator.begin(
+            background,
+            current,
+            permit=PlanningAttemptPermit(
+                "coordinator-background-permit",
+                "coordinator-task",
+                background.goal_revision,
+                "background-after-direct",
+                PlanningAttemptPermitKind.TASK_UPDATE,
+            ),
+            state_anchor=None,
+            remaining_damage_budget=background.damage_budget,
+        )
+        next_failure = coordinator.retry_from_current(
+            current,
+            trigger=PlanningRetryTrigger.LOCAL_RESULT_INVALID,
+            cause=RetryCause.PLANNING,
+            failure_id="background-after-direct-failure",
+            remaining_damage_budget=background.damage_budget,
+        )
+
+        self.assertIs(next_failure.kind, PlanningUpdateKind.RUNNING)
+        self.assertEqual(coordinator.local_attempt_failures, 1)
 
     def test_recovery_reanchor_requires_a_handoff_permit(self):
         with self.assertRaisesRegex(ContractViolation, "handoff permit"):
@@ -373,6 +493,9 @@ class SuccessorAndContinuationContractTests(unittest.TestCase):
         session._goal_requests.select_reach_policy(
             GoalReachPolicy.KEEP_ACTIVE_ON_REACH,
         )
+        session._goal_requests.select_planning_policy(
+            GoalPlanningPolicy.PROVED_LOCAL_DIRECT_THEN_BACKGROUND,
+        )
         session._task_damage_budget = risk.budget
         session._movement_damage_spent_points = 2.0
         session._transition(NavigationTransitionAction.MARK_FAILED, "approach-ended")
@@ -388,6 +511,10 @@ class SuccessorAndContinuationContractTests(unittest.TestCase):
         self.assertIs(
             continuation._goal_requests.reach_policy,
             GoalReachPolicy.KEEP_ACTIVE_ON_REACH,
+        )
+        self.assertIs(
+            continuation._goal_requests.planning_policy,
+            GoalPlanningPolicy.PROVED_LOCAL_DIRECT_THEN_BACKGROUND,
         )
         self.assertEqual(continuation._movement_damage_spent_points, 2.0)
         self.assertEqual(continuation._retry_ledger.total_recovery_starts, 1)
