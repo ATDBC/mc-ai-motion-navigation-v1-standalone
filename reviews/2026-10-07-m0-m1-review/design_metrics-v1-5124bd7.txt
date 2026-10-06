@@ -1,0 +1,26 @@
+motion_nav lines: 38431
+  coordination                    16655  43%
+  execution_control                7042  18%
+  other                            1923  5%
+  physics_geometry_knowledge       4669  12%
+  planning_solving                 8142  21%
+
+action-type dispatch sites outside action implementations: 42
+  by category: A_controller_selection 11, B_body_commitment_and_stop_safety 2, C_background_motion_solving 7, D_preconditions_and_information 1, F_geometry_and_progress 6, G_walk_proof_and_validation 15
+  by file:     route_admission.py 17, action_route_executor.py 10, motion_coordination.py 7, navigation_session.py 6, route_body_controller.py 2
+  sites naming each segment: WalkSegment 30, JumpUpSegment 6, JumpGapSegment 4, StepSegment 2
+
+production files mentioning each segment class (besides action_route.py):
+  WalkSegment            5: action_route_executor.py motion_coordination.py navigation_session.py route_admission.py route_body_controller.py
+  JumpUpSegment          4: action_route_executor.py motion_coordination.py navigation_session.py route_admission.py
+  StepSegment            2: action_route_executor.py route_admission.py
+  JumpGapSegment         4: action_route_executor.py motion_coordination.py navigation_session.py route_admission.py
+  ControlledDropSegment  1: route_admission.py
+
+MotionSolveKind references outside motion_solver.py: motion_coordination.py 1
+
+NavigationSession: 4994 lines, 130 methods, 63 assigned self attributes, 12 methods over 100 lines; longest ['diagnostics:137', '_consume_route_decision:156', '_proposal:180', 'update_goal:181', 'propose:187', 'observe:195']
+
+same-named methods in PlanningCoordinator and MotionRouteCoordinator: 7 ['_record_admission', '_remember_work_window', '_work_identity', '_work_window', 'admission_records', 'async_diagnostics', 'cancel_work']
+verbatim identical if-conditions: admit~admit_surface 9, admit_local_direct~admit_ground_direct 6, route_admission~route_validation 5
+RuntimeNavigationDriver lifecycle string literals: 36

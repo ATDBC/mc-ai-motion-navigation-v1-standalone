@@ -1,0 +1,19 @@
+Linux reproduction of M0/M1 at 5124bd7 (4 cores, Python 3.11.15); formal commands from the acceptance record section 5
+
+## full motion-navigation checks (ran in parallel with the behaviour sets)
+forward tests 1531 passed True failures 0 errors 0 xfail 0 skipped 0 scene_hash 05cfbd29ba3067b4 -> 05cfbd29ba3067b4
+real	13m34.321s
+reverse tests 1531 passed True failures 0 errors 0 xfail 0 skipped 0 scene_hash 05cfbd29ba3067b4 -> 05cfbd29ba3067b4
+real	13m3.568s
+
+## five behaviour sets, one Linux run each (2 workers) vs evidence/motion_navigation/redesign-m1/round1/<set>-index.json
+faults: {"cases": 16, "differences": [], "equivalent": true}
+follow: {"cases": 10, "differences": [], "equivalent": true}
+world_changes: {"cases": 19, "differences": [], "equivalent": true}
+coordination: {"cases": 1448, "differences": [], "equivalent": true}
+product: {"cases": 2000, "differences": [], "equivalent": true}
+product real	30m51.355s
+coordination real	12m16.322s
+faults real	0m5.777s
+follow real	0m56.259s
+world_changes real	0m15.234s

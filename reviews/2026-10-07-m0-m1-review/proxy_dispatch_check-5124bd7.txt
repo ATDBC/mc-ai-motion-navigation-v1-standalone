@@ -1,0 +1,18 @@
+enum-field comparisons outside actions/: 6
+  action_route_executor.py:263 [_activate] BodyCommitment: is BodyCommitment.TRANSITION):
+  action_route_executor.py:268 [_activate] ControllerFamily: elif action_spec(next_action).controller_family is ControllerFamily.AIR:
+  action_route_executor.py:385 [_activate] ControllerFamily: elif action_spec(action).controller_family is ControllerFamily.AIR:
+  action_route_executor.py:641 [requires_safe_handoff] BodyCommitment: return action_spec(self.route.actions[self.action_index]).body_commitment is BodyCommitment.TRANSITION
+  action_route_executor.py:1069 [decide] ControllerFamily: if action_spec(action).controller_family is ControllerFamily.AIR:
+  motion_coordination.py:1112 [_prepare_upcoming_from_applied_state] MotionSolveKind: policy = (self.gap_solver_policy if kind is MotionSolveKind.JUMP_GAP
+
+action_route_executor.py lines that choose a controller or entry profile by action kind:
+  223: if type(action) is WalkSegment:
+  265: if type(next_action) is JumpUpSegment:
+  268: elif action_spec(next_action).controller_family is ControllerFamily.AIR:
+  371: elif type(action) is JumpUpSegment:
+  385: elif action_spec(action).controller_family is ControllerFamily.AIR:
+  397: assert type(action) is StepSegment
+  942: if type(action) is WalkSegment:
+  1047: if type(action) is StepSegment:
+  1069: if action_spec(action).controller_family is ControllerFamily.AIR:
