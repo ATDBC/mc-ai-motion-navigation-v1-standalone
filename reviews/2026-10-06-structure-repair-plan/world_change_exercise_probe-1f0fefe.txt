@@ -1,0 +1,5 @@
+follow straight_2_0 + slab at z+6 floor, tick 60         EXCEPTION ContractViolation: fixed route frame did not advance {'admit_ground_direct': 8, 'validate': 50}
+follow straight_2_0 + slab at z+6 floor, tick 100        EXCEPTION ContractViolation: fixed route frame did not advance {'admit_ground_direct': 12, 'validate': 78}
+follow straight_2_0 + stone block on route, tick 80      passed=True state=cancelled violations=0 {'admit_ground_direct': 17, 'validate': 119}
+point flat_walk + slab on route floor, tick 10         outcome=cancelled reason=cancelled_after_stop violations=0 {'validate': 30, 'replay_walk_validation_recipe': 1}
+point flat_walk + stone block on route, tick 10        outcome=success reason=goal_state_satisfied violations=0 {'validate': 69, 'replay_walk_validation_recipe': 1}

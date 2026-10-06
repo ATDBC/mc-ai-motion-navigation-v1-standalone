@@ -1,0 +1,17 @@
+case drop_5 goal (4.5, 59.0, -0.5) authorised damage 2
+outcome failed motion_unsolvable:needs_state damage 2.0 violations [] final (3.32, 59.0, -0.5)
+  tick  37 on_ground=True  y=64.00 forward=0 session=executing driver=awaiting_verified_motion
+  tick  38 on_ground=True  y=64.00 forward=1 session=executing driver=submit_verified_command
+  tick  39 on_ground=True  y=64.00 forward=0 session=executing driver=submit_verified_command
+  tick  40 on_ground=True  y=64.00 forward=1 session=executing driver=expired_pending_submission_retain_responsibility
+  tick  41 on_ground=True  y=64.00 forward=0 session=executing driver=retain_landing_responsibility
+  tick  42 on_ground=True  y=64.00 forward=0 session=executing driver=retain_landing_responsibility
+  tick  43 on_ground=True  y=64.00 forward=0 session=executing driver=retain_landing_responsibility
+  tick  44 on_ground=True  y=64.00 forward=0 session=executing driver=retain_landing_responsibility
+  tick  45 on_ground=False y=63.92 forward=0 session=executing driver=repreparing_grounded_verified_motion
+  tick  46 on_ground=False y=63.77 forward=0 session=failed driver=body_handoff_waiting_for_evidence
+  tick  47 on_ground=False y=63.54 forward=0 session=failed driver=body_handoff_waiting_for_evidence
+  tick  48 on_ground=False y=63.23 forward=0 session=failed driver=body_handoff_waiting_for_evidence
+  tick  49 on_ground=False y=62.85 forward=0 session=failed driver=body_handoff_waiting_for_evidence
+  tick  50 on_ground=False y=62.41 forward=0 session=failed driver=body_handoff_waiting_for_evidence
+  tick  56 on_ground=True  y=59.00 forward=0 session=failed driver=motion_unsolvable:needs_state

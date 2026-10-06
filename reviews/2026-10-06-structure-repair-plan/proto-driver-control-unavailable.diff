@@ -1,0 +1,53 @@
+diff --git a/mc2p/skills/navigation_session_driver.py b/mc2p/skills/navigation_session_driver.py
+index 69f8b9a..b5d16d5 100644
+--- a/mc2p/skills/navigation_session_driver.py
++++ b/mc2p/skills/navigation_session_driver.py
+@@ -393,9 +393,7 @@ class RuntimeNavigationDriver:
+                 self.session.ingest(result.observation)
+             self._sync_report()
+         if self.state in {"failed", "cancelled"}:
+-            if not self._release_if_quiescent():
+-                self.state = "stopping"
+-                self.reason = "body_handoff_waiting_for_evidence"
++            self._release_if_quiescent()
+
+     def discard_prepared(self) -> None:
+         """Forget a proposal when the parent did not advance Runtime."""
+@@ -462,6 +460,11 @@ class RuntimeNavigationDriver:
+             raise ContractViolation("runtime navigation driver has no input owner")
+         if self._prepared_deadline_ns is not None:
+             raise ContractViolation("prepared navigation must be adopted or discarded")
++        if self.runtime.state is not RuntimeStateV1.READY:
++            # Cancelling would map the session back to "stopping" and wait for
++            # evidence that a failed Runtime can no longer produce.
++            self.state, self.reason = "failed", "control_unavailable"
++            return False
+         report = self.session.report
+         if report.state not in {
+             NavigationSessionState.COMPLETE,
+@@ -475,20 +478,23 @@ class RuntimeNavigationDriver:
+         if self.state == "stopping":
+             return False
+         if not self._release_if_quiescent():
+-            self.state = "stopping"
+-            self.reason = "body_handoff_waiting_for_evidence"
+             return False
+         self.reason = reason
+         return True
+
+     def _release_if_quiescent(self) -> bool:
++        """Release, wait for stop evidence, or fail when Runtime lost control."""
+         if self.runtime.state is not RuntimeStateV1.READY:
++            # A failed Runtime yields no new observation; waiting here would
++            # re-run navigation on the same frame.  Its owner recreates it.
+             self.state, self.reason = "failed", "control_unavailable"
+             return False
+         evidence = self.session.body_handoff(
+             self.runtime.observation, self.runtime.input_ledger,
+         )
+         if evidence.disposition is not HandoffDisposition.QUIESCENT:
++            self.state = "stopping"
++            self.reason = "body_handoff_waiting_for_evidence"
+             return False
+         self._release_source()
+         return True

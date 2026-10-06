@@ -1,0 +1,18 @@
+## two independent runs on 1f0fefe (Linux, Python 3.11.15)
+a r28-structure-trajectory-v1 cases 10 passed 10
+b r28-structure-trajectory-v1 cases 10 passed 10
+  straight_2_0                       passed=True 41b4e7f8f204f983
+  straight_3_3                       passed=True c00e2484d78e23c8
+  straight_4_0                       passed=True 8d887770704af2b9
+  lateral_3_3                        passed=True 8c0e82bf2cc10763
+  move_stop_800_resume               passed=True 06e8f739dc7c3f1f
+  high_frequency_throttle            passed=True 835fd6ff28658c5c
+  normal_cancel                      passed=True 3616d3c0c538c869
+  one_missing_observation            passed=True afb252ae95892a28
+  first_input_late_one_tick          passed=True 39c003fa1da1ba29
+  straight_5_0_out_of_scope          passed=True e673e39bd3480f5d
+## compare a b
+{"cases": 10, "differences": [], "equivalent": true}
+
+## third run on a clean 1f0fefe checkout, compared with run a
+{"cases": 10, "differences": [], "equivalent": true}

@@ -1,0 +1,23 @@
+diff --git a/tests/sim/runner.py b/tests/sim/runner.py
+index 7239cf6..454e050 100644
+--- a/tests/sim/runner.py
++++ b/tests/sim/runner.py
+@@ -11,6 +11,7 @@ existing worker interfaces:
+ """
+ from __future__ import annotations
+
++from copy import deepcopy
+ from dataclasses import asdict, dataclass, field, replace
+ from pathlib import Path
+ import math
+@@ -252,7 +253,9 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
+     command_activities = {}
+     backend = backend_factory(clock, Scene(dict(scenario.scene.solids), scenario.scene.volume).with_floor(),
+                                 scenario.start, scenario.yaw_degrees,
+-                                perturbations=scenario.perturbations)
++                                # A run owns its perturbations; tests may edit them during the run,
++                                # but must not change the shared module-level scenario.
++                                perturbations=deepcopy(scenario.perturbations))
+     if scenario.start_velocity_blocks_per_tick is not None:
+         backend.state = replace(
+             backend.state,

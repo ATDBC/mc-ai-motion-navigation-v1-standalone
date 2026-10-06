@@ -1,0 +1,26 @@
+diff --git a/tests/motion_nav/test_r28_shared_recovery.py b/tests/motion_nav/test_r28_shared_recovery.py
+index d5fbdc9..80cbe92 100644
+--- a/tests/motion_nav/test_r28_shared_recovery.py
++++ b/tests/motion_nav/test_r28_shared_recovery.py
+@@ -27,7 +27,7 @@ class SharedRecoveryFormalTests(unittest.TestCase):
+
+     def test_expired_planning_work_is_retired_at_every_observed_boundary(self):
+         base = next(s for s in SCENARIOS if s.name == "flat_walk")
+-        edits = {tick: {(0, 63, 5): "minecraft:stone" if tick % 2 else "minecraft:grass_block"}
++        edits = {tick: {(0, 63, 5): "minecraft:stone" if tick % 2 else "minecraft:stone_slab[type=bottom]"}
+                  for tick in range(3, 180)}
+         result = run(replace(base, name="r28-every-tick-material-change", max_ticks=180,
+                              perturbations=Perturbations(world_edits=edits)))
+diff --git a/tests/sim/migration_faults.py b/tests/sim/migration_faults.py
+index 50973da..16f91f6 100644
+--- a/tests/sim/migration_faults.py
++++ b/tests/sim/migration_faults.py
+@@ -46,7 +46,7 @@ def run_fault_case(name):
+         expected = "success", "goal_state_satisfied"
+     elif name == "active_route_dependency_retry":
+         edits = {tick: {(0, 63, 5): "minecraft:stone" if tick % 2
+-                       else "minecraft:grass_block"}
++                       else "minecraft:stone_slab[type=bottom]"}
+                  for tick in range(3, 65, 3)}
+         result = run(replace(base, perturbations=Perturbations(world_edits=edits)))
+         expected = "success", "goal_state_satisfied"

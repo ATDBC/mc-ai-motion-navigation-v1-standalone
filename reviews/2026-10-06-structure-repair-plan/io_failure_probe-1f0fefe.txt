@@ -1,0 +1,19 @@
+## 1f0fefe (clean)
+point flat_walk      I/O failure at movement tick   5: EXCEPTION ContractViolation: fixed route frame did not advance
+                     right after the failed step: driver=stopping/body_handoff_waiting_for_evidence runtime=failed disposition=recreate_runtime
+point flat_walk      I/O failure at movement tick  20: EXCEPTION ContractViolation: fixed route frame did not advance
+                     right after the failed step: driver=stopping/body_handoff_waiting_for_evidence runtime=failed disposition=recreate_runtime
+follow straight_2_0  I/O failure at movement tick  30: EXCEPTION ContractViolation: fixed route frame did not advance
+                     right after the failed step: driver=stopping/body_handoff_waiting_for_evidence runtime=failed disposition=recreate_runtime
+follow straight_2_0  I/O failure at movement tick 120: EXCEPTION ContractViolation: fixed route frame did not advance
+                     right after the failed step: driver=stopping/body_handoff_waiting_for_evidence runtime=failed disposition=recreate_runtime
+
+## 1f0fefe + proto-driver-control-unavailable.diff
+point flat_walk      I/O failure at movement tick   5: outcome=driver_failed/executing reason=tracking_fixed_route violations=0
+                     right after the failed step: driver=failed/control_unavailable runtime=failed disposition=recreate_runtime
+point flat_walk      I/O failure at movement tick  20: outcome=driver_failed/executing reason=tracking_fixed_route violations=0
+                     right after the failed step: driver=failed/control_unavailable runtime=failed disposition=recreate_runtime
+follow straight_2_0  I/O failure at movement tick  30: EXCEPTION ContractViolation: runtime navigation driver cannot tick
+                     right after the failed step: driver=failed/control_unavailable runtime=failed disposition=recreate_runtime
+follow straight_2_0  I/O failure at movement tick 120: EXCEPTION ContractViolation: runtime navigation driver cannot tick
+                     right after the failed step: driver=failed/control_unavailable runtime=failed disposition=recreate_runtime

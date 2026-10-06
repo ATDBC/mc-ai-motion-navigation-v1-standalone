@@ -1,0 +1,10 @@
+entry point                                                 worker_death  driver_contract_containmen          ground_stall_retry  active_route_dependency_re  walk+block placed (tick 10
+RouteAdmitter.admit                                                    0                           0                           0                           0                           0
+RouteAdmitter.admit_surface                                            0                           0                           2                           1                           2
+RouteAdmitter.admit_current_request                                    0                           0                           2                           1                           2
+RouteAdmitter.admit_local_direct                                       0                           0                           0                           0                           0
+RouteAdmitter.admit_ground_direct                                      0                           0                           0                           0                           0
+ActiveRouteTracker.validate                                            0                           0                          81                          44                          69
+replay_walk_validation_recipe                                          0                           0                           0                          16                           1
+query_surface_walk_edge                                                0                           0                           0                          16                           1
+NavigationSession._wait_for_active_terminal                            0                           0                           0                           0                           0

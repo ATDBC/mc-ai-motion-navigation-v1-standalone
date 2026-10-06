@@ -1,0 +1,18 @@
+## b1d43c2
+R28-C-02  every tick, ticks 3-179; the test expects outcome=failed with valid work identity
+  stone/grass_block (current)  outcome=failed   reason=planning_timeout_retry_exhausted   plans=1 I3/violations=0
+  stone/air                    outcome=failed   reason=ground_mode_ground_state_lost      plans=2 I3/violations=1
+  stone/bottom slab            outcome=failed   reason=planning_timeout_retry_exhausted   plans=1 I3/violations=0
+fault active_route_dependency_retry  every 3 ticks, 3-64; the test expects success and begin_recovery > 0
+  stone/grass_block (current)  outcome=success  reason=goal_state_satisfied               begin_recovery=7
+  stone/bottom slab            outcome=success  reason=goal_state_satisfied               begin_recovery=10
+
+## 1f0fefe
+R28-C-02  every tick, ticks 3-179; the test expects outcome=failed with valid work identity
+  stone/grass_block (current)  outcome=success  reason=goal_state_satisfied               plans=1 I3/violations=0
+  stone/air                    outcome=failed   reason=ground_mode_ground_state_lost      plans=2 I3/violations=1
+  stone/bottom slab            outcome=failed   reason=planning_timeout_retry_exhausted   plans=1 I3/violations=0
+fault active_route_dependency_retry  every 3 ticks, 3-64; the test expects success and begin_recovery > 0
+  stone/grass_block (current)  outcome=success  reason=goal_state_satisfied               begin_recovery=0
+  stone/bottom slab            outcome=success  reason=goal_state_satisfied               begin_recovery=10
+

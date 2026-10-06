@@ -1,0 +1,42 @@
+Full motion-navigation check on 1f0fefe (Linux, 4 cores, Python 3.11.15), 1,478 tests
+forward: python -B -m unittest discover -s tests/motion_nav -p 'test_*.py'
+reverse: python -B reverse_suite.py (modules in reverse order)
+
+## 1f0fefe unchanged, forward: 5 failures (see ../2026-10-06-structure-s0-review/reproduction-1f0fefe.txt)
+
+## + runner perturbation copy + bottom-slab perturbation, forward
+FAIL: test_cli_writes_schema_and_refuses_overwrite
+FAIL: test_changed_heading_during_background_revalidation_can_realign (seed=163)
+Ran 1478 tests in 482.192s
+FAILED (failures=2)
+real	8m3.718s
+
+## + the two test prototypes + driver prototype, forward, machine otherwise idle
+FAIL: test_cli_writes_schema_and_refuses_overwrite
+FAIL: test_changed_heading_during_background_revalidation_can_realign (seed=163)
+Ran 1478 tests in 482.984s
+FAILED (failures=2)
+real	8m4.437s
+
+## same, reverse module order, machine otherwise idle
+FAIL: test_changed_heading_during_background_revalidation_can_realign (seed=163)
+Ran 1478 tests in 482.170s
+FAILED (failures=1)
+real	8m3.340s
+
+## same, forward, while a second full suite ran in parallel (higher CPU load)
+FAIL: test_cli_writes_schema_and_refuses_overwrite
+FAIL: test_short_child_process_writes_complete_evidence_and_refuses_overwrite
+FAIL: test_changed_heading_during_background_revalidation_can_realign (seed=163)
+FAIL: test_thirteenth_recovery_with_planning_timeouts_is_typed_and_bounded
+Ran 1478 tests in 1403.550s
+FAILED (failures=4)
+real	23m24.847s
+  (failure details for the two load-only failures)
+    AssertionError: 66.485812 not less than 50.0
+    - planning_timeout
+    + task_recovery_rate_exhausted
+
+
+The parallel reverse run is not reported: the first reverse script lacked a __main__ guard and spawned
+planner workers re-ran the suite.  reverse_suite.py in this directory is the corrected script.
