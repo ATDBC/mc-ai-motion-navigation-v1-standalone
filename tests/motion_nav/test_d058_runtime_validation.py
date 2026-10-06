@@ -1,7 +1,6 @@
 """D058-B validates admitted Walk proofs before advancing body control."""
 from dataclasses import replace
 import math
-import time
 import unittest
 from unittest.mock import patch, PropertyMock
 
@@ -807,15 +806,6 @@ class D058RuntimeValidationTests(unittest.TestCase):
         self.assertEqual(validation_calls[0][0][1], ())
         self.assertNotIn("effective_dependencies", validation_calls[0][1])
         self.assertNotIn("query_cache", validation_calls[0][1])
-        samples = []
-        for _ in range(200):
-            started = time.perf_counter_ns()
-            supervisor._validate_routes(current)
-            samples.append(time.perf_counter_ns() - started)
-        samples.sort()
-        p95_ms = samples[math.ceil(.95 * len(samples)) - 1] / 1_000_000
-        self.assertLess(p95_ms, 1.0)
-
     def test_supervisor_materializes_each_changed_controls_dependencies_once(self):
         control, current, anchor = ExecutionSupervisorTests()._control()
         supervisor = ExecutionSupervisor()

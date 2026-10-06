@@ -453,6 +453,9 @@ class NavigationSessionPort(Protocol):
         frame: NavigationFrame,
     ) -> None: ...
     def cancel(self, reason: str) -> None: ...
+    def handle_control_unavailable(self) -> None: ...
+    def contract_stop_proposal(self, frame: NavigationFrame, state_anchor: StateAnchor | None,
+                              deadline_ns: int, *, input_ledger: InputApplicationLedger) -> NavigationSessionProposal: ...
     def spawn_successor(
         self, session_id: str, *, task_id: str,
     ) -> "NavigationSessionPort": ...
@@ -756,6 +759,24 @@ class NavigationSession:
         }:
             return
         self._request_ending(HandoffDestination.FAIL, StopCause.CANCELLED, reason)
+
+    def handle_control_unavailable(self) -> None:
+        """Control loss is a terminal failure, never evidence of safe landing."""
+        if self.report.terminal:
+            return
+        self._handoff.finish_control_unavailable(budget=self._retry_ledger)
+        self._supervisor.request_route_stop(StopCause.INPUT_LOST)
+        if self._coordinator is not None:
+            self._coordinator.cancel_work("control_unavailable")
+        self._transition(NavigationTransitionAction.MARK_FAILED, "control_unavailable")
+
+    def contract_stop_proposal(self, frame: NavigationFrame, state_anchor: StateAnchor | None,
+                              deadline_ns: int, *, input_ledger: InputApplicationLedger) -> NavigationSessionProposal:
+        """Submit one neutral frame without deciding the same controller twice."""
+        self.handle_internal_contract_failure("navigation_internal_contract_failure")
+        self._control_ledger, self._control_anchor = input_ledger, state_anchor
+        self._begin_task_activity(frame, input_ledger, state_anchor)
+        return self._proposal(MovementV1(), None, 1, deadline_ns, retain_body_input=True)
 
     def _admit_command_event(self, event: NavigationSessionEvent) -> None:
         """Reject an invalid synchronous command before it mutates the task."""

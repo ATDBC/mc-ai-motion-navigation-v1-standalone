@@ -450,6 +450,18 @@ class NavigationHandoffCoordinator:
             recovery_limit_status=request.recovery_limit_status,
         )
 
+    def finish_control_unavailable(self, *, budget: RetryLedger | None) -> None:
+        """End bookkeeping after control loss without claiming a safe handoff."""
+        request = self._stop_request
+        if request is not None and request.recovery_identity is not None:
+            if type(budget) is not RetryLedger:
+                raise ContractViolation("control loss requires the owning recovery budget")
+            budget.finish_recovery(request.recovery_identity, RecoveryFinishEvidence(
+                RecoveryFinishKind.CONTROL_UNAVAILABLE,
+            ))
+        self._stop_request = None
+        self._pending_goal = None
+
     def request_recovery(
         self, *, request_id: str, destination: HandoffDestination, reason: str,
         budget: RetryLedger | None, cause: StopCause = StopCause.MOTION_UNSOLVABLE,

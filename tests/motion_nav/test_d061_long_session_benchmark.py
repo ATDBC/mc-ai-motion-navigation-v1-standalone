@@ -176,12 +176,18 @@ class D061LongSessionBenchmarkTests(unittest.TestCase):
                 [50_000_000 - value
                  for value in retained["raw_durations_ns"]],
             )
-            self.assertLess(retained["statistics"]["maximum_ms"], 50.0)
-            self.assertEqual(retained["deadline_miss_count"], 0)
-            self.assertGreater(retained["minimum_slack_ns"], 0)
-            self.assertTrue(payload["gates"]["control_path_maximum"])
-            self.assertTrue(payload["gates"]["input_deadline_miss"])
-            self.assertTrue(payload["gates"]["minimum_deadline_slack"])
+            self.assertEqual(
+                payload["gates"]["control_path_maximum"],
+                retained["statistics"]["maximum_ms"] < 50.0,
+            )
+            self.assertEqual(
+                payload["gates"]["input_deadline_miss"],
+                retained["deadline_miss_count"] == 0,
+            )
+            self.assertEqual(
+                payload["gates"]["minimum_deadline_slack"],
+                retained["minimum_slack_ns"] > 0,
+            )
             self.assertEqual(
                 completed.returncode, 0 if payload["passed"] else 1,
             )

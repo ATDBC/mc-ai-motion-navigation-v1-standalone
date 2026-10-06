@@ -1,0 +1,42 @@
+{
+  "product": {
+    "cases": 2000,
+    "differences": [],
+    "equivalent": true,
+    "index_files_byte_identical": true,
+    "behavior_source_commit": "c546119d6997f13a52e39f8b4c7cf503abeea365",
+    "signature_extractor_commit": "c546119d6997f13a52e39f8b4c7cf503abeea365"
+  },
+  "coordination": {
+    "cases": 1448,
+    "differences": [],
+    "equivalent": true,
+    "index_files_byte_identical": true,
+    "behavior_source_commit": "f3551c334c28dfaa2d7be6f2f235da21e0a53da5",
+    "signature_extractor_commit": "f3551c334c28dfaa2d7be6f2f235da21e0a53da5"
+  },
+  "faults": {
+    "cases": 16,
+    "differences": [],
+    "equivalent": true,
+    "index_files_byte_identical": true,
+    "behavior_source_commit": "f3551c334c28dfaa2d7be6f2f235da21e0a53da5",
+    "signature_extractor_commit": "f3551c334c28dfaa2d7be6f2f235da21e0a53da5"
+  },
+  "follow": {
+    "cases": 10,
+    "differences": [],
+    "equivalent": true,
+    "index_files_byte_identical": true,
+    "behavior_source_commit": "c546119d6997f13a52e39f8b4c7cf503abeea365",
+    "signature_extractor_commit": "c546119d6997f13a52e39f8b4c7cf503abeea365"
+  },
+  "world_changes": {
+    "cases": 19,
+    "differences": [],
+    "equivalent": true,
+    "index_files_byte_identical": true,
+    "behavior_source_commit": "c546119d6997f13a52e39f8b4c7cf503abeea365",
+    "signature_extractor_commit": "c546119d6997f13a52e39f8b4c7cf503abeea365"
+  }
+}

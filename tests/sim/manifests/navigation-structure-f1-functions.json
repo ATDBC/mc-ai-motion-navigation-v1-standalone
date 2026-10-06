@@ -1,0 +1,287 @@
+{
+  "before_f1": "931ea8b",
+  "final_f1": "f418649",
+  "functions": [
+    {
+      "target": "navigation_session.NavigationSession.__init__",
+      "change": "changed",
+      "status": "retained:independent_responsibility",
+      "review": "owned state initialization or read-only report; deleting fields does not remove a repeated decision"
+    },
+    {
+      "target": "navigation_session.NavigationSession._transition",
+      "change": "changed",
+      "status": "reviewed:no_deletion_proposed",
+      "review": "F1 goal revision, information resume or typed-result consumption within existing Session order; no equivalent owned fact at the same lifecycle point has been identified"
+    },
+    {
+      "target": "navigation_session.NavigationSession._request",
+      "change": "changed",
+      "status": "retained:independent_responsibility",
+      "review": "owned state initialization or read-only report; deleting fields does not remove a repeated decision"
+    },
+    {
+      "target": "navigation_session.NavigationSession.report",
+      "change": "changed",
+      "status": "retained:independent_responsibility",
+      "review": "owned state initialization or read-only report; deleting fields does not remove a repeated decision"
+    },
+    {
+      "target": "navigation_session.NavigationSession._retain_satisfied_goal",
+      "change": "changed",
+      "status": "reviewed:no_deletion_proposed",
+      "review": "F1 goal revision, information resume or typed-result consumption within existing Session order; no equivalent owned fact at the same lifecycle point has been identified"
+    },
+    {
+      "target": "navigation_session.NavigationSession.diagnostics",
+      "change": "changed",
+      "status": "retained:independent_responsibility",
+      "review": "owned state initialization or read-only report; deleting fields does not remove a repeated decision"
+    },
+    {
+      "target": "navigation_session.NavigationSession.ingest",
+      "change": "changed",
+      "status": "reviewed:no_deletion_proposed",
+      "review": "F1 goal revision, information resume or typed-result consumption within existing Session order; no equivalent owned fact at the same lifecycle point has been identified"
+    },
+    {
+      "target": "navigation_session.NavigationSession.observation_request",
+      "change": "changed",
+      "status": "reviewed:no_deletion_proposed",
+      "review": "F1 goal revision, information resume or typed-result consumption within existing Session order; no equivalent owned fact at the same lifecycle point has been identified"
+    },
+    {
+      "target": "navigation_session.NavigationSession.start_goal",
+      "change": "changed",
+      "status": "reviewed:no_deletion_proposed",
+      "review": "F1 goal revision, information resume or typed-result consumption within existing Session order; no equivalent owned fact at the same lifecycle point has been identified"
+    },
+    {
+      "target": "navigation_session.NavigationSession._start_goal_after_admission",
+      "change": "changed",
+      "status": "reviewed:no_deletion_proposed",
+      "review": "F1 goal revision, information resume or typed-result consumption within existing Session order; no equivalent owned fact at the same lifecycle point has been identified"
+    },
+    {
+      "target": "navigation_session.NavigationSession.update_goal",
+      "change": "changed",
+      "status": "reviewed:no_deletion_proposed",
+      "review": "F1 goal revision, information resume or typed-result consumption within existing Session order; no equivalent owned fact at the same lifecycle point has been identified"
+    },
+    {
+      "target": "navigation_session.NavigationSession._current_action_precondition",
+      "change": "changed",
+      "status": "retained:independent_responsibility",
+      "review": "action-boundary fact acquisition and current verified-window responsibility, rather than goal/candidate admission"
+    },
+    {
+      "target": "navigation_session.NavigationSession._upcoming_action_precondition_index",
+      "change": "added",
+      "status": "retained:independent_responsibility",
+      "review": "action-boundary fact acquisition and current verified-window responsibility, rather than goal/candidate admission"
+    },
+    {
+      "target": "navigation_session.NavigationSession._clear_pending_action_boundary",
+      "change": "added",
+      "status": "retained:independent_responsibility",
+      "review": "action-boundary fact acquisition and current verified-window responsibility, rather than goal/candidate admission"
+    },
+    {
+      "target": "navigation_session.NavigationSession._begin_action_acquisition",
+      "change": "changed",
+      "status": "retained:independent_responsibility",
+      "review": "action-boundary fact acquisition and current verified-window responsibility, rather than goal/candidate admission"
+    },
+    {
+      "target": "navigation_session.NavigationSession.observe",
+      "change": "changed",
+      "status": "reviewed:no_deletion_proposed",
+      "review": "F1 goal revision, information resume or typed-result consumption within existing Session order; no equivalent owned fact at the same lifecycle point has been identified"
+    },
+    {
+      "target": "navigation_session.NavigationSession.propose",
+      "change": "changed",
+      "status": "reviewed:no_deletion_proposed",
+      "review": "F1 goal revision, information resume or typed-result consumption within existing Session order; no equivalent owned fact at the same lifecycle point has been identified"
+    },
+    {
+      "target": "navigation_session.NavigationSession._prepare_route_action",
+      "change": "changed",
+      "status": "retained:independent_responsibility",
+      "review": "action-boundary fact acquisition and current verified-window responsibility, rather than goal/candidate admission"
+    },
+    {
+      "target": "navigation_session.NavigationSession._consume_route_decision",
+      "change": "changed",
+      "status": "reviewed:no_deletion_proposed",
+      "review": "F1 goal revision, information resume or typed-result consumption within existing Session order; no equivalent owned fact at the same lifecycle point has been identified"
+    },
+    {
+      "target": "navigation_session.NavigationSession.register_verified_submission",
+      "change": "changed",
+      "status": "reviewed:no_deletion_proposed",
+      "review": "F1 goal revision, information resume or typed-result consumption within existing Session order; no equivalent owned fact at the same lifecycle point has been identified"
+    },
+    {
+      "target": "navigation_session.NavigationSession.same_task_continuation_evidence",
+      "change": "changed",
+      "status": "reviewed:no_deletion_proposed",
+      "review": "F1 goal revision, information resume or typed-result consumption within existing Session order; no equivalent owned fact at the same lifecycle point has been identified"
+    },
+    {
+      "target": "navigation_session.NavigationSession.rebuild_same_task",
+      "change": "changed",
+      "status": "reviewed:no_deletion_proposed",
+      "review": "F1 goal revision, information resume or typed-result consumption within existing Session order; no equivalent owned fact at the same lifecycle point has been identified"
+    },
+    {
+      "target": "navigation_session.NavigationSession._replace_request",
+      "change": "changed",
+      "status": "reviewed:no_deletion_proposed",
+      "review": "F1 goal revision, information resume or typed-result consumption within existing Session order; no equivalent owned fact at the same lifecycle point has been identified"
+    },
+    {
+      "target": "navigation_session.NavigationSession._accept_goal_request",
+      "change": "changed",
+      "status": "reviewed:no_deletion_proposed",
+      "review": "F1 goal revision, information resume or typed-result consumption within existing Session order; no equivalent owned fact at the same lifecycle point has been identified"
+    },
+    {
+      "target": "navigation_session.NavigationSession._can_attempt_ground_direct_request",
+      "change": "added",
+      "status": "inventory_candidate",
+      "review": "see candidate owner/fact/lifecycle review"
+    },
+    {
+      "target": "navigation_session.NavigationSession._can_attempt_local_direct_request",
+      "change": "added",
+      "status": "inventory_candidate",
+      "review": "see candidate owner/fact/lifecycle review"
+    },
+    {
+      "target": "navigation_session.NavigationSession._ordinary_walk_can_continue_during_direct",
+      "change": "added",
+      "status": "pending:S2_owner_and_mutation_review",
+      "review": "request-time direct eligibility and current-body qualification; investigate common facts before any guarded merge"
+    },
+    {
+      "target": "navigation_session.NavigationSession._activate_ground_direct_route",
+      "change": "added",
+      "status": "inventory_candidate",
+      "review": "see candidate owner/fact/lifecycle review"
+    },
+    {
+      "target": "navigation_session.NavigationSession._activate_local_route",
+      "change": "changed",
+      "status": "inventory_candidate",
+      "review": "see candidate owner/fact/lifecycle review"
+    },
+    {
+      "target": "navigation_session.NavigationSession._resolve_probe_handoff",
+      "change": "changed",
+      "status": "reviewed:no_deletion_proposed",
+      "review": "F1 goal revision, information resume or typed-result consumption within existing Session order; no equivalent owned fact at the same lifecycle point has been identified"
+    },
+    {
+      "target": "navigation_session.NavigationSession._apply_probe_handoff_resolution",
+      "change": "changed",
+      "status": "reviewed:no_deletion_proposed",
+      "review": "F1 goal revision, information resume or typed-result consumption within existing Session order; no equivalent owned fact at the same lifecycle point has been identified"
+    },
+    {
+      "target": "navigation_session.NavigationSession._request_probe_stop",
+      "change": "changed",
+      "status": "reviewed:no_deletion_proposed",
+      "review": "F1 goal revision, information resume or typed-result consumption within existing Session order; no equivalent owned fact at the same lifecycle point has been identified"
+    },
+    {
+      "target": "navigation_session.NavigationSession._resume_pending_goal",
+      "change": "changed",
+      "status": "reviewed:no_deletion_proposed",
+      "review": "F1 goal revision, information resume or typed-result consumption within existing Session order; no equivalent owned fact at the same lifecycle point has been identified"
+    },
+    {
+      "target": "navigation_session.NavigationSession._advance_planning",
+      "change": "changed",
+      "status": "reviewed:no_deletion_proposed",
+      "review": "F1 goal revision, information resume or typed-result consumption within existing Session order; no equivalent owned fact at the same lifecycle point has been identified"
+    },
+    {
+      "target": "navigation_session.NavigationSession._activate_planning_route",
+      "change": "changed",
+      "status": "reviewed:no_deletion_proposed",
+      "review": "F1 goal revision, information resume or typed-result consumption within existing Session order; no equivalent owned fact at the same lifecycle point has been identified"
+    },
+    {
+      "target": "navigation_session.NavigationSession._proposal",
+      "change": "changed",
+      "status": "reviewed:no_deletion_proposed",
+      "review": "F1 goal revision, information resume or typed-result consumption within existing Session order; no equivalent owned fact at the same lifecycle point has been identified"
+    },
+    {
+      "target": "navigation_session.NavigationSession._information_look",
+      "change": "changed",
+      "status": "reviewed:no_deletion_proposed",
+      "review": "F1 goal revision, information resume or typed-result consumption within existing Session order; no equivalent owned fact at the same lifecycle point has been identified"
+    },
+    {
+      "target": "navigation_session.NavigationSession._surface_for_goal",
+      "change": "changed",
+      "status": "reviewed:no_deletion_proposed",
+      "review": "F1 goal revision, information resume or typed-result consumption within existing Session order; no equivalent owned fact at the same lifecycle point has been identified"
+    },
+    {
+      "target": "execution_supervisor.ExecutionSupervisor.effective_dependencies",
+      "change": "added",
+      "status": "retained:independent_responsibility",
+      "review": "owned state initialization or read-only report; deleting fields does not remove a repeated decision"
+    },
+    {
+      "target": "execution_supervisor.ExecutionSupervisor.advance_body",
+      "change": "changed",
+      "status": "retained:independent_responsibility",
+      "review": "body owner advances/stops/transfers the selected incumbent; Session goal/planning decisions cannot replace physical handoff evidence"
+    },
+    {
+      "target": "execution_supervisor.ExecutionSupervisor._validate_routes",
+      "change": "added",
+      "status": "inventory_candidate",
+      "review": "see candidate owner/fact/lifecycle review"
+    },
+    {
+      "target": "execution_supervisor.ExecutionSupervisor.continue_rejected_candidate",
+      "change": "changed",
+      "status": "inventory_candidate",
+      "review": "see candidate owner/fact/lifecycle review"
+    },
+    {
+      "target": "execution_supervisor.ExecutionSupervisor._advance_incumbent_prefix",
+      "change": "changed",
+      "status": "inventory_candidate",
+      "review": "see candidate owner/fact/lifecycle review"
+    },
+    {
+      "target": "execution_supervisor.ExecutionSupervisor.stop_protection",
+      "change": "changed",
+      "status": "retained:independent_responsibility",
+      "review": "body owner advances/stops/transfers the selected incumbent; Session goal/planning decisions cannot replace physical handoff evidence"
+    },
+    {
+      "target": "execution_supervisor.ExecutionSupervisor.transfer_probe_to_route",
+      "change": "changed",
+      "status": "retained:independent_responsibility",
+      "review": "body owner advances/stops/transfers the selected incumbent; Session goal/planning decisions cannot replace physical handoff evidence"
+    }
+  ],
+  "limit": "AST differences locate review scope; statuses are owner review, never mutation/behavior proof",
+  "source_snapshots_sha256": {
+    "931ea8b": {
+      "mc2p/motion_nav/navigation_session.py": "2a4c9167aa7d12546fb605622c37aeb0fa87c9fa53f6ab366c72c583ba114fc0",
+      "mc2p/motion_nav/execution_supervisor.py": "14613309254be775c609235b4acac84f01ada345310953f943f2ed3d365fb9c2"
+    },
+    "f418649": {
+      "mc2p/motion_nav/navigation_session.py": "10c4b1a1d507719c1df655cf4f17fa2e61e7ab77be56b959fa96271948b3cdf1",
+      "mc2p/motion_nav/execution_supervisor.py": "fc915c9fd3b2b84fe91e4432a5d922494eaabca9c19490a6ab09c4e16b1d2ef4"
+    }
+  }
+}

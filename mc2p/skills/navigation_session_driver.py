@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import time
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import Callable
 
 from mc2p.contracts.behavior import BehaviorProfileV0
@@ -23,6 +24,7 @@ from mc2p.contracts.observation_v3 import ObservationSnapshotV3
 from mc2p.contracts.task import (
     ComparisonOperatorV0, SuccessCriterionV0, TaskIntentV0,
 )
+from mc2p.contracts.report import FailureV0
 from mc2p.motion_nav.movement_transition import GoalState
 from mc2p.motion_nav.goal_reach_policy import GoalReachPolicy
 from mc2p.motion_nav.goal_planning_policy import GoalPlanningPolicy
@@ -37,6 +39,12 @@ from mc2p.runtime.player_runtime_v1 import (
 
 
 _STEP_WINDOW_NS = 500_000_000
+
+
+class _ReleaseResult(StrEnum):
+    RELEASED = "released"
+    PENDING = "pending"
+    CONTROL_UNAVAILABLE = "control_unavailable"
 
 
 class _OwnerDeadlineExpired(ContractViolation):
@@ -285,13 +293,8 @@ class RuntimeNavigationDriver:
             # Direct session and simulator calls still expose programmer
             # errors.  The formal driver keeps the current body owner and
             # converts the fault into a bounded safe stop.
-            self.session.handle_internal_contract_failure(
-                "navigation_internal_contract_failure",
-            )
-            proposal = self.session.propose(
+            proposal = self.session.contract_stop_proposal(
                 frame, anchor, deadline, input_ledger=ledger,
-                conditioned_yaw_delta_degrees=conditioned_yaw_delta,
-                conditioned_look_intent_id=conditioned_look_intent_id,
             )
         control = proposal.control_frame
         if control is None:
@@ -359,7 +362,10 @@ class RuntimeNavigationDriver:
                 f"{result.report.failure.code.value}:"
                 f"{result.report.failure.message}"
             )
-            self.state, self.reason = "failed", "runtime_failure"
+            if self.runtime.state is not RuntimeStateV1.READY:
+                self._finish_control_unavailable()
+                return
+            self._sync_report(runtime_failure=result.report.failure)
         else:
             if (not self.session.report.terminal
                     and proposal is not None
@@ -393,9 +399,12 @@ class RuntimeNavigationDriver:
                 self.session.ingest(result.observation)
             self._sync_report()
         if self.state in {"failed", "cancelled"}:
-            if not self._release_if_quiescent():
+            release = self._release_if_quiescent()
+            if release is _ReleaseResult.PENDING:
                 self.state = "stopping"
                 self.reason = "body_handoff_waiting_for_evidence"
+            elif release is _ReleaseResult.CONTROL_UNAVAILABLE:
+                self._finish_control_unavailable()
 
     def discard_prepared(self) -> None:
         """Forget a proposal when the parent did not advance Runtime."""
@@ -429,9 +438,17 @@ class RuntimeNavigationDriver:
             self.session.ingest(self.runtime.observation)
             self.session.cancel(reason)
         self._sync_report()
-        if self.state == "stopping" or not self._release_if_quiescent():
+        # A stopping session must advance its body owner before querying
+        # release; the query itself can finalize a quiescent probe.
+        release = (_ReleaseResult.PENDING
+                   if self.state == "stopping" and self.runtime.state is RuntimeStateV1.READY
+                   else self._release_if_quiescent())
+        if release is _ReleaseResult.CONTROL_UNAVAILABLE:
+            self._finish_control_unavailable()
+            raise ContractViolation("CONTROL_UNAVAILABLE: navigation cannot continue safe stop")
+        if self.state == "stopping" or release is _ReleaseResult.PENDING:
             if self.runtime.state is not RuntimeStateV1.READY:
-                self.state, self.reason = "failed", "control_unavailable"
+                self._finish_control_unavailable()
                 raise ContractViolation(
                     "CONTROL_UNAVAILABLE: navigation cannot continue safe stop"
                 )
@@ -458,10 +475,15 @@ class RuntimeNavigationDriver:
         """Release a terminal session, or begin cancellation without abandoning it."""
         if not isinstance(reason, str) or not reason.strip():
             raise ContractViolation("runtime navigation release requires reason")
+        if self.source is None and self.session.report.terminal:
+            return True
         if self.source is None:
             raise ContractViolation("runtime navigation driver has no input owner")
         if self._prepared_deadline_ns is not None:
             raise ContractViolation("prepared navigation must be adopted or discarded")
+        if self.runtime.state is not RuntimeStateV1.READY:
+            self._finish_control_unavailable()
+            return self.source is None
         report = self.session.report
         if report.state not in {
             NavigationSessionState.COMPLETE,
@@ -474,24 +496,37 @@ class RuntimeNavigationDriver:
         self._sync_report()
         if self.state == "stopping":
             return False
-        if not self._release_if_quiescent():
+        release = self._release_if_quiescent()
+        if release is _ReleaseResult.CONTROL_UNAVAILABLE:
+            self._finish_control_unavailable()
+            return self.source is None
+        if release is _ReleaseResult.PENDING:
             self.state = "stopping"
             self.reason = "body_handoff_waiting_for_evidence"
             return False
         self.reason = reason
         return True
 
-    def _release_if_quiescent(self) -> bool:
+    def _release_if_quiescent(self) -> _ReleaseResult:
         if self.runtime.state is not RuntimeStateV1.READY:
-            self.state, self.reason = "failed", "control_unavailable"
-            return False
+            return _ReleaseResult.CONTROL_UNAVAILABLE
         evidence = self.session.body_handoff(
             self.runtime.observation, self.runtime.input_ledger,
         )
         if evidence.disposition is not HandoffDisposition.QUIESCENT:
-            return False
+            return _ReleaseResult.PENDING
         self._release_source()
-        return True
+        return _ReleaseResult.RELEASED
+
+    def _finish_control_unavailable(self) -> None:
+        if self.session.report.terminal:
+            # An earlier business result stays immutable. Control loss does
+            # not provide the missing physical release evidence for its tail.
+            self._sync_report(unavailable_runtime=self.runtime.state)
+            return
+        self.session.handle_control_unavailable()
+        self._sync_report()
+        self._release_source()
 
     def transfer_to_successor(
         self, successor: "ExternalMotionRecoveryDriver", reason: str,
@@ -559,7 +594,8 @@ class RuntimeNavigationDriver:
         self.session.unbind_source(source)
         self.source = None
 
-    def _sync_report(self) -> None:
+    def _sync_report(self, *, runtime_failure: FailureV0 | None = None,
+                     unavailable_runtime: RuntimeStateV1 | None = None) -> None:
         report = self.session.report
         mapping = {
             NavigationSessionState.CANCELLING: "stopping",
@@ -571,6 +607,12 @@ class RuntimeNavigationDriver:
         }
         self.state = mapping.get(report.state, "running")
         self.reason = report.reason
+        if runtime_failure is not None:
+            self.state, self.reason = "failed", "runtime_failure"
+        if unavailable_runtime is not None:
+            if unavailable_runtime is RuntimeStateV1.READY:
+                raise ContractViolation("ready Runtime still has control")
+            self.state, self.reason = "failed", "control_unavailable"
 
     def _task(self, deadline_ns: int, reason: str | None = None) -> TaskIntentV0:
         return TaskIntentV0(

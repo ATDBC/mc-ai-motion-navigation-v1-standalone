@@ -402,6 +402,7 @@ def run_scenario_with_trace(
     after_tick=None,
     control_path_started=None,
     control_path_finished=None,
+    trajectory_sink=None,
 ) -> dict:
     if cancel_when is not None and not callable(cancel_when):
         raise TypeError("long-session cancel predicate must be callable")
@@ -418,6 +419,7 @@ def run_scenario_with_trace(
         cancel_when=cancel_when, after_tick=after_tick,
         control_path_started=control_path_started,
         control_path_finished=control_path_finished,
+        trajectory_sink=trajectory_sink,
     )
 
 
@@ -429,6 +431,7 @@ def _run_scenario(
     after_tick=None,
     control_path_started=None,
     control_path_finished=None,
+    trajectory_sink=None,
 ) -> dict:
     if type(scenario) is not FollowScenario:
         raise TypeError("F1-C requires a frozen FollowScenario")
@@ -691,6 +694,17 @@ def _run_scenario(
                 "goal_position": goal_position,
                 "applied_movement": asdict(applied_movement),
             })
+            if trajectory_sink is not None:
+                trajectory_sink({
+                    **response_frames[-1],
+                    "velocity": backend.state.velocity_blocks_per_tick,
+                    "on_ground": backend.state.on_ground,
+                    "controller_ids": diagnostics.controller_ids,
+                    "body_handoff": (None if diagnostics.handoff is None else asdict(diagnostics.handoff)),
+                    "planning_submissions": sum(item.operation == "submit" for item in planner.activity),
+                    "motion_submissions": sum(item.operation == "submit" for item in motion.activity),
+                })
+
 
             if moved <= .005 and driver.source is not None:
                 if zero_start is None:

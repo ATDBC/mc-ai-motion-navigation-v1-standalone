@@ -3,10 +3,14 @@ from dataclasses import replace
 from unittest.mock import patch
 
 from scripts.navigation_migration_evidence import observe
-from tests.sim.migration_faults import FAULT_CASES
+from tests.sim.migration_faults import FAULT_CASES, run_fault_case
 
 
 class MigrationFaultTests(unittest.TestCase):
+    def test_old_material_premise_is_rejected_before_claiming_fault_coverage(self):
+        with self.assertRaisesRegex(AssertionError, "route validation stop"):
+            run_fault_case("active_route_dependency_retry", dependency_material="minecraft:grass_block")
+
     def test_external_impulse_delivery_is_independent_of_diagnostic_names(self):
         from mc2p.motion_nav.navigation_session import NavigationSession
         from tests.sim.backend import Perturbations

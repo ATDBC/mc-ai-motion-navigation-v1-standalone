@@ -1,0 +1,47 @@
+{
+  "schema_version": "mc2p.navigation-structure-baseline.v1",
+  "normalizer_version": "r28-structure-trajectory-v1",
+  "kind": "follow",
+  "cases": [
+    {
+      "id": "straight_2_0",
+      "signature": "b811eb4f16ec4dd99e269cd69daab82e908a9b50c765bc0a00b2cfcadad78638"
+    },
+    {
+      "id": "straight_3_3",
+      "signature": "c598252c852c59fe3d83882cf5ba3cbe898083bd240b72444ab603fece0596ef"
+    },
+    {
+      "id": "straight_4_0",
+      "signature": "6803c84f0b0c56a4c3a7a53f19da5a0cf7cc739213bef37cf3242e7c385d3da7"
+    },
+    {
+      "id": "lateral_3_3",
+      "signature": "d6bdf68b3149ab6b738aa52309f39cea007f3eac6040c3d88a91acc2f019cfd5"
+    },
+    {
+      "id": "move_stop_800_resume",
+      "signature": "06be60e2ec0a25abcc9ea637d30e17b29909d5cc673026d1bfff8360b3d31fcb"
+    },
+    {
+      "id": "high_frequency_throttle",
+      "signature": "c5e0c7b201aaecdcd3e0ecc646ce1f883a6d5d47096b116a8c51cb5a404cf002"
+    },
+    {
+      "id": "normal_cancel",
+      "signature": "256f0f14131bb9e50e3f9448b00675b4b46317be5ecac673b718ad6c01e95d41"
+    },
+    {
+      "id": "one_missing_observation",
+      "signature": "a9cbf042cfb597fd8e44cdfde72481acb513a1b48f44e7ff93a6ee8781493f5f"
+    },
+    {
+      "id": "first_input_late_one_tick",
+      "signature": "9d0c132cdb91d1ea2d2393b8a3db447ddc7c944c0b5bfe62bcd6490fb761c698"
+    },
+    {
+      "id": "straight_5_0_out_of_scope",
+      "signature": "da5ac1e95087c888ec10732885d9e3b0616d0360da18fbfe2a47579362a26485"
+    }
+  ]
+}

@@ -766,6 +766,9 @@ class PlayerRuntimeV1:
 
     @staticmethod
     def _exception_failure(error: Exception, code: FailureCodeV0, *, classify: bool = True) -> FailureV0:
+        from mc2p.runtime.backend_v1 import BackendIOFailure
+        if classify and isinstance(error, BackendIOFailure):
+            return error.failure
         if classify:
             if isinstance(error, TimeoutError): code = FailureCodeV0.DEADLINE_EXCEEDED
             elif isinstance(error, ContractViolation) and code is not FailureCodeV0.CONTRACT:

@@ -165,6 +165,7 @@ class RecoveryFinishKind(StrEnum):
     BODY_HANDOFF = "body_handoff"
     SAFE_RELEASE = "safe_release"
     RESPONSIBILITY_TRANSFERRED = "responsibility_transferred"
+    CONTROL_UNAVAILABLE = "control_unavailable"
 
 
 @dataclass(frozen=True, slots=True)

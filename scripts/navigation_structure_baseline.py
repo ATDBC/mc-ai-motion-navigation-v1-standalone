@@ -165,7 +165,7 @@ def write_index(kind: str, source: Path, output: Path) -> dict:
 
 
 def compare_indexes(baseline: dict, candidate: dict) -> dict:
-    for key in ("normalizer_version", "kind"):
+    for key in ("normalizer_version", "kind", "signature_schema_version"):
         if baseline.get(key) != candidate.get(key):
             raise ValueError(f"structure comparison basis differs: {key}")
     old = {row["id"]: row["signature"] for row in baseline["cases"]}
@@ -179,6 +179,38 @@ def compare_indexes(baseline: dict, candidate: dict) -> dict:
             "equivalent": not differences}
 
 
+def verify_manifest(root: Path) -> dict:
+    """Verify every declared compact file without rewriting any evidence."""
+    root = root.resolve()
+    manifest = json.loads((root / "baseline-manifest.json").read_text("utf-8"))
+    checked = set()
+
+    def check(name, expected):
+        path = (root / name).resolve()
+        if Path(name).is_absolute() or not path.is_relative_to(root):
+            raise ValueError("manifest reference escapes its evidence directory")
+        actual = hashlib.sha256(path.read_bytes()).hexdigest()
+        if actual != expected:
+            raise ValueError(f"manifest checksum mismatch: {name}")
+        checked.add(name)
+
+    for value in manifest["sets"].values():
+        check(value["index"], value["index_sha256"])
+        check(value["repeat_index"], value["repeat_index_sha256"])
+    check("path-matrix.json", manifest["path_matrix_sha256"])
+    check("deletion-inventory.json", manifest["deletion_inventory_sha256"])
+    for name, digest in manifest["compact_summary_files"].items():
+        check(name, digest)
+    checksums = root / "SHA256SUMS.txt"
+    if checksums.exists():
+        for line in checksums.read_text("utf-8").splitlines():
+            digest, name = line.split("  ", 1)
+            if name == checksums.name:
+                raise ValueError("SHA256SUMS must not hash itself")
+            check(name, digest)
+    return {"verified": True, "files_checked": len(checked), "sets": len(manifest["sets"])}
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -186,10 +218,16 @@ def main(argv=None) -> int:
     index.add_argument("kind", choices=("product", "migration"))
     index.add_argument("--source", type=Path, required=True)
     index.add_argument("--output", type=Path, required=True)
+    verify = subparsers.add_parser("verify")
+    verify.add_argument("--root", type=Path, required=True)
     compare = subparsers.add_parser("compare")
     compare.add_argument("--baseline", type=Path, required=True)
     compare.add_argument("--candidate", type=Path, required=True)
     args = parser.parse_args(argv)
+    if args.command == "verify":
+        report = verify_manifest(args.root)
+        print(json.dumps(report, ensure_ascii=False))
+        return 0
     if args.command == "index":
         result = write_index(args.kind, args.source, args.output)
         report = {"kind": result["kind"], "cases": len(result["cases"]),

@@ -9,7 +9,18 @@ from mc2p.contracts.action_receipt import (
 from mc2p.contracts.common import ContractViolation
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.contracts.reset import ResetRequestV0, ResetResultV0
+from mc2p.contracts.report import FailureCodeV0, FailureV0
 from mc2p.runtime.backend import BackendStepResultV0
+
+
+class BackendIOFailure(OSError):
+    """A backend that knows recoverability can preserve its typed I/O failure."""
+
+    def __init__(self, failure: FailureV0) -> None:
+        if type(failure) is not FailureV0 or failure.code is not FailureCodeV0.BACKEND_IO:
+            raise ContractViolation("backend I/O failure requires typed BACKEND_IO")
+        super().__init__(failure.message)
+        self.failure = failure
 
 
 @dataclass(frozen=True, slots=True)

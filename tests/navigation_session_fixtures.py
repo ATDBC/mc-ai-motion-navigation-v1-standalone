@@ -86,6 +86,15 @@ class FakeNavigationSession:
             raise AssertionError("wrong source")
         self.source = None
 
+    def handle_control_unavailable(self):
+        if not self.report.terminal:
+            self.state = NavigationSessionState.FAILED
+            self.reason = "control_unavailable"
+
+    def contract_stop_proposal(self, frame, state_anchor, deadline_ns, *, input_ledger):
+        self.cancel("navigation_internal_contract_failure")
+        return NavigationSessionProposal(None, self.report)
+
     def ingest(self, snapshot):
         frame = type("Frame", (), {
             "body": type("Body", (), {"sequence_id": snapshot.sequence_id})(),

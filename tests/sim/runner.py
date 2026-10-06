@@ -12,6 +12,7 @@ existing worker interfaces:
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field, replace
+from copy import deepcopy
 from pathlib import Path
 import math
 import random
@@ -35,6 +36,7 @@ from mc2p.motion_nav.runtime_adapter import TEST_ORACLE
 from tests.sim.backend import CalculatorBackend, Perturbations, Scene
 from tests.sim.monitor import InvariantMonitor, TickEvidence
 from tests.sim.async_monitor import AsyncCoverageRequirement, ObservedAsyncActivity, VerificationAssessment
+from tests.sim.planning_clock import deterministic_planning_clock
 from mc2p.motion_nav.async_work import AsyncWorkKind
 
 CONFIG = Path("config/motion-navigation")
@@ -78,7 +80,11 @@ class InlinePlannerWorker:
         self._job = self._queued_jobs.pop(0) if self._queued_jobs else None
         if job is not None:
             self.activity.append(ObservedAsyncActivity(job.request.work_identity, "poll"))
-        result = None if job is None else planner_worker._execute_job(job)
+        if job is None:
+            result = None
+        else:
+            with deterministic_planning_clock():
+                result = planner_worker._execute_job(job)
         return result
 
     def poll_available(self):
@@ -159,10 +165,15 @@ class Context:
     risk_policy_id: str
     goal_state: GoalState
     goal_position: tuple[float, float, float]
+    planner_worker: InlinePlannerWorker | None = None
 
     @property
     def diagnostics(self):
         return self.session.diagnostics
+
+    @property
+    def planning_activity(self) -> tuple[ObservedAsyncActivity, ...]:
+        return (() if self.planner_worker is None else tuple(self.planner_worker.activity))
 
 
 def seed_memory(runtime: PlayerRuntimeV1, scene: Scene, *, exclude=frozenset()) -> None:
@@ -252,7 +263,7 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
     command_activities = {}
     backend = backend_factory(clock, Scene(dict(scenario.scene.solids), scenario.scene.volume).with_floor(),
                                 scenario.start, scenario.yaw_degrees,
-                                perturbations=scenario.perturbations)
+                                perturbations=deepcopy(scenario.perturbations))
     if scenario.start_velocity_blocks_per_tick is not None:
         backend.state = replace(
             backend.state,
@@ -298,7 +309,7 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                  reach_policy=reach_policy)
     monitor = InvariantMonitor()
     context = Context(0, backend, session, driver, clock,
-                      scenario.damage_points, policy, goal, scenario.goal)
+                      scenario.damage_points, policy, goal, scenario.goal, planner)
     trace: list[dict] = []
     released_ticks = 0
     information_activity = {}

@@ -575,6 +575,7 @@ class MotionRouteCoordinator:
         self._grounded_recovery_wait_id: str | None = None
         self._local_attempts = LocalAttemptChain(maximum_failures=3)
         self._local_attempt_action_index = executor.action_index
+        self._reanchor_after_landing_action: int | None = None
 
     def start(self, frame: NavigationFrame) -> None:
         if type(frame) is not NavigationFrame:
@@ -583,6 +584,7 @@ class MotionRouteCoordinator:
         self.last_admission = None
         self.last_failure_attempt_id = None
         self.last_failure_reason = ""
+        self._reanchor_after_landing_action = None
         self._end_grounded_recovery_wait()
         self._local_attempts.reset()
         self.executor.start(
@@ -781,6 +783,19 @@ class MotionRouteCoordinator:
             )
         if self._work.check(result.work_identity, self._clock(), current_scope=current_scope) is not WorkCheck.READY:
             self._expire_delivered_result(result)
+            return False
+        if (prepared.status is GapPreparationStatus.SOLVE_FAILED
+                and result.solve_result.status is SolveStatus.NEEDS_STATE
+                and not anchor.physics_state.on_ground):
+            # A grounded retry can leave its support while the calculation is
+            # in flight. Its missing entry state is not a no-solution proof.
+            self._record_admission(AsyncAdmissionDisposition.RECOMPUTE,
+                                   identity_matched=True, facts_valid=False)
+            self._retire_work("airborne_entry_needs_state")
+            if (action_index == self.executor.action_index
+                    and not self.executor.current_verified_action_started()):
+                self._reanchor_after_landing_action = action_index
+            self.last_failure_reason = ""
             return False
         if prepared.status is not GapPreparationStatus.READY:
             self._record_admission(
@@ -1275,6 +1290,24 @@ class MotionRouteCoordinator:
                 result, anchor, world, changed_cells, ledger,
                 current_scope=current_scope,
             ) or installed
+        if self._reanchor_after_landing_action == self.executor.action_index:
+            if frame.body.is_on_ground:
+                # Cancel only the obsolete route, after real landing. The
+                # existing session recovery path verifies release and plans
+                # from this observation instead of the old departure surface.
+                self._reanchor_after_landing_action = None
+                self.executor.cancel()
+                decision = self.executor.decide(frame, state_anchor=anchor,
+                                                input_ledger=ledger)
+                return replace(decision, state=ActionRouteState.NEEDS_REPLAN,
+                               reason_code="landed_entry_requires_reanchor")
+            decision = self.executor.decide(frame, state_anchor=anchor,
+                                            input_ledger=ledger)
+            return replace(decision, movement=MovementV1(), look=None,
+                           submit_input=True, input_lease_ticks=1,
+                           requires_verified_motion=False,
+                           body_phase=BodyControlPhase.ENTRY_RECOVERY,
+                           reason_code="airborne_entry_waiting_for_landing")
         entry_ready = self.executor.current_verified_motion_can_start(anchor)
         if entry_ready is False:
             attempt_id = (

@@ -4,7 +4,7 @@
 
 默认分支 `main` 是项目方唯一的公开发布线，只接收固定导出脚本生成并校验通过的整理后快照。主项目的完整开发分支和提交历史不会直接推入本仓库。三方审查分支可以单独存在，用于保存审查报告和复现材料；它们不改变 `main` 的正式状态。
 
-2026-10-06，F1 已知世界正式跟随的功能交付通过，五个代表 Fabric 场景逐场通过，修订响应 P95 不超过 4 tick，task recovery 和安全违规均为 0。薄跟随层只调用导航的开始、目标修订和释放接口。原结构门槛未通过，因此当前只做行为不变的结构整理。S0 已冻结三个删除候选和 `r28-structure-trajectory-v1` 基线：v7 2,000 项、协调 1,448/1,448、补充故障 4/4；当前产品完成 1,718/2,000，零异常、零安全事件。`_wait_for_active_terminal` 等有正式职责或证据不足的入口明确保留。结果见[结构整理验收](docs/motion_navigation/acceptance/post-F1-navigation-structure-cleanup.md)，紧凑签名和清单位于 `evidence/motion_navigation/post-f1-structure-s0/`。
+2026-10-06，S0-R 已在正式 Windows 环境完成，S1 可以开始但尚未实施。最终完整正序、逆序均为 1,499/1,499；产品 2,000 项、协调 1,448 项、扩充故障 16 项、正式跟随 10 项和世界变化 19 项均连续两次一致。产品仍为 1,718/2,000，零异常、零安全事件。v2 清单保留 14 个待审候选和 2 个仅审查项，S1／S2 变异尚未执行。三方使用 Linux 是审查方的环境限制；Linux 复跑只用于补充检查可移植性，不阻塞本项目阶段关闭。结果见[结构整理验收](docs/motion_navigation/acceptance/post-F1-navigation-structure-cleanup.md)，紧凑签名、路径矩阵和清单位于 `evidence/motion_navigation/post-f1-structure-s0r/`。
 
 2026-10-04，R28 已按时间盒结束，正式批次为 **10／10**。R28-1、R28-4 按冻结范围完成；R28-3 完成限定安全与功能交付，但原完整阶段未通过；R28-5 未执行。协调代码净减少、两次统计查看、产品统计非退步、五 tick 修订响应、正式跟随和室内终点接近仍未通过。三方在 Linux 上对最终代码复跑运动导航 **1,207／1,207**、协调集合 **1,448／1,448**、补充故障 **4／4** 和 v7 **1,710／2,000**。迁移入口实际覆盖 **40／41**；`_wait_for_active_terminal` 没有场景进入，尚未证明可达或不可达。R28-4 的五个晚到下降结果是时序敏感变化，不记为产品能力提升。精简证据位于 `evidence/motion_navigation/r28-4-budget-v1/` 和 `evidence/motion_navigation/r28-3-generation-v1/`，收尾结论见 [R28 验收第 20 节](docs/motion_navigation/acceptance/navigation-coordination-convergence.md#20-r28-时间盒收尾)。下一阶段是正式跟随。
 

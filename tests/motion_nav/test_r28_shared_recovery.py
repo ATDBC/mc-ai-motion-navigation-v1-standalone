@@ -6,6 +6,7 @@ from tests.motion_nav.test_action_continuity_formal import _gap_case
 from tests.sim.backend import Perturbations, SLAB_ID
 from tests.sim.runner import Event, _goal, run
 from tests.sim.scenarios import SCENARIOS
+from tests.sim.migration_faults import assert_route_replacement_entered
 
 
 class SharedRecoveryFormalTests(unittest.TestCase):
@@ -27,15 +28,34 @@ class SharedRecoveryFormalTests(unittest.TestCase):
 
     def test_expired_planning_work_is_retired_at_every_observed_boundary(self):
         base = next(s for s in SCENARIOS if s.name == "flat_walk")
-        edits = {tick: {(0, 63, 5): "minecraft:stone" if tick % 2 else "minecraft:grass_block"}
-                 for tick in range(3, 180)}
+        def keep_changing(context):
+            context.backend.perturbations.world_edits.update({
+                tick: {(0, 63, 5): "minecraft:stone" if tick % 2 else SLAB_ID}
+                for tick in range(context.backend.movement_tick + 1, 180)
+            })
+        # Let the first changed edge stop and submit its replacement before
+        # invalidating each subsequent planning basis.
+        edits = {4: {(0, 63, 5): SLAB_ID}}
         result = run(replace(base, name="r28-every-tick-material-change", max_ticks=180,
-                             perturbations=Perturbations(world_edits=edits)))
+                             perturbations=Perturbations(world_edits=edits),
+                             events=[Event("repeat-after-replacement-submit", lambda c:
+                                 sum(item.operation == "submit" for item in c.planning_activity) >= 2,
+                                 keep_changing)]))
         self.assertFalse(result.violations, result.violations)
+        assert_route_replacement_entered(result)
         self.assertEqual(result.outcome, "failed", result.reason)
         self.assertFalse(result.trace[-1]["source_bound"])
         self.assertTrue(all(not row["planning_work_owned"] or row["planning_work_identity_valid"]
                             for row in result.trace))
+
+    def test_old_material_change_does_not_satisfy_recovery_premise(self):
+        base = next(s for s in SCENARIOS if s.name == "flat_walk")
+        edits = {tick: {(0, 63, 5): "minecraft:stone" if tick % 2 else "minecraft:grass_block"}
+                 for tick in range(3, 180)}
+        result = run(replace(base, max_ticks=180, perturbations=Perturbations(world_edits=edits)))
+        self.assertEqual(result.outcome, "success")
+        with self.assertRaisesRegex(AssertionError, "route validation stop"):
+            assert_route_replacement_entered(result)
 
     def test_airborne_cancel_cannot_be_replaced_by_a_new_goal_revision(self):
         refused = []

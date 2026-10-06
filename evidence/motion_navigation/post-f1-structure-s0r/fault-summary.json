@@ -1,0 +1,981 @@
+{
+  "product_denominator": false,
+  "cases": [
+    {
+      "id": "faults/worker_death",
+      "passed": true,
+      "task_outcome": "failed",
+      "reason": "planner_worker_died_retry_exhausted",
+      "violations": [],
+      "verification": {
+        "status": "verified",
+        "coverage": {
+          "planning": {
+            "begin": 3,
+            "apply": 0,
+            "finish": 3
+          },
+          "information": {
+            "begin": 0,
+            "apply": 0,
+            "finish": 0
+          },
+          "motion_solve": {
+            "begin": 0,
+            "apply": 0,
+            "finish": 0
+          },
+          "placement_confirmation": {
+            "begin": 0,
+            "apply": 0,
+            "finish": 0
+          }
+        },
+        "gaps": []
+      },
+      "verification_complete": true
+    },
+    {
+      "id": "faults/driver_contract_containment",
+      "passed": true,
+      "task_outcome": "failed",
+      "reason": "navigation_internal_contract_failure",
+      "violations": [],
+      "verification": {
+        "status": "verified",
+        "coverage": {
+          "planning": {
+            "begin": 1,
+            "apply": 0,
+            "finish": 1
+          },
+          "information": {
+            "begin": 0,
+            "apply": 0,
+            "finish": 0
+          },
+          "motion_solve": {
+            "begin": 0,
+            "apply": 0,
+            "finish": 0
+          },
+          "placement_confirmation": {
+            "begin": 0,
+            "apply": 0,
+            "finish": 0
+          }
+        },
+        "gaps": []
+      },
+      "verification_complete": true
+    },
+    {
+      "id": "faults/ground_stall_retry",
+      "passed": true,
+      "task_outcome": "success",
+      "reason": "goal_state_satisfied",
+      "violations": [],
+      "verification": {
+        "status": "verified",
+        "coverage": {
+          "planning": {
+            "begin": 2,
+            "apply": 2,
+            "finish": 2
+          },
+          "information": {
+            "begin": 0,
+            "apply": 0,
+            "finish": 0
+          },
+          "motion_solve": {
+            "begin": 0,
+            "apply": 0,
+            "finish": 0
+          },
+          "placement_confirmation": {
+            "begin": 0,
+            "apply": 0,
+            "finish": 0
+          }
+        },
+        "gaps": []
+      },
+      "verification_complete": true
+    },
+    {
+      "id": "faults/active_route_dependency_retry",
+      "passed": true,
+      "task_outcome": "success",
+      "reason": "goal_state_satisfied",
+      "violations": [],
+      "verification": {
+        "status": "verified",
+        "coverage": {
+          "planning": {
+            "begin": 8,
+            "apply": 8,
+            "finish": 8
+          },
+          "information": {
+            "begin": 0,
+            "apply": 0,
+            "finish": 0
+          },
+          "motion_solve": {
+            "begin": 0,
+            "apply": 0,
+            "finish": 0
+          },
+          "placement_confirmation": {
+            "begin": 0,
+            "apply": 0,
+            "finish": 0
+          }
+        },
+        "gaps": []
+      },
+      "verification_complete": true
+    },
+    {
+      "id": "io/point/walking/False",
+      "passed": true,
+      "phase": "walking",
+      "follow": false,
+      "retryable": false,
+      "phase_entry": {
+        "movement_tick": 2,
+        "position": [
+          0.5,
+          64.0,
+          0.598000009074074
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.05350800495444445
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": true,
+        "driver_state": "running",
+        "driver_reason": "tracking_fixed_route",
+        "session_state": "executing",
+        "session_reason": "tracking_fixed_route"
+      },
+      "failure": {
+        "code": "backend_io",
+        "message": "injected transport loss",
+        "retryable": false,
+        "source": "test_backend",
+        "detail_json": "{}",
+        "schema_version": "mc2p.failure.v0"
+      },
+      "disposition": "end_episode",
+      "terminal": {
+        "movement_tick": 2,
+        "position": [
+          0.5,
+          64.0,
+          0.598000009074074
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.05350800495444445
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "failed",
+        "driver_reason": "control_unavailable",
+        "session_state": "failed",
+        "session_reason": "control_unavailable"
+      },
+      "terminal_propose_calls": 0,
+      "writes_after_failure": 0
+    },
+    {
+      "id": "io/point/walking/True",
+      "passed": true,
+      "phase": "walking",
+      "follow": false,
+      "retryable": true,
+      "phase_entry": {
+        "movement_tick": 2,
+        "position": [
+          0.5,
+          64.0,
+          0.598000009074074
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.05350800495444445
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": true,
+        "driver_state": "running",
+        "driver_reason": "tracking_fixed_route",
+        "session_state": "executing",
+        "session_reason": "tracking_fixed_route"
+      },
+      "failure": {
+        "code": "backend_io",
+        "message": "injected transport loss",
+        "retryable": true,
+        "source": "test_backend",
+        "detail_json": "{}",
+        "schema_version": "mc2p.failure.v0"
+      },
+      "disposition": "recreate_runtime",
+      "terminal": {
+        "movement_tick": 2,
+        "position": [
+          0.5,
+          64.0,
+          0.598000009074074
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.05350800495444445
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "failed",
+        "driver_reason": "control_unavailable",
+        "session_state": "failed",
+        "session_reason": "control_unavailable"
+      },
+      "terminal_propose_calls": 0,
+      "writes_after_failure": 0
+    },
+    {
+      "id": "io/point/braking/False",
+      "passed": true,
+      "phase": "braking",
+      "follow": false,
+      "retryable": false,
+      "phase_entry": {
+        "movement_tick": 2,
+        "position": [
+          0.5,
+          64.0,
+          0.598000009074074
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.05350800495444445
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": true,
+        "driver_state": "stopping",
+        "driver_reason": "cancellation_requested",
+        "session_state": "stopping",
+        "session_reason": "cancellation_requested"
+      },
+      "failure": {
+        "code": "backend_io",
+        "message": "injected transport loss",
+        "retryable": false,
+        "source": "test_backend",
+        "detail_json": "{}",
+        "schema_version": "mc2p.failure.v0"
+      },
+      "disposition": "end_episode",
+      "terminal": {
+        "movement_tick": 2,
+        "position": [
+          0.5,
+          64.0,
+          0.598000009074074
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.05350800495444445
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "failed",
+        "driver_reason": "control_unavailable",
+        "session_state": "failed",
+        "session_reason": "control_unavailable"
+      },
+      "terminal_propose_calls": 0,
+      "writes_after_failure": 0
+    },
+    {
+      "id": "io/point/braking/True",
+      "passed": true,
+      "phase": "braking",
+      "follow": false,
+      "retryable": true,
+      "phase_entry": {
+        "movement_tick": 2,
+        "position": [
+          0.5,
+          64.0,
+          0.598000009074074
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.05350800495444445
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": true,
+        "driver_state": "stopping",
+        "driver_reason": "cancellation_requested",
+        "session_state": "stopping",
+        "session_reason": "cancellation_requested"
+      },
+      "failure": {
+        "code": "backend_io",
+        "message": "injected transport loss",
+        "retryable": true,
+        "source": "test_backend",
+        "detail_json": "{}",
+        "schema_version": "mc2p.failure.v0"
+      },
+      "disposition": "recreate_runtime",
+      "terminal": {
+        "movement_tick": 2,
+        "position": [
+          0.5,
+          64.0,
+          0.598000009074074
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.05350800495444445
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "failed",
+        "driver_reason": "control_unavailable",
+        "session_state": "failed",
+        "session_reason": "control_unavailable"
+      },
+      "terminal_propose_calls": 0,
+      "writes_after_failure": 0
+    },
+    {
+      "id": "io/point/airborne/False",
+      "passed": true,
+      "phase": "airborne",
+      "follow": false,
+      "retryable": false,
+      "phase_entry": {
+        "movement_tick": 12,
+        "position": [
+          0.55,
+          64.42,
+          2.9945819031338172
+        ],
+        "velocity": [
+          0.0,
+          0.3332000064849853,
+          0.2429599196825353
+        ],
+        "on_ground": false,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": true,
+          "sneak": false,
+          "sprint": true
+        },
+        "source_bound": true,
+        "driver_state": "running",
+        "driver_reason": "submit_verified_command",
+        "session_state": "executing",
+        "session_reason": "submit_verified_command"
+      },
+      "failure": {
+        "code": "backend_io",
+        "message": "injected transport loss",
+        "retryable": false,
+        "source": "test_backend",
+        "detail_json": "{}",
+        "schema_version": "mc2p.failure.v0"
+      },
+      "disposition": "end_episode",
+      "terminal": {
+        "movement_tick": 12,
+        "position": [
+          0.55,
+          64.42,
+          2.9945819031338172
+        ],
+        "velocity": [
+          0.0,
+          0.3332000064849853,
+          0.2429599196825353
+        ],
+        "on_ground": false,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": true,
+          "sneak": false,
+          "sprint": true
+        },
+        "source_bound": false,
+        "driver_state": "failed",
+        "driver_reason": "control_unavailable",
+        "session_state": "failed",
+        "session_reason": "control_unavailable"
+      },
+      "terminal_propose_calls": 0,
+      "writes_after_failure": 0
+    },
+    {
+      "id": "io/point/airborne/True",
+      "passed": true,
+      "phase": "airborne",
+      "follow": false,
+      "retryable": true,
+      "phase_entry": {
+        "movement_tick": 12,
+        "position": [
+          0.55,
+          64.42,
+          2.9945819031338172
+        ],
+        "velocity": [
+          0.0,
+          0.3332000064849853,
+          0.2429599196825353
+        ],
+        "on_ground": false,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": true,
+          "sneak": false,
+          "sprint": true
+        },
+        "source_bound": true,
+        "driver_state": "running",
+        "driver_reason": "submit_verified_command",
+        "session_state": "executing",
+        "session_reason": "submit_verified_command"
+      },
+      "failure": {
+        "code": "backend_io",
+        "message": "injected transport loss",
+        "retryable": true,
+        "source": "test_backend",
+        "detail_json": "{}",
+        "schema_version": "mc2p.failure.v0"
+      },
+      "disposition": "recreate_runtime",
+      "terminal": {
+        "movement_tick": 12,
+        "position": [
+          0.55,
+          64.42,
+          2.9945819031338172
+        ],
+        "velocity": [
+          0.0,
+          0.3332000064849853,
+          0.2429599196825353
+        ],
+        "on_ground": false,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": true,
+          "sneak": false,
+          "sprint": true
+        },
+        "source_bound": false,
+        "driver_state": "failed",
+        "driver_reason": "control_unavailable",
+        "session_state": "failed",
+        "session_reason": "control_unavailable"
+      },
+      "terminal_propose_calls": 0,
+      "writes_after_failure": 0
+    },
+    {
+      "id": "io/follow/walking/False",
+      "passed": true,
+      "phase": "walking",
+      "follow": true,
+      "retryable": false,
+      "phase_entry": {
+        "movement_tick": 2,
+        "position": [
+          0.5,
+          64.0,
+          0.598000009074074
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.05350800495444445
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": true,
+        "driver_state": "running",
+        "driver_reason": "tracking_fixed_route",
+        "session_state": "executing",
+        "session_reason": "tracking_fixed_route"
+      },
+      "failure": {
+        "code": "backend_io",
+        "message": "injected transport loss",
+        "retryable": false,
+        "source": "test_backend",
+        "detail_json": "{}",
+        "schema_version": "mc2p.failure.v0"
+      },
+      "disposition": "end_episode",
+      "terminal": {
+        "movement_tick": 2,
+        "position": [
+          0.5,
+          64.0,
+          0.598000009074074
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.05350800495444445
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "failed",
+        "driver_reason": "control_unavailable",
+        "session_state": "failed",
+        "session_reason": "control_unavailable"
+      },
+      "terminal_propose_calls": 0,
+      "writes_after_failure": 0
+    },
+    {
+      "id": "io/follow/walking/True",
+      "passed": true,
+      "phase": "walking",
+      "follow": true,
+      "retryable": true,
+      "phase_entry": {
+        "movement_tick": 2,
+        "position": [
+          0.5,
+          64.0,
+          0.598000009074074
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.05350800495444445
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": true,
+        "driver_state": "running",
+        "driver_reason": "tracking_fixed_route",
+        "session_state": "executing",
+        "session_reason": "tracking_fixed_route"
+      },
+      "failure": {
+        "code": "backend_io",
+        "message": "injected transport loss",
+        "retryable": true,
+        "source": "test_backend",
+        "detail_json": "{}",
+        "schema_version": "mc2p.failure.v0"
+      },
+      "disposition": "recreate_runtime",
+      "terminal": {
+        "movement_tick": 2,
+        "position": [
+          0.5,
+          64.0,
+          0.598000009074074
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.05350800495444445
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "failed",
+        "driver_reason": "control_unavailable",
+        "session_state": "failed",
+        "session_reason": "control_unavailable"
+      },
+      "terminal_propose_calls": 0,
+      "writes_after_failure": 0
+    },
+    {
+      "id": "io/follow/braking/False",
+      "passed": true,
+      "phase": "braking",
+      "follow": true,
+      "retryable": false,
+      "phase_entry": {
+        "movement_tick": 2,
+        "position": [
+          0.5,
+          64.0,
+          0.598000009074074
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.05350800495444445
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": true,
+        "driver_state": "stopping",
+        "driver_reason": "cancellation_requested",
+        "session_state": "stopping",
+        "session_reason": "cancellation_requested"
+      },
+      "failure": {
+        "code": "backend_io",
+        "message": "injected transport loss",
+        "retryable": false,
+        "source": "test_backend",
+        "detail_json": "{}",
+        "schema_version": "mc2p.failure.v0"
+      },
+      "disposition": "end_episode",
+      "terminal": {
+        "movement_tick": 2,
+        "position": [
+          0.5,
+          64.0,
+          0.598000009074074
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.05350800495444445
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "failed",
+        "driver_reason": "control_unavailable",
+        "session_state": "failed",
+        "session_reason": "control_unavailable"
+      },
+      "terminal_propose_calls": 0,
+      "writes_after_failure": 0
+    },
+    {
+      "id": "io/follow/braking/True",
+      "passed": true,
+      "phase": "braking",
+      "follow": true,
+      "retryable": true,
+      "phase_entry": {
+        "movement_tick": 2,
+        "position": [
+          0.5,
+          64.0,
+          0.598000009074074
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.05350800495444445
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": true,
+        "driver_state": "stopping",
+        "driver_reason": "cancellation_requested",
+        "session_state": "stopping",
+        "session_reason": "cancellation_requested"
+      },
+      "failure": {
+        "code": "backend_io",
+        "message": "injected transport loss",
+        "retryable": true,
+        "source": "test_backend",
+        "detail_json": "{}",
+        "schema_version": "mc2p.failure.v0"
+      },
+      "disposition": "recreate_runtime",
+      "terminal": {
+        "movement_tick": 2,
+        "position": [
+          0.5,
+          64.0,
+          0.598000009074074
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.05350800495444445
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "failed",
+        "driver_reason": "control_unavailable",
+        "session_state": "failed",
+        "session_reason": "control_unavailable"
+      },
+      "terminal_propose_calls": 0,
+      "writes_after_failure": 0
+    },
+    {
+      "id": "io/follow/airborne/False",
+      "passed": true,
+      "phase": "airborne",
+      "follow": true,
+      "retryable": false,
+      "phase_entry": {
+        "movement_tick": 12,
+        "position": [
+          0.55,
+          64.42,
+          2.9945819031338172
+        ],
+        "velocity": [
+          0.0,
+          0.3332000064849853,
+          0.2429599196825353
+        ],
+        "on_ground": false,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": true,
+          "sneak": false,
+          "sprint": true
+        },
+        "source_bound": true,
+        "driver_state": "running",
+        "driver_reason": "submit_verified_command",
+        "session_state": "executing",
+        "session_reason": "submit_verified_command"
+      },
+      "failure": {
+        "code": "backend_io",
+        "message": "injected transport loss",
+        "retryable": false,
+        "source": "test_backend",
+        "detail_json": "{}",
+        "schema_version": "mc2p.failure.v0"
+      },
+      "disposition": "end_episode",
+      "terminal": {
+        "movement_tick": 12,
+        "position": [
+          0.55,
+          64.42,
+          2.9945819031338172
+        ],
+        "velocity": [
+          0.0,
+          0.3332000064849853,
+          0.2429599196825353
+        ],
+        "on_ground": false,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": true,
+          "sneak": false,
+          "sprint": true
+        },
+        "source_bound": false,
+        "driver_state": "failed",
+        "driver_reason": "control_unavailable",
+        "session_state": "failed",
+        "session_reason": "control_unavailable"
+      },
+      "terminal_propose_calls": 0,
+      "writes_after_failure": 0
+    },
+    {
+      "id": "io/follow/airborne/True",
+      "passed": true,
+      "phase": "airborne",
+      "follow": true,
+      "retryable": true,
+      "phase_entry": {
+        "movement_tick": 12,
+        "position": [
+          0.55,
+          64.42,
+          2.9945819031338172
+        ],
+        "velocity": [
+          0.0,
+          0.3332000064849853,
+          0.2429599196825353
+        ],
+        "on_ground": false,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": true,
+          "sneak": false,
+          "sprint": true
+        },
+        "source_bound": true,
+        "driver_state": "running",
+        "driver_reason": "submit_verified_command",
+        "session_state": "executing",
+        "session_reason": "submit_verified_command"
+      },
+      "failure": {
+        "code": "backend_io",
+        "message": "injected transport loss",
+        "retryable": true,
+        "source": "test_backend",
+        "detail_json": "{}",
+        "schema_version": "mc2p.failure.v0"
+      },
+      "disposition": "recreate_runtime",
+      "terminal": {
+        "movement_tick": 12,
+        "position": [
+          0.55,
+          64.42,
+          2.9945819031338172
+        ],
+        "velocity": [
+          0.0,
+          0.3332000064849853,
+          0.2429599196825353
+        ],
+        "on_ground": false,
+        "applied_movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": true,
+          "sneak": false,
+          "sprint": true
+        },
+        "source_bound": false,
+        "driver_state": "failed",
+        "driver_reason": "control_unavailable",
+        "session_state": "failed",
+        "session_reason": "control_unavailable"
+      },
+      "terminal_propose_calls": 0,
+      "writes_after_failure": 0
+    }
+  ]
+}

@@ -1,0 +1,1138 @@
+{
+  "cases": [
+    {
+      "id": "world/point/4/grass",
+      "passed": true,
+      "follow": false,
+      "edit_tick": 4,
+      "material": "grass",
+      "observed_replay_entries": [
+        {
+          "movement_tick": 5,
+          "role": "incumbent",
+          "disposition": "continue",
+          "reason": "revalidated",
+          "queries_used": 2,
+          "affected_cells": [
+            [
+              0,
+              63,
+              5
+            ]
+          ]
+        }
+      ],
+      "applied_perturbations": [
+        [
+          "remove_landing_support",
+          4
+        ]
+      ],
+      "terminal": {
+        "movement_tick": 45,
+        "position": [
+          0.5,
+          64.0,
+          8.483029486108489
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.0017049490474872512
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "success",
+        "driver_reason": "world-change-terminal-release",
+        "session_state": "complete",
+        "session_reason": "goal_state_satisfied"
+      },
+      "damage": 0.0,
+      "recovery_starts": 0
+    },
+    {
+      "id": "world/point/4/obstacle",
+      "passed": true,
+      "follow": false,
+      "edit_tick": 4,
+      "material": "obstacle",
+      "observed_replay_entries": [
+        {
+          "movement_tick": 5,
+          "role": "incumbent",
+          "disposition": "stop",
+          "reason": "blocked",
+          "queries_used": 1,
+          "affected_cells": [
+            [
+              0,
+              64,
+              5
+            ]
+          ]
+        }
+      ],
+      "applied_perturbations": [
+        [
+          "remove_landing_support",
+          4
+        ]
+      ],
+      "terminal": {
+        "movement_tick": 71,
+        "position": [
+          0.5002893326656813,
+          64.0,
+          8.443961168125844
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.0
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "success",
+        "driver_reason": "world-change-terminal-release",
+        "session_state": "complete",
+        "session_reason": "goal_state_satisfied"
+      },
+      "damage": 0.0,
+      "recovery_starts": 1
+    },
+    {
+      "id": "world/point/4/slab",
+      "passed": true,
+      "follow": false,
+      "edit_tick": 4,
+      "material": "slab",
+      "observed_replay_entries": [
+        {
+          "movement_tick": 5,
+          "role": "incumbent",
+          "disposition": "stop",
+          "reason": "blocked",
+          "queries_used": 1,
+          "affected_cells": [
+            [
+              0,
+              63,
+              5
+            ]
+          ]
+        }
+      ],
+      "applied_perturbations": [
+        [
+          "remove_landing_support",
+          4
+        ]
+      ],
+      "terminal": {
+        "movement_tick": 55,
+        "position": [
+          0.5,
+          64.0,
+          8.561299831455363
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.0017043944822283197
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "success",
+        "driver_reason": "world-change-terminal-release",
+        "session_state": "complete",
+        "session_reason": "goal_state_satisfied"
+      },
+      "damage": 0.0,
+      "recovery_starts": 1
+    },
+    {
+      "id": "world/point/10/grass",
+      "passed": true,
+      "follow": false,
+      "edit_tick": 10,
+      "material": "grass",
+      "observed_replay_entries": [
+        {
+          "movement_tick": 11,
+          "role": "incumbent",
+          "disposition": "continue",
+          "reason": "revalidated",
+          "queries_used": 2,
+          "affected_cells": [
+            [
+              0,
+              63,
+              5
+            ]
+          ]
+        }
+      ],
+      "applied_perturbations": [
+        [
+          "remove_landing_support",
+          10
+        ]
+      ],
+      "terminal": {
+        "movement_tick": 45,
+        "position": [
+          0.5,
+          64.0,
+          8.483029486108489
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.0017049490474872512
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "success",
+        "driver_reason": "world-change-terminal-release",
+        "session_state": "complete",
+        "session_reason": "goal_state_satisfied"
+      },
+      "damage": 0.0,
+      "recovery_starts": 0
+    },
+    {
+      "id": "world/point/10/obstacle",
+      "passed": true,
+      "follow": false,
+      "edit_tick": 10,
+      "material": "obstacle",
+      "observed_replay_entries": [
+        {
+          "movement_tick": 11,
+          "role": "incumbent",
+          "disposition": "stop",
+          "reason": "blocked",
+          "queries_used": 1,
+          "affected_cells": [
+            [
+              0,
+              64,
+              5
+            ]
+          ]
+        }
+      ],
+      "applied_perturbations": [
+        [
+          "remove_landing_support",
+          10
+        ]
+      ],
+      "terminal": {
+        "movement_tick": 70,
+        "position": [
+          0.5002893326656813,
+          64.0,
+          8.445936206243832
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.0
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "success",
+        "driver_reason": "world-change-terminal-release",
+        "session_state": "complete",
+        "session_reason": "goal_state_satisfied"
+      },
+      "damage": 0.0,
+      "recovery_starts": 1
+    },
+    {
+      "id": "world/point/10/slab",
+      "passed": true,
+      "follow": false,
+      "edit_tick": 10,
+      "material": "slab",
+      "observed_replay_entries": [
+        {
+          "movement_tick": 11,
+          "role": "incumbent",
+          "disposition": "stop",
+          "reason": "blocked",
+          "queries_used": 1,
+          "affected_cells": [
+            [
+              0,
+              63,
+              5
+            ]
+          ]
+        }
+      ],
+      "applied_perturbations": [
+        [
+          "remove_landing_support",
+          10
+        ]
+      ],
+      "terminal": {
+        "movement_tick": 54,
+        "position": [
+          0.5,
+          64.0,
+          8.561299831455363
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.0017043944822283197
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "success",
+        "driver_reason": "world-change-terminal-release",
+        "session_state": "complete",
+        "session_reason": "goal_state_satisfied"
+      },
+      "damage": 0.0,
+      "recovery_starts": 1
+    },
+    {
+      "id": "world/point/18/grass",
+      "passed": true,
+      "follow": false,
+      "edit_tick": 18,
+      "material": "grass",
+      "observed_replay_entries": [
+        {
+          "movement_tick": 19,
+          "role": "incumbent",
+          "disposition": "continue",
+          "reason": "revalidated",
+          "queries_used": 2,
+          "affected_cells": [
+            [
+              0,
+              63,
+              5
+            ]
+          ]
+        }
+      ],
+      "applied_perturbations": [
+        [
+          "remove_landing_support",
+          18
+        ]
+      ],
+      "terminal": {
+        "movement_tick": 45,
+        "position": [
+          0.5,
+          64.0,
+          8.483029486108489
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.0017049490474872512
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "success",
+        "driver_reason": "world-change-terminal-release",
+        "session_state": "complete",
+        "session_reason": "goal_state_satisfied"
+      },
+      "damage": 0.0,
+      "recovery_starts": 0
+    },
+    {
+      "id": "world/point/18/obstacle",
+      "passed": true,
+      "follow": false,
+      "edit_tick": 18,
+      "material": "obstacle",
+      "observed_replay_entries": [
+        {
+          "movement_tick": 19,
+          "role": "incumbent",
+          "disposition": "stop",
+          "reason": "blocked",
+          "queries_used": 1,
+          "affected_cells": [
+            [
+              0,
+              64,
+              5
+            ]
+          ]
+        }
+      ],
+      "applied_perturbations": [
+        [
+          "remove_landing_support",
+          18
+        ]
+      ],
+      "terminal": {
+        "movement_tick": 67,
+        "position": [
+          0.5002893326656813,
+          64.0,
+          8.448317382057851
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.0
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "success",
+        "driver_reason": "world-change-terminal-release",
+        "session_state": "complete",
+        "session_reason": "goal_state_satisfied"
+      },
+      "damage": 0.0,
+      "recovery_starts": 1
+    },
+    {
+      "id": "world/point/18/slab",
+      "passed": true,
+      "follow": false,
+      "edit_tick": 18,
+      "material": "slab",
+      "observed_replay_entries": [
+        {
+          "movement_tick": 19,
+          "role": "incumbent",
+          "disposition": "stop",
+          "reason": "blocked",
+          "queries_used": 1,
+          "affected_cells": [
+            [
+              0,
+              63,
+              5
+            ]
+          ]
+        }
+      ],
+      "applied_perturbations": [
+        [
+          "remove_landing_support",
+          18
+        ]
+      ],
+      "terminal": {
+        "movement_tick": 54,
+        "position": [
+          0.5,
+          64.0,
+          8.561299831455363
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.0017043944822283197
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "success",
+        "driver_reason": "world-change-terminal-release",
+        "session_state": "complete",
+        "session_reason": "goal_state_satisfied"
+      },
+      "damage": 0.0,
+      "recovery_starts": 1
+    },
+    {
+      "id": "world/follow/4/grass",
+      "passed": true,
+      "follow": true,
+      "edit_tick": 4,
+      "material": "grass",
+      "observed_replay_entries": [
+        {
+          "movement_tick": 5,
+          "role": "incumbent",
+          "disposition": "continue",
+          "reason": "revalidated",
+          "queries_used": 1,
+          "affected_cells": [
+            [
+              0,
+              63,
+              5
+            ]
+          ]
+        }
+      ],
+      "applied_perturbations": [
+        [
+          "remove_landing_support",
+          4
+        ]
+      ],
+      "terminal": {
+        "movement_tick": 121,
+        "position": [
+          0.5,
+          64.0,
+          8.483029486108489
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.0
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "cancelled",
+        "driver_reason": "known_world_follow_cancelled",
+        "session_state": "cancelled",
+        "session_reason": "known_world_follow_cancelled"
+      },
+      "damage": 0.0,
+      "recovery_starts": 0
+    },
+    {
+      "id": "world/follow/4/obstacle",
+      "passed": true,
+      "follow": true,
+      "edit_tick": 4,
+      "material": "obstacle",
+      "observed_replay_entries": [
+        {
+          "movement_tick": 5,
+          "role": "incumbent",
+          "disposition": "stop",
+          "reason": "blocked",
+          "queries_used": 1,
+          "affected_cells": [
+            [
+              0,
+              64,
+              5
+            ]
+          ]
+        }
+      ],
+      "applied_perturbations": [
+        [
+          "remove_landing_support",
+          4
+        ]
+      ],
+      "terminal": {
+        "movement_tick": 121,
+        "position": [
+          0.5002893326656813,
+          64.0,
+          8.443961168125844
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.0
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "cancelled",
+        "driver_reason": "known_world_follow_cancelled",
+        "session_state": "cancelled",
+        "session_reason": "known_world_follow_cancelled"
+      },
+      "damage": 0.0,
+      "recovery_starts": 1
+    },
+    {
+      "id": "world/follow/4/slab",
+      "passed": true,
+      "follow": true,
+      "edit_tick": 4,
+      "material": "slab",
+      "observed_replay_entries": [
+        {
+          "movement_tick": 5,
+          "role": "incumbent",
+          "disposition": "stop",
+          "reason": "blocked",
+          "queries_used": 1,
+          "affected_cells": [
+            [
+              0,
+              63,
+              5
+            ]
+          ]
+        }
+      ],
+      "applied_perturbations": [
+        [
+          "remove_landing_support",
+          4
+        ]
+      ],
+      "terminal": {
+        "movement_tick": 121,
+        "position": [
+          0.5,
+          64.0,
+          8.345441796319289
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.0
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "cancelled",
+        "driver_reason": "known_world_follow_cancelled",
+        "session_state": "cancelled",
+        "session_reason": "known_world_follow_cancelled"
+      },
+      "damage": 0.0,
+      "recovery_starts": 1
+    },
+    {
+      "id": "world/follow/10/grass",
+      "passed": true,
+      "follow": true,
+      "edit_tick": 10,
+      "material": "grass",
+      "observed_replay_entries": [
+        {
+          "movement_tick": 11,
+          "role": "incumbent",
+          "disposition": "continue",
+          "reason": "revalidated",
+          "queries_used": 1,
+          "affected_cells": [
+            [
+              0,
+              63,
+              5
+            ]
+          ]
+        }
+      ],
+      "applied_perturbations": [
+        [
+          "remove_landing_support",
+          10
+        ]
+      ],
+      "terminal": {
+        "movement_tick": 121,
+        "position": [
+          0.5,
+          64.0,
+          8.483029486108489
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.0
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "cancelled",
+        "driver_reason": "known_world_follow_cancelled",
+        "session_state": "cancelled",
+        "session_reason": "known_world_follow_cancelled"
+      },
+      "damage": 0.0,
+      "recovery_starts": 0
+    },
+    {
+      "id": "world/follow/10/obstacle",
+      "passed": true,
+      "follow": true,
+      "edit_tick": 10,
+      "material": "obstacle",
+      "observed_replay_entries": [
+        {
+          "movement_tick": 11,
+          "role": "incumbent",
+          "disposition": "stop",
+          "reason": "blocked",
+          "queries_used": 1,
+          "affected_cells": [
+            [
+              0,
+              64,
+              5
+            ]
+          ]
+        }
+      ],
+      "applied_perturbations": [
+        [
+          "remove_landing_support",
+          10
+        ]
+      ],
+      "terminal": {
+        "movement_tick": 121,
+        "position": [
+          0.5002893326656813,
+          64.0,
+          8.445936206243832
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.0
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "cancelled",
+        "driver_reason": "known_world_follow_cancelled",
+        "session_state": "cancelled",
+        "session_reason": "known_world_follow_cancelled"
+      },
+      "damage": 0.0,
+      "recovery_starts": 1
+    },
+    {
+      "id": "world/follow/10/slab",
+      "passed": true,
+      "follow": true,
+      "edit_tick": 10,
+      "material": "slab",
+      "observed_replay_entries": [
+        {
+          "movement_tick": 11,
+          "role": "incumbent",
+          "disposition": "stop",
+          "reason": "blocked",
+          "queries_used": 1,
+          "affected_cells": [
+            [
+              0,
+              63,
+              5
+            ]
+          ]
+        }
+      ],
+      "applied_perturbations": [
+        [
+          "remove_landing_support",
+          10
+        ]
+      ],
+      "terminal": {
+        "movement_tick": 121,
+        "position": [
+          0.5,
+          64.0,
+          8.345441796319289
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.0
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "cancelled",
+        "driver_reason": "known_world_follow_cancelled",
+        "session_state": "cancelled",
+        "session_reason": "known_world_follow_cancelled"
+      },
+      "damage": 0.0,
+      "recovery_starts": 1
+    },
+    {
+      "id": "world/follow/18/grass",
+      "passed": true,
+      "follow": true,
+      "edit_tick": 18,
+      "material": "grass",
+      "observed_replay_entries": [
+        {
+          "movement_tick": 19,
+          "role": "incumbent",
+          "disposition": "continue",
+          "reason": "revalidated",
+          "queries_used": 1,
+          "affected_cells": [
+            [
+              0,
+              63,
+              5
+            ]
+          ]
+        }
+      ],
+      "applied_perturbations": [
+        [
+          "remove_landing_support",
+          18
+        ]
+      ],
+      "terminal": {
+        "movement_tick": 121,
+        "position": [
+          0.5,
+          64.0,
+          8.483029486108489
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.0
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "cancelled",
+        "driver_reason": "known_world_follow_cancelled",
+        "session_state": "cancelled",
+        "session_reason": "known_world_follow_cancelled"
+      },
+      "damage": 0.0,
+      "recovery_starts": 0
+    },
+    {
+      "id": "world/follow/18/obstacle",
+      "passed": true,
+      "follow": true,
+      "edit_tick": 18,
+      "material": "obstacle",
+      "observed_replay_entries": [
+        {
+          "movement_tick": 19,
+          "role": "incumbent",
+          "disposition": "stop",
+          "reason": "blocked",
+          "queries_used": 1,
+          "affected_cells": [
+            [
+              0,
+              64,
+              5
+            ]
+          ]
+        }
+      ],
+      "applied_perturbations": [
+        [
+          "remove_landing_support",
+          18
+        ]
+      ],
+      "terminal": {
+        "movement_tick": 121,
+        "position": [
+          0.5002893326656813,
+          64.0,
+          8.448317382057851
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.0
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "cancelled",
+        "driver_reason": "known_world_follow_cancelled",
+        "session_state": "cancelled",
+        "session_reason": "known_world_follow_cancelled"
+      },
+      "damage": 0.0,
+      "recovery_starts": 1
+    },
+    {
+      "id": "world/follow/18/slab",
+      "passed": true,
+      "follow": true,
+      "edit_tick": 18,
+      "material": "slab",
+      "observed_replay_entries": [
+        {
+          "movement_tick": 19,
+          "role": "incumbent",
+          "disposition": "stop",
+          "reason": "blocked",
+          "queries_used": 1,
+          "affected_cells": [
+            [
+              0,
+              63,
+              5
+            ]
+          ]
+        }
+      ],
+      "applied_perturbations": [
+        [
+          "remove_landing_support",
+          18
+        ]
+      ],
+      "terminal": {
+        "movement_tick": 121,
+        "position": [
+          0.5,
+          64.0,
+          8.345441796319289
+        ],
+        "velocity": [
+          0.0,
+          -0.0784000015258789,
+          0.0
+        ],
+        "on_ground": true,
+        "applied_movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "source_bound": false,
+        "driver_state": "cancelled",
+        "driver_reason": "known_world_follow_cancelled",
+        "session_state": "cancelled",
+        "session_reason": "known_world_follow_cancelled"
+      },
+      "damage": 0.0,
+      "recovery_starts": 1
+    },
+    {
+      "id": "world/r1-dependency-recovery",
+      "passed": true,
+      "task_outcome": "success",
+      "reason": "goal_state_satisfied",
+      "observed_replay_entries": [
+        {
+          "movement_tick": 7,
+          "role": "incumbent",
+          "disposition": "stop",
+          "reason": "blocked",
+          "queries_used": 1,
+          "affected_cells": [
+            [
+              0,
+              63,
+              5
+            ]
+          ]
+        },
+        {
+          "movement_tick": 13,
+          "role": "incumbent",
+          "disposition": "stop",
+          "reason": "blocked",
+          "queries_used": 1,
+          "affected_cells": [
+            [
+              0,
+              63,
+              5
+            ]
+          ]
+        },
+        {
+          "movement_tick": 16,
+          "role": "incumbent",
+          "disposition": "continue",
+          "reason": "revalidated",
+          "queries_used": 2,
+          "affected_cells": [
+            [
+              0,
+              63,
+              5
+            ]
+          ]
+        },
+        {
+          "movement_tick": 31,
+          "role": "incumbent",
+          "disposition": "stop",
+          "reason": "blocked",
+          "queries_used": 1,
+          "affected_cells": [
+            [
+              0,
+              63,
+              5
+            ]
+          ]
+        },
+        {
+          "movement_tick": 34,
+          "role": "incumbent",
+          "disposition": "continue",
+          "reason": "revalidated",
+          "queries_used": 2,
+          "affected_cells": [
+            [
+              0,
+              63,
+              5
+            ]
+          ]
+        },
+        {
+          "movement_tick": 49,
+          "role": "incumbent",
+          "disposition": "stop",
+          "reason": "blocked",
+          "queries_used": 1,
+          "affected_cells": [
+            [
+              0,
+              63,
+              5
+            ]
+          ]
+        },
+        {
+          "movement_tick": 52,
+          "role": "incumbent",
+          "disposition": "continue",
+          "reason": "revalidated",
+          "queries_used": 2,
+          "affected_cells": [
+            [
+              0,
+              63,
+              5
+            ]
+          ]
+        }
+      ],
+      "recovery_starts": 7
+    }
+  ],
+  "entry_source": "typed navigation diagnostics with nonzero replay queries; exact function bindings also verified in independent path matrix"
+}

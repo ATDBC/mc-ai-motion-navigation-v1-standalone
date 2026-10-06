@@ -1,0 +1,38 @@
+{
+  "final_verifier_commit": "3dd6bc18852f8e5734355c37cc8dcc9d2a330824",
+  "runs": {
+    "final-forward": {
+      "tests": 1499,
+      "elapsed_seconds": 330.3,
+      "failures": 0,
+      "errors": 0,
+      "expected_failures": 0,
+      "skipped": 0,
+      "shared_scenario_hash_before": "05cfbd29ba3067b4ed2eece3f59b5afbbff619cb611fe9f0c30a776b4b813161",
+      "shared_scenario_hash_after": "05cfbd29ba3067b4ed2eece3f59b5afbbff619cb611fe9f0c30a776b4b813161",
+      "source_commit": "3dd6bc18852f8e5734355c37cc8dcc9d2a330824",
+      "source_worktree_clean": false,
+      "production_and_test_sources_committed": true,
+      "uncommitted_scope": "documentation and compact evidence packaging only"
+    },
+    "final-reverse": {
+      "tests": 1499,
+      "elapsed_seconds": 330.943,
+      "failures": 0,
+      "errors": 0,
+      "expected_failures": 0,
+      "skipped": 0,
+      "shared_scenario_hash_before": "05cfbd29ba3067b4ed2eece3f59b5afbbff619cb611fe9f0c30a776b4b813161",
+      "shared_scenario_hash_after": "05cfbd29ba3067b4ed2eece3f59b5afbbff619cb611fe9f0c30a776b4b813161",
+      "source_commit": "3dd6bc18852f8e5734355c37cc8dcc9d2a330824",
+      "source_worktree_clean": false,
+      "production_and_test_sources_committed": true,
+      "uncommitted_scope": "documentation and compact evidence packaging only"
+    }
+  },
+  "production_fingerprints_identical": true,
+  "commands": [
+    "python scripts/run_motion_navigation_checks.py --output .tmp/s0r-r2/final-forward.json",
+    "python scripts/run_motion_navigation_checks.py --reverse --output .tmp/s0r-r2/final-reverse.json"
+  ]
+}
