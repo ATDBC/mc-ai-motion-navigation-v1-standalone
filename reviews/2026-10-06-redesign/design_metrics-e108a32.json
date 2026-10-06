@@ -1,0 +1,760 @@
+{
+ "motion_nav_lines": 38316,
+ "layers": {
+  "coordination": {
+   "lines": 16785,
+   "share": 0.438
+  },
+  "execution_control": {
+   "lines": 7148,
+   "share": 0.187
+  },
+  "other": {
+   "lines": 1572,
+   "share": 0.041
+  },
+  "physics_geometry_knowledge": {
+   "lines": 4669,
+   "share": 0.122
+  },
+  "planning_solving": {
+   "lines": 8142,
+   "share": 0.212
+  }
+ },
+ "dispatch_sites": 70,
+ "dispatch_by_category": {
+  "A_controller_selection": 17,
+  "B_body_commitment_and_stop_safety": 7,
+  "C_background_motion_solving": 14,
+  "D_preconditions_and_information": 6,
+  "E_risk_and_damage": 3,
+  "F_geometry_and_progress": 6,
+  "G_walk_proof_and_validation": 15,
+  "H_route_type_registry": 2
+ },
+ "dispatch_by_file": {
+  "action_route_executor.py": 19,
+  "route_admission.py": 17,
+  "motion_coordination.py": 15,
+  "navigation_session.py": 14,
+  "action_route.py": 2,
+  "route_body_controller.py": 2,
+  "action_preconditions.py": 1
+ },
+ "dispatch_sites_mentioning_segment": {
+  "WalkSegment": 32,
+  "ControlledDropSegment": 21,
+  "JumpGapSegment": 13,
+  "JumpUpSegment": 11,
+  "StepSegment": 3
+ },
+ "files_mentioning_segment": {
+  "WalkSegment": [
+   "mc2p/motion_nav/action_route_executor.py",
+   "mc2p/motion_nav/motion_coordination.py",
+   "mc2p/motion_nav/navigation_session.py",
+   "mc2p/motion_nav/route_admission.py",
+   "mc2p/motion_nav/route_body_controller.py"
+  ],
+  "JumpUpSegment": [
+   "mc2p/motion_nav/action_route_executor.py",
+   "mc2p/motion_nav/motion_coordination.py",
+   "mc2p/motion_nav/navigation_session.py",
+   "mc2p/motion_nav/route_admission.py"
+  ],
+  "StepSegment": [
+   "mc2p/motion_nav/action_route_executor.py",
+   "mc2p/motion_nav/route_admission.py"
+  ],
+  "JumpGapSegment": [
+   "mc2p/motion_nav/action_route_executor.py",
+   "mc2p/motion_nav/motion_coordination.py",
+   "mc2p/motion_nav/navigation_session.py",
+   "mc2p/motion_nav/route_admission.py"
+  ],
+  "ControlledDropSegment": [
+   "mc2p/motion_nav/action_preconditions.py",
+   "mc2p/motion_nav/action_route_executor.py",
+   "mc2p/motion_nav/motion_coordination.py",
+   "mc2p/motion_nav/navigation_session.py",
+   "mc2p/motion_nav/route_admission.py"
+  ]
+ },
+ "solve_kind_references_outside_solver": {
+  "action_route_executor.py": 6,
+  "motion_coordination.py": 6,
+  "route_admission.py": 3
+ },
+ "session": {
+  "lines": 5072,
+  "methods": 132,
+  "assigned_self_attributes": 63,
+  "methods_over_100_lines": 12,
+  "longest": [
+   "diagnostics:137",
+   "_consume_route_decision:156",
+   "_proposal:180",
+   "update_goal:181",
+   "propose:187",
+   "observe:195"
+  ]
+ },
+ "async_same_named_methods": [
+  "_record_admission",
+  "_remember_work_window",
+  "_work_identity",
+  "_work_window",
+  "admission_records",
+  "async_diagnostics",
+  "cancel_work"
+ ],
+ "identical_guards": {
+  "admit~admit_surface": 9,
+  "admit_local_direct~admit_ground_direct": 6,
+  "route_admission~route_validation": 5
+ },
+ "driver_lifecycle_string_literals": 37,
+ "dispatch": [
+  {
+   "file": "action_preconditions.py",
+   "line": 197,
+   "function": "check_action_precondition",
+   "category": "D_preconditions_and_information",
+   "segments": [
+    "ControlledDropSegment"
+   ]
+  },
+  {
+   "file": "action_route.py",
+   "line": 174,
+   "function": "__post_init__",
+   "category": "H_route_type_registry",
+   "segments": [
+    "WalkSegment",
+    "JumpUpSegment",
+    "StepSegment"
+   ]
+  },
+  {
+   "file": "action_route.py",
+   "line": 175,
+   "function": "__post_init__",
+   "category": "H_route_type_registry",
+   "segments": [
+    "JumpGapSegment",
+    "ControlledDropSegment"
+   ]
+  },
+  {
+   "file": "action_route_executor.py",
+   "line": 202,
+   "function": "enter_upcoming_action_boundary",
+   "category": "A_controller_selection",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "action_route_executor.py",
+   "line": 221,
+   "function": "_activate",
+   "category": "A_controller_selection",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "action_route_executor.py",
+   "line": 244,
+   "function": "_activate",
+   "category": "A_controller_selection",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "action_route_executor.py",
+   "line": 264,
+   "function": "_activate",
+   "category": "A_controller_selection",
+   "segments": [
+    "JumpUpSegment"
+   ]
+  },
+  {
+   "file": "action_route_executor.py",
+   "line": 267,
+   "function": "_activate",
+   "category": "A_controller_selection",
+   "segments": [
+    "JumpGapSegment",
+    "ControlledDropSegment"
+   ]
+  },
+  {
+   "file": "action_route_executor.py",
+   "line": 346,
+   "function": "_activate",
+   "category": "A_controller_selection",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "action_route_executor.py",
+   "line": 374,
+   "function": "_activate",
+   "category": "A_controller_selection",
+   "segments": [
+    "JumpUpSegment"
+   ]
+  },
+  {
+   "file": "action_route_executor.py",
+   "line": 388,
+   "function": "_activate",
+   "category": "A_controller_selection",
+   "segments": [
+    "JumpGapSegment",
+    "ControlledDropSegment"
+   ]
+  },
+  {
+   "file": "action_route_executor.py",
+   "line": 407,
+   "function": "_activate",
+   "category": "A_controller_selection",
+   "segments": [
+    "StepSegment"
+   ]
+  },
+  {
+   "file": "action_route_executor.py",
+   "line": 445,
+   "function": "_landed_on_current_action_destination",
+   "category": "A_controller_selection",
+   "segments": [
+    "JumpUpSegment"
+   ]
+  },
+  {
+   "file": "action_route_executor.py",
+   "line": 450,
+   "function": "_landed_on_current_action_destination",
+   "category": "A_controller_selection",
+   "segments": [
+    "JumpGapSegment",
+    "ControlledDropSegment"
+   ]
+  },
+  {
+   "file": "action_route_executor.py",
+   "line": 513,
+   "function": "start",
+   "category": "B_body_commitment_and_stop_safety",
+   "segments": [
+    "JumpGapSegment"
+   ]
+  },
+  {
+   "file": "action_route_executor.py",
+   "line": 678,
+   "function": "requires_safe_handoff",
+   "category": "B_body_commitment_and_stop_safety",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "action_route_executor.py",
+   "line": 737,
+   "function": "stop_protection",
+   "category": "B_body_commitment_and_stop_safety",
+   "segments": [
+    "ControlledDropSegment"
+   ]
+  },
+  {
+   "file": "action_route_executor.py",
+   "line": 886,
+   "function": "decide",
+   "category": "A_controller_selection",
+   "segments": [
+    "ControlledDropSegment"
+   ]
+  },
+  {
+   "file": "action_route_executor.py",
+   "line": 979,
+   "function": "decide",
+   "category": "A_controller_selection",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "action_route_executor.py",
+   "line": 1084,
+   "function": "decide",
+   "category": "A_controller_selection",
+   "segments": [
+    "StepSegment"
+   ]
+  },
+  {
+   "file": "action_route_executor.py",
+   "line": 1106,
+   "function": "decide",
+   "category": "A_controller_selection",
+   "segments": [
+    "JumpGapSegment",
+    "ControlledDropSegment"
+   ]
+  },
+  {
+   "file": "action_route_executor.py",
+   "line": 1197,
+   "function": "_commit_drop_damage_if_started",
+   "category": "E_risk_and_damage",
+   "segments": [
+    "ControlledDropSegment"
+   ]
+  },
+  {
+   "file": "motion_coordination.py",
+   "line": 151,
+   "function": "_air_action_direction",
+   "category": "C_background_motion_solving",
+   "segments": [
+    "JumpUpSegment"
+   ]
+  },
+  {
+   "file": "motion_coordination.py",
+   "line": 153,
+   "function": "_air_action_direction",
+   "category": "C_background_motion_solving",
+   "segments": [
+    "JumpGapSegment",
+    "ControlledDropSegment"
+   ]
+  },
+  {
+   "file": "motion_coordination.py",
+   "line": 157,
+   "function": "_air_action_direction",
+   "category": "C_background_motion_solving",
+   "segments": [
+    "JumpGapSegment"
+   ]
+  },
+  {
+   "file": "motion_coordination.py",
+   "line": 169,
+   "function": "_air_action_landing",
+   "category": "C_background_motion_solving",
+   "segments": [
+    "JumpUpSegment"
+   ]
+  },
+  {
+   "file": "motion_coordination.py",
+   "line": 176,
+   "function": "_air_action_landing",
+   "category": "C_background_motion_solving",
+   "segments": [
+    "JumpGapSegment",
+    "ControlledDropSegment"
+   ]
+  },
+  {
+   "file": "motion_coordination.py",
+   "line": 209,
+   "function": "_following_motion_direction",
+   "category": "C_background_motion_solving",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "motion_coordination.py",
+   "line": 211,
+   "function": "_following_motion_direction",
+   "category": "C_background_motion_solving",
+   "segments": [
+    "JumpUpSegment"
+   ]
+  },
+  {
+   "file": "motion_coordination.py",
+   "line": 238,
+   "function": "_planned_gap_request",
+   "category": "C_background_motion_solving",
+   "segments": [
+    "JumpGapSegment"
+   ]
+  },
+  {
+   "file": "motion_coordination.py",
+   "line": 309,
+   "function": "_planned_continuation",
+   "category": "C_background_motion_solving",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "motion_coordination.py",
+   "line": 740,
+   "function": "_accept_result",
+   "category": "C_background_motion_solving",
+   "segments": [
+    "JumpGapSegment"
+   ]
+  },
+  {
+   "file": "motion_coordination.py",
+   "line": 928,
+   "function": "_submit_action",
+   "category": "C_background_motion_solving",
+   "segments": [
+    "JumpGapSegment"
+   ]
+  },
+  {
+   "file": "motion_coordination.py",
+   "line": 1105,
+   "function": "_upcoming_gap_index",
+   "category": "C_background_motion_solving",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "motion_coordination.py",
+   "line": 1132,
+   "function": "_prepare_upcoming_from_applied_state",
+   "category": "C_background_motion_solving",
+   "segments": [
+    "ControlledDropSegment"
+   ]
+  },
+  {
+   "file": "motion_coordination.py",
+   "line": 1144,
+   "function": "_prepare_upcoming_from_applied_state",
+   "category": "C_background_motion_solving",
+   "segments": [
+    "JumpUpSegment"
+   ]
+  },
+  {
+   "file": "motion_coordination.py",
+   "line": 1496,
+   "function": "decide",
+   "category": "B_body_commitment_and_stop_safety",
+   "segments": [
+    "ControlledDropSegment"
+   ]
+  },
+  {
+   "file": "navigation_session.py",
+   "line": 962,
+   "function": "current_action_requires_route_look",
+   "category": "D_preconditions_and_information",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "navigation_session.py",
+   "line": 1452,
+   "function": "observation_request",
+   "category": "D_preconditions_and_information",
+   "segments": [
+    "ControlledDropSegment"
+   ]
+  },
+  {
+   "file": "navigation_session.py",
+   "line": 1951,
+   "function": "_route_expected_damage_points",
+   "category": "E_risk_and_damage",
+   "segments": [
+    "ControlledDropSegment"
+   ]
+  },
+  {
+   "file": "navigation_session.py",
+   "line": 1977,
+   "function": "_record_retry_route_progress",
+   "category": "F_geometry_and_progress",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "navigation_session.py",
+   "line": 1986,
+   "function": "_record_retry_route_progress",
+   "category": "F_geometry_and_progress",
+   "segments": [
+    "JumpUpSegment"
+   ]
+  },
+  {
+   "file": "navigation_session.py",
+   "line": 2036,
+   "function": "_reserve_route_risk",
+   "category": "E_risk_and_damage",
+   "segments": [
+    "ControlledDropSegment"
+   ]
+  },
+  {
+   "file": "navigation_session.py",
+   "line": 2086,
+   "function": "_needs_same_frame_stop_protection",
+   "category": "B_body_commitment_and_stop_safety",
+   "segments": [
+    "JumpGapSegment",
+    "ControlledDropSegment"
+   ]
+  },
+  {
+   "file": "navigation_session.py",
+   "line": 2230,
+   "function": "_current_action_precondition",
+   "category": "D_preconditions_and_information",
+   "segments": [
+    "ControlledDropSegment"
+   ]
+  },
+  {
+   "file": "navigation_session.py",
+   "line": 2267,
+   "function": "_upcoming_action_precondition_index",
+   "category": "D_preconditions_and_information",
+   "segments": [
+    "ControlledDropSegment"
+   ]
+  },
+  {
+   "file": "navigation_session.py",
+   "line": 2334,
+   "function": "_begin_action_acquisition",
+   "category": "D_preconditions_and_information",
+   "segments": [
+    "ControlledDropSegment"
+   ]
+  },
+  {
+   "file": "navigation_session.py",
+   "line": 2991,
+   "function": "_prepare_route_action",
+   "category": "B_body_commitment_and_stop_safety",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "navigation_session.py",
+   "line": 3052,
+   "function": "_prepare_route_action",
+   "category": "B_body_commitment_and_stop_safety",
+   "segments": [
+    "ControlledDropSegment"
+   ]
+  },
+  {
+   "file": "navigation_session.py",
+   "line": 3840,
+   "function": "_ordinary_walk_can_continue_during_direct",
+   "category": "G_walk_proof_and_validation",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "navigation_session.py",
+   "line": 4764,
+   "function": "_proposal",
+   "category": "G_walk_proof_and_validation",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "route_admission.py",
+   "line": 98,
+   "function": "_action_route_length",
+   "category": "F_geometry_and_progress",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "route_admission.py",
+   "line": 101,
+   "function": "_action_route_length",
+   "category": "F_geometry_and_progress",
+   "segments": [
+    "JumpUpSegment"
+   ]
+  },
+  {
+   "file": "route_admission.py",
+   "line": 279,
+   "function": "__post_init__",
+   "category": "G_walk_proof_and_validation",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "route_admission.py",
+   "line": 320,
+   "function": "__post_init__",
+   "category": "G_walk_proof_and_validation",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "route_admission.py",
+   "line": 342,
+   "function": "__post_init__",
+   "category": "G_walk_proof_and_validation",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "route_admission.py",
+   "line": 1314,
+   "function": "admit",
+   "category": "G_walk_proof_and_validation",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "route_admission.py",
+   "line": 1463,
+   "function": "_body_meets_route_entry",
+   "category": "G_walk_proof_and_validation",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "route_admission.py",
+   "line": 1467,
+   "function": "_body_meets_route_entry",
+   "category": "G_walk_proof_and_validation",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "route_admission.py",
+   "line": 1482,
+   "function": "_terminal_meets_current_goal",
+   "category": "F_geometry_and_progress",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "route_admission.py",
+   "line": 1485,
+   "function": "_terminal_meets_current_goal",
+   "category": "F_geometry_and_progress",
+   "segments": [
+    "JumpUpSegment"
+   ]
+  },
+  {
+   "file": "route_admission.py",
+   "line": 1736,
+   "function": "_surface_action_route",
+   "category": "G_walk_proof_and_validation",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "route_admission.py",
+   "line": 1760,
+   "function": "_surface_action_route",
+   "category": "G_walk_proof_and_validation",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "route_admission.py",
+   "line": 2008,
+   "function": "_surface_validation_plan",
+   "category": "G_walk_proof_and_validation",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "route_admission.py",
+   "line": 2040,
+   "function": "_surface_validation_plan",
+   "category": "G_walk_proof_and_validation",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "route_admission.py",
+   "line": 2065,
+   "function": "_surface_validation_plan",
+   "category": "G_walk_proof_and_validation",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "route_admission.py",
+   "line": 2290,
+   "function": "admit_surface",
+   "category": "G_walk_proof_and_validation",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "route_admission.py",
+   "line": 2781,
+   "function": "update",
+   "category": "G_walk_proof_and_validation",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "route_body_controller.py",
+   "line": 129,
+   "function": "activity",
+   "category": "A_controller_selection",
+   "segments": [
+    "WalkSegment"
+   ]
+  },
+  {
+   "file": "route_body_controller.py",
+   "line": 164,
+   "function": "advance",
+   "category": "A_controller_selection",
+   "segments": [
+    "WalkSegment"
+   ]
+  }
+ ]
+}
