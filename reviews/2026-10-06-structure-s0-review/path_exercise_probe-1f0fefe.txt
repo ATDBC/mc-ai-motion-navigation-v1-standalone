@@ -1,0 +1,28 @@
+code 1f0fefe, Linux, Python 3.11.15; call counting only, behaviour unchanged
+
+calls per entry point; product = first 20 seeds of each v7 group, follow = 10 F1 scenarios
+
+entry point                                        follow (10)       height (40)       player (40)        point (40)  strict_drop (40)       target (40)
+RouteAdmitter.admit                                          0                 0                 0                 0                 0                 0
+RouteAdmitter.admit_surface                                  6                40                40                40                40               203
+RouteAdmitter.admit_current_request                          6                40                40                40                40               203
+RouteAdmitter.admit_local_direct                             0                 0                 0                 0                 0                 0
+RouteAdmitter.admit_ground_direct                          303                 0                 0                 0                 0                 0
+ActiveRouteTracker.validate                               1508              1596              2137              2589              1915              2950
+replay_walk_validation_recipe                                0                 0                 0                 0                 0                 0
+query_surface_walk_edge                                      0                 0                 0                 0                 0                 0
+NavigationSession._wait_for_active_terminal                  0                 0                 0                 0                 0                 0
+
+coordination set, every 8th of 1448 jobs (181 run):
+  RouteAdmitter.admit                                0
+  RouteAdmitter.admit_surface                      235
+  RouteAdmitter.admit_current_request              235
+  RouteAdmitter.admit_local_direct                   0
+  RouteAdmitter.admit_ground_direct                  0
+  ActiveRouteTracker.validate                     4544
+  replay_walk_validation_recipe                      0
+  query_surface_walk_edge                            0
+  NavigationSession._wait_for_active_terminal        0
+
+note: query_surface_walk_edge is bound to an alias (_surface_walk_query) inside known_map_planner at import time,
+      so planner calls are not counted here; its zero is a limit of this probe, not evidence of non-use.

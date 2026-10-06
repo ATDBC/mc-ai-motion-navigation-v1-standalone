@@ -1,0 +1,19 @@
+12 coordination files: navigation_session, navigation_handoff, navigation_owners, planning_coordinator, motion_coordination, execution_supervisor, retry_ledger, async_work, route_body_controller, probe_body_controller, route_admission, planner_worker
+
+commit       lines  branches  contract  validation  dataclass  session  propose
+b1d43c2      13169      1585       357        1118         52     4653      156
+origin/main   15568      1808       416        1464         58     5051      187
+
+per file, b1d43c2 -> origin/main (lines / branches / validation lines)
+  navigation_session        4653 -> 5051  (  +398)     +43     +21
+  navigation_handoff         717 -> 717   (    +0)      +0      +0
+  navigation_owners          411 -> 426   (   +15)      +2      +4
+  planning_coordinator      2501 -> 2532  (   +31)      +2     +20
+  motion_coordination       1513 -> 1513  (    +0)      +0      +0
+  execution_supervisor       562 -> 689   (  +127)     +11      +5
+  retry_ledger               769 -> 769   (    +0)      +0      +0
+  async_work                 285 -> 285   (    +0)      +0      +0
+  route_body_controller      222 -> 281   (   +59)      +5     +17
+  probe_body_controller      152 -> 152   (    +0)      +0      +0
+  route_admission           1052 -> 2821  ( +1769)    +160    +279
+  planner_worker             332 -> 332   (    +0)      +0      +0

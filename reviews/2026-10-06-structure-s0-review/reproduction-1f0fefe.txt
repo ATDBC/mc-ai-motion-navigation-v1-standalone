@@ -1,0 +1,37 @@
+1f0fefe on Linux, 4 cores, Python 3.11.15; S0 normalizer r28-structure-trajectory-v1
+
+== product v7 (2,000) vs S0 product-v7-index.json
+completed: 1718/2000
+{"cases": 2000, "differences": [], "equivalent": true}
+
+== coordination 1,448 vs S0 coordination-1448-index.json
+{"cases": 1448, "failed": 0, "uncovered_functions": ["navigation_session._wait_for_active_terminal", "planning_coordinator.retry_from_current", "retry_ledger.begin_recovery"]}
+{"cases": 1448, "differences": [], "equivalent": true}
+
+== supplementary faults vs S0 faults-4-index.json
+{"cases": 4, "differences": [], "equivalent": true}
+
+== migration function coverage (union): 40/41, _wait_for_active_terminal entered by neither set
+
+== motion-navigation unit tests (full discover)
+FAIL: test_cli_writes_schema_and_refuses_overwrite (test_d058_route_revalidation_benchmark.D058RouteRevalidationBenchmarkTests.test_cli_writes_schema_and_refuses_overwrite)
+FAIL: test_changed_heading_during_background_revalidation_can_realign (test_motion_baseline_recovery.MotionBaselineRecoveryTests.test_changed_heading_during_background_revalidation_can_realign) (seed=163)
+FAIL: test_removed_landing_support_is_rechecked_four_ticks_before_departure (test_navigation_supervised_interruptions.SupervisedInterruptionTests.test_removed_landing_support_is_rechecked_four_ticks_before_departure)
+FAIL: test_public_faults_enter_the_migration_function_and_release_body (test_r28_migration_faults.MigrationFaultTests.test_public_faults_enter_the_migration_function_and_release_body) (name='active_route_dependency_retry')
+FAIL: test_expired_planning_work_is_retired_at_every_observed_boundary (test_r28_shared_recovery.SharedRecoveryFormalTests.test_expired_planning_work_is_retired_at_every_observed_boundary)
+Ran 1478 tests in 492.671s
+FAILED (failures=5)
+
+== order dependence of the I3 failure
+test module alone: 28/28 OK; the single test alone: OK twice
+bisect over the 87 preceding modules:
+second half (44) reproduces
+second half (22) reproduces
+second half (11) reproduces
+second half (6) reproduces
+first half (3) reproduces
+second half (2) reproduces
+second half (1) reproduces
+result: test_navigation_route_handoff
+bisect-done
+per-test check inside test_navigation_route_handoff: only test_ready_probe_waits_for_selected_route_and_keeps_late_input_owner triggers it

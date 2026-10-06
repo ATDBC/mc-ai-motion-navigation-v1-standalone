@@ -1,0 +1,30 @@
+RouteAdmitter: 1876 lines, 25 methods
+  admit                      55 lines,  11 distinct if-conditions
+  admit_surface             183 lines,  22 distinct if-conditions
+  admit_current_request      95 lines,  15 distinct if-conditions
+  admit_local_direct        149 lines,  10 distinct if-conditions
+  admit_ground_direct       140 lines,  15 distinct if-conditions
+
+verbatim-identical if-conditions per pair of entry points:
+
+  admit & admit_surface: 9
+    - action_route is None
+    - candidate.goal_id != goal_id or candidate.goal_revision != goal_revision
+    - candidate.request_id != expected_request_id
+    - candidate.world_session != frame.session.value
+    - corridor_segments and connection_length + length + segment_length > self.maximum_corridor_blocks
+    - frame.world.geometry_revision != candidate.geometry_revision and (not changed_cells)
+    - not connected
+    - set(candidate.dependencies).intersection(changed_cells)
+    - type(changed_cells) is not tuple
+
+  admit_surface & admit_current_request: 1
+    - type(resources) is AdmissionReason
+
+  admit_local_direct & admit_ground_direct: 6
+    - capability_identity != GroundCapabilityIdentity.from_profile(ground_profile)
+    - direct.status is not QueryStatus.FEASIBLE
+    - not ground_profile_allows_dependency_blocks(ground_profile, frame.world, direct.dependencies)
+    - request.world_session != frame.session.value
+    - selected.status is not QueryStatus.FEASIBLE
+    - type(request) is not SurfacePlanningRequest or type(frame) is not NavigationFrame or type(ground_profile) is not GroundMotionProfile or (type(capability_identit
