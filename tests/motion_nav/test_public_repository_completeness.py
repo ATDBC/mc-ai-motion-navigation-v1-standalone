@@ -25,6 +25,9 @@ class PublicRepositoryCompletenessTests(unittest.TestCase):
             "tests/motion_nav/test_f2r_piecewise_completion.py",
             "evidence/motion_navigation/action-spec-hardening-v1/metrics-baseline-corrected.json",
             "evidence/motion_navigation/F2R-piecewise-completion-v1/red/geometry/summary.json",
+            "docs/motion_navigation/stages/F2S-support-region-convergence-before-route-optimization.md",
+            "docs/motion_navigation/acceptance/F2S-support-region-convergence.md",
+            "docs/motion_navigation/decisions/0076-unify-goal-completion-region-before-route-optimization.md",
             "docs/motion_navigation/architecture/continuous-ground-route-execution-v1.md",
             "docs/motion_navigation/stages/F2-non-center-ground-route-execution.md",
             "docs/motion_navigation/acceptance/F2-non-center-ground-route-execution.md",
@@ -42,6 +45,7 @@ class PublicRepositoryCompletenessTests(unittest.TestCase):
         )
         self.assertEqual(tuple(p for p in required if p not in selected_paths), ())
         self.assertNotIn('docs/superpowers/plans/2026-10-07-non-center-ground-route-execution.md', selected_paths)
+        self.assertNotIn('docs/superpowers/plans/2026-10-06-motion-navigation-m0-m1.md', selected_paths)
 
     def test_motion_navigation_tests_keep_their_minimum_shared_dependencies(self):
         required = (

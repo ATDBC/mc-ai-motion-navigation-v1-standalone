@@ -1,5 +1,9 @@
 # AGENTS.md
 
+2026-10-08，F2-R 已按冻结范围通过。完成区域选择原目标内最大的精确安全矩形；UNKNOWN 按最坏障碍裁剪，只允许完全已知的安全子区域。Windows 正逆各 1647/1647，v7 为 1998/2000，v8 为 3817/3904；Fabric 外角和对角柱 16/16，8 次晚1实际应用，零安全与期限违规。潜行仍只有组件证明。见 [F2-R 阶段](docs/motion_navigation/stages/F2R-piecewise-completion-and-v8.md)、[验收](docs/motion_navigation/acceptance/F2R-piecewise-completion-and-v8.md)和 [D075](docs/motion_navigation/decisions/0075-repair-piecewise-completion-and-bound-edge-guard.md)。
+
+路线优化器前先执行 F2-S。它处理平台外角、桥头和柱顶的支撑边缘，统一 Session、规划尾段和接纳的正式完成区域查询，并建立支撑边缘 v9。F2-S 不降低 0.5 支撑门槛，不改中心点搜索、协调生命周期或动作接口。通过后才进入路线优化器和正式潜行区间。见 [D076](docs/motion_navigation/decisions/0076-unify-goal-completion-region-before-route-optimization.md)、[方案](docs/motion_navigation/stages/F2S-support-region-convergence-before-route-optimization.md)和[验收](docs/motion_navigation/acceptance/F2S-support-region-convergence.md)。
+
 2026-10-07，F2 通用非中心地面路线执行与终点接近已按冻结范围验收通过。普通开阔路线保留快速路径，已知碰撞或支撑边界每帧最多复核三个候选；潜行只由路线区间授权，完成区域保持在原 `GoalState` 内。正式 Windows 完整正逆各 1627/1627，五组通过，产品 1998/2000，旧成功退步 0；玩家站位 187/400 → 400/400。Fabric 冻结清单 93/93 符合各自判定，80 正例完成、40 次首条晚一 tick 实际应用，三组路线／持续输入用时比为 1.000／1.235／1.074，连续 10 tick 非中性停滞为 0。首个静止普通 Walk 补一 tick 中性等价证明，命令租约与 Session／Runtime 生命周期未改。
 
 范围见 [F2 阶段](docs/motion_navigation/stages/F2-non-center-ground-route-execution.md)、[架构](docs/motion_navigation/architecture/continuous-ground-route-execution-v1.md)和 [D074](docs/motion_navigation/decisions/0074-generalize-ground-route-execution-before-terminal-approach.md)，结果与限制见 [F2 验收](docs/motion_navigation/acceptance/F2-non-center-ground-route-execution.md)。紧凑证据位于 `evidence/motion_navigation/F2-ground-route-v1/final/`，原失败、逐项索引、来源和哈希均保留。外力仅按冻结试次判断；移动活塞观察、动态避障、路线优化器、疾跑路线和新动作尚未交付。
@@ -10,7 +14,7 @@ Windows 是正式开发、自动验收和 Fabric 实机平台；Linux 仅用于�
 
 历史 F1 按“功能通过、结构未通过”保存；R28 按“时间盒结束，部分交付通过”保存。历史 S0-R、v1—v7、R27 和连续高度 M3 的结果与边界均保留在各自验收及 `evidence/motion_navigation/` 中，不用 F2 的新结果覆盖。历史入口见 [F1 验收](docs/motion_navigation/acceptance/F1-known-world-following.md)、[R28 验收](docs/motion_navigation/acceptance/navigation-coordination-convergence.md)和 [S0-R 验收](docs/motion_navigation/acceptance/post-F1-navigation-structure-cleanup.md)。
 
-本仓库是主项目生成的源码快照。先读 F2 阶段和对应验收，再按任务读取相关架构与决定。
+本仓库是主项目生成的源码快照。先读 F2-S 方案和验收，再读 F2-R 已关闭范围；随后按任务读取相关架构与决定。
 
 项目方只通过默认分支 `main` 发布由固定导出清单生成、校验通过的公开快照。不得把主项目的完整开发分支或提交历史直接推入本仓库。三方审查分支可以保留，但只保存审查者自己的报告和复现材料，不代表正式发布状态。
 

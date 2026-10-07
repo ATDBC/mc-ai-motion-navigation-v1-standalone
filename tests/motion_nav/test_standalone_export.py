@@ -83,7 +83,6 @@ class StandaloneExportTests(unittest.TestCase):
             'docs/motion_navigation/decisions/0072-end-post-f1-cleanup-and-validate-action-spec.md',
             'docs/motion_navigation/stages/motion-navigation-middle-layer-M0-M1-plan.md',
             'docs/motion_navigation/acceptance/motion-navigation-middle-layer-M0-M1.md',
-            'docs/superpowers/plans/2026-10-06-motion-navigation-m0-m1.md',
             'evidence/motion_navigation/redesign-m0/baseline-manifest.json',
             'evidence/motion_navigation/redesign-m1/final-manifest.json',
         )
@@ -93,6 +92,9 @@ class StandaloneExportTests(unittest.TestCase):
             self.assertIn('M1', text)
             self.assertIn('结构止损', text)
             self.assertIn('M2', text)
+        self.assertFalse(
+            (self.root/'docs/superpowers/plans/2026-10-06-motion-navigation-m0-m1.md').exists()
+        )
         self.assertFalse(any('.tmp' in p.relative_to(self.root).parts
                              for p in self.root.rglob('*') if p.is_file()))
         for directory in ('redesign-m0', 'redesign-m1'):
@@ -112,6 +114,9 @@ class StandaloneExportTests(unittest.TestCase):
             "tests/motion_nav/test_f2r_piecewise_completion.py",
             "evidence/motion_navigation/action-spec-hardening-v1/metrics-baseline-corrected.json",
             "evidence/motion_navigation/F2R-piecewise-completion-v1/red/geometry/summary.json",
+            "docs/motion_navigation/stages/F2S-support-region-convergence-before-route-optimization.md",
+            "docs/motion_navigation/acceptance/F2S-support-region-convergence.md",
+            "docs/motion_navigation/decisions/0076-unify-goal-completion-region-before-route-optimization.md",
             "evidence/motion_navigation/F2-ground-route-v1/baseline/measurement-v2/error-copies.json",
             "evidence/motion_navigation/F2-ground-route-v1/final/windows/forward-final.json",
             "evidence/motion_navigation/F2-ground-route-v1/final/windows/reverse-final.json",
@@ -122,9 +127,11 @@ class StandaloneExportTests(unittest.TestCase):
         )
         self.assertEqual(tuple(p for p in required if not (self.root/p).is_file()), ())
         self.assertFalse((self.root/'docs/superpowers/plans/2026-10-07-non-center-ground-route-execution.md').exists())
+        self.assertFalse((self.root/'docs/superpowers/plans/2026-10-06-motion-navigation-m0-m1.md').exists())
         for name in ("README.md", "AGENTS.md"):
             text = (self.root/name).read_text("utf-8")
             self.assertIn("F2", text)
+            self.assertIn("F2-S", text)
             self.assertIn("冻结范围验收通过", text)
             self.assertIn("1998/2000", text)
             self.assertIn("93/93", text)
