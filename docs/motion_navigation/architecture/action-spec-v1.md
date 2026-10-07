@@ -1,6 +1,6 @@
 # 动作规则接口 v1
 
-日期：2026-10-07。实现范围：M1 的受控下降迁移候选；阶段因 Session 缩减不足而止损，不能据此开始 M2。
+日期：2026-10-07。实现范围：保留 M1 的受控下降迁移，并完成 D073 的接口加固。历史 M1 仍未通过；后续不单独实施 M2。
 
 ## 1. 要解决的问题
 
@@ -20,7 +20,7 @@
 | `stop_hold` | 当前帧保护、缺信息及依赖变化时的安全按键 | Session、执行器 |
 | `entry_observation`、`precondition` | 入口几何与当前事实是否满足动作要求 | 入口检查、运动协调 |
 | `needs_background_solving`、`solve_kind`、`solve_geometry` | 是否求解、求解类别、方向/落点/起点/最大 tick | 运动协调 |
-| `controller_family`、`controller_factory`、`completed` | 使用现有哪类控制器、如何创建、观察到落地时是否已到达 | 执行器 |
+| `controller_adapter`、`completed` | 提供控制器操作、判断当前身体是否到达目的地 | 执行器 |
 
 所有字段都必须显式给出。其他动作的零风险和无采集需求也由各自声明给出。
 
@@ -47,3 +47,24 @@ MotionRouteCoordinator 继续创建/接纳后台作业，处理 NEEDS_STATE、�
 量尺保留动作记录和类型联合声明，另计运行时特判。规划边到 `ControlledDropSegment` 的唯一转换继续留在 RouteAdmitter。所有通用 `actions` 文件均参与量尺，只有具体下降实现按既定口径排除。
 
 接口收回了动作规则，但 Session 只减少 52 行，未达到 100 行门槛。剩余入口、信息等待、身份及身体协调职责继续保留；本轮不为行数重新包装这些职责。
+
+## 6. D073 后的控制器与低层契约
+
+`ActionControllerAdapter` 是动作提供的一组冻结函数。它让执行器调用控制器的操作，不需要知道控制器属于哪种动作。
+
+- `create` 创建并启动控制器；
+- `entry_limits` 给前一段提供入口位置与速度限制；
+- `interpret` 把控制器自己的结果转换为已有的统一动作结果；
+- `stop_protection` 处理已经决定过当前帧后的停止请求，避免再次决定或发出未提交的离地输入。
+
+前三项必须可调用。停止操作可以省略，但声明了 `same_frame_protection` 时必须提供。登记时先验证适配器类型，再检查这些操作。受控下降和跨隙共用 AIR 适配器；Walk、JumpUp、Step 沿用原路径。执行器只判断是否提供适配器，生产代码已移除 ControllerFamily。
+
+适配器不保存等待、恢复、世代或身体拥有权。停止操作只作用于传入的当前控制器。控制器完成后，执行器继续决定段推进并验证最终目标。统一结果使用原有 ActionRouteState；该枚举现在定义在契约模块，旧执行器导入路径继续可用。
+
+`action_requirements.py` 拥有前提结果、采集规格、采集许可与公开的 `acquisition_id`。`action_preconditions.py` 继续提供无状态动作边界入口，并重导出旧公开类型。`landing_evidence.py` 拥有下降视觉证据判断和相关常量；探边模块重导出既有常量，距离、年龄和采集权限不变。
+
+独立 NewAction / NewController / NewResult 探针已经覆盖步行接续、完成、输入失联、取消和同帧停止，没有继承下降或复用 AIR。它只证明控制器接口的扩展边界，不是新正式运动能力的实机验收。完整结果见[加固验收](../acceptance/action-spec-hardening-driver-lifecycle.md)。
+
+D073 撤回未来的行数门槛。M1 当时只减少 52 行的事实及其未通过结论保留；本轮 Session 仍为 4,994 行，未搬走仍有职责的协调代码。
+
+量尺静态解析本地模块的枚举身份及有限类型/成员别名、重导出链；未知模块符号比较显露，能力与交接结果按原枚举身份分类。物理规则身份值单列，不计成动作实现选择。

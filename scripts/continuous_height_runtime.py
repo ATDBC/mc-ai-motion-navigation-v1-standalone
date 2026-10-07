@@ -37,7 +37,7 @@ from mc2p.motion_nav.physics_types import (
 )
 from mc2p.motion_nav.planner_worker import PlannerWorker
 from mc2p.motion_nav.world_model import Aabb, CellKnowledge
-from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
+from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver, RuntimeNavigationDriverState
 from scripts.control_probe_core import append_jsonl, write_json_atomic
 
 
@@ -1370,21 +1370,22 @@ def run_continuous_height_runtime(
                     append_jsonl(
                         directory / "continuous-height-samples.jsonl", sample,
                     )
-                    if driver.state in {"success", "failed", "cancelled"}:
+                    if driver.state in {RuntimeNavigationDriverState.SUCCESS, RuntimeNavigationDriverState.FAILED, RuntimeNavigationDriverState.CANCELLED}:
                         break
                 final_health = _self_health(runtime)
                 actual_damage = max(0.0, initial_health - final_health)
                 final_position = tuple(frame.body.position)
                 expected_terminal = trial.get("expected_terminal", "success")
+                expected_states = (tuple(RuntimeNavigationDriverState(value)
+                    for value in expected_terminal) if type(expected_terminal) is tuple
+                    else (RuntimeNavigationDriverState(expected_terminal),))
                 terminal_matches = (
-                    driver.state in expected_terminal
-                    if type(expected_terminal) is tuple
-                    else driver.state == expected_terminal
+                    driver.state in expected_states
                 )
                 violations: list[str] = []
                 if not terminal_matches:
                     violations.append(
-                        f"unexpected_terminal:{driver.state}:{driver.reason}:"
+                        f"unexpected_terminal:{driver.state.value}:{driver.reason}:"
                         f"expected={expected_terminal}"
                     )
                 expected_reason = trial.get("expected_reason")
@@ -1393,7 +1394,7 @@ def run_continuous_height_runtime(
                         f"unexpected_reason:{driver.reason}:"
                         f"expected={expected_reason}"
                     )
-                if driver.state == "success":
+                if driver.state == RuntimeNavigationDriverState.SUCCESS:
                     if math.dist(final_position, expected_goal_position) > .35:
                         violations.append(
                             f"success_outside_goal:{final_position}"
@@ -1403,7 +1404,7 @@ def run_continuous_height_runtime(
                         f"{trial_id} did not end on stable ground: "
                         f"{final_position}"
                     )
-                elif (driver.state == "failed"
+                elif (driver.state == RuntimeNavigationDriverState.FAILED
                       and injection == "remove_landing_support_at_lead"
                       and actual_damage == 0.0
                       and abs(final_position[1] - start[1]) > .01):
@@ -1415,7 +1416,7 @@ def run_continuous_height_runtime(
                         and not (
                             injection == "remove_landing_support_at_lead"
                             and not trial.get("expected_safe_stop", False)
-                            and driver.state in {"failed", "cancelled"}
+                            and driver.state in {RuntimeNavigationDriverState.FAILED, RuntimeNavigationDriverState.CANCELLED}
                         )):
                     violations.append(
                         f"damage_budget_exceeded:{actual_damage}"
@@ -1435,7 +1436,7 @@ def run_continuous_height_runtime(
                     "episode_id": episode,
                     "passed": not violations,
                     "violations": violations,
-                    "task_succeeded": driver.state == "success",
+                    "task_succeeded": driver.state == RuntimeNavigationDriverState.SUCCESS,
                     "ticks": len(samples),
                     "elapsed_ns": time.perf_counter_ns() - started_ns,
                     "actions": list(admitted_actions),
@@ -1446,7 +1447,7 @@ def run_continuous_height_runtime(
                         actual_damage
                         > budget.maximum_expected_damage_points + 1e-6
                     ),
-                    "terminal_state": driver.state,
+                    "terminal_state": driver.state.value,
                     "terminal_reason": driver.reason,
                     "injection_applied": injection_applied,
                     "injection_attempts": injection_attempts,
@@ -1474,7 +1475,7 @@ def run_continuous_height_runtime(
                 append_jsonl(directory / "continuous-height-trials.jsonl", row)
             finally:
                 if driver.source is not None:
-                    if driver.state in {"success", "failed", "cancelled"}:
+                    if driver.state in {RuntimeNavigationDriverState.SUCCESS, RuntimeNavigationDriverState.FAILED, RuntimeNavigationDriverState.CANCELLED}:
                         driver.release("continuous_height_trial_complete")
                     else:
                         driver.stop(profile, "continuous_height_trial_cleanup")

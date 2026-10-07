@@ -1229,6 +1229,9 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                         if os.environ.get("MC2P_R28_PRODUCT_PROBE") == "1":
                             from scripts.r28_product_fabric_runtime import run_r28_product_runtime
                             run_r25_planning_information_runtime = run_r28_product_runtime
+                        if os.environ.get("MC2P_F2_GROUND_ROUTE_PROBE") == "1":
+                            from scripts.f2_ground_route_runtime import run_f2_ground_route_runtime
+                            run_r25_planning_information_runtime = run_f2_ground_route_runtime
                         if os.environ.get("MC2P_ACTION_CONTINUITY_PROBE") == "1":
                             from scripts.action_continuity_fabric_runtime import run_action_continuity_runtime
                             run_r25_planning_information_runtime = run_action_continuity_runtime

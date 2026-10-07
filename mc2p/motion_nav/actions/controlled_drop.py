@@ -1,11 +1,19 @@
 """Controlled descent facts; the coordinator still owns landing and reanchoring."""
 import math
+from mc2p.motion_nav.action_requirements import (
+    ActionPreconditionResult, ActionPreconditionStatus as Status,
+    ActionPreconditionReason as Reason, AcquisitionSpec, acquisition_id,
+)
+from mc2p.motion_nav.geometry import QueryStatus, query_support
+from mc2p.motion_nav.landing_evidence import direct_drop_visual_evidence_sufficient
+from mc2p.motion_nav.world_model import CellKnowledge
+from mc2p.motion_nav.landing_evidence import DIRECT_DROP_SUPPORT_MAX_AGE_TICKS
 from mc2p.contracts.action_v1 import MovementV1
 from mc2p.motion_nav.action_route import ControlledDropSegment
 from mc2p.motion_nav.motion_risk import conservative_plain_fall_damage_points
 from mc2p.motion_nav.motion_solver import MotionSolveKind
-from mc2p.motion_nav.actions.contracts import ActionSpec, BodyCommitment, ControllerFamily, EntryObservation, StopHold
-from mc2p.motion_nav.actions.existing import air_controller, surface_completed, surface_geometry
+from mc2p.motion_nav.actions.contracts import ActionSpec, BodyCommitment, EntryObservation, StopHold
+from mc2p.motion_nav.actions.existing import AIR_CONTROLLER_ADAPTER, surface_completed, surface_geometry
 
 
 def expected_damage_points(action):
@@ -39,14 +47,6 @@ def entry_observation(action, frame):
 
 
 def precondition(route, action_index, frame, *, task_id, edge_probe=None, acquisition_grant=None):
-    from mc2p.motion_nav.action_preconditions import (
-        ActionPreconditionResult, ActionPreconditionStatus as Status,
-        ActionPreconditionReason as Reason, AcquisitionSpec, _acquisition_id,
-        DIRECT_DROP_SUPPORT_MAX_AGE_TICKS,
-    )
-    from mc2p.motion_nav.geometry import QueryStatus, query_support
-    from mc2p.motion_nav.route_admission import direct_drop_visual_evidence_sufficient
-    from mc2p.motion_nav.world_model import CellKnowledge
     action = route.action_route.actions[action_index]
     entry = entry_observation(action, frame)
     if not entry.needs_acquisition_before_solve:
@@ -78,7 +78,7 @@ def precondition(route, action_index, frame, *, task_id, edge_probe=None, acquis
                                             missing_cells=stale_support)
         return ActionPreconditionResult(Status.READY, Reason.READY)
     dependencies = tuple(sorted(set(action.dependencies) | set(support.dependencies) | {entry.landing_cell}))
-    acquisition = AcquisitionSpec(_acquisition_id(route, action_index, entry.landing_cell),
+    acquisition = AcquisitionSpec(acquisition_id(route, action_index, entry.landing_cell),
         task_id, route.goal_id, route.goal_revision, route.route_id, route.route_revision,
         action_index, entry.landing_cell, route.world_session, frame.world.geometry_revision, dependencies)
     return ActionPreconditionResult(Status.NEEDS_ACQUISITION, Reason.LANDING_LOWER_EVIDENCE_REQUIRED,
@@ -90,8 +90,7 @@ CONTROLLED_DROP_SPEC = ActionSpec(
     requires_verified_motion=True, expected_damage_points=expected_damage_points,
     stop_hold=StopHold(True, MovementV1(sneak=True), MovementV1(sneak=True)),
     needs_background_solving=True, solve_kind=MotionSolveKind.CONTROLLED_DROP,
-    solve_geometry=solve_geometry, controller_family=ControllerFamily.AIR,
-    controller_factory=air_controller, completed=surface_completed,
+    solve_geometry=solve_geometry, controller_adapter=AIR_CONTROLLER_ADAPTER, completed=surface_completed,
     entry_observation=entry_observation, precondition=precondition,
     tracks_damage=True, damage_committed=damage_committed,
 )

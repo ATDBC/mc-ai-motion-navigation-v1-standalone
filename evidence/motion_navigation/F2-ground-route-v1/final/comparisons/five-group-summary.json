@@ -1,0 +1,75 @@
+{
+  "faults": {
+    "cases": 16,
+    "identical": 15,
+    "normalizer_version": "r28-structure-trajectory-v1",
+    "signature_schema": "mc2p.s0r-owned-verification.v2",
+    "baseline": "evidence\\motion_navigation\\action-spec-hardening-v1\\review-p2\\faults-index.json",
+    "baseline_sha256": "e96b7fa0e84fdf1280bfbc21bca4801d690bed53850c2fa419b0414e0966794a",
+    "results": {
+      "passed": 16,
+      "failed": 0
+    }
+  },
+  "world_changes": {
+    "cases": 19,
+    "identical": 6,
+    "normalizer_version": "r28-structure-trajectory-v1",
+    "signature_schema": null,
+    "baseline": "evidence\\motion_navigation\\action-spec-hardening-v1\\review-p2\\world_changes-index.json",
+    "baseline_sha256": "5d07a37cc2f942561da29c5e565ed47e83a0126ae542c9bb22f0df18f60ac444",
+    "results": {
+      "passed": 19,
+      "failed": 0
+    }
+  },
+  "follow": {
+    "cases": 10,
+    "identical": 1,
+    "normalizer_version": "r28-structure-trajectory-v1",
+    "signature_schema": null,
+    "baseline": "evidence\\motion_navigation\\action-spec-hardening-v1\\review-p2\\follow-index.json",
+    "baseline_sha256": "601c3fb0170cc77af888d8ede985862196d5e54181e5b5d691fc170d2f761693",
+    "results": {
+      "passed": 10,
+      "failed": 0
+    }
+  },
+  "coordination": {
+    "cases": 1448,
+    "identical": 1073,
+    "normalizer_version": "r28-structure-trajectory-v1",
+    "signature_schema": "mc2p.s0r-owned-verification.v2",
+    "baseline": "evidence\\motion_navigation\\action-spec-hardening-v1\\review-p2\\coordination-index.json",
+    "baseline_sha256": "e94296eb4dbc6e7945b1b68574d3767f24309a28309b2c069b3fb33d5bd45f9a",
+    "results": {
+      "passed": 1448,
+      "failed": 0
+    }
+  },
+  "product": {
+    "cases": 2000,
+    "identical": 1022,
+    "normalizer_version": "r28-structure-trajectory-v1",
+    "signature_schema": null,
+    "baseline": "evidence\\motion_navigation\\action-spec-hardening-v1\\review-p2\\product-index.json",
+    "baseline_sha256": "666382d8ea288eb40e1654e9dba95eb6b9dd97198be2f0ef26d3588649d18367",
+    "results": {
+      "success": 1998,
+      "exceptions": 0,
+      "safety_violation_tasks": 0
+    },
+    "before_success": 1718,
+    "after_success": 1998,
+    "changed_by_group": {
+      "point-normal": 120,
+      "point-late": 105,
+      "target-normal": 121,
+      "target-late": 87,
+      "drop-normal": 119,
+      "drop-late": 130,
+      "player-normal": 147,
+      "player-late": 149
+    }
+  }
+}

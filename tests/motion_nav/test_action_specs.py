@@ -47,7 +47,7 @@ class ActionSpecContractTests(unittest.TestCase):
     def test_air_controller_creation_cannot_be_left_undeclared(self):
         spec = ACTION_REGISTRY.for_type(ControlledDropSegment)
         with self.assertRaises(ContractViolation):
-            ActionRegistry((replace(spec, controller_factory=None),))
+            ActionRegistry((replace(spec, controller_adapter=replace(spec.controller_adapter, create=None)),))
 
     def test_spec_and_stop_declarations_cannot_store_execution_state(self):
         spec = ACTION_REGISTRY.for_type(ControlledDropSegment)
@@ -67,7 +67,7 @@ class ActionSpecContractTests(unittest.TestCase):
         from dataclasses import asdict
         from pathlib import Path
         from types import SimpleNamespace
-        from mc2p.motion_nav.actions.contracts import ControllerFamily
+        from mc2p.motion_nav.actions.existing import AIR_CONTROLLER_ADAPTER
         from mc2p.motion_nav.actions.registry import action_spec
         from mc2p.contracts.action_v1 import MovementV1
         from tests.motion_nav.action_spec_fixtures import geometry_action
@@ -79,7 +79,7 @@ class ActionSpecContractTests(unittest.TestCase):
             expected, spec = record['expected'], action_spec(action)
             self.assertEqual(spec.expected_damage_points(action), expected['damage_points'])
             self.assertIs(spec.body_commitment, BodyCommitment.TRANSITION)
-            self.assertIs(spec.controller_family, ControllerFamily.AIR)
+            self.assertIs(spec.controller_adapter, AIR_CONTROLLER_ADAPTER)
             self.assertTrue(spec.requires_verified_motion)
             self.assertTrue(spec.stop_hold.same_frame_protection)
             self.assertEqual(spec.stop_hold.information_movement, MovementV1(sneak=True))

@@ -1,0 +1,16 @@
+test_planned_look_wins_and_first_move_applies_on_time (tests.motion_nav.test_f2_ground_start_window.F2GroundStartFormalChainTests.test_planned_look_wins_and_first_move_applies_on_time) ... FAIL
+
+======================================================================
+FAIL: test_planned_look_wins_and_first_move_applies_on_time (tests.motion_nav.test_f2_ground_start_window.F2GroundStartFormalChainTests.test_planned_look_wins_and_first_move_applies_on_time)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2_ground_start_window.py", line 205, in test_planned_look_wins_and_first_move_applies_on_time
+    self.assert_formal_start()
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2_ground_start_window.py", line 148, in assert_formal_start
+    self.assertIsNotNone(window,"Session/Executor did not generate the first-start window")
+AssertionError: unexpectedly None : Session/Executor did not generate the first-start window
+
+----------------------------------------------------------------------
+Ran 1 test in 0.037s
+
+FAILED (failures=1)

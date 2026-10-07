@@ -27,7 +27,7 @@ from mc2p.motion_nav.goal_reach_policy import GoalReachPolicy
 from mc2p.motion_nav.navigation_session import NavigationSession, NavigationSessionProfiles
 from mc2p.motion_nav.world_model import Aabb
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1
-from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
+from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver, RuntimeNavigationDriverState
 from mc2p.motion_nav.movement_transition import GoalState, GoalSupport
 from mc2p.motion_nav.movement_transition import MovementMode
 from tests.test_player_runtime import _RecordingTrace
@@ -40,7 +40,9 @@ from tests.sim.planning_clock import deterministic_planning_clock
 from mc2p.motion_nav.async_work import AsyncWorkKind
 
 CONFIG = Path("config/motion-navigation")
-TERMINAL_DRIVER = {"success", "failed", "cancelled", "stopped", "interaction_required"}
+TERMINAL_DRIVER = {RuntimeNavigationDriverState.SUCCESS, RuntimeNavigationDriverState.FAILED,
+                   RuntimeNavigationDriverState.CANCELLED, RuntimeNavigationDriverState.STOPPED,
+                   RuntimeNavigationDriverState.INTERACTION_REQUIRED}
 
 
 def _goal(position, risk_policy_id="no_expected_damage") -> GoalState:
@@ -333,7 +335,7 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                     event.fired_at = tick
                     event.action(context)
             if driver.source is not None and driver.state in {
-                    "success", "failed", "cancelled"}:
+                    RuntimeNavigationDriverState.SUCCESS, RuntimeNavigationDriverState.FAILED, RuntimeNavigationDriverState.CANCELLED}:
                 driver.release("simulation_terminal_release")
             if driver.source is None or driver.state in TERMINAL_DRIVER:
                 if not perturbations_stopped:
@@ -627,7 +629,7 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                 } for action in diagnostics.risk_actions),
                 "session_state": diagnostics.state.value,
                 "session_reason": diagnostics.reason,
-                "driver_state": driver.state,
+                "driver_state": driver.state.value,
                 "driver_reason": driver.reason,
                 "runtime_failure": driver.last_runtime_failure,
                 "body_handoff": (
@@ -658,7 +660,7 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
             if released_ticks >= after_terminal_ticks and stable:
                 break
         report = session.report
-        driver_state = driver.state
+        driver_state = driver.state.value
     finally:
         session.close()
         runtime.close()

@@ -19,7 +19,7 @@ from mc2p.skills.fixed_melee import (
     combat_standoff_goal_state,
 )
 from mc2p.skills.melee_strike_driver import MeleeStrikeDriver, TASK_LIMIT_NS
-from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
+from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver, RuntimeNavigationDriverState
 
 
 class _ApproachExit(StrEnum):
@@ -205,18 +205,22 @@ class FixedMeleeDriver:
                             "cancelled", "cancelled_before_submit",
                         )
                 return result
-            if self.approach_driver.state == "success":
+            if self.approach_driver.state == RuntimeNavigationDriverState.SUCCESS:
                 self.approach_driver.release("combat_standoff_reached")
                 self.approach_driver = None
                 self._start_strike(self._clock())
                 return self.strike_driver.tick(profile, owner_deadline_ns)
             result = self.approach_driver.tick(profile, owner_deadline_ns)
-            if self.approach_driver.state == "success":
+            if self.approach_driver.state == RuntimeNavigationDriverState.SUCCESS:
                 self.approach_driver.release("combat_standoff_reached")
                 self.approach_driver = None
                 self._start_strike(self._clock())
                 return result
-            if self.approach_driver.state in {"failed", "cancelled", "stopped", "blocked"}:
+            if self.approach_driver.state in {
+                RuntimeNavigationDriverState.FAILED,
+                RuntimeNavigationDriverState.CANCELLED,
+                RuntimeNavigationDriverState.STOPPED,
+            }:
                 reason = "approach/" + str(self.approach_driver.reason)
                 if self.approach_driver.source is not None:
                     self.approach_driver.release(reason)

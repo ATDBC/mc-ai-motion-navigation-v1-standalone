@@ -1,0 +1,1592 @@
+{
+  "actual_routes": {
+    "84c6f3a11242ae2ba28758bb-walk-0": [
+      {
+        "x": 0.55,
+        "y": 100,
+        "z": 0.67
+      },
+      {
+        "x": 0.5,
+        "y": 100,
+        "z": 1.5
+      },
+      {
+        "x": 0.5,
+        "y": 100,
+        "z": 2.5
+      },
+      {
+        "x": 0.5,
+        "y": 100,
+        "z": 3.5
+      },
+      {
+        "x": 0.5,
+        "y": 100,
+        "z": 4.5
+      },
+      {
+        "x": 0.5,
+        "y": 100,
+        "z": 5.5
+      },
+      {
+        "x": 0.5,
+        "y": 100,
+        "z": 6.5
+      },
+      {
+        "x": 0.5,
+        "y": 100,
+        "z": 7.5
+      },
+      {
+        "x": 0.55,
+        "y": 100,
+        "z": 8.33
+      }
+    ]
+  },
+  "completion_contracts": [
+    {
+      "capability_intervals": [],
+      "completion_region": {
+        "bounds": {
+          "max_x": 0.75,
+          "max_y": 100.05,
+          "max_z": 8.53,
+          "min_x": 0.35000000000000003,
+          "min_y": 99.95,
+          "min_z": 8.13
+        },
+        "dependencies": [
+          [
+            0,
+            98,
+            7
+          ],
+          [
+            0,
+            98,
+            8
+          ],
+          [
+            0,
+            99,
+            7
+          ],
+          [
+            0,
+            99,
+            8
+          ],
+          [
+            0,
+            100,
+            7
+          ],
+          [
+            0,
+            100,
+            8
+          ],
+          [
+            0,
+            101,
+            7
+          ],
+          [
+            0,
+            101,
+            8
+          ],
+          [
+            1,
+            98,
+            7
+          ],
+          [
+            1,
+            98,
+            8
+          ],
+          [
+            1,
+            99,
+            7
+          ],
+          [
+            1,
+            99,
+            8
+          ],
+          [
+            1,
+            100,
+            7
+          ],
+          [
+            1,
+            100,
+            8
+          ],
+          [
+            1,
+            101,
+            7
+          ],
+          [
+            1,
+            101,
+            8
+          ]
+        ],
+        "reference_point": [
+          0.55,
+          100,
+          8.33
+        ],
+        "support_height": 100,
+        "surface_identity": [
+          0,
+          8,
+          100,
+          0
+        ]
+      },
+      "dependencies": {
+        "raw_items": 44,
+        "raw_json_sha256": "476b366bceb86b761cd5d3d43fece3b672c139c00e92b8f6555151ccc4e0dc25",
+        "first": [
+          0,
+          98,
+          0
+        ],
+        "last": [
+          1,
+          101,
+          8
+        ],
+        "raw_retained_locally": true
+      },
+      "profile_id": "fabric-1_21-walk-b08-v1",
+      "ruleset_id": "minecraft-java-1_21-player-motion-r1"
+    }
+  ],
+  "condition": "normal",
+  "control_ms": {
+    "maximum": 1.0378,
+    "p50": 0.9273,
+    "p95": 1.0378,
+    "p99": 1.0378
+  },
+  "current_goal_bounds": [
+    0.35000000000000003,
+    99.92,
+    8.13,
+    0.75,
+    100.08,
+    8.53
+  ],
+  "damage_points": 0.0,
+  "danger_contact_frames": 0,
+  "direction": 0,
+  "drop_frames": 0,
+  "episode_id": "fabric-21001-0",
+  "expected": "success",
+  "expected_terminals": [
+    "success",
+    "failed",
+    "cancelled"
+  ],
+  "external_entity_count": 4,
+  "external_entity_initial_motion": [
+    -0.08,
+    0.0,
+    0.0
+  ],
+  "external_force_kind": "vanilla_no_ai_villager_collision",
+  "family": "offset_mid",
+  "final_body": {
+    "allow_flying": false,
+    "body_box": {
+      "max_x": 0.31985918288588977,
+      "max_y": 101.8,
+      "max_z": 3.9119196432949424,
+      "min_x": -0.2801408171141102,
+      "min_y": 100.0,
+      "min_z": 3.3119196432949427
+    },
+    "fall_distance_blocks": 0.0,
+    "food_points": 20,
+    "game_mode": "survival",
+    "health_points": 20.0,
+    "horizontal_collision": false,
+    "is_climbing": false,
+    "is_fall_flying": false,
+    "is_flying": false,
+    "is_on_ground": true,
+    "is_sneaking": false,
+    "is_sprinting": false,
+    "is_submerged_in_water": false,
+    "is_swimming": false,
+    "is_using_item": false,
+    "movement_tick_id": 176,
+    "pitch_radians": 0.6108652381980153,
+    "pose": "standing",
+    "position": [
+      0.019859182885889757,
+      100.0,
+      3.6119196432949425
+    ],
+    "saturation_points": 20.0,
+    "sequence_id": 172,
+    "session": {
+      "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+    },
+    "stamp": {
+      "controller_clock_id": "controller-872cf04ca0484a63b924bb2052a98ff7",
+      "received_monotonic_ns": 378534131721100,
+      "sequence_id": 172,
+      "session": {
+        "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+      },
+      "world_tick": 1150
+    },
+    "status_effects": [],
+    "velocity_blocks_per_second": [
+      -0.054887019148639436,
+      -1.568000030517578,
+      0.07958840014363472
+    ],
+    "vertical_collision": true,
+    "yaw_radians": 0.0
+  },
+  "formal_goal_checks": [],
+  "formal_goal_status": "not_satisfied",
+  "frames": 24,
+  "goal_bounds": [
+    0.35000000000000003,
+    99.92,
+    8.13,
+    0.75,
+    100.08,
+    8.53
+  ],
+  "id": "f2-external_force",
+  "injection": "external_force",
+  "injection_applied": true,
+  "input_deadline_miss_count": 1,
+  "interruption_evidence": {
+    "commands": [
+      "summon minecraft:villager 0.9 100.0 2.4542496592612073 {NoAI:1b,PersistenceRequired:1b,Silent:1b,Tags:[\"mc2p_f2_push\"],Motion:[-0.08d,0.0d,0.0d]}",
+      "summon minecraft:villager 0.9 100.0 2.4542496592612073 {NoAI:1b,PersistenceRequired:1b,Silent:1b,Tags:[\"mc2p_f2_push\"],Motion:[-0.08d,0.0d,0.0d]}",
+      "summon minecraft:villager 0.9 100.0 2.4542496592612073 {NoAI:1b,PersistenceRequired:1b,Silent:1b,Tags:[\"mc2p_f2_push\"],Motion:[-0.08d,0.0d,0.0d]}",
+      "summon minecraft:villager 0.9 100.0 2.4542496592612073 {NoAI:1b,PersistenceRequired:1b,Silent:1b,Tags:[\"mc2p_f2_push\"],Motion:[-0.08d,0.0d,0.0d]}"
+    ],
+    "external_force_kind": "vanilla_no_ai_villager_collision",
+    "frame": 17,
+    "kind": "external_force",
+    "maximum_lateral_displacement_blocks": 0.5301408171141103,
+    "movement_tick": 166,
+    "position": [
+      0.55,
+      100.0,
+      2.354249659261207
+    ],
+    "post_push_bodies": [
+      {
+        "allow_flying": false,
+        "body_box": {
+          "max_x": 0.8500000000000001,
+          "max_y": 101.8,
+          "max_z": 2.869600454447249,
+          "min_x": 0.25000000000000006,
+          "min_y": 100.0,
+          "min_z": 2.2696004544472492
+        },
+        "fall_distance_blocks": 0.0,
+        "food_points": 20,
+        "game_mode": "survival",
+        "health_points": 20.0,
+        "horizontal_collision": false,
+        "is_climbing": false,
+        "is_fall_flying": false,
+        "is_flying": false,
+        "is_on_ground": true,
+        "is_sneaking": false,
+        "is_sprinting": false,
+        "is_submerged_in_water": false,
+        "is_swimming": false,
+        "is_using_item": false,
+        "movement_tick_id": 167,
+        "pitch_radians": 0.6108652381980153,
+        "pose": "standing",
+        "position": [
+          0.55,
+          100.0,
+          2.569600454447249
+        ],
+        "saturation_points": 20.0,
+        "sequence_id": 166,
+        "session": {
+          "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+        },
+        "stamp": {
+          "controller_clock_id": "controller-872cf04ca0484a63b924bb2052a98ff7",
+          "received_monotonic_ns": 378533677532200,
+          "sequence_id": 166,
+          "session": {
+            "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+          },
+          "world_tick": 1141
+        },
+        "status_effects": [],
+        "velocity_blocks_per_second": [
+          0.0,
+          -1.568000030517578,
+          2.3516309565796893
+        ],
+        "vertical_collision": true,
+        "yaw_radians": 0.0
+      },
+      {
+        "allow_flying": false,
+        "body_box": {
+          "max_x": 0.8500000000000001,
+          "max_y": 101.8,
+          "max_z": 2.869600454447249,
+          "min_x": 0.25000000000000006,
+          "min_y": 100.0,
+          "min_z": 2.2696004544472492
+        },
+        "fall_distance_blocks": 0.0,
+        "food_points": 20,
+        "game_mode": "survival",
+        "health_points": 20.0,
+        "horizontal_collision": false,
+        "is_climbing": false,
+        "is_fall_flying": false,
+        "is_flying": false,
+        "is_on_ground": true,
+        "is_sneaking": false,
+        "is_sprinting": false,
+        "is_submerged_in_water": false,
+        "is_swimming": false,
+        "is_using_item": false,
+        "movement_tick_id": 167,
+        "pitch_radians": 0.6108652381980153,
+        "pose": "standing",
+        "position": [
+          0.55,
+          100.0,
+          2.569600454447249
+        ],
+        "saturation_points": 20.0,
+        "sequence_id": 166,
+        "session": {
+          "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+        },
+        "stamp": {
+          "controller_clock_id": "controller-872cf04ca0484a63b924bb2052a98ff7",
+          "received_monotonic_ns": 378533677532200,
+          "sequence_id": 166,
+          "session": {
+            "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+          },
+          "world_tick": 1141
+        },
+        "status_effects": [],
+        "velocity_blocks_per_second": [
+          0.0,
+          -1.568000030517578,
+          2.3516309565796893
+        ],
+        "vertical_collision": true,
+        "yaw_radians": 0.0
+      },
+      {
+        "allow_flying": false,
+        "body_box": {
+          "max_x": 0.8500000000000001,
+          "max_y": 101.8,
+          "max_z": 3.0851820056438957,
+          "min_x": 0.25000000000000006,
+          "min_y": 100.0,
+          "min_z": 2.485182005643896
+        },
+        "fall_distance_blocks": 0.0,
+        "food_points": 20,
+        "game_mode": "survival",
+        "health_points": 20.0,
+        "horizontal_collision": false,
+        "is_climbing": false,
+        "is_fall_flying": false,
+        "is_flying": false,
+        "is_on_ground": true,
+        "is_sneaking": false,
+        "is_sprinting": false,
+        "is_submerged_in_water": false,
+        "is_swimming": false,
+        "is_using_item": false,
+        "movement_tick_id": 168,
+        "pitch_radians": 0.6108652381980153,
+        "pose": "standing",
+        "position": [
+          0.55,
+          100.0,
+          2.785182005643896
+        ],
+        "saturation_points": 20.0,
+        "sequence_id": 167,
+        "session": {
+          "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+        },
+        "stamp": {
+          "controller_clock_id": "controller-872cf04ca0484a63b924bb2052a98ff7",
+          "received_monotonic_ns": 378533875263900,
+          "sequence_id": 167,
+          "session": {
+            "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+          },
+          "world_tick": 1142
+        },
+        "status_effects": [],
+        "velocity_blocks_per_second": [
+          -2.36643194850243,
+          -1.568000030517578,
+          4.591661890430664
+        ],
+        "vertical_collision": true,
+        "yaw_radians": 0.0
+      },
+      {
+        "allow_flying": false,
+        "body_box": {
+          "max_x": 0.8500000000000001,
+          "max_y": 101.8,
+          "max_z": 3.0851820056438957,
+          "min_x": 0.25000000000000006,
+          "min_y": 100.0,
+          "min_z": 2.485182005643896
+        },
+        "fall_distance_blocks": 0.0,
+        "food_points": 20,
+        "game_mode": "survival",
+        "health_points": 20.0,
+        "horizontal_collision": false,
+        "is_climbing": false,
+        "is_fall_flying": false,
+        "is_flying": false,
+        "is_on_ground": true,
+        "is_sneaking": false,
+        "is_sprinting": false,
+        "is_submerged_in_water": false,
+        "is_swimming": false,
+        "is_using_item": false,
+        "movement_tick_id": 168,
+        "pitch_radians": 0.6108652381980153,
+        "pose": "standing",
+        "position": [
+          0.55,
+          100.0,
+          2.785182005643896
+        ],
+        "saturation_points": 20.0,
+        "sequence_id": 167,
+        "session": {
+          "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+        },
+        "stamp": {
+          "controller_clock_id": "controller-872cf04ca0484a63b924bb2052a98ff7",
+          "received_monotonic_ns": 378533875263900,
+          "sequence_id": 167,
+          "session": {
+            "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+          },
+          "world_tick": 1142
+        },
+        "status_effects": [],
+        "velocity_blocks_per_second": [
+          -2.36643194850243,
+          -1.568000030517578,
+          4.591661890430664
+        ],
+        "vertical_collision": true,
+        "yaw_radians": 0.0
+      },
+      {
+        "allow_flying": false,
+        "body_box": {
+          "max_x": 0.3818306689487876,
+          "max_y": 101.8,
+          "max_z": 3.822058479275219,
+          "min_x": -0.2181693310512124,
+          "min_y": 100.0,
+          "min_z": 3.222058479275219
+        },
+        "fall_distance_blocks": 0.0,
+        "food_points": 20,
+        "game_mode": "survival",
+        "health_points": 20.0,
+        "horizontal_collision": false,
+        "is_climbing": false,
+        "is_fall_flying": false,
+        "is_flying": false,
+        "is_on_ground": true,
+        "is_sneaking": false,
+        "is_sprinting": false,
+        "is_submerged_in_water": false,
+        "is_swimming": false,
+        "is_using_item": false,
+        "movement_tick_id": 172,
+        "pitch_radians": 0.6108652381980153,
+        "pose": "standing",
+        "position": [
+          0.0818306689487876,
+          100.0,
+          3.522058479275219
+        ],
+        "saturation_points": 20.0,
+        "sequence_id": 168,
+        "session": {
+          "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+        },
+        "stamp": {
+          "controller_clock_id": "controller-872cf04ca0484a63b924bb2052a98ff7",
+          "received_monotonic_ns": 378533929615500,
+          "sequence_id": 168,
+          "session": {
+            "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+          },
+          "world_tick": 1146
+        },
+        "status_effects": [],
+        "velocity_blocks_per_second": [
+          -0.6175880339959345,
+          -1.568000030517578,
+          0.8955276554640068
+        ],
+        "vertical_collision": true,
+        "yaw_radians": 0.0
+      },
+      {
+        "allow_flying": false,
+        "body_box": {
+          "max_x": 0.3818306689487876,
+          "max_y": 101.8,
+          "max_z": 3.822058479275219,
+          "min_x": -0.2181693310512124,
+          "min_y": 100.0,
+          "min_z": 3.222058479275219
+        },
+        "fall_distance_blocks": 0.0,
+        "food_points": 20,
+        "game_mode": "survival",
+        "health_points": 20.0,
+        "horizontal_collision": false,
+        "is_climbing": false,
+        "is_fall_flying": false,
+        "is_flying": false,
+        "is_on_ground": true,
+        "is_sneaking": false,
+        "is_sprinting": false,
+        "is_submerged_in_water": false,
+        "is_swimming": false,
+        "is_using_item": false,
+        "movement_tick_id": 172,
+        "pitch_radians": 0.6108652381980153,
+        "pose": "standing",
+        "position": [
+          0.0818306689487876,
+          100.0,
+          3.522058479275219
+        ],
+        "saturation_points": 20.0,
+        "sequence_id": 168,
+        "session": {
+          "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+        },
+        "stamp": {
+          "controller_clock_id": "controller-872cf04ca0484a63b924bb2052a98ff7",
+          "received_monotonic_ns": 378533929615500,
+          "sequence_id": 168,
+          "session": {
+            "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+          },
+          "world_tick": 1146
+        },
+        "status_effects": [],
+        "velocity_blocks_per_second": [
+          -0.6175880339959345,
+          -1.568000030517578,
+          0.8955276554640068
+        ],
+        "vertical_collision": true,
+        "yaw_radians": 0.0
+      },
+      {
+        "allow_flying": false,
+        "body_box": {
+          "max_x": 0.35095126724899084,
+          "max_y": 101.8,
+          "max_z": 3.866834862048419,
+          "min_x": -0.2490487327510091,
+          "min_y": 100.0,
+          "min_z": 3.2668348620484196
+        },
+        "fall_distance_blocks": 0.0,
+        "food_points": 20,
+        "game_mode": "survival",
+        "health_points": 20.0,
+        "horizontal_collision": false,
+        "is_climbing": false,
+        "is_fall_flying": false,
+        "is_flying": false,
+        "is_on_ground": true,
+        "is_sneaking": false,
+        "is_sprinting": false,
+        "is_submerged_in_water": false,
+        "is_swimming": false,
+        "is_using_item": false,
+        "movement_tick_id": 173,
+        "pitch_radians": 0.6108652381980153,
+        "pose": "standing",
+        "position": [
+          0.05095126724899088,
+          100.0,
+          3.5668348620484194
+        ],
+        "saturation_points": 20.0,
+        "sequence_id": 169,
+        "session": {
+          "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+        },
+        "stamp": {
+          "controller_clock_id": "controller-872cf04ca0484a63b924bb2052a98ff7",
+          "received_monotonic_ns": 378533979430500,
+          "sequence_id": 169,
+          "session": {
+            "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+          },
+          "world_tick": 1147
+        },
+        "status_effects": [],
+        "velocity_blocks_per_second": [
+          -0.33720310572880696,
+          -1.568000030517578,
+          0.4889581566771224
+        ],
+        "vertical_collision": true,
+        "yaw_radians": 0.0
+      },
+      {
+        "allow_flying": false,
+        "body_box": {
+          "max_x": 0.35095126724899084,
+          "max_y": 101.8,
+          "max_z": 3.866834862048419,
+          "min_x": -0.2490487327510091,
+          "min_y": 100.0,
+          "min_z": 3.2668348620484196
+        },
+        "fall_distance_blocks": 0.0,
+        "food_points": 20,
+        "game_mode": "survival",
+        "health_points": 20.0,
+        "horizontal_collision": false,
+        "is_climbing": false,
+        "is_fall_flying": false,
+        "is_flying": false,
+        "is_on_ground": true,
+        "is_sneaking": false,
+        "is_sprinting": false,
+        "is_submerged_in_water": false,
+        "is_swimming": false,
+        "is_using_item": false,
+        "movement_tick_id": 173,
+        "pitch_radians": 0.6108652381980153,
+        "pose": "standing",
+        "position": [
+          0.05095126724899088,
+          100.0,
+          3.5668348620484194
+        ],
+        "saturation_points": 20.0,
+        "sequence_id": 169,
+        "session": {
+          "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+        },
+        "stamp": {
+          "controller_clock_id": "controller-872cf04ca0484a63b924bb2052a98ff7",
+          "received_monotonic_ns": 378533979430500,
+          "sequence_id": 169,
+          "session": {
+            "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+          },
+          "world_tick": 1147
+        },
+        "status_effects": [],
+        "velocity_blocks_per_second": [
+          -0.33720310572880696,
+          -1.568000030517578,
+          0.4889581566771224
+        ],
+        "vertical_collision": true,
+        "yaw_radians": 0.0
+      },
+      {
+        "allow_flying": false,
+        "body_box": {
+          "max_x": 0.33409111196255054,
+          "max_y": 101.8,
+          "max_z": 3.891282769882275,
+          "min_x": -0.26590888803744944,
+          "min_y": 100.0,
+          "min_z": 3.2912827698822755
+        },
+        "fall_distance_blocks": 0.0,
+        "food_points": 20,
+        "game_mode": "survival",
+        "health_points": 20.0,
+        "horizontal_collision": false,
+        "is_climbing": false,
+        "is_fall_flying": false,
+        "is_flying": false,
+        "is_on_ground": true,
+        "is_sneaking": false,
+        "is_sprinting": false,
+        "is_submerged_in_water": false,
+        "is_swimming": false,
+        "is_using_item": false,
+        "movement_tick_id": 174,
+        "pitch_radians": 0.6108652381980153,
+        "pose": "standing",
+        "position": [
+          0.03409111196255053,
+          100.0,
+          3.5912827698822753
+        ],
+        "saturation_points": 20.0,
+        "sequence_id": 170,
+        "session": {
+          "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+        },
+        "stamp": {
+          "controller_clock_id": "controller-872cf04ca0484a63b924bb2052a98ff7",
+          "received_monotonic_ns": 378534030793700,
+          "sequence_id": 170,
+          "session": {
+            "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+          },
+          "world_tick": 1148
+        },
+        "status_effects": [],
+        "velocity_blocks_per_second": [
+          -0.18411291711312772,
+          -1.568000030517578,
+          0.2669711845551134
+        ],
+        "vertical_collision": true,
+        "yaw_radians": 0.0
+      },
+      {
+        "allow_flying": false,
+        "body_box": {
+          "max_x": 0.33409111196255054,
+          "max_y": 101.8,
+          "max_z": 3.891282769882275,
+          "min_x": -0.26590888803744944,
+          "min_y": 100.0,
+          "min_z": 3.2912827698822755
+        },
+        "fall_distance_blocks": 0.0,
+        "food_points": 20,
+        "game_mode": "survival",
+        "health_points": 20.0,
+        "horizontal_collision": false,
+        "is_climbing": false,
+        "is_fall_flying": false,
+        "is_flying": false,
+        "is_on_ground": true,
+        "is_sneaking": false,
+        "is_sprinting": false,
+        "is_submerged_in_water": false,
+        "is_swimming": false,
+        "is_using_item": false,
+        "movement_tick_id": 174,
+        "pitch_radians": 0.6108652381980153,
+        "pose": "standing",
+        "position": [
+          0.03409111196255053,
+          100.0,
+          3.5912827698822753
+        ],
+        "saturation_points": 20.0,
+        "sequence_id": 170,
+        "session": {
+          "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+        },
+        "stamp": {
+          "controller_clock_id": "controller-872cf04ca0484a63b924bb2052a98ff7",
+          "received_monotonic_ns": 378534030793700,
+          "sequence_id": 170,
+          "session": {
+            "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+          },
+          "world_tick": 1148
+        },
+        "status_effects": [],
+        "velocity_blocks_per_second": [
+          -0.18411291711312772,
+          -1.568000030517578,
+          0.2669711845551134
+        ],
+        "vertical_collision": true,
+        "yaw_radians": 0.0
+      },
+      {
+        "allow_flying": false,
+        "body_box": {
+          "max_x": 0.3248854661068941,
+          "max_y": 101.8,
+          "max_z": 3.904631329110031,
+          "min_x": -0.27511453389310586,
+          "min_y": 100.0,
+          "min_z": 3.3046313291100313
+        },
+        "fall_distance_blocks": 0.0,
+        "food_points": 20,
+        "game_mode": "survival",
+        "health_points": 20.0,
+        "horizontal_collision": false,
+        "is_climbing": false,
+        "is_fall_flying": false,
+        "is_flying": false,
+        "is_on_ground": true,
+        "is_sneaking": false,
+        "is_sprinting": false,
+        "is_submerged_in_water": false,
+        "is_swimming": false,
+        "is_using_item": false,
+        "movement_tick_id": 175,
+        "pitch_radians": 0.6108652381980153,
+        "pose": "standing",
+        "position": [
+          0.024885466106894148,
+          100.0,
+          3.604631329110031
+        ],
+        "saturation_points": 20.0,
+        "sequence_id": 171,
+        "session": {
+          "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+        },
+        "stamp": {
+          "controller_clock_id": "controller-872cf04ca0484a63b924bb2052a98ff7",
+          "received_monotonic_ns": 378534081198100,
+          "sequence_id": 171,
+          "session": {
+            "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+          },
+          "world_tick": 1149
+        },
+        "status_effects": [],
+        "velocity_blocks_per_second": [
+          -0.10052566442008781,
+          -1.568000030517578,
+          0.1457662836982288
+        ],
+        "vertical_collision": true,
+        "yaw_radians": 0.0
+      },
+      {
+        "allow_flying": false,
+        "body_box": {
+          "max_x": 0.3248854661068941,
+          "max_y": 101.8,
+          "max_z": 3.904631329110031,
+          "min_x": -0.27511453389310586,
+          "min_y": 100.0,
+          "min_z": 3.3046313291100313
+        },
+        "fall_distance_blocks": 0.0,
+        "food_points": 20,
+        "game_mode": "survival",
+        "health_points": 20.0,
+        "horizontal_collision": false,
+        "is_climbing": false,
+        "is_fall_flying": false,
+        "is_flying": false,
+        "is_on_ground": true,
+        "is_sneaking": false,
+        "is_sprinting": false,
+        "is_submerged_in_water": false,
+        "is_swimming": false,
+        "is_using_item": false,
+        "movement_tick_id": 175,
+        "pitch_radians": 0.6108652381980153,
+        "pose": "standing",
+        "position": [
+          0.024885466106894148,
+          100.0,
+          3.604631329110031
+        ],
+        "saturation_points": 20.0,
+        "sequence_id": 171,
+        "session": {
+          "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+        },
+        "stamp": {
+          "controller_clock_id": "controller-872cf04ca0484a63b924bb2052a98ff7",
+          "received_monotonic_ns": 378534081198100,
+          "sequence_id": 171,
+          "session": {
+            "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+          },
+          "world_tick": 1149
+        },
+        "status_effects": [],
+        "velocity_blocks_per_second": [
+          -0.10052566442008781,
+          -1.568000030517578,
+          0.1457662836982288
+        ],
+        "vertical_collision": true,
+        "yaw_radians": 0.0
+      },
+      {
+        "allow_flying": false,
+        "body_box": {
+          "max_x": 0.31985918288588977,
+          "max_y": 101.8,
+          "max_z": 3.9119196432949424,
+          "min_x": -0.2801408171141102,
+          "min_y": 100.0,
+          "min_z": 3.3119196432949427
+        },
+        "fall_distance_blocks": 0.0,
+        "food_points": 20,
+        "game_mode": "survival",
+        "health_points": 20.0,
+        "horizontal_collision": false,
+        "is_climbing": false,
+        "is_fall_flying": false,
+        "is_flying": false,
+        "is_on_ground": true,
+        "is_sneaking": false,
+        "is_sprinting": false,
+        "is_submerged_in_water": false,
+        "is_swimming": false,
+        "is_using_item": false,
+        "movement_tick_id": 176,
+        "pitch_radians": 0.6108652381980153,
+        "pose": "standing",
+        "position": [
+          0.019859182885889757,
+          100.0,
+          3.6119196432949425
+        ],
+        "saturation_points": 20.0,
+        "sequence_id": 172,
+        "session": {
+          "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+        },
+        "stamp": {
+          "controller_clock_id": "controller-872cf04ca0484a63b924bb2052a98ff7",
+          "received_monotonic_ns": 378534131721100,
+          "sequence_id": 172,
+          "session": {
+            "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+          },
+          "world_tick": 1150
+        },
+        "status_effects": [],
+        "velocity_blocks_per_second": [
+          -0.054887019148639436,
+          -1.568000030517578,
+          0.07958840014363472
+        ],
+        "vertical_collision": true,
+        "yaw_radians": 0.0
+      }
+    ],
+    "pre_push_body": {
+      "allow_flying": false,
+      "body_box": {
+        "max_x": 0.8500000000000001,
+        "max_y": 101.8,
+        "max_z": 2.654249659261207,
+        "min_x": 0.25000000000000006,
+        "min_y": 100.0,
+        "min_z": 2.0542496592612074
+      },
+      "fall_distance_blocks": 0.0,
+      "food_points": 20,
+      "game_mode": "survival",
+      "health_points": 20.0,
+      "horizontal_collision": false,
+      "is_climbing": false,
+      "is_fall_flying": false,
+      "is_flying": false,
+      "is_on_ground": true,
+      "is_sneaking": false,
+      "is_sprinting": false,
+      "is_submerged_in_water": false,
+      "is_swimming": false,
+      "is_using_item": false,
+      "movement_tick_id": 166,
+      "pitch_radians": 0.6108652381980153,
+      "pose": "standing",
+      "position": [
+        0.55,
+        100.0,
+        2.354249659261207
+      ],
+      "saturation_points": 20.0,
+      "sequence_id": 165,
+      "session": {
+        "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+      },
+      "stamp": {
+        "controller_clock_id": "controller-872cf04ca0484a63b924bb2052a98ff7",
+        "received_monotonic_ns": 378533628557300,
+        "sequence_id": 165,
+        "session": {
+          "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+        },
+        "world_tick": 1140
+      },
+      "status_effects": [],
+      "velocity_blocks_per_second": [
+        0.0,
+        -1.568000030517578,
+        2.3470158363675835
+      ],
+      "vertical_collision": true,
+      "yaw_radians": 0.0
+    },
+    "pre_push_source": {
+      "episode_id": "fabric-21001-0",
+      "generation": 1,
+      "schema_version": "mc2p.intent-source.v1",
+      "scope_id": "695ed0d930934b839ea0267fca1814cf",
+      "slot": 0,
+      "source_id": "ordered/695ed0d930934b839ea0267fca1814cf/0/1"
+    },
+    "reentry": [
+      {
+        "reason": "current_support_allows_navigation_reentry",
+        "status": "continue_navigation"
+      },
+      {
+        "reason": "current_support_allows_navigation_reentry",
+        "status": "continue_navigation"
+      },
+      {
+        "reason": "navigation_contract_unavailable",
+        "status": "requires_body_recovery"
+      },
+      {
+        "reason": "navigation_contract_unavailable",
+        "status": "requires_body_recovery"
+      },
+      {
+        "reason": "navigation_contract_unavailable",
+        "status": "requires_body_recovery"
+      },
+      {
+        "reason": "navigation_contract_unavailable",
+        "status": "requires_body_recovery"
+      }
+    ],
+    "residuals": [
+      {
+        "anchor_tick": 166,
+        "contact_mismatch": false,
+        "dependencies": [
+          [
+            0,
+            98,
+            2
+          ],
+          [
+            0,
+            99,
+            2
+          ],
+          [
+            0,
+            100,
+            2
+          ],
+          [
+            0,
+            101,
+            2
+          ]
+        ],
+        "missing_cells": [],
+        "missing_ticks": [],
+        "observed_tick": 167,
+        "position_error_blocks": 5.70641134345351e-09,
+        "predicted_state": {
+          "allow_flying": false,
+          "body_height": 1.7999999999999972,
+          "body_width": 0.6000000000000001,
+          "climbing": false,
+          "fall_distance_blocks": 0.0,
+          "fall_flying": false,
+          "flying": false,
+          "food_points": 20,
+          "game_mode": "survival",
+          "gravity_attribute": 0.08,
+          "horizontal_collision": false,
+          "is_using_item": false,
+          "jump_strength_attribute": 0.42,
+          "jumping_cooldown_ticks": 0,
+          "movement_speed_attribute": 0.1,
+          "movement_tick_id": 167,
+          "on_ground": true,
+          "pitch_radians": 0.6108652381980153,
+          "pose": "standing",
+          "position": [
+            0.55,
+            100.0,
+            2.5696004601536604
+          ],
+          "ruleset_id": "minecraft-java-1_21-player-motion-r1",
+          "saturation_points": 20.0,
+          "session": {
+            "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+          },
+          "sneaking": false,
+          "sprinting": false,
+          "state_schema": "mc2p.physics-state.v1",
+          "status_effects": [],
+          "step_height_blocks": 0.6,
+          "submerged_in_water": false,
+          "swimming": false,
+          "velocity_blocks_per_tick": [
+            0.0,
+            -0.0784000015258789,
+            0.11758153728727949
+          ],
+          "vertical_collision": true,
+          "yaw_radians": 0.0
+        },
+        "reasons": [],
+        "status": "matched",
+        "velocity_error_blocks_per_tick": 1.0541704981159583e-08
+      },
+      {
+        "anchor_tick": 167,
+        "contact_mismatch": false,
+        "dependencies": [
+          [
+            0,
+            98,
+            2
+          ],
+          [
+            0,
+            98,
+            3
+          ],
+          [
+            0,
+            99,
+            2
+          ],
+          [
+            0,
+            99,
+            3
+          ],
+          [
+            0,
+            100,
+            2
+          ],
+          [
+            0,
+            100,
+            3
+          ],
+          [
+            0,
+            101,
+            2
+          ],
+          [
+            0,
+            101,
+            3
+          ]
+        ],
+        "missing_cells": [],
+        "missing_ticks": [],
+        "observed_tick": 168,
+        "position_error_blocks": 5.70641178754272e-09,
+        "predicted_state": {
+          "allow_flying": false,
+          "body_height": 1.7999999999999972,
+          "body_width": 0.6000000000000001,
+          "climbing": false,
+          "fall_distance_blocks": 0.0,
+          "fall_flying": false,
+          "flying": false,
+          "food_points": 20,
+          "game_mode": "survival",
+          "gravity_attribute": 0.08,
+          "horizontal_collision": false,
+          "is_using_item": false,
+          "jump_strength_attribute": 0.42,
+          "jumping_cooldown_ticks": 0,
+          "movement_speed_attribute": 0.1,
+          "movement_tick_id": 168,
+          "on_ground": true,
+          "pitch_radians": 0.6108652381980153,
+          "pose": "standing",
+          "position": [
+            0.55,
+            100.0,
+            2.7851820113503076
+          ],
+          "ruleset_id": "minecraft-java-1_21-player-motion-r1",
+          "saturation_points": 20.0,
+          "session": {
+            "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+          },
+          "sneaking": false,
+          "sprinting": false,
+          "state_schema": "mc2p.physics-state.v1",
+          "status_effects": [],
+          "step_height_blocks": 0.6,
+          "submerged_in_water": false,
+          "swimming": false,
+          "velocity_blocks_per_tick": [
+            0.0,
+            -0.0784000015258789,
+            0.11770753006906998
+          ],
+          "vertical_collision": true,
+          "yaw_radians": 0.0
+        },
+        "reasons": [],
+        "status": "deviation",
+        "velocity_error_blocks_per_tick": 0.16283777921228773
+      }
+    ]
+  },
+  "late_input": null,
+  "max_full_candidates": 0,
+  "motion_quality": {
+    "completion_ticks": null,
+    "driver_terminal_tick": 176,
+    "final_recorded_tick": 176,
+    "first_actual_non_neutral_tick": 158,
+    "first_region_entry_tick": null,
+    "first_satisfied_observation_tick": null,
+    "first_stopped_goal_tick": null,
+    "stagnant_windows": [],
+    "stopped_speed_threshold_blocks_per_second": 0.1
+  },
+  "original_goal": {
+    "allowed_modes": [
+      "walk"
+    ],
+    "allowed_poses": [
+      "standing"
+    ],
+    "maximum_terminal_speed_blocks_per_second": 0.6,
+    "maximum_yaw_error_radians": null,
+    "minimum_resources": {
+      "values": []
+    },
+    "region": {
+      "max_x": 0.75,
+      "max_y": 100.08,
+      "max_z": 8.53,
+      "min_x": 0.35000000000000003,
+      "min_y": 99.92,
+      "min_z": 8.13
+    },
+    "required_yaw_radians": null,
+    "risk_policy_id": "no_expected_damage",
+    "support": "solid"
+  },
+  "original_goal_bounds": [
+    0.35000000000000003,
+    99.92,
+    8.13,
+    0.75,
+    100.08,
+    8.53
+  ],
+  "passed": true,
+  "physics_steps": 0,
+  "prepare_ms": {
+    "maximum": 6.3715,
+    "p50": 0.8194,
+    "p95": 2.2924,
+    "p99": 6.3715
+  },
+  "reason": "ordinary_ground_speed_outside_model",
+  "scene_sha256": "546b24f736b6ba7b67f4ecb34938afdde365fc8f71ac5b0c54a4b55a5151d80d",
+  "start_position": [
+    0.55,
+    100.0,
+    0.67
+  ],
+  "start_prefix_proofs": {
+    "prefixes": [
+      {
+        "command": {
+          "forward": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false,
+          "strafe": 0
+        },
+        "control_ticks": 1,
+        "input_state": {
+          "allow_flying": false,
+          "body_height": 1.7999999999999972,
+          "body_width": 0.6000000000000001,
+          "climbing": false,
+          "fall_distance_blocks": 0.0,
+          "fall_flying": false,
+          "flying": false,
+          "food_points": 20,
+          "game_mode": "survival",
+          "gravity_attribute": 0.08,
+          "horizontal_collision": false,
+          "is_using_item": false,
+          "jump_strength_attribute": 0.42,
+          "jumping_cooldown_ticks": 0,
+          "movement_speed_attribute": 0.1,
+          "movement_tick_id": 157,
+          "on_ground": true,
+          "pitch_radians": 0.6108652381980153,
+          "pose": "standing",
+          "position": [
+            0.55,
+            100.0,
+            0.67
+          ],
+          "ruleset_id": "minecraft-java-1_21-player-motion-r1",
+          "saturation_points": 20.0,
+          "session": {
+            "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+          },
+          "sneaking": false,
+          "sprinting": false,
+          "state_schema": "mc2p.physics-state.v1",
+          "status_effects": [],
+          "step_height_blocks": 0.6,
+          "submerged_in_water": false,
+          "swimming": false,
+          "velocity_blocks_per_tick": [
+            0.0,
+            -0.0784000015258789,
+            0.0
+          ],
+          "vertical_collision": true,
+          "yaw_radians": 0.0
+        },
+        "observation_sequence": 156,
+        "result": {
+          "dependencies": [
+            [
+              0,
+              98,
+              0
+            ],
+            [
+              0,
+              99,
+              0
+            ],
+            [
+              0,
+              100,
+              0
+            ],
+            [
+              0,
+              101,
+              0
+            ]
+          ],
+          "minimum_support": 1.0,
+          "missing_cells": [],
+          "physics_steps": 1,
+          "reason": "verified",
+          "sneak_edge_clipped": false,
+          "status": "feasible",
+          "support_boundary_rejected": false,
+          "tracking_end": {
+            "allow_flying": false,
+            "body_height": 1.7999999999999972,
+            "body_width": 0.6000000000000001,
+            "climbing": false,
+            "fall_distance_blocks": 0.0,
+            "fall_flying": false,
+            "flying": false,
+            "food_points": 20,
+            "game_mode": "survival",
+            "gravity_attribute": 0.08,
+            "horizontal_collision": false,
+            "is_using_item": false,
+            "jump_strength_attribute": 0.42,
+            "jumping_cooldown_ticks": 0,
+            "movement_speed_attribute": 0.1,
+            "movement_tick_id": 158,
+            "on_ground": true,
+            "pitch_radians": 0.6108652381980153,
+            "pose": "standing",
+            "position": [
+              0.55,
+              100.0,
+              0.67
+            ],
+            "ruleset_id": "minecraft-java-1_21-player-motion-r1",
+            "saturation_points": 20.0,
+            "session": {
+              "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+            },
+            "sneaking": false,
+            "sprinting": false,
+            "state_schema": "mc2p.physics-state.v1",
+            "status_effects": [],
+            "step_height_blocks": 0.6,
+            "submerged_in_water": false,
+            "swimming": false,
+            "velocity_blocks_per_tick": [
+              0.0,
+              -0.0784000015258789,
+              0.0
+            ],
+            "vertical_collision": true,
+            "yaw_radians": 0.0
+          },
+          "trajectory": [
+            {
+              "allow_flying": false,
+              "body_height": 1.7999999999999972,
+              "body_width": 0.6000000000000001,
+              "climbing": false,
+              "fall_distance_blocks": 0.0,
+              "fall_flying": false,
+              "flying": false,
+              "food_points": 20,
+              "game_mode": "survival",
+              "gravity_attribute": 0.08,
+              "horizontal_collision": false,
+              "is_using_item": false,
+              "jump_strength_attribute": 0.42,
+              "jumping_cooldown_ticks": 0,
+              "movement_speed_attribute": 0.1,
+              "movement_tick_id": 157,
+              "on_ground": true,
+              "pitch_radians": 0.6108652381980153,
+              "pose": "standing",
+              "position": [
+                0.55,
+                100.0,
+                0.67
+              ],
+              "ruleset_id": "minecraft-java-1_21-player-motion-r1",
+              "saturation_points": 20.0,
+              "session": {
+                "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+              },
+              "sneaking": false,
+              "sprinting": false,
+              "state_schema": "mc2p.physics-state.v1",
+              "status_effects": [],
+              "step_height_blocks": 0.6,
+              "submerged_in_water": false,
+              "swimming": false,
+              "velocity_blocks_per_tick": [
+                0.0,
+                -0.0784000015258789,
+                0.0
+              ],
+              "vertical_collision": true,
+              "yaw_radians": 0.0
+            },
+            {
+              "allow_flying": false,
+              "body_height": 1.7999999999999972,
+              "body_width": 0.6000000000000001,
+              "climbing": false,
+              "fall_distance_blocks": 0.0,
+              "fall_flying": false,
+              "flying": false,
+              "food_points": 20,
+              "game_mode": "survival",
+              "gravity_attribute": 0.08,
+              "horizontal_collision": false,
+              "is_using_item": false,
+              "jump_strength_attribute": 0.42,
+              "jumping_cooldown_ticks": 0,
+              "movement_speed_attribute": 0.1,
+              "movement_tick_id": 158,
+              "on_ground": true,
+              "pitch_radians": 0.6108652381980153,
+              "pose": "standing",
+              "position": [
+                0.55,
+                100.0,
+                0.67
+              ],
+              "ruleset_id": "minecraft-java-1_21-player-motion-r1",
+              "saturation_points": 20.0,
+              "session": {
+                "value": "fabric:fabric-21001-0:jvm:97181344-df56-40d9-911f-e3f66c274532"
+              },
+              "sneaking": false,
+              "sprinting": false,
+              "state_schema": "mc2p.physics-state.v1",
+              "status_effects": [],
+              "step_height_blocks": 0.6,
+              "submerged_in_water": false,
+              "swimming": false,
+              "velocity_blocks_per_tick": [
+                0.0,
+                -0.0784000015258789,
+                0.0
+              ],
+              "vertical_collision": true,
+              "yaw_radians": 0.0
+            }
+          ]
+        },
+        "tail_ticks": 0
+      }
+    ],
+    "windows": [
+      {
+        "candidate_lease_ticks": 2,
+        "candidate_movement": {
+          "forward": 1,
+          "jump": false,
+          "sneak": false,
+          "sprint": false,
+          "strafe": 0
+        },
+        "earliest_tick": 158,
+        "first_command": true,
+        "latest_tick": 159,
+        "observation_sequence": 156
+      }
+    ]
+  },
+  "state": "failed",
+  "task_success": false,
+  "trajectory_sha256": "b430e44eb1736759a316c829ed4eb2b775eed257c8fd8973bdc5bfc838055245",
+  "violations": []
+}

@@ -1,0 +1,25 @@
+[
+  {
+    "name": "forward",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/run_motion_navigation_checks.py",
+      "--output",
+      "D:\\My_project\\mc_ai\\.tmp\\f2-task5-chain-forward.json"
+    ],
+    "return_code": 0,
+    "elapsed_seconds": 544.2635114000295
+  },
+  {
+    "name": "reverse",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/run_motion_navigation_checks.py",
+      "--reverse",
+      "--output",
+      "D:\\My_project\\mc_ai\\.tmp\\f2-task5-chain-reverse.json"
+    ],
+    "return_code": 0,
+    "elapsed_seconds": 514.4095196999842
+  }
+]

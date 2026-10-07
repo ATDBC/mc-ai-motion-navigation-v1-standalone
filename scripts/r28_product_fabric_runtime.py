@@ -10,7 +10,7 @@ from dataclasses import asdict
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.motion_nav.navigation_session import NavigationSession, NavigationSessionProfiles
-from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
+from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver, RuntimeNavigationDriverState
 from scripts.control_probe_core import append_jsonl
 from scripts.r25_planning_information_runtime import _task
 from tests.sim.runner import _goal
@@ -77,7 +77,7 @@ def run_r28_product_runtime(runtime, backend, episode, directory, deadline_ns, f
             first_tick = runtime.navigation_observation_adapter.latest_frame.body.movement_tick_id
             try:
                 for index in range(300):
-                    if driver.state in {"success", "failed", "cancelled"}:
+                    if driver.state in {RuntimeNavigationDriverState.SUCCESS, RuntimeNavigationDriverState.FAILED, RuntimeNavigationDriverState.CANCELLED}:
                         break
                     result = driver.tick(profile, min(deadline_ns, time.perf_counter_ns() + 500_000_000))
                     diagnostic()
@@ -85,7 +85,7 @@ def run_r28_product_runtime(runtime, backend, episode, directory, deadline_ns, f
                     movement = None if result.decision is None else result.decision.action.movement
                     row = {"trial": name, "frame": index, "movement_tick": frame.body.movement_tick_id,
                            "position": frame.body.position, "velocity": frame.body.velocity_blocks_per_second,
-                           "on_ground": frame.body.is_on_ground, "state": driver.state,
+                           "on_ground": frame.body.is_on_ground, "state": driver.state.value,
                            "reason": driver.reason, "movement": None if movement is None else {
                                "forward": movement.forward, "strafe": movement.strafe, "jump": movement.jump}}
                     rows.append(row)
@@ -93,8 +93,8 @@ def run_r28_product_runtime(runtime, backend, episode, directory, deadline_ns, f
                     if result.report.failure is not None:
                         raise RuntimeError(result.report.failure)
                 frame = runtime.navigation_observation_adapter.latest_frame
-                trials.append({"id": name, "outcome": driver.state, "reason": driver.reason,
-                               "passed": driver.state == "success", "position": frame.body.position,
+                trials.append({"id": name, "outcome": driver.state.value, "reason": driver.reason,
+                               "passed": driver.state == RuntimeNavigationDriverState.SUCCESS, "position": frame.body.position,
                                "movement_ticks": frame.body.movement_tick_id - first_tick,
                                "wall_elapsed_seconds": (time.perf_counter_ns() - started) / 1e9})
             finally:
@@ -160,7 +160,7 @@ def run_batch5(runtime,backend,episode,directory,deadline_ns,fixture_writer,
         delayed=[]; timings=[]
         try:
             for index in range(300):
-                if driver.state in {'success','failed','cancelled'}:break
+                if driver.state in {RuntimeNavigationDriverState.SUCCESS,RuntimeNavigationDriverState.FAILED,RuntimeNavigationDriverState.CANCELLED}:break
                 deadline=min(deadline_ns,time.perf_counter_ns()+500_000_000)
                 before=runtime.navigation_observation_adapter.latest_frame.body.movement_tick_id
                 begun=time.perf_counter_ns()
@@ -180,13 +180,13 @@ def run_batch5(runtime,backend,episode,directory,deadline_ns,fixture_writer,
                 append_jsonl(directory/'r28-product-frames.jsonl',dict(trial=name,frame=index,
                     movement_tick=frame.body.movement_tick_id,position=frame.body.position,
                     velocity=frame.body.velocity_blocks_per_second,on_ground=frame.body.is_on_ground,
-                    state=driver.state,reason=driver.reason,prepare_ns=prepared-begun,
+                    state=driver.state.value,reason=driver.reason,prepare_ns=prepared-begun,
                     roundtrip_ns=elapsed,injection_requested=inject,actual_tick_offset=applied,
                     diagnostics=asdict(session.diagnostics),winning_activity=asdict(fd.movement_activity) if fd.movement_activity else None))
                 if result.report.failure is not None:raise RuntimeError(result.report.failure)
             terminal_reason=driver.reason
-            trials.append(dict(id=name,family=family,direction=direction,outcome=driver.state,reason=terminal_reason,
-                task_success=driver.state=='success',bounded_result=driver.state in {'success','failed','cancelled'},
+            trials.append(dict(id=name,family=family,direction=direction,outcome=driver.state.value,reason=terminal_reason,
+                task_success=driver.state==RuntimeNavigationDriverState.SUCCESS,bounded_result=driver.state in {RuntimeNavigationDriverState.SUCCESS,RuntimeNavigationDriverState.FAILED,RuntimeNavigationDriverState.CANCELLED},
                 position=frame.body.position,movement_ticks=frame.body.movement_tick_id-first_tick,
                 requested_late_probability=late,delayed_applications=delayed,
                 verified_late=sum(r['actual_tick_offset']==2 for r in delayed),prepare_ns=timings))

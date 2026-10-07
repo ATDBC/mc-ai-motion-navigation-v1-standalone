@@ -1,0 +1,75 @@
+[
+  {
+    "movement": [
+      1,
+      0
+    ],
+    "status": "needs_information",
+    "reason": "missing_world",
+    "missing_cells": [
+      [
+        1,
+        98,
+        7
+      ]
+    ],
+    "steps": 2
+  },
+  {
+    "movement": [
+      1,
+      -1
+    ],
+    "status": "needs_information",
+    "reason": "missing_world",
+    "missing_cells": [
+      [
+        0,
+        98,
+        7
+      ],
+      [
+        1,
+        98,
+        7
+      ]
+    ],
+    "steps": 3
+  },
+  {
+    "movement": [
+      1,
+      1
+    ],
+    "status": "needs_information",
+    "reason": "missing_world",
+    "missing_cells": [
+      [
+        1,
+        98,
+        7
+      ],
+      [
+        2,
+        98,
+        6
+      ],
+      [
+        2,
+        98,
+        7
+      ]
+    ],
+    "steps": 3
+  },
+  {
+    "movement": [
+      0,
+      -1
+    ],
+    "status": "feasible",
+    "reason": "verified",
+    "missing_cells": [],
+    "steps": 9
+  }
+]

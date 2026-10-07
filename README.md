@@ -4,29 +4,15 @@
 
 默认分支 `main` 是项目方唯一的公开发布线，只接收固定导出脚本生成并校验通过的整理后快照。主项目的完整开发分支和提交历史不会直接推入本仓库。三方审查分支可以单独存在，用于保存审查报告和复现材料；它们不改变 `main` 的正式状态。
 
-2026-10-07，M0 通过，M1 结构止损，未通过。下降规则迁移经行为验证予以保留：新版类型位置 79→42、下降 30→0，Session 5,046→4,994，只减少 52 行，未达到 100 行门槛；运动导航包净增 152 行。最终正式 Windows 完整正序、逆序均为 1,528/1,528，五组连续两轮与 M0 逐项一致，产品仍为 1,718/2,000，零异常和安全事件，D058/D061 性能全部通过。等待落地、NEEDS_STATE 重锚、信息等待、作业身份和身体责任仍由原 owner 管理。M2—M5 未授权；原 S1—S4 不再实施。结果见 [M0—M1 验收](docs/motion_navigation/acceptance/motion-navigation-middle-layer-M0-M1.md)，范围见[阶段方案](docs/motion_navigation/stages/motion-navigation-middle-layer-M0-M1-plan.md)、[D072](docs/motion_navigation/decisions/0072-end-post-f1-cleanup-and-validate-action-spec.md)和[动作接口](docs/motion_navigation/architecture/action-spec-v1.md)。紧凑证据位于 `evidence/motion_navigation/redesign-m0/` 和 `redesign-m1/`。
+2026-10-07，F2 通用非中心地面路线执行与终点接近已按冻结范围验收通过。普通开阔路线保留快速路径，已知碰撞或支撑边界每帧最多复核三个候选；潜行只由路线区间授权，完成区域保持在原 `GoalState` 内。正式 Windows 完整正逆各 1627/1627，五组通过，产品 1998/2000，旧成功退步 0；玩家站位 187/400 → 400/400。Fabric 冻结清单 93/93 符合各自判定，80 正例完成、40 次首条晚一 tick 实际应用，三组路线／持续输入用时比为 1.000／1.235／1.074，连续 10 tick 非中性停滞为 0。首个静止普通 Walk 补一 tick 中性等价证明，命令租约与 Session／Runtime 生命周期未改。
 
-Windows 是正式开发、自动验收和 Fabric 实机平台；Linux 仅作补充可移植性复核，不作为阶段关闭门槛。公开快照保存完整紧凑索引与原字节哈希，不包含本地 `.tmp` 或原始大型轨迹；D061 保留全部计时样本和 Gen2 事件，其他 GC 明细由主项目保管。
+范围见 [F2 阶段](docs/motion_navigation/stages/F2-non-center-ground-route-execution.md)、[架构](docs/motion_navigation/architecture/continuous-ground-route-execution-v1.md)和 [D074](docs/motion_navigation/decisions/0074-generalize-ground-route-execution-before-terminal-approach.md)，结果与限制见 [F2 验收](docs/motion_navigation/acceptance/F2-non-center-ground-route-execution.md)。紧凑证据位于 `evidence/motion_navigation/F2-ground-route-v1/final/`，原失败、逐项索引、来源和哈希均保留。外力仅按冻结试次判断；移动活塞观察、动态避障、路线优化器、疾跑路线和新动作尚未交付。
 
-历史 S0-R 已在 Windows 通过，原始结果仍保存在[结构整理验收](docs/motion_navigation/acceptance/post-F1-navigation-structure-cleanup.md)和 `evidence/motion_navigation/post-f1-structure-s0r/`。它当时使 S1 具备开始条件，该顺序现由 D072 取代。
+Windows 是正式开发、自动验收和 Fabric 实机平台；Linux 仅用于补充可移植性复核。公开快照不包含本地 `.tmp`、`artifacts`、凭据、世界存档或原始大型轨迹。F2 的详细轨迹比较和 Fabric 原始流审计仍需主项目保管的原始证据，紧凑摘要不能代替完整观察。`EXPORT-METADATA.json` 的来源提交标识本次公开整理；历史验收采集提交和当时的 dirty 状态仍按原记录保存。
 
-2026-10-04，R28 已按时间盒结束，正式批次为 **10／10**。R28-1、R28-4 按冻结范围完成；R28-3 完成限定安全与功能交付，但原完整阶段未通过；R28-5 未执行。协调代码净减少、两次统计查看、产品统计非退步、五 tick 修订响应、正式跟随和室内终点接近仍未通过。三方在 Linux 上对最终代码复跑运动导航 **1,207／1,207**、协调集合 **1,448／1,448**、补充故障 **4／4** 和 v7 **1,710／2,000**。迁移入口实际覆盖 **40／41**；`_wait_for_active_terminal` 没有场景进入，尚未证明可达或不可达。R28-4 的五个晚到下降结果是时序敏感变化，不记为产品能力提升。精简证据位于 `evidence/motion_navigation/r28-4-budget-v1/` 和 `evidence/motion_navigation/r28-3-generation-v1/`，收尾结论见 [R28 验收第 20 节](docs/motion_navigation/acceptance/navigation-coordination-convergence.md#20-r28-时间盒收尾)。当时下一阶段为正式跟随，后续结果见 F1 和 D072。
+历史 M0 通过，M1 结构止损，未通过；动作接口迁移保留，后续接口加固和 Driver 枚举生命周期整改已经完成。原 S1—S4 不再实施，M2—M5 未授权。原结果分别见 [M0／M1 验收](docs/motion_navigation/acceptance/motion-navigation-middle-layer-M0-M1.md)、[加固验收](docs/motion_navigation/acceptance/action-spec-hardening-driver-lifecycle.md)和 [D073](docs/motion_navigation/decisions/0073-accept-action-spec-and-retire-size-gates.md)，历史失败不回写。
 
-历史 v7 冻结参照为 **1,705／2,000**。产品清单加入按运动 tick 驱动的确定性交付延迟；减少的七项都属于“下降＋随机晚一 tick”。没有安全违规、异常或证据缺口。D055 的快速拒绝不再缩短完整求解测得的准备长度；平视二格下降正常和首条晚一 tick 的 Fabric 复验为 **2／2**。数据、源码指纹和失败保存在 `evidence/motion_navigation/r28-baseline-v7/`，结果与命令见 [R28 验收第 15 节](docs/motion_navigation/acceptance/navigation-coordination-convergence.md#15-后台交付延迟整改与-v7-量尺)。
-
-历史 v6 为 **1,712/2,000**，晚到下降 198/200。该轮运动导航 960/960，最终 Fabric 40/40；二十次首条晚到由实际应用账本核实。原结果、限制和失败继续保存在 `evidence/motion_navigation/r28-baseline-v6/`，没有用 v7 回填。
-
-历史 v5 为 **1,699/2,000**，晚到下降 185/200，固定非退步未通过。D054 的原修正及当时运动导航 951/951、协调结果和失败保持原范围，证据仍在 `evidence/motion_navigation/r28-baseline-v5/` 与验收第 13 节；没有用 v6 回填旧结果。
-
-D053 已接入共同出口、有限直线跨隙择优和连续高度尾段。该轮运动导航 **935/935**，四方向 Fabric **4/4**，用时 **45—47 tick**；空中没有反向或松键，落地接续空档为零。正常完成和失联恢复分别判断，原恢复资格保留，新增完整停止尾迹证明。证据在 `evidence/motion_navigation/action-continuation-quality-v1/`，结果与限制见 R28 验收第 12.8 节。完整组合、长期期限、独立拐角／墙接触和 R28 主线仍打开。
-
-D052 的历史首试点已保留动作恢复期限、将复杂重验证移到后台，并接入真实前缀与连续入口。当时限定“步行—一格跨隙—落地直行”四方向 Fabric 4/4，运动导航 914/914；证据在 `evidence/motion_navigation/action-continuity-v1/`。这份历史结果及原 v1—v4、演示失败不改写。
-
-D051 已撤回终点推演筛选和按失败文案改名，保留目标几何、末段直连、路线长度与依赖。v4 原八层为 1,589/1,600，玩家站位为 114/400，总计 1,703/2,000；比 v3 少完成三场边缘接近，比较检查如实未通过。800 个严格任务逐项不变，代表性 Fabric 绕墙 4/4 完成。v1—v3 与全部失败保持原记录，新证据在 `evidence/motion_navigation/r28-baseline-v4/`，范围见验收第 11 节。v4 是固定规则基线，不是产品非退步发布结论。
-
-886 项检查通过，1,448 组同输入协调记录的公共签名一致，四个额外故障场景通过。原脚下下降复现混用了传感器地形与旧碰撞世界；修正注入后 12 个变体均有界，其中六场仍未完成任务。新增门禁阻止这类矛盾测试输入，不放宽生产释放。每 tick 修改材质时的工作退场边界仍留给 R28-1。贴墙、边缘、持续目标、正式跟随及全路线平滑未提前接入。
-
-代表性 Fabric 12 个正式导航任务全部完成。原总批次因记录封装错误而失败，该结果保留；用实际保存的完整原始流独立复核，七项协议门槛全部通过。200 对组件样本不代表统计非退步验收，代表性 Fabric 不替代完整 M3。范围见[R28 验收第 9 节](docs/motion_navigation/acceptance/navigation-coordination-convergence.md#9-批次-24产品基线修正)。R28-1 迁移、持续目标、速率预算及正式跟随尚未实施，R27 和 M3 的原结论保持原范围。
+历史 F1 按“功能通过、结构未通过”保存；R28 按“时间盒结束，部分交付通过”保存。历史 S0-R、v1—v7、R27 和连续高度 M3 的结果与边界均保留在各自验收及 `evidence/motion_navigation/` 中，不用 F2 的新结果覆盖。历史入口见 [F1 验收](docs/motion_navigation/acceptance/F1-known-world-following.md)、[R28 验收](docs/motion_navigation/acceptance/navigation-coordination-convergence.md)和 [S0-R 验收](docs/motion_navigation/acceptance/post-F1-navigation-structure-cleanup.md)。
 
 当前已完成 B01 至 B10、C1-A 至 C1-C、C1-R 的 R0 至 R6、B11 固定放置与有限搭桥，以及 B12-A、B12-B。B12-A 固定了每次攻击的证据和分类重试，并接入 Minecraft 1.21 伤害来源事实。B12-B 让战斗先确定本帧视角，导航再按最终视角计算普通地面移动；追逐阶段会持续给出目标视角，导航同时记录每帧的移动决定原因。活动目标和真实墙体场景补齐了持续瞄准、遮挡后的导航、补看和权限撤销。动作证明的生效窗口修正和客户端额外推进一个 tick 时的局部安全恢复也已包含。正式 Fabric 结果与适用边界写在 `docs/motion_navigation/acceptance/`。
 
@@ -43,9 +29,9 @@ D051 已撤回终点推演筛选和按失败文案改名，保留目标几何、
 ## 先读什么
 
 1. `AGENTS.md`
-2. `docs/motion_navigation/stages/motion-navigation-middle-layer-M0-M1-plan.md`
-3. `docs/motion_navigation/acceptance/motion-navigation-middle-layer-M0-M1.md`
-4. `docs/motion_navigation/decisions/0048-converge-recovery-by-risk-and-product-evidence.md`
+2. `docs/motion_navigation/stages/F2-non-center-ground-route-execution.md`
+3. `docs/motion_navigation/acceptance/F2-non-center-ground-route-execution.md`
+4. `docs/motion_navigation/architecture/continuous-ground-route-execution-v1.md` 和 D074
 5. `docs/motion_navigation/architecture/navigation-coordination-v1.md`（第 17 节包含当前 R28 目标和已实施的持续目标语义）
 6. 当前实现和证据读 R27 阶段文档、`navigation-coordination-refactor.md` 第 20 节与 `defect-ledger.md`。
 7. 连续高度与物理范围读 M3、B09-R、B10 的对应 architecture 和 acceptance。
@@ -91,6 +77,20 @@ python scripts/export_motion_navigation_standalone.py verify --root .
 ```text
 python -m unittest discover -s tests/motion_nav -p "test_*.py" -v
 ```
+
+快速检查 F2 的路线、潜行区间、原目标完成区域和正式启动窗口：
+
+```text
+python -m unittest tests.motion_nav.test_f2_ground_route_gates tests.motion_nav.test_f2_non_center_ground_route tests.motion_nav.test_f2_ground_route_edge_guard tests.motion_nav.test_f2_ground_completion_region tests.motion_nav.test_f2_ground_start_window -q
+```
+
+重新生成 F2 的组件与玩家站位量尺时，必须使用新的空输出目录：
+
+```text
+python scripts/f2_ground_route_evidence.py --output output/f2-ground-route --workers 4
+```
+
+F2 的完整历史命令与采集环境保存在 `final/README.md`。其中 `reproduce/run_windows_checks.py` 沿用主项目 `.venv/python.exe` 路径；公开环境可按上述命令直接运行源码检查。历史详细对比与实机审计需要未公开的原始流，不属于仅凭公开快照可重跑的检查。
 
 快速检查 D055 的真实准备、后台复核、启动交付及首条晚到：
 

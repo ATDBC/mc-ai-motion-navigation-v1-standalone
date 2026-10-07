@@ -1,0 +1,439 @@
+{
+  "passed": true,
+  "cases": [
+    {
+      "late_ticks": 0,
+      "planned_look_won": true,
+      "generated_intent": {
+        "intent_id": "ordered/ca9f87fc3fb14dd9ba2c42843fb2d944/0/1/1",
+        "source_id": "ordered/ca9f87fc3fb14dd9ba2c42843fb2d944/0/1",
+        "episode_id": "episode-sim",
+        "observation_sequence_id": 0,
+        "priority": 200,
+        "submitted_at_monotonic_ns": 100000000,
+        "expires_at_monotonic_ns": 350000000,
+        "movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "look": null,
+        "operation": null,
+        "valid_for_ticks": 1,
+        "movement_requires_look": false,
+        "movement_look_tolerance_degrees": 0.0,
+        "movement_observed_yaw_limit_degrees": null,
+        "movement_conditioned_look_intent_id": "ordered/ca9f87fc3fb14dd9ba2c42843fb2d944/1/1/1",
+        "movement_tick_window": {
+          "earliest_tick": 3,
+          "latest_tick": 4
+        },
+        "schema_version": "mc2p.action-intent.v1"
+      },
+      "formal_prefix_yaw_radians": 0.2617993877991494,
+      "adopted_window": {
+        "earliest_tick": 3,
+        "latest_tick": 4
+      },
+      "actual_action": {
+        "episode_id": "episode-sim",
+        "request_sequence_id": 0,
+        "observation_sequence_id": 0,
+        "deadline_monotonic_ns": 350000000,
+        "movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "look": {
+          "yaw_delta_degrees": 15.0,
+          "pitch_delta_degrees": 0.0
+        },
+        "operation": null,
+        "valid_for_ticks": 1,
+        "cancel_request_sequence_id": null,
+        "schema_version": "mc2p.action-snapshot.v1"
+      },
+      "actual_record": {
+        "session": {
+          "value": "fixture:episode-sim:jvm-test"
+        },
+        "control_sequence": 0,
+        "action": {
+          "episode_id": "episode-sim",
+          "request_sequence_id": 0,
+          "observation_sequence_id": 0,
+          "deadline_monotonic_ns": 350000000,
+          "movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "look": {
+            "yaw_delta_degrees": 15.0,
+            "pitch_delta_degrees": 0.0
+          },
+          "operation": null,
+          "valid_for_ticks": 1,
+          "cancel_request_sequence_id": null,
+          "schema_version": "mc2p.action-snapshot.v1"
+        },
+        "requested_first_tick": 3,
+        "requested_last_tick": 3,
+        "latest_allowed_first_tick": 4,
+        "status": "applied",
+        "applied_ticks": [
+          3
+        ],
+        "samples": [
+          {
+            "schema_version": "mc2p.input-application.v1",
+            "movement_tick_id": 3,
+            "episode_id": "episode-sim",
+            "request_sequence_id": 0,
+            "sampled_at_jvm_ns": 3,
+            "state": "leased",
+            "forward": 1.0,
+            "strafe": 0.0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          }
+        ],
+        "resolved_at_tick": 3
+      }
+    },
+    {
+      "late_ticks": 1,
+      "planned_look_won": true,
+      "generated_intent": {
+        "intent_id": "ordered/90f5e6fe59514c2c8dade025c844556b/0/1/1",
+        "source_id": "ordered/90f5e6fe59514c2c8dade025c844556b/0/1",
+        "episode_id": "episode-sim",
+        "observation_sequence_id": 0,
+        "priority": 200,
+        "submitted_at_monotonic_ns": 100000000,
+        "expires_at_monotonic_ns": 350000000,
+        "movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "look": null,
+        "operation": null,
+        "valid_for_ticks": 1,
+        "movement_requires_look": false,
+        "movement_look_tolerance_degrees": 0.0,
+        "movement_observed_yaw_limit_degrees": null,
+        "movement_conditioned_look_intent_id": "ordered/90f5e6fe59514c2c8dade025c844556b/1/1/1",
+        "movement_tick_window": {
+          "earliest_tick": 3,
+          "latest_tick": 4
+        },
+        "schema_version": "mc2p.action-intent.v1"
+      },
+      "formal_prefix_yaw_radians": 0.2617993877991494,
+      "adopted_window": {
+        "earliest_tick": 3,
+        "latest_tick": 4
+      },
+      "actual_action": {
+        "episode_id": "episode-sim",
+        "request_sequence_id": 0,
+        "observation_sequence_id": 0,
+        "deadline_monotonic_ns": 350000000,
+        "movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "look": {
+          "yaw_delta_degrees": 15.0,
+          "pitch_delta_degrees": 0.0
+        },
+        "operation": null,
+        "valid_for_ticks": 1,
+        "cancel_request_sequence_id": null,
+        "schema_version": "mc2p.action-snapshot.v1"
+      },
+      "actual_record": {
+        "session": {
+          "value": "fixture:episode-sim:jvm-test"
+        },
+        "control_sequence": 0,
+        "action": {
+          "episode_id": "episode-sim",
+          "request_sequence_id": 0,
+          "observation_sequence_id": 0,
+          "deadline_monotonic_ns": 350000000,
+          "movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "look": {
+            "yaw_delta_degrees": 15.0,
+            "pitch_delta_degrees": 0.0
+          },
+          "operation": null,
+          "valid_for_ticks": 1,
+          "cancel_request_sequence_id": null,
+          "schema_version": "mc2p.action-snapshot.v1"
+        },
+        "requested_first_tick": 3,
+        "requested_last_tick": 3,
+        "latest_allowed_first_tick": 4,
+        "status": "applied",
+        "applied_ticks": [
+          4
+        ],
+        "samples": [
+          {
+            "schema_version": "mc2p.input-application.v1",
+            "movement_tick_id": 4,
+            "episode_id": "episode-sim",
+            "request_sequence_id": 0,
+            "sampled_at_jvm_ns": 4,
+            "state": "leased",
+            "forward": 1.0,
+            "strafe": 0.0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          }
+        ],
+        "resolved_at_tick": 4
+      }
+    },
+    {
+      "late_ticks": 2,
+      "planned_look_won": true,
+      "generated_intent": {
+        "intent_id": "ordered/52c8f671e8f940c3928113c5a3ab3cb9/0/1/1",
+        "source_id": "ordered/52c8f671e8f940c3928113c5a3ab3cb9/0/1",
+        "episode_id": "episode-sim",
+        "observation_sequence_id": 0,
+        "priority": 200,
+        "submitted_at_monotonic_ns": 100000000,
+        "expires_at_monotonic_ns": 350000000,
+        "movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "look": null,
+        "operation": null,
+        "valid_for_ticks": 1,
+        "movement_requires_look": false,
+        "movement_look_tolerance_degrees": 0.0,
+        "movement_observed_yaw_limit_degrees": null,
+        "movement_conditioned_look_intent_id": "ordered/52c8f671e8f940c3928113c5a3ab3cb9/1/1/1",
+        "movement_tick_window": {
+          "earliest_tick": 3,
+          "latest_tick": 4
+        },
+        "schema_version": "mc2p.action-intent.v1"
+      },
+      "formal_prefix_yaw_radians": 0.2617993877991494,
+      "adopted_window": {
+        "earliest_tick": 3,
+        "latest_tick": 4
+      },
+      "actual_action": {
+        "episode_id": "episode-sim",
+        "request_sequence_id": 0,
+        "observation_sequence_id": 0,
+        "deadline_monotonic_ns": 350000000,
+        "movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "look": {
+          "yaw_delta_degrees": 15.0,
+          "pitch_delta_degrees": 0.0
+        },
+        "operation": null,
+        "valid_for_ticks": 1,
+        "cancel_request_sequence_id": null,
+        "schema_version": "mc2p.action-snapshot.v1"
+      },
+      "actual_record": {
+        "session": {
+          "value": "fixture:episode-sim:jvm-test"
+        },
+        "control_sequence": 0,
+        "action": {
+          "episode_id": "episode-sim",
+          "request_sequence_id": 0,
+          "observation_sequence_id": 0,
+          "deadline_monotonic_ns": 350000000,
+          "movement": {
+            "forward": 1,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "look": {
+            "yaw_delta_degrees": 15.0,
+            "pitch_delta_degrees": 0.0
+          },
+          "operation": null,
+          "valid_for_ticks": 1,
+          "cancel_request_sequence_id": null,
+          "schema_version": "mc2p.action-snapshot.v1"
+        },
+        "requested_first_tick": 3,
+        "requested_last_tick": 3,
+        "latest_allowed_first_tick": 4,
+        "status": "applied_outside_window",
+        "applied_ticks": [
+          5
+        ],
+        "samples": [
+          {
+            "schema_version": "mc2p.input-application.v1",
+            "movement_tick_id": 5,
+            "episode_id": "episode-sim",
+            "request_sequence_id": 0,
+            "sampled_at_jvm_ns": 5,
+            "state": "leased",
+            "forward": 1.0,
+            "strafe": 0.0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          }
+        ],
+        "resolved_at_tick": 5
+      }
+    },
+    {
+      "late_ticks": 0,
+      "planned_look_won": false,
+      "generated_intent": {
+        "intent_id": "ordered/99bc72e6ef574f87a95b22dbe7e94532/0/1/1",
+        "source_id": "ordered/99bc72e6ef574f87a95b22dbe7e94532/0/1",
+        "episode_id": "episode-sim",
+        "observation_sequence_id": 0,
+        "priority": 200,
+        "submitted_at_monotonic_ns": 100000000,
+        "expires_at_monotonic_ns": 350000000,
+        "movement": {
+          "forward": 1,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "look": null,
+        "operation": null,
+        "valid_for_ticks": 1,
+        "movement_requires_look": false,
+        "movement_look_tolerance_degrees": 0.0,
+        "movement_observed_yaw_limit_degrees": null,
+        "movement_conditioned_look_intent_id": "ordered/99bc72e6ef574f87a95b22dbe7e94532/1/1/1",
+        "movement_tick_window": {
+          "earliest_tick": 3,
+          "latest_tick": 4
+        },
+        "schema_version": "mc2p.action-intent.v1"
+      },
+      "formal_prefix_yaw_radians": 0.2617993877991494,
+      "adopted_window": null,
+      "actual_action": {
+        "episode_id": "episode-sim",
+        "request_sequence_id": 0,
+        "observation_sequence_id": 0,
+        "deadline_monotonic_ns": 600000000,
+        "movement": {
+          "forward": 0,
+          "strafe": 0,
+          "jump": false,
+          "sneak": false,
+          "sprint": false
+        },
+        "look": {
+          "yaw_delta_degrees": -20.0,
+          "pitch_delta_degrees": 0.0
+        },
+        "operation": null,
+        "valid_for_ticks": 1,
+        "cancel_request_sequence_id": null,
+        "schema_version": "mc2p.action-snapshot.v1"
+      },
+      "actual_record": {
+        "session": {
+          "value": "fixture:episode-sim:jvm-test"
+        },
+        "control_sequence": 0,
+        "action": {
+          "episode_id": "episode-sim",
+          "request_sequence_id": 0,
+          "observation_sequence_id": 0,
+          "deadline_monotonic_ns": 600000000,
+          "movement": {
+            "forward": 0,
+            "strafe": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          },
+          "look": {
+            "yaw_delta_degrees": -20.0,
+            "pitch_delta_degrees": 0.0
+          },
+          "operation": null,
+          "valid_for_ticks": 1,
+          "cancel_request_sequence_id": null,
+          "schema_version": "mc2p.action-snapshot.v1"
+        },
+        "requested_first_tick": 3,
+        "requested_last_tick": 3,
+        "latest_allowed_first_tick": 3,
+        "status": "applied",
+        "applied_ticks": [
+          3
+        ],
+        "samples": [
+          {
+            "schema_version": "mc2p.input-application.v1",
+            "movement_tick_id": 3,
+            "episode_id": "episode-sim",
+            "request_sequence_id": 0,
+            "sampled_at_jvm_ns": 3,
+            "state": "neutral",
+            "forward": 0.0,
+            "strafe": 0.0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false
+          }
+        ],
+        "resolved_at_tick": 3
+      }
+    }
+  ],
+  "test_file": "tests/motion_nav/test_f2_ground_start_window.py",
+  "old_multi_point_exclusion_mutation_detected": true,
+  "test_sha256": "35e716543708c8278b329a27b4404b474685232b611c70dfdc832bd27fd9051f",
+  "formal_chain": "NavigationSession -> RuntimeNavigationDriver -> ActionRouteExecutor -> PlayerRuntimeV1 -> InputApplicationLedger",
+  "fixture": "Real planner multi-point Walk; calculator settles neutral entry; declared 15-degree planned look."
+}

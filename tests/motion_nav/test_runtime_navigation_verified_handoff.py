@@ -19,7 +19,7 @@ from mc2p.motion_nav.movement_transition import MovementMode
 from mc2p.motion_nav.online_motion import InputApplicationStatus
 from mc2p.runtime.backend_v1 import BackendStepResultV1
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1
-from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
+from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver, RuntimeNavigationDriverState
 from tests.follow_v3_fixtures import follow_snapshot, observed_block
 from tests.motion_nav.test_b07_step_route import step_profile
 from tests.motion_nav.test_b07_surface_planning import ordinary_profile
@@ -309,7 +309,7 @@ class RuntimeVerifiedMotionHandoffTests(unittest.TestCase):
         self.assertIsNone(applied_then_skipped.report.failure)
         self.assertIsNone(recovered.report.failure)
         self.assertEqual(runtime.state.value, "ready")
-        self.assertNotEqual(driver.state, "failed")
+        self.assertNotEqual(driver.state, RuntimeNavigationDriverState.FAILED)
         self.assertIsNotNone(driver.source)
         self.assertEqual(recovered.decision.action.movement, MovementV1())
         self.assertEqual(
@@ -329,7 +329,7 @@ class RuntimeVerifiedMotionHandoffTests(unittest.TestCase):
 
         self.assertIsNone(result.report.failure)
         self.assertEqual(runtime.state.value, "ready")
-        self.assertIn(driver.state, {"stopping", "failed"})
+        self.assertIn(driver.state, {RuntimeNavigationDriverState.STOPPING, RuntimeNavigationDriverState.FAILED})
         self.assertIsNotNone(driver.source)
         self.assertIs(session.report.state, NavigationSessionState.CANCELLING)
         self.assertIsNotNone(session._executor)

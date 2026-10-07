@@ -27,7 +27,7 @@ from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1, RuntimeStateV1
 from mc2p.skills.fixed_melee import CombatTargetV1
 from mc2p.skills.melee_strike_driver import MeleeStrikeDriver
 from mc2p.skills.moving_melee_driver import MovingMeleeDriver
-from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
+from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver, RuntimeNavigationDriverState
 from scripts.control_probe_core import append_jsonl, write_json_atomic
 from scripts.c1_moving_melee_runtime import (
     _await_seed_receipt, validate_seed_receipt,
@@ -903,12 +903,12 @@ def _run_positive(
                     and result.decision.action.movement == expected):
                 movement_id = dict(result.decision.selected_intents).get("movement")
                 break
-            if navigation.state in {"success", "failed", "cancelled"}:
+            if navigation.state in {RuntimeNavigationDriverState.SUCCESS, RuntimeNavigationDriverState.FAILED, RuntimeNavigationDriverState.CANCELLED}:
                 break
         if movement_id is None:
             raise RuntimeError(
                 f"B12-B route did not produce {trial['direction']} movement: "
-                f"{navigation.state}/{navigation.reason}"
+                f"{navigation.state.value}/{navigation.reason}"
             )
 
         strike = MeleeStrikeDriver(runtime, task_deadline_ns=deadline_ns)
@@ -1145,11 +1145,11 @@ def _navigation_until_moving(
         if result.decision is not None \
                 and _nonneutral_movement(result.decision.action.movement):
             return
-        if navigation.state in {"success", "failed", "cancelled"}:
+        if navigation.state in {RuntimeNavigationDriverState.SUCCESS, RuntimeNavigationDriverState.FAILED, RuntimeNavigationDriverState.CANCELLED}:
             break
     raise RuntimeError(
         "B12-B boundary route did not produce movement: "
-        f"{navigation.state}/{navigation.reason}"
+        f"{navigation.state.value}/{navigation.reason}"
     )
 
 

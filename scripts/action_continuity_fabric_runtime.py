@@ -22,7 +22,7 @@ from mc2p.motion_nav.world_model import Aabb
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.motion_worker import MotionSolverWorker
 from mc2p.motion_nav.planner_worker import PlannerWorker
-from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
+from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver, RuntimeNavigationDriverState
 from scripts.control_probe_core import write_json_atomic
 from scripts.r25_planning_information_runtime import _task
 
@@ -38,7 +38,9 @@ SOURCES = (
     "mc2p/motion_nav/known_map_planner.py",
     "mc2p/motion_nav/planner_worker.py", "mc2p/motion_nav/planning_coordinator.py",
 )
-TERMINAL = {"success", "failed", "cancelled", "stopped", "interaction_required"}
+TERMINAL = {RuntimeNavigationDriverState.SUCCESS, RuntimeNavigationDriverState.FAILED,
+            RuntimeNavigationDriverState.CANCELLED, RuntimeNavigationDriverState.STOPPED,
+            RuntimeNavigationDriverState.INTERACTION_REQUIRED}
 
 
 class _ObservedMotionWorker:
@@ -381,7 +383,7 @@ def run_action_continuity_runtime(runtime, backend, episode, directory, deadline
                         observation_sequence=frame.body.sequence_id, movement_tick=frame.body.movement_tick_id,
                         position=frame.body.position, velocity=frame.body.velocity_blocks_per_second,
                         on_ground=frame.body.is_on_ground, pose=frame.body.pose, yaw=frame.body.yaw_radians,
-                        health=frame.body.health_points, state=driver.state, reason=driver.reason,
+                        health=frame.body.health_points, state=driver.state.value, reason=driver.reason,
                         controller_ids=session.diagnostics.controller_ids, source_bound=driver.source is not None,
                         input_samples=[asdict(sample) for sample in samples], input_records=records,
                         winning_activity=None if fd.movement_activity is None else asdict(fd.movement_activity),
@@ -403,9 +405,10 @@ def run_action_continuity_runtime(runtime, backend, episode, directory, deadline
                     if driver.state in TERMINAL or deadline_ns - time.perf_counter_ns() < 8_000_000_000:
                         break
                     tick("navigation")
-                expected = 'cancelled' if generation_operation == 'cancel' else 'success'
+                expected = (RuntimeNavigationDriverState.CANCELLED
+                    if generation_operation == 'cancel' else RuntimeNavigationDriverState.SUCCESS)
                 required_events = 2 if generation_operation == 'double' else 1
-                trial.update(outcome=driver.state, reason=driver.reason,
+                trial.update(outcome=driver.state.value, reason=driver.reason,
                     passed=driver.state == expected and (not generation_operation or len(generation_events) == required_events),
                     generation_events=generation_events,
                     late_injection_applied=delay_injected,

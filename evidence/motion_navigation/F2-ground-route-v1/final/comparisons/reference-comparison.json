@@ -1,0 +1,13 @@
+{
+  "cases": 16,
+  "changed_ids": [],
+  "all_success": true,
+  "source": "task4/player-reference-runs.jsonl",
+  "fields": [
+    "input_sha256",
+    "outcome",
+    "reason",
+    "trajectory_sha256",
+    "inputs_sha256"
+  ]
+}

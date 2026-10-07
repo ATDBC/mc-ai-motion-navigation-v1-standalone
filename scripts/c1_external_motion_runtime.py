@@ -20,6 +20,7 @@ from mc2p.motion_nav.navigation_session import (
     NavigationSession, NavigationSessionProfiles,
 )
 from mc2p.skills.fixed_melee import CombatTargetV1
+from mc2p.skills.navigation_session_driver import RuntimeNavigationDriverState
 from mc2p.skills.moving_melee_driver import MovingMeleeDriver
 from scripts.c1_moving_melee_runtime import (
     PLAYER_START,
@@ -396,7 +397,8 @@ def _run_negative(
     recovery = driver.recovery_driver
     if injection == "late_old_plan":
         if old_approach is not None:
-            old_approach.state = "success"
+            # Controlled negative injection: a late report belongs to a retired driver.
+            old_approach._set_state(RuntimeNavigationDriverState.SUCCESS, old_approach.reason)
         driver.tick(profile, min(deadline_ns, time.perf_counter_ns() + 3_000_000_000))
         passed = driver.recovery_driver is recovery \
             and driver.report.state == "recovering_external_motion"

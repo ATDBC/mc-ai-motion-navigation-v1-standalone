@@ -40,6 +40,18 @@ from mc2p.runtime.player_runtime_v1 import (
 _STEP_WINDOW_NS = 500_000_000
 
 
+class RuntimeNavigationDriverState(StrEnum):
+    READY = "ready"
+    RUNNING = "running"
+    STOPPING = "stopping"
+    SUCCESS = "success"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+    STOPPED = "stopped"
+    INTERACTION_REQUIRED = "interaction_required"
+    INTERACTION_SUSPENDED = "interaction_suspended"
+
+
 class _ReleaseResult(StrEnum):
     RELEASED = "released"
     PENDING = "pending"
@@ -95,7 +107,7 @@ class RuntimeNavigationDriver:
             "navigation_v1"
         )
         self.source: IntentSourceV1 | None = None
-        self.state = "ready"
+        self._state = RuntimeNavigationDriverState.READY
         self.reason = "not_started"
         self._goal_id: str | None = None
         self._goal_revision: int | None = None
@@ -104,6 +116,16 @@ class RuntimeNavigationDriver:
         self._prepared_proposal: NavigationSessionProposal | None = None
         self._last_frame_diagnostics: NavigationFrameDiagnostics | None = None
         self._last_runtime_failure: str | None = None
+
+    @property
+    def state(self) -> RuntimeNavigationDriverState:
+        return self._state
+
+    def _set_state(self, state: RuntimeNavigationDriverState, reason: str) -> None:
+        if type(state) is not RuntimeNavigationDriverState:
+            raise ContractViolation('runtime navigation state must be an enum')
+        self._state = state
+        self.reason = reason
 
     @property
     def last_frame_diagnostics(self) -> NavigationFrameDiagnostics | None:
@@ -140,7 +162,7 @@ class RuntimeNavigationDriver:
         ),
     ) -> None:
         require_nonnegative_int(now_ns, "runtime navigation start time")
-        if self.source is not None or self.state not in {"ready", "stopped"}:
+        if self.source is not None or self.state not in {RuntimeNavigationDriverState.READY, RuntimeNavigationDriverState.STOPPED}:
             raise ContractViolation("runtime navigation driver already owns input")
         if type(goal) is not GoalState:
             raise ContractViolation("runtime navigation requires GoalState")
@@ -221,8 +243,8 @@ class RuntimeNavigationDriver:
         if type(profile) is not BehaviorProfileV0:
             raise ContractViolation("runtime navigation tick requires BehaviorProfileV0")
         if self.source is None or self.state in {
-            "ready", "success", "failed", "cancelled", "stopped",
-            "interaction_required",
+            RuntimeNavigationDriverState.READY, RuntimeNavigationDriverState.SUCCESS, RuntimeNavigationDriverState.FAILED, RuntimeNavigationDriverState.CANCELLED, RuntimeNavigationDriverState.STOPPED,
+            RuntimeNavigationDriverState.INTERACTION_REQUIRED,
         }:
             raise ContractViolation("runtime navigation driver cannot tick")
         try:
@@ -255,8 +277,8 @@ class RuntimeNavigationDriver:
         if self._prepared_deadline_ns is not None:
             raise ContractViolation("runtime navigation already has a prepared frame")
         if self.source is None or self.state in {
-            "ready", "success", "failed", "cancelled", "stopped",
-            "interaction_required",
+            RuntimeNavigationDriverState.READY, RuntimeNavigationDriverState.SUCCESS, RuntimeNavigationDriverState.FAILED, RuntimeNavigationDriverState.CANCELLED, RuntimeNavigationDriverState.STOPPED,
+            RuntimeNavigationDriverState.INTERACTION_REQUIRED,
         }:
             raise ContractViolation("runtime navigation driver cannot prepare")
         now = self._clock()
@@ -402,11 +424,10 @@ class RuntimeNavigationDriver:
                     and type(result.observation) is ObservationSnapshotV3):
                 self.session.ingest(result.observation)
             self._sync_report()
-        if self.state in {"failed", "cancelled"}:
+        if self.state in {RuntimeNavigationDriverState.FAILED, RuntimeNavigationDriverState.CANCELLED}:
             release = self._release_if_quiescent()
             if release is _ReleaseResult.PENDING:
-                self.state = "stopping"
-                self.reason = "body_handoff_waiting_for_evidence"
+                self._set_state(RuntimeNavigationDriverState.STOPPING, "body_handoff_waiting_for_evidence")
             elif release is _ReleaseResult.CONTROL_UNAVAILABLE:
                 self._finish_control_unavailable()
 
@@ -445,19 +466,18 @@ class RuntimeNavigationDriver:
         # A stopping session must advance its body owner before querying
         # release; the query itself can finalize a quiescent probe.
         release = (_ReleaseResult.PENDING
-                   if self.state == "stopping" and self.runtime.state is RuntimeStateV1.READY
+                   if self.state == RuntimeNavigationDriverState.STOPPING and self.runtime.state is RuntimeStateV1.READY
                    else self._release_if_quiescent())
         if release is _ReleaseResult.CONTROL_UNAVAILABLE:
             self._finish_control_unavailable()
             raise ContractViolation("CONTROL_UNAVAILABLE: navigation cannot continue safe stop")
-        if self.state == "stopping" or release is _ReleaseResult.PENDING:
+        if self.state == RuntimeNavigationDriverState.STOPPING or release is _ReleaseResult.PENDING:
             if self.runtime.state is not RuntimeStateV1.READY:
                 self._finish_control_unavailable()
                 raise ContractViolation(
                     "CONTROL_UNAVAILABLE: navigation cannot continue safe stop"
                 )
-            self.state = "stopping"
-            self.reason = "body_handoff_waiting_for_evidence"
+            self._set_state(RuntimeNavigationDriverState.STOPPING, "body_handoff_waiting_for_evidence")
             return self.tick(profile, self._clock() + _STEP_WINDOW_NS)
         now = self._clock()
         deadline = now + _STEP_WINDOW_NS
@@ -498,15 +518,14 @@ class RuntimeNavigationDriver:
             self.session.ingest(self.runtime.observation)
             self.session.cancel(reason)
         self._sync_report()
-        if self.state == "stopping":
+        if self.state == RuntimeNavigationDriverState.STOPPING:
             return False
         release = self._release_if_quiescent()
         if release is _ReleaseResult.CONTROL_UNAVAILABLE:
             self._finish_control_unavailable()
             return self.source is None
         if release is _ReleaseResult.PENDING:
-            self.state = "stopping"
-            self.reason = "body_handoff_waiting_for_evidence"
+            self._set_state(RuntimeNavigationDriverState.STOPPING, "body_handoff_waiting_for_evidence")
             return False
         self.reason = reason
         return True
@@ -557,8 +576,7 @@ class RuntimeNavigationDriver:
             self.session.ingest(self.runtime.observation)
             self.session.cancel(reason)
         self._release_source()
-        self.state = "stopped"
-        self.reason = reason
+        self._set_state(RuntimeNavigationDriverState.STOPPED, reason)
 
     def suspend_for_interaction(self) -> bool:
         """Release movement input while preserving the final navigation goal."""
@@ -570,17 +588,15 @@ class RuntimeNavigationDriver:
             self.runtime.observation, self.runtime.input_ledger,
         )
         if evidence.disposition is not HandoffDisposition.QUIESCENT:
-            self.state = "stopping"
-            self.reason = "interaction_body_handoff_pending"
+            self._set_state(RuntimeNavigationDriverState.STOPPING, "interaction_body_handoff_pending")
             return False
         self._release_source()
-        self.state = "interaction_suspended"
-        self.reason = "world_interaction_owns_input"
+        self._set_state(RuntimeNavigationDriverState.INTERACTION_SUSPENDED, "world_interaction_owns_input")
         return True
 
     def resume_after_interaction(self) -> None:
         """Rebind after the confirmed world change has reached Runtime's world owner."""
-        if self.source is not None or self.state != "interaction_suspended":
+        if self.source is not None or self.state != RuntimeNavigationDriverState.INTERACTION_SUSPENDED:
             raise ContractViolation("navigation is not suspended for interaction")
         source = self.runtime.register_ordered_source("navigation-session")
         self.session.bind_source(source)
@@ -601,19 +617,18 @@ class RuntimeNavigationDriver:
     def _sync_report(self, *, unavailable_runtime: RuntimeStateV1 | None = None) -> None:
         report = self.session.report
         mapping = {
-            NavigationSessionState.CANCELLING: "stopping",
-            NavigationSessionState.COMPLETE: "success",
-            NavigationSessionState.CANCELLED: "cancelled",
-            NavigationSessionState.FAILED: "failed",
-            NavigationSessionState.CLOSED: "failed",
-            NavigationSessionState.REQUIRES_INTERACTION: "interaction_required",
+            NavigationSessionState.CANCELLING: RuntimeNavigationDriverState.STOPPING,
+            NavigationSessionState.COMPLETE: RuntimeNavigationDriverState.SUCCESS,
+            NavigationSessionState.CANCELLED: RuntimeNavigationDriverState.CANCELLED,
+            NavigationSessionState.FAILED: RuntimeNavigationDriverState.FAILED,
+            NavigationSessionState.CLOSED: RuntimeNavigationDriverState.FAILED,
+            NavigationSessionState.REQUIRES_INTERACTION: RuntimeNavigationDriverState.INTERACTION_REQUIRED,
         }
-        self.state = mapping.get(report.state, "running")
-        self.reason = report.reason
+        self._set_state(mapping.get(report.state, RuntimeNavigationDriverState.RUNNING), report.reason)
         if unavailable_runtime is not None:
             if unavailable_runtime is RuntimeStateV1.READY:
                 raise ContractViolation("ready Runtime still has control")
-            self.state, self.reason = "failed", "control_unavailable"
+            self._set_state(RuntimeNavigationDriverState.FAILED, "control_unavailable")
 
     def _task(self, deadline_ns: int, reason: str | None = None) -> TaskIntentV0:
         return TaskIntentV0(

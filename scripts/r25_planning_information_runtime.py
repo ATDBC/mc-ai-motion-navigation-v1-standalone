@@ -17,7 +17,7 @@ from mc2p.contracts.task import (
 from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, MovementMode
 from mc2p.motion_nav.navigation_session import NavigationSession, NavigationSessionProfiles
 from mc2p.motion_nav.world_model import Aabb, CellKnowledge
-from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
+from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver, RuntimeNavigationDriverState
 from scripts.control_probe_core import append_jsonl, write_json_atomic
 
 
@@ -209,10 +209,10 @@ def run_r25_planning_information_runtime(
             }
             frame_rows.append(row)
             append_jsonl(directory / "r25-planning-information-frames.jsonl", row)
-            if driver.state in {"success", "failed", "cancelled"}:
+            if driver.state in {RuntimeNavigationDriverState.SUCCESS, RuntimeNavigationDriverState.FAILED, RuntimeNavigationDriverState.CANCELLED}:
                 break
         passed = (
-            driver.state == "success"
+            driver.state == RuntimeNavigationDriverState.SUCCESS
             and _PATH_CLEARANCE in requested_positions
             and (
                 _STRUCTURAL_UNKNOWN not in first_requested_sequence
@@ -238,7 +238,7 @@ def run_r25_planning_information_runtime(
         summary = {
             "schema_version": "mc2p.r25-planning-information.v1",
             "passed": passed,
-            "driver_state": driver.state,
+            "driver_state": driver.state.value,
             "driver_reason": driver.reason,
             "path_clearance": list(_PATH_CLEARANCE),
             "structural_unknown": list(_STRUCTURAL_UNKNOWN),
@@ -273,9 +273,9 @@ def run_r25_planning_information_runtime(
             {"name": "r27_formal_successor_gap", "passed": summary["r27_successor_gap"]["passed"]},
         ]
     finally:
-        if driver.state not in {"success", "failed", "cancelled", "stopped"}:
+        if driver.state not in {RuntimeNavigationDriverState.SUCCESS, RuntimeNavigationDriverState.FAILED, RuntimeNavigationDriverState.CANCELLED, RuntimeNavigationDriverState.STOPPED}:
             driver.stop(profile, "r25_probe_cleanup")
         if driver.source is not None and driver.state in {
-                "success", "failed", "cancelled", "stopped"}:
+                RuntimeNavigationDriverState.SUCCESS, RuntimeNavigationDriverState.FAILED, RuntimeNavigationDriverState.CANCELLED, RuntimeNavigationDriverState.STOPPED}:
             driver.release("r25_probe_complete")
         session.close()

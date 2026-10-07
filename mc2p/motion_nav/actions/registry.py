@@ -3,7 +3,7 @@ from types import MappingProxyType
 from mc2p.contracts.common import ContractViolation
 from mc2p.contracts.action_v1 import MovementV1
 from mc2p.motion_nav.motion_solver import MotionSolveKind
-from mc2p.motion_nav.actions.contracts import ActionSpec, BodyCommitment, ControllerFamily, StopHold
+from mc2p.motion_nav.actions.contracts import ActionSpec, BodyCommitment, ActionControllerAdapter, StopHold
 
 
 class ActionRegistry:
@@ -20,7 +20,6 @@ class ActionRegistry:
                     or type(spec.needs_background_solving) is not bool
                     or type(spec.tracks_damage) is not bool
                     or type(spec.stop_hold) is not StopHold
-                    or type(spec.controller_family) is not ControllerFamily
                     or any(not callable(getattr(spec, member)) for member in (
                         'expected_damage_points', 'completed', 'entry_observation',
                         'precondition', 'damage_committed'))):
@@ -35,9 +34,18 @@ class ActionRegistry:
                     raise ContractViolation('background action requires solve kind and geometry')
             elif spec.solve_kind is not None or spec.solve_geometry is not None:
                 raise ContractViolation('non-solving action must explicitly omit solve geometry')
-            if ((spec.controller_family is ControllerFamily.AIR or spec.controller_factory is not None)
-                    and not callable(spec.controller_factory)):
-                raise ContractViolation('action controller factory must be explicit')
+            adapter = spec.controller_adapter
+            if adapter is not None and type(adapter) is not ActionControllerAdapter:
+                raise ContractViolation('action controller adapter must be typed')
+            if (hold.same_frame_protection
+                    and (adapter is None or not callable(adapter.stop_protection))):
+                raise ContractViolation('same-frame protection requires an adapter operation')
+            if adapter is not None:
+                if (type(adapter) is not ActionControllerAdapter
+                        or any(not callable(getattr(adapter, name))
+                               for name in ('create', 'entry_limits', 'interpret'))
+                        or adapter.stop_protection is not None and not callable(adapter.stop_protection)):
+                    raise ContractViolation('action controller adapter must declare all operations')
             if spec.segment_type in by_type:
                 raise ContractViolation('duplicate action declaration')
             by_type[spec.segment_type] = spec

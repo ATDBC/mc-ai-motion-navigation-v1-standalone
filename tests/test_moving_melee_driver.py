@@ -16,6 +16,7 @@ from mc2p.skills.engagement_memory import EngagementEventKind
 from mc2p.skills.attack_evidence import AttackTaskOutcome
 from mc2p.skills.melee_strike_driver import MeleeStrikeDriver, MeleeStrikeOutcome
 from mc2p.skills.moving_melee_driver import MAX_REAPPROACHES, MovingMeleeDriver
+from mc2p.skills.navigation_session_driver import RuntimeNavigationDriverState
 from tests.navigation_session_fixtures import FakeNavigationSession
 from tests.test_fixed_melee_driver import MeleeBackend, TRACK
 from tests.test_player_runtime import _RecordingTrace
@@ -76,7 +77,9 @@ class MovingMeleeDriverTests(unittest.TestCase):
         self.assertIsNone(driver.strike_driver)
 
         self.backend.distance = 2.5
-        driver.approach_driver.state = "success"
+        driver.approach_driver.session.state = NavigationSessionState.COMPLETE
+        driver.approach_driver.session.reason = "test_route_complete"
+        driver.approach_driver._sync_report()
         self.tick(driver)
         while driver.report.confirmed_hits < 2:
             self.tick(driver)
@@ -256,7 +259,9 @@ class MovingMeleeDriverTests(unittest.TestCase):
         driver.start(self.target, self.clock[0])
         nav_source = driver.approach_driver.source.source_id
         self.backend.distance = 2.5
-        driver.approach_driver.state = "success"
+        driver.approach_driver.session.state = NavigationSessionState.COMPLETE
+        driver.approach_driver.session.reason = "test_route_complete"
+        driver.approach_driver._sync_report()
         release = self.tick(driver)
         self.assertFalse(any(value.startswith(nav_source + "/")
                              for _, value in release.decision.selected_intents))
@@ -274,7 +279,9 @@ class MovingMeleeDriverTests(unittest.TestCase):
         ).succeeded)
         driver = self.driver()
         driver.start(self.target, self.clock[0])
-        driver.approach_driver.state = "success"
+        driver.approach_driver.session.state = NavigationSessionState.COMPLETE
+        driver.approach_driver.session.reason = "test_route_complete"
+        driver.approach_driver._sync_report()
         self.backend.distance = 6.0
 
         changed = replace(driver._moving_goal, changed=True, reason="target_moved")
@@ -416,7 +423,7 @@ class MovingMeleeDriverTests(unittest.TestCase):
         self.assertIsNotNone(driver.recovery_driver)
         self.assertEqual(driver.report.state, "recovering_external_motion")
         self.assertEqual(driver.report.external_motion_events, 1)
-        self.assertEqual(old_approach.state, "stopped")
+        self.assertIs(old_approach.state, RuntimeNavigationDriverState.STOPPED)
 
         self.backend.own_velocity = (.02, 0.0, 0.0)
         self.tick(driver)
@@ -701,7 +708,8 @@ class MovingMeleeDriverTests(unittest.TestCase):
         original_tick = first.tick
         def fail_once(profile, deadline):
             result = original_tick(profile, deadline)
-            first.state, first.reason = "blocked", "no_admissible_candidate"
+            first.session.handle_internal_contract_failure("no_admissible_candidate")
+            first._sync_report()
             return result
         first.tick = fail_once
         self.tick(driver)

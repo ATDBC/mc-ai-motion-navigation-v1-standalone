@@ -12,6 +12,32 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class PublicRepositoryCompletenessTests(unittest.TestCase):
+    def test_f2_snapshot_selects_formal_tools_and_final_evidence(self):
+        selected_paths = {
+            path.as_posix() for path in collect_export_files(load_manifest())
+        }
+        required = (
+            "scripts/f2_ground_route_evidence.py",
+            "scripts/f2_ground_route_quality.py",
+            "scripts/f2_ground_route_runtime.py",
+            "docs/superpowers/plans/2026-10-07-non-center-ground-route-execution.md",
+            "docs/motion_navigation/architecture/continuous-ground-route-execution-v1.md",
+            "docs/motion_navigation/stages/F2-non-center-ground-route-execution.md",
+            "docs/motion_navigation/acceptance/F2-non-center-ground-route-execution.md",
+            "docs/motion_navigation/decisions/0074-generalize-ground-route-execution-before-terminal-approach.md",
+            "tests/sim/manifests/navigation-product-f2-ground-route-v1.json",
+            "evidence/motion_navigation/F2-ground-route-v1/baseline/measurement-v2/error-copies.json",
+            "evidence/motion_navigation/F2-ground-route-v1/final/README.md",
+            "evidence/motion_navigation/F2-ground-route-v1/final/SHA256SUMS",
+            "evidence/motion_navigation/F2-ground-route-v1/final/source-consistency.json",
+            "evidence/motion_navigation/F2-ground-route-v1/final/windows/forward-final.json",
+            "evidence/motion_navigation/F2-ground-route-v1/final/windows/reverse-final.json",
+            "evidence/motion_navigation/F2-ground-route-v1/final/fabric/summary.json",
+            "evidence/motion_navigation/F2-ground-route-v1/final/fabric/trials.jsonl",
+            "evidence/motion_navigation/F2-ground-route-v1/final/fabric/failures/corner-replay-red.json",
+        )
+        self.assertEqual(tuple(p for p in required if p not in selected_paths), ())
+
     def test_motion_navigation_tests_keep_their_minimum_shared_dependencies(self):
         required = (
             "config/motion-navigation/reference-SHA256SUMS.txt",

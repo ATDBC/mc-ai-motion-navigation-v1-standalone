@@ -1,0 +1,169 @@
+{
+  "cases": 19,
+  "identical": 6,
+  "changed_ids": [
+    "world/point/4/grass",
+    "world/point/4/obstacle",
+    "world/point/10/grass",
+    "world/point/10/obstacle",
+    "world/point/18/grass",
+    "world/point/18/obstacle",
+    "world/follow/4/grass",
+    "world/follow/4/obstacle",
+    "world/follow/10/grass",
+    "world/follow/10/obstacle",
+    "world/follow/18/grass",
+    "world/follow/18/obstacle",
+    "world/r1-dependency-recovery"
+  ],
+  "normalizer_version": "r28-structure-trajectory-v1",
+  "signature_schema": null,
+  "baseline": "evidence\\motion_navigation\\action-spec-hardening-v1\\review-p2\\world_changes-index.json",
+  "baseline_sha256": "5d07a37cc2f942561da29c5e565ed47e83a0126ae542c9bb22f0df18f60ac444",
+  "results": {
+    "passed": 19,
+    "failed": 0
+  },
+  "details": [
+    {
+      "id": "world/point/4/grass",
+      "before_signature": "7bc04bc5f97955c1a502225750f48daaf7a1c6b173e2ead749fcf8efe87b515d",
+      "after_signature": "dbf3724f43f4bb8c61e5c4ce1b1542179be14a76d80f04c5a61f00b3489305f3",
+      "changed_raw_fields": [
+        "terminal",
+        "trace"
+      ],
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "world/point/4/obstacle",
+      "before_signature": "b4143bae8963073c4d9b0b5ff6468e837338af55dd368482dc7dd6370ad735c2",
+      "after_signature": "b3729c9810e126335879ff8118758523fbe4ef82eda55716fe164f6e18849986",
+      "changed_raw_fields": [
+        "terminal",
+        "trace"
+      ],
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "world/point/10/grass",
+      "before_signature": "2ae96cb40520e725aae3c30fd3537a4b508bd814afd69e45dfd6335d1826ea3e",
+      "after_signature": "9d16293fa98d180864aa2a0ec64c3307e96eb176b2cf0e28b51cc87b9f5f89c7",
+      "changed_raw_fields": [
+        "terminal",
+        "trace"
+      ],
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "world/point/10/obstacle",
+      "before_signature": "91bb06e425598281d05e0160565dfe04a238c0d0214104805fde33b2474b392b",
+      "after_signature": "bf75f5e9f350a55330f2ad879067db452d58e0532629c8b3bb2907f04dbc6a72",
+      "changed_raw_fields": [
+        "trace"
+      ],
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "world/point/18/grass",
+      "before_signature": "f64bd661cb6ce9a03389010414cb09d15cbf51ee79e71e10bf555fd8bfb57c2f",
+      "after_signature": "a366defd65f2376b0a07b6aa260d884fc92953484cd9c4400b6cff35e27b4db5",
+      "changed_raw_fields": [
+        "terminal",
+        "trace"
+      ],
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "world/point/18/obstacle",
+      "before_signature": "a2a05babeba51be5173af67e4b3b225ae28c8c14ddc2f0b7b644c6a612d482e9",
+      "after_signature": "0836e430ec8308c9a61f4bf242401297dba3716994a53c140ad1917f0380afbf",
+      "changed_raw_fields": [
+        "trace"
+      ],
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "world/follow/4/grass",
+      "before_signature": "df3df884f6b78d2eaf654352d7169b7b8d6bc607d65b0e3bbbf89f26d3e8241d",
+      "after_signature": "f201ce360852fc9d8a3959fafe124bc69a91746390a6986b945b92868adf9e2d",
+      "changed_raw_fields": [
+        "terminal",
+        "trace"
+      ],
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "world/follow/4/obstacle",
+      "before_signature": "7776711b1e71281dd825f0b0e573f9459dbd55bc97a3ccf5760457e428b71546",
+      "after_signature": "de8189afe5ec35496f64e7bed28ba27404c4dad4020a5a61900cafcce59bc4d7",
+      "changed_raw_fields": [
+        "terminal",
+        "trace"
+      ],
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "world/follow/10/grass",
+      "before_signature": "7763007798511e0a1d2d8e8960611037260b5681b3e0bc464e153750a3d13a22",
+      "after_signature": "2ffeea481e208546e859f81c105391332d61959f567f7682737e417152df35bf",
+      "changed_raw_fields": [
+        "terminal",
+        "trace"
+      ],
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "world/follow/10/obstacle",
+      "before_signature": "617130c2b54f7d4d4282bee4cef355d4880a8d238cbf3d38c7135670994709bb",
+      "after_signature": "83c82c50365d1708ccebd4180d235632beb77c5fde9760d919da5dc31454e38d",
+      "changed_raw_fields": [
+        "terminal",
+        "trace"
+      ],
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "world/follow/18/grass",
+      "before_signature": "c454320f07df775190491c0e63e4f37b40e40888ed0cbed9b168e4c4ba7ddd82",
+      "after_signature": "4814a5f231a6184e9cfe575fd9d73a92bd1b40c5e2ecb41bf30902c9906f2a4b",
+      "changed_raw_fields": [
+        "terminal",
+        "trace"
+      ],
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "world/follow/18/obstacle",
+      "before_signature": "ed95135eff418d64874377297cc6630571ae70ee500dd779172737fa5c2f747f",
+      "after_signature": "093cae5bb2b33613d79e9cec5bb3c842eb50ef124c6af344e9834554e1c4daba",
+      "changed_raw_fields": [
+        "terminal",
+        "trace"
+      ],
+      "before_passed": true,
+      "after_passed": true
+    },
+    {
+      "id": "world/r1-dependency-recovery",
+      "before_signature": "b0d01de05c780816843b5728ac14617c67dbe6ae715fbc4e9752364b7aab8629",
+      "after_signature": "8c084e7e0d475c903aeeb6cc483f3df0f397d5edf50b53373cccca48fd16965b",
+      "changed_raw_fields": [
+        "trace"
+      ],
+      "before_passed": true,
+      "after_passed": true
+    }
+  ]
+}

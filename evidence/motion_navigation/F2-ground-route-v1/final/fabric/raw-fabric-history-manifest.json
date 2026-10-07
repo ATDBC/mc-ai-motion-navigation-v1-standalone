@@ -1,0 +1,3066 @@
+{
+  "runs": [
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T072256389352Z-44530021",
+      "native_status": "passed",
+      "primary_failure": null,
+      "planned_cases": 1,
+      "plan_sha256": "14390cd70bf13c1ae85b8b11f497293786a573a056bbe17334c01b5341030752",
+      "recorded_trials": 1,
+      "passed_trials": 1,
+      "outcomes": [
+        {
+          "id": "f2-offset_mid-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T072256389352Z-44530021/result.json",
+          "bytes": 197594,
+          "sha256": "e6c7e2af725985a48ad0ed4a49a589008ed4326d8dd1b7ee4f4d7d1a73d29753"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T072256389352Z-44530021/worker-result.json",
+          "bytes": 197078,
+          "sha256": "0a4bff40f301749d36c3a3345d9609ba8afe9792390cc9259aceea417f24afab"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T072256389352Z-44530021/worker.log",
+          "bytes": 54,
+          "sha256": "45466046b980780a17628ad5f148368118b73db55bb2cce9100cda6e34d31569"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T072256389352Z-44530021/client-0/f2-plan.json",
+          "bytes": 495,
+          "sha256": "99c2b6297b857f042d747b09385e7df83ded3b6c7870174654f3d1b9762f559a"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T072256389352Z-44530021/client-0/f2-trials.jsonl",
+          "bytes": 4635,
+          "sha256": "b1491f0bf3f7d5ac20f07ef2dd138a69105136b00a0622f150e087b02d5d076f"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T072256389352Z-44530021/client-0/f2-summary.json",
+          "bytes": 51529,
+          "sha256": "7f0209eacd14c222b10d807ad3d567c569471165ade864ac3b2ffedeea3d4153"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T072256389352Z-44530021/client-0/trace.jsonl",
+          "bytes": 3438445,
+          "sha256": "e0092ef5d8baa28d9f8741a67fe02a91224ff0d2b409ccbfd3be2e8ad05dbc0d"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T072256389352Z-44530021/client-0/f2-frames.jsonl",
+          "bytes": 49570,
+          "sha256": "caae77cb0b2afbd7cffbf05cdc7249f532f5c95ba658c9b68233a91aadcd77ee"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T072256389352Z-44530021/client-0/diagnostics.jsonl",
+          "bytes": 138191,
+          "sha256": "ca9db7a8eb8a144e175051880ef737b53977604f887418a5d3019a9bb20220b8"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T072256389352Z-44530021/client-0/time-report.json",
+          "bytes": 15839,
+          "sha256": "87d6ca7d3b2d7bd41e85276506ced825234d36df72c071d0bb1eb30219080014"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T072256389352Z-44530021/client-0/time-events.jsonl",
+          "bytes": 210724,
+          "sha256": "67bd20f5cda0015d2f7b9f6272a335795aa557b676acaa52e6197d170e90d0d9"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T072545022605Z-9843853c",
+      "native_status": "failed",
+      "primary_failure": {
+        "message": "F2 fail fast: f2-player_corridor_end-0-normal: ['unexpected_terminal']",
+        "type": "AssertionError"
+      },
+      "planned_cases": 8,
+      "plan_sha256": "1df7644c62dd7b3b052418b87651a7f2046b0856213b85240629eec5c53850e4",
+      "recorded_trials": 8,
+      "passed_trials": 7,
+      "outcomes": [
+        {
+          "id": "f2-offset_mid-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-diagonal_mid-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-tangent_mid-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-open_noncenter-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_wall_head-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_wall_parallel-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_corner-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_corridor_end-0-normal",
+          "state": "failed",
+          "task_success": false,
+          "passed": false
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T072545022605Z-9843853c/result.json",
+          "bytes": 14209,
+          "sha256": "469b0f3b33911fdf61b76ddabdda0f1f35225b06b0f88517c37cda47b2ba144c"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T072545022605Z-9843853c/worker-result.json",
+          "bytes": 13336,
+          "sha256": "9c86a958a7cea00af76028165db2bfbe74a8a7caa10f38148a2ea77bbd433d35"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T072545022605Z-9843853c/worker.log",
+          "bytes": 467,
+          "sha256": "6ddcf22553dd34fa13eadc8f8dba9d95fa4511a0d2c96b5b0950d14c0a163982"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T072545022605Z-9843853c/client-0/f2-plan.json",
+          "bytes": 2754,
+          "sha256": "2ed3c9525337f62bfb579495e5bd90fe5a92ad115d502fb400d389e74cd5193e"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T072545022605Z-9843853c/client-0/f2-trials.jsonl",
+          "bytes": 34329,
+          "sha256": "0500db3b4ad468340105475f527c10c88d215122dcbf7d69921602bc5da23ca9"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T072545022605Z-9843853c/client-0/f2-failed-trial.json",
+          "bytes": 2715,
+          "sha256": "bf7c9f9da7bfe7d9ba717e271a1c30f95f7e9cbf75273acf955150a420353884"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T072545022605Z-9843853c/client-0/trace.jsonl",
+          "bytes": 24523481,
+          "sha256": "2623e6a3ae27325070511c420675ea6672c307823928af9e985eb4228d8e2535"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T072545022605Z-9843853c/client-0/f2-frames.jsonl",
+          "bytes": 354978,
+          "sha256": "c38280265da235ac7fefa6b5240985aaf6278dcd26bd4299d3366a3b12c8b575"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T072545022605Z-9843853c/client-0/diagnostics.jsonl",
+          "bytes": 1015670,
+          "sha256": "ff21c20d559a2eb2da51f21bd882747afdc508b5f558efe986939cfca6145663"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T072545022605Z-9843853c/client-0/time-report.json",
+          "bytes": 117492,
+          "sha256": "bddbd7ab5469e786b0faf0ceb6acde51696dc47831a237339ebba5b4efe9f947"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T072545022605Z-9843853c/client-0/time-events.jsonl",
+          "bytes": 515274,
+          "sha256": "9b239bbbe806e44e5375f2207cd27006c0918615b6e43c57c48eab994b184494"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T073616711170Z-b40c75f9",
+      "native_status": "failed",
+      "primary_failure": {
+        "message": "F2 fail fast: f2-player_corner-0-normal: ['unexpected_terminal']",
+        "type": "AssertionError"
+      },
+      "planned_cases": 2,
+      "plan_sha256": "9338fcda05bb7c02db7936855987435bc7694c78afbe8d83a4590e2607647382",
+      "recorded_trials": 1,
+      "passed_trials": 0,
+      "outcomes": [
+        {
+          "id": "f2-player_corner-0-normal",
+          "state": "failed",
+          "task_success": false,
+          "passed": false
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T073616711170Z-b40c75f9/result.json",
+          "bytes": 13848,
+          "sha256": "1aae195f93fe66b1ba4302e537922c60c305d82f4333b28ddc0ca8a5aa6a597f"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T073616711170Z-b40c75f9/worker-result.json",
+          "bytes": 13330,
+          "sha256": "ea238840d97cde32443ea134b3e0e399b3c74f5d1d03c611aa2524452858049f"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T073616711170Z-b40c75f9/worker.log",
+          "bytes": 57,
+          "sha256": "432560ba6e5a96f7a9f59072a9788d14074e3f3c373099be3c9874f199b76ddf"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T073616711170Z-b40c75f9/client-0/f2-plan.json",
+          "bytes": 806,
+          "sha256": "8bb872710e161a06d2ef352175b3ac198d08aa79f22b5349ef2ae594ddf62cb7"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T073616711170Z-b40c75f9/client-0/f2-trials.jsonl",
+          "bytes": 3663,
+          "sha256": "3737e8e01b3f96e092432f3d574ea889c4452a6290aa8c48f5327417c94bac3a"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T073616711170Z-b40c75f9/client-0/f2-failed-trial.json",
+          "bytes": 3663,
+          "sha256": "3737e8e01b3f96e092432f3d574ea889c4452a6290aa8c48f5327417c94bac3a"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T073616711170Z-b40c75f9/client-0/trace.jsonl",
+          "bytes": 4079946,
+          "sha256": "854b05470250dfd73e527c828dd8ed0278a48da425a74a15c8b97a1a226f355d"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T073616711170Z-b40c75f9/client-0/f2-frames.jsonl",
+          "bytes": 62826,
+          "sha256": "031ad56937dfec133cf1375508ea617a1c97c912cf45190f503b0462d4965b96"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T073616711170Z-b40c75f9/client-0/diagnostics.jsonl",
+          "bytes": 183234,
+          "sha256": "90a02a34f41d4a70194893070fdfd722d4db4619846cf814e73ce2b70de57813"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T073616711170Z-b40c75f9/client-0/time-report.json",
+          "bytes": 20989,
+          "sha256": "823643c1cda4717f37e3e7c5aac2787dd7536b1b338a01b43174da405a868059"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T073616711170Z-b40c75f9/client-0/time-events.jsonl",
+          "bytes": 225269,
+          "sha256": "24d4ca4e3ed9bb02282b6b631ac56475d02d640b858b67c071a190a37558cc2f"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T075353444885Z-fbdcb8e8",
+      "native_status": "passed",
+      "primary_failure": null,
+      "planned_cases": 2,
+      "plan_sha256": "9338fcda05bb7c02db7936855987435bc7694c78afbe8d83a4590e2607647382",
+      "recorded_trials": 2,
+      "passed_trials": 2,
+      "outcomes": [
+        {
+          "id": "f2-player_corner-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_corridor_end-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T075353444885Z-fbdcb8e8/result.json",
+          "bytes": 204060,
+          "sha256": "19e19ff76ad85bdd8dcbe892bfae88190f141a9e092357c97a402aa5cabf2685"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075353444885Z-fbdcb8e8/worker-result.json",
+          "bytes": 203490,
+          "sha256": "04e44809b98a7ca952b8e161e80c3e76d5ccd8bf428ec43fc1c4f8b265ef23ee"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075353444885Z-fbdcb8e8/worker.log",
+          "bytes": 120,
+          "sha256": "7520c129e0be819176cd4e0dd0106f545a57d7ede6025d9c09e7034e60219aa5"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075353444885Z-fbdcb8e8/client-0/f2-plan.json",
+          "bytes": 806,
+          "sha256": "8bb872710e161a06d2ef352175b3ac198d08aa79f22b5349ef2ae594ddf62cb7"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075353444885Z-fbdcb8e8/client-0/f2-trials.jsonl",
+          "bytes": 9277,
+          "sha256": "7ce1ceac7769aa557eb44f6b574ca4b4175470263174d35664a9166a1ba9d089"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075353444885Z-fbdcb8e8/client-0/f2-summary.json",
+          "bytes": 56172,
+          "sha256": "957af01238e1b998a9b3163bfda60c4d7b8848c683fff9747ad378fb8d20556e"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075353444885Z-fbdcb8e8/client-0/trace.jsonl",
+          "bytes": 18180442,
+          "sha256": "48884492a18c02dc8d7c18c9d817d4bb9383138d044d8b21409ccd5bbd8d5ef7"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075353444885Z-fbdcb8e8/client-0/f2-frames.jsonl",
+          "bytes": 102300,
+          "sha256": "12006be9c5a0c73a4547846c6b3813ab41def662bcbc91219ad764f105b7236a"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075353444885Z-fbdcb8e8/client-0/diagnostics.jsonl",
+          "bytes": 627423,
+          "sha256": "59841363a02b017844a5aa8da7ff3e047a2f6ebd76547442f39e7a01f92372c8"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075353444885Z-fbdcb8e8/client-0/time-report.json",
+          "bytes": 72303,
+          "sha256": "2efeee3a8eade38501f95bec910549d0a6802423f7ecda3c0deb5ca87f40fa16"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075353444885Z-fbdcb8e8/client-0/time-events.jsonl",
+          "bytes": 379143,
+          "sha256": "aa7e97b0630c53ca5d1064c966799277baf69f52071a4045868eccdb6e893740"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T075706026265Z-17072d29",
+      "native_status": "passed",
+      "primary_failure": null,
+      "planned_cases": 8,
+      "plan_sha256": "1df7644c62dd7b3b052418b87651a7f2046b0856213b85240629eec5c53850e4",
+      "recorded_trials": 8,
+      "passed_trials": 8,
+      "outcomes": [
+        {
+          "id": "f2-offset_mid-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-diagonal_mid-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-tangent_mid-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-open_noncenter-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_wall_head-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_wall_parallel-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_corner-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_corridor_end-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T075706026265Z-17072d29/result.json",
+          "bytes": 263544,
+          "sha256": "751b05a542414d060b811a5d44ffcb7bcd4712bfeac4b490691daf8fef9a1829"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075706026265Z-17072d29/worker-result.json",
+          "bytes": 262674,
+          "sha256": "6ccaa073e4d6777c3b5492eea2573d2e744d82e0b8efe4c298f27dcc4f874794"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075706026265Z-17072d29/worker.log",
+          "bytes": 467,
+          "sha256": "01010d3121fae6fbae8b31338428cf2f966979e1cb75a2a32f3163343a1cfe28"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075706026265Z-17072d29/client-0/f2-plan.json",
+          "bytes": 2754,
+          "sha256": "2ed3c9525337f62bfb579495e5bd90fe5a92ad115d502fb400d389e74cd5193e"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075706026265Z-17072d29/client-0/f2-trials.jsonl",
+          "bytes": 38884,
+          "sha256": "65e904c155fc13f3b45b88ea6e666e34c176539ae80be01561988f2d5f4cdd5c"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075706026265Z-17072d29/client-0/f2-summary.json",
+          "bytes": 85785,
+          "sha256": "de9f88a28d1d3fee17866bfe540f11291adf04f4c5996382736d3f42abb34e8c"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075706026265Z-17072d29/client-0/trace.jsonl",
+          "bytes": 75579283,
+          "sha256": "9e0eba99d9c648fb930286627583a091783827c06676a3e07698a67c91dd21e4"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075706026265Z-17072d29/client-0/f2-frames.jsonl",
+          "bytes": 441290,
+          "sha256": "e1688114843d175dae13dc6cf13cc525876e29e12e5878fba3eb438168af4a54"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075706026265Z-17072d29/client-0/diagnostics.jsonl",
+          "bytes": 2487082,
+          "sha256": "30e0e42b8c3e8bce1000bfd95fc5245c66caaa401de473f5d08d25e5e6a3247a"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075706026265Z-17072d29/client-0/time-report.json",
+          "bytes": 287792,
+          "sha256": "32df88c3c29480f5537677982f674d09855c0f334cd60c441876c3bc4e96b3e5"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075706026265Z-17072d29/client-0/time-events.jsonl",
+          "bytes": 1026497,
+          "sha256": "be57b1fef290ce66b47a551e4870dc67a98baa618fcdcc7a44a487f0b036381a"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T075937109035Z-69e30527",
+      "native_status": "failed",
+      "primary_failure": {
+        "message": "F2 fail fast: f2-player_ledge_2-0-normal: ['unexpected_terminal']",
+        "type": "AssertionError"
+      },
+      "planned_cases": 8,
+      "plan_sha256": "3038966f809fa92391422d9fc4a5b5945a752483ffbd744c146feb48cef9e9b7",
+      "recorded_trials": 2,
+      "passed_trials": 1,
+      "outcomes": [
+        {
+          "id": "f2-player_ledge_1-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_ledge_2-0-normal",
+          "state": "failed",
+          "task_success": false,
+          "passed": false
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T075937109035Z-69e30527/result.json",
+          "bytes": 13901,
+          "sha256": "206e6072fba2af9e7c5d8d7552da1f5cbfc23adcca06eaa98006fb2622ff291f"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075937109035Z-69e30527/worker-result.json",
+          "bytes": 13331,
+          "sha256": "f43259f605f7a9ade82566c85a0e6d04ee10566603b5215a525ffbc0b3203b0d"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075937109035Z-69e30527/worker.log",
+          "bytes": 116,
+          "sha256": "2d47a6e9f41eeb7896438ef34bb9c05b722639e9baa4e0df91a100145f15e784"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075937109035Z-69e30527/client-0/f2-plan.json",
+          "bytes": 2715,
+          "sha256": "0fb5ef49dbff1d4f9b61c3a5da99ff5e4dfecf6732d8bb334802b563652b1794"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075937109035Z-69e30527/client-0/f2-trials.jsonl",
+          "bytes": 7742,
+          "sha256": "8d482b3ddcde6f80d86c0687142bc1e13f7d1a1db764f3cddf8d3ab0d5b9940f"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075937109035Z-69e30527/client-0/f2-failed-trial.json",
+          "bytes": 2773,
+          "sha256": "ff1d7b8de182cc7f748cc46b4862a8225b023bc7caa026879702edf2eca04912"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075937109035Z-69e30527/client-0/trace.jsonl",
+          "bytes": 19742765,
+          "sha256": "0f4148334cfbdfb4e22c2fa14c88e2390964e7c9799ae81b137f14ef83cc3a1d"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075937109035Z-69e30527/client-0/f2-frames.jsonl",
+          "bytes": 98497,
+          "sha256": "e9badfede94c291506878c3a50bfce13a8bcf6ed1d0a8ebb0e179e3813e9a00e"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075937109035Z-69e30527/client-0/diagnostics.jsonl",
+          "bytes": 622518,
+          "sha256": "87a3547dad2ba595708b0a8726ee3553384c8078f9049cdce4f53af7e60de347"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075937109035Z-69e30527/client-0/time-report.json",
+          "bytes": 71758,
+          "sha256": "9ab7fea984977ee74bb7c315e7b1f8d35122b242ef81891052e5d41244197baa"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T075937109035Z-69e30527/client-0/time-events.jsonl",
+          "bytes": 377530,
+          "sha256": "629f6622275de82e50a1839b3920ff532995ec04a0c26d390b35ec7212b1f5fa"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T080227054949Z-ac4c0deb",
+      "native_status": "passed",
+      "primary_failure": null,
+      "planned_cases": 1,
+      "plan_sha256": "7ebc31af41100d5ce7423b1d9067bafc8a7834c99c1691924eb6dc7ff055b209",
+      "recorded_trials": 1,
+      "passed_trials": 1,
+      "outcomes": [
+        {
+          "id": "f2-player_ledge_2-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T080227054949Z-ac4c0deb/result.json",
+          "bytes": 194908,
+          "sha256": "448969043982f37ac96b220e79b455e29f4981058144190e5efbf4cd297deb71"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080227054949Z-ac4c0deb/worker-result.json",
+          "bytes": 194390,
+          "sha256": "eea60ad3ade447201955f899cf6f087831a6367b13a054bcc84220d26da3a31b"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080227054949Z-ac4c0deb/worker.log",
+          "bytes": 58,
+          "sha256": "c1deff04bc3ed8fed910f796da7bdcd34692be1c4beb726394a62d26fbbf4aa3"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080227054949Z-ac4c0deb/client-0/f2-plan.json",
+          "bytes": 499,
+          "sha256": "933b74335f7c46f8065b7ec2dd538cf1a4fbbb4becd18093904298fc596b0063"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080227054949Z-ac4c0deb/client-0/f2-trials.jsonl",
+          "bytes": 5017,
+          "sha256": "b5ce65828e893af285e4c565119bedf3151954ad66877aeafff081c5f48bcf1b"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080227054949Z-ac4c0deb/client-0/f2-summary.json",
+          "bytes": 51911,
+          "sha256": "4d4ef2c5143f373da0ee8c91498d5b96e4cc6b082230e2d8f8d82d93de2a9f64"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080227054949Z-ac4c0deb/client-0/trace.jsonl",
+          "bytes": 10477850,
+          "sha256": "da8cc0a63e0a271a61f1a32462c47fba2c222d58192737d9fa34ad6a51bdf5f4"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080227054949Z-ac4c0deb/client-0/f2-frames.jsonl",
+          "bytes": 71741,
+          "sha256": "b231853dfb9ce7baef472999bc77265238ad88831352dfe6291083248f0e54d9"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080227054949Z-ac4c0deb/client-0/diagnostics.jsonl",
+          "bytes": 349878,
+          "sha256": "fe6fcfe2c8b2087173dea809c0b615a7e3ad9447c158c9e1e29509c2c0103238"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080227054949Z-ac4c0deb/client-0/time-report.json",
+          "bytes": 40233,
+          "sha256": "c9b86c42b2d08cdcc7a3aa7ef212110a4db079e0c1f3170f5ca659b92e07fa22"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080227054949Z-ac4c0deb/client-0/time-events.jsonl",
+          "bytes": 283104,
+          "sha256": "76a2601ee5b1d0928c2646d38e1dc9365654f17f456d006add968185d94ec990"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T080402586326Z-415073d1",
+      "native_status": "passed",
+      "primary_failure": null,
+      "planned_cases": 8,
+      "plan_sha256": "1df7644c62dd7b3b052418b87651a7f2046b0856213b85240629eec5c53850e4",
+      "recorded_trials": 8,
+      "passed_trials": 8,
+      "outcomes": [
+        {
+          "id": "f2-offset_mid-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-diagonal_mid-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-tangent_mid-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-open_noncenter-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_wall_head-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_wall_parallel-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_corner-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_corridor_end-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T080402586326Z-415073d1/result.json",
+          "bytes": 263615,
+          "sha256": "b5dc35a5dfec017240deb3bfbfcdae01204c0e135e15cbfac7793dc686402313"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080402586326Z-415073d1/worker-result.json",
+          "bytes": 262742,
+          "sha256": "7b5693955935046356047582c30751b35e2be974c8ea17d7b9232dc0caf1ea20"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080402586326Z-415073d1/worker.log",
+          "bytes": 467,
+          "sha256": "01010d3121fae6fbae8b31338428cf2f966979e1cb75a2a32f3163343a1cfe28"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080402586326Z-415073d1/client-0/f2-plan.json",
+          "bytes": 2754,
+          "sha256": "2ed3c9525337f62bfb579495e5bd90fe5a92ad115d502fb400d389e74cd5193e"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080402586326Z-415073d1/client-0/f2-trials.jsonl",
+          "bytes": 38886,
+          "sha256": "725dadea729ece7b85df296bc593a0c3a4ad8cb4546e64c62869318331e4647c"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080402586326Z-415073d1/client-0/f2-summary.json",
+          "bytes": 85787,
+          "sha256": "548fab169e4d769d43a2b04df14fe1c466b9ecaf74a7c4428fa018d23d6b7ed9"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080402586326Z-415073d1/client-0/trace.jsonl",
+          "bytes": 75446181,
+          "sha256": "fbc9d04d1e4d0e0329cb1349724b1ff9df917cd3c40ea3cce0492e9e96d95335"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080402586326Z-415073d1/client-0/f2-frames.jsonl",
+          "bytes": 440470,
+          "sha256": "3472aa8dda9da65a2e94d11a14d7e8ee0021c82058d7f0176adaa83eedfe21f5"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080402586326Z-415073d1/client-0/diagnostics.jsonl",
+          "bytes": 2486587,
+          "sha256": "208a9ff662fd66d38fa663e5040a08801f27ed74c3d05a1c4c7cbc8eaf1b7e93"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080402586326Z-415073d1/client-0/time-report.json",
+          "bytes": 287665,
+          "sha256": "39a991361753035bbbb0f7352c2873e2b9f47537d5575ce36d617a22fb9903e6"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080402586326Z-415073d1/client-0/time-events.jsonl",
+          "bytes": 1026555,
+          "sha256": "5154cae8fb1d97a6dee54a9a8d3a64f68695a7d40ec8ad4f35711b2a7293e0f0"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T080635373855Z-ab2c1b73",
+      "native_status": "passed",
+      "primary_failure": null,
+      "planned_cases": 8,
+      "plan_sha256": "3038966f809fa92391422d9fc4a5b5945a752483ffbd744c146feb48cef9e9b7",
+      "recorded_trials": 8,
+      "passed_trials": 8,
+      "outcomes": [
+        {
+          "id": "f2-player_ledge_1-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_ledge_2-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-head_wall_mid",
+          "state": "failed",
+          "task_success": false,
+          "passed": true
+        },
+        {
+          "id": "f2-hazard_wall",
+          "state": "failed",
+          "task_success": false,
+          "passed": true
+        },
+        {
+          "id": "f2-undeclared_edge",
+          "state": "failed",
+          "task_success": false,
+          "passed": true
+        },
+        {
+          "id": "f2-low_ceiling",
+          "state": "failed",
+          "task_success": false,
+          "passed": true
+        },
+        {
+          "id": "f2-revision",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-cancel",
+          "state": "cancelled",
+          "task_success": false,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T080635373855Z-ab2c1b73/result.json",
+          "bytes": 266252,
+          "sha256": "f84854cd9b3105839b8ae6674e4b0e027661e01ca5a669fd15fec6e5068d2548"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080635373855Z-ab2c1b73/worker-result.json",
+          "bytes": 265381,
+          "sha256": "d4db3a209c66eea6e1511527f0cee438240bd5e7aa45090ca8c6724a06c32d72"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080635373855Z-ab2c1b73/worker.log",
+          "bytes": 388,
+          "sha256": "8473b942dabcb6cf715a94d18f39a0b65f1bc0bd78b1dc3b372744610fa47eff"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080635373855Z-ab2c1b73/client-0/f2-plan.json",
+          "bytes": 2715,
+          "sha256": "0fb5ef49dbff1d4f9b61c3a5da99ff5e4dfecf6732d8bb334802b563652b1794"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080635373855Z-ab2c1b73/client-0/f2-trials.jsonl",
+          "bytes": 32347,
+          "sha256": "603150c60862fd3355c8acd62d0a594ae188f2498feb6963c8fc8622c4b39c7d"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080635373855Z-ab2c1b73/client-0/f2-summary.json",
+          "bytes": 79248,
+          "sha256": "38d05399e46f9560ec6d879a4acce1952e19c4f1ef2a70b0eae69bab1e675146"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080635373855Z-ab2c1b73/client-0/trace.jsonl",
+          "bytes": 72359284,
+          "sha256": "47efbedcf8f8c0b2596d56b58cfc2079b57f7d8be683537b4262f5c6301cd80b"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080635373855Z-ab2c1b73/client-0/f2-frames.jsonl",
+          "bytes": 253428,
+          "sha256": "5943d4769818d252702836730079148d41ef9024a5b6cdd9d94133ba47730367"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080635373855Z-ab2c1b73/client-0/diagnostics.jsonl",
+          "bytes": 2284060,
+          "sha256": "a2673e66cdcd67dd9bb072a13be1fe0ea0c7816b39389d193b2961a30bbf39a2"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080635373855Z-ab2c1b73/client-0/time-report.json",
+          "bytes": 264111,
+          "sha256": "28de8bc7c49b82caf0ee88fa58b89636da1ef5dbd14a28e8e2134e84f7aed33e"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080635373855Z-ab2c1b73/client-0/time-events.jsonl",
+          "bytes": 957688,
+          "sha256": "ec4d8b5b62fd26f94804040f76e49953188a674300cbd6be2469ea880c19cb6f"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T080900508785Z-66b9b082",
+      "native_status": "passed",
+      "primary_failure": null,
+      "planned_cases": 2,
+      "plan_sha256": "af9de0ac62d7128d64323422545e8f4433d01911e58973343e48cc064226e15d",
+      "recorded_trials": 2,
+      "passed_trials": 2,
+      "outcomes": [
+        {
+          "id": "f2-input_loss",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-support_change",
+          "state": "failed",
+          "task_success": false,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T080900508785Z-66b9b082/result.json",
+          "bytes": 212893,
+          "sha256": "bec723143b1bd9cc2022638d60131750f62496f5e623ee5c03f74a6f6412f00c"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080900508785Z-66b9b082/worker-result.json",
+          "bytes": 212325,
+          "sha256": "1f8ede69350f2ec58498d84f580b8a6195bdbe1c171f760087d839c4bbbd7141"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080900508785Z-66b9b082/worker.log",
+          "bytes": 93,
+          "sha256": "3464cc5f262b4e76431f96f1501c78f9d4b282b2cc28915bfe3c35bb1b76ed13"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080900508785Z-66b9b082/client-0/f2-plan.json",
+          "bytes": 909,
+          "sha256": "5618ce8b96713fc16a92d761e34d7b8a82757187929e927fc522ebbfa390cf1f"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080900508785Z-66b9b082/client-0/f2-trials.jsonl",
+          "bytes": 9764,
+          "sha256": "12c3ed13914a5363f905875427ff5baf4caa3de9abfcecc685ba556abddb3041"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080900508785Z-66b9b082/client-0/f2-summary.json",
+          "bytes": 56659,
+          "sha256": "10efb17b5430ed16b969ad39e720bdcb8d96085b5a4d5268adf07637a57d02f0"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080900508785Z-66b9b082/client-0/trace.jsonl",
+          "bytes": 19281367,
+          "sha256": "47802373cbffb8419f801bdc0a26bfd65fa5e59454a28fbb9effaef691d1c9b4"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080900508785Z-66b9b082/client-0/f2-frames.jsonl",
+          "bytes": 88853,
+          "sha256": "3981693dda5ba9cd9b8b5eef5ebf3a0bc628d919bf1243f4f993da1984c21cd9"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080900508785Z-66b9b082/client-0/diagnostics.jsonl",
+          "bytes": 596203,
+          "sha256": "73c375938a3ed979a446965003d9f428d3ba20c6d1449b4788b793f26343393b"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080900508785Z-66b9b082/client-0/time-report.json",
+          "bytes": 68684,
+          "sha256": "6bf38719218be236acb20705b666454d0c3c68394bf63c02b9c8d2d391b429d5"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T080900508785Z-66b9b082/client-0/time-events.jsonl",
+          "bytes": 371618,
+          "sha256": "268b778e78a6e8e2eba6aea4eaf8741b2d8a25d4a3bc49a0de92701dbf4b8b7f"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T081050674943Z-14177f16",
+      "native_status": "failed",
+      "primary_failure": {
+        "message": "F2 fail fast: f2-offset_mid-0-late_first: ['late_first_not_confirmed']",
+        "type": "AssertionError"
+      },
+      "planned_cases": 5,
+      "plan_sha256": "65ab94ebcf9bd4023ec29ced25c6ac7e8151751a8e7b5cdc4c4fcda997243dce",
+      "recorded_trials": 1,
+      "passed_trials": 0,
+      "outcomes": [
+        {
+          "id": "f2-offset_mid-0-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": false
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T081050674943Z-14177f16/result.json",
+          "bytes": 13855,
+          "sha256": "0aa5c3d4e4b81ac68e0c4bb86a74bad4a807a7af64735664016fbc4575fe851b"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T081050674943Z-14177f16/worker-result.json",
+          "bytes": 13336,
+          "sha256": "82ef682a3bccb9948f0bcd96c8e0e9116dc210e25e069cf1118cef6521ef8e16"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T081050674943Z-14177f16/worker.log",
+          "bytes": 59,
+          "sha256": "c270a998c1dcd11560c3c0e11a238656a8a3a1ca149acfd9829421122d1daf45"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T081050674943Z-14177f16/client-0/f2-plan.json",
+          "bytes": 2113,
+          "sha256": "406c245da3cd40b77fb307b2e1d04dc4f787062c0bab01e798ccb65045245829"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T081050674943Z-14177f16/client-0/f2-trials.jsonl",
+          "bytes": 5485,
+          "sha256": "a114fbd994d85a87f14d82e9e250417a697cda81bf98779c77ef23f05a40a9f1"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T081050674943Z-14177f16/client-0/f2-failed-trial.json",
+          "bytes": 5485,
+          "sha256": "a114fbd994d85a87f14d82e9e250417a697cda81bf98779c77ef23f05a40a9f1"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T081050674943Z-14177f16/client-0/trace.jsonl",
+          "bytes": 9926625,
+          "sha256": "5fce2a141645774611773004353c584ab6ce84b3456d996d761e628d586e9dff"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T081050674943Z-14177f16/client-0/f2-frames.jsonl",
+          "bytes": 61032,
+          "sha256": "f1c80fce43ca0bb30b5234c4483c0866e2a8e1a65d8e57afce159e19da45d82a"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T081050674943Z-14177f16/client-0/diagnostics.jsonl",
+          "bytes": 313047,
+          "sha256": "a4b830aa7d2de500140e662ddb085fd2e54da3b28af4f800d0c890b05a32bcc9"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T081050674943Z-14177f16/client-0/time-report.json",
+          "bytes": 35907,
+          "sha256": "4892cfb2edf9cdbbde0e4a2acab463e848b41fd28f18f7468ed8bc14efae3809"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T081050674943Z-14177f16/client-0/time-events.jsonl",
+          "bytes": 270241,
+          "sha256": "ce71f55608fd60491bca56f08c6fd068c8a7d5383e7ddcc25e8767ed5bcc357d"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T085218847092Z-262e8890",
+      "native_status": "passed",
+      "primary_failure": null,
+      "planned_cases": 8,
+      "plan_sha256": "d22bcf49f5398ae9de5bccd0faf6e770123b43cc71f99d69e7ef5ad1b842d1cc",
+      "recorded_trials": 8,
+      "passed_trials": 8,
+      "outcomes": [
+        {
+          "id": "f2-offset_mid-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-offset_mid-0-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-diagonal_mid-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-tangent_mid-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-open_noncenter-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_wall_head-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_wall_parallel-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_corner-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T085218847092Z-262e8890/result.json",
+          "bytes": 346597,
+          "sha256": "db995a8eb96d10c73ffefda3d3543e9eebaf797c103d6926b7b229f353280571"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085218847092Z-262e8890/worker-result.json",
+          "bytes": 345725,
+          "sha256": "4fe439d2962c7037ad7882b58f474c3c46eeea5120ce4b6aabd24168604f85da"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085218847092Z-262e8890/worker.log",
+          "bytes": 462,
+          "sha256": "1bd8f7dcff8831b702b41d08946065b88430ac14b5716a70efc6865d4816815e"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085218847092Z-262e8890/client-0/f2-plan.json",
+          "bytes": 2750,
+          "sha256": "2f1699ce58d9d12f4728b1a21f5712e1fc5c3b4270e2ee5359b5c65750b3f108"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085218847092Z-262e8890/client-0/f2-trials.jsonl",
+          "bytes": 79855,
+          "sha256": "629f1109b8ac3df3938bdd7bb84049b78ab157c6d0dff6db096bf929fe6b19d5"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085218847092Z-262e8890/client-0/f2-summary.json",
+          "bytes": 126968,
+          "sha256": "f3d2977128559c30218a882f71791017d8b256bde978f0fb77773e07878fbb88"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085218847092Z-262e8890/client-0/trace.jsonl",
+          "bytes": 76119385,
+          "sha256": "4a02f37e4717c80971bcaceebd9daf4e45a3e0787eebaa9e587d2bedf4e2642f"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085218847092Z-262e8890/client-0/f2-frames.jsonl",
+          "bytes": 501602,
+          "sha256": "6bb035c8c5cdfa0e1b7977bf9e185ea73e408bca34b7a6e13428a14f8f7b3b10"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085218847092Z-262e8890/client-0/diagnostics.jsonl",
+          "bytes": 2479616,
+          "sha256": "5124a1da2a8772ad9449580d21f5312dfa3966548f56b2474127068b1c4122b8"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085218847092Z-262e8890/client-0/time-report.json",
+          "bytes": 286966,
+          "sha256": "9655ec806193deb999697937c39682883451c2f13e51ec8277784f47ed1cbeb0"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085218847092Z-262e8890/client-0/time-events.jsonl",
+          "bytes": 1024990,
+          "sha256": "baef5cc212c8ce88f40d13ede95dbe1218a684e2f408f511779005977b098adc"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T085452180457Z-c60b2b95",
+      "native_status": "passed",
+      "primary_failure": null,
+      "planned_cases": 8,
+      "plan_sha256": "037c4ca231ed8525950dba2a82205714ba624d7665267d457115e89d0d8a0254",
+      "recorded_trials": 8,
+      "passed_trials": 8,
+      "outcomes": [
+        {
+          "id": "f2-player_corridor_end-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_ledge_1-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_ledge_2-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-head_wall_mid",
+          "state": "failed",
+          "task_success": false,
+          "passed": true
+        },
+        {
+          "id": "f2-hazard_wall",
+          "state": "failed",
+          "task_success": false,
+          "passed": true
+        },
+        {
+          "id": "f2-undeclared_edge",
+          "state": "failed",
+          "task_success": false,
+          "passed": true
+        },
+        {
+          "id": "f2-low_ceiling",
+          "state": "failed",
+          "task_success": false,
+          "passed": true
+        },
+        {
+          "id": "f2-revision",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T085452180457Z-c60b2b95/result.json",
+          "bytes": 299329,
+          "sha256": "12de4fe3352b253b8c833348ed1a8297605d68ceab8f4936c25d342cb9dbbbba"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085452180457Z-c60b2b95/worker-result.json",
+          "bytes": 298457,
+          "sha256": "8a6328de5e5aac2cb4c480f714ccb208a874ad2a9e5baefbf54bf871923f35c8"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085452180457Z-c60b2b95/worker.log",
+          "bytes": 408,
+          "sha256": "d8c654a74601c17f79bd05d9954078875b9b0bf551675e61d4dae96d3701f311"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085452180457Z-c60b2b95/client-0/f2-plan.json",
+          "bytes": 2715,
+          "sha256": "32cbd85bb29ea6f51e707581b80b937c79c56f9da0c9cfc1976bdd40735839b8"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085452180457Z-c60b2b95/client-0/f2-trials.jsonl",
+          "bytes": 54119,
+          "sha256": "c581060418686c9573a61fcb6404f9a84ad59cf9646218646b6d381bb29567f2"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085452180457Z-c60b2b95/client-0/f2-summary.json",
+          "bytes": 101232,
+          "sha256": "6c62fe18169beec3ff08ed488919987bb4927fe924f6ee297405b76e1d68e147"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085452180457Z-c60b2b95/client-0/trace.jsonl",
+          "bytes": 73247063,
+          "sha256": "245275695a9d6bc4fe636c1d9abf5118917d58e3ebef173666e366aa225a6841"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085452180457Z-c60b2b95/client-0/f2-frames.jsonl",
+          "bytes": 366857,
+          "sha256": "8bcc03d04857f19a7a254e252683711f477174020b8a12e8c120ae1fc667b27b"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085452180457Z-c60b2b95/client-0/diagnostics.jsonl",
+          "bytes": 2380842,
+          "sha256": "396a7f4c79876de7973d73ef2d0ceb381f0219dc56186d3a1ab8de8fb5eeb457"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085452180457Z-c60b2b95/client-0/time-report.json",
+          "bytes": 275168,
+          "sha256": "5c2bf3d99825754c52911dfb2fb1a72f6301068e181fe425f2c563a71a31c19d"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085452180457Z-c60b2b95/client-0/time-events.jsonl",
+          "bytes": 993069,
+          "sha256": "aab2ddfde860e1a73cd0f4c9f8204b1c415e844aa12715e2f20deb16d9e38894"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T085727749887Z-5e62bcdd",
+      "native_status": "failed",
+      "primary_failure": {
+        "message": "FailureV0(code=<FailureCodeV0.OBSERVATION_INVARIANT: 'observation_invariant'>, message='block collision boxes exceed the supported vertical neighbor extent', retryable=True, source='runtime', detail_json='{\"exception_type\": \"ContractViolation\"}', schema_version='mc2p.failure.v0')",
+        "type": "RuntimeError"
+      },
+      "planned_cases": 8,
+      "plan_sha256": "517fbdde73a4b2aeda7baa3741b4852ec517737e2252fd1854d73f90e28046a9",
+      "recorded_trials": 3,
+      "passed_trials": 3,
+      "outcomes": [
+        {
+          "id": "f2-cancel",
+          "state": "cancelled",
+          "task_success": false,
+          "passed": true
+        },
+        {
+          "id": "f2-input_loss",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-support_change",
+          "state": "failed",
+          "task_success": false,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T085727749887Z-5e62bcdd/result.json",
+          "bytes": 14218,
+          "sha256": "5b7556c3d279888cee8337d43f1a59429666616029d8f61cf040ca571c308166"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085727749887Z-5e62bcdd/worker-result.json",
+          "bytes": 13549,
+          "sha256": "1819e267bcffa688855ce1971b8af34c7153ae145d5a4f9523d9849d1d21f5cb"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085727749887Z-5e62bcdd/worker.log",
+          "bytes": 136,
+          "sha256": "69bc9fba4346d129608777a8ac92b524f2e59f5fb26065c25ed059cf11a230f2"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085727749887Z-5e62bcdd/client-0/f2-plan.json",
+          "bytes": 3211,
+          "sha256": "6a51d3044f029f415d3e19ef1ab026445e5c1611ddd8439d151cde5123ab8b2d"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085727749887Z-5e62bcdd/client-0/f2-trials.jsonl",
+          "bytes": 29504,
+          "sha256": "535d9b29f4048f5f46a15529c076cc77efd74a29fc7f315a4b0942a4ec99d9c7"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085727749887Z-5e62bcdd/client-0/trace.jsonl",
+          "bytes": 37094963,
+          "sha256": "2488de67867fa6e0130767c8bff37ce2c948eae1b6de93ae4962717665d3106f"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085727749887Z-5e62bcdd/client-0/f2-frames.jsonl",
+          "bytes": 138873,
+          "sha256": "c6f960abb372ed3985a94234020594e61f404d40f126976bc2f243ffccd505c7"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085727749887Z-5e62bcdd/client-0/diagnostics.jsonl",
+          "bytes": 1110210,
+          "sha256": "399ca3957f53f6f56c0321dd2809e381806ddde31a42adeb554247e39e4e9b9b"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085727749887Z-5e62bcdd/client-0/time-report.json",
+          "bytes": 128148,
+          "sha256": "1df960be0aa87b4dc9f5d060521ea530cab8b7e4a3a46db0cba7744d45dac810"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T085727749887Z-5e62bcdd/client-0/time-events.jsonl",
+          "bytes": 550891,
+          "sha256": "da88beb8b96e477e1a1632c3a21f53c7ba5d0fc1aff4c70cb2ed2f6047ff362a"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T090239184213Z-b4d2c531",
+      "native_status": "passed",
+      "primary_failure": null,
+      "planned_cases": 1,
+      "plan_sha256": "98f5c8ed3dc9cb886a2206518f96f54d3d6aa539a70b99f350300544568e3678",
+      "recorded_trials": 1,
+      "passed_trials": 1,
+      "outcomes": [
+        {
+          "id": "f2-external_force",
+          "state": "failed",
+          "task_success": false,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T090239184213Z-b4d2c531/result.json",
+          "bytes": 258175,
+          "sha256": "a9027ade4702731042f30ff5d6d7b3a9dc99a1592613c398981b60881c1c302e"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090239184213Z-b4d2c531/worker-result.json",
+          "bytes": 257658,
+          "sha256": "e6d3a5d8002bb5d531c828f4660be920c8a4e39bad7886eb78bf0e2cfdf4919a"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090239184213Z-b4d2c531/worker.log",
+          "bytes": 48,
+          "sha256": "b5f5642fe5b1b591ba3af701491563fed55a84d9f328657f5051005e5ff738c5"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090239184213Z-b4d2c531/client-0/f2-plan.json",
+          "bytes": 720,
+          "sha256": "8ea49dfa86ea1c069257011b64f61e62c6afaa0fba50eb4b0420f1f76d1adad6"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090239184213Z-b4d2c531/client-0/f2-trials.jsonl",
+          "bytes": 30966,
+          "sha256": "0527efc1e8485e4216cc007a2d8ce1a4950fa7a31611498a10cd48c82abb0e77"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090239184213Z-b4d2c531/client-0/f2-summary.json",
+          "bytes": 78072,
+          "sha256": "278fbed064753c032b41adaba604322f3f6c3e3d1b6ef02c4611cc39397fb2a1"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090239184213Z-b4d2c531/client-0/trace.jsonl",
+          "bytes": 9249794,
+          "sha256": "817404811a26484a2139d0e918fe5731f1e67e19fe074945a2d9b2b28bb274e3"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090239184213Z-b4d2c531/client-0/f2-frames.jsonl",
+          "bytes": 27754,
+          "sha256": "909734aac21751aa4e0bbb3934f126c9f0b8cbb4b59f47e8d56e6ecb7939a046"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090239184213Z-b4d2c531/client-0/diagnostics.jsonl",
+          "bytes": 271302,
+          "sha256": "245c6dcb274dd73bdd58786cb85e70798e7386666e95599f65f89027bc9bbb79"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090239184213Z-b4d2c531/client-0/time-report.json",
+          "bytes": 31259,
+          "sha256": "53ca6d96919a5bb9b9ceb06820f326c961aa6d0188bc4fe1351579266528d51d"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090239184213Z-b4d2c531/client-0/time-events.jsonl",
+          "bytes": 257922,
+          "sha256": "8e2ef6e166ec4f436f1affd482b1d3db38cc4267e0f47e7ec320007bfcf29f8c"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T090414229301Z-ff7385e1",
+      "native_status": "passed",
+      "primary_failure": null,
+      "planned_cases": 7,
+      "plan_sha256": "408b5b4bde3bbbfc93c8be163c69a7b838eac84bad5a766862beb7cde5b842e5",
+      "recorded_trials": 7,
+      "passed_trials": 7,
+      "outcomes": [
+        {
+          "id": "f2-offset_mid-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_wall_head-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_ledge_2-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-reference-offset_mid",
+          "state": "reference",
+          "task_success": null,
+          "passed": true
+        },
+        {
+          "id": "f2-reference-player_wall_head",
+          "state": "reference",
+          "task_success": null,
+          "passed": true
+        },
+        {
+          "id": "f2-reference-player_ledge_2",
+          "state": "reference",
+          "task_success": null,
+          "passed": true
+        },
+        {
+          "id": "f2-window-outside",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T090414229301Z-ff7385e1/result.json",
+          "bytes": 283958,
+          "sha256": "716a08b19a957adb7f3493860cc504aafc434d0e09917c7c30397fb129dea51d"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090414229301Z-ff7385e1/worker-result.json",
+          "bytes": 283289,
+          "sha256": "765cec14a856e1dc9bfa28733590dd207dd420fdd39047f207dd4f311d384cf1"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090414229301Z-ff7385e1/worker.log",
+          "bytes": 402,
+          "sha256": "abe3275033400af6ce4236fe7375514e9a51e1321d318f0bbf4ec23931c5387f"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090414229301Z-ff7385e1/client-0/f2-plan.json",
+          "bytes": 2696,
+          "sha256": "676bb33781bffb02a8788643d7e158a6f991d7ae1b33495c7396098c4db1e3e2"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090414229301Z-ff7385e1/client-0/f2-trials.jsonl",
+          "bytes": 47338,
+          "sha256": "5085271754d656bbd5624e8e4e67938a9debc8a5e790d95d304b62f7cf5433dc"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090414229301Z-ff7385e1/client-0/f2-summary.json",
+          "bytes": 94450,
+          "sha256": "79642e56106f7b9c040af99b39e5cda1290ca28f505bc87343d7c5f0fb85ad8a"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090414229301Z-ff7385e1/client-0/trace.jsonl",
+          "bytes": 67924801,
+          "sha256": "f5dfd51db1df7c728d4b3abda2cd5ed0a1e43da7ab4454c5fde66f9d24e3c048"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090414229301Z-ff7385e1/client-0/f2-frames.jsonl",
+          "bytes": 270918,
+          "sha256": "0c10ca7f55a93dc8cd50bb15b7150fa9e3ac763742a549562f8087f4dfcb9381"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090414229301Z-ff7385e1/client-0/diagnostics.jsonl",
+          "bytes": 2198609,
+          "sha256": "5b59c3a42f2357da3a205d8efa9323cec62c79741355372183656528077580aa"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090414229301Z-ff7385e1/client-0/time-report.json",
+          "bytes": 254351,
+          "sha256": "64fcf4bb534d80960d8f2dbb3df0fcc84961c7b29b809d443d0d54880d11abbd"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090414229301Z-ff7385e1/client-0/time-events.jsonl",
+          "bytes": 927785,
+          "sha256": "5cd9b4d3a31814ee31e00252d55f6740ae5fe7d499b433a53ec3ecd9a998e737"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T090734139208Z-a33ea170",
+      "native_status": "passed",
+      "primary_failure": null,
+      "planned_cases": 8,
+      "plan_sha256": "aa30b88afb85d76a093d6fb90b54da28e2c140490cb353c522da7ac0e2791766",
+      "recorded_trials": 8,
+      "passed_trials": 8,
+      "outcomes": [
+        {
+          "id": "f2-offset_mid-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-offset_mid-0-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-offset_mid-1-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-offset_mid-1-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-offset_mid-2-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-offset_mid-2-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-offset_mid-3-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-offset_mid-3-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T090734139208Z-a33ea170/result.json",
+          "bytes": 356808,
+          "sha256": "c1fd0e0f679bce8295c903a698180836cd92d960e2203516de530431e75f924a"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090734139208Z-a33ea170/worker-result.json",
+          "bytes": 355942,
+          "sha256": "fe497a1b49856149af466360e7cbdfa44851bc26c3b17b3ef0fc174f8435dd4e"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090734139208Z-a33ea170/worker.log",
+          "bytes": 448,
+          "sha256": "70e5e28e0de13f8797034b037856f3946da5ce69da7f1b3bf713eaf54928e5ba"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090734139208Z-a33ea170/client-0/f2-plan.json",
+          "bytes": 2742,
+          "sha256": "c567a2c39568bab2c41326ed32d0e277c3df8368686b801349f374db6c20d5c9"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090734139208Z-a33ea170/client-0/f2-trials.jsonl",
+          "bytes": 83400,
+          "sha256": "dc969895a593deb6957eabffca90a56942655cfc41d55a5b1f4a3c80762dc00e"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090734139208Z-a33ea170/client-0/f2-summary.json",
+          "bytes": 130513,
+          "sha256": "36f43499b856923fd4a01e8d8893191e7e9c6477b4762295f75b4c7cb3b524ad"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090734139208Z-a33ea170/client-0/trace.jsonl",
+          "bytes": 78627566,
+          "sha256": "c48b6da319f9c896472ee2943b558536435c545782840b7c48dc470a64c4f57e"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090734139208Z-a33ea170/client-0/f2-frames.jsonl",
+          "bytes": 506017,
+          "sha256": "cee18aad770ba9abc89f58509a42c0d6b9f909728555f835ed61dbbd81c51f07"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090734139208Z-a33ea170/client-0/diagnostics.jsonl",
+          "bytes": 2486140,
+          "sha256": "df9d5c5e87ce485aebdbe64a41c092166fff79939efaf63e48498cdb12e79bd3"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090734139208Z-a33ea170/client-0/time-report.json",
+          "bytes": 287630,
+          "sha256": "6ca3a5c82d4a22af4bd8f5c24a20dc1ec43eb1584dd75a6d646184406a12fff1"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T090734139208Z-a33ea170/client-0/time-events.jsonl",
+          "bytes": 1028104,
+          "sha256": "a02501e6b6fd31faa4b417675cca68e7bc31334708a6b6b3148eb63306adcaee"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T091021460728Z-b84ddc8f",
+      "native_status": "failed",
+      "primary_failure": {
+        "message": "F2 fail fast: f2-diagonal_mid-1-late_first: ['input_deadline_miss']",
+        "type": "AssertionError"
+      },
+      "planned_cases": 8,
+      "plan_sha256": "157b2e22e3abdccc8a15b7e13ecca0099a04a66fa6079e80adf3b2ef1e8703c6",
+      "recorded_trials": 4,
+      "passed_trials": 3,
+      "outcomes": [
+        {
+          "id": "f2-diagonal_mid-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-diagonal_mid-0-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-diagonal_mid-1-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-diagonal_mid-1-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": false
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T091021460728Z-b84ddc8f/result.json",
+          "bytes": 14004,
+          "sha256": "3a6316c3f455f146cbf7df6b2c901868aed639c859322e5c6aa438e4a52da273"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091021460728Z-b84ddc8f/worker-result.json",
+          "bytes": 13333,
+          "sha256": "9cc9a5fefc1216ed25af4ac5a545dbb79f964206165a3877aa3ef277586e3521"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091021460728Z-b84ddc8f/worker.log",
+          "bytes": 233,
+          "sha256": "b71fd2fd71498f3f86d68a542b75a5efd6804bb0e89eaff01ca1a20785ff381e"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091021460728Z-b84ddc8f/client-0/f2-plan.json",
+          "bytes": 2878,
+          "sha256": "a71f3a064d4d66831e1c452f4e799c4a3b0e8fc36bdbae04431e614e50eb8660"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091021460728Z-b84ddc8f/client-0/f2-trials.jsonl",
+          "bytes": 41926,
+          "sha256": "dbe21d2daae23407374fe286e2754de2dcbed2b97229bb474ef32e9a3f2f3c19"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091021460728Z-b84ddc8f/client-0/f2-failed-trial.json",
+          "bytes": 10704,
+          "sha256": "2bb355bb1dbd228d0bb9b8b9e78c6c9a99060595b2dd424f63bab6963102972d"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091021460728Z-b84ddc8f/client-0/trace.jsonl",
+          "bytes": 39919619,
+          "sha256": "55baddb07e42f00406aae705f48a738bca4bd80cd3a419ccdd992d66f1e5eb89"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091021460728Z-b84ddc8f/client-0/f2-frames.jsonl",
+          "bytes": 284108,
+          "sha256": "75ad6a0c16455bd9ecb08cc71f2a4171a6bd19f4fced9a304b283761c8d56f2d"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091021460728Z-b84ddc8f/client-0/diagnostics.jsonl",
+          "bytes": 1283567,
+          "sha256": "c60fb96f3168a953f83290958350494e990b4ed845618181dac7a7a19662f969"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091021460728Z-b84ddc8f/client-0/time-report.json",
+          "bytes": 148238,
+          "sha256": "2f57591418ce9e01c3d632cf6543545a1d7512ebf3a40f64adfd7f2e4b0fac1c"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091021460728Z-b84ddc8f/client-0/time-events.jsonl",
+          "bytes": 608268,
+          "sha256": "c852a50d1857e275e912ae45f4bcb270d2a0da20fdae472e0a9fed044ea21f23"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T091713128944Z-d5e1458f",
+      "native_status": "passed",
+      "primary_failure": null,
+      "planned_cases": 2,
+      "plan_sha256": "d0a7c3cb8d83bf3fa13f88287cc7c9bba74410e854367677bbd6a896e7a7322e",
+      "recorded_trials": 2,
+      "passed_trials": 2,
+      "outcomes": [
+        {
+          "id": "f2-diagonal_mid-1-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-diagonal_mid-1-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T091713128944Z-d5e1458f/result.json",
+          "bytes": 230312,
+          "sha256": "6d5b3e8e05a47cf60d7b382d5002c1df583a935c7fd2715510ffda8b847f70c8"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091713128944Z-d5e1458f/worker-result.json",
+          "bytes": 229742,
+          "sha256": "9600e8f7cb1fad0ba5fae7f71ac704f2402a064965e2fa42be25520f89ca334d"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091713128944Z-d5e1458f/worker.log",
+          "bytes": 116,
+          "sha256": "96df76758ae5752b06e060203aff6b2793ff0298268f5dc7cf080d09321aeeac"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091713128944Z-d5e1458f/client-0/f2-plan.json",
+          "bytes": 856,
+          "sha256": "5c884b967e204ed5862e15c684a380c412f7f19ef67e34ec78b7e8b3d934a12f"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091713128944Z-d5e1458f/client-0/f2-trials.jsonl",
+          "bytes": 21071,
+          "sha256": "464ff840ad3b1620c596c805ea5cef73d5d797b7cd79fa64f0f653725f8b55a0"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091713128944Z-d5e1458f/client-0/f2-summary.json",
+          "bytes": 68178,
+          "sha256": "323e559242b7507d9497472bb22f574a6ac34c552c7b505b1948f97360093802"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091713128944Z-d5e1458f/client-0/trace.jsonl",
+          "bytes": 20025313,
+          "sha256": "6a891b605a12fc982704bd218c9c8d528590e04ed7ea0bcea23eb8cdb805426f"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091713128944Z-d5e1458f/client-0/f2-frames.jsonl",
+          "bytes": 138454,
+          "sha256": "3bdfbb91cd540bb033bd7f06098cfa1e8deab95d645816a80b35deb93770bd20"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091713128944Z-d5e1458f/client-0/diagnostics.jsonl",
+          "bytes": 638605,
+          "sha256": "8f893a25e2469bde122e9a50c7739664f4fd8d217f969dd296e37de1a956323c"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091713128944Z-d5e1458f/client-0/time-report.json",
+          "bytes": 73731,
+          "sha256": "e6ceac47f28e6e35fbf54e65527a7a6a51bb81ff1da842966a7e7128bc89c6c8"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091713128944Z-d5e1458f/client-0/time-events.jsonl",
+          "bytes": 383876,
+          "sha256": "5bfd083fa3622e447955d16dce155713448b8b6af95acc2567eb04c0467782d7"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T091902080489Z-d0dc2d79",
+      "native_status": "passed",
+      "primary_failure": null,
+      "planned_cases": 8,
+      "plan_sha256": "157b2e22e3abdccc8a15b7e13ecca0099a04a66fa6079e80adf3b2ef1e8703c6",
+      "recorded_trials": 8,
+      "passed_trials": 8,
+      "outcomes": [
+        {
+          "id": "f2-diagonal_mid-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-diagonal_mid-0-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-diagonal_mid-1-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-diagonal_mid-1-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-diagonal_mid-2-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-diagonal_mid-2-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-diagonal_mid-3-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-diagonal_mid-3-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T091902080489Z-d0dc2d79/result.json",
+          "bytes": 358571,
+          "sha256": "819cc4d541d3b9f2ee1db439f558dbeb3eb918f4dba846e931938cffc508f630"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091902080489Z-d0dc2d79/worker-result.json",
+          "bytes": 357699,
+          "sha256": "9c360ff56462cb09027bb032215abe90e80bb8cc1525d153f4e502dd034b824b"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091902080489Z-d0dc2d79/worker.log",
+          "bytes": 464,
+          "sha256": "554929f1ddee5b723658f67d5a5b3b1c9a0d1f660d3c5d1cf7e4ed708dd0168e"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091902080489Z-d0dc2d79/client-0/f2-plan.json",
+          "bytes": 2878,
+          "sha256": "a71f3a064d4d66831e1c452f4e799c4a3b0e8fc36bdbae04431e614e50eb8660"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091902080489Z-d0dc2d79/client-0/f2-trials.jsonl",
+          "bytes": 84488,
+          "sha256": "5373b1af68f99b7999d0bbd7357fa83278d143602e1078f0625ce5fb4479ec45"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091902080489Z-d0dc2d79/client-0/f2-summary.json",
+          "bytes": 131601,
+          "sha256": "426c74f18047d809ff9e9c6c1912d50c33c382c95fb5075c13ccde889d13892d"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091902080489Z-d0dc2d79/client-0/trace.jsonl",
+          "bytes": 79790839,
+          "sha256": "e7012bde95a07ce90c4166a98397a089bd374299b566ff2095f0455e0185a4be"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091902080489Z-d0dc2d79/client-0/f2-frames.jsonl",
+          "bytes": 568266,
+          "sha256": "640d25f6edc3f35f2954485c183ad7cba94054b9e759b6b557473cc0053726d3"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091902080489Z-d0dc2d79/client-0/diagnostics.jsonl",
+          "bytes": 2558267,
+          "sha256": "a8accac35fbdda8d9e107209497afb4619ef0ae06233741f3d0ee33659caf1a4"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091902080489Z-d0dc2d79/client-0/time-report.json",
+          "bytes": 296129,
+          "sha256": "22314717c958f6ba70a45f23ce5a0fe0353526fb974675a377799b3ccc754331"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T091902080489Z-d0dc2d79/client-0/time-events.jsonl",
+          "bytes": 1053246,
+          "sha256": "827a93fb3ddad6457ee86b5a5c82f53b1ffce7a03f40d15875e806bc2243cf23"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T094212643719Z-5bfb80f8",
+      "native_status": "passed",
+      "primary_failure": null,
+      "planned_cases": 8,
+      "plan_sha256": "1d675eb76f3221eb4a8c843feb64980ce458c599eb7ded9794ab60feb0445792",
+      "recorded_trials": 8,
+      "passed_trials": 8,
+      "outcomes": [
+        {
+          "id": "f2-tangent_mid-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-tangent_mid-0-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-tangent_mid-1-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-tangent_mid-1-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-tangent_mid-2-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-tangent_mid-2-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-tangent_mid-3-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-tangent_mid-3-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T094212643719Z-5bfb80f8/result.json",
+          "bytes": 357018,
+          "sha256": "d43560aefaddc50e0e2c122f8075cc73b361d0b0eac0acf8aa9ee6938066f5d3"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094212643719Z-5bfb80f8/worker-result.json",
+          "bytes": 356144,
+          "sha256": "af70c27342fde90d446f2de885bc813e73e1caf2d421195b6f1ff20d3456cf28"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094212643719Z-5bfb80f8/worker.log",
+          "bytes": 456,
+          "sha256": "d454e0ef41222d424de1bc67c4f3af786c20e093a078426f4c0ba26adf29134c"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094212643719Z-5bfb80f8/client-0/f2-plan.json",
+          "bytes": 3062,
+          "sha256": "095740e1e9f27301a782c2fa6fff9de81d4f64d4c627c7c0988738943c4640e1"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094212643719Z-5bfb80f8/client-0/f2-trials.jsonl",
+          "bytes": 83219,
+          "sha256": "23f5e567ee5c5278f21f3e15326661ceecaeb8cda5030461a2af8ed64dbc1c14"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094212643719Z-5bfb80f8/client-0/f2-summary.json",
+          "bytes": 130332,
+          "sha256": "167f8e5effebb248ff350d26a784fd5f7bf51e65673f9d036772ba0956da9236"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094212643719Z-5bfb80f8/client-0/trace.jsonl",
+          "bytes": 72910550,
+          "sha256": "badc331919994995ceff192736e5aad96e7ca4f1f0751eafed83247bd784f16b"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094212643719Z-5bfb80f8/client-0/f2-frames.jsonl",
+          "bytes": 496916,
+          "sha256": "417f5d1d21a7f26dcde1b362a3e30c08ee7f5e94a977e5f1fb29d1c70c32937b"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094212643719Z-5bfb80f8/client-0/diagnostics.jsonl",
+          "bytes": 2472461,
+          "sha256": "6c3ff19c1a5251c8bb6fcc0605af12ba563c71a88d327aaa569bb466fa434cc2"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094212643719Z-5bfb80f8/client-0/time-report.json",
+          "bytes": 285893,
+          "sha256": "0135d099c6ee0853337c0058e879ef1f3ff52568d53202b3d94f4195dbb7869b"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094212643719Z-5bfb80f8/client-0/time-events.jsonl",
+          "bytes": 1021861,
+          "sha256": "c5fb49cddca3fae51f06190d8c9f29c55eb3294eb8f11cb9d0d601edb9224588"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T094453011979Z-463c0ded",
+      "native_status": "passed",
+      "primary_failure": null,
+      "planned_cases": 8,
+      "plan_sha256": "0c6d1d21c46fd3e3a64dcdd729d2a2859186ccc86ca960b1116a1482c3b14bd2",
+      "recorded_trials": 8,
+      "passed_trials": 8,
+      "outcomes": [
+        {
+          "id": "f2-open_noncenter-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-open_noncenter-0-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-open_noncenter-1-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-open_noncenter-1-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-open_noncenter-2-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-open_noncenter-2-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-open_noncenter-3-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-open_noncenter-3-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T094453011979Z-463c0ded/result.json",
+          "bytes": 358590,
+          "sha256": "e421c3a2c8c0298d611a7056b72d43f5471f8db720fd26efce251f7444a13b4a"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094453011979Z-463c0ded/worker-result.json",
+          "bytes": 357722,
+          "sha256": "b05a49ed14011ccc87fcad23858c8652b20af66b97f78ae3dc27bc676dd579f0"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094453011979Z-463c0ded/worker.log",
+          "bytes": 480,
+          "sha256": "62c72a8f041c167f5ca2c4201a5bab8c5204348f47899568f86507c9263ee659"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094453011979Z-463c0ded/client-0/f2-plan.json",
+          "bytes": 2910,
+          "sha256": "663cc520affa262edce37782a9e16dba865db7a6abb6c8ab816811a7445da647"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094453011979Z-463c0ded/client-0/f2-trials.jsonl",
+          "bytes": 84520,
+          "sha256": "411524a2a1d92a9bca817faddf89d247e4eb26698ccd15c5fa327fb30fdd3ae3"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094453011979Z-463c0ded/client-0/f2-summary.json",
+          "bytes": 131633,
+          "sha256": "2fc8974d6f10bf1efbaf1de797228652f90df0f0235ad627fc8dcb0c543891cb"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094453011979Z-463c0ded/client-0/trace.jsonl",
+          "bytes": 79883128,
+          "sha256": "f5e30beb667145652f59c641a6380ec01d80f4426152960dcec23e505d17df5d"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094453011979Z-463c0ded/client-0/f2-frames.jsonl",
+          "bytes": 569178,
+          "sha256": "1d1399d06a38b317bf120a378470bbe48bbcfb928412bc0f8419342f7cf5a610"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094453011979Z-463c0ded/client-0/diagnostics.jsonl",
+          "bytes": 2557993,
+          "sha256": "7d06088d854283ef571ed438e7e43f9c0d3df4a87b1bc5b4fb2e328dd5ae0e32"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094453011979Z-463c0ded/client-0/time-report.json",
+          "bytes": 296072,
+          "sha256": "df70d178a57d28120e083b5e64551f16bce2f78d84be64fbabc936c6a9ea7c43"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094453011979Z-463c0ded/client-0/time-events.jsonl",
+          "bytes": 1052895,
+          "sha256": "5dfd15e343202b034c40d0b41313f129e839334ab89a82ef09c9c9d9b1392e4e"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T094738686981Z-73bf3b1a",
+      "native_status": "passed",
+      "primary_failure": null,
+      "planned_cases": 8,
+      "plan_sha256": "23dcce52bf49ef3a685fe644c7213066d419b04da1891f2e7a81a53a3d1437a0",
+      "recorded_trials": 8,
+      "passed_trials": 8,
+      "outcomes": [
+        {
+          "id": "f2-player_wall_head-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_wall_head-0-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_wall_head-1-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_wall_head-1-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_wall_head-2-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_wall_head-2-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_wall_head-3-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_wall_head-3-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T094738686981Z-73bf3b1a/result.json",
+          "bytes": 349057,
+          "sha256": "97273b1f0ef250905adca9eb436d05533144c01e2a3290f7a79d4f23d9ddc038"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094738686981Z-73bf3b1a/worker-result.json",
+          "bytes": 348184,
+          "sha256": "1cca6821a8832bc2caf5032e8bf4b75c52763d6f47e362cbe193ada764000ed7"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094738686981Z-73bf3b1a/worker.log",
+          "bytes": 496,
+          "sha256": "2c460da5d5c432fd0f9eabb49e27c76808a5d298fab55f9086bb2bd31abb3b1f"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094738686981Z-73bf3b1a/client-0/f2-plan.json",
+          "bytes": 2678,
+          "sha256": "d646d8ebe507da5d8807092aa464a1dcd5ea4a52e58522795b96746f9a48de50"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094738686981Z-73bf3b1a/client-0/f2-trials.jsonl",
+          "bytes": 79115,
+          "sha256": "d2a2db112129f27c7dd4c00c9b7eb047bbaa5c02886b0bc7a1f856cafe2c1993"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094738686981Z-73bf3b1a/client-0/f2-summary.json",
+          "bytes": 126228,
+          "sha256": "10f3d0cb160852824fe68b3f2108c675655ff88b53b8eafd9a4ddf0188919f31"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094738686981Z-73bf3b1a/client-0/trace.jsonl",
+          "bytes": 76370580,
+          "sha256": "af3c6cd276ac0bd12720d53408b12b5ed5f6e386b43c0ada35fd4333bcdb0a9d"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094738686981Z-73bf3b1a/client-0/f2-frames.jsonl",
+          "bytes": 505194,
+          "sha256": "91961da53d8b421dab38aedec08e4cb68e0c5f01dfda7ac05eec904aa1e51205"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094738686981Z-73bf3b1a/client-0/diagnostics.jsonl",
+          "bytes": 2484639,
+          "sha256": "22b8fbbd67a78439616c83554fb7bbb96aac963e572728fceb81de6900f6540f"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094738686981Z-73bf3b1a/client-0/time-report.json",
+          "bytes": 287403,
+          "sha256": "f0cb195a3b8ff025d93d157ebcae04ca93e822543c6de109ebf20b28e825c7ab"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T094738686981Z-73bf3b1a/client-0/time-events.jsonl",
+          "bytes": 1026745,
+          "sha256": "0c27d66395967302243a5cf03f3b5fd3827595a26d8d5e18d24fd1b2b6a7c1e1"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T095021899430Z-229e2ed5",
+      "native_status": "passed",
+      "primary_failure": null,
+      "planned_cases": 8,
+      "plan_sha256": "2b4fe84a371fd5efe5dce87e08915098d8430177285985ef0045f25365a51131",
+      "recorded_trials": 8,
+      "passed_trials": 8,
+      "outcomes": [
+        {
+          "id": "f2-player_wall_parallel-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_wall_parallel-0-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_wall_parallel-1-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_wall_parallel-1-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_wall_parallel-2-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_wall_parallel-2-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_wall_parallel-3-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_wall_parallel-3-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T095021899430Z-229e2ed5/result.json",
+          "bytes": 348788,
+          "sha256": "52b75a328385d2f26c337759c4672eac6ece8b411c5e83d48da184d758c620ae"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095021899430Z-229e2ed5/worker-result.json",
+          "bytes": 347913,
+          "sha256": "22268b24a2f772b467eda69b8ad02db57f3e8ef7b97b971aac3231ec58ee8e90"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095021899430Z-229e2ed5/worker.log",
+          "bytes": 528,
+          "sha256": "234a59ecfa827031fed00275b2b891d6aefcddb4cf37f653b4a34bf55ecb9595"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095021899430Z-229e2ed5/client-0/f2-plan.json",
+          "bytes": 2742,
+          "sha256": "d55265182dde960f2f4bd837bcd3285f491d3348b52e260b763761f87dd3ce86"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095021899430Z-229e2ed5/client-0/f2-trials.jsonl",
+          "bytes": 78776,
+          "sha256": "c4de470da9b54449300d31462b416ebd92d4e3e01e0a8f46963753781813e2fe"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095021899430Z-229e2ed5/client-0/f2-summary.json",
+          "bytes": 125889,
+          "sha256": "d0a353b965154c5008978cbdad6c49c89565c271a464718fc9f4893b83dddf39"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095021899430Z-229e2ed5/client-0/trace.jsonl",
+          "bytes": 74248844,
+          "sha256": "83897308df874bd3153ada1fae6d6a29a697217707c5bcdaf09f2af913c0f439"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095021899430Z-229e2ed5/client-0/f2-frames.jsonl",
+          "bytes": 406173,
+          "sha256": "ce338cc7922291e9a1448f2366804c7a84c6403c74fd5145e9329eece7cb56af"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095021899430Z-229e2ed5/client-0/diagnostics.jsonl",
+          "bytes": 2363721,
+          "sha256": "6b73c51f1c8fccb6adb46a6e561b09c500c997dfe7d067a1a17942ab4661398e"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095021899430Z-229e2ed5/client-0/time-report.json",
+          "bytes": 273277,
+          "sha256": "9b7d097d5f76ba41a48f84eb4af18a4bbb2733299231c4bc723d478a45923997"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095021899430Z-229e2ed5/client-0/time-events.jsonl",
+          "bytes": 984333,
+          "sha256": "ca96ac7327569403846ecd3b8022bddb1276eb259cea0f21d5905b4e6982103a"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T095300280127Z-68342755",
+      "native_status": "passed",
+      "primary_failure": null,
+      "planned_cases": 8,
+      "plan_sha256": "6e81194b7840361c0ff2072935ad97c8e956cc6dc73b30f5433ffc58785587d8",
+      "recorded_trials": 8,
+      "passed_trials": 8,
+      "outcomes": [
+        {
+          "id": "f2-player_corner-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_corner-0-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_corner-1-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_corner-1-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_corner-2-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_corner-2-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_corner-3-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_corner-3-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T095300280127Z-68342755/result.json",
+          "bytes": 345879,
+          "sha256": "a8e0049cc8c5981306ada57bd48e63d8e279c204d37b16790a949597691c7daf"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095300280127Z-68342755/worker-result.json",
+          "bytes": 345008,
+          "sha256": "ff0511bf2aac6d1bbe3823ab48342d93c86ef040982cb8d7227666819b6106ed"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095300280127Z-68342755/worker.log",
+          "bytes": 472,
+          "sha256": "809ace730cf8f02b1579692ed771529d5d4fc1b3042a01d9eb8f35f06a384951"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095300280127Z-68342755/client-0/f2-plan.json",
+          "bytes": 2630,
+          "sha256": "211c27721867d78101f43e42585d58db7a9689d6ef2e22690f9452bc64154ee0"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095300280127Z-68342755/client-0/f2-trials.jsonl",
+          "bytes": 79587,
+          "sha256": "4f8689729d970bd8a9460ceb56b85bbdaef222cb1080a16625ad86e18912573e"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095300280127Z-68342755/client-0/f2-summary.json",
+          "bytes": 126700,
+          "sha256": "589b44493959d8533b5fd972c71a0eb408e5216b428bae53d050ecbdd1f1dd3f"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095300280127Z-68342755/client-0/trace.jsonl",
+          "bytes": 72847037,
+          "sha256": "de3a31ceb4856e6d488083ad1eeaf5f6683dcfe1f62955c18662946f00d1e39a"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095300280127Z-68342755/client-0/f2-frames.jsonl",
+          "bytes": 509306,
+          "sha256": "c385e5926595f3fe15d80d44ab559b5e584329268d9aab51658ad92549b8cfe9"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095300280127Z-68342755/client-0/diagnostics.jsonl",
+          "bytes": 2490449,
+          "sha256": "4be0a5b3958a87a3af145eb751c3dc9230ebd157f27651bd7142dadb9d35aa63"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095300280127Z-68342755/client-0/time-report.json",
+          "bytes": 288127,
+          "sha256": "4f70ed5db0c544075b7f2c436645ec7753e8901aefbabcc4fc6038ad7b9d7d52"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095300280127Z-68342755/client-0/time-events.jsonl",
+          "bytes": 1029060,
+          "sha256": "f1ca895996d3c69236fdd4cac2457865fba03bbcea1f044446729dcb11d1a511"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T095542623312Z-3a7f1716",
+      "native_status": "passed",
+      "primary_failure": null,
+      "planned_cases": 8,
+      "plan_sha256": "0654576345fca5f0266afd0bcc49afbf72d4a4a2109c2baa5070fdfa6c934610",
+      "recorded_trials": 8,
+      "passed_trials": 8,
+      "outcomes": [
+        {
+          "id": "f2-player_corridor_end-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_corridor_end-0-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_corridor_end-1-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_corridor_end-1-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_corridor_end-2-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_corridor_end-2-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_corridor_end-3-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_corridor_end-3-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T095542623312Z-3a7f1716/result.json",
+          "bytes": 346760,
+          "sha256": "ed07ec92137465824fb86020a30346e03ea115e853521f898ae48210b82cc1c7"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095542623312Z-3a7f1716/worker-result.json",
+          "bytes": 345885,
+          "sha256": "baf9b3189ca7048af7c2f09f7787d074d938eaecace0081bbc224a44e2169bbf"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095542623312Z-3a7f1716/worker.log",
+          "bytes": 520,
+          "sha256": "eaa82ebfb14cdb5b3f1e5332465b9cd288daa320dc34073b8a5cb134660de34b"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095542623312Z-3a7f1716/client-0/f2-plan.json",
+          "bytes": 2838,
+          "sha256": "444d999857aa16670003101f2eaac6d9667cff5f7b393afd27ae0fe3adb8a572"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095542623312Z-3a7f1716/client-0/f2-trials.jsonl",
+          "bytes": 80278,
+          "sha256": "7e11009aee555412564c9a688bcba53caeb27c543db0c41c23c145aa6c6061ac"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095542623312Z-3a7f1716/client-0/f2-summary.json",
+          "bytes": 127391,
+          "sha256": "89c91279069b95dacc7c3b0cbb362aed5f61df3fb39cb44dea7bf9711b38369a"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095542623312Z-3a7f1716/client-0/trace.jsonl",
+          "bytes": 72939832,
+          "sha256": "55310a488e78c17e730992974382bf30ae2a1d2ffef1ac5ec4bdf2a51aa63784"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095542623312Z-3a7f1716/client-0/f2-frames.jsonl",
+          "bytes": 533838,
+          "sha256": "8d5bfacc0736b4607c6ac63c44fdd90f68b432bc456da41b69265f793178ab52"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095542623312Z-3a7f1716/client-0/diagnostics.jsonl",
+          "bytes": 2522679,
+          "sha256": "47c4660d09fe1da5ffbbaf69f597e7993fa8d2dbf744dc3549effbab57e92393"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095542623312Z-3a7f1716/client-0/time-report.json",
+          "bytes": 291751,
+          "sha256": "2bb86e476c058fb05666e8cb2a734c5cf3cf7f694a9f889fe00f4b208069143b"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095542623312Z-3a7f1716/client-0/time-events.jsonl",
+          "bytes": 1039954,
+          "sha256": "8afa2b8292dfe937273dd8ceadf50a2d14573cb91e164de26654535e4f1f4677"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T095826192744Z-b05caf79",
+      "native_status": "passed",
+      "primary_failure": null,
+      "planned_cases": 8,
+      "plan_sha256": "7e0f15a8f5eed4f2abbfbecfec4f5fefc25ae61b90838b0d242de7d509ed8e1e",
+      "recorded_trials": 8,
+      "passed_trials": 8,
+      "outcomes": [
+        {
+          "id": "f2-player_ledge_1-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_ledge_1-0-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_ledge_1-1-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_ledge_1-1-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_ledge_1-2-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_ledge_1-2-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_ledge_1-3-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_ledge_1-3-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T095826192744Z-b05caf79/result.json",
+          "bytes": 350518,
+          "sha256": "335998857a0a50b1b66c6851cf2f344816e3d8944dcbd80e05f7dc26199c78c4"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095826192744Z-b05caf79/worker-result.json",
+          "bytes": 349645,
+          "sha256": "cd6eb71ff7012d0b552df360e1f1d03b492dcbb217b546cce564e141e66a8243"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095826192744Z-b05caf79/worker.log",
+          "bytes": 480,
+          "sha256": "15f8bda4d6bdeac2c3ae36e37661df085c271f28170cd5a42d57f2ec98298be3"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095826192744Z-b05caf79/client-0/f2-plan.json",
+          "bytes": 2774,
+          "sha256": "98865078b8f334e2d0d40ca54110ddd1a5791c99194b5a40d571a970172ea557"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095826192744Z-b05caf79/client-0/f2-trials.jsonl",
+          "bytes": 82397,
+          "sha256": "54165453ba230ef75d6422c9fc0edba467836922388182a55d79e2c7733dfd59"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095826192744Z-b05caf79/client-0/f2-summary.json",
+          "bytes": 129510,
+          "sha256": "4e182e35a85b839ff66916ef5fabef0f7987ebf59e98adbb86874f4634feefd4"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095826192744Z-b05caf79/client-0/trace.jsonl",
+          "bytes": 82053152,
+          "sha256": "635ff32811090108c7075dcb49a5e21c34eaae141fa174eeb80ceff0fec7fb5f"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095826192744Z-b05caf79/client-0/f2-frames.jsonl",
+          "bytes": 607199,
+          "sha256": "2aee47d11b26ca45af61a35bb365b0b17e5cd9b157bafd5feed066062d753588"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095826192744Z-b05caf79/client-0/diagnostics.jsonl",
+          "bytes": 2708033,
+          "sha256": "2b7cf76f5a1afd2ddd2be5b49db743443ca8c5d93701add1de6912a843a6a9fc"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095826192744Z-b05caf79/client-0/time-report.json",
+          "bytes": 313614,
+          "sha256": "e858d471290e334d5f7cd860ad8b1080827109162e0334547c90e2dda6f376fc"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T095826192744Z-b05caf79/client-0/time-events.jsonl",
+          "bytes": 1105292,
+          "sha256": "eaf0c6e21d41521e2d92e60fbea19e45d744a6a6de06e2787bb6cf52c4e3ca3c"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T100115964172Z-727a0106",
+      "native_status": "passed",
+      "primary_failure": null,
+      "planned_cases": 8,
+      "plan_sha256": "9a684120663d156091aea9ca34cca28f804731aa6efc60ab227cab819eda7528",
+      "recorded_trials": 8,
+      "passed_trials": 8,
+      "outcomes": [
+        {
+          "id": "f2-player_ledge_2-0-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_ledge_2-0-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_ledge_2-1-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_ledge_2-1-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_ledge_2-2-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_ledge_2-2-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_ledge_2-3-normal",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-player_ledge_2-3-late_first",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T100115964172Z-727a0106/result.json",
+          "bytes": 352171,
+          "sha256": "7829d2e1135b44a8668d5cf75b70416c7616a65926693a536a0ec800a3cedc5a"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100115964172Z-727a0106/worker-result.json",
+          "bytes": 351296,
+          "sha256": "01d2ee5680c42d5ae156758c8e4724bb5d2f50845184bcb3a667a3911a0a9ee9"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100115964172Z-727a0106/worker.log",
+          "bytes": 480,
+          "sha256": "db45310146c000d269597c796119df16f02b180b970066a4d2e43d8c2d93955a"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100115964172Z-727a0106/client-0/f2-plan.json",
+          "bytes": 2774,
+          "sha256": "99159a0c87a5689d2cc3e47fce46e8185d9f8f0112e9a49a41e0bbfb3e68e4c4"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100115964172Z-727a0106/client-0/f2-trials.jsonl",
+          "bytes": 82825,
+          "sha256": "c27ec673051b4719396d8038df3b2c4f7a7c382309e630cf1af1e31d99a8a73d"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100115964172Z-727a0106/client-0/f2-summary.json",
+          "bytes": 129938,
+          "sha256": "ae65809575adb1b65f4efde43fc99cc0eac5e86ba3de67c4fd42ce63a7ce1d71"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100115964172Z-727a0106/client-0/trace.jsonl",
+          "bytes": 82797630,
+          "sha256": "6718532999b968f81098d7cb863e23e4a29141f3baf7442b1c0b8736cb4c4577"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100115964172Z-727a0106/client-0/f2-frames.jsonl",
+          "bytes": 659791,
+          "sha256": "99fa3101bab2d231bc9ad195f27f84a454aec9fea6aa07f3a92f13f688ab3b3e"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100115964172Z-727a0106/client-0/diagnostics.jsonl",
+          "bytes": 2769758,
+          "sha256": "7c763381a4e5c19e7789bf25c8e2f8d2f54fe683d7677f153ad510aba509fa5a"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100115964172Z-727a0106/client-0/time-report.json",
+          "bytes": 320846,
+          "sha256": "f6f99003fc0b67312ef8027a855540bbce39901bef17d564e34bf71e1acc689d"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100115964172Z-727a0106/client-0/time-events.jsonl",
+          "bytes": 1127250,
+          "sha256": "6f07671fe0a0879a7f579116f6145a5bcac9e14bb1837ba13a85290c9d016b51"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T100406507232Z-6711b54d",
+      "native_status": "passed",
+      "primary_failure": null,
+      "planned_cases": 8,
+      "plan_sha256": "8bf7bfb0c13cf82ae42b6f2e131430554ad2b26aa97f4325a176dbb7fe588427",
+      "recorded_trials": 8,
+      "passed_trials": 8,
+      "outcomes": [
+        {
+          "id": "f2-head_wall_mid",
+          "state": "failed",
+          "task_success": false,
+          "passed": true
+        },
+        {
+          "id": "f2-hazard_wall",
+          "state": "failed",
+          "task_success": false,
+          "passed": true
+        },
+        {
+          "id": "f2-undeclared_edge",
+          "state": "failed",
+          "task_success": false,
+          "passed": true
+        },
+        {
+          "id": "f2-low_ceiling",
+          "state": "failed",
+          "task_success": false,
+          "passed": true
+        },
+        {
+          "id": "f2-revision",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-cancel",
+          "state": "cancelled",
+          "task_success": false,
+          "passed": true
+        },
+        {
+          "id": "f2-input_loss",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-support_change",
+          "state": "failed",
+          "task_success": false,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T100406507232Z-6711b54d/result.json",
+          "bytes": 302394,
+          "sha256": "53f6f80c731b778c2e60186da943337bf58b5ac8b29075e62a9f483f265af8a1"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100406507232Z-6711b54d/worker-result.json",
+          "bytes": 301520,
+          "sha256": "21ff8dee892ca8ca5a501bdab5736317c5493d7ce2d85e4de04de7d5658788f5"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100406507232Z-6711b54d/worker.log",
+          "bytes": 365,
+          "sha256": "ca084eece5712aa12b36e6436ad500583524939a0e04ffbb416facd5c3324f02"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100406507232Z-6711b54d/client-0/f2-plan.json",
+          "bytes": 2808,
+          "sha256": "b6fa83a386a64530638d11a736cf5f36e76a2e0321185e9afb6d79e258fc18b3"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100406507232Z-6711b54d/client-0/f2-trials.jsonl",
+          "bytes": 53950,
+          "sha256": "f90b372d00c9e242ecc1c04abe4ac10be7b7deef3f545b3a737d3915ab5abafd"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100406507232Z-6711b54d/client-0/f2-summary.json",
+          "bytes": 101063,
+          "sha256": "de0b172e197fe3c7db39e5739c6ee46176166ef2a1fd17d89336ee6bd5264940"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100406507232Z-6711b54d/client-0/trace.jsonl",
+          "bytes": 70998788,
+          "sha256": "ed8556cc1f39bd2d0b9faf893e062d5d5b610350b617c32e6aa3cdea39961074"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100406507232Z-6711b54d/client-0/f2-frames.jsonl",
+          "bytes": 242912,
+          "sha256": "ebdd5a3a22cdf65d6555ee089ac00737e6857fed200d3cbee504f8f497c5baa2"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100406507232Z-6711b54d/client-0/diagnostics.jsonl",
+          "bytes": 2199012,
+          "sha256": "7968f746cf0c8d34d269969bb8f2ee8c2705a1bc890b59c0c2a43c1d500429d9"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100406507232Z-6711b54d/client-0/time-report.json",
+          "bytes": 254150,
+          "sha256": "679759dc3fcad126d6e9aa8f7c74ea099219713ee7f9e80745cb72cb8d852698"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100406507232Z-6711b54d/client-0/time-events.jsonl",
+          "bytes": 931049,
+          "sha256": "e816be8b07de33cb8f180080bb66ff1bce1e50cc1340844aa7e607e8e4702730"
+        }
+      ]
+    },
+    {
+      "raw_directory": "artifacts/fabric-deployment/20261007T100629383498Z-eec66998",
+      "native_status": "passed",
+      "primary_failure": null,
+      "planned_cases": 5,
+      "plan_sha256": "b1d4dd3197f9453ac1d482c7bebb236f07d690f4b22b55ec4909cde927f1f150",
+      "recorded_trials": 5,
+      "passed_trials": 5,
+      "outcomes": [
+        {
+          "id": "f2-external_force",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        },
+        {
+          "id": "f2-reference-offset_mid",
+          "state": "reference",
+          "task_success": null,
+          "passed": true
+        },
+        {
+          "id": "f2-reference-player_wall_head",
+          "state": "reference",
+          "task_success": null,
+          "passed": true
+        },
+        {
+          "id": "f2-reference-player_ledge_2",
+          "state": "reference",
+          "task_success": null,
+          "passed": true
+        },
+        {
+          "id": "f2-window-outside",
+          "state": "success",
+          "task_success": true,
+          "passed": true
+        }
+      ],
+      "raw_files": [
+        {
+          "path": "artifacts/fabric-deployment/20261007T100629383498Z-eec66998/result.json",
+          "bytes": 512929,
+          "sha256": "a0ac99c7ac46bee205a4487dc89d0bee666bf8c904e4f812e0b3cac73da12a5c"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100629383498Z-eec66998/worker-result.json",
+          "bytes": 512359,
+          "sha256": "373d91e1e49078cd140fcc0968d9a7613eda8219b47087c7ef107dc2409729ad"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100629383498Z-eec66998/worker.log",
+          "bytes": 279,
+          "sha256": "3525a83ab8454391e5b1fbb325a2750d5cd29df20d32707842b7aa3f87afa85f"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100629383498Z-eec66998/client-0/f2-plan.json",
+          "bytes": 2299,
+          "sha256": "87eb43e0972a0d2ef5f448212d2bc1ebe1bb581ab90e50c1a7bfe1e5b4753edf"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100629383498Z-eec66998/client-0/f2-trials.jsonl",
+          "bytes": 161875,
+          "sha256": "51689bcc2b377486434f27afde2481463ba47e03082af5b54d3c436f74ca40e4"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100629383498Z-eec66998/client-0/f2-summary.json",
+          "bytes": 208985,
+          "sha256": "656f0998fab72fd5b4757187aedce8c3b47f725009194caa014c8628c87f33d2"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100629383498Z-eec66998/client-0/trace.jsonl",
+          "bytes": 48028453,
+          "sha256": "9a378e0c873e7dc07341943366ca4d3cb811f297b8dcee61afa657c84333fe32"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100629383498Z-eec66998/client-0/f2-frames.jsonl",
+          "bytes": 122661,
+          "sha256": "5bd27d7948f3264a5009bc83f0c076f1ab868cf3c2218b3aa0b5aed0e9df31ee"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100629383498Z-eec66998/client-0/diagnostics.jsonl",
+          "bytes": 1534970,
+          "sha256": "1c655178be8f92668b8640aaf1409fd13ae899b3c74ce0be431d2aa333071f21"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100629383498Z-eec66998/client-0/time-report.json",
+          "bytes": 177295,
+          "sha256": "8237a5e1a60a01a92a70fdf4784796f07561a25ab4423300874d16e0e2db0dcc"
+        },
+        {
+          "path": "artifacts/fabric-deployment/20261007T100629383498Z-eec66998/client-0/time-events.jsonl",
+          "bytes": 696449,
+          "sha256": "2f6e22793dbf757ba6fad5fac640612c1bbd2ca775d67fb5ebab01cec811c85d"
+        }
+      ]
+    }
+  ],
+  "scope": "Original failed and incomplete runs preserved; only accepted-batches count toward the final 93-case audit."
+}

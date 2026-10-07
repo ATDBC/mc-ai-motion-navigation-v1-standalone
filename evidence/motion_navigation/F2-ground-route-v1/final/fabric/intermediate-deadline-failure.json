@@ -1,0 +1,1469 @@
+{
+  "failure_preserved": true,
+  "raw_directory": "artifacts/fabric-deployment/20261007T091021460728Z-b84ddc8f",
+  "trial": {
+    "actual_routes": {
+      "60d33ec1a6e7bb4a19113331-walk-0": [
+        {
+          "x": 0.67,
+          "y": 100,
+          "z": -0.73
+        },
+        {
+          "x": 0.5,
+          "y": 100,
+          "z": -1.5
+        },
+        {
+          "x": 1.5,
+          "y": 100,
+          "z": -1.5
+        },
+        {
+          "x": 2.5,
+          "y": 100,
+          "z": -1.5
+        },
+        {
+          "x": 3.5,
+          "y": 100,
+          "z": -1.5
+        },
+        {
+          "x": 4.5,
+          "y": 100,
+          "z": -1.5
+        },
+        {
+          "x": 5.5,
+          "y": 100,
+          "z": -1.5
+        },
+        {
+          "x": 6.5,
+          "y": 100,
+          "z": -1.5
+        },
+        {
+          "x": 7.5,
+          "y": 100,
+          "z": -1.5
+        },
+        {
+          "x": 8.23,
+          "y": 100,
+          "z": -1.37
+        }
+      ]
+    },
+    "completion_contracts": [
+      {
+        "capability_intervals": [],
+        "completion_region": {
+          "bounds": {
+            "max_x": 8.43,
+            "max_y": 100.05,
+            "max_z": -1.1700000000000002,
+            "min_x": 8.030000000000001,
+            "min_y": 99.95,
+            "min_z": -1.57
+          },
+          "dependencies": [
+            [
+              7,
+              98,
+              -2
+            ],
+            [
+              7,
+              98,
+              -1
+            ],
+            [
+              7,
+              99,
+              -2
+            ],
+            [
+              7,
+              99,
+              -1
+            ],
+            [
+              7,
+              100,
+              -2
+            ],
+            [
+              7,
+              100,
+              -1
+            ],
+            [
+              7,
+              101,
+              -2
+            ],
+            [
+              7,
+              101,
+              -1
+            ],
+            [
+              8,
+              98,
+              -2
+            ],
+            [
+              8,
+              98,
+              -1
+            ],
+            [
+              8,
+              99,
+              -2
+            ],
+            [
+              8,
+              99,
+              -1
+            ],
+            [
+              8,
+              100,
+              -2
+            ],
+            [
+              8,
+              100,
+              -1
+            ],
+            [
+              8,
+              101,
+              -2
+            ],
+            [
+              8,
+              101,
+              -1
+            ]
+          ],
+          "reference_point": [
+            8.23,
+            100,
+            -1.37
+          ],
+          "support_height": 100,
+          "surface_identity": [
+            8,
+            -2,
+            100,
+            0
+          ]
+        },
+        "dependencies": [
+          [
+            0,
+            98,
+            -2
+          ],
+          [
+            0,
+            98,
+            -1
+          ],
+          [
+            0,
+            99,
+            -2
+          ],
+          [
+            0,
+            99,
+            -1
+          ],
+          [
+            0,
+            100,
+            -2
+          ],
+          [
+            0,
+            100,
+            -1
+          ],
+          [
+            0,
+            101,
+            -2
+          ],
+          [
+            0,
+            101,
+            -1
+          ],
+          [
+            1,
+            98,
+            -2
+          ],
+          [
+            1,
+            99,
+            -2
+          ],
+          [
+            1,
+            100,
+            -2
+          ],
+          [
+            1,
+            101,
+            -2
+          ],
+          [
+            2,
+            98,
+            -2
+          ],
+          [
+            2,
+            99,
+            -2
+          ],
+          [
+            2,
+            100,
+            -2
+          ],
+          [
+            2,
+            101,
+            -2
+          ],
+          [
+            3,
+            98,
+            -2
+          ],
+          [
+            3,
+            99,
+            -2
+          ],
+          [
+            3,
+            100,
+            -2
+          ],
+          [
+            3,
+            101,
+            -2
+          ],
+          [
+            4,
+            98,
+            -2
+          ],
+          [
+            4,
+            99,
+            -2
+          ],
+          [
+            4,
+            100,
+            -2
+          ],
+          [
+            4,
+            101,
+            -2
+          ],
+          [
+            5,
+            98,
+            -2
+          ],
+          [
+            5,
+            99,
+            -2
+          ],
+          [
+            5,
+            100,
+            -2
+          ],
+          [
+            5,
+            101,
+            -2
+          ],
+          [
+            6,
+            98,
+            -2
+          ],
+          [
+            6,
+            99,
+            -2
+          ],
+          [
+            6,
+            100,
+            -2
+          ],
+          [
+            6,
+            101,
+            -2
+          ],
+          [
+            7,
+            98,
+            -2
+          ],
+          [
+            7,
+            98,
+            -1
+          ],
+          [
+            7,
+            99,
+            -2
+          ],
+          [
+            7,
+            99,
+            -1
+          ],
+          [
+            7,
+            100,
+            -2
+          ],
+          [
+            7,
+            100,
+            -1
+          ],
+          [
+            7,
+            101,
+            -2
+          ],
+          [
+            7,
+            101,
+            -1
+          ],
+          [
+            8,
+            98,
+            -2
+          ],
+          [
+            8,
+            98,
+            -1
+          ],
+          [
+            8,
+            99,
+            -2
+          ],
+          [
+            8,
+            99,
+            -1
+          ],
+          [
+            8,
+            100,
+            -2
+          ],
+          [
+            8,
+            100,
+            -1
+          ],
+          [
+            8,
+            101,
+            -2
+          ],
+          [
+            8,
+            101,
+            -1
+          ]
+        ],
+        "profile_id": "fabric-1_21-walk-b08-v1",
+        "ruleset_id": "minecraft-java-1_21-player-motion-r1"
+      }
+    ],
+    "condition": "late_first",
+    "control_ms": {
+      "maximum": 4.2241,
+      "p50": 0.9399,
+      "p95": 1.1701,
+      "p99": 4.2241
+    },
+    "current_goal_bounds": [
+      8.030000000000001,
+      99.92,
+      -1.57,
+      8.43,
+      100.08,
+      -1.1700000000000002
+    ],
+    "damage_points": 0.0,
+    "danger_contact_frames": 0,
+    "direction": 1,
+    "drop_frames": 0,
+    "episode_id": "fabric-21001-0",
+    "expected": "success",
+    "family": "diagonal_mid",
+    "final_body": {
+      "allow_flying": false,
+      "body_box": {
+        "max_x": 8.614305909887982,
+        "max_y": 101.8,
+        "max_z": -1.0774803953975935,
+        "min_x": 8.01430590988798,
+        "min_y": 100.0,
+        "min_z": -1.6774803953975936
+      },
+      "fall_distance_blocks": 0.0,
+      "food_points": 20,
+      "game_mode": "survival",
+      "health_points": 20.0,
+      "horizontal_collision": false,
+      "is_climbing": false,
+      "is_fall_flying": false,
+      "is_flying": false,
+      "is_on_ground": true,
+      "is_sneaking": false,
+      "is_sprinting": false,
+      "is_submerged_in_water": false,
+      "is_swimming": false,
+      "is_using_item": false,
+      "movement_tick_id": 825,
+      "pitch_radians": 0.6108652381980153,
+      "pose": "standing",
+      "position": [
+        8.314305909887981,
+        100.0,
+        -1.3774803953975936
+      ],
+      "saturation_points": 20.0,
+      "sequence_id": 822,
+      "session": {
+        "value": "fabric:fabric-21001-0:jvm:05946979-f3ee-46b4-bfb2-e87b96a1ec38"
+      },
+      "stamp": {
+        "controller_clock_id": "controller-fcfdf1f811c34d77801998cdaff45fe3",
+        "received_monotonic_ns": 379028668376900,
+        "sequence_id": 822,
+        "session": {
+          "value": "fabric:fabric-21001-0:jvm:05946979-f3ee-46b4-bfb2-e87b96a1ec38"
+        },
+        "world_tick": 1792
+      },
+      "status_effects": [],
+      "velocity_blocks_per_second": [
+        0.0,
+        -1.568000030517578,
+        0.0
+      ],
+      "vertical_collision": true,
+      "yaw_radians": -1.5707963267948966
+    },
+    "formal_goal_checks": [
+      {
+        "applied_risk_policy_id": "no_expected_damage",
+        "food_points": 20,
+        "goal_bounds": [
+          8.030000000000001,
+          99.92,
+          -1.57,
+          8.43,
+          100.08,
+          -1.1700000000000002
+        ],
+        "goal_modes": [
+          "walk"
+        ],
+        "goal_poses": [
+          "standing"
+        ],
+        "goal_risk_policy_id": "no_expected_damage",
+        "goal_support": "solid",
+        "maximum_terminal_speed": 0.6,
+        "maximum_yaw_error": null,
+        "minimum_resources": [],
+        "mode": "walk",
+        "movement_tick": 824,
+        "observation_sequence": 821,
+        "on_ground": true,
+        "pose": "standing",
+        "position": [
+          8.314305909887981,
+          100.0,
+          -1.3774803953975936
+        ],
+        "required_yaw": null,
+        "sneaking": false,
+        "status": "satisfied",
+        "velocity_blocks_per_second": [
+          0.05814149105765679,
+          -1.568000030517578,
+          0.0
+        ],
+        "yaw_radians": -1.5707963267948966
+      }
+    ],
+    "formal_goal_status": "satisfied",
+    "frames": 57,
+    "goal_bounds": [
+      8.030000000000001,
+      99.92,
+      -1.57,
+      8.43,
+      100.08,
+      -1.1700000000000002
+    ],
+    "id": "f2-diagonal_mid-1-late_first",
+    "injection_applied": false,
+    "input_deadline_miss_count": 1,
+    "interruption_evidence": null,
+    "late_input": {
+      "actual_movement": {
+        "forward": 0,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 1
+      },
+      "actual_offset": 2,
+      "actual_ticks": [
+        777
+      ],
+      "before_tick": 775,
+      "latest_allowed_first_tick": 777,
+      "requested_first_tick": 776,
+      "requested_last_tick": 776,
+      "status": "applied",
+      "valid_for_ticks": 1
+    },
+    "max_full_candidates": 0,
+    "motion_quality": {
+      "completion_ticks": 48,
+      "driver_terminal_tick": 825,
+      "final_recorded_tick": 825,
+      "first_actual_non_neutral_tick": 777,
+      "first_region_entry_tick": 818,
+      "first_satisfied_observation_tick": 821,
+      "first_stopped_goal_tick": 824,
+      "stagnant_windows": [],
+      "stopped_speed_threshold_blocks_per_second": 0.1
+    },
+    "original_goal": {
+      "allowed_modes": [
+        "walk"
+      ],
+      "allowed_poses": [
+        "standing"
+      ],
+      "maximum_terminal_speed_blocks_per_second": 0.6,
+      "maximum_yaw_error_radians": null,
+      "minimum_resources": {
+        "values": []
+      },
+      "region": {
+        "max_x": 8.43,
+        "max_y": 100.08,
+        "max_z": -1.1700000000000002,
+        "min_x": 8.030000000000001,
+        "min_y": 99.92,
+        "min_z": -1.57
+      },
+      "required_yaw_radians": null,
+      "risk_policy_id": "no_expected_damage",
+      "support": "solid"
+    },
+    "original_goal_bounds": [
+      8.030000000000001,
+      99.92,
+      -1.57,
+      8.43,
+      100.08,
+      -1.1700000000000002
+    ],
+    "passed": false,
+    "physics_steps": 0,
+    "prepare_ms": {
+      "maximum": 6.585,
+      "p50": 1.8145,
+      "p95": 2.7746,
+      "p99": 6.585
+    },
+    "reason": "goal_state_satisfied",
+    "scene_sha256": "dfe9e2b0b74d55e9ce2d94686fbfdf7846a701c44f531409446dd242d262539b",
+    "start_position": [
+      0.67,
+      100.0,
+      -0.73
+    ],
+    "start_prefix_proofs": {
+      "prefixes": [
+        {
+          "command": {
+            "forward": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false,
+            "strafe": 0
+          },
+          "control_ticks": 1,
+          "input_state": {
+            "allow_flying": false,
+            "body_height": 1.7999999999999972,
+            "body_width": 0.5999999999999999,
+            "climbing": false,
+            "fall_distance_blocks": 0.0,
+            "fall_flying": false,
+            "flying": false,
+            "food_points": 20,
+            "game_mode": "survival",
+            "gravity_attribute": 0.08,
+            "horizontal_collision": false,
+            "is_using_item": false,
+            "jump_strength_attribute": 0.42,
+            "jumping_cooldown_ticks": 0,
+            "movement_speed_attribute": 0.1,
+            "movement_tick_id": 775,
+            "on_ground": true,
+            "pitch_radians": 0.6108652381980153,
+            "pose": "standing",
+            "position": [
+              0.67,
+              100.0,
+              -0.73
+            ],
+            "ruleset_id": "minecraft-java-1_21-player-motion-r1",
+            "saturation_points": 20.0,
+            "session": {
+              "value": "fabric:fabric-21001-0:jvm:05946979-f3ee-46b4-bfb2-e87b96a1ec38"
+            },
+            "sneaking": false,
+            "sprinting": false,
+            "state_schema": "mc2p.physics-state.v1",
+            "status_effects": [],
+            "step_height_blocks": 0.6,
+            "submerged_in_water": false,
+            "swimming": false,
+            "velocity_blocks_per_tick": [
+              0.0,
+              -0.0784000015258789,
+              0.0
+            ],
+            "vertical_collision": true,
+            "yaw_radians": -1.5707963267948966
+          },
+          "observation_sequence": 774,
+          "result": {
+            "dependencies": [
+              [
+                0,
+                98,
+                -2
+              ],
+              [
+                0,
+                98,
+                -1
+              ],
+              [
+                0,
+                99,
+                -2
+              ],
+              [
+                0,
+                99,
+                -1
+              ],
+              [
+                0,
+                100,
+                -2
+              ],
+              [
+                0,
+                100,
+                -1
+              ],
+              [
+                0,
+                101,
+                -2
+              ],
+              [
+                0,
+                101,
+                -1
+              ]
+            ],
+            "minimum_support": 1.0,
+            "missing_cells": [],
+            "physics_steps": 1,
+            "reason": "verified",
+            "sneak_edge_clipped": false,
+            "status": "feasible",
+            "support_boundary_rejected": false,
+            "tracking_end": {
+              "allow_flying": false,
+              "body_height": 1.7999999999999972,
+              "body_width": 0.5999999999999999,
+              "climbing": false,
+              "fall_distance_blocks": 0.0,
+              "fall_flying": false,
+              "flying": false,
+              "food_points": 20,
+              "game_mode": "survival",
+              "gravity_attribute": 0.08,
+              "horizontal_collision": false,
+              "is_using_item": false,
+              "jump_strength_attribute": 0.42,
+              "jumping_cooldown_ticks": 0,
+              "movement_speed_attribute": 0.1,
+              "movement_tick_id": 776,
+              "on_ground": true,
+              "pitch_radians": 0.6108652381980153,
+              "pose": "standing",
+              "position": [
+                0.67,
+                100.0,
+                -0.73
+              ],
+              "ruleset_id": "minecraft-java-1_21-player-motion-r1",
+              "saturation_points": 20.0,
+              "session": {
+                "value": "fabric:fabric-21001-0:jvm:05946979-f3ee-46b4-bfb2-e87b96a1ec38"
+              },
+              "sneaking": false,
+              "sprinting": false,
+              "state_schema": "mc2p.physics-state.v1",
+              "status_effects": [],
+              "step_height_blocks": 0.6,
+              "submerged_in_water": false,
+              "swimming": false,
+              "velocity_blocks_per_tick": [
+                0.0,
+                -0.0784000015258789,
+                0.0
+              ],
+              "vertical_collision": true,
+              "yaw_radians": -1.5707963267948966
+            },
+            "trajectory": [
+              {
+                "allow_flying": false,
+                "body_height": 1.7999999999999972,
+                "body_width": 0.5999999999999999,
+                "climbing": false,
+                "fall_distance_blocks": 0.0,
+                "fall_flying": false,
+                "flying": false,
+                "food_points": 20,
+                "game_mode": "survival",
+                "gravity_attribute": 0.08,
+                "horizontal_collision": false,
+                "is_using_item": false,
+                "jump_strength_attribute": 0.42,
+                "jumping_cooldown_ticks": 0,
+                "movement_speed_attribute": 0.1,
+                "movement_tick_id": 775,
+                "on_ground": true,
+                "pitch_radians": 0.6108652381980153,
+                "pose": "standing",
+                "position": [
+                  0.67,
+                  100.0,
+                  -0.73
+                ],
+                "ruleset_id": "minecraft-java-1_21-player-motion-r1",
+                "saturation_points": 20.0,
+                "session": {
+                  "value": "fabric:fabric-21001-0:jvm:05946979-f3ee-46b4-bfb2-e87b96a1ec38"
+                },
+                "sneaking": false,
+                "sprinting": false,
+                "state_schema": "mc2p.physics-state.v1",
+                "status_effects": [],
+                "step_height_blocks": 0.6,
+                "submerged_in_water": false,
+                "swimming": false,
+                "velocity_blocks_per_tick": [
+                  0.0,
+                  -0.0784000015258789,
+                  0.0
+                ],
+                "vertical_collision": true,
+                "yaw_radians": -1.5707963267948966
+              },
+              {
+                "allow_flying": false,
+                "body_height": 1.7999999999999972,
+                "body_width": 0.5999999999999999,
+                "climbing": false,
+                "fall_distance_blocks": 0.0,
+                "fall_flying": false,
+                "flying": false,
+                "food_points": 20,
+                "game_mode": "survival",
+                "gravity_attribute": 0.08,
+                "horizontal_collision": false,
+                "is_using_item": false,
+                "jump_strength_attribute": 0.42,
+                "jumping_cooldown_ticks": 0,
+                "movement_speed_attribute": 0.1,
+                "movement_tick_id": 776,
+                "on_ground": true,
+                "pitch_radians": 0.6108652381980153,
+                "pose": "standing",
+                "position": [
+                  0.67,
+                  100.0,
+                  -0.73
+                ],
+                "ruleset_id": "minecraft-java-1_21-player-motion-r1",
+                "saturation_points": 20.0,
+                "session": {
+                  "value": "fabric:fabric-21001-0:jvm:05946979-f3ee-46b4-bfb2-e87b96a1ec38"
+                },
+                "sneaking": false,
+                "sprinting": false,
+                "state_schema": "mc2p.physics-state.v1",
+                "status_effects": [],
+                "step_height_blocks": 0.6,
+                "submerged_in_water": false,
+                "swimming": false,
+                "velocity_blocks_per_tick": [
+                  0.0,
+                  -0.0784000015258789,
+                  0.0
+                ],
+                "vertical_collision": true,
+                "yaw_radians": -1.5707963267948966
+              }
+            ]
+          },
+          "tail_ticks": 0
+        }
+      ],
+      "windows": [
+        {
+          "candidate_lease_ticks": 2,
+          "candidate_movement": {
+            "forward": 0,
+            "jump": false,
+            "sneak": false,
+            "sprint": false,
+            "strafe": 1
+          },
+          "earliest_tick": 776,
+          "first_command": true,
+          "latest_tick": 777,
+          "observation_sequence": 774
+        }
+      ]
+    },
+    "state": "success",
+    "task_success": true,
+    "trajectory_sha256": "60104b3443cebee7f4700e3d8911907caed18602d021855a023e62ab5795b1a8",
+    "violations": [
+      "input_deadline_miss"
+    ]
+  },
+  "miss_frames": [
+    {
+      "activity": {
+        "action_index": 0,
+        "observation_sequence_id": 793,
+        "owner_id": "route/60d33ec1a6e7bb4a19113331",
+        "phase": "tracking",
+        "route_id": "60d33ec1a6e7bb4a19113331",
+        "route_revision": 1,
+        "world_session": {
+          "value": "fabric:fabric-21001-0:jvm:05946979-f3ee-46b4-bfb2-e87b96a1ec38"
+        }
+      },
+      "actual_application_ticks": [
+        797
+      ],
+      "danger_contact": false,
+      "formal_goal_status": "not_satisfied",
+      "health_points": 20.0,
+      "in_original_goal_region": false,
+      "index": 28,
+      "input_status": "applied_outside_window",
+      "latest_allowed_first_tick": 796,
+      "movement": {
+        "forward": 1,
+        "jump": false,
+        "sneak": false,
+        "sprint": false,
+        "strafe": 0
+      },
+      "on_ground": true,
+      "pose": "standing",
+      "position": [
+        3.652553695144957,
+        100.0,
+        -1.52910427830522
+      ],
+      "prepare_ns": 2306000,
+      "reason": "tracking_fixed_route",
+      "request_sequence": 793,
+      "requested_first_tick": 796,
+      "selected_intents": [
+        [
+          "movement",
+          "ordered/b3dc002814384246822a39f3f2b89ecc/0/4/29"
+        ]
+      ],
+      "sneaking": false,
+      "source": {
+        "episode_id": "fabric-21001-0",
+        "generation": 4,
+        "schema_version": "mc2p.intent-source.v1",
+        "scope_id": "b3dc002814384246822a39f3f2b89ecc",
+        "slot": 0,
+        "source_id": "ordered/b3dc002814384246822a39f3f2b89ecc/0/4"
+      },
+      "state": "running",
+      "tick": 797,
+      "trial": "f2-diagonal_mid-1-late_first",
+      "velocity": [
+        1.7726307575076647,
+        -1.568000030517578,
+        0.0
+      ]
+    }
+  ],
+  "step_timing_and_actual_receipts": [
+    {
+      "decision_observation_received_ns": 379027016775400,
+      "dispatched_monotonic_ns": 379027022326700,
+      "report": {
+        "action_sequence_id": 790,
+        "episode_id": "fabric-21001-0",
+        "failure": null,
+        "observation_sequence_id": 791,
+        "phase": "known_world_navigation",
+        "progress": 0.0,
+        "recoveries": [],
+        "report_id": "report-791",
+        "risk_events": [],
+        "runtime_step": 791,
+        "schema_version": "mc2p.execution-report.v0",
+        "selected_intent_ids": [
+          "ordered/b3dc002814384246822a39f3f2b89ecc/0/4/26"
+        ],
+        "status": "running",
+        "task_id": "r25-planning-information"
+      },
+      "decision": {
+        "action": {
+          "cancel_request_sequence_id": null,
+          "deadline_monotonic_ns": 379027272002000,
+          "episode_id": "fabric-21001-0",
+          "look": {
+            "pitch_delta_degrees": 0.0,
+            "yaw_delta_degrees": 0.0
+          },
+          "movement": {
+            "forward": 1,
+            "jump": false,
+            "sneak": false,
+            "sprint": false,
+            "strafe": 0
+          },
+          "observation_sequence_id": 790,
+          "operation": null,
+          "request_sequence_id": 790,
+          "schema_version": "mc2p.action-snapshot.v1",
+          "valid_for_ticks": 1
+        },
+        "candidate_intent_ids": [
+          "ordered/b3dc002814384246822a39f3f2b89ecc/0/4/26"
+        ],
+        "movement_tick_window": null,
+        "schema_version": "mc2p.arbitration-decision.v1",
+        "selected_intents": [
+          [
+            "movement",
+            "ordered/b3dc002814384246822a39f3f2b89ecc/0/4/26"
+          ]
+        ],
+        "suppressed_intents": []
+      },
+      "client_sample": {
+        "clock_id": "jvm:05946979-f3ee-46b4-bfb2-e87b96a1ec38",
+        "completed_at_monotonic_ns": 39841485700,
+        "started_at_monotonic_ns": 39841092200
+      },
+      "receipt": {
+        "action_keyboard_callbacks": 0,
+        "action_mouse_callbacks": 0,
+        "dropped_input_samples": 0,
+        "episode_id": "fabric-21001-0",
+        "execution_path": "client_behavior_v1",
+        "execution_phase": "client_tick_action_boundary",
+        "execution_thread": "Render thread",
+        "generation_id": 791,
+        "handled_screen_render_attempts": 0,
+        "handled_screen_render_completions": 0,
+        "input_applications": [
+          {
+            "episode_id": "fabric-21001-0",
+            "forward": 1.0,
+            "jump": false,
+            "movement_tick_id": 793,
+            "request_sequence_id": 790,
+            "sampled_at_jvm_ns": 39840014200,
+            "schema_version": "mc2p.input-application.v1",
+            "sneak": false,
+            "sprint": false,
+            "state": "leased",
+            "strafe": 0.0
+          }
+        ],
+        "input_samples": 793,
+        "leased_input_samples": 791,
+        "oldest_retained_input_tick": 793,
+        "on_client_thread": true,
+        "reason": "controls_applied",
+        "request_sequence_id": 790,
+        "schema_version": "mc2p.client_action_receipt.v3",
+        "status": "executed",
+        "world_tick": 1759
+      }
+    },
+    {
+      "decision_observation_received_ns": 379027068917500,
+      "dispatched_monotonic_ns": 379027092730500,
+      "report": {
+        "action_sequence_id": 791,
+        "episode_id": "fabric-21001-0",
+        "failure": null,
+        "observation_sequence_id": 792,
+        "phase": "known_world_navigation",
+        "progress": 0.0,
+        "recoveries": [],
+        "report_id": "report-792",
+        "risk_events": [],
+        "runtime_step": 792,
+        "schema_version": "mc2p.execution-report.v0",
+        "selected_intent_ids": [
+          "ordered/b3dc002814384246822a39f3f2b89ecc/0/4/27"
+        ],
+        "status": "running",
+        "task_id": "r25-planning-information"
+      },
+      "decision": {
+        "action": {
+          "cancel_request_sequence_id": null,
+          "deadline_monotonic_ns": 379027342200200,
+          "episode_id": "fabric-21001-0",
+          "look": {
+            "pitch_delta_degrees": 0.0,
+            "yaw_delta_degrees": 0.0
+          },
+          "movement": {
+            "forward": 1,
+            "jump": false,
+            "sneak": false,
+            "sprint": false,
+            "strafe": 0
+          },
+          "observation_sequence_id": 791,
+          "operation": null,
+          "request_sequence_id": 791,
+          "schema_version": "mc2p.action-snapshot.v1",
+          "valid_for_ticks": 1
+        },
+        "candidate_intent_ids": [
+          "ordered/b3dc002814384246822a39f3f2b89ecc/0/4/27"
+        ],
+        "movement_tick_window": null,
+        "schema_version": "mc2p.arbitration-decision.v1",
+        "selected_intents": [
+          [
+            "movement",
+            "ordered/b3dc002814384246822a39f3f2b89ecc/0/4/27"
+          ]
+        ],
+        "suppressed_intents": []
+      },
+      "client_sample": {
+        "clock_id": "jvm:05946979-f3ee-46b4-bfb2-e87b96a1ec38",
+        "completed_at_monotonic_ns": 39892089300,
+        "started_at_monotonic_ns": 39891729500
+      },
+      "receipt": {
+        "action_keyboard_callbacks": 0,
+        "action_mouse_callbacks": 0,
+        "dropped_input_samples": 0,
+        "episode_id": "fabric-21001-0",
+        "execution_path": "client_behavior_v1",
+        "execution_phase": "client_tick_action_boundary",
+        "execution_thread": "Render thread",
+        "generation_id": 792,
+        "handled_screen_render_attempts": 0,
+        "handled_screen_render_completions": 0,
+        "input_applications": [
+          {
+            "episode_id": "fabric-21001-0",
+            "forward": 1.0,
+            "jump": false,
+            "movement_tick_id": 794,
+            "request_sequence_id": 791,
+            "sampled_at_jvm_ns": 39890625200,
+            "schema_version": "mc2p.input-application.v1",
+            "sneak": false,
+            "sprint": false,
+            "state": "leased",
+            "strafe": 0.0
+          }
+        ],
+        "input_samples": 794,
+        "leased_input_samples": 792,
+        "oldest_retained_input_tick": 794,
+        "on_client_thread": true,
+        "reason": "controls_applied",
+        "request_sequence_id": 791,
+        "schema_version": "mc2p.client_action_receipt.v3",
+        "status": "executed",
+        "world_tick": 1760
+      }
+    },
+    {
+      "decision_observation_received_ns": 379027119419900,
+      "dispatched_monotonic_ns": 379027131476400,
+      "report": {
+        "action_sequence_id": 792,
+        "episode_id": "fabric-21001-0",
+        "failure": null,
+        "observation_sequence_id": 793,
+        "phase": "known_world_navigation",
+        "progress": 0.0,
+        "recoveries": [],
+        "report_id": "report-793",
+        "risk_events": [],
+        "runtime_step": 793,
+        "schema_version": "mc2p.execution-report.v0",
+        "selected_intent_ids": [
+          "ordered/b3dc002814384246822a39f3f2b89ecc/0/4/28"
+        ],
+        "status": "running",
+        "task_id": "r25-planning-information"
+      },
+      "decision": {
+        "action": {
+          "cancel_request_sequence_id": null,
+          "deadline_monotonic_ns": 379027380969000,
+          "episode_id": "fabric-21001-0",
+          "look": {
+            "pitch_delta_degrees": 0.0,
+            "yaw_delta_degrees": 0.0
+          },
+          "movement": {
+            "forward": 1,
+            "jump": false,
+            "sneak": false,
+            "sprint": false,
+            "strafe": 0
+          },
+          "observation_sequence_id": 792,
+          "operation": null,
+          "request_sequence_id": 792,
+          "schema_version": "mc2p.action-snapshot.v1",
+          "valid_for_ticks": 1
+        },
+        "candidate_intent_ids": [
+          "ordered/b3dc002814384246822a39f3f2b89ecc/0/4/28"
+        ],
+        "movement_tick_window": null,
+        "schema_version": "mc2p.arbitration-decision.v1",
+        "selected_intents": [
+          [
+            "movement",
+            "ordered/b3dc002814384246822a39f3f2b89ecc/0/4/28"
+          ]
+        ],
+        "suppressed_intents": []
+      },
+      "client_sample": {
+        "clock_id": "jvm:05946979-f3ee-46b4-bfb2-e87b96a1ec38",
+        "completed_at_monotonic_ns": 39971979500,
+        "started_at_monotonic_ns": 39971502800
+      },
+      "receipt": {
+        "action_keyboard_callbacks": 0,
+        "action_mouse_callbacks": 0,
+        "dropped_input_samples": 0,
+        "episode_id": "fabric-21001-0",
+        "execution_path": "client_behavior_v1",
+        "execution_phase": "client_tick_action_boundary",
+        "execution_thread": "Render thread",
+        "generation_id": 793,
+        "handled_screen_render_attempts": 0,
+        "handled_screen_render_completions": 0,
+        "input_applications": [
+          {
+            "episode_id": "fabric-21001-0",
+            "forward": 1.0,
+            "jump": false,
+            "movement_tick_id": 795,
+            "request_sequence_id": 792,
+            "sampled_at_jvm_ns": 39969346900,
+            "schema_version": "mc2p.input-application.v1",
+            "sneak": false,
+            "sprint": false,
+            "state": "leased",
+            "strafe": 0.0
+          }
+        ],
+        "input_samples": 795,
+        "leased_input_samples": 793,
+        "oldest_retained_input_tick": 795,
+        "on_client_thread": true,
+        "reason": "controls_applied",
+        "request_sequence_id": 792,
+        "schema_version": "mc2p.client_action_receipt.v3",
+        "status": "executed",
+        "world_tick": 1761
+      }
+    },
+    {
+      "decision_observation_received_ns": 379027199707200,
+      "dispatched_monotonic_ns": 379027209594600,
+      "report": {
+        "action_sequence_id": 793,
+        "episode_id": "fabric-21001-0",
+        "failure": null,
+        "observation_sequence_id": 794,
+        "phase": "known_world_navigation",
+        "progress": 0.0,
+        "recoveries": [],
+        "report_id": "report-794",
+        "risk_events": [],
+        "runtime_step": 794,
+        "schema_version": "mc2p.execution-report.v0",
+        "selected_intent_ids": [
+          "ordered/b3dc002814384246822a39f3f2b89ecc/0/4/29"
+        ],
+        "status": "running",
+        "task_id": "r25-planning-information"
+      },
+      "decision": {
+        "action": {
+          "cancel_request_sequence_id": null,
+          "deadline_monotonic_ns": 379027459099700,
+          "episode_id": "fabric-21001-0",
+          "look": {
+            "pitch_delta_degrees": 0.0,
+            "yaw_delta_degrees": 0.0
+          },
+          "movement": {
+            "forward": 1,
+            "jump": false,
+            "sneak": false,
+            "sprint": false,
+            "strafe": 0
+          },
+          "observation_sequence_id": 793,
+          "operation": null,
+          "request_sequence_id": 793,
+          "schema_version": "mc2p.action-snapshot.v1",
+          "valid_for_ticks": 1
+        },
+        "candidate_intent_ids": [
+          "ordered/b3dc002814384246822a39f3f2b89ecc/0/4/29"
+        ],
+        "movement_tick_window": null,
+        "schema_version": "mc2p.arbitration-decision.v1",
+        "selected_intents": [
+          [
+            "movement",
+            "ordered/b3dc002814384246822a39f3f2b89ecc/0/4/29"
+          ]
+        ],
+        "suppressed_intents": []
+      },
+      "client_sample": {
+        "clock_id": "jvm:05946979-f3ee-46b4-bfb2-e87b96a1ec38",
+        "completed_at_monotonic_ns": 40038840700,
+        "started_at_monotonic_ns": 40038485200
+      },
+      "receipt": {
+        "action_keyboard_callbacks": 0,
+        "action_mouse_callbacks": 0,
+        "dropped_input_samples": 0,
+        "episode_id": "fabric-21001-0",
+        "execution_path": "client_behavior_v1",
+        "execution_phase": "client_tick_action_boundary",
+        "execution_thread": "Render thread",
+        "generation_id": 794,
+        "handled_screen_render_attempts": 0,
+        "handled_screen_render_completions": 0,
+        "input_applications": [
+          {
+            "episode_id": "fabric-21001-0",
+            "forward": 0.0,
+            "jump": false,
+            "movement_tick_id": 796,
+            "request_sequence_id": 792,
+            "sampled_at_jvm_ns": 39985054900,
+            "schema_version": "mc2p.input-application.v1",
+            "sneak": false,
+            "sprint": false,
+            "state": "lease_exhausted",
+            "strafe": 0.0
+          },
+          {
+            "episode_id": "fabric-21001-0",
+            "forward": 1.0,
+            "jump": false,
+            "movement_tick_id": 797,
+            "request_sequence_id": 793,
+            "sampled_at_jvm_ns": 40037248100,
+            "schema_version": "mc2p.input-application.v1",
+            "sneak": false,
+            "sprint": false,
+            "state": "leased",
+            "strafe": 0.0
+          }
+        ],
+        "input_samples": 797,
+        "leased_input_samples": 794,
+        "oldest_retained_input_tick": 796,
+        "on_client_thread": true,
+        "reason": "controls_applied",
+        "request_sequence_id": 793,
+        "schema_version": "mc2p.client_action_receipt.v3",
+        "status": "executed",
+        "world_tick": 1763
+      }
+    },
+    {
+      "decision_observation_received_ns": 379027265920400,
+      "dispatched_monotonic_ns": 379027271948600,
+      "report": {
+        "action_sequence_id": 794,
+        "episode_id": "fabric-21001-0",
+        "failure": null,
+        "observation_sequence_id": 795,
+        "phase": "known_world_navigation",
+        "progress": 0.0,
+        "recoveries": [],
+        "report_id": "report-795",
+        "risk_events": [],
+        "runtime_step": 795,
+        "schema_version": "mc2p.execution-report.v0",
+        "selected_intent_ids": [
+          "ordered/b3dc002814384246822a39f3f2b89ecc/0/4/30"
+        ],
+        "status": "running",
+        "task_id": "r25-planning-information"
+      },
+      "decision": {
+        "action": {
+          "cancel_request_sequence_id": null,
+          "deadline_monotonic_ns": 379027521537300,
+          "episode_id": "fabric-21001-0",
+          "look": {
+            "pitch_delta_degrees": 0.0,
+            "yaw_delta_degrees": 0.0
+          },
+          "movement": {
+            "forward": 1,
+            "jump": false,
+            "sneak": false,
+            "sprint": false,
+            "strafe": 0
+          },
+          "observation_sequence_id": 794,
+          "operation": null,
+          "request_sequence_id": 794,
+          "schema_version": "mc2p.action-snapshot.v1",
+          "valid_for_ticks": 1
+        },
+        "candidate_intent_ids": [
+          "ordered/b3dc002814384246822a39f3f2b89ecc/0/4/30"
+        ],
+        "movement_tick_window": null,
+        "schema_version": "mc2p.arbitration-decision.v1",
+        "selected_intents": [
+          [
+            "movement",
+            "ordered/b3dc002814384246822a39f3f2b89ecc/0/4/30"
+          ]
+        ],
+        "suppressed_intents": []
+      },
+      "client_sample": {
+        "clock_id": "jvm:05946979-f3ee-46b4-bfb2-e87b96a1ec38",
+        "completed_at_monotonic_ns": 40090151000,
+        "started_at_monotonic_ns": 40089791800
+      },
+      "receipt": {
+        "action_keyboard_callbacks": 0,
+        "action_mouse_callbacks": 0,
+        "dropped_input_samples": 0,
+        "episode_id": "fabric-21001-0",
+        "execution_path": "client_behavior_v1",
+        "execution_phase": "client_tick_action_boundary",
+        "execution_thread": "Render thread",
+        "generation_id": 795,
+        "handled_screen_render_attempts": 0,
+        "handled_screen_render_completions": 0,
+        "input_applications": [
+          {
+            "episode_id": "fabric-21001-0",
+            "forward": 1.0,
+            "jump": false,
+            "movement_tick_id": 798,
+            "request_sequence_id": 794,
+            "sampled_at_jvm_ns": 40088670100,
+            "schema_version": "mc2p.input-application.v1",
+            "sneak": false,
+            "sprint": false,
+            "state": "leased",
+            "strafe": 0.0
+          }
+        ],
+        "input_samples": 798,
+        "leased_input_samples": 795,
+        "oldest_retained_input_tick": 798,
+        "on_client_thread": true,
+        "reason": "controls_applied",
+        "request_sequence_id": 794,
+        "schema_version": "mc2p.client_action_receipt.v3",
+        "status": "executed",
+        "world_tick": 1764
+      }
+    }
+  ],
+  "root_cause_boundary": "First delayed start applied within [776,777]; request793 during motion expected796 but applied797. JVM consecutive application samples 794->795 78.7217ms and795->796 15.7080ms compress the next input opportunity. Python observed-to-dispatch9.8874ms, prepare2.306ms. No inferred wall-clock crossing is treated as successful."
+}

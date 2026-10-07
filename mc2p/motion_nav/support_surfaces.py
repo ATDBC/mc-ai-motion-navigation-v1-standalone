@@ -6,8 +6,10 @@ import math
 
 from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.geometry import (
-    QueryStatus, query_support, sweep, unknown_shape_owner_is_fully_covered,
+    QueryStatus, query_support, sweep, required_cells_for_sweep,
+    unknown_shape_owner_is_fully_covered, _rectangle_union_area,
 )
+from mc2p.motion_nav.ground_route_execution import GroundCompletionRegion
 from mc2p.motion_nav.world_model import (
     Aabb, BlockPos, COLLISION_OWNER_BELOW_REACH_CELLS, CellKnowledge,
     WorldQueryCache, WorldView,
@@ -88,6 +90,168 @@ class StandablePointResult:
     position: tuple[float, float, float] | None = None
     dependencies: tuple[BlockPos, ...] = ()
     missing_cells: tuple[BlockPos, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class StandableRegionResult:
+    status: QueryStatus
+    completion_region: GroundCompletionRegion | None = None
+    dependencies: tuple[BlockPos, ...] = ()
+    missing_cells: tuple[BlockPos, ...] = ()
+
+    @property
+    def position(self) -> tuple[float, float, float] | None:
+        return None if self.completion_region is None else self.completion_region.reference_point
+
+
+def standable_region_in_goal(world: WorldView, surface: SupportSurface, region: Aabb,
+                             *, body_width: float = .6, body_height: float = 1.8,
+                             minimum_support_fraction: float = .5,
+                             connection_from: tuple[float, float, float] | None = None,
+                             allowed_materials: frozenset[str] | None = None,
+                             query_cache: WorldQueryCache | None = None) -> StandableRegionResult:
+    """Construct a single exact clearance rectangle, never an outer envelope.
+
+    Support is piecewise bilinear between finite shape edges. Its minimum in
+    each piece occurs at a vertex. A threshold cutting a piece is explicitly
+    unsupported in V1, rather than approximated with a sampled rectangle.
+    """
+    if query_cache is not None:
+        query_cache.validate_for(world)
+    if (not math.isfinite(body_width) or not math.isfinite(body_height)
+            or body_width <= 0 or body_height <= 0
+            or not 0 < minimum_support_fraction <= 1):
+        raise ContractViolation("standable region body/support limits are invalid")
+    # The historical overlap helper permits numerical contact. A completion
+    # reference must belong to the original goal exactly, including height.
+    if not region.min_y <= surface.position[1] <= region.max_y:
+        return StandableRegionResult(QueryStatus.BLOCKED)
+    overlap = _region_overlap(surface, region)
+    if overlap is None:
+        return StandableRegionResult(QueryStatus.BLOCKED)
+    lx, hx, lz, hz = overlap
+    if lx >= hx or lz >= hz:
+        return StandableRegionResult(QueryStatus.BLOCKED)
+    y, half = surface.position[1], body_width / 2
+    envelope = Aabb(lx-half, y, lz-half, hx+half, y+body_height, hz+half)
+    selected = set(required_cells_for_sweep(envelope, (0., 0., 0.)))
+    selected.update(query_support(envelope, world, query_cache=query_cache).dependencies)
+    parts = ((lx, lz, hx, hz),)
+    missing, unsupported, support_boxes, clipping_owners = set(), False, [], set()
+    for owner in sorted(selected):
+        fact = world.cell(owner) if query_cache is None else query_cache.cell(owner)
+        if fact.knowledge is CellKnowledge.UNKNOWN:
+            if unknown_shape_owner_is_fully_covered(world, owner):
+                continue
+            missing.add(owner)
+            # The bounded owner may reach one cell above itself.
+            boxes = (Aabb(owner[0], owner[1], owner[2],
+                          owner[0]+1, owner[1]+2, owner[2]+1),)
+        elif fact.knowledge is CellKnowledge.AIR:
+            continue
+        else:
+            assert fact.block is not None
+            if (allowed_materials is not None and fact.block.material_key not in allowed_materials):
+                return StandableRegionResult(QueryStatus.UNSUPPORTED,
+                    dependencies=tuple(sorted(set(surface.dependencies) | selected)))
+            if fact.block.fluid or fact.block.collision_kind == 'unsupported':
+                unsupported = True
+                boxes = (Aabb(owner[0], owner[1], owner[2],
+                              owner[0]+1, owner[1]+2, owner[2]+1),)
+            else:
+                boxes = fact.block.world_boxes(owner)
+        for box in boxes:
+            if abs(box.max_y-y) <= .05:
+                support_boxes.append(box)
+            if box.min_y >= y+body_height-_EPSILON or box.max_y <= y+_EPSILON:
+                continue
+            blocker = Aabb(box.min_x-half, y-1, box.min_z-half,
+                           box.max_x+half, y+body_height+1, box.max_z+half)
+            reduced_parts = tuple(reduced for part in parts for reduced in _subtract_footprint(part, blocker))
+            if reduced_parts != parts and fact.knowledge is CellKnowledge.BLOCK:
+                clipping_owners.add(owner)
+            parts = reduced_parts
+    dependencies = set(surface.dependencies) | selected
+    def rejected(status):
+        return StandableRegionResult(status, dependencies=tuple(sorted(dependencies)),
+                                     missing_cells=tuple(sorted(missing)))
+    if not parts:
+        return rejected(QueryStatus.NEEDS_INFORMATION if missing else
+                        QueryStatus.UNSUPPORTED if unsupported else QueryStatus.BLOCKED)
+    lx, lz = min(p[0] for p in parts), min(p[1] for p in parts)
+    hx, hz = max(p[2] for p in parts), max(p[3] for p in parts)
+    if abs(_rectangle_union_area(list(parts)) - (hx-lx)*(hz-lz)) > _EPSILON:
+        return rejected(QueryStatus.UNSUPPORTED)
+    xs = {lx, hx} | {v for box in support_boxes for edge in (box.min_x, box.max_x)
+                         for v in (edge-half, edge+half) if lx < v < hx}
+    zs = {lz, hz} | {v for box in support_boxes for edge in (box.min_z, box.max_z)
+                         for v in (edge-half, edge+half) if lz < v < hz}
+    exact_dependencies = set()
+    fractions = []
+    for x in sorted(xs):
+        for z in sorted(zs):
+            body = Aabb(x-half, y, z-half, x+half, y+body_height, z+half)
+            clearance = sweep(body, (0., 0., 0.), world, query_cache=query_cache)
+            support = query_support(body, world, query_cache=query_cache)
+            exact_dependencies.update((*clearance.dependencies, *support.dependencies))
+            if clearance.status is not QueryStatus.FEASIBLE or support.status is not QueryStatus.FEASIBLE:
+                missing.update((*clearance.missing_cells, *support.missing_cells))
+                return rejected(QueryStatus.NEEDS_INFORMATION if missing else
+                                QueryStatus.UNSUPPORTED if QueryStatus.UNSUPPORTED in
+                                (clearance.status, support.status) else QueryStatus.BLOCKED)
+            fractions.append(support.support_fraction)
+    if min(fractions)+_EPSILON < minimum_support_fraction:
+        return rejected(QueryStatus.BLOCKED if max(fractions)+_EPSILON < minimum_support_fraction
+                        else QueryStatus.UNSUPPORTED)
+    # Full rectangle envelope records clearance and support owners between
+    # vertices, including facts which select its exact shape boundaries.
+    exact_envelope = Aabb(lx-half, y, lz-half, hx+half, y+body_height, hz+half)
+    exact_dependencies.update(required_cells_for_sweep(exact_envelope, (0., 0., 0.)))
+    # Keep boundary-defining owners so the typed region recipe can replay
+    # shape changes. A contact wall becoming hazardous invalidates the region.
+    exact_dependencies.update(clipping_owners)
+    exact_dependencies.update(query_support(exact_envelope, world, query_cache=query_cache).dependencies)
+    # Retain the supporting surface identity, but not unused point-selection
+    # facts outside the accepted body envelope (D059/D060).
+    center = ((lx+hx)/2, (lz+hz)/2)
+    x, z = center
+    if connection_from is not None:
+        # Project the incoming axis-aligned leg into the rectangle. Equal
+        # line distance chooses the largest interior margin, then coordinate.
+        target_x, target_z = (region.min_x+region.max_x)/2, (region.min_z+region.max_z)/2
+        dx, dz = target_x-connection_from[0], target_z-connection_from[2]
+        low, high = 0., math.inf
+        for origin, delta, minimum, maximum in (
+                (connection_from[0], dx, lx, hx), (connection_from[2], dz, lz, hz)):
+            if abs(delta) <= _EPSILON:
+                if not minimum <= origin <= maximum:
+                    high = -1.
+            else:
+                a, b = sorted(((minimum-origin)/delta, (maximum-origin)/delta))
+                low, high = max(low, a), min(high, b)
+        if low < high and math.isfinite(high):
+            # On the projected incoming ray, choose the point maximizing the
+            # minimum rectangular boundary margin. Piecewise-linear extrema
+            # occur at intersections of these four affine distances.
+            margins = ((connection_from[0]-lx, dx), (hx-connection_from[0], -dx),
+                       (connection_from[2]-lz, dz), (hz-connection_from[2], -dz))
+            values = {low, high, (low+high)/2}
+            for a, da in margins:
+                for b, db in margins:
+                    if abs(da-db) > _EPSILON:
+                        value = (b-a)/(da-db)
+                        if low <= value <= high:
+                            values.add(value)
+            t = min(values, key=lambda v: (-min(a+da*v for a, da in margins),
+                                          connection_from[0]+dx*v, connection_from[2]+dz*v))
+            x, z = connection_from[0]+dx*t, connection_from[2]+dz*t
+    bounds = Aabb(lx, max(region.min_y, y-.05), lz,
+                  hx, min(region.max_y, y+.05), hz)
+    node = surface.node_id
+    completion = GroundCompletionRegion(bounds, (x, y, z), y,
+        (node.column_x, node.column_z, node.vertical_band, node.surface_index),
+        tuple(sorted(exact_dependencies)))
+    return StandableRegionResult(QueryStatus.FEASIBLE, completion, tuple(sorted(dependencies)))
 
 
 def _region_overlap(surface: SupportSurface, region: Aabb):

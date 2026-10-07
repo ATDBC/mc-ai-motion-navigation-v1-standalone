@@ -8,7 +8,7 @@ from mc2p.contracts.action_v1 import MovementV1
 from mc2p.motion_nav.motion_solver import MotionSolveKind, LandingRegion
 if TYPE_CHECKING:
     from mc2p.motion_nav.runtime_adapter import NavigationFrame
-    from mc2p.motion_nav.action_preconditions import ActionPreconditionResult
+    from mc2p.motion_nav.action_requirements import ActionPreconditionResult
     from mc2p.motion_nav.segment_entry import SegmentEntryWindow
     from mc2p.motion_nav.world_model import BlockPos
 
@@ -18,11 +18,37 @@ class BodyCommitment(StrEnum):
     TRANSITION = 'transition'
 
 
-class ControllerFamily(StrEnum):
-    GROUND = 'ground'
-    JUMP_UP = 'jump_up'
-    STEP = 'step'
-    AIR = 'air'
+class ActionRouteState(StrEnum):
+    IDLE = "idle"
+    RUNNING = "running"
+    CANCELLING = "cancelling"
+    COMPLETE = "complete"
+    CANCELLED = "cancelled"
+    FAILED = "failed"
+    BLOCKED = "blocked"
+    NEEDS_INFORMATION = "needs_information"
+    UNSUPPORTED = "unsupported"
+    INPUT_LOST = "input_lost"
+    NEEDS_REPLAN = "needs_replan"
+
+
+@dataclass(frozen=True, slots=True)
+class ActionControllerResult:
+    state: ActionRouteState | None
+    movement: MovementV1
+    input_lease_ticks: int
+    reason: str
+    missing_cells: tuple[BlockPos, ...] = ()
+    look: object | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ActionControllerAdapter:
+    create: Callable
+    entry_limits: Callable
+    interpret: Callable
+    # Replace an unsubmitted departure without deciding the controller twice.
+    stop_protection: Callable | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,8 +86,7 @@ class ActionSpec:
     needs_background_solving: bool
     solve_kind: MotionSolveKind | None
     solve_geometry: Callable | None
-    controller_family: ControllerFamily
-    controller_factory: Callable | None
+    controller_adapter: ActionControllerAdapter | None
     completed: Callable[[object, NavigationFrame], bool]
     entry_observation: Callable
     precondition: Callable[..., ActionPreconditionResult]

@@ -1,0 +1,30 @@
+{
+  "passed": true,
+  "cases": [
+    {
+      "conditioned_look_won": true,
+      "actual_action_movement": "MovementV1(forward=1, strafe=0, jump=False, sneak=False, sprint=False)",
+      "adopted_window": [
+        2,
+        3
+      ],
+      "requested_first_tick": 2,
+      "latest_allowed_first_tick": 3,
+      "status": "applied",
+      "actual_application_ticks": [
+        2
+      ]
+    },
+    {
+      "conditioned_look_won": false,
+      "actual_action_movement": "MovementV1(forward=0, strafe=0, jump=False, sneak=False, sprint=False)",
+      "adopted_window": null,
+      "requested_first_tick": 2,
+      "latest_allowed_first_tick": 2,
+      "status": "applied",
+      "actual_application_ticks": [
+        2
+      ]
+    }
+  ]
+}

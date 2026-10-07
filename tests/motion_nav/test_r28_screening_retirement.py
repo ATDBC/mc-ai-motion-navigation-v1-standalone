@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from tests.sim.runner import InlinePlannerWorker, Scenario, lane, run
 from tests.sim.product_cases import player_layout
+from scripts.f2_ground_route_evidence import terminal_controller_evidence
 
 
 class GeometryOnlyPlanner(InlinePlannerWorker):
@@ -21,12 +22,18 @@ class ScreeningRetirementTests(unittest.TestCase):
         self.assertEqual(result.outcome, 'success', result.reason)
         self.assertFalse(result.violations)
 
-    def test_wall_control_failure_is_not_a_screening_conclusion(self):
-        scene, start, goal = player_layout('player_wall_head')
-        result = run(Scenario('honest-wall-result', scene, start, goal))
-        self.assertFalse(result.violations)
-        self.assertEqual(result.outcome, 'failed')
-        self.assertEqual(result.reason, 'fixed_route_has_no_forward_control')
+    def test_wall_outcome_comes_from_live_control_without_screening(self):
+        for family in ('player_wall_head', 'player_wall_parallel', 'player_corner',
+                       'player_corridor_end', 'player_ledge_1', 'player_ledge_2'):
+            with self.subTest(family=family), terminal_controller_evidence() as actual:
+                scene, start, goal = player_layout(family)
+                result = run(Scenario('honest-result-'+family, scene, start, goal),
+                             planner_factory=GeometryOnlyPlanner)
+                self.assertFalse(result.violations)
+                self.assertEqual(result.outcome, 'success', result.reason)
+                self.assertTrue(result.verification_complete)
+                self.assertTrue(actual['contracts'])
+                self.assertTrue(actual['formal_goal_checks'])
 
 
 if __name__ == '__main__':

@@ -47,7 +47,7 @@ from mc2p.skills.melee_strike_driver import (
 )
 from mc2p.skills.moving_melee import MovingMeleePhase, decide_moving_melee
 from mc2p.skills.moving_target import MovingGoalDecisionV1, decide_moving_goal
-from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
+from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver, RuntimeNavigationDriverState
 
 
 MAX_REAPPROACHES = 16
@@ -699,7 +699,9 @@ class MovingMeleeDriver:
         """Retire a terminal route before deciding whether pursuit can retry."""
         if (self.approach_driver is None
                 or self.approach_driver.state not in {
-                    "failed", "cancelled", "stopped", "blocked",
+                    RuntimeNavigationDriverState.FAILED,
+                    RuntimeNavigationDriverState.CANCELLED,
+                    RuntimeNavigationDriverState.STOPPED,
                 }):
             return False
         reason = "approach/" + str(self.approach_driver.reason)
@@ -926,7 +928,7 @@ class MovingMeleeDriver:
                 approach.adopt_result(result)
                 if approach.source is None:
                     self.approach_driver = None
-                elif approach.state == "success":
+                elif approach.state == RuntimeNavigationDriverState.SUCCESS:
                     approach.release("combat_standoff_reached")
                     self.approach_driver = None
         captured, capture_result = self._capture_external_motion(
@@ -1229,7 +1231,7 @@ class MovingMeleeDriver:
                 return result
             # A completed route is no longer replaceable. Consume its success
             # before considering a moving-target goal refresh.
-            if self.approach_driver.state == "success":
+            if self.approach_driver.state == RuntimeNavigationDriverState.SUCCESS:
                 result = self._release_approach(profile, "combat_standoff_reached")
                 self._phase, self._reason = MovingMeleePhase.RECOVERING_CADENCE, \
                     "standoff_reached_refresh_required"
@@ -1259,7 +1261,7 @@ class MovingMeleeDriver:
             if captured:
                 return capture_result if capture_result is not None else result
             self._observe()
-            if self.approach_driver.state == "success":
+            if self.approach_driver.state == RuntimeNavigationDriverState.SUCCESS:
                 self._release_approach(
                     profile, "combat_standoff_reached", advance_runtime=False,
                 )

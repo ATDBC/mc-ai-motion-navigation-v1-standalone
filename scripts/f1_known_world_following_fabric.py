@@ -39,7 +39,7 @@ from mc2p.skills.known_world_follow_driver import (
     KnownWorldFollowStatus,
 )
 from mc2p.skills.local_perception import project_follow_view
-from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
+from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver, RuntimeNavigationDriverState
 from scripts.control_probe_core import write_json_atomic
 from scripts.fabric_deployment_launch import ROOT, inspect_launch, verify_assets
 from scripts.follow_fixture_world import PLAYERS, offline_uuid
@@ -989,7 +989,7 @@ def _run_formal_case(run_dir: Path, scenario: FabricFollowScenario, *,
                 frame = {
                     "movement_tick": _movement_tick(host.follower),
                     "position": list(robot_position),
-                    "driver_state": driver.state,
+                    "driver_state": driver.state.value,
                     "source_bound": driver.source is not None,
                     "goal_satisfied": (
                         session.report.observed_goal_status
@@ -1050,7 +1050,7 @@ def _run_formal_case(run_dir: Path, scenario: FabricFollowScenario, *,
                     )
                 if cancellation_requested and driver.source is None:
                     break
-                if driver.state in {"failed", "success"}:
+                if driver.state in {RuntimeNavigationDriverState.FAILED, RuntimeNavigationDriverState.SUCCESS}:
                     safety.add("unexpected_navigation_terminal")
                     break
 
@@ -1088,7 +1088,7 @@ def _run_formal_case(run_dir: Path, scenario: FabricFollowScenario, *,
             if not source_released:
                 safety.add("cancel_source_not_released")
             final_session_state = session.report.state.value
-            final_driver_state = driver.state
+            final_driver_state = driver.state.value
         finally:
             if samples is not None:
                 samples.close()

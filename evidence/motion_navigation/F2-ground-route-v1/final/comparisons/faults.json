@@ -1,0 +1,27 @@
+{
+  "cases": 16,
+  "identical": 15,
+  "changed_ids": [
+    "faults/active_route_dependency_retry"
+  ],
+  "normalizer_version": "r28-structure-trajectory-v1",
+  "signature_schema": "mc2p.s0r-owned-verification.v2",
+  "baseline": "evidence\\motion_navigation\\action-spec-hardening-v1\\review-p2\\faults-index.json",
+  "baseline_sha256": "e96b7fa0e84fdf1280bfbc21bca4801d690bed53850c2fa419b0414e0966794a",
+  "results": {
+    "passed": 16,
+    "failed": 0
+  },
+  "details": [
+    {
+      "id": "faults/active_route_dependency_retry",
+      "before_signature": "5c79e6d4dc9a3cdcc11411a424b8ddd2b34c30cfde16ef142d1d0aded45b353c",
+      "after_signature": "5619897e59af268fc50f7acd5de210bdaa47e99fc864e01ac9d8b58f361b54f7",
+      "changed_raw_fields": [
+        "trace"
+      ],
+      "before_passed": true,
+      "after_passed": true
+    }
+  ]
+}

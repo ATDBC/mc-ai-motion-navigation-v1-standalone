@@ -1,4 +1,5 @@
 from __future__ import annotations
+from mc2p.skills.navigation_session_driver import RuntimeNavigationDriverState
 
 from dataclasses import replace
 import math
@@ -451,9 +452,9 @@ class WorldChangeNavigationIntegrationTests(unittest.TestCase):
         )
         for _ in range(30):
             driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
-            if driver.navigation.state == "interaction_required":
+            if driver.navigation.state == RuntimeNavigationDriverState.INTERACTION_REQUIRED:
                 break
-        self.assertEqual(driver.navigation.state, "interaction_required")
+        self.assertEqual(driver.navigation.state, RuntimeNavigationDriverState.INTERACTION_REQUIRED)
         self._delay_one_body_handoff(driver)
 
         driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
@@ -480,9 +481,9 @@ class WorldChangeNavigationIntegrationTests(unittest.TestCase):
         clock, _, driver = self._fixture(maximum_blocks=1)
         for _ in range(30):
             driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
-            if driver.navigation.state == "interaction_required":
+            if driver.navigation.state == RuntimeNavigationDriverState.INTERACTION_REQUIRED:
                 break
-        self.assertEqual(driver.navigation.state, "interaction_required")
+        self.assertEqual(driver.navigation.state, RuntimeNavigationDriverState.INTERACTION_REQUIRED)
         self._delay_one_body_handoff(driver)
 
         driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)

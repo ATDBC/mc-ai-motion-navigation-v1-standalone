@@ -169,6 +169,17 @@ def _oracle_session(*, exact_terminal: bool):
 
 class D059ConsumersAndIdentityTests(unittest.TestCase):
     @staticmethod
+    def _requested_dependencies(session, proposal, dependencies):
+        # Region proofs add cells; retain the runtime's 16-cell refresh budget
+        # and verify successive requests rather than requiring one full page.
+        requested = set(proposal.control_frame.observation_request.air_positions)
+        for _ in range((len(dependencies) + 15) // 16):
+            request = session.observation_request()
+            assert len(request.air_positions) <= 16
+            requested.update(request.air_positions)
+        return requested
+
+    @staticmethod
     def _coordinator(route, executor):
         ledger = RetryLedger("d059-control-identity-task")
         return MotionRouteCoordinator(
@@ -205,7 +216,7 @@ class D059ConsumersAndIdentityTests(unittest.TestCase):
             recipe for recipe in route.validation_plan.recipes
             if recipe.query_kind
                 is WalkValidationQueryKind.STANDABLE_CONNECTION
-            and recipe.standable_connection.position[0] == 2.6
+            and recipe.standable_connection.position[0] == 2.45
         )
         return world, candidate, control, supervisor, ledger, terminal
 
@@ -438,16 +449,17 @@ class D059ConsumersAndIdentityTests(unittest.TestCase):
                 recipe for recipe in route.validation_plan.recipes
                 if recipe.query_kind
                     is WalkValidationQueryKind.STANDABLE_CONNECTION
-                and recipe.standable_connection.position[0] == 2.6
+                and recipe.standable_connection.position[0] == 2.45
             )
             self.assertNotIn(selection_only, effective)
             self.assertTrue(set(exact.dependencies).issubset(effective))
 
-            request = proposal.control_frame.observation_request
-            self.assertNotIn(selection_only, request.air_positions)
+            requested = self._requested_dependencies(session, proposal, effective)
+            self.assertNotIn(selection_only, requested)
             self.assertTrue(
-                set(exact.dependencies).issubset(request.air_positions)
+                set(exact.dependencies).issubset(requested)
             )
+            self.assertTrue(set(effective).issubset(requested))
 
             protected = []
             original = WorldKnowledge.set_protection
@@ -477,12 +489,13 @@ class D059ConsumersAndIdentityTests(unittest.TestCase):
             self.assertFalse(any(
                 recipe.query_kind
                     is WalkValidationQueryKind.STANDABLE_CONNECTION
-                and recipe.standable_connection.position[0] == 2.6
+                and recipe.standable_connection.position[0] == 2.45
                 for recipe in route.validation_plan.recipes
             ))
 
-            request = proposal.control_frame.observation_request
-            self.assertIn(selection_only, request.air_positions)
+            requested = self._requested_dependencies(session, proposal, effective)
+            self.assertIn(selection_only, requested)
+            self.assertTrue(set(effective).issubset(requested))
 
             protected = []
             original = WorldKnowledge.set_protection

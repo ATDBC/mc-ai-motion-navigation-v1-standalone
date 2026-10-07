@@ -20,8 +20,9 @@ from mc2p.motion_nav.support_surfaces import query_support_surfaces
 from mc2p.motion_nav.world_model import BlockPos, CellKnowledge
 
 
-DIRECT_DROP_EVIDENCE_DISTANCE_BLOCKS = 4.5
-DIRECT_DROP_EVIDENCE_MAX_AGE_TICKS = 5
+from mc2p.motion_nav.landing_evidence import (
+    DIRECT_DROP_EVIDENCE_DISTANCE_BLOCKS, DIRECT_DROP_EVIDENCE_MAX_AGE_TICKS,
+)
 DIRECT_DROP_EDGE_PROBE_CORNER_OFFSET_BLOCKS = .65
 DIRECT_DROP_EDGE_PROBE_HOLD_RADIUS_BLOCKS = .18
 DIRECT_DROP_EDGE_PROBE_ENTRY_RADIUS_BLOCKS = .08

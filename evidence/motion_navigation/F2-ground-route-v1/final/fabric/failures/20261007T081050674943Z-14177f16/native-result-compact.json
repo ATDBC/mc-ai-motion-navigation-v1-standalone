@@ -1,0 +1,61 @@
+{
+  "status": "failed",
+  "primary_failure": {
+    "message": "F2 fail fast: f2-offset_mid-0-late_first: ['late_first_not_confirmed']",
+    "type": "AssertionError"
+  },
+  "checks": [
+    {
+      "name": "client-0:complete_time_event_attribution",
+      "passed": true
+    },
+    {
+      "name": "client-0:observation_pipeline_frames_recorded",
+      "passed": true
+    },
+    {
+      "name": "client-0:legacy_block_parity_disabled",
+      "passed": true
+    },
+    {
+      "name": "v3_python_and_java_sources_unchanged",
+      "passed": true
+    }
+  ],
+  "cleanup_failures": [],
+  "diagnostic_failures": [],
+  "parent_supervision": {
+    "cleanup_failures": [],
+    "primary_failure": null,
+    "process_stopped": true,
+    "registered_processes": [
+      {
+        "create_time": 1791360650.6800458,
+        "pid": 2752
+      },
+      {
+        "create_time": 1791360655.2397647,
+        "pid": 22044
+      },
+      {
+        "create_time": 1791360659.3988323,
+        "pid": 37132
+      },
+      {
+        "create_time": 1791360655.2343757,
+        "pid": 45352
+      },
+      {
+        "create_time": 1791360710.3169425,
+        "pid": 49176
+      },
+      {
+        "create_time": 1791360659.4034824,
+        "pid": 70456
+      }
+    ],
+    "return_code": 1,
+    "schema_version": "mc2p.bounded-process-result.v0"
+  },
+  "ports_free": true
+}

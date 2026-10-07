@@ -1,4 +1,5 @@
 """State-triggered R27 combinations; physical movement remains calculator-driven."""
+from mc2p.skills.navigation_session_driver import RuntimeNavigationDriverState
 from dataclasses import asdict, replace
 from pathlib import Path
 import random
@@ -228,7 +229,7 @@ def math_speed(velocity):
 def run_gap_sequence(seed, *, service_followup=True):
     from mc2p.motion_nav.motion_worker import GapMotionSolveResult, _execute_job
     from mc2p.motion_nav.motion_solver import SolveResult, SolveStatus
-    from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
+    from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver, RuntimeNavigationDriverState
     from tests.sim.backend import CalculatorBackend
     rng = random.Random(seed)
 
@@ -312,7 +313,7 @@ def run_gap_sequence(seed, *, service_followup=True):
                     old = worker.jobs[0]
                     driver.release("replace_gap_session")
                     events.append("old_owner_stopped")
-                elif driver.source is not None and driver.state in {"success", "failed", "cancelled"}:
+                elif driver.source is not None and driver.state in {RuntimeNavigationDriverState.SUCCESS, RuntimeNavigationDriverState.FAILED, RuntimeNavigationDriverState.CANCELLED}:
                     driver.release("gap_sequence_terminal")
             if backend.movement_tick == before_tick:
                 backend.free_tick()
@@ -321,7 +322,7 @@ def run_gap_sequence(seed, *, service_followup=True):
                 owners += current.async_work_diagnostics
             monitor.check(owners, current.active_motion_mailboxes)
             trace.append({"tick": tick, "position": backend.state.position, "on_ground": backend.state.on_ground,
-                "source_owned": driver.source is not None, "driver_state": driver.state,
+                "source_owned": driver.source is not None, "driver_state": driver.state.value,
                 "driver_reason": driver.reason, "events": list(events),
                 "async_events": [asdict(event) for event in monitor.last_events],
                 "actual_applied": backend.applied_commands[-1] if backend.applied_commands else None})
@@ -330,10 +331,10 @@ def run_gap_sequence(seed, *, service_followup=True):
         verification = monitor.finalize(AsyncCoverageRequirement(
             (AsyncWorkKind.PLANNING, AsyncWorkKind.MOTION_SOLVE),
             (AsyncWorkKind.PLANNING, AsyncWorkKind.MOTION_SOLVE)), (*planner.activity, *worker.activity))
-        passed = (delivered and driver.state == "success" and driver.source is None
+        passed = (delivered and driver.state == RuntimeNavigationDriverState.SUCCESS and driver.source is None
                   and backend.state.on_ground and verification.complete
                   and old.work_identity != new.work_identity)
-        return {"seed": seed, "passed": passed, "task_outcome": driver.state,
+        return {"seed": seed, "passed": passed, "task_outcome": driver.state.value,
                 "events": events, "followup_operations": followup_operations,
                 "verification": asdict(verification), "trace": trace}
     finally:

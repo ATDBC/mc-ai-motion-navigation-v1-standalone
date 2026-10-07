@@ -1,0 +1,73 @@
+{
+  "status": "failed",
+  "primary_failure": {
+    "message": "FailureV0(code=<FailureCodeV0.OBSERVATION_INVARIANT: 'observation_invariant'>, message='block collision boxes exceed the supported vertical neighbor extent', retryable=True, source='runtime', detail_json='{\"exception_type\": \"ContractViolation\"}', schema_version='mc2p.failure.v0')",
+    "type": "RuntimeError"
+  },
+  "checks": [
+    {
+      "name": "client-0:complete_time_event_attribution",
+      "passed": false
+    },
+    {
+      "name": "client-0:observation_pipeline_frames_recorded",
+      "passed": true
+    },
+    {
+      "name": "client-0:legacy_block_parity_disabled",
+      "passed": true
+    },
+    {
+      "name": "v3_python_and_java_sources_unchanged",
+      "passed": true
+    }
+  ],
+  "cleanup_failures": [],
+  "diagnostic_failures": [],
+  "parent_supervision": {
+    "cleanup_failures": [],
+    "primary_failure": null,
+    "process_stopped": true,
+    "registered_processes": [
+      {
+        "create_time": 1791363515.0143328,
+        "pid": 1944
+      },
+      {
+        "create_time": 1791363523.1133614,
+        "pid": 10136
+      },
+      {
+        "create_time": 1791363454.048404,
+        "pid": 12128
+      },
+      {
+        "create_time": 1791363447.7563558,
+        "pid": 27072
+      },
+      {
+        "create_time": 1791363458.9492896,
+        "pid": 48964
+      },
+      {
+        "create_time": 1791363454.0655384,
+        "pid": 49472
+      },
+      {
+        "create_time": 1791363458.9432597,
+        "pid": 49772
+      },
+      {
+        "create_time": 1791363533.663516,
+        "pid": 59620
+      },
+      {
+        "create_time": 1791363542.873102,
+        "pid": 60480
+      }
+    ],
+    "return_code": 1,
+    "schema_version": "mc2p.bounded-process-result.v0"
+  },
+  "ports_free": true
+}

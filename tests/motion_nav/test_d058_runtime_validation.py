@@ -973,7 +973,10 @@ class D058RuntimeValidationTests(unittest.TestCase):
             goal_state=goal,
         )
 
-        route = _admit(world, request, candidate, (1.5, 1, 1.636))
+        # This case exercises the fail-closed owner with no exact initial
+        # proof. F2 can now rebind a real first-leg proof to its reference.
+        with patch.object(RouteAdmitter, '_forward_ground_entry', return_value=None):
+            route = _admit(world, request, candidate, (1.5, 1, 1.636))
 
         initial = route.validation_plan.initial_connection
         self.assertIsNotNone(initial)
@@ -1148,7 +1151,8 @@ class D058RuntimeValidationTests(unittest.TestCase):
             world, (1, 1), (1, 2), request_id="d058-unmapped-runtime",
             goal_state=goal,
         )
-        route = _admit(world, request, candidate, (1.5, 1, 1.636))
+        with patch.object(RouteAdmitter, '_forward_ground_entry', return_value=None):
+            route = _admit(world, request, candidate, (1.5, 1, 1.636))
         initial = route.validation_plan.initial_connection
         owner = route.validation_plan.owner(initial.owner_ref)
         unmapped_cell = route.validation_plan.dependencies_for_owner(

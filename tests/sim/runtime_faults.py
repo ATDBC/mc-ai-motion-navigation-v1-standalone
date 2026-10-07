@@ -13,14 +13,16 @@ from mc2p.motion_nav.navigation_session import NavigationSession, NavigationSess
 from mc2p.runtime.backend_v1 import BackendIOFailure
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1
 from mc2p.skills.known_world_follow_driver import KnownWorldFollowDriver
-from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
+from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver, RuntimeNavigationDriverState
 from tests.sim.backend import CalculatorBackend, Scene
 from tests.sim.runner import CONFIG, InlinePlannerWorker, InlineMotionWorker, Scenario, _goal, seed_memory
 from tests.sim.scenarios import SCENARIOS
 from tests.test_player_runtime import _RecordingTrace
 
 TRACK = "player-target-1"
-TERMINAL = {"success", "failed", "cancelled", "stopped", "interaction_required"}
+TERMINAL = {RuntimeNavigationDriverState.SUCCESS, RuntimeNavigationDriverState.FAILED,
+            RuntimeNavigationDriverState.CANCELLED, RuntimeNavigationDriverState.STOPPED,
+            RuntimeNavigationDriverState.INTERACTION_REQUIRED}
 
 
 def gap_scenario():
@@ -88,7 +90,7 @@ class RuntimeCase:
                 "on_ground": self.backend.state.on_ground,
                 "applied_movement": asdict(self.backend.applied[-1]) if self.backend.applied else None,
                 "source_bound": self.driver.source is not None,
-                "driver_state": self.driver.state, "driver_reason": self.driver.reason,
+                "driver_state": self.driver.state.value, "driver_reason": self.driver.reason,
                 "session_state": self.session.report.state.value,
                 "session_reason": self.session.report.reason}
 
@@ -140,7 +142,7 @@ def run_io_case(*, follow, phase, retryable):
                     or (phase != "airborne" and any(abs(v) > .02 for v in (velocity[0], velocity[2])))):
                 if phase == "braking":
                     assert not case.driver.release("io-braking")
-                    assert case.driver.state == "stopping"
+                    assert case.driver.state == RuntimeNavigationDriverState.STOPPING
                 break
             assert case.driver.state not in TERMINAL, case.driver.reason
             case.step()
@@ -155,7 +157,7 @@ def run_io_case(*, follow, phase, retryable):
         assert failure.code is FailureCodeV0.BACKEND_IO and failure.retryable == retryable
         disposition = case.runtime.last_failure_disposition.disposition.value
         assert disposition == ("recreate_runtime" if retryable else "end_episode")
-        assert (case.driver.state, case.driver.reason) == ("failed", "control_unavailable")
+        assert (case.driver.state, case.driver.reason) == (RuntimeNavigationDriverState.FAILED, "control_unavailable")
         assert (case.session.report.state.value, case.session.report.reason) == ("failed", "control_unavailable")
         assert case.driver.source is None and case.driver.release("terminal-release")
         writes = case.backend.attempted_writes

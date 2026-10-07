@@ -25,7 +25,7 @@ from mc2p.skills.known_world_follow_driver import (
     KnownWorldFollowState,
     KnownWorldFollowStatus,
 )
-from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
+from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver, RuntimeNavigationDriverState
 from tests.sim.backend import CalculatorBackend, Perturbations
 from tests.sim.monitor import InvariantMonitor, TickEvidence
 from tests.sim.product_metrics import RevisionResponseMode, revision_responses
@@ -683,7 +683,7 @@ def _run_scenario(
             response_frames.append({
                 "movement_tick": backend.movement_tick,
                 "position": position_after,
-                "driver_state": driver.state,
+                "driver_state": driver.state.value,
                 "source_bound": driver.source is not None,
                 "goal_satisfied": (
                     session.report.observed_goal_status
@@ -863,7 +863,7 @@ def _run_scenario(
             "safety_violations": violations,
             "terminal_session_state": session.report.state.value,
             "terminal_session_reason": session.report.reason,
-            "terminal_driver_state": driver.state,
+            "terminal_driver_state": driver.state.value,
             "terminal_driver_reason": driver.reason,
             "source_released": driver.source is None,
             "first_delayed_input_tick": backend.first_delayed_input_tick,

@@ -12,7 +12,7 @@ from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.action_route_executor import (
     ActionRouteDecision, ActionRouteState,
 )
-from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
+from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver, RuntimeNavigationDriverState
 from tests.test_fixed_melee_driver import MeleeBackend
 from tests.test_player_runtime import _RecordingTrace, _task
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1
@@ -305,13 +305,13 @@ class C1NavigationSessionTests(unittest.TestCase):
 
         driver.stop(BehaviorProfileV0(), "cancelled")
 
-        self.assertEqual(driver.state, "stopping")
+        self.assertEqual(driver.state, RuntimeNavigationDriverState.STOPPING)
         self.assertIsNotNone(driver.source)
         self.assertEqual(self.runtime.ordered_source_stats["active_sources"], 1)
 
         driver.tick(BehaviorProfileV0(), self.clock[0] + 500_000_000)
 
-        self.assertEqual(driver.state, "cancelled")
+        self.assertEqual(driver.state, RuntimeNavigationDriverState.CANCELLED)
         self.assertIsNone(driver.source)
         self.assertEqual(self.runtime.ordered_source_stats["active_sources"], 0)
 
@@ -333,7 +333,7 @@ class C1NavigationSessionTests(unittest.TestCase):
         result = driver.tick(BehaviorProfileV0(), self.clock[0])
 
         self.assertIsNone(result.report.failure)
-        self.assertEqual(driver.state, "cancelled")
+        self.assertEqual(driver.state, RuntimeNavigationDriverState.CANCELLED)
         self.assertEqual(driver.reason, "owner_heartbeat_lost")
         self.assertIsNone(driver.source)
         self.assertEqual(self.runtime.state.value, "ready")
@@ -358,7 +358,7 @@ class C1NavigationSessionTests(unittest.TestCase):
         session.handoff_ready = False
 
         driver.stop(BehaviorProfileV0(), "cancelled")
-        self.assertEqual(driver.state, "stopping")
+        self.assertEqual(driver.state, RuntimeNavigationDriverState.STOPPING)
         self.assertIsNotNone(driver.source)
 
         session.handoff_ready = True

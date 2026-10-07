@@ -1,0 +1,680 @@
+{
+  "files": [
+    {
+      "path": "artifacts/fabric-deployment/20261007T090734139208Z-a33ea170/result.json",
+      "bytes": 356808,
+      "sha256": "c1fd0e0f679bce8295c903a698180836cd92d960e2203516de530431e75f924a"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T090734139208Z-a33ea170/worker-result.json",
+      "bytes": 355942,
+      "sha256": "fe497a1b49856149af466360e7cbdfa44851bc26c3b17b3ef0fc174f8435dd4e"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T090734139208Z-a33ea170/worker.log",
+      "bytes": 448,
+      "sha256": "70e5e28e0de13f8797034b037856f3946da5ce69da7f1b3bf713eaf54928e5ba"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T090734139208Z-a33ea170/client-0/f2-plan.json",
+      "bytes": 2742,
+      "sha256": "c567a2c39568bab2c41326ed32d0e277c3df8368686b801349f374db6c20d5c9"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T090734139208Z-a33ea170/client-0/f2-summary.json",
+      "bytes": 130513,
+      "sha256": "36f43499b856923fd4a01e8d8893191e7e9c6477b4762295f75b4c7cb3b524ad"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T090734139208Z-a33ea170/client-0/f2-trials.jsonl",
+      "bytes": 83400,
+      "sha256": "dc969895a593deb6957eabffca90a56942655cfc41d55a5b1f4a3c80762dc00e"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T090734139208Z-a33ea170/client-0/f2-frames.jsonl",
+      "bytes": 506017,
+      "sha256": "cee18aad770ba9abc89f58509a42c0d6b9f909728555f835ed61dbbd81c51f07"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T090734139208Z-a33ea170/client-0/trace.jsonl",
+      "bytes": 78627566,
+      "sha256": "c48b6da319f9c896472ee2943b558536435c545782840b7c48dc470a64c4f57e"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T090734139208Z-a33ea170/client-0/diagnostics.jsonl",
+      "bytes": 2486140,
+      "sha256": "df9d5c5e87ce485aebdbe64a41c092166fff79939efaf63e48498cdb12e79bd3"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T090734139208Z-a33ea170/client-0/time-events.jsonl",
+      "bytes": 1028104,
+      "sha256": "a02501e6b6fd31faa4b417675cca68e7bc31334708a6b6b3148eb63306adcaee"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T090734139208Z-a33ea170/client-0/time-report.json",
+      "bytes": 287630,
+      "sha256": "6ca3a5c82d4a22af4bd8f5c24a20dc1ec43eb1584dd75a6d646184406a12fff1"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T091902080489Z-d0dc2d79/result.json",
+      "bytes": 358571,
+      "sha256": "819cc4d541d3b9f2ee1db439f558dbeb3eb918f4dba846e931938cffc508f630"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T091902080489Z-d0dc2d79/worker-result.json",
+      "bytes": 357699,
+      "sha256": "9c360ff56462cb09027bb032215abe90e80bb8cc1525d153f4e502dd034b824b"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T091902080489Z-d0dc2d79/worker.log",
+      "bytes": 464,
+      "sha256": "554929f1ddee5b723658f67d5a5b3b1c9a0d1f660d3c5d1cf7e4ed708dd0168e"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T091902080489Z-d0dc2d79/client-0/f2-plan.json",
+      "bytes": 2878,
+      "sha256": "a71f3a064d4d66831e1c452f4e799c4a3b0e8fc36bdbae04431e614e50eb8660"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T091902080489Z-d0dc2d79/client-0/f2-summary.json",
+      "bytes": 131601,
+      "sha256": "426c74f18047d809ff9e9c6c1912d50c33c382c95fb5075c13ccde889d13892d"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T091902080489Z-d0dc2d79/client-0/f2-trials.jsonl",
+      "bytes": 84488,
+      "sha256": "5373b1af68f99b7999d0bbd7357fa83278d143602e1078f0625ce5fb4479ec45"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T091902080489Z-d0dc2d79/client-0/f2-frames.jsonl",
+      "bytes": 568266,
+      "sha256": "640d25f6edc3f35f2954485c183ad7cba94054b9e759b6b557473cc0053726d3"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T091902080489Z-d0dc2d79/client-0/trace.jsonl",
+      "bytes": 79790839,
+      "sha256": "e7012bde95a07ce90c4166a98397a089bd374299b566ff2095f0455e0185a4be"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T091902080489Z-d0dc2d79/client-0/diagnostics.jsonl",
+      "bytes": 2558267,
+      "sha256": "a8accac35fbdda8d9e107209497afb4619ef0ae06233741f3d0ee33659caf1a4"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T091902080489Z-d0dc2d79/client-0/time-events.jsonl",
+      "bytes": 1053246,
+      "sha256": "827a93fb3ddad6457ee86b5a5c82f53b1ffce7a03f40d15875e806bc2243cf23"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T091902080489Z-d0dc2d79/client-0/time-report.json",
+      "bytes": 296129,
+      "sha256": "22314717c958f6ba70a45f23ce5a0fe0353526fb974675a377799b3ccc754331"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094212643719Z-5bfb80f8/result.json",
+      "bytes": 357018,
+      "sha256": "d43560aefaddc50e0e2c122f8075cc73b361d0b0eac0acf8aa9ee6938066f5d3"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094212643719Z-5bfb80f8/worker-result.json",
+      "bytes": 356144,
+      "sha256": "af70c27342fde90d446f2de885bc813e73e1caf2d421195b6f1ff20d3456cf28"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094212643719Z-5bfb80f8/worker.log",
+      "bytes": 456,
+      "sha256": "d454e0ef41222d424de1bc67c4f3af786c20e093a078426f4c0ba26adf29134c"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094212643719Z-5bfb80f8/client-0/f2-plan.json",
+      "bytes": 3062,
+      "sha256": "095740e1e9f27301a782c2fa6fff9de81d4f64d4c627c7c0988738943c4640e1"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094212643719Z-5bfb80f8/client-0/f2-summary.json",
+      "bytes": 130332,
+      "sha256": "167f8e5effebb248ff350d26a784fd5f7bf51e65673f9d036772ba0956da9236"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094212643719Z-5bfb80f8/client-0/f2-trials.jsonl",
+      "bytes": 83219,
+      "sha256": "23f5e567ee5c5278f21f3e15326661ceecaeb8cda5030461a2af8ed64dbc1c14"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094212643719Z-5bfb80f8/client-0/f2-frames.jsonl",
+      "bytes": 496916,
+      "sha256": "417f5d1d21a7f26dcde1b362a3e30c08ee7f5e94a977e5f1fb29d1c70c32937b"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094212643719Z-5bfb80f8/client-0/trace.jsonl",
+      "bytes": 72910550,
+      "sha256": "badc331919994995ceff192736e5aad96e7ca4f1f0751eafed83247bd784f16b"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094212643719Z-5bfb80f8/client-0/diagnostics.jsonl",
+      "bytes": 2472461,
+      "sha256": "6c3ff19c1a5251c8bb6fcc0605af12ba563c71a88d327aaa569bb466fa434cc2"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094212643719Z-5bfb80f8/client-0/time-events.jsonl",
+      "bytes": 1021861,
+      "sha256": "c5fb49cddca3fae51f06190d8c9f29c55eb3294eb8f11cb9d0d601edb9224588"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094212643719Z-5bfb80f8/client-0/time-report.json",
+      "bytes": 285893,
+      "sha256": "0135d099c6ee0853337c0058e879ef1f3ff52568d53202b3d94f4195dbb7869b"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094453011979Z-463c0ded/result.json",
+      "bytes": 358590,
+      "sha256": "e421c3a2c8c0298d611a7056b72d43f5471f8db720fd26efce251f7444a13b4a"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094453011979Z-463c0ded/worker-result.json",
+      "bytes": 357722,
+      "sha256": "b05a49ed14011ccc87fcad23858c8652b20af66b97f78ae3dc27bc676dd579f0"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094453011979Z-463c0ded/worker.log",
+      "bytes": 480,
+      "sha256": "62c72a8f041c167f5ca2c4201a5bab8c5204348f47899568f86507c9263ee659"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094453011979Z-463c0ded/client-0/f2-plan.json",
+      "bytes": 2910,
+      "sha256": "663cc520affa262edce37782a9e16dba865db7a6abb6c8ab816811a7445da647"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094453011979Z-463c0ded/client-0/f2-summary.json",
+      "bytes": 131633,
+      "sha256": "2fc8974d6f10bf1efbaf1de797228652f90df0f0235ad627fc8dcb0c543891cb"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094453011979Z-463c0ded/client-0/f2-trials.jsonl",
+      "bytes": 84520,
+      "sha256": "411524a2a1d92a9bca817faddf89d247e4eb26698ccd15c5fa327fb30fdd3ae3"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094453011979Z-463c0ded/client-0/f2-frames.jsonl",
+      "bytes": 569178,
+      "sha256": "1d1399d06a38b317bf120a378470bbe48bbcfb928412bc0f8419342f7cf5a610"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094453011979Z-463c0ded/client-0/trace.jsonl",
+      "bytes": 79883128,
+      "sha256": "f5e30beb667145652f59c641a6380ec01d80f4426152960dcec23e505d17df5d"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094453011979Z-463c0ded/client-0/diagnostics.jsonl",
+      "bytes": 2557993,
+      "sha256": "7d06088d854283ef571ed438e7e43f9c0d3df4a87b1bc5b4fb2e328dd5ae0e32"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094453011979Z-463c0ded/client-0/time-events.jsonl",
+      "bytes": 1052895,
+      "sha256": "5dfd15e343202b034c40d0b41313f129e839334ab89a82ef09c9c9d9b1392e4e"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094453011979Z-463c0ded/client-0/time-report.json",
+      "bytes": 296072,
+      "sha256": "df70d178a57d28120e083b5e64551f16bce2f78d84be64fbabc936c6a9ea7c43"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094738686981Z-73bf3b1a/result.json",
+      "bytes": 349057,
+      "sha256": "97273b1f0ef250905adca9eb436d05533144c01e2a3290f7a79d4f23d9ddc038"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094738686981Z-73bf3b1a/worker-result.json",
+      "bytes": 348184,
+      "sha256": "1cca6821a8832bc2caf5032e8bf4b75c52763d6f47e362cbe193ada764000ed7"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094738686981Z-73bf3b1a/worker.log",
+      "bytes": 496,
+      "sha256": "2c460da5d5c432fd0f9eabb49e27c76808a5d298fab55f9086bb2bd31abb3b1f"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094738686981Z-73bf3b1a/client-0/f2-plan.json",
+      "bytes": 2678,
+      "sha256": "d646d8ebe507da5d8807092aa464a1dcd5ea4a52e58522795b96746f9a48de50"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094738686981Z-73bf3b1a/client-0/f2-summary.json",
+      "bytes": 126228,
+      "sha256": "10f3d0cb160852824fe68b3f2108c675655ff88b53b8eafd9a4ddf0188919f31"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094738686981Z-73bf3b1a/client-0/f2-trials.jsonl",
+      "bytes": 79115,
+      "sha256": "d2a2db112129f27c7dd4c00c9b7eb047bbaa5c02886b0bc7a1f856cafe2c1993"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094738686981Z-73bf3b1a/client-0/f2-frames.jsonl",
+      "bytes": 505194,
+      "sha256": "91961da53d8b421dab38aedec08e4cb68e0c5f01dfda7ac05eec904aa1e51205"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094738686981Z-73bf3b1a/client-0/trace.jsonl",
+      "bytes": 76370580,
+      "sha256": "af3c6cd276ac0bd12720d53408b12b5ed5f6e386b43c0ada35fd4333bcdb0a9d"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094738686981Z-73bf3b1a/client-0/diagnostics.jsonl",
+      "bytes": 2484639,
+      "sha256": "22b8fbbd67a78439616c83554fb7bbb96aac963e572728fceb81de6900f6540f"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094738686981Z-73bf3b1a/client-0/time-events.jsonl",
+      "bytes": 1026745,
+      "sha256": "0c27d66395967302243a5cf03f3b5fd3827595a26d8d5e18d24fd1b2b6a7c1e1"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T094738686981Z-73bf3b1a/client-0/time-report.json",
+      "bytes": 287403,
+      "sha256": "f0cb195a3b8ff025d93d157ebcae04ca93e822543c6de109ebf20b28e825c7ab"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095021899430Z-229e2ed5/result.json",
+      "bytes": 348788,
+      "sha256": "52b75a328385d2f26c337759c4672eac6ece8b411c5e83d48da184d758c620ae"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095021899430Z-229e2ed5/worker-result.json",
+      "bytes": 347913,
+      "sha256": "22268b24a2f772b467eda69b8ad02db57f3e8ef7b97b971aac3231ec58ee8e90"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095021899430Z-229e2ed5/worker.log",
+      "bytes": 528,
+      "sha256": "234a59ecfa827031fed00275b2b891d6aefcddb4cf37f653b4a34bf55ecb9595"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095021899430Z-229e2ed5/client-0/f2-plan.json",
+      "bytes": 2742,
+      "sha256": "d55265182dde960f2f4bd837bcd3285f491d3348b52e260b763761f87dd3ce86"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095021899430Z-229e2ed5/client-0/f2-summary.json",
+      "bytes": 125889,
+      "sha256": "d0a353b965154c5008978cbdad6c49c89565c271a464718fc9f4893b83dddf39"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095021899430Z-229e2ed5/client-0/f2-trials.jsonl",
+      "bytes": 78776,
+      "sha256": "c4de470da9b54449300d31462b416ebd92d4e3e01e0a8f46963753781813e2fe"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095021899430Z-229e2ed5/client-0/f2-frames.jsonl",
+      "bytes": 406173,
+      "sha256": "ce338cc7922291e9a1448f2366804c7a84c6403c74fd5145e9329eece7cb56af"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095021899430Z-229e2ed5/client-0/trace.jsonl",
+      "bytes": 74248844,
+      "sha256": "83897308df874bd3153ada1fae6d6a29a697217707c5bcdaf09f2af913c0f439"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095021899430Z-229e2ed5/client-0/diagnostics.jsonl",
+      "bytes": 2363721,
+      "sha256": "6b73c51f1c8fccb6adb46a6e561b09c500c997dfe7d067a1a17942ab4661398e"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095021899430Z-229e2ed5/client-0/time-events.jsonl",
+      "bytes": 984333,
+      "sha256": "ca96ac7327569403846ecd3b8022bddb1276eb259cea0f21d5905b4e6982103a"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095021899430Z-229e2ed5/client-0/time-report.json",
+      "bytes": 273277,
+      "sha256": "9b7d097d5f76ba41a48f84eb4af18a4bbb2733299231c4bc723d478a45923997"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095300280127Z-68342755/result.json",
+      "bytes": 345879,
+      "sha256": "a8e0049cc8c5981306ada57bd48e63d8e279c204d37b16790a949597691c7daf"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095300280127Z-68342755/worker-result.json",
+      "bytes": 345008,
+      "sha256": "ff0511bf2aac6d1bbe3823ab48342d93c86ef040982cb8d7227666819b6106ed"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095300280127Z-68342755/worker.log",
+      "bytes": 472,
+      "sha256": "809ace730cf8f02b1579692ed771529d5d4fc1b3042a01d9eb8f35f06a384951"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095300280127Z-68342755/client-0/f2-plan.json",
+      "bytes": 2630,
+      "sha256": "211c27721867d78101f43e42585d58db7a9689d6ef2e22690f9452bc64154ee0"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095300280127Z-68342755/client-0/f2-summary.json",
+      "bytes": 126700,
+      "sha256": "589b44493959d8533b5fd972c71a0eb408e5216b428bae53d050ecbdd1f1dd3f"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095300280127Z-68342755/client-0/f2-trials.jsonl",
+      "bytes": 79587,
+      "sha256": "4f8689729d970bd8a9460ceb56b85bbdaef222cb1080a16625ad86e18912573e"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095300280127Z-68342755/client-0/f2-frames.jsonl",
+      "bytes": 509306,
+      "sha256": "c385e5926595f3fe15d80d44ab559b5e584329268d9aab51658ad92549b8cfe9"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095300280127Z-68342755/client-0/trace.jsonl",
+      "bytes": 72847037,
+      "sha256": "de3a31ceb4856e6d488083ad1eeaf5f6683dcfe1f62955c18662946f00d1e39a"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095300280127Z-68342755/client-0/diagnostics.jsonl",
+      "bytes": 2490449,
+      "sha256": "4be0a5b3958a87a3af145eb751c3dc9230ebd157f27651bd7142dadb9d35aa63"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095300280127Z-68342755/client-0/time-events.jsonl",
+      "bytes": 1029060,
+      "sha256": "f1ca895996d3c69236fdd4cac2457865fba03bbcea1f044446729dcb11d1a511"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095300280127Z-68342755/client-0/time-report.json",
+      "bytes": 288127,
+      "sha256": "4f70ed5db0c544075b7f2c436645ec7753e8901aefbabcc4fc6038ad7b9d7d52"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095542623312Z-3a7f1716/result.json",
+      "bytes": 346760,
+      "sha256": "ed07ec92137465824fb86020a30346e03ea115e853521f898ae48210b82cc1c7"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095542623312Z-3a7f1716/worker-result.json",
+      "bytes": 345885,
+      "sha256": "baf9b3189ca7048af7c2f09f7787d074d938eaecace0081bbc224a44e2169bbf"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095542623312Z-3a7f1716/worker.log",
+      "bytes": 520,
+      "sha256": "eaa82ebfb14cdb5b3f1e5332465b9cd288daa320dc34073b8a5cb134660de34b"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095542623312Z-3a7f1716/client-0/f2-plan.json",
+      "bytes": 2838,
+      "sha256": "444d999857aa16670003101f2eaac6d9667cff5f7b393afd27ae0fe3adb8a572"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095542623312Z-3a7f1716/client-0/f2-summary.json",
+      "bytes": 127391,
+      "sha256": "89c91279069b95dacc7c3b0cbb362aed5f61df3fb39cb44dea7bf9711b38369a"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095542623312Z-3a7f1716/client-0/f2-trials.jsonl",
+      "bytes": 80278,
+      "sha256": "7e11009aee555412564c9a688bcba53caeb27c543db0c41c23c145aa6c6061ac"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095542623312Z-3a7f1716/client-0/f2-frames.jsonl",
+      "bytes": 533838,
+      "sha256": "8d5bfacc0736b4607c6ac63c44fdd90f68b432bc456da41b69265f793178ab52"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095542623312Z-3a7f1716/client-0/trace.jsonl",
+      "bytes": 72939832,
+      "sha256": "55310a488e78c17e730992974382bf30ae2a1d2ffef1ac5ec4bdf2a51aa63784"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095542623312Z-3a7f1716/client-0/diagnostics.jsonl",
+      "bytes": 2522679,
+      "sha256": "47c4660d09fe1da5ffbbaf69f597e7993fa8d2dbf744dc3549effbab57e92393"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095542623312Z-3a7f1716/client-0/time-events.jsonl",
+      "bytes": 1039954,
+      "sha256": "8afa2b8292dfe937273dd8ceadf50a2d14573cb91e164de26654535e4f1f4677"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095542623312Z-3a7f1716/client-0/time-report.json",
+      "bytes": 291751,
+      "sha256": "2bb86e476c058fb05666e8cb2a734c5cf3cf7f694a9f889fe00f4b208069143b"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095826192744Z-b05caf79/result.json",
+      "bytes": 350518,
+      "sha256": "335998857a0a50b1b66c6851cf2f344816e3d8944dcbd80e05f7dc26199c78c4"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095826192744Z-b05caf79/worker-result.json",
+      "bytes": 349645,
+      "sha256": "cd6eb71ff7012d0b552df360e1f1d03b492dcbb217b546cce564e141e66a8243"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095826192744Z-b05caf79/worker.log",
+      "bytes": 480,
+      "sha256": "15f8bda4d6bdeac2c3ae36e37661df085c271f28170cd5a42d57f2ec98298be3"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095826192744Z-b05caf79/client-0/f2-plan.json",
+      "bytes": 2774,
+      "sha256": "98865078b8f334e2d0d40ca54110ddd1a5791c99194b5a40d571a970172ea557"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095826192744Z-b05caf79/client-0/f2-summary.json",
+      "bytes": 129510,
+      "sha256": "4e182e35a85b839ff66916ef5fabef0f7987ebf59e98adbb86874f4634feefd4"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095826192744Z-b05caf79/client-0/f2-trials.jsonl",
+      "bytes": 82397,
+      "sha256": "54165453ba230ef75d6422c9fc0edba467836922388182a55d79e2c7733dfd59"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095826192744Z-b05caf79/client-0/f2-frames.jsonl",
+      "bytes": 607199,
+      "sha256": "2aee47d11b26ca45af61a35bb365b0b17e5cd9b157bafd5feed066062d753588"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095826192744Z-b05caf79/client-0/trace.jsonl",
+      "bytes": 82053152,
+      "sha256": "635ff32811090108c7075dcb49a5e21c34eaae141fa174eeb80ceff0fec7fb5f"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095826192744Z-b05caf79/client-0/diagnostics.jsonl",
+      "bytes": 2708033,
+      "sha256": "2b7cf76f5a1afd2ddd2be5b49db743443ca8c5d93701add1de6912a843a6a9fc"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095826192744Z-b05caf79/client-0/time-events.jsonl",
+      "bytes": 1105292,
+      "sha256": "eaf0c6e21d41521e2d92e60fbea19e45d744a6a6de06e2787bb6cf52c4e3ca3c"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T095826192744Z-b05caf79/client-0/time-report.json",
+      "bytes": 313614,
+      "sha256": "e858d471290e334d5f7cd860ad8b1080827109162e0334547c90e2dda6f376fc"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100115964172Z-727a0106/result.json",
+      "bytes": 352171,
+      "sha256": "7829d2e1135b44a8668d5cf75b70416c7616a65926693a536a0ec800a3cedc5a"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100115964172Z-727a0106/worker-result.json",
+      "bytes": 351296,
+      "sha256": "01d2ee5680c42d5ae156758c8e4724bb5d2f50845184bcb3a667a3911a0a9ee9"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100115964172Z-727a0106/worker.log",
+      "bytes": 480,
+      "sha256": "db45310146c000d269597c796119df16f02b180b970066a4d2e43d8c2d93955a"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100115964172Z-727a0106/client-0/f2-plan.json",
+      "bytes": 2774,
+      "sha256": "99159a0c87a5689d2cc3e47fce46e8185d9f8f0112e9a49a41e0bbfb3e68e4c4"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100115964172Z-727a0106/client-0/f2-summary.json",
+      "bytes": 129938,
+      "sha256": "ae65809575adb1b65f4efde43fc99cc0eac5e86ba3de67c4fd42ce63a7ce1d71"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100115964172Z-727a0106/client-0/f2-trials.jsonl",
+      "bytes": 82825,
+      "sha256": "c27ec673051b4719396d8038df3b2c4f7a7c382309e630cf1af1e31d99a8a73d"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100115964172Z-727a0106/client-0/f2-frames.jsonl",
+      "bytes": 659791,
+      "sha256": "99fa3101bab2d231bc9ad195f27f84a454aec9fea6aa07f3a92f13f688ab3b3e"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100115964172Z-727a0106/client-0/trace.jsonl",
+      "bytes": 82797630,
+      "sha256": "6718532999b968f81098d7cb863e23e4a29141f3baf7442b1c0b8736cb4c4577"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100115964172Z-727a0106/client-0/diagnostics.jsonl",
+      "bytes": 2769758,
+      "sha256": "7c763381a4e5c19e7789bf25c8e2f8d2f54fe683d7677f153ad510aba509fa5a"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100115964172Z-727a0106/client-0/time-events.jsonl",
+      "bytes": 1127250,
+      "sha256": "6f07671fe0a0879a7f579116f6145a5bcac9e14bb1837ba13a85290c9d016b51"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100115964172Z-727a0106/client-0/time-report.json",
+      "bytes": 320846,
+      "sha256": "f6f99003fc0b67312ef8027a855540bbce39901bef17d564e34bf71e1acc689d"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100406507232Z-6711b54d/result.json",
+      "bytes": 302394,
+      "sha256": "53f6f80c731b778c2e60186da943337bf58b5ac8b29075e62a9f483f265af8a1"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100406507232Z-6711b54d/worker-result.json",
+      "bytes": 301520,
+      "sha256": "21ff8dee892ca8ca5a501bdab5736317c5493d7ce2d85e4de04de7d5658788f5"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100406507232Z-6711b54d/worker.log",
+      "bytes": 365,
+      "sha256": "ca084eece5712aa12b36e6436ad500583524939a0e04ffbb416facd5c3324f02"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100406507232Z-6711b54d/client-0/f2-plan.json",
+      "bytes": 2808,
+      "sha256": "b6fa83a386a64530638d11a736cf5f36e76a2e0321185e9afb6d79e258fc18b3"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100406507232Z-6711b54d/client-0/f2-summary.json",
+      "bytes": 101063,
+      "sha256": "de0b172e197fe3c7db39e5739c6ee46176166ef2a1fd17d89336ee6bd5264940"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100406507232Z-6711b54d/client-0/f2-trials.jsonl",
+      "bytes": 53950,
+      "sha256": "f90b372d00c9e242ecc1c04abe4ac10be7b7deef3f545b3a737d3915ab5abafd"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100406507232Z-6711b54d/client-0/f2-frames.jsonl",
+      "bytes": 242912,
+      "sha256": "ebdd5a3a22cdf65d6555ee089ac00737e6857fed200d3cbee504f8f497c5baa2"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100406507232Z-6711b54d/client-0/trace.jsonl",
+      "bytes": 70998788,
+      "sha256": "ed8556cc1f39bd2d0b9faf893e062d5d5b610350b617c32e6aa3cdea39961074"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100406507232Z-6711b54d/client-0/diagnostics.jsonl",
+      "bytes": 2199012,
+      "sha256": "7968f746cf0c8d34d269969bb8f2ee8c2705a1bc890b59c0c2a43c1d500429d9"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100406507232Z-6711b54d/client-0/time-events.jsonl",
+      "bytes": 931049,
+      "sha256": "e816be8b07de33cb8f180080bb66ff1bce1e50cc1340844aa7e607e8e4702730"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100406507232Z-6711b54d/client-0/time-report.json",
+      "bytes": 254150,
+      "sha256": "679759dc3fcad126d6e9aa8f7c74ea099219713ee7f9e80745cb72cb8d852698"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100629383498Z-eec66998/result.json",
+      "bytes": 512929,
+      "sha256": "a0ac99c7ac46bee205a4487dc89d0bee666bf8c904e4f812e0b3cac73da12a5c"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100629383498Z-eec66998/worker-result.json",
+      "bytes": 512359,
+      "sha256": "373d91e1e49078cd140fcc0968d9a7613eda8219b47087c7ef107dc2409729ad"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100629383498Z-eec66998/worker.log",
+      "bytes": 279,
+      "sha256": "3525a83ab8454391e5b1fbb325a2750d5cd29df20d32707842b7aa3f87afa85f"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100629383498Z-eec66998/client-0/f2-plan.json",
+      "bytes": 2299,
+      "sha256": "87eb43e0972a0d2ef5f448212d2bc1ebe1bb581ab90e50c1a7bfe1e5b4753edf"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100629383498Z-eec66998/client-0/f2-summary.json",
+      "bytes": 208985,
+      "sha256": "656f0998fab72fd5b4757187aedce8c3b47f725009194caa014c8628c87f33d2"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100629383498Z-eec66998/client-0/f2-trials.jsonl",
+      "bytes": 161875,
+      "sha256": "51689bcc2b377486434f27afde2481463ba47e03082af5b54d3c436f74ca40e4"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100629383498Z-eec66998/client-0/f2-frames.jsonl",
+      "bytes": 122661,
+      "sha256": "5bd27d7948f3264a5009bc83f0c076f1ab868cf3c2218b3aa0b5aed0e9df31ee"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100629383498Z-eec66998/client-0/f2-reference-frames.jsonl",
+      "bytes": 82546,
+      "sha256": "03dc6e754d3acdb6de101c68aa622eea9881c02469fcfaced518fb149d48b4aa"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100629383498Z-eec66998/client-0/trace.jsonl",
+      "bytes": 48028453,
+      "sha256": "9a378e0c873e7dc07341943366ca4d3cb811f297b8dcee61afa657c84333fe32"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100629383498Z-eec66998/client-0/diagnostics.jsonl",
+      "bytes": 1534970,
+      "sha256": "1c655178be8f92668b8640aaf1409fd13ae899b3c74ce0be431d2aa333071f21"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100629383498Z-eec66998/client-0/time-events.jsonl",
+      "bytes": 696449,
+      "sha256": "2f6e22793dbf757ba6fad5fac640612c1bbd2ca775d67fb5ebab01cec811c85d"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T100629383498Z-eec66998/client-0/time-report.json",
+      "bytes": 177295,
+      "sha256": "8237a5e1a60a01a92a70fdf4784796f07561a25ab4423300874d16e0e2db0dcc"
+    },
+    {
+      "path": ".tmp/f2-task5-fabric-audit.json",
+      "bytes": 2189314,
+      "sha256": "99fa437f1f09fa85de6eeed125046cf44d71bb062da8276bf2b2fc79c608cf25"
+    },
+    {
+      "path": ".tmp/f2-task5-native-accepted-batches.json",
+      "bytes": 4477,
+      "sha256": "66b84de18a4ecd98a033fa65a0dbba0e198c950643c8094eae2aeed31f3acf0b"
+    }
+  ],
+  "full_traces_retained_locally": true
+}

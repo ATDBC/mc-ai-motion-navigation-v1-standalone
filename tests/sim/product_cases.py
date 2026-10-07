@@ -13,6 +13,27 @@ from tests.sim.scenarios import half_steps, columns, drop_ledge
 STONE = "minecraft:stone"
 
 
+def f2_ground_route_scene(case: dict) -> Scene:
+    """Test-only frozen route fixtures; the existing product generator is unchanged."""
+    from tests.sim.continuous_height_matrix import _rotate_cell
+    layout = case["layout"]
+    width = range(-3, 2) if layout == "edge" else range(-3, 5)
+    solids = {(x, 63, z): STONE for x in width for z in range(-2, 10)}
+    if layout in {"tangent", "corner"}:
+        solids.update({(2, y, z): STONE for y in (64, 65) for z in range(-1, 9)})
+    if layout in {"head_wall", "hazard", "fluid", "unsupported", "unknown"}:
+        material = {"hazard": "minecraft:magma_block", "fluid": "minecraft:water",
+                    "unsupported": "minecraft:oak_fence"}.get(layout, STONE)
+        solids.update({(x, y, 3): material for y in (64, 65) for x in range(-3, 5)})
+    if layout == "corner":
+        solids.update({(x, y, 7): STONE for x in range(-3, 3) for y in (64, 65)})
+    if layout == "small_height":
+        solids.update({(x, 64, z): "minecraft:smooth_stone_slab[type=bottom]"
+                       for x in range(-3, 5) for z in (2, 3)})
+    rotated = {_rotate_cell(p, case["direction"]): material for p, material in solids.items()}
+    return Scene(rotated, ((-14, 14), (60, 69), (-14, 14)))
+
+
 def _platform():
     return {(x, 63, z): STONE for x in range(-3, 4) for z in range(15)}
 

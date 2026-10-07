@@ -197,14 +197,14 @@ class D059TerminalSelectionDependencyTests(unittest.TestCase):
         )
         self.assertEqual(candidate.path[-1].position, (2.5, 1, 1.5))
         selected = route.action_route.actions[-1].fixed_route.points[-1]
-        self.assertEqual((selected.x, selected.y, selected.z), (2.6, 1, 1.5))
+        self.assertEqual((selected.x, selected.y, selected.z), (2.45, 1, 1.5))
         exact = tuple(
             recipe for recipe in plan.recipes
             if recipe.query_kind
                 is WalkValidationQueryKind.STANDABLE_CONNECTION
         )
         self.assertEqual(len(exact), 1)
-        self.assertEqual(exact[0].standable_connection.position, (2.6, 1, 1.5))
+        self.assertEqual(exact[0].standable_connection.position, (2.45, 1, 1.5))
         self.assertNotIn(unknown, exact[0].dependencies)
         self.assertNotIn(unknown, candidate.dependencies)
         self.assertIsNone(plan.initial_connection)
@@ -258,6 +258,7 @@ class D059TerminalSelectionDependencyTests(unittest.TestCase):
         )
         expected_execution = (
             preterminal_execution | set(exact[0].dependencies)
+            | set(route.action_route.actions[-1].fixed_route.execution_contract.completion_region.dependencies)
         )
         self.assertEqual(
             set(route.action_route.actions[-1].dependencies),
@@ -498,11 +499,11 @@ class D059TerminalSelectionDependencyTests(unittest.TestCase):
             item.position
             for item in plan.dependency_provenance
             if {
-                plan.owner(ref).kind for ref in item.owner_refs
-            } == {
                 DependencyOwnerKind.WALK_LEG,
                 DependencyOwnerKind.NON_RECIPE,
-            }
+            }.issubset({
+                plan.owner(ref).kind for ref in item.owner_refs
+            })
             and any(
                 plan.owner(ref).recipe_ref is not None
                 and plan.recipe(plan.owner(ref).recipe_ref).query_kind

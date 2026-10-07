@@ -1,0 +1,512 @@
+{
+  "restored_formal_observations": 644,
+  "actor_position": [
+    0.5,
+    100.0,
+    0.5
+  ],
+  "actor_facts": [
+    {
+      "position": [
+        0,
+        99,
+        0
+      ],
+      "knowledge": "block",
+      "material": "minecraft:stone",
+      "last_observation_sequence": 643
+    },
+    {
+      "position": [
+        0,
+        100,
+        0
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 643
+    },
+    {
+      "position": [
+        0,
+        101,
+        0
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 643
+    },
+    {
+      "position": [
+        0,
+        102,
+        0
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 635
+    },
+    {
+      "position": [
+        0,
+        99,
+        1
+      ],
+      "knowledge": "block",
+      "material": "minecraft:stone",
+      "last_observation_sequence": 643
+    },
+    {
+      "position": [
+        0,
+        100,
+        1
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 627
+    },
+    {
+      "position": [
+        0,
+        101,
+        1
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 627
+    },
+    {
+      "position": [
+        0,
+        102,
+        1
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 627
+    },
+    {
+      "position": [
+        0,
+        99,
+        2
+      ],
+      "knowledge": "block",
+      "material": "minecraft:stone",
+      "last_observation_sequence": 643
+    },
+    {
+      "position": [
+        0,
+        100,
+        2
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 627
+    },
+    {
+      "position": [
+        0,
+        101,
+        2
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 627
+    },
+    {
+      "position": [
+        0,
+        102,
+        2
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 627
+    },
+    {
+      "position": [
+        0,
+        99,
+        3
+      ],
+      "knowledge": "block",
+      "material": "minecraft:stone",
+      "last_observation_sequence": 643
+    },
+    {
+      "position": [
+        0,
+        100,
+        3
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 627
+    },
+    {
+      "position": [
+        0,
+        101,
+        3
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 627
+    },
+    {
+      "position": [
+        0,
+        102,
+        3
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 627
+    },
+    {
+      "position": [
+        0,
+        99,
+        4
+      ],
+      "knowledge": "block",
+      "material": "minecraft:stone",
+      "last_observation_sequence": 643
+    },
+    {
+      "position": [
+        0,
+        100,
+        4
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 627
+    },
+    {
+      "position": [
+        0,
+        101,
+        4
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 627
+    },
+    {
+      "position": [
+        0,
+        102,
+        4
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 627
+    },
+    {
+      "position": [
+        0,
+        99,
+        5
+      ],
+      "knowledge": "block",
+      "material": "minecraft:stone",
+      "last_observation_sequence": 643
+    },
+    {
+      "position": [
+        0,
+        100,
+        5
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 627
+    },
+    {
+      "position": [
+        0,
+        101,
+        5
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 627
+    },
+    {
+      "position": [
+        0,
+        102,
+        5
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 627
+    },
+    {
+      "position": [
+        0,
+        99,
+        6
+      ],
+      "knowledge": "block",
+      "material": "minecraft:stone",
+      "last_observation_sequence": 643
+    },
+    {
+      "position": [
+        0,
+        100,
+        6
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 605
+    },
+    {
+      "position": [
+        0,
+        101,
+        6
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 605
+    },
+    {
+      "position": [
+        0,
+        102,
+        6
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 540
+    },
+    {
+      "position": [
+        0,
+        99,
+        7
+      ],
+      "knowledge": "block",
+      "material": "minecraft:stone",
+      "last_observation_sequence": 643
+    },
+    {
+      "position": [
+        0,
+        100,
+        7
+      ],
+      "knowledge": "block",
+      "material": "minecraft:stone",
+      "last_observation_sequence": 609
+    },
+    {
+      "position": [
+        0,
+        101,
+        7
+      ],
+      "knowledge": "block",
+      "material": "minecraft:stone",
+      "last_observation_sequence": 609
+    },
+    {
+      "position": [
+        0,
+        102,
+        7
+      ],
+      "knowledge": "block",
+      "material": "minecraft:stone",
+      "last_observation_sequence": 609
+    },
+    {
+      "position": [
+        0,
+        99,
+        8
+      ],
+      "knowledge": "block",
+      "material": "minecraft:stone",
+      "last_observation_sequence": 643
+    },
+    {
+      "position": [
+        0,
+        100,
+        8
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 549
+    },
+    {
+      "position": [
+        0,
+        101,
+        8
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 549
+    },
+    {
+      "position": [
+        0,
+        102,
+        8
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 549
+    },
+    {
+      "position": [
+        0,
+        99,
+        9
+      ],
+      "knowledge": "block",
+      "material": "minecraft:stone",
+      "last_observation_sequence": 643
+    },
+    {
+      "position": [
+        0,
+        100,
+        9
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 549
+    },
+    {
+      "position": [
+        0,
+        101,
+        9
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 549
+    },
+    {
+      "position": [
+        0,
+        102,
+        9
+      ],
+      "knowledge": "air",
+      "material": null,
+      "last_observation_sequence": 448
+    },
+    {
+      "position": [
+        0,
+        99,
+        10
+      ],
+      "knowledge": "block",
+      "material": "minecraft:stone",
+      "last_observation_sequence": 552
+    },
+    {
+      "position": [
+        0,
+        100,
+        10
+      ],
+      "knowledge": "block",
+      "material": "minecraft:stone",
+      "last_observation_sequence": 643
+    },
+    {
+      "position": [
+        0,
+        101,
+        10
+      ],
+      "knowledge": "block",
+      "material": "minecraft:stone",
+      "last_observation_sequence": 643
+    },
+    {
+      "position": [
+        0,
+        102,
+        10
+      ],
+      "knowledge": "block",
+      "material": "minecraft:stone",
+      "last_observation_sequence": 643
+    }
+  ],
+  "prepared_corridor_expected_clear_center_cells": [
+    [
+      0,
+      100,
+      4
+    ],
+    [
+      0,
+      101,
+      4
+    ],
+    [
+      0,
+      100,
+      5
+    ],
+    [
+      0,
+      101,
+      5
+    ],
+    [
+      0,
+      100,
+      6
+    ],
+    [
+      0,
+      101,
+      6
+    ],
+    [
+      0,
+      100,
+      7
+    ],
+    [
+      0,
+      101,
+      7
+    ],
+    [
+      0,
+      100,
+      8
+    ],
+    [
+      0,
+      101,
+      8
+    ],
+    [
+      0,
+      100,
+      9
+    ],
+    [
+      0,
+      101,
+      9
+    ]
+  ]
+}

@@ -50,6 +50,7 @@ from mc2p.motion_nav.route_validation import (
 from mc2p.motion_nav.support_surfaces import (
     HorizontalRegion,
     StandablePointResult,
+    StandableRegionResult,
     SupportSurface,
     SurfaceNodeId,
     standable_point_in_region,
@@ -65,6 +66,7 @@ from mc2p.motion_nav.world_model import (
 from tests.motion_nav.test_b07_step_transition import frame, profile as step_profile
 from tests.motion_nav.test_b07_surface_planning import ordinary_profile
 from tests.motion_nav.test_d060_terminal_node_exact_proof import _world
+from mc2p.motion_nav.ground_route_execution import GroundCompletionRegion
 from tests.motion_nav.test_jump_up import jump_profile
 from tests.motion_nav.test_navigation_session import (
     _InlinePlanner,
@@ -81,6 +83,15 @@ def _goal(target_z: float) -> GoalState:
         frozenset({"standing"}),
         .6,
     )
+
+
+def _region_result(status, position=None, dependencies=(), missing_cells=()):
+    completion=None
+    if status is QueryStatus.FEASIBLE:
+        x,y,z=position
+        completion=GroundCompletionRegion(Aabb(x-.001,y-.001,z-.001,x+.001,y+.001,z+.001),
+            position,y,(math.floor(x),math.floor(z),math.floor(y),0),())
+    return StandableRegionResult(status,completion,dependencies,missing_cells)
 
 
 class D062DirectWalkValidationTests(unittest.TestCase):
@@ -148,8 +159,9 @@ class D062DirectWalkValidationTests(unittest.TestCase):
         self.assertEqual(route.connection_length_blocks, 0.0)
         self.assertIsNone(route.validation_plan.initial_connection)
         owners = route.validation_plan.owners
-        self.assertEqual(len(owners), 1)
+        self.assertEqual(len(owners), 2)
         self.assertIs(owners[0].kind, DependencyOwnerKind.WALK_LEG)
+        self.assertIs(owners[1].kind, DependencyOwnerKind.COMPLETION_REGION)
         recipe = route.validation_plan.recipe(owners[0].recipe_ref)
         self.assertIs(
             recipe.query_kind,
@@ -245,7 +257,7 @@ class D062DirectWalkValidationTests(unittest.TestCase):
                 dict(capability_identity=capability),
                 (("RouteAdmitter._surface_for_local_body", (
                     QueryStatus.FEASIBLE, start_surface, (), (),
-                )), ("standable_point_in_region", StandablePointResult(
+                )), ("standable_region_in_goal", _region_result(
                     QueryStatus.BLOCKED,
                 ))),
                 LocalDirectAdmissionPhase.GOAL_SELECTION,
@@ -256,7 +268,7 @@ class D062DirectWalkValidationTests(unittest.TestCase):
                 dict(capability_identity=capability),
                 (("RouteAdmitter._surface_for_local_body", (
                     QueryStatus.FEASIBLE, start_surface, (), (),
-                )), ("standable_point_in_region", StandablePointResult(
+                )), ("standable_region_in_goal", _region_result(
                     QueryStatus.FEASIBLE, endpoint,
                 )), ("query_standable_connection", StandablePointResult(
                     QueryStatus.BLOCKED,
@@ -269,7 +281,7 @@ class D062DirectWalkValidationTests(unittest.TestCase):
                 dict(capability_identity=capability),
                 (("RouteAdmitter._surface_for_local_body", (
                     QueryStatus.FEASIBLE, start_surface, (), (),
-                )), ("standable_point_in_region", StandablePointResult(
+                )), ("standable_region_in_goal", _region_result(
                     QueryStatus.FEASIBLE, endpoint,
                 )), ("query_standable_connection", StandablePointResult(
                     QueryStatus.FEASIBLE,
@@ -400,7 +412,7 @@ class D062DirectWalkValidationTests(unittest.TestCase):
         )
         self.assertEqual(
             set(route.action_route.actions[0].dependencies),
-            set(recipe.dependencies),
+            set(recipe.dependencies) | set(route.action_route.actions[0].fixed_route.execution_contract.completion_region.dependencies),
         )
         replay_status, replay_dependencies = replay_walk_validation_recipe(
             recipe,
@@ -426,8 +438,8 @@ class D062DirectWalkValidationTests(unittest.TestCase):
         self.assertNotIn("minecraft:dirt", profile.support_materials)
 
         with patch(
-            "mc2p.motion_nav.route_admission.standable_point_in_region",
-            return_value=StandablePointResult(
+            "mc2p.motion_nav.route_admission.standable_region_in_goal",
+            return_value=_region_result(
                 QueryStatus.FEASIBLE,
                 endpoint,
                 dependencies=tuple(sorted((extra, *exact))),
@@ -665,8 +677,8 @@ class D062DirectWalkValidationTests(unittest.TestCase):
         }
         for status, reason in expected.items():
             with self.subTest(status=status), patch(
-                "mc2p.motion_nav.route_admission.standable_point_in_region",
-                return_value=StandablePointResult(
+                "mc2p.motion_nav.route_admission.standable_region_in_goal",
+                return_value=_region_result(
                     status,
                     missing_cells=((0, -59, 10),)
                     if status is QueryStatus.NEEDS_INFORMATION else (),
@@ -692,8 +704,8 @@ class D062DirectWalkValidationTests(unittest.TestCase):
         endpoint = (.5, -60.0, 9.8)
         for status, reason in expected.items():
             with self.subTest(status=status), patch(
-                "mc2p.motion_nav.route_admission.standable_point_in_region",
-                return_value=StandablePointResult(
+                "mc2p.motion_nav.route_admission.standable_region_in_goal",
+                return_value=_region_result(
                     QueryStatus.FEASIBLE,
                     endpoint,
                 ),
@@ -936,7 +948,7 @@ class D062DirectWalkValidationTests(unittest.TestCase):
                 ActiveRouteValidationReason.REVALIDATED,
             )
             self.assertEqual(validation.incumbent.affected_cells, changed)
-            self.assertEqual(validation.incumbent.queries_used, 1)
+            self.assertEqual(validation.incumbent.queries_used, 2)
             self.assertEqual(session.diagnostics.recovery_total_starts, 0)
             self.assertEqual(
                 dict(session.diagnostics.retry_cause_counts).get(
@@ -1021,8 +1033,8 @@ class D062DirectWalkValidationTests(unittest.TestCase):
         candidate = astar_surface_plan(graph, request)
 
         with patch(
-            "mc2p.motion_nav.route_admission.standable_point_in_region",
-            return_value=StandablePointResult(
+            "mc2p.motion_nav.route_admission.standable_region_in_goal",
+            return_value=_region_result(
                 QueryStatus.FEASIBLE,
                 (.5, -60.0, 12.5),
                 dependencies=((0, -59, 13),),
@@ -1080,8 +1092,8 @@ class D062DirectWalkValidationTests(unittest.TestCase):
         )
         candidate = astar_surface_plan(graph, request)
         with patch(
-            "mc2p.motion_nav.route_admission.standable_point_in_region",
-            return_value=StandablePointResult(
+            "mc2p.motion_nav.route_admission.standable_region_in_goal",
+            return_value=_region_result(
                 QueryStatus.FEASIBLE,
                 (.5, -60.0, 12.5),
                 dependencies=((0, -59, 13),),

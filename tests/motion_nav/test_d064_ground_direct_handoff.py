@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from types import SimpleNamespace
+from pathlib import Path
 import unittest
 
 from mc2p.contracts.action_v1 import MovementV1
@@ -45,6 +46,7 @@ from mc2p.motion_nav.route_validation import (
 )
 from mc2p.motion_nav.support_surfaces import SurfaceNodeId
 from mc2p.motion_nav.world_model import Aabb, BlockGeometry, ObservationStamp
+from mc2p.motion_nav.world_model import WorldQueryCache
 from tests.motion_nav.test_b07_step_transition import frame, profile as step_profile
 from tests.motion_nav.test_b07_surface_planning import ordinary_profile
 from tests.motion_nav.test_d060_terminal_node_exact_proof import _world
@@ -107,7 +109,8 @@ class D064GroundDirectAdmissionTests(unittest.TestCase):
         )
         self.assertLessEqual(route.fixed_route_length_blocks, 8.0)
         self.assertIsNotNone(route.validation_plan)
-        self.assertEqual(len(route.validation_plan.owners), 1)
+        self.assertEqual(len(route.validation_plan.owners), 2)
+        self.assertIs(route.validation_plan.owners[1].kind, DependencyOwnerKind.COMPLETION_REGION)
         owner = route.validation_plan.owners[0]
         self.assertIs(owner.kind, DependencyOwnerKind.WALK_LEG)
         recipe = route.validation_plan.recipe(owner.recipe_ref)
@@ -285,8 +288,13 @@ class OrdinaryWalkStartWindowPolicyTests(unittest.TestCase):
         current = frame(world, 64, (.5, -60.0, 1.5))
         self.frame = replace(
             current,
-            body=replace(current.body, movement_tick_id=8),
+            body=replace(current.body, movement_tick_id=8,
+                         velocity_blocks_per_second=(0.,-1.568000030517578,0.),
+                         vertical_collision=True),
         )
+        self.profile = NavigationSessionProfiles.load(
+            Path(__file__).resolve().parents[2]/"config/motion-navigation").ground
+        self.physics_state = replace(_ground_anchor(self.frame).physics_state,movement_tick_id=8)
         self.action = WalkSegment(
             FixedRoute("d068-straight", (
                 RoutePoint(.5, -60.0, 1.5),
@@ -306,10 +314,12 @@ class OrdinaryWalkStartWindowPolicyTests(unittest.TestCase):
             "tracking",
         )
 
-    def test_only_stopped_straight_ordinary_walk_gets_one_tick_slack(self):
+    def test_only_proved_stationary_ordinary_walk_gets_one_tick_slack(self):
+        proof = dict(physics_state=self.physics_state,profile=self.profile,
+                     query_cache=WorldQueryCache(self.frame.world),first_command=True)
         self.assertEqual(
             _ordinary_walk_start_window(
-                self.action, self.decision, self.frame,
+                self.action, self.decision, self.frame,**proof,
             ),
             (9, 10),
         )
@@ -336,7 +346,6 @@ class OrdinaryWalkStartWindowPolicyTests(unittest.TestCase):
         cases = {
             "traversal": (traversal, self.decision, self.frame),
             "non_walk": (non_walk, self.decision, self.frame),
-            "corner": (corner, self.decision, self.frame),
             "braking": (
                 self.action,
                 replace(self.decision, state=FixedRouteState.BRAKING),
@@ -371,7 +380,7 @@ class OrdinaryWalkStartWindowPolicyTests(unittest.TestCase):
         }
         for name, arguments in cases.items():
             with self.subTest(name=name):
-                self.assertIsNone(_ordinary_walk_start_window(*arguments))
+                self.assertIsNone(_ordinary_walk_start_window(*arguments,**proof))
 
 
 class D064GroundDirectSessionTests(unittest.TestCase):
@@ -748,13 +757,17 @@ class D064GroundDirectSessionTests(unittest.TestCase):
         current = frame(world, 67, (.5, -60.0, 1.5))
         current = replace(
             current,
-            body=replace(current.body, movement_tick_id=8),
+            body=replace(current.body, movement_tick_id=8,
+                         velocity_blocks_per_second=(0.,-1.568000030517578,0.),
+                         vertical_collision=True),
         )
+        original_anchor = _ground_anchor(current)
+        current_anchor = replace(original_anchor,movement_tick_id=8,
+            physics_state=replace(original_anchor.physics_state,movement_tick_id=8))
         session = NavigationSession(
             "d064-initial-direct",
-            NavigationSessionProfiles(
-                ordinary_profile(), jump_profile(), step_profile(),
-            ),
+            NavigationSessionProfiles.load(
+                Path(__file__).resolve().parents[2]/"config/motion-navigation"),
             planner_worker=planner,
             clock_ns=lambda: 1_000_000_000,
         )
@@ -771,7 +784,7 @@ class D064GroundDirectSessionTests(unittest.TestCase):
         try:
             proposal = session.propose(
                 current,
-                _ground_anchor(current),
+                current_anchor,
                 2_000_000_000,
                 input_ledger=InputApplicationLedger(),
             )

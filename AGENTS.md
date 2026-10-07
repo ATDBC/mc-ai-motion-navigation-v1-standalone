@@ -1,26 +1,16 @@
 # AGENTS.md
 
-2026-10-07，M0 通过，M1 结构止损，未通过。下降规则迁移经行为验证予以保留：新版类型位置 79→42、下降 30→0，Session 5,046→4,994，只减少 52 行，未达到 100 行门槛；运动导航包净增 152 行。最终正式 Windows 完整正序、逆序均为 1,528/1,528，五组连续两轮与 M0 逐项一致，产品仍为 1,718/2,000，零异常和安全事件，D058/D061 性能全部通过。等待落地、NEEDS_STATE 重锚、信息等待、作业身份和身体责任仍由原 owner 管理。M2—M5 未授权；原 S1—S4 不再实施。结果见 [M0—M1 验收](docs/motion_navigation/acceptance/motion-navigation-middle-layer-M0-M1.md)，范围见[阶段方案](docs/motion_navigation/stages/motion-navigation-middle-layer-M0-M1-plan.md)、[D072](docs/motion_navigation/decisions/0072-end-post-f1-cleanup-and-validate-action-spec.md)和[动作接口](docs/motion_navigation/architecture/action-spec-v1.md)。紧凑证据位于 `evidence/motion_navigation/redesign-m0/` 和 `redesign-m1/`。
+2026-10-07，F2 通用非中心地面路线执行与终点接近已按冻结范围验收通过。普通开阔路线保留快速路径，已知碰撞或支撑边界每帧最多复核三个候选；潜行只由路线区间授权，完成区域保持在原 `GoalState` 内。正式 Windows 完整正逆各 1627/1627，五组通过，产品 1998/2000，旧成功退步 0；玩家站位 187/400 → 400/400。Fabric 冻结清单 93/93 符合各自判定，80 正例完成、40 次首条晚一 tick 实际应用，三组路线／持续输入用时比为 1.000／1.235／1.074，连续 10 tick 非中性停滞为 0。首个静止普通 Walk 补一 tick 中性等价证明，命令租约与 Session／Runtime 生命周期未改。
 
-Windows 是正式开发、自动验收和 Fabric 实机平台；Linux 仅作补充可移植性复核，不作为阶段关闭门槛。公开快照保存完整紧凑索引与原字节哈希，不包含本地 `.tmp` 或原始大型轨迹；D061 保留全部计时样本和 Gen2 事件，其他 GC 明细由主项目保管。
+范围见 [F2 阶段](docs/motion_navigation/stages/F2-non-center-ground-route-execution.md)、[架构](docs/motion_navigation/architecture/continuous-ground-route-execution-v1.md)和 [D074](docs/motion_navigation/decisions/0074-generalize-ground-route-execution-before-terminal-approach.md)，结果与限制见 [F2 验收](docs/motion_navigation/acceptance/F2-non-center-ground-route-execution.md)。紧凑证据位于 `evidence/motion_navigation/F2-ground-route-v1/final/`，原失败、逐项索引、来源和哈希均保留。外力仅按冻结试次判断；移动活塞观察、动态避障、路线优化器、疾跑路线和新动作尚未交付。
 
-历史 S0-R 已在 Windows 通过，原始结果仍保存在[结构整理验收](docs/motion_navigation/acceptance/post-F1-navigation-structure-cleanup.md)和 `evidence/motion_navigation/post-f1-structure-s0r/`。它当时使 S1 具备开始条件，该顺序现由 D072 取代。
+Windows 是正式开发、自动验收和 Fabric 实机平台；Linux 仅用于补充可移植性复核。公开快照不包含本地 `.tmp`、`artifacts`、凭据、世界存档或原始大型轨迹。F2 的详细轨迹比较和 Fabric 原始流审计仍需主项目保管的原始证据，紧凑摘要不能代替完整观察。`EXPORT-METADATA.json` 的来源提交标识本次公开整理；历史验收采集提交和当时的 dirty 状态仍按原记录保存。
 
-2026-10-04：R28 已按时间盒结束，正式批次为 **10／10**。R28-1、R28-4 按冻结范围完成；R28-3 完成限定安全与功能交付，但原完整阶段未通过；R28-5 未执行。协调代码净减少、两次统计查看、产品统计非退步、五 tick 修订响应、正式跟随和室内终点接近仍未通过。最终代码的 Linux 复跑为运动导航 1,207／1,207、协调 1,448／1,448、补充故障 4／4、v7 1,710／2,000。迁移入口实际覆盖 **40／41**，`_wait_for_active_terminal` 当前没有场景进入，尚未证明可达或不可达。结果见[R28 验收第 18—20 节](docs/motion_navigation/acceptance/navigation-coordination-convergence.md#18-r28-4-持续任务恢复预算)，精简证据位于 `r28-4-budget-v1` 和 `r28-3-generation-v1`。当时下一阶段为正式跟随，后续结果见 F1 和 D072。
+历史 M0 通过，M1 结构止损，未通过；动作接口迁移保留，后续接口加固和 Driver 枚举生命周期整改已经完成。原 S1—S4 不再实施，M2—M5 未授权。原结果分别见 [M0／M1 验收](docs/motion_navigation/acceptance/motion-navigation-middle-layer-M0-M1.md)、[加固验收](docs/motion_navigation/acceptance/action-spec-hardening-driver-lifecycle.md)和 [D073](docs/motion_navigation/decisions/0073-accept-action-spec-and-retire-size-gates.md)，历史失败不回写。
 
-历史 v6 的 D055 启动交付结果仍保存在验收第 14 节及 `r28-baseline-v6`：产品 1,712/2,000，晚到下降 198/200，最终 Fabric 40/40。旧结果和失败不改写。
+历史 F1 按“功能通过、结构未通过”保存；R28 按“时间盒结束，部分交付通过”保存。历史 S0-R、v1—v7、R27 和连续高度 M3 的结果与边界均保留在各自验收及 `evidence/motion_navigation/` 中，不用 F2 的新结果覆盖。历史入口见 [F1 验收](docs/motion_navigation/acceptance/F1-known-world-following.md)、[R28 验收](docs/motion_navigation/acceptance/navigation-coordination-convergence.md)和 [S0-R 验收](docs/motion_navigation/acceptance/post-F1-navigation-structure-cleanup.md)。
 
-历史 v5 的 D054 修正与 1,699/2,000 结果保留在验收第 13 节及 `r28-baseline-v5`；当时固定非退步未通过。41 个迁移函数的入口记录不替代关键分支验收，旧专项及失败不改写。
-
-2026-10-02：D053 的共同出口、有限跨隙择优及连续高度尾段已实施。运动导航 935/935，四方向 Fabric 跨隙 4/4，45—47 tick，空中无反向／松键。结果、原恢复期限与完整停止尾迹见 [R28 验收第 12.8 节](docs/motion_navigation/acceptance/navigation-coordination-convergence.md#128-d053-限定实现与运动质量)。完整组合、长期控制期限、拐角／墙接触、R28 共享协调及跟随未关闭，旧基线和失败保持原记录。
-
-本仓库是由主项目生成的只读源码快照。先读最新的 `docs/motion_navigation/stages/` 和对应的 `acceptance/`，再读取相关 `architecture/` 与 `decisions/`。
-
-D051 的进入修正已移除正式筛选和失败改名，保留末段直连及证据工具；886 项检查通过。v4 原八层为 1,589/1,600，玩家站位为 114/400；比 v3 少完成三场，非退步比较未通过。800 个严格任务逐项不变，代表性 Fabric 绕墙 4/4。旧 R28-C-01 注入混用两份地形，修正后的 12 个变体有界退出但不代表恢复成功。R28-C-02、共享协调、终点接触和跟随尚未关闭；结果见验收第 11 节，原 v1—v3 保留。
-
-历史 v3 结果与失败保存在[R28 验收第 10.7 节](docs/motion_navigation/acceptance/navigation-coordination-convergence.md#107-批次-5-实现与-v3-结果)，不作为筛选可用的结论。原四个未覆盖函数已有正式路径场景，16 组历史扰动交付差异单列。R28-1、持续预算、跟随和完整路线平滑尚未实施。现行 R27 和 M3 结论保持原范围。
-
-当前导航协调 S0 至 S5 已实施。2026-10-01，R27 复审整改 A0—A5 完成，S5 按本轮冻结范围重新关闭。停止请求保留业务终态和身体责任，信息通知携带完整身份，四个模拟关闭入口执行共同证据检查；测试走 Runtime 和正式 driver，不替实现生成身份。当前范围见 [R27](docs/motion_navigation/stages/navigation-async-work-r27-root-fix-plan.md)，结果和限制见[验收第 20 节](docs/motion_navigation/acceptance/navigation-coordination-refactor.md#20-r27-复审整改结果)与[缺陷台账](docs/motion_navigation/acceptance/defect-ledger.md)。连续高度 M3 的历史 Fabric 结论保留。
+本仓库是主项目生成的源码快照。先读 F2 阶段和对应验收，再按任务读取相关架构与决定。
 
 项目方只通过默认分支 `main` 发布由固定导出清单生成、校验通过的公开快照。不得把主项目的完整开发分支或提交历史直接推入本仓库。三方审查分支可以保留，但只保存审查者自己的报告和复现材料，不代表正式发布状态。
 
@@ -52,6 +42,7 @@ D051 的进入修正已移除正式筛选和失败改名，保留末段直连及
 ```text
 python scripts/export_motion_navigation_standalone.py verify --root .
 python -m unittest discover -s tests/motion_nav -p "test_*.py" -v
+python -m unittest tests.motion_nav.test_f2_ground_route_gates tests.motion_nav.test_f2_non_center_ground_route tests.motion_nav.test_f2_ground_route_edge_guard tests.motion_nav.test_f2_ground_completion_region tests.motion_nav.test_f2_ground_start_window -q
 python -m unittest tests.test_c1_melee_evidence tests.test_c1_moving_melee_evidence tests.test_c1_external_motion_evidence tests.test_c1_fixed_melee_runtime tests.test_c1_moving_melee_runtime tests.test_c1_external_motion_runtime -v
 python -m unittest tests.test_action_arbiter_v1 tests.test_action_receipt tests.test_player_runtime_v1 tests.test_runtime_failure_disposition tests.test_engagement_memory tests.test_fixed_melee tests.test_fixed_melee_driver tests.test_melee_strike_driver tests.test_moving_melee tests.test_moving_melee_driver tests.test_external_motion_recovery_driver tests.test_c1_navigation_session -v
 python -m unittest tests.test_b10_runtime_probe tests.test_b11_world_change_runtime tests.test_b12_attack_evidence_runtime tests.test_b12a_fabric_runtime tests.test_b12a_runtime_injection_acceptance tests.test_b12b_partial_combat_runtime tests.test_b12b_runtime_injection_acceptance tests.test_fabric_deployment_probe -v

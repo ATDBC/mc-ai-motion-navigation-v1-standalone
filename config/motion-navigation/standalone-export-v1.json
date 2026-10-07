@@ -87,7 +87,13 @@
     "tools/navigation_replay/**/*",
     "evidence/motion_navigation/redesign-m0/**/*",
     "evidence/motion_navigation/redesign-m1/**/*",
-    "docs/superpowers/plans/2026-10-06-motion-navigation-m0-m1.md"
+    "docs/superpowers/plans/2026-10-06-motion-navigation-m0-m1.md",
+    "evidence/motion_navigation/F2-ground-route-v1/final/**/*",
+    "evidence/motion_navigation/F2-ground-route-v1/baseline/measurement-v2/error-copies.json",
+    "evidence/motion_navigation/F2-ground-route-v1/task2/runs.jsonl",
+    "evidence/motion_navigation/F2-ground-route-v1/task3/review-fix/microbenchmark.py",
+    "evidence/motion_navigation/F2-ground-route-v1/task4/microbenchmark.py",
+    "docs/superpowers/plans/2026-10-07-non-center-ground-route-execution.md"
   ],
   "python_entry_globs": [
     "scripts/export_motion_navigation_standalone.py",
@@ -167,7 +173,10 @@
     "tests/test_public_runtime_evidence.py",
     "scripts/navigation_design_metrics.py",
     "scripts/navigation_dead_path_probe.py",
-    "scripts/navigation_historical_seed_probe.py"
+    "scripts/navigation_historical_seed_probe.py",
+    "scripts/f2_ground_route_evidence.py",
+    "scripts/f2_ground_route_quality.py",
+    "scripts/f2_ground_route_runtime.py"
   ],
   "required_paths": [
     "README.md",
@@ -404,6 +413,37 @@
     "evidence/motion_navigation/redesign-m1/controlled-drop-corpus.json",
     "evidence/motion_navigation/redesign-m1/equivalence-report.json",
     "evidence/motion_navigation/redesign-m1/performance/d058/performance.json",
-    "evidence/motion_navigation/redesign-m1/performance/d061/performance.json"
+    "evidence/motion_navigation/redesign-m1/performance/d061/performance.json",
+    "scripts/f2_ground_route_evidence.py",
+    "scripts/f2_ground_route_quality.py",
+    "scripts/f2_ground_route_runtime.py",
+    "tests/sim/manifests/navigation-product-f2-ground-route-v1.json",
+    "tests/motion_nav/test_f2_ground_route_gates.py",
+    "tests/motion_nav/test_f2_non_center_ground_route.py",
+    "tests/motion_nav/test_f2_ground_route_edge_guard.py",
+    "tests/motion_nav/test_f2_ground_completion_region.py",
+    "tests/motion_nav/test_f2_ground_start_window.py",
+    "docs/superpowers/plans/2026-10-07-non-center-ground-route-execution.md",
+    "docs/motion_navigation/architecture/continuous-ground-route-execution-v1.md",
+    "docs/motion_navigation/stages/F2-non-center-ground-route-execution.md",
+    "docs/motion_navigation/acceptance/F2-non-center-ground-route-execution.md",
+    "docs/motion_navigation/decisions/0074-generalize-ground-route-execution-before-terminal-approach.md",
+    "evidence/motion_navigation/F2-ground-route-v1/baseline/measurement-v2/error-copies.json",
+    "evidence/motion_navigation/F2-ground-route-v1/final/README.md",
+    "evidence/motion_navigation/F2-ground-route-v1/final/SHA256SUMS",
+    "evidence/motion_navigation/F2-ground-route-v1/final/source-consistency.json",
+    "evidence/motion_navigation/F2-ground-route-v1/final/windows/forward-final.json",
+    "evidence/motion_navigation/F2-ground-route-v1/final/windows/reverse-final.json",
+    "evidence/motion_navigation/F2-ground-route-v1/final/windows/formal-start-chain.json",
+    "evidence/motion_navigation/F2-ground-route-v1/final/fabric/plan.json",
+    "evidence/motion_navigation/F2-ground-route-v1/final/fabric/accepted-batches.json",
+    "evidence/motion_navigation/F2-ground-route-v1/final/fabric/trials.jsonl",
+    "evidence/motion_navigation/F2-ground-route-v1/final/fabric/summary.json",
+    "evidence/motion_navigation/F2-ground-route-v1/final/fabric/external-force-earlier-bounded-result.json",
+    "evidence/motion_navigation/F2-ground-route-v1/final/fabric/failures/corner-replay-red.json",
+    "evidence/motion_navigation/F2-ground-route-v1/final/comparisons/five-group-summary.json",
+    "evidence/motion_navigation/F2-ground-route-v1/final/comparisons/strict-goal-proof.json",
+    "evidence/motion_navigation/F2-ground-route-v1/final/performance/d058-compact.json",
+    "evidence/motion_navigation/F2-ground-route-v1/final/performance/d061-compact.json"
   ]
 }

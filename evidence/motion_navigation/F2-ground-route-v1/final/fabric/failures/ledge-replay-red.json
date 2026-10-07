@@ -1,0 +1,22 @@
+{
+  "node": null,
+  "missing": [
+    [
+      0,
+      98,
+      11
+    ]
+  ],
+  "facts": [
+    {
+      "position": [
+        0,
+        98,
+        11
+      ],
+      "knowledge": "unknown",
+      "material": null,
+      "last_observation_sequence": null
+    }
+  ]
+}

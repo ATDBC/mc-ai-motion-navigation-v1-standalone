@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from mc2p.motion_nav.actions.registry import action_spec
-from mc2p.motion_nav.actions.contracts import BodyCommitment, ControllerFamily
+from mc2p.motion_nav.actions.contracts import BodyCommitment, ActionRouteState, ActionControllerResult
 
 from dataclasses import dataclass, replace
 from enum import StrEnum
@@ -17,7 +17,7 @@ from mc2p.motion_nav.action_route import (
     ActionRoute, JumpGapSegment, JumpUpSegment,
     StepSegment, WalkSegment,
 )
-from mc2p.motion_nav.air_motion import AirMotionController, AirMotionProfile, AirMotionState
+from mc2p.motion_nav.air_motion import AirMotionProfile
 from mc2p.motion_nav.fixed_route import (
     FixedRouteConfig, FixedRouteController, FixedRouteDecision, FixedRouteState,
     GroundHandoffTarget,
@@ -53,22 +53,10 @@ from mc2p.motion_nav.route_validation import RouteProgressEvidence
 from mc2p.motion_nav.segment_entry import body_fits_segment_entry
 from mc2p.motion_nav.safe_ground_control import (
     verified_ground_recovery_movement, verified_ground_rollout,
+    verified_ground_route_candidate,
 )
-from mc2p.motion_nav.world_model import BlockPos
-
-
-class ActionRouteState(StrEnum):
-    IDLE = "idle"
-    RUNNING = "running"
-    CANCELLING = "cancelling"
-    COMPLETE = "complete"
-    CANCELLED = "cancelled"
-    FAILED = "failed"
-    BLOCKED = "blocked"
-    NEEDS_INFORMATION = "needs_information"
-    UNSUPPORTED = "unsupported"
-    INPUT_LOST = "input_lost"
-    NEEDS_REPLAN = "needs_replan"
+from mc2p.motion_nav.world_model import BlockPos, WorldQueryCache
+from mc2p.motion_nav.geometry import QueryStatus
 
 
 @dataclass(frozen=True, slots=True)
@@ -95,16 +83,21 @@ def _ordinary_walk_start_window(
     action: WalkSegment,
     decision: FixedRouteDecision,
     frame: NavigationFrame,
+    *, physics_state: PhysicsState | None = None,
+    profile: GroundMotionProfile | None = None,
+    query_cache: WorldQueryCache | None = None,
+    first_command: bool = False,
+    minimum_support: float = .15,
 ) -> tuple[int, int] | None:
-    """Allow one late start only for a stopped, straight ordinary Walk.
+    """Reuse a safe ordinary candidate only after a proved stationary prefix.
 
-    This is a start-time tolerance, not a lease extension.  Corners, proved
-    height traversal, braking, non-Walk transitions and moving bodies keep the
-    exact-tick contract until they have their own evidence.
+    The candidate already covers its complete lease and released-input tail.
+    An equivalent one-tick neutral entry makes that same spatial proof valid
+    one tick later. The submitted lease remains unchanged.
     """
     movement_tick = frame.body.movement_tick_id
     if (
-        len(action.fixed_route.points) != 2
+        not first_command
         or action.traversal_plan is not None
         or (
             action.transition is not None
@@ -120,7 +113,27 @@ def _ordinary_walk_start_window(
             frame.body.velocity_blocks_per_second[0],
             frame.body.velocity_blocks_per_second[2],
         ) > 1.0e-6
+        or physics_state is None
+        or profile is None
+        or query_cache is None
+        or physics_state.status_effects
+        or physics_state.jumping_cooldown_ticks
     ):
+        return None
+    prefix = verified_ground_route_candidate(
+        frame, physics_state, MovementV1(), control_ticks=1, tail_ticks=0,
+        minimum_support=minimum_support, profile=profile, query_cache=query_cache,
+    )
+    delayed = prefix.tracking_end
+    if prefix.status is not QueryStatus.FEASIBLE or delayed is None:
+        return None
+    if (math.dist(delayed.position, physics_state.position) > 1.e-9
+            or any(abs(a-b) > 1.e-9 for a,b in zip(
+                delayed.velocity_blocks_per_tick,physics_state.velocity_blocks_per_tick))
+            or replace(delayed,movement_tick_id=physics_state.movement_tick_id,
+                       position=physics_state.position,
+                       velocity_blocks_per_tick=physics_state.velocity_blocks_per_tick)
+                != physics_state):
         return None
     return movement_tick + 1, movement_tick + 2
 
@@ -165,10 +178,7 @@ class ActionRouteExecutor:
         self.route: ActionRoute | None = None
         self.state = ActionRouteState.IDLE
         self.action_index = 0
-        self._controller: (
-            FixedRouteController | JumpUpController | StepController
-            | AirMotionController | VerifiedMotionExecutor | None
-        ) = None
+        self._controller: object | None = None
         self._cancel_requested = False
         self._stop_cause: StopCause | None = None
         self._actions_finished = False
@@ -265,12 +275,9 @@ class ActionRouteExecutor:
                 if type(next_action) is JumpUpSegment:
                     entry_tolerance = self.jump_profile.entry_center_tolerance_blocks
                     entry_speed = self.jump_profile.maximum_entry_speed_blocks_per_second
-                elif action_spec(next_action).controller_family is ControllerFamily.AIR:
-                    profile = self.air_profiles.get(next_action.edge.profile_id)
-                    if profile is None:
-                        raise ContractViolation("air segment requires a calibrated profile")
-                    entry_tolerance = profile.entry_center_tolerance_blocks
-                    entry_speed = profile.maximum_entry_speed_blocks_per_second
+                elif action_spec(next_action).controller_adapter is not None:
+                    entry_tolerance, entry_speed = action_spec(next_action).controller_adapter.entry_limits(
+                        next_action, self.air_profiles)
                 else:
                     if self.step_profile is None:
                         raise ContractViolation("Step segment requires a calibrated profile")
@@ -331,7 +338,8 @@ class ActionRouteExecutor:
             if (self.action_index + 1 == len(self.route.actions)
                     and self.route.goal_state is not None):
                 config = terminal_route_config(config, motion_profile,
-                    self.route.goal_state, action.fixed_route.points[-1])
+                    self.route.goal_state, action.fixed_route.points[-1],
+                    action.fixed_route.execution_contract)
             controller = FixedRouteController(
                 motion_profile, config, mode_profile=mode_profile,
             )
@@ -361,7 +369,8 @@ class ActionRouteExecutor:
                         remaining = remaining[point_index:]
                         break
                 tracking_route = FixedRoute(tracking_route.route_id,
-                    (RoutePoint(*frame.body.position), *remaining))
+                    (RoutePoint(*frame.body.position), *remaining),
+                    tracking_route.execution_contract)
             controller.start(
                 tracking_route, frame,
                 traversal_plan=action.traversal_plan,
@@ -382,7 +391,7 @@ class ActionRouteExecutor:
                 raise ContractViolation("JumpUp segment uses another calibrated profile")
             controller = JumpUpController(self.jump_profile)
             controller.start(action.edge.start, action.edge.end, frame)
-        elif action_spec(action).controller_family is ControllerFamily.AIR:
+        elif action_spec(action).controller_adapter is not None:
             admitted = self._verified_motion.get(self.action_index)
             if admitted is not None:
                 controller = VerifiedMotionExecutor()
@@ -392,7 +401,7 @@ class ActionRouteExecutor:
             if self.action_index in self._required_verified_motion:
                 self._controller = None
                 return
-            controller = action_spec(action).controller_factory(action, frame, self.air_profiles)
+            controller = action_spec(action).controller_adapter.create(action, frame, self.air_profiles)
         else:
             assert type(action) is StepSegment
             if self.step_profile is None:
@@ -729,16 +738,17 @@ class ActionRouteExecutor:
             return self._result(started, MovementV1(), 1,
                 "awaiting_cancel_observation" if speed <= .01
                 else "retain_landing_responsibility")
-        if type(controller) is AirMotionController:
-            speed = math.hypot(frame.body.velocity_blocks_per_second[0],
-                               frame.body.velocity_blocks_per_second[2])
-            if frame.body.is_on_ground and not controller._departure_observed:
-                stopped = speed <= controller.profile.maximum_exit_speed_blocks_per_second
-                controller.state = AirMotionState.CANCELLED if stopped else AirMotionState.CANCELLING
-                self.state = ActionRouteState.CANCELLED if stopped else ActionRouteState.CANCELLING
-                return self._result(started, MovementV1(), 1,
-                    "cancelled_before_departure" if stopped else "stopping_before_departure")
-            return replace(previous, state=self.state, body_phase=None)
+        adapter = action_spec(self.route.actions[self.action_index]).controller_adapter
+        if adapter is not None and adapter.stop_protection is not None:
+            outcome = adapter.stop_protection(controller, frame)
+            if outcome is None:
+                return replace(previous, state=self.state, body_phase=None)
+            if type(outcome) is not ActionControllerResult:
+                raise ContractViolation('action stop protection requires a typed result')
+            if outcome.state is not None:
+                self.state = outcome.state
+            return self._result(started, outcome.movement, outcome.input_lease_ticks,
+                                outcome.reason, outcome.missing_cells, outcome.look)
         raise ContractViolation("same-frame stop protection requires the current air action")
 
     def _terminal_decision(
@@ -949,15 +959,16 @@ class ActionRouteExecutor:
                         yaw_radians=float(movement_yaw_radians),
                     ),
                 )
+            first_command = self._controller._last_sequence is None
+            ground_state = (None if state_anchor is None else replace(
+                state_anchor.physics_state,
+                yaw_radians=movement_frame.body.yaw_radians,
+                pitch_radians=movement_frame.body.pitch_radians,
+            ))
+            ground_cache = WorldQueryCache(movement_frame.world)
             decision = self._controller.decide(
                 movement_frame, input_confirmed=input_confirmed,
-                physics_state=(
-                    None if state_anchor is None else replace(
-                        state_anchor.physics_state,
-                        yaw_radians=movement_frame.body.yaw_radians,
-                        pitch_radians=movement_frame.body.pitch_radians,
-                    )
-                ),
+                physics_state=ground_state,query_cache=ground_cache,
             )
             if type(decision) is not FixedRouteDecision:
                 raise ContractViolation(
@@ -1026,7 +1037,10 @@ class ActionRouteExecutor:
             if decision.state in mapping:
                 self.state = mapping[decision.state]
             ordinary_start_window = _ordinary_walk_start_window(
-                action, decision, frame,
+                action, decision, movement_frame,physics_state=ground_state,
+                profile=self.ground_profile,query_cache=ground_cache,
+                first_command=first_command,
+                minimum_support=self._controller.config.minimum_support_fraction,
             )
             return self._result(
                 started, decision.movement, decision.input_lease_ticks,
@@ -1066,28 +1080,20 @@ class ActionRouteExecutor:
                 started, decision.movement, decision.input_lease_ticks,
                 decision.reason_code, decision.missing_cells,
             )
-        if action_spec(action).controller_family is ControllerFamily.AIR:
-            terminal = {
-                AirMotionState.BLOCKED: ActionRouteState.BLOCKED,
-                AirMotionState.NEEDS_INFORMATION: ActionRouteState.NEEDS_INFORMATION,
-                AirMotionState.UNSUPPORTED: ActionRouteState.UNSUPPORTED,
-                AirMotionState.FAILED: ActionRouteState.FAILED,
-                AirMotionState.CANCELLED: ActionRouteState.CANCELLED,
-                AirMotionState.INPUT_LOST: ActionRouteState.INPUT_LOST,
-            }
-            if decision.state is AirMotionState.COMPLETE:
-                return self._advance(
-                    frame, started, state_anchor=state_anchor,
-                    input_ledger=input_ledger,
-                )
-            if decision.state in terminal:
-                self.state = terminal[decision.state]
+        adapter = action_spec(action).controller_adapter
+        if adapter is not None:
+            outcome = adapter.interpret(decision)
+            if type(outcome) is not ActionControllerResult:
+                raise ContractViolation('action adapter requires a typed result')
+            if outcome.state is ActionRouteState.COMPLETE:
+                return self._advance(frame, started, state_anchor=state_anchor,
+                                     input_ledger=input_ledger)
+            if outcome.state is not None:
+                self.state = outcome.state
             elif self._cancel_requested:
                 self.state = ActionRouteState.CANCELLING
-            return self._result(
-                started, decision.movement, decision.input_lease_ticks,
-                decision.reason_code, decision.missing_cells, decision.look,
-            )
+            return self._result(started, outcome.movement, outcome.input_lease_ticks,
+                                outcome.reason, outcome.missing_cells, outcome.look)
         terminal = {
             JumpUpState.BLOCKED: ActionRouteState.BLOCKED,
             JumpUpState.NEEDS_INFORMATION: ActionRouteState.NEEDS_INFORMATION,

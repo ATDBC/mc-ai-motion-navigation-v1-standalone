@@ -1,0 +1,15 @@
+{
+  "prepare_frames": 4637,
+  "prepare_ms": {
+    "p50": 1.7502,
+    "p95": 3.7606,
+    "p99": 5.9395,
+    "maximum": 15.9067
+  },
+  "largest_per_case_controller_p95_ms": 4.1026,
+  "largest_controller_sample_ms": 5.7072,
+  "controller_p95_scope": "largest individual-case P95, not pooled-frame P95; only per-case raw summaries persist",
+  "max_full_candidates": 3,
+  "candidate_physics_steps": 3360,
+  "neutral_start_prefix_steps_reported_separately": true
+}

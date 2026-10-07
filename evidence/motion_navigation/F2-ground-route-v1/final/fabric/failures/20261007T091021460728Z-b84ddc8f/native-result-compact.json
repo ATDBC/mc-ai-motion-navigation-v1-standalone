@@ -1,0 +1,73 @@
+{
+  "status": "failed",
+  "primary_failure": {
+    "message": "F2 fail fast: f2-diagonal_mid-1-late_first: ['input_deadline_miss']",
+    "type": "AssertionError"
+  },
+  "checks": [
+    {
+      "name": "client-0:complete_time_event_attribution",
+      "passed": true
+    },
+    {
+      "name": "client-0:observation_pipeline_frames_recorded",
+      "passed": true
+    },
+    {
+      "name": "client-0:legacy_block_parity_disabled",
+      "passed": true
+    },
+    {
+      "name": "v3_python_and_java_sources_unchanged",
+      "passed": true
+    }
+  ],
+  "cleanup_failures": [],
+  "diagnostic_failures": [],
+  "parent_supervision": {
+    "cleanup_failures": [],
+    "primary_failure": null,
+    "process_stopped": true,
+    "registered_processes": [
+      {
+        "create_time": 1791364298.9582984,
+        "pid": 3396
+      },
+      {
+        "create_time": 1791364227.9533408,
+        "pid": 13060
+      },
+      {
+        "create_time": 1791364309.3104448,
+        "pid": 17224
+      },
+      {
+        "create_time": 1791364233.0081325,
+        "pid": 20160
+      },
+      {
+        "create_time": 1791364319.5784695,
+        "pid": 25632
+      },
+      {
+        "create_time": 1791364288.6762683,
+        "pid": 35260
+      },
+      {
+        "create_time": 1791364221.4725075,
+        "pid": 42520
+      },
+      {
+        "create_time": 1791364233.0023434,
+        "pid": 58500
+      },
+      {
+        "create_time": 1791364227.961806,
+        "pid": 59900
+      }
+    ],
+    "return_code": 1,
+    "schema_version": "mc2p.bounded-process-result.v0"
+  },
+  "ports_free": true
+}

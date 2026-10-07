@@ -10,9 +10,11 @@ from mc2p.motion_nav.async_work import AsyncWorkIdentity
 from mc2p.motion_nav.block_motion_traits import unsupported_motion_cells
 from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
 from mc2p.motion_nav.ground_motion import GroundMotionProfile
+from mc2p.motion_nav.ground_route_execution import GroundCompletionRegion
 from mc2p.motion_nav.support_surfaces import (
     SupportSurface,
     query_standable_connection,
+    query_support_surfaces, standable_region_in_goal,
 )
 from mc2p.motion_nav.world_model import (
     Aabb,
@@ -42,6 +44,7 @@ def _point(value: tuple[float, float, float], name: str) -> None:
 class WalkValidationQueryKind(StrEnum):
     SURFACE_EDGE = "surface_edge"
     STANDABLE_CONNECTION = "standable_connection"
+    STANDABLE_REGION = "standable_region"
 
 
 class DependencyOwnerKind(StrEnum):
@@ -49,6 +52,7 @@ class DependencyOwnerKind(StrEnum):
     INITIAL_CONNECTION = "initial_connection"
     STRICT_ACTION = "strict_action"
     NON_RECIPE = "non_recipe"
+    COMPLETION_REGION = "completion_region"
 
 
 class ActiveRouteValidationDisposition(StrEnum):
@@ -259,6 +263,31 @@ class StandableConnectionQueryArgs:
 
 
 @dataclass(frozen=True, slots=True)
+class StandableRegionQueryArgs:
+    surface: SupportSurface
+    goal_region: Aabb
+    connection_from: tuple[float, float, float]
+    expected_region: GroundCompletionRegion
+    body_width_blocks: float = .6
+    body_height_blocks: float = 1.8
+    minimum_support_fraction: float = .5
+
+    def __post_init__(self) -> None:
+        if (type(self.surface) is not SupportSurface or type(self.goal_region) is not Aabb
+                or type(self.expected_region) is not GroundCompletionRegion):
+            raise ContractViolation("standable region recipe requires typed geometry")
+        _point(self.connection_from, "standable region incoming point")
+        if (any(type(v) not in (int, float) or not math.isfinite(v) or v <= 0 for v in
+                (self.body_width_blocks, self.body_height_blocks, self.minimum_support_fraction))
+                or self.minimum_support_fraction > 1):
+            raise ContractViolation("standable region recipe body/support limits are invalid")
+        expected = self.expected_region
+        if (not all(a <= b for a,b in zip(self.goal_region.as_tuple()[:3], expected.bounds.as_tuple()[:3]))
+                or not all(a <= b for a,b in zip(expected.bounds.as_tuple()[3:], self.goal_region.as_tuple()[3:]))):
+            raise ContractViolation("standable region recipe enlarges the goal")
+
+
+@dataclass(frozen=True, slots=True)
 class WalkValidationRecipe:
     recipe_id: str
     query_kind: WalkValidationQueryKind
@@ -267,6 +296,7 @@ class WalkValidationRecipe:
     ground_profile: GroundMotionProfile
     capability: GroundCapabilityIdentity
     dependencies: tuple[BlockPos, ...]
+    standable_region: StandableRegionQueryArgs | None = None
 
     def __post_init__(self) -> None:
         require_identifier(self.recipe_id, "walk validation recipe")
@@ -282,10 +312,13 @@ class WalkValidationRecipe:
         _sorted_positions(self.dependencies, "walk validation dependencies")
         surface = type(self.surface_edge) is SurfaceEdgeQueryArgs
         standable = type(self.standable_connection) is StandableConnectionQueryArgs
+        region = type(self.standable_region) is StandableRegionQueryArgs
         if ((self.query_kind is WalkValidationQueryKind.SURFACE_EDGE
-             and not (surface and not standable))
+             and not (surface and not standable and not region))
                 or (self.query_kind is WalkValidationQueryKind.STANDABLE_CONNECTION
-                    and not (standable and not surface))):
+                    and not (standable and not surface and not region))
+                or (self.query_kind is WalkValidationQueryKind.STANDABLE_REGION
+                    and not (region and not surface and not standable))):
             raise ContractViolation("walk validation query payload does not match its kind")
 
 
@@ -315,6 +348,9 @@ class DependencyOwner:
         if (self.kind is DependencyOwnerKind.WALK_LEG
                 and (self.fixed_route_id is None or self.recipe_ref is None)):
             raise ContractViolation("walk leg owner requires route and recipe references")
+        if (self.kind is DependencyOwnerKind.COMPLETION_REGION
+                and (self.fixed_route_id is None or self.recipe_ref is None)):
+            raise ContractViolation("completion owner requires route and recipe references")
 
 
 @dataclass(frozen=True, slots=True)
@@ -434,6 +470,9 @@ class ActiveRouteValidationPlan:
                 if owner.recipe_ref not in recipes:
                     raise ContractViolation("dependency owner recipe reference is missing")
                 referenced_recipes.append(owner.recipe_ref)
+                is_region = recipes[owner.recipe_ref].query_kind is WalkValidationQueryKind.STANDABLE_REGION
+                if is_region != (owner.kind is DependencyOwnerKind.COMPLETION_REGION):
+                    raise ContractViolation("completion recipe requires exactly its typed owner")
         if tuple(sorted(referenced_recipes)) != tuple(sorted(recipes)):
             raise ContractViolation("walk validation recipes require one owning reference")
 
@@ -611,7 +650,7 @@ def replay_walk_validation_recipe(
             body_height_blocks=args.body_height_blocks,
             query_cache=cache,
         )
-    else:
+    elif recipe.query_kind is WalkValidationQueryKind.STANDABLE_CONNECTION:
         assert recipe.standable_connection is not None
         args = recipe.standable_connection
         result = query_standable_connection(
@@ -624,6 +663,29 @@ def replay_walk_validation_recipe(
             query_cache=cache,
         )
         status, dependencies = result.status, result.dependencies
+    else:
+        assert recipe.standable_region is not None
+        args = recipe.standable_region
+        node = args.surface.node_id
+        current = query_support_surfaces(world, node.column_x, node.column_z,
+            args.expected_region.support_height, args.expected_region.support_height,
+            body_width=args.body_width_blocks, body_height=args.body_height_blocks,
+            minimum_support_fraction=args.minimum_support_fraction)
+        surface = next((s for s in current.surfaces if s.node_id == node), None)
+        if current.status is not QueryStatus.FEASIBLE or surface is None:
+            return (current.status if current.status is not QueryStatus.FEASIBLE else QueryStatus.BLOCKED,
+                    current.dependencies)
+        result = standable_region_in_goal(world, surface, args.goal_region,
+            connection_from=args.connection_from, body_width=args.body_width_blocks,
+            body_height=args.body_height_blocks, minimum_support_fraction=args.minimum_support_fraction,
+            allowed_materials=recipe.ground_profile.support_materials, query_cache=cache)
+        status, dependencies = result.status, result.dependencies
+        if status is QueryStatus.FEASIBLE:
+            accepted, expected = result.completion_region, args.expected_region
+            geometry = lambda r: (r.bounds, r.reference_point, r.support_height, r.surface_identity)
+            if geometry(accepted) != geometry(expected):
+                status = QueryStatus.BLOCKED
+            dependencies = accepted.dependencies
     if (status is QueryStatus.FEASIBLE
             and not ground_profile_allows_dependency_blocks(
                 recipe.ground_profile, world, dependencies, cache

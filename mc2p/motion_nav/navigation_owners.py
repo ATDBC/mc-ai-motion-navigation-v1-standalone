@@ -23,7 +23,7 @@ from mc2p.motion_nav.retry_ledger import (
     ProgressEvidence, ProgressKind,
     RetryLedger, RetryLedgerCapacityExceeded, WaitPolicy, WaitVerdict,
 )
-from mc2p.motion_nav.route_admission import direct_drop_visual_evidence_sufficient
+from mc2p.motion_nav.landing_evidence import direct_drop_visual_evidence_sufficient
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.async_work import AsyncComputationScope, ComputationInvalidationCause
 from mc2p.contracts.common import require_identifier

@@ -19,7 +19,7 @@ from mc2p.motion_nav.world_interaction import (
 )
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1, RuntimeStepResultV1
 from mc2p.skills.block_placement_driver import RuntimeBlockPlacementDriver
-from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
+from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver, RuntimeNavigationDriverState
 
 
 @dataclass(frozen=True, slots=True)
@@ -137,7 +137,7 @@ class RuntimeWorldChangeNavigationDriver:
             terminal_state, terminal_reason = self._pending_terminal
             result = None
             if self.navigation.source is not None:
-                if self.navigation.state in {"running", "stopping"}:
+                if self.navigation.state in {RuntimeNavigationDriverState.RUNNING, RuntimeNavigationDriverState.STOPPING}:
                     result = self.navigation.tick(profile, owner_deadline_ns)
                 if self.navigation.source is not None:
                     self._state = "stopping"
@@ -148,7 +148,7 @@ class RuntimeWorldChangeNavigationDriver:
             return result
         if self.placement is not None:
             return self._tick_placement(profile, owner_deadline_ns)
-        if self.navigation.state == "interaction_required":
+        if self.navigation.state is RuntimeNavigationDriverState.INTERACTION_REQUIRED:
             interaction = self.session.required_interaction
             if interaction is None:
                 raise ContractViolation("navigation lost its required interaction")
@@ -230,10 +230,10 @@ class RuntimeWorldChangeNavigationDriver:
 
     def _sync_navigation(self) -> None:
         mapping = {
-            "success": "success",
-            "failed": "failed",
-            "cancelled": "cancelled",
-            "interaction_required": "interaction_required",
+            RuntimeNavigationDriverState.SUCCESS: "success",
+            RuntimeNavigationDriverState.FAILED: "failed",
+            RuntimeNavigationDriverState.CANCELLED: "cancelled",
+            RuntimeNavigationDriverState.INTERACTION_REQUIRED: "interaction_required",
         }
         self._state = mapping.get(self.navigation.state, "navigating")
         self._reason = self.navigation.reason

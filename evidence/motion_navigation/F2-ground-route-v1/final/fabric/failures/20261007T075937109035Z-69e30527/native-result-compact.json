@@ -1,0 +1,65 @@
+{
+  "status": "failed",
+  "primary_failure": {
+    "message": "F2 fail fast: f2-player_ledge_2-0-normal: ['unexpected_terminal']",
+    "type": "AssertionError"
+  },
+  "checks": [
+    {
+      "name": "client-0:complete_time_event_attribution",
+      "passed": true
+    },
+    {
+      "name": "client-0:observation_pipeline_frames_recorded",
+      "passed": true
+    },
+    {
+      "name": "client-0:legacy_block_parity_disabled",
+      "passed": true
+    },
+    {
+      "name": "v3_python_and_java_sources_unchanged",
+      "passed": true
+    }
+  ],
+  "cleanup_failures": [],
+  "diagnostic_failures": [],
+  "parent_supervision": {
+    "cleanup_failures": [],
+    "primary_failure": null,
+    "process_stopped": true,
+    "registered_processes": [
+      {
+        "create_time": 1791360047.6069093,
+        "pid": 1964
+      },
+      {
+        "create_time": 1791359985.7090857,
+        "pid": 13944
+      },
+      {
+        "create_time": 1791359981.6527865,
+        "pid": 31552
+      },
+      {
+        "create_time": 1791359985.7137587,
+        "pid": 46448
+      },
+      {
+        "create_time": 1791360037.1571224,
+        "pid": 47672
+      },
+      {
+        "create_time": 1791359981.6471665,
+        "pid": 68592
+      },
+      {
+        "create_time": 1791359977.1138008,
+        "pid": 71136
+      }
+    ],
+    "return_code": 1,
+    "schema_version": "mc2p.bounded-process-result.v0"
+  },
+  "ports_free": true
+}

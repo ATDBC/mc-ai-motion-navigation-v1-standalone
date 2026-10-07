@@ -1,0 +1,2006 @@
+{
+  "cases": [
+    {
+      "id": "f2-offset_mid-0-normal",
+      "family": "offset_mid",
+      "direction": 0,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "546b24f736b6ba7b67f4ecb34938afdde365fc8f71ac5b0c54a4b55a5151d80d",
+      "start_position": [
+        0.73,
+        100.0,
+        0.67
+      ],
+      "goal_bounds": [
+        0.53,
+        99.92,
+        8.13,
+        0.9299999999999999,
+        100.08,
+        8.53
+      ]
+    },
+    {
+      "id": "f2-offset_mid-0-late_first",
+      "family": "offset_mid",
+      "direction": 0,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "546b24f736b6ba7b67f4ecb34938afdde365fc8f71ac5b0c54a4b55a5151d80d",
+      "start_position": [
+        0.73,
+        100.0,
+        0.67
+      ],
+      "goal_bounds": [
+        0.53,
+        99.92,
+        8.13,
+        0.9299999999999999,
+        100.08,
+        8.53
+      ]
+    },
+    {
+      "id": "f2-offset_mid-1-normal",
+      "family": "offset_mid",
+      "direction": 1,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "dfe9e2b0b74d55e9ce2d94686fbfdf7846a701c44f531409446dd242d262539b",
+      "start_position": [
+        0.67,
+        100.0,
+        -0.73
+      ],
+      "goal_bounds": [
+        8.13,
+        99.92,
+        -0.9299999999999999,
+        8.53,
+        100.08,
+        -0.53
+      ]
+    },
+    {
+      "id": "f2-offset_mid-1-late_first",
+      "family": "offset_mid",
+      "direction": 1,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "dfe9e2b0b74d55e9ce2d94686fbfdf7846a701c44f531409446dd242d262539b",
+      "start_position": [
+        0.67,
+        100.0,
+        -0.73
+      ],
+      "goal_bounds": [
+        8.13,
+        99.92,
+        -0.9299999999999999,
+        8.53,
+        100.08,
+        -0.53
+      ]
+    },
+    {
+      "id": "f2-offset_mid-2-normal",
+      "family": "offset_mid",
+      "direction": 2,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "f78039acfc4b4a579e6783347f1883b316978a558c94ad8dc75ccedf4bd3c643",
+      "start_position": [
+        -0.73,
+        100.0,
+        -0.67
+      ],
+      "goal_bounds": [
+        -0.9299999999999999,
+        99.92,
+        -8.53,
+        -0.53,
+        100.08,
+        -8.13
+      ]
+    },
+    {
+      "id": "f2-offset_mid-2-late_first",
+      "family": "offset_mid",
+      "direction": 2,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "f78039acfc4b4a579e6783347f1883b316978a558c94ad8dc75ccedf4bd3c643",
+      "start_position": [
+        -0.73,
+        100.0,
+        -0.67
+      ],
+      "goal_bounds": [
+        -0.9299999999999999,
+        99.92,
+        -8.53,
+        -0.53,
+        100.08,
+        -8.13
+      ]
+    },
+    {
+      "id": "f2-offset_mid-3-normal",
+      "family": "offset_mid",
+      "direction": 3,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "b97008dc2e45115f48d14da94018fa0cb8e78b27e3f4466f491ab50c0d07af85",
+      "start_position": [
+        -0.67,
+        100.0,
+        0.73
+      ],
+      "goal_bounds": [
+        -8.53,
+        99.92,
+        0.53,
+        -8.13,
+        100.08,
+        0.9299999999999999
+      ]
+    },
+    {
+      "id": "f2-offset_mid-3-late_first",
+      "family": "offset_mid",
+      "direction": 3,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "b97008dc2e45115f48d14da94018fa0cb8e78b27e3f4466f491ab50c0d07af85",
+      "start_position": [
+        -0.67,
+        100.0,
+        0.73
+      ],
+      "goal_bounds": [
+        -8.53,
+        99.92,
+        0.53,
+        -8.13,
+        100.08,
+        0.9299999999999999
+      ]
+    },
+    {
+      "id": "f2-diagonal_mid-0-normal",
+      "family": "diagonal_mid",
+      "direction": 0,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "546b24f736b6ba7b67f4ecb34938afdde365fc8f71ac5b0c54a4b55a5151d80d",
+      "start_position": [
+        0.73,
+        100.0,
+        0.67
+      ],
+      "goal_bounds": [
+        1.1700000000000002,
+        99.92,
+        8.030000000000001,
+        1.57,
+        100.08,
+        8.43
+      ]
+    },
+    {
+      "id": "f2-diagonal_mid-0-late_first",
+      "family": "diagonal_mid",
+      "direction": 0,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "546b24f736b6ba7b67f4ecb34938afdde365fc8f71ac5b0c54a4b55a5151d80d",
+      "start_position": [
+        0.73,
+        100.0,
+        0.67
+      ],
+      "goal_bounds": [
+        1.1700000000000002,
+        99.92,
+        8.030000000000001,
+        1.57,
+        100.08,
+        8.43
+      ]
+    },
+    {
+      "id": "f2-diagonal_mid-1-normal",
+      "family": "diagonal_mid",
+      "direction": 1,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "dfe9e2b0b74d55e9ce2d94686fbfdf7846a701c44f531409446dd242d262539b",
+      "start_position": [
+        0.67,
+        100.0,
+        -0.73
+      ],
+      "goal_bounds": [
+        8.030000000000001,
+        99.92,
+        -1.57,
+        8.43,
+        100.08,
+        -1.1700000000000002
+      ]
+    },
+    {
+      "id": "f2-diagonal_mid-1-late_first",
+      "family": "diagonal_mid",
+      "direction": 1,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "dfe9e2b0b74d55e9ce2d94686fbfdf7846a701c44f531409446dd242d262539b",
+      "start_position": [
+        0.67,
+        100.0,
+        -0.73
+      ],
+      "goal_bounds": [
+        8.030000000000001,
+        99.92,
+        -1.57,
+        8.43,
+        100.08,
+        -1.1700000000000002
+      ]
+    },
+    {
+      "id": "f2-diagonal_mid-2-normal",
+      "family": "diagonal_mid",
+      "direction": 2,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "f78039acfc4b4a579e6783347f1883b316978a558c94ad8dc75ccedf4bd3c643",
+      "start_position": [
+        -0.73,
+        100.0,
+        -0.67
+      ],
+      "goal_bounds": [
+        -1.57,
+        99.92,
+        -8.43,
+        -1.1700000000000002,
+        100.08,
+        -8.030000000000001
+      ]
+    },
+    {
+      "id": "f2-diagonal_mid-2-late_first",
+      "family": "diagonal_mid",
+      "direction": 2,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "f78039acfc4b4a579e6783347f1883b316978a558c94ad8dc75ccedf4bd3c643",
+      "start_position": [
+        -0.73,
+        100.0,
+        -0.67
+      ],
+      "goal_bounds": [
+        -1.57,
+        99.92,
+        -8.43,
+        -1.1700000000000002,
+        100.08,
+        -8.030000000000001
+      ]
+    },
+    {
+      "id": "f2-diagonal_mid-3-normal",
+      "family": "diagonal_mid",
+      "direction": 3,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "b97008dc2e45115f48d14da94018fa0cb8e78b27e3f4466f491ab50c0d07af85",
+      "start_position": [
+        -0.67,
+        100.0,
+        0.73
+      ],
+      "goal_bounds": [
+        -8.43,
+        99.92,
+        1.1700000000000002,
+        -8.030000000000001,
+        100.08,
+        1.57
+      ]
+    },
+    {
+      "id": "f2-diagonal_mid-3-late_first",
+      "family": "diagonal_mid",
+      "direction": 3,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "b97008dc2e45115f48d14da94018fa0cb8e78b27e3f4466f491ab50c0d07af85",
+      "start_position": [
+        -0.67,
+        100.0,
+        0.73
+      ],
+      "goal_bounds": [
+        -8.43,
+        99.92,
+        1.1700000000000002,
+        -8.030000000000001,
+        100.08,
+        1.57
+      ]
+    },
+    {
+      "id": "f2-tangent_mid-0-normal",
+      "family": "tangent_mid",
+      "direction": 0,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "499ef8a4dac1d556dd12f572268c08311dd50bf5cbae9932ef35546aa99dc287",
+      "start_position": [
+        1.699999988079071,
+        100.0,
+        0.67
+      ],
+      "goal_bounds": [
+        1.499999988079071,
+        99.92,
+        8.030000000000001,
+        1.899999988079071,
+        100.08,
+        8.43
+      ]
+    },
+    {
+      "id": "f2-tangent_mid-0-late_first",
+      "family": "tangent_mid",
+      "direction": 0,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "499ef8a4dac1d556dd12f572268c08311dd50bf5cbae9932ef35546aa99dc287",
+      "start_position": [
+        1.699999988079071,
+        100.0,
+        0.67
+      ],
+      "goal_bounds": [
+        1.499999988079071,
+        99.92,
+        8.030000000000001,
+        1.899999988079071,
+        100.08,
+        8.43
+      ]
+    },
+    {
+      "id": "f2-tangent_mid-1-normal",
+      "family": "tangent_mid",
+      "direction": 1,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "42ebeccb5ef7f2f48dfb40d4a38e5aeff2e231199ba50cc5191d133f58a0cd2c",
+      "start_position": [
+        0.67,
+        100.0,
+        -1.699999988079071
+      ],
+      "goal_bounds": [
+        8.030000000000001,
+        99.92,
+        -1.899999988079071,
+        8.43,
+        100.08,
+        -1.499999988079071
+      ]
+    },
+    {
+      "id": "f2-tangent_mid-1-late_first",
+      "family": "tangent_mid",
+      "direction": 1,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "42ebeccb5ef7f2f48dfb40d4a38e5aeff2e231199ba50cc5191d133f58a0cd2c",
+      "start_position": [
+        0.67,
+        100.0,
+        -1.699999988079071
+      ],
+      "goal_bounds": [
+        8.030000000000001,
+        99.92,
+        -1.899999988079071,
+        8.43,
+        100.08,
+        -1.499999988079071
+      ]
+    },
+    {
+      "id": "f2-tangent_mid-2-normal",
+      "family": "tangent_mid",
+      "direction": 2,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "45adc01c08d401b7d38449c25713fa630fba7bd6e9a25b823ecc0ff5688dfb3a",
+      "start_position": [
+        -1.699999988079071,
+        100.0,
+        -0.67
+      ],
+      "goal_bounds": [
+        -1.899999988079071,
+        99.92,
+        -8.43,
+        -1.499999988079071,
+        100.08,
+        -8.030000000000001
+      ]
+    },
+    {
+      "id": "f2-tangent_mid-2-late_first",
+      "family": "tangent_mid",
+      "direction": 2,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "45adc01c08d401b7d38449c25713fa630fba7bd6e9a25b823ecc0ff5688dfb3a",
+      "start_position": [
+        -1.699999988079071,
+        100.0,
+        -0.67
+      ],
+      "goal_bounds": [
+        -1.899999988079071,
+        99.92,
+        -8.43,
+        -1.499999988079071,
+        100.08,
+        -8.030000000000001
+      ]
+    },
+    {
+      "id": "f2-tangent_mid-3-normal",
+      "family": "tangent_mid",
+      "direction": 3,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "771c0e3b7caf9ee7a46963e464732f5fe99b44fba2eb5a0d43d559a569c74411",
+      "start_position": [
+        -0.67,
+        100.0,
+        1.699999988079071
+      ],
+      "goal_bounds": [
+        -8.43,
+        99.92,
+        1.499999988079071,
+        -8.030000000000001,
+        100.08,
+        1.899999988079071
+      ]
+    },
+    {
+      "id": "f2-tangent_mid-3-late_first",
+      "family": "tangent_mid",
+      "direction": 3,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "771c0e3b7caf9ee7a46963e464732f5fe99b44fba2eb5a0d43d559a569c74411",
+      "start_position": [
+        -0.67,
+        100.0,
+        1.699999988079071
+      ],
+      "goal_bounds": [
+        -8.43,
+        99.92,
+        1.499999988079071,
+        -8.030000000000001,
+        100.08,
+        1.899999988079071
+      ]
+    },
+    {
+      "id": "f2-open_noncenter-0-normal",
+      "family": "open_noncenter",
+      "direction": 0,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "546b24f736b6ba7b67f4ecb34938afdde365fc8f71ac5b0c54a4b55a5151d80d",
+      "start_position": [
+        0.73,
+        100.0,
+        0.67
+      ],
+      "goal_bounds": [
+        1.1700000000000002,
+        99.92,
+        8.030000000000001,
+        1.57,
+        100.08,
+        8.43
+      ]
+    },
+    {
+      "id": "f2-open_noncenter-0-late_first",
+      "family": "open_noncenter",
+      "direction": 0,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "546b24f736b6ba7b67f4ecb34938afdde365fc8f71ac5b0c54a4b55a5151d80d",
+      "start_position": [
+        0.73,
+        100.0,
+        0.67
+      ],
+      "goal_bounds": [
+        1.1700000000000002,
+        99.92,
+        8.030000000000001,
+        1.57,
+        100.08,
+        8.43
+      ]
+    },
+    {
+      "id": "f2-open_noncenter-1-normal",
+      "family": "open_noncenter",
+      "direction": 1,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "dfe9e2b0b74d55e9ce2d94686fbfdf7846a701c44f531409446dd242d262539b",
+      "start_position": [
+        0.67,
+        100.0,
+        -0.73
+      ],
+      "goal_bounds": [
+        8.030000000000001,
+        99.92,
+        -1.57,
+        8.43,
+        100.08,
+        -1.1700000000000002
+      ]
+    },
+    {
+      "id": "f2-open_noncenter-1-late_first",
+      "family": "open_noncenter",
+      "direction": 1,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "dfe9e2b0b74d55e9ce2d94686fbfdf7846a701c44f531409446dd242d262539b",
+      "start_position": [
+        0.67,
+        100.0,
+        -0.73
+      ],
+      "goal_bounds": [
+        8.030000000000001,
+        99.92,
+        -1.57,
+        8.43,
+        100.08,
+        -1.1700000000000002
+      ]
+    },
+    {
+      "id": "f2-open_noncenter-2-normal",
+      "family": "open_noncenter",
+      "direction": 2,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "f78039acfc4b4a579e6783347f1883b316978a558c94ad8dc75ccedf4bd3c643",
+      "start_position": [
+        -0.73,
+        100.0,
+        -0.67
+      ],
+      "goal_bounds": [
+        -1.57,
+        99.92,
+        -8.43,
+        -1.1700000000000002,
+        100.08,
+        -8.030000000000001
+      ]
+    },
+    {
+      "id": "f2-open_noncenter-2-late_first",
+      "family": "open_noncenter",
+      "direction": 2,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "f78039acfc4b4a579e6783347f1883b316978a558c94ad8dc75ccedf4bd3c643",
+      "start_position": [
+        -0.73,
+        100.0,
+        -0.67
+      ],
+      "goal_bounds": [
+        -1.57,
+        99.92,
+        -8.43,
+        -1.1700000000000002,
+        100.08,
+        -8.030000000000001
+      ]
+    },
+    {
+      "id": "f2-open_noncenter-3-normal",
+      "family": "open_noncenter",
+      "direction": 3,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "b97008dc2e45115f48d14da94018fa0cb8e78b27e3f4466f491ab50c0d07af85",
+      "start_position": [
+        -0.67,
+        100.0,
+        0.73
+      ],
+      "goal_bounds": [
+        -8.43,
+        99.92,
+        1.1700000000000002,
+        -8.030000000000001,
+        100.08,
+        1.57
+      ]
+    },
+    {
+      "id": "f2-open_noncenter-3-late_first",
+      "family": "open_noncenter",
+      "direction": 3,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "b97008dc2e45115f48d14da94018fa0cb8e78b27e3f4466f491ab50c0d07af85",
+      "start_position": [
+        -0.67,
+        100.0,
+        0.73
+      ],
+      "goal_bounds": [
+        -8.43,
+        99.92,
+        1.1700000000000002,
+        -8.030000000000001,
+        100.08,
+        1.57
+      ]
+    },
+    {
+      "id": "f2-player_wall_head-0-normal",
+      "family": "player_wall_head",
+      "direction": 0,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "8a961e193a359356c6b6af0a513b35e76b3445ed7c691bfafb47bde1f9feeb24",
+      "start_position": [
+        0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        1.5,
+        99.92,
+        6.3,
+        1.9,
+        100.08,
+        6.7
+      ]
+    },
+    {
+      "id": "f2-player_wall_head-0-late_first",
+      "family": "player_wall_head",
+      "direction": 0,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "8a961e193a359356c6b6af0a513b35e76b3445ed7c691bfafb47bde1f9feeb24",
+      "start_position": [
+        0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        1.5,
+        99.92,
+        6.3,
+        1.9,
+        100.08,
+        6.7
+      ]
+    },
+    {
+      "id": "f2-player_wall_head-1-normal",
+      "family": "player_wall_head",
+      "direction": 1,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "6391b8670b74cb417429fd55bb1508f59a83c22747785eed8c7588e327d9a9e9",
+      "start_position": [
+        0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        6.3,
+        99.92,
+        -1.9,
+        6.7,
+        100.08,
+        -1.5
+      ]
+    },
+    {
+      "id": "f2-player_wall_head-1-late_first",
+      "family": "player_wall_head",
+      "direction": 1,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "6391b8670b74cb417429fd55bb1508f59a83c22747785eed8c7588e327d9a9e9",
+      "start_position": [
+        0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        6.3,
+        99.92,
+        -1.9,
+        6.7,
+        100.08,
+        -1.5
+      ]
+    },
+    {
+      "id": "f2-player_wall_head-2-normal",
+      "family": "player_wall_head",
+      "direction": 2,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "ba290b0e0d2193f0ae8b6cb8e28df0522e99191183f8ee1fba13765e72850132",
+      "start_position": [
+        -0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        -1.9,
+        99.92,
+        -6.7,
+        -1.5,
+        100.08,
+        -6.3
+      ]
+    },
+    {
+      "id": "f2-player_wall_head-2-late_first",
+      "family": "player_wall_head",
+      "direction": 2,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "ba290b0e0d2193f0ae8b6cb8e28df0522e99191183f8ee1fba13765e72850132",
+      "start_position": [
+        -0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        -1.9,
+        99.92,
+        -6.7,
+        -1.5,
+        100.08,
+        -6.3
+      ]
+    },
+    {
+      "id": "f2-player_wall_head-3-normal",
+      "family": "player_wall_head",
+      "direction": 3,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "7bcb36d69d75f9afa7ce497102886f074c49111c1d8d6e21597601ab54e4f983",
+      "start_position": [
+        -0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        -6.7,
+        99.92,
+        1.5,
+        -6.3,
+        100.08,
+        1.9
+      ]
+    },
+    {
+      "id": "f2-player_wall_head-3-late_first",
+      "family": "player_wall_head",
+      "direction": 3,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "7bcb36d69d75f9afa7ce497102886f074c49111c1d8d6e21597601ab54e4f983",
+      "start_position": [
+        -0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        -6.7,
+        99.92,
+        1.5,
+        -6.3,
+        100.08,
+        1.9
+      ]
+    },
+    {
+      "id": "f2-player_wall_parallel-0-normal",
+      "family": "player_wall_parallel",
+      "direction": 0,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "8a961e193a359356c6b6af0a513b35e76b3445ed7c691bfafb47bde1f9feeb24",
+      "start_position": [
+        1.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        1.5,
+        99.92,
+        6.3,
+        1.9,
+        100.08,
+        6.7
+      ]
+    },
+    {
+      "id": "f2-player_wall_parallel-0-late_first",
+      "family": "player_wall_parallel",
+      "direction": 0,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "8a961e193a359356c6b6af0a513b35e76b3445ed7c691bfafb47bde1f9feeb24",
+      "start_position": [
+        1.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        1.5,
+        99.92,
+        6.3,
+        1.9,
+        100.08,
+        6.7
+      ]
+    },
+    {
+      "id": "f2-player_wall_parallel-1-normal",
+      "family": "player_wall_parallel",
+      "direction": 1,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "6391b8670b74cb417429fd55bb1508f59a83c22747785eed8c7588e327d9a9e9",
+      "start_position": [
+        0.5,
+        100.0,
+        -1.5
+      ],
+      "goal_bounds": [
+        6.3,
+        99.92,
+        -1.9,
+        6.7,
+        100.08,
+        -1.5
+      ]
+    },
+    {
+      "id": "f2-player_wall_parallel-1-late_first",
+      "family": "player_wall_parallel",
+      "direction": 1,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "6391b8670b74cb417429fd55bb1508f59a83c22747785eed8c7588e327d9a9e9",
+      "start_position": [
+        0.5,
+        100.0,
+        -1.5
+      ],
+      "goal_bounds": [
+        6.3,
+        99.92,
+        -1.9,
+        6.7,
+        100.08,
+        -1.5
+      ]
+    },
+    {
+      "id": "f2-player_wall_parallel-2-normal",
+      "family": "player_wall_parallel",
+      "direction": 2,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "ba290b0e0d2193f0ae8b6cb8e28df0522e99191183f8ee1fba13765e72850132",
+      "start_position": [
+        -1.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        -1.9,
+        99.92,
+        -6.7,
+        -1.5,
+        100.08,
+        -6.3
+      ]
+    },
+    {
+      "id": "f2-player_wall_parallel-2-late_first",
+      "family": "player_wall_parallel",
+      "direction": 2,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "ba290b0e0d2193f0ae8b6cb8e28df0522e99191183f8ee1fba13765e72850132",
+      "start_position": [
+        -1.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        -1.9,
+        99.92,
+        -6.7,
+        -1.5,
+        100.08,
+        -6.3
+      ]
+    },
+    {
+      "id": "f2-player_wall_parallel-3-normal",
+      "family": "player_wall_parallel",
+      "direction": 3,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "7bcb36d69d75f9afa7ce497102886f074c49111c1d8d6e21597601ab54e4f983",
+      "start_position": [
+        -0.5,
+        100.0,
+        1.5
+      ],
+      "goal_bounds": [
+        -6.7,
+        99.92,
+        1.5,
+        -6.3,
+        100.08,
+        1.9
+      ]
+    },
+    {
+      "id": "f2-player_wall_parallel-3-late_first",
+      "family": "player_wall_parallel",
+      "direction": 3,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "7bcb36d69d75f9afa7ce497102886f074c49111c1d8d6e21597601ab54e4f983",
+      "start_position": [
+        -0.5,
+        100.0,
+        1.5
+      ],
+      "goal_bounds": [
+        -6.7,
+        99.92,
+        1.5,
+        -6.3,
+        100.08,
+        1.9
+      ]
+    },
+    {
+      "id": "f2-player_corner-0-normal",
+      "family": "player_corner",
+      "direction": 0,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "c836f5aa120a88431ecc919c4d2a60b7658ea85b68d8d41430012f699be5d515",
+      "start_position": [
+        0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        1.5,
+        99.92,
+        6.5,
+        1.9,
+        100.08,
+        6.9
+      ]
+    },
+    {
+      "id": "f2-player_corner-0-late_first",
+      "family": "player_corner",
+      "direction": 0,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "c836f5aa120a88431ecc919c4d2a60b7658ea85b68d8d41430012f699be5d515",
+      "start_position": [
+        0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        1.5,
+        99.92,
+        6.5,
+        1.9,
+        100.08,
+        6.9
+      ]
+    },
+    {
+      "id": "f2-player_corner-1-normal",
+      "family": "player_corner",
+      "direction": 1,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "007cac0013ca168e0e588940ecc1bd11758bc832b841852ffa2f24a80f518ff1",
+      "start_position": [
+        0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        6.5,
+        99.92,
+        -1.9,
+        6.9,
+        100.08,
+        -1.5
+      ]
+    },
+    {
+      "id": "f2-player_corner-1-late_first",
+      "family": "player_corner",
+      "direction": 1,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "007cac0013ca168e0e588940ecc1bd11758bc832b841852ffa2f24a80f518ff1",
+      "start_position": [
+        0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        6.5,
+        99.92,
+        -1.9,
+        6.9,
+        100.08,
+        -1.5
+      ]
+    },
+    {
+      "id": "f2-player_corner-2-normal",
+      "family": "player_corner",
+      "direction": 2,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "8c612350cd51949fbd10122963f4e130196ebb7be2fb6109fb45e6677df5c6f7",
+      "start_position": [
+        -0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        -1.9,
+        99.92,
+        -6.9,
+        -1.5,
+        100.08,
+        -6.5
+      ]
+    },
+    {
+      "id": "f2-player_corner-2-late_first",
+      "family": "player_corner",
+      "direction": 2,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "8c612350cd51949fbd10122963f4e130196ebb7be2fb6109fb45e6677df5c6f7",
+      "start_position": [
+        -0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        -1.9,
+        99.92,
+        -6.9,
+        -1.5,
+        100.08,
+        -6.5
+      ]
+    },
+    {
+      "id": "f2-player_corner-3-normal",
+      "family": "player_corner",
+      "direction": 3,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "93dd7746e77b4d80a2e67667cab96602caac20637f80284d656792312426d9c9",
+      "start_position": [
+        -0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        -6.9,
+        99.92,
+        1.5,
+        -6.5,
+        100.08,
+        1.9
+      ]
+    },
+    {
+      "id": "f2-player_corner-3-late_first",
+      "family": "player_corner",
+      "direction": 3,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "93dd7746e77b4d80a2e67667cab96602caac20637f80284d656792312426d9c9",
+      "start_position": [
+        -0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        -6.9,
+        99.92,
+        1.5,
+        -6.5,
+        100.08,
+        1.9
+      ]
+    },
+    {
+      "id": "f2-player_corridor_end-0-normal",
+      "family": "player_corridor_end",
+      "direction": 0,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "83f503a03d7e49a1c8e7a9af8f1504ba368c158a38e5a12c92986d07ac8dee59",
+      "start_position": [
+        0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        0.3,
+        99.92,
+        9.5,
+        0.7,
+        100.08,
+        9.899999999999999
+      ]
+    },
+    {
+      "id": "f2-player_corridor_end-0-late_first",
+      "family": "player_corridor_end",
+      "direction": 0,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "83f503a03d7e49a1c8e7a9af8f1504ba368c158a38e5a12c92986d07ac8dee59",
+      "start_position": [
+        0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        0.3,
+        99.92,
+        9.5,
+        0.7,
+        100.08,
+        9.899999999999999
+      ]
+    },
+    {
+      "id": "f2-player_corridor_end-1-normal",
+      "family": "player_corridor_end",
+      "direction": 1,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "fecdadd584d9729f0cffcf5559b9b4a2a3cc5c3cdb765f82e2a1218a8ac0e7b3",
+      "start_position": [
+        0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        9.5,
+        99.92,
+        -0.7,
+        9.899999999999999,
+        100.08,
+        -0.3
+      ]
+    },
+    {
+      "id": "f2-player_corridor_end-1-late_first",
+      "family": "player_corridor_end",
+      "direction": 1,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "fecdadd584d9729f0cffcf5559b9b4a2a3cc5c3cdb765f82e2a1218a8ac0e7b3",
+      "start_position": [
+        0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        9.5,
+        99.92,
+        -0.7,
+        9.899999999999999,
+        100.08,
+        -0.3
+      ]
+    },
+    {
+      "id": "f2-player_corridor_end-2-normal",
+      "family": "player_corridor_end",
+      "direction": 2,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "b6e9a006fa88e6f77714d0584bc933b61d2a963a1a53ea6e10344e6c7954fa33",
+      "start_position": [
+        -0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        -0.7,
+        99.92,
+        -9.899999999999999,
+        -0.3,
+        100.08,
+        -9.5
+      ]
+    },
+    {
+      "id": "f2-player_corridor_end-2-late_first",
+      "family": "player_corridor_end",
+      "direction": 2,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "b6e9a006fa88e6f77714d0584bc933b61d2a963a1a53ea6e10344e6c7954fa33",
+      "start_position": [
+        -0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        -0.7,
+        99.92,
+        -9.899999999999999,
+        -0.3,
+        100.08,
+        -9.5
+      ]
+    },
+    {
+      "id": "f2-player_corridor_end-3-normal",
+      "family": "player_corridor_end",
+      "direction": 3,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "a0fbf751cc838165925395b21115d671d6c13743e8fe26daf1817364bc199f75",
+      "start_position": [
+        -0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        -9.899999999999999,
+        99.92,
+        0.3,
+        -9.5,
+        100.08,
+        0.7
+      ]
+    },
+    {
+      "id": "f2-player_corridor_end-3-late_first",
+      "family": "player_corridor_end",
+      "direction": 3,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "a0fbf751cc838165925395b21115d671d6c13743e8fe26daf1817364bc199f75",
+      "start_position": [
+        -0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        -9.899999999999999,
+        99.92,
+        0.3,
+        -9.5,
+        100.08,
+        0.7
+      ]
+    },
+    {
+      "id": "f2-player_ledge_1-0-normal",
+      "family": "player_ledge_1",
+      "direction": 0,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "546b24f736b6ba7b67f4ecb34938afdde365fc8f71ac5b0c54a4b55a5151d80d",
+      "start_position": [
+        0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        0.3,
+        99.92,
+        10.6,
+        0.7,
+        100.08,
+        10.999999999999998
+      ]
+    },
+    {
+      "id": "f2-player_ledge_1-0-late_first",
+      "family": "player_ledge_1",
+      "direction": 0,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "546b24f736b6ba7b67f4ecb34938afdde365fc8f71ac5b0c54a4b55a5151d80d",
+      "start_position": [
+        0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        0.3,
+        99.92,
+        10.6,
+        0.7,
+        100.08,
+        10.999999999999998
+      ]
+    },
+    {
+      "id": "f2-player_ledge_1-1-normal",
+      "family": "player_ledge_1",
+      "direction": 1,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "dfe9e2b0b74d55e9ce2d94686fbfdf7846a701c44f531409446dd242d262539b",
+      "start_position": [
+        0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        10.6,
+        99.92,
+        -0.7,
+        10.999999999999998,
+        100.08,
+        -0.3
+      ]
+    },
+    {
+      "id": "f2-player_ledge_1-1-late_first",
+      "family": "player_ledge_1",
+      "direction": 1,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "dfe9e2b0b74d55e9ce2d94686fbfdf7846a701c44f531409446dd242d262539b",
+      "start_position": [
+        0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        10.6,
+        99.92,
+        -0.7,
+        10.999999999999998,
+        100.08,
+        -0.3
+      ]
+    },
+    {
+      "id": "f2-player_ledge_1-2-normal",
+      "family": "player_ledge_1",
+      "direction": 2,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "f78039acfc4b4a579e6783347f1883b316978a558c94ad8dc75ccedf4bd3c643",
+      "start_position": [
+        -0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        -0.7,
+        99.92,
+        -10.999999999999998,
+        -0.3,
+        100.08,
+        -10.6
+      ]
+    },
+    {
+      "id": "f2-player_ledge_1-2-late_first",
+      "family": "player_ledge_1",
+      "direction": 2,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "f78039acfc4b4a579e6783347f1883b316978a558c94ad8dc75ccedf4bd3c643",
+      "start_position": [
+        -0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        -0.7,
+        99.92,
+        -10.999999999999998,
+        -0.3,
+        100.08,
+        -10.6
+      ]
+    },
+    {
+      "id": "f2-player_ledge_1-3-normal",
+      "family": "player_ledge_1",
+      "direction": 3,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "b97008dc2e45115f48d14da94018fa0cb8e78b27e3f4466f491ab50c0d07af85",
+      "start_position": [
+        -0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        -10.999999999999998,
+        99.92,
+        0.3,
+        -10.6,
+        100.08,
+        0.7
+      ]
+    },
+    {
+      "id": "f2-player_ledge_1-3-late_first",
+      "family": "player_ledge_1",
+      "direction": 3,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "b97008dc2e45115f48d14da94018fa0cb8e78b27e3f4466f491ab50c0d07af85",
+      "start_position": [
+        -0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        -10.999999999999998,
+        99.92,
+        0.3,
+        -10.6,
+        100.08,
+        0.7
+      ]
+    },
+    {
+      "id": "f2-player_ledge_2-0-normal",
+      "family": "player_ledge_2",
+      "direction": 0,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "546b24f736b6ba7b67f4ecb34938afdde365fc8f71ac5b0c54a4b55a5151d80d",
+      "start_position": [
+        0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        0.3,
+        99.92,
+        10.7,
+        0.7,
+        100.08,
+        11.099999999999998
+      ]
+    },
+    {
+      "id": "f2-player_ledge_2-0-late_first",
+      "family": "player_ledge_2",
+      "direction": 0,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "546b24f736b6ba7b67f4ecb34938afdde365fc8f71ac5b0c54a4b55a5151d80d",
+      "start_position": [
+        0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        0.3,
+        99.92,
+        10.7,
+        0.7,
+        100.08,
+        11.099999999999998
+      ]
+    },
+    {
+      "id": "f2-player_ledge_2-1-normal",
+      "family": "player_ledge_2",
+      "direction": 1,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "dfe9e2b0b74d55e9ce2d94686fbfdf7846a701c44f531409446dd242d262539b",
+      "start_position": [
+        0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        10.7,
+        99.92,
+        -0.7,
+        11.099999999999998,
+        100.08,
+        -0.3
+      ]
+    },
+    {
+      "id": "f2-player_ledge_2-1-late_first",
+      "family": "player_ledge_2",
+      "direction": 1,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "dfe9e2b0b74d55e9ce2d94686fbfdf7846a701c44f531409446dd242d262539b",
+      "start_position": [
+        0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        10.7,
+        99.92,
+        -0.7,
+        11.099999999999998,
+        100.08,
+        -0.3
+      ]
+    },
+    {
+      "id": "f2-player_ledge_2-2-normal",
+      "family": "player_ledge_2",
+      "direction": 2,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "f78039acfc4b4a579e6783347f1883b316978a558c94ad8dc75ccedf4bd3c643",
+      "start_position": [
+        -0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        -0.7,
+        99.92,
+        -11.099999999999998,
+        -0.3,
+        100.08,
+        -10.7
+      ]
+    },
+    {
+      "id": "f2-player_ledge_2-2-late_first",
+      "family": "player_ledge_2",
+      "direction": 2,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "f78039acfc4b4a579e6783347f1883b316978a558c94ad8dc75ccedf4bd3c643",
+      "start_position": [
+        -0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        -0.7,
+        99.92,
+        -11.099999999999998,
+        -0.3,
+        100.08,
+        -10.7
+      ]
+    },
+    {
+      "id": "f2-player_ledge_2-3-normal",
+      "family": "player_ledge_2",
+      "direction": 3,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "b97008dc2e45115f48d14da94018fa0cb8e78b27e3f4466f491ab50c0d07af85",
+      "start_position": [
+        -0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        -11.099999999999998,
+        99.92,
+        0.3,
+        -10.7,
+        100.08,
+        0.7
+      ]
+    },
+    {
+      "id": "f2-player_ledge_2-3-late_first",
+      "family": "player_ledge_2",
+      "direction": 3,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "b97008dc2e45115f48d14da94018fa0cb8e78b27e3f4466f491ab50c0d07af85",
+      "start_position": [
+        -0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        -11.099999999999998,
+        99.92,
+        0.3,
+        -10.7,
+        100.08,
+        0.7
+      ]
+    },
+    {
+      "id": "f2-head_wall_mid",
+      "family": "head_wall_mid",
+      "direction": 0,
+      "condition": "normal",
+      "expected": "failed",
+      "scene_sha256": "26b4f335e3919798a54d96b0a5ecbb7e27c866795170a789c901fcfddcdc8639",
+      "start_position": [
+        0.73,
+        100.0,
+        0.67
+      ],
+      "goal_bounds": [
+        0.53,
+        99.92,
+        8.13,
+        0.9299999999999999,
+        100.08,
+        8.53
+      ]
+    },
+    {
+      "id": "f2-hazard_wall",
+      "family": "hazard_wall",
+      "direction": 0,
+      "condition": "normal",
+      "expected": "failed",
+      "scene_sha256": "9f7a054e6dca040d3da838de291584f4cd33b02361c95eea1cb650945a5796ee",
+      "start_position": [
+        0.73,
+        100.0,
+        0.67
+      ],
+      "goal_bounds": [
+        0.53,
+        99.92,
+        8.13,
+        0.9299999999999999,
+        100.08,
+        8.53
+      ]
+    },
+    {
+      "id": "f2-undeclared_edge",
+      "family": "undeclared_edge",
+      "direction": 0,
+      "condition": "normal",
+      "expected": "failed",
+      "scene_sha256": "546b24f736b6ba7b67f4ecb34938afdde365fc8f71ac5b0c54a4b55a5151d80d",
+      "start_position": [
+        0.73,
+        100.0,
+        0.67
+      ],
+      "goal_bounds": [
+        0.53,
+        99.92,
+        11.25,
+        0.9299999999999999,
+        100.08,
+        11.649999999999999
+      ]
+    },
+    {
+      "id": "f2-low_ceiling",
+      "family": "low_ceiling",
+      "direction": 0,
+      "condition": "normal",
+      "expected": "failed",
+      "scene_sha256": "8993358ab4b60f827bd8bdb981971b5de508c645dba1319a85843f1ad8e36dcf",
+      "start_position": [
+        0.73,
+        100.0,
+        0.67
+      ],
+      "goal_bounds": [
+        0.53,
+        99.92,
+        8.13,
+        0.9299999999999999,
+        100.08,
+        8.53
+      ]
+    },
+    {
+      "id": "f2-revision",
+      "family": "offset_mid",
+      "direction": 0,
+      "condition": "normal",
+      "injection": "revision",
+      "expected": "success",
+      "scene_sha256": "546b24f736b6ba7b67f4ecb34938afdde365fc8f71ac5b0c54a4b55a5151d80d",
+      "start_position": [
+        0.73,
+        100.0,
+        0.67
+      ],
+      "goal_bounds": [
+        0.53,
+        99.92,
+        8.13,
+        0.9299999999999999,
+        100.08,
+        8.53
+      ]
+    },
+    {
+      "id": "f2-cancel",
+      "family": "offset_mid",
+      "direction": 0,
+      "condition": "normal",
+      "injection": "cancel",
+      "expected": "cancelled",
+      "scene_sha256": "546b24f736b6ba7b67f4ecb34938afdde365fc8f71ac5b0c54a4b55a5151d80d",
+      "start_position": [
+        0.73,
+        100.0,
+        0.67
+      ],
+      "goal_bounds": [
+        0.53,
+        99.92,
+        8.13,
+        0.9299999999999999,
+        100.08,
+        8.53
+      ]
+    },
+    {
+      "id": "f2-input_loss",
+      "family": "offset_mid",
+      "direction": 0,
+      "condition": "normal",
+      "injection": "input_loss",
+      "expected": "success",
+      "expected_terminals": [
+        "success",
+        "failed",
+        "cancelled"
+      ],
+      "scene_sha256": "546b24f736b6ba7b67f4ecb34938afdde365fc8f71ac5b0c54a4b55a5151d80d",
+      "start_position": [
+        0.73,
+        100.0,
+        0.67
+      ],
+      "goal_bounds": [
+        0.53,
+        99.92,
+        8.13,
+        0.9299999999999999,
+        100.08,
+        8.53
+      ]
+    },
+    {
+      "id": "f2-support_change",
+      "family": "offset_mid",
+      "direction": 0,
+      "condition": "normal",
+      "injection": "support_change",
+      "expected": "failed",
+      "scene_sha256": "546b24f736b6ba7b67f4ecb34938afdde365fc8f71ac5b0c54a4b55a5151d80d",
+      "start_position": [
+        0.73,
+        100.0,
+        0.67
+      ],
+      "goal_bounds": [
+        0.53,
+        99.92,
+        8.13,
+        0.9299999999999999,
+        100.08,
+        8.53
+      ]
+    },
+    {
+      "id": "f2-external_force",
+      "family": "offset_mid",
+      "direction": 0,
+      "condition": "normal",
+      "injection": "external_force",
+      "expected": "success",
+      "expected_terminals": [
+        "success",
+        "failed",
+        "cancelled"
+      ],
+      "external_force_kind": "vanilla_no_ai_villager_collision",
+      "external_entity_count": 4,
+      "external_entity_initial_motion": [
+        -0.08,
+        0.0,
+        0.0
+      ],
+      "scene_sha256": "546b24f736b6ba7b67f4ecb34938afdde365fc8f71ac5b0c54a4b55a5151d80d",
+      "start_position": [
+        0.55,
+        100.0,
+        0.67
+      ],
+      "goal_bounds": [
+        0.35000000000000003,
+        99.92,
+        8.13,
+        0.75,
+        100.08,
+        8.53
+      ]
+    },
+    {
+      "id": "f2-reference-offset_mid",
+      "family": "offset_mid",
+      "direction": 0,
+      "condition": "normal",
+      "expected": "success",
+      "reference": true,
+      "reference_point": [
+        0.73,
+        100.0,
+        8.23
+      ],
+      "release_distance_blocks": 0.26,
+      "scene_sha256": "546b24f736b6ba7b67f4ecb34938afdde365fc8f71ac5b0c54a4b55a5151d80d",
+      "start_position": [
+        0.73,
+        100.0,
+        0.67
+      ],
+      "goal_bounds": [
+        0.53,
+        99.92,
+        8.13,
+        0.9299999999999999,
+        100.08,
+        8.53
+      ]
+    },
+    {
+      "id": "f2-reference-player_wall_head",
+      "family": "player_wall_head",
+      "direction": 0,
+      "condition": "normal",
+      "expected": "success",
+      "reference": true,
+      "reference_point": [
+        1.6,
+        100.0,
+        6.4
+      ],
+      "release_distance_blocks": 0.26,
+      "scene_sha256": "8a961e193a359356c6b6af0a513b35e76b3445ed7c691bfafb47bde1f9feeb24",
+      "start_position": [
+        0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        1.5,
+        99.92,
+        6.3,
+        1.9,
+        100.08,
+        6.7
+      ]
+    },
+    {
+      "id": "f2-reference-player_ledge_2",
+      "family": "player_ledge_2",
+      "direction": 0,
+      "condition": "normal",
+      "expected": "success",
+      "reference": true,
+      "reference_point": [
+        0.5,
+        100.0,
+        10.78
+      ],
+      "release_distance_blocks": 0.26,
+      "scene_sha256": "546b24f736b6ba7b67f4ecb34938afdde365fc8f71ac5b0c54a4b55a5151d80d",
+      "start_position": [
+        0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        0.3,
+        99.92,
+        10.7,
+        0.7,
+        100.08,
+        11.099999999999998
+      ]
+    },
+    {
+      "id": "f2-window-outside",
+      "family": "offset_mid",
+      "direction": 0,
+      "condition": "late_two",
+      "expected": "failed",
+      "expected_terminals": [
+        "success",
+        "failed",
+        "cancelled"
+      ],
+      "scene_sha256": "546b24f736b6ba7b67f4ecb34938afdde365fc8f71ac5b0c54a4b55a5151d80d",
+      "start_position": [
+        0.73,
+        100.0,
+        0.67
+      ],
+      "goal_bounds": [
+        0.53,
+        99.92,
+        8.13,
+        0.9299999999999999,
+        100.08,
+        8.53
+      ]
+    }
+  ],
+  "sha256": "ef266ac3e33a46d6a688196646a33122935601ad989bbbad0d67e97918c927bf"
+}

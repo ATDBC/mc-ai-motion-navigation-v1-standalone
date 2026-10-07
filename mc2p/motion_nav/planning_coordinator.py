@@ -54,6 +54,7 @@ from mc2p.motion_nav.known_map_planner import (
     SurfaceRouteCandidate,
 )
 from mc2p.motion_nav.landing_edge_probe import LandingEdgeProbe
+from mc2p.motion_nav.landing_evidence import direct_drop_visual_evidence_sufficient
 from mc2p.motion_nav.movement_transition import MovementMode
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.navigation_owners import (
@@ -77,7 +78,6 @@ from mc2p.motion_nav.route_admission import (
     AdmissionReason,
     AdmissionStatus,
     RouteAdmitter,
-    direct_drop_visual_evidence_sufficient,
 )
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.step_transition import StepProfile

@@ -6,7 +6,7 @@ from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.motion_nav.world_model import Aabb, CellKnowledge
 from mc2p.motion_nav.navigation_session import NavigationSession
 from mc2p.motion_nav.movement_transition import GoalState, GoalSupport, MovementMode
-from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
+from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver, RuntimeNavigationDriverState
 from mc2p.motion_nav.motion_worker import GapMotionSolveResult, _execute_job
 from mc2p.motion_nav.motion_solver import SolveResult, SolveStatus
 from scripts.control_probe_core import append_jsonl
@@ -66,7 +66,7 @@ def run_successor_gap_case(runtime, task, profile, profiles, directory, deadline
     sessions = [original]
     try:
         driver.start("r27-same-goal", 1, goal, time.perf_counter_ns())
-        if driver.state in {"failed", "success", "cancelled"}:
+        if driver.state in {RuntimeNavigationDriverState.FAILED, RuntimeNavigationDriverState.SUCCESS, RuntimeNavigationDriverState.CANCELLED}:
             raise RuntimeError(f"R27 original start rejected: {original.report}; body={frame.body}")
         for _ in range(60):
             result = driver.tick(profile, min(deadline_ns, time.perf_counter_ns() + 500_000_000))
@@ -75,7 +75,7 @@ def run_successor_gap_case(runtime, task, profile, profiles, directory, deadline
                 raise RuntimeError(f"R27 original control failed: {result.report.failure}")
             if worker.jobs:
                 break
-            if driver.state in {"failed", "success", "cancelled"}:
+            if driver.state in {RuntimeNavigationDriverState.FAILED, RuntimeNavigationDriverState.SUCCESS, RuntimeNavigationDriverState.CANCELLED}:
                 raise RuntimeError(f"R27 original ended before solve: {original.report}; "
                     f"head={[runtime.navigation_observation_adapter.latest_frame.world.cell((0, feet_y + y, z)).knowledge.value for y in range(4) for z in range(3)]}")
         if not worker.jobs:
@@ -119,11 +119,11 @@ def run_successor_gap_case(runtime, task, profile, profiles, directory, deadline
                 "tick": tick, "observation": runtime.observation.sequence_id,
                 "report": asdict(successor.report),
                 "owners": [asdict(owner) for owner in successor.async_work_diagnostics]})
-            if result.report.failure is not None or driver.state in {"success", "failed", "cancelled"}:
+            if result.report.failure is not None or driver.state in {RuntimeNavigationDriverState.SUCCESS, RuntimeNavigationDriverState.FAILED, RuntimeNavigationDriverState.CANCELLED}:
                 break
-        row = {"passed": driver.state == "success", "old": asdict(old.work_identity),
+        row = {"passed": driver.state == RuntimeNavigationDriverState.SUCCESS, "old": asdict(old.work_identity),
                "new": asdict(new.work_identity), "successor_report_reason": successor.diagnostics.reason,
-               "state": driver.state, "reason": driver.reason}
+               "state": driver.state.value, "reason": driver.reason}
         append_jsonl(directory / "r27-successor-gap-trials.jsonl", row)
         if not row["passed"]:
             raise RuntimeError(f"R27 successor gap failed: {row}")

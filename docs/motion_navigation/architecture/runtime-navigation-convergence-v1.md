@@ -230,3 +230,15 @@ Runtime 是正式世界知识的长期拥有者。V3 reset 成功后以及每个
 11. 已提交但尚未确认的已验证命令仍属于原执行器；观察中的着地状态不能单独授权新路线接管。
 12. V3 正式观察在返回技能以前已经进入 Runtime 的唯一世界知识；正式导航会话不能自带第二份地图。
 13. 失败分类必须对应实际生命周期动作；任务级失败不能默认封存客户端，输入状态不确定也不能假装可以继续。
+
+## 11. D073：导航驱动器的枚举状态
+
+RuntimeNavigationDriverState 覆盖 READY、RUNNING、STOPPING、SUCCESS、FAILED、CANCELLED、STOPPED、INTERACTION_REQUIRED 与 INTERACTION_SUSPENDED。构造时设置 READY；其他状态只由 `_set_state` 写入，公开 `state` 为只读属性。
+
+驱动器根据 Session 的枚举报告映射状态。`reason` 只用于报告。控制失效、交互暂停与恢复、取消、成功以及身体收尾都调用同一写入入口；对外保存字符串时使用 `.value`。
+
+例如下降途中取消任务时，驱动器仍报告 STOPPING，并保留原身体 owner。原 Session 完成落地与交接后，驱动器才报告 CANCELLED 并释放来源。业务已经结束时，控制失效仍保留 Session 的原业务结果，驱动器继续遵守现有身体责任规则。
+
+枚举只收口驱动器自己的写入，没有建立第二套 Session 生命周期。I/O、交互、取消、继任者与身体收尾已按 Windows 检查，结果见[加固验收](../acceptance/action-spec-hardening-driver-lifecycle.md)。
+
+固定/移动近战及 Fabric 消费者内部比较 RuntimeNavigationDriverState；JSON 和日志边界输出 `.value`。测试通过 Session 报告同步状态；迟到旧结果负例只调用已有枚举写入入口。只读 state 和 Session 生命周期边界保持。

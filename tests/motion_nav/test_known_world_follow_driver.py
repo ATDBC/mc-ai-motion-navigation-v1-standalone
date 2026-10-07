@@ -28,7 +28,7 @@ from mc2p.skills.known_world_follow_driver import (
     KnownWorldFollowStatus,
 )
 from mc2p.skills.follow_types import MOVEMENT_FRESHNESS_NS
-from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
+from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver, RuntimeNavigationDriverState
 from tests.follow_fixtures import player_value
 from tests.follow_v3_fixtures import follow_snapshot
 from tests.navigation_session_fixtures import FakeNavigationSession
@@ -580,7 +580,7 @@ class KnownWorldFollowRuntimeTests(unittest.TestCase):
 
         self.assertEqual(cancelling.status,
                          KnownWorldFollowStatus.CANCEL_PENDING)
-        self.assertEqual(self.navigation.state, "stopping")
+        self.assertEqual(self.navigation.state, RuntimeNavigationDriverState.STOPPING)
         self.assertIsNotNone(self.navigation.source)
         self.assertEqual(self.runtime.ordered_source_stats["active_sources"], 1)
 

@@ -262,13 +262,15 @@ class FixedMeleeDriverTests(unittest.TestCase):
 
         def blocked_tick(profile, deadline):
             result = original_tick(profile, deadline)
-            approach.state = "blocked"
-            approach.reason = "test_blocked"
+            approach.session.handle_internal_contract_failure("test_blocked")
+            approach._sync_report()
             return result
 
         approach.tick = blocked_tick
         first.tick(self.profile, self.clock[0] + 2_000_000_000)
         self.assertTrue(first.report.terminal)
+        self.assertEqual(first.report.reason, "approach/test_blocked")
+        self.assertIsNone(approach.source)
         second = self.driver()
         second.start(self.target(), self.clock[0])
         self.assertEqual(second.report.state, "approaching")

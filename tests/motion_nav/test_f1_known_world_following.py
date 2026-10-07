@@ -5,11 +5,15 @@ from dataclasses import replace
 import json
 import math
 import unittest
+from unittest.mock import patch
+
+from mc2p.contracts.action_v1 import MovementV1
+from mc2p.motion_nav.fixed_route import FixedRouteController, FixedRouteState
 
 from tests.sim.known_world_following import (
     REPRESENTATIVE_SCENARIOS, SCENARIOS, SCENARIO_BY_NAME, TARGET_TRACK_ID,
     FollowScenario, FollowingBackend,
-    run_manifest, run_scenario,
+    run_manifest, run_scenario, run_scenario_with_trace, _RecordingTrace,
 )
 from tests.sim.product_metrics import revision_responses
 from tests.sim.runner import lane
@@ -138,13 +142,26 @@ class F1KnownWorldFollowingTests(unittest.TestCase):
             for y in (64, 65)
             for z in (8, 12, 16)
         )
-        result = run_scenario(FollowScenario(
-            "d064_three_revision_information",
-            2.0,
-            move_ticks=120,
-            final_hold_ticks=20,
-            initial_unknown_cells=unknown,
-        ))
+        current_decisions, samples = [], []
+        original = FixedRouteController.decide
+
+        def record(controller, frame, **kwargs):
+            decision = original(controller, frame, **kwargs)
+            current_decisions.append((controller._route, frame.body.position, decision))
+            return decision
+
+        def sample(row):
+            samples.append((row, tuple(current_decisions)))
+            current_decisions.clear()
+
+        with patch.object(FixedRouteController, 'decide', new=record):
+            result = run_scenario_with_trace(FollowScenario(
+                "d064_three_revision_information",
+                2.0,
+                move_ticks=120,
+                final_hold_ticks=20,
+                initial_unknown_cells=unknown,
+            ), _RecordingTrace(), trajectory_sink=sample)
 
         waits = result["revision_information_waits"]
         self.assertGreaterEqual(len(waits), 3)
@@ -157,10 +174,30 @@ class F1KnownWorldFollowingTests(unittest.TestCase):
             "stopping",
             {item["state"] for item in result["state_history"]},
         )
-        self.assertEqual(
-            result["revision_information_movement_gap_ticks"],
-            [],
-        )
+        pre_control = {row['tick']: row for row in result['revision_pre_control_states']}
+        for wait in waits:
+            tick = wait['tick']
+            incumbent = pre_control[tick]['incumbent_route_id']
+            self.assertIsNotNone(incumbent)
+            self.assertTrue(any(route.route_id == incumbent and decision.state in
+                {FixedRouteState.RUNNING, FixedRouteState.BRAKING}
+                for route, _, decision in samples[tick-1][1]))
+        for tick in result['revision_information_movement_gap_ticks']:
+            observed, decisions = samples[tick-1]
+            incumbent = pre_control[tick]['incumbent_route_id']
+            # Region completion may legitimately brake the old effective goal
+            # while a newer goal waits for facts. Prove that precise reason.
+            braking = [(route, position, decision) for route, position, decision in decisions
+                if route.route_id == incumbent and decision.state is FixedRouteState.BRAKING
+                and decision.reason == 'goal_braking' and decision.movement == MovementV1()]
+            self.assertTrue(braking)
+            for route, position, _ in braking:
+                region = route.execution_contract.completion_region
+                self.assertIsNotNone(region)
+                self.assertTrue(region.contains(position))
+                self.assertTrue(region.contains(observed['position']))
+            self.assertTrue(any(row['tick'] > tick and row['revision'] > pre_control[tick]['revision']
+                for row in result['revision_pre_control_states']))
         self.assertEqual(result["task_recoveries"], 0)
         self.assertEqual(result["planning_submissions"], 0)
 
@@ -169,7 +206,10 @@ class F1KnownWorldFollowingTests(unittest.TestCase):
             (x, y, z)
             for x in range(-3, 4)
             for y in (64, 65)
-            for z in (11,)
+            # Region stopping happens before the old exact guide. Row 9 is
+            # required by the first resumed direct target after the hold;
+            # row 11 is reached only after a new incumbent already exists.
+            for z in (9,)
         )
         scenario = FollowScenario(
             "d064_move_stop_800_resume_regression",
@@ -190,6 +230,9 @@ class F1KnownWorldFollowingTests(unittest.TestCase):
         }
         self.assertFalse({"failed", "stopping"} & pause_states)
         self.assertEqual(result["task_recoveries"], 0)
+        self.assertGreaterEqual(max(
+            max(0, min(end, pause_end) - max(begin, scenario.move_ticks+1) + 1)
+            for begin, end in result['zero_displacement_intervals']), 700)
 
         resume_waits = [
             item for item in result["revision_pre_control_states"]
@@ -208,6 +251,12 @@ class F1KnownWorldFollowingTests(unittest.TestCase):
             item["state"] == "needs_information" and not item["terminal"]
             for item in resume_waits
         ))
+        self.assertTrue(any(
+            item['tick'] > resume_waits[0]['tick']
+            and item['revision'] > resume_waits[0]['revision']
+            and item['missing_cell_count'] == 0
+            and item['incumbent_route_id'] is not None
+            for item in result['revision_pre_control_states']))
         self.assertTrue(all(
             not item["terminal"] and item["state"] != "stopping"
             for item in result["revision_pre_control_states"]

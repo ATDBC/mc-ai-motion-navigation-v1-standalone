@@ -1,0 +1,169 @@
+[
+  {
+    "stage": "forward-final",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/run_motion_navigation_checks.py",
+      "--output",
+      ".tmp/f2-task5-startfix-forward-final.json"
+    ],
+    "return_code": 0,
+    "elapsed_seconds": 398.25171340000816,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2-task5-startfix-forward-final.log"
+  },
+  {
+    "stage": "reverse-final",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/run_motion_navigation_checks.py",
+      "--reverse",
+      "--output",
+      ".tmp/f2-task5-startfix-reverse-final.json"
+    ],
+    "return_code": 0,
+    "elapsed_seconds": 402.6436172000249,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2-task5-startfix-reverse-final.log"
+  },
+  {
+    "stage": "faults",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/navigation_s0r_evidence.py",
+      "--set",
+      "faults",
+      "--output",
+      ".tmp/f2-task5-startfix-faults",
+      "--workers",
+      "4"
+    ],
+    "return_code": 0,
+    "elapsed_seconds": 1.9145146999508142,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2-task5-startfix-faults.log"
+  },
+  {
+    "stage": "world_changes",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/navigation_s0r_evidence.py",
+      "--set",
+      "world_changes",
+      "--output",
+      ".tmp/f2-task5-startfix-world_changes",
+      "--workers",
+      "4"
+    ],
+    "return_code": 0,
+    "elapsed_seconds": 4.5031138000194915,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2-task5-startfix-world_changes.log"
+  },
+  {
+    "stage": "follow",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/navigation_s0r_evidence.py",
+      "--set",
+      "follow",
+      "--output",
+      ".tmp/f2-task5-startfix-follow",
+      "--workers",
+      "4"
+    ],
+    "return_code": 0,
+    "elapsed_seconds": 14.133512299973518,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2-task5-startfix-follow.log"
+  },
+  {
+    "stage": "coordination",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/navigation_s0r_evidence.py",
+      "--set",
+      "coordination",
+      "--output",
+      ".tmp/f2-task5-startfix-coordination",
+      "--workers",
+      "4"
+    ],
+    "return_code": 0,
+    "elapsed_seconds": 148.50225630000932,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2-task5-startfix-coordination.log"
+  },
+  {
+    "stage": "product",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/navigation_s0r_evidence.py",
+      "--set",
+      "product",
+      "--output",
+      ".tmp/f2-task5-startfix-product",
+      "--workers",
+      "4"
+    ],
+    "return_code": 0,
+    "elapsed_seconds": 369.57622919999994,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2-task5-startfix-product.log"
+  },
+  {
+    "stage": "f2-all",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/f2_ground_route_evidence.py",
+      "--output",
+      ".tmp/f2-task5-startfix-all",
+      "--workers",
+      "4"
+    ],
+    "return_code": 0,
+    "elapsed_seconds": 86.15967409999575,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2-task5-startfix-f2-all.log"
+  },
+  {
+    "stage": "ground-performance",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "evidence/motion_navigation/F2-ground-route-v1/task3/review-fix/microbenchmark.py",
+      ".tmp/f2-task5-startfix-ground-performance.json"
+    ],
+    "return_code": 0,
+    "elapsed_seconds": 24.681131899997126,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2-task5-startfix-ground-performance.log"
+  },
+  {
+    "stage": "terminal-performance",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "evidence/motion_navigation/F2-ground-route-v1/task4/microbenchmark.py",
+      ".tmp/f2-task5-startfix-terminal-performance.json"
+    ],
+    "return_code": 0,
+    "elapsed_seconds": 21.24271940003382,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2-task5-startfix-terminal-performance.log"
+  },
+  {
+    "stage": "d058",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "scripts.benchmark_d058_route_revalidation",
+      "--output",
+      ".tmp/f2-task5-startfix-d058"
+    ],
+    "return_code": 0,
+    "elapsed_seconds": 41.78194509999594,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2-task5-startfix-d058.log"
+  },
+  {
+    "stage": "d061",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "scripts.benchmark_d061_long_session",
+      "--output",
+      ".tmp/f2-task5-startfix-d061"
+    ],
+    "return_code": 0,
+    "elapsed_seconds": 212.7659033999662,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2-task5-startfix-d061.log"
+  }
+]

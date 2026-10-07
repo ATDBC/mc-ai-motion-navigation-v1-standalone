@@ -1,0 +1,61 @@
+{
+  "status": "failed",
+  "primary_failure": {
+    "message": "F2 fail fast: f2-player_corner-0-normal: ['unexpected_terminal']",
+    "type": "AssertionError"
+  },
+  "checks": [
+    {
+      "name": "client-0:complete_time_event_attribution",
+      "passed": true
+    },
+    {
+      "name": "client-0:observation_pipeline_frames_recorded",
+      "passed": true
+    },
+    {
+      "name": "client-0:legacy_block_parity_disabled",
+      "passed": true
+    },
+    {
+      "name": "v3_python_and_java_sources_unchanged",
+      "passed": true
+    }
+  ],
+  "cleanup_failures": [],
+  "diagnostic_failures": [],
+  "parent_supervision": {
+    "cleanup_failures": [],
+    "primary_failure": null,
+    "process_stopped": true,
+    "registered_processes": [
+      {
+        "create_time": 1791358581.3452432,
+        "pid": 14012
+      },
+      {
+        "create_time": 1791358576.7172058,
+        "pid": 30812
+      },
+      {
+        "create_time": 1791358585.5594711,
+        "pid": 41824
+      },
+      {
+        "create_time": 1791358581.339907,
+        "pid": 52300
+      },
+      {
+        "create_time": 1791358585.5547357,
+        "pid": 62272
+      },
+      {
+        "create_time": 1791358631.911954,
+        "pid": 63048
+      }
+    ],
+    "return_code": 1,
+    "schema_version": "mc2p.bounded-process-result.v0"
+  },
+  "ports_free": true
+}

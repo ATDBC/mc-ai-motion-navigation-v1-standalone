@@ -1,0 +1,89 @@
+{
+  "status": "failed",
+  "primary_failure": {
+    "message": "F2 fail fast: f2-player_corridor_end-0-normal: ['unexpected_terminal']",
+    "type": "AssertionError"
+  },
+  "checks": [
+    {
+      "name": "client-0:complete_time_event_attribution",
+      "passed": true
+    },
+    {
+      "name": "client-0:observation_pipeline_frames_recorded",
+      "passed": true
+    },
+    {
+      "name": "client-0:legacy_block_parity_disabled",
+      "passed": true
+    },
+    {
+      "name": "v3_python_and_java_sources_unchanged",
+      "passed": true
+    }
+  ],
+  "cleanup_failures": [],
+  "diagnostic_failures": [],
+  "parent_supervision": {
+    "cleanup_failures": [],
+    "primary_failure": null,
+    "process_stopped": true,
+    "registered_processes": [
+      {
+        "create_time": 1791358030.4124713,
+        "pid": 10028
+      },
+      {
+        "create_time": 1791358022.2192576,
+        "pid": 12092
+      },
+      {
+        "create_time": 1791358026.0661275,
+        "pid": 26012
+      },
+      {
+        "create_time": 1791357953.8475072,
+        "pid": 29148
+      },
+      {
+        "create_time": 1791357949.6406426,
+        "pid": 37476
+      },
+      {
+        "create_time": 1791357945.0281625,
+        "pid": 46940
+      },
+      {
+        "create_time": 1791358013.2725737,
+        "pid": 47100
+      },
+      {
+        "create_time": 1791357949.6329,
+        "pid": 51940
+      },
+      {
+        "create_time": 1791358017.9196823,
+        "pid": 56364
+      },
+      {
+        "create_time": 1791358004.3649187,
+        "pid": 57004
+      },
+      {
+        "create_time": 1791357953.8530447,
+        "pid": 61976
+      },
+      {
+        "create_time": 1791358000.0666585,
+        "pid": 62344
+      },
+      {
+        "create_time": 1791358009.022916,
+        "pid": 70664
+      }
+    ],
+    "return_code": 1,
+    "schema_version": "mc2p.bounded-process-result.v0"
+  },
+  "ports_free": true
+}

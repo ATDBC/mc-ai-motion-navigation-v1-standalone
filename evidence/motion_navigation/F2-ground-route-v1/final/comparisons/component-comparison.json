@@ -1,0 +1,17 @@
+{
+  "cases": 112,
+  "non_edge_cases": 104,
+  "changed_ids": [],
+  "behavior_and_physics_counts_unchanged": true,
+  "compared_fields": [
+    "input_sha256",
+    "behavior_sha256",
+    "outcome",
+    "reason",
+    "full_candidates_max",
+    "physics_steps_total",
+    "physics_steps_max"
+  ],
+  "gate_violations": 0,
+  "maximum_candidates": 3
+}

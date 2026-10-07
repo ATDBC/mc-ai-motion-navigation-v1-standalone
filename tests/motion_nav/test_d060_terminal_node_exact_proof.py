@@ -46,6 +46,8 @@ from mc2p.motion_nav.runtime_adapter import (
 )
 from mc2p.motion_nav.support_surfaces import SurfaceNodeId
 from mc2p.motion_nav.support_surfaces import StandablePointResult
+from mc2p.motion_nav.support_surfaces import StandableRegionResult
+from mc2p.motion_nav.ground_route_execution import GroundCompletionRegion
 from mc2p.motion_nav.world_model import (
     Aabb,
     BlockGeometry,
@@ -74,6 +76,15 @@ _CASES = (
     (13, 11.803689974112187, 7, 8.025439477531426, 12),
     (15, 12.797093391526154, 8, 8.88380618239971, 13),
 )
+
+
+def _equal_region(position, dependencies):
+    """Freeze equality of the reference and graph node for D060's proof case."""
+    x, y, z = position
+    completion = GroundCompletionRegion(
+        Aabb(x-.1, y-.01, z-.1, x+.1, y+.01, z+.1), position, y,
+        (0, math.floor(z), math.floor(y), 0), ())
+    return StandableRegionResult(QueryStatus.FEASIBLE, completion, dependencies)
 
 
 def _goal(target_z: float, *, feet_y: float = -60.0) -> GoalState:
@@ -140,9 +151,8 @@ def _admit_equal_terminal(
     )
     candidate = astar_surface_plan(graph, request)
     with patch(
-        "mc2p.motion_nav.route_admission.standable_point_in_region",
-        return_value=StandablePointResult(
-            QueryStatus.FEASIBLE,
+        "mc2p.motion_nav.route_admission.standable_region_in_goal",
+        return_value=_equal_region(
             candidate.path[-1].position,
             dependencies=(
                 (0, -60, unknown_z),
@@ -312,9 +322,8 @@ class D060TerminalNodeExactProofTests(unittest.TestCase):
             total_cost_ticks=1,
         )
         with patch(
-            "mc2p.motion_nav.route_admission.standable_point_in_region",
-            return_value=StandablePointResult(
-                QueryStatus.FEASIBLE,
+            "mc2p.motion_nav.route_admission.standable_region_in_goal",
+            return_value=_equal_region(
                 candidate.path[-1].position,
                 dependencies=((0, -60, 10), (0, -59, 10)),
             ),
@@ -412,9 +421,8 @@ class D060TerminalNodeExactProofTests(unittest.TestCase):
                 "_surface_for_goal",
                 return_value=(SurfaceNodeId(0, 9, 64, 0), ()),
             ), patch(
-                "mc2p.motion_nav.route_admission.standable_point_in_region",
-                return_value=StandablePointResult(
-                    QueryStatus.FEASIBLE,
+                "mc2p.motion_nav.route_admission.standable_region_in_goal",
+                return_value=_equal_region(
                     (.5, 64.0, 9.5),
                     dependencies=((0, 64, 10), (0, 65, 10)),
                 ),

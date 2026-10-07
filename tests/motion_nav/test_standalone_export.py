@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from pathlib import Path
+import hashlib
+import json
 import shutil
 import subprocess
 import sys
@@ -99,6 +101,49 @@ class StandaloneExportTests(unittest.TestCase):
 
     def test_workspace_tmp_cannot_be_selected_as_export_source(self):
         self.assertFalse(_allowed_source(self.root/'README.md'))
+
+    def test_f2_export_has_current_entrypoints_and_preserves_final_evidence(self):
+        required = (
+            "scripts/f2_ground_route_evidence.py",
+            "scripts/f2_ground_route_quality.py",
+            "scripts/f2_ground_route_runtime.py",
+            "docs/superpowers/plans/2026-10-07-non-center-ground-route-execution.md",
+            "evidence/motion_navigation/F2-ground-route-v1/baseline/measurement-v2/error-copies.json",
+            "evidence/motion_navigation/F2-ground-route-v1/final/windows/forward-final.json",
+            "evidence/motion_navigation/F2-ground-route-v1/final/windows/reverse-final.json",
+            "evidence/motion_navigation/F2-ground-route-v1/final/fabric/accepted-batches.json",
+            "evidence/motion_navigation/F2-ground-route-v1/final/fabric/trials.jsonl",
+            "evidence/motion_navigation/F2-ground-route-v1/final/fabric/external-force-earlier-bounded-result.json",
+            "evidence/motion_navigation/F2-ground-route-v1/final/fabric/failures/corner-replay-red.json",
+        )
+        self.assertEqual(tuple(p for p in required if not (self.root/p).is_file()), ())
+        for name in ("README.md", "AGENTS.md"):
+            text = (self.root/name).read_text("utf-8")
+            self.assertIn("F2", text)
+            self.assertIn("冻结范围验收通过", text)
+            self.assertIn("1998/2000", text)
+            self.assertIn("93/93", text)
+            self.assertIn("F2-non-center-ground-route-execution.md", text)
+        source = ROOT / "evidence/motion_navigation/F2-ground-route-v1/final"
+        exported = self.root / "evidence/motion_navigation/F2-ground-route-v1/final"
+        for path in source.rglob("*"):
+            if path.is_file() and "__pycache__" not in path.parts:
+                self.assertEqual((exported/path.relative_to(source)).read_bytes(), path.read_bytes())
+
+    def test_f2_export_matches_frozen_production_fingerprints(self):
+        source = self.root / "evidence/motion_navigation/F2-ground-route-v1/final/source-consistency.json"
+        report = json.loads(source.read_text("utf-8"))
+        for name, expected in report["full_production_files"].items():
+            self.assertEqual(hashlib.sha256((self.root/name).read_bytes()).hexdigest(), expected, name)
+
+    def test_export_has_no_local_artifacts_credentials_or_worlds(self):
+        forbidden_parts = {".tmp", "artifacts", ".venv", ".gradle", "world", "worlds", "saves"}
+        forbidden_names = {".env", "credentials.json", "secrets.json", "launcher_accounts.json", "level.dat"}
+        for path in self.root.rglob("*"):
+            if path.is_file():
+                relative = path.relative_to(self.root)
+                self.assertFalse(forbidden_parts.intersection(relative.parts), relative)
+                self.assertNotIn(path.name, forbidden_names, relative)
 
     def test_exported_first_party_modules_all_import(self) -> None:
         script = """

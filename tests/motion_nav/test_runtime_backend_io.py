@@ -1,4 +1,5 @@
 """Backend loss on the formal point/follow path does not reuse an old frame."""
+from mc2p.skills.navigation_session_driver import RuntimeNavigationDriverState
 import unittest
 from dataclasses import replace
 from unittest.mock import patch
@@ -8,12 +9,19 @@ from mc2p.contracts.common import ContractViolation
 from mc2p.contracts.report import FailureCodeV0, FailureV0
 from mc2p.motion_nav.navigation_session import NavigationSessionState
 
-TERMINAL = {"success", "failed", "cancelled", "stopped", "interaction_required"}
+TERMINAL = {RuntimeNavigationDriverState.SUCCESS, RuntimeNavigationDriverState.FAILED,
+            RuntimeNavigationDriverState.CANCELLED, RuntimeNavigationDriverState.STOPPED,
+            RuntimeNavigationDriverState.INTERACTION_REQUIRED}
 
 from tests.sim.runtime_faults import build_runtime_case, run_io_case
 
 
 class RuntimeBackendIOTests(unittest.TestCase):
+    def test_fault_trace_serializes_navigation_state_as_plain_string(self):
+        case = build_runtime_case()
+        self.addCleanup(case.close)
+        self.assertIs(type(case.row()['driver_state']), str)
+
     def fixture(self, *, follow=False, gap=False):
         case = build_runtime_case(follow=follow, gap=gap)
         self.addCleanup(case.close)
