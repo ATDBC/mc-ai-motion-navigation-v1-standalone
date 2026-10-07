@@ -107,7 +107,11 @@ class StandaloneExportTests(unittest.TestCase):
             "scripts/f2_ground_route_evidence.py",
             "scripts/f2_ground_route_quality.py",
             "scripts/f2_ground_route_runtime.py",
-            "docs/superpowers/plans/2026-10-07-non-center-ground-route-execution.md",
+            "scripts/f2r_piecewise_evidence.py",
+            "tests/sim/manifests/navigation-product-r28-v8.json",
+            "tests/motion_nav/test_f2r_piecewise_completion.py",
+            "evidence/motion_navigation/action-spec-hardening-v1/metrics-baseline-corrected.json",
+            "evidence/motion_navigation/F2R-piecewise-completion-v1/red/geometry/summary.json",
             "evidence/motion_navigation/F2-ground-route-v1/baseline/measurement-v2/error-copies.json",
             "evidence/motion_navigation/F2-ground-route-v1/final/windows/forward-final.json",
             "evidence/motion_navigation/F2-ground-route-v1/final/windows/reverse-final.json",
@@ -117,6 +121,7 @@ class StandaloneExportTests(unittest.TestCase):
             "evidence/motion_navigation/F2-ground-route-v1/final/fabric/failures/corner-replay-red.json",
         )
         self.assertEqual(tuple(p for p in required if not (self.root/p).is_file()), ())
+        self.assertFalse((self.root/'docs/superpowers/plans/2026-10-07-non-center-ground-route-execution.md').exists())
         for name in ("README.md", "AGENTS.md"):
             text = (self.root/name).read_text("utf-8")
             self.assertIn("F2", text)
@@ -131,7 +136,7 @@ class StandaloneExportTests(unittest.TestCase):
                 self.assertEqual((exported/path.relative_to(source)).read_bytes(), path.read_bytes())
 
     def test_f2_export_matches_frozen_production_fingerprints(self):
-        source = self.root / "evidence/motion_navigation/F2-ground-route-v1/final/source-consistency.json"
+        source = self.root / "evidence/motion_navigation/F2R-piecewise-completion-v1/source-consistency.json"
         report = json.loads(source.read_text("utf-8"))
         for name, expected in report["full_production_files"].items():
             self.assertEqual(hashlib.sha256((self.root/name).read_bytes()).hexdigest(), expected, name)

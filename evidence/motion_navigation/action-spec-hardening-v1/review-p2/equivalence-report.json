@@ -1,0 +1,27 @@
+{
+  "faults": {
+    "cases": 16,
+    "differences": [],
+    "equivalent": true
+  },
+  "world_changes": {
+    "cases": 19,
+    "differences": [],
+    "equivalent": true
+  },
+  "follow": {
+    "cases": 10,
+    "differences": [],
+    "equivalent": true
+  },
+  "coordination": {
+    "cases": 1448,
+    "differences": [],
+    "equivalent": true
+  },
+  "product": {
+    "cases": 2000,
+    "differences": [],
+    "equivalent": true
+  }
+}

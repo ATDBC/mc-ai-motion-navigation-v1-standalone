@@ -1,0 +1,14 @@
+{
+  "cases": 10,
+  "identical": 10,
+  "changed_ids": [],
+  "normalizer_version": "r28-structure-trajectory-v1",
+  "signature_schema_version": null,
+  "baseline": "evidence/motion_navigation/F2-ground-route-v1/final/five-groups/follow-index.json",
+  "baseline_sha256": "18162a0e74908cb98701a227faf160d50d79c1145d3250c8e5b259b98bd93335",
+  "results": {
+    "passed": 10,
+    "failed": 0
+  },
+  "details": []
+}

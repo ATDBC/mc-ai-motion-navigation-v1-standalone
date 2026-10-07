@@ -1,0 +1,80 @@
+{
+  "mode": "clutter",
+  "cases": 1800,
+  "source_commit": "409adec84dff8cef77a4b1dfd09c5ce86314bafc",
+  "source_worktree_clean": false,
+  "production_sha256": "b9c538f4722605937c625dc1fadd1d68271072984edb0dc59a1c1014cc86de1a",
+  "manifest_sha256": "84d60deccd5e6ded838c625feed18cc90006324749ad986a1e62bfd472b99502",
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "by_layer": {
+    "clutter_10/follow": {
+      "cases": 300,
+      "results": {
+        "feasible": 300
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "point_feasible": 300,
+      "lost": 0,
+      "control_p95_ms_max": null
+    },
+    "clutter_10/melee": {
+      "cases": 300,
+      "results": {
+        "feasible": 300
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "point_feasible": 300,
+      "lost": 0,
+      "control_p95_ms_max": null
+    },
+    "clutter_10/product": {
+      "cases": 300,
+      "results": {
+        "feasible": 287,
+        "blocked": 13
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "point_feasible": 287,
+      "lost": 0,
+      "control_p95_ms_max": null
+    },
+    "clutter_20/follow": {
+      "cases": 300,
+      "results": {
+        "feasible": 300
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "point_feasible": 300,
+      "lost": 0,
+      "control_p95_ms_max": null
+    },
+    "clutter_20/melee": {
+      "cases": 300,
+      "results": {
+        "feasible": 300
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "point_feasible": 300,
+      "lost": 0,
+      "control_p95_ms_max": null
+    },
+    "clutter_20/product": {
+      "cases": 300,
+      "results": {
+        "feasible": 283,
+        "blocked": 17
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "point_feasible": 283,
+      "lost": 0,
+      "control_p95_ms_max": null
+    }
+  }
+}

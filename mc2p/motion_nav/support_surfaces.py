@@ -7,7 +7,7 @@ import math
 from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.geometry import (
     QueryStatus, query_support, sweep, required_cells_for_sweep,
-    unknown_shape_owner_is_fully_covered, _rectangle_union_area,
+    unknown_shape_owner_is_fully_covered,
 )
 from mc2p.motion_nav.ground_route_execution import GroundCompletionRegion
 from mc2p.motion_nav.world_model import (
@@ -178,10 +178,10 @@ def standable_region_in_goal(world: WorldView, surface: SupportSurface, region: 
     if not parts:
         return rejected(QueryStatus.NEEDS_INFORMATION if missing else
                         QueryStatus.UNSUPPORTED if unsupported else QueryStatus.BLOCKED)
-    lx, lz = min(p[0] for p in parts), min(p[1] for p in parts)
-    hx, hz = max(p[2] for p in parts), max(p[3] for p in parts)
-    if abs(_rectangle_union_area(list(parts)) - (hx-lx)*(hz-lz)) > _EPSILON:
-        return rejected(QueryStatus.UNSUPPORTED)
+    # Each subtraction piece is exact. Keep the largest safe piece rather
+    # than rejecting an L-shaped union or filling its blocked outer envelope.
+    lx, lz, hx, hz = min(parts, key=lambda p: (
+        -(p[2]-p[0])*(p[3]-p[1]), p[0], p[1], p[2], p[3]))
     xs = {lx, hx} | {v for box in support_boxes for edge in (box.min_x, box.max_x)
                          for v in (edge-half, edge+half) if lx < v < hx}
     zs = {lz, hz} | {v for box in support_boxes for edge in (box.min_z, box.max_z)

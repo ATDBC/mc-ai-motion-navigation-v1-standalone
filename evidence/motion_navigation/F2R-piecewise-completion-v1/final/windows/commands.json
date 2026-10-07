@@ -1,0 +1,240 @@
+[
+  {
+    "stage": "f2-fixture-final",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/f2_ground_route_evidence.py",
+      "--output",
+      ".tmp/f2r-f2-fixture-final",
+      "--workers",
+      "4"
+    ],
+    "return_code": 0,
+    "begin_utc": "2026-10-07T15:19:47.447687+00:00",
+    "end_utc": "2026-10-07T15:21:21.259176+00:00",
+    "elapsed_seconds": 93.81146489997627,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-f2-fixture-final.log"
+  },
+  {
+    "stage": "product-fixture-final",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/navigation_s0r_evidence.py",
+      "--set",
+      "product",
+      "--output",
+      ".tmp/f2r-product-fixture-final",
+      "--workers",
+      "4"
+    ],
+    "return_code": 0,
+    "begin_utc": "2026-10-07T15:21:21.259176+00:00",
+    "end_utc": "2026-10-07T15:27:19.475163+00:00",
+    "elapsed_seconds": 358.2160662999959,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-product-fixture-final.log"
+  },
+  {
+    "stage": "faults-fixture-final",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/navigation_s0r_evidence.py",
+      "--set",
+      "faults",
+      "--output",
+      ".tmp/f2r-faults-fixture-final",
+      "--workers",
+      "4"
+    ],
+    "return_code": 0,
+    "begin_utc": "2026-10-07T15:27:19.476160+00:00",
+    "end_utc": "2026-10-07T15:27:21.103274+00:00",
+    "elapsed_seconds": 1.6273981999838725,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-faults-fixture-final.log"
+  },
+  {
+    "stage": "world_changes-fixture-final",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/navigation_s0r_evidence.py",
+      "--set",
+      "world_changes",
+      "--output",
+      ".tmp/f2r-world_changes-fixture-final",
+      "--workers",
+      "4"
+    ],
+    "return_code": 0,
+    "begin_utc": "2026-10-07T15:27:21.104272+00:00",
+    "end_utc": "2026-10-07T15:27:24.615850+00:00",
+    "elapsed_seconds": 3.511347600026056,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-world_changes-fixture-final.log"
+  },
+  {
+    "stage": "follow-fixture-final",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/navigation_s0r_evidence.py",
+      "--set",
+      "follow",
+      "--output",
+      ".tmp/f2r-follow-fixture-final",
+      "--workers",
+      "4"
+    ],
+    "return_code": 0,
+    "begin_utc": "2026-10-07T15:27:24.615850+00:00",
+    "end_utc": "2026-10-07T15:27:37.900650+00:00",
+    "elapsed_seconds": 13.284521100053098,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-follow-fixture-final.log"
+  },
+  {
+    "stage": "coordination-fixture-final",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/navigation_s0r_evidence.py",
+      "--set",
+      "coordination",
+      "--output",
+      ".tmp/f2r-coordination-fixture-final",
+      "--workers",
+      "4"
+    ],
+    "return_code": 0,
+    "begin_utc": "2026-10-07T15:27:37.901254+00:00",
+    "end_utc": "2026-10-07T15:29:26.304099+00:00",
+    "elapsed_seconds": 108.40267009998206,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-coordination-fixture-final.log"
+  },
+  {
+    "stage": "product-audit-fixture-final",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      ".tmp/f2r_product_audit_fixture.py"
+    ],
+    "return_code": 0,
+    "begin_utc": "2026-10-07T15:29:26.304099+00:00",
+    "end_utc": "2026-10-07T15:29:35.115102+00:00",
+    "elapsed_seconds": 8.81033840001328,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-product-audit-fixture-final.log"
+  },
+  {
+    "stage": "groups-audit-fixture-final",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      ".tmp/f2r_groups_audit_fixture.py"
+    ],
+    "return_code": 0,
+    "begin_utc": "2026-10-07T15:29:35.115102+00:00",
+    "end_utc": "2026-10-07T15:29:35.181884+00:00",
+    "elapsed_seconds": 0.06633609998971224,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-groups-audit-fixture-final.log"
+  },
+  {
+    "stage": "forward-fixture-final",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/run_motion_navigation_checks.py",
+      "--output",
+      ".tmp/f2r-forward-fixture-final.json"
+    ],
+    "return_code": 0,
+    "begin_utc": "2026-10-07T15:29:35.182880+00:00",
+    "end_utc": "2026-10-07T15:36:33.995949+00:00",
+    "elapsed_seconds": 418.8138303000014,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-forward-fixture-final.log"
+  },
+  {
+    "stage": "reverse-fixture-final",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/run_motion_navigation_checks.py",
+      "--reverse",
+      "--output",
+      ".tmp/f2r-reverse-fixture-final.json"
+    ],
+    "return_code": 0,
+    "begin_utc": "2026-10-07T15:36:33.996946+00:00",
+    "end_utc": "2026-10-07T15:43:32.354255+00:00",
+    "elapsed_seconds": 418.3571706999792,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-reverse-fixture-final.log"
+  },
+  {
+    "stage": "d058-fixture-final",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "scripts.benchmark_d058_route_revalidation",
+      "--output",
+      ".tmp/f2r-d058-fixture-final"
+    ],
+    "return_code": 0,
+    "begin_utc": "2026-10-07T15:43:32.355775+00:00",
+    "end_utc": "2026-10-07T15:44:17.829214+00:00",
+    "elapsed_seconds": 45.47351689997595,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-d058-fixture-final.log"
+  },
+  {
+    "stage": "v8-geometry-final",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/f2r_piecewise_evidence.py",
+      "geometry",
+      "--output",
+      ".tmp/f2r-v8-geometry-final"
+    ],
+    "return_code": 0,
+    "begin_utc": "2026-10-07T15:44:17.829214+00:00",
+    "end_utc": "2026-10-07T15:44:19.128837+00:00",
+    "elapsed_seconds": 1.2996493999962695,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-v8-geometry-final.log"
+  },
+  {
+    "stage": "v8-clutter-final",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/f2r_piecewise_evidence.py",
+      "clutter",
+      "--output",
+      ".tmp/f2r-v8-clutter-final"
+    ],
+    "return_code": 0,
+    "begin_utc": "2026-10-07T15:44:19.128837+00:00",
+    "end_utc": "2026-10-07T15:44:25.842816+00:00",
+    "elapsed_seconds": 6.712877599988133,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-v8-clutter-final.log"
+  },
+  {
+    "stage": "v8-formal-serial",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/f2r_piecewise_evidence.py",
+      "formal",
+      "--output",
+      ".tmp/f2r-v8-formal-serial",
+      "--workers",
+      "1"
+    ],
+    "return_code": 0,
+    "begin_utc": "2026-10-07T15:44:25.842816+00:00",
+    "end_utc": "2026-10-07T15:46:13.638373+00:00",
+    "elapsed_seconds": 107.7955793000292,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-v8-formal-serial.log"
+  },
+  {
+    "stage": "v8-clutter-formal-serial",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/f2r_piecewise_evidence.py",
+      "clutter-formal",
+      "--output",
+      ".tmp/f2r-v8-clutter-formal-serial",
+      "--workers",
+      "1"
+    ],
+    "return_code": 0,
+    "begin_utc": "2026-10-07T15:46:13.638373+00:00",
+    "end_utc": "2026-10-07T15:59:47.074429+00:00",
+    "elapsed_seconds": 813.4346114000073,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-v8-clutter-formal-serial.log"
+  }
+]

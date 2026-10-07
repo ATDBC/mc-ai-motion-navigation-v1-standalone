@@ -1,0 +1,147 @@
+{
+  "formal_acceptance": false,
+  "mode": "segment-timers",
+  "begin_utc": "2026-10-07T15:07:20.027488+00:00",
+  "end_utc": "2026-10-07T15:10:52.996835+00:00",
+  "configuration": {
+    "test_mode": false,
+    "warmup_samples": 100,
+    "minimum_retained_samples": 4096,
+    "maximum_retained_samples": 8192,
+    "post_gen2_samples": 128,
+    "control_path_maximum_ms": 50.0,
+    "trace_capacity": 2048,
+    "trace_projection_sample_capacity": 4096,
+    "move_ticks": 80,
+    "pause_ticks": 800,
+    "resume_ticks": 80
+  },
+  "behavior_sha256": "23aec5a557242119489bac0f44fdb8771c8a427ba38af3465dd8d6583da41a8b",
+  "frames": [
+    {
+      "retained_ordinal": 783,
+      "captured_ordinal": 883,
+      "wall_ms": 47.1383,
+      "segments_ms": {
+        "KnownWorldFollowDriver.update": 3.485,
+        "RuntimeNavigationDriver.prepare_proposals": 3.7873,
+        "PlayerRuntimeV1.control_frame": 39.6054,
+        "FollowingBackend.step": 38.8154,
+        "CalculatorBackend.observation": 38.4081,
+        "CalculatorBackend.air_query": 35.304,
+        "InlinePlannerWorker.poll_latest": 0,
+        "InlineMotionWorker.poll_available": 0,
+        "NavigationObservationAdapter.ingest": 0.6121,
+        "BoundedAsyncTraceWriter.write": 0.039599999999999996
+      }
+    },
+    {
+      "retained_ordinal": 791,
+      "captured_ordinal": 891,
+      "wall_ms": 45.6138,
+      "segments_ms": {
+        "KnownWorldFollowDriver.update": 4.1102,
+        "RuntimeNavigationDriver.prepare_proposals": 3.7438,
+        "PlayerRuntimeV1.control_frame": 37.4391,
+        "FollowingBackend.step": 36.6712,
+        "CalculatorBackend.observation": 36.2651,
+        "CalculatorBackend.air_query": 33.175200000000004,
+        "InlinePlannerWorker.poll_latest": 0,
+        "InlineMotionWorker.poll_available": 0,
+        "NavigationObservationAdapter.ingest": 0.6143,
+        "BoundedAsyncTraceWriter.write": 0.037200000000000004
+      }
+    },
+    {
+      "retained_ordinal": 795,
+      "captured_ordinal": 895,
+      "wall_ms": 46.0113,
+      "segments_ms": {
+        "KnownWorldFollowDriver.update": 3.5497,
+        "RuntimeNavigationDriver.prepare_proposals": 3.8001,
+        "PlayerRuntimeV1.control_frame": 38.3417,
+        "FollowingBackend.step": 37.5887,
+        "CalculatorBackend.observation": 37.1842,
+        "CalculatorBackend.air_query": 34.021499999999996,
+        "InlinePlannerWorker.poll_latest": 0,
+        "InlineMotionWorker.poll_available": 0,
+        "NavigationObservationAdapter.ingest": 0.6011000000000001,
+        "BoundedAsyncTraceWriter.write": 0.0361
+      }
+    },
+    {
+      "retained_ordinal": 839,
+      "captured_ordinal": 939,
+      "wall_ms": 46.2188,
+      "segments_ms": {
+        "KnownWorldFollowDriver.update": 4.3194,
+        "RuntimeNavigationDriver.prepare_proposals": 3.7883,
+        "PlayerRuntimeV1.control_frame": 37.7621,
+        "FollowingBackend.step": 36.9693,
+        "CalculatorBackend.observation": 36.5468,
+        "CalculatorBackend.air_query": 33.354,
+        "InlinePlannerWorker.poll_latest": 0,
+        "InlineMotionWorker.poll_available": 0,
+        "NavigationObservationAdapter.ingest": 0.6171,
+        "BoundedAsyncTraceWriter.write": 0.0417
+      }
+    },
+    {
+      "retained_ordinal": 851,
+      "captured_ordinal": 951,
+      "wall_ms": 41.9356,
+      "segments_ms": {
+        "KnownWorldFollowDriver.update": 4.242,
+        "RuntimeNavigationDriver.prepare_proposals": 3.5973,
+        "PlayerRuntimeV1.control_frame": 33.7999,
+        "FollowingBackend.step": 33.0187,
+        "CalculatorBackend.observation": 32.5986,
+        "CalculatorBackend.air_query": 29.298099999999998,
+        "InlinePlannerWorker.poll_latest": 0,
+        "InlineMotionWorker.poll_available": 0,
+        "NavigationObservationAdapter.ingest": 0.6115,
+        "BoundedAsyncTraceWriter.write": 0.041499999999999995
+      }
+    }
+  ],
+  "sleep_records": [
+    {
+      "captured_ordinal": 883,
+      "retained_ordinal": 783,
+      "inside_control_path": false,
+      "requested_seconds": 0.0023189,
+      "elapsed_ms": 2.5106
+    },
+    {
+      "captured_ordinal": 891,
+      "retained_ordinal": 791,
+      "inside_control_path": false,
+      "requested_seconds": 0.003989,
+      "elapsed_ms": 3.9993
+    },
+    {
+      "captured_ordinal": 895,
+      "retained_ordinal": 795,
+      "inside_control_path": false,
+      "requested_seconds": 0.0031079,
+      "elapsed_ms": 3.5076
+    },
+    {
+      "captured_ordinal": 939,
+      "retained_ordinal": 839,
+      "inside_control_path": false,
+      "requested_seconds": 0.0031327,
+      "elapsed_ms": 3.2938
+    },
+    {
+      "captured_ordinal": 951,
+      "retained_ordinal": 851,
+      "inside_control_path": false,
+      "requested_seconds": 0.0076496,
+      "elapsed_ms": 7.9851
+    }
+  ],
+  "cumulative_top": [],
+  "self_top": [],
+  "raw_profile_sha256": "441aabd5be52f9aecb65bafb9578da9f7aa82a1912dcbccd15e19f6208cbd597"
+}

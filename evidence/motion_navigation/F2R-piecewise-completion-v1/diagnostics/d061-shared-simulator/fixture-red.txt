@@ -1,0 +1,53 @@
+test_all_fields_for_invisible_upper_lower_and_occluded_samples (tests.motion_nav.test_sim_visual_air_query_short_circuit.SimVisualAirShortCircuitTests.test_all_fields_for_invisible_upper_lower_and_occluded_samples) ... ok
+test_fixed_random_worlds_match_eager_reference_per_cell (tests.motion_nav.test_sim_visual_air_query_short_circuit.SimVisualAirShortCircuitTests.test_fixed_random_worlds_match_eager_reference_per_cell) ... ok
+test_geometry_fov_and_distance_boundaries_match_reference (tests.motion_nav.test_sim_visual_air_query_short_circuit.SimVisualAirShortCircuitTests.test_geometry_fov_and_distance_boundaries_match_reference) ... ok
+test_occlusion_requires_all_candidates_and_outside_view_requires_no_rays (tests.motion_nav.test_sim_visual_air_query_short_circuit.SimVisualAirShortCircuitTests.test_occlusion_requires_all_candidates_and_outside_view_requires_no_rays) ... ok
+test_only_upper_visible_still_checks_every_lower_candidate (tests.motion_nav.test_sim_visual_air_query_short_circuit.SimVisualAirShortCircuitTests.test_only_upper_visible_still_checks_every_lower_candidate) ... FAIL
+test_removed_short_circuit_and_flipped_classification_are_detected (tests.motion_nav.test_sim_visual_air_query_short_circuit.SimVisualAirShortCircuitTests.test_removed_short_circuit_and_flipped_classification_are_detected) ... ok
+test_stops_after_first_lower_witness (tests.motion_nav.test_sim_visual_air_query_short_circuit.SimVisualAirShortCircuitTests.test_stops_after_first_lower_witness) ... FAIL
+test_upper_witness_skips_more_upper_rays_until_later_lower_witness (tests.motion_nav.test_sim_visual_air_query_short_circuit.SimVisualAirShortCircuitTests.test_upper_witness_skips_more_upper_rays_until_later_lower_witness) ... FAIL
+
+======================================================================
+FAIL: test_only_upper_visible_still_checks_every_lower_candidate (tests.motion_nav.test_sim_visual_air_query_short_circuit.SimVisualAirShortCircuitTests.test_only_upper_visible_still_checks_every_lower_candidate)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_sim_visual_air_query_short_circuit.py", line 89, in test_only_upper_visible_still_checks_every_lower_candidate
+    self._assert_upper_only_checks_every_lower_candidate(CalculatorBackend.air_query)
+  File "D:\My_project\mc_ai\tests\motion_nav\test_sim_visual_air_query_short_circuit.py", line 80, in _assert_upper_only_checks_every_lower_candidate
+    self.assertEqual(sum(p[1] > .25 for p in upper_only.visible_calls), 1)
+AssertionError: 50 != 1
+
+======================================================================
+FAIL: test_stops_after_first_lower_witness (tests.motion_nav.test_sim_visual_air_query_short_circuit.SimVisualAirShortCircuitTests.test_stops_after_first_lower_witness)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_sim_visual_air_query_short_circuit.py", line 83, in test_stops_after_first_lower_witness
+    self._assert_lower_witness_stops(CalculatorBackend.air_query)
+  File "D:\My_project\mc_ai\tests\motion_nav\test_sim_visual_air_query_short_circuit.py", line 67, in _assert_lower_witness_stops
+    self.assertEqual(len(lower.visible_calls), 1)
+AssertionError: 100 != 1
+
+======================================================================
+FAIL: test_upper_witness_skips_more_upper_rays_until_later_lower_witness (tests.motion_nav.test_sim_visual_air_query_short_circuit.SimVisualAirShortCircuitTests.test_upper_witness_skips_more_upper_rays_until_later_lower_witness)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_sim_visual_air_query_short_circuit.py", line 86, in test_upper_witness_skips_more_upper_rays_until_later_lower_witness
+    self._assert_upper_then_lower_stops(CalculatorBackend.air_query)
+  File "D:\My_project\mc_ai\tests\motion_nav\test_sim_visual_air_query_short_circuit.py", line 73, in _assert_upper_then_lower_stops
+    self.assertEqual(upper_then_lower.visible_calls,
+AssertionError: Lists differ: [(0.1[51 chars]1, 0.95, 0.1), (0.1, 0.05, 0.3), (0.1, 0.2, 0.[1643 chars]0.9)] != [(0.1[51 chars]1, 0.05, 0.3)]
+
+First differing element 3:
+(0.1, 0.95, 0.1)
+(0.1, 0.05, 0.3)
+
+First list contains 96 additional elements.
+First extra element 4:
+(0.1, 0.05, 0.3)
+
+Diff is 2123 characters long. Set self.maxDiff to None to see it.
+
+----------------------------------------------------------------------
+Ran 8 tests in 1.856s
+
+FAILED (failures=3)

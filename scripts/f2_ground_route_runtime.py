@@ -47,11 +47,19 @@ NEGATIVES = ("head_wall_mid", "hazard_wall", "undeclared_edge", "low_ceiling")
 INTERRUPTIONS = ("revision", "cancel", "input_loss", "support_change", "external_force")
 
 
-def frozen_plan():
+def frozen_plan(*, f2r=False):
+    families = ('f2r_outer_corner', 'f2r_diagonal_pillar') if f2r else FAMILIES
     rows = [{"id": f"f2-{family}-{direction}-{condition}", "family": family,
         "direction": direction, "condition": condition, "expected": "success"}
-        for family in FAMILIES for direction in range(4)
+        for family in families for direction in range(4)
         for condition in ("normal", "late_first")]
+    if f2r:
+        for row in rows:
+            solids, start, target = fixture(row)
+            row['scene_sha256'] = digest(sorted((list(p), m) for p, m in solids.items()))
+            row['start_position'] = list(start)
+            row['goal_bounds'] = list(_goal(target).region.as_tuple())
+        return rows
     rows.extend({"id": "f2-"+family, "family": family, "direction": 0,
         "condition": "normal", "expected": "failed"} for family in NEGATIVES)
     rows.extend({"id": "f2-"+kind, "family": "offset_mid", "direction": 0,
@@ -85,7 +93,11 @@ def frozen_plan():
 def fixture(row):
     """Freeze exact fixture geometry, start and original GoalState before run."""
     family = row["family"]
-    if family.startswith("player_"):
+    if family.startswith('f2r_'):
+        from tests.sim.f2r_cases import layout
+        scene, start, target = layout(family.removeprefix('f2r_'))
+        solids = dict(scene.solids)
+    elif family.startswith("player_"):
         scene, start, target = player_layout(family)
         solids = dict(scene.solids)
     else:
@@ -155,8 +167,10 @@ def _prepare_fixture(runtime, row, writer, task, profile, deadline, diagnostic):
             px,pz = _rotate(x+.5,z+.5,row["direction"])
             cells.extend((math.floor(px),y,math.floor(pz)) for y in range(98,104))
     cells = tuple(cells)
+    # Keep the preparation camera outside the wider F2-R building.
+    right_back_z = 10.5 if row["family"] == "f2r_outer_corner" else 9.5
     exterior = tuple((x,z,yaw,pitch) for x,z,yaw in
-        ((-2.5,.5,-30),(-2.5,9.5,-150),(3.5,.5,30),(3.5,9.5,150))
+        ((-2.5,.5,-30),(-2.5,9.5,-150),(3.5,.5,30),(3.5,right_back_z,150))
         for pitch in (0,45))
     def survey(views, covered):
         for x,z,yaw,pitch in views:
@@ -204,7 +218,8 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
     harness_patterns = ["scripts/f2_ground_route_runtime.py",
         "scripts/f2_ground_route_quality.py",
         "scripts/f2_ground_route_evidence.py","scripts/probe_fabric_deployment_observation.py",
-        "scripts/r28_product_fabric_runtime.py","tests/sim/product_cases.py","tests/sim/runner.py"]
+        "scripts/r28_product_fabric_runtime.py","tests/sim/product_cases.py","tests/sim/runner.py",
+        "tests/sim/f2r_cases.py"]
     source_before = {"production":source_fingerprint(production_patterns),
         "harness":source_fingerprint(harness_patterns)}
     selected = json.loads(os.environ["MC2P_F2_SELECTED_PLAN"])
@@ -439,6 +454,7 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
                         for f in frames]),"max_full_candidates":maximum,
                     "physics_steps":sum(f["physics_steps"] for f in control),
                     "control_ms":timing_summary([f["control_ms"] for f in control]),
+                    "control_samples_ms":[f["control_ms"] for f in control],
                     "prepare_ms":timing_summary([f["prepare_ns"]/1e6 for f in frames]),
                     "drop_frames":sum(not f["on_ground"] for f in frames),
                     "damage_points":max(0.,initial_health-_self_health(runtime)),
@@ -489,8 +505,9 @@ def main(argv=None):
     parser.add_argument("--smoke",action="store_true")
     parser.add_argument("--ids",nargs="+")
     parser.add_argument("--plan-only",action="store_true")
+    parser.add_argument('--f2r', action='store_true', help='Frozen 16-case F2-R outer-corner/pillar matrix')
     args,launcher = parser.parse_known_args(argv)
-    selected = frozen_plan()
+    selected = frozen_plan(f2r=args.f2r)
     if args.smoke:
         selected = [r for r in selected if r["direction"] == 0 and (
             r["condition"] == "normal" or r["id"] == "f2-offset_mid-0-late_first"

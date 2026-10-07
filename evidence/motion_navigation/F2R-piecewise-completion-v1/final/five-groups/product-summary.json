@@ -1,0 +1,255 @@
+{
+  "schema_version": "mc2p.navigation-product-run.v1",
+  "elapsed_seconds": 345.8634788999916,
+  "groups": [
+    {
+      "group": "point-normal",
+      "tasks": 200,
+      "success": 200,
+      "exceptions": 0,
+      "insufficient_evidence": 0,
+      "safety_violation_tasks": 0,
+      "arrival_ticks_p95": 74,
+      "first_movement_ticks_p95": 3,
+      "planning_requests": 200,
+      "zero_displacement_ticks": 0,
+      "controller_switches": 0,
+      "arrival_ticks_p50": 68,
+      "motion_job_count_distribution": {
+        "0": 200
+      },
+      "motion_operations": {},
+      "followup_after_cold_tasks": 0,
+      "tasks_with_motion_work": 0,
+      "failure_reasons": {},
+      "jobs_by_action": {}
+    },
+    {
+      "group": "point-late",
+      "tasks": 200,
+      "success": 200,
+      "exceptions": 0,
+      "insufficient_evidence": 0,
+      "safety_violation_tasks": 0,
+      "arrival_ticks_p95": 85,
+      "first_movement_ticks_p95": 3,
+      "planning_requests": 200,
+      "zero_displacement_ticks": 0,
+      "controller_switches": 0,
+      "arrival_ticks_p50": 77,
+      "motion_job_count_distribution": {
+        "0": 200
+      },
+      "motion_operations": {},
+      "followup_after_cold_tasks": 0,
+      "tasks_with_motion_work": 0,
+      "failure_reasons": {},
+      "jobs_by_action": {}
+    },
+    {
+      "group": "height-normal",
+      "tasks": 200,
+      "success": 200,
+      "exceptions": 0,
+      "insufficient_evidence": 0,
+      "safety_violation_tasks": 0,
+      "arrival_ticks_p95": 42,
+      "first_movement_ticks_p95": 1,
+      "planning_requests": 200,
+      "zero_displacement_ticks": 0,
+      "controller_switches": 0,
+      "arrival_ticks_p50": 39,
+      "motion_job_count_distribution": {
+        "0": 200
+      },
+      "motion_operations": {},
+      "followup_after_cold_tasks": 0,
+      "tasks_with_motion_work": 0,
+      "failure_reasons": {},
+      "jobs_by_action": {}
+    },
+    {
+      "group": "height-late",
+      "tasks": 200,
+      "success": 200,
+      "exceptions": 0,
+      "insufficient_evidence": 0,
+      "safety_violation_tasks": 0,
+      "arrival_ticks_p95": 50,
+      "first_movement_ticks_p95": 2,
+      "planning_requests": 200,
+      "zero_displacement_ticks": 0,
+      "controller_switches": 0,
+      "arrival_ticks_p50": 43,
+      "motion_job_count_distribution": {
+        "0": 200
+      },
+      "motion_operations": {},
+      "followup_after_cold_tasks": 0,
+      "tasks_with_motion_work": 0,
+      "failure_reasons": {},
+      "jobs_by_action": {}
+    },
+    {
+      "group": "target-normal",
+      "tasks": 200,
+      "success": 200,
+      "exceptions": 0,
+      "insufficient_evidence": 0,
+      "safety_violation_tasks": 0,
+      "arrival_ticks_p95": 84,
+      "first_movement_ticks_p95": 3,
+      "planning_requests": 996,
+      "zero_displacement_ticks": 0,
+      "controller_switches": 796,
+      "arrival_ticks_p50": 64,
+      "motion_job_count_distribution": {
+        "0": 200
+      },
+      "motion_operations": {},
+      "followup_after_cold_tasks": 0,
+      "tasks_with_motion_work": 0,
+      "failure_reasons": {},
+      "jobs_by_action": {}
+    },
+    {
+      "group": "target-late",
+      "tasks": 200,
+      "success": 200,
+      "exceptions": 0,
+      "insufficient_evidence": 0,
+      "safety_violation_tasks": 0,
+      "arrival_ticks_p95": 94,
+      "first_movement_ticks_p95": 3,
+      "planning_requests": 1074,
+      "zero_displacement_ticks": 5,
+      "controller_switches": 607,
+      "arrival_ticks_p50": 76,
+      "motion_job_count_distribution": {
+        "0": 200
+      },
+      "motion_operations": {},
+      "followup_after_cold_tasks": 0,
+      "tasks_with_motion_work": 0,
+      "failure_reasons": {},
+      "jobs_by_action": {}
+    },
+    {
+      "group": "drop-normal",
+      "tasks": 200,
+      "success": 200,
+      "exceptions": 0,
+      "insufficient_evidence": 0,
+      "safety_violation_tasks": 0,
+      "arrival_ticks_p95": 79,
+      "first_movement_ticks_p95": 3,
+      "planning_requests": 200,
+      "zero_displacement_ticks": 3104,
+      "controller_switches": 400,
+      "arrival_ticks_p50": 72,
+      "motion_job_count_distribution": {
+        "2": 200
+      },
+      "motion_operations": {
+        "solve": 200,
+        "revalidate": 200
+      },
+      "followup_after_cold_tasks": 200,
+      "tasks_with_motion_work": 200,
+      "failure_reasons": {},
+      "jobs_by_action": {
+        "drop_2": {
+          "2": 100
+        },
+        "drop_5": {
+          "2": 100
+        }
+      }
+    },
+    {
+      "group": "drop-late",
+      "tasks": 200,
+      "success": 198,
+      "exceptions": 0,
+      "insufficient_evidence": 0,
+      "safety_violation_tasks": 0,
+      "arrival_ticks_p95": 93,
+      "first_movement_ticks_p95": 3,
+      "planning_requests": 200,
+      "zero_displacement_ticks": 3584,
+      "controller_switches": 400,
+      "arrival_ticks_p50": 79,
+      "motion_job_count_distribution": {
+        "2": 133,
+        "3": 62,
+        "4": 3,
+        "0": 2
+      },
+      "motion_operations": {
+        "solve": 266,
+        "revalidate": 198
+      },
+      "followup_after_cold_tasks": 198,
+      "tasks_with_motion_work": 198,
+      "failure_reasons": {
+        "edge_probe_acquisition_timeout": 2
+      },
+      "jobs_by_action": {
+        "drop_2": {
+          "2": 65,
+          "3": 32,
+          "4": 3
+        },
+        "drop_5": {
+          "2": 68,
+          "3": 30
+        }
+      }
+    },
+    {
+      "group": "player-normal",
+      "tasks": 200,
+      "success": 200,
+      "exceptions": 0,
+      "insufficient_evidence": 0,
+      "safety_violation_tasks": 0,
+      "arrival_ticks_p95": 60,
+      "first_movement_ticks_p95": 3,
+      "planning_requests": 200,
+      "zero_displacement_ticks": 0,
+      "controller_switches": 0,
+      "arrival_ticks_p50": 50,
+      "motion_job_count_distribution": {
+        "0": 200
+      },
+      "motion_operations": {},
+      "followup_after_cold_tasks": 0,
+      "tasks_with_motion_work": 0,
+      "failure_reasons": {},
+      "jobs_by_action": {}
+    },
+    {
+      "group": "player-late",
+      "tasks": 200,
+      "success": 200,
+      "exceptions": 0,
+      "insufficient_evidence": 0,
+      "safety_violation_tasks": 0,
+      "arrival_ticks_p95": 70,
+      "first_movement_ticks_p95": 3,
+      "planning_requests": 200,
+      "zero_displacement_ticks": 0,
+      "controller_switches": 0,
+      "arrival_ticks_p50": 58,
+      "motion_job_count_distribution": {
+        "0": 200
+      },
+      "motion_operations": {},
+      "followup_after_cold_tasks": 0,
+      "tasks_with_motion_work": 0,
+      "failure_reasons": {},
+      "jobs_by_action": {}
+    }
+  ],
+  "records": 2000
+}

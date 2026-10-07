@@ -1,0 +1,341 @@
+{
+  "cases": [
+    {
+      "id": "f2-f2r_outer_corner-0-normal",
+      "family": "f2r_outer_corner",
+      "direction": 0,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "d40a3c8730c10ad249a3179285543d9b7c0821ba436c2ac115a65145dbcd5fc4",
+      "start_position": [
+        0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        1.5,
+        99.92,
+        6.5,
+        1.9,
+        100.08,
+        6.9
+      ]
+    },
+    {
+      "id": "f2-f2r_outer_corner-0-late_first",
+      "family": "f2r_outer_corner",
+      "direction": 0,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "d40a3c8730c10ad249a3179285543d9b7c0821ba436c2ac115a65145dbcd5fc4",
+      "start_position": [
+        0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        1.5,
+        99.92,
+        6.5,
+        1.9,
+        100.08,
+        6.9
+      ]
+    },
+    {
+      "id": "f2-f2r_outer_corner-1-normal",
+      "family": "f2r_outer_corner",
+      "direction": 1,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "9bcda182344d16428b87cbc5189f22ecd2c673152c7776a0c4231af84872efac",
+      "start_position": [
+        0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        6.5,
+        99.92,
+        -1.9,
+        6.9,
+        100.08,
+        -1.5
+      ]
+    },
+    {
+      "id": "f2-f2r_outer_corner-1-late_first",
+      "family": "f2r_outer_corner",
+      "direction": 1,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "9bcda182344d16428b87cbc5189f22ecd2c673152c7776a0c4231af84872efac",
+      "start_position": [
+        0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        6.5,
+        99.92,
+        -1.9,
+        6.9,
+        100.08,
+        -1.5
+      ]
+    },
+    {
+      "id": "f2-f2r_outer_corner-2-normal",
+      "family": "f2r_outer_corner",
+      "direction": 2,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "cb638fefffb2751f8fc88a8baaa84100bc89de9faf256b9baa9d9576175b2e32",
+      "start_position": [
+        -0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        -1.9,
+        99.92,
+        -6.9,
+        -1.5,
+        100.08,
+        -6.5
+      ]
+    },
+    {
+      "id": "f2-f2r_outer_corner-2-late_first",
+      "family": "f2r_outer_corner",
+      "direction": 2,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "cb638fefffb2751f8fc88a8baaa84100bc89de9faf256b9baa9d9576175b2e32",
+      "start_position": [
+        -0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        -1.9,
+        99.92,
+        -6.9,
+        -1.5,
+        100.08,
+        -6.5
+      ]
+    },
+    {
+      "id": "f2-f2r_outer_corner-3-normal",
+      "family": "f2r_outer_corner",
+      "direction": 3,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "c7cfb2bb798b2e0829fe37c51e24c87ba7d2408faca8ad9670d7dd7ee9a93608",
+      "start_position": [
+        -0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        -6.9,
+        99.92,
+        1.5,
+        -6.5,
+        100.08,
+        1.9
+      ]
+    },
+    {
+      "id": "f2-f2r_outer_corner-3-late_first",
+      "family": "f2r_outer_corner",
+      "direction": 3,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "c7cfb2bb798b2e0829fe37c51e24c87ba7d2408faca8ad9670d7dd7ee9a93608",
+      "start_position": [
+        -0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        -6.9,
+        99.92,
+        1.5,
+        -6.5,
+        100.08,
+        1.9
+      ]
+    },
+    {
+      "id": "f2-f2r_diagonal_pillar-0-normal",
+      "family": "f2r_diagonal_pillar",
+      "direction": 0,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "9642597b3f5a12e7b41b6f4939891e51700566063d9e7b07b93c0eee1a4ab8fa",
+      "start_position": [
+        0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        1.5,
+        99.92,
+        6.5,
+        1.9,
+        100.08,
+        6.9
+      ]
+    },
+    {
+      "id": "f2-f2r_diagonal_pillar-0-late_first",
+      "family": "f2r_diagonal_pillar",
+      "direction": 0,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "9642597b3f5a12e7b41b6f4939891e51700566063d9e7b07b93c0eee1a4ab8fa",
+      "start_position": [
+        0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        1.5,
+        99.92,
+        6.5,
+        1.9,
+        100.08,
+        6.9
+      ]
+    },
+    {
+      "id": "f2-f2r_diagonal_pillar-1-normal",
+      "family": "f2r_diagonal_pillar",
+      "direction": 1,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "3005beca695a1cb2d74575e9b3d9af4ef118454dc2de91740ad79406ae406dcf",
+      "start_position": [
+        0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        6.5,
+        99.92,
+        -1.9,
+        6.9,
+        100.08,
+        -1.5
+      ]
+    },
+    {
+      "id": "f2-f2r_diagonal_pillar-1-late_first",
+      "family": "f2r_diagonal_pillar",
+      "direction": 1,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "3005beca695a1cb2d74575e9b3d9af4ef118454dc2de91740ad79406ae406dcf",
+      "start_position": [
+        0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        6.5,
+        99.92,
+        -1.9,
+        6.9,
+        100.08,
+        -1.5
+      ]
+    },
+    {
+      "id": "f2-f2r_diagonal_pillar-2-normal",
+      "family": "f2r_diagonal_pillar",
+      "direction": 2,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "a483557e4852fef5c4c934c9ca9d385639f4e71b6b640495e87b0a6bb1c1a283",
+      "start_position": [
+        -0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        -1.9,
+        99.92,
+        -6.9,
+        -1.5,
+        100.08,
+        -6.5
+      ]
+    },
+    {
+      "id": "f2-f2r_diagonal_pillar-2-late_first",
+      "family": "f2r_diagonal_pillar",
+      "direction": 2,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "a483557e4852fef5c4c934c9ca9d385639f4e71b6b640495e87b0a6bb1c1a283",
+      "start_position": [
+        -0.5,
+        100.0,
+        -0.5
+      ],
+      "goal_bounds": [
+        -1.9,
+        99.92,
+        -6.9,
+        -1.5,
+        100.08,
+        -6.5
+      ]
+    },
+    {
+      "id": "f2-f2r_diagonal_pillar-3-normal",
+      "family": "f2r_diagonal_pillar",
+      "direction": 3,
+      "condition": "normal",
+      "expected": "success",
+      "scene_sha256": "953c3dd4363a93788c15e283b74110d48bddce124feedf9860b7d2df703723ee",
+      "start_position": [
+        -0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        -6.9,
+        99.92,
+        1.5,
+        -6.5,
+        100.08,
+        1.9
+      ]
+    },
+    {
+      "id": "f2-f2r_diagonal_pillar-3-late_first",
+      "family": "f2r_diagonal_pillar",
+      "direction": 3,
+      "condition": "late_first",
+      "expected": "success",
+      "scene_sha256": "953c3dd4363a93788c15e283b74110d48bddce124feedf9860b7d2df703723ee",
+      "start_position": [
+        -0.5,
+        100.0,
+        0.5
+      ],
+      "goal_bounds": [
+        -6.9,
+        99.92,
+        1.5,
+        -6.5,
+        100.08,
+        1.9
+      ]
+    }
+  ],
+  "sha256": "8aad55272cc5c24861b660546f2b41dc5c79ec2e6f1e372309b4eb1a4679cb6f"
+}

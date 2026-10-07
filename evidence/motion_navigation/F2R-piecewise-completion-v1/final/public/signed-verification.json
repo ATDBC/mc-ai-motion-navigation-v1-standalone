@@ -1,0 +1,19 @@
+{
+  "schema_version": "mc2p.f2r.signed-public-verification.v1",
+  "passed": true,
+  "snapshot": "D:\\My_project\\mc_ai\\.tmp\\f2r-public-snapshot-20261008-signed",
+  "snapshot_source_commit": "c6c0085149852ea6a9381a776a5ff70ae905704e",
+  "snapshot_source_worktree_clean": true,
+  "export_verify_files": 1542,
+  "tested_full_source_commit": "cc28816bd9d09c506b9ffa43e89850d401b7bd99",
+  "tested_full_count": 1647,
+  "tested_focused_count": 63,
+  "compared_core_files": 638,
+  "changed_or_missing_core_files": [],
+  "core_index_sha256": "6a6cabfa09297e844a7d906c5230f4bb3fc4bb60bc384fbc72ba7ce7c4932d31",
+  "verify_command": ".venv/python.exe scripts/export_motion_navigation_standalone.py verify --root .tmp/f2r-public-snapshot-20261008-signed",
+  "verify_stdout": "STANDALONE_EXPORT_OK files=1542",
+  "snapshot_metadata_sha256": "a56dadcffb11469adc1fbf250c841271dfbb524fc73b7128b7716b6273f773b9",
+  "snapshot_hash_file_sha256": "5a700d982c5a91ad88bec4c2ab3f5532b97971d34e080128637ae22b2735430c",
+  "provenance_note": "完整检查来自 cc28816；最后签署仅文档与证据，638 个代码/配置/夹具文件逐字节一致。后续只添加此验证记录。"
+}

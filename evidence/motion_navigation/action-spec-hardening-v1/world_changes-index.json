@@ -1,0 +1,83 @@
+{
+  "schema_version": "mc2p.navigation-structure-baseline.v1",
+  "normalizer_version": "r28-structure-trajectory-v1",
+  "kind": "world_changes",
+  "cases": [
+    {
+      "id": "world/point/4/grass",
+      "signature": "7bc04bc5f97955c1a502225750f48daaf7a1c6b173e2ead749fcf8efe87b515d"
+    },
+    {
+      "id": "world/point/4/obstacle",
+      "signature": "b4143bae8963073c4d9b0b5ff6468e837338af55dd368482dc7dd6370ad735c2"
+    },
+    {
+      "id": "world/point/4/slab",
+      "signature": "8f03764f02319c741aa1e55a57a6fdb332f5b22e728d5260916a9865034a58ed"
+    },
+    {
+      "id": "world/point/10/grass",
+      "signature": "2ae96cb40520e725aae3c30fd3537a4b508bd814afd69e45dfd6335d1826ea3e"
+    },
+    {
+      "id": "world/point/10/obstacle",
+      "signature": "91bb06e425598281d05e0160565dfe04a238c0d0214104805fde33b2474b392b"
+    },
+    {
+      "id": "world/point/10/slab",
+      "signature": "db82c6a11bf99be6e90533e7c5ab716ef60b1505a9a4cd13da34bcc2f2eeb515"
+    },
+    {
+      "id": "world/point/18/grass",
+      "signature": "f64bd661cb6ce9a03389010414cb09d15cbf51ee79e71e10bf555fd8bfb57c2f"
+    },
+    {
+      "id": "world/point/18/obstacle",
+      "signature": "a2a05babeba51be5173af67e4b3b225ae28c8c14ddc2f0b7b644c6a612d482e9"
+    },
+    {
+      "id": "world/point/18/slab",
+      "signature": "b36e7ae84fcc922b56ad4fd65afe5424280869e3f097cb85e50362a6f5d4e8bf"
+    },
+    {
+      "id": "world/follow/4/grass",
+      "signature": "df3df884f6b78d2eaf654352d7169b7b8d6bc607d65b0e3bbbf89f26d3e8241d"
+    },
+    {
+      "id": "world/follow/4/obstacle",
+      "signature": "7776711b1e71281dd825f0b0e573f9459dbd55bc97a3ccf5760457e428b71546"
+    },
+    {
+      "id": "world/follow/4/slab",
+      "signature": "987ca177a4a5103d9ca0277e49d910238930e7be7057c50bdfb6a39acba178d6"
+    },
+    {
+      "id": "world/follow/10/grass",
+      "signature": "7763007798511e0a1d2d8e8960611037260b5681b3e0bc464e153750a3d13a22"
+    },
+    {
+      "id": "world/follow/10/obstacle",
+      "signature": "617130c2b54f7d4d4282bee4cef355d4880a8d238cbf3d38c7135670994709bb"
+    },
+    {
+      "id": "world/follow/10/slab",
+      "signature": "c23b5acfeda3dec0f6d31fea3091b2a7080e9ff4ce7a5020c49d562cf00f7883"
+    },
+    {
+      "id": "world/follow/18/grass",
+      "signature": "c454320f07df775190491c0e63e4f37b40e40888ed0cbed9b168e4c4ba7ddd82"
+    },
+    {
+      "id": "world/follow/18/obstacle",
+      "signature": "ed95135eff418d64874377297cc6630571ae70ee500dd779172737fa5c2f747f"
+    },
+    {
+      "id": "world/follow/18/slab",
+      "signature": "db205b93a7584e4d190ebf2be0be308eb967163d5b814508bdd05dc1ac32d785"
+    },
+    {
+      "id": "world/r1-dependency-recovery",
+      "signature": "b0d01de05c780816843b5728ac14617c67dbe6ae715fbc4e9752364b7aab8629"
+    }
+  ]
+}

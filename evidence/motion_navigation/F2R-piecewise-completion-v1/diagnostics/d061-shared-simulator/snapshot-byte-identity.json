@@ -1,0 +1,12 @@
+{
+  "A": {
+    "environment_sha256": "0c1e49c9fc4a5b46dca40d42aa09c292018cf7d973b8570138859d2831e9caed",
+    "support_normalized_lf_sha256": "e771dce114cc65c1c64455e9f9710ef112434050cd42a747155171c6d57ea9fe"
+  },
+  "B": {
+    "environment_sha256": "0c1e49c9fc4a5b46dca40d42aa09c292018cf7d973b8570138859d2831e9caed",
+    "support_normalized_lf_sha256": "e0e2bfda1d704be0c9609f750addc173a437ccf6a57278f7f7b5d8640795fd59"
+  },
+  "current_checkout_support_sha256": "e0e2bfda1d704be0c9609f750addc173a437ccf6a57278f7f7b5d8640795fd59",
+  "note": "git archive converts source LF to archived CRLF through repository settings; Python source meaning is unchanged. The frozen environment JSON is normalized to its required SHA256."
+}

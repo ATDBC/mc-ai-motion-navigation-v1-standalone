@@ -1,0 +1,34 @@
+{
+  "cases": 1904,
+  "populations": [
+    {
+      "population": "formal-serial",
+      "cases": 104,
+      "fields": [
+        "outcome",
+        "reason",
+        "final_position",
+        "damage",
+        "applied_perturbations",
+        "verification_complete",
+        "input_sha256"
+      ],
+      "changed_ids": []
+    },
+    {
+      "population": "clutter-formal-serial",
+      "cases": 1800,
+      "fields": [
+        "outcome",
+        "reason",
+        "final_position",
+        "damage",
+        "applied_perturbations",
+        "verification_complete",
+        "input_sha256"
+      ],
+      "changed_ids": []
+    }
+  ],
+  "changed_ids": []
+}

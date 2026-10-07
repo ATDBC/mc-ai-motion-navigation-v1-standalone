@@ -1,0 +1,154 @@
+{
+  "production_commit": "069b24ab8a9dcbc2eea1e5a5c5ce5b949adb7d65",
+  "initial_git_status": "",
+  "steps": [
+    {
+      "name": "forward",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "scripts/run_motion_navigation_checks.py",
+        "--output",
+        ".tmp/action-hardening-p2-forward.json"
+      ],
+      "exit_code": 0,
+      "seconds": 351.6987135000527
+    },
+    {
+      "name": "reverse",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "scripts/run_motion_navigation_checks.py",
+        "--output",
+        ".tmp/action-hardening-p2-reverse.json",
+        "--reverse"
+      ],
+      "exit_code": 0,
+      "seconds": 352.02684429998044
+    },
+    {
+      "name": "faults",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "scripts/navigation_s0r_evidence.py",
+        "--set",
+        "faults",
+        "--output",
+        "D:\\My_project\\mc_ai\\.tmp\\action-hardening-p2-faults",
+        "--workers",
+        "4"
+      ],
+      "exit_code": 0,
+      "seconds": 1.7745756999938749
+    },
+    {
+      "name": "world_changes",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "scripts/navigation_s0r_evidence.py",
+        "--set",
+        "world_changes",
+        "--output",
+        "D:\\My_project\\mc_ai\\.tmp\\action-hardening-p2-world_changes",
+        "--workers",
+        "4"
+      ],
+      "exit_code": 0,
+      "seconds": 4.037236300006043
+    },
+    {
+      "name": "follow",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "scripts/navigation_s0r_evidence.py",
+        "--set",
+        "follow",
+        "--output",
+        "D:\\My_project\\mc_ai\\.tmp\\action-hardening-p2-follow",
+        "--workers",
+        "4"
+      ],
+      "exit_code": 0,
+      "seconds": 14.967335900000762
+    },
+    {
+      "name": "coordination",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "scripts/navigation_s0r_evidence.py",
+        "--set",
+        "coordination",
+        "--output",
+        "D:\\My_project\\mc_ai\\.tmp\\action-hardening-p2-coordination",
+        "--workers",
+        "4"
+      ],
+      "exit_code": 0,
+      "seconds": 184.01675710000563
+    },
+    {
+      "name": "product",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "scripts/navigation_s0r_evidence.py",
+        "--set",
+        "product",
+        "--output",
+        "D:\\My_project\\mc_ai\\.tmp\\action-hardening-p2-product",
+        "--workers",
+        "4"
+      ],
+      "exit_code": 0,
+      "seconds": 479.79829529998824
+    },
+    {
+      "name": "direct",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "-m",
+        "unittest",
+        "tests.test_fixed_melee_driver",
+        "tests.test_moving_melee_driver",
+        "tests.motion_nav.test_navigation_design_metrics",
+        "tests.motion_nav.test_runtime_navigation_state_consumers",
+        "tests.motion_nav.test_runtime_navigation_driver_state",
+        "tests.motion_nav.test_runtime_backend_io",
+        "tests.motion_nav.test_action_preconditions",
+        "tests.motion_nav.test_action_controller_adapter",
+        "tests.motion_nav.test_action_continuity_fabric_options",
+        "tests.motion_nav.test_continuous_height_execution",
+        "-q"
+      ],
+      "exit_code": 0,
+      "seconds": 15.681020399963018
+    }
+  ],
+  "comparisons": {
+    "faults": {
+      "cases": 16,
+      "differences": [],
+      "equivalent": true
+    },
+    "world_changes": {
+      "cases": 19,
+      "differences": [],
+      "equivalent": true
+    },
+    "follow": {
+      "cases": 10,
+      "differences": [],
+      "equivalent": true
+    },
+    "coordination": {
+      "cases": 1448,
+      "differences": [],
+      "equivalent": true
+    },
+    "product": {
+      "cases": 2000,
+      "differences": [],
+      "equivalent": true
+    }
+  },
+  "current": "complete",
+  "current_started": 1791340146.9341378
+}

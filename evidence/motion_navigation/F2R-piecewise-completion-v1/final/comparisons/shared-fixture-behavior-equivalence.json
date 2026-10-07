@@ -1,0 +1,32 @@
+{
+  "passed": true,
+  "populations": [
+    {
+      "group": "product",
+      "cases": 2000,
+      "changed_ids": []
+    },
+    {
+      "group": "faults",
+      "cases": 16,
+      "changed_ids": []
+    },
+    {
+      "group": "world_changes",
+      "cases": 19,
+      "changed_ids": []
+    },
+    {
+      "group": "follow",
+      "cases": 10,
+      "changed_ids": []
+    },
+    {
+      "group": "coordination",
+      "cases": 1448,
+      "changed_ids": []
+    }
+  ],
+  "total_cases": 3493,
+  "claim": "Equivalent shared-simulator witness optimization; no robot capability gain"
+}

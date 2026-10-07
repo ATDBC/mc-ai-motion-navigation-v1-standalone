@@ -1,0 +1,55 @@
+{
+  "passed": true,
+  "cases": 16,
+  "late_first_actual_window_applied": 8,
+  "plan_sha256": "8aad55272cc5c24861b660546f2b41dc5c79ec2e6f1e372309b4eb1a4679cb6f",
+  "batches": [
+    {
+      "ids": [
+        "f2-f2r_outer_corner-0-normal",
+        "f2-f2r_outer_corner-0-late_first",
+        "f2-f2r_outer_corner-1-normal",
+        "f2-f2r_outer_corner-1-late_first",
+        "f2-f2r_outer_corner-2-normal",
+        "f2-f2r_outer_corner-2-late_first",
+        "f2-f2r_outer_corner-3-normal",
+        "f2-f2r_outer_corner-3-late_first"
+      ],
+      "raw_directories": [
+        "D:\\My_project\\mc_ai\\artifacts\\fabric-deployment\\20261007T160542413190Z-df26905f"
+      ],
+      "return_code": 0
+    },
+    {
+      "ids": [
+        "f2-f2r_diagonal_pillar-0-normal",
+        "f2-f2r_diagonal_pillar-0-late_first",
+        "f2-f2r_diagonal_pillar-1-normal",
+        "f2-f2r_diagonal_pillar-1-late_first",
+        "f2-f2r_diagonal_pillar-2-normal",
+        "f2-f2r_diagonal_pillar-2-late_first",
+        "f2-f2r_diagonal_pillar-3-normal",
+        "f2-f2r_diagonal_pillar-3-late_first"
+      ],
+      "raw_directories": [
+        "D:\\My_project\\mc_ai\\artifacts\\fabric-deployment\\20261007T160817206610Z-29a505f8"
+      ],
+      "return_code": 0
+    }
+  ],
+  "sources_unchanged": true,
+  "prepare_frames": 811,
+  "prepare_ms": {
+    "p50": 1.2811,
+    "p95": 2.3205,
+    "p99": 3.8213,
+    "maximum": 4.7297
+  },
+  "control_ms": {
+    "p50": 0.6909,
+    "p95": 1.6602,
+    "p99": 2.7688,
+    "maximum": 4.202
+  },
+  "max_full_candidates": 1
+}

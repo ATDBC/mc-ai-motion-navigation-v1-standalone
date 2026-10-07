@@ -1,0 +1,200 @@
+{
+  "files": [
+    {
+      "path": "artifacts/fabric-deployment/20261007T160542413190Z-df26905f/client-0/f2-plan.json",
+      "sha256": "41ff8f2ab0aae91edf771eaa1860d1c20ffbd92b9c7c800b38065733401bb2ee",
+      "bytes": 2678
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160542413190Z-df26905f/client-0/f2-summary.json",
+      "sha256": "afd8d721a9db3d3b6c323322da51b31edc420c256b82cf3118b1b0623383c977",
+      "bytes": 130402
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160542413190Z-df26905f/client-0/f2-trials.jsonl",
+      "sha256": "44d8590083fce4005b016cc8ef0a17893c1207e98ef55f3bce602c09999ba181",
+      "bytes": 83101
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160542413190Z-df26905f/client-0/f2-frames.jsonl",
+      "sha256": "914e66c63f871eabdc5259d603eebf087417482d657444be04442b387577f6ab",
+      "bytes": 504729
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160542413190Z-df26905f/client-0/trace.jsonl",
+      "sha256": "88816cb4aa7617281068853f0197c11b0471559bd2b1f79585f36116987e0fc5",
+      "bytes": 86508117
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160542413190Z-df26905f/client-0/diagnostics.jsonl",
+      "sha256": "cf6c7421826794809b23b0bad1d0f60e5530741b3ad407c79c27344115a748c7",
+      "bytes": 2482085
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160542413190Z-df26905f/client-0/time-events.jsonl",
+      "sha256": "bf649b80fd0bdf8cc4ba3341b2e8e2eaffdf8693d0e27b8bd0abf2f70c7d72b9",
+      "bytes": 1025007
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160542413190Z-df26905f/client-0/time-report.json",
+      "sha256": "919134c4101f3aebfaecc66d3a1561626e321d2cb222da50f7980949af813161",
+      "bytes": 286956
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160542413190Z-df26905f/result.json",
+      "sha256": "bd7bf00e82088aad0726c155d8f3eeb9c664b7d36133e46cc72492b8a23cd999",
+      "bytes": 361868
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160542413190Z-df26905f/worker-result.json",
+      "sha256": "675f55576495b9f6e22a176fdea2138ee66ce7efa97e89a1f7755fce96f9d1a5",
+      "bytes": 360997
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160542413190Z-df26905f/worker.log",
+      "sha256": "ff5b4b12656bddccc391257ebf59772f5e82f3f34356ebcdb1b6378d4e4324f7",
+      "bytes": 496
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160817206610Z-29a505f8/client-0/f2-plan.json",
+      "sha256": "4163797694f0750622d2b64815d7fbe28179c4e950c9d0bd4a2fd26320d10086",
+      "bytes": 2726
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160817206610Z-29a505f8/client-0/f2-summary.json",
+      "sha256": "c955b4426ad47bc31dfbacacf6e699c40a17bc74880a151d3bb86b8c9e4dbe95",
+      "bytes": 130453
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160817206610Z-29a505f8/client-0/f2-trials.jsonl",
+      "sha256": "984800206d678ef11804d3719e8ef820ef4829638ecfb9c4b8842b0b47767aab",
+      "bytes": 83152
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160817206610Z-29a505f8/client-0/f2-frames.jsonl",
+      "sha256": "c0c50a17ff181a90ea2a2aa9673cc79bfa5799a4bf6a5407b0892e33917ef0f0",
+      "bytes": 504971
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160817206610Z-29a505f8/client-0/trace.jsonl",
+      "sha256": "901082332ed1939ffd9c6f4b4417a1119617e2c98041926939b3fe01c465e618",
+      "bytes": 90779813
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160817206610Z-29a505f8/client-0/diagnostics.jsonl",
+      "sha256": "354c24e623da2bc90267845d18b79b4a0378f8aac274d517b821f46310dd9cf6",
+      "bytes": 2480320
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160817206610Z-29a505f8/client-0/time-events.jsonl",
+      "sha256": "05e09a10363fe6fb641bbba0ef386e32f9fcf3dec03443ce5aade8ca59dfa8ef",
+      "bytes": 1024481
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160817206610Z-29a505f8/client-0/time-report.json",
+      "sha256": "f14edfda85e4b7133aaa6c2bd0ff88024e52019a57013145fe2135a2197d1314",
+      "bytes": 286748
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160817206610Z-29a505f8/result.json",
+      "sha256": "e6e35b3c23da3932ec6e9ccd26a59865aa5ce1a169d50ba5f7847e07b64eef55",
+      "bytes": 361855
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160817206610Z-29a505f8/worker-result.json",
+      "sha256": "ea03d1bf35589cadfe9107476440c779f9e0e25456733d539d0bcbf4757600c1",
+      "bytes": 360983
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160817206610Z-29a505f8/worker.log",
+      "sha256": "093b9328aa6514a228760da2691918c702b5eb233ea3a3887bd821299c4c4e96",
+      "bytes": 520
+    },
+    {
+      "path": "artifacts/f2-ground-route/20261007T160541167148Z-f36e2e0b-runs.json",
+      "sha256": "f76b9f21e10a593c345410130f596415df883ca29a0ab9ae9e9820f8ea6a63a4",
+      "bytes": 941
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160321156889Z-2e9c4e22/result.json",
+      "bytes": 215076,
+      "sha256": "827ba50c8c55b47f90aa1312660a4ccf851646c62036fc2b51a7b356b4f3ea7b"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160321156889Z-2e9c4e22/worker-result.json",
+      "bytes": 214558,
+      "sha256": "068a8529c4f19219ad9fe3d8c08ae469576ee1d1d4e033643c1e750ca2583ceb"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160321156889Z-2e9c4e22/worker.log",
+      "bytes": 60,
+      "sha256": "21c7852d97ba81855431cfe4cc44e5e158738bee8605ff1bad4f5d9589c004cc"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160321156889Z-2e9c4e22/client-0/f2-summary.json",
+      "bytes": 57352,
+      "sha256": "218e43a678a9b64faa4ac0a562f3e4e10ce0f28723b856237dfd7114fae064f6"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160321156889Z-2e9c4e22/client-0/f2-trials.jsonl",
+      "bytes": 10058,
+      "sha256": "988efd200ed7c90a6529047791805ca771e855108e90b60eca64c2451b23a1f6"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160321156889Z-2e9c4e22/client-0/trace.jsonl",
+      "bytes": 10770496,
+      "sha256": "6d934ed1677aba9fd9c37b8a62ce4b446df1227874ea17b2daea883ac2d04b9b"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160432297531Z-a2b034e8/result.json",
+      "bytes": 214888,
+      "sha256": "ec65f0bf438a78a75a5ee2dfdea0e857538beb833d1084b48ad1d59d312c6a3a"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160432297531Z-a2b034e8/worker-result.json",
+      "bytes": 214368,
+      "sha256": "0e6fee7fbd7fb6b7eabbb1780a32719410e1b275024a35aa5d7604acf92270bb"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160432297531Z-a2b034e8/worker.log",
+      "bytes": 63,
+      "sha256": "25b8042c2545b17df5cd1ed2060119d4f96216955f62db48a91d2f18a5059e7f"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160432297531Z-a2b034e8/client-0/f2-summary.json",
+      "bytes": 57358,
+      "sha256": "ca988bacfdcda395f4b85613ccb9296adc37144053ddde73fe4a4f42c2fef63b"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160432297531Z-a2b034e8/client-0/f2-trials.jsonl",
+      "bytes": 10064,
+      "sha256": "abbdf5b541da6560e59bb024bc3f2efeba0fd09f7f408b35f3d80f13163cb3de"
+    },
+    {
+      "path": "artifacts/fabric-deployment/20261007T160432297531Z-a2b034e8/client-0/trace.jsonl",
+      "bytes": 11332114,
+      "sha256": "b025671bbfddf3f66f8b758e53e189017e16bfe415220dce0937a2ccb904ca81"
+    },
+    {
+      "path": ".tmp/f2r-fabric-final-audit.json",
+      "bytes": 367215,
+      "sha256": "b9f5761e9b4e878c9a2410affc6c36ce7a43d2e0f5f4b10c51d9d86b64768db2"
+    },
+    {
+      "path": ".tmp/f2r-native-pipeline.json",
+      "bytes": 1367,
+      "sha256": "7a5353b6862a247662bc704b297ffd9f4c69cbc281b5b13fb310d62e9f91f40e"
+    },
+    {
+      "path": ".tmp/f2r_native_audit.py",
+      "bytes": 4082,
+      "sha256": "6b898ae1ccc4afb555dba5e1a43c2e02b5a02009df97fd3716922eca91c77ab6"
+    },
+    {
+      "path": ".tmp/f2r_native_pipeline.py",
+      "bytes": 1411,
+      "sha256": "d6c364734895b20a19aff2e2ce2a2532c7e94b4cedf65fdaa3ec7b44cb70a4f8"
+    }
+  ],
+  "full_traces_retained_locally": true
+}

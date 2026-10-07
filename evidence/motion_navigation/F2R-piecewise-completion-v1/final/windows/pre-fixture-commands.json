@@ -1,0 +1,67 @@
+[
+  {
+    "stage": "f2-final",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/f2_ground_route_evidence.py",
+      "--output",
+      ".tmp/f2r-f2-final",
+      "--workers",
+      "4"
+    ],
+    "return_code": 0,
+    "elapsed_seconds": 113.13192860002164,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-f2-final.log"
+  },
+  {
+    "stage": "forward-final",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/run_motion_navigation_checks.py",
+      "--output",
+      ".tmp/f2r-forward-final.json"
+    ],
+    "return_code": 0,
+    "elapsed_seconds": 508.42527639999753,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-forward-final.log"
+  },
+  {
+    "stage": "reverse-final",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/run_motion_navigation_checks.py",
+      "--reverse",
+      "--output",
+      ".tmp/f2r-reverse-final.json"
+    ],
+    "return_code": 0,
+    "elapsed_seconds": 529.5151889999979,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-reverse-final.log"
+  },
+  {
+    "stage": "d058",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "scripts.benchmark_d058_route_revalidation",
+      "--output",
+      ".tmp/f2r-d058"
+    ],
+    "return_code": 0,
+    "elapsed_seconds": 52.438980900042225,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-d058.log"
+  },
+  {
+    "stage": "d061",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "-m",
+      "scripts.benchmark_d061_long_session",
+      "--output",
+      ".tmp/f2r-d061"
+    ],
+    "return_code": 1,
+    "elapsed_seconds": 213.339771799976,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-d061.log"
+  }
+]

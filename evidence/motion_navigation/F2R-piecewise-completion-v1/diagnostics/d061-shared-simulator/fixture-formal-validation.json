@@ -1,0 +1,38 @@
+{
+  "passed": true,
+  "behavior_fields_equal_to_pre_fix_formal_failure": true,
+  "behavior_sha256": "b622a9bae5cf63bda1a29ffb9aaedb766f7a72830be014d22c979329cb36f74c",
+  "shared_backend_sha256": "3a93a5dac30d8d4fb4e68b436297813593a82741dbb00444dc0fbfe805737733",
+  "configuration_unchanged": true,
+  "fixed_retained_ordinals": {
+    "783": 34.0921,
+    "791": 29.5715,
+    "795": 29.1187,
+    "839": 29.8507,
+    "851": 28.6875
+  },
+  "raw_files": [
+    {
+      "path": ".tmp/f2r-d061-fixture-final/performance.json",
+      "bytes": 11926290,
+      "sha256": "3a94c2e1bf307f95f874f907553ad772066fb0248835debf16908c352cce7562"
+    },
+    {
+      "path": ".tmp/f2r-d061-fixture-final/COMMAND.txt",
+      "bytes": 114,
+      "sha256": "77f62d546bac7926085c2d940577b8238bf5a931f690e1a91da61619cccc7463"
+    },
+    {
+      "path": ".tmp/f2r-d061-fixture-final/SHA256SUMS",
+      "bytes": 1394,
+      "sha256": "d489159a9407f3992e20c91907d16d6bafc02add0d50bf7cfc6bcfb64db9e8b2"
+    },
+    {
+      "path": ".tmp/f2r-d061-fixture-final-run.json",
+      "bytes": 616,
+      "sha256": "0f5cff983bf825b1bce9f7579fa25ee51a2c6713fbb7b6e4af138b13ecfb44ed"
+    }
+  ],
+  "full_traces_retained_locally": true,
+  "robot_capability_gain_claimed": false
+}

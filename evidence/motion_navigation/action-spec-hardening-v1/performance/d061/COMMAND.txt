@@ -1,0 +1,1 @@
+D:\My_project\mc_ai\.venv\python.exe -m scripts.benchmark_d061_long_session --output .tmp\action-hardening-d061

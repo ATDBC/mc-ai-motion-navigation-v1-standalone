@@ -301,13 +301,23 @@ class CalculatorBackend:
         if not in_view:
             return {"position": list(cell), "status": "outside_view",
                     "observer_distance_blocks": None, "lower_region_visible": None}
-        visible = [p for p in in_view if self._visible(eye, p, cell)]
+        visible = False
+        lower_visible = False
+        for point in in_view:
+            lower = point[1] - cell[1] <= .25
+            if visible and not lower:
+                continue
+            if self._visible(eye, point, cell):
+                visible = True
+                if lower:
+                    lower_visible = True
+                    break
         if not visible:
             return {"position": list(cell), "status": "occluded",
                     "observer_distance_blocks": None, "lower_region_visible": None}
         return {"position": list(cell), "status": "visible_air",
                 "observer_distance_blocks": distance,
-                "lower_region_visible": any(p[1] - cell[1] <= .25 for p in visible)}
+                "lower_region_visible": lower_visible}
 
     def observation(self, *, request_sequence_id=None, air_positions=()):
         s = self.state

@@ -1,0 +1,52 @@
+{
+  "passed": true,
+  "tested_snapshot": "D:\\My_project\\mc_ai\\.tmp\\f2r-public-snapshot-20261008-final",
+  "export_verify_files": 1539,
+  "focused_tests": 63,
+  "full_tests": 1647,
+  "full_scene_hash_unchanged": true,
+  "source_commit": "cc28816bd9d09c506b9ffa43e89850d401b7bd99",
+  "source_worktree_clean": true,
+  "test_imports_from_snapshot": true,
+  "old_repeated_plan_absent": true,
+  "hardening_evidence_entries": 48,
+  "tested_core_files": 638,
+  "raw_files": [
+    {
+      "path": ".tmp/f2r-public-full.log",
+      "bytes": 305293,
+      "sha256": "a4d151dd0c542656552555ef0aff6c656c8b6df83bea179d68fa765565e800b8"
+    },
+    {
+      "path": ".tmp/f2r-public-full.json",
+      "bytes": 10148,
+      "sha256": "e7f3114a7fb8028b9ec6bfb4ef10f729a98120be013f1e094155a02383baaf9e"
+    },
+    {
+      "path": ".tmp/f2r-public-focused.log",
+      "bytes": 13026,
+      "sha256": "7a763d60170638bcfdb6268b073033d69d0243cb7d0bfc84d127f416677886a0"
+    },
+    {
+      "path": ".tmp/f2r-public-tested-core-index.json",
+      "bytes": 77663,
+      "sha256": "6a6cabfa09297e844a7d906c5230f4bb3fc4bb60bc384fbc72ba7ce7c4932d31"
+    },
+    {
+      "path": ".tmp/f2r-public-snapshot-20261008-final/EXPORT-METADATA.json",
+      "bytes": 303,
+      "sha256": "3c8c4aad38ad79e6ab3fa4d90b2f0c3e04585affb7737defa35a6b5a1e1c2b61"
+    },
+    {
+      "path": ".tmp/f2r-public-snapshot-20261008-final/SHA256SUMS.txt",
+      "bytes": 198707,
+      "sha256": "552b113d1d4d738b150dbae11131f0aa84985c7330f32f3e9c12c5353988bc69"
+    }
+  ],
+  "final_document_signed_snapshot_pending": false,
+  "signed_snapshot_verified": true,
+  "signed_snapshot_source_commit": "c6c0085149852ea6a9381a776a5ff70ae905704e",
+  "signed_snapshot_verify_files": 1542,
+  "signed_core_compared": 638,
+  "signed_core_changes": 0
+}

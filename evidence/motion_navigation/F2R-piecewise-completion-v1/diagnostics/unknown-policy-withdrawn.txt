@@ -1,0 +1,197 @@
+FFFFFFFFFFFFFFFFFFFFFFFF
+======================================================================
+FAIL: test_unknown_corner_clipping_owner_requires_information (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_unknown_corner_clipping_owner_requires_information) (family='outer_corner', direction='south', target='product')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 28, in test_unknown_corner_clipping_owner_requires_information
+    self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+AssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.NEEDS_INFORMATION: 'needs_information'>
+
+======================================================================
+FAIL: test_unknown_corner_clipping_owner_requires_information (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_unknown_corner_clipping_owner_requires_information) (family='outer_corner', direction='south', target='melee')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 28, in test_unknown_corner_clipping_owner_requires_information
+    self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+AssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.NEEDS_INFORMATION: 'needs_information'>
+
+======================================================================
+FAIL: test_unknown_corner_clipping_owner_requires_information (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_unknown_corner_clipping_owner_requires_information) (family='outer_corner', direction='south', target='follow')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 28, in test_unknown_corner_clipping_owner_requires_information
+    self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+AssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.NEEDS_INFORMATION: 'needs_information'>
+
+======================================================================
+FAIL: test_unknown_corner_clipping_owner_requires_information (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_unknown_corner_clipping_owner_requires_information) (family='outer_corner', direction='east', target='product')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 28, in test_unknown_corner_clipping_owner_requires_information
+    self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+AssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.NEEDS_INFORMATION: 'needs_information'>
+
+======================================================================
+FAIL: test_unknown_corner_clipping_owner_requires_information (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_unknown_corner_clipping_owner_requires_information) (family='outer_corner', direction='east', target='melee')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 28, in test_unknown_corner_clipping_owner_requires_information
+    self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+AssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.NEEDS_INFORMATION: 'needs_information'>
+
+======================================================================
+FAIL: test_unknown_corner_clipping_owner_requires_information (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_unknown_corner_clipping_owner_requires_information) (family='outer_corner', direction='east', target='follow')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 28, in test_unknown_corner_clipping_owner_requires_information
+    self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+AssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.NEEDS_INFORMATION: 'needs_information'>
+
+======================================================================
+FAIL: test_unknown_corner_clipping_owner_requires_information (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_unknown_corner_clipping_owner_requires_information) (family='outer_corner', direction='north', target='product')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 28, in test_unknown_corner_clipping_owner_requires_information
+    self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+AssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.NEEDS_INFORMATION: 'needs_information'>
+
+======================================================================
+FAIL: test_unknown_corner_clipping_owner_requires_information (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_unknown_corner_clipping_owner_requires_information) (family='outer_corner', direction='north', target='melee')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 28, in test_unknown_corner_clipping_owner_requires_information
+    self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+AssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.NEEDS_INFORMATION: 'needs_information'>
+
+======================================================================
+FAIL: test_unknown_corner_clipping_owner_requires_information (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_unknown_corner_clipping_owner_requires_information) (family='outer_corner', direction='north', target='follow')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 28, in test_unknown_corner_clipping_owner_requires_information
+    self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+AssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.NEEDS_INFORMATION: 'needs_information'>
+
+======================================================================
+FAIL: test_unknown_corner_clipping_owner_requires_information (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_unknown_corner_clipping_owner_requires_information) (family='outer_corner', direction='west', target='product')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 28, in test_unknown_corner_clipping_owner_requires_information
+    self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+AssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.NEEDS_INFORMATION: 'needs_information'>
+
+======================================================================
+FAIL: test_unknown_corner_clipping_owner_requires_information (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_unknown_corner_clipping_owner_requires_information) (family='outer_corner', direction='west', target='melee')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 28, in test_unknown_corner_clipping_owner_requires_information
+    self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+AssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.NEEDS_INFORMATION: 'needs_information'>
+
+======================================================================
+FAIL: test_unknown_corner_clipping_owner_requires_information (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_unknown_corner_clipping_owner_requires_information) (family='outer_corner', direction='west', target='follow')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 28, in test_unknown_corner_clipping_owner_requires_information
+    self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+AssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.NEEDS_INFORMATION: 'needs_information'>
+
+======================================================================
+FAIL: test_unknown_corner_clipping_owner_requires_information (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_unknown_corner_clipping_owner_requires_information) (family='diagonal_pillar', direction='south', target='product')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 28, in test_unknown_corner_clipping_owner_requires_information
+    self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+AssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.NEEDS_INFORMATION: 'needs_information'>
+
+======================================================================
+FAIL: test_unknown_corner_clipping_owner_requires_information (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_unknown_corner_clipping_owner_requires_information) (family='diagonal_pillar', direction='south', target='melee')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 28, in test_unknown_corner_clipping_owner_requires_information
+    self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+AssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.NEEDS_INFORMATION: 'needs_information'>
+
+======================================================================
+FAIL: test_unknown_corner_clipping_owner_requires_information (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_unknown_corner_clipping_owner_requires_information) (family='diagonal_pillar', direction='south', target='follow')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 28, in test_unknown_corner_clipping_owner_requires_information
+    self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+AssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.NEEDS_INFORMATION: 'needs_information'>
+
+======================================================================
+FAIL: test_unknown_corner_clipping_owner_requires_information (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_unknown_corner_clipping_owner_requires_information) (family='diagonal_pillar', direction='east', target='product')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 28, in test_unknown_corner_clipping_owner_requires_information
+    self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+AssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.NEEDS_INFORMATION: 'needs_information'>
+
+======================================================================
+FAIL: test_unknown_corner_clipping_owner_requires_information (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_unknown_corner_clipping_owner_requires_information) (family='diagonal_pillar', direction='east', target='melee')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 28, in test_unknown_corner_clipping_owner_requires_information
+    self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+AssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.NEEDS_INFORMATION: 'needs_information'>
+
+======================================================================
+FAIL: test_unknown_corner_clipping_owner_requires_information (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_unknown_corner_clipping_owner_requires_information) (family='diagonal_pillar', direction='east', target='follow')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 28, in test_unknown_corner_clipping_owner_requires_information
+    self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+AssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.NEEDS_INFORMATION: 'needs_information'>
+
+======================================================================
+FAIL: test_unknown_corner_clipping_owner_requires_information (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_unknown_corner_clipping_owner_requires_information) (family='diagonal_pillar', direction='north', target='product')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 28, in test_unknown_corner_clipping_owner_requires_information
+    self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+AssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.NEEDS_INFORMATION: 'needs_information'>
+
+======================================================================
+FAIL: test_unknown_corner_clipping_owner_requires_information (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_unknown_corner_clipping_owner_requires_information) (family='diagonal_pillar', direction='north', target='melee')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 28, in test_unknown_corner_clipping_owner_requires_information
+    self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+AssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.NEEDS_INFORMATION: 'needs_information'>
+
+======================================================================
+FAIL: test_unknown_corner_clipping_owner_requires_information (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_unknown_corner_clipping_owner_requires_information) (family='diagonal_pillar', direction='north', target='follow')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 28, in test_unknown_corner_clipping_owner_requires_information
+    self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+AssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.NEEDS_INFORMATION: 'needs_information'>
+
+======================================================================
+FAIL: test_unknown_corner_clipping_owner_requires_information (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_unknown_corner_clipping_owner_requires_information) (family='diagonal_pillar', direction='west', target='product')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 28, in test_unknown_corner_clipping_owner_requires_information
+    self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+AssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.NEEDS_INFORMATION: 'needs_information'>
+
+======================================================================
+FAIL: test_unknown_corner_clipping_owner_requires_information (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_unknown_corner_clipping_owner_requires_information) (family='diagonal_pillar', direction='west', target='melee')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 28, in test_unknown_corner_clipping_owner_requires_information
+    self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+AssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.NEEDS_INFORMATION: 'needs_information'>
+
+======================================================================
+FAIL: test_unknown_corner_clipping_owner_requires_information (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_unknown_corner_clipping_owner_requires_information) (family='diagonal_pillar', direction='west', target='follow')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 28, in test_unknown_corner_clipping_owner_requires_information
+    self.assertIs(result.status, QueryStatus.NEEDS_INFORMATION)
+AssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.NEEDS_INFORMATION: 'needs_information'>
+
+----------------------------------------------------------------------
+Ran 1 test in 0.323s
+
+FAILED (failures=24)

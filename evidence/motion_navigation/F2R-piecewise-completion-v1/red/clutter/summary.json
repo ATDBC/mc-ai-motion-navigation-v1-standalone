@@ -1,0 +1,86 @@
+{
+  "mode": "clutter",
+  "cases": 1800,
+  "source_commit": "409adec84dff8cef77a4b1dfd09c5ce86314bafc",
+  "source_worktree_clean": false,
+  "production_sha256": "e771dce114cc65c1c64455e9f9710ef112434050cd42a747155171c6d57ea9fe",
+  "manifest_sha256": "84d60deccd5e6ded838c625feed18cc90006324749ad986a1e62bfd472b99502",
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "by_layer": {
+    "clutter_10/follow": {
+      "cases": 300,
+      "results": {
+        "feasible": 212,
+        "unsupported": 88
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "point_feasible": 300,
+      "lost": 88,
+      "control_p95_ms_max": null
+    },
+    "clutter_10/melee": {
+      "cases": 300,
+      "results": {
+        "feasible": 235,
+        "unsupported": 65
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "point_feasible": 300,
+      "lost": 65,
+      "control_p95_ms_max": null
+    },
+    "clutter_10/product": {
+      "cases": 300,
+      "results": {
+        "feasible": 272,
+        "unsupported": 15,
+        "blocked": 13
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "point_feasible": 287,
+      "lost": 15,
+      "control_p95_ms_max": null
+    },
+    "clutter_20/follow": {
+      "cases": 300,
+      "results": {
+        "feasible": 186,
+        "unsupported": 114
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "point_feasible": 300,
+      "lost": 114,
+      "control_p95_ms_max": null
+    },
+    "clutter_20/melee": {
+      "cases": 300,
+      "results": {
+        "feasible": 211,
+        "unsupported": 89
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "point_feasible": 300,
+      "lost": 89,
+      "control_p95_ms_max": null
+    },
+    "clutter_20/product": {
+      "cases": 300,
+      "results": {
+        "feasible": 246,
+        "unsupported": 37,
+        "blocked": 17
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "point_feasible": 283,
+      "lost": 37,
+      "control_p95_ms_max": null
+    }
+  }
+}

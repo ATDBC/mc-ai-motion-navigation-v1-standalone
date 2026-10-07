@@ -1,0 +1,87 @@
+{
+  "expanded_manifest_sha256": "84d60deccd5e6ded838c625feed18cc90006324749ad986a1e62bfd472b99502",
+  "local_expanded_manifest": "D:\\My_project\\mc_ai\\.tmp\\f2r-v8-expanded-frozen.json",
+  "geometry_input_sha256": "4b6d1ac79fe5ad844df3c5897052d629702603a91c523a5c9fcbc65f41f9d7bb",
+  "clutter_input_sha256": "785138fe595ac686df846de4bcc82e222543cc5fa8c1c796a340c7e0bd08d56c",
+  "geometry_cases": 104,
+  "clutter_cases": 1800,
+  "by_layer": {
+    "clutter_10/follow": {
+      "cases": 300,
+      "input_sha256": "ac73500380e53da2e2a8cee19e0166864307fe94b1af58f5a754d2aea8c6a472"
+    },
+    "clutter_10/melee": {
+      "cases": 300,
+      "input_sha256": "ed91ffd78ef8b469b963be382f804a27b7be7a249e9956e56b6281ed77ab0d69"
+    },
+    "clutter_10/product": {
+      "cases": 300,
+      "input_sha256": "9269c2b74d3a80c5b55b05f74a09557868d2f52d159a4bf36af64353c050b737"
+    },
+    "clutter_20/follow": {
+      "cases": 300,
+      "input_sha256": "f0f38722ed1989dbd5ab1b3d9959d1686b4cf7b2a843fadf366addcb39841ba7"
+    },
+    "clutter_20/melee": {
+      "cases": 300,
+      "input_sha256": "9c81713d5796b0ba7495b5b7f67601b373f3d72e91286bfc526eb812d1f9237c"
+    },
+    "clutter_20/product": {
+      "cases": 300,
+      "input_sha256": "d0c967767d06fcbce84a76dad80d21ff20667be9de89dc72fac905a63adabd39"
+    },
+    "diagonal_approach/melee": {
+      "cases": 8,
+      "input_sha256": "77329e92f146944c5da5b89ee426ae6fe56adbf0d003e58376c906034e2f7df7"
+    },
+    "diagonal_approach/product": {
+      "cases": 8,
+      "input_sha256": "48dc5089135713239c742e9f5a939bdb3f1bfc3614477efea29e417bde6d3440"
+    },
+    "diagonal_pillar/follow": {
+      "cases": 8,
+      "input_sha256": "b309116949ee0f7f9758c9074100fdf2fae8b2944d3cc33f8db7f1421b2c01cd"
+    },
+    "diagonal_pillar/melee": {
+      "cases": 8,
+      "input_sha256": "6ec40f9ba354eb949f7941c1d9be9af7c7509bf02c9a675de02d8a4284f48639"
+    },
+    "diagonal_pillar/product": {
+      "cases": 8,
+      "input_sha256": "33c7f68ef61af86a649a06227a1fb31efe88e6080ff68475b4bef1285dd38ee0"
+    },
+    "multi_cell/follow": {
+      "cases": 8,
+      "input_sha256": "60c009cdb4adbd28dff1bbd0aaf958eb0cb188bba5bcf3b20b6acd0bfdd76b96"
+    },
+    "multi_cell/product": {
+      "cases": 8,
+      "input_sha256": "b3bbbb8d33094bc58687c4575404cbab9a284bd6ceaedd74919d679553a54198"
+    },
+    "outer_corner/follow": {
+      "cases": 8,
+      "input_sha256": "5a5ea00e5372ca0befbc2df97d0ce8d5e0631c635f6b7cdeac3d253a95e96d9f"
+    },
+    "outer_corner/melee": {
+      "cases": 8,
+      "input_sha256": "27d0294000be4714012205bfaba3a984d22306358b753d0364a3d36025243f13"
+    },
+    "outer_corner/product": {
+      "cases": 8,
+      "input_sha256": "b9c892b55ed7b97fb92db1126a4afd538c588d2262ff302a997c717ec077c92e"
+    },
+    "two_pillars/follow": {
+      "cases": 8,
+      "input_sha256": "0b3ba378da1520b7eef110ca681680e66c224e54f3840f7a8586a61cfd123637"
+    },
+    "two_pillars/melee": {
+      "cases": 8,
+      "input_sha256": "38e30b605725cac35f84325f37bcffc210b845e808eb07c815aba72367687953"
+    },
+    "two_pillars/product": {
+      "cases": 8,
+      "input_sha256": "590e83505930d222e6c655e21440c8f417f3ab7fc9fd1ff43ce1743b7c1a557a"
+    }
+  },
+  "compact_manifest_sha256": "c29e9158f461a647ae1b34ace278a3652e67052e3d9fcb80282fe517bf09efd6"
+}

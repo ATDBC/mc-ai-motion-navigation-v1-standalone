@@ -1,0 +1,498 @@
+{
+  "f2-f2r_outer_corner-0-normal": {
+    "ordered/1780d0cca1ed4323b946f308e7395e3c/0/1": [
+      {
+        "trace_line": 542,
+        "payload": {
+          "removed_intent_ids": [
+            "ordered/1780d0cca1ed4323b946f308e7395e3c/0/1/50"
+          ],
+          "source_id": "ordered/1780d0cca1ed4323b946f308e7395e3c/0/1"
+        },
+        "record_type": "source_cancel",
+        "schema_version": "mc2p.trace-record.v0"
+      },
+      {
+        "trace_line": 543,
+        "payload": {
+          "removed_intent_ids": [],
+          "source": {
+            "episode_id": "fabric-21001-0",
+            "generation": 1,
+            "schema_version": "mc2p.intent-source.v1",
+            "scope_id": "1780d0cca1ed4323b946f308e7395e3c",
+            "slot": 0,
+            "source_id": "ordered/1780d0cca1ed4323b946f308e7395e3c/0/1"
+          }
+        },
+        "record_type": "ordered_source_unregistered",
+        "schema_version": "mc2p.trace-record.v0"
+      }
+    ]
+  },
+  "f2-f2r_outer_corner-0-late_first": {
+    "ordered/1780d0cca1ed4323b946f308e7395e3c/0/2": [
+      {
+        "trace_line": 1084,
+        "payload": {
+          "removed_intent_ids": [
+            "ordered/1780d0cca1ed4323b946f308e7395e3c/0/2/50"
+          ],
+          "source_id": "ordered/1780d0cca1ed4323b946f308e7395e3c/0/2"
+        },
+        "record_type": "source_cancel",
+        "schema_version": "mc2p.trace-record.v0"
+      },
+      {
+        "trace_line": 1085,
+        "payload": {
+          "removed_intent_ids": [],
+          "source": {
+            "episode_id": "fabric-21001-0",
+            "generation": 2,
+            "schema_version": "mc2p.intent-source.v1",
+            "scope_id": "1780d0cca1ed4323b946f308e7395e3c",
+            "slot": 0,
+            "source_id": "ordered/1780d0cca1ed4323b946f308e7395e3c/0/2"
+          }
+        },
+        "record_type": "ordered_source_unregistered",
+        "schema_version": "mc2p.trace-record.v0"
+      }
+    ]
+  },
+  "f2-f2r_outer_corner-1-normal": {
+    "ordered/1780d0cca1ed4323b946f308e7395e3c/0/3": [
+      {
+        "trace_line": 1631,
+        "payload": {
+          "removed_intent_ids": [
+            "ordered/1780d0cca1ed4323b946f308e7395e3c/0/3/51"
+          ],
+          "source_id": "ordered/1780d0cca1ed4323b946f308e7395e3c/0/3"
+        },
+        "record_type": "source_cancel",
+        "schema_version": "mc2p.trace-record.v0"
+      },
+      {
+        "trace_line": 1632,
+        "payload": {
+          "removed_intent_ids": [],
+          "source": {
+            "episode_id": "fabric-21001-0",
+            "generation": 3,
+            "schema_version": "mc2p.intent-source.v1",
+            "scope_id": "1780d0cca1ed4323b946f308e7395e3c",
+            "slot": 0,
+            "source_id": "ordered/1780d0cca1ed4323b946f308e7395e3c/0/3"
+          }
+        },
+        "record_type": "ordered_source_unregistered",
+        "schema_version": "mc2p.trace-record.v0"
+      }
+    ]
+  },
+  "f2-f2r_outer_corner-1-late_first": {
+    "ordered/1780d0cca1ed4323b946f308e7395e3c/0/4": [
+      {
+        "trace_line": 2178,
+        "payload": {
+          "removed_intent_ids": [
+            "ordered/1780d0cca1ed4323b946f308e7395e3c/0/4/51"
+          ],
+          "source_id": "ordered/1780d0cca1ed4323b946f308e7395e3c/0/4"
+        },
+        "record_type": "source_cancel",
+        "schema_version": "mc2p.trace-record.v0"
+      },
+      {
+        "trace_line": 2179,
+        "payload": {
+          "removed_intent_ids": [],
+          "source": {
+            "episode_id": "fabric-21001-0",
+            "generation": 4,
+            "schema_version": "mc2p.intent-source.v1",
+            "scope_id": "1780d0cca1ed4323b946f308e7395e3c",
+            "slot": 0,
+            "source_id": "ordered/1780d0cca1ed4323b946f308e7395e3c/0/4"
+          }
+        },
+        "record_type": "ordered_source_unregistered",
+        "schema_version": "mc2p.trace-record.v0"
+      }
+    ]
+  },
+  "f2-f2r_outer_corner-2-normal": {
+    "ordered/1780d0cca1ed4323b946f308e7395e3c/0/5": [
+      {
+        "trace_line": 2719,
+        "payload": {
+          "removed_intent_ids": [
+            "ordered/1780d0cca1ed4323b946f308e7395e3c/0/5/50"
+          ],
+          "source_id": "ordered/1780d0cca1ed4323b946f308e7395e3c/0/5"
+        },
+        "record_type": "source_cancel",
+        "schema_version": "mc2p.trace-record.v0"
+      },
+      {
+        "trace_line": 2720,
+        "payload": {
+          "removed_intent_ids": [],
+          "source": {
+            "episode_id": "fabric-21001-0",
+            "generation": 5,
+            "schema_version": "mc2p.intent-source.v1",
+            "scope_id": "1780d0cca1ed4323b946f308e7395e3c",
+            "slot": 0,
+            "source_id": "ordered/1780d0cca1ed4323b946f308e7395e3c/0/5"
+          }
+        },
+        "record_type": "ordered_source_unregistered",
+        "schema_version": "mc2p.trace-record.v0"
+      }
+    ]
+  },
+  "f2-f2r_outer_corner-2-late_first": {
+    "ordered/1780d0cca1ed4323b946f308e7395e3c/0/6": [
+      {
+        "trace_line": 3256,
+        "payload": {
+          "removed_intent_ids": [
+            "ordered/1780d0cca1ed4323b946f308e7395e3c/0/6/49"
+          ],
+          "source_id": "ordered/1780d0cca1ed4323b946f308e7395e3c/0/6"
+        },
+        "record_type": "source_cancel",
+        "schema_version": "mc2p.trace-record.v0"
+      },
+      {
+        "trace_line": 3257,
+        "payload": {
+          "removed_intent_ids": [],
+          "source": {
+            "episode_id": "fabric-21001-0",
+            "generation": 6,
+            "schema_version": "mc2p.intent-source.v1",
+            "scope_id": "1780d0cca1ed4323b946f308e7395e3c",
+            "slot": 0,
+            "source_id": "ordered/1780d0cca1ed4323b946f308e7395e3c/0/6"
+          }
+        },
+        "record_type": "ordered_source_unregistered",
+        "schema_version": "mc2p.trace-record.v0"
+      }
+    ]
+  },
+  "f2-f2r_outer_corner-3-normal": {
+    "ordered/1780d0cca1ed4323b946f308e7395e3c/0/7": [
+      {
+        "trace_line": 3812,
+        "payload": {
+          "removed_intent_ids": [
+            "ordered/1780d0cca1ed4323b946f308e7395e3c/0/7/53"
+          ],
+          "source_id": "ordered/1780d0cca1ed4323b946f308e7395e3c/0/7"
+        },
+        "record_type": "source_cancel",
+        "schema_version": "mc2p.trace-record.v0"
+      },
+      {
+        "trace_line": 3813,
+        "payload": {
+          "removed_intent_ids": [],
+          "source": {
+            "episode_id": "fabric-21001-0",
+            "generation": 7,
+            "schema_version": "mc2p.intent-source.v1",
+            "scope_id": "1780d0cca1ed4323b946f308e7395e3c",
+            "slot": 0,
+            "source_id": "ordered/1780d0cca1ed4323b946f308e7395e3c/0/7"
+          }
+        },
+        "record_type": "ordered_source_unregistered",
+        "schema_version": "mc2p.trace-record.v0"
+      }
+    ]
+  },
+  "f2-f2r_outer_corner-3-late_first": {
+    "ordered/1780d0cca1ed4323b946f308e7395e3c/0/8": [
+      {
+        "trace_line": 4364,
+        "payload": {
+          "removed_intent_ids": [
+            "ordered/1780d0cca1ed4323b946f308e7395e3c/0/8/52"
+          ],
+          "source_id": "ordered/1780d0cca1ed4323b946f308e7395e3c/0/8"
+        },
+        "record_type": "source_cancel",
+        "schema_version": "mc2p.trace-record.v0"
+      },
+      {
+        "trace_line": 4365,
+        "payload": {
+          "removed_intent_ids": [],
+          "source": {
+            "episode_id": "fabric-21001-0",
+            "generation": 8,
+            "schema_version": "mc2p.intent-source.v1",
+            "scope_id": "1780d0cca1ed4323b946f308e7395e3c",
+            "slot": 0,
+            "source_id": "ordered/1780d0cca1ed4323b946f308e7395e3c/0/8"
+          }
+        },
+        "record_type": "ordered_source_unregistered",
+        "schema_version": "mc2p.trace-record.v0"
+      }
+    ]
+  },
+  "f2-f2r_diagonal_pillar-0-normal": {
+    "ordered/c8c1640b99204114aee4c5441036c383/0/1": [
+      {
+        "trace_line": 546,
+        "payload": {
+          "removed_intent_ids": [
+            "ordered/c8c1640b99204114aee4c5441036c383/0/1/51"
+          ],
+          "source_id": "ordered/c8c1640b99204114aee4c5441036c383/0/1"
+        },
+        "record_type": "source_cancel",
+        "schema_version": "mc2p.trace-record.v0"
+      },
+      {
+        "trace_line": 547,
+        "payload": {
+          "removed_intent_ids": [],
+          "source": {
+            "episode_id": "fabric-21001-0",
+            "generation": 1,
+            "schema_version": "mc2p.intent-source.v1",
+            "scope_id": "c8c1640b99204114aee4c5441036c383",
+            "slot": 0,
+            "source_id": "ordered/c8c1640b99204114aee4c5441036c383/0/1"
+          }
+        },
+        "record_type": "ordered_source_unregistered",
+        "schema_version": "mc2p.trace-record.v0"
+      }
+    ]
+  },
+  "f2-f2r_diagonal_pillar-0-late_first": {
+    "ordered/c8c1640b99204114aee4c5441036c383/0/2": [
+      {
+        "trace_line": 1088,
+        "payload": {
+          "removed_intent_ids": [
+            "ordered/c8c1640b99204114aee4c5441036c383/0/2/50"
+          ],
+          "source_id": "ordered/c8c1640b99204114aee4c5441036c383/0/2"
+        },
+        "record_type": "source_cancel",
+        "schema_version": "mc2p.trace-record.v0"
+      },
+      {
+        "trace_line": 1089,
+        "payload": {
+          "removed_intent_ids": [],
+          "source": {
+            "episode_id": "fabric-21001-0",
+            "generation": 2,
+            "schema_version": "mc2p.intent-source.v1",
+            "scope_id": "c8c1640b99204114aee4c5441036c383",
+            "slot": 0,
+            "source_id": "ordered/c8c1640b99204114aee4c5441036c383/0/2"
+          }
+        },
+        "record_type": "ordered_source_unregistered",
+        "schema_version": "mc2p.trace-record.v0"
+      }
+    ]
+  },
+  "f2-f2r_diagonal_pillar-1-normal": {
+    "ordered/c8c1640b99204114aee4c5441036c383/0/3": [
+      {
+        "trace_line": 1635,
+        "payload": {
+          "removed_intent_ids": [
+            "ordered/c8c1640b99204114aee4c5441036c383/0/3/51"
+          ],
+          "source_id": "ordered/c8c1640b99204114aee4c5441036c383/0/3"
+        },
+        "record_type": "source_cancel",
+        "schema_version": "mc2p.trace-record.v0"
+      },
+      {
+        "trace_line": 1636,
+        "payload": {
+          "removed_intent_ids": [],
+          "source": {
+            "episode_id": "fabric-21001-0",
+            "generation": 3,
+            "schema_version": "mc2p.intent-source.v1",
+            "scope_id": "c8c1640b99204114aee4c5441036c383",
+            "slot": 0,
+            "source_id": "ordered/c8c1640b99204114aee4c5441036c383/0/3"
+          }
+        },
+        "record_type": "ordered_source_unregistered",
+        "schema_version": "mc2p.trace-record.v0"
+      }
+    ]
+  },
+  "f2-f2r_diagonal_pillar-1-late_first": {
+    "ordered/c8c1640b99204114aee4c5441036c383/0/4": [
+      {
+        "trace_line": 2182,
+        "payload": {
+          "removed_intent_ids": [
+            "ordered/c8c1640b99204114aee4c5441036c383/0/4/51"
+          ],
+          "source_id": "ordered/c8c1640b99204114aee4c5441036c383/0/4"
+        },
+        "record_type": "source_cancel",
+        "schema_version": "mc2p.trace-record.v0"
+      },
+      {
+        "trace_line": 2183,
+        "payload": {
+          "removed_intent_ids": [],
+          "source": {
+            "episode_id": "fabric-21001-0",
+            "generation": 4,
+            "schema_version": "mc2p.intent-source.v1",
+            "scope_id": "c8c1640b99204114aee4c5441036c383",
+            "slot": 0,
+            "source_id": "ordered/c8c1640b99204114aee4c5441036c383/0/4"
+          }
+        },
+        "record_type": "ordered_source_unregistered",
+        "schema_version": "mc2p.trace-record.v0"
+      }
+    ]
+  },
+  "f2-f2r_diagonal_pillar-2-normal": {
+    "ordered/c8c1640b99204114aee4c5441036c383/0/5": [
+      {
+        "trace_line": 2719,
+        "payload": {
+          "removed_intent_ids": [
+            "ordered/c8c1640b99204114aee4c5441036c383/0/5/49"
+          ],
+          "source_id": "ordered/c8c1640b99204114aee4c5441036c383/0/5"
+        },
+        "record_type": "source_cancel",
+        "schema_version": "mc2p.trace-record.v0"
+      },
+      {
+        "trace_line": 2720,
+        "payload": {
+          "removed_intent_ids": [],
+          "source": {
+            "episode_id": "fabric-21001-0",
+            "generation": 5,
+            "schema_version": "mc2p.intent-source.v1",
+            "scope_id": "c8c1640b99204114aee4c5441036c383",
+            "slot": 0,
+            "source_id": "ordered/c8c1640b99204114aee4c5441036c383/0/5"
+          }
+        },
+        "record_type": "ordered_source_unregistered",
+        "schema_version": "mc2p.trace-record.v0"
+      }
+    ]
+  },
+  "f2-f2r_diagonal_pillar-2-late_first": {
+    "ordered/c8c1640b99204114aee4c5441036c383/0/6": [
+      {
+        "trace_line": 3256,
+        "payload": {
+          "removed_intent_ids": [
+            "ordered/c8c1640b99204114aee4c5441036c383/0/6/49"
+          ],
+          "source_id": "ordered/c8c1640b99204114aee4c5441036c383/0/6"
+        },
+        "record_type": "source_cancel",
+        "schema_version": "mc2p.trace-record.v0"
+      },
+      {
+        "trace_line": 3257,
+        "payload": {
+          "removed_intent_ids": [],
+          "source": {
+            "episode_id": "fabric-21001-0",
+            "generation": 6,
+            "schema_version": "mc2p.intent-source.v1",
+            "scope_id": "c8c1640b99204114aee4c5441036c383",
+            "slot": 0,
+            "source_id": "ordered/c8c1640b99204114aee4c5441036c383/0/6"
+          }
+        },
+        "record_type": "ordered_source_unregistered",
+        "schema_version": "mc2p.trace-record.v0"
+      }
+    ]
+  },
+  "f2-f2r_diagonal_pillar-3-normal": {
+    "ordered/c8c1640b99204114aee4c5441036c383/0/7": [
+      {
+        "trace_line": 3808,
+        "payload": {
+          "removed_intent_ids": [
+            "ordered/c8c1640b99204114aee4c5441036c383/0/7/52"
+          ],
+          "source_id": "ordered/c8c1640b99204114aee4c5441036c383/0/7"
+        },
+        "record_type": "source_cancel",
+        "schema_version": "mc2p.trace-record.v0"
+      },
+      {
+        "trace_line": 3809,
+        "payload": {
+          "removed_intent_ids": [],
+          "source": {
+            "episode_id": "fabric-21001-0",
+            "generation": 7,
+            "schema_version": "mc2p.intent-source.v1",
+            "scope_id": "c8c1640b99204114aee4c5441036c383",
+            "slot": 0,
+            "source_id": "ordered/c8c1640b99204114aee4c5441036c383/0/7"
+          }
+        },
+        "record_type": "ordered_source_unregistered",
+        "schema_version": "mc2p.trace-record.v0"
+      }
+    ]
+  },
+  "f2-f2r_diagonal_pillar-3-late_first": {
+    "ordered/c8c1640b99204114aee4c5441036c383/0/8": [
+      {
+        "trace_line": 4360,
+        "payload": {
+          "removed_intent_ids": [
+            "ordered/c8c1640b99204114aee4c5441036c383/0/8/52"
+          ],
+          "source_id": "ordered/c8c1640b99204114aee4c5441036c383/0/8"
+        },
+        "record_type": "source_cancel",
+        "schema_version": "mc2p.trace-record.v0"
+      },
+      {
+        "trace_line": 4361,
+        "payload": {
+          "removed_intent_ids": [],
+          "source": {
+            "episode_id": "fabric-21001-0",
+            "generation": 8,
+            "schema_version": "mc2p.intent-source.v1",
+            "scope_id": "c8c1640b99204114aee4c5441036c383",
+            "slot": 0,
+            "source_id": "ordered/c8c1640b99204114aee4c5441036c383/0/8"
+          }
+        },
+        "record_type": "ordered_source_unregistered",
+        "schema_version": "mc2p.trace-record.v0"
+      }
+    ]
+  }
+}

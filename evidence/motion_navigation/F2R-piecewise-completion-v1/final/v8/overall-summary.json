@@ -1,0 +1,241 @@
+{
+  "cases": 3904,
+  "v7_success": 1998,
+  "geometry_success": 104,
+  "clutter_success": 1715,
+  "safety_events": 0,
+  "point_feasible_region_rejected": 0,
+  "original_goal_completion_observations": 1819,
+  "verification_complete": 1857,
+  "timing_scope": "Pooled per-layer FixedRouteController samples; one process at a time. V7 base retains whole-task timing and arrival metrics.",
+  "by_layer": {
+    "clutter_10/follow": {
+      "cases": 300,
+      "success": 300,
+      "verification_complete": 296,
+      "control_samples": 9469,
+      "control_ms": {
+        "p50": 0.6323,
+        "p95": 1.2138,
+        "p99": 2.2823,
+        "maximum": 4.6581
+      }
+    },
+    "clutter_10/melee": {
+      "cases": 300,
+      "success": 298,
+      "verification_complete": 296,
+      "control_samples": 9740,
+      "control_ms": {
+        "p50": 0.6352,
+        "p95": 1.2237,
+        "p99": 2.3989,
+        "maximum": 4.6564
+      }
+    },
+    "clutter_10/product": {
+      "cases": 300,
+      "success": 286,
+      "verification_complete": 284,
+      "control_samples": 9542,
+      "control_ms": {
+        "p50": 0.6067,
+        "p95": 1.2891,
+        "p99": 2.7468,
+        "maximum": 5.5053
+      }
+    },
+    "clutter_20/follow": {
+      "cases": 300,
+      "success": 286,
+      "verification_complete": 298,
+      "control_samples": 10121,
+      "control_ms": {
+        "p50": 0.5792,
+        "p95": 1.6602,
+        "p99": 3.5424,
+        "maximum": 4.2903
+      }
+    },
+    "clutter_20/melee": {
+      "cases": 300,
+      "success": 282,
+      "verification_complete": 298,
+      "control_samples": 10292,
+      "control_ms": {
+        "p50": 0.5782,
+        "p95": 1.7761,
+        "p99": 3.5486,
+        "maximum": 4.2963
+      }
+    },
+    "clutter_20/product": {
+      "cases": 300,
+      "success": 263,
+      "verification_complete": 281,
+      "control_samples": 10065,
+      "control_ms": {
+        "p50": 0.5723,
+        "p95": 1.9312,
+        "p99": 3.5577,
+        "maximum": 4.5901
+      }
+    },
+    "diagonal_approach/melee": {
+      "cases": 8,
+      "success": 8,
+      "verification_complete": 8,
+      "control_samples": 344,
+      "control_ms": {
+        "p50": 0.7578,
+        "p95": 0.8666,
+        "p99": 1.594,
+        "maximum": 1.6815
+      }
+    },
+    "diagonal_approach/product": {
+      "cases": 8,
+      "success": 8,
+      "verification_complete": 8,
+      "control_samples": 372,
+      "control_ms": {
+        "p50": 0.7834,
+        "p95": 1.7692,
+        "p99": 3.0043,
+        "maximum": 4.0019
+      }
+    },
+    "diagonal_pillar/follow": {
+      "cases": 8,
+      "success": 8,
+      "verification_complete": 8,
+      "control_samples": 340,
+      "control_ms": {
+        "p50": 0.7667,
+        "p95": 1.1031,
+        "p99": 1.1811,
+        "maximum": 1.2862
+      }
+    },
+    "diagonal_pillar/melee": {
+      "cases": 8,
+      "success": 8,
+      "verification_complete": 8,
+      "control_samples": 348,
+      "control_ms": {
+        "p50": 0.7557,
+        "p95": 0.8701,
+        "p99": 1.2337,
+        "maximum": 1.3194
+      }
+    },
+    "diagonal_pillar/product": {
+      "cases": 8,
+      "success": 8,
+      "verification_complete": 8,
+      "control_samples": 352,
+      "control_ms": {
+        "p50": 0.7659,
+        "p95": 1.7848,
+        "p99": 2.9305,
+        "maximum": 4.3256
+      }
+    },
+    "multi_cell/follow": {
+      "cases": 8,
+      "success": 8,
+      "verification_complete": 8,
+      "control_samples": 340,
+      "control_ms": {
+        "p50": 0.7702,
+        "p95": 1.101,
+        "p99": 1.2061,
+        "maximum": 1.2356
+      }
+    },
+    "multi_cell/product": {
+      "cases": 8,
+      "success": 8,
+      "verification_complete": 8,
+      "control_samples": 340,
+      "control_ms": {
+        "p50": 0.7647,
+        "p95": 1.1019,
+        "p99": 1.2014,
+        "maximum": 1.2412
+      }
+    },
+    "outer_corner/follow": {
+      "cases": 8,
+      "success": 8,
+      "verification_complete": 8,
+      "control_samples": 340,
+      "control_ms": {
+        "p50": 0.7706,
+        "p95": 1.0921,
+        "p99": 1.2206,
+        "maximum": 1.245
+      }
+    },
+    "outer_corner/melee": {
+      "cases": 8,
+      "success": 8,
+      "verification_complete": 8,
+      "control_samples": 348,
+      "control_ms": {
+        "p50": 0.7528,
+        "p95": 0.872,
+        "p99": 1.2368,
+        "maximum": 1.2498
+      }
+    },
+    "outer_corner/product": {
+      "cases": 8,
+      "success": 8,
+      "verification_complete": 8,
+      "control_samples": 352,
+      "control_ms": {
+        "p50": 0.7321,
+        "p95": 1.4394,
+        "p99": 2.2724,
+        "maximum": 4.3535
+      }
+    },
+    "two_pillars/follow": {
+      "cases": 8,
+      "success": 8,
+      "verification_complete": 8,
+      "control_samples": 342,
+      "control_ms": {
+        "p50": 0.7669,
+        "p95": 1.1231,
+        "p99": 2.4351,
+        "maximum": 2.4515
+      }
+    },
+    "two_pillars/melee": {
+      "cases": 8,
+      "success": 8,
+      "verification_complete": 8,
+      "control_samples": 348,
+      "control_ms": {
+        "p50": 0.7598,
+        "p95": 1.5138,
+        "p99": 2.4483,
+        "maximum": 2.4648
+      }
+    },
+    "two_pillars/product": {
+      "cases": 8,
+      "success": 8,
+      "verification_complete": 8,
+      "control_samples": 354,
+      "control_ms": {
+        "p50": 0.769,
+        "p95": 1.9414,
+        "p99": 4.2835,
+        "maximum": 4.3564
+      }
+    }
+  }
+}

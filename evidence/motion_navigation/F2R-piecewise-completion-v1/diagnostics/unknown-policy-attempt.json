@@ -1,0 +1,10 @@
+{
+  "status": "withdrawn_design_hypothesis",
+  "production_change_retained": false,
+  "attempt": "Return NEEDS_INFORMATION whenever any whole-goal selection envelope owner is UNKNOWN.",
+  "red": "24 new corner cases expected NEEDS_INFORMATION but returned a completely known safe subrectangle.",
+  "focused_failure": "Two old single-column direct-route fixtures lost admission because unknown neighboring columns participate only in worst-case selection clipping.",
+  "decision": "Keep the existing worst-case full-cell UNKNOWN clipping semantics; never treat UNKNOWN as AIR. A completely known safe subset may execute without retaining unrelated selection-only UNKNOWN facts.",
+  "verification": "New properties cover the old strip, outer corners, diagonal pillars, four directions, three target sizes, UNKNOWN-to-BLOCK/AIR safety, actual execution UNKNOWN rejection, and the existing fully-covered UNKNOWN exception.",
+  "limits": "The withdrawn strict whole-envelope assertion was not a product safety failure. Its attempted guard and focused failures are retained as diagnostics. The temporary source change invalidated the first full-forward export fingerprint check; that run is not a final gate."
+}

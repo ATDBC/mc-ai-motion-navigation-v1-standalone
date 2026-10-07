@@ -1,0 +1,25 @@
+......E.........E..
+======================================================================
+ERROR: test_all_formal_direct_entries_bind_same_region_contract (tests.motion_nav.test_f2_ground_completion_region.GroundCompletionRegionTests.test_all_formal_direct_entries_bind_same_region_contract)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2_ground_completion_region.py", line 97, in test_all_formal_direct_entries_bind_same_region_contract
+    route=result.route.action_route.actions[-1].fixed_route
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'action_route'
+
+======================================================================
+ERROR: test_region_proof_replays_equivalent_facts_and_stops_changed_rectangle (tests.motion_nav.test_f2_ground_completion_region.GroundCompletionRegionTests.test_region_proof_replays_equivalent_facts_and_stops_changed_rectangle)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2_ground_completion_region.py", line 111, in test_region_proof_replays_equivalent_facts_and_stops_changed_rectangle
+    tracker=ActiveRouteTracker(result.route)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\mc2p\motion_nav\route_admission.py", line 2433, in __init__
+    raise ContractViolation("route tracker requires an active route")
+mc2p.contracts.common.ContractViolation: route tracker requires an active route
+
+----------------------------------------------------------------------
+Ran 19 tests in 47.369s
+
+FAILED (errors=2)

@@ -1,0 +1,545 @@
+{
+  "formal_acceptance": false,
+  "mode": "cprofile",
+  "begin_utc": "2026-10-07T15:02:28.630503+00:00",
+  "end_utc": "2026-10-07T15:06:01.682958+00:00",
+  "configuration": {
+    "test_mode": false,
+    "warmup_samples": 100,
+    "minimum_retained_samples": 4096,
+    "maximum_retained_samples": 8192,
+    "post_gen2_samples": 128,
+    "control_path_maximum_ms": 50.0,
+    "trace_capacity": 2048,
+    "trace_projection_sample_capacity": 4096,
+    "move_ticks": 80,
+    "pause_ticks": 800,
+    "resume_ticks": 80
+  },
+  "behavior_sha256": "23aec5a557242119489bac0f44fdb8771c8a427ba38af3465dd8d6583da41a8b",
+  "frames": [
+    {
+      "retained_ordinal": 783,
+      "captured_ordinal": 883,
+      "wall_ms": 182.8707,
+      "segments_ms": {
+        "KnownWorldFollowDriver.update": 13.4262,
+        "RuntimeNavigationDriver.prepare_proposals": 15.0399,
+        "PlayerRuntimeV1.control_frame": 153.5554,
+        "FollowingBackend.step": 150.4052,
+        "CalculatorBackend.observation": 149.2374,
+        "CalculatorBackend.air_query": 136.7351,
+        "InlinePlannerWorker.poll_latest": 0,
+        "InlineMotionWorker.poll_available": 0,
+        "NavigationObservationAdapter.ingest": 2.5615,
+        "BoundedAsyncTraceWriter.write": 0.1539
+      }
+    },
+    {
+      "retained_ordinal": 791,
+      "captured_ordinal": 891,
+      "wall_ms": 193.5481,
+      "segments_ms": {
+        "KnownWorldFollowDriver.update": 15.9256,
+        "RuntimeNavigationDriver.prepare_proposals": 14.5965,
+        "PlayerRuntimeV1.control_frame": 162.0014,
+        "FollowingBackend.step": 159.0335,
+        "CalculatorBackend.observation": 157.8972,
+        "CalculatorBackend.air_query": 126.9711,
+        "InlinePlannerWorker.poll_latest": 0,
+        "InlineMotionWorker.poll_available": 0,
+        "NavigationObservationAdapter.ingest": 2.5097,
+        "BoundedAsyncTraceWriter.write": 0.14679999999999999
+      }
+    },
+    {
+      "retained_ordinal": 795,
+      "captured_ordinal": 895,
+      "wall_ms": 177.3273,
+      "segments_ms": {
+        "KnownWorldFollowDriver.update": 13.9278,
+        "RuntimeNavigationDriver.prepare_proposals": 15.0184,
+        "PlayerRuntimeV1.control_frame": 147.3936,
+        "FollowingBackend.step": 144.4387,
+        "CalculatorBackend.observation": 143.3272,
+        "CalculatorBackend.air_query": 131.0247,
+        "InlinePlannerWorker.poll_latest": 0,
+        "InlineMotionWorker.poll_available": 0,
+        "NavigationObservationAdapter.ingest": 2.5241,
+        "BoundedAsyncTraceWriter.write": 0.1245
+      }
+    },
+    {
+      "retained_ordinal": 839,
+      "captured_ordinal": 939,
+      "wall_ms": 176.2771,
+      "segments_ms": {
+        "KnownWorldFollowDriver.update": 16.7171,
+        "RuntimeNavigationDriver.prepare_proposals": 14.6551,
+        "PlayerRuntimeV1.control_frame": 143.8877,
+        "FollowingBackend.step": 140.9055,
+        "CalculatorBackend.observation": 139.7694,
+        "CalculatorBackend.air_query": 127.2272,
+        "InlinePlannerWorker.poll_latest": 0,
+        "InlineMotionWorker.poll_available": 0,
+        "NavigationObservationAdapter.ingest": 2.5322,
+        "BoundedAsyncTraceWriter.write": 0.1401
+      }
+    },
+    {
+      "retained_ordinal": 851,
+      "captured_ordinal": 951,
+      "wall_ms": 159.6734,
+      "segments_ms": {
+        "KnownWorldFollowDriver.update": 16.4565,
+        "RuntimeNavigationDriver.prepare_proposals": 13.5624,
+        "PlayerRuntimeV1.control_frame": 128.8674,
+        "FollowingBackend.step": 125.9119,
+        "CalculatorBackend.observation": 124.7963,
+        "CalculatorBackend.air_query": 112.04310000000001,
+        "InlinePlannerWorker.poll_latest": 0,
+        "InlineMotionWorker.poll_available": 0,
+        "NavigationObservationAdapter.ingest": 2.5042999999999997,
+        "BoundedAsyncTraceWriter.write": 0.13879999999999998
+      }
+    }
+  ],
+  "sleep_records": [],
+  "cumulative_top": [
+    {
+      "file": "D:\\My_project\\mc_ai\\.tmp\\f2r_d061_targeted_profile.py",
+      "line": 28,
+      "function": "wrapped",
+      "primitive_calls": 10,
+      "total_calls": 185,
+      "self_ms": 1.0253,
+      "cumulative_ms": 887.581
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\mc2p\\skills\\navigation_session_driver.py",
+      "line": 238,
+      "function": "tick",
+      "primitive_calls": 5,
+      "total_calls": 5,
+      "self_ms": 0.030400000000000003,
+      "cumulative_ms": 811.0704
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\mc2p\\runtime\\player_runtime_v1.py",
+      "line": 332,
+      "function": "control_frame",
+      "primitive_calls": 5,
+      "total_calls": 5,
+      "self_ms": 0.0535,
+      "cumulative_ms": 735.6911
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\mc2p\\runtime\\player_runtime_v1.py",
+      "line": 372,
+      "function": "step",
+      "primitive_calls": 5,
+      "total_calls": 5,
+      "self_ms": 0.14450000000000002,
+      "cumulative_ms": 734.7407000000001
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\mc2p\\runtime\\player_runtime_v1.py",
+      "line": 496,
+      "function": "_backend_step",
+      "primitive_calls": 5,
+      "total_calls": 5,
+      "self_ms": 0.018299999999999997,
+      "cumulative_ms": 720.7229
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\tests\\sim\\known_world_following.py",
+      "line": 181,
+      "function": "step",
+      "primitive_calls": 5,
+      "total_calls": 5,
+      "self_ms": 0.010300000000000002,
+      "cumulative_ms": 720.6834
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\tests\\sim\\backend.py",
+      "line": 431,
+      "function": "step",
+      "primitive_calls": 5,
+      "total_calls": 5,
+      "self_ms": 0.0635,
+      "cumulative_ms": 720.6482000000001
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\tests\\sim\\known_world_following.py",
+      "line": 190,
+      "function": "observation",
+      "primitive_calls": 5,
+      "total_calls": 5,
+      "self_ms": 0.07259999999999998,
+      "cumulative_ms": 717.1616
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\tests\\sim\\backend.py",
+      "line": 312,
+      "function": "observation",
+      "primitive_calls": 5,
+      "total_calls": 5,
+      "self_ms": 0.2992,
+      "cumulative_ms": 714.9672
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\tests\\sim\\backend.py",
+      "line": 288,
+      "function": "air_query",
+      "primitive_calls": 50,
+      "total_calls": 50,
+      "self_ms": 0.2783,
+      "cumulative_ms": 633.7221
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\tests\\sim\\backend.py",
+      "line": 304,
+      "function": "<listcomp>",
+      "primitive_calls": 47,
+      "total_calls": 47,
+      "self_ms": 1.4191,
+      "cumulative_ms": 594.7056
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\tests\\sim\\backend.py",
+      "line": 260,
+      "function": "_visible",
+      "primitive_calls": 4640,
+      "total_calls": 4640,
+      "self_ms": 236.1199,
+      "cumulative_ms": 593.2865
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\tests\\sim\\backend.py",
+      "line": 247,
+      "function": "_blocked",
+      "primitive_calls": 256418,
+      "total_calls": 256418,
+      "self_ms": 131.89350000000002,
+      "cumulative_ms": 201.0714
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\tests\\sim\\backend.py",
+      "line": 267,
+      "function": "<genexpr>",
+      "primitive_calls": 1136808,
+      "total_calls": 1136808,
+      "self_ms": 126.1962,
+      "cumulative_ms": 152.8017
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\mc2p\\skills\\known_world_follow_driver.py",
+      "line": 227,
+      "function": "update",
+      "primitive_calls": 5,
+      "total_calls": 5,
+      "self_ms": 0.0859,
+      "cumulative_ms": 76.34649999999999
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\mc2p\\skills\\navigation_session_driver.py",
+      "line": 202,
+      "function": "replace_goal",
+      "primitive_calls": 5,
+      "total_calls": 5,
+      "self_ms": 0.027500000000000004,
+      "cumulative_ms": 75.07920000000001
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\scripts\\benchmark_d061_long_session.py",
+      "line": 389,
+      "function": "measured",
+      "primitive_calls": 5,
+      "total_calls": 5,
+      "self_ms": 0.0162,
+      "cumulative_ms": 72.9213
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\mc2p\\skills\\navigation_session_driver.py",
+      "line": 270,
+      "function": "prepare_proposals",
+      "primitive_calls": 5,
+      "total_calls": 5,
+      "self_ms": 0.04100000000000001,
+      "cumulative_ms": 72.8582
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\mc2p\\motion_nav\\navigation_session.py",
+      "line": 1678,
+      "function": "update_goal",
+      "primitive_calls": 5,
+      "total_calls": 5,
+      "self_ms": 0.1304,
+      "cumulative_ms": 72.50099999999999
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\mc2p\\motion_nav\\navigation_session.py",
+      "line": 2545,
+      "function": "propose",
+      "primitive_calls": 5,
+      "total_calls": 5,
+      "self_ms": 0.17,
+      "cumulative_ms": 69.4497
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\mc2p\\motion_nav\\navigation_session.py",
+      "line": 4962,
+      "function": "_surface_for_goal",
+      "primitive_calls": 5,
+      "total_calls": 5,
+      "self_ms": 0.5569,
+      "cumulative_ms": 68.79660000000001
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\mc2p\\motion_nav\\geometry.py",
+      "line": 217,
+      "function": "query_support",
+      "primitive_calls": 663,
+      "total_calls": 663,
+      "self_ms": 7.938300000000001,
+      "cumulative_ms": 53.3309
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\mc2p\\motion_nav\\world_model.py",
+      "line": 193,
+      "function": "world_boxes",
+      "primitive_calls": 3831,
+      "total_calls": 3831,
+      "self_ms": 5.3180000000000005,
+      "cumulative_ms": 52.793
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method math.floor>",
+      "primitive_calls": 1631481,
+      "total_calls": 1631481,
+      "self_ms": 51.328300000000006,
+      "cumulative_ms": 51.328300000000006
+    }
+  ],
+  "self_top": [
+    {
+      "file": "D:\\My_project\\mc_ai\\tests\\sim\\backend.py",
+      "line": 260,
+      "function": "_visible",
+      "primitive_calls": 4640,
+      "total_calls": 4640,
+      "self_ms": 236.1199,
+      "cumulative_ms": 593.2865
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\tests\\sim\\backend.py",
+      "line": 247,
+      "function": "_blocked",
+      "primitive_calls": 256418,
+      "total_calls": 256418,
+      "self_ms": 131.89350000000002,
+      "cumulative_ms": 201.0714
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\tests\\sim\\backend.py",
+      "line": 267,
+      "function": "<genexpr>",
+      "primitive_calls": 1136808,
+      "total_calls": 1136808,
+      "self_ms": 126.1962,
+      "cumulative_ms": 152.8017
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method math.floor>",
+      "primitive_calls": 1631481,
+      "total_calls": 1631481,
+      "self_ms": 51.328300000000006,
+      "cumulative_ms": 51.328300000000006
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\mc2p\\motion_nav\\world_model.py",
+      "line": 46,
+      "function": "_finite",
+      "primitive_calls": 68934,
+      "total_calls": 68934,
+      "self_ms": 20.4403,
+      "cumulative_ms": 23.4385
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\tests\\sim\\backend.py",
+      "line": 234,
+      "function": "_nearby_blocks",
+      "primitive_calls": 5,
+      "total_calls": 5,
+      "self_ms": 19.2866,
+      "cumulative_ms": 38.426
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\tests\\follow_v3_fixtures.py",
+      "line": 39,
+      "function": "<listcomp>",
+      "primitive_calls": 875,
+      "total_calls": 875,
+      "self_ms": 18.7224,
+      "cumulative_ms": 18.746499999999997
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\tests\\sim\\backend.py",
+      "line": 273,
+      "function": "_in_view",
+      "primitive_calls": 5000,
+      "total_calls": 5000,
+      "self_ms": 18.630200000000002,
+      "cumulative_ms": 35.98120000000001
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<method 'get' of 'dict' objects>",
+      "primitive_calls": 298888,
+      "total_calls": 298888,
+      "self_ms": 17.8442,
+      "cumulative_ms": 18.2929
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method builtins.any>",
+      "primitive_calls": 37420,
+      "total_calls": 38552,
+      "self_ms": 14.715100000000001,
+      "cumulative_ms": 31.501099999999997
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\mc2p\\motion_nav\\world_model.py",
+      "line": 133,
+      "function": "__post_init__",
+      "primitive_calls": 9224,
+      "total_calls": 9224,
+      "self_ms": 11.6766,
+      "cumulative_ms": 32.5186
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\mc2p\\motion_nav\\world_model.py",
+      "line": 315,
+      "function": "_cell_at_valid_position",
+      "primitive_calls": 6084,
+      "total_calls": 6084,
+      "self_ms": 8.4408,
+      "cumulative_ms": 37.435500000000005
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\mc2p\\motion_nav\\geometry.py",
+      "line": 217,
+      "function": "query_support",
+      "primitive_calls": 663,
+      "total_calls": 663,
+      "self_ms": 7.938300000000001,
+      "cumulative_ms": 53.3309
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method builtins.sum>",
+      "primitive_calls": 14915,
+      "total_calls": 14915,
+      "self_ms": 6.8871,
+      "cumulative_ms": 13.8741
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method builtins.max>",
+      "primitive_calls": 60516,
+      "total_calls": 60516,
+      "self_ms": 6.0879,
+      "cumulative_ms": 6.208100000000001
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\mc2p\\motion_nav\\world_model.py",
+      "line": 24,
+      "function": "_position",
+      "primitive_calls": 12097,
+      "total_calls": 12097,
+      "self_ms": 5.865600000000001,
+      "cumulative_ms": 16.4377
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\mc2p\\motion_nav\\world_model.py",
+      "line": 40,
+      "function": "_section",
+      "primitive_calls": 12204,
+      "total_calls": 12204,
+      "self_ms": 5.7067000000000005,
+      "cumulative_ms": 15.635800000000001
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method builtins.abs>",
+      "primitive_calls": 161676,
+      "total_calls": 161676,
+      "self_ms": 5.590900000000001,
+      "cumulative_ms": 5.590900000000001
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\mc2p\\motion_nav\\world_model.py",
+      "line": 193,
+      "function": "world_boxes",
+      "primitive_calls": 3831,
+      "total_calls": 3831,
+      "self_ms": 5.3180000000000005,
+      "cumulative_ms": 52.793
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\mc2p\\motion_nav\\world_model.py",
+      "line": 25,
+      "function": "<genexpr>",
+      "primitive_calls": 48388,
+      "total_calls": 48388,
+      "self_ms": 5.117800000000001,
+      "cumulative_ms": 5.117800000000001
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\mc2p\\motion_nav\\world_model.py",
+      "line": 142,
+      "function": "moved",
+      "primitive_calls": 4520,
+      "total_calls": 4520,
+      "self_ms": 4.949400000000001,
+      "cumulative_ms": 28.000700000000002
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\mc2p\\motion_nav\\world_model.py",
+      "line": 42,
+      "function": "<genexpr>",
+      "primitive_calls": 48816,
+      "total_calls": 48816,
+      "self_ms": 4.8297,
+      "cumulative_ms": 4.8297
+    },
+    {
+      "file": "D:\\My_project\\mc_ai\\mc2p\\motion_nav\\world_model.py",
+      "line": 35,
+      "function": "_block_section_from_valid_position",
+      "primitive_calls": 7200,
+      "total_calls": 7200,
+      "self_ms": 4.391500000000001,
+      "cumulative_ms": 7.1362000000000005
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method builtins.sorted>",
+      "primitive_calls": 8276,
+      "total_calls": 8542,
+      "self_ms": 3.6823,
+      "cumulative_ms": 4.6514
+    }
+  ],
+  "raw_profile_sha256": "162775b3a0a110c91402010c44dadc9596a1b82c6360f23fddfefe147245fdd0"
+}

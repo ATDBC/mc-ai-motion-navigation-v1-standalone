@@ -1,0 +1,134 @@
+{
+  "production_commit": "4f3bf8a9a22ffb55e8f160972b2ea52fb0aab70b",
+  "steps": [
+    {
+      "name": "reverse-final",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "scripts/run_motion_navigation_checks.py",
+        "--reverse",
+        "--output",
+        ".tmp/action-hardening-reverse-final.json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "faults",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "scripts/navigation_s0r_evidence.py",
+        "--set",
+        "faults",
+        "--output",
+        "D:\\My_project\\mc_ai\\.tmp\\action-hardening-faults",
+        "--workers",
+        "4"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "world_changes",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "scripts/navigation_s0r_evidence.py",
+        "--set",
+        "world_changes",
+        "--output",
+        "D:\\My_project\\mc_ai\\.tmp\\action-hardening-world_changes",
+        "--workers",
+        "4"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "follow",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "scripts/navigation_s0r_evidence.py",
+        "--set",
+        "follow",
+        "--output",
+        "D:\\My_project\\mc_ai\\.tmp\\action-hardening-follow",
+        "--workers",
+        "4"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "coordination",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "scripts/navigation_s0r_evidence.py",
+        "--set",
+        "coordination",
+        "--output",
+        "D:\\My_project\\mc_ai\\.tmp\\action-hardening-coordination",
+        "--workers",
+        "4"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "product",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "scripts/navigation_s0r_evidence.py",
+        "--set",
+        "product",
+        "--output",
+        "D:\\My_project\\mc_ai\\.tmp\\action-hardening-product",
+        "--workers",
+        "4"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "d058",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "scripts/benchmark_d058_route_revalidation.py",
+        "--output",
+        ".tmp/action-hardening-d058"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "d061",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "scripts/benchmark_d061_long_session.py",
+        "--output",
+        ".tmp/action-hardening-d061"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "comparisons": {
+    "faults": {
+      "cases": 16,
+      "differences": [],
+      "equivalent": true
+    },
+    "world_changes": {
+      "cases": 19,
+      "differences": [],
+      "equivalent": true
+    },
+    "follow": {
+      "cases": 10,
+      "differences": [],
+      "equivalent": true
+    },
+    "coordination": {
+      "cases": 1448,
+      "differences": [],
+      "equivalent": true
+    },
+    "product": {
+      "cases": 2000,
+      "differences": [],
+      "equivalent": true
+    }
+  },
+  "current": "complete"
+}

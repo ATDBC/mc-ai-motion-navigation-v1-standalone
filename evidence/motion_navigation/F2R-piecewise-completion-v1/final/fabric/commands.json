@@ -1,0 +1,45 @@
+[
+  {
+    "stage": "outer-smoke",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/f2_ground_route_runtime.py",
+      "--f2r",
+      "--ids",
+      "f2-f2r_outer_corner-0-normal"
+    ],
+    "return_code": 0,
+    "begin_utc": "2026-10-07T16:03:19.266809+00:00",
+    "end_utc": "2026-10-07T16:04:30.665823+00:00",
+    "elapsed_seconds": 71.3990401000483,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-fabric-outer-smoke.log"
+  },
+  {
+    "stage": "pillar-smoke",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/f2_ground_route_runtime.py",
+      "--f2r",
+      "--ids",
+      "f2-f2r_diagonal_pillar-0-normal"
+    ],
+    "return_code": 0,
+    "begin_utc": "2026-10-07T16:04:30.666820+00:00",
+    "end_utc": "2026-10-07T16:05:40.809025+00:00",
+    "elapsed_seconds": 70.14374410000164,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-fabric-pillar-smoke.log"
+  },
+  {
+    "stage": "full16",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/f2_ground_route_runtime.py",
+      "--f2r"
+    ],
+    "return_code": 0,
+    "begin_utc": "2026-10-07T16:05:40.811027+00:00",
+    "end_utc": "2026-10-07T16:10:51.766926+00:00",
+    "elapsed_seconds": 310.95602749998216,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-fabric-full16.log"
+  }
+]

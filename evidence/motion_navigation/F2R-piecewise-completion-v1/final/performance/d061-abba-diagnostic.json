@@ -1,0 +1,278 @@
+{
+  "formal_acceptance": false,
+  "purpose": "Same-machine interleaved source attribution only",
+  "order": [
+    "A",
+    "B",
+    "B",
+    "A"
+  ],
+  "snapshots": {
+    "A": {
+      "root": "D:\\My_project\\mc_ai\\.tmp\\f2r-ab-diagnostic-r2\\A-source",
+      "production_commit": "409adec84dff8cef77a4b1dfd09c5ce86314bafc",
+      "archive_sha256": "7ee5f27683708fcf261431a91d2e3a69f40f76aa8da671807cce0ab2b1075639",
+      "support_surfaces_sha256": "4b3557f8fe0955e1acea9be0b63d0f504c29689dd95c1c4b9e660554115b1adf"
+    },
+    "B": {
+      "root": "D:\\My_project\\mc_ai\\.tmp\\f2r-ab-diagnostic-r2\\B-source",
+      "production_commit": "7d3195689dc81a99e6a8da2cf7e16a505b755c4b",
+      "archive_sha256": "5849dc8c933450f5ab80ae070864654900e04d9252806a94eb431e66334354b1",
+      "support_surfaces_sha256": "127d8cf241f97333af9bfd62a00179c5e74f0ae1b7ed46d5a190c92af6a9e0e7"
+    }
+  },
+  "runs": [
+    {
+      "ordinal": 1,
+      "variant": "A",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "-m",
+        "scripts.benchmark_d061_long_session",
+        "--output",
+        "D:\\My_project\\mc_ai\\.tmp\\f2r-ab-diagnostic-r2\\1-A"
+      ],
+      "cwd": "D:\\My_project\\mc_ai\\.tmp\\f2r-ab-diagnostic-r2\\A-source",
+      "begin_utc": "2026-10-07T14:40:49.063314+00:00",
+      "end_utc": "2026-10-07T14:44:22.814063+00:00",
+      "elapsed_seconds": 213.69621999998344,
+      "return_code": 1,
+      "passed": false,
+      "configuration": {
+        "control_path_maximum_ms": 50.0,
+        "maximum_retained_samples": 8192,
+        "minimum_retained_samples": 4096,
+        "move_ticks": 80,
+        "pause_ticks": 800,
+        "post_gen2_samples": 128,
+        "resume_ticks": 80,
+        "test_mode": false,
+        "trace_capacity": 2048,
+        "trace_projection_sample_capacity": 4096,
+        "warmup_samples": 100
+      },
+      "behavior_sha256": "23aec5a557242119489bac0f44fdb8771c8a427ba38af3465dd8d6583da41a8b",
+      "prepare": {
+        "maximum_ms": 5.5035,
+        "maximum_ns": 5503500,
+        "p50_ms": 5.0116,
+        "p50_ns": 5011600,
+        "p95_ms": 5.1718,
+        "p95_ns": 5171800,
+        "p99_ms": 5.2728,
+        "p99_ns": 5272800,
+        "samples": 4096
+      },
+      "full_control": {
+        "maximum_ms": 58.2005,
+        "maximum_ns": 58200500,
+        "p50_ms": 10.3026,
+        "p50_ns": 10302600,
+        "p95_ms": 10.9053,
+        "p95_ns": 10905300,
+        "p99_ms": 32.9165,
+        "p99_ns": 32916500,
+        "samples": 4096
+      },
+      "deadline_misses": 6,
+      "minimum_slack_ns": -8200500,
+      "corresponding_ordinals": {
+        "783": 58.2005,
+        "791": 55.4922,
+        "795": 55.4704,
+        "839": 55.9662,
+        "851": 51.0185
+      },
+      "performance_sha256": "5f6c86667077a34e279d4eaf4f55b2c0ed20aa1ef49905706ef3281e01aad527"
+    },
+    {
+      "ordinal": 2,
+      "variant": "B",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "-m",
+        "scripts.benchmark_d061_long_session",
+        "--output",
+        "D:\\My_project\\mc_ai\\.tmp\\f2r-ab-diagnostic-r2\\2-B"
+      ],
+      "cwd": "D:\\My_project\\mc_ai\\.tmp\\f2r-ab-diagnostic-r2\\B-source",
+      "begin_utc": "2026-10-07T14:44:22.820404+00:00",
+      "end_utc": "2026-10-07T14:47:56.504355+00:00",
+      "elapsed_seconds": 213.62586189998547,
+      "return_code": 1,
+      "passed": false,
+      "configuration": {
+        "control_path_maximum_ms": 50.0,
+        "maximum_retained_samples": 8192,
+        "minimum_retained_samples": 4096,
+        "move_ticks": 80,
+        "pause_ticks": 800,
+        "post_gen2_samples": 128,
+        "resume_ticks": 80,
+        "test_mode": false,
+        "trace_capacity": 2048,
+        "trace_projection_sample_capacity": 4096,
+        "warmup_samples": 100
+      },
+      "behavior_sha256": "23aec5a557242119489bac0f44fdb8771c8a427ba38af3465dd8d6583da41a8b",
+      "prepare": {
+        "maximum_ms": 5.6466,
+        "maximum_ns": 5646600,
+        "p50_ms": 4.9954,
+        "p50_ns": 4995400,
+        "p95_ms": 5.1556,
+        "p95_ns": 5155600,
+        "p99_ms": 5.2488,
+        "p99_ns": 5248800,
+        "samples": 4096
+      },
+      "full_control": {
+        "maximum_ms": 58.2694,
+        "maximum_ns": 58269400,
+        "p50_ms": 10.1878,
+        "p50_ns": 10187800,
+        "p95_ms": 10.7217,
+        "p95_ns": 10721700,
+        "p99_ms": 31.7699,
+        "p99_ns": 31769900,
+        "samples": 4096
+      },
+      "deadline_misses": 5,
+      "minimum_slack_ns": -8269400,
+      "corresponding_ordinals": {
+        "783": 58.2694,
+        "791": 55.8682,
+        "795": 55.7106,
+        "839": 56.4995,
+        "851": 52.2819
+      },
+      "performance_sha256": "74d903ba94bd782a8e1563eb4605c944fb4d088bd388024143202c0cc66479a7"
+    },
+    {
+      "ordinal": 3,
+      "variant": "B",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "-m",
+        "scripts.benchmark_d061_long_session",
+        "--output",
+        "D:\\My_project\\mc_ai\\.tmp\\f2r-ab-diagnostic-r2\\3-B"
+      ],
+      "cwd": "D:\\My_project\\mc_ai\\.tmp\\f2r-ab-diagnostic-r2\\B-source",
+      "begin_utc": "2026-10-07T14:47:56.511071+00:00",
+      "end_utc": "2026-10-07T14:51:30.412830+00:00",
+      "elapsed_seconds": 213.8438627999858,
+      "return_code": 1,
+      "passed": false,
+      "configuration": {
+        "control_path_maximum_ms": 50.0,
+        "maximum_retained_samples": 8192,
+        "minimum_retained_samples": 4096,
+        "move_ticks": 80,
+        "pause_ticks": 800,
+        "post_gen2_samples": 128,
+        "resume_ticks": 80,
+        "test_mode": false,
+        "trace_capacity": 2048,
+        "trace_projection_sample_capacity": 4096,
+        "warmup_samples": 100
+      },
+      "behavior_sha256": "23aec5a557242119489bac0f44fdb8771c8a427ba38af3465dd8d6583da41a8b",
+      "prepare": {
+        "maximum_ms": 5.4742,
+        "maximum_ns": 5474200,
+        "p50_ms": 4.9762,
+        "p50_ns": 4976200,
+        "p95_ms": 5.1173,
+        "p95_ns": 5117300,
+        "p99_ms": 5.2209,
+        "p99_ns": 5220900,
+        "samples": 4096
+      },
+      "full_control": {
+        "maximum_ms": 57.3616,
+        "maximum_ns": 57361600,
+        "p50_ms": 10.1528,
+        "p50_ns": 10152800,
+        "p95_ms": 10.6261,
+        "p95_ns": 10626100,
+        "p99_ms": 31.4608,
+        "p99_ns": 31460800,
+        "samples": 4096
+      },
+      "deadline_misses": 5,
+      "minimum_slack_ns": -7361600,
+      "corresponding_ordinals": {
+        "783": 57.3616,
+        "791": 55.4619,
+        "795": 55.188,
+        "839": 55.9657,
+        "851": 50.3665
+      },
+      "performance_sha256": "0932aef04594e84848eabfec73057a246f7acddc1c62fa8575a220dc87c0b370"
+    },
+    {
+      "ordinal": 4,
+      "variant": "A",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "-m",
+        "scripts.benchmark_d061_long_session",
+        "--output",
+        "D:\\My_project\\mc_ai\\.tmp\\f2r-ab-diagnostic-r2\\4-A"
+      ],
+      "cwd": "D:\\My_project\\mc_ai\\.tmp\\f2r-ab-diagnostic-r2\\A-source",
+      "begin_utc": "2026-10-07T14:51:30.419157+00:00",
+      "end_utc": "2026-10-07T14:55:04.321493+00:00",
+      "elapsed_seconds": 213.84416350000538,
+      "return_code": 1,
+      "passed": false,
+      "configuration": {
+        "control_path_maximum_ms": 50.0,
+        "maximum_retained_samples": 8192,
+        "minimum_retained_samples": 4096,
+        "move_ticks": 80,
+        "pause_ticks": 800,
+        "post_gen2_samples": 128,
+        "resume_ticks": 80,
+        "test_mode": false,
+        "trace_capacity": 2048,
+        "trace_projection_sample_capacity": 4096,
+        "warmup_samples": 100
+      },
+      "behavior_sha256": "23aec5a557242119489bac0f44fdb8771c8a427ba38af3465dd8d6583da41a8b",
+      "prepare": {
+        "maximum_ms": 5.471,
+        "maximum_ns": 5471000,
+        "p50_ms": 4.9876,
+        "p50_ns": 4987600,
+        "p95_ms": 5.1478,
+        "p95_ns": 5147800,
+        "p99_ms": 5.2463,
+        "p99_ns": 5246300,
+        "samples": 4096
+      },
+      "full_control": {
+        "maximum_ms": 57.7275,
+        "maximum_ns": 57727500,
+        "p50_ms": 10.1663,
+        "p50_ns": 10166300,
+        "p95_ms": 10.7716,
+        "p95_ns": 10771600,
+        "p99_ms": 31.2779,
+        "p99_ns": 31277900,
+        "samples": 4096
+      },
+      "deadline_misses": 5,
+      "minimum_slack_ns": -7727500,
+      "corresponding_ordinals": {
+        "783": 57.7275,
+        "791": 55.5736,
+        "795": 55.7892,
+        "839": 56.5536,
+        "851": 50.6724
+      },
+      "performance_sha256": "6f60a5abf7eb3d8e6c1599b6371000b6926c1dc2287eb5be58eecf8c3f4b4fc1"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "cases": 2000,
+  "identical": 1993,
+  "changed_ids": [
+    "player-normal-000008",
+    "player-normal-000041",
+    "player-normal-000072",
+    "player-normal-000073",
+    "player-late-000041",
+    "player-late-000072",
+    "player-late-000073"
+  ],
+  "gained_ids": [],
+  "lost_ids": [],
+  "motion_job_changed_ids": [],
+  "before_success": 1998,
+  "after_success": 1998,
+  "changed_by_group": {
+    "player-normal": 4,
+    "player-late": 3
+  },
+  "baseline": ".tmp\\f2-task5-startfix-product"
+}

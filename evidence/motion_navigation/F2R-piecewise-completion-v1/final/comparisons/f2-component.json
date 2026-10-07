@@ -1,0 +1,18 @@
+{
+  "cases": 112,
+  "changed_ids": [],
+  "player_success": 400,
+  "reference_success": 16,
+  "compared_fields": [
+    "input_sha256",
+    "outcome",
+    "reason",
+    "success",
+    "behavior_sha256",
+    "baseline_v2_behavior_sha256",
+    "physics_steps_total",
+    "physics_steps_max"
+  ],
+  "baseline": ".tmp/f2r-f2-final/runs.jsonl",
+  "fixture_only_optimization_behavior_unchanged": true
+}

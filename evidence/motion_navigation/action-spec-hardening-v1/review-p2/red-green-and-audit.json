@@ -1,0 +1,139 @@
+{
+  "source_commit": "069b24ab8a9dcbc2eea1e5a5c5ce5b949adb7d65",
+  "red": [
+    {
+      "command": "-m unittest tests.motion_nav.test_navigation_design_metrics.NavigationDesignMetricsTests.test_imported_closed_enum_comparison_does_not_depend_on_case -q",
+      "tests": 1,
+      "failures": 1,
+      "cause": "跨文件小写Enum导入仍被旧大小写门槛漏报"
+    },
+    {
+      "command": "-m unittest tests.test_fixed_melee_driver tests.test_moving_melee_driver -q",
+      "tests": 57,
+      "errors": 5,
+      "cause": "只读 RuntimeNavigationDriver.state 被五个旧测试直接赋值"
+    },
+    {
+      "command": "-m unittest tests.motion_nav.test_navigation_design_metrics.NavigationDesignMetricsTests.test_local_enum_members_and_simple_aliases_ignore_case -q",
+      "tests": 1,
+      "failed_subtests": 4,
+      "cause": "小写类名、小写成员、模块属性别名与成员别名均漏报"
+    },
+    {
+      "command": "-m unittest tests.motion_nav.test_runtime_navigation_state_consumers -q",
+      "tests": 2,
+      "failures": 1,
+      "cause": "跨仓库审计发现消费者字符串比较、直接写入及日志输出遗漏"
+    },
+    {
+      "command": "-m unittest tests.motion_nav.test_runtime_backend_io.RuntimeBackendIOTests.test_fault_trace_serializes_navigation_state_as_plain_string -q",
+      "tests": 1,
+      "failures": 1,
+      "cause": "故障行保留 StrEnum 对象，未显式转换普通字符串"
+    }
+  ],
+  "green": {
+    "direct": 142,
+    "melee_modules": 57,
+    "metric_tests": 30,
+    "whole_repository_static_tests": 2
+  },
+  "diagnostic_command_error": {
+    "tests": 57,
+    "errors": 2,
+    "cause": "直接检查误写两个不存在的模块名；更正为实际 adapter 等模块后126/126"
+  },
+  "audit": {
+    "command": "rg -n 'RuntimeNavigationDriver|NavigationDriver|navigation_session_driver|\\.state\\s*=' scripts tests mc2p --glob '*.py'",
+    "raw": "D:\\My_project\\mc_ai\\.tmp\\hardening-p2-state-rg-audit.txt",
+    "scope": "静态测试遍历mc2p/scripts/tests全部Python文件；跟踪构造、类型注解、approach_driver字段和简单名称别名。手工rg核对其余读写和序列化。",
+    "fixed": [
+      "fixed_melee_driver.py",
+      "moving_melee_driver.py",
+      "action_continuity_fabric_runtime.py",
+      "continuous_height_runtime.py",
+      "b12b_partial_combat_runtime.py",
+      "c1_external_motion_runtime.py",
+      "tests/sim/runtime_faults.py",
+      "tests/test_fixed_melee_driver.py",
+      "tests/test_moving_melee_driver.py"
+    ],
+    "excluded": [
+      "历史PointGoalDriver及其他驱动器生命周期字符串",
+      "Session/恢复报告字符串",
+      "已序列化JSON/统计中的普通字符串",
+      "Driver契约测试故意验证被拒绝的state写入"
+    ],
+    "controlled_fault": "C1 late_old_plan负例只通过已有_set_state注入已退休旧驱动器的枚举结果；没有恢复可写state。",
+    "fixture": "失败用FakeNavigationSession.handle_internal_contract_failure，完成用FakeSession.COMPLETE报告，均由_sync_report同步。"
+  },
+  "metrics": {
+    "direct": 42,
+    "executor_proxy": 0,
+    "solve_strategy_proxy": 1,
+    "capability": 2,
+    "unclassified": 0,
+    "new_rule": "静态读取并缓存本地模块；模块/函数简单Name/Attribute别名、AnnAssign和有限重导出链统一解析。函数局部独立，不做路径分析；重复/分支/动态派生仅显露来源。递归带cycle guard及缓存，按原枚举身份分类。",
+    "neutral": "通用状态/政策分类写明职责；BodyCommitment和登记完整性保持。协议身份及math.pi/inf按原根符号身份记录neutral_value_checks70条（含派生），不按业务成员名排除。",
+    "derived": {
+      "count": 210,
+      "stable_in_two_measurements": true,
+      "rule": "全safe来源继续capability/neutral并记录derived；含未知/实现或不明模块符号的闭值比较proxy+unclassified。已有MotionSolveKind数值参数约束单列，不重复计策略选择。"
+    },
+    "syntax_boundaries": "不执行import，不解析闭包/对象字段/容器传播/调用返回值/任意控制流。getattr等动态表达式只检测来源并显露，不推断结果。",
+    "red_reexport": {
+      "tests": 3,
+      "failures": 3,
+      "cases": [
+        "类型/成员重导出及AnnAssign链",
+        "能力/neutral重导出分类",
+        "循环保护"
+      ]
+    },
+    "red_unsupported": {
+      "tests": 1,
+      "failures": 1,
+      "case": "跨模块循环及动态getattr模块符号显露"
+    },
+    "red_local": {
+      "tests": 2,
+      "failed_subtests": 5,
+      "cases": [
+        "函数类型别名",
+        "局部AnnAssign成员链",
+        "getattr",
+        "列表下标",
+        "函数隔离与重复/分支"
+      ]
+    },
+    "red_module_dynamic": {
+      "tests": 1,
+      "failures": 1,
+      "cases": [
+        "模块顶层动态赋值直接比较",
+        "动态成员重导出",
+        "安全派生与普通非枚举动态值"
+      ]
+    },
+    "red_module_priority": {
+      "tests": 1,
+      "failed_subtests": 3,
+      "cases": [
+        "重复赋值顺序互换",
+        "unknown+safe",
+        "safe+safe",
+        "单次赋值"
+      ]
+    },
+    "red_copy": {
+      "tests": 1,
+      "failures": 1,
+      "case": "同/跨模块copy链须保持aggregate身份"
+    },
+    "diagnostic_broad_attribute_rule": {
+      "unclassified": 525,
+      "rejected": true,
+      "categories": "120处self、54处request，其余为坐标、输入值、帧/目标/路线身份及对象身份比较；改用本地静态符号解析。"
+    }
+  }
+}

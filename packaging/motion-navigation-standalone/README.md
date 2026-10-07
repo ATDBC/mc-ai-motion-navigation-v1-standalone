@@ -4,6 +4,10 @@
 
 默认分支 `main` 是项目方唯一的公开发布线，只接收固定导出脚本生成并校验通过的整理后快照。主项目的完整开发分支和提交历史不会直接推入本仓库。三方审查分支可以单独存在，用于保存审查报告和复现材料；它们不改变 `main` 的正式状态。
 
+2026-10-08，F2-R 已按冻结范围通过。外角、对角柱和杂乱地形中的完成区域，从原目标内的安全精确矩形中选择面积最大的一块；不使用外接矩形，不扩大原 `GoalState`。UNKNOWN 按整格最坏障碍裁剪，只允许完全已知的安全子区域。Windows 完整正逆各 1647/1647；v7 为 1998/2000，旧成功退步 0；v8 为 3817/3904，87 项失败全部保留。Fabric 两族四方向正常／首条晚1共 16/16，8 次晚1实际应用，零安全与期限违规，来源全部注销。
+
+共享模拟器等价短路后，单次正式 D061 完整路径最大 40.1764 ms、deadline miss 为 0；原超限记录保留，夹具性能修复不记作机器人能力提升。`SNEAK_EDGE_GUARD` 仍只有组件证明，正式路线没有生产者。下一阶段为路线优化器，必须成为第一个正式区间生产者，并补必须潜行的实机证明；若更换阶段，先删除不可达状态机。现行范围与结果见 [F2-R 阶段](docs/motion_navigation/stages/F2R-piecewise-completion-and-v8.md)、[F2-R 验收](docs/motion_navigation/acceptance/F2R-piecewise-completion-and-v8.md)及 [D075](docs/motion_navigation/decisions/0075-repair-piecewise-completion-and-bound-edge-guard.md)，紧凑证据位于 `evidence/motion_navigation/F2R-piecewise-completion-v1/`。以下 F2 及更早记录保留各自的历史范围。
+
 2026-10-07，F2 通用非中心地面路线执行与终点接近已按冻结范围验收通过。普通开阔路线保留快速路径，已知碰撞或支撑边界每帧最多复核三个候选；潜行只由路线区间授权，完成区域保持在原 `GoalState` 内。正式 Windows 完整正逆各 1627/1627，五组通过，产品 1998/2000，旧成功退步 0；玩家站位 187/400 → 400/400。Fabric 冻结清单 93/93 符合各自判定，80 正例完成、40 次首条晚一 tick 实际应用，三组路线／持续输入用时比为 1.000／1.235／1.074，连续 10 tick 非中性停滞为 0。首个静止普通 Walk 补一 tick 中性等价证明，命令租约与 Session／Runtime 生命周期未改。
 
 范围见 [F2 阶段](docs/motion_navigation/stages/F2-non-center-ground-route-execution.md)、[架构](docs/motion_navigation/architecture/continuous-ground-route-execution-v1.md)和 [D074](docs/motion_navigation/decisions/0074-generalize-ground-route-execution-before-terminal-approach.md)，结果与限制见 [F2 验收](docs/motion_navigation/acceptance/F2-non-center-ground-route-execution.md)。紧凑证据位于 `evidence/motion_navigation/F2-ground-route-v1/final/`，原失败、逐项索引、来源和哈希均保留。外力仅按冻结试次判断；移动活塞观察、动态避障、路线优化器、疾跑路线和新动作尚未交付。
@@ -29,9 +33,9 @@ Windows 是正式开发、自动验收和 Fabric 实机平台；Linux 仅用于�
 ## 先读什么
 
 1. `AGENTS.md`
-2. `docs/motion_navigation/stages/F2-non-center-ground-route-execution.md`
-3. `docs/motion_navigation/acceptance/F2-non-center-ground-route-execution.md`
-4. `docs/motion_navigation/architecture/continuous-ground-route-execution-v1.md` 和 D074
+2. [F2-R 阶段](docs/motion_navigation/stages/F2R-piecewise-completion-and-v8.md)
+3. [F2-R 验收](docs/motion_navigation/acceptance/F2R-piecewise-completion-and-v8.md)和 [D075](docs/motion_navigation/decisions/0075-repair-piecewise-completion-and-bound-edge-guard.md)
+4. `docs/motion_navigation/architecture/continuous-ground-route-execution-v1.md` 和 D074；基础历史见 [F2 阶段](docs/motion_navigation/stages/F2-non-center-ground-route-execution.md)与 [F2 验收](docs/motion_navigation/acceptance/F2-non-center-ground-route-execution.md)。
 5. `docs/motion_navigation/architecture/navigation-coordination-v1.md`（第 17 节包含当前 R28 目标和已实施的持续目标语义）
 6. 当前实现和证据读 R27 阶段文档、`navigation-coordination-refactor.md` 第 20 节与 `defect-ledger.md`。
 7. 连续高度与物理范围读 M3、B09-R、B10 的对应 architecture 和 acceptance。

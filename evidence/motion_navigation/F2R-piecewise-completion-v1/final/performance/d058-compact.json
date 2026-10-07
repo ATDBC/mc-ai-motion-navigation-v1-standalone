@@ -1,0 +1,555 @@
+{
+  "complete_prepare": {
+    "captured_samples": 3514,
+    "discarded_prefix_samples": 100,
+    "gates": {
+      "maximum_ms_exclusive": 30.0,
+      "maximum_passed": true,
+      "p95_ms_max": 8.0,
+      "p95_passed": true,
+      "p99_ms_max": 15.0,
+      "p99_passed": true
+    },
+    "initial_gc_collected": 0,
+    "minimum_retained_samples": 1000,
+    "raw_samples_ns": {
+      "raw_items": 3414,
+      "raw_json_sha256": "565958180cb1328dcb1d9535e7de1af5fd5fc85f20deffe74010257cb44b9ea9",
+      "first": 1223100,
+      "last": 3987900,
+      "raw_retained_locally": true
+    },
+    "retained_samples": 3414,
+    "scenario_order": [
+      "straight_2_0",
+      "straight_3_3",
+      "straight_4_0",
+      "lateral_3_3",
+      "move_stop_800_resume",
+      "high_frequency_throttle",
+      "normal_cancel",
+      "one_missing_observation",
+      "first_input_late_one_tick",
+      "straight_5_0_out_of_scope"
+    ],
+    "scenario_results": [
+      {
+        "observed_ticks": 280,
+        "passed": true,
+        "scenario": "straight_2_0"
+      },
+      {
+        "observed_ticks": 280,
+        "passed": true,
+        "scenario": "straight_3_3"
+      },
+      {
+        "observed_ticks": 280,
+        "passed": true,
+        "scenario": "straight_4_0"
+      },
+      {
+        "observed_ticks": 280,
+        "passed": true,
+        "scenario": "lateral_3_3"
+      },
+      {
+        "observed_ticks": 1120,
+        "passed": true,
+        "scenario": "move_stop_800_resume"
+      },
+      {
+        "observed_ticks": 280,
+        "passed": true,
+        "scenario": "high_frequency_throttle"
+      },
+      {
+        "observed_ticks": 103,
+        "passed": true,
+        "scenario": "normal_cancel"
+      },
+      {
+        "observed_ticks": 280,
+        "passed": true,
+        "scenario": "one_missing_observation"
+      },
+      {
+        "observed_ticks": 280,
+        "passed": true,
+        "scenario": "first_input_late_one_tick"
+      },
+      {
+        "observed_ticks": 340,
+        "passed": true,
+        "scenario": "straight_5_0_out_of_scope"
+      }
+    ],
+    "scenario_sample_ranges": [
+      {
+        "captured_end_ordinal": 278,
+        "captured_samples": 279,
+        "captured_start_ordinal": 0,
+        "gc_collected_after": 255174,
+        "retained_end_ordinal": 178,
+        "retained_samples": 179,
+        "retained_start_ordinal": 0,
+        "scenario": "straight_2_0",
+        "scenario_ordinal": 0
+      },
+      {
+        "captured_end_ordinal": 557,
+        "captured_samples": 279,
+        "captured_start_ordinal": 279,
+        "gc_collected_after": 255675,
+        "retained_end_ordinal": 457,
+        "retained_samples": 279,
+        "retained_start_ordinal": 179,
+        "scenario": "straight_3_3",
+        "scenario_ordinal": 1
+      },
+      {
+        "captured_end_ordinal": 836,
+        "captured_samples": 279,
+        "captured_start_ordinal": 558,
+        "gc_collected_after": 255932,
+        "retained_end_ordinal": 736,
+        "retained_samples": 279,
+        "retained_start_ordinal": 458,
+        "scenario": "straight_4_0",
+        "scenario_ordinal": 2
+      },
+      {
+        "captured_end_ordinal": 1115,
+        "captured_samples": 279,
+        "captured_start_ordinal": 837,
+        "gc_collected_after": 255881,
+        "retained_end_ordinal": 1015,
+        "retained_samples": 279,
+        "retained_start_ordinal": 737,
+        "scenario": "lateral_3_3",
+        "scenario_ordinal": 3
+      },
+      {
+        "captured_end_ordinal": 2234,
+        "captured_samples": 1119,
+        "captured_start_ordinal": 1116,
+        "gc_collected_after": 626630,
+        "retained_end_ordinal": 2134,
+        "retained_samples": 1119,
+        "retained_start_ordinal": 1016,
+        "scenario": "move_stop_800_resume",
+        "scenario_ordinal": 4
+      },
+      {
+        "captured_end_ordinal": 2513,
+        "captured_samples": 279,
+        "captured_start_ordinal": 2235,
+        "gc_collected_after": 253320,
+        "retained_end_ordinal": 2413,
+        "retained_samples": 279,
+        "retained_start_ordinal": 2135,
+        "scenario": "high_frequency_throttle",
+        "scenario_ordinal": 5
+      },
+      {
+        "captured_end_ordinal": 2616,
+        "captured_samples": 103,
+        "captured_start_ordinal": 2514,
+        "gc_collected_after": 177830,
+        "retained_end_ordinal": 2516,
+        "retained_samples": 103,
+        "retained_start_ordinal": 2414,
+        "scenario": "normal_cancel",
+        "scenario_ordinal": 6
+      },
+      {
+        "captured_end_ordinal": 2895,
+        "captured_samples": 279,
+        "captured_start_ordinal": 2617,
+        "gc_collected_after": 255369,
+        "retained_end_ordinal": 2795,
+        "retained_samples": 279,
+        "retained_start_ordinal": 2517,
+        "scenario": "one_missing_observation",
+        "scenario_ordinal": 7
+      },
+      {
+        "captured_end_ordinal": 3174,
+        "captured_samples": 279,
+        "captured_start_ordinal": 2896,
+        "gc_collected_after": 255339,
+        "retained_end_ordinal": 3074,
+        "retained_samples": 279,
+        "retained_start_ordinal": 2796,
+        "scenario": "first_input_late_one_tick",
+        "scenario_ordinal": 8
+      },
+      {
+        "captured_end_ordinal": 3513,
+        "captured_samples": 339,
+        "captured_start_ordinal": 3175,
+        "gc_collected_after": 282830,
+        "retained_end_ordinal": 3413,
+        "retained_samples": 339,
+        "retained_start_ordinal": 3075,
+        "scenario": "straight_5_0_out_of_scope",
+        "scenario_ordinal": 9
+      }
+    ],
+    "scope": "RuntimeNavigationDriver.prepare_proposals around the existing F1-C formal manifest; includes Session preparation and inline test workers, excludes Runtime control_frame, game/IPC, and trace serialization",
+    "statistics": {
+      "maximum_ms": 16.428,
+      "maximum_ns": 16428000,
+      "p50_ms": 3.9464,
+      "p50_ns": 3946400,
+      "p95_ms": 4.978,
+      "p95_ns": 4978000,
+      "p99_ms": 5.6564,
+      "p99_ns": 5656400,
+      "samples": 3414
+    }
+  },
+  "configuration": {
+    "f1_scenarios": [
+      "straight_2_0",
+      "straight_3_3",
+      "straight_4_0",
+      "lateral_3_3",
+      "move_stop_800_resume",
+      "high_frequency_throttle",
+      "normal_cancel",
+      "one_missing_observation",
+      "first_input_late_one_tick",
+      "straight_5_0_out_of_scope"
+    ],
+    "prepare_discarded_prefix_samples": 100,
+    "prepare_minimum_retained_samples": 1000,
+    "route_group_measured_iterations": 1000,
+    "route_group_warmup_iterations": 100
+  },
+  "environment": {
+    "clock": "time.perf_counter_ns",
+    "executable": "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]"
+  },
+  "gates": {
+    "all_passed": true,
+    "complete_prepare_passed": true,
+    "route_revalidation_p95_passed": true
+  },
+  "generated_at_utc": "2026-10-07T15:44:17.686138+00:00",
+  "route_revalidation_groups": {
+    "complex_shape_one_replay": {
+      "expected": [
+        {
+          "disposition": "continue",
+          "identity": {
+            "action_index": 0,
+            "goal_id": "goal",
+            "goal_revision": 1,
+            "planning_generation": 1,
+            "route_id": "01f351ad1364ad4b4c42b2f7",
+            "route_revision": 1,
+            "source_request_id": "d058-benchmark-complex-shape",
+            "work_identity": null,
+            "world_session": "d058-benchmark-complex-shape"
+          },
+          "queries_used": 1,
+          "reason": "revalidated"
+        }
+      ],
+      "gates": {
+        "p95_ms_max": 1.0,
+        "p95_passed": true
+      },
+      "raw_samples_ns": {
+        "raw_items": 1000,
+        "raw_json_sha256": "f635cf92dc5598af0c4a917c93fbd77a8c891350076e5aa1abe21136701a8cba",
+        "first": 178000,
+        "last": 177700,
+        "raw_retained_locally": true
+      },
+      "scope": "ActiveRouteTracker SURFACE_EDGE replay over slab AABB geometry",
+      "statistics": {
+        "maximum_ms": 0.2145,
+        "maximum_ns": 214500,
+        "p50_ms": 0.1781,
+        "p50_ns": 178100,
+        "p95_ms": 0.1915,
+        "p95_ns": 191500,
+        "p99_ms": 0.2014,
+        "p99_ns": 201400,
+        "samples": 1000
+      }
+    },
+    "incumbent_pending_four_replays": {
+      "expected": [
+        {
+          "disposition": "continue",
+          "identity": {
+            "action_index": 0,
+            "goal_id": "goal",
+            "goal_revision": 1,
+            "planning_generation": 1,
+            "route_id": "88034dfe7473bcd7190d4914",
+            "route_revision": 1,
+            "source_request_id": "d058-benchmark-supervisor",
+            "work_identity": null,
+            "world_session": "b07-flat-surface"
+          },
+          "queries_used": 2,
+          "reason": "revalidated"
+        },
+        {
+          "disposition": "continue",
+          "identity": {
+            "action_index": 0,
+            "goal_id": "goal",
+            "goal_revision": 1,
+            "planning_generation": 1,
+            "route_id": "d058-benchmark-pending",
+            "route_revision": 1,
+            "source_request_id": "d058-benchmark-pending-request",
+            "work_identity": null,
+            "world_session": "b07-flat-surface"
+          },
+          "queries_used": 2,
+          "reason": "revalidated"
+        }
+      ],
+      "gates": {
+        "p95_ms_max": 1.0,
+        "p95_passed": true
+      },
+      "raw_samples_ns": {
+        "raw_items": 1000,
+        "raw_json_sha256": "86cb39d2454fcf75d52879085b9269b8182bd5cfc9c8648c6c97ec666aa6803a",
+        "first": 285600,
+        "last": 286700,
+        "raw_retained_locally": true
+      },
+      "scope": "ExecutionSupervisor incumbent then pending under one four-query frame budget",
+      "statistics": {
+        "maximum_ms": 0.3212,
+        "maximum_ns": 321200,
+        "p50_ms": 0.2862,
+        "p50_ns": 286200,
+        "p95_ms": 0.29,
+        "p95_ns": 290000,
+        "p99_ms": 0.2984,
+        "p99_ns": 298400,
+        "samples": 1000
+      }
+    },
+    "nonempty_no_intersection": {
+      "expected": [
+        {
+          "disposition": "unaffected",
+          "identity": {
+            "action_index": 0,
+            "goal_id": "goal",
+            "goal_revision": 1,
+            "planning_generation": 1,
+            "route_id": "88034dfe7473bcd7190d4914",
+            "route_revision": 1,
+            "source_request_id": "d058-benchmark-unaffected",
+            "work_identity": null,
+            "world_session": "b07-flat-surface"
+          },
+          "queries_used": 0,
+          "reason": "no_intersection"
+        }
+      ],
+      "gates": {
+        "p95_ms_max": 1.0,
+        "p95_passed": true
+      },
+      "raw_samples_ns": {
+        "raw_items": 1000,
+        "raw_json_sha256": "bb4c558af72aa4a47f483d5f2a8ab16c9755c3fadff06f74fa80b2849905ef19",
+        "first": 5500,
+        "last": 5600,
+        "raw_retained_locally": true
+      },
+      "scope": "ActiveRouteTracker nonempty changed set with no dependency intersection",
+      "statistics": {
+        "maximum_ms": 0.0246,
+        "maximum_ns": 24600,
+        "p50_ms": 0.0055,
+        "p50_ns": 5500,
+        "p95_ms": 0.0056,
+        "p95_ns": 5600,
+        "p99_ms": 0.0057,
+        "p99_ns": 5700,
+        "samples": 1000
+      }
+    },
+    "single_incumbent_two_replays": {
+      "expected": [
+        {
+          "disposition": "continue",
+          "identity": {
+            "action_index": 0,
+            "goal_id": "goal",
+            "goal_revision": 1,
+            "planning_generation": 1,
+            "route_id": "88034dfe7473bcd7190d4914",
+            "route_revision": 1,
+            "source_request_id": "d058-benchmark-supervisor",
+            "work_identity": null,
+            "world_session": "b07-flat-surface"
+          },
+          "queries_used": 2,
+          "reason": "revalidated"
+        }
+      ],
+      "gates": {
+        "p95_ms_max": 1.0,
+        "p95_passed": true
+      },
+      "raw_samples_ns": {
+        "raw_items": 1000,
+        "raw_json_sha256": "ed7d97e5f2bbc30c8ccd36bd11ef28a6da47534a967c101e76d9021f052047ae",
+        "first": 163000,
+        "last": 160700,
+        "raw_retained_locally": true
+      },
+      "scope": "ExecutionSupervisor single incumbent with one shared dependency",
+      "statistics": {
+        "maximum_ms": 0.2521,
+        "maximum_ns": 252100,
+        "p50_ms": 0.1604,
+        "p50_ns": 160400,
+        "p95_ms": 0.1633,
+        "p95_ns": 163300,
+        "p99_ms": 0.183,
+        "p99_ns": 183000,
+        "samples": 1000
+      }
+    },
+    "standable_connection_one_replay": {
+      "expected": [
+        {
+          "disposition": "continue",
+          "identity": {
+            "action_index": 0,
+            "goal_id": "goal",
+            "goal_revision": 1,
+            "planning_generation": 1,
+            "route_id": "88034dfe7473bcd7190d4914",
+            "route_revision": 1,
+            "source_request_id": "d058-benchmark-standable-connection",
+            "work_identity": null,
+            "world_session": "b07-flat-surface"
+          },
+          "queries_used": 1,
+          "reason": "revalidated"
+        }
+      ],
+      "gates": {
+        "p95_ms_max": 1.0,
+        "p95_passed": true
+      },
+      "raw_samples_ns": {
+        "raw_items": 1000,
+        "raw_json_sha256": "1051eacf970a065e45896b84fc09ee076e999b8bf9f41932f1f29472e92dd708",
+        "first": 231900,
+        "last": 236900,
+        "raw_retained_locally": true
+      },
+      "scope": "ActiveRouteTracker exact STANDABLE_CONNECTION replay with real geometry",
+      "statistics": {
+        "maximum_ms": 0.2903,
+        "maximum_ns": 290300,
+        "p50_ms": 0.2307,
+        "p50_ns": 230700,
+        "p95_ms": 0.2422,
+        "p95_ns": 242200,
+        "p99_ms": 0.2617,
+        "p99_ns": 261700,
+        "samples": 1000
+      }
+    },
+    "surface_edge_one_replay": {
+      "expected": [
+        {
+          "disposition": "continue",
+          "identity": {
+            "action_index": 0,
+            "goal_id": "goal",
+            "goal_revision": 1,
+            "planning_generation": 1,
+            "route_id": "88034dfe7473bcd7190d4914",
+            "route_revision": 1,
+            "source_request_id": "d058-benchmark-surface-edge",
+            "work_identity": null,
+            "world_session": "b07-flat-surface"
+          },
+          "queries_used": 1,
+          "reason": "revalidated"
+        }
+      ],
+      "gates": {
+        "p95_ms_max": 1.0,
+        "p95_passed": true
+      },
+      "raw_samples_ns": {
+        "raw_items": 1000,
+        "raw_json_sha256": "34ed09e5dc8ac815867415331f6d59cc7912fcf782f254de10f23122bdfd6df7",
+        "first": 181500,
+        "last": 176700,
+        "raw_retained_locally": true
+      },
+      "scope": "ActiveRouteTracker exact SURFACE_EDGE replay with real geometry",
+      "statistics": {
+        "maximum_ms": 0.267,
+        "maximum_ns": 267000,
+        "p50_ms": 0.1801,
+        "p50_ns": 180100,
+        "p95_ms": 0.1906,
+        "p95_ns": 190600,
+        "p99_ms": 0.208,
+        "p99_ns": 208000,
+        "samples": 1000
+      }
+    }
+  },
+  "schema_version": "mc2p.d058-route-revalidation-performance.v1",
+  "source": {
+    "commit": "86f7bb9ab6451cb26802a66cef73f932703c55c1",
+    "files": [
+      {
+        "path": "scripts/benchmark_d058_route_revalidation.py",
+        "sha256": "53ca2004c989a3f2ea03276e2a685f37d97a11dfd64b98fde73f30fcca04248e"
+      },
+      {
+        "path": "mc2p/motion_nav/route_validation.py",
+        "sha256": "c72d1bef64f7dc9c060a156705fd50038b5bd0b0b64df34f351c8460c87d4d51"
+      },
+      {
+        "path": "mc2p/motion_nav/route_admission.py",
+        "sha256": "48c7188538d57a09fa9e7fa6221e5ef2dce432e2125ea00d183bdb59d00e6a34"
+      },
+      {
+        "path": "mc2p/motion_nav/route_body_controller.py",
+        "sha256": "d5349ee3c6277105d20ba245fb92d2a3f70fbee25a028454d34e7817889b153f"
+      },
+      {
+        "path": "mc2p/motion_nav/execution_supervisor.py",
+        "sha256": "0990a3df7359238344d20b12fe053818a848bf8f284e1e0d8e3ed33733678dbc"
+      },
+      {
+        "path": "mc2p/skills/navigation_session_driver.py",
+        "sha256": "e29d52b7b1b62576fd5bb8f4ced3d7bd39a6579cef32c40e94d6b42db1a45b02"
+      },
+      {
+        "path": "tests/sim/known_world_following.py",
+        "sha256": "c79570a74a02e80fbd33bd7b5de27c6ef7b6a551bdc66e77b5ae66969eb307ef"
+      }
+    ],
+    "git_dirty": false,
+    "git_status": [],
+    "scope_sha256": "428ef10bca32eaff68db3c251bb0eaff6a894a09fc6b19ef38ea3cba25642be8"
+  }
+}

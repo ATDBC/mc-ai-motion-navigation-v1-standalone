@@ -1,0 +1,17 @@
+{
+  "purpose": "Single formal clean collection after ABBA and 60-second idle cooling",
+  "head": "7d3195689dc81a99e6a8da2cf7e16a505b755c4b",
+  "source_worktree_clean": true,
+  "command": [
+    "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "-m",
+    "scripts.benchmark_d061_long_session",
+    "--output",
+    ".tmp/f2r-d061-clean-final"
+  ],
+  "begin_utc": "2026-10-07T14:56:31.633903+00:00",
+  "diagnostic_last_end_utc": "2026-10-07T14:55:04.321493+00:00",
+  "end_utc": "2026-10-07T15:00:04.947722+00:00",
+  "elapsed_seconds": 213.31353559996933,
+  "return_code": 1
+}

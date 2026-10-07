@@ -1,0 +1,14 @@
+{
+  "cases": 16,
+  "identical": 16,
+  "changed_ids": [],
+  "normalizer_version": "r28-structure-trajectory-v1",
+  "signature_schema_version": "mc2p.s0r-owned-verification.v2",
+  "baseline": "evidence/motion_navigation/F2-ground-route-v1/final/five-groups/faults-index.json",
+  "baseline_sha256": "b856813ab7e48301d2fe75bf7e06033fffbf5a614c95b0d767a7d0f7251a31f1",
+  "results": {
+    "passed": 16,
+    "failed": 0
+  },
+  "details": []
+}

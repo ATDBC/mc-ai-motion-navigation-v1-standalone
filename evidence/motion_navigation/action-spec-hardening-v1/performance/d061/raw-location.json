@@ -1,0 +1,29 @@
+{
+  "raw_directory": "D:\\My_project\\mc_ai\\.tmp\\action-hardening-d061",
+  "raw_files": {
+    "COMMAND.txt": "78231bf1e9c753e3db76f97cd030bb34c53b7620e4feba0f8e50abfcab63c421",
+    "performance.json": "4c3fc39f02b3ef0812c66b869a2a23b781db24a5a544a07b6a82b30d732c3ebc",
+    "SHA256SUMS": "18ad489fa7d7372778557e6eaddb0710967865ba00136afb31bb2df33f9a33ae",
+    "trace/complete.json": "c01759ed0a9889dafd58f1f033c2b71078e532a4873d631a3886f3cb066147dc",
+    "trace/manifest.jsonl": "93c55f6b6846e6ab3647d2df4f521710817106a3180552d5380dd763f07fa95b",
+    "trace/segment-00000000.jsonl": "de0b5c7abf75c3c9e8ff9d7404005c35972cdbcf6a338e91ac48c5f8aed538df",
+    "trace/segment-00000001.jsonl": "ad3ef966e3521b6489400fc776bc573af2345353b9051d2ce0cd9136dd324b95",
+    "trace/segment-00000002.jsonl": "d5166bcb1ca8e05ed18f724e9aee670f2b30f4ccf4f7d3473a39beafb0a82dfc",
+    "trace/segment-00000003.jsonl": "476343c915c5f11d5959993f93a88c3c4b9ba680ea3233646c535f9eabb002c5",
+    "trace/segment-00000004.jsonl": "81d265d3d4cb933dee2881b1787defd62742f1fdbbb680ddc905f41ae4c72ea1",
+    "trace/segment-00000005.jsonl": "aac81f0663a78f2822ff984c9bb7f1fde6014771d71f5c837770b3fd8b807cec",
+    "trace/segment-00000006.jsonl": "068165711ccfcf04b343b42f262db10fa1260ffcd19c3bc25460ab304f48fc2e",
+    "trace/segment-00000007.jsonl": "6a217aac6e4957709d71d87bc9d9f5d6b337e49da4009afdf2e65ffdc8913dcc",
+    "trace/segment-00000008.jsonl": "c30263dbd165c54cf42d31dac42bb0459f1fa01f9a59d0fb60c6177953c87076",
+    "trace/segment-00000009.jsonl": "ff3bb34da2d1fbf4d467ea591bc0c075c0f039fa8de84a6745b1d67591deb254",
+    "trace/segment-00000010.jsonl": "179d8344f763377b90ba808c5cb43a589a47a84d7920313d1d85ea3e6099dbbf"
+  },
+  "compact_changes": [
+    {
+      "field": "complete_prepare.gc_diagnostic.events",
+      "original_events": 17322,
+      "retained_generation_2_events": 66,
+      "note": "所有计时样本、事件计数、统计和门槛保留；原始GC明细留在raw目录。"
+    }
+  ]
+}

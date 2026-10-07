@@ -1,0 +1,14 @@
+{
+  "cases": 19,
+  "identical": 19,
+  "changed_ids": [],
+  "normalizer_version": "r28-structure-trajectory-v1",
+  "signature_schema_version": null,
+  "baseline": "evidence/motion_navigation/F2-ground-route-v1/final/five-groups/world_changes-index.json",
+  "baseline_sha256": "558118ed51885100156c39193a457aa12fa86ba1101263352a7590a3c4d7b7dc",
+  "results": {
+    "passed": 19,
+    "failed": 0
+  },
+  "details": []
+}

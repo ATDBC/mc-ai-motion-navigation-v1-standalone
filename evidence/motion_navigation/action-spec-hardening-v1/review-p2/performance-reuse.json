@@ -1,0 +1,25 @@
+{
+  "source_commit": "4f3bf8a9a22ffb55e8f160972b2ea52fb0aab70b",
+  "new_behavior_source_commit": "069b24ab8a9dcbc2eea1e5a5c5ce5b949adb7d65",
+  "rerun": false,
+  "changed_capture_path_files": {
+    "mc2p/motion_nav/action_requirements.py": {
+      "ast_unchanged": true,
+      "change": "trailing blank lines only"
+    },
+    "mc2p/motion_nav/landing_evidence.py": {
+      "ast_unchanged": true,
+      "change": "trailing blank lines only"
+    }
+  },
+  "benchmarks_and_runtime_driver": "unchanged Git blobs",
+  "reason": "本轮只改消费者枚举比较、故障输出边界和量尺；D058/D061 导航准备与控制路径无语义改动。",
+  "files": {
+    "performance/d058/COMMAND.txt": "ce9f412e6c7ee52d1e439f9429f32a265fc108d623fa558a21825b41034fe594",
+    "performance/d058/performance.json": "821e51a7a7a13de783445e0f04df0562ca270859aa069feff58364a0766614c6",
+    "performance/d058/raw-location.json": "367dfe030d1afc3376d8b7147156d245ddf4beb13f170cbc37752fc31d4827df",
+    "performance/d061/COMMAND.txt": "78231bf1e9c753e3db76f97cd030bb34c53b7620e4feba0f8e50abfcab63c421",
+    "performance/d061/performance.json": "bf666b372afd495ca2f34f29c4f326604a5d505f5f03876afcf68902f1b0c106",
+    "performance/d061/raw-location.json": "c25d7f528a565dca38f0ae65036abd02080264852045ccaa002c2595b81cac63"
+  }
+}

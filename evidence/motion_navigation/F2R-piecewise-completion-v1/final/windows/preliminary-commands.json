@@ -1,0 +1,94 @@
+[
+  {
+    "stage": "product",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/navigation_s0r_evidence.py",
+      "--set",
+      "product",
+      "--output",
+      ".tmp/f2r-product",
+      "--workers",
+      "4"
+    ],
+    "return_code": 0,
+    "elapsed_seconds": 482.6538736000075,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-product.log"
+  },
+  {
+    "stage": "faults",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/navigation_s0r_evidence.py",
+      "--set",
+      "faults",
+      "--output",
+      ".tmp/f2r-faults",
+      "--workers",
+      "4"
+    ],
+    "return_code": 0,
+    "elapsed_seconds": 1.9443797999992967,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-faults.log"
+  },
+  {
+    "stage": "world_changes",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/navigation_s0r_evidence.py",
+      "--set",
+      "world_changes",
+      "--output",
+      ".tmp/f2r-world_changes",
+      "--workers",
+      "4"
+    ],
+    "return_code": 0,
+    "elapsed_seconds": 4.820533999998588,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-world_changes.log"
+  },
+  {
+    "stage": "follow",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/navigation_s0r_evidence.py",
+      "--set",
+      "follow",
+      "--output",
+      ".tmp/f2r-follow",
+      "--workers",
+      "4"
+    ],
+    "return_code": 0,
+    "elapsed_seconds": 17.28698680002708,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-follow.log"
+  },
+  {
+    "stage": "coordination",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/navigation_s0r_evidence.py",
+      "--set",
+      "coordination",
+      "--output",
+      ".tmp/f2r-coordination",
+      "--workers",
+      "4"
+    ],
+    "return_code": 0,
+    "elapsed_seconds": 186.7523569999612,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-coordination.log"
+  },
+  {
+    "stage": "forward",
+    "command": [
+      "D:\\My_project\\mc_ai\\.venv\\python.exe",
+      "scripts/run_motion_navigation_checks.py",
+      "--output",
+      ".tmp/f2r-forward.json"
+    ],
+    "return_code": 1,
+    "elapsed_seconds": 529.0542901000008,
+    "log": "D:\\My_project\\mc_ai\\.tmp\\f2r-forward.log"
+  }
+]

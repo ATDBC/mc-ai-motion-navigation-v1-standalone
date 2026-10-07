@@ -1,0 +1,293 @@
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='outer_corner', target='product', direction='south')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='outer_corner', target='product', direction='east')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='outer_corner', target='product', direction='north')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='outer_corner', target='product', direction='west')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='outer_corner', target='melee', direction='south')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='outer_corner', target='melee', direction='east')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='outer_corner', target='melee', direction='north')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='outer_corner', target='melee', direction='west')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='outer_corner', target='follow', direction='south')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='outer_corner', target='follow', direction='east')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='outer_corner', target='follow', direction='north')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='outer_corner', target='follow', direction='west')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='diagonal_pillar', target='product', direction='south')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='diagonal_pillar', target='product', direction='east')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='diagonal_pillar', target='product', direction='north')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='diagonal_pillar', target='product', direction='west')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='diagonal_pillar', target='melee', direction='south')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='diagonal_pillar', target='melee', direction='east')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='diagonal_pillar', target='melee', direction='north')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='diagonal_pillar', target='melee', direction='west')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='diagonal_pillar', target='follow', direction='south')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='diagonal_pillar', target='follow', direction='east')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='diagonal_pillar', target='follow', direction='north')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='diagonal_pillar', target='follow', direction='west')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='two_pillars', target='product', direction='south')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='two_pillars', target='product', direction='east')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='two_pillars', target='product', direction='north')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='two_pillars', target='product', direction='west')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='two_pillars', target='melee', direction='south')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='two_pillars', target='melee', direction='east')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='two_pillars', target='melee', direction='north')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='two_pillars', target='melee', direction='west')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='two_pillars', target='follow', direction='south')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='two_pillars', target='follow', direction='east')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='two_pillars', target='follow', direction='north')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+======================================================================
+FAIL: test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle (tests.motion_nav.test_f2r_piecewise_completion.PiecewiseCompletionTests.test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle) (family='two_pillars', target='follow', direction='west')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_f2r_piecewise_completion.py", line 23, in test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle
+    self.assertIs(selected.status, QueryStatus.FEASIBLE)
+AssertionError: <QueryStatus.UNSUPPORTED: 'unsupported'> is not <QueryStatus.FEASIBLE: 'feasible'>
+
+----------------------------------------------------------------------
+Ran 1 test in 0.459s
+
+FAILED (failures=36)
