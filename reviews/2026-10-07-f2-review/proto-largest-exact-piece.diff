@@ -1,0 +1,14 @@
+diff --git a/mc2p/motion_nav/support_surfaces.py b/mc2p/motion_nav/support_surfaces.py
+index 9da6ac4..a24b151 100644
+--- a/mc2p/motion_nav/support_surfaces.py
++++ b/mc2p/motion_nav/support_surfaces.py
+@@ -181,7 +181,8 @@ def standable_region_in_goal(world: WorldView, surface: SupportSurface, region:
+     lx, lz = min(p[0] for p in parts), min(p[1] for p in parts)
+     hx, hz = max(p[2] for p in parts), max(p[3] for p in parts)
+     if abs(_rectangle_union_area(list(parts)) - (hx-lx)*(hz-lz)) > _EPSILON:
+-        return rejected(QueryStatus.UNSUPPORTED)
++        # Keep the largest exact piece; never its outer envelope.
++        lx, lz, hx, hz = max(parts, key=lambda p: ((p[2]-p[0])*(p[3]-p[1]), -p[0], -p[1]))
+     xs = {lx, hx} | {v for box in support_boxes for edge in (box.min_x, box.max_x)
+                          for v in (edge-half, edge+half) if lx < v < hx}
+     zs = {lz, hz} | {v for box in support_boxes for edge in (box.min_z, box.max_z)

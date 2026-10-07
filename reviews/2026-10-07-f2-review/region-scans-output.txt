@@ -1,0 +1,23 @@
+## dc27f4c
+goal points scanned in cell (1,6): 196
+point feasible but region not: 16
+  x range 1.55..1.7, z range 6.55..6.7, statuses ['unsupported']
+cell centre (1.5, 6.5): feasible feasible
+density 0.10 product +-0.20 : old point feasible 287, new region rejected  15 (5.2%)
+density 0.10 melee r=0.50   : old point feasible 300, new region rejected  65 (21.7%)
+density 0.10 follow 1.77    : old point feasible 300, new region rejected  88 (29.3%)
+density 0.20 product +-0.20 : old point feasible 283, new region rejected  37 (13.1%)
+density 0.20 melee r=0.50   : old point feasible 300, new region rejected  89 (29.7%)
+density 0.20 follow 1.77    : old point feasible 300, new region rejected 114 (38.0%)
+
+## dc27f4c+proto-largest-exact-piece.diff
+goal points scanned in cell (1,6): 196
+point feasible but region not: 0
+cell centre (1.5, 6.5): feasible feasible
+density 0.10 product +-0.20 : old point feasible 287, new region rejected   0 (0.0%)
+density 0.10 melee r=0.50   : old point feasible 300, new region rejected   0 (0.0%)
+density 0.10 follow 1.77    : old point feasible 300, new region rejected   0 (0.0%)
+density 0.20 product +-0.20 : old point feasible 283, new region rejected   0 (0.0%)
+density 0.20 melee r=0.50   : old point feasible 300, new region rejected   0 (0.0%)
+density 0.20 follow 1.77    : old point feasible 300, new region rejected   0 (0.0%)
+

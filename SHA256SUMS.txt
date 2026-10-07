@@ -674,6 +674,15 @@ ed79314914ad860e7cc30b556507fb9d5c339d8fc869285ebc6c940bdcd49e6d  reviews/2026-1
 577468a48e52675c36bb10b08e2c99a7a4a2f0b6d31c44d670764ba44d0156fc  reviews/2026-10-06-structure-s0-review/scenario_leak_check-1f0fefe.txt
 97953a05debf1c4d129d6ba2203a9cdaa3515a2ddfc852804ee4b03f7631ea3f  reviews/2026-10-06-structure-s0-review/scenario_leak_check.py
 1effbde6ebfd7d51a4727f67a5a9fe44819e27dffaa5ccb444976a7be742da42  reviews/2026-10-06-structure-s0-review/structure_metrics-1f0fefe.txt
+0d0d3dd83af00fed5c01e6af98963b137da8d2622fa0a878565f0bd3a5dbf107  reviews/2026-10-07-f2-review.md
+0402011fd80a30d5c3dfb9164cc16168e62c892a5c219ff6e0b129d0e1057181  reviews/2026-10-07-f2-review/corner-probes-output.txt
+5b6ce51b0b9bd8343a50fa0d49b63c298857c51846f685e93be30f4163a8bfda  reviews/2026-10-07-f2-review/follow_corner_probe.py
+07f2a996d29555f83fb0e3405290d579e682bad2be5079eadd2fdcbb4b4e32a7  reviews/2026-10-07-f2-review/linux-reproduction-dc27f4c.txt
+72860c049fcac6f707a32ef8438cc65a7850de8b1decf50dccd51e228f47a9e1  reviews/2026-10-07-f2-review/outer_corner_probe.py
+cee198270877169652e567f5593e8bfbccd4138c9393990f0a081f1a3a850c84  reviews/2026-10-07-f2-review/proto-largest-exact-piece.diff
+fbd238e5486559e939221d1e7ed972f6616783cf10df6f38892310efa412f9e8  reviews/2026-10-07-f2-review/random_clutter_scan.py
+5795c3d54bd2cc1e290cdf7a2f0db40ccc969fb8170acf77739e50316e957d4b  reviews/2026-10-07-f2-review/region-scans-output.txt
+283238cb487ba4017ae184cd068bbd6019f689cad273e81469890d12c7b203b7  reviews/2026-10-07-f2-review/region_shape_scan.py
 0b372d205c7b91309f1f06532acac0e5627a12e0c5897bfac8d078a6ac23256d  reviews/2026-10-07-m0-m1-review.md
 3c0bee87a11ec4054c222746e17dd6f31dbb1f8431839f2e67b405b899970b39  reviews/2026-10-07-m0-m1-review/design_metrics-v1-5124bd7.txt
 986358160ef18c4afa9c28740acfdb4ee37d01ec816668bb11cb372c3c6c5446  reviews/2026-10-07-m0-m1-review/linux-reproduction-5124bd7.txt

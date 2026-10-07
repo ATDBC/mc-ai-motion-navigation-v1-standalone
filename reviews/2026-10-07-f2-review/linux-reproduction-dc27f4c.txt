@@ -1,0 +1,46 @@
+Linux reproduction of dc27f4c (4 cores, Python 3.11.15). Formal platform remains Windows (D071); this is supplementary.
+
+## full motion-navigation checks, forward (scripts/run_motion_navigation_checks.py)
+dc27f4c {'tests': 1631, 'passed': True}
+real	11m19.351s
+
+## behaviour sets vs evidence/motion_navigation/F2-ground-route-v1/final/five-groups/<set>-index.json
+faults: {"cases": 16, "differences": 0, "equivalent": true}
+world_changes: {"cases": 19, "differences": 0, "equivalent": true}
+follow: {"cases": 10, "differences": 0, "equivalent": true}
+coordination: {"cases": 1448, "differences": 0, "equivalent": true}
+
+## follow / world_changes signature changes vs a 5124bd7 Linux run of the same sets (all still pass)
+follow: signature changed 9, pass/fail changed 0
+world_changes: signature changed 13, pass/fail changed 0
+
+## F2 frozen inventory (scripts/f2_ground_route_evidence.py, 528 tasks) vs evidence/.../final/f2/index.json
+dc27f4c: 528 tasks, success 472 / expected-failure 56; outcome+reason equal 528/528; behaviour sha equal 528/528
+dc27f4c + proto-largest-exact-piece.diff: 528 tasks, success 472 / expected-failure 56; outcome+reason equal 528/528; behaviour sha equal 528/528
+
+## design metrics (scripts/navigation_design_metrics.py, schema v3)
+direct_action_dispatch 42 {'JumpGapSegment': 4, 'JumpUpSegment': 6, 'StepSegment': 2, 'WalkSegment': 30}
+proxy_implementation_dispatch 1: motion_coordination.py:1112 kind is MotionSolveKind.JUMP_GAP
+capability_checks 2 (BodyCommitment); unclassified 0
+session lines 4994; navigation_session_driver flow strings 0; state writers ['__init__', '_set_state']
+
+## reverse-dependency and unreachable edge-guard checks
+controlled_drop.py runtime imports: math, mc2p.contracts.action_v1, mc2p.motion_nav.action_requirements, mc2p.motion_nav.action_route, mc2p.motion_nav.actions.contracts, mc2p.motion_nav.actions.existing, mc2p.motion_nav.geometry, mc2p.motion_nav.landing_evidence, mc2p.motion_nav.motion_risk, mc2p.motion_nav.motion_solver, mc2p.motion_nav.world_model
+production constructors of capability intervals (GroundRouteCapabilityInterval( / SNEAK_EDGE_GUARD):
+mc2p/motion_nav/ground_route_execution.py:50:    SNEAK_EDGE_GUARD = "sneak_edge_guard"
+mc2p/motion_nav/fixed_route.py:1454:            GroundRouteCapability.SNEAK_EDGE_GUARD, progress)
+scripts/f2_ground_route_evidence.py:168:        GroundRouteCapabilityInterval(a, b, frozenset({GroundRouteCapability.SNEAK_EDG
+tests/motion_nav/test_f2_ground_route_edge_guard.py:38:EDGE = frozenset({Capability.SNEAK_EDGE_GUARD})
+tests/motion_nav/test_f2_ground_route_edge_guard.py:385:        item = {**item, "capability_intervals": [[0., 6.]], "capability": "SNEAK_EDGE_
+
+## prototype (dc27f4c + proto-largest-exact-piece.diff): full forward checks
+tests 1631, failures 1, scene hash unchanged
+test_f2_export_matches_frozen_production_fingerprints (test_standalone_export.StandaloneExportTests.test_f2_export_matches_frozen_production_fingerprints) ... FAIL
+ : mc2p/motion_nav/support_surfaces.py
+The only failure pins the published byte hash of support_surfaces.py (expected for any edit of that file); 1630 other tests pass.
+
+## product 2000 vs evidence/.../final/five-groups/product-index.json (2 workers each, run concurrently)
+dc27f4c: {"cases": 2000, "differences": 0, "equivalent": true}
+   success 1998/2000, failures {'edge_probe_acquisition_timeout': 2}, exceptions 0, tasks with safety events 0
+dc27f4c + proto-largest-exact-piece.diff: {"cases": 2000, "differences": 0, "equivalent": true}
+   success 1998/2000, failures {'edge_probe_acquisition_timeout': 2}, exceptions 0, tasks with safety events 0
