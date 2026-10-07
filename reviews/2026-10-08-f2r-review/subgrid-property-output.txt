@@ -1,0 +1,2 @@
+project single-block case: ('feasible', 0.5)
+random holes: 1800 goals, 1800 feasible regions, all dense-checked (clearance, support >= 0.5, inside goal)

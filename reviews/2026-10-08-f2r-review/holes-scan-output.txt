@@ -1,0 +1,16 @@
+## 1ee76b6
+holes 0.10 product +-0.20 : old point feasible 300, new region rejected   0 (0.0%)
+holes 0.10 melee r=0.50   : old point feasible 300, new region rejected   0 (0.0%)
+holes 0.10 follow 1.77    : old point feasible 300, new region rejected   1 (0.3%)
+holes 0.20 product +-0.20 : old point feasible 300, new region rejected   1 (0.3%)
+holes 0.20 melee r=0.50   : old point feasible 300, new region rejected   2 (0.7%)
+holes 0.20 follow 1.77    : old point feasible 300, new region rejected   3 (1.0%)
+
+## 1ee76b6 + proto-support-threshold-subgrid.diff
+holes 0.10 product +-0.20 : old point feasible 300, new region rejected   0 (0.0%)
+holes 0.10 melee r=0.50   : old point feasible 300, new region rejected   0 (0.0%)
+holes 0.10 follow 1.77    : old point feasible 300, new region rejected   0 (0.0%)
+holes 0.20 product +-0.20 : old point feasible 300, new region rejected   0 (0.0%)
+holes 0.20 melee r=0.50   : old point feasible 300, new region rejected   0 (0.0%)
+holes 0.20 follow 1.77    : old point feasible 300, new region rejected   0 (0.0%)
+

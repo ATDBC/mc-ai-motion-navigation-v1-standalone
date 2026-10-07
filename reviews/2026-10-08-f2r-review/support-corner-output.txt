@@ -1,0 +1,14 @@
+## 5124bd7
+product +-0.20 at (4.80,10.80): point=feasible sim=failed/fixed_route_has_no_forward_control ticks=97 final=(4.63, 64.0, 10.67)
+product +-0.20 at (4.90,10.90): point=feasible sim=failed/fixed_route_has_no_forward_control ticks=97 final=(4.63, 64.0, 10.67)
+melee r=0.5 at (4.70,10.70): point=feasible sim=success/goal_state_satisfied ticks=97 final=(4.63, 64.0, 10.67)
+follow hold, player at (4.50,10.50): point=feasible sim=success/goal_state_satisfied ticks=96 final=(4.48, 64.0, 10.52)
+control: melee r=0.5 mid-edge (0.50,10.70): point=feasible sim=success/goal_state_satisfied ticks=74 final=(0.5, 64.0, 10.64)
+
+## 1ee76b6
+product +-0.20 at (4.80,10.80): point=feasible region=unsupported sim=failed/goal_standing_point_unavailable ticks=21 final=(0.5, 64.0, 0.5)
+product +-0.20 at (4.90,10.90): point=feasible region=unsupported sim=failed/goal_standing_point_unavailable ticks=21 final=(0.5, 64.0, 0.5)
+melee r=0.5 at (4.70,10.70): point=feasible region=unsupported sim=failed/goal_standing_point_unavailable ticks=21 final=(0.5, 64.0, 0.5)
+follow hold, player at (4.50,10.50): point=feasible region=unsupported sim=failed/goal_standing_point_unavailable ticks=21 final=(0.5, 64.0, 0.5)
+control: melee r=0.5 mid-edge (0.50,10.70): point=feasible region=feasible sim=success/goal_state_satisfied ticks=74 final=(0.5, 64.0, 10.64)
+

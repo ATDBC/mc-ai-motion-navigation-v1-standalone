@@ -1,0 +1,42 @@
+diff --git a/mc2p/motion_nav/support_surfaces.py b/mc2p/motion_nav/support_surfaces.py
+index e94a2a6..62d57ae 100644
+--- a/mc2p/motion_nav/support_surfaces.py
++++ b/mc2p/motion_nav/support_surfaces.py
+@@ -187,7 +187,7 @@ def standable_region_in_goal(world: WorldView, surface: SupportSurface, region:
+     zs = {lz, hz} | {v for box in support_boxes for edge in (box.min_z, box.max_z)
+                          for v in (edge-half, edge+half) if lz < v < hz}
+     exact_dependencies = set()
+-    fractions = []
++    fractions = {}
+     for x in sorted(xs):
+         for z in sorted(zs):
+             body = Aabb(x-half, y, z-half, x+half, y+body_height, z+half)
+@@ -199,10 +199,24 @@ def standable_region_in_goal(world: WorldView, surface: SupportSurface, region:
+                 return rejected(QueryStatus.NEEDS_INFORMATION if missing else
+                                 QueryStatus.UNSUPPORTED if QueryStatus.UNSUPPORTED in
+                                 (clearance.status, support.status) else QueryStatus.BLOCKED)
+-            fractions.append(support.support_fraction)
+-    if min(fractions)+_EPSILON < minimum_support_fraction:
+-        return rejected(QueryStatus.BLOCKED if max(fractions)+_EPSILON < minimum_support_fraction
+-                        else QueryStatus.UNSUPPORTED)
++            fractions[(x, z)] = support.support_fraction
++    if min(fractions.values())+_EPSILON < minimum_support_fraction:
++        # Support is bilinear inside each grid cell, so a sub-grid whose
++        # vertices all meet the threshold is exact. Keep the largest one.
++        gx, gz = sorted(xs), sorted(zs)
++        ok = lambda i, j: fractions[(gx[i], gz[j])]+_EPSILON >= minimum_support_fraction
++        best = None
++        for i0 in range(len(gx)):
++            for i1 in range(i0+1, len(gx)):
++                for j0 in range(len(gz)):
++                    for j1 in range(j0+1, len(gz)):
++                        if all(ok(i, j) for i in range(i0, i1+1) for j in range(j0, j1+1)):
++                            key = (-(gx[i1]-gx[i0])*(gz[j1]-gz[j0]), gx[i0], gz[j0], gx[i1], gz[j1])
++                            best = key if best is None or key < best else best
++        if best is None:
++            return rejected(QueryStatus.BLOCKED if max(fractions.values())+_EPSILON < minimum_support_fraction
++                            else QueryStatus.UNSUPPORTED)
++        lx, lz, hx, hz = best[1:]
+     # Full rectangle envelope records clearance and support owners between
+     # vertices, including facts which select its exact shape boundaries.
+     exact_envelope = Aabb(lx-half, y, lz-half, hx+half, y+body_height, hz+half)

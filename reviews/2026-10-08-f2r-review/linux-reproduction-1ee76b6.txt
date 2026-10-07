@@ -1,0 +1,23 @@
+Linux reproduction of 1ee76b6 (4 cores, Python 3.11.15). Formal platform remains Windows; supplementary only.
+
+## full motion-navigation checks, forward
+{'source_commit': '1ee76b6aa1d9be44cee64bdd5a22f7481cad31c9', 'tests': 1647, 'passed': True}
+real	10m31.935s
+
+## behaviour sets vs evidence/motion_navigation/F2R-piecewise-completion-v1/final/five-groups/<set>-index.json
+faults: {"cases": 16, "differences": 0, "equivalent": true}
+world_changes: {"cases": 19, "differences": 0, "equivalent": true}
+follow: {"cases": 10, "differences": 0, "equivalent": true}
+(product v7 and coordination not rerun this round)
+
+## v8 formal chain (scripts/f2r_piecewise_evidence.py formal + clutter-formal) vs published v8/layers/*.jsonl  [compare_v8.py]
+1ee76b6: 1904 rows (1904 matched to published); success 1819; failures {'goal_surface_unavailable': 30, 'fixed_route_has_no_forward_control': 9, 'fixed_route_stalled': 5, 'planning_no_known_route': 41}
+   equal to published: {'input_sha256': 1904, 'outcome': 1904, 'reason': 1904, 'final_position': 1904, 'trajectory_sha256': 1904, 'damage': 1904}
+1ee76b6 + proto-support-threshold-subgrid.diff: 1904 rows (1904 matched to published); success 1819; failures {'goal_surface_unavailable': 30, 'fixed_route_has_no_forward_control': 9, 'fixed_route_stalled': 5, 'planning_no_known_route': 41}
+   equal to published: {'input_sha256': 1904, 'outcome': 1904, 'reason': 1904, 'final_position': 1904, 'trajectory_sha256': 1904, 'damage': 1904}
+
+## prototype: F2 528 (scripts/f2_ground_route_evidence.py) vs F2R-piecewise-completion-v1/final/f2/index.json
+behaviour sha equal 528 / 528 ; outcome+reason equal 528
+
+## prototype: region-related unit tests (F2, F2-R, D059/D060/D062/D064 modules)
+117 run, 1 failure: test_support_threshold_cutting_rectangle_is_not_approximated (pins the rejection the prototype changes)
