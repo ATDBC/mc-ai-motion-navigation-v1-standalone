@@ -1,0 +1,2 @@
+selected piece: (0.7, 0.2, 1.0, 0.7) area 0.15
+spanning rectangle: (0.6, 0.2, 1.0, 0.7) area 0.2 clear and supported at all 441 samples: True
