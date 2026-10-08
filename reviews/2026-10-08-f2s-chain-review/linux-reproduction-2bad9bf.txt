@@ -1,0 +1,23 @@
+Linux reproduction of 2bad9bf (4 cores, Python 3.11.15). Supplementary only.
+
+## full motion_nav (scripts/run_motion_navigation_checks.py)
+Ran 1812 tests in 853.143s
+FAILED (failures=58, errors=5)
+distinct failing test methods: linux 37, published Windows 34, both 34
+linux-only: ['test_b10_motion_worker.B10MotionWorkerTests.test_background_worker_returns_the_same_bounded_gap_result', 'test_f2s_support_region.F2SFreezeTests.test_green_region_benchmark_uses_real_diagnostics_and_frozen_gates', 'test_r28_corner_progress.CornerProgressTests.test_rotated_wall_detour_completes_with_equal_entry']
+by module (published Windows list, 60 entries incl. subtests): {"test_f2_ground_route_edge_guard": 36, "test_f2_non_center_ground_route": 5, "test_ground_terminal_search": 2, "test_b06_movement_contracts": 2, "test_b11_world_change_navigation": 2, "test_navigation_closed_loop": 2, "test_navigation_design_metrics": 2, "test_navigation_product_delivery": 1, "test_b08_ground_modes": 1, "test_continuous_height_full_matrix": 1, "test_f1_known_world_following": 1, "test_f2_ground_route_gates": 1, "test_goal_reach_policy": 1, "test_motion_baseline_recovery": 1, "test_navigation_supervised_interruptions": 1, "test_r28_shared_recovery": 1}
+
+## F2 frozen 528 (scripts/f2_ground_route_evidence.py) vs F2R-piecewise-completion-v1/final/f2/index.json
+outcome or reason changed: 472
+   400  player             success/goal_state_satisfied  ->  driver_failed/ready/not_started
+     8  head_wall          blocked/fixed_route_stalled  ->  blocked/no_safe_ground_candidate
+     8  hazard_wall        unsupported/forward_ground_material_unsupported  ->  unsupported/local_geometry_unsupported
+     8  unknown_wall       needs_information/forward_candidate_requires_information  ->  needs_information/local_motion_requires_information
+     8  fluid_wall         unsupported/forward_ground_material_unsupported  ->  unsupported/local_geometry_unsupported
+     8  unsupported_wall   unsupported/forward_ground_material_unsupported  ->  unsupported/local_geometry_unsupported
+     8  outside_corridor   blocked/no_safe_ground_candidate  ->  needs_replan/fixed_route_observed_outside_corridor
+     8  undeclared_edge    blocked/fixed_route_has_no_forward_control  ->  succeeded/goal_reached_and_stopped
+     4  point              success/goal_state_satisfied  ->  driver_failed/ready/not_started
+     4  height             success/goal_state_satisfied  ->  driver_failed/ready/not_started
+     4  target             success/goal_state_satisfied  ->  driver_failed/ready/not_started
+     4  drop               success/goal_state_satisfied  ->  driver_failed/ready/not_started

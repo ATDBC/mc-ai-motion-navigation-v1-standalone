@@ -1,0 +1,10 @@
+## 1ee76b6
+open straight   : outcomes [('succeeded', 48)]; decide ms p50 1.057 p95 1.601 max 3.542 (n=240)
+offset straight : outcomes [('succeeded', 49)]; decide ms p50 1.084 p95 1.847 max 2.263 (n=245)
+wall tangent    : outcomes [('succeeded', 49)]; decide ms p50 1.009 p95 3.765 max 5.083 (n=245)
+
+## 2bad9bf
+open straight   : outcomes [('succeeded', 49)]; decide ms p50 8.385 p95 13.249 max 16.183 (n=245)
+offset straight : outcomes [('succeeded', 50)]; decide ms p50 8.273 p95 11.424 max 28.855 (n=250)
+wall tangent    : outcomes [('succeeded', 49)]; decide ms p50 9.455 p95 12.082 max 21.849 (n=245)
+

@@ -698,6 +698,12 @@ ca9ab8e1ce38a209ae744b81d67f25e8efbd01079a14d2b87b7c0d0d350170ea  reviews/2026-1
 46e1375ed2764ed7f8b37b91c996d8d1ef14f8713ed3d4f0d5e214f139f3a0cb  reviews/2026-10-08-f2r-review/subgrid_property_check.py
 38f66a6753e236323a9dcc6d3456b087f13426a63ff0c6661339514128c7d6c0  reviews/2026-10-08-f2r-review/support-corner-output.txt
 a1dc41bfca23c7ca3e8f3f6f4a9828060451fd29b32a7c09af9fa04880cca923  reviews/2026-10-08-f2r-review/support_corner_probe.py
+8f80a4c8a7adcfe24c07914eefcad804f847c4911e605772739b87ae6ddcef8a  reviews/2026-10-08-f2s-chain-review.md
+890a8f4f8b312017c4294bb1cd35c2e645c12eb6601a63961834ba117f65371b  reviews/2026-10-08-f2s-chain-review/controller-hotpath-output.txt
+402cdc721e35a759135cf896c4d1a05e4aa0e4582fc79b59978a138528dcf28e  reviews/2026-10-08-f2s-chain-review/controller_hotpath.py
+f776f26aed62dc0956e54d5e448c5d432713ce5c73b63c133666a254a4793a34  reviews/2026-10-08-f2s-chain-review/linux-reproduction-2bad9bf.txt
+9eb14fb40263d545b1966e5b6e383374f6fc4f902676593c52631c813df7b58f  reviews/2026-10-08-f2s-chain-review/wallclock-budget-output.txt
+be847ea8007dceff60f0ef989b793c949e307e9abe70f80e01dd7ee820dcad04  reviews/2026-10-08-f2s-chain-review/wallclock_budget_check.py
 55fe72dc5bbd53ef5634b705132b6011d085a60e754b2d0a26dd1282f7ac2b40  reviews/2026-10-08-f2s-plan-review.md
 8b77b2c22ea5af575e6dc83a4ad157b9ecf16c67307d6bc394ce21321873f222  reviews/2026-10-08-f2s-plan-review/goal-selection-cost-output.txt
 15afb6e0d1462f3440177df0afef10aea5caa73b9658aa3217cb4c3824d2e58d  reviews/2026-10-08-f2s-plan-review/goal_selection_cost.py

@@ -1,0 +1,4 @@
+normal ('1847e3e0bd2e', 50, 'succeeded', ['goal_braking', 'goal_reached_and_stopped', 'tracking_fixed_route'])
+normal ('1847e3e0bd2e', 50, 'succeeded', ['goal_braking', 'goal_reached_and_stopped', 'tracking_fixed_route'])
+slow ('4868e6b766bf', 2, 'needs_replan', ['ground_candidate_budget_exhausted_neutral', 'ground_candidate_budget_exhausted_unproven'])
+slow ('4868e6b766bf', 2, 'needs_replan', ['ground_candidate_budget_exhausted_neutral', 'ground_candidate_budget_exhausted_unproven'])
