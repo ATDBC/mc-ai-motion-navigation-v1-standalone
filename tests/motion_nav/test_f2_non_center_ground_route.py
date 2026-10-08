@@ -21,7 +21,7 @@ def case(family):
 
 
 class NonCenterGroundRouteTests(unittest.TestCase):
-    def test_safe_lease_with_escaping_neutral_tail_is_rejected(self):
+    def test_safe_lease_with_inside_prefix_and_escaping_neutral_tail_is_allowed(self):
         item = case("tangent")
         backend = CalculatorBackend([0], f2_ground_route_scene(item), tuple(item["start"]))
         state = replace(backend.state, velocity_blocks_per_tick=(0., -.0784, .14))
@@ -39,10 +39,15 @@ class NonCenterGroundRouteTests(unittest.TestCase):
         errors = [max(0., s.position[2] - 1.05) for s in result.trajectory]
         self.assertLessEqual(max(errors[:3]), .15)
         self.assertGreater(max(errors[3:]), .15)
-        # Use the real rejected fast candidate and real calculator result. Only
-        # the trajectory after the full lease invalidates this input.
+        # The applied prefix remains inside the admitted corridor. The passive
+        # tail is still proved against the world, but its corridor drift is a
+        # diagnostic rather than a hard-safety failure.
         reviewed = controller._replay_rejected_candidates([candidate], frame, body, (1.7, 1.05), state, cache)
-        self.assertTrue(reviewed[0].blocked)
+        self.assertTrue(any(
+            not item.blocked and not item.unsupported and not item.missing
+            and item.movement == command
+            for item in reviewed
+        ))
 
     def test_ground_replay_preserves_full_stop_and_rejects_vertical_motion(self):
         item = case("tangent")

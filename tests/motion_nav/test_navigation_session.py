@@ -39,11 +39,15 @@ from mc2p.motion_nav.motion_risk import RiskCommitEvidence, RiskCommitKind
 from mc2p.motion_nav.retry_ledger import RetryLedger, WaitPolicy
 from mc2p.motion_nav.runtime_adapter import BodyState, NavigationFrame
 from mc2p.motion_nav.navigation_session import (
-    NavigationSession,
+    NavigationSession as _ProductionNavigationSession,
     NavigationSessionProfiles,
     NavigationSessionState,
     information_look_for_missing_cells,
     information_probe_movement,
+)
+from mc2p.motion_nav.motion_worker import (
+    MotionWorkerCancelStatus, MotionWorkerHealth, MotionWorkerReadiness,
+    _execute_job,
 )
 from mc2p.motion_nav.navigation_lifecycle import NavigationTransitionAction
 from mc2p.motion_nav.landing_edge_probe import (
@@ -76,6 +80,43 @@ from tests.motion_nav.test_b09_air_transitions import air_profile
 from tests.motion_nav.test_b10_gap_solver import fixture as gap_fixture
 from tests.motion_nav.test_b10_online_motion import state as physics_state
 from tests.observation_v3_fixtures import valid_snapshot_v3
+
+
+class _InlineMotionWorker:
+    """Explicit standalone-test port; production Session never creates it."""
+
+    def __init__(self):
+        self.pending = []
+
+    def submit(self, job):
+        self.pending.append(job)
+        return True
+
+    def poll_available(self):
+        values = tuple(_execute_job(job) for job in self.pending)
+        self.pending.clear()
+        return values
+
+    def cancel(self, identity, _status=None):
+        return MotionWorkerCancelStatus.ACCEPTED
+
+    def close(self):
+        self.pending.clear()
+
+    def is_alive(self):
+        return True
+
+    @property
+    def health(self):
+        return MotionWorkerHealth(
+            MotionWorkerReadiness.READY, None, 0, None, None,
+        )
+
+
+def NavigationSession(*args, **kwargs):
+    """Construct a standalone Session with an explicitly supplied test port."""
+    kwargs.setdefault("motion_worker", _InlineMotionWorker())
+    return _ProductionNavigationSession(*args, **kwargs)
 
 
 class _InlinePlanner:
@@ -2422,7 +2463,7 @@ class NavigationSessionTests(unittest.TestCase):
                 body_box=Aabb(body_x - .3, 64.0, .2, body_x + .3, 65.8, .8),
                 is_on_ground=True,
             )
-            node, missing = NavigationSession._surface_for_body(replace(
+            node, missing = _ProductionNavigationSession._surface_for_body(replace(
                 current,
                 body=body,
                 world=knowledge.view(),

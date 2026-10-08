@@ -73,6 +73,7 @@ from tests.motion_nav.test_navigation_session import (
     NavigationSessionTests,
     _InlinePlanner,
     _ground_anchor,
+    _InlineMotionWorker,
 )
 from tests.motion_nav.test_route_body_advance import _FrameExecutor
 from tests.motion_nav.test_execution_supervisor import ExecutionSupervisorTests
@@ -728,7 +729,7 @@ class D058RuntimeValidationTests(unittest.TestCase):
                 session = NavigationSession(
                     f"d058-pending-{cause.value}",
                     NavigationSessionTests().profiles(),
-                    planner_worker=_InlinePlanner(),
+                    planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(),
                 )
                 session._supervisor = supervisor
                 self.assertTrue(
@@ -749,7 +750,7 @@ class D058RuntimeValidationTests(unittest.TestCase):
         session = NavigationSession(
             "d058-pending-superseded",
             NavigationSessionTests().profiles(),
-            planner_worker=_InlinePlanner(),
+            planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(),
         )
         session._supervisor = supervisor
         session._request = SurfacePlanningRequest(

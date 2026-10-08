@@ -402,6 +402,8 @@ def run_scenario_with_trace(
     after_tick=None,
     control_path_started=None,
     control_path_finished=None,
+    harness_frame_started=None,
+    harness_frame_finished=None,
     trajectory_sink=None,
 ) -> dict:
     if cancel_when is not None and not callable(cancel_when):
@@ -414,11 +416,19 @@ def run_scenario_with_trace(
             or (control_path_finished is not None
                 and not callable(control_path_finished))):
         raise TypeError("long-session control-path callbacks must be callable")
+    if ((harness_frame_started is None) != (harness_frame_finished is None)
+            or (harness_frame_started is not None
+                and not callable(harness_frame_started))
+            or (harness_frame_finished is not None
+                and not callable(harness_frame_finished))):
+        raise TypeError("long-session harness-frame callbacks must be callable")
     return _run_scenario(
         scenario, trace_writer,
         cancel_when=cancel_when, after_tick=after_tick,
         control_path_started=control_path_started,
         control_path_finished=control_path_finished,
+        harness_frame_started=harness_frame_started,
+        harness_frame_finished=harness_frame_finished,
         trajectory_sink=trajectory_sink,
     )
 
@@ -431,6 +441,8 @@ def _run_scenario(
     after_tick=None,
     control_path_started=None,
     control_path_finished=None,
+    harness_frame_started=None,
+    harness_frame_finished=None,
     trajectory_sink=None,
 ) -> dict:
     if type(scenario) is not FollowScenario:
@@ -538,6 +550,8 @@ def _run_scenario(
             benchmark_cancel = (
                 cancel_when(tick) if cancel_when is not None else False
             )
+            if harness_frame_started is not None:
+                harness_frame_started(tick, runtime.backend_elapsed_ns_total)
             if control_path_started is not None:
                 control_path_started(tick)
 
@@ -721,6 +735,12 @@ def _run_scenario(
             if scenario.stable_tick(backend.target_tick):
                 stable_raw_distances.append(raw_distance)
                 stable_excess_lags.append(lag)
+            if harness_frame_finished is not None:
+                harness_frame_finished(
+                    tick,
+                    revised_this_tick,
+                    runtime.backend_elapsed_ns_total,
+                )
             if after_tick is not None:
                 after_tick(tick)
             if cancellation_requested and driver.source is None:

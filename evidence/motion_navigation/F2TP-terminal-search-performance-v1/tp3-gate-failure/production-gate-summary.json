@@ -1,0 +1,59 @@
+{
+  "mode": "clutter-formal",
+  "cases": 5,
+  "source_commit": "a61a76e6a245cd2f4b808ba3eed581a6dc4722e6",
+  "source_worktree_clean": true,
+  "production_sha256": "be12bdcf9aa67d26a17c1c1e5629aeed17846f5716e44914593a191c5e8b3f4d",
+  "production_files": {
+    "mc2p/motion_nav/support_surfaces.py": "96a95033dc4c5970ca9db615996132a9c83bdf97db1b691a233512f6395d242f",
+    "mc2p/motion_nav/ground_terminal_search.py": "7962d1f21f6b1733cf9a39434e7b35dec60aa58f93234fbfa355b680d0309a0e",
+    "mc2p/motion_nav/motion_worker.py": "e383a50a65fa312ca86eb7cf5e884a0c76ea7500743d5ceeb9076d83253ad7fa",
+    "mc2p/motion_nav/motion_coordination.py": "97dbe464394f1c594034f38d8d541a8c8300f0fcbec81e876edf80fc462fd760",
+    "mc2p/motion_nav/fixed_route.py": "fb948374e185749a37a820a0be819fec507dfe072b8785e3281dc7a4372e81db",
+    "mc2p/motion_nav/action_route_executor.py": "4dbb5edc46caeb4fbce9ff397759c7f54735141053f0bf2f6b3d3d5214a37e1c",
+    "mc2p/motion_nav/navigation_session.py": "0d41c88cee87e208ac4cfa9827fbe27c12c10abc67123163e8392eb303605fc8",
+    "mc2p/motion_nav/online_motion.py": "69130ac03f74ea5be07af4f71c1ee1a5cfe338fae1369f4cfd2ee38743b8a259",
+    "mc2p/motion_nav/safe_ground_control.py": "1a87233e97141c7eaec01322e9c8e991a49105a31c94e002294e5cd316173d07"
+  },
+  "manifest_sha256": "c29e9158f461a647ae1b34ace278a3652e67052e3d9fcb80282fe517bf09efd6",
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "by_layer": {
+    "clutter_10/product": {
+      "cases": 5,
+      "results": {
+        "success": 5
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 5,
+      "control_ms": {
+        "p50": 17.3962,
+        "p95": 32.2344,
+        "p99": 39.6086,
+        "maximum": 44.8677
+      },
+      "production_prepare_ms": {
+        "p50": 9.2981,
+        "p95": 10.2973,
+        "p99": 22.9633,
+        "maximum": 24.9259
+      },
+      "backend_step_ms": {
+        "p50": 8.0694,
+        "p95": 21.8194,
+        "p99": 30.227,
+        "maximum": 32.7892
+      },
+      "full_frame_ms": {
+        "p50": 17.3962,
+        "p95": 32.2344,
+        "p99": 39.6086,
+        "maximum": 44.8677
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 34.9618
+    }
+  }
+}

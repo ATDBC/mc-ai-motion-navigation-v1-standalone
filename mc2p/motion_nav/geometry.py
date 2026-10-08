@@ -41,18 +41,23 @@ class SupportResult:
 
 
 def unknown_shape_owner_is_fully_covered(
-        world: WorldView, position: BlockPos) -> bool:
+        world: WorldView, position: BlockPos, *,
+        query_cache: WorldQueryCache | None = None) -> bool:
     """Whether known collision above prevents a hidden owner reaching higher."""
     if type(world) is not WorldView:
         raise ContractViolation("shape-owner coverage requires a world view")
     if (type(position) is not tuple or len(position) != 3
             or any(type(value) is not int for value in position)):
         raise ContractViolation("shape-owner coverage requires an integer cell")
-    fact = world.cell(position)
+    if query_cache is not None and (
+            type(query_cache) is not WorldQueryCache
+            or query_cache.world is not world):
+        raise ContractViolation("shape-owner query cache belongs to another world view")
+    fact = world.cell(position) if query_cache is None else query_cache.cell(position)
     if fact.knowledge is not CellKnowledge.UNKNOWN:
         return False
     above = (position[0], position[1] + 1, position[2])
-    cover = world.cell(above)
+    cover = world.cell(above) if query_cache is None else query_cache.cell(above)
     if (cover.knowledge is not CellKnowledge.BLOCK
             or cover.block is None or cover.block.fluid
             or cover.block.collision_kind == "unsupported"):
@@ -165,7 +170,8 @@ def sweep(
     for position in cells:
         fact = world.cell(position) if query_cache is None else query_cache.cell(position)
         if fact.knowledge is CellKnowledge.UNKNOWN:
-            if unknown_shape_owner_is_fully_covered(world, position):
+            if unknown_shape_owner_is_fully_covered(
+                    world, position, query_cache=query_cache):
                 continue
             missing.append(position)
             continue
@@ -248,7 +254,8 @@ def query_support(
     for position in cells:
         fact = world.cell(position) if query_cache is None else query_cache.cell(position)
         if fact.knowledge is CellKnowledge.UNKNOWN:
-            if unknown_shape_owner_is_fully_covered(world, position):
+            if unknown_shape_owner_is_fully_covered(
+                    world, position, query_cache=query_cache):
                 continue
             missing.append(position)
             continue

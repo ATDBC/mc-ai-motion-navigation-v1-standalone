@@ -34,6 +34,7 @@ from tests.motion_nav.test_b07_step_route import step_profile
 from tests.motion_nav.test_b07_surface_planning import ordinary_profile
 from tests.motion_nav.test_jump_up import jump_profile
 from tests.motion_nav.test_navigation_session import _InlinePlanner, _ground_anchor
+from tests.motion_nav.test_navigation_session import _InlineMotionWorker
 from mc2p.motion_nav.online_motion import InputApplicationLedger
 
 
@@ -110,7 +111,8 @@ class BridgePlanningTests(unittest.TestCase):
         initial = NavigationFrame(SESSION, self._body(.5), world.view(), 'fixture')
         session = NavigationSession('bridge-work-identity',
             NavigationSessionProfiles(ordinary_profile(), jump_profile(), step_profile()),
-            planner_worker=planner, bridge_policy=BridgePlacementPolicy(maximum_blocks=3),
+            planner_worker=planner, motion_worker=_InlineMotionWorker(),
+            bridge_policy=BridgePlacementPolicy(maximum_blocks=3),
             clock_ns=lambda: clock[0])
         self.addCleanup(session.close)
         session.start(request(), initial)
@@ -234,7 +236,7 @@ class BridgePlanningTests(unittest.TestCase):
         session = NavigationSession(
             "bridge-enabled-session",
             profiles,
-            planner_worker=_InlinePlanner(),
+            planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(),
             bridge_policy=BridgePlacementPolicy(maximum_blocks=3),
             clock_ns=lambda: 1,
         )
@@ -257,7 +259,7 @@ class BridgePlanningTests(unittest.TestCase):
         denied = NavigationSession(
             "bridge-disabled-session",
             profiles,
-            planner_worker=_InlinePlanner(),
+            planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(),
             clock_ns=lambda: 1,
         )
         self.addCleanup(denied.close)
@@ -277,7 +279,7 @@ class BridgePlanningTests(unittest.TestCase):
             NavigationSessionProfiles(
                 ordinary_profile(), jump_profile(), step_profile(),
             ),
-            planner_worker=_InlinePlanner(),
+            planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(),
             bridge_policy=BridgePlacementPolicy(maximum_blocks=3),
             clock_ns=lambda: 1,
         )
@@ -323,7 +325,7 @@ class BridgePlanningTests(unittest.TestCase):
             NavigationSessionProfiles(
                 ordinary_profile(), jump_profile(), step_profile(),
             ),
-            planner_worker=_InlinePlanner(),
+            planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(),
             bridge_policy=BridgePlacementPolicy(maximum_blocks=3),
             clock_ns=lambda: 1,
         )

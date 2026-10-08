@@ -1,0 +1,344 @@
+{
+  "schema_version": "mc2p.navigation-product.f2s-support-region-v9.v1",
+  "generator_id": "mc2p.f2s-support-region-inputs",
+  "generator_version": 1,
+  "base_manifest": "navigation-product-r28-v8.json",
+  "base_manifest_sha256": "c29e9158f461a647ae1b34ace278a3652e67052e3d9fcb80282fe517bf09efd6",
+  "support_region_inputs": {
+    "families": [
+      "platform_outer_corner",
+      "bridge_head",
+      "column_top",
+      "cliff_corner",
+      "holes",
+      "slab_edge",
+      "stair_edge",
+      "obstacle_support",
+      "cross_piece"
+    ],
+    "targets": [
+      "product",
+      "melee",
+      "follow"
+    ],
+    "directions": [
+      "south",
+      "east",
+      "north",
+      "west"
+    ],
+    "conditions": [
+      "normal",
+      "first_late"
+    ],
+    "seeds": {
+      "platform_outer_corner": 7601,
+      "bridge_head": 7602,
+      "column_top": 7603,
+      "cliff_corner": 7604,
+      "holes": 7605,
+      "slab_edge": 7606,
+      "stair_edge": 7607,
+      "obstacle_support": 7608,
+      "cross_piece": 7609
+    }
+  },
+  "performance_inputs": {
+    "platform": "windows",
+    "warmup_runs": 8,
+    "measured_runs": 80,
+    "clutter_density": 0.35,
+    "clutter_seed": 4,
+    "target": "follow",
+    "cases": [
+      "first_feasible",
+      "last_feasible",
+      "all_unavailable"
+    ],
+    "wall_clock_affects_selection": false
+  },
+  "reference_search": {
+    "source_reason": "planning_no_known_route",
+    "maximum_states": 4096,
+    "maximum_expansions": 4096,
+    "labels": [
+      "REFERENCE_REACHABLE",
+      "PROVEN_UNREACHABLE",
+      "UNRESOLVED"
+    ]
+  },
+  "expected_inputs": {
+    "v8_geometry_cases": 104,
+    "v8_clutter_cases": 1800,
+    "support_region_cases": 216,
+    "support_region_input_sha256": "7e4dc207a4cf1302061f27f6070443013db31a735926d1499e53c9450b49eba4"
+  },
+  "frozen_execution_failures": {
+    "fixed_route_has_no_forward_control": [
+      "f2r/clutter/0.1/1/19/melee",
+      "f2r/clutter/0.2/0/5/product",
+      "f2r/clutter/0.2/10/12/melee",
+      "f2r/clutter/0.2/3/19/melee",
+      "f2r/clutter/0.2/5/13/product",
+      "f2r/clutter/0.2/5/23/product",
+      "f2r/clutter/0.2/7/21/melee",
+      "f2r/clutter/0.2/7/21/product",
+      "f2r/clutter/0.2/8/17/melee"
+    ],
+    "fixed_route_stalled": [
+      "f2r/clutter/0.1/4/16/melee",
+      "f2r/clutter/0.1/7/1/product",
+      "f2r/clutter/0.2/11/22/product",
+      "f2r/clutter/0.2/8/1/product",
+      "f2r/clutter/0.2/8/5/product"
+    ]
+  },
+  "frozen_no_route_labels": [
+    {
+      "id": "f2r/clutter/0.2/0/12/follow",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 18,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/0/12/melee",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 90,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/0/12/product",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 90,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/0/2/follow",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 62,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/0/2/melee",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 90,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/0/2/product",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 90,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/2/10/follow",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 46,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/2/10/melee",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 112,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/2/10/product",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 112,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/2/15/follow",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 5,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/2/15/melee",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 86,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/2/15/product",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 86,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/2/21/follow",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 81,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/2/21/melee",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 112,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/2/21/product",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 112,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/2/22/follow",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 5,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/2/22/melee",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 86,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/2/22/product",
+      "label": "UNRESOLVED",
+      "expanded": 141,
+      "reason": "discrete_reference_exhausted"
+    },
+    {
+      "id": "f2r/clutter/0.2/3/20/follow",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 11,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/3/20/melee",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 80,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/3/20/product",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 101,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/3/21/follow",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 67,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/3/21/melee",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 88,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/3/21/product",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 88,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/3/9/follow",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 11,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/3/9/melee",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 80,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/7/0/follow",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 45,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/7/0/melee",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 88,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/7/0/product",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 108,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/7/16/follow",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 4,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/7/16/melee",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 77,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/7/16/product",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 77,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/7/7/follow",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 4,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/7/7/melee",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 77,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/7/7/product",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 77,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/8/12/follow",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 6,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/8/12/melee",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 116,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/8/12/product",
+      "label": "UNRESOLVED",
+      "expanded": 145,
+      "reason": "discrete_reference_exhausted"
+    },
+    {
+      "id": "f2r/clutter/0.2/8/19/follow",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 6,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/8/19/melee",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 116,
+      "reason": "goal_reached"
+    },
+    {
+      "id": "f2r/clutter/0.2/8/19/product",
+      "label": "REFERENCE_REACHABLE",
+      "expanded": 116,
+      "reason": "goal_reached"
+    }
+  ]
+}

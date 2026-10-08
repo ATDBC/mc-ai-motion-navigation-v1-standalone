@@ -231,7 +231,9 @@ class ReanchorConsumptionTests(unittest.TestCase):
         })
         planner = CountingPlanner()
         session = NavigationSession("reanchor-consumption", session_fixtures.NavigationSessionTests().profiles(),
-                                    planner_worker=planner, clock_ns=lambda: 1_000_000_000)
+                                    planner_worker=planner,
+                                    motion_worker=session_fixtures._InlineMotionWorker(),
+                                    clock_ns=lambda: 1_000_000_000)
         session.bind_source(session_fixtures._source())
         session.start_goal("task", 1, session_fixtures._goal((3.5, 1., .5)),
                            navigation_frame(world, 0, (.5, 1., .5)))

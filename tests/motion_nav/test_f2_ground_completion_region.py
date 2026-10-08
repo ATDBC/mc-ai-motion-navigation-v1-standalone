@@ -183,12 +183,34 @@ class GroundCompletionRegionTests(unittest.TestCase):
                 allowed_materials=PROFILES.ground.support_materials)
             self.assertIs(selected.status, QueryStatus.UNSUPPORTED)
 
+    def test_adjacent_fluid_and_unsupported_shape_are_clipped_without_material_policy(self):
+        for block in (BlockGeometry.empty('minecraft:water', fluid=True),
+                      BlockGeometry.unsupported('minecraft:oak_fence')):
+            backend, surface, goal = region_fixture()
+            stamp = ObservationStamp(backend.state.session, 2, 2, 'region-adjacent', 100_000_000)
+            backend.truth.observe_blocks(stamp, {(2, 64, 6): block})
+            selected = standable_region_in_goal(backend.truth.view(), surface, goal.region)
+            self.assertIs(selected.status, QueryStatus.FEASIBLE)
+            self.assertLessEqual(selected.completion_region.bounds.max_x, 1.7)
+
+    def test_fluid_and_unsupported_shape_covering_bound_region_remain_typed(self):
+        for block in (BlockGeometry.empty('minecraft:water', fluid=True),
+                      BlockGeometry.unsupported('minecraft:oak_fence')):
+            backend, surface, goal = region_fixture()
+            stamp = ObservationStamp(backend.state.session, 2, 2, 'region-bound', 100_000_000)
+            backend.truth.observe_blocks(stamp, {(1, 64, 6): block})
+            selected = standable_region_in_goal(backend.truth.view(), surface, goal.region)
+            self.assertIs(selected.status, QueryStatus.UNSUPPORTED)
+
     def test_support_threshold_cutting_rectangle_is_not_approximated(self):
         scene = Scene({(0, 63, 0): 'minecraft:stone'}, ((-2, 3), (60, 68), (-2, 3)))
         backend = CalculatorBackend([0], scene, (.5, 64., .5), 0.)
         surface = query_support_surfaces(backend.world._world, 0, 0, 64., 64.).surfaces[0]
         selected = standable_region_in_goal(backend.world._world, surface,
-            Aabb(.3, 63.99, .3, 1., 64.01, 1.))
+            # This goal is wholly inside one support-grid cell.  The 0.5
+            # contour cuts that cell, so F2-S must not invent a root or a
+            # zero-margin subregion inside it.
+            Aabb(.8, 63.99, .8, 1., 64.01, 1.))
         self.assertIs(selected.status, QueryStatus.UNSUPPORTED)
 
     def test_observed_region_completion_can_precede_reference(self):

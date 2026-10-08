@@ -23,6 +23,7 @@ from tests.motion_nav.test_jump_up import jump_profile
 from tests.motion_nav.test_navigation_session import (
     _InlinePlanner, _RepeatingRecoveryExecutor,
     _goal, _ground_anchor, _known_world, _nodes,
+    _InlineMotionWorker,
 )
 
 
@@ -60,7 +61,7 @@ class ExecutionSupervisorTests(unittest.TestCase):
             "supervisor-evidence", NavigationSessionProfiles(
                 ordinary_profile(), jump_profile(), step_profile(),
             ),
-            planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
+            planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(), clock_ns=lambda: 1_000_000_000,
         )
         initial = frame(world, 0, start.position)
         session.start_goal("task", 1, _goal(goal.position), initial)

@@ -30,6 +30,7 @@ from mc2p.motion_nav.navigation_session import (
 from mc2p.motion_nav.online_motion import InputApplicationLedger
 from mc2p.motion_nav.route_admission import (
     ActiveRouteTracker,
+    AdmissionReason,
     AdmissionStatus,
     RouteAdmitter,
 )
@@ -66,6 +67,7 @@ from tests.motion_nav.test_navigation_session import (
     _InlinePlanner,
     _ground_anchor,
     _source,
+    _InlineMotionWorker,
 )
 from tests.observation_v3_fixtures import valid_snapshot_v3
 
@@ -127,6 +129,8 @@ def _admit_equal_terminal(
     start_z: int,
     admission_z: float,
     unknown_z: int,
+    *,
+    allow_rejected: bool = False,
 ):
     world = _world(revision, unknown_z)
     goal = _goal(target_z)
@@ -169,6 +173,8 @@ def _admit_equal_terminal(
             changed_cells=(),
         )
     if admitted.status is not AdmissionStatus.ACCEPTED:
+        if allow_rejected:
+            return world, candidate, admitted, (0, -60, unknown_z)
         raise AssertionError(admitted)
     return world, candidate, admitted.route, (0, -60, unknown_z)
 
@@ -294,7 +300,7 @@ class D060TerminalNodeExactProofTests(unittest.TestCase):
 
         self.assertEqual(len(set(identities)), 4)
 
-    def test_body_connection_with_one_graph_node_stays_non_recipe(self):
+    def test_body_connection_with_one_graph_node_uses_exact_terminal_proof(self):
         world = _world(21, 10)
         goal = _goal(9.926195412950081)
         goal_node = SurfaceNodeId(0, 9, -60, 0)
@@ -340,57 +346,33 @@ class D060TerminalNodeExactProofTests(unittest.TestCase):
         route = admitted.route
         selection_only = (0, -60, 10)
         self.assertEqual(len(route.action_route.actions[-1].node_ids), 1)
-        self.assertIn(selection_only, route.action_route.actions[-1].dependencies)
-        provenance = next(
-            item for item in route.validation_plan.dependency_provenance
-            if item.position == selection_only
-        )
-        self.assertIn(
-            DependencyOwnerKind.NON_RECIPE,
-            tuple(
-                route.validation_plan.owner(ref).kind
-                for ref in provenance.owner_refs
-            ),
-        )
+        self.assertNotIn(selection_only, route.action_route.actions[-1].dependencies)
         self.assertFalse(any(
+            item.position == selection_only
+            for item in route.validation_plan.dependency_provenance
+        ))
+        self.assertTrue(any(
             recipe.query_kind is WalkValidationQueryKind.STANDABLE_CONNECTION
             and recipe.standable_connection.position
                 == candidate.path[-1].position
             for recipe in route.validation_plan.recipes
         ))
 
-    def test_equal_terminal_direct_query_blocked_stays_non_recipe(self):
+    def test_equal_terminal_direct_query_blocked_is_rejected(self):
         with patch(
             "mc2p.motion_nav.route_admission.query_standable_connection",
             return_value=StandablePointResult(QueryStatus.BLOCKED),
         ):
-            _, _, route, selection_only = _admit_equal_terminal(*_CASES[0])
+            _, _, rejected, _ = _admit_equal_terminal(
+                *_CASES[0], allow_rejected=True,
+            )
 
-        self.assertIn(
-            selection_only,
-            route.action_route.actions[-1].dependencies,
+        self.assertIs(rejected.status, AdmissionStatus.REJECTED)
+        self.assertIs(
+            rejected.reason,
+            AdmissionReason.GOAL_STANDING_POINT_UNAVAILABLE,
         )
-        provenance = next(
-            item for item in route.validation_plan.dependency_provenance
-            if item.position == selection_only
-        )
-        self.assertIn(
-            DependencyOwnerKind.NON_RECIPE,
-            tuple(
-                route.validation_plan.owner(ref).kind
-                for ref in provenance.owner_refs
-            ),
-        )
-        self.assertFalse(any(
-            recipe.query_kind is WalkValidationQueryKind.STANDABLE_CONNECTION
-            and recipe.standable_connection.position
-                == tuple((
-                    route.action_route.actions[-1].fixed_route.points[-1].x,
-                    route.action_route.actions[-1].fixed_route.points[-1].y,
-                    route.action_route.actions[-1].fixed_route.points[-1].z,
-                ))
-            for recipe in route.validation_plan.recipes
-        ))
+        self.assertIsNone(rejected.route)
 
     def test_equal_terminal_consumers_exclude_selection_and_keep_exact_proof(self):
         adapter = NavigationObservationAdapter()
@@ -399,7 +381,7 @@ class D060TerminalNodeExactProofTests(unittest.TestCase):
             NavigationSessionProfiles(
                 ordinary_profile(), jump_profile(), step_profile(),
             ),
-            planner_worker=_InlinePlanner(),
+            planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(),
             clock_ns=lambda: 1_000_000_000,
         )
         session.attach_observation_adapter(adapter)

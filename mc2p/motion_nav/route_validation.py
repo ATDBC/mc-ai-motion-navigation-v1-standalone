@@ -14,7 +14,8 @@ from mc2p.motion_nav.ground_route_execution import GroundCompletionRegion
 from mc2p.motion_nav.support_surfaces import (
     SupportSurface,
     query_standable_connection,
-    query_support_surfaces, standable_region_in_goal,
+    query_support_surfaces,
+    validate_standable_region,
 )
 from mc2p.motion_nav.world_model import (
     Aabb,
@@ -349,8 +350,8 @@ class DependencyOwner:
                 and (self.fixed_route_id is None or self.recipe_ref is None)):
             raise ContractViolation("walk leg owner requires route and recipe references")
         if (self.kind is DependencyOwnerKind.COMPLETION_REGION
-                and (self.fixed_route_id is None or self.recipe_ref is None)):
-            raise ContractViolation("completion owner requires route and recipe references")
+                and self.recipe_ref is None):
+            raise ContractViolation("completion owner requires a recipe reference")
 
 
 @dataclass(frozen=True, slots=True)
@@ -675,17 +676,12 @@ def replay_walk_validation_recipe(
         if current.status is not QueryStatus.FEASIBLE or surface is None:
             return (current.status if current.status is not QueryStatus.FEASIBLE else QueryStatus.BLOCKED,
                     current.dependencies)
-        result = standable_region_in_goal(world, surface, args.goal_region,
-            connection_from=args.connection_from, body_width=args.body_width_blocks,
+        result = validate_standable_region(
+            world, surface, args.goal_region, args.expected_region,
+            body_width=args.body_width_blocks,
             body_height=args.body_height_blocks, minimum_support_fraction=args.minimum_support_fraction,
             allowed_materials=recipe.ground_profile.support_materials, query_cache=cache)
         status, dependencies = result.status, result.dependencies
-        if status is QueryStatus.FEASIBLE:
-            accepted, expected = result.completion_region, args.expected_region
-            geometry = lambda r: (r.bounds, r.reference_point, r.support_height, r.surface_identity)
-            if geometry(accepted) != geometry(expected):
-                status = QueryStatus.BLOCKED
-            dependencies = accepted.dependencies
     if (status is QueryStatus.FEASIBLE
             and not ground_profile_allows_dependency_blocks(
                 recipe.ground_profile, world, dependencies, cache

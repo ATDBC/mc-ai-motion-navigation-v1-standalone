@@ -29,6 +29,7 @@ from tests.motion_nav.test_b07_step_route import step_profile
 from tests.motion_nav.test_b07_surface_planning import ordinary_profile
 from tests.motion_nav.test_jump_up import jump_profile
 from tests.motion_nav.test_navigation_session import _InlinePlanner
+from tests.motion_nav.test_navigation_session import _InlineMotionWorker
 from tests.test_action_receipt import receipt_value
 from tests.test_player_runtime import _RecordingTrace
 
@@ -327,7 +328,7 @@ class WorldChangeNavigationIntegrationTests(unittest.TestCase):
         session = NavigationSession(
             "b11-runtime-session",
             profiles,
-            planner_worker=_InlinePlanner(),
+            planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(),
             bridge_policy=BridgePlacementPolicy(maximum_blocks=maximum_blocks),
             clock_ns=lambda: clock[0],
         )

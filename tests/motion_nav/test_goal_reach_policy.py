@@ -153,7 +153,7 @@ class GoalReachPolicyFormalTests(unittest.TestCase):
         session = NavigationSession(
             "satisfied-cross-node",
             fixtures.NavigationSessionTests().profiles(),
-            planner_worker=planner,
+            planner_worker=planner, motion_worker=fixtures._InlineMotionWorker(),
             clock_ns=lambda: clock[0],
         )
         session.bind_source(fixtures._source())
@@ -412,7 +412,7 @@ class GoalReachPolicyFormalTests(unittest.TestCase):
                 session = NavigationSession(
                     "policy-mismatch",
                     fixtures.NavigationSessionTests().profiles(),
-                    planner_worker=fixtures._InlinePlanner(),
+                    planner_worker=fixtures._InlinePlanner(), motion_worker=fixtures._InlineMotionWorker(),
                     retry_ledger=ledger,
                 )
                 session.bind_source(fixtures._source())
@@ -435,7 +435,7 @@ class GoalReachPolicyFormalTests(unittest.TestCase):
             session = NavigationSession(
                 "diagnostic-boundary",
                 fixtures.NavigationSessionTests().profiles(),
-                planner_worker=fixtures._InlinePlanner(),
+                planner_worker=fixtures._InlinePlanner(), motion_worker=fixtures._InlineMotionWorker(),
                 retry_ledger=ledger,
                 clock_ns=lambda: clock[0],
             )

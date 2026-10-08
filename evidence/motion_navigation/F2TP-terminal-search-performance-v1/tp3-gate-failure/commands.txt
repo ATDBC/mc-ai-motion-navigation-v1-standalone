@@ -1,0 +1,3 @@
+.venv\python.exe -m unittest tests.motion_nav.test_ground_terminal_search tests.motion_nav.test_ground_terminal_formal_chain tests.motion_nav.test_b10_motion_worker tests.motion_nav.test_b10_motion_candidate tests.motion_nav.test_navigation_session tests.motion_nav.test_fixed_route_walk
+$env:PYTHONPATH='.'; .venv\python.exe scripts/benchmark_f2tp_worker.py --phase-samples 20 --beam-samples 10 --output .tmp/f2tp-worker-gate-a61a76e6.json
+$env:PYTHONPATH='.'; .venv\python.exe scripts/f2r_piecewise_evidence.py clutter-formal --output .tmp/f2tp-production-gate-a61a76e6 --workers 1 --ids f2r/clutter/0.1/0/0/product f2r/clutter/0.1/0/1/product f2r/clutter/0.1/0/2/product f2r/clutter/0.1/0/3/product f2r/clutter/0.1/0/4/product

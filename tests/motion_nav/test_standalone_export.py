@@ -142,11 +142,32 @@ class StandaloneExportTests(unittest.TestCase):
             if path.is_file() and "__pycache__" not in path.parts:
                 self.assertEqual((exported/path.relative_to(source)).read_bytes(), path.read_bytes())
 
-    def test_f2_export_matches_frozen_production_fingerprints(self):
-        source = self.root / "evidence/motion_navigation/F2R-piecewise-completion-v1/source-consistency.json"
-        report = json.loads(source.read_text("utf-8"))
-        for name, expected in report["full_production_files"].items():
-            self.assertEqual(hashlib.sha256((self.root/name).read_bytes()).hexdigest(), expected, name)
+    def test_f2_export_preserves_history_and_matches_current_production_fingerprints(self):
+        historical_name = Path(
+            "evidence/motion_navigation/F2R-piecewise-completion-v1/"
+            "source-consistency.json"
+        )
+        self.assertEqual(
+            (self.root / historical_name).read_bytes(),
+            (ROOT / historical_name).read_bytes(),
+            "the frozen F2-R fingerprint record must be exported unchanged",
+        )
+
+        current_name = Path(
+            "evidence/motion_navigation/F2RH-runtime-worker-hotpath-v1/"
+            "formal-gate-summary.json"
+        )
+        report = json.loads((self.root / current_name).read_text("utf-8"))
+        self.assertTrue(
+            report["source_worktree_clean"],
+            "the current production fingerprint must come from a clean formal gate",
+        )
+        for name, expected in report["production_files"].items():
+            self.assertEqual(
+                hashlib.sha256((self.root / name).read_bytes()).hexdigest(),
+                expected,
+                f"current production fingerprint differs: {name}",
+            )
 
     def test_export_has_no_local_artifacts_credentials_or_worlds(self):
         forbidden_parts = {".tmp", "artifacts", ".venv", ".gradle", "world", "worlds", "saves"}

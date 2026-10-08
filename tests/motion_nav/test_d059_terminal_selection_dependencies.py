@@ -30,6 +30,7 @@ from mc2p.motion_nav.online_motion import InputApplicationLedger
 from mc2p.motion_nav.retry_ledger import RetryCause
 from mc2p.motion_nav.route_admission import (
     ActiveRouteTracker,
+    AdmissionReason,
     AdmissionStatus,
     CorridorStatus,
     RouteAdmitter,
@@ -61,6 +62,7 @@ from tests.motion_nav.test_b07_surface_planning import ordinary_profile
 from tests.motion_nav.test_b07_support_surfaces import surface_world
 from tests.motion_nav.test_navigation_session import (
     _InlinePlanner,
+    _InlineMotionWorker,
     _ground_anchor,
     _source,
 )
@@ -197,14 +199,20 @@ class D059TerminalSelectionDependencyTests(unittest.TestCase):
         )
         self.assertEqual(candidate.path[-1].position, (2.5, 1, 1.5))
         selected = route.action_route.actions[-1].fixed_route.points[-1]
-        self.assertEqual((selected.x, selected.y, selected.z), (2.45, 1, 1.5))
+        self.assertEqual(
+            (selected.x, selected.y, selected.z),
+            candidate.path[-1].position,
+        )
         exact = tuple(
             recipe for recipe in plan.recipes
             if recipe.query_kind
                 is WalkValidationQueryKind.STANDABLE_CONNECTION
         )
         self.assertEqual(len(exact), 1)
-        self.assertEqual(exact[0].standable_connection.position, (2.45, 1, 1.5))
+        self.assertEqual(
+            exact[0].standable_connection.position,
+            candidate.path[-1].position,
+        )
         self.assertNotIn(unknown, exact[0].dependencies)
         self.assertNotIn(unknown, candidate.dependencies)
         self.assertIsNone(plan.initial_connection)
@@ -601,7 +609,7 @@ class D059TerminalSelectionDependencyTests(unittest.TestCase):
             ActiveRouteValidationReason.STRICT_OWNER_CHANGED,
         )
 
-    def test_no_exact_proof_branches_keep_terminal_selection_non_recipe(self):
+    def test_unproved_terminal_rejects_and_ground_tail_gets_exact_recipe(self):
         with self.subTest(branch="second-direct-query-blocked"):
             world = _world_with_unselected_unknowns()
             request, candidate = _candidate(
@@ -615,22 +623,25 @@ class D059TerminalSelectionDependencyTests(unittest.TestCase):
                 "mc2p.motion_nav.route_admission.query_standable_connection",
                 return_value=StandablePointResult(QueryStatus.BLOCKED),
             ):
-                route = _admit(
-                    world,
-                    request,
+                rejected = RouteAdmitter().admit_surface(
                     candidate,
-                    candidate.path[0].position,
+                    frame(world, 2, candidate.path[0].position),
+                    expected_request_id=request.request_id,
+                    goal_id=request.goal_id,
+                    goal_revision=request.goal_revision,
+                    changed_cells=(),
                 )
-            changed = (3, 1, 1)
-            world.confirm_air(
-                ObservationStamp(
-                    world.session, 45, 45, "test-clock", 2_250_000_000,
-                ),
-                (changed,),
+            self.assertIs(
+                rejected.status,
+                AdmissionStatus.REJECTED,
             )
-            _assert_non_recipe_stop(self, world, route, changed)
+            self.assertIs(
+                rejected.reason,
+                AdmissionReason.GOAL_STANDING_POINT_UNAVAILABLE,
+            )
 
         with self.subTest(branch="ground-traversal-tail"):
+            selection_only = (3, 5, 0)
             world = surface_world({
                 (0, 0, 0): BlockGeometry.full_cube("minecraft:stone"),
                 (1, 0, 0): BlockGeometry(
@@ -649,7 +660,7 @@ class D059TerminalSelectionDependencyTests(unittest.TestCase):
                     for x in (2, 3)
                     for y in range(-2, 6)
                     for z in range(-1, 2)
-                    if (x, y, z) != (2, 0, 0)
+                    if (x, y, z) not in {(2, 0, 0), selection_only}
                 ),
             )
             snapshot = KnownMapSnapshotBuilder(
@@ -700,18 +711,57 @@ class D059TerminalSelectionDependencyTests(unittest.TestCase):
             )
             self.assertIs(admitted.status, AdmissionStatus.ACCEPTED)
             route = admitted.route
-            self.assertFalse(any(
-                recipe.query_kind
+            tail_recipes = tuple(
+                recipe for recipe in route.validation_plan.recipes
+                if recipe.query_kind
                     is WalkValidationQueryKind.STANDABLE_CONNECTION
-                for recipe in route.validation_plan.recipes
+            )
+            self.assertTrue(tail_recipes)
+            self.assertNotIn(selection_only, route.action_route.dependencies)
+            self.assertNotIn(selection_only, route.corridor.dependencies)
+            self.assertFalse(any(
+                item.position == selection_only
+                for item in route.validation_plan.dependency_provenance
             ))
-            changed = (3, 1, 0)
-            _assert_non_recipe_stop(
-                self,
-                world,
-                route,
-                changed,
-                reason=ActiveRouteValidationReason.STRICT_OWNER_CHANGED,
+            world.confirm_air(
+                ObservationStamp(
+                    world.session, 4, 4, "test-clock", 200_000_000,
+                ),
+                (selection_only,),
+            )
+            unaffected = ActiveRouteTracker(route).validate(
+                world.view(),
+                (selection_only,),
+                ground_profile=ordinary_profile(),
+            )
+            self.assertIs(
+                unaffected.disposition,
+                ActiveRouteValidationDisposition.UNAFFECTED,
+            )
+            self.assertIs(
+                unaffected.reason,
+                ActiveRouteValidationReason.NO_INTERSECTION,
+            )
+            self.assertEqual(unaffected.queries_used, 0)
+
+            tail_support = (2, 0, 0)
+            self.assertTrue(any(
+                tail_support in recipe.dependencies for recipe in tail_recipes
+            ))
+            world.confirm_air(
+                ObservationStamp(
+                    world.session, 5, 5, "test-clock", 250_000_000,
+                ),
+                (tail_support,),
+            )
+            stopped = ActiveRouteTracker(route).validate(
+                world.view(),
+                (tail_support,),
+                ground_profile=ordinary_profile(),
+            )
+            self.assertIs(
+                stopped.disposition,
+                ActiveRouteValidationDisposition.STOP,
             )
 
     def test_formal_session_ignores_each_selection_only_change(self):
@@ -725,13 +775,14 @@ class D059TerminalSelectionDependencyTests(unittest.TestCase):
                 step_profile(),
             ),
             planner_worker=planner,
+            motion_worker=_InlineMotionWorker(),
             clock_ns=lambda: 1_000_000_000,
         )
         # D063 now waits for the complete bounded goal-surface fact set.
         # This D059 lifecycle test intentionally isolates the older route
         # validation boundary, so supply the already-selected graph node and
         # leave the terminal selection dependency to RouteAdmitter.
-        session._surface_for_goal = lambda frame, goal: (
+        session._surface_for_goal = lambda frame, goal, ground_profile=None: (
             SurfaceNodeId(
                 2,
                 round((goal.region.min_z + goal.region.max_z) / 2.0 - .5),

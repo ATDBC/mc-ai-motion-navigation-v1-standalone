@@ -16,7 +16,11 @@ from mc2p.motion_nav.movement_transition import (
     GoalSupport,
     MovementMode,
 )
-from mc2p.motion_nav.route_admission import AdmissionStatus, RouteAdmitter
+from mc2p.motion_nav.route_admission import (
+    AdmissionReason,
+    AdmissionStatus,
+    RouteAdmitter,
+)
 from mc2p.motion_nav.route_validation import (
     ActiveRouteValidationPlan,
     DependencyOwner,
@@ -155,7 +159,7 @@ class D058ValidationPlanTests(unittest.TestCase):
             for recipe in plan.recipes
         ))
 
-    def test_standable_tail_and_unmappable_tail_have_distinct_metadata(self):
+    def test_standable_tail_is_proved_and_unmappable_tail_is_rejected(self):
         world = flat_surface_world(4)
         goal = GoalState(
             Aabb(2.72, .99, 1.52, 2.92, 1.01, 1.72),
@@ -184,18 +188,20 @@ class D058ValidationPlanTests(unittest.TestCase):
             "mc2p.motion_nav.route_admission.query_standable_connection",
             return_value=blocked,
         ):
-            unmappable = _admit(
-                world, request, candidate, candidate.path[0].position,
+            unmappable = RouteAdmitter().admit_surface(
+                candidate,
+                frame(world, 2, candidate.path[0].position),
+                expected_request_id=request.request_id,
+                goal_id=request.goal_id,
+                goal_revision=request.goal_revision,
+                changed_cells=(),
             )
-        unmappable_plan = unmappable.validation_plan
-        self.assertFalse(any(
-            recipe.query_kind is WalkValidationQueryKind.STANDABLE_CONNECTION
-            for recipe in unmappable_plan.recipes
-        ))
-        self.assertTrue(any(
-            owner.kind is DependencyOwnerKind.NON_RECIPE
-            for owner in unmappable_plan.owners
-        ))
+        self.assertIs(unmappable.status, AdmissionStatus.REJECTED)
+        self.assertIs(
+            unmappable.reason,
+            AdmissionReason.GOAL_STANDING_POINT_UNAVAILABLE,
+        )
+        self.assertIsNone(unmappable.route)
 
     def test_walk_step_walk_keeps_two_action_plans_and_strict_owner(self):
         session = WorldSessionId("d058-walk-step-walk")

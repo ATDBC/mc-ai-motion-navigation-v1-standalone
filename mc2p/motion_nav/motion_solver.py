@@ -251,6 +251,9 @@ class SolveStatus(StrEnum):
     NO_SOLUTION_WITHIN_SEARCH = "no_solution_within_search"
     INVALID_INPUT = "invalid_input"
     INTERNAL_ERROR = "internal_error"
+    CANCELLED = "cancelled"
+    STALE = "stale"
+    TIMEOUT = "timeout"
 
 
 @dataclass(frozen=True, slots=True)
@@ -858,6 +861,7 @@ def validate_gap_trajectory(
 def _release_recovery_evidence(
         trajectory: tuple[PhysicsState, ...], world: PhysicsWorldView,
         request: GapSolveRequest | AirTransitionSolveRequest,
+        *, stop_check=lambda: None,
 ) -> tuple[
         tuple[int, ...], tuple[BlockPos, ...], tuple[str, ...],
         SolveStatus | None, tuple[BlockPos, ...], tuple[str, ...],
@@ -871,6 +875,13 @@ def _release_recovery_evidence(
     # Include the final exit's stop tail as well as each interruptible command.
     # A grounded flag alone does not establish support or harmless recovery.
     for index, release_state in enumerate(trajectory):
+        stopped = _cooperative_stop_result(stop_check)
+        if stopped is not None:
+            return (
+                tuple(safe), tuple(sorted(dependencies)),
+                tuple(sorted(resource_reasons)), stopped.status,
+                stopped.missing_cells, stopped.reasons,
+            )
         current = release_state
         recovered = False
         maximum_fall = current.fall_distance_blocks
@@ -879,6 +890,13 @@ def _release_recovery_evidence(
         # Then verify its whole passive stop tail, with a separate bounded
         # horizon. A small residual velocity is not proof of continued support.
         for recovery_tick in range(2 * request.recovery_horizon_ticks):
+            stopped = _cooperative_stop_result(stop_check)
+            if stopped is not None:
+                return (
+                    tuple(safe), tuple(sorted(dependencies)),
+                    tuple(sorted(resource_reasons)), stopped.status,
+                    stopped.missing_cells, stopped.reasons,
+                )
             if recovery_tick >= request.recovery_horizon_ticks and not settled:
                 break
             neutral = TickInput(
@@ -953,6 +971,7 @@ def _replay_verified_commands(
         *, start_tick: int,
         inherited_dependencies: tuple[BlockPos, ...] = (),
         inherited_resource_reasons: tuple[str, ...] = (),
+        stop_check=lambda: None,
 ) -> tuple[VerifiedMotionStartVariant | None, SolveResult | None]:
     """Replay one immutable command list from one concrete pre-start state."""
     current = entry_state
@@ -962,6 +981,9 @@ def _replay_verified_commands(
     dependencies = set(inherited_dependencies)
     resource_reasons = set(inherited_resource_reasons)
     for command in commands:
+        stopped = _cooperative_stop_result(stop_check)
+        if stopped is not None:
+            return None, stopped
         projected = project_movement_command(
             current, command.movement,
             movement_yaw_radians=command.required_movement_yaw_radians,
@@ -1004,7 +1026,9 @@ def _replay_verified_commands(
         )
     (release_safe, release_dependencies, release_resource_reasons,
      release_status, release_missing, release_reasons) = \
-        _release_recovery_evidence(trajectory, world, request)
+        _release_recovery_evidence(
+            trajectory, world, request, stop_check=stop_check,
+        )
     if release_status is not None:
         return None, SolveResult(
             release_status,
@@ -1038,6 +1062,7 @@ def _prove_delayed_starts(
         commands: tuple[MotionCommandTick, ...],
         world: PhysicsWorldView,
         request: GapSolveRequest | AirTransitionSolveRequest,
+        *, stop_check=lambda: None,
 ) -> tuple[
         tuple[VerifiedMotionStartVariant, ...],
         tuple[BlockPos, ...], tuple[str, ...], SolveResult | None,
@@ -1055,8 +1080,14 @@ def _prove_delayed_starts(
     for start_tick in range(
             window.earliest_start_tick + 1,
             window.latest_start_tick + 1):
+        stopped = _cooperative_stop_result(stop_check)
+        if stopped is not None:
+            return (), (), (), stopped
         target_entry_tick = start_tick - 1
         while current.movement_tick_id < target_entry_tick:
+            stopped = _cooperative_stop_result(stop_check)
+            if stopped is not None:
+                return (), (), (), stopped
             projected = project_movement_command(
                 current, MovementV1(),
                 movement_yaw_radians=current.yaw_radians,
@@ -1106,6 +1137,7 @@ def _prove_delayed_starts(
             start_tick=start_tick,
             inherited_dependencies=tuple(sorted(prelude_dependencies)),
             inherited_resource_reasons=tuple(sorted(prelude_resource_reasons)),
+            stop_check=stop_check,
         )
         if failure is not None:
             return (), (), (), failure
@@ -1140,7 +1172,8 @@ def revalidate_gap_motion(
         proof: VerifiedMotionResult, anchor: StateAnchor,
         world: PhysicsWorldView,
         execution_window: CandidateExecutionWindow, *,
-        entry_prefix: tuple[MotionCommandTick, ...] = ()) -> SolveResult:
+        entry_prefix: tuple[MotionCommandTick, ...] = (),
+        stop_check=lambda: None) -> SolveResult:
     """Replay one old verified air command sequence without searching.
 
     The worker uses the same preparation predictor as an initial solve. It
@@ -1153,6 +1186,9 @@ def revalidate_gap_motion(
             or type(entry_prefix) is not tuple or len(entry_prefix) > 4
             or any(type(command) is not MotionCommandTick for command in entry_prefix)):
         raise ContractViolation("gap revalidation requires proof, anchor, world and window")
+    stopped = _cooperative_stop_result(stop_check)
+    if stopped is not None:
+        return stopped
     if (anchor.session != world.session
             or anchor.ruleset_id != proof.ruleset_id
             or anchor.state_schema != proof.entry_state.state_schema
@@ -1186,6 +1222,7 @@ def revalidate_gap_motion(
     if entry_prefix:
         return _prepare_air_transition(
             anchor, world, request, entry_prefix, revalidate_proof=proof,
+            stop_check=stop_check,
         )
     rejected = check_motion_entry(anchor, world, request)
     if rejected is not None:
@@ -1196,6 +1233,7 @@ def revalidate_gap_motion(
         world,
         request,
         start_tick=execution_window.earliest_start_tick,
+        stop_check=stop_check,
     )
     if failure is not None:
         if failure.status in {
@@ -1214,7 +1252,7 @@ def revalidate_gap_motion(
     assert primary is not None
     (delayed_variants, delayed_dependencies, delayed_resource_reasons,
      delayed_failure) = _prove_delayed_starts(
-        anchor, proof.commands, world, request,
+        anchor, proof.commands, world, request, stop_check=stop_check,
     )
     if delayed_failure is not None:
         return delayed_failure
@@ -1247,9 +1285,11 @@ def revalidate_air_transition(
         proof: VerifiedMotionResult, anchor: StateAnchor,
         world: PhysicsWorldView,
         execution_window: CandidateExecutionWindow, *,
-        entry_prefix: tuple[MotionCommandTick, ...] = ()) -> SolveResult:
+        entry_prefix: tuple[MotionCommandTick, ...] = (),
+        stop_check=lambda: None) -> SolveResult:
     return revalidate_gap_motion(
         proof, anchor, world, execution_window, entry_prefix=entry_prefix,
+        stop_check=stop_check,
     )
 
 
@@ -1264,7 +1304,22 @@ class _AirRollout:
     failure: SolveResult | None
 
 
-def _rollout_air_template(anchor, world, request, template) -> _AirRollout:
+def _cooperative_stop_result(stop_check) -> SolveResult | None:
+    status = stop_check()
+    if status is None:
+        return None
+    value = getattr(status, "value", str(status))
+    mapped = {
+        "cancelled": SolveStatus.CANCELLED,
+        "stale": SolveStatus.STALE,
+        "timeout": SolveStatus.TIMEOUT,
+    }.get(value, SolveStatus.CANCELLED)
+    return SolveResult(mapped, reasons=(f"worker_{value}",))
+
+
+def _rollout_air_template(
+    anchor, world, request, template, *, stop_check=lambda: None,
+) -> _AirRollout:
     current = anchor.physics_state
     commands: list[MotionCommandTick] = []
     inputs: list[TickInput] = []
@@ -1277,6 +1332,10 @@ def _rollout_air_template(anchor, world, request, template) -> _AirRollout:
     observed_landing = False
     exit_motion_applied = 0
     for tick in range(request.max_ticks):
+        stopped = _cooperative_stop_result(stop_check)
+        if stopped is not None:
+            incomplete = stopped
+            break
         if observed_landing and request.exit_direction is not None:
             command = MotionCommandTick(
                 MovementV1(forward=1),
@@ -1378,18 +1437,26 @@ def _rollout_air_template(anchor, world, request, template) -> _AirRollout:
                        tuple(sorted(dependencies)), tuple(sorted(resource_reasons)), incomplete)
 
 
-def _ranked_air_rollouts(anchor, world, request):
+def _ranked_air_rollouts(anchor, world, request, *, stop_check=lambda: None):
     templates = request.policy.templates
     if request.continuation is None or request.kind is not MotionSolveKind.JUMP_GAP:
         for template in templates:
-            yield _rollout_air_template(anchor, world, request, template)
+            yield _rollout_air_template(
+                anchor, world, request, template, stop_check=stop_check,
+            )
         return
     # Ranking is pure, deterministic and bounded. Unknown or unsafe candidates
     # are not promoted into proofs. Full release/late-start proofs follow rank.
     continuation = request.continuation
     ranked = []
     for index, template in enumerate(templates[:request.max_candidates]):
-        rollout = _rollout_air_template(anchor, world, request, template)
+        stopped = _cooperative_stop_result(stop_check)
+        if stopped is not None:
+            yield _AirRollout((), (), (anchor.physics_state,), (), (), (), stopped)
+            return
+        rollout = _rollout_air_template(
+            anchor, world, request, template, stop_check=stop_check,
+        )
         valid = rollout.failure is None and validate_gap_trajectory(
             rollout.states, rollout.events, request).accepted
         progress = continuation.progress(rollout.states[-1].position)
@@ -1405,7 +1472,7 @@ def _ranked_air_rollouts(anchor, world, request):
 
 def solve_air_transition(
         anchor: StateAnchor, world: PhysicsWorldView,
-        request: AirTransitionSolveRequest) -> SolveResult:
+        request: AirTransitionSolveRequest, *, stop_check=lambda: None) -> SolveResult:
     if type(request) is not AirTransitionSolveRequest:
         raise ContractViolation("air transition solver requires a typed request")
     rejected = check_motion_entry(anchor, world, request)
@@ -1416,7 +1483,11 @@ def solve_air_transition(
     saw_release_recovery_failure = False
     saw_damage_budget_failure = False
     saw_missing_cells: set[BlockPos] = set()
-    for template in _ranked_air_rollouts(anchor, world, request):
+    for template in _ranked_air_rollouts(
+            anchor, world, request, stop_check=stop_check):
+        stopped = _cooperative_stop_result(stop_check)
+        if stopped is not None:
+            return replace(stopped, candidates_evaluated=evaluated)
         if evaluated >= request.max_candidates:
             return SolveResult(
                 SolveStatus.BUDGET_EXHAUSTED,
@@ -1447,7 +1518,9 @@ def solve_air_transition(
             continue
         (release_safe, release_dependencies, release_resource_reasons,
          release_status, release_missing, release_reasons) = \
-            _release_recovery_evidence(trajectory, world, request)
+            _release_recovery_evidence(
+                trajectory, world, request, stop_check=stop_check,
+            )
         if release_status is SolveStatus.NO_SOLUTION_WITHIN_SEARCH:
             saw_release_recovery_failure = True
             continue
@@ -1463,7 +1536,7 @@ def solve_air_transition(
         resource_reasons.update(release_resource_reasons)
         (delayed_variants, delayed_dependencies, delayed_resource_reasons,
          delayed_failure) = _prove_delayed_starts(
-            anchor, tuple(commands), world, request,
+            anchor, tuple(commands), world, request, stop_check=stop_check,
         )
         if delayed_failure is not None:
             if delayed_failure.status in {
@@ -1540,19 +1613,25 @@ def solve_air_transition(
 
 
 def solve_one_cell_gap(anchor: StateAnchor, world: PhysicsWorldView,
-                       request: GapSolveRequest) -> SolveResult:
+                       request: GapSolveRequest, *,
+                       stop_check=lambda: None) -> SolveResult:
     if type(request) is not GapSolveRequest:
         raise ContractViolation("gap solver requires a GapSolveRequest")
-    return solve_air_transition(anchor, world, request.as_air_transition())
+    return solve_air_transition(
+        anchor, world, request.as_air_transition(), stop_check=stop_check,
+    )
 
 
 def solve_prepared_air_transition(
         anchor: StateAnchor,
         world: PhysicsWorldView,
         request: GapSolveRequest | AirTransitionSolveRequest,
-        entry_prefix: tuple[MotionCommandTick, ...]) -> SolveResult:
+        entry_prefix: tuple[MotionCommandTick, ...], *,
+        stop_check=lambda: None) -> SolveResult:
     """Solve at the entry predicted by one already-selected short ground prefix."""
-    return _prepare_air_transition(anchor, world, request, entry_prefix)
+    return _prepare_air_transition(
+        anchor, world, request, entry_prefix, stop_check=stop_check,
+    )
 
 
 def _prepare_air_transition(
@@ -1560,7 +1639,8 @@ def _prepare_air_transition(
         world: PhysicsWorldView,
         request: GapSolveRequest | AirTransitionSolveRequest,
         entry_prefix: tuple[MotionCommandTick, ...], *,
-        revalidate_proof: VerifiedMotionResult | None = None) -> SolveResult:
+        revalidate_proof: VerifiedMotionResult | None = None,
+        stop_check=lambda: None) -> SolveResult:
     """Predict one prefix for either search or unchanged-command revalidation.
 
     The original anchor remains the only observation. The conditional anchor
@@ -1583,15 +1663,18 @@ def _prepare_air_transition(
             reasons=("preparation_execution_window_detached",),
         )
     if not entry_prefix:
-        return (solve_one_cell_gap(anchor, world, request)
+        return (solve_one_cell_gap(anchor, world, request, stop_check=stop_check)
                 if type(request) is GapSolveRequest else
-                solve_air_transition(anchor, world, request))
+                solve_air_transition(anchor, world, request, stop_check=stop_check))
     current = anchor.physics_state
     trajectory = [current]
     inputs: list[TickInput] = []
     dependencies: set[BlockPos] = set()
     resource_reasons: set[str] = set()
     for command in entry_prefix:
+        stopped = _cooperative_stop_result(stop_check)
+        if stopped is not None:
+            return stopped
         if (command.movement.jump
                 or _angle_error(command.required_movement_yaw_radians,
                                 anchor.physics_state.yaw_radians) > 1.0e-9):
@@ -1646,11 +1729,14 @@ def _prepare_air_transition(
         anchor, movement_tick_id=current.movement_tick_id, physics_state=current,
     )
     solved = (revalidate_air_transition(
-                  revalidate_proof, predicted_entry, world, request.execution_window)
+                  revalidate_proof, predicted_entry, world, request.execution_window,
+                  stop_check=stop_check)
               if revalidate_proof is not None else
-              solve_one_cell_gap(predicted_entry, world, request)
+              solve_one_cell_gap(
+                  predicted_entry, world, request, stop_check=stop_check)
               if type(request) is GapSolveRequest else
-              solve_air_transition(predicted_entry, world, request))
+              solve_air_transition(
+                  predicted_entry, world, request, stop_check=stop_check))
     if solved.status is not SolveStatus.SOLVED:
         return solved
     assert solved.proof is not None

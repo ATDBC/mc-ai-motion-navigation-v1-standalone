@@ -1,0 +1,102 @@
+{
+  "mode": "clutter-formal",
+  "cases": 42,
+  "source_commit": "34ee73692cb75a613d9b86960f3eb5113dcc71e4",
+  "source_worktree_clean": true,
+  "production_sha256": "96a95033dc4c5970ca9db615996132a9c83bdf97db1b691a233512f6395d242f",
+  "manifest_sha256": "c29e9158f461a647ae1b34ace278a3652e67052e3d9fcb80282fe517bf09efd6",
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "by_layer": {
+    "clutter_10/follow": {
+      "cases": 17,
+      "results": {
+        "success": 17
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 17,
+      "control_ms": {
+        "p50": 4.3888,
+        "p95": 5.5037,
+        "p99": 5.767,
+        "maximum": 5.7954
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 5.7954
+    },
+    "clutter_10/melee": {
+      "cases": 4,
+      "results": {
+        "success": 4
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 4,
+      "control_ms": {
+        "p50": 4.6817,
+        "p95": 5.7429,
+        "p99": 6.0446,
+        "maximum": 6.0446
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 6.0446
+    },
+    "clutter_10/product": {
+      "cases": 1,
+      "results": {
+        "success": 1
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 1,
+      "control_ms": {
+        "p50": 4.4557,
+        "p95": 5.1738,
+        "p99": 5.1738,
+        "maximum": 5.1738
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 5.1738
+    },
+    "clutter_20/follow": {
+      "cases": 12,
+      "results": {
+        "success": 12
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 12,
+      "control_ms": {
+        "p50": 4.7609,
+        "p95": 7.0752,
+        "p99": 7.4773,
+        "maximum": 7.4773
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 7.4773
+    },
+    "clutter_20/melee": {
+      "cases": 8,
+      "results": {
+        "success": 8
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 8,
+      "control_ms": {
+        "p50": 4.4946,
+        "p95": 5.9134,
+        "p99": 6.0641,
+        "maximum": 6.0641
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 6.0641
+    }
+  }
+}

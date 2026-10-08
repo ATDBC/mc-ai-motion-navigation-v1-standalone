@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import argparse
 from array import array
+from contextlib import ExitStack
+from dataclasses import dataclass
 from datetime import datetime, timezone
 import gc
 import hashlib
@@ -27,7 +29,9 @@ from mc2p.runtime.segmented_trace import (
     SegmentedTraceWriter,
     iter_segmented_jsonl,
 )
+from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1
 from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
+from mc2p.skills.known_world_follow_driver import KnownWorldFollowDriver
 from tests.sim.known_world_following import (
     FOLLOW_HOLD_DISTANCE_BLOCKS,
     MAX_PLANNING_SUBMISSIONS_PER_REVISION,
@@ -39,7 +43,7 @@ from tests.sim.known_world_following import (
 )
 
 
-SCHEMA_VERSION = "mc2p.d061-long-session-performance.v4"
+SCHEMA_VERSION = "mc2p.d061-long-session-performance.v5"
 TRACE_CAPACITY = 2048
 TRACE_PROJECTION_SAMPLE_CAPACITY = 4096
 DEFAULT_WARMUP = 100
@@ -52,6 +56,110 @@ P99_LIMIT_MS = 15.0
 MAXIMUM_LIMIT_MS = 30.0
 CONTROL_PATH_MAXIMUM_LIMIT_MS = 50.0
 CONTROL_PERIOD_NS = 50_000_000
+
+
+@dataclass(frozen=True, slots=True)
+class _FrameTimingSample:
+    production_ns: int
+    simulation_backend_ns: int
+    full_harness_ns: int
+    production_segments: tuple[tuple[str, int], ...]
+    following_revision: bool
+
+
+class _FrameTimingRecorder:
+    """Directly time disjoint production/backend spans in one harness frame."""
+
+    def __init__(self, clock_ns=time.perf_counter_ns) -> None:
+        if not callable(clock_ns):
+            raise TypeError("frame timing recorder requires a clock")
+        self._clock = clock_ns
+        self._frame_started: int | None = None
+        self._production_started: int | None = None
+        self._production_label: str | None = None
+        self._backend_started: int | None = None
+        self._segments: dict[str, int] = {}
+        self._backend_ns = 0
+
+    @property
+    def frame_active(self) -> bool:
+        return self._frame_started is not None
+
+    def start_frame(self) -> None:
+        if self.frame_active:
+            raise RuntimeError("timing frame already active")
+        self._frame_started = self._clock()
+        self._production_started = None
+        self._production_label = None
+        self._backend_started = None
+        self._segments = {}
+        self._backend_ns = 0
+
+    def _elapsed(self, started: int) -> int:
+        elapsed = self._clock() - started
+        if elapsed < 0:
+            raise RuntimeError("timing clock moved backwards")
+        return elapsed
+
+    def _record_production_interval(self) -> None:
+        if self._production_started is None or self._production_label is None:
+            raise RuntimeError("production interval is not active")
+        duration = self._elapsed(self._production_started)
+        self._segments[self._production_label] = (
+            self._segments.get(self._production_label, 0) + duration
+        )
+        self._production_started = None
+
+    def start_production(self, label: str) -> None:
+        if (not self.frame_active or type(label) is not str or not label
+                or self._production_started is not None
+                or self._backend_started is not None):
+            raise RuntimeError("production timing boundary is invalid")
+        self._production_label = label
+        self._production_started = self._clock()
+
+    def finish_production(self, label: str) -> None:
+        if self._production_label != label or self._backend_started is not None:
+            raise RuntimeError("production timing boundary does not match")
+        self._record_production_interval()
+        self._production_label = None
+
+    def start_backend(self) -> None:
+        if (self._production_started is None
+                or self._production_label is None
+                or self._backend_started is not None):
+            raise RuntimeError("backend must interrupt one production span")
+        self._record_production_interval()
+        self._backend_started = self._clock()
+
+    def finish_backend(self) -> None:
+        if self._backend_started is None or self._production_label is None:
+            raise RuntimeError("backend timing boundary does not match")
+        self._backend_ns += self._elapsed(self._backend_started)
+        self._backend_started = None
+        self._production_started = self._clock()
+
+    def finish_frame(self, *, following_revision: bool) -> _FrameTimingSample:
+        if (not self.frame_active or self._production_started is not None
+                or self._production_label is not None
+                or self._backend_started is not None
+                or type(following_revision) is not bool):
+            raise RuntimeError("timing frame ended with an active segment")
+        assert self._frame_started is not None
+        full = self._elapsed(self._frame_started)
+        segments = tuple(self._segments.items())
+        production = sum(duration for _, duration in segments)
+        if production + self._backend_ns > full:
+            raise RuntimeError("timing segments overlap")
+        sample = _FrameTimingSample(
+            production,
+            self._backend_ns,
+            full,
+            segments,
+            following_revision,
+        )
+        self._frame_started = None
+        return sample
 
 
 def _nearest_rank(values: list[int], fraction: float) -> int:
@@ -72,6 +180,56 @@ def _statistics(values: list[int]) -> dict:
         "p95_ms": _nearest_rank(values, .95) / 1_000_000,
         "p99_ms": _nearest_rank(values, .99) / 1_000_000,
         "maximum_ms": max(values) / 1_000_000,
+    }
+
+
+def _timing_gates(
+    *,
+    production_ns: list[int],
+    simulation_backend_ns: list[int],
+    full_harness_ns: list[int],
+    revision_ordinals: tuple[int, ...],
+) -> dict[str, bool]:
+    """Evaluate every frozen timing gate from raw, directly measured spans."""
+    if not production_ns or not simulation_backend_ns or not full_harness_ns:
+        raise ValueError("timing gates require all three measurement layers")
+    if not (len(production_ns) == len(simulation_backend_ns)
+            == len(full_harness_ns)):
+        raise ValueError("timing layers must describe the same frames")
+    if any(type(value) is not int or value < 0 for values in (
+            production_ns, simulation_backend_ns, full_harness_ns)
+            for value in values):
+        raise ValueError("timing samples must be nonnegative integers")
+    if (type(revision_ordinals) is not tuple
+            or any(type(value) is not int or value < 0
+                   or value >= len(production_ns)
+                   for value in revision_ordinals)):
+        raise ValueError("revision ordinals must select production frames")
+    production = _statistics(production_ns)
+    revisions = (
+        _statistics([production_ns[index] for index in revision_ordinals])
+        if revision_ordinals else None
+    )
+    return {
+        "production_prepare_p95": production["p95_ms"] <= P95_LIMIT_MS,
+        "production_prepare_p99": production["p99_ms"] <= P99_LIMIT_MS,
+        "production_prepare_maximum": (
+            production["maximum_ms"] < MAXIMUM_LIMIT_MS
+        ),
+        "following_revision_production_p95": (
+            revisions is not None and revisions["p95_ms"] <= P95_LIMIT_MS
+        ),
+        "following_revision_production_p99": (
+            revisions is not None and revisions["p99_ms"] <= P99_LIMIT_MS
+        ),
+        "following_revision_production_maximum": (
+            revisions is not None
+            and revisions["maximum_ms"] < MAXIMUM_LIMIT_MS
+        ),
+        "full_harness_maximum": (
+            _statistics(full_harness_ns)["maximum_ms"]
+            < CONTROL_PATH_MAXIMUM_LIMIT_MS
+        ),
     }
 
 
@@ -138,6 +296,7 @@ def _source_identity() -> dict:
         "mc2p/runtime/async_trace.py",
         "mc2p/runtime/segmented_trace.py",
         "mc2p/runtime/player_runtime_v1.py",
+        "mc2p/runtime/arbiter_v1.py",
         "mc2p/skills/known_world_follow_driver.py",
         "mc2p/skills/navigation_session_driver.py",
         "mc2p/motion_nav/navigation_session.py",
@@ -157,6 +316,7 @@ def _source_identity() -> dict:
     status = _git("status", "--porcelain", "--untracked-files=normal")
     return {
         "commit": _git("rev-parse", "HEAD"),
+        "hash_basis": "windows_worktree_bytes",
         "git_dirty": bool(status),
         "git_status": status.splitlines(),
         "scope_sha256": digest.hexdigest(),
@@ -222,6 +382,12 @@ def run_long_session(
     elapsed: list[int] = []
     control_durations = array("Q")
     control_period_slack = array("q")
+    production_durations = array("Q")
+    simulation_backend_durations = array("Q")
+    harness_durations = array("Q")
+    following_revision_flags = bytearray()
+    frame_production_segments: list[tuple[tuple[str, int], ...]] = []
+    frame_timing = _FrameTimingRecorder()
     original = RuntimeNavigationDriver.prepare_proposals
     no_sample = (1 << 64) - 1
     current_sample = no_sample
@@ -392,15 +558,86 @@ def run_long_session(
             return original(driver, *args, **kwargs)
         sample_ordinal = len(elapsed)
         current_sample = sample_ordinal
+        frame_timing.start_production("navigation_prepare")
         started = time.perf_counter_ns()
         try:
             return original(driver, *args, **kwargs)
         finally:
             duration = time.perf_counter_ns() - started
+            frame_timing.finish_production("navigation_prepare")
             current_sample = no_sample
             elapsed.append(duration)
             last_completed_sample = sample_ordinal
             check_identity(driver)
+
+    def measured_follow_update(driver, *args, **kwargs):
+        if not measurement_active or not frame_timing.frame_active:
+            return original_follow_update(driver, *args, **kwargs)
+        frame_timing.start_production("follow_update")
+        try:
+            return original_follow_update(driver, *args, **kwargs)
+        finally:
+            frame_timing.finish_production("follow_update")
+
+    def measured_follow_cancel(driver, *args, **kwargs):
+        if not measurement_active or not frame_timing.frame_active:
+            return original_follow_cancel(driver, *args, **kwargs)
+        frame_timing.start_production("follow_cancel")
+        try:
+            return original_follow_cancel(driver, *args, **kwargs)
+        finally:
+            frame_timing.finish_production("follow_cancel")
+
+    def measured_control_frame(runtime, *args, **kwargs):
+        if not measurement_active or not frame_timing.frame_active:
+            return original_control_frame(runtime, *args, **kwargs)
+        frame_timing.start_production("runtime_control_frame")
+        try:
+            return original_control_frame(runtime, *args, **kwargs)
+        finally:
+            frame_timing.finish_production("runtime_control_frame")
+
+    def measured_backend_step(runtime, *args, **kwargs):
+        if not measurement_active or not frame_timing.frame_active:
+            return original_backend_step(runtime, *args, **kwargs)
+        frame_timing.start_backend()
+        try:
+            return original_backend_step(runtime, *args, **kwargs)
+        finally:
+            frame_timing.finish_backend()
+
+    def measured_adopt(driver, *args, **kwargs):
+        if not measurement_active or not frame_timing.frame_active:
+            return original_adopt(driver, *args, **kwargs)
+        frame_timing.start_production("navigation_adopt")
+        try:
+            return original_adopt(driver, *args, **kwargs)
+        finally:
+            frame_timing.finish_production("navigation_adopt")
+
+    def harness_frame_started(
+        _tick: int,
+        _backend_elapsed_ns_total: int,
+    ) -> None:
+        if not measurement_active:
+            return
+        frame_timing.start_frame()
+
+    def harness_frame_finished(
+        _tick: int,
+        revised_this_tick: bool,
+        _backend_elapsed_ns_total: int,
+    ) -> None:
+        if not frame_timing.frame_active:
+            return
+        sample = frame_timing.finish_frame(
+            following_revision=revised_this_tick,
+        )
+        production_durations.append(sample.production_ns)
+        simulation_backend_durations.append(sample.simulation_backend_ns)
+        harness_durations.append(sample.full_harness_ns)
+        following_revision_flags.append(1 if sample.following_revision else 0)
+        frame_production_segments.append(sample.production_segments)
 
     def control_path_started(_tick: int) -> None:
         nonlocal active_control, control_started_ns, control_path_mismatch
@@ -473,16 +710,39 @@ def run_long_session(
 
     cancel_tick = warmup + maximum_retained + 512
     scenario = _scenario(test_mode=test_mode, cancel_tick=cancel_tick)
+    original_follow_update = KnownWorldFollowDriver.update
+    original_follow_cancel = KnownWorldFollowDriver.cancel
+    original_control_frame = PlayerRuntimeV1.control_frame
+    original_backend_step = PlayerRuntimeV1._backend_step
+    original_adopt = RuntimeNavigationDriver.adopt_result
     gc.callbacks.append(gc_event)
     try:
-        with patch.object(
-            RuntimeNavigationDriver, "prepare_proposals", measured,
-        ):
+        with ExitStack() as stack:
+            stack.enter_context(patch.object(
+                RuntimeNavigationDriver, "prepare_proposals", measured,
+            ))
+            stack.enter_context(patch.object(
+                KnownWorldFollowDriver, "update", measured_follow_update,
+            ))
+            stack.enter_context(patch.object(
+                KnownWorldFollowDriver, "cancel", measured_follow_cancel,
+            ))
+            stack.enter_context(patch.object(
+                PlayerRuntimeV1, "control_frame", measured_control_frame,
+            ))
+            stack.enter_context(patch.object(
+                PlayerRuntimeV1, "_backend_step", measured_backend_step,
+            ))
+            stack.enter_context(patch.object(
+                RuntimeNavigationDriver, "adopt_result", measured_adopt,
+            ))
             behavior = run_scenario_with_trace(
                 scenario, trace,
                 cancel_when=cancel_when, after_tick=pace_tick,
                 control_path_started=control_path_started,
                 control_path_finished=control_path_finished,
+                harness_frame_started=harness_frame_started,
+                harness_frame_finished=harness_frame_finished,
             )
     finally:
         if gc_event in gc.callbacks:
@@ -494,6 +754,31 @@ def run_long_session(
     statistics = _statistics(retained)
     retained_control_durations = list(control_durations[warmup:])
     retained_control_slack = list(control_period_slack[warmup:])
+    retained_production = list(production_durations[warmup:])
+    retained_simulation_backend = list(
+        simulation_backend_durations[warmup:]
+    )
+    retained_harness = list(harness_durations[warmup:])
+    retained_revision_flags = list(following_revision_flags[warmup:])
+    revision_ordinals = tuple(
+        index for index, value in enumerate(retained_revision_flags) if value
+    )
+    production_statistics = _statistics(retained_production)
+    simulation_backend_statistics = _statistics(
+        retained_simulation_backend
+    )
+    harness_statistics = _statistics(retained_harness)
+    revision_production_statistics = (
+        _statistics([retained_production[index]
+                     for index in revision_ordinals])
+        if revision_ordinals else None
+    )
+    timing_gates = _timing_gates(
+        production_ns=retained_production,
+        simulation_backend_ns=retained_simulation_backend,
+        full_harness_ns=retained_harness,
+        revision_ordinals=revision_ordinals,
+    )
     captured_control_statistics = _statistics(list(control_durations))
     retained_control_statistics = _statistics(retained_control_durations)
     retained_deadline_misses = sum(
@@ -513,6 +798,7 @@ def run_long_session(
     )
     unmatched_start = active_event_slot != -1
     unmatched_control_path = active_control != no_sample
+    unmatched_harness = frame_timing.frame_active
     gc_diagnostic_integrity = (
         not overflowed and not start_stop_mismatch and not unmatched_start
     )
@@ -621,13 +907,14 @@ def run_long_session(
         else paced_ticks * 1_000_000_000 / pacing_elapsed_ns
     )
     gates = {
-        "prepare_p95": statistics["p95_ms"] <= P95_LIMIT_MS,
-        "prepare_p99": statistics["p99_ms"] <= P99_LIMIT_MS,
-        "prepare_maximum": statistics["maximum_ms"] < MAXIMUM_LIMIT_MS,
-        "control_path_maximum": (
-            retained_control_statistics["maximum_ms"]
-                < CONTROL_PATH_MAXIMUM_LIMIT_MS
-        ),
+        **timing_gates,
+        # Compatibility names stay visible to older evidence readers.  They
+        # point at the new directly measured layers rather than weakening a
+        # gate or deriving one duration by subtraction.
+        "prepare_p95": timing_gates["production_prepare_p95"],
+        "prepare_p99": timing_gates["production_prepare_p99"],
+        "prepare_maximum": timing_gates["production_prepare_maximum"],
+        "control_path_maximum": timing_gates["full_harness_maximum"],
         "input_deadline_miss": retained_deadline_misses == 0,
         "minimum_deadline_slack": (
             bool(retained_control_slack)
@@ -636,9 +923,16 @@ def run_long_session(
         "prepare_control_alignment": (
             len(elapsed) == len(control_durations)
             and len(control_durations) == len(control_period_slack)
+            and len(control_durations) == len(production_durations)
+            and len(production_durations)
+                == len(simulation_backend_durations)
+            and len(simulation_backend_durations) == len(harness_durations)
+            and len(harness_durations) == len(following_revision_flags)
+            and len(harness_durations) == len(frame_production_segments)
         ),
         "control_path_integrity": (
             not control_path_mismatch and not unmatched_control_path
+            and not unmatched_harness
         ),
         "sample_minimum": (
             len(retained_control_durations) >= minimum_retained
@@ -669,6 +963,28 @@ def run_long_session(
                 <= TRACE_PROJECTION_SAMPLE_CAPACITY
         ),
     }
+    captured_frame_samples = [
+        {
+            "captured_ordinal": index,
+            "phase": "warmup" if index < warmup else "retained",
+            "production_prepare_ns": production_durations[index],
+            "simulation_backend_ns": simulation_backend_durations[index],
+            "full_harness_ns": harness_durations[index],
+            "following_revision": bool(following_revision_flags[index]),
+            "production_segments_ns": [
+                {"name": name, "duration_ns": duration}
+                for name, duration in frame_production_segments[index]
+            ],
+        }
+        for index in range(len(harness_durations))
+    ]
+    retained_frame_samples = [
+        {
+            **sample,
+            "retained_ordinal": index,
+        }
+        for index, sample in enumerate(captured_frame_samples[warmup:])
+    ]
     payload = {
         "schema_version": SCHEMA_VERSION,
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -678,6 +994,7 @@ def run_long_session(
             "executable": sys.executable,
             "platform": platform.platform(),
             "wall_clock": "time.perf_counter_ns",
+            "hash_basis": "windows_worktree_bytes",
             "control_thread_id": control_thread_id,
             "control_frequency_hz": 20,
             "control_period_ns": CONTROL_PERIOD_NS,
@@ -697,6 +1014,93 @@ def run_long_session(
             "pause_ticks": scenario.pause_ticks,
             "resume_ticks": scenario.resume_ticks,
         },
+        "timing_boundaries": {
+            "production_prepare_ms": {
+                "measurement_boundary": (
+                    "direct spans around KnownWorldFollowDriver update/cancel, "
+                    "RuntimeNavigationDriver prepare/adopt, plus the "
+                    "PlayerRuntimeV1.control_frame intervals before and after "
+                    "its directly timed backend call"
+                ),
+                "includes": [
+                    "following_target_revision",
+                    "navigation_session_ingest_propose",
+                    "runtime_arbitration_and_execution_window_checks",
+                    "runtime_input_ledger_and_dispatch_trace",
+                    "runtime_result_validation_observation_ingest_and_report",
+                    "navigation_result_adoption",
+                ],
+                "excludes": [
+                    "simulation_backend_step",
+                    "simulator_diagnostics",
+                    "test_metric_aggregation",
+                    "pacing_sleep",
+                ],
+                "derived_by_subtraction": False,
+            },
+            "simulation_backend_ms": {
+                "measurement_boundary": (
+                    "direct PlayerRuntimeV1.backend_elapsed_ns_total delta "
+                    "between harness frame callbacks"
+                ),
+                "includes": [
+                    "simulated_visual_queries",
+                    "simulated_world_and_physics_advance",
+                ],
+                "excludes": [
+                    "navigation_prepare",
+                    "runtime_arbitration",
+                    "test_metric_aggregation",
+                    "pacing_sleep",
+                ],
+                "derived_by_subtraction": False,
+            },
+            "full_harness_ms": {
+                "measurement_boundary": (
+                    "direct wall span from the start of one scenario frame "
+                    "through navigation, backend, invariants, and per-frame "
+                    "metric collection; ends before pacing"
+                ),
+                "includes": [
+                    "production_prepare_ms",
+                    "simulation_backend_ms",
+                    "invariant_monitor",
+                    "per_frame_evidence_and_metrics",
+                ],
+                "excludes": ["pacing_sleep"],
+                "derived_by_subtraction": False,
+            },
+        },
+        "timing_layers": {
+            "production_prepare_ms": {
+                "measurement_boundary": "timing_boundaries.production_prepare_ms",
+                "samples": len(retained_production),
+                "raw_samples_ns": retained_production,
+                "statistics": production_statistics,
+            },
+            "simulation_backend_ms": {
+                "measurement_boundary": "timing_boundaries.simulation_backend_ms",
+                "samples": len(retained_simulation_backend),
+                "raw_samples_ns": retained_simulation_backend,
+                "statistics": simulation_backend_statistics,
+                "gating": "reported_only",
+            },
+            "full_harness_ms": {
+                "measurement_boundary": "timing_boundaries.full_harness_ms",
+                "samples": len(retained_harness),
+                "raw_samples_ns": retained_harness,
+                "statistics": harness_statistics,
+            },
+            "following_revision_frames": {
+                "retained_ordinals": list(revision_ordinals),
+                "samples": len(revision_ordinals),
+                "production_prepare_statistics": (
+                    revision_production_statistics
+                ),
+            },
+        },
+        "frame_samples": captured_frame_samples,
+        "retained_frame_samples": retained_frame_samples,
         "complete_prepare": {
             "captured_samples": len(elapsed),
             "warmup_samples": warmup,

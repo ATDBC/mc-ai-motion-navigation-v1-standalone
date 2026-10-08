@@ -1,0 +1,8 @@
+{
+  "schema_version": "f2tp-measurement-classification-v1",
+  "source_commit": "a61a76e6a245cd2f4b808ba3eed581a6dc4722e6",
+  "historical_source": "evidence/motion_navigation/F2TS-bounded-ground-terminal-v1/isolated-worker-gate-failure/summary.json",
+  "historical_control_ms_kind": "mixed_interval",
+  "current_intervals": ["production_prepare_ms", "backend_step_ms", "full_frame_ms"],
+  "derivation": "all current intervals are directly timed; no interval is derived by subtraction"
+}

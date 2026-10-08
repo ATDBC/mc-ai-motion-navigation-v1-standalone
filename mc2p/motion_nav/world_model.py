@@ -376,12 +376,16 @@ class WorldQueryCache:
         self.world = world
         self._facts: dict[BlockPos, CellFact] = {}
         self._boxes: dict[BlockPos, tuple[Aabb, ...]] = {}
+        self._cell_reads = 0
+        self._cell_misses = 0
 
     def cell(self, position: BlockPos) -> CellFact:
+        self._cell_reads += 1
         cached = self._facts.get(position)
         if cached is not None:
             return cached
         _position(position)
+        self._cell_misses += 1
         fact = self.world._cell_at_valid_position(position)
         self._facts[position] = fact
         return fact
@@ -398,6 +402,14 @@ class WorldQueryCache:
     @property
     def touched_cells(self) -> tuple[BlockPos, ...]:
         return tuple(sorted(self._facts))
+
+    @property
+    def hits(self) -> int:
+        return self._cell_reads - self._cell_misses
+
+    @property
+    def misses(self) -> int:
+        return self._cell_misses
 
     def validate_for(self, world: WorldView) -> None:
         if world is not self.world:

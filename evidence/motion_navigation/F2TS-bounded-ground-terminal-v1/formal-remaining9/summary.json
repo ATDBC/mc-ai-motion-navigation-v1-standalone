@@ -1,0 +1,48 @@
+{
+  "mode": "clutter-formal",
+  "cases": 9,
+  "source_commit": "34ee73692cb75a613d9b86960f3eb5113dcc71e4",
+  "source_worktree_clean": true,
+  "production_sha256": "96a95033dc4c5970ca9db615996132a9c83bdf97db1b691a233512f6395d242f",
+  "manifest_sha256": "c29e9158f461a647ae1b34ace278a3652e67052e3d9fcb80282fe517bf09efd6",
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "by_layer": {
+    "clutter_10/product": {
+      "cases": 3,
+      "results": {
+        "success": 3
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 3,
+      "control_ms": {
+        "p50": 4.8542,
+        "p95": 5.9551,
+        "p99": 6.2492,
+        "maximum": 7.5222
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 6.2492
+    },
+    "clutter_20/product": {
+      "cases": 6,
+      "results": {
+        "success": 6
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 6,
+      "control_ms": {
+        "p50": 5.0693,
+        "p95": 6.8443,
+        "p99": 8.394,
+        "maximum": 13.7165
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 9.6092
+    }
+  }
+}

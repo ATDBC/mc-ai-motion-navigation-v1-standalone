@@ -38,6 +38,7 @@ from mc2p.motion_nav.ground_modes import GroundModeProfiles
 from mc2p.motion_nav.ground_motion import GroundMotionProfile
 from mc2p.motion_nav.jump_up import JumpUpProfile
 from mc2p.motion_nav.known_map_planner import (
+    ExactSurfacePlanningGoal, GoalRegionPlanningRequest,
     KnownMapBounds,
     KnownMapSnapshotBuilder,
     PlanningBlocker,
@@ -1582,6 +1583,9 @@ class PlanningCoordinator:
                     request,
                     goal=interaction.work_node,
                     goal_state=None,
+                    planning_target=ExactSurfacePlanningGoal(
+                        interaction.work_node,
+                    ),
                     entry_physics_state=(
                         state_anchor.physics_state
                         if state_anchor is not None
@@ -2155,14 +2159,26 @@ class PlanningCoordinator:
                 request.start.column_z,
                 request.start.vertical_band,
             )
-            goal_x, goal_z, goal_y = (
-                request.goal.column_x,
-                request.goal.column_z,
-                request.goal.vertical_band,
-            )
+            if type(request.planning_target) is GoalRegionPlanningRequest:
+                region = request.planning_target.goal_state.region
+                goal_min_x = math.floor(region.min_x)
+                goal_max_x = math.floor(math.nextafter(region.max_x, -math.inf))
+                goal_min_z = math.floor(region.min_z)
+                goal_max_z = math.floor(math.nextafter(region.max_z, -math.inf))
+                goal_min_y = math.ceil(region.min_y - 1.0e-9)
+                goal_max_y = math.floor(region.max_y + 1.0e-9)
+                if goal_min_y > goal_max_y:
+                    goal_min_y = goal_max_y = request.goal.vertical_band
+            else:
+                goal_min_x = goal_max_x = request.goal.column_x
+                goal_min_z = goal_max_z = request.goal.column_z
+                goal_min_y = goal_max_y = request.goal.vertical_band
         else:
             start_x, start_y, start_z = request.start
             goal_x, goal_y, goal_z = request.goal
+            goal_min_x = goal_max_x = goal_x
+            goal_min_z = goal_max_z = goal_z
+            goal_min_y = goal_max_y = goal_y
         extra_top = max((
             math.ceil(max(
                 (point[1] for point in profile.reference_positions),
@@ -2172,12 +2188,12 @@ class PlanningCoordinator:
         ), default=0)
         margin = self._planning_margin
         return KnownMapBounds(
-            min(start_x, goal_x) - margin,
-            max(start_x, goal_x) + margin,
-            min(start_y, goal_y),
-            max(start_y, goal_y),
-            min(start_z, goal_z) - margin,
-            max(start_z, goal_z) + margin,
+            min(start_x, goal_min_x) - margin,
+            max(start_x, goal_max_x) + margin,
+            min(start_y, goal_min_y),
+            max(start_y, goal_max_y),
+            min(start_z, goal_min_z) - margin,
+            max(start_z, goal_max_z) + margin,
             True,
             max(0, extra_top),
         )

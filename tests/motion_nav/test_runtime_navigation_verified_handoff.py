@@ -26,6 +26,7 @@ from tests.motion_nav.test_b07_surface_planning import ordinary_profile
 from tests.motion_nav.test_b09_air_transitions import air_profile
 from tests.motion_nav.test_jump_up import jump_profile
 from tests.motion_nav.test_navigation_session import _InlinePlanner, _goal
+from tests.motion_nav.test_navigation_session import _InlineMotionWorker
 from tests.test_action_receipt import receipt_value
 from tests.test_player_runtime import _RecordingTrace
 
@@ -223,7 +224,7 @@ class RuntimeVerifiedMotionHandoffTests(unittest.TestCase):
         )
         session = _AnchorInjectionSession(
             "runtime-gap-session", profiles,
-            planner_worker=_InlinePlanner(),
+            planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(),
             clock_ns=lambda: clock[0],
         )
         driver = RuntimeNavigationDriver(runtime, session, clock_ns=lambda: clock[0])

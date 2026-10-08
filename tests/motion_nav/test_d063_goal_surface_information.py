@@ -1,4 +1,4 @@
-"""D063 requests one complete bounded goal-surface fact set."""
+"""D063 requests the bounded facts that can still change goal selection."""
 from __future__ import annotations
 
 import math
@@ -25,6 +25,7 @@ from scripts import f1_known_world_following_fabric as fabric_follow
 from tests.follow_v3_fixtures import follow_snapshot, observed_block
 from tests.motion_nav.test_navigation_session import (
     _InlinePlanner,
+    _InlineMotionWorker,
     _ground_anchor,
     _source,
 )
@@ -184,6 +185,7 @@ class D063GoalSurfaceInformationTests(unittest.TestCase):
             "d063-goal-surface",
             NavigationSessionProfiles.load(Path("config/motion-navigation")),
             planner_worker=planner,
+            motion_worker=_InlineMotionWorker(),
             clock_ns=lambda: 100_000_000,
         )
         initial = session.ingest(_snapshot())
@@ -276,9 +278,13 @@ class D063GoalSurfaceInformationTests(unittest.TestCase):
                 set(advanced.control_frame.observation_request.air_positions)
                 .isdisjoint(_COMPLETE_GOAL_MISSING)
             )
+            # F2-SG keeps every safe terminal in one A* request.  Equal-cost
+            # frontiers may expose up to the eight bounded neighbours around
+            # the current support, while the completed 98-cell goal query
+            # must never be requested a second time.
             self.assertLessEqual(
                 len(advanced.control_frame.observation_request.air_positions),
-                5,
+                8,
             )
             self.assertIsNone(session.active_route)
             self.assertTrue(all(
@@ -289,7 +295,7 @@ class D063GoalSurfaceInformationTests(unittest.TestCase):
         finally:
             session.close()
 
-    def test_large_goal_missing_is_kept_and_paged_at_128(self):
+    def test_large_goal_starts_complete_then_stops_after_irrelevant_missing(self):
         session, planner, current = self._waiting_session(_wide_goal())
         ledger = InputApplicationLedger()
         requested = []
@@ -320,9 +326,10 @@ class D063GoalSurfaceInformationTests(unittest.TestCase):
             else:
                 self.fail("bounded goal missing did not finish paging")
 
-            self.assertGreater(len(requested), 128)
+            self.assertGreater(len(expected), 128)
+            self.assertEqual(len(requested), 128)
             self.assertEqual(len(requested), len(set(requested)))
-            self.assertEqual(set(requested), set(expected))
+            self.assertTrue(set(requested).issubset(expected))
             final = proposal
             self.assertNotEqual(
                 final.report.reason,

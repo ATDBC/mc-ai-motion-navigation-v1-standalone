@@ -2,22 +2,114 @@
 from mc2p.motion_nav.async_work import AsyncComputationScope
 import time
 import unittest
+from dataclasses import replace
 from unittest.mock import patch
 
 from mc2p.motion_nav.motion_solver import (
     GapSolveRequest, LandingRegion, SolveStatus,
 )
 from mc2p.motion_nav.motion_worker import (
-    GapMotionSolveJob, MotionResultInbox, MotionSolverWorker, _execute_job,
+    GapMotionSolveJob, GroundTerminalSolveJob, MotionResultInbox,
+    MotionSolverWorker, MotionWorkerReadiness, _execute_job,
+)
+from mc2p.motion_nav.ground_terminal_search import (
+    GroundTerminalSearchLimits, GroundTerminalSearchStatus,
 )
 from mc2p.motion_nav.async_work import (
     AsyncWorkIdentity, AsyncWorkKind,
 )
 from mc2p.motion_nav.online_motion import CandidateExecutionWindow
+from mc2p.motion_nav.world_model import Aabb
 from tests.motion_nav.test_b10_gap_solver import fixture
 
 
 class B10MotionWorkerTests(unittest.TestCase):
+    def test_worker_reports_ready_before_accepting_formal_work(self):
+        with MotionSolverWorker(max_pending=1) as worker:
+            self.assertTrue(worker.wait_until_ready(.1))
+            self.assertIs(worker.readiness, MotionWorkerReadiness.READY)
+            self.assertIsNotNone(worker.ready_monotonic_ns)
+            self.assertNotEqual(worker.pid, None)
+
+    def test_ground_terminal_deadline_is_typed_from_submit_clock(self):
+        from tests.motion_nav.test_ground_terminal_search import _request
+        request = _request(
+            bounds=Aabb(.17, 63.99, .32, .23, 64.01, .38), lead_ticks=12,
+        )
+        request = replace(
+            request,
+            limits=replace(request.limits, deadline_ns=1),
+        )
+        result = _execute_job(GroundTerminalSolveJob(
+            "route/ground", 1, request, 1,
+        ))
+        self.assertIs(
+            result.search_result.status, GroundTerminalSearchStatus.TIMEOUT,
+        )
+
+    def test_cancelled_queued_ground_work_stops_at_first_checkpoint(self):
+        from tests.motion_nav.test_ground_terminal_search import _request
+        request = _request(
+            bounds=Aabb(.17, 63.99, .32, .23, 64.01, .38), lead_ticks=12,
+        )
+        job = GroundTerminalSolveJob(
+            "route/ground", 1, request, time.perf_counter_ns(),
+        )
+        with MotionSolverWorker(max_pending=2) as worker:
+            self.assertTrue(worker.cancel(
+                job.work_identity, GroundTerminalSearchStatus.CANCELLED,
+            ))
+            self.assertTrue(worker.submit(job))
+            deadline = time.perf_counter() + 5.0
+            result = None
+            while result is None and time.perf_counter() < deadline:
+                available = worker.poll_available()
+                if available:
+                    result = available[0]
+                else:
+                    time.sleep(.01)
+        self.assertIsNotNone(result)
+        self.assertIs(
+            result.search_result.status,
+            GroundTerminalSearchStatus.CANCELLED,
+        )
+        self.assertEqual(result.search_result.stats.beam_generated, 0)
+
+    def test_running_ground_work_observes_cancellation_before_full_beam(self):
+        from tests.motion_nav.test_ground_terminal_search import _request
+        request = _request(
+            bounds=Aabb(.87, 63.99, .87, .93, 64.01, .93),
+            scene="wall_corner", lead_ticks=12,
+            limits=GroundTerminalSearchLimits(
+                maximum_ticks=4, phase_candidate_budget=1000,
+                beam_node_budget=5000,
+                deadline_ns=time.perf_counter_ns() + 2_000_000_000,
+            ),
+        )
+        job = GroundTerminalSolveJob(
+            "route/ground-running", 2, request, time.perf_counter_ns(),
+        )
+        with MotionSolverWorker(max_pending=2) as worker:
+            self.assertTrue(worker.submit(job))
+            time.sleep(.03)
+            self.assertTrue(worker.cancel(
+                job.work_identity, GroundTerminalSearchStatus.CANCELLED,
+            ))
+            deadline = time.perf_counter() + 5.0
+            result = None
+            while result is None and time.perf_counter() < deadline:
+                available = worker.poll_available()
+                if available:
+                    result = available[0]
+                else:
+                    time.sleep(.005)
+        self.assertIsNotNone(result)
+        self.assertIs(
+            result.search_result.status,
+            GroundTerminalSearchStatus.CANCELLED,
+        )
+        self.assertLess(result.search_result.stats.beam_generated, 5000)
+
     def test_shared_inbox_drains_once_and_routes_by_full_identity(self):
         anchor, world, target, _ = fixture()
         request = GapSolveRequest(

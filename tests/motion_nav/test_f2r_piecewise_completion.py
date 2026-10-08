@@ -141,7 +141,7 @@ class PiecewiseCompletionTests(unittest.TestCase):
         self.assertIs(selected.status, QueryStatus.FEASIBLE)
         self.assertEqual(selected.completion_region.bounds.as_tuple(), (0., 63.99, 0., .125, 64.01, 1.))
 
-    def test_changed_piece_invalidates_typed_region_replay(self):
+    def test_region_replay_validates_the_bound_region_instead_of_reselecting(self):
         from mc2p.motion_nav.route_validation import (WalkValidationRecipe, WalkValidationQueryKind,
             StandableRegionQueryArgs, GroundCapabilityIdentity, replay_walk_validation_recipe)
         from tests.motion_nav.test_f2_ground_completion_region import PROFILES
@@ -156,9 +156,17 @@ class PiecewiseCompletionTests(unittest.TestCase):
             None, None, PROFILES.ground, GroundCapabilityIdentity.from_profile(PROFILES.ground),
             selected.completion_region.dependencies, args)
         self.assertIs(replay_walk_validation_recipe(recipe, world.view())[0], QueryStatus.FEASIBLE)
-        # Removing the boundary owner expands the exact piece; old proof fails.
+        # Removing an outside boundary owner creates a better region elsewhere,
+        # but the region bound into this route remains safe and valid.
         world.confirm_air(ObservationStamp(backend.state.session, 2, 2, 'f2r-change', 100_000_000),
                           ((2, 64, 7), (2, 65, 7), (2, 66, 7)))
+        self.assertIs(replay_walk_validation_recipe(recipe, world.view())[0], QueryStatus.FEASIBLE)
+
+        # A new obstacle inside the bound rectangle still invalidates it.
+        world.observe_blocks(
+            ObservationStamp(backend.state.session, 3, 3, 'f2r-bound-change', 150_000_000),
+            {(1, 64, 6): BlockGeometry.full_cube('minecraft:stone')},
+        )
         self.assertIs(replay_walk_validation_recipe(recipe, world.view())[0], QueryStatus.BLOCKED)
 
     def test_outer_corner_pillar_and_two_pillars_keep_exact_standable_rectangle(self):

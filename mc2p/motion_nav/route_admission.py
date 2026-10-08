@@ -66,6 +66,7 @@ from mc2p.motion_nav.route_validation import (
     replay_walk_validation_recipe,
 )
 from mc2p.motion_nav.known_map_planner import (
+    ExactSurfacePlanningGoal, GoalRegionPlanningRequest,
     PlanningRequest, SurfacePlanningRequest,
     PlanningStatus, RouteCandidate, WalkEdge, WalkNode, WalkNodeId,
     SurfacePlanningStatus, SurfaceRouteCandidate, SurfaceWalkEdge,
@@ -73,12 +74,15 @@ from mc2p.motion_nav.known_map_planner import (
 )
 from mc2p.motion_nav.step_transition import StepEdge
 from mc2p.motion_nav.support_surfaces import (
+    StandableRegionResult,
+    StandablePointResult,
     SupportSurface,
     SurfaceNodeId,
     query_standable_connection,
     query_support_surfaces,
     standable_point_in_region,
     standable_region_in_goal,
+    validate_standable_region,
 )
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.segment_entry import (
@@ -216,6 +220,61 @@ class ExecutableCorridor:
         return bool(set(self.dependencies).intersection(changed_cells))
 
 
+def _surface_identity(surface: SupportSurface) -> tuple[int, int, int, int]:
+    node = surface.node_id
+    return (
+        node.column_x,
+        node.column_z,
+        node.vertical_band,
+        node.surface_index,
+    )
+
+
+def _validate_completion_surface(
+    action: object,
+    args: StandableRegionQueryArgs,
+) -> None:
+    """Bind a completion proof to the declared endpoint of one action."""
+    surface = args.surface
+    expected = args.expected_region
+    if (expected.surface_identity != _surface_identity(surface)
+            or abs(expected.support_height - surface.position[1]) > 1.0e-9):
+        raise ContractViolation(
+            "completion region differs from its recipe surface"
+        )
+    traversal_plan = getattr(action, "traversal_plan", None)
+    if traversal_plan is not None:
+        surface_path = traversal_plan.surface_node_path
+        terminal = traversal_plan.route.points[-1]
+        if (not surface_path or surface_path[-1] != surface.node_id
+                or (terminal.x, terminal.y, terminal.z)
+                    != expected.reference_point):
+            raise ContractViolation(
+                "completion recipe differs from strict traversal endpoint"
+            )
+        return
+    end_surface = getattr(action, "end_surface", None)
+    if end_surface is not None:
+        if type(end_surface) is not SupportSurface or surface != end_surface:
+            raise ContractViolation(
+                "completion recipe differs from strict action endpoint"
+            )
+        return
+    edge = getattr(action, "edge", None)
+    endpoint = getattr(edge, "end", None)
+    if (type(endpoint) is not tuple or len(endpoint) != 3
+            or any(type(value) is not int for value in endpoint)):
+        raise ContractViolation(
+            "strict action does not declare a completion endpoint"
+        )
+    node = surface.node_id
+    if ((node.column_x, node.vertical_band, node.column_z) != endpoint
+            or abs(surface.position[1] - float(endpoint[1])) > 1.0e-9):
+        raise ContractViolation(
+            "completion recipe differs from strict action endpoint"
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class ActiveRoute:
     route_id: str
@@ -318,19 +377,42 @@ class ActiveRoute:
                             "standable validation recipe differs from fixed route"
                         )
         for owner in self.validation_plan.owners:
-            if owner.fixed_route_id is None:
-                continue
             action = self.action_route.actions[owner.action_index]
-            if (type(action) is not WalkSegment
-                    or action.fixed_route.route_id != owner.fixed_route_id):
-                raise ContractViolation("validation owner fixed route differs")
             if owner.kind is DependencyOwnerKind.COMPLETION_REGION:
                 recipe = self.validation_plan.recipe(owner.recipe_ref)
                 args = recipe.standable_region
-                if (args is None or action.fixed_route.execution_contract is None
-                        or args.expected_region != action.fixed_route.execution_contract.completion_region
-                        or self.goal_state is None or args.goal_region != self.goal_state.region):
-                    raise ContractViolation("completion recipe differs from final route contract")
+                if (args is None or self.goal_state is None
+                        or args.goal_region != self.goal_state.region):
+                    raise ContractViolation(
+                        "completion recipe differs from active goal"
+                    )
+                if owner.action_index != action_count - 1:
+                    raise ContractViolation(
+                        "completion owner must bind the final action"
+                    )
+                if owner.fixed_route_id is None:
+                    _validate_completion_surface(action, args)
+                    continue
+                if (args.expected_region.surface_identity
+                        != _surface_identity(args.surface)
+                        or abs(args.expected_region.support_height
+                               - args.surface.position[1]) > 1.0e-9):
+                    raise ContractViolation(
+                        "completion region differs from its recipe surface"
+                    )
+                fixed_route = getattr(action, "fixed_route", None)
+                if (type(fixed_route) is not FixedRoute
+                        or fixed_route.execution_contract is None
+                        or args.expected_region != fixed_route
+                            .execution_contract.completion_region):
+                    raise ContractViolation(
+                        "completion recipe differs from final route contract"
+                    )
+            if owner.fixed_route_id is None:
+                continue
+            if (type(action) is not WalkSegment
+                    or action.fixed_route.route_id != owner.fixed_route_id):
+                raise ContractViolation("validation owner fixed route differs")
         if (self.validation_plan.initial_connection is not None
                 and abs(
                     self.validation_plan.initial_connection
@@ -640,8 +722,29 @@ class RouteAdmitter:
     @staticmethod
     def _goal_completion(world: WorldView, surface: SupportSurface, goal: GoalState,
                          profile: GroundMotionProfile | None, incoming):
-        return standable_region_in_goal(world, surface, goal.region, connection_from=incoming,
-            allowed_materials=None if profile is None else profile.support_materials)
+        selected = standable_region_in_goal(
+            world,
+            surface,
+            goal.region,
+            connection_from=incoming,
+            allowed_materials=(
+                None if profile is None else profile.support_materials
+            ),
+        )
+        completion = selected.completion_region
+        if (selected.status is QueryStatus.FEASIBLE
+                and completion is not None
+                and completion.contains(surface.position)):
+            # The planner already proved the leg to this surface point.  Keep
+            # it when it lies in the exact completion rectangle instead of
+            # inventing a diagonal tail toward the goal centre.  Admission
+            # still proves the final connection and binds its dependencies.
+            completion = replace(
+                completion,
+                reference_point=surface.position,
+            )
+            selected = replace(selected, completion_region=completion)
+        return selected
 
     @staticmethod
     def _direct_walk_result(
@@ -1380,7 +1483,10 @@ class RouteAdmitter:
                 or candidate.goal_revision != calculation_request.goal_revision
                 or candidate.world_session != calculation_request.world_session
                 or candidate.planning_start != calculation_request.start
-                or candidate.planning_goal != calculation_request.goal
+                or (type(calculation_request.planning_target)
+                    is ExactSurfacePlanningGoal
+                    and candidate.planning_goal != calculation_request.goal)
+                or candidate.planning_target != calculation_request.planning_target
                 or candidate.goal_state != calculation_request.goal_state
                 or candidate.work_identity != calculation_request.work_identity
                 or (surface and (
@@ -1536,6 +1642,7 @@ class RouteAdmitter:
         terminal_execution_dependencies: list[
             _ExactTerminalExecutionDependencies
         ] | None = None,
+        terminal_rejections: list[StandablePointResult] | None = None,
     ) -> ActionRoute | None:
         def entry_window(previous, next_node, transition) -> SegmentEntryWindow:
             if type(transition) is not MovementTransition:
@@ -1679,26 +1786,98 @@ class RouteAdmitter:
                                 == tuple(node.node_id for node in pending_nodes)
                                 for plan in candidate.ground_traversal_plans)
                 if has_proof:
-                    pending_dependencies.update(terminal_target.dependencies)
                     # Preserve the proved trajectory; its final same-height
                     # connection is a separate ordinary closed-loop walk.
                     tail_proof = next(plan for plan in candidate.ground_traversal_plans
                         if canonical_surface_node_path(plan.surface_node_path)
                         == tuple(node.node_id for node in pending_nodes))
+                    tail_start = tail_proof.route.points[-1]
+                    tail_start_position = (
+                        tail_start.x, tail_start.y, tail_start.z,
+                    )
+                    direct = query_standable_connection(
+                        frame.world,
+                        candidate.path[-1].surface,
+                        terminal_target.position,
+                        tail_start_position,
+                    )
+                    if direct.status is not QueryStatus.FEASIBLE:
+                        if terminal_rejections is not None:
+                            terminal_rejections.append(direct)
+                        return None
                     tail_id = (tail_proof.continuation.following_route_id
                                if tail_proof.continuation is not None else f"{route_id}-goal-tail")
                     flush_walk()
-                    actions.append(WalkSegment(FixedRoute(tail_id, (last, terminal)),
-                                               (candidate.path[-1].node_id,), terminal_target.dependencies))
+                    tail_action_index = len(actions)
+                    actions.append(WalkSegment(
+                        FixedRoute(tail_id, (tail_start, terminal)),
+                        (candidate.path[-1].node_id,),
+                        tuple(sorted(set(direct.dependencies))),
+                    ))
+                    exact_terminal_execution = (
+                        _ExactTerminalExecutionDependencies(
+                            tail_action_index,
+                            (),
+                            tuple(sorted(set(direct.dependencies))),
+                        )
+                    )
+                    if terminal_proofs is not None:
+                        terminal_proofs.append(_StandableQueryProof(
+                            StandableConnectionQueryArgs(
+                                candidate.path[-1].surface,
+                                terminal_target.position,
+                                tail_start_position,
+                                .6,
+                                1.8,
+                            ),
+                            direct.dependencies,
+                        ))
                 else:
                     direct = None
-                    if len(pending_points) >= 2:
+                    direct_from = None
+                    append_terminal = False
+                    if len(pending_points) == 1:
+                        # A region search can finish on its start graph node.
+                        # The graph path then has no edge, but the body can
+                        # still be outside the witness completion rectangle.
+                        # Materialize the already-proved node-to-region
+                        # connection as an ordinary terminal WalkSegment.
+                        only = pending_points[0]
+                        direct_from = (only.x, only.y, only.z)
+                        direct = query_standable_connection(
+                            frame.world,
+                            candidate.path[-1].surface,
+                            terminal_target.position,
+                            direct_from,
+                        )
+                        append_terminal = (
+                            direct.status is QueryStatus.FEASIBLE
+                        )
+                    elif len(pending_points) >= 2:
                         before = pending_points[-2]
+                        direct_from = (before.x, before.y, before.z)
                         direct = query_standable_connection(frame.world,
                             candidate.path[-1].surface, terminal_target.position,
-                            (before.x, before.y, before.z))
+                            direct_from)
+                        if direct.status is not QueryStatus.FEASIBLE:
+                            last_point = pending_points[-1]
+                            direct_from = (
+                                last_point.x, last_point.y, last_point.z,
+                            )
+                            direct = query_standable_connection(
+                                frame.world,
+                                candidate.path[-1].surface,
+                                terminal_target.position,
+                                direct_from,
+                            )
+                            append_terminal = (
+                                direct.status is QueryStatus.FEASIBLE
+                            )
                     if direct is not None and direct.status is QueryStatus.FEASIBLE:
-                        pending_points[-1] = terminal
+                        if append_terminal:
+                            pending_points.append(terminal)
+                        else:
+                            pending_points[-1] = terminal
                         pending_dependencies.update(direct.dependencies)
                         exact_terminal_execution = (
                             _ExactTerminalExecutionDependencies(
@@ -1712,15 +1891,17 @@ class RouteAdmitter:
                                 StandableConnectionQueryArgs(
                                     candidate.path[-1].surface,
                                     terminal_target.position,
-                                    (before.x, before.y, before.z),
+                                    direct_from,
                                     .6,
                                     1.8,
                                 ),
                                 direct.dependencies,
                             ))
                     else:
-                        pending_dependencies.update(terminal_target.dependencies)
-                        pending_points.append(terminal)
+                        if (terminal_rejections is not None
+                                and direct is not None):
+                            terminal_rejections.append(direct)
+                        return None
             else:
                 terminal_matches_last = True
         flush_walk()
@@ -1804,6 +1985,39 @@ class RouteAdmitter:
                                     ),
                                     direct.dependencies,
                                 ))
+                if (exact_terminal_execution is None
+                        and len(final_action.fixed_route.points) >= 2):
+                    before = final_action.fixed_route.points[-2]
+                    direct_from = (before.x, before.y, before.z)
+                    direct = query_standable_connection(
+                        frame.world,
+                        candidate.path[-1].surface,
+                        terminal_target.position,
+                        direct_from,
+                    )
+                    if direct.status is QueryStatus.FEASIBLE:
+                        exact_terminal_execution = (
+                            _ExactTerminalExecutionDependencies(
+                                len(actions) - 1,
+                                tuple(sorted(set(final_action.dependencies))),
+                                tuple(sorted(set(direct.dependencies))),
+                            )
+                        )
+                        if terminal_proofs is not None:
+                            terminal_proofs.append(_StandableQueryProof(
+                                StandableConnectionQueryArgs(
+                                    candidate.path[-1].surface,
+                                    terminal_target.position,
+                                    direct_from,
+                                    .6,
+                                    1.8,
+                                ),
+                                direct.dependencies,
+                            ))
+                    else:
+                        if terminal_rejections is not None:
+                            terminal_rejections.append(direct)
+                        return None
             completion = terminal_target.completion_region
             if exact_terminal_execution is not None:
                 exact_terminal_execution = replace(exact_terminal_execution,
@@ -1811,7 +2025,7 @@ class RouteAdmitter:
             if exact_terminal_execution is None:
                 actions[-1] = replace(actions[-1], dependencies=tuple(sorted(
                     set(actions[-1].dependencies)
-                    | set(terminal_target.dependencies) | set(completion.dependencies))))
+                    | set(completion.dependencies))))
             else:
                 if exact_terminal_execution.action_index != len(actions) - 1:
                     raise ContractViolation(
@@ -2069,6 +2283,35 @@ class RouteAdmitter:
             return point.x, point.y, point.z
 
         for action_index, action in enumerate(action_route.actions):
+            completion_dependencies: set[BlockPos] = set()
+            if (completion_proof is not None
+                    and action_index == len(action_route.actions) - 1
+                    and completion_proof.expected_region.dependencies):
+                completion_dependencies.update(
+                    completion_proof.expected_region.dependencies
+                )
+                region_recipe = add_recipe(
+                    query_kind=WalkValidationQueryKind.STANDABLE_REGION,
+                    region=completion_proof,
+                    dependencies=tuple(sorted(completion_dependencies)),
+                )
+                fixed_route = getattr(action, "fixed_route", None)
+                completion_fixed_route = (
+                    fixed_route.route_id
+                    if (type(fixed_route) is FixedRoute
+                        and fixed_route.execution_contract is not None)
+                    else None
+                )
+                add_owner(
+                    DependencyOwnerKind.COMPLETION_REGION,
+                    action_index,
+                    completion_dependencies,
+                    fixed_route_id=completion_fixed_route,
+                    recipe=region_recipe,
+                )
+                covered_by_action[action_index].update(
+                    completion_dependencies
+                )
             if type(action) is not WalkSegment:
                 add_owner(
                     DependencyOwnerKind.STRICT_ACTION,
@@ -2159,21 +2402,52 @@ class RouteAdmitter:
                     progress[start_point_index],
                     progress[end_point_index],
                 ))
+            if (terminal_execution is not None
+                    and terminal_execution.action_index == action_index
+                    and not terminal_execution.uses_initial_connection
+                    and not terminal_proof_mapped):
+                if terminal_proof is None or len(points) < 2 or profile is None:
+                    raise ContractViolation(
+                        "exact terminal execution lacks a replayable proof"
+                    )
+                start_point_index = len(points) - 2
+                end_point_index = len(points) - 1
+                start_point = point_value(points[start_point_index])
+                end_point = point_value(points[end_point_index])
+                if (start_point != terminal_proof.args.connection_from
+                        or end_point != terminal_proof.args.position):
+                    raise ContractViolation(
+                        "terminal proof differs from the final fixed-route leg"
+                    )
+                recipe = add_recipe(
+                    query_kind=WalkValidationQueryKind.STANDABLE_CONNECTION,
+                    standable=terminal_proof.args,
+                    dependencies=terminal_proof.dependencies,
+                )
+                owner = add_owner(
+                    DependencyOwnerKind.WALK_LEG,
+                    action_index,
+                    recipe.dependencies,
+                    fixed_route_id=action.fixed_route.route_id,
+                    recipe=recipe,
+                )
+                assert owner is not None
+                covered_by_action[action_index].update(recipe.dependencies)
+                legs.append(WalkLegValidationBinding(
+                    owner.owner_id,
+                    recipe.recipe_id,
+                    start_point_index,
+                    end_point_index,
+                    progress[start_point_index],
+                    progress[end_point_index],
+                ))
+                terminal_proof_mapped = True
             if legs:
                 action_plans.append(WalkActionValidationPlan(
                     action_index,
                     action.fixed_route.route_id,
                     tuple(legs),
                 ))
-            completion = (None if action.fixed_route.execution_contract is None else
-                          action.fixed_route.execution_contract.completion_region)
-            if completion is not None and completion.dependencies:
-                if completion_proof is None:
-                    raise ContractViolation("completion region lacks original query arguments")
-                region_recipe = add_recipe(query_kind=WalkValidationQueryKind.STANDABLE_REGION,
-                    region=completion_proof, dependencies=completion.dependencies)
-                add_owner(DependencyOwnerKind.COMPLETION_REGION, action_index,
-                    completion.dependencies, fixed_route_id=action.fixed_route.route_id, recipe=region_recipe)
             if (terminal_execution is not None
                     and terminal_execution.action_index == action_index
                     and (terminal_proof_mapped
@@ -2283,8 +2557,42 @@ class RouteAdmitter:
         if candidate.goal_state is not None:
             incoming = (candidate.path[-2].position if len(candidate.path) >= 2
                         else frame.body.position)
-            terminal_target = self._goal_completion(frame.world, candidate.path[-1].surface,
-                candidate.goal_state, candidate.ground_profile, incoming)
+            witness = candidate.terminal_witness
+            if type(candidate.planning_target) is GoalRegionPlanningRequest:
+                if (witness is None
+                        or witness.terminal_surface != candidate.path[-1].node_id):
+                    return AdmissionResult(
+                        AdmissionStatus.REJECTED,
+                        AdmissionReason.CANDIDATE_BASIS_MISMATCH,
+                    )
+                terminal_target = validate_standable_region(
+                    frame.world,
+                    candidate.path[-1].surface,
+                    candidate.goal_state.region,
+                    witness.completion_region,
+                    allowed_materials=(
+                        None if candidate.ground_profile is None
+                        else candidate.ground_profile.support_materials
+                    ),
+                    query_cache=WorldQueryCache(frame.world),
+                )
+                if terminal_target.status is QueryStatus.FEASIBLE:
+                    connection = query_standable_connection(
+                        frame.world,
+                        candidate.path[-1].surface,
+                        witness.completion_region.reference_point,
+                        candidate.path[-1].position,
+                    )
+                    if connection.status is not QueryStatus.FEASIBLE:
+                        terminal_target = StandableRegionResult(
+                            connection.status,
+                            missing_cells=connection.missing_cells,
+                        )
+            else:
+                terminal_target = self._goal_completion(
+                    frame.world, candidate.path[-1].surface,
+                    candidate.goal_state, candidate.ground_profile, incoming,
+                )
             if terminal_target.status is not QueryStatus.FEASIBLE:
                 return AdmissionResult(AdmissionStatus.REJECTED,
                     AdmissionReason.GOAL_STANDING_POINT_NEEDS_INFORMATION if terminal_target.missing_cells
@@ -2294,14 +2602,27 @@ class RouteAdmitter:
         terminal_execution_dependencies: list[
             _ExactTerminalExecutionDependencies
         ] = []
+        terminal_rejections: list[StandablePointResult] = []
         action_route = self._surface_action_route(
             candidate, frame, connection_length, connection_dependencies, route_id, terminal_target,
             skip_first_walk_start=skip_first_walk_start,
             forward_entry=forward_entry,
             terminal_proofs=terminal_proofs,
             terminal_execution_dependencies=terminal_execution_dependencies,
+            terminal_rejections=terminal_rejections,
         )
         if action_route is None:
+            if terminal_rejections:
+                rejected = terminal_rejections[-1]
+                return AdmissionResult(
+                    (AdmissionStatus.NEEDS_INFORMATION
+                     if rejected.status is QueryStatus.NEEDS_INFORMATION
+                     else AdmissionStatus.REJECTED),
+                    (AdmissionReason.GOAL_STANDING_POINT_NEEDS_INFORMATION
+                     if rejected.status is QueryStatus.NEEDS_INFORMATION
+                     else AdmissionReason.GOAL_STANDING_POINT_UNAVAILABLE),
+                    missing_cells=rejected.missing_cells,
+                )
             return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.CANDIDATE_HAS_NO_ACTIONS)
         if (forward_entry is not None and terminal_execution_dependencies
                 and terminal_execution_dependencies[0].action_index == 0
@@ -2376,7 +2697,7 @@ class RouteAdmitter:
             | ((set(terminal_execution.exact_dependencies)
                 | set(terminal_target.completion_region.dependencies)
                 if terminal_execution is not None
-                else set(terminal_target.dependencies))
+                else set(terminal_target.completion_region.dependencies))
                if terminal_target is not None
                and corridor_nodes[-1].node_id == candidate.path[-1].node_id
                else set())

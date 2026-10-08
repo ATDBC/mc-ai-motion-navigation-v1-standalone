@@ -11,8 +11,13 @@ import tempfile
 import unittest
 
 from scripts.benchmark_d061_long_session import (
+    _FrameTimingRecorder,
     _control_period_outcome,
+    _timing_gates,
     _gen2_coverage,
+)
+from scripts.f2_ground_route_evidence import (
+    _FrameTimingRecorder as _HotpathFrameTimingRecorder,
 )
 
 
@@ -20,6 +25,129 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class D061LongSessionBenchmarkTests(unittest.TestCase):
+    def test_hotpath_recorder_reports_nested_exclusive_time_and_residual(self):
+        class Clock:
+            value = 0
+            def __call__(self): return self.value
+        clock = Clock()
+        recorder = _HotpathFrameTimingRecorder(clock)
+        clock.value += 2
+        with recorder.segment("session_propose"):
+            clock.value += 3
+            with recorder.segment("fixed_route_verifier"):
+                clock.value += 5
+            clock.value += 7
+        clock.value += 11
+        result = recorder.finish()
+        self.assertEqual(result["production_prepare_ms"], 28 / 1e6)
+        self.assertEqual(
+            result["production_segments_inclusive_ms"],
+            {"fixed_route_verifier": 5 / 1e6, "session_propose": 15 / 1e6},
+        )
+        self.assertEqual(
+            result["production_segments_exclusive_ms"],
+            {"fixed_route_verifier": 5 / 1e6, "session_propose": 10 / 1e6},
+        )
+        self.assertEqual(result["production_unattributed_ms"], 13 / 1e6)
+
+    def test_frame_recorder_directly_counts_runtime_shell_around_backend_without_overlap(self):
+        class Clock:
+            value = 0
+
+            def __call__(self):
+                return self.value
+
+        def sample(backend_ns: int):
+            clock = Clock()
+            recorder = _FrameTimingRecorder(clock)
+            recorder.start_frame()
+            recorder.start_production("follow_update")
+            clock.value += 5
+            recorder.finish_production("follow_update")
+            recorder.start_production("runtime_control_frame")
+            clock.value += 3
+            recorder.start_backend()
+            clock.value += backend_ns
+            recorder.finish_backend()
+            clock.value += 2
+            recorder.finish_production("runtime_control_frame")
+            clock.value += 10
+            return recorder.finish_frame(following_revision=True)
+
+        first = sample(100)
+        delayed = sample(200)
+        self.assertEqual(first.production_ns, 10)
+        self.assertEqual(first.simulation_backend_ns, 100)
+        self.assertEqual(first.full_harness_ns, 120)
+        self.assertEqual(
+            first.production_segments,
+            (("follow_update", 5), ("runtime_control_frame", 5)),
+        )
+        self.assertTrue(first.following_revision)
+        self.assertEqual(delayed.production_ns, first.production_ns)
+        self.assertEqual(
+            delayed.simulation_backend_ns - first.simulation_backend_ns,
+            100,
+        )
+        self.assertEqual(delayed.full_harness_ns - first.full_harness_ns, 100)
+        self.assertLessEqual(
+            first.production_ns + first.simulation_backend_ns,
+            first.full_harness_ns,
+        )
+
+    def test_three_timing_layers_keep_every_gate_and_do_not_charge_backend_to_production(self):
+        healthy = _timing_gates(
+            production_ns=[5_000_000, 6_000_000],
+            simulation_backend_ns=[35_000_000, 40_000_000],
+            full_harness_ns=[45_000_000, 49_000_000],
+            revision_ordinals=(1,),
+        )
+        self.assertEqual(set(healthy), {
+            "production_prepare_p95",
+            "production_prepare_p99",
+            "production_prepare_maximum",
+            "following_revision_production_p95",
+            "following_revision_production_p99",
+            "following_revision_production_maximum",
+            "full_harness_maximum",
+        })
+        self.assertTrue(all(healthy.values()))
+
+        only_p95_would_hide_tail = _timing_gates(
+            production_ns=[7_000_000] * 96 + [16_000_000] * 4,
+            simulation_backend_ns=[1] * 100,
+            full_harness_ns=[20_000_000] * 100,
+            revision_ordinals=(0,),
+        )
+        self.assertTrue(only_p95_would_hide_tail["production_prepare_p95"])
+        self.assertFalse(only_p95_would_hide_tail["production_prepare_p99"])
+
+        hidden_maximum = _timing_gates(
+            production_ns=[5_000_000, 31_000_000],
+            simulation_backend_ns=[1, 1],
+            full_harness_ns=[32_000_000, 32_000_000],
+            revision_ordinals=(0,),
+        )
+        self.assertFalse(hidden_maximum["production_prepare_maximum"])
+
+        backend_mixed_into_production = _timing_gates(
+            production_ns=[40_000_000],
+            simulation_backend_ns=[35_000_000],
+            full_harness_ns=[45_000_000],
+            revision_ordinals=(0,),
+        )
+        self.assertFalse(backend_mixed_into_production[
+            "production_prepare_maximum"
+        ])
+
+        missing_full_harness_gate = _timing_gates(
+            production_ns=[5_000_000],
+            simulation_backend_ns=[1],
+            full_harness_ns=[51_000_000],
+            revision_ordinals=(0,),
+        )
+        self.assertFalse(missing_full_harness_gate["full_harness_maximum"])
+
     def test_control_period_slack_uses_the_same_wall_duration(self):
         cases = (
             (40_000_000, 10_000_000, False),
@@ -138,9 +266,17 @@ class D061LongSessionBenchmarkTests(unittest.TestCase):
             )
             self.assertEqual(
                 payload["schema_version"],
-                "mc2p.d061-long-session-performance.v4",
+                "mc2p.d061-long-session-performance.v5",
             )
             self.assertTrue(payload["configuration"]["test_mode"])
+            self.assertEqual(
+                payload["source"]["hash_basis"],
+                "windows_worktree_bytes",
+            )
+            self.assertEqual(
+                payload["environment"]["hash_basis"],
+                "windows_worktree_bytes",
+            )
             self.assertIsInstance(
                 payload["environment"]["control_thread_id"], int,
             )
@@ -151,6 +287,36 @@ class D061LongSessionBenchmarkTests(unittest.TestCase):
             )
             prepare = payload["complete_prepare"]
             control = payload["formal_control_path"]
+            layers = payload["timing_layers"]
+            self.assertEqual(set(layers), {
+                "production_prepare_ms",
+                "simulation_backend_ms",
+                "full_harness_ms",
+                "following_revision_frames",
+            })
+            self.assertIn("measurement_boundary", layers["production_prepare_ms"])
+            self.assertIn("measurement_boundary", layers["simulation_backend_ms"])
+            self.assertIn("measurement_boundary", layers["full_harness_ms"])
+            self.assertNotIn("derived_by_subtraction", json.dumps(layers))
+            frame_samples = payload["retained_frame_samples"]
+            self.assertGreaterEqual(len(frame_samples), 8)
+            self.assertEqual(len(frame_samples), layers["full_harness_ms"]["samples"])
+            for ordinal, sample in enumerate(frame_samples):
+                self.assertEqual(sample["retained_ordinal"], ordinal)
+                self.assertGreaterEqual(sample["production_prepare_ns"], 0)
+                self.assertGreaterEqual(sample["simulation_backend_ns"], 0)
+                self.assertGreaterEqual(sample["full_harness_ns"], 0)
+                self.assertIs(type(sample["following_revision"]), bool)
+                self.assertEqual(
+                    sample["production_prepare_ns"],
+                    sum(item["duration_ns"]
+                        for item in sample["production_segments_ns"]),
+                )
+            self.assertTrue(any(
+                item["name"] == "runtime_control_frame"
+                for sample in frame_samples
+                for item in sample["production_segments_ns"]
+            ))
             self.assertEqual(prepare["warmup_samples"], 1)
             self.assertGreaterEqual(prepare["retained_samples"], 8)
             self.assertLessEqual(prepare["retained_samples"], 16)
@@ -177,9 +343,19 @@ class D061LongSessionBenchmarkTests(unittest.TestCase):
                  for value in retained["raw_durations_ns"]],
             )
             self.assertEqual(
-                payload["gates"]["control_path_maximum"],
-                retained["statistics"]["maximum_ms"] < 50.0,
+                payload["gates"]["full_harness_maximum"],
+                layers["full_harness_ms"]["statistics"]["maximum_ms"] < 50.0,
             )
+            for required_gate in (
+                "production_prepare_p95",
+                "production_prepare_p99",
+                "production_prepare_maximum",
+                "following_revision_production_p95",
+                "following_revision_production_p99",
+                "following_revision_production_maximum",
+                "full_harness_maximum",
+            ):
+                self.assertIn(required_gate, payload["gates"])
             self.assertEqual(
                 payload["gates"]["input_deadline_miss"],
                 retained["deadline_miss_count"] == 0,

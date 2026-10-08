@@ -105,6 +105,7 @@ def _failure_candidate(job: _PlanningJob, reason: str):
             minimum_resources=request.minimum_resources,
             reasons=(reason,),
             work_identity=request.work_identity,
+            planning_target=request.planning_target,
         )
     return RouteCandidate(
         request.sequence, request.request_id, request.goal_id,
