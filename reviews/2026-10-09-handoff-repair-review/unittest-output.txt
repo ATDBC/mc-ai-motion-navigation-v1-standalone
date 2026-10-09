@@ -1,0 +1,19 @@
+# ffb1dfa full tests/motion_nav (Linux)
+Ran 1670 tests in 548.595s
+OK
+
+# proto full tests/motion_nav (Linux)
+FAIL: test_f2_export_matches_frozen_production_fingerprints (test_standalone_export.StandaloneExportTests.test_f2_export_matches_frozen_production_fingerprints)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-mc-ai-motion-navigation-v1-standalone/7b6c23a8-548e-536b-b677-503d1715db15/scratchpad/main-proto/tests/motion_nav/test_standalone_export.py", line 169, in test_f2_export_matches_frozen_production_fingerprints
+    self.assertEqual(
+AssertionError: '32f08331029d8fbd8974a7525c421ba59ed15b74e84639676f11d32d55ecf0ff' != '208e57f73302a50204fdc580a02d83da8094088cbd13dae72a59aa200c547db6'
+- 32f08331029d8fbd8974a7525c421ba59ed15b74e84639676f11d32d55ecf0ff
++ 208e57f73302a50204fdc580a02d83da8094088cbd13dae72a59aa200c547db6
+ : mc2p/motion_nav/fixed_route.py
+
+----------------------------------------------------------------------
+Ran 1670 tests in 576.847s
+
+FAILED (failures=1)

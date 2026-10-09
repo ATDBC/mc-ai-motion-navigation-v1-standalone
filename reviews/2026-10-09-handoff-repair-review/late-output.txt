@@ -1,0 +1,266 @@
+# Outputs of handoff_edge_probe.py and column_top_late_probe.py (Linux, sim Runtime -> Driver -> Session chain)
+# ffb1dfa = entry handoff repair; cf08d2e = R4 signed, before the repair;
+# proto = ffb1dfa + proto-entry-position-brake.diff
+
+## ffb1dfa, first exploratory run: handoff_edge_probe.py --late --p=0.3 --seeds=3 (before aligned_* families existed)
+turn_jumpup  normal    success/goal_state_satisfied ticks=108 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=59 pre_takeoff_min_speed=1.173 b/s max_yaw_step=90.0 overshoot=0.0 violations=0 damage=0.0
+turn_jumpup  late s1   success/goal_state_satisfied ticks=127 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=74 pre_takeoff_min_speed=0.94 b/s max_yaw_step=90.0 overshoot=0.0 violations=0 damage=0.0
+turn_jumpup  late s2   success/goal_state_satisfied ticks=124 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=68 pre_takeoff_min_speed=0.323 b/s max_yaw_step=90.0 overshoot=0.0 violations=0 damage=0.0
+turn_jumpup  late s3   failed/fixed_route_stalled ticks=121 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=90.0 overshoot=0.0 violations=0 damage=0.0
+turn_gap     normal    success/goal_state_satisfied ticks=101 segs=['JumpGapSegment', 'WalkSegment'] takeoff_tick=59 pre_takeoff_min_speed=1.173 b/s max_yaw_step=90.0 overshoot=0.0 violations=0 damage=0.0
+turn_gap     late s1   success/goal_state_satisfied ticks=117 segs=['JumpGapSegment', 'WalkSegment'] takeoff_tick=74 pre_takeoff_min_speed=0.94 b/s max_yaw_step=90.0 overshoot=0.0 violations=0 damage=0.0
+turn_gap     late s2   success/goal_state_satisfied ticks=113 segs=['JumpGapSegment', 'WalkSegment'] takeoff_tick=68 pre_takeoff_min_speed=0.323 b/s max_yaw_step=90.0 overshoot=0.0 violations=0 damage=0.0
+turn_gap     late s3   success/goal_state_satisfied ticks=119 segs=['JumpGapSegment', 'WalkSegment'] takeoff_tick=70 pre_takeoff_min_speed=0.634 b/s max_yaw_step=90.0 overshoot=0.0 violations=0 damage=0.0
+turn_drop    normal    success/goal_state_satisfied ticks=106 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=64 pre_takeoff_min_speed=0.7 b/s max_yaw_step=90.0 overshoot=0.0 violations=0 damage=0.0
+turn_drop    late s1   failed/fixed_route_stalled ticks=127 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=90.0 overshoot=0.0 violations=0 damage=0.0
+turn_drop    late s2   success/goal_state_satisfied ticks=121 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=75 pre_takeoff_min_speed=0.177 b/s max_yaw_step=90.0 overshoot=0.0 violations=0 damage=0.0
+turn_drop    late s3   failed/fixed_route_stalled ticks=121 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=90.0 overshoot=0.0 violations=0 damage=0.0
+back_jumpup  normal    success/goal_state_satisfied ticks=51 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=17 pre_takeoff_min_speed=1.271 b/s max_yaw_step=180.0 overshoot=0.0 violations=0 damage=0.0
+back_jumpup  late s1   failed/goal_state_not_satisfied ticks=67 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=22 pre_takeoff_min_speed=0.903 b/s max_yaw_step=180.0 overshoot=0.0 violations=0 damage=0.0
+back_jumpup  late s2   success/goal_state_satisfied ticks=80 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=20 pre_takeoff_min_speed=0.69 b/s max_yaw_step=180.0 overshoot=0.0 violations=0 damage=0.0
+back_jumpup  late s3   failed/goal_state_not_satisfied ticks=66 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=20 pre_takeoff_min_speed=1.095 b/s max_yaw_step=180.0 overshoot=0.0 violations=0 damage=0.0
+diag_jumpup  normal    success/goal_state_satisfied ticks=50 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=16 pre_takeoff_min_speed=1.308 b/s max_yaw_step=45.0 overshoot=0.0 violations=0 damage=0.0
+diag_jumpup  late s1   failed/goal_state_not_satisfied ticks=67 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=22 pre_takeoff_min_speed=0.903 b/s max_yaw_step=45.0 overshoot=0.0 violations=0 damage=0.0
+diag_jumpup  late s2   failed/goal_state_not_satisfied ticks=49 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=18 pre_takeoff_min_speed=0.711 b/s max_yaw_step=45.0 overshoot=0.0 violations=0 damage=0.0
+diag_jumpup  late s3   failed/goal_state_not_satisfied ticks=66 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=20 pre_takeoff_min_speed=1.098 b/s max_yaw_step=45.0 overshoot=0.0 violations=0 damage=0.0
+
+## cf08d2e, same exploratory run (aligned_jumpup added)
+turn_jumpup  normal    failed/fixed_route_stalled ticks=110 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=0.0 overshoot=0.0 violations=0 damage=0.0
+turn_jumpup  late s1   failed/fixed_route_stalled ticks=123 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=0.0 overshoot=0.0 violations=0 damage=0.0
+turn_jumpup  late s2   failed/fixed_route_stalled ticks=116 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=0.0 overshoot=0.0 violations=0 damage=0.0
+turn_jumpup  late s3   failed/fixed_route_stalled ticks=118 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=0.0 overshoot=0.0 violations=0 damage=0.0
+turn_gap     normal    failed/fixed_route_has_no_forward_control ticks=82 segs=['JumpGapSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=0.0 overshoot=0.0 violations=0 damage=0.0
+turn_gap     late s1   failed/fixed_route_stalled ticks=118 segs=['JumpGapSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=0.0 overshoot=0.0 violations=0 damage=0.0
+turn_gap     late s2   failed/fixed_route_stalled ticks=110 segs=['JumpGapSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=0.0 overshoot=0.0 violations=0 damage=0.0
+turn_gap     late s3   failed/fixed_route_stalled ticks=112 segs=['JumpGapSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=0.0 overshoot=0.0 violations=0 damage=0.0
+turn_drop    normal    failed/fixed_route_has_no_forward_control ticks=82 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=0.0 overshoot=0.0 violations=0 damage=0.0
+turn_drop    late s1   failed/fixed_route_stalled ticks=118 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=0.0 overshoot=0.0 violations=0 damage=0.0
+turn_drop    late s2   failed/fixed_route_stalled ticks=110 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=0.0 overshoot=0.0 violations=0 damage=0.0
+turn_drop    late s3   failed/fixed_route_stalled ticks=112 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=0.0 overshoot=0.0 violations=0 damage=0.0
+back_jumpup  normal    failed/fixed_route_has_no_forward_control ticks=39 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=0.0 overshoot=0.0 violations=0 damage=0.0
+back_jumpup  late s1   failed/fixed_route_has_no_forward_control ticks=44 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=0.0 overshoot=0.0 violations=0 damage=0.0
+back_jumpup  late s2   failed/fixed_route_has_no_forward_control ticks=41 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=0.0 overshoot=0.0 violations=0 damage=0.0
+back_jumpup  late s3   failed/fixed_route_has_no_forward_control ticks=42 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=0.0 overshoot=0.0 violations=0 damage=0.0
+diag_jumpup  normal    failed/fixed_route_stalled ticks=64 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=0.0 overshoot=0.0 violations=0 damage=0.0
+diag_jumpup  late s1   failed/fixed_route_has_no_forward_control ticks=46 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=0.0 overshoot=0.0 violations=0 damage=0.0
+diag_jumpup  late s2   failed/fixed_route_stalled ticks=65 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=0.0 overshoot=0.0 violations=0 damage=0.0
+diag_jumpup  late s3   failed/fixed_route_stalled ticks=67 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=0.0 overshoot=0.0 violations=0 damage=0.0
+aligned_jumpup normal    cancelled/cancelled_after_stop ticks=39 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=0.0 overshoot=0.0 violations=0 damage=0.0
+aligned_jumpup late s1   failed/goal_state_not_satisfied ticks=67 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=22 pre_takeoff_min_speed=0.907 b/s max_yaw_step=0.0 overshoot=0.0 violations=0 damage=0.0
+aligned_jumpup late s2   failed/goal_state_not_satisfied ticks=49 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=18 pre_takeoff_min_speed=1.259 b/s max_yaw_step=0.0 overshoot=0.0 violations=0 damage=0.0
+aligned_jumpup late s3   failed/goal_state_not_satisfied ticks=66 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=19 pre_takeoff_min_speed=1.269 b/s max_yaw_step=0.0 overshoot=0.0 violations=0 damage=0.0
+
+## ffb1dfa, handoff_edge_probe.py --late (p=0.2, seeds 1..8)
+turn_jumpup  normal    success/goal_state_satisfied ticks=108 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=59 pre_takeoff_min_speed=1.173 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.63, 65.0, 9.56) violations=0 damage=0.0
+turn_jumpup  late s1   success/goal_state_satisfied ticks=118 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=69 pre_takeoff_min_speed=0.617 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.44, 65.0, 9.56) violations=0 damage=0.0
+turn_jumpup  late s2   success/goal_state_satisfied ticks=118 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=66 pre_takeoff_min_speed=1.259 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.63, 65.0, 9.56) violations=0 damage=0.0
+turn_jumpup  late s3   success/goal_state_satisfied ticks=131 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=66 pre_takeoff_min_speed=1.257 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.63, 65.0, 9.56) violations=0 damage=0.0
+turn_jumpup  late s4   success/goal_state_satisfied ticks=124 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=69 pre_takeoff_min_speed=1.126 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.63, 65.0, 9.56) violations=0 damage=0.0
+turn_jumpup  late s5   success/goal_state_satisfied ticks=125 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=71 pre_takeoff_min_speed=0.592 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.63, 65.0, 9.56) violations=0 damage=0.0
+turn_jumpup  late s6   failed/fixed_route_stalled ticks=118 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=90.0 overshoot=0.0 final=(2.52, 64.0, 9.35) violations=0 damage=0.0
+turn_jumpup  late s7   success/goal_state_satisfied ticks=126 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=72 pre_takeoff_min_speed=0.675 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.63, 65.0, 9.56) violations=0 damage=0.0
+turn_jumpup  late s8   success/goal_state_satisfied ticks=124 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=74 pre_takeoff_min_speed=0.366 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.63, 65.0, 9.56) violations=0 damage=0.0
+turn_gap     normal    success/goal_state_satisfied ticks=101 segs=['JumpGapSegment', 'WalkSegment'] takeoff_tick=59 pre_takeoff_min_speed=1.173 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.65, 64.0, 9.4) violations=0 damage=0.0
+turn_gap     late s1   success/goal_state_satisfied ticks=111 segs=['JumpGapSegment', 'WalkSegment'] takeoff_tick=69 pre_takeoff_min_speed=0.617 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.65, 64.0, 9.4) violations=0 damage=0.0
+turn_gap     late s2   success/goal_state_satisfied ticks=108 segs=['JumpGapSegment', 'WalkSegment'] takeoff_tick=66 pre_takeoff_min_speed=1.259 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.54, 64.0, 9.56) violations=0 damage=0.0
+turn_gap     late s3   success/goal_state_satisfied ticks=108 segs=['JumpGapSegment', 'WalkSegment'] takeoff_tick=66 pre_takeoff_min_speed=1.257 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.54, 64.0, 9.56) violations=0 damage=0.0
+turn_gap     late s4   success/goal_state_satisfied ticks=111 segs=['JumpGapSegment', 'WalkSegment'] takeoff_tick=69 pre_takeoff_min_speed=1.126 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.63, 64.0, 9.4) violations=0 damage=0.0
+turn_gap     late s5   success/goal_state_satisfied ticks=117 segs=['JumpGapSegment', 'WalkSegment'] takeoff_tick=72 pre_takeoff_min_speed=0.592 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.64, 64.0, 9.4) violations=0 damage=0.0
+turn_gap     late s6   success/goal_state_satisfied ticks=114 segs=['JumpGapSegment', 'WalkSegment'] takeoff_tick=69 pre_takeoff_min_speed=0.689 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.5, 64.0, 9.56) violations=0 damage=0.0
+turn_gap     late s7   success/goal_state_satisfied ticks=121 segs=['JumpGapSegment', 'WalkSegment'] takeoff_tick=72 pre_takeoff_min_speed=0.675 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.61, 64.0, 9.4) violations=0 damage=0.0
+turn_gap     late s8   success/goal_state_satisfied ticks=115 segs=['JumpGapSegment', 'WalkSegment'] takeoff_tick=74 pre_takeoff_min_speed=0.366 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.62, 64.0, 9.56) violations=0 damage=0.0
+turn_drop    normal    success/goal_state_satisfied ticks=106 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=64 pre_takeoff_min_speed=0.7 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.61, 64.0, 9.56) violations=0 damage=0.0
+turn_drop    late s1   success/goal_state_satisfied ticks=117 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=75 pre_takeoff_min_speed=0.527 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.6, 64.0, 9.56) violations=0 damage=0.0
+turn_drop    late s2   success/goal_state_satisfied ticks=115 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=71 pre_takeoff_min_speed=0.649 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.61, 64.0, 9.56) violations=0 damage=0.0
+turn_drop    late s3   success/goal_state_satisfied ticks=119 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=75 pre_takeoff_min_speed=0.098 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.6, 64.0, 9.56) violations=0 damage=0.0
+turn_drop    late s4   success/goal_state_satisfied ticks=117 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=74 pre_takeoff_min_speed=0.693 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.61, 64.0, 9.56) violations=0 damage=0.0
+turn_drop    late s5   success/goal_state_satisfied ticks=120 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=76 pre_takeoff_min_speed=0.592 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.6, 64.0, 9.56) violations=0 damage=0.0
+turn_drop    late s6   success/goal_state_satisfied ticks=122 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=79 pre_takeoff_min_speed=0.061 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.57, 64.0, 9.41) violations=0 damage=0.0
+turn_drop    late s7   failed/fixed_route_stalled ticks=123 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=90.0 overshoot=0.0 final=(2.53, 65.0, 9.35) violations=0 damage=0.0
+turn_drop    late s8   success/goal_state_satisfied ticks=124 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=81 pre_takeoff_min_speed=0.2 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.61, 64.0, 9.56) violations=0 damage=0.0
+back_jumpup  normal    success/goal_state_satisfied ticks=51 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=17 pre_takeoff_min_speed=1.271 b/s max_yaw_step=180.0 overshoot=0.0 final=(0.5, 65.0, 2.36) violations=0 damage=0.0
+back_jumpup  late s1   failed/goal_state_not_satisfied ticks=54 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=21 pre_takeoff_min_speed=0.682 b/s max_yaw_step=180.0 overshoot=0.0 final=(0.5, 65.0, 2.12) violations=0 damage=0.0
+back_jumpup  late s2   failed/goal_state_not_satisfied ticks=50 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=19 pre_takeoff_min_speed=0.696 b/s max_yaw_step=180.0 overshoot=0.0 final=(0.5, 65.0, 1.86) violations=0 damage=0.0
+back_jumpup  late s3   failed/goal_state_not_satisfied ticks=49 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=18 pre_takeoff_min_speed=1.232 b/s max_yaw_step=180.0 overshoot=0.0 final=(0.5, 65.0, 1.82) violations=0 damage=0.0
+back_jumpup  late s4   failed/goal_state_not_satisfied ticks=53 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=20 pre_takeoff_min_speed=0.696 b/s max_yaw_step=180.0 overshoot=0.0 final=(0.5, 65.0, 2.12) violations=0 damage=0.0
+back_jumpup  late s5   success/goal_state_satisfied ticks=66 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=19 pre_takeoff_min_speed=0.649 b/s max_yaw_step=180.0 overshoot=0.0 final=(0.5, 65.0, 2.36) violations=0 damage=0.0
+back_jumpup  late s6   failed/goal_state_not_satisfied ticks=52 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=18 pre_takeoff_min_speed=0.687 b/s max_yaw_step=180.0 overshoot=0.0 final=(0.5, 65.0, 2.24) violations=0 damage=0.0
+back_jumpup  late s7   failed/goal_state_not_satisfied ticks=54 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=23 pre_takeoff_min_speed=0.63 b/s max_yaw_step=180.0 overshoot=0.0 final=(0.5, 65.0, 1.86) violations=0 damage=0.0
+back_jumpup  late s8   failed/goal_state_not_satisfied ticks=83 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=22 pre_takeoff_min_speed=0.79 b/s max_yaw_step=180.0 overshoot=0.0 final=(0.5, 65.0, 2.23) violations=0 damage=0.0
+diag_jumpup  normal    success/goal_state_satisfied ticks=50 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=16 pre_takeoff_min_speed=1.308 b/s max_yaw_step=45.0 overshoot=0.0 final=(0.5, 65.0, 2.36) violations=0 damage=0.0
+diag_jumpup  late s1   success/goal_state_satisfied ticks=80 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=20 pre_takeoff_min_speed=0.922 b/s max_yaw_step=45.0 overshoot=0.0 final=(0.5, 65.0, 2.36) violations=0 damage=0.0
+diag_jumpup  late s2   failed/goal_state_not_satisfied ticks=49 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=18 pre_takeoff_min_speed=0.711 b/s max_yaw_step=45.0 overshoot=0.0 final=(0.5, 65.0, 1.85) violations=0 damage=0.0
+diag_jumpup  late s3   failed/goal_state_not_satisfied ticks=49 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=18 pre_takeoff_min_speed=0.952 b/s max_yaw_step=45.0 overshoot=0.0 final=(0.5, 65.0, 1.82) violations=0 damage=0.0
+diag_jumpup  late s4   failed/goal_state_not_satisfied ticks=53 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=20 pre_takeoff_min_speed=0.71 b/s max_yaw_step=45.0 overshoot=0.0 final=(0.5, 65.0, 2.12) violations=0 damage=0.0
+diag_jumpup  late s5   success/goal_state_satisfied ticks=66 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=19 pre_takeoff_min_speed=0.662 b/s max_yaw_step=45.0 overshoot=0.0 final=(0.5, 65.0, 2.36) violations=0 damage=0.0
+diag_jumpup  late s6   failed/goal_state_not_satisfied ticks=52 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=18 pre_takeoff_min_speed=0.687 b/s max_yaw_step=45.0 overshoot=0.0 final=(0.5, 65.0, 2.24) violations=0 damage=0.0
+diag_jumpup  late s7   failed/goal_state_not_satisfied ticks=54 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=23 pre_takeoff_min_speed=0.642 b/s max_yaw_step=45.0 overshoot=0.0 final=(0.5, 65.0, 1.86) violations=0 damage=0.0
+diag_jumpup  late s8   failed/goal_state_not_satisfied ticks=83 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=22 pre_takeoff_min_speed=0.794 b/s max_yaw_step=45.0 overshoot=0.0 final=(0.5, 65.0, 2.23) violations=0 damage=0.0
+aligned_jumpup normal    success/goal_state_satisfied ticks=50 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=16 pre_takeoff_min_speed=1.287 b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 65.0, 2.36) violations=0 damage=0.0
+aligned_jumpup late s1   failed/goal_state_not_satisfied ticks=49 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=18 pre_takeoff_min_speed=1.234 b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 65.0, 1.86) violations=0 damage=0.0
+aligned_jumpup late s2   failed/goal_state_not_satisfied ticks=49 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=18 pre_takeoff_min_speed=1.259 b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 65.0, 1.85) violations=0 damage=0.0
+aligned_jumpup late s3   failed/goal_state_not_satisfied ticks=49 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=17 pre_takeoff_min_speed=0.701 b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 65.0, 1.98) violations=0 damage=0.0
+aligned_jumpup late s4   failed/goal_state_not_satisfied ticks=53 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=20 pre_takeoff_min_speed=0.687 b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 65.0, 2.12) violations=0 damage=0.0
+aligned_jumpup late s5   failed/goal_state_not_satisfied ticks=49 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=18 pre_takeoff_min_speed=0.673 b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 65.0, 1.82) violations=0 damage=0.0
+aligned_jumpup late s6   success/goal_state_satisfied ticks=51 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=17 pre_takeoff_min_speed=1.286 b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 65.0, 2.36) violations=0 damage=0.0
+aligned_jumpup late s7   failed/goal_state_not_satisfied ticks=53 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=22 pre_takeoff_min_speed=1.153 b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 65.0, 1.85) violations=0 damage=0.0
+aligned_jumpup late s8   failed/goal_state_not_satisfied ticks=64 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=20 pre_takeoff_min_speed=0.872 b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 65.0, 1.86) violations=0 damage=0.0
+aligned_far  normal    success/goal_state_satisfied ticks=69 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=16 pre_takeoff_min_speed=1.287 b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 65.0, 5.49) violations=0 damage=0.0
+aligned_far  late s1   success/goal_state_satisfied ticks=75 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=18 pre_takeoff_min_speed=1.234 b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 65.0, 5.53) violations=0 damage=0.0
+aligned_far  late s2   success/goal_state_satisfied ticks=76 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=18 pre_takeoff_min_speed=1.259 b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 65.0, 5.52) violations=0 damage=0.0
+aligned_far  late s3   success/goal_state_satisfied ticks=71 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=17 pre_takeoff_min_speed=0.701 b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 65.0, 5.49) violations=0 damage=0.0
+aligned_far  late s4   success/goal_state_satisfied ticks=78 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=20 pre_takeoff_min_speed=0.687 b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 65.0, 5.49) violations=0 damage=0.0
+aligned_far  late s5   success/goal_state_satisfied ticks=77 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=18 pre_takeoff_min_speed=0.673 b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 65.0, 5.5) violations=0 damage=0.0
+aligned_far  late s6   success/goal_state_satisfied ticks=76 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=17 pre_takeoff_min_speed=1.286 b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 65.0, 5.49) violations=0 damage=0.0
+aligned_far  late s7   success/goal_state_satisfied ticks=77 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=22 pre_takeoff_min_speed=1.153 b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 65.0, 5.52) violations=0 damage=0.0
+aligned_far  late s8   success/goal_state_satisfied ticks=91 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=20 pre_takeoff_min_speed=0.872 b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 65.0, 5.53) violations=0 damage=0.0
+
+## cf08d2e, handoff_edge_probe.py --late aligned_jumpup
+aligned_jumpup normal    cancelled/cancelled_after_stop ticks=39 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 64.0, 1.52) violations=0 damage=0.0
+aligned_jumpup late s1   failed/goal_state_not_satisfied ticks=49 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=18 pre_takeoff_min_speed=1.234 b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 65.0, 1.86) violations=0 damage=0.0
+aligned_jumpup late s2   failed/goal_state_not_satisfied ticks=49 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=18 pre_takeoff_min_speed=1.259 b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 65.0, 1.85) violations=0 damage=0.0
+aligned_jumpup late s3   cancelled/cancelled_after_stop ticks=41 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 64.0, 1.31) violations=0 damage=0.0
+aligned_jumpup late s4   failed/goal_state_not_satisfied ticks=53 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=20 pre_takeoff_min_speed=0.687 b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 65.0, 2.12) violations=0 damage=0.0
+aligned_jumpup late s5   failed/goal_state_not_satisfied ticks=49 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=18 pre_takeoff_min_speed=0.673 b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 65.0, 1.82) violations=0 damage=0.0
+aligned_jumpup late s6   cancelled/cancelled_after_stop ticks=42 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=None pre_takeoff_min_speed=None b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 64.0, 1.53) violations=0 damage=0.0
+aligned_jumpup late s7   failed/goal_state_not_satisfied ticks=53 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=22 pre_takeoff_min_speed=1.153 b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 65.0, 1.85) violations=0 damage=0.0
+aligned_jumpup late s8   failed/goal_state_not_satisfied ticks=64 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=20 pre_takeoff_min_speed=0.872 b/s max_yaw_step=0.0 overshoot=0.0 final=(0.5, 65.0, 1.86) violations=0 damage=0.0
+
+## continuous-height matrix jump_up_1, late condition, 100 frozen cases (outcome counts)
+### main-ffb
+    100 success/goal_state_satisfied
+### main-cf0
+    100 success/goal_state_satisfied
+
+## ffb1dfa, column_top_late_probe.py 8 0
+goal (3.5, 65.0, 9.5) normal   success/goal_state_satisfied final=(3.36, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s1  failed/goal_state_not_satisfied final=(2.85, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s2  success/goal_state_satisfied final=(3.36, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s3  failed/goal_state_not_satisfied final=(3.24, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s4  failed/goal_state_not_satisfied final=(2.82, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s5  success/goal_state_satisfied final=(3.36, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s6  failed/fixed_route_stalled final=(2.52, 64.0, 9.35) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s7  failed/goal_state_not_satisfied final=(3.24, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s8  failed/goal_state_not_satisfied final=(3.12, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5): late success 2/8
+goal (4.7, 65.0, 10.7) normal   success/goal_state_satisfied final=(4.65, 65.0, 10.59) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s1  failed/fixed_route_stalled final=(2.52, 64.0, 10.44) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s2  failed/fixed_route_stalled final=(2.52, 64.0, 10.44) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s3  failed/fixed_route_stalled final=(2.52, 64.0, 10.44) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s4  success/goal_state_satisfied final=(4.63, 65.0, 10.7) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s5  failed/fixed_route_stalled final=(2.52, 64.0, 10.44) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s6  failed/fixed_route_stalled final=(2.52, 64.0, 10.44) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s7  failed/fixed_route_stalled final=(2.53, 64.0, 10.65) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s8  failed/no_safe_ground_candidate final=(2.82, 65.0, 10.66) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7): late success 1/8
+
+## ffb1dfa, column_top_late_probe.py 8 -90
+goal (3.5, 65.0, 9.5) normal   success/goal_state_satisfied final=(3.36, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s1  success/goal_state_satisfied final=(3.36, 65.0, 9.35) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s2  success/goal_state_satisfied final=(3.36, 65.0, 9.35) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s3  success/goal_state_satisfied final=(3.36, 65.0, 9.35) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s4  failed/goal_state_not_satisfied final=(2.96, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s5  success/goal_state_satisfied final=(3.36, 65.0, 9.35) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s6  success/goal_state_satisfied final=(3.36, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s7  failed/goal_state_not_satisfied final=(2.98, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s8  failed/goal_state_not_satisfied final=(2.98, 65.0, 9.35) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5): late success 5/8
+goal (4.7, 65.0, 10.7) normal   success/goal_state_satisfied final=(4.59, 65.0, 10.59) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s1  failed/fixed_route_stalled final=(2.53, 64.0, 10.44) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s2  failed/fixed_route_stalled final=(2.53, 64.0, 10.44) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s3  success/goal_state_satisfied final=(4.64, 65.0, 10.65) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s4  success/goal_state_satisfied final=(4.54, 65.0, 10.59) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s5  success/goal_state_satisfied final=(4.64, 65.0, 10.86) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s6  success/goal_state_satisfied final=(4.65, 65.0, 10.65) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s7  success/goal_state_satisfied final=(4.57, 65.0, 10.59) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s8  failed/fixed_route_stalled final=(2.52, 64.0, 10.66) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7): late success 5/8
+
+## cf08d2e, column_top_late_probe.py 8 -90
+goal (3.5, 65.0, 9.5) normal   cancelled/cancelled_after_stop final=(2.44, 64.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s1  cancelled/cancelled_after_stop final=(2.44, 64.0, 9.35) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s2  cancelled/cancelled_after_stop final=(2.44, 64.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s3  cancelled/cancelled_after_stop final=(2.44, 64.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s4  cancelled/cancelled_after_stop final=(2.44, 64.0, 9.35) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s5  cancelled/cancelled_after_stop final=(2.44, 64.0, 9.57) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s6  cancelled/cancelled_after_stop final=(2.44, 64.0, 9.35) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s7  cancelled/cancelled_after_stop final=(2.44, 64.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s8  cancelled/cancelled_after_stop final=(2.44, 64.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5): late success 0/8
+goal (4.7, 65.0, 10.7) normal   success/goal_state_satisfied final=(4.59, 65.0, 10.59) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s1  cancelled/cancelled_after_stop final=(2.53, 64.0, 10.44) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s2  cancelled/cancelled_after_stop final=(2.53, 64.0, 10.44) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s3  success/goal_state_satisfied final=(4.64, 65.0, 10.65) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s4  cancelled/cancelled_after_stop final=(2.39, 64.0, 10.59) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s5  success/goal_state_satisfied final=(4.64, 65.0, 10.86) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s6  cancelled/cancelled_after_stop final=(2.42, 64.0, 10.65) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s7  success/goal_state_satisfied final=(4.57, 65.0, 10.59) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s8  cancelled/cancelled_after_stop final=(2.52, 64.0, 10.44) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7): late success 3/8
+
+## proto, column_top_late_probe.py 8 0
+goal (3.5, 65.0, 9.5) normal   success/goal_state_satisfied final=(3.36, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s1  failed/goal_state_not_satisfied final=(2.85, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s2  success/goal_state_satisfied final=(3.36, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s3  failed/goal_state_not_satisfied final=(3.24, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s4  failed/goal_state_not_satisfied final=(2.82, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s5  success/goal_state_satisfied final=(3.36, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s6  success/goal_state_satisfied final=(3.36, 65.0, 9.41) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s7  failed/goal_state_not_satisfied final=(3.24, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s8  failed/goal_state_not_satisfied final=(3.12, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5): late success 3/8
+goal (4.7, 65.0, 10.7) normal   success/goal_state_satisfied final=(4.65, 65.0, 10.59) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s1  success/goal_state_satisfied final=(4.59, 65.0, 10.59) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s2  success/goal_state_satisfied final=(4.64, 65.0, 10.64) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s3  success/goal_state_satisfied final=(4.58, 65.0, 10.59) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s4  success/goal_state_satisfied final=(4.54, 65.0, 10.59) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s5  success/goal_state_satisfied final=(4.65, 65.0, 10.58) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s6  success/goal_state_satisfied final=(4.59, 65.0, 10.59) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s7  success/goal_state_satisfied final=(4.59, 65.0, 10.59) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s8  success/goal_state_satisfied final=(4.62, 65.0, 10.65) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7): late success 8/8
+
+## proto, column_top_late_probe.py 8 -90
+goal (3.5, 65.0, 9.5) normal   success/goal_state_satisfied final=(3.36, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s1  failed/goal_state_not_satisfied final=(2.82, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s2  success/goal_state_satisfied final=(3.36, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s3  failed/goal_state_not_satisfied final=(2.82, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s4  failed/goal_state_not_satisfied final=(3.12, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s5  failed/goal_state_not_satisfied final=(2.82, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s6  success/goal_state_satisfied final=(3.36, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s7  success/goal_state_satisfied final=(3.36, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5) late s8  failed/goal_state_not_satisfied final=(2.98, 65.0, 9.56) route=['Walk', 'JumpUp'] violations=0 damage=0.0
+goal (3.5, 65.0, 9.5): late success 3/8
+goal (4.7, 65.0, 10.7) normal   success/goal_state_satisfied final=(4.59, 65.0, 10.59) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s1  success/goal_state_satisfied final=(4.59, 65.0, 10.68) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s2  success/goal_state_satisfied final=(4.54, 65.0, 10.59) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s3  success/goal_state_satisfied final=(4.64, 65.0, 10.65) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s4  success/goal_state_satisfied final=(4.54, 65.0, 10.59) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s5  success/goal_state_satisfied final=(4.64, 65.0, 10.86) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s6  success/goal_state_satisfied final=(4.65, 65.0, 10.59) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s7  success/goal_state_satisfied final=(4.57, 65.0, 10.59) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7) late s8  success/goal_state_satisfied final=(4.67, 65.0, 10.6) route=['Walk', 'JumpUp', 'Walk'] violations=0 damage=0.0
+goal (4.7, 65.0, 10.7): late success 8/8
+
+## proto, handoff_edge_probe.py --late turn_jumpup turn_drop
+turn_jumpup  normal    success/goal_state_satisfied ticks=108 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=59 pre_takeoff_min_speed=1.173 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.63, 65.0, 9.56) violations=0 damage=0.0
+turn_jumpup  late s1   success/goal_state_satisfied ticks=118 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=69 pre_takeoff_min_speed=0.617 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.44, 65.0, 9.56) violations=0 damage=0.0
+turn_jumpup  late s2   success/goal_state_satisfied ticks=118 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=66 pre_takeoff_min_speed=1.259 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.63, 65.0, 9.56) violations=0 damage=0.0
+turn_jumpup  late s3   success/goal_state_satisfied ticks=131 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=66 pre_takeoff_min_speed=1.257 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.63, 65.0, 9.56) violations=0 damage=0.0
+turn_jumpup  late s4   success/goal_state_satisfied ticks=124 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=69 pre_takeoff_min_speed=1.126 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.63, 65.0, 9.56) violations=0 damage=0.0
+turn_jumpup  late s5   success/goal_state_satisfied ticks=125 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=71 pre_takeoff_min_speed=0.592 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.63, 65.0, 9.56) violations=0 damage=0.0
+turn_jumpup  late s6   success/goal_state_satisfied ticks=126 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=75 pre_takeoff_min_speed=0.0 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.57, 65.0, 9.56) violations=0 damage=0.0
+turn_jumpup  late s7   success/goal_state_satisfied ticks=126 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=72 pre_takeoff_min_speed=0.675 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.63, 65.0, 9.56) violations=0 damage=0.0
+turn_jumpup  late s8   success/goal_state_satisfied ticks=124 segs=['JumpUpSegment', 'WalkSegment'] takeoff_tick=74 pre_takeoff_min_speed=0.366 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.63, 65.0, 9.56) violations=0 damage=0.0
+turn_drop    normal    success/goal_state_satisfied ticks=106 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=64 pre_takeoff_min_speed=0.7 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.61, 64.0, 9.56) violations=0 damage=0.0
+turn_drop    late s1   success/goal_state_satisfied ticks=117 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=75 pre_takeoff_min_speed=0.527 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.6, 64.0, 9.56) violations=0 damage=0.0
+turn_drop    late s2   success/goal_state_satisfied ticks=115 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=71 pre_takeoff_min_speed=0.649 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.61, 64.0, 9.56) violations=0 damage=0.0
+turn_drop    late s3   success/goal_state_satisfied ticks=119 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=75 pre_takeoff_min_speed=0.098 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.6, 64.0, 9.56) violations=0 damage=0.0
+turn_drop    late s4   success/goal_state_satisfied ticks=117 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=74 pre_takeoff_min_speed=0.693 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.61, 64.0, 9.56) violations=0 damage=0.0
+turn_drop    late s5   success/goal_state_satisfied ticks=120 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=76 pre_takeoff_min_speed=0.592 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.6, 64.0, 9.56) violations=0 damage=0.0
+turn_drop    late s6   success/goal_state_satisfied ticks=122 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=79 pre_takeoff_min_speed=0.061 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.57, 64.0, 9.41) violations=0 damage=0.0
+turn_drop    late s7   success/goal_state_satisfied ticks=137 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=93 pre_takeoff_min_speed=0.044 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.58, 64.0, 9.55) violations=0 damage=0.0
+turn_drop    late s8   success/goal_state_satisfied ticks=124 segs=['ControlledDropSegment', 'WalkSegment'] takeoff_tick=81 pre_takeoff_min_speed=0.2 b/s max_yaw_step=90.0 overshoot=0.0 final=(5.61, 64.0, 9.56) violations=0 damage=0.0
+
+## proto, targeted unittest: test_action_entry_handoff_repair + five F2 modules
+Ran 56 tests ... OK

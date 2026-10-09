@@ -1,0 +1,24 @@
+diff --git a/mc2p/motion_nav/fixed_route.py b/mc2p/motion_nav/fixed_route.py
+index 9eb924f..05d1465 100644
+--- a/mc2p/motion_nav/fixed_route.py
++++ b/mc2p/motion_nav/fixed_route.py
+@@ -1182,7 +1182,18 @@ class FixedRouteController:
+
+         stop_distance = self._release_distance(body, completion_speed)
+         remaining = max(0.0, self._geometry.total_length - self._progress)
+-        if (at_goal
++        entry_position_fits = (
++            route_complete
++            and self.config.handoff_entry_window is not None
++            and entry_matches is False
++            and frame.body.is_on_ground
++            and body_fits_segment_entry(
++                self.config.handoff_entry_window,
++                replace(frame.body, velocity_blocks_per_second=(0.0, 0.0, 0.0)),
++                observed_ground_mode(frame.body),
++            )
++        )
++        if (at_goal or entry_position_fits
+                 or (completion is None and speed > completion_speed
+                     and remaining <= stop_distance
+                     + self.config.endpoint_tolerance_blocks * 0.65)):
