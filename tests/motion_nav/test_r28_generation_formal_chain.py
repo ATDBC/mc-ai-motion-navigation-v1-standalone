@@ -191,7 +191,7 @@ class GenerationFormalChainTests(unittest.TestCase):
         from tests.observation_v3_fixtures import valid_snapshot_v3
         world, worker = _world(), fixture._InlinePlanner(hold_first=True)
         session = NavigationSession('r28-world-change', fixture.NavigationSessionTests().profiles(),
-            planner_worker=worker, motion_worker=fixture._InlineMotionWorker(), clock_ns=lambda: 1_000_000_000)
+            planner_worker=worker, clock_ns=lambda: 1_000_000_000)
         try:
             current = frame(world, 0, (-.5, 1., .5))
             session.start(_request(world), current)

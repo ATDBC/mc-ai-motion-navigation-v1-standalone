@@ -66,7 +66,6 @@ from mc2p.motion_nav.route_validation import (
     replay_walk_validation_recipe,
 )
 from mc2p.motion_nav.known_map_planner import (
-    ExactSurfacePlanningGoal, GoalRegionPlanningRequest,
     PlanningRequest, SurfacePlanningRequest,
     PlanningStatus, RouteCandidate, WalkEdge, WalkNode, WalkNodeId,
     SurfacePlanningStatus, SurfaceRouteCandidate, SurfaceWalkEdge,
@@ -74,15 +73,12 @@ from mc2p.motion_nav.known_map_planner import (
 )
 from mc2p.motion_nav.step_transition import StepEdge
 from mc2p.motion_nav.support_surfaces import (
-    StandableRegionResult,
-    StandablePointResult,
     SupportSurface,
     SurfaceNodeId,
     query_standable_connection,
     query_support_surfaces,
     standable_point_in_region,
     standable_region_in_goal,
-    validate_standable_region,
 )
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.segment_entry import (
@@ -723,10 +719,7 @@ class RouteAdmitter:
     def _goal_completion(world: WorldView, surface: SupportSurface, goal: GoalState,
                          profile: GroundMotionProfile | None, incoming):
         selected = standable_region_in_goal(
-            world,
-            surface,
-            goal.region,
-            connection_from=incoming,
+            world, surface, goal.region, connection_from=incoming,
             allowed_materials=(
                 None if profile is None else profile.support_materials
             ),
@@ -734,16 +727,22 @@ class RouteAdmitter:
         completion = selected.completion_region
         if (selected.status is QueryStatus.FEASIBLE
                 and completion is not None
-                and completion.contains(surface.position)):
-            # The planner already proved the leg to this surface point.  Keep
-            # it when it lies in the exact completion rectangle instead of
-            # inventing a diagonal tail toward the goal centre.  Admission
-            # still proves the final connection and binds its dependencies.
-            completion = replace(
-                completion,
-                reference_point=surface.position,
+                and completion.contains(surface.position)
+                and query_standable_connection(
+                    world,
+                    surface,
+                    completion.reference_point,
+                    incoming,
+                ).status is not QueryStatus.FEASIBLE):
+            # Keep the already-proved surface endpoint only when the newly
+            # selected terminal would require an unsafe diagonal tail.
+            selected = replace(
+                selected,
+                completion_region=replace(
+                    completion,
+                    reference_point=surface.position,
+                ),
             )
-            selected = replace(selected, completion_region=completion)
         return selected
 
     @staticmethod
@@ -1483,10 +1482,7 @@ class RouteAdmitter:
                 or candidate.goal_revision != calculation_request.goal_revision
                 or candidate.world_session != calculation_request.world_session
                 or candidate.planning_start != calculation_request.start
-                or (type(calculation_request.planning_target)
-                    is ExactSurfacePlanningGoal
-                    and candidate.planning_goal != calculation_request.goal)
-                or candidate.planning_target != calculation_request.planning_target
+                or candidate.planning_goal != calculation_request.goal
                 or candidate.goal_state != calculation_request.goal_state
                 or candidate.work_identity != calculation_request.work_identity
                 or (surface and (
@@ -1642,7 +1638,6 @@ class RouteAdmitter:
         terminal_execution_dependencies: list[
             _ExactTerminalExecutionDependencies
         ] | None = None,
-        terminal_rejections: list[StandablePointResult] | None = None,
     ) -> ActionRoute | None:
         def entry_window(previous, next_node, transition) -> SegmentEntryWindow:
             if type(transition) is not MovementTransition:
@@ -1801,59 +1796,48 @@ class RouteAdmitter:
                         terminal_target.position,
                         tail_start_position,
                     )
-                    if direct.status is not QueryStatus.FEASIBLE:
-                        if terminal_rejections is not None:
-                            terminal_rejections.append(direct)
-                        return None
                     tail_id = (tail_proof.continuation.following_route_id
                                if tail_proof.continuation is not None else f"{route_id}-goal-tail")
                     flush_walk()
-                    tail_action_index = len(actions)
-                    actions.append(WalkSegment(
-                        FixedRoute(tail_id, (tail_start, terminal)),
-                        (candidate.path[-1].node_id,),
-                        tuple(sorted(set(direct.dependencies))),
-                    ))
-                    exact_terminal_execution = (
-                        _ExactTerminalExecutionDependencies(
-                            tail_action_index,
-                            (),
+                    if direct.status is QueryStatus.FEASIBLE:
+                        tail_action_index = len(actions)
+                        actions.append(WalkSegment(
+                            FixedRoute(tail_id, (tail_start, terminal)),
+                            (candidate.path[-1].node_id,),
                             tuple(sorted(set(direct.dependencies))),
+                        ))
+                        exact_terminal_execution = (
+                            _ExactTerminalExecutionDependencies(
+                                tail_action_index,
+                                (),
+                                tuple(sorted(set(direct.dependencies))),
+                            )
                         )
-                    )
-                    if terminal_proofs is not None:
-                        terminal_proofs.append(_StandableQueryProof(
-                            StandableConnectionQueryArgs(
-                                candidate.path[-1].surface,
-                                terminal_target.position,
-                                tail_start_position,
-                                .6,
-                                1.8,
-                            ),
-                            direct.dependencies,
+                        if terminal_proofs is not None:
+                            terminal_proofs.append(_StandableQueryProof(
+                                StandableConnectionQueryArgs(
+                                    candidate.path[-1].surface,
+                                    terminal_target.position,
+                                    tail_start_position,
+                                    .6,
+                                    1.8,
+                                ),
+                                direct.dependencies,
+                            ))
+                    else:
+                        pending_dependencies.update(
+                            terminal_target.dependencies
+                        )
+                        actions.append(WalkSegment(
+                            FixedRoute(tail_id, (last, terminal)),
+                            (candidate.path[-1].node_id,),
+                            terminal_target.dependencies,
                         ))
                 else:
                     direct = None
                     direct_from = None
                     append_terminal = False
-                    if len(pending_points) == 1:
-                        # A region search can finish on its start graph node.
-                        # The graph path then has no edge, but the body can
-                        # still be outside the witness completion rectangle.
-                        # Materialize the already-proved node-to-region
-                        # connection as an ordinary terminal WalkSegment.
-                        only = pending_points[0]
-                        direct_from = (only.x, only.y, only.z)
-                        direct = query_standable_connection(
-                            frame.world,
-                            candidate.path[-1].surface,
-                            terminal_target.position,
-                            direct_from,
-                        )
-                        append_terminal = (
-                            direct.status is QueryStatus.FEASIBLE
-                        )
-                    elif len(pending_points) >= 2:
+                    if len(pending_points) >= 2:
                         before = pending_points[-2]
                         direct_from = (before.x, before.y, before.z)
                         direct = query_standable_connection(frame.world,
@@ -1898,10 +1882,10 @@ class RouteAdmitter:
                                 direct.dependencies,
                             ))
                     else:
-                        if (terminal_rejections is not None
-                                and direct is not None):
-                            terminal_rejections.append(direct)
-                        return None
+                        pending_dependencies.update(
+                            terminal_target.dependencies
+                        )
+                        pending_points.append(terminal)
             else:
                 terminal_matches_last = True
         flush_walk()
@@ -2014,10 +1998,6 @@ class RouteAdmitter:
                                 ),
                                 direct.dependencies,
                             ))
-                    else:
-                        if terminal_rejections is not None:
-                            terminal_rejections.append(direct)
-                        return None
             completion = terminal_target.completion_region
             if exact_terminal_execution is not None:
                 exact_terminal_execution = replace(exact_terminal_execution,
@@ -2025,6 +2005,7 @@ class RouteAdmitter:
             if exact_terminal_execution is None:
                 actions[-1] = replace(actions[-1], dependencies=tuple(sorted(
                     set(actions[-1].dependencies)
+                    | set(terminal_target.dependencies)
                     | set(completion.dependencies))))
             else:
                 if exact_terminal_execution.action_index != len(actions) - 1:
@@ -2285,6 +2266,7 @@ class RouteAdmitter:
         for action_index, action in enumerate(action_route.actions):
             completion_dependencies: set[BlockPos] = set()
             if (completion_proof is not None
+                    and terminal_execution is not None
                     and action_index == len(action_route.actions) - 1
                     and completion_proof.expected_region.dependencies):
                 completion_dependencies.update(
@@ -2557,42 +2539,8 @@ class RouteAdmitter:
         if candidate.goal_state is not None:
             incoming = (candidate.path[-2].position if len(candidate.path) >= 2
                         else frame.body.position)
-            witness = candidate.terminal_witness
-            if type(candidate.planning_target) is GoalRegionPlanningRequest:
-                if (witness is None
-                        or witness.terminal_surface != candidate.path[-1].node_id):
-                    return AdmissionResult(
-                        AdmissionStatus.REJECTED,
-                        AdmissionReason.CANDIDATE_BASIS_MISMATCH,
-                    )
-                terminal_target = validate_standable_region(
-                    frame.world,
-                    candidate.path[-1].surface,
-                    candidate.goal_state.region,
-                    witness.completion_region,
-                    allowed_materials=(
-                        None if candidate.ground_profile is None
-                        else candidate.ground_profile.support_materials
-                    ),
-                    query_cache=WorldQueryCache(frame.world),
-                )
-                if terminal_target.status is QueryStatus.FEASIBLE:
-                    connection = query_standable_connection(
-                        frame.world,
-                        candidate.path[-1].surface,
-                        witness.completion_region.reference_point,
-                        candidate.path[-1].position,
-                    )
-                    if connection.status is not QueryStatus.FEASIBLE:
-                        terminal_target = StandableRegionResult(
-                            connection.status,
-                            missing_cells=connection.missing_cells,
-                        )
-            else:
-                terminal_target = self._goal_completion(
-                    frame.world, candidate.path[-1].surface,
-                    candidate.goal_state, candidate.ground_profile, incoming,
-                )
+            terminal_target = self._goal_completion(frame.world, candidate.path[-1].surface,
+                candidate.goal_state, candidate.ground_profile, incoming)
             if terminal_target.status is not QueryStatus.FEASIBLE:
                 return AdmissionResult(AdmissionStatus.REJECTED,
                     AdmissionReason.GOAL_STANDING_POINT_NEEDS_INFORMATION if terminal_target.missing_cells
@@ -2602,27 +2550,14 @@ class RouteAdmitter:
         terminal_execution_dependencies: list[
             _ExactTerminalExecutionDependencies
         ] = []
-        terminal_rejections: list[StandablePointResult] = []
         action_route = self._surface_action_route(
             candidate, frame, connection_length, connection_dependencies, route_id, terminal_target,
             skip_first_walk_start=skip_first_walk_start,
             forward_entry=forward_entry,
             terminal_proofs=terminal_proofs,
             terminal_execution_dependencies=terminal_execution_dependencies,
-            terminal_rejections=terminal_rejections,
         )
         if action_route is None:
-            if terminal_rejections:
-                rejected = terminal_rejections[-1]
-                return AdmissionResult(
-                    (AdmissionStatus.NEEDS_INFORMATION
-                     if rejected.status is QueryStatus.NEEDS_INFORMATION
-                     else AdmissionStatus.REJECTED),
-                    (AdmissionReason.GOAL_STANDING_POINT_NEEDS_INFORMATION
-                     if rejected.status is QueryStatus.NEEDS_INFORMATION
-                     else AdmissionReason.GOAL_STANDING_POINT_UNAVAILABLE),
-                    missing_cells=rejected.missing_cells,
-                )
             return AdmissionResult(AdmissionStatus.REJECTED, AdmissionReason.CANDIDATE_HAS_NO_ACTIONS)
         if (forward_entry is not None and terminal_execution_dependencies
                 and terminal_execution_dependencies[0].action_index == 0

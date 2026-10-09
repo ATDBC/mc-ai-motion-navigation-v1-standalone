@@ -1,0 +1,8 @@
+{
+  "schema_version": "mc2p.f2rec-r2-production-semantic-hashes.v1",
+  "baseline_commit": "686cc0a78c379f2ef87fa3f6201e36fd2c98c49c",
+  "files": {
+    "mc2p/motion_nav/navigation_session.py": "22f55df99aef6a1a4b1eac341f1a2af326c5f5e70f45fdb2455f57a234e28a24"
+  },
+  "status": "unsigned-performance-stop-round2"
+}

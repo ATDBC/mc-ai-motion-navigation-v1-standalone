@@ -1,0 +1,99 @@
+{
+  "schema_version": "mc2p.f2rec-r2-selection-probe.v1",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "baseline_commit": "686cc0a78c379f2ef87fa3f6201e36fd2c98c49c",
+  "comparison": {
+    "tasks": 1904,
+    "equal": 1904,
+    "changes": []
+  },
+  "follow_clutter_selection_ms": {
+    "samples": 600,
+    "p50": 0.9329,
+    "p95": 1.1873,
+    "p99": 1.2235,
+    "maximum": 1.7362
+  },
+  "formal_clutter_revisions": {
+    "cases": [
+      {
+        "id": "f2r/clutter/0.1/0/0/follow",
+        "revisions_accepted": 10,
+        "revisions_requested": 10,
+        "outcome": "cancelled",
+        "violations": [],
+        "damage": 0.0
+      },
+      {
+        "id": "f2r/clutter/0.1/0/1/follow",
+        "revisions_accepted": 10,
+        "revisions_requested": 10,
+        "outcome": "cancelled",
+        "violations": [],
+        "damage": 0.0
+      },
+      {
+        "id": "f2r/clutter/0.1/0/3/follow",
+        "revisions_accepted": 10,
+        "revisions_requested": 10,
+        "outcome": "cancelled",
+        "violations": [],
+        "damage": 0.0
+      },
+      {
+        "id": "f2r/clutter/0.2/0/0/follow",
+        "revisions_accepted": 10,
+        "revisions_requested": 10,
+        "outcome": "cancelled",
+        "violations": [],
+        "damage": 0.0
+      },
+      {
+        "id": "f2r/clutter/0.2/0/1/follow",
+        "revisions_accepted": 10,
+        "revisions_requested": 10,
+        "outcome": "cancelled",
+        "violations": [],
+        "damage": 0.0
+      },
+      {
+        "id": "f2r/clutter/0.2/0/3/follow",
+        "revisions_accepted": 10,
+        "revisions_requested": 10,
+        "outcome": "cancelled",
+        "violations": [],
+        "damage": 0.0
+      }
+    ],
+    "production_revision_prepare_ms": {
+      "samples": 60,
+      "p50": 6.1529,
+      "p95": 8.8542,
+      "p99": 9.6655,
+      "maximum": 9.6655
+    },
+    "synchronous_test_planner_ms": {
+      "samples": 60,
+      "p50": 4.1896,
+      "p95": 40.4142,
+      "p99": 80.7062,
+      "maximum": 80.7062
+    },
+    "full_revision_prepare_ms": {
+      "samples": 60,
+      "p50": 10.5398,
+      "p95": 45.9737,
+      "p99": 88.6424,
+      "maximum": 88.6424
+    },
+    "gates": {
+      "all_revisions_accepted": true,
+      "zero_safety_events": true,
+      "p95": false,
+      "p99": true,
+      "maximum": true
+    },
+    "timing_boundary": "replace_goal + prepare_proposals, backend advancement and synchronous test planner job excluded; latter reported separately."
+  },
+  "timing_boundary": "Selector only, excludes test-world creation; complete production frame uses D061."
+}

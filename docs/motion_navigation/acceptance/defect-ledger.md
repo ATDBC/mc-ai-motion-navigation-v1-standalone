@@ -168,35 +168,3 @@ Windows 五组两轮逐项一致，原始流在 `.tmp`，紧凑证据进入 `pos
 | M0-C-01 | 已复现并修复 | 正式后端返回 `rejected` 回执时 Runtime 仍为 READY；原驱动器单独写为 failed，Session 在地面和空中都仍为 EXECUTING。现在交给 Session 已有失败收尾入口，再读取其类型化报告。两种身体状态均安全落地、来源释放；终态后不能准备或写入新输入。没有改驱动器状态表示方式。 |
 | M0-C-02 | 当前有界，状态表示留 M5 | Session 已有业务失败后，Runtime 关闭和 `_finish_control_unavailable` 保留原结论与尚存来源，且不新增输入。驱动器报告控制不可用，Session 仍报告原业务结果；两个报告表达不同事实，不能把控制失联当作安全释放证据。 |
 | M0-T-01 | 不增加旧种子 | 对 15、69、119 记录运动协调方法入口及逐函数行跳转弧；三者均没有 seed 163 与条件触发朝向场景之外的新入口或新弧。原始紧凑报告位于 `redesign-m0/historical-seeds.json`。这只说明当前运动协调恢复路径没有新增覆盖，不能推广为所有代码路径相同。 |
-
-### F2-R 后支撑区域与路线优化输入（2026-10-08）
-
-F2-R 按原冻结范围保持关闭。下面的问题来自新增审查和 v8 已保留失败，进入 [F2-S](../stages/F2S-support-region-convergence-before-route-optimization.md) 与后续路线优化阶段，不改写 F2-R 的结果。
-
-| 编号 | 等级 | 问题 | 当前处理要求 |
-|---|---|---|---|
-| F2S-C-01 | P2 | 平台外角、桥头或柱顶的目标内存在可站点，但区域某个顶点支撑比例低于 0.5，Session 先用点查询选中，接纳再用区域查询原地拒绝 | F2-S 先冻结 RED；用障碍、UNKNOWN 与支撑边界的统一网格选择最大安全矩形，并让 Session、规划尾段和接纳共用首次选择 |
-| F2S-C-02 | P2 | 路线复核重新寻找全局最优矩形；区域外未登记的变化可能让仍安全的绑定矩形无故失效 | 初选与复核分开；复核只验证绑定矩形仍在目标内、净空、支撑合格且支撑面身份不变 |
-| F2S-M-01 | 产品缺口 | v8 杂乱层有 9 项 `fixed_route_has_no_forward_control` | 保留稳定 ID，作为路线优化器和局部跟踪的固定回归对象；不计为 F2-S 几何成功 |
-| F2S-M-02 | 产品缺口 | v8 杂乱层有 5 项 `fixed_route_stalled` | 保留稳定 ID和停止前轨迹，路线优化器阶段分别判断路径折线与控制器进展 |
-| F2S-P-01 | 证据缺口 | v8 杂乱层有 41 项无已知路线，尚未区分物理不可达与规划缺陷 | F2-S 用独立参考搜索标注 `REFERENCE_REACHABLE`、`PROVEN_UNREACHABLE` 或 `UNRESOLVED`，不改原分类 |
-| F2S-T-01 | 量尺偏差 | D061 首版生产层漏掉 Runtime 在后端前后的输入账本、trace、窗口、校验、观察接入和报告组装 | recorder 已改为直接暂停／恢复 Runtime control frame，后端单列且片段不重叠；旧 4096 只保留下界，今后正式采集必须使用修正版，保留 8/15/30 与 50 ms 门槛 |
-| F2S-T-02 | 已关闭 | F2-SP 复用单次查询缓存，并按几何下界只查询仍可能改变结果的目标列；首轮短门槛 `7.6401 ms` 失败保留，一次局部修正后为 `6.9638 ms` | 唯一一次正式 D061 保留 `4096` 帧；全部生产 P95/P99/max `5.1705/5.3590/7.0193 ms`，目标修订层 `7.0193/7.0193/7.0193 ms`，全部门槛通过。F2-SP 当时没有运行任务 4；后续任务 4 的部分结果由 F2S-C-03／04 记录 |
-| F2S-C-03 | 已关闭 | 完成区域参考点替换规划器已经证明的末段支撑面，生成一条未经规划的斜向尾段；杂乱场景中该斜线碰柱，造成 55 项旧成功退步 | `f9f03590` 保留已证明的支撑面终点；目标更小时再追加同支撑面的精确尾段。聚焦 56 项中 55 项恢复，相关定向检查 `100/100`，零新安全事件 |
-| F2S-C-04 | P1／主触发已修，阶段未关闭 | 原目标覆盖多个可行支撑面时，Session 在规划前只保留代表点最近的一个面。该面可能图上不可达，而另一个目标面可达，导致 `f2r/clutter/0.2/3/9/product` 从成功退步为 `planning_no_known_route` | F2-SG 批次 0—3 已让一次后台 A* 搜索完整区域，主例能够选择另一个可达面。v8 回归又暴露 F2SG-C-05，因此 F2-SG 和 F2-S 任务 4 都没有关闭 |
-| F2SG-C-05 | P1／开放，F2-GP 首轮止损 | 多终点 A* 只比较到 SurfaceNode 代表点的图成本；witness 只证明末段几何安全，没有绑定控制器可执行的 terminal route 及其 tick 成本。原 v8 杂乱层出现 51 项旧成功退步；零边末段修复恢复 42 项，剩余 9 项统一为停滞或无前进控制 | `61fefa78` 已让 `FixedRoute` 与 rollout 共用纯 `GroundTrackingPolicy`，直线和两种 L 形定向检查通过。接入 terminal edge 时 F2S-C-04 失败；首轮两次评分修正均失败并撤销。后续已把固定两 tick策略模拟与正式逐 tick提交的偏差登记为 F2PC-C-01。planner／A*／接纳尚未接线，大集合、D061、性能和 Fabric 未运行。不能加入近停入口、面积阈值、候选重试或场景特判 |
-| F2PC-C-01 | P1／已止损，根因方向被否定 | 组件层能证明一 tick比两 tick更适合窄 completion，但正式链要求每帧完整停止尾迹立即落入最终 completion，仍会过早淘汰下一 tick可修正的闭环输入 | 首次实现使 F2S-C-04 以 `no_safe_ground_candidate` 失败；补齐正式一 tick全尾迹复核后仍以 `fixed_route_stalled` 失败。生产改动已撤销，大集合、D061 和 Fabric 未运行。后续必须把“安全可停在支撑／走廊内”和“任务已在 completion 内完成”分开设计 |
-| F2SC-C-01 | P1／核心职责已修，阶段未关闭 | 普通地面控制缺少分开的安全尾迹和完成谓词。旧实现要求安全尾迹立即停进 completion，也没有统一规定 0／1／2 tick可能生效前缀、超调反向修正和 terminal 进展 | D082 的安全尾迹与 completion 已分开，聚焦检查 `54/54`，F2S-C-04 normal 完成。remaining9 只完成 `4/9`，触发下面两项新缺口和止损；不能据此关闭 F2-SC |
-| F2SC-C-02 | P1／F2-CV 止损后仍开放 | terminal 身体已经走完路线弧长并停在 completion 外时，安全修正能缩短 completion 距离，但候选的前进资格仍只认路线弧长，因此返回 `fixed_route_has_no_forward_control` | F2-CV 试验中，历史最佳只重置 watchdog 后可执行修正，并在不再改善时有界 `fixed_route_stalled`；但正式接线因 F2CV-C-01 撤出。这项结果只保留为失败证据，当前生产链没有宣布修复 |
-| F2SC-C-03 | P1／F2-CV 止损后仍开放 | 窄 completion 附近九个简化候选都需要完整 1.21 复核时，现有有界复核只检查前三个；前三个没有形成可接纳前缀，后续候选未检查并返回 `no_safe_ground_candidate` | 独立 `9 × 2` 验证器与 8／15／30 ms 微基准已通过；正式接线因 F2CV-C-01 的历史成功退步撤出。当前生产链仍使用原限制，不能把纯验证器通过记作该缺口已关闭 |
-| F2CV-C-01 | P1／职责混合已修，F2-WR 因行为与性能止损 | 封闭候选验证接入 `FixedRoute` 时，把完整中性尾迹留在 tracking corridor 内当成硬安全。长路线和拐弯中，物理安全且可由下一帧闭环修正的普通移动被提前拒绝 | `8c009ff5` 分开世界安全与 `GroundRouteFit`，`22bc850c` 接回正式链并持有短期 tail 依赖。职责边界和 `57/57` 聚焦检查通过，但 remaining9 仍为 `3/9`，两个历史成功只恢复 `f2r/clutter/0.2/9/6/product`；正式 P95 仍约 `26—28 ms`。两轮限定处理后止损，remaining42、D061 和 Fabric 未运行。F2-WR 保持未通过，证据见 `evidence/motion_navigation/F2WR-world-safety-route-fit-v1/` |
-| F2SS-C-01 | P1／核心职责已修，阶段未关闭 | 正式普通 Walk 先运行 `GroundTrackingPolicy` 的简化 rollout／safe-tail／world 检查，再运行 `GroundCandidateVerifier` 的正式十八项验证。两套物理事实使正式 P95 约为 `26—28 ms`，也让入口、停止终点和依赖需要额外映射 | `9d072fa4` 已让正式普通候选帧只生成一次十八项报告；策略只读报告，正式路径旧 rollout／查询／replay 为零。短控制微基准通过，v8 又暴露 F2SS-C-02，因此 F2-SS 未关闭；F2-WR 旧失败不变 |
-| F2SS-C-02 | P1／开放，F2-TS 正式隔离 worker 门槛失败 | 三个冻结的 v8 旧成功在正式 1.21 物理下停在窄 completion 外 `0.0061—0.0229` 格。十八项候选的世界安全成立，但一 tick离散输入无法完成更小修正；旧简化模型的完成可能是假阳性 | 通用一到三阶段序列与 beam 已进入 motion worker／FixedRoute 链，偏离后的当前状态恢复、anchor 身份和恢复期限也已加固。旧 `3/3`、`9/9`、`42/42` 使用 Inline worker，不能证明后台交付。干净 Windows `a8cb3bfb` 的第一个真实 worker oracle 在 20 tick／1 秒内没有收到 beam 结果，以 `no_safe_ground_candidate` 有界失败。性能审计已纠正量尺：原 `23.2694／42.7075／42.7075 ms` 混合生产控制、模拟后端和完整夹具，不能直接判 production `8／15／30 ms` 失败；真正阻塞是 beam 约 `16 秒` 以及过期／取消／旧世代工作不能早停。F2-TP 先处理三段量尺、取消、增量 beam、常驻 worker 和有界交付；其余 oracle、remaining9／42、F2-GP、v7、大集合、D061 和 Fabric 均未运行 |
-| F2TP-C-01 | 已关闭 | F2-TS 隔离证据把混合 `control_ms` 与 production `8／15／30 ms` 门槛直接比较，无法判断控制线程自身是否超限 | `ee915064` 起直接记录 production／backend／full；旧 `control_ms` 标成 `mixed_interval`，原文件不改写。新的 production 门槛结果单列在 F2TP-C-03 |
-| F2TP-C-02 | 核心修复通过，阶段未关闭 | 正式 beam 在实际 oracle 上约需 `16 秒`，且 deadline、取消和 work generation 作废不能在搜索内部终止旧工作，导致 20 tick／1 秒内无结果并阻塞后续任务 | `a61a76e6` 的逐 tick normal／late1 beam 在正式 worker 上最坏 `125.9636 ms`；phase P95 `3.8161 ms`。typed deadline／cancel／stale、READY 预热和运行中早停已有检查。因为 F2TP-C-03 阻塞，没有前移触发或重跑 oracle |
-| F2TP-C-03 | 开放性能债；历史 TP3 门槛失败 | 三段量尺修正后，非 oracle 正式链的生产控制没有达到内部 P95/P99 容量目标 | 五个固定 clutter 场景共 `142` 帧，production P95/P99/max 为 `10.2973/22.9633/24.9259 ms`，full max `44.8677 ms`。原 TP3 按冻结门槛停止，未运行 TP4、oracle、remaining、大集合、D061 或 Fabric。D089 保留历史失败，并在零真实期限失败、零安全事件时把 P95/P99 归为性能债 |
-| F2RH-C-01 | 已关闭 | Motion worker 的正式生命周期仍部分留在 Session：首次动作路线可在控制路径创建和预热进程，Session 还能关闭它；READY 后死亡、cancel 队列满和结果发布前作废也没有完整 typed 处理 | `631784d3` 把所有权移到 Runtime；`6d45bd6f` 与 `963d5b49` 补齐 typed factory 失败、两秒取消期限、每次非阻塞发布前复核，以及真实 air solve／revalidation 的中途停止。固定 FIFO 矩阵覆盖三类停止和跨动作族后续启动。聚焦正式链 `98/98`，独立复审无未关闭生命周期 P0／P1／P2 |
-| F2RH-P-01 | 开放性能债；历史 RH5 门槛失败 | profile 已定位 production 容量余量不足，当前没有真实期限或安全违规 | profile 拆出十一段和 residual，定位稳定帧最大单项为 verifier P95 `4.5559 ms`，ingest P95 `2.7037 ms`。唯一 shape-query 复用后，干净 Windows production P95/P99/max 为 `10.2680/23.9535/24.9818 ms`，full max `45.3178 ms`；安全事件和 deadline miss 为 `0`。F2-RH 原门槛失败保持，D089 将 P95/P99 归为性能债，不自动阻塞无关产品主线，也不自动授权 TP4 |
-| F2CV-C-02 | 产品边界／已得到有界结果 | C02 的 completion 在 X 方向约宽 `0.0206` 格，身体停点越界约 `0.0073` 格；九键中任一一 tick横移连同释放尾迹都会跨过该窄区 | 历史最佳只重置 stall watchdog，不参与安全资格或候选排序。安全修正可以短暂非单调；没有新历史最佳时以 `fixed_route_stalled` 有界结束。不能把此结果冒充完成，也不能扩大 completion 或调评分掩盖离散控制极限 |
-
-任务 0 已把 F2S-M-01 的 9 个 ID、F2S-M-02 的 5 个 ID 和 F2S-P-01 的 41 个标签写入 `tests/sim/manifests/navigation-product-f2s-support-region-v9.json`。41 项独立标签为 `39 REFERENCE_REACHABLE`、`0 PROVEN_UNREACHABLE`、`2 UNRESOLVED`。两项离散洪泛穷尽不能证明连续空间不可达。完整 ID 保持在机器可读清单中，避免文档和执行输入各维护一份名单。

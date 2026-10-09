@@ -81,7 +81,6 @@ from mc2p.motion_nav.landing_edge_probe import (
     information_probe_movement,
 )
 from mc2p.motion_nav.known_map_planner import (
-    GoalRegionPlanningRequest,
     PlanningRequest,
     SurfacePlanningRequest,
     SurfaceSearchNeed, surface_search_need,
@@ -89,15 +88,13 @@ from mc2p.motion_nav.known_map_planner import (
 from mc2p.motion_nav.bridge_planner import (
     BridgeInteractionPlan, BridgePlacementPolicy,
 )
-from mc2p.motion_nav.motion_coordination import (
-    MotionRouteCoordinator, route_needs_motion_coordination,
-)
+from mc2p.motion_nav.motion_coordination import MotionRouteCoordinator
 from mc2p.motion_nav.async_work import AsyncComputationScope, AsyncWorkKind, ComputationInvalidationCause
 from mc2p.motion_nav.motion_solver import (
     DEFAULT_GAP_SOLVER_POLICY, GapSolverPolicy, load_gap_solver_policy,
 )
 from mc2p.motion_nav.motion_worker import (
-    MotionResultInbox, MotionWorkerComputePort,
+    MotionResultInbox, MotionSolverWorker, MotionWorkerPort,
 )
 from mc2p.motion_nav.motion_risk import (
     RiskActionRecord, RiskActionState, RiskCommitEvidence, RiskCommitKind,
@@ -166,12 +163,8 @@ from mc2p.motion_nav.safe_ground_control import (
     verified_ground_recovery_movement,
 )
 from mc2p.motion_nav.step_transition import StepProfile, load_step_profile
-from mc2p.motion_nav.support_surfaces import (
-    SurfaceNodeId,
-    query_support_surfaces,
-    standable_region_in_goal,
-)
-from mc2p.motion_nav.world_model import BlockPos, CellKnowledge, WorldQueryCache
+from mc2p.motion_nav.support_surfaces import SurfaceNodeId, query_support_surfaces, standable_point_in_region
+from mc2p.motion_nav.world_model import BlockPos, CellKnowledge
 
 
 _INFORMATION_WAIT_LIMIT_FRAMES = 40
@@ -489,7 +482,7 @@ class NavigationSession:
         *,
         planner_worker: PlannerWorkerPort | None = None,
         owns_planner_worker: bool = True,
-        motion_worker: MotionWorkerComputePort | None = None,
+        motion_worker: MotionWorkerPort | None = None,
         observation_adapter: NavigationObservationAdapter | None = None,
         route_admitter: RouteAdmitter | None = None,
         clock_ns: Callable[[], int] = time.perf_counter_ns,
@@ -510,8 +503,7 @@ class NavigationSession:
             )
         if planner_worker is not None and not isinstance(planner_worker, PlannerWorkerPort):
             raise ContractViolation("planner worker does not satisfy its protocol")
-        if (motion_worker is not None
-                and not isinstance(motion_worker, MotionWorkerComputePort)):
+        if motion_worker is not None and not isinstance(motion_worker, MotionWorkerPort):
             raise ContractViolation("motion worker does not satisfy its protocol")
         if type(snapshot_cells_per_step) is not int or snapshot_cells_per_step < 1:
             raise ContractViolation("snapshot step budget must be positive")
@@ -532,6 +524,7 @@ class NavigationSession:
         from mc2p.motion_nav.async_work import AsyncOwnerScope
         self._execution_instances = AsyncOwnerScope()
         self._motion_result_poll_sequence = 0
+        self._owns_motion_worker = False
         self._adapter = observation_adapter or NavigationObservationAdapter()
         self._admitter = route_admitter or RouteAdmitter()
         self._clock = clock_ns
@@ -1292,24 +1285,6 @@ class NavigationSession:
             )
         self._adapter = adapter
 
-    def attach_motion_worker(self, worker: MotionWorkerComputePort) -> None:
-        """Borrow Runtime's prewarmed worker without acquiring its lifetime."""
-        if not isinstance(worker, MotionWorkerComputePort):
-            raise ContractViolation("navigation motion worker is invalid")
-        if self._motion_worker is worker:
-            return
-        if (self._motion_worker is not None or self._frame is not None
-                or self._request is not None or self._active_route is not None
-                or self._state is not NavigationSessionState.READY):
-            raise ContractViolation(
-                "navigation motion worker cannot change after session start"
-            )
-        self._motion_worker = worker
-
-    @property
-    def borrowed_motion_worker(self) -> MotionWorkerComputePort | None:
-        return self._motion_worker
-
     def unbind_source(self, source: IntentSourceV1) -> None:
         if type(source) is not IntentSourceV1 or self._source != source:
             raise ContractViolation("navigation source does not own this session")
@@ -1664,9 +1639,7 @@ class NavigationSession:
         if new_risk_ledger:
             self._movement_damage_spent_points = 0.0
         self._executor_reported_damage_points = 0.0
-        goal_node, missing = self._surface_for_goal(
-            frame, goal_state, self.profiles.ground,
-        )
+        goal_node, missing = self._surface_for_goal(frame, goal_state)
         if goal_node is None:
             self._frame = frame
             self._pending_goal = PendingGoalRevision(
@@ -1776,12 +1749,9 @@ class NavigationSession:
             goal_id=goal_id,
             goal_revision=goal_revision,
             goal_state=goal_state,
-            planning_target=GoalRegionPlanningRequest(goal_state),
             damage_budget=next_budget,
         )
-        goal_node, missing = self._surface_for_goal(
-            self._frame, goal_state, self.profiles.ground,
-        )
+        goal_node, missing = self._surface_for_goal(self._frame, goal_state)
         if goal_node is None:
             self._request = next_request
             if (missing
@@ -1900,14 +1870,6 @@ class NavigationSession:
         maximum_planning_seconds: float = .5,
         damage_budget: TaskDamageBudget = TaskDamageBudget(),
     ) -> SurfacePlanningRequest:
-        observed = evaluate_observed_goal(
-            frame, goal_state, damage_budget.risk_policy_id,
-        )
-        if observed.status is ObservedGoalStatus.SATISFIED:
-            # Keep a satisfied region goal on the local path.  Sending it to
-            # the graph planner would create a zero-action route even though
-            # no body movement is required.
-            goal_node = start_node
         return SurfacePlanningRequest(
             1, f"{self.session_id}-request-1", goal_id, goal_revision,
             frame.session.value, start_node, goal_node,
@@ -1919,7 +1881,6 @@ class NavigationSession:
             damage_budget=damage_budget,
             maximum_planning_seconds=maximum_planning_seconds,
             reach_policy=self._goal_requests.reach_policy,
-            planning_target=GoalRegionPlanningRequest(goal_state),
         )
 
     def _remaining_damage_budget(self) -> TaskDamageBudget:
@@ -2525,7 +2486,7 @@ class NavigationSession:
                 pending = self._pending_goal
                 if self._has_body_owner():
                     goal_node, goal_missing = self._surface_for_goal(
-                        frame, pending.goal_state, self.profiles.ground,
+                        frame, pending.goal_state,
                     )
                     start_node, start_missing = self._surface_for_body(frame)
                     missing = tuple(sorted(
@@ -2549,9 +2510,6 @@ class NavigationSession:
                             start=start_node,
                             goal=goal_node,
                             goal_state=pending.goal_state,
-                            planning_target=GoalRegionPlanningRequest(
-                                pending.goal_state,
-                            ),
                             damage_budget=pending.damage_budget,
                         )
                         self._pending_goal = None
@@ -3499,7 +3457,9 @@ class NavigationSession:
             bridge_policy=self._bridge_policy,
         )
         successor._declared_successor_task_id = task_id
+        successor._owns_motion_worker = self._owns_motion_worker
         self._owns_planner_worker = False
+        self._owns_motion_worker = False
         self._finalize_close()
         return successor
 
@@ -3574,7 +3534,9 @@ class NavigationSession:
             evidence.movement_damage_spent_points
         )
         continuation._bridge_remaining = evidence.bridge_remaining
+        continuation._owns_motion_worker = self._owns_motion_worker
         self._owns_planner_worker = False
+        self._owns_motion_worker = False
         self._finalize_close()
         continuation._goal_requests.resume_computation_after_reanchor(self._goal_requests)
         return continuation
@@ -3589,6 +3551,8 @@ class NavigationSession:
         self._closed = True
         if self._owns_planner_worker and hasattr(self._planner, "close"):
             self._planner.close()
+        if self._motion_worker is not None and self._owns_motion_worker:
+            self._motion_worker.close()
         # COMPLETE/CANCELLED/FAILED describe the task result and remain
         # immutable after they are reached.  ``_closed`` separately records
         # that workers and input resources have been released.
@@ -3946,17 +3910,6 @@ class NavigationSession:
             self._snapshot_missing = ()
             return
         if admission.status is AdmissionStatus.REJECTED:
-            if type(request.planning_target) is GoalRegionPlanningRequest:
-                self._local_goal_request_id = None
-                self._replace_request(
-                    request,
-                    frame,
-                    "same_support_local_not_applicable",
-                    preserve_active_route=(
-                        self._supervisor.incumbent_route is not None
-                    ),
-                )
-                return
             reason = (
                 "same_support_local_mode_unsupported"
                 if admission.reason
@@ -4211,7 +4164,7 @@ class NavigationSession:
             )
             return
         goal_node, goal_missing = self._surface_for_goal(
-            frame, pending.goal_state, self.profiles.ground,
+            frame, pending.goal_state,
         )
         start_node, start_missing = self._surface_for_body(frame)
         missing = tuple(sorted(set(goal_missing) | set(start_missing)))
@@ -4289,7 +4242,6 @@ class NavigationSession:
             goal_id=pending.goal_id,
             goal_revision=pending.goal_revision,
             goal_state=pending.goal_state,
-            planning_target=GoalRegionPlanningRequest(pending.goal_state),
             damage_budget=pending.damage_budget,
         )
         self._snapshot_missing = ()
@@ -4581,13 +4533,11 @@ class NavigationSession:
             gap_solver_policy=self.profiles.gap_solver,
         )
         motion_coordinator = None
-        if route_needs_motion_coordination(route):
+        if any(action_spec(action).needs_background_solving
+               for action in route.action_route.actions):
             if self._motion_worker is None:
-                self._transition(
-                    NavigationTransitionAction.MARK_FAILED,
-                    "motion_worker_unavailable",
-                )
-                return
+                self._motion_worker = MotionSolverWorker(max_pending=4)
+                self._owns_motion_worker = True
             motion_coordinator = MotionRouteCoordinator(
                 route, executor, self._motion_worker,
                 computation_scope=self.current_computation_scope,
@@ -5013,105 +4963,32 @@ class NavigationSession:
     def _surface_for_goal(
         frame: NavigationFrame,
         goal: GoalState,
-        ground_profile: GroundMotionProfile | None = None,
     ) -> tuple[SurfaceNodeId | None, tuple[BlockPos, ...]]:
+        candidates = []
+        missing: set[BlockPos] = set()
+        max_x = math.floor(math.nextafter(goal.region.max_x, -math.inf))
+        max_z = math.floor(math.nextafter(goal.region.max_z, -math.inf))
+        for x in range(math.floor(goal.region.min_x), max_x + 1):
+            for z in range(math.floor(goal.region.min_z), max_z + 1):
+                result = query_support_surfaces(
+                    frame.world, x, z,
+                    goal.region.min_y, goal.region.max_y,
+                    collect_complete_missing=True,
+                )
+                missing.update(result.missing_cells)
+                for surface in result.surfaces:
+                    target = standable_point_in_region(frame.world, surface, goal.region)
+                    missing.update(target.missing_cells)
+                    if target.status is QueryStatus.FEASIBLE:
+                        candidates.append((surface, target.position))
+        if missing or not candidates:
+            return None, tuple(sorted(missing))
         center = (
             (goal.region.min_x + goal.region.max_x) / 2.0,
             (goal.region.min_y + goal.region.max_y) / 2.0,
             (goal.region.min_z + goal.region.max_z) / 2.0,
         )
-        max_x = math.floor(math.nextafter(goal.region.max_x, -math.inf))
-        max_z = math.floor(math.nextafter(goal.region.max_z, -math.inf))
-        cache = WorldQueryCache(frame.world)
-        columns = []
-        for x in range(math.floor(goal.region.min_x), max_x + 1):
-            closest_x = min(max(center[0], float(x)), float(x + 1))
-            for z in range(math.floor(goal.region.min_z), max_z + 1):
-                closest_z = min(max(center[2], float(z)), float(z + 1))
-                lower_bound = math.hypot(
-                    closest_x - center[0], closest_z - center[2],
-                )
-                columns.append((lower_bound, x, z))
-        columns.sort()
-
-        best_surface = None
-        best_key = None
-        discovery_missing: list[tuple[float, tuple[BlockPos, ...]]] = []
-        selection_missing: list[
-            tuple[tuple[float, SurfaceNodeId], tuple[BlockPos, ...]]
-        ] = []
-        allowed_materials = (
-            None if ground_profile is None else ground_profile.support_materials
-        )
-        for index, (lower_bound, x, z) in enumerate(columns):
-            result = query_support_surfaces(
-                frame.world, x, z,
-                goal.region.min_y, goal.region.max_y,
-                collect_complete_missing=True,
-                query_cache=cache,
-            )
-            if result.missing_cells:
-                discovery_missing.append((lower_bound, result.missing_cells))
-            for surface in sorted(
-                    result.surfaces,
-                    key=lambda item: (
-                        math.dist(item.position, center), item.node_id,
-                    )):
-                surface_key = (
-                    math.dist(surface.position, center), surface.node_id,
-                )
-                if best_key is not None and surface_key >= best_key:
-                    continue
-                exact = standable_region_in_goal(
-                    frame.world,
-                    surface,
-                    goal.region,
-                    allowed_materials=allowed_materials,
-                    query_cache=cache,
-                )
-                if exact.status is QueryStatus.FEASIBLE:
-                    best_surface = surface
-                    best_key = surface_key
-                elif exact.status is QueryStatus.NEEDS_INFORMATION:
-                    selection_missing.append((surface_key, exact.missing_cells))
-
-            if best_key is None:
-                continue
-            next_lower_bound = (
-                math.inf if index + 1 == len(columns)
-                else columns[index + 1][0]
-            )
-            # Equality is deliberately not enough: an unqueried column may
-            # contain an equal-distance surface with a smaller SurfaceNodeId.
-            if next_lower_bound > best_key[0] + 1.0e-9:
-                break
-
-        if best_key is None:
-            missing = {
-                cell
-                for _, cells in discovery_missing
-                for cell in cells
-            }
-            missing.update(
-                cell
-                for _, cells in selection_missing
-                for cell in cells
-            )
-            return None, tuple(sorted(missing))
-
-        relevant_missing = {
-            cell
-            for lower_bound, cells in discovery_missing
-            if lower_bound <= best_key[0] + 1.0e-9
-            for cell in cells
-        }
-        relevant_missing.update(
-            cell
-            for surface_key, cells in selection_missing
-            if surface_key < best_key
-            for cell in cells
-        )
-        if relevant_missing:
-            return None, tuple(sorted(relevant_missing))
-        assert best_surface is not None
-        return best_surface.node_id, ()
+        return min(
+            candidates,
+            key=lambda item: math.dist(item[1], center),
+        )[0].node_id, tuple(sorted(missing))

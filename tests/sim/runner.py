@@ -22,10 +22,6 @@ from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.reset import ResetRequestV0
 from mc2p.motion_nav import motion_worker, planner_worker
-from mc2p.motion_nav.ground_terminal_search import GroundTerminalSearchStatus
-from mc2p.motion_nav.motion_worker import (
-    MotionWorkerCancelStatus, MotionWorkerHealth, MotionWorkerReadiness,
-)
 from mc2p.motion_nav.motion_risk import TaskDamageBudget, TaskRiskLedger
 from mc2p.motion_nav.goal_reach_policy import GoalReachPolicy
 from mc2p.motion_nav.navigation_session import NavigationSession, NavigationSessionProfiles
@@ -114,12 +110,6 @@ class InlineMotionWorker:
     def is_alive(self) -> bool:
         return True
 
-    @property
-    def health(self):
-        return MotionWorkerHealth(
-            MotionWorkerReadiness.READY, None, 0, None, None,
-        )
-
     def submit(self, job) -> bool:
         self._pending.append(job)
         self.activity.append(ObservedAsyncActivity(job.work_identity, "submit"))
@@ -130,15 +120,6 @@ class InlineMotionWorker:
         self.activity.extend(ObservedAsyncActivity(job.work_identity, "poll") for job in self._pending)
         self._pending = []
         return done
-
-    def cancel(
-        self, identity,
-        _status=GroundTerminalSearchStatus.CANCELLED,
-    ):
-        # Keep deterministic late delivery available to the formal inbox; the
-        # coordinator's local retirement must reject it exactly like a real
-        # result that crossed the cancel boundary.
-        return MotionWorkerCancelStatus.ACCEPTED
 
     def close(self) -> None:
         self._pending = []

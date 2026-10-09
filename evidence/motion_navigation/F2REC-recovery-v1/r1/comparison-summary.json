@@ -1,0 +1,76 @@
+{
+  "schema_version": "mc2p.f2rec-r1-comparison.v1",
+  "formal_platform": "windows",
+  "baseline_public_commit": "1ee76b6",
+  "implementation_base_commit": "e913118168dbed2ce269f2f82bf07883b932c9cc",
+  "signed": false,
+  "signing_blocker": "full forward remains 1658/1661; reverse was not run under fail-fast",
+  "limited_correction_rounds": 2,
+  "targeted": {
+    "tests_passed": 475,
+    "tests_total": 475
+  },
+  "v9": {
+    "pre_cleanup_candidate_success": 152,
+    "pre_cleanup_candidate_superseded": true,
+    "reason": "candidate included an unauthorized no-proof typed-rejection semantic",
+    "f2s_c01_tasks": 64,
+    "f2s_c01_completed": 40,
+    "column_top_tasks": 24,
+    "column_top_completed": 0,
+    "old_success_regressions": 0,
+    "current_full_v9_rerun": false
+  },
+  "f2_528": {
+    "tasks": 528,
+    "result_or_reason_changes": 0,
+    "old_success_regressions": 0,
+    "successful_behavior_hash_changes": [
+      "player-normal-000008",
+      "player-normal-000041",
+      "player-normal-000072",
+      "player-normal-000073",
+      "player-late-000041",
+      "player-late-000072",
+      "player-late-000073"
+    ]
+  },
+  "v8_affected": {
+    "tasks": 56,
+    "success": 56,
+    "old_success_regressions": 0,
+    "safety_events": 0
+  },
+  "full_forward": {
+    "tests": 1661,
+    "passed": 1658,
+    "failures": 3,
+    "errors": 0,
+    "skipped": 0,
+    "elapsed_seconds": 469.944,
+    "scene_hash_unchanged": true,
+    "post_failure_targeted_gate_check": "superseded by stop cleanup; see direct_cleanup_checks"
+  },
+  "full_reverse": {
+    "run": false,
+    "reason": "full forward was not green; stopped by fail-fast"
+  },
+  "direct_cleanup_checks": {
+    "d058_d059_d060": {
+      "passed": 34,
+      "total": 34
+    },
+    "r1_region_geometry": {
+      "passed": 7,
+      "total": 7
+    },
+    "completion_region": {
+      "passed": 13,
+      "total": 13
+    },
+    "f2r_piecewise": {
+      "passed": 8,
+      "total": 8
+    }
+  }
+}

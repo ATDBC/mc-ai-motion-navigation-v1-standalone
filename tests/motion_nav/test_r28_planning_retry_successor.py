@@ -35,7 +35,6 @@ from mc2p.motion_nav.retry_ledger import (
     RetryLedger,
 )
 from tests.motion_nav.test_navigation_session import _InlinePlanner, _goal
-from tests.motion_nav.test_navigation_session import _InlineMotionWorker
 from tests.motion_nav.test_planning_coordinator import _permit, _request, _world
 from tests.motion_nav.test_b07_step_route import frame, step_profile
 from tests.motion_nav.test_b07_surface_planning import ordinary_profile
@@ -334,8 +333,7 @@ class SuccessorAndContinuationContractTests(unittest.TestCase):
         from unittest.mock import Mock
         from mc2p.motion_nav.motion_worker import MotionWorkerPort
         planner = _InlinePlanner()
-        from mc2p.motion_nav.motion_worker import MotionWorkerOwner
-        motion = Mock(spec=MotionWorkerOwner)
+        motion = Mock(spec=MotionWorkerPort)
         session = NavigationSession(
             "old-session", self._session_profiles(),
             planner_worker=planner, retry_ledger=RetryLedger("old-task"),
@@ -343,6 +341,7 @@ class SuccessorAndContinuationContractTests(unittest.TestCase):
             motion_worker=motion,
             clock_ns=lambda: 1_000_000_000,
         )
+        session._owns_motion_worker = True
         session._transition(NavigationTransitionAction.MARK_FAILED, "old-ended")
         self.addCleanup(session.close)
         return session, planner
@@ -360,6 +359,7 @@ class SuccessorAndContinuationContractTests(unittest.TestCase):
                     session.spawn_successor("new-session", task_id=task_id)
                 self.assertFalse(session._closed)
                 self.assertTrue(session._owns_planner_worker)
+                self.assertTrue(session._owns_motion_worker)
                 self.assertIs(session._planner, planner)
                 self.assertFalse(planner.closed)
                 motion.close.assert_not_called()
@@ -373,10 +373,12 @@ class SuccessorAndContinuationContractTests(unittest.TestCase):
         self.assertTrue(successor._owns_planner_worker)
         self.assertIs(successor._planner, planner)
         self.assertIs(successor._motion_worker, motion)
+        self.assertTrue(successor._owns_motion_worker)
+        self.assertFalse(session._owns_motion_worker)
         motion.close.assert_not_called()
         successor.close()
         self.assertTrue(planner.closed)
-        motion.close.assert_not_called()
+        motion.close.assert_called_once_with()
 
     def test_mismatched_successor_start_preserves_fresh_state_and_allows_retry(self):
         for entry in ("start", "start_goal"):
@@ -416,6 +418,7 @@ class SuccessorAndContinuationContractTests(unittest.TestCase):
                 self.assertEqual(planner.jobs, [])
                 self.assertIs(successor._planner, planner)
                 self.assertTrue(successor._owns_planner_worker)
+                self.assertTrue(successor._owns_motion_worker)
                 successor._motion_worker.close.assert_not_called()
                 self.assertTrue(session._closed)
                 self.assertFalse(planner.closed)
@@ -431,7 +434,7 @@ class SuccessorAndContinuationContractTests(unittest.TestCase):
         old_risk = TaskRiskLedger("old-task", TaskDamageBudget("old-risk", 2))
         session = NavigationSession(
             "old-session", self._session_profiles(),
-            planner_worker=planner, motion_worker=_InlineMotionWorker(), retry_ledger=old_retry,
+            planner_worker=planner, retry_ledger=old_retry,
             risk_ledger=old_risk, clock_ns=lambda: 1_000_000_000,
         )
         session._transition(NavigationTransitionAction.MARK_FAILED, "old-ended")
@@ -484,7 +487,7 @@ class SuccessorAndContinuationContractTests(unittest.TestCase):
         risk.settle("drop", observed_damage_points=2)
         session = NavigationSession(
             "combat-session", self._session_profiles(),
-            planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(), retry_ledger=retry,
+            planner_worker=_InlinePlanner(), retry_ledger=retry,
             risk_ledger=risk, clock_ns=lambda: 1_000_000_000,
         )
         session._goal_requests.select_reach_policy(
@@ -552,7 +555,7 @@ class SuccessorAndContinuationContractTests(unittest.TestCase):
         retry.begin_recovery(RecoveryIdentity(2, "exhaust"), RetryCause.PLANNING)
         session = NavigationSession(
             "exhausted-session", self._session_profiles(),
-            planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(), retry_ledger=retry,
+            planner_worker=_InlinePlanner(), retry_ledger=retry,
             risk_ledger=TaskRiskLedger("combat-task", TaskDamageBudget()),
             clock_ns=lambda: 1_000_000_000,
         )
@@ -573,7 +576,7 @@ class SuccessorAndContinuationContractTests(unittest.TestCase):
         )
         session = NavigationSession(
             "expired-session", self._session_profiles(),
-            planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(), retry_ledger=retry,
+            planner_worker=_InlinePlanner(), retry_ledger=retry,
             risk_ledger=TaskRiskLedger("combat-task", TaskDamageBudget()),
             clock_ns=lambda: now[0],
         )
@@ -597,7 +600,7 @@ class SuccessorAndContinuationContractTests(unittest.TestCase):
         )
         session = NavigationSession(
             "expiring-session", self._session_profiles(),
-            planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(), retry_ledger=retry,
+            planner_worker=_InlinePlanner(), retry_ledger=retry,
             risk_ledger=TaskRiskLedger("combat-task", TaskDamageBudget()),
             clock_ns=lambda: now[0],
         )
@@ -622,7 +625,7 @@ class SuccessorAndContinuationContractTests(unittest.TestCase):
         )
         session = NavigationSession(
             "deviation-session", self._session_profiles(),
-            planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(), clock_ns=lambda: 1_000_000_000,
+            planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
         )
         session.start(request, current)
         session.propose(current, None, 2_000_000_000)

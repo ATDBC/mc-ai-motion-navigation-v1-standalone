@@ -1,0 +1,68 @@
+{
+  "cases": {
+    "cancel_backpressure": {
+      "evidence": "Held the production submit boundary under backpressure.",
+      "observed": {
+        "bounded_terminal_reached": true,
+        "decision_count": 4,
+        "local_failure_count": 3,
+        "task_recovery_starts": 0,
+        "terminal_reason": "motion_unsolvable:motion_solver_retry_exhausted",
+        "verified_command_executed": false
+      },
+      "risk": "closed",
+      "status": "PASS"
+    },
+    "pre_publish_invalidation": {
+      "evidence": "Delivered a completed old revision after replacement.",
+      "observed": {
+        "late_result_disposition": "discarded_late",
+        "late_result_identity_matched": true,
+        "old_identity_retired": true,
+        "replacement_identity_active": true,
+        "retired_result_executable": false
+      },
+      "risk": "closed",
+      "status": "PASS"
+    },
+    "ready_after_death": {
+      "evidence": "Killed the live solver during an airborne verified action.",
+      "observed": {
+        "airborne_owner_retained": true,
+        "neutral_or_bounded_safe_result": true,
+        "runtime_state": "ready",
+        "session_reason": "complete_verified_landing_after_cancel",
+        "session_state": "executing",
+        "worker_alive_after_injection": false,
+        "worker_alive_before": true
+      },
+      "risk": "closed",
+      "status": "PASS"
+    },
+    "runtime_close": {
+      "evidence": "Closed Runtime while its Session-owned worker was live.",
+      "observed": {
+        "input_ownership_cleared": true,
+        "neutral_release_sent": true,
+        "runtime_state": "closed",
+        "source_stats_after": {
+          "active_intents": 0,
+          "active_sources": 0,
+          "retained_slots": 0
+        },
+        "source_stats_before": {
+          "active_intents": 0,
+          "active_sources": 1,
+          "retained_slots": 1
+        },
+        "worker_alive_after_runtime_close": true,
+        "worker_alive_before": true
+      },
+      "risk": "lifecycle_debt",
+      "status": "PASS"
+    }
+  },
+  "current_hard_risk": false,
+  "probe_kind": "dynamic_formal_path",
+  "schema_version": "mc2p.f2rec-r0-worker-lifecycle.v1"
+}

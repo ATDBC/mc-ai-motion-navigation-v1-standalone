@@ -1,0 +1,31 @@
+{
+  "schema_version": "mc2p.f2rec-r1-stop-record.v1",
+  "status": "not_signed",
+  "next_stage_started": false,
+  "reason": "first full forward was not green; fail-fast stopped reverse and further expensive collections",
+  "full_forward": {
+    "tests": 1661,
+    "passed": 1658,
+    "failures": 3,
+    "errors": 0,
+    "skipped": 0,
+    "elapsed_seconds": 469.944
+  },
+  "failure_classification": {
+    "r0_red_gate": "historical R0 evidence was incorrectly rerun against recovered R1 code",
+    "export_fingerprint_gate": "R1 allowed production changes were still compared only with F2-R fingerprints",
+    "d059_exact_terminal_gate": "real scope violation: candidate replaced the existing no-proof NON_RECIPE closure with an unauthorized typed early rejection"
+  },
+  "reverse_run": false,
+  "stop_cleanup": {
+    "completed": true,
+    "full_suite_rerun": false,
+    "reverse_run": false,
+    "direct_checks": {
+      "d058_d059_d060": "34/34",
+      "r1_region_geometry": "7/7",
+      "completion_region": "13/13",
+      "f2r_piecewise": "8/8"
+    }
+  }
+}

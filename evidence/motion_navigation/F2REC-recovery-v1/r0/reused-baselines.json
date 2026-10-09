@@ -1,0 +1,50 @@
+{
+  "artifacts": [
+    {
+      "path": "evidence/motion_navigation/r28-baseline-v7/summary.json",
+      "sha256": "49b7c71f1b6acbf74e0c702ee9b7101fdab91ff062d694747b8888b218c9b5e1"
+    },
+    {
+      "path": "evidence/motion_navigation/r28-baseline-v7/comparison-summary.json",
+      "sha256": "17bbfdd2cccf708417d53b91c5f55d4d74f742d2dc3678d6acb2e5c883e172ff"
+    },
+    {
+      "path": "evidence/motion_navigation/F2R-piecewise-completion-v1/final/f2/index.json",
+      "sha256": "a3bdffea8af0acd02d0e34b415ff8a754848b4a98706fb3e593619944ab74fe2"
+    },
+    {
+      "path": "evidence/motion_navigation/F2R-piecewise-completion-v1/final/f2/summary.json",
+      "sha256": "d241791c28f8773c62a4b525b7474b8abeb791f92a2839ca64e979e0f2800a75"
+    },
+    {
+      "path": "evidence/motion_navigation/F2R-piecewise-completion-v1/final/v8/overall-summary.json",
+      "sha256": "aa461524cfbc8e61d02f5fa9d3e1f2b5b8522b8a0a88b1d4d73c78553a952f7c"
+    },
+    {
+      "path": "evidence/motion_navigation/F2R-piecewise-completion-v1/final/v8/repeat-check.json",
+      "sha256": "0a15dc184b721a6ccb98d371439891971c695c0627e76a5a51855f679dddc82c"
+    },
+    {
+      "path": "evidence/motion_navigation/F2R-piecewise-completion-v1/final/five-groups/faults-index.json",
+      "sha256": "b856813ab7e48301d2fe75bf7e06033fffbf5a614c95b0d767a7d0f7251a31f1"
+    },
+    {
+      "path": "evidence/motion_navigation/F2R-piecewise-completion-v1/final/five-groups/world_changes-index.json",
+      "sha256": "558118ed51885100156c39193a457aa12fa86ba1101263352a7590a3c4d7b7dc"
+    },
+    {
+      "path": "evidence/motion_navigation/F2R-piecewise-completion-v1/final/five-groups/follow-index.json",
+      "sha256": "18162a0e74908cb98701a227faf160d50d79c1145d3250c8e5b259b98bd93335"
+    },
+    {
+      "path": "evidence/motion_navigation/F2R-piecewise-completion-v1/final/five-groups/coordination-index.json",
+      "sha256": "f6961bf1d213251a7c7cff21e9f46249b927bb101ac10bc226a5f1fa555c747e"
+    },
+    {
+      "path": "evidence/motion_navigation/F2R-piecewise-completion-v1/final/five-groups/product-index.json",
+      "sha256": "8fb3fcd47359487f989723af1eae58a0239ed7b5fabce94ded728039ee1f7ff8"
+    }
+  ],
+  "reason": "F2-R production semantics and frozen inputs are unchanged; D089 permits reuse. R0 reruns full checks, v9, D058, D061 and three hot paths.",
+  "schema_version": "mc2p.f2rec-r0-reused-baselines.v1"
+}

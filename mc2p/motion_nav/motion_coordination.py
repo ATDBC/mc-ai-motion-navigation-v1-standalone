@@ -44,9 +44,8 @@ from mc2p.motion_nav.retry_ledger import (
     RetryLedger, WaitPolicy, WaitVerdict,
 )
 from mc2p.motion_nav.motion_worker import (
-    GapMotionSolveJob, GapMotionSolveResult,
-    GroundTerminalSolveJob, GroundTerminalSolveResult, MotionResultInbox,
-    MotionJobOperation, MotionWorkerCancelStatus, MotionWorkerComputePort,
+    GapMotionSolveJob, GapMotionSolveResult, MotionResultInbox,
+    MotionJobOperation, MotionWorkerPort,
 )
 from mc2p.motion_nav.online_motion import (
     CandidateExecutionWindow, InputApplicationLedger, ProjectionStatus,
@@ -61,12 +60,7 @@ from mc2p.motion_nav.safe_ground_control import (
     verified_ground_recovery_movement, verified_ground_rollout,
     verified_ground_target_movement,
 )
-from mc2p.motion_nav.world_model import Aabb, BlockPos, CellKnowledge, WorldView
-from mc2p.motion_nav.ground_terminal_search import (
-    GROUND_TERMINAL_BEAM_PREPARATION_TICKS,
-    GroundTerminalSearchLimits, GroundTerminalSearchStatus,
-    GroundTerminalSolveRequest,
-)
+from mc2p.motion_nav.world_model import BlockPos
 from mc2p.motion_nav.segment_entry import MotionContinuationRequirement, SegmentEntryWindow
 from mc2p.motion_nav.movement_transition import MovementMode
 from mc2p.motion_nav.fixed_route import GroundHandoffDisposition
@@ -77,32 +71,6 @@ _MAX_ENTRY_ALIGNMENT_DEGREES_PER_TICK = 36.0
 _GROUNDED_ENTRY_RECOVERY_POLICY = WaitPolicy(40, 2_000_000_000)
 _MOTION_SOLVE_LIMIT_NS = 1_000_000_000
 _MOTION_SOLVE_LIMIT_TICKS = 20
-_GROUND_TERMINAL_FAILURE_REASONS = frozenset({
-    "fixed_route_has_no_forward_control",
-    "fixed_route_stalled",
-    "no_safe_ground_candidate",
-})
-
-
-def route_needs_motion_coordination(route: ActiveRoute) -> bool:
-    """Return whether one route needs the shared background motion worker.
-
-    Ordinary Walk uses it only for the final completion-bearing segment.  A
-    plain Walk must stay on the synchronous ground path.
-    """
-    if type(route) is not ActiveRoute:
-        raise ContractViolation("motion coordination predicate requires an active route")
-    actions = route.action_route.actions
-    for index, action in enumerate(actions):
-        if action_spec(action).needs_background_solving:
-            return True
-        if (index == len(actions) - 1 and type(action) is WalkSegment
-                and action.fixed_route.execution_contract is not None
-                and action.fixed_route.execution_contract.completion_region is not None
-                and (action.transition is None
-                     or action.transition.mode is MovementMode.WALK)):
-            return True
-    return False
 
 
 def _gap_physics_bounds(
@@ -516,7 +484,7 @@ class MotionRouteCoordinator:
     """Connect one active route to bounded background motion solving."""
 
     def __init__(self, route: ActiveRoute, executor: ActionRouteExecutor,
-                 worker: MotionWorkerComputePort, *,
+                 worker: MotionWorkerPort, *,
                  damage_budget: TaskDamageBudget = TaskDamageBudget(),
                  retry_ledger: RetryLedger,
                  computation_scope: AsyncComputationScope,
@@ -529,7 +497,7 @@ class MotionRouteCoordinator:
                  ] = DEFAULT_AIR_TRANSITION_POLICIES) -> None:
         if (type(route) is not ActiveRoute
                 or type(executor) is not ActionRouteExecutor
-                or not isinstance(worker, MotionWorkerComputePort)
+                or not isinstance(worker, MotionWorkerPort)
                 or type(damage_budget) is not TaskDamageBudget
                 or type(retry_ledger) is not RetryLedger
                 or type(computation_scope) is not AsyncComputationScope
@@ -567,12 +535,6 @@ class MotionRouteCoordinator:
         self._known_work_windows: dict[AsyncWorkIdentity, AsyncWorkWindow] = {}
         self._pending_job: GapMotionSolveJob | None = None
         self._solve_basis_job: GapMotionSolveJob | None = None
-        self._pending_ground_job: GroundTerminalSolveJob | None = None
-        self._ground_solve_basis_job: GroundTerminalSolveJob | None = None
-        self._pending_cancellations: dict[
-            AsyncWorkIdentity, tuple[GroundTerminalSearchStatus, int]
-        ] = {}
-        self._ground_beam_requested = False
         self._delivery_ticks = 1
         self._delivery_identity: AsyncWorkIdentity | None = None
         self.last_admission: AsyncAdmissionRecord | None = None
@@ -617,8 +579,6 @@ class MotionRouteCoordinator:
             ("pending_connection", self._pending_connection),
             ("pending_job", self._pending_job),
             ("solve_basis", self._solve_basis_job),
-            ("pending_ground_job", self._pending_ground_job),
-            ("ground_solve_basis", self._ground_solve_basis_job),
         ) if value is not None)
         return AsyncOwnerDiagnostics(self._owner_instance_id, self._work_identity,
                                     self._work_window, self._work.events,
@@ -635,168 +595,11 @@ class MotionRouteCoordinator:
     def cancel_work(self, cause: str = "motion_route_stopped") -> None:
         if not isinstance(cause, str) or not cause:
             raise ContractViolation("motion work cancellation requires a cause")
-        if self._ground_solve_basis_job is not None:
-            self.executor.retire_ground_terminal()
         self._retire_work(cause)
         self._end_grounded_recovery_wait()
 
     def _connection_id(self, action_index: int) -> str:
         return f"{self.route.route_id}/action-{action_index}"
-
-    def _ground_terminal_action_index(self) -> int | None:
-        actions = self.route.action_route.actions
-        if not actions:
-            return None
-        index = len(actions) - 1
-        action = actions[index]
-        if (type(action) is not WalkSegment
-                or action.fixed_route.execution_contract is None
-                or action.fixed_route.execution_contract.completion_region is None
-                or (action.transition is not None
-                    and action.transition.mode is not MovementMode.WALK)):
-            return None
-        return index
-
-    @staticmethod
-    def _ground_terminal_snapshot(
-        frame: NavigationFrame,
-        completion,
-    ) -> NavigationFrame:
-        points = (frame.body.position, completion.reference_point)
-        min_x = math.floor(min(value[0] for value in points) - 3.0)
-        max_x = math.ceil(max(value[0] for value in points) + 3.0)
-        min_y = math.floor(min(frame.body.position[1], completion.support_height) - 2.0)
-        max_y = math.ceil(max(
-            frame.body.body_box.max_y, completion.support_height + 2.0,
-        ) + 1.0)
-        min_z = math.floor(min(value[2] for value in points) - 3.0)
-        max_z = math.ceil(max(value[2] for value in points) + 3.0)
-        facts = {}
-        for x in range(min_x, max_x + 1):
-            for y in range(min_y, max_y + 1):
-                for z in range(min_z, max_z + 1):
-                    fact = frame.world.cell((x, y, z))
-                    if fact.knowledge is not CellKnowledge.UNKNOWN:
-                        facts[(x, y, z)] = fact
-        world = WorldView.detached(
-            frame.world.session,
-            frame.world.geometry_revision,
-            frame.world.evidence_revision,
-            facts,
-        )
-        return replace(frame, world=world, changed_cells=())
-
-    @staticmethod
-    def _ground_terminal_corridor(action: WalkSegment) -> tuple[Aabb, ...]:
-        boxes = []
-        for first, second in zip(
-                action.fixed_route.points, action.fixed_route.points[1:]):
-            boxes.append(Aabb(
-                min(first.x, second.x) - .75,
-                min(first.y, second.y) - .10,
-                min(first.z, second.z) - .75,
-                max(first.x, second.x) + .75,
-                max(first.y, second.y) + 1.90,
-                max(first.z, second.z) + .75,
-            ))
-        if not boxes:
-            point = action.fixed_route.points[0]
-            boxes.append(Aabb(
-                point.x - .75, point.y - .10, point.z - .75,
-                point.x + .75, point.y + 1.90, point.z + .75,
-            ))
-        return tuple(boxes)
-
-    def _submit_ground_terminal(
-        self,
-        frame: NavigationFrame,
-        anchor: StateAnchor,
-        *,
-        preparation_ticks: int = 0,
-        replace_pending_basis: bool = False,
-    ) -> bool:
-        index = self._ground_terminal_action_index()
-        if (index is None or index != self.executor.action_index
-                or self._work_identity is not None
-                or (self.executor.ground_terminal_active
-                    and not replace_pending_basis)
-                or type(preparation_ticks) is not int
-                or not 0 <= preparation_ticks <= 32):
-            return False
-        action = self.route.action_route.actions[index]
-        assert type(action) is WalkSegment
-        completion = action.fixed_route.execution_contract.completion_region
-        assert completion is not None
-        self._candidate_revision += 1
-        connection = f"{self._connection_id(index)}/ground-terminal"
-        now = self._clock()
-        worker_now = time.perf_counter_ns()
-        identity = AsyncWorkIdentity(
-            self.computation_scope,
-            self._owner_instance_id,
-            AsyncWorkKind.MOTION_SOLVE,
-            connection,
-            self._candidate_revision,
-        )
-        work_window = AsyncWorkWindow(
-            anchor.movement_tick_id,
-            now,
-            now + _MOTION_SOLVE_LIMIT_NS,
-        )
-        self._work.begin(identity, work_window)
-        self._remember_work_window(identity, work_window)
-        if not self.result_inbox.register(identity):
-            self.last_failure_reason = "motion_inbox_capacity_exhausted"
-            self._retire_work(self.last_failure_reason)
-            return False
-        request = GroundTerminalSolveRequest(
-            anchor=anchor,
-            work_identity=identity,
-            goal_id=self.route.goal_id,
-            goal_revision=self.route.goal_revision,
-            route_id=self.route.route_id,
-            route_revision=self.route.route_revision,
-            action_index=index,
-            execution_window=CandidateExecutionWindow(
-                anchor.movement_tick_id + preparation_ticks + 1,
-                anchor.movement_tick_id + preparation_ticks + 2,
-            ),
-            frame=self._ground_terminal_snapshot(frame, completion),
-            completion=completion,
-            profile=self.executor.ground_profile,
-            limits=GroundTerminalSearchLimits(
-                maximum_ticks=8,
-                neutral_tail_ticks=30,
-                phase_candidate_budget=4096,
-                beam_node_budget=32768,
-                maximum_final_speed_blocks_per_second=min(
-                    .1,
-                    self.route.goal_state.maximum_terminal_speed_blocks_per_second
-                    if self.route.goal_state is not None else .1,
-                ),
-                minimum_support_fraction=.15,
-                deadline_ns=worker_now + _MOTION_SOLVE_LIMIT_NS,
-            ),
-            preparation_inputs=(MovementV1(),) * preparation_ticks,
-            route_corridor=self._ground_terminal_corridor(action),
-        )
-        job = GroundTerminalSolveJob(
-            connection, self._candidate_revision, request, worker_now,
-        )
-        if not self.executor.begin_ground_terminal_solve(request):
-            self._retire_work("ground_terminal_basis_rejected")
-            return False
-        self._pending_ground_job = job
-        self._ground_solve_basis_job = job
-        self._pending_connection = connection
-        self._pending_action_index = index
-        self._pending_submitted_tick = anchor.movement_tick_id
-        if self.worker.submit(job):
-            self._pending_ground_job = None
-            self.last_failure_reason = ""
-        else:
-            self.last_failure_reason = "motion_solver_backpressure"
-        return True
 
     @property
     def recovering_grounded_entry(self) -> bool:
@@ -824,8 +627,6 @@ class MotionRouteCoordinator:
     def _sample_solve_delivery(
             self, result: GapMotionSolveResult, anchor: StateAnchor, *,
             current_scope: AsyncComputationScope) -> None:
-        if type(result) is not GapMotionSolveResult:
-            return
         job = self._solve_basis_job
         if (job is None or job.operation is not MotionJobOperation.SOLVE
                 or result.solve_result.status is not SolveStatus.SOLVED
@@ -841,142 +642,11 @@ class MotionRouteCoordinator:
             - job.anchor.movement_tick_id))
         self._delivery_identity = result.work_identity
 
-    def _accept_ground_terminal_result(
-            self, result: GroundTerminalSolveResult, anchor: StateAnchor,
-            world: PhysicsWorldView, changed_cells: tuple[BlockPos, ...],
-            ledger: InputApplicationLedger | None = None, *,
-            current_scope: AsyncComputationScope) -> bool:
-        basis = self._ground_solve_basis_job
-        check = self._work.check(
-            result.work_identity, self._clock(), current_scope=current_scope,
-        )
-        if check is not WorkCheck.READY:
-            self._record_admission(
-                (AsyncAdmissionDisposition.RECOMPUTE
-                 if check is WorkCheck.EXPIRED else
-                 AsyncAdmissionDisposition.DISCARDED_LATE),
-                identity_matched=False,
-                facts_valid=None,
-                result_identity=result.work_identity,
-            )
-            self.executor.retire_ground_terminal()
-            self._retire_work("ground_terminal_result_not_current")
-            return False
-        if (basis is None
-                or result.connection_id != self._pending_connection
-                or result.candidate_revision != self._candidate_revision
-                or result.work_identity != basis.work_identity
-                or basis.request.work_identity != result.work_identity
-                or basis.request.goal_id != self.route.goal_id
-                or basis.request.goal_revision != self.route.goal_revision
-                or basis.request.route_id != self.route.route_id
-                or basis.request.route_revision != self.route.route_revision
-                or basis.request.action_index != self.executor.action_index):
-            self._record_admission(
-                AsyncAdmissionDisposition.DISCARDED_LATE,
-                identity_matched=False, facts_valid=False,
-                result_identity=result.work_identity,
-            )
-            self.executor.retire_ground_terminal()
-            self._retire_work("ground_terminal_identity_changed")
-            return False
-        sequence = result.search_result.sequence
-        if (result.search_result.status
-                is GroundTerminalSearchStatus.INSUFFICIENT_LEAD
-                and not basis.request.preparation_inputs
-                and anchor.physics_state.on_ground
-                and math.hypot(
-                    anchor.physics_state.velocity_blocks_per_tick[0],
-                    anchor.physics_state.velocity_blocks_per_tick[2],
-                ) * 20.0 <= .1):
-            self._record_admission(
-                AsyncAdmissionDisposition.RECOMPUTE,
-                identity_matched=True, facts_valid=True,
-                result_identity=result.work_identity,
-            )
-            self._retire_work("ground_terminal_beam_lead_required")
-            self._ground_beam_requested = True
-            return False
-        if (result.search_result.status is not GroundTerminalSearchStatus.SOLVED
-                or sequence is None):
-            attempt = self._record_local_failure(
-                f"{result.connection_id}/candidate-{result.candidate_revision}/"
-                f"{result.search_result.status.value}"
-            )
-            self._record_admission(
-                (AsyncAdmissionDisposition.RECOMPUTE
-                 if result.search_result.status in {
-                     GroundTerminalSearchStatus.BUDGET_EXHAUSTED,
-                     GroundTerminalSearchStatus.STALE,
-                 } else AsyncAdmissionDisposition.TERMINATED),
-                identity_matched=True, facts_valid=False,
-                result_identity=result.work_identity,
-            )
-            self.executor.retire_ground_terminal()
-            self._retire_work("ground_terminal_no_sequence")
-            self.last_failure_reason = result.search_result.status.value
-            if attempt.verdict is LocalAttemptVerdict.EXHAUSTED:
-                self.last_failure_reason = "ground_terminal_retry_exhausted"
-            return False
-        changed = set(changed_cells)
-        for position in sequence.dependencies:
-            before = basis.request.frame.world.cell(position)
-            current = world.cell(position)
-            if (before.knowledge != current.knowledge
-                    or before.block != current.block):
-                changed.add(position)
-        if changed.intersection(sequence.dependencies):
-            self._record_admission(
-                AsyncAdmissionDisposition.RECOMPUTE,
-                identity_matched=True, facts_valid=False,
-                result_identity=result.work_identity,
-            )
-            self.executor.retire_ground_terminal()
-            self._retire_work("ground_terminal_dependency_changed")
-            self.last_failure_reason = "ground_terminal_dependency_changed"
-            return False
-        accepted_ns = self._clock()
-        if not self._work.try_apply(
-                result.work_identity, accepted_ns,
-                current_scope=current_scope):
-            self.executor.retire_ground_terminal()
-            self._retire_work("ground_terminal_apply_rejected")
-            return False
-        if not self.executor.install_ground_terminal_sequence(
-                sequence, anchor, ledger):
-            self._record_admission(
-                AsyncAdmissionDisposition.RECOMPUTE,
-                identity_matched=True, facts_valid=False,
-                result_identity=result.work_identity,
-            )
-            self.executor.retire_ground_terminal()
-            self._retire_work("ground_terminal_entry_changed")
-            self.last_failure_reason = "ground_terminal_entry_changed"
-            return False
-        self._record_admission(
-            AsyncAdmissionDisposition.APPLIED,
-            identity_matched=True, facts_valid=True,
-            result_identity=result.work_identity,
-            accepted_ns=accepted_ns,
-        )
-        self._retire_work("ground_terminal_sequence_installed")
-        self.last_failure_reason = ""
-        self.last_failure_attempt_id = None
-        return True
-
     def _accept_result(
-            self, result: GapMotionSolveResult | GroundTerminalSolveResult,
-            anchor: StateAnchor,
+            self, result: GapMotionSolveResult, anchor: StateAnchor,
             world: PhysicsWorldView, changed_cells: tuple[BlockPos, ...],
             ledger: InputApplicationLedger | None = None, *,
             current_scope: AsyncComputationScope) -> bool:
-        if type(result) is GroundTerminalSolveResult:
-            return self._accept_ground_terminal_result(
-                result, anchor, world, changed_cells, ledger,
-                current_scope=current_scope,
-            )
-        if type(result) is not GapMotionSolveResult:
-            raise ContractViolation("motion result domain is unsupported")
         if result.work_identity is None:
             self.unidentified_results += 1
             return False
@@ -1289,12 +959,10 @@ class MotionRouteCoordinator:
             ))
 
     def _flush_pending_job(self) -> None:
-        job = self._pending_job or self._pending_ground_job
-        if job is None:
+        if self._pending_job is None:
             return
-        if self.worker.submit(job):
+        if self.worker.submit(self._pending_job):
             self._pending_job = None
-            self._pending_ground_job = None
             self.last_failure_reason = ""
 
     def _submit_current(
@@ -1322,55 +990,13 @@ class MotionRouteCoordinator:
         self.executor.prepare_ground_handoff(None)
         identity = self._work_identity
         if identity is not None:
-            cancel = getattr(self.worker, "cancel", None)
-            if callable(cancel):
-                status = (
-                    GroundTerminalSearchStatus.TIMEOUT
-                    if "expired" in _cause or "timeout" in _cause else
-                    GroundTerminalSearchStatus.CANCELLED
-                    if "cancel" in _cause or "stopped" in _cause else
-                    GroundTerminalSearchStatus.STALE
-                )
-                outcome = cancel(identity, status)
-                if outcome in {False, MotionWorkerCancelStatus.BACKPRESSURE}:
-                    if len(self._pending_cancellations) < 64:
-                        self._pending_cancellations[identity] = (
-                            status, self._clock() + 2_000_000_000,
-                        )
-                    else:
-                        self.last_failure_reason = (
-                            "motion_cancel_retry_capacity_exhausted"
-                        )
             self.result_inbox.retire(identity)
             self._work.finish(identity, _cause, self._clock())
         self._pending_job = None
-        self._pending_ground_job = None
         self._pending_connection = None
         self._pending_action_index = None
         self._pending_submitted_tick = None
         self._solve_basis_job = None
-        self._ground_solve_basis_job = None
-
-    def _retry_pending_cancellations(self) -> None:
-        cancel = getattr(self.worker, "cancel", None)
-        if not callable(cancel):
-            self._pending_cancellations.clear()
-            return
-        now = self._clock()
-        for identity, pending in tuple(self._pending_cancellations.items()):
-            status, expires_ns = pending
-            if now >= expires_ns:
-                self._pending_cancellations.pop(identity, None)
-                self.last_failure_reason = "motion_cancel_retry_expired"
-                continue
-            outcome = cancel(identity, status)
-            if outcome in {
-                    True,
-                    MotionWorkerCancelStatus.ACCEPTED,
-                    MotionWorkerCancelStatus.ALREADY_FINISHED,
-                    MotionWorkerCancelStatus.WORKER_UNAVAILABLE,
-            }:
-                self._pending_cancellations.pop(identity, None)
 
     def _record_admission(
         self,
@@ -1544,7 +1170,6 @@ class MotionRouteCoordinator:
                     and (type(result_poll_sequence) is not int
                          or result_poll_sequence < 0))):
             raise ContractViolation("motion route decision requires current typed state")
-        self._retry_pending_cancellations()
         installed = False
         worker_available = True
         self._sync_local_attempt_chain()
@@ -1562,7 +1187,6 @@ class MotionRouteCoordinator:
             self.last_failure_reason = "motion_solver_worker_died"
             self.executor.cancel()
         elif self._work_expired(anchor):
-            expired_ground = self._ground_solve_basis_job is not None
             expired_connection = self._pending_connection
             expired_action_index = (
                 self._pending_action_index
@@ -1570,8 +1194,6 @@ class MotionRouteCoordinator:
                 else self.executor.action_index
             )
             expired_revision = self._candidate_revision
-            if expired_ground:
-                self.executor.retire_ground_terminal()
             self._retire_work("motion_solver_request_expired")
             assert expired_connection is not None
             attempt_id = (
@@ -1579,13 +1201,7 @@ class MotionRouteCoordinator:
                 "solver-request-expired"
             )
             registration = self._record_local_failure(attempt_id)
-            if expired_ground:
-                self.last_failure_reason = (
-                    "ground_terminal_solver_request_expired"
-                    if registration.verdict is LocalAttemptVerdict.RETRY else
-                    "ground_terminal_retry_exhausted"
-                )
-            elif registration.verdict is LocalAttemptVerdict.RETRY:
+            if registration.verdict is LocalAttemptVerdict.RETRY:
                 self.last_failure_reason = ""
                 if (registration.first_seen
                         and expired_action_index == self.executor.action_index):
@@ -1595,7 +1211,7 @@ class MotionRouteCoordinator:
             else:
                 self.last_failure_reason = "motion_solver_retry_exhausted"
                 self.executor.cancel()
-        elif self._pending_job is not None or self._pending_ground_job is not None:
+        elif self._pending_job is not None:
             self._flush_pending_job()
         available_results = ()
         if self._owns_result_inbox and self._work_identity is None:
@@ -1617,22 +1233,8 @@ class MotionRouteCoordinator:
                 result = self.result_inbox.peek(self._work_identity)
                 if result is not None:
                     self._sample_solve_delivery(result, anchor, current_scope=current_scope)
-                proof = (None if type(result) is not GapMotionSolveResult
-                         else result.solve_result.proof)
-                ground_sequence = (
-                    result.search_result.sequence
-                    if type(result) is GroundTerminalSolveResult else None
-                )
-                ready_to_take = (
-                    ground_sequence is None
-                    or anchor.movement_tick_id + 1
-                        >= ground_sequence.execution_window.earliest_start_tick
-                ) if type(result) is GroundTerminalSolveResult else (
-                    proof is None
-                    or anchor.movement_tick_id + 1
-                        >= proof.execution_window.earliest_start_tick
-                )
-                if ready_to_take:
+                proof = None if result is None else result.solve_result.proof
+                if proof is None or anchor.movement_tick_id + 1 >= proof.execution_window.earliest_start_tick:
                     available_results = self.result_inbox.take(self._work_identity)
         for result in available_results:
             installed = self._accept_result(
@@ -1676,57 +1278,6 @@ class MotionRouteCoordinator:
             movement_yaw_radians=movement_yaw_radians,
         )
         self._sync_local_attempt_chain()
-        if self._ground_beam_requested:
-            self._ground_beam_requested = False
-            safe_prep = verified_ground_rollout(
-                frame, anchor.physics_state, MovementV1(),
-                control_ticks=1, tail_ticks=30,
-                minimum_support=.15,
-            )
-            if (safe_prep is not None
-                    and self._submit_ground_terminal(
-                        frame, anchor,
-                        preparation_ticks=GROUND_TERMINAL_BEAM_PREPARATION_TICKS,
-                        replace_pending_basis=True,
-                    )):
-                decision = replace(
-                    decision,
-                    state=ActionRouteState.RUNNING,
-                    movement=MovementV1(), look=None,
-                    input_lease_ticks=1,
-                    reason_code="preparing_ground_terminal_beam",
-                    submit_input=True,
-                    verified_command_index=None,
-                    expected_movement_tick=None,
-                    latest_movement_tick=None,
-                )
-            else:
-                self.executor.retire_ground_terminal()
-                self.last_failure_reason = "ground_terminal_beam_preparation_unproved"
-        elif (worker_available
-                and decision.reason_code in _GROUND_TERMINAL_FAILURE_REASONS
-                and frame.body.is_on_ground
-                and frame.body.pose == "standing"
-                and self._local_attempts.failure_count
-                    < self._local_attempts.maximum_failures
-                and verified_ground_rollout(
-                    frame, anchor.physics_state, MovementV1(),
-                    control_ticks=1, tail_ticks=30,
-                    minimum_support=.15,
-                ) is not None
-                and self._submit_ground_terminal(frame, anchor)):
-            decision = replace(
-                decision,
-                state=ActionRouteState.RUNNING,
-                movement=MovementV1(),
-                look=None,
-                input_lease_ticks=1,
-                reason_code="awaiting_ground_terminal_sequence",
-                submit_input=True,
-                verified_command_index=None,
-                expected_movement_tick=None,
-                latest_movement_tick=None,
-            )
         if (decision.ground_handoff_disposition is GroundHandoffDisposition.REJECTED
                 and self._solve_basis_job is not None
                 and self._solve_basis_job.entry_prefix):

@@ -1,0 +1,16 @@
+{
+  "schema_version": "mc2p.f2rec-r1-tool-provenance.v1",
+  "branch": "codex/f2r-recovery",
+  "head_commit": "e913118168dbed2ce269f2f82bf07883b932c9cc",
+  "worktree_clean": false,
+  "formal_platform": "windows",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "files": {
+    "scripts/f2rec_r0_v9.py": "36cb6fd83d3785b0104bddd1773bb86b01366321b2e26a33be35c85828507007",
+    "scripts/f2_ground_route_evidence.py": "e11b89fd858099b629fcc1d179f7b99bc4e91e86140b2f772765f7dca0a11a07",
+    "scripts/f2r_piecewise_evidence.py": "cc928fecd26bc251b69978a66eb09a95a4848d03f5067c590bec1217693e3522",
+    "scripts/run_motion_navigation_checks.py": "46c3e27a0b8fe7f97a7f5acf953f9b329596592f0e316ef57daca50fc2765f34",
+    "tests/sim/f2s_cases.py": "3e9af1ebb6598d7bd61424d2cdf96a722a7fa940c2a5d23bf6f6aee47f8ad993"
+  }
+}

@@ -16,40 +16,10 @@ from scripts.benchmark_d061_long_session import (
     _timing_gates,
     _gen2_coverage,
 )
-from scripts.f2_ground_route_evidence import (
-    _FrameTimingRecorder as _HotpathFrameTimingRecorder,
-)
-
-
 ROOT = Path(__file__).resolve().parents[2]
 
 
 class D061LongSessionBenchmarkTests(unittest.TestCase):
-    def test_hotpath_recorder_reports_nested_exclusive_time_and_residual(self):
-        class Clock:
-            value = 0
-            def __call__(self): return self.value
-        clock = Clock()
-        recorder = _HotpathFrameTimingRecorder(clock)
-        clock.value += 2
-        with recorder.segment("session_propose"):
-            clock.value += 3
-            with recorder.segment("fixed_route_verifier"):
-                clock.value += 5
-            clock.value += 7
-        clock.value += 11
-        result = recorder.finish()
-        self.assertEqual(result["production_prepare_ms"], 28 / 1e6)
-        self.assertEqual(
-            result["production_segments_inclusive_ms"],
-            {"fixed_route_verifier": 5 / 1e6, "session_propose": 15 / 1e6},
-        )
-        self.assertEqual(
-            result["production_segments_exclusive_ms"],
-            {"fixed_route_verifier": 5 / 1e6, "session_propose": 10 / 1e6},
-        )
-        self.assertEqual(result["production_unattributed_ms"], 13 / 1e6)
-
     def test_frame_recorder_directly_counts_runtime_shell_around_backend_without_overlap(self):
         class Clock:
             value = 0

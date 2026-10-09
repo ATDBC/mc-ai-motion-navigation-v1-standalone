@@ -647,58 +647,19 @@ class ActionRouteExecutor:
                 VerifiedMotionExecutorState.RUNNING,
                 VerifiedMotionExecutorState.RECOVERING,
             }
-        if (type(self._controller) is FixedRouteController
-                and self._controller.ground_terminal_holds_body):
-            return True
         return action_spec(self.route.actions[self.action_index]).body_commitment is BodyCommitment.TRANSITION
 
     def register_verified_submission(
             self, command_index: int, *, control_sequence: int,
             requested_movement_tick: int,
             requested_latest_movement_tick: int | None = None) -> None:
-        if type(self._controller) is VerifiedMotionExecutor:
-            self._controller.register_submission(
-                command_index, control_sequence=control_sequence,
-                requested_movement_tick=requested_movement_tick,
-                requested_latest_movement_tick=requested_latest_movement_tick,
-            )
-            return
-        if type(self._controller) is FixedRouteController:
-            self._controller.register_ground_terminal_submission(
-                command_index, control_sequence=control_sequence,
-                requested_movement_tick=requested_movement_tick,
-                requested_latest_movement_tick=requested_latest_movement_tick,
-            )
-            return
-        raise ContractViolation("current route action is not verified motion")
-
-    def begin_ground_terminal_solve(self, request) -> bool:
-        if type(self._controller) is not FixedRouteController:
-            return False
-        accepted = self._controller.begin_ground_terminal_solve(request)
-        if accepted:
-            self.state = ActionRouteState.RUNNING
-        return accepted
-
-    def install_ground_terminal_sequence(
-        self, sequence, anchor: StateAnchor,
-        input_ledger: InputApplicationLedger | None = None,
-    ) -> bool:
-        if type(self._controller) is not FixedRouteController:
-            return False
-        return self._controller.install_ground_terminal_sequence(
-            sequence, anchor, input_ledger,
+        if type(self._controller) is not VerifiedMotionExecutor:
+            raise ContractViolation("current route action is not verified motion")
+        self._controller.register_submission(
+            command_index, control_sequence=control_sequence,
+            requested_movement_tick=requested_movement_tick,
+            requested_latest_movement_tick=requested_latest_movement_tick,
         )
-
-    def retire_ground_terminal(self) -> None:
-        if type(self._controller) is FixedRouteController:
-            self._controller.retire_ground_terminal()
-
-    @property
-    def ground_terminal_active(self) -> bool:
-        return (type(self._controller) is FixedRouteController
-                and (self._controller.ground_terminal_active
-                     or self._controller.ground_terminal_pending))
 
     def request_stop(self, cause: StopCause) -> None:
         if type(cause) is not StopCause:
@@ -1008,7 +969,6 @@ class ActionRouteExecutor:
             decision = self._controller.decide(
                 movement_frame, input_confirmed=input_confirmed,
                 physics_state=ground_state,query_cache=ground_cache,
-                state_anchor=state_anchor, input_ledger=input_ledger,
             )
             if type(decision) is not FixedRouteDecision:
                 raise ContractViolation(
@@ -1082,23 +1042,16 @@ class ActionRouteExecutor:
                 first_command=first_command,
                 minimum_support=self._controller.config.minimum_support_fraction,
             )
-            ground_verified = decision.verified_command_index is not None
             return self._result(
                 started, decision.movement, decision.input_lease_ticks,
                 decision.reason, decision.missing_cells,
-                submit_input=decision.submit_input,
-                verified_command_index=decision.verified_command_index,
                 expected_movement_tick=(
-                    decision.expected_movement_tick
-                    if ground_verified else
-                    None if ordinary_start_window is None else
-                    ordinary_start_window[0]
+                    None if ordinary_start_window is None
+                    else ordinary_start_window[0]
                 ),
                 latest_movement_tick=(
-                    decision.latest_movement_tick
-                    if ground_verified else
-                    None if ordinary_start_window is None else
-                    ordinary_start_window[1]
+                    None if ordinary_start_window is None
+                    else ordinary_start_window[1]
                 ),
                 ground_handoff_disposition=decision.handoff_disposition,
                 route_progress_evidence=progress_evidence,

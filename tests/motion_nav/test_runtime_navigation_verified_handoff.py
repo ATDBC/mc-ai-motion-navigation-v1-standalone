@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import replace
 import time
 import unittest
+from unittest.mock import patch
 
 from mc2p.contracts.action_receipt import behavior_receipt_from_mapping
 from mc2p.contracts.action_v1 import ActionSnapshotV1, MovementV1
@@ -17,6 +18,7 @@ from mc2p.motion_nav.navigation_session import (
 )
 from mc2p.motion_nav.movement_transition import MovementMode
 from mc2p.motion_nav.online_motion import InputApplicationStatus
+from mc2p.motion_nav.motion_worker import MotionSolverWorker
 from mc2p.runtime.backend_v1 import BackendStepResultV1
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1
 from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver, RuntimeNavigationDriverState
@@ -26,9 +28,42 @@ from tests.motion_nav.test_b07_surface_planning import ordinary_profile
 from tests.motion_nav.test_b09_air_transitions import air_profile
 from tests.motion_nav.test_jump_up import jump_profile
 from tests.motion_nav.test_navigation_session import _InlinePlanner, _goal
-from tests.motion_nav.test_navigation_session import _InlineMotionWorker
 from tests.test_action_receipt import receipt_value
 from tests.test_player_runtime import _RecordingTrace
+
+
+class _FixtureMotionWorker(MotionSolverWorker):
+    """Keep real process delivery time outside the fixture's simulated ticks."""
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._fixture_pending = 0
+        self._fixture_results = []
+
+    def submit(self, job):
+        accepted = super().submit(job)
+        self._fixture_pending += int(accepted)
+        return accepted
+
+    def _collect_fixture_results(self):
+        results = super().poll_available()
+        self._fixture_pending -= len(results)
+        self._fixture_results.extend(results)
+
+    def poll_available(self):
+        self._collect_fixture_results()
+        results = tuple(self._fixture_results)
+        self._fixture_results.clear()
+        return results
+
+    def await_fixture_delivery(self):
+        deadline = time.monotonic() + 5.0
+        while self._fixture_pending:
+            if not self.is_alive() or time.monotonic() >= deadline:
+                raise AssertionError("fixture motion process did not deliver its job")
+            self._collect_fixture_results()
+            if self._fixture_pending:
+                time.sleep(.001)
 
 
 class _GapRuntimeBackend:
@@ -198,6 +233,7 @@ class RuntimeVerifiedMotionHandoffTests(unittest.TestCase):
         self, *, change_landing_on_jump=False,
         apply_jump_one_tick_late=False,
         extra_tick_after_second_airborne_command=False,
+        fixture_worker_type=_FixtureMotionWorker,
     ):
         clock = [100_000_000]
         backend = _GapRuntimeBackend(
@@ -224,18 +260,48 @@ class RuntimeVerifiedMotionHandoffTests(unittest.TestCase):
         )
         session = _AnchorInjectionSession(
             "runtime-gap-session", profiles,
-            planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(),
+            planner_worker=_InlinePlanner(),
             clock_ns=lambda: clock[0],
         )
         driver = RuntimeNavigationDriver(runtime, session, clock_ns=lambda: clock[0])
         driver.start("runtime-gap-goal", 1, _goal((.5, 64.0, 2.5)), clock[0])
-        for _ in range(80):
-            result = driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
-            self.assertIsNone(result.report.failure)
-            if result.decision is not None and result.decision.action.movement.jump:
-                return clock, backend, runtime, session, driver
-            time.sleep(.01)
+        # This setup verifies body ownership, not operating-system scheduling.
+        # Solve in the real process, but expose each result on the next
+        # simulated frame. Dedicated delivery tests inject client-tick delays.
+        with patch("mc2p.motion_nav.navigation_session.MotionSolverWorker",
+                   fixture_worker_type):
+            for _ in range(80):
+                result = driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
+                self.assertIsNone(result.report.failure)
+                self.assertFalse(session.report.terminal, session.report.reason)
+                if result.decision is not None and result.decision.action.movement.jump:
+                    return clock, backend, runtime, session, driver
+                worker = session._motion_worker
+                if worker is not None:
+                    worker.await_fixture_delivery()
         self.fail("runtime bridge did not submit the verified gap command")
+
+    def test_fixture_delivery_delay_does_not_spend_simulated_motion_window(self):
+        class DelayedDeliveryWorker(_FixtureMotionWorker):
+            def __init__(self, **kwargs):
+                super().__init__(**kwargs)
+                self.deferred_polls = 0
+
+            def _collect_fixture_results(self):
+                if self._fixture_pending and self.deferred_polls < 100:
+                    self.deferred_polls += 1
+                    return
+                super()._collect_fixture_results()
+
+        clock, backend, runtime, session, driver = self._running_gap(
+            fixture_worker_type=DelayedDeliveryWorker,
+        )
+        self.addCleanup(runtime.close)
+        self.addCleanup(session.close)
+        self.assertEqual(session._motion_worker.deferred_polls, 100)
+        self.assertTrue(backend.airborne)
+        self.assertLess(backend.movement_tick, 20)
+        self.assertIsNone(runtime.last_failure_disposition)
 
     def test_runtime_bridge_keeps_landing_owner_when_anchor_disappears(self):
         clock, backend, runtime, session, driver = self._running_gap()

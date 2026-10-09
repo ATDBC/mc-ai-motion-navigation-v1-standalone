@@ -1,0 +1,21 @@
+{
+  "schema_version": "mc2p.f2rec-r2-allowed-changes.v1",
+  "frozen_before_formal_acceptance": true,
+  "baseline_commit": "686cc0a78c379f2ef87fa3f6201e36fd2c98c49c",
+  "production_scope": [
+    "NavigationSession._surface_for_goal and imports only"
+  ],
+  "allowed": [
+    "reject a face without a positive safe completion region",
+    "select a safe region when historical point samples find none",
+    "bound selector queries using a geometric distance lower bound and local immutable-fact cache"
+  ],
+  "forbidden": [
+    "old success becomes failure",
+    "new safety event",
+    "fallback after exhausted planning budget",
+    "new Session field/state/retry/job",
+    "column_top Walk-to-JumpUp control repair"
+  ],
+  "c04_prior_state": "already GREEN on R1 with preserved F2-R preference; no search fallback needed"
+}

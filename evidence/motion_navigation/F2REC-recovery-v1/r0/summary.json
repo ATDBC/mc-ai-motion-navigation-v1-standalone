@@ -1,0 +1,27 @@
+{
+  "baseline_source": "886ae1fc",
+  "checks": {
+    "forward": "1654/1654",
+    "reverse": "1654/1654"
+  },
+  "d058_passed": true,
+  "d061_production_8_15_30_passed": true,
+  "d061_full_maximum_under_50_passed": true,
+  "d061_following_revision_p95_passed": false,
+  "d061_following_revision_p95_classification": "performance_debt",
+  "formal_platform": "windows",
+  "open_findings": [
+    "Runtime.close does not own or close the Session-created motion worker",
+    "following-revision production P95 is 11.4178 ms and remains performance debt"
+  ],
+  "production_code_modified": false,
+  "ready_for_r1": true,
+  "recovery_plan_commit": "a4e3bcf2",
+  "schema_version": "mc2p.f2rec-r0-summary.v1",
+  "v9": {
+    "completed": 64,
+    "red": 152,
+    "safety_events": 0,
+    "tasks": 216
+  }
+}

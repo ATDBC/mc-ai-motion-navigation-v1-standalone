@@ -1,0 +1,18 @@
+{
+  "schema_version": "mc2p.f2rec-r2-selection-probe.v1",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "baseline_commit": "686cc0a78c379f2ef87fa3f6201e36fd2c98c49c",
+  "comparison": {
+    "tasks": 1904,
+    "equal": 1904,
+    "changes": []
+  },
+  "follow_clutter_selection_ms": {
+    "samples": 600,
+    "p50": 2.1355,
+    "p95": 2.567,
+    "p99": 2.6688,
+    "maximum": 8.9127
+  },
+  "timing_boundary": "Selector only, excludes test-world creation; complete production frame uses D061."
+}

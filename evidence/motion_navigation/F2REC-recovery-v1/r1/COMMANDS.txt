@@ -1,0 +1,14 @@
+停止清理后的直接检查：
+.venv\python.exe -m unittest tests.motion_nav.test_d058_validation_plan tests.motion_nav.test_d059_terminal_selection_dependencies tests.motion_nav.test_d059_consumers_and_identity tests.motion_nav.test_d060_terminal_node_exact_proof
+.venv\python.exe -m unittest tests.motion_nav.test_f2rec_r1_region_geometry
+.venv\python.exe -m unittest tests.motion_nav.test_f2_ground_completion_region
+.venv\python.exe -m unittest tests.motion_nav.test_f2r_piecewise_completion
+
+停止前的完整正序（未通过，保留原记录）：
+.venv\python.exe -m scripts.run_motion_navigation_checks --output evidence/motion_navigation/F2REC-recovery-v1/r1/full-forward.json
+
+没有运行完整逆序，也没有在停止清理后重跑 v9、F2 528 或 v8。
+
+2026-10-09 D091 范围调整后的签署命令（生产代码不变）：
+.venv\python.exe -m scripts.run_motion_navigation_checks --output evidence/motion_navigation/F2REC-recovery-v1/r1/full-forward-signature.json
+.venv\python.exe -m scripts.run_motion_navigation_checks --reverse --output evidence/motion_navigation/F2REC-recovery-v1/r1/full-reverse-signature.json

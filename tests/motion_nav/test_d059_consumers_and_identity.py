@@ -62,7 +62,6 @@ from tests.motion_nav.test_navigation_session import (
     _InlinePlanner,
     _ground_anchor,
     _source,
-    _InlineMotionWorker,
 )
 from tests.observation_v3_fixtures import valid_snapshot_v3
 
@@ -115,7 +114,7 @@ def _oracle_session(*, exact_terminal: bool):
         NavigationSessionProfiles(
             ordinary_profile(), jump_profile(), step_profile(),
         ),
-        planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(),
+        planner_worker=_InlinePlanner(),
         clock_ns=lambda: 1_000_000_000,
     )
     session.attach_observation_adapter(adapter)
@@ -163,8 +162,7 @@ def _oracle_session(*, exact_terminal: bool):
                     2_000_000_000,
                     input_ledger=InputApplicationLedger(),
                 )
-    if (exact_terminal
-            and proposal.report.state is not NavigationSessionState.EXECUTING):
+    if proposal.report.state is not NavigationSessionState.EXECUTING:
         raise AssertionError(proposal.report)
     return session, proposal, session.active_route, selection_only
 
@@ -218,6 +216,7 @@ class D059ConsumersAndIdentityTests(unittest.TestCase):
             recipe for recipe in route.validation_plan.recipes
             if recipe.query_kind
                 is WalkValidationQueryKind.STANDABLE_CONNECTION
+            and recipe.standable_connection.position[0] == 2.45
         )
         return world, candidate, control, supervisor, ledger, terminal
 
@@ -450,6 +449,7 @@ class D059ConsumersAndIdentityTests(unittest.TestCase):
                 recipe for recipe in route.validation_plan.recipes
                 if recipe.query_kind
                     is WalkValidationQueryKind.STANDABLE_CONNECTION
+                and recipe.standable_connection.position[0] == 2.45
             )
             self.assertNotIn(selection_only, effective)
             self.assertTrue(set(exact.dependencies).issubset(effective))
@@ -478,21 +478,37 @@ class D059ConsumersAndIdentityTests(unittest.TestCase):
         finally:
             session.close()
 
-    def test_unproved_terminal_is_rejected_instead_of_protecting_selection_scan(self):
+    def test_no_exact_consumers_keep_full_terminal_selection_dependencies(self):
         session, proposal, route, selection_only = _oracle_session(
             exact_terminal=False,
         )
         try:
-            self.assertIs(proposal.report.state, NavigationSessionState.FAILED)
-            self.assertEqual(
-                proposal.report.reason,
-                "goal_standing_point_unavailable",
-            )
-            self.assertIsNone(route)
-            self.assertNotIn(
-                selection_only,
-                proposal.control_frame.observation_request.air_positions,
-            )
+            tracker = ActiveRouteTracker(route)
+            effective = tracker.effective_dependencies
+            self.assertIn(selection_only, effective)
+            self.assertFalse(any(
+                recipe.query_kind
+                    is WalkValidationQueryKind.STANDABLE_CONNECTION
+                and recipe.standable_connection.position[0] == 2.45
+                for recipe in route.validation_plan.recipes
+            ))
+
+            requested = self._requested_dependencies(session, proposal, effective)
+            self.assertIn(selection_only, requested)
+            self.assertTrue(set(effective).issubset(requested))
+
+            protected = []
+            original = WorldKnowledge.set_protection
+
+            def record(owner, center, dependencies):
+                protected.append(dependencies)
+                return original(owner, center, dependencies)
+
+            with patch.object(WorldKnowledge, "set_protection", new=record):
+                session.ingest(_snapshot(2))
+
+            self.assertIn(selection_only, protected[-1])
+            self.assertEqual(set(protected[-1]), set(effective))
         finally:
             session.close()
 

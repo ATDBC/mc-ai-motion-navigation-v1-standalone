@@ -36,10 +36,6 @@ from mc2p.motion_nav.online_motion import (
 from mc2p.motion_nav.runtime_adapter import (
     NavigationObservationAdapter, world_session_from_observation,
 )
-from mc2p.motion_nav.motion_worker import (
-    MotionSolverWorker, MotionWorkerHealth, MotionWorkerOwner, MotionWorkerPort,
-    MotionWorkerReadiness,
-)
 
 _OrderedResult = TypeVar('_OrderedResult')
 
@@ -68,22 +64,12 @@ class PlayerRuntimeV1:
         return self._clock()
 
     def __init__(self, backend: PlayerBackendV1, trace_writer: TraceSinkV0,
-                 clock_ns: Callable[[], int] = time.perf_counter_ns, *,
-                 motion_worker_factory: Callable[[], MotionWorkerOwner] | None = None) -> None:
+                 clock_ns: Callable[[], int] = time.perf_counter_ns) -> None:
         if getattr(backend, "action_schema_version", None) != "mc2p.action-snapshot.v1":
             raise ContractViolation("formal Runtime requires an explicit Action V1 backend")
         self._observation_schema = validate_observation_schema(getattr(backend, "observation_schema_version", None))
         self._observation_type = ObservationSnapshotV3 if self._observation_schema == OBSERVATION_V3 else ObservationSnapshotV2
-        if motion_worker_factory is not None and not callable(motion_worker_factory):
-            raise ContractViolation("motion worker factory must be callable")
         self._backend, self._trace, self._clock = backend, trace_writer, clock_ns
-        self._motion_worker_factory = (
-            motion_worker_factory
-            if motion_worker_factory is not None else
-            lambda: MotionSolverWorker(max_pending=8)
-        )
-        self._motion_worker: MotionWorkerOwner | None = None
-        self._motion_worker_failure_health: MotionWorkerHealth | None = None
         self._arbiter = ActionArbiterV1()
         self._io_lock, self._cancel_lock = threading.RLock(), threading.Lock()
         self._state = RuntimeStateV1.NEW
@@ -134,64 +120,6 @@ class PlayerRuntimeV1:
     @property
     def last_navigation_ingest_ns(self) -> int | None:
         return self._last_navigation_ingest_ns
-
-    @property
-    def motion_worker_health(self) -> MotionWorkerHealth:
-        if self._motion_worker_failure_health is not None:
-            return self._motion_worker_failure_health
-        worker = self._motion_worker
-        if worker is None:
-            return MotionWorkerHealth(
-                MotionWorkerReadiness.STARTING, None, None, None, None,
-            )
-        health = getattr(worker, "health", None)
-        if type(health) is MotionWorkerHealth:
-            return health
-        readiness = (
-            MotionWorkerReadiness.READY
-            if worker.is_alive() else MotionWorkerReadiness.DEAD
-        )
-        return MotionWorkerHealth(
-            readiness, getattr(worker, "pid", None), None,
-            None if readiness is MotionWorkerReadiness.READY else self._clock(),
-            None if readiness is MotionWorkerReadiness.READY else "worker_dead",
-        )
-
-    def borrow_motion_worker(
-        self, existing: MotionWorkerPort | None = None,
-    ) -> MotionWorkerPort | None:
-        """Return Runtime's sole prewarmed worker without transferring ownership."""
-        with self._io_lock:
-            if self._state is RuntimeStateV1.CLOSED:
-                return None
-            if self._motion_worker_failure_health is not None:
-                return None
-            if self._motion_worker is None:
-                try:
-                    worker = (
-                        existing if existing is not None
-                        else self._motion_worker_factory()
-                    )
-                except Exception as error:
-                    self._motion_worker_failure_health = MotionWorkerHealth(
-                        MotionWorkerReadiness.INITIALIZATION_FAILED,
-                        None, None, self._clock(), type(error).__name__,
-                    )
-                    return None
-                if not isinstance(worker, MotionWorkerOwner):
-                    self._motion_worker_failure_health = MotionWorkerHealth(
-                        MotionWorkerReadiness.INITIALIZATION_FAILED,
-                        None, None, self._clock(), "invalid_worker_port",
-                    )
-                    return None
-                self._motion_worker = worker
-            elif existing is not None and existing is not self._motion_worker:
-                raise ContractViolation(
-                    "Runtime already owns a different motion worker"
-                )
-            if self.motion_worker_health.readiness is not MotionWorkerReadiness.READY:
-                return None
-            return self._motion_worker
 
     def apply_failure(self, failure: FailureV0) -> FailureDispositionDecision:
         """Execute one typed lifecycle decision at a Runtime frame boundary."""
@@ -632,7 +560,6 @@ class PlayerRuntimeV1:
                     except Exception as error:
                         self._cleanup_failures.append(self._exception_failure(error, FailureCodeV0.CLEANUP, classify=False))
                     finally:
-                        self._close_motion_worker()
                         self._state = RuntimeStateV1.CLOSED
 
     def _submit_input_record(
@@ -786,24 +713,11 @@ class PlayerRuntimeV1:
         except Exception as error:
             self._cleanup_failures.append(self._exception_failure(error, FailureCodeV0.CLEANUP, classify=False))
 
-    def _close_motion_worker(self) -> None:
-        worker = self._motion_worker
-        if worker is None:
-            return
-        self._motion_worker = None
-        try:
-            worker.close()
-        except Exception as error:
-            self._cleanup_failures.append(self._exception_failure(
-                error, FailureCodeV0.CLEANUP, classify=False,
-            ))
-
     def _seal(self, state: RuntimeStateV1 = RuntimeStateV1.FAILED) -> None:
         self._state = state
         self._force_neutral_reason = None
         self._arbiter.clear()
         self._close_backend()
-        self._close_motion_worker()
 
     def _apply_failure(
         self, failure: FailureV0, *, record: bool,

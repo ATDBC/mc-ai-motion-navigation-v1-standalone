@@ -53,7 +53,6 @@ from tests.motion_nav.test_d060_terminal_node_exact_proof import _world
 from tests.motion_nav.test_jump_up import jump_profile
 from tests.motion_nav.test_navigation_session import (
     _InlinePlanner,
-    _InlineMotionWorker,
     _ground_anchor,
     _source,
 )
@@ -395,7 +394,7 @@ class D064GroundDirectSessionTests(unittest.TestCase):
             NavigationSessionProfiles(
                 ordinary_profile(), jump_profile(), step_profile(),
             ),
-            planner_worker=planner, motion_worker=_InlineMotionWorker(),
+            planner_worker=planner,
             clock_ns=lambda: 1_000_000_000,
         )
         session.bind_source(_source())
@@ -445,7 +444,7 @@ class D064GroundDirectSessionTests(unittest.TestCase):
             NavigationSessionProfiles(
                 ordinary_profile(), jump_profile(), step_profile(),
             ),
-            planner_worker=planner, motion_worker=_InlineMotionWorker(),
+            planner_worker=planner,
             clock_ns=lambda: 1_000_000_000,
         )
         session.bind_source(_source())
@@ -479,7 +478,7 @@ class D064GroundDirectSessionTests(unittest.TestCase):
             NavigationSessionProfiles(
                 ordinary_profile(), jump_profile(), step_profile(),
             ),
-            planner_worker=planner, motion_worker=_InlineMotionWorker(),
+            planner_worker=planner,
             clock_ns=lambda: 1_000_000_000,
         )
         session.bind_source(_source())
@@ -559,7 +558,7 @@ class D064GroundDirectSessionTests(unittest.TestCase):
             NavigationSessionProfiles(
                 ordinary_profile(), jump_profile(), step_profile(),
             ),
-            planner_worker=planner, motion_worker=_InlineMotionWorker(),
+            planner_worker=planner,
             clock_ns=lambda: 1_000_000_000,
         )
         session.bind_source(_source())
@@ -676,7 +675,7 @@ class D064GroundDirectSessionTests(unittest.TestCase):
             NavigationSessionProfiles(
                 ordinary_profile(), jump_profile(), step_profile(),
             ),
-            planner_worker=planner, motion_worker=_InlineMotionWorker(),
+            planner_worker=planner,
             clock_ns=lambda: 1_000_000_000,
         )
         session.bind_source(_source())
@@ -769,7 +768,7 @@ class D064GroundDirectSessionTests(unittest.TestCase):
             "d064-initial-direct",
             NavigationSessionProfiles.load(
                 Path(__file__).resolve().parents[2]/"config/motion-navigation"),
-            planner_worker=planner, motion_worker=_InlineMotionWorker(),
+            planner_worker=planner,
             clock_ns=lambda: 1_000_000_000,
         )
         session.bind_source(_source())
@@ -835,7 +834,7 @@ class D064GroundDirectSessionTests(unittest.TestCase):
             NavigationSessionProfiles(
                 ordinary_profile(), jump_profile(), step_profile(),
             ),
-            planner_worker=planner, motion_worker=_InlineMotionWorker(),
+            planner_worker=planner,
             clock_ns=lambda: 1_000_000_000,
         )
         session.bind_source(_source())
@@ -875,7 +874,7 @@ class D064GroundDirectSessionTests(unittest.TestCase):
             NavigationSessionProfiles(
                 ordinary_profile(), jump_profile(), step_profile(),
             ),
-            planner_worker=_InlinePlanner(hold_first=True), motion_worker=_InlineMotionWorker(),
+            planner_worker=_InlinePlanner(hold_first=True),
             clock_ns=lambda: 1_000_000_000,
         )
         session.bind_source(_source())
@@ -928,7 +927,7 @@ class D064GroundDirectSessionTests(unittest.TestCase):
             NavigationSessionProfiles(
                 ordinary_profile(), jump_profile(), step_profile(),
             ),
-            planner_worker=planner, motion_worker=_InlineMotionWorker(),
+            planner_worker=planner,
             clock_ns=lambda: 1_000_000_000,
         )
         session.bind_source(_source())
@@ -1051,7 +1050,7 @@ class D064GroundDirectSessionTests(unittest.TestCase):
             NavigationSessionProfiles(
                 ordinary_profile(), jump_profile(), step_profile(),
             ),
-            planner_worker=planner, motion_worker=_InlineMotionWorker(),
+            planner_worker=planner,
             clock_ns=lambda: 1_000_000_000,
         )
         session.bind_source(_source())
@@ -1180,7 +1179,7 @@ class D064GroundDirectSessionTests(unittest.TestCase):
             NavigationSessionProfiles(
                 ordinary_profile(), jump_profile(), step_profile(),
             ),
-            planner_worker=_InlinePlanner(hold_first=True), motion_worker=_InlineMotionWorker(),
+            planner_worker=_InlinePlanner(hold_first=True),
             clock_ns=lambda: 1_000_000_000,
         )
         session.bind_source(_source())

@@ -1,0 +1,15 @@
+{
+  "status": "superseded-supplemental-only",
+  "reason": "Initial commands used global Python 3.14 instead of formal .venv Python 3.11; all signing gates rerun with .venv. Export import test failed due missing psutil only in global Python. Global D061 was interrupted.",
+  "formal_executable": ".venv/python.exe",
+  "formal_python": "3.11.16",
+  "supplemental_executable": "D:/Admin/Programs/Python/Python3/python.exe",
+  "supplemental_artifact_locations": [
+    ".tmp/f2rec-r2-v9",
+    ".tmp/f2rec-r2-v8-fixed",
+    ".tmp/f2rec-r2-v8-clutter",
+    ".tmp/f2rec-r2-f2-528",
+    ".tmp/f2rec-r2-d058",
+    ".tmp/f2rec-r2-selection.json"
+  ]
+}

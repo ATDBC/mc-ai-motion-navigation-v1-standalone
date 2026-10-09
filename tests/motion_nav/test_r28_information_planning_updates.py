@@ -23,7 +23,6 @@ from tests.motion_nav import test_navigation_session as session_fixtures
 from tests.motion_nav import test_planning_coordinator as planning_fixtures
 from tests.motion_nav import test_route_body_advance as route_fixtures
 from tests.motion_nav.test_navigation_session import _InlinePlanner
-from tests.motion_nav.test_navigation_session import _InlineMotionWorker
 from tests.motion_nav.test_planning_coordinator import (
     _DeferredPlanner, _request, _permit, _world,
 )
@@ -144,7 +143,7 @@ class PlanningDeliveryFactsTests(unittest.TestCase):
         world = _world()
         fixture = session_fixtures.NavigationSessionTests()
         session = NavigationSession("routing-order", fixture.profiles(),
-                                    planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(), clock_ns=lambda: 1_000_000_000)
+                                    planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000)
         self.addCleanup(session.close)
         current = frame(world, 0, (-.5, 1., .5))
         session.start(_request(world), current)
@@ -166,7 +165,7 @@ class PlanningDeliveryFactsTests(unittest.TestCase):
         world = _world()
         current = frame(world, 0, (-.5, 1., .5))
         session = NavigationSession("delivery-only", session_fixtures.NavigationSessionTests().profiles(),
-                                    planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(), clock_ns=lambda: 1_000_000_000)
+                                    planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000)
         self.addCleanup(session.close)
         session.start(_request(world), current)
         owner = session._planning_coordinator
@@ -258,7 +257,7 @@ class SameFrameProbeStoppingTests(unittest.TestCase):
         world = _world()
         current = frame(world, 0, (-.5, 1., .5))
         session = NavigationSession("pending-probe-terminal", session_fixtures.NavigationSessionTests().profiles(),
-                                    planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(), clock_ns=lambda: 1_000_000_000)
+                                    planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000)
         self.addCleanup(session.close)
         session.start(_request(world), current)
         session._edge_probe = LandingEdgeProbe(session._request.goal_id, 1, (0, 0, 0), 0)

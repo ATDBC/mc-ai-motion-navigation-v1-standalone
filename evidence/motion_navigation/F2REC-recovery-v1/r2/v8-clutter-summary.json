@@ -1,0 +1,141 @@
+{
+  "mode": "clutter-formal",
+  "cases": 1800,
+  "source_commit": "686cc0a78c379f2ef87fa3f6201e36fd2c98c49c",
+  "source_worktree_clean": false,
+  "production_sha256": "6cb3e7c8991a205dd5049abe723aa61324fd67d797ae7069a2829a2afbdc4679",
+  "manifest_sha256": "c29e9158f461a647ae1b34ace278a3652e67052e3d9fcb80282fe517bf09efd6",
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "by_layer": {
+    "clutter_10/follow": {
+      "cases": 300,
+      "results": {
+        "success": 300
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 296,
+      "control_ms": {
+        "p50": 0.6175,
+        "p95": 1.1574,
+        "p99": 2.2556,
+        "maximum": 4.3625
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 4.0646
+    },
+    "clutter_10/melee": {
+      "cases": 300,
+      "results": {
+        "success": 298,
+        "failed": 2
+      },
+      "reasons": {
+        "fixed_route_has_no_forward_control": 1,
+        "fixed_route_stalled": 1
+      },
+      "safety_events": 0,
+      "verification_complete": 296,
+      "control_ms": {
+        "p50": 0.6171,
+        "p95": 1.1925,
+        "p99": 2.2717,
+        "maximum": 4.8814
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 4.3365
+    },
+    "clutter_10/product": {
+      "cases": 300,
+      "results": {
+        "success": 286,
+        "failed": 14
+      },
+      "reasons": {
+        "goal_surface_unavailable": 13,
+        "fixed_route_stalled": 1
+      },
+      "safety_events": 0,
+      "verification_complete": 284,
+      "control_ms": {
+        "p50": 0.603,
+        "p95": 1.2349,
+        "p99": 2.6527,
+        "maximum": 4.6804
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 4.0821
+    },
+    "clutter_20/follow": {
+      "cases": 300,
+      "results": {
+        "success": 286,
+        "failed": 14
+      },
+      "reasons": {
+        "planning_no_known_route": 14
+      },
+      "safety_events": 0,
+      "verification_complete": 298,
+      "control_ms": {
+        "p50": 0.5972,
+        "p95": 1.7173,
+        "p99": 3.5974,
+        "maximum": 4.3711
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 4.2418
+    },
+    "clutter_20/melee": {
+      "cases": 300,
+      "results": {
+        "success": 283,
+        "failed": 17
+      },
+      "reasons": {
+        "planning_no_known_route": 14,
+        "fixed_route_has_no_forward_control": 3
+      },
+      "safety_events": 0,
+      "verification_complete": 298,
+      "control_ms": {
+        "p50": 0.5965,
+        "p95": 1.7514,
+        "p99": 3.5915,
+        "maximum": 4.4135
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 4.1096
+    },
+    "clutter_20/product": {
+      "cases": 300,
+      "results": {
+        "success": 264,
+        "failed": 36
+      },
+      "reasons": {
+        "planning_no_known_route": 13,
+        "fixed_route_has_no_forward_control": 4,
+        "goal_surface_unavailable": 17,
+        "fixed_route_stalled": 2
+      },
+      "safety_events": 0,
+      "verification_complete": 281,
+      "control_ms": {
+        "p50": 0.5881,
+        "p95": 1.9801,
+        "p99": 3.6168,
+        "maximum": 4.9016
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 4.214
+    }
+  }
+}

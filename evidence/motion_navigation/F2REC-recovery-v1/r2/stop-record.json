@@ -1,0 +1,27 @@
+{
+  "schema_version": "mc2p.f2rec-r2-stop.v1",
+  "signed": false,
+  "candidate_commit": "8b9163a3",
+  "archive_ref": "archive/f2rec-r2-stopped-20261009",
+  "reason": "Two performance rounds still exceed frozen following revision production P95 <= 8 ms.",
+  "round1_d061_revision_p95_ms": 9.4895,
+  "round2_formal_clutter_revision_p95_ms": 8.8542,
+  "limited_production_corrections": 1,
+  "final_targeted_tests": 61,
+  "full_forward_run": false,
+  "full_reverse_run": false,
+  "fabric_run": false,
+  "r3_started": false,
+  "r4_started": false,
+  "production_delta": {
+    "allowed_file": "mc2p/motion_nav/navigation_session.py",
+    "insertions": 64,
+    "deletions": 22,
+    "net": 42,
+    "new_session_fields": 0,
+    "new_session_methods": 0,
+    "new_session_states": 0,
+    "new_job_types": 0
+  },
+  "handoff": "Candidate is isolated on the archive ref. Keep raw failure evidence; do not merge it into the recovery mainline, extend scope, or relabel unsigned work as complete."
+}

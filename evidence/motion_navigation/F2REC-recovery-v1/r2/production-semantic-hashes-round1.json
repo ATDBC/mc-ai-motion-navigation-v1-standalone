@@ -1,0 +1,8 @@
+{
+  "schema_version": "mc2p.f2rec-r2-production-semantic-hashes.v1",
+  "baseline_commit": "686cc0a78c379f2ef87fa3f6201e36fd2c98c49c",
+  "files": {
+    "mc2p/motion_nav/navigation_session.py": "477ad2992e6fc863e9f01d50f8e3a183023442a0c14079d22f305e017a25d6bd"
+  },
+  "status": "round1-superseded-performance-failed"
+}

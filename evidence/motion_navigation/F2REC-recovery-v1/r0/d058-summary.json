@@ -1,0 +1,24 @@
+{
+  "complete_prepare": {
+    "retained_samples": 3414,
+    "statistics": {
+      "maximum_ms": 16.5112,
+      "maximum_ns": 16511200,
+      "p50_ms": 3.9479,
+      "p50_ns": 3947900,
+      "p95_ms": 4.9727,
+      "p95_ns": 4972700,
+      "p99_ms": 5.6631,
+      "p99_ns": 5663100,
+      "samples": 3414
+    }
+  },
+  "gates": {
+    "all_passed": true,
+    "complete_prepare_passed": true,
+    "route_revalidation_p95_passed": true
+  },
+  "route_groups": 6,
+  "schema_version": "mc2p.d058-route-revalidation-performance.v1",
+  "source_artifact_sha256": "2902bd6b1f3705155185a8d6fc3ec58bea18d56ce86fa68216098047a13b86f3"
+}

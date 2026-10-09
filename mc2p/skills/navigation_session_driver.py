@@ -32,7 +32,6 @@ from mc2p.motion_nav.navigation_session import (
     NavigationSessionPort, NavigationSessionProposal, NavigationSessionState,
 )
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
-from mc2p.motion_nav.motion_worker import MotionWorkerReadiness
 from mc2p.runtime.player_runtime_v1 import (
     PlayerRuntimeV1, RuntimeStateV1, RuntimeStepResultV1,
 )
@@ -101,16 +100,6 @@ class RuntimeNavigationDriver:
         session.attach_observation_adapter(
             runtime.navigation_observation_adapter,
         )
-        self._motion_worker_available = True
-        attach_motion_worker = getattr(session, "attach_motion_worker", None)
-        self._requires_motion_worker = callable(attach_motion_worker)
-        if callable(attach_motion_worker):
-            worker = runtime.borrow_motion_worker(
-                getattr(session, "borrowed_motion_worker", None),
-            )
-            self._motion_worker_available = worker is not None
-            if worker is not None:
-                attach_motion_worker(worker)
         self.runtime = runtime
         self.session = session
         self._clock = clock_ns
@@ -177,15 +166,6 @@ class RuntimeNavigationDriver:
             raise ContractViolation("runtime navigation driver already owns input")
         if type(goal) is not GoalState:
             raise ContractViolation("runtime navigation requires GoalState")
-        if (self._requires_motion_worker
-                and (not self._motion_worker_available
-                     or self.runtime.motion_worker_health.readiness
-                        is not MotionWorkerReadiness.READY)):
-            self._set_state(
-                RuntimeNavigationDriverState.FAILED,
-                "motion_worker_unavailable",
-            )
-            return
         frame = self.session.ingest(self.runtime.observation)
         self.source = self.runtime.register_ordered_source("navigation-session")
         self.session.bind_source(self.source)

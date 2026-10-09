@@ -1,0 +1,16 @@
+{
+  "tests": 2,
+  "failures": [
+    {
+      "test": "tests.motion_nav.test_f2rec_r2_goal_selection.RecoveryGoalSelectionTests.test_no_positive_completion_region_cannot_be_selected",
+      "traceback": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\tests\\motion_nav\\test_f2rec_r2_goal_selection.py\", line 28, in test_no_positive_completion_region_cannot_be_selected\n    self.assertIsNone(node)\nAssertionError: SurfaceNodeId(column_x=0, column_z=0, vertical_band=64, surface_index=0) is not None\n"
+    },
+    {
+      "test": "tests.motion_nav.test_f2rec_r2_goal_selection.RecoveryGoalSelectionTests.test_follow_goal_queries_only_faces_that_can_change_the_old_choice",
+      "traceback": "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\tests\\motion_nav\\test_f2rec_r2_goal_selection.py\", line 46, in test_follow_goal_queries_only_faces_that_can_change_the_old_choice\n    self.assertEqual(query.call_count, 1)\nAssertionError: 0 != 1\n"
+    }
+  ],
+  "errors": 0,
+  "baseline_commit": "686cc0a78c379f2ef87fa3f6201e36fd2c98c49c",
+  "injection": "test-only frozen original selector; production file was not changed"
+}

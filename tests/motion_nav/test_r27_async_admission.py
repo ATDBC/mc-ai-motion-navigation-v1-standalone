@@ -11,8 +11,7 @@ from mc2p.motion_nav.async_work import (
     AsyncWorkIdentity, AsyncWorkKind, AsyncWorkLifecycle, AsyncWorkWindow, WorkCheck,
 )
 from mc2p.motion_nav.motion_worker import (
-    GapMotionSolveResult, MotionResultInbox, MotionWorkerCancelStatus,
-    MotionWorkerHealth, MotionWorkerReadiness, _execute_job,
+    GapMotionSolveResult, MotionResultInbox, _execute_job,
 )
 from mc2p.motion_nav.motion_solver import SolveResult, SolveStatus
 from mc2p.motion_nav.motion_coordination import MotionRouteCoordinator
@@ -54,7 +53,6 @@ from tests.motion_nav import test_runtime_navigation_verified_handoff as runtime
 from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
 from mc2p.motion_nav.navigation_session import NavigationSession, NavigationSessionProfiles
 from tests.motion_nav.test_navigation_session import _InlinePlanner, _goal
-from tests.motion_nav.test_navigation_session import _InlineMotionWorker
 from tests.motion_nav import test_navigation_session as session_fixtures
 from tests.motion_nav.test_b07_surface_planning import ordinary_profile
 from mc2p.contracts.action_receipt import behavior_receipt_from_mapping
@@ -71,13 +69,6 @@ class DeferredMotionWorker:
     def poll_available(self):
         results, self.results = tuple(self.results), []
         return results
-    @property
-    def health(self):
-        return MotionWorkerHealth(
-            MotionWorkerReadiness.READY, None, 0, None, None,
-        )
-    def cancel(self, identity, _status=None):
-        return MotionWorkerCancelStatus.ACCEPTED
     def close(self):
         pass
     def is_alive(self):
@@ -217,7 +208,7 @@ class R27IdentityTests(unittest.TestCase):
                 start, goal = session_fixtures._nodes(world, (-1, 1))
                 clock = [1_000_000_000]
                 session = NavigationSession("late-fact", session_fixtures.NavigationSessionTests().profiles(),
-                    planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(), clock_ns=lambda: clock[0])
+                    planner_worker=_InlinePlanner(), clock_ns=lambda: clock[0])
                 session.bind_source(session_fixtures._source())
                 current = planning_fixtures.frame(world, 0, start.position)
                 session.start(planning_fixtures.SurfacePlanningRequest(1, "request", "goal", 1,

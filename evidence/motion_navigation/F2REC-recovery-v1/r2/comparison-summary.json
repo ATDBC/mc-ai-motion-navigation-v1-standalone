@@ -1,0 +1,2027 @@
+{
+  "schema_version": "mc2p.f2rec-r2-comparison.v1",
+  "formal_platform": "windows",
+  "python_executable": ".venv/python.exe",
+  "status": "unsigned-performance-stop-round2",
+  "v8": {
+    "tasks": 1904,
+    "completed": 1821,
+    "old_success_regressions": [],
+    "new_completed": [
+      "f2r/clutter/0.2/10/12/melee",
+      "f2r/clutter/0.2/11/22/product"
+    ],
+    "changes_against_f2r": [
+      {
+        "id": "f2r/outer_corner/product/north/normal",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/outer_corner/product/north/first_late",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/outer_corner/product/west/normal",
+        "changed_fields": [
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/outer_corner/product/west/first_late",
+        "changed_fields": [
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/outer_corner/melee/south/normal",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/outer_corner/melee/south/first_late",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/outer_corner/follow/north/normal",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/outer_corner/follow/north/first_late",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/diagonal_pillar/product/north/normal",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/diagonal_pillar/product/north/first_late",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/diagonal_pillar/product/west/normal",
+        "changed_fields": [
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/diagonal_pillar/product/west/first_late",
+        "changed_fields": [
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/diagonal_pillar/melee/south/normal",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/diagonal_pillar/melee/south/first_late",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/diagonal_pillar/follow/north/normal",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/diagonal_pillar/follow/north/first_late",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/two_pillars/product/north/normal",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/two_pillars/product/north/first_late",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/two_pillars/product/west/normal",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/two_pillars/product/west/first_late",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/two_pillars/melee/south/normal",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/two_pillars/melee/south/first_late",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/two_pillars/follow/south/normal",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/two_pillars/follow/south/first_late",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/two_pillars/follow/north/normal",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/two_pillars/follow/north/first_late",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/multi_cell/product/north/normal",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/multi_cell/product/north/first_late",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/multi_cell/follow/north/normal",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/multi_cell/follow/north/first_late",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/diagonal_approach/product/north/normal",
+        "changed_fields": [
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/diagonal_approach/product/north/first_late",
+        "changed_fields": [
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/diagonal_approach/melee/south/normal",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/diagonal_approach/melee/south/first_late",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/diagonal_approach/melee/north/normal",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/diagonal_approach/melee/north/first_late",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/0/18/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/0/19/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/0/19/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/0/21/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/0/21/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/1/1/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/1/8/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/1/13/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/1/24/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/2/1/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/2/1/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/2/8/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/2/8/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/2/9/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/2/10/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/2/10/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/2/21/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/2/23/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/3/8/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/3/12/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/3/12/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/3/13/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/3/16/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/4/1/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/4/1/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/4/4/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/4/4/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/4/9/product",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/4/9/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/4/9/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/4/15/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/4/15/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/5/0/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/5/2/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/5/4/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/6/3/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/6/12/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/6/24/product",
+        "changed_fields": [
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/6/24/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/6/24/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/7/11/product",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/7/11/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/7/16/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/7/17/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/7/19/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/7/19/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/7/22/product",
+        "changed_fields": [
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/7/22/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/7/22/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/8/1/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/8/1/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/8/5/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/8/5/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/8/7/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/8/7/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/8/9/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/8/11/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/8/12/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/8/19/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/8/19/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/9/7/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/9/7/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/9/10/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/9/14/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/10/2/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/10/13/product",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/10/13/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/10/16/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/10/19/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/10/19/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.1/11/2/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/0/0/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/0/3/product",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/0/5/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/0/5/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/0/10/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/0/10/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/0/13/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/0/13/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/0/20/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/0/20/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/0/21/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/0/21/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/1/0/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/1/1/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/1/6/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/1/8/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/1/8/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/1/15/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/1/15/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/1/16/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/1/16/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/1/17/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/1/18/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/1/18/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/1/22/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/1/22/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/1/23/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/1/23/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/2/4/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/2/5/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/2/12/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/2/12/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/2/18/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/3/1/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/3/1/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/3/6/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/3/14/product",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/3/15/product",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/3/15/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/3/15/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/3/17/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/3/17/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/3/18/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/3/23/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/3/23/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/4/2/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/4/6/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/4/6/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/4/11/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/4/14/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/4/15/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/4/15/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/4/23/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/4/23/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/4/24/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/4/24/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/5/4/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/5/5/product",
+        "changed_fields": [
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/5/5/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/5/5/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/5/6/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/5/10/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/5/12/product",
+        "changed_fields": [
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/5/12/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/5/12/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/5/22/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/5/22/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/6/1/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/6/4/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/6/4/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/6/23/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/6/24/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/6/24/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/7/3/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/7/3/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/7/6/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/7/6/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/7/21/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/7/22/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/8/1/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/8/2/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/8/2/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/8/5/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/8/6/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/8/10/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/8/10/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/8/22/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/9/0/product",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/9/1/product",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/9/1/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/9/1/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/9/2/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/9/3/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/9/4/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/9/6/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/9/6/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/9/9/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/9/9/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/9/10/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/9/12/product",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/9/12/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/9/15/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/9/15/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/9/19/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/9/19/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/9/21/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/9/21/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/9/23/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/9/23/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/10/1/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/10/6/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/10/6/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/10/12/melee",
+        "changed_fields": [
+          "outcome",
+          "reason",
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/10/12/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/10/13/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/10/13/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/10/14/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/10/14/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/10/17/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/10/17/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/10/19/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/10/19/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/11/5/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/11/8/product",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/11/12/melee",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/11/14/follow",
+        "changed_fields": [
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      },
+      {
+        "id": "f2r/clutter/0.2/11/22/product",
+        "changed_fields": [
+          "outcome",
+          "reason",
+          "final_position",
+          "inputs_sha256",
+          "trajectory_sha256",
+          "physics_steps"
+        ]
+      }
+    ],
+    "safety_events": 0
+  },
+  "f2_528": {
+    "tasks": 528,
+    "identical_to_r1": true
+  },
+  "r1_56": {
+    "tasks": 56,
+    "identical_fields": [
+      "outcome",
+      "reason",
+      "final_position",
+      "inputs_sha256",
+      "trajectory_sha256",
+      "physics_steps"
+    ],
+    "changed_ids": []
+  },
+  "c04": {
+    "outcome": "success",
+    "identical_to_f2r": true,
+    "fallback_added": false
+  },
+  "v9": {
+    "tasks": 216,
+    "completed": 152,
+    "old_success_regressions": [],
+    "column_top_completed": 0,
+    "safety_events": 0,
+    "damage_events": 0,
+    "source_leaks": 0
+  },
+  "functional_data_scope": "Functional collections ran on round1. Round2 only moves the selector distance lower bound before support-column queries; the 1904-node preference oracle remains exactly equal, but full live collections have not been relabelled as final-source runs.",
+  "stop_reason": "round1 D061 revision P95 9.4895 ms; after the one limited pruning correction, formal clutter revise+prepare P95 remains 8.8542 ms > 8 ms."
+}

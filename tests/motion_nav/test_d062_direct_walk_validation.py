@@ -72,7 +72,6 @@ from tests.motion_nav.test_navigation_session import (
     _InlinePlanner,
     _ground_anchor,
     _source,
-    _InlineMotionWorker,
 )
 
 
@@ -342,7 +341,6 @@ class D062DirectWalkValidationTests(unittest.TestCase):
                 ordinary_profile(), jump_profile(), step_profile(),
             ),
             planner_worker=_InlinePlanner(hold_first=True),
-            motion_worker=_InlineMotionWorker(),
             clock_ns=lambda: 1_000_000_000,
         )
         session.bind_source(_source())
@@ -530,7 +528,7 @@ class D062DirectWalkValidationTests(unittest.TestCase):
             NavigationSessionProfiles(
                 ordinary_profile(), jump_profile(), step_profile(),
             ),
-            planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(),
+            planner_worker=_InlinePlanner(),
             clock_ns=lambda: 1_000_000_000,
         )
         session.bind_source(_source())
@@ -594,7 +592,7 @@ class D062DirectWalkValidationTests(unittest.TestCase):
                     NavigationSessionProfiles(
                         ordinary_profile(), jump_profile(), step_profile(),
                     ),
-                    planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(),
+                    planner_worker=_InlinePlanner(),
                     route_admitter=admitter,
                     clock_ns=lambda: 1_000_000_000,
                 )
@@ -773,7 +771,7 @@ class D062DirectWalkValidationTests(unittest.TestCase):
                     NavigationSessionProfiles(
                         ordinary_profile(), jump_profile(), step_profile(),
                     ),
-                    planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(),
+                    planner_worker=_InlinePlanner(),
                     route_admitter=RejectingAdmitter(),
                     clock_ns=lambda: 1_000_000_000,
                 )
@@ -805,7 +803,7 @@ class D062DirectWalkValidationTests(unittest.TestCase):
             NavigationSessionProfiles(
                 ordinary_profile(), jump_profile(), step_profile(),
             ),
-            planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(),
+            planner_worker=_InlinePlanner(),
             clock_ns=lambda: 1_000_000_000,
         )
         session.bind_source(_source())
@@ -878,7 +876,7 @@ class D062DirectWalkValidationTests(unittest.TestCase):
         finally:
             session.close()
 
-    def test_seq64_outside_air_fact_keeps_already_safe_bound_region(self):
+    def test_seq64_equivalent_air_fact_admits_and_revalidates_local_route(self):
         world = _world(62, 10)
         ledger = InputApplicationLedger()
         position = (.5, -60.0, 9.1)
@@ -888,23 +886,23 @@ class D062DirectWalkValidationTests(unittest.TestCase):
             NavigationSessionProfiles(
                 ordinary_profile(), jump_profile(), step_profile(),
             ),
-            planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(),
+            planner_worker=_InlinePlanner(),
             clock_ns=lambda: 1_000_000_000,
         )
         session.bind_source(_source())
         session.start_goal("d062-seq64-goal", 13, _goal(9.8), initial)
         try:
-            admitted = session.propose(
+            waiting = session.propose(
                 initial,
                 _ground_anchor(initial),
                 2_000_000_000,
                 input_ledger=ledger,
             )
             self.assertIs(
-                admitted.report.state,
-                NavigationSessionState.EXECUTING,
+                waiting.report.state,
+                NavigationSessionState.NEEDS_INFORMATION,
             )
-            self.assertIsNotNone(session.active_route)
+            self.assertIsNone(session.active_route)
 
             changed = ((0, -60, 10), (0, -59, 10))
             world.confirm_air(
@@ -943,14 +941,14 @@ class D062DirectWalkValidationTests(unittest.TestCase):
             self.assertIsNotNone(validation.incumbent)
             self.assertIs(
                 validation.incumbent.disposition,
-                ActiveRouteValidationDisposition.UNAFFECTED,
+                ActiveRouteValidationDisposition.CONTINUE,
             )
             self.assertIs(
                 validation.incumbent.reason,
-                ActiveRouteValidationReason.NO_INTERSECTION,
+                ActiveRouteValidationReason.REVALIDATED,
             )
-            self.assertEqual(validation.incumbent.affected_cells, ())
-            self.assertEqual(validation.incumbent.queries_used, 0)
+            self.assertEqual(validation.incumbent.affected_cells, changed)
+            self.assertEqual(validation.incumbent.queries_used, 2)
             self.assertEqual(session.diagnostics.recovery_total_starts, 0)
             self.assertEqual(
                 dict(session.diagnostics.retry_cause_counts).get(

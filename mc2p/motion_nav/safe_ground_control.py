@@ -30,47 +30,32 @@ class VerifiedGroundRouteCandidate:
     support_boundary_rejected: bool = False
 
 
-class CachedGroundPhysicsWorld(PhysicsWorldView):
+class _CachedGroundPhysicsWorld(PhysicsWorldView):
     """Calculator shapes and material reads share the current control-frame cache."""
     def __init__(self, frame: NavigationFrame, cache: WorldQueryCache):
         super().__init__(frame.world, JAVA_1_21_RULESET)
         self.cache = cache
-        # One verifier frame asks the calculator about the same swept cell
-        # sets for many members of the closed 18-candidate family.  The world
-        # view is immutable, so the complete typed query can be shared.
-        self._shape_cache: dict[
-            tuple[BlockPos, ...], WorldShapeQuery
-        ] = {}
 
     def cell(self, position):
         return self.cache.cell(position)
 
     def shapes(self, positions):
-        requested = tuple(sorted(set(positions)))
-        cached = self._shape_cache.get(requested)
-        if cached is not None:
-            return cached
-        dependencies = set(requested)
+        dependencies = set(positions)
         boxes, missing, unsupported = [], [], []
         for position in sorted(dependencies):
             fact = self.cache.cell(position)
             if fact.knowledge is CellKnowledge.UNKNOWN:
                 above = (position[0], position[1] + 1, position[2])
                 dependencies.add(above)
-                if not unknown_shape_owner_is_fully_covered(
-                        self.cache.world, position, query_cache=self.cache):
+                if not unknown_shape_owner_is_fully_covered(self.cache.world, position):
                     missing.append(position)
             elif fact.block is not None:
                 if fact.block.fluid or fact.block.collision_kind == "unsupported":
                     unsupported.append(position)
                 else:
                     boxes.extend(self.cache.collision_boxes(position))
-        result = WorldShapeQuery(
-            tuple(boxes), tuple(sorted(dependencies)),
-            tuple(missing), tuple(unsupported),
-        )
-        self._shape_cache[requested] = result
-        return result
+        return WorldShapeQuery(tuple(boxes), tuple(sorted(dependencies)),
+                               tuple(missing), tuple(unsupported))
 
 
 def ground_route_state_matches(frame: NavigationFrame, state: PhysicsState | None,
@@ -129,7 +114,7 @@ def verified_ground_route_candidate(
     trajectory: list[PhysicsState] = []
     dependencies: set[BlockPos] = set()
     lowest_support = 1.0
-    tracking_end = state if control_ticks == 0 and state is not None else None
+    tracking_end = None
     steps = 0
     clipped = False
 
@@ -150,7 +135,7 @@ def verified_ground_route_candidate(
     if clearance.status is not QueryStatus.FEASIBLE:
         return finish(clearance.status, "initial_clearance_rejected", clearance.missing_cells)
     current = state
-    world = CachedGroundPhysicsWorld(frame, query_cache)
+    world = _CachedGroundPhysicsWorld(frame, query_cache)
     trajectory.append(state)
     for index in range(control_ticks + tail_ticks):
         if (index >= control_ticks

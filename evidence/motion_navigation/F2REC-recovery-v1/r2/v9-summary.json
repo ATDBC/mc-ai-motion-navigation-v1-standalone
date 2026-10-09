@@ -1,0 +1,22 @@
+{
+  "schema_version": "mc2p.f2rec-r0-v9.v1",
+  "source_commit": "686cc0a78c379f2ef87fa3f6201e36fd2c98c49c",
+  "formal_platform": "windows",
+  "measured_platform": "Windows-10-10.0.26200-SP0",
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "tasks": 216,
+  "completed": 152,
+  "standable_point_exists_but_task_failed": 64,
+  "reason_counts": {
+    "cancelled_after_stop": 12,
+    "fixed_route_stalled": 12,
+    "goal_state_not_satisfied": 28,
+    "goal_state_satisfied": 152,
+    "goal_surface_unavailable": 4,
+    "planning_unsupported": 8
+  },
+  "safety_events": 0,
+  "damage_events": 0,
+  "source_leaks": 0,
+  "terminal_sneaking": 0
+}

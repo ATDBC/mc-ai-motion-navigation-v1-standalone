@@ -1,0 +1,10 @@
+# F2-REC R0 Windows commands
+.venv/python.exe -m unittest discover -s tests/motion_nav -p "test_*.py"
+.venv/python.exe -m scripts.run_motion_navigation_checks --reverse --output <reverse.json>
+.venv/python.exe -m scripts.f2rec_r0_v9 --output <v9-dir> --workers 4
+.venv/python.exe -m scripts.benchmark_d058_route_revalidation --output <d058-dir>
+.venv/python.exe -m scripts.benchmark_d061_long_session --output <d061-dir>
+.venv/python.exe -c "from scripts.f2rec_r0_baseline import collect_ground_hotpaths; print(collect_ground_hotpaths(repeats=5))"
+.venv/python.exe -m unittest tests.motion_nav.test_f2rec_r0_baseline tests.motion_nav.test_d061_long_session_benchmark tests.motion_nav.test_standalone_export
+.venv/python.exe -c "from scripts.f2rec_r0_baseline import worker_lifecycle_probe; print(worker_lifecycle_probe())"
+.venv/python.exe -c "from scripts.f2rec_r0_baseline import collect_tool_provenance; print(collect_tool_provenance())"

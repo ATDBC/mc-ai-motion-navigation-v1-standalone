@@ -1,0 +1,10 @@
+.venv/python.exe -m unittest tests.motion_nav.test_f2rec_r2_goal_selection tests.motion_nav.test_f2rec_r1_region_geometry tests.motion_nav.test_f2_ground_completion_region tests.motion_nav.test_f2r_piecewise_completion tests.motion_nav.test_d059_consumers_and_identity tests.motion_nav.test_d060_terminal_node_exact_proof tests.motion_nav.test_standalone_export -q
+.venv/python.exe -m scripts.f2_ground_route_evidence --output <f2-528-dir> --workers 4
+.venv/python.exe -m scripts.f2r_piecewise_evidence formal --output <v8-fixed-dir> --workers 4
+.venv/python.exe -m scripts.f2r_piecewise_evidence clutter-formal --output <v8-clutter-dir> --workers 4
+.venv/python.exe -m scripts.f2rec_r0_v9 --output <v9-dir> --workers 4
+.venv/python.exe -m scripts.f2rec_r2_selection_probe --output <selection-json>
+.venv/python.exe -m scripts.f2rec_r2_selection_probe --revisions-only --output <revision-json>
+.venv/python.exe -m scripts.benchmark_d058_route_revalidation --output <d058-dir>
+.venv/python.exe -m scripts.benchmark_d061_long_session --output <d061-dir>
+完整正序和逆序未运行：R2 性能两轮未达到门槛，按 D090 停止。

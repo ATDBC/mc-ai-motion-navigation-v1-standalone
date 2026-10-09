@@ -1,0 +1,11 @@
+{
+  "schema_version": "mc2p.f2rec-r1-production-semantic-hashes.v1",
+  "baseline_public_commit": "1ee76b6",
+  "files": {
+    "mc2p/motion_nav/geometry.py": "f2d647dcda3ecd84dbd22397dea32c7a6713ae4eb24ac9671fdea0200d1b5938",
+    "mc2p/motion_nav/route_admission.py": "17299eed323b538fe9b86decda455efdc7896e886c08489fbda280301cd2dca8",
+    "mc2p/motion_nav/route_validation.py": "945f499bff0d5bc9dfd08c0b4cb8f54b1b9dab0a830e5e1fe7eea95df4be6867",
+    "mc2p/motion_nav/support_surfaces.py": "96a95033dc4c5970ca9db615996132a9c83bdf97db1b691a233512f6395d242f"
+  },
+  "status": "unsigned-stop-cleanup"
+}

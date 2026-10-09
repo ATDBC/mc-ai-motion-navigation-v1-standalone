@@ -1,0 +1,30 @@
+{
+  "schema_version": "mc2p.f2rec-r1-production-summary.v1",
+  "allowed_files": [
+    "mc2p/motion_nav/geometry.py",
+    "mc2p/motion_nav/route_admission.py",
+    "mc2p/motion_nav/route_validation.py",
+    "mc2p/motion_nav/support_surfaces.py"
+  ],
+  "forbidden_files_modified": [],
+  "added_lines": 665,
+  "deleted_lines": 99,
+  "net_lines": 566,
+  "navigation_session_modified": false,
+  "fixed_route_modified": false,
+  "planner_worker_modified": false,
+  "action_or_lifecycle_modified": false,
+  "known_map_planner_modified": false,
+  "retained": [
+    "unified safe-region grid",
+    "bound rectangle replay validation",
+    "optional world query cache at geometry APIs",
+    "minimal preservation of an already-proved terminal surface",
+    "exact terminal proof when the final connection query is feasible"
+  ],
+  "withdrawn": [
+    "typed early rejection when the exact terminal connection query is not feasible",
+    "terminal rejection plumbing used only by that early rejection"
+  ],
+  "no_proof_behavior": "retain full terminal selection dependencies and use the existing NON_RECIPE validation closure"
+}

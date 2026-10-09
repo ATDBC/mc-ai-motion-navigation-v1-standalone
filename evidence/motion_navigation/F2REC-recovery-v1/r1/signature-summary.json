@@ -1,0 +1,53 @@
+{
+  "schema_version": "mc2p.f2rec-r1-signature.v1",
+  "signed": true,
+  "date": "2026-10-09",
+  "formal_platform": "windows",
+  "production_source_commit": "56fb58205aa0941d894f0a820b922cd7419d78f5",
+  "production_unchanged_during_signature": true,
+  "decision": "D091",
+  "scope": "completion-region geometry only",
+  "f2s_c01_completed": 40,
+  "f2s_c01_total": 64,
+  "deferred_column_top": 24,
+  "frozen_scope_file": "column-top-deferred-red.json",
+  "old_success_regressions": 0,
+  "targeted_tests": {
+    "passed": 67,
+    "total": 67,
+    "elapsed_seconds": 33.273
+  },
+  "full_checks": {
+    "forward": {
+      "file": "full-forward-signature.json",
+      "tests": 1661,
+      "passed": 1661,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "elapsed_seconds": 366.76,
+      "sha256": "369c459e9ebf171069b41f413e00ed23f47d35f924a682ca7259e5921e3df90c"
+    },
+    "reverse": {
+      "file": "full-reverse-signature.json",
+      "tests": 1661,
+      "passed": 1661,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "elapsed_seconds": 362.408,
+      "sha256": "6fc22c76de309a869e1336a97e8cf743a1ca924b206c9c39fde0da613c7075a7"
+    }
+  },
+  "historical_stopped_evidence": [
+    "full-forward.json",
+    "comparison-summary.json",
+    "stop-record.json"
+  ],
+  "r2_allowed": true,
+  "limits": [
+    "No current complete v9/F2-528/v8 rerun is claimed. Their earlier directional evidence remains explicitly historical.",
+    "Deferred column-top tasks remain uncompleted ability RED and retain bounded/safety/source requirements.",
+    "R2/R3/R4 and Fabric/public release are not signed."
+  ]
+}

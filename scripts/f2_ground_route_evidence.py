@@ -266,144 +266,15 @@ def timing_summary(values):
             "p99": quantile(values, .99), "maximum": max(values, default=None)}
 
 
-class _FrameTimingRecorder:
-    """Directly measure production, backend and full frame intervals.
-
-    Production is accumulated only while production code is running.  It is
-    never derived by subtracting backend time from the full frame.
-    """
-
-    def __init__(self, clock_ns=time.perf_counter_ns):
-        self._clock = clock_ns
-        now = self._clock()
-        self.full_started_ns = now
-        self._production_started_ns = now
-        self.production_ns = 0
-        self.backend_ns = 0
-        self.backend_intervals: list[tuple[int, int]] = []
-        self._paused = False
-        self._segment_stack: list[list] = []
-        self.segment_inclusive_ns: dict[str, int] = {}
-        self.segment_exclusive_ns: dict[str, int] = {}
-
-    @contextmanager
-    def segment(self, label: str):
-        if self._paused or type(label) is not str or not label:
-            raise RuntimeError("production segment boundary is invalid")
-        frame = [label, self._clock(), 0]
-        self._segment_stack.append(frame)
-        try:
-            yield
-        finally:
-            if not self._segment_stack or self._segment_stack[-1] is not frame:
-                raise RuntimeError("production segment nesting changed")
-            self._segment_stack.pop()
-            elapsed = self._clock() - frame[1]
-            if elapsed < 0 or frame[2] > elapsed:
-                raise RuntimeError("production segment clock is invalid")
-            self.segment_inclusive_ns[label] = (
-                self.segment_inclusive_ns.get(label, 0) + elapsed
-            )
-            self.segment_exclusive_ns[label] = (
-                self.segment_exclusive_ns.get(label, 0) + elapsed - frame[2]
-            )
-            if self._segment_stack:
-                self._segment_stack[-1][2] += elapsed
-
-    def pause_for_backend(self):
-        if self._paused or self._segment_stack:
-            raise RuntimeError("frame production timing is already paused")
-        now = self._clock()
-        self.production_ns += now - self._production_started_ns
-        self._paused = True
-        return now
-
-    def resume_after_backend(self, started_ns):
-        if not self._paused:
-            raise RuntimeError("frame production timing was not paused")
-        finished = self._clock()
-        self.backend_ns += finished - started_ns
-        self.backend_intervals.append((started_ns, finished))
-        self._production_started_ns = self._clock()
-        self._paused = False
-
-    def finish(self):
-        if self._paused or self._segment_stack:
-            raise RuntimeError("frame timing ended inside backend")
-        finished = self._clock()
-        self.production_ns += finished - self._production_started_ns
-        residual_ns = self.production_ns - sum(
-            self.segment_exclusive_ns.values()
-        )
-        if residual_ns < 0:
-            raise RuntimeError("production segments exceed the direct total")
-        return {
-            "production_prepare_ms": self.production_ns / 1e6,
-            "backend_step_ms": self.backend_ns / 1e6,
-            "full_frame_ms": (finished - self.full_started_ns) / 1e6,
-            "production_started_ns": self.full_started_ns,
-            "production_finished_ns": finished,
-            "backend_intervals_ns": tuple(self.backend_intervals),
-            "full_started_ns": self.full_started_ns,
-            "full_finished_ns": finished,
-            "measurement_boundary": "direct_intervals_no_subtraction",
-            "production_segments_inclusive_ms": {
-                key: value / 1e6
-                for key, value in self.segment_inclusive_ns.items()
-            },
-            "production_segments_exclusive_ms": {
-                key: value / 1e6
-                for key, value in self.segment_exclusive_ns.items()
-            },
-            "production_unattributed_ms": residual_ns / 1e6,
-        }
-
-
 @contextmanager
 def terminal_controller_evidence():
     """Observe the real FixedRoute objects and decisions; leave trace unchanged."""
     from mc2p.motion_nav.fixed_route import FixedRouteController
     from mc2p.motion_nav import action_route_executor
     from mc2p.motion_nav.ground_modes import observed_ground_mode
-    from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver
-    from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1
-    from mc2p.motion_nav.runtime_adapter import NavigationObservationAdapter
-    from mc2p.motion_nav.navigation_session import NavigationSession
-    from mc2p.motion_nav.ground_candidate_verifier import GroundCandidateVerifier
-    from mc2p.motion_nav.motion_coordination import MotionRouteCoordinator
-    from mc2p.motion_nav.known_map_planner import KnownMapSnapshotBuilder
-    from mc2p.motion_nav.motion_worker import MotionResultInbox
-    from mc2p.runtime.arbiter_v1 import ActionArbiterV1
-    from mc2p.motion_nav.online_motion import InputApplicationLedger
     original_start, original_decide = FixedRouteController.start, FixedRouteController.decide
     original_goal = action_route_executor.evaluate_observed_goal
-    original_driver_tick = RuntimeNavigationDriver.tick
-    original_backend_step = PlayerRuntimeV1._backend_step
-    original_ingest = NavigationObservationAdapter.ingest
-    original_anchor = NavigationSession.execution_anchor
-    original_propose = NavigationSession.propose
-    original_verify = GroundCandidateVerifier.verify
-    original_motion_decide = MotionRouteCoordinator.decide
-    original_snapshot = KnownMapSnapshotBuilder.advance
-    original_drain = MotionResultInbox.drain_once
-    original_take = MotionResultInbox.take
-    original_resolve = ActionArbiterV1.resolve
-    original_adopt = RuntimeNavigationDriver.adopt_result
-    original_submit_input = InputApplicationLedger.submit
-    original_observe_receipt = InputApplicationLedger.observe_receipt
-    active_timing = []
-    records = {
-        "contracts": [], "frames": [], "runtime_frames": [],
-        "formal_goal_checks": [],
-    }
-    def timed(label, original):
-        def wrapper(*args, **kwargs):
-            timing = active_timing[-1] if active_timing else None
-            if timing is None:
-                return original(*args, **kwargs)
-            with timing.segment(label):
-                return original(*args, **kwargs)
-        return wrapper
+    records = {"contracts": [], "frames": [], "formal_goal_checks": []}
     def start(controller, route, frame, **kwargs):
         if route.execution_contract is not None:
             value = asdict(route.execution_contract)
@@ -418,39 +289,6 @@ def terminal_controller_evidence():
             "full_candidates": decision.full_candidates, "physics_steps": decision.physics_steps,
             "state": decision.state.value, "position": frame.body.position})
         return decision
-    def driver_tick(driver, *args, **kwargs):
-        timing = _FrameTimingRecorder()
-        active_timing.append(timing)
-        runtime = getattr(driver, "runtime", None)
-        trace = None if runtime is None else getattr(runtime, "_trace", None)
-        try:
-            if trace is None:
-                return original_driver_tick(driver, *args, **kwargs)
-            original_trace_write = trace.write
-            def trace_write(*trace_args, **trace_kwargs):
-                with timing.segment("trace"):
-                    return original_trace_write(*trace_args, **trace_kwargs)
-            with patch.object(trace, "write", trace_write):
-                return original_driver_tick(driver, *args, **kwargs)
-        finally:
-            if not active_timing or active_timing[-1] is not timing:
-                raise RuntimeError("runtime frame timing ownership changed")
-            active_timing.pop()
-            measured = timing.finish()
-            # Preserve the historical field as an explicitly mixed/full
-            # interval.  New gates use the three named direct intervals.
-            measured["control_ms"] = measured["full_frame_ms"]
-            measured["control_ms_kind"] = "mixed_interval"
-            records["runtime_frames"].append(measured)
-    def backend_step(runtime, *args, **kwargs):
-        timing = active_timing[-1] if active_timing else None
-        if timing is None:
-            return original_backend_step(runtime, *args, **kwargs)
-        started = timing.pause_for_backend()
-        try:
-            return original_backend_step(runtime, *args, **kwargs)
-        finally:
-            timing.resume_after_backend(started)
     def goal_check(frame, goal, risk_policy_id):
         result = original_goal(frame, goal, risk_policy_id)
         records['formal_goal_checks'].append({
@@ -471,20 +309,6 @@ def terminal_controller_evidence():
             'goal_risk_policy_id': goal.risk_policy_id})
         return result
     with patch.object(FixedRouteController, "start", start), patch.object(FixedRouteController, "decide", decide), \
-            patch.object(RuntimeNavigationDriver, "tick", driver_tick), \
-            patch.object(PlayerRuntimeV1, "_backend_step", backend_step), \
-            patch.object(NavigationObservationAdapter, "ingest", timed("ingest", original_ingest)), \
-            patch.object(NavigationSession, "execution_anchor", timed("anchor", original_anchor)), \
-            patch.object(NavigationSession, "propose", timed("session_propose", original_propose)), \
-            patch.object(GroundCandidateVerifier, "verify", timed("fixed_route_verifier", original_verify)), \
-            patch.object(MotionRouteCoordinator, "decide", timed("motion_coordinator", original_motion_decide)), \
-            patch.object(KnownMapSnapshotBuilder, "advance", timed("snapshot", original_snapshot)), \
-            patch.object(MotionResultInbox, "drain_once", timed("motion_inbox", original_drain)), \
-            patch.object(MotionResultInbox, "take", timed("motion_inbox", original_take)), \
-            patch.object(ActionArbiterV1, "resolve", timed("runtime_arbitrate", original_resolve)), \
-            patch.object(RuntimeNavigationDriver, "adopt_result", timed("driver_adopt", original_adopt)), \
-            patch.object(InputApplicationLedger, "submit", timed("input_ledger", original_submit_input)), \
-            patch.object(InputApplicationLedger, "observe_receipt", timed("input_ledger", original_observe_receipt)), \
             patch.object(action_route_executor, 'evaluate_observed_goal', goal_check):
         yield records
 

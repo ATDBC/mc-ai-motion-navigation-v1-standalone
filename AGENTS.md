@@ -1,10 +1,8 @@
 # AGENTS.md
 
-2026-10-08，[D089](docs/motion_navigation/decisions/0089-grade-fail-fast-by-risk-and-bound-task-expansion.md)修正了项目使用 fail-fast 的方式。安全不变量、身体责任、过期执行、真实控制期限和无界等待仍然要求立即停止；冻结能力发生功能回归时，不能签署当前能力；内部性能余量未达，但没有真实期限失败、安全事件或产品退步时，登记为性能债。同一任务最多做两轮限定修正。继续修改需要改变公共契约、状态所有者、规划或求解方法，或需要另开阶段时，必须先结束当前任务并向用户报告。只有用户明确授权，才能进入新阶段。
+2026-10-09，公开实现从 F2-R 按 [D090](docs/motion_navigation/decisions/0090-rebuild-main-from-f2r-and-recover-only-validated-parts.md) 恢复到已签署的 R1。R0 基线和 R1 完成区域几何已签署；R1 的 Windows 完整正序、逆序各 1661/1661，失败、错误、跳过均为 0。区域几何正式链完成 40/64；柱顶 `column_top` 24 项仍为 Walk→JumpUp 交接 RED，保持有界结束、零伤害、零安全违规及来源释放，尚未交付柱顶能力。范围调整见 [D091](docs/motion_navigation/decisions/0091-sign-region-geometry-and-defer-column-top-handoff.md)。
 
-F2-RH 已实施到 RH5。Runtime 现在持有唯一共享 Motion worker，生命周期聚焦检查为 `98/98`，独立复审没有未关闭的生命周期 P0／P1／P2。五个非 oracle 场景 `5/5`，零安全事件和观察到的 deadline miss；production 最大值 `24.9818 ms`、完整路径最大值 `45.3178 ms`。production P95/P99 为 `10.2680/23.9535 ms`，没有达到原 `8/15 ms` 内部余量，现按 D089 记为性能债。F2-RH、F2-TP 和 F2-TS 的历史阶段仍然未通过；TP4、oracle、remaining9／42、F2-GP、大集合、D061 和 Fabric 没有运行，不能从现有结果推断这些范围已经通过，也不能自动启动。见 [D088](docs/motion_navigation/decisions/0088-own-motion-worker-at-runtime-and-profile-control-hotpath.md)、[F2-RH 阶段](docs/motion_navigation/stages/F2RH-runtime-worker-and-control-hotpath.md)和[验收](docs/motion_navigation/acceptance/F2RH-runtime-worker-and-control-hotpath.md)。
-
-F2-R 仍按原冻结范围通过。完成区域选择原目标内最大的精确安全矩形；UNKNOWN 按最坏障碍裁剪，只允许完全已知的安全子区域。Windows 正逆各 1647/1647，v7 为 1998/2000，v8 为 3817/3904；Fabric 外角和对角柱 16/16，8 次晚1实际应用，零安全与期限违规。潜行仍只有组件证明。见 [F2-R 阶段](docs/motion_navigation/stages/F2R-piecewise-completion-and-v8.md)、[验收](docs/motion_navigation/acceptance/F2R-piecewise-completion-and-v8.md)和 [D075](docs/motion_navigation/decisions/0075-repair-piecewise-completion-and-bound-edge-guard.md)。F2-S 及其后续调查保留历史状态，不因 D089 改写。
+R2 最小选面候选没有冻结旧成功退步，纯选面 P95 为 1.1873 ms；正式杂乱目标修订＋准备 P95 为 8.8542 ms，仍超过 8 ms。两轮限定优化后已止损，R2 未签署。公开 main 的生产代码保持已签署 R1，未签署的 R2 候选代码只保存在主项目本地归档，不进入公开快照。R3、R4 未开始，本次公开整理不代表恢复全阶段已经通过。当前入口为 [F2REC 阶段](docs/motion_navigation/stages/F2REC-rebuild-from-f2r.md)、[验收](docs/motion_navigation/acceptance/F2REC-rebuild-from-f2r.md)及 `evidence/motion_navigation/F2REC-recovery-v1/`。以下较早结果保留各自历史范围。
 
 2026-10-07，F2 通用非中心地面路线执行与终点接近已按冻结范围验收通过。普通开阔路线保留快速路径，已知碰撞或支撑边界每帧最多复核三个候选；潜行只由路线区间授权，完成区域保持在原 `GoalState` 内。正式 Windows 完整正逆各 1627/1627，五组通过，产品 1998/2000，旧成功退步 0；玩家站位 187/400 → 400/400。Fabric 冻结清单 93/93 符合各自判定，80 正例完成、40 次首条晚一 tick 实际应用，三组路线／持续输入用时比为 1.000／1.235／1.074，连续 10 tick 非中性停滞为 0。首个静止普通 Walk 补一 tick 中性等价证明，命令租约与 Session／Runtime 生命周期未改。
 
@@ -16,9 +14,7 @@ Windows 是正式开发、自动验收和 Fabric 实机平台；Linux 仅用于�
 
 历史 F1 按“功能通过、结构未通过”保存；R28 按“时间盒结束，部分交付通过”保存。历史 S0-R、v1—v7、R27 和连续高度 M3 的结果与边界均保留在各自验收及 `evidence/motion_navigation/` 中，不用 F2 的新结果覆盖。历史入口见 [F1 验收](docs/motion_navigation/acceptance/F1-known-world-following.md)、[R28 验收](docs/motion_navigation/acceptance/navigation-coordination-convergence.md)和 [S0-R 验收](docs/motion_navigation/acceptance/post-F1-navigation-structure-cleanup.md)。
 
-本仓库是主项目生成的源码快照。先读 D089、F2-RH 方案和验收，再按任务读取相关架构与决定。F2-S、F2-TP 和 F2-TS 文档记录未关闭范围与失败证据，不能当作已交付能力。
-
-当前公开快照的导出完整性和 `18/18` 项定向检查通过。完整 `tests/motion_nav` 检查为 `1812` 项，其中 `56` 项失败、`4` 项错误。处理代码前先读 `evidence/motion_navigation/F2RH-runtime-worker-hotpath-v1/public-export-check.json`，不要把这些已保留问题改写成全绿结论。
+本仓库是主项目生成的源码快照。先读 F2REC 阶段和对应验收，再按任务读取相关架构与决定。
 
 项目方只通过默认分支 `main` 发布由固定导出清单生成、校验通过的公开快照。不得把主项目的完整开发分支或提交历史直接推入本仓库。三方审查分支可以保留，但只保存审查者自己的报告和复现材料，不代表正式发布状态。
 
@@ -31,9 +27,8 @@ Windows 是正式开发、自动验收和 Fabric 实机平台；Linux 仅用于�
 - 每类长期状态只有一个拥有者。不要复制地图、目标、路线、动作许可或输入账本。
 - 不为尚未进入当前阶段的能力建立空框架。
 - 当前仓库只包含独立 Fabric 正式路径。CraftGround 和旧射线兼容代码只在主仓库作历史参照。
-- fail-fast 按风险使用。安全不变量、身体责任、过期执行、真实期限和无界等待属于硬停止；冻结能力的回归阻止当前能力签署；内部性能余量不足但没有实际伤害时登记为性能债。
-- 同一任务最多做两轮限定修正。第二轮后仍需改变公共契约、状态所有者、规划或求解方法时，结束当前任务并报告；只有用户明确授权，才能新开阶段。
-- 出现未预期失败时，先停止扩大验收并保留证据。修复后先复跑直接相关场景，不带着已知问题继续批量运行，也不因性能债自动扩大重构。
+- 采用 fail fast（尽早发现失败）：先用低成本检查验证正式调用链和最容易暴露问题的代表性边界场景；专项检查稳定后，再扩大到完整矩阵和实机验收。
+- 出现未预期失败时，先停止扩大验收，保留失败证据，定位根因并检查共同规则；修复后先复跑直接相关场景，不带着已知问题继续批量运行。
 - 小范围接口或诊断修改按实际影响复查，并完成阶段要求的检查；没有新变化、失败或未决疑点时，复用仍有效的证据，不自动重跑全部。额外问题先登记并判断是否阻塞当前交付，避免无关扩展当前批次。
 - 快速发现失败不得降低验收门槛、删除失败样本或把有界失败计为成功；机器人已经承担的安全收尾责任必须继续履行。
 

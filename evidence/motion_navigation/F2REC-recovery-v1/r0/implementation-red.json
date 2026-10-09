@@ -1,0 +1,18 @@
+{
+  "schema_version": "mc2p.f2rec-r0-implementation-red.v1",
+  "first_full_check": {
+    "tests": 1652,
+    "failures": 1,
+    "errors": 6,
+    "elapsed_seconds": 449.356,
+    "log_sha256": "c44c0dd8aa77246ec92d7a7353aae717c179b1146434969885271a0783189f87",
+    "causes": [
+      "过宽移植 f2_ground_route_evidence.py，错误依赖已撤出的 ground_candidate_verifier",
+      "公开 F2-R 字节指纹包含混合换行，无法跨 Windows checkout 稳定复现"
+    ],
+    "resolution": [
+      "恢复 F2-R 证据脚本，只保留独立计时器",
+      "新增以 LF 为规范形式的 F2-R 语义哈希，仍逐文件检查代码内容"
+    ]
+  }
+}

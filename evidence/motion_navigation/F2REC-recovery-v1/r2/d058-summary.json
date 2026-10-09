@@ -1,0 +1,68 @@
+{
+  "source": {
+    "commit": "686cc0a78c379f2ef87fa3f6201e36fd2c98c49c",
+    "files": [
+      {
+        "path": "scripts/benchmark_d058_route_revalidation.py",
+        "sha256": "53ca2004c989a3f2ea03276e2a685f37d97a11dfd64b98fde73f30fcca04248e"
+      },
+      {
+        "path": "mc2p/motion_nav/route_validation.py",
+        "sha256": "4ece9219854cfe03cc1f041a89f0dac3be58c91ff56858adfaa6cfbef5e9ab01"
+      },
+      {
+        "path": "mc2p/motion_nav/route_admission.py",
+        "sha256": "ad45581fe92b0c943367067de8e9347f740515f955e30ed283066a593859744d"
+      },
+      {
+        "path": "mc2p/motion_nav/route_body_controller.py",
+        "sha256": "3977269de81b326bfcdf549e6c3f0deb420a04e538c0be21833aa5a7c8cebfee"
+      },
+      {
+        "path": "mc2p/motion_nav/execution_supervisor.py",
+        "sha256": "b60870b97613026399da36cc851bdd53c1ccb3f86c76d77813bec27bceb96a59"
+      },
+      {
+        "path": "mc2p/skills/navigation_session_driver.py",
+        "sha256": "e29d52b7b1b62576fd5bb8f4ced3d7bd39a6579cef32c40e94d6b42db1a45b02"
+      },
+      {
+        "path": "tests/sim/known_world_following.py",
+        "sha256": "d50cfda133bf0a545110e4e2939f6e492235d35125b1cf0b1489a50b27948138"
+      }
+    ],
+    "git_dirty": true,
+    "git_status": [
+      "M config/motion-navigation/standalone-export-v1.json",
+      " M mc2p/motion_nav/navigation_session.py",
+      " M tests/motion_nav/test_standalone_export.py",
+      "?? evidence/motion_navigation/F2REC-recovery-v1/r2/",
+      "?? scripts/f2rec_r2_selection_probe.py",
+      "?? tests/motion_nav/test_f2rec_r2_goal_selection.py"
+    ],
+    "scope_sha256": "f67ad0a612573049a4edc6cf77ffcbb90931b962e30b7d7cc419bb69eeb0239f"
+  },
+  "environment": {
+    "clock": "time.perf_counter_ns",
+    "executable": "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]"
+  },
+  "statistics": {
+    "maximum_ms": 15.641,
+    "maximum_ns": 15641000,
+    "p50_ms": 3.1953,
+    "p50_ns": 3195300,
+    "p95_ms": 4.8681,
+    "p95_ns": 4868100,
+    "p99_ms": 6.0866,
+    "p99_ns": 6086600,
+    "samples": 3414
+  },
+  "retained_samples": 3414,
+  "gates": {
+    "all_passed": true,
+    "complete_prepare_passed": true,
+    "route_revalidation_p95_passed": true
+  }
+}

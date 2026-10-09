@@ -1,0 +1,120 @@
+{
+  "mode": "clutter-formal",
+  "cases": 56,
+  "source_commit": "e913118168dbed2ce269f2f82bf07883b932c9cc",
+  "source_worktree_clean": false,
+  "production_sha256": "6cb3e7c8991a205dd5049abe723aa61324fd67d797ae7069a2829a2afbdc4679",
+  "manifest_sha256": "c29e9158f461a647ae1b34ace278a3652e67052e3d9fcb80282fe517bf09efd6",
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "by_layer": {
+    "clutter_10/follow": {
+      "cases": 7,
+      "results": {
+        "success": 7
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 7,
+      "control_ms": {
+        "p50": 0.5911,
+        "p95": 1.5729,
+        "p99": 3.6516,
+        "maximum": 4.0854
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 2.7874
+    },
+    "clutter_10/melee": {
+      "cases": 6,
+      "results": {
+        "success": 6
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 6,
+      "control_ms": {
+        "p50": 0.5955,
+        "p95": 1.0133,
+        "p99": 2.4087,
+        "maximum": 4.154
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 2.4087
+    },
+    "clutter_10/product": {
+      "cases": 8,
+      "results": {
+        "success": 8
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 8,
+      "control_ms": {
+        "p50": 0.5852,
+        "p95": 1.8897,
+        "p99": 3.675,
+        "maximum": 3.763
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 3.6337
+    },
+    "clutter_20/follow": {
+      "cases": 8,
+      "results": {
+        "success": 8
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 8,
+      "control_ms": {
+        "p50": 0.8012,
+        "p95": 2.478,
+        "p99": 3.731,
+        "maximum": 5.05
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 3.3349
+    },
+    "clutter_20/melee": {
+      "cases": 11,
+      "results": {
+        "success": 11
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 11,
+      "control_ms": {
+        "p50": 0.8001,
+        "p95": 2.0932,
+        "p99": 3.647,
+        "maximum": 5.1055
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 2.6841
+    },
+    "clutter_20/product": {
+      "cases": 16,
+      "results": {
+        "success": 16
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 16,
+      "control_ms": {
+        "p50": 0.7703,
+        "p95": 2.5664,
+        "p99": 4.2384,
+        "maximum": 5.3251
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 4.2295
+    }
+  }
+}

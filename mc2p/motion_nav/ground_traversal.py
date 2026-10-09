@@ -9,7 +9,6 @@ import math
 from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.fixed_route import FixedRoute, FixedRouteConfig, RoutePoint
-from mc2p.motion_nav.ground_route_execution import GroundCompletionRegion
 from mc2p.motion_nav.geometry import QueryStatus, query_support
 from mc2p.motion_nav.ground_motion import GroundMotionProfile
 from mc2p.motion_nav.movement_transition import MovementMode
@@ -30,84 +29,6 @@ class GroundTraversalStatus(StrEnum):
     UNSUPPORTED = "unsupported"
     BLOCKED = "blocked"
     BUDGET_EXHAUSTED = "budget_exhausted"
-
-
-@dataclass(frozen=True, slots=True)
-class GroundTraversalExitRequirement:
-    """The observed state that an ordinary-ground proof must deliver."""
-
-    completion_region: GroundCompletionRegion
-    allowed_poses: frozenset[str]
-    allowed_modes: frozenset[MovementMode]
-    minimum_speed_blocks_per_second: float
-    maximum_speed_blocks_per_second: float
-    required_direction: tuple[float, float] | None = None
-    maximum_direction_error_radians: float | None = None
-
-    def __post_init__(self) -> None:
-        if type(self.completion_region) is not GroundCompletionRegion:
-            raise ContractViolation("ground exit requires a completion region")
-        if (type(self.allowed_poses) is not frozenset or not self.allowed_poses
-                or any(type(value) is not str or not value
-                       for value in self.allowed_poses)):
-            raise ContractViolation("ground exit poses must be explicit")
-        if (type(self.allowed_modes) is not frozenset or not self.allowed_modes
-                or any(type(value) is not MovementMode
-                       for value in self.allowed_modes)):
-            raise ContractViolation("ground exit modes must be explicit")
-        for value in (self.minimum_speed_blocks_per_second,
-                      self.maximum_speed_blocks_per_second):
-            if type(value) not in (int, float) or not math.isfinite(float(value)):
-                raise ContractViolation("ground exit speed must be finite")
-        if (self.minimum_speed_blocks_per_second < 0
-                or self.maximum_speed_blocks_per_second
-                   < self.minimum_speed_blocks_per_second):
-            raise ContractViolation("ground exit speed interval is invalid")
-        if (self.required_direction is None) != (
-                self.maximum_direction_error_radians is None):
-            raise ContractViolation("ground exit direction requirement is incomplete")
-        if self.required_direction is not None:
-            if (type(self.required_direction) is not tuple
-                    or len(self.required_direction) != 2
-                    or any(type(value) not in (int, float)
-                           or not math.isfinite(float(value))
-                           for value in self.required_direction)
-                    or abs(math.hypot(*self.required_direction) - 1.0) > 1.0e-6
-                    or type(self.maximum_direction_error_radians) not in (int, float)
-                    or not 0 <= self.maximum_direction_error_radians <= math.pi):
-                raise ContractViolation("ground exit direction is invalid")
-
-    def accepts(self, state: PhysicsState, mode: MovementMode) -> bool:
-        if type(state) is not PhysicsState or type(mode) is not MovementMode:
-            raise ContractViolation("ground exit check requires typed state and mode")
-        x, y, z = state.position
-        bounds = self.completion_region.bounds
-        speed = math.hypot(
-            state.velocity_blocks_per_tick[0] * 20.0,
-            state.velocity_blocks_per_tick[2] * 20.0,
-        )
-        if not (
-            bounds.min_x - 1.0e-9 <= x <= bounds.max_x + 1.0e-9
-            and bounds.min_y - 1.0e-9 <= y <= bounds.max_y + 1.0e-9
-            and bounds.min_z - 1.0e-9 <= z <= bounds.max_z + 1.0e-9
-            and state.pose in self.allowed_poses
-            and mode in self.allowed_modes
-            and self.minimum_speed_blocks_per_second - 1.0e-9
-                <= speed <= self.maximum_speed_blocks_per_second + 1.0e-9
-            and state.on_ground
-        ):
-            return False
-        if self.required_direction is None or speed <= 0.1:
-            return True
-        vx = state.velocity_blocks_per_tick[0]
-        vz = state.velocity_blocks_per_tick[2]
-        length = math.hypot(vx, vz)
-        if length <= 1.0e-12:
-            return self.minimum_speed_blocks_per_second <= 1.0e-9
-        dot = max(-1.0, min(1.0,
-            (vx * self.required_direction[0]
-             + vz * self.required_direction[1]) / length))
-        return math.acos(dot) <= self.maximum_direction_error_radians + 1.0e-9
 
 
 @dataclass(frozen=True, slots=True)
@@ -355,7 +276,6 @@ def verify_ground_traversal(
     maximum_ticks: int,
     surface_node_path: tuple[SurfaceNodeId, ...] = (),
     continuation: MotionContinuationRequirement | None = None,
-    exit_requirement: GroundTraversalExitRequirement | None = None,
 ) -> GroundTraversalResult:
     if (type(entry_state) is not PhysicsState or type(route) is not FixedRoute
             or type(world) is not PhysicsWorldView
@@ -370,11 +290,6 @@ def verify_ground_traversal(
         raise ContractViolation("ground traversal world belongs to another session")
     if continuation is not None and type(continuation) is not MotionContinuationRequirement:
         raise ContractViolation("ground continuation requirement must be typed")
-    if (exit_requirement is not None
-            and type(exit_requirement) is not GroundTraversalExitRequirement):
-        raise ContractViolation("ground exit requirement must be typed")
-    if continuation is not None and exit_requirement is not None:
-        raise ContractViolation("ground traversal cannot have two exit owners")
     if (entry_state.ruleset_id != JAVA_1_21_RULESET.ruleset_id
             or entry_state.pose != "standing" or entry_state.sprinting
             or entry_state.sneaking):
@@ -403,7 +318,7 @@ def verify_ground_traversal(
     if any(direction is None for direction in directions):
         return GroundTraversalResult(
             GroundTraversalStatus.UNSUPPORTED,
-            reasons=("ground_traversal_requires_nonzero_segments",),
+            reasons=("ground_traversal_requires_cardinal_segments",),
         )
     height_changes = tuple(
         second.y - first.y
@@ -500,11 +415,7 @@ def verify_ground_traversal(
         ) * 20.0
         if continuation is None and (reached_terminal or approaching_terminal_descent):
             braking = True
-        terminal_ready = (
-            exit_requirement.accepts(state, MovementMode.WALK)
-            if exit_requirement is not None else horizontal_speed <= 0.10
-        )
-        if braking and terminal_ready:
+        if braking and horizontal_speed <= 0.10:
             plan = GroundTraversalPlan(
                 route, _entry_window(route, profile, trajectory[0], exit=False),
                 _entry_window(route, profile, trajectory[-1], exit=True),

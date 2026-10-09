@@ -23,8 +23,6 @@ from mc2p.motion_nav.ground_traversal import (
     GroundTraversalPlan, GroundTraversalProofCache, GroundTraversalStatus,
     verify_ground_traversal,
 )
-from mc2p.motion_nav.ground_terminal_approach import GroundTerminalApproach
-from mc2p.motion_nav.ground_route_execution import GroundCompletionRegion
 from mc2p.motion_nav.fixed_route import FixedRoute, RoutePoint
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView
 from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET, PhysicsState
@@ -36,7 +34,7 @@ from mc2p.motion_nav.movement_transition import (
 )
 from mc2p.motion_nav.world_model import (
     Aabb, BlockPos, COLLISION_OWNER_BELOW_REACH_CELLS, CellFact, CellKnowledge,
-    WORLD_SECTION_SIZE, WorldQueryCache, WorldView,
+    WORLD_SECTION_SIZE, WorldView,
 )
 from mc2p.motion_nav.motion_risk import (
     MOVEMENT_DAMAGE_BUDGET_RESOURCE, TaskDamageBudget,
@@ -46,14 +44,13 @@ from mc2p.motion_nav.step_transition import StepEdge, StepProfile, query_step
 from mc2p.motion_nav.segment_entry import SegmentEntryWindow, MotionContinuationRequirement
 from mc2p.motion_nav.support_surfaces import (
     SupportSurface, SurfaceNodeId, query_support_surfaces, surface_overlaps_region,
-    standable_region_in_goal,
+    standable_point_in_region,
 )
 
 
 WalkNodeId = tuple[int, int, int]
 _DIRECTIONS = ((-1, 0), (0, -1), (0, 1), (1, 0))
 _PLANNING_TICK_SECONDS = 0.05
-_MINIMUM_GOAL_COMPLETION_CONTROL_SPAN = .25
 
 
 def seconds_to_planning_ticks(seconds: float) -> int:
@@ -1242,42 +1239,9 @@ class SurfaceControlledDropEdge:
         return ResourceChange(tuple(sorted(values.items())))
 
 
-@dataclass(frozen=True, slots=True)
-class SurfaceTerminalApproachEdge:
-    """A costed same-surface edge whose ground plan was already proved."""
-
-    start: SurfaceNodeId
-    end: SurfaceNodeId
-    approach: GroundTerminalApproach
-
-    def __post_init__(self) -> None:
-        if (type(self.start) is not SurfaceNodeId
-                or type(self.end) is not SurfaceNodeId
-                or self.start != self.end
-                or type(self.approach) is not GroundTerminalApproach):
-            raise ContractViolation("terminal approach edge must retain one surface proof")
-
-    @property
-    def cost_seconds(self) -> float:
-        return self.approach.cost_ticks * _PLANNING_TICK_SECONDS
-
-    @property
-    def dependencies(self) -> tuple[BlockPos, ...]:
-        return self.approach.dependencies
-
-    @property
-    def transition(self) -> None:
-        return None
-
-    @property
-    def resource_change(self) -> ResourceChange:
-        return ResourceChange()
-
-
 SurfaceEdge = (
     SurfaceWalkEdge | StepEdge | SurfaceJumpUpEdge
     | SurfaceJumpGapEdge | SurfaceControlledDropEdge
-    | SurfaceTerminalApproachEdge
 )
 
 
@@ -1291,7 +1255,6 @@ class PlannerStateKey:
     heading: tuple[int, int] | None = None
     speed_interval: tuple[float, float] | None = None
     first_ground_run: bool = True
-    terminal_approach_id: str | None = None
 
     def __post_init__(self) -> None:
         if type(self.node_id) is not SurfaceNodeId:
@@ -1315,15 +1278,9 @@ class PlannerStateKey:
             raise ContractViolation("planner state speed interval is invalid")
         if type(self.first_ground_run) is not bool:
             raise ContractViolation("planner ground-run state must be bool")
-        if self.terminal_approach_id is not None:
-            require_identifier(self.terminal_approach_id,
-                               "planner terminal approach id")
 
 
 def _surface_edge_identity(edge: SurfaceEdge) -> tuple:
-    if type(edge) is SurfaceTerminalApproachEdge:
-        return (edge.start, edge.end, type(edge).__name__,
-                edge.approach.approach_id, "")
     transition = edge.transition
     transition_id = transition.transition_id if transition is not None else ""
     if type(edge) is SurfaceJumpUpEdge:
@@ -1362,8 +1319,7 @@ class SurfaceGraph:
             raise ContractViolation("surface graph nodes must be immutable")
         if type(self.edges) is not tuple or any(type(edge) not in (
                 SurfaceWalkEdge, StepEdge, SurfaceJumpUpEdge,
-                SurfaceJumpGapEdge, SurfaceControlledDropEdge,
-                SurfaceTerminalApproachEdge)
+                SurfaceJumpGapEdge, SurfaceControlledDropEdge)
                                                  for edge in self.edges):
             raise ContractViolation("surface graph edges must be immutable")
         ids = tuple(node.node_id for node in self.nodes)
@@ -1507,55 +1463,6 @@ class PlanningInformationNeed:
 
 
 @dataclass(frozen=True, slots=True)
-class ExactSurfacePlanningGoal:
-    terminal_surface: SurfaceNodeId
-
-    def __post_init__(self) -> None:
-        if type(self.terminal_surface) is not SurfaceNodeId:
-            raise ContractViolation("exact surface planning goal must name a surface")
-
-
-@dataclass(frozen=True, slots=True)
-class GoalRegionPlanningRequest:
-    goal_state: GoalState
-
-    def __post_init__(self) -> None:
-        if type(self.goal_state) is not GoalState:
-            raise ContractViolation("goal region planning requires a typed goal state")
-
-
-SurfacePlanningTarget = ExactSurfacePlanningGoal | GoalRegionPlanningRequest
-
-
-@dataclass(frozen=True, slots=True)
-class GoalTerminalWitness:
-    terminal_surface: SurfaceNodeId
-    completion_region: GroundCompletionRegion
-    connection_dependencies: tuple[BlockPos, ...]
-
-    def __post_init__(self) -> None:
-        if (type(self.terminal_surface) is not SurfaceNodeId
-                or type(self.completion_region) is not GroundCompletionRegion):
-            raise ContractViolation("goal terminal witness requires typed terminal facts")
-        identity = self.completion_region.surface_identity
-        expected = (
-            self.terminal_surface.column_x,
-            self.terminal_surface.column_z,
-            self.terminal_surface.vertical_band,
-            self.terminal_surface.surface_index,
-        )
-        if identity != expected:
-            raise ContractViolation("goal witness completion belongs to another surface")
-        if (type(self.connection_dependencies) is not tuple
-                or self.connection_dependencies
-                != tuple(sorted(set(self.connection_dependencies)))
-                or any(type(position) is not tuple or len(position) != 3
-                       or any(type(value) is not int for value in position)
-                       for position in self.connection_dependencies)):
-            raise ContractViolation("goal witness connection dependencies must be immutable")
-
-
-@dataclass(frozen=True, slots=True)
 class SurfacePlanningRequest:
     sequence: int
     request_id: str
@@ -1573,7 +1480,6 @@ class SurfacePlanningRequest:
     entry_physics_state: PhysicsState | None = None
     work_identity: AsyncWorkIdentity | None = None
     reach_policy: GoalReachPolicy = GoalReachPolicy.COMPLETE_ON_REACH
-    planning_target: SurfacePlanningTarget | None = None
 
     def __post_init__(self) -> None:
         if type(self.reach_policy) is not GoalReachPolicy:
@@ -1585,23 +1491,6 @@ class SurfacePlanningRequest:
         require_identifier(self.world_session, "surface planning world session")
         if type(self.start) is not SurfaceNodeId or type(self.goal) is not SurfaceNodeId:
             raise ContractViolation("surface planning requires surface node ids")
-        if self.planning_target is None:
-            # Compatibility for frozen exact-node diagnostics.  Formal Session
-            # requests set this field explicitly and never branch on None.
-            object.__setattr__(
-                self, "planning_target", ExactSurfacePlanningGoal(self.goal),
-            )
-        elif type(self.planning_target) not in (
-                ExactSurfacePlanningGoal, GoalRegionPlanningRequest):
-            raise ContractViolation("surface planning target must be typed")
-        if (type(self.planning_target) is ExactSurfacePlanningGoal
-                and self.planning_target.terminal_surface != self.goal):
-            # Frozen exact-node tests and diagnostics use dataclasses.replace
-            # on the compatibility ``goal`` field. Keep those exact requests
-            # typed while moving them to the replacement node.
-            object.__setattr__(
-                self, "planning_target", ExactSurfacePlanningGoal(self.goal),
-            )
         if type(self.maximum_expansions) is not int or not 1 <= self.maximum_expansions <= 1_000_000:
             raise ContractViolation("surface planning expansion budget is invalid")
         if (type(self.maximum_planning_seconds) not in (int, float)
@@ -1651,11 +1540,6 @@ class SurfacePlanningRequest:
                 raise ContractViolation(
                     "surface planning goal and damage budget use different policies"
                 )
-        if type(self.planning_target) is GoalRegionPlanningRequest:
-            if self.goal_state != self.planning_target.goal_state:
-                raise ContractViolation(
-                    "region planning target and request goal state differ"
-                )
 
 
 class SurfaceSearchNeed(StrEnum):
@@ -1698,8 +1582,6 @@ class SurfaceRouteCandidate:
     information_need: PlanningInformationNeed | None = None
     work_identity: AsyncWorkIdentity | None = None
     ground_profile: GroundMotionProfile | None = None
-    planning_target: SurfacePlanningTarget | None = None
-    terminal_witness: GoalTerminalWitness | None = None
 
     def __post_init__(self) -> None:
         if (self.total_cost_ticks is not None
@@ -1724,24 +1606,6 @@ class SurfaceRouteCandidate:
         if (self.ground_profile is not None
                 and type(self.ground_profile) is not GroundMotionProfile):
             raise ContractViolation("surface route ground profile must be typed")
-        if self.planning_target is not None and type(self.planning_target) not in (
-                ExactSurfacePlanningGoal, GoalRegionPlanningRequest):
-            raise ContractViolation("surface route planning target must be typed")
-        if self.terminal_witness is not None:
-            if type(self.terminal_witness) is not GoalTerminalWitness:
-                raise ContractViolation("surface route terminal witness must be typed")
-            if self.status is not SurfacePlanningStatus.COMPLETE:
-                # Fault-injection and late-result tests derive a negative
-                # result from a real completed candidate with dataclasses.replace.
-                # Normalize that derived result instead of letting stale
-                # positive proof leak into a non-complete candidate.
-                object.__setattr__(self, "terminal_witness", None)
-            elif self.planning_goal != self.terminal_witness.terminal_surface:
-                raise ContractViolation("surface route terminal and witness differ")
-        if (type(self.planning_target) is GoalRegionPlanningRequest
-                and self.status is SurfacePlanningStatus.COMPLETE
-                and self.terminal_witness is None):
-            raise ContractViolation("complete region route requires a terminal witness")
 
 
 def _surface_edge_cost_ticks(edge: SurfaceEdge) -> int:
@@ -2470,34 +2334,23 @@ def _surface_candidate(request: SurfacePlanningRequest, graph: SurfaceGraph,
                        reasons: tuple[str, ...] = (),
                        ground_traversal_plans: tuple[GroundTraversalPlan, ...] = (),
                        information_need: PlanningInformationNeed | None = None,
-                       terminal_witness: GoalTerminalWitness | None = None,
                        ) -> SurfaceRouteCandidate:
     by_id = {node.node_id: node for node in graph.nodes}
     path = tuple(by_id[node_id] for node_id in path_ids)
-    witness_dependencies = set()
-    if terminal_witness is not None:
-        witness_dependencies.update(terminal_witness.completion_region.dependencies)
-        witness_dependencies.update(terminal_witness.connection_dependencies)
     dependencies = tuple(sorted(
         {cell for node in path for cell in node.dependencies}
         | {cell for edge in segments for cell in edge.dependencies}
         | {cell for plan in ground_traversal_plans
            for cell in plan.dependencies}
-        | witness_dependencies
     ))
-    planning_goal = (
-        terminal_witness.terminal_surface
-        if terminal_witness is not None else request.goal
-    )
     return SurfaceRouteCandidate(
         request.sequence, request.request_id, request.goal_id,
         request.goal_revision, request.world_session, graph.geometry_revision,
-        request.start, planning_goal, status, path, segments, cost,
+        request.start, request.goal, status, path, segments, cost,
         dependencies, expanded, final_resources, request.goal_state,
         request.initial_resources, request.minimum_resources,
         planner_states, reasons, cost_ticks, ground_traversal_plans,
         information_need, request.work_identity, graph.ground_profile,
-        request.planning_target, terminal_witness,
     )
 
 
@@ -2795,136 +2648,6 @@ def _ground_traversal_entry_route(
     )
 
 
-def _goal_connection_dependencies(
-    world: WorldView,
-    start: tuple[float, float, float],
-    end: tuple[float, float, float],
-    ground_profile: GroundMotionProfile,
-    *,
-    body_width: float = .6,
-    body_height: float = 1.8,
-    query_cache: WorldQueryCache,
-) -> tuple[QueryStatus, tuple[BlockPos, ...], tuple[BlockPos, ...]]:
-    """Prove the short in-surface leg from graph point to completion point."""
-    half = body_width / 2.0
-    body = Aabb(
-        start[0] - half, start[1], start[2] - half,
-        start[0] + half, start[1] + body_height, start[2] + half,
-    )
-    delta = (end[0] - start[0], end[1] - start[1], end[2] - start[2])
-    movement = sweep(body, delta, world, query_cache=query_cache)
-    dependencies = set(movement.dependencies)
-    missing = set(movement.missing_cells)
-    if movement.status is not QueryStatus.FEASIBLE:
-        return movement.status, tuple(sorted(dependencies)), tuple(sorted(missing))
-    for fraction in (.25, .5, .75, 1.0):
-        support = query_support(
-            body.moved(*(component * fraction for component in delta)),
-            world,
-            query_cache=query_cache,
-        )
-        dependencies.update(support.dependencies)
-        missing.update(support.missing_cells)
-        if support.status is not QueryStatus.FEASIBLE:
-            return support.status, tuple(sorted(dependencies)), tuple(sorted(missing))
-        if support.support_fraction + 1.0e-9 < .5:
-            return QueryStatus.BLOCKED, tuple(sorted(dependencies)), tuple(sorted(missing))
-        if (ground_profile.support_materials
-                and not set(support.support_materials).issubset(
-                    ground_profile.support_materials
-                )):
-            return QueryStatus.UNSUPPORTED, tuple(sorted(dependencies)), tuple(sorted(missing))
-    return QueryStatus.FEASIBLE, tuple(sorted(dependencies)), ()
-
-
-def _goal_region_witnesses(
-    expander: _SurfaceExpander,
-    request: SurfacePlanningRequest,
-) -> tuple[GoalTerminalWitness, ...]:
-    target = request.planning_target
-    if type(target) is not GoalRegionPlanningRequest:
-        raise ContractViolation("goal witness enumeration requires a region target")
-    goal = target.goal_state
-    if goal.support not in {GoalSupport.SOLID, GoalSupport.ANY}:
-        expander.has_unsupported = True
-        return ()
-    maximum_x = math.floor(math.nextafter(goal.region.max_x, -math.inf))
-    maximum_z = math.floor(math.nextafter(goal.region.max_z, -math.inf))
-    cache = WorldQueryCache(expander.world)
-    found: list[GoalTerminalWitness] = []
-    for x in range(math.floor(goal.region.min_x), maximum_x + 1):
-        for z in range(math.floor(goal.region.min_z), maximum_z + 1):
-            nodes = expander.column(
-                x, z,
-                frontier_kind=PlanningFrontierKind.GOAL,
-                frontier_key=f"goal-region:{x},{z}",
-            )
-            for node in nodes:
-                selected = standable_region_in_goal(
-                    expander.world,
-                    node.surface,
-                    goal.region,
-                    connection_from=node.position,
-                    allowed_materials=expander.ground_profile.support_materials,
-                    query_cache=cache,
-                )
-                expander._record_blockers(
-                    selected.status,
-                    selected.missing_cells or selected.dependencies,
-                    kind=PlanningBlockerKind.CLEARANCE,
-                    requirement_key="goal-completion-region",
-                    frontier_kind=PlanningFrontierKind.GOAL,
-                    frontier_key=f"goal-region:{node.node_id!r}",
-                )
-                if selected.status is QueryStatus.UNSUPPORTED:
-                    expander.has_unsupported = True
-                if (selected.status is not QueryStatus.FEASIBLE
-                        or selected.completion_region is None):
-                    continue
-                connection_status, connection_dependencies, connection_missing = (
-                    _goal_connection_dependencies(
-                        expander.world,
-                        node.position,
-                        selected.completion_region.reference_point,
-                        expander.ground_profile,
-                        body_height=expander.body_height,
-                        query_cache=cache,
-                    )
-                )
-                expander._record_blockers(
-                    connection_status,
-                    connection_missing or connection_dependencies,
-                    kind=PlanningBlockerKind.SWEEP,
-                    requirement_key="goal-terminal-connection",
-                    frontier_kind=PlanningFrontierKind.GOAL,
-                    frontier_key=f"goal-connection:{node.node_id!r}",
-                )
-                if connection_status is QueryStatus.UNSUPPORTED:
-                    expander.has_unsupported = True
-                if connection_status is not QueryStatus.FEASIBLE:
-                    continue
-                found.append(GoalTerminalWitness(
-                    node.node_id,
-                    selected.completion_region,
-                    connection_dependencies,
-                ))
-    # Prefer terminals whose completion rectangle can absorb the ordinary
-    # controller's stopping tail.  A small goal at a platform corner may have
-    # no wider alternative; retain its proven sliver so the existing terminal
-    # contact controller remains available instead of declaring no route.
-    controllable = tuple(
-        witness for witness in found
-        if min(
-            witness.completion_region.bounds.max_x
-                - witness.completion_region.bounds.min_x,
-            witness.completion_region.bounds.max_z
-                - witness.completion_region.bounds.min_z,
-        ) + 1.0e-9 >= _MINIMUM_GOAL_COMPLETION_CONTROL_SPAN
-    )
-    selected = controllable or tuple(found)
-    return tuple(sorted(selected, key=lambda item: item.terminal_surface))
-
-
 def plan_known_surface_snapshot(
     snapshot: KnownMapSnapshot,
     ground_profile: GroundMotionProfile,
@@ -2937,10 +2660,6 @@ def plan_known_surface_snapshot(
 ) -> SurfaceRouteCandidate:
     """Search a detached snapshot while expanding only reached surface columns."""
     started_ns = time.perf_counter_ns()
-    request_deadline_ns = (
-        started_ns + int(request.maximum_planning_seconds * 1_000_000_000)
-        if type(request) is SurfacePlanningRequest else None
-    )
     if (type(snapshot) is not KnownMapSnapshot
             or type(ground_profile) is not GroundMotionProfile
             or type(step_profile) is not StepProfile
@@ -2992,25 +2711,12 @@ def plan_known_surface_snapshot(
         frontier_kind=PlanningFrontierKind.START,
         frontier_key=f"start:{request.start!r}",
     )
-    exact_target = (
-        request.planning_target
-        if type(request.planning_target) is ExactSurfacePlanningGoal else None
+    goal = expander.node(
+        request.goal,
+        frontier_kind=PlanningFrontierKind.GOAL,
+        frontier_key=f"goal:{request.goal!r}",
     )
-    if exact_target is not None:
-        goal = expander.node(
-            exact_target.terminal_surface,
-            frontier_kind=PlanningFrontierKind.GOAL,
-            frontier_key=f"goal:{exact_target.terminal_surface!r}",
-        )
-        terminal_witnesses: tuple[GoalTerminalWitness, ...] = ()
-    else:
-        goal = None
-        terminal_witnesses = _goal_region_witnesses(expander, request)
-        if time.perf_counter_ns() >= request_deadline_ns:
-            return _surface_candidate(
-                request, discovered_graph(), SurfacePlanningStatus.TIMEOUT,
-            )
-    if start is None or (exact_target is not None and goal is None):
+    if start is None or goal is None:
         graph = discovered_graph()
         information_need = expander.information_need(request, snapshot)
         status = (
@@ -3022,7 +2728,7 @@ def plan_known_surface_snapshot(
         return _surface_candidate(
             request, graph, status, information_need=information_need,
         )
-    if exact_target is not None and request.goal_state is not None:
+    if request.goal_state is not None:
         if not (
             surface_overlaps_region(goal.surface, request.goal_state.region)
             and request.goal_state.support in {GoalSupport.SOLID, GoalSupport.ANY}
@@ -3041,50 +2747,14 @@ def plan_known_surface_snapshot(
 
     start_state = PlannerStateKey(request.start, None, None)
 
-    witness_by_node = {
-        witness.terminal_surface: witness for witness in terminal_witnesses
-    }
-    goal_nodes = (
-        (exact_target.terminal_surface,)
-        if exact_target is not None else tuple(witness_by_node)
-    )
-    if not goal_nodes:
-        graph = discovered_graph()
-        information_need = expander.information_need(request, snapshot)
-        status = (
-            SurfacePlanningStatus.NO_KNOWN_ROUTE if information_need is not None else
-            SurfacePlanningStatus.UNSUPPORTED if graph.has_unsupported else
-            SurfacePlanningStatus.NO_ROUTE_WITHIN_COMPLETE_SCOPE
-            if graph.complete_scope else SurfacePlanningStatus.NO_KNOWN_ROUTE
-        )
-        return _surface_candidate(
-            request, graph, status, information_need=information_need,
-        )
-
     def heuristic(state: PlannerStateKey) -> float:
-        return min(
-            abs(state.node_id.column_x - node.column_x)
-            + abs(state.node_id.column_z - node.column_z)
-            for node in goal_nodes
+        return (
+            abs(state.node_id.column_x - request.goal.column_x)
+            + abs(state.node_id.column_z - request.goal.column_z)
         ) * unit_cost_ticks
 
     def goal_test(state: PlannerStateKey) -> bool:
-        if state.node_id not in goal_nodes:
-            return False
-        if exact_target is not None or request.goal_state is None:
-            return True
-        target = request.goal_state
-        if state.movement_mode is None or state.pose is None:
-            return state.node_id == request.start
-        if (state.movement_mode not in target.allowed_modes
-                or state.pose not in target.allowed_poses):
-            return False
-        if state.speed_interval is None:
-            return True
-        return (
-            state.speed_interval[0]
-            <= target.maximum_terminal_speed_blocks_per_second + 1.0e-9
-        )
+        return state.node_id == request.goal
 
     def outgoing(state: PlannerStateKey) -> tuple[SurfaceEdge, ...]:
         return tuple(
@@ -3097,25 +2767,19 @@ def plan_known_surface_snapshot(
         )
 
     def run_search() -> _SearchResult:
-        planning_seconds = request.maximum_planning_seconds
-        if exact_target is None:
-            planning_seconds = max(
-                1.0e-9,
-                (request_deadline_ns - time.perf_counter_ns()) / 1_000_000_000,
-            )
         if expander.resource_neutral(request):
             return _plain_search(
-                start_state, goal_nodes[0], request.initial_resources,
+                start_state, request.goal, request.initial_resources,
                 request.maximum_expansions, heuristic, outgoing,
-                planning_seconds,
+                request.maximum_planning_seconds,
                 goal_test=goal_test, next_states=_surface_successor_states,
                 edge_cost=_surface_edge_cost_ticks,
             )
         return _resource_aware_search(
-            start_state, goal_nodes[0],
+            start_state, request.goal,
             request.initial_resources, request.minimum_resources,
             request.maximum_expansions, heuristic, outgoing,
-            planning_seconds,
+            request.maximum_planning_seconds,
             goal_test=goal_test, next_states=_surface_successor_states,
             edge_cost=_surface_edge_cost_ticks,
         )
@@ -3282,14 +2946,8 @@ def plan_known_surface_snapshot(
         if (request.goal_state is not None and last == len(search.segments) - 1
                 and expander.movement_mode is MovementMode.WALK):
             goal_surface = expander.nodes[search.path[-1].node_id].surface
-            terminal = standable_region_in_goal(
-                snapshot.world,
-                goal_surface,
-                request.goal_state.region,
-                connection_from=goal_surface.position,
-                allowed_materials=ground_profile.support_materials,
-                query_cache=WorldQueryCache(snapshot.world),
-            )
+            terminal = standable_point_in_region(snapshot.world, goal_surface,
+                request.goal_state.region, connection_from=goal_surface.position)
             final = route.points[-1]
             if (terminal.status is QueryStatus.FEASIBLE
                     and math.dist(terminal.position, (final.x, final.y, final.z)) > 1.0e-6):
@@ -3371,21 +3029,15 @@ def plan_known_surface_snapshot(
                     request, graph, SurfacePlanningStatus.UNSUPPORTED,
                     expanded=search.expanded,
                 )
-        selected_witness = (
-            witness_by_node.get(search.path[-1].node_id)
-            if exact_target is None else None
-        )
-        cost_ticks = max(1, int(search.cost_seconds))
         candidate = _surface_candidate(
             request, graph, SurfacePlanningStatus.COMPLETE,
             tuple(state.node_id for state in search.path),
             search.segments,
-            cost_ticks * _PLANNING_TICK_SECONDS,
-            cost_ticks,
+            int(search.cost_seconds) * _PLANNING_TICK_SECONDS,
+            int(search.cost_seconds),
             search.expanded, search.final_resources,
             tuple(search.path),
             ground_traversal_plans=traversal_plans,
-            terminal_witness=selected_witness,
         )
         return candidate
     information_need = expander.information_need(request, snapshot)

@@ -1,0 +1,69 @@
+{
+  "formal_clutter_revisions": {
+    "cases": [
+      {
+        "id": "f2r/clutter/0.1/0/0/follow",
+        "revisions_accepted": 10,
+        "revisions_requested": 10,
+        "outcome": "cancelled",
+        "violations": [],
+        "damage": 0.0
+      },
+      {
+        "id": "f2r/clutter/0.1/0/1/follow",
+        "revisions_accepted": 10,
+        "revisions_requested": 10,
+        "outcome": "cancelled",
+        "violations": [],
+        "damage": 0.0
+      },
+      {
+        "id": "f2r/clutter/0.1/0/3/follow",
+        "revisions_accepted": 10,
+        "revisions_requested": 10,
+        "outcome": "cancelled",
+        "violations": [],
+        "damage": 0.0
+      },
+      {
+        "id": "f2r/clutter/0.2/0/0/follow",
+        "revisions_accepted": 10,
+        "revisions_requested": 10,
+        "outcome": "cancelled",
+        "violations": [],
+        "damage": 0.0
+      },
+      {
+        "id": "f2r/clutter/0.2/0/1/follow",
+        "revisions_accepted": 10,
+        "revisions_requested": 10,
+        "outcome": "cancelled",
+        "violations": [],
+        "damage": 0.0
+      },
+      {
+        "id": "f2r/clutter/0.2/0/3/follow",
+        "revisions_accepted": 10,
+        "revisions_requested": 10,
+        "outcome": "cancelled",
+        "violations": [],
+        "damage": 0.0
+      }
+    ],
+    "production_revision_prepare_ms": {
+      "samples": 60,
+      "p50": 11.7292,
+      "p95": 47.2378,
+      "p99": 90.9678,
+      "maximum": 90.9678
+    },
+    "gates": {
+      "all_revisions_accepted": true,
+      "zero_safety_events": true,
+      "p95": false,
+      "p99": false,
+      "maximum": false
+    },
+    "timing_boundary": "replace_goal + prepare_proposals, backend advancement excluded."
+  }
+}

@@ -135,7 +135,7 @@ class F1KnownWorldFollowingTests(unittest.TestCase):
             {"revision": 3, "response_ticks": 2, "end": "movement"},
         ])
 
-    def test_d077_three_revisions_skip_only_irrelevant_unknown_without_stopping(self):
+    def test_d064_three_revisions_request_facts_without_stopping_walk(self):
         unknown = tuple(
             (x, y, z)
             for x in range(-2, 3)
@@ -164,13 +164,40 @@ class F1KnownWorldFollowingTests(unittest.TestCase):
             ), _RecordingTrace(), trajectory_sink=sample)
 
         waits = result["revision_information_waits"]
-        self.assertEqual(waits, [])
+        self.assertGreaterEqual(len(waits), 3)
+        self.assertEqual(
+            [item["revision"] for item in waits],
+            sorted({item["revision"] for item in waits}),
+        )
+        self.assertTrue(all(item["missing_cell_count"] > 0 for item in waits))
         self.assertNotIn(
             "stopping",
             {item["state"] for item in result["state_history"]},
         )
-        self.assertEqual(result['revision_information_movement_gap_ticks'], [])
-        self.assertGreaterEqual(result["accepted_revisions"], 3)
+        pre_control = {row['tick']: row for row in result['revision_pre_control_states']}
+        for wait in waits:
+            tick = wait['tick']
+            incumbent = pre_control[tick]['incumbent_route_id']
+            self.assertIsNotNone(incumbent)
+            self.assertTrue(any(route.route_id == incumbent and decision.state in
+                {FixedRouteState.RUNNING, FixedRouteState.BRAKING}
+                for route, _, decision in samples[tick-1][1]))
+        for tick in result['revision_information_movement_gap_ticks']:
+            observed, decisions = samples[tick-1]
+            incumbent = pre_control[tick]['incumbent_route_id']
+            # Region completion may legitimately brake the old effective goal
+            # while a newer goal waits for facts. Prove that precise reason.
+            braking = [(route, position, decision) for route, position, decision in decisions
+                if route.route_id == incumbent and decision.state is FixedRouteState.BRAKING
+                and decision.reason == 'goal_braking' and decision.movement == MovementV1()]
+            self.assertTrue(braking)
+            for route, position, _ in braking:
+                region = route.execution_contract.completion_region
+                self.assertIsNotNone(region)
+                self.assertTrue(region.contains(position))
+                self.assertTrue(region.contains(observed['position']))
+            self.assertTrue(any(row['tick'] > tick and row['revision'] > pre_control[tick]['revision']
+                for row in result['revision_pre_control_states']))
         self.assertEqual(result["task_recoveries"], 0)
         self.assertEqual(result["planning_submissions"], 0)
 

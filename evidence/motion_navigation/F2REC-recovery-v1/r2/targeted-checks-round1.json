@@ -1,0 +1,12 @@
+{
+  "formal_platform": "windows",
+  "python_executable": ".venv/python.exe",
+  "command": ".venv/python.exe -m unittest tests.motion_nav.test_f2rec_r2_goal_selection tests.motion_nav.test_f2rec_r1_region_geometry tests.motion_nav.test_f2_ground_completion_region tests.motion_nav.test_f2r_piecewise_completion tests.motion_nav.test_d059_consumers_and_identity tests.motion_nav.test_d060_terminal_node_exact_proof tests.motion_nav.test_standalone_export -q",
+  "tests": 61,
+  "passed": 61,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "elapsed_seconds": 54.359,
+  "round": 1
+}

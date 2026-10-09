@@ -1,0 +1,184 @@
+{
+  "schema_version": "mc2p.f2rec-r2-d061-stop-summary.v1",
+  "status": "round1-performance-failed",
+  "full_raw_artifact_sha256": "14c01937ca63847ca0f5aac29992ac58d5a4f9bf104545d560de91efe9b1d9b8",
+  "formal_command": ".venv/python.exe -m scripts.benchmark_d061_long_session --output <d061-output>",
+  "source": {
+    "commit": "686cc0a78c379f2ef87fa3f6201e36fd2c98c49c",
+    "files": [
+      {
+        "path": "scripts/benchmark_d061_long_session.py",
+        "sha256": "ec1d1fa8c0cda71098c6d8cbb9e851850c944183762944675da2b0f1259d0034"
+      },
+      {
+        "path": "tests/sim/known_world_following.py",
+        "sha256": "d50cfda133bf0a545110e4e2939f6e492235d35125b1cf0b1489a50b27948138"
+      },
+      {
+        "path": "mc2p/runtime/async_trace.py",
+        "sha256": "0688d9f53da07a2e3f9184b29f79f2770fb8623feb43e9a3e322dd91d2010001"
+      },
+      {
+        "path": "mc2p/runtime/segmented_trace.py",
+        "sha256": "eb07294badb8d58f8d8072eabae6661e462157eee48e213920728fafca744bf2"
+      },
+      {
+        "path": "mc2p/runtime/player_runtime_v1.py",
+        "sha256": "25dabb5d9f604047a1370c2b10990b26de392e1bccb73c1c0a92b9e8c7ab7c1a"
+      },
+      {
+        "path": "mc2p/runtime/arbiter_v1.py",
+        "sha256": "3816760434283653ea762626d6cf8b030fff2d9878201e2c5d7ee23894258909"
+      },
+      {
+        "path": "mc2p/skills/known_world_follow_driver.py",
+        "sha256": "8bbc48e871e1bf9e9e5339c47d2501a7e67d7afaf03b523a4222125d9b631868"
+      },
+      {
+        "path": "mc2p/skills/navigation_session_driver.py",
+        "sha256": "e29d52b7b1b62576fd5bb8f4ced3d7bd39a6579cef32c40e94d6b42db1a45b02"
+      },
+      {
+        "path": "mc2p/motion_nav/navigation_session.py",
+        "sha256": "abaf496a7344837d1107f5d03cdbc1e91c005ade92be6b28f4ae9a3c4c4fed8d"
+      },
+      {
+        "path": "mc2p/motion_nav/route_admission.py",
+        "sha256": "ad45581fe92b0c943367067de8e9347f740515f955e30ed283066a593859744d"
+      }
+    ],
+    "git_dirty": true,
+    "git_status": [
+      "M config/motion-navigation/standalone-export-v1.json",
+      " M mc2p/motion_nav/navigation_session.py",
+      " M tests/motion_nav/test_standalone_export.py",
+      "?? evidence/motion_navigation/F2REC-recovery-v1/r2/",
+      "?? scripts/f2rec_r2_selection_probe.py",
+      "?? tests/motion_nav/test_f2rec_r2_goal_selection.py"
+    ],
+    "hash_basis": "windows_worktree_bytes",
+    "scope_sha256": "aecf88550eae25da6d22f8b2840ee053ec36cb46b22dac409e1b4de97ff4236d"
+  },
+  "environment": {
+    "control_frequency_hz": 20,
+    "control_period_ns": 50000000,
+    "control_thread_id": 62748,
+    "executable": "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "hash_basis": "windows_worktree_bytes",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+    "wall_clock": "time.perf_counter_ns"
+  },
+  "timing_layers": {
+    "following_revision_frames": {
+      "production_prepare_statistics": {
+        "maximum_ms": 9.4895,
+        "maximum_ns": 9489500,
+        "p50_ms": 8.5125,
+        "p50_ns": 8512500,
+        "p95_ms": 9.4895,
+        "p95_ns": 9489500,
+        "p99_ms": 9.4895,
+        "p99_ns": 9489500,
+        "samples": 19
+      },
+      "retained_ordinals": [
+        782,
+        786,
+        790,
+        794,
+        798,
+        802,
+        806,
+        810,
+        814,
+        818,
+        830,
+        834,
+        838,
+        842,
+        846,
+        850,
+        854,
+        858,
+        863
+      ],
+      "samples": 19
+    },
+    "full_harness_ms": {
+      "measurement_boundary": "timing_boundaries.full_harness_ms",
+      "samples": 4096,
+      "statistics": {
+        "maximum_ms": 29.6239,
+        "maximum_ns": 29623900,
+        "p50_ms": 8.5674,
+        "p50_ns": 8567400,
+        "p95_ms": 9.0933,
+        "p95_ns": 9093300,
+        "p99_ms": 23.687,
+        "p99_ns": 23687000,
+        "samples": 4096
+      }
+    },
+    "production_prepare_ms": {
+      "measurement_boundary": "timing_boundaries.production_prepare_ms",
+      "samples": 4096,
+      "statistics": {
+        "maximum_ms": 9.4895,
+        "maximum_ns": 9489500,
+        "p50_ms": 4.9114,
+        "p50_ns": 4911400,
+        "p95_ms": 5.1447,
+        "p95_ns": 5144700,
+        "p99_ms": 5.3113,
+        "p99_ns": 5311300,
+        "samples": 4096
+      }
+    },
+    "simulation_backend_ms": {
+      "gating": "reported_only",
+      "measurement_boundary": "timing_boundaries.simulation_backend_ms",
+      "samples": 4096,
+      "statistics": {
+        "maximum_ms": 23.9104,
+        "maximum_ns": 23910400,
+        "p50_ms": 3.2042,
+        "p50_ns": 3204200,
+        "p95_ms": 3.4252,
+        "p95_ns": 3425200,
+        "p99_ms": 17.9888,
+        "p99_ns": 17988800,
+        "samples": 4096
+      }
+    }
+  },
+  "gates": {
+    "behavior": true,
+    "control_path_integrity": true,
+    "control_path_maximum": true,
+    "following_revision_production_maximum": true,
+    "following_revision_production_p95": false,
+    "following_revision_production_p99": true,
+    "full_harness_maximum": true,
+    "gc_diagnostic_integrity": true,
+    "gen2_coverage": true,
+    "identity": true,
+    "input_deadline_miss": true,
+    "minimum_deadline_slack": true,
+    "pacing": true,
+    "prepare_control_alignment": true,
+    "prepare_maximum": true,
+    "prepare_p95": true,
+    "prepare_p99": true,
+    "production_prepare_maximum": true,
+    "production_prepare_p95": true,
+    "production_prepare_p99": true,
+    "safety": true,
+    "sample_maximum": true,
+    "sample_minimum": true,
+    "terminal": true,
+    "trace": true
+  },
+  "passed": false,
+  "raw_artifact_bytes": 17724597
+}

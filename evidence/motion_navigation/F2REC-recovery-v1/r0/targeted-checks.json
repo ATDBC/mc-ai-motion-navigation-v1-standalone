@@ -1,0 +1,27 @@
+{
+  "schema_version": "mc2p.f2rec-r0-targeted-checks.v1",
+  "formal_interpreter": ".venv/python.exe",
+  "modules": [
+    "tests.motion_nav.test_f2rec_r0_baseline",
+    "tests.motion_nav.test_d061_long_session_benchmark",
+    "tests.motion_nav.test_standalone_export"
+  ],
+  "tests": 23,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "elapsed_seconds": 27.231,
+  "post_export_manifest_edit": {
+    "modules": [
+      "tests.motion_nav.test_f2rec_r0_baseline",
+      "tests.motion_nav.test_standalone_export"
+    ],
+    "tests": 17,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "elapsed_seconds": 25.759
+  },
+  "tdd_red": "old inspect.getsource probe lacked dynamic_formal_path and observed evidence",
+  "post_commit_policy": "rerun these affected checks and evidence hash verification only; the full 1654/1654 baseline remains tied to tool-provenance.json"
+}

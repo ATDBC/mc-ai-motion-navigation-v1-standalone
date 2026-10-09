@@ -30,7 +30,6 @@ from mc2p.motion_nav.online_motion import InputApplicationLedger
 from mc2p.motion_nav.retry_ledger import RetryCause
 from mc2p.motion_nav.route_admission import (
     ActiveRouteTracker,
-    AdmissionReason,
     AdmissionStatus,
     CorridorStatus,
     RouteAdmitter,
@@ -62,7 +61,6 @@ from tests.motion_nav.test_b07_surface_planning import ordinary_profile
 from tests.motion_nav.test_b07_support_surfaces import surface_world
 from tests.motion_nav.test_navigation_session import (
     _InlinePlanner,
-    _InlineMotionWorker,
     _ground_anchor,
     _source,
 )
@@ -199,20 +197,14 @@ class D059TerminalSelectionDependencyTests(unittest.TestCase):
         )
         self.assertEqual(candidate.path[-1].position, (2.5, 1, 1.5))
         selected = route.action_route.actions[-1].fixed_route.points[-1]
-        self.assertEqual(
-            (selected.x, selected.y, selected.z),
-            candidate.path[-1].position,
-        )
+        self.assertEqual((selected.x, selected.y, selected.z), (2.45, 1, 1.5))
         exact = tuple(
             recipe for recipe in plan.recipes
             if recipe.query_kind
                 is WalkValidationQueryKind.STANDABLE_CONNECTION
         )
         self.assertEqual(len(exact), 1)
-        self.assertEqual(
-            exact[0].standable_connection.position,
-            candidate.path[-1].position,
-        )
+        self.assertEqual(exact[0].standable_connection.position, (2.45, 1, 1.5))
         self.assertNotIn(unknown, exact[0].dependencies)
         self.assertNotIn(unknown, candidate.dependencies)
         self.assertIsNone(plan.initial_connection)
@@ -609,7 +601,7 @@ class D059TerminalSelectionDependencyTests(unittest.TestCase):
             ActiveRouteValidationReason.STRICT_OWNER_CHANGED,
         )
 
-    def test_unproved_terminal_rejects_and_ground_tail_gets_exact_recipe(self):
+    def test_no_exact_proof_keeps_selection_and_feasible_tail_gets_recipe(self):
         with self.subTest(branch="second-direct-query-blocked"):
             world = _world_with_unselected_unknowns()
             request, candidate = _candidate(
@@ -623,22 +615,20 @@ class D059TerminalSelectionDependencyTests(unittest.TestCase):
                 "mc2p.motion_nav.route_admission.query_standable_connection",
                 return_value=StandablePointResult(QueryStatus.BLOCKED),
             ):
-                rejected = RouteAdmitter().admit_surface(
+                route = _admit(
+                    world,
+                    request,
                     candidate,
-                    frame(world, 2, candidate.path[0].position),
-                    expected_request_id=request.request_id,
-                    goal_id=request.goal_id,
-                    goal_revision=request.goal_revision,
-                    changed_cells=(),
+                    candidate.path[0].position,
                 )
-            self.assertIs(
-                rejected.status,
-                AdmissionStatus.REJECTED,
+            changed = (3, 1, 1)
+            world.confirm_air(
+                ObservationStamp(
+                    world.session, 45, 45, "test-clock", 2_250_000_000,
+                ),
+                (changed,),
             )
-            self.assertIs(
-                rejected.reason,
-                AdmissionReason.GOAL_STANDING_POINT_UNAVAILABLE,
-            )
+            _assert_non_recipe_stop(self, world, route, changed)
 
         with self.subTest(branch="ground-traversal-tail"):
             selection_only = (3, 5, 0)
@@ -775,14 +765,13 @@ class D059TerminalSelectionDependencyTests(unittest.TestCase):
                 step_profile(),
             ),
             planner_worker=planner,
-            motion_worker=_InlineMotionWorker(),
             clock_ns=lambda: 1_000_000_000,
         )
         # D063 now waits for the complete bounded goal-surface fact set.
         # This D059 lifecycle test intentionally isolates the older route
         # validation boundary, so supply the already-selected graph node and
         # leave the terminal selection dependency to RouteAdmitter.
-        session._surface_for_goal = lambda frame, goal, ground_profile=None: (
+        session._surface_for_goal = lambda frame, goal: (
             SurfaceNodeId(
                 2,
                 round((goal.region.min_z + goal.region.max_z) / 2.0 - .5),

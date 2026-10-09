@@ -18,11 +18,6 @@ from mc2p.motion_nav.ground_motion import (
     GroundControl, GroundMotionProfile, PlanarBodyState, predict_ground,
     world_direction_control,
 )
-from mc2p.motion_nav.ground_candidate_verifier import (
-    CLOSED_GROUND_MOVEMENTS, GroundCandidateFamilyStatus,
-    GroundCandidateSafety, GroundCandidateVerificationReport,
-    GroundCandidateVerifier, GroundRouteFit,
-)
 from mc2p.motion_nav.ground_modes import (
     GroundModeProfile, ModeReadiness, evaluate_ground_mode, movement_for_ground_mode,
     observed_ground_mode,
@@ -30,19 +25,8 @@ from mc2p.motion_nav.ground_modes import (
 from mc2p.motion_nav.ground_route_execution import (
     GroundRouteCapability, GroundRouteExecutionContract, GroundRouteGuardPhase,
 )
-from mc2p.motion_nav.ground_tracking_policy import (
-    GroundTrackingContext, GroundTrackingLimits, GroundTrackingPolicy,
-    GroundTrackingRoute,
-)
-from mc2p.motion_nav.ground_terminal_search import (
-    GroundTerminalBranchProof, GroundTerminalSequence,
-    GroundTerminalSolveRequest,
-)
 from mc2p.motion_nav.movement_transition import MovementMode, GoalState
-from mc2p.motion_nav.online_motion import (
-    InputApplicationLedger, InputApplicationStatus, ProjectionStatus, StateAnchor,
-    project_movement_command,
-)
+from mc2p.motion_nav.online_motion import ProjectionStatus, project_movement_command
 from mc2p.motion_nav.physics_1_21 import step as physics_step
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView, build_physics_state
 from mc2p.motion_nav.physics_types import (
@@ -50,9 +34,7 @@ from mc2p.motion_nav.physics_types import (
 )
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.safe_ground_control import (
-    VerifiedGroundRouteCandidate, ground_route_state_matches,
-    verified_ground_recovery_movement, verified_ground_rollout,
-    verified_ground_route_candidate,
+    VerifiedGroundRouteCandidate, ground_route_state_matches, verified_ground_route_candidate,
 )
 from mc2p.motion_nav.segment_entry import (
     MotionContinuationRequirement, SegmentEntryWindow, body_fits_segment_entry,
@@ -219,47 +201,6 @@ class FixedRouteDecision:
     full_candidates: int = 0
     physics_steps: int = 0
     edge_guard_phase: GroundRouteGuardPhase = GroundRouteGuardPhase.INACTIVE
-    submit_input: bool = True
-    declared_candidates: int = 0
-    classified_candidates: int = 0
-    candidate_budget_exhausted: bool = False
-    world_dependencies: tuple[BlockPos, ...] = ()
-    dependency_valid_until_movement_tick: int | None = None
-    route_fit: GroundRouteFit | None = None
-    verified_command_index: int | None = None
-    expected_movement_tick: int | None = None
-    latest_movement_tick: int | None = None
-
-
-@dataclass(frozen=True, slots=True)
-class _GroundTerminalPendingSubmission:
-    command_index: int
-    control_sequence: int
-    requested_tick: int
-    latest_tick: int
-
-
-def _ground_terminal_state_matches(
-    observed: PhysicsState,
-    predicted: PhysicsState,
-) -> bool:
-    """Bound execution to the calculator trajectory without exact-float coupling."""
-    return (
-        observed.session == predicted.session
-        and observed.ruleset_id == predicted.ruleset_id
-        and observed.state_schema == predicted.state_schema
-        and observed.pose == predicted.pose
-        and observed.on_ground == predicted.on_ground
-        and math.dist(observed.position, predicted.position) <= .035
-        and math.dist(
-            observed.velocity_blocks_per_tick,
-            predicted.velocity_blocks_per_tick,
-        ) <= .012
-        and abs(math.atan2(
-            math.sin(observed.yaw_radians - predicted.yaw_radians),
-            math.cos(observed.yaw_radians - predicted.yaw_radians),
-        )) <= math.radians(3.0)
-    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -386,9 +327,6 @@ class _Candidate:
     progress_gain: float
     full_replay_eligible: bool = False
     support_boundary: bool = False
-    control_ticks: int = 0
-    completion_distance_blocks: float = math.inf
-    target_distance_blocks: float = math.inf
 
 
 @dataclass(frozen=True, slots=True)
@@ -510,9 +448,6 @@ class FixedRouteController:
         self._previous_movement = MovementV1()
         self._handoff_target_hint: GroundHandoffTarget | None = None
         self._progress_anchor = 0.0
-        self._terminal_distance_anchor = math.inf
-        self._terminal_stop_distance_anchor = math.inf
-        self._terminal_speed_anchor = math.inf
         self._no_progress_frames = 0
         self._stall_detected = False
         self._segment_index = 0
@@ -526,28 +461,8 @@ class FixedRouteController:
         self._physics_steps = 0
         self._guard_phase = GroundRouteGuardPhase.INACTIVE
         self._ordinary_replays: dict[MovementV1, VerifiedGroundRouteCandidate] = {}
-        self._closed_replays: dict[tuple[MovementV1, int], VerifiedGroundRouteCandidate] = {}
-        self._closed_route_fits: dict[tuple[MovementV1, int], GroundRouteFit] = {}
-        self._declared_candidates = 0
-        self._classified_candidates = 0
-        self._candidate_budget_exhausted = False
-        self._candidate_neutral_safe = False
-        self._active_tail_dependencies: tuple[BlockPos, ...] = ()
-        self._active_tail_valid_until_tick: int | None = None
-        self._active_route_fit: GroundRouteFit | None = None
         self._guard_release_frames = 0
         self._guard_outside_frames = 0
-        self._ground_terminal_basis: GroundTerminalSolveRequest | None = None
-        self._ground_terminal_sequence: GroundTerminalSequence | None = None
-        self._ground_terminal_branch: GroundTerminalBranchProof | None = None
-        self._ground_terminal_start_tick: int | None = None
-        self._ground_terminal_command_index = 0
-        self._ground_terminal_pending: _GroundTerminalPendingSubmission | None = None
-        self._ground_terminal_tail_index: int | None = None
-        self._ground_terminal_tail_start_tick: int | None = None
-        self._ground_terminal_recovering = False
-        self._ground_terminal_recovery_deadline_tick: int | None = None
-        self._ground_terminal_recovery_terminal = FixedRouteState.NEEDS_REPLAN
 
     def start(
         self, route: FixedRoute, frame: NavigationFrame, *,
@@ -598,9 +513,6 @@ class FixedRouteController:
         self._previous_movement = MovementV1()
         self._handoff_target_hint = None
         self._progress_anchor = 0.0
-        self._terminal_distance_anchor = math.inf
-        self._terminal_stop_distance_anchor = math.inf
-        self._terminal_speed_anchor = math.inf
         self._no_progress_frames = 0
         self._stall_detected = False
         self._segment_index = 0
@@ -613,435 +525,7 @@ class FixedRouteController:
         self._guard_phase = GroundRouteGuardPhase.INACTIVE
         self._guard_release_frames = 0
         self._guard_outside_frames = 0
-        self._active_tail_dependencies = ()
-        self._active_tail_valid_until_tick = None
-        self._active_route_fit = None
-        self._clear_ground_terminal()
         self.state = FixedRouteState.RUNNING
-
-    @property
-    def ground_terminal_pending(self) -> bool:
-        return self._ground_terminal_basis is not None
-
-    @property
-    def ground_terminal_active(self) -> bool:
-        return self._ground_terminal_sequence is not None
-
-    @property
-    def ground_terminal_holds_body(self) -> bool:
-        return (self._ground_terminal_basis is not None
-                or self.ground_terminal_active
-                or self._ground_terminal_pending is not None)
-
-    def _clear_ground_terminal(self) -> None:
-        self._ground_terminal_basis = None
-        self._ground_terminal_sequence = None
-        self._ground_terminal_branch = None
-        self._ground_terminal_start_tick = None
-        self._ground_terminal_command_index = 0
-        self._ground_terminal_pending = None
-        self._ground_terminal_tail_index = None
-        self._ground_terminal_tail_start_tick = None
-        self._ground_terminal_recovering = False
-        self._ground_terminal_recovery_deadline_tick = None
-        self._ground_terminal_recovery_terminal = FixedRouteState.NEEDS_REPLAN
-
-    @staticmethod
-    def _ground_terminal_anchor_domain_matches(
-        expected: StateAnchor,
-        observed: StateAnchor,
-    ) -> bool:
-        """Keep a proof inside the phase and projection domain it was built for."""
-        return (
-            observed.session == expected.session
-            and observed.phase is expected.phase
-            and observed.ruleset_id == expected.ruleset_id
-            and observed.state_schema == expected.state_schema
-            and observed.input_projection_version
-                == expected.input_projection_version
-        )
-
-    def begin_ground_terminal_solve(
-        self,
-        request: GroundTerminalSolveRequest,
-    ) -> bool:
-        """Hold one typed solve basis while ordinary ground keeps body ownership."""
-        if type(request) is not GroundTerminalSolveRequest or self._route is None:
-            raise ContractViolation("ground terminal basis requires an active fixed route")
-        contract = self._route.execution_contract
-        if (contract is None or contract.completion_region != request.completion
-                or request.profile.profile_id != self.profile.profile_id):
-            return False
-        self._ground_terminal_basis = request
-        if self.state in {FixedRouteState.BLOCKED, FixedRouteState.BRAKING}:
-            self.state = FixedRouteState.RUNNING
-        return True
-
-    def retire_ground_terminal(self) -> None:
-        """Retire unstarted work; an active sequence first enters its safe tail."""
-        if self._ground_terminal_sequence is None:
-            self._clear_ground_terminal()
-            return
-        self._ground_terminal_recovering = True
-        self._ground_terminal_tail_index = 0
-
-    def install_ground_terminal_sequence(
-        self,
-        sequence: GroundTerminalSequence,
-        anchor: StateAnchor,
-        ledger: InputApplicationLedger | None = None,
-    ) -> bool:
-        if (type(sequence) is not GroundTerminalSequence
-                or type(anchor) is not StateAnchor):
-            raise ContractViolation("ground terminal install requires typed proof and anchor")
-        basis = self._ground_terminal_basis
-        if (basis is None
-                or sequence.work_identity != basis.work_identity
-                or sequence.anchor != basis.anchor
-                or sequence.goal_id != basis.goal_id
-                or sequence.goal_revision != basis.goal_revision
-                or sequence.route_id != basis.route_id
-                or sequence.route_revision != basis.route_revision
-                or sequence.action_index != basis.action_index
-                or sequence.execution_window != basis.execution_window
-                or sequence.completion != basis.completion
-                or sequence.ruleset_id != anchor.ruleset_id
-                or not self._ground_terminal_anchor_domain_matches(
-                    sequence.anchor, anchor,
-                )):
-            return False
-        if sequence.preparation_inputs:
-            if ledger is None:
-                return False
-            first_tick = sequence.anchor.movement_tick_id + 1
-            for offset, expected in enumerate(sequence.preparation_inputs):
-                sample = ledger.sample(first_tick + offset)
-                if (sample is None
-                        or abs(float(sample.forward) - expected.forward) > 1.0e-9
-                        or abs(float(sample.strafe) - expected.strafe) > 1.0e-9
-                        or sample.jump != expected.jump
-                        or sample.sneak != expected.sneak
-                        or sample.sprint != expected.sprint):
-                    return False
-        start_tick = anchor.movement_tick_id + 1
-        if not sequence.execution_window.allows_start(start_tick):
-            return False
-        branch = (
-            sequence.normal
-            if start_tick == sequence.execution_window.earliest_start_tick
-            else sequence.late1
-            if start_tick == sequence.execution_window.latest_start_tick
-            else None
-        )
-        if branch is None or not _ground_terminal_state_matches(
-                anchor.physics_state, branch.entry_state):
-            return False
-        self._ground_terminal_sequence = sequence
-        self._ground_terminal_branch = branch
-        self._ground_terminal_start_tick = start_tick
-        self._ground_terminal_command_index = 0
-        self._ground_terminal_pending = None
-        self._ground_terminal_tail_index = None
-        self._ground_terminal_tail_start_tick = None
-        self._ground_terminal_recovering = False
-        self.state = FixedRouteState.RUNNING
-        return True
-
-    def register_ground_terminal_submission(
-        self,
-        command_index: int,
-        *,
-        control_sequence: int,
-        requested_movement_tick: int,
-        requested_latest_movement_tick: int | None = None,
-    ) -> None:
-        sequence = self._ground_terminal_sequence
-        if sequence is None or self._ground_terminal_branch is None:
-            raise ContractViolation("ground terminal sequence is not active")
-        if requested_latest_movement_tick is None:
-            requested_latest_movement_tick = requested_movement_tick
-        if (command_index != self._ground_terminal_command_index
-                or self._ground_terminal_pending is not None
-                or requested_movement_tick != self._ground_terminal_expected_tick()
-                or requested_latest_movement_tick != requested_movement_tick):
-            raise ContractViolation("ground terminal submission differs from proof")
-        self._ground_terminal_pending = _GroundTerminalPendingSubmission(
-            command_index, control_sequence, requested_movement_tick,
-            requested_latest_movement_tick,
-        )
-
-    def _ground_terminal_expected_tick(self) -> int:
-        assert self._ground_terminal_start_tick is not None
-        return self._ground_terminal_start_tick + self._ground_terminal_command_index
-
-    def _ground_terminal_begin_recovery(
-        self,
-        anchor: StateAnchor | None = None,
-        terminal: FixedRouteState = FixedRouteState.NEEDS_REPLAN,
-    ) -> None:
-        if not self._ground_terminal_recovering:
-            self._ground_terminal_recovering = True
-            self._ground_terminal_tail_index = 0
-            self._ground_terminal_recovery_terminal = terminal
-        elif terminal is FixedRouteState.INPUT_LOST:
-            self._ground_terminal_recovery_terminal = terminal
-        branch = self._ground_terminal_branch
-        if branch is not None:
-            tail = branch.prefix_tails[min(
-                self._ground_terminal_command_index,
-                len(branch.prefix_tails) - 1,
-            )]
-            self._active_tail_dependencies = tail.dependencies
-            if (anchor is not None
-                    and self._ground_terminal_recovery_deadline_tick is None):
-                maximum = min(
-                    len(tail.trajectory), self.config.maximum_recovery_ticks,
-                )
-                self._ground_terminal_recovery_deadline_tick = (
-                    anchor.movement_tick_id + max(1, maximum)
-                )
-
-    def _decide_ground_terminal_recovery(
-        self,
-        frame: NavigationFrame,
-        anchor: StateAnchor,
-        started: int,
-    ) -> FixedRouteDecision:
-        """Choose recovery from the observed state; an old tail grants no input."""
-        self._ground_terminal_begin_recovery(anchor)
-        current = anchor.physics_state
-        deadline = self._ground_terminal_recovery_deadline_tick
-        speed = math.hypot(
-            current.velocity_blocks_per_tick[0],
-            current.velocity_blocks_per_tick[2],
-        ) * 20.0
-        if current.on_ground and speed <= self.config.stopped_speed_blocks_per_second:
-            terminal = (
-                FixedRouteState.CANCELLED
-                if self._cancel_requested else
-                self._ground_terminal_recovery_terminal
-            )
-            self._clear_ground_terminal()
-            self.state = terminal
-            return self._decision(
-                started, MovementV1(),
-                "ground_terminal_cancelled_after_safe_recovery"
-                if terminal is FixedRouteState.CANCELLED else
-                "ground_terminal_deviation_reanchored",
-                submit_input=False,
-            )
-        if deadline is not None and anchor.movement_tick_id >= deadline:
-            self._clear_ground_terminal()
-            self.state = FixedRouteState.INPUT_LOST
-            return self._decision(
-                started, MovementV1(),
-                "ground_terminal_recovery_deadline_exhausted",
-                submit_input=False,
-            )
-        remaining = max(
-            1,
-            self.config.maximum_recovery_ticks
-            if deadline is None else deadline - anchor.movement_tick_id,
-        )
-        neutral_safe = verified_ground_rollout(
-            frame, current, MovementV1(),
-            control_ticks=1,
-            tail_ticks=max(0, remaining - 1),
-            minimum_support=self.config.minimum_support_fraction,
-        )
-        if neutral_safe is not None:
-            self.state = FixedRouteState.CANCELLING
-            return self._decision(
-                started, MovementV1(),
-                "ground_terminal_current_state_neutral_recovery",
-                input_lease_ticks=1,
-            )
-        recovery = verified_ground_recovery_movement(frame, current)
-        if recovery is not None:
-            self.state = FixedRouteState.CANCELLING
-            return self._decision(
-                started, recovery,
-                "ground_terminal_current_state_verified_recovery",
-                input_lease_ticks=1,
-            )
-        self._clear_ground_terminal()
-        self.state = FixedRouteState.INPUT_LOST
-        return self._decision(
-            started, MovementV1(),
-            "ground_terminal_current_state_recovery_unavailable",
-            submit_input=False,
-        )
-
-    def _consume_ground_terminal_submission(
-        self,
-        anchor: StateAnchor,
-        ledger: InputApplicationLedger,
-    ) -> str | None:
-        pending = self._ground_terminal_pending
-        sequence = self._ground_terminal_sequence
-        if pending is None or sequence is None:
-            return None
-        record = ledger.record(pending.control_sequence)
-        if record is None:
-            if anchor.movement_tick_id >= pending.latest_tick:
-                self._ground_terminal_begin_recovery(
-                    anchor, FixedRouteState.INPUT_LOST,
-                )
-                self._ground_terminal_pending = None
-                return "ground_terminal_receipt_missing"
-            return "ground_terminal_awaiting_application"
-        if record.action.movement != sequence.commands[pending.command_index]:
-            self._ground_terminal_begin_recovery(
-                anchor, FixedRouteState.INPUT_LOST,
-            )
-            self._ground_terminal_pending = None
-            return "ground_terminal_applied_command_changed"
-        if record.status is InputApplicationStatus.APPLIED:
-            if (len(record.applied_ticks) != 1
-                    or record.applied_ticks[0] != pending.requested_tick):
-                self._ground_terminal_begin_recovery(
-                    anchor, FixedRouteState.INPUT_LOST,
-                )
-                self._ground_terminal_pending = None
-                return "ground_terminal_input_tick_changed"
-            self._ground_terminal_command_index += 1
-            self._ground_terminal_pending = None
-            return None
-        if record.status in {
-                InputApplicationStatus.APPLIED_OUTSIDE_WINDOW,
-                InputApplicationStatus.REJECTED,
-                InputApplicationStatus.AMBIGUOUS,
-                InputApplicationStatus.EXPIRED,
-                InputApplicationStatus.SUPERSEDED,
-        }:
-            self._ground_terminal_begin_recovery(
-                anchor, FixedRouteState.INPUT_LOST,
-            )
-            self._ground_terminal_pending = None
-            return f"ground_terminal_input_{record.status.value}"
-        return "ground_terminal_awaiting_application"
-
-    def _decide_ground_terminal(
-        self,
-        frame: NavigationFrame,
-        anchor: StateAnchor,
-        ledger: InputApplicationLedger,
-        started: int,
-    ) -> FixedRouteDecision:
-        sequence = self._ground_terminal_sequence
-        branch = self._ground_terminal_branch
-        assert sequence is not None and branch is not None
-        if not self._ground_terminal_anchor_domain_matches(
-                sequence.anchor, anchor):
-            self._ground_terminal_begin_recovery(anchor)
-        if (sequence.goal_id != self._ground_terminal_basis.goal_id
-                or sequence.goal_revision != self._ground_terminal_basis.goal_revision
-                or sequence.route_id != self._ground_terminal_basis.route_id
-                or sequence.route_revision != self._ground_terminal_basis.route_revision):
-            self._ground_terminal_begin_recovery(anchor)
-        if set(frame.changed_cells).intersection(sequence.dependencies):
-            self._ground_terminal_begin_recovery(anchor)
-        if self._cancel_requested:
-            self._ground_terminal_begin_recovery(
-                anchor, FixedRouteState.CANCELLED,
-            )
-
-        pending_reason = self._consume_ground_terminal_submission(anchor, ledger)
-        if (self._ground_terminal_recovering
-                and self._ground_terminal_pending is not None):
-            self._ground_terminal_begin_recovery(anchor)
-            deadline = self._ground_terminal_recovery_deadline_tick
-            if deadline is not None and anchor.movement_tick_id >= deadline:
-                self._clear_ground_terminal()
-                self.state = FixedRouteState.INPUT_LOST
-                return self._decision(
-                    started, MovementV1(),
-                    "ground_terminal_recovery_submission_unresolved",
-                    submit_input=False,
-                )
-            self.state = FixedRouteState.CANCELLING
-            return self._decision(
-                started, MovementV1(),
-                "ground_terminal_recovery_waiting_for_previous_submission",
-                submit_input=False,
-            )
-        if pending_reason is not None:
-            if not self._ground_terminal_recovering:
-                return self._decision(
-                    started, MovementV1(), pending_reason,
-                    input_lease_ticks=1,
-                )
-
-        if self._ground_terminal_recovering:
-            return self._decide_ground_terminal_recovery(
-                frame, anchor, started,
-            )
-
-        command_index = self._ground_terminal_command_index
-        if command_index >= len(sequence.commands):
-            if self._ground_terminal_tail_start_tick is None:
-                self._ground_terminal_tail_start_tick = anchor.movement_tick_id
-            tail = branch.prefix_tails[-1].trajectory
-            offset = anchor.movement_tick_id - self._ground_terminal_tail_start_tick
-            expected = tail[min(max(offset, 0), len(tail) - 1)]
-            if not _ground_terminal_state_matches(anchor.physics_state, expected):
-                self._ground_terminal_begin_recovery(anchor)
-                self.state = FixedRouteState.CANCELLING
-                return self._decision(
-                    started, MovementV1(), "ground_terminal_tail_deviated",
-                    input_lease_ticks=1,
-                )
-            if offset >= len(tail) - 1:
-                completion = sequence.completion
-                speed = math.hypot(
-                    anchor.physics_state.velocity_blocks_per_tick[0],
-                    anchor.physics_state.velocity_blocks_per_tick[2],
-                ) * 20.0
-                if (completion.contains(anchor.physics_state.position)
-                        and anchor.physics_state.on_ground
-                        and anchor.physics_state.pose == "standing"
-                        and speed <= self.config.stopped_speed_blocks_per_second):
-                    self._clear_ground_terminal()
-                    self.state = FixedRouteState.SUCCEEDED
-                    return self._decision(
-                        started, MovementV1(), "ground_terminal_sequence_complete",
-                    )
-                self._ground_terminal_begin_recovery(anchor)
-                self.state = FixedRouteState.CANCELLING
-                return self._decision(
-                    started, MovementV1(), "ground_terminal_exit_not_observed",
-                )
-            self.state = FixedRouteState.RUNNING
-            return self._decision(
-                started, MovementV1(), "ground_terminal_neutral_tail",
-                input_lease_ticks=1,
-            )
-
-        expected_state = branch.command_trajectory[command_index]
-        if not _ground_terminal_state_matches(anchor.physics_state, expected_state):
-            self._ground_terminal_begin_recovery(anchor)
-            self.state = FixedRouteState.CANCELLING
-            return self._decision(
-                started, MovementV1(), "ground_terminal_trajectory_deviated",
-                input_lease_ticks=1,
-            )
-        expected_tick = self._ground_terminal_expected_tick()
-        if anchor.movement_tick_id + 1 != expected_tick:
-            self._ground_terminal_begin_recovery(anchor)
-            self.state = FixedRouteState.CANCELLING
-            return self._decision(
-                started, MovementV1(), "ground_terminal_command_window_expired",
-                input_lease_ticks=1,
-            )
-        self.state = FixedRouteState.RUNNING
-        return self._decision(
-            started, sequence.commands[command_index],
-            "submit_verified_ground_terminal_command",
-            input_lease_ticks=1,
-            verified_command_index=command_index,
-            expected_movement_tick=expected_tick,
-            latest_movement_tick=expected_tick,
-        )
 
     def set_handoff_target(self, target: GroundHandoffTarget | None) -> None:
         """Guide tracking toward a conditional entry; never authorize an action."""
@@ -1066,12 +550,7 @@ class FixedRouteController:
 
     def _decision(self, started: int, movement: MovementV1, reason: str,
                   missing: tuple[BlockPos, ...] = (), *,
-                  handoff_disposition: GroundHandoffDisposition | None = None,
-                  input_lease_ticks: int | None = None,
-                  submit_input: bool = True,
-                  verified_command_index: int | None = None,
-                  expected_movement_tick: int | None = None,
-                  latest_movement_tick: int | None = None) -> FixedRouteDecision:
+                  handoff_disposition: GroundHandoffDisposition | None = None) -> FixedRouteDecision:
         if (self.mode_profile is not None
                 and self._guard_phase is GroundRouteGuardPhase.INACTIVE
                 and not (self.mode_profile.mode is MovementMode.SPRINT
@@ -1091,23 +570,11 @@ class FixedRouteController:
                 if self._handoff_target_hint is not None
                 else GroundHandoffDisposition.NOT_REQUESTED
             )
-        if input_lease_ticks is None:
-            input_lease_ticks = self.config.input_lease_ticks
-        elif type(input_lease_ticks) is not int or input_lease_ticks not in (1, 2):
-            raise ContractViolation("ordinary ground decision lease must be one or two ticks")
         return FixedRouteDecision(
             self.state, movement, self._progress, self._cross_track,
             tuple(sorted(set(missing))), time.perf_counter_ns() - started,
-            input_lease_ticks, reason, handoff_disposition,
+            self.config.input_lease_ticks, reason, handoff_disposition,
             self._full_candidates, self._physics_steps, self._guard_phase,
-            submit_input, self._declared_candidates, self._classified_candidates,
-            self._candidate_budget_exhausted,
-            self._active_tail_dependencies,
-            self._active_tail_valid_until_tick,
-            self._active_route_fit,
-            verified_command_index,
-            expected_movement_tick,
-            latest_movement_tick,
         )
 
     def _prepared_handoff_movement(self, frame: NavigationFrame) -> MovementV1 | None:
@@ -1478,67 +945,15 @@ class FixedRouteController:
              if braking else "tracking_verified_ground_traversal"),
         )
 
-    def _verify_ordinary_ground_family(
-        self,
-        frame: NavigationFrame,
-        body: PlanarBodyState,
-        physics_state: PhysicsState | None,
-        query_cache: WorldQueryCache,
-        *,
-        deadline_ns: int,
-    ) -> GroundCandidateVerificationReport:
-        """Produce the one physical ordinary-WALK report for this frame."""
-        assert self._route is not None and self._geometry is not None
-        goal = self._geometry.goal
-        context = GroundTrackingContext(
-            body, frame.body.body_box, frame.body.position[1],
-            GroundTrackingRoute.from_fixed_route(self._route),
-            self._progress, self._segment_index, self._previous_movement,
-            (goal.x, goal.z), False, self.profile,
-            GroundTrackingLimits.from_fixed_route_config(self.config),
-            frame.world, query_cache,
-        )
-        report = GroundCandidateVerifier().verify(
-            frame, physics_state, context,
-            tail_ticks=self.config.maximum_recovery_ticks,
-            minimum_support=self.config.minimum_support_fraction,
-            profile=self.profile,
-            query_cache=query_cache,
-            deadline_ns=deadline_ns,
-        )
-        self._declared_candidates = len(report.candidates)
-        self._classified_candidates = sum(
-            item.status is not GroundCandidateSafety.BUDGET_EXHAUSTED
-            for item in report.candidates
-        )
-        self._candidate_neutral_safe = report.neutral_safe
-        self._candidate_budget_exhausted = (
-            report.status is GroundCandidateFamilyStatus.BUDGET_EXHAUSTED
-        )
-        self._physics_steps += report.stats.physics_steps
-        return report
-
     def decide(self, frame: NavigationFrame, *, input_confirmed: bool = True,
                physics_state: PhysicsState | None = None,
-               query_cache: WorldQueryCache | None = None,
-               state_anchor: StateAnchor | None = None,
-               input_ledger: InputApplicationLedger | None = None) -> FixedRouteDecision:
+               query_cache: WorldQueryCache | None = None) -> FixedRouteDecision:
         started = time.perf_counter_ns()
         self._full_candidates = 0
         self._physics_steps = 0
         self._ordinary_replays = {}
-        self._closed_replays = {}
-        self._closed_route_fits = {}
-        self._declared_candidates = 0
-        self._classified_candidates = 0
-        self._candidate_budget_exhausted = False
-        self._candidate_neutral_safe = False
         if type(frame) is not NavigationFrame or type(input_confirmed) is not bool:
             raise ContractViolation("fixed route decision requires a navigation frame and confirmation")
-        if ((state_anchor is not None and type(state_anchor) is not StateAnchor)
-                or (input_ledger is not None
-                    and type(input_ledger) is not InputApplicationLedger)):
-            raise ContractViolation("fixed route execution evidence must be typed")
         if self._route is None or self._geometry is None or self._session is None:
             raise ContractViolation("fixed route controller has not started")
         if frame.session != self._session:
@@ -1547,41 +962,14 @@ class FixedRouteController:
         if self._last_sequence is not None and frame.body.sequence_id <= self._last_sequence:
             raise ContractViolation("fixed route frame did not advance")
         self._last_sequence = frame.body.sequence_id
-        movement_tick = frame.body.movement_tick_id
-        if (self._active_tail_valid_until_tick is not None
-                and movement_tick is not None
-                and movement_tick > self._active_tail_valid_until_tick):
-            self._active_tail_dependencies = ()
-            self._active_tail_valid_until_tick = None
-            self._active_route_fit = None
         if self.state in {
             FixedRouteState.CANCELLED, FixedRouteState.SUCCEEDED,
             FixedRouteState.INPUT_LOST, FixedRouteState.FAILED, FixedRouteState.UNSUPPORTED,
         }:
             return self._decision(started, MovementV1(), self.state.value)
-        if not input_confirmed and self._ground_terminal_sequence is not None:
-            if state_anchor is None:
-                self._clear_ground_terminal()
-                self.state = FixedRouteState.INPUT_LOST
-                return self._decision(
-                    started, MovementV1(),
-                    "ground_terminal_execution_anchor_unavailable",
-                    submit_input=False,
-                )
-            self._ground_terminal_begin_recovery(
-                state_anchor, FixedRouteState.INPUT_LOST,
-            )
-            self.state = FixedRouteState.CANCELLING
-        elif not input_confirmed:
+        if not input_confirmed:
             self.state = FixedRouteState.INPUT_LOST
             return self._decision(started, MovementV1(), "input_application_unconfirmed")
-        if (self._ground_terminal_sequence is None
-                and set(frame.changed_cells).intersection(
-                    self._active_tail_dependencies)):
-            self.state = FixedRouteState.NEEDS_REPLAN
-            return self._decision(
-                started, MovementV1(), "ground_tail_dependencies_changed",
-            )
         if self._traversal_plan is not None:
             return self._decide_traversal(frame, started, physics_state)
         if query_cache is None:
@@ -1710,49 +1098,6 @@ class FixedRouteController:
                          self.profile.support_materials))):
             self.state = FixedRouteState.UNSUPPORTED
             return self._decision(started, MovementV1(), "ordinary_ground_material_unsupported")
-        if self._ground_terminal_sequence is not None:
-            if state_anchor is None or input_ledger is None:
-                self._clear_ground_terminal()
-                self.state = FixedRouteState.INPUT_LOST
-                return self._decision(
-                    started, MovementV1(),
-                    "ground_terminal_execution_evidence_unavailable",
-                    submit_input=False,
-                )
-            return self._decide_ground_terminal(
-                frame, state_anchor, input_ledger, started,
-            )
-        if self._ground_terminal_basis is not None and self._cancel_requested:
-            self._clear_ground_terminal()
-        if self._ground_terminal_basis is not None:
-            if (state_anchor is None
-                    or physics_state is None
-                    or state_anchor.physics_state != physics_state):
-                self._clear_ground_terminal()
-            else:
-                waiting = verified_ground_route_candidate(
-                    frame, physics_state, MovementV1(),
-                    control_ticks=1,
-                    tail_ticks=self.config.maximum_recovery_ticks,
-                    minimum_support=self.config.minimum_support_fraction,
-                    profile=self.profile,
-                    query_cache=query_cache,
-                )
-                self._physics_steps += waiting.physics_steps
-                if waiting.status is QueryStatus.FEASIBLE:
-                    self.state = FixedRouteState.RUNNING
-                    self._active_tail_dependencies = waiting.dependencies
-                    movement_tick = frame.body.movement_tick_id
-                    self._active_tail_valid_until_tick = (
-                        None if movement_tick is None else
-                        movement_tick + max(0, len(waiting.trajectory) - 1)
-                    )
-                    return self._decision(
-                        started, MovementV1(),
-                        "awaiting_ground_terminal_sequence",
-                        input_lease_ticks=1,
-                    )
-                self._clear_ground_terminal()
         projection = self._geometry.project(
             body.x, body.z, self._progress, self._segment_index,
             self.config.maximum_cross_track_blocks,
@@ -1761,11 +1106,6 @@ class FixedRouteController:
         self._progress = max(self._progress, projection.progress)
         self._segment_index = max(self._segment_index, projection.segment_index)
         self._cross_track = projection.distance
-        if self._cross_track > self.config.maximum_cross_track_blocks:
-            self.state = FixedRouteState.NEEDS_REPLAN
-            return self._decision(
-                started, MovementV1(), "fixed_route_observed_outside_corridor",
-            )
         preview_missing = self._route_preview_missing(frame, query_cache)
         if self._progress >= self._progress_anchor + 0.10:
             self._progress_anchor = self._progress
@@ -1775,15 +1115,6 @@ class FixedRouteController:
         if self._no_progress_frames >= 20:
             self._stall_detected = True
 
-        ordinary_report = None
-        if ((self.mode_profile is None
-                or self.mode_profile.mode is MovementMode.WALK)
-                and self.profile.motion_catalog is not None):
-            ordinary_report = self._verify_ordinary_ground_family(
-                frame, body, physics_state, query_cache,
-                deadline_ns=started + 30_000_000,
-            )
-
         if self._cancel_requested:
             if speed <= self.config.stopped_speed_blocks_per_second:
                 self.state = FixedRouteState.CANCELLED
@@ -1792,7 +1123,6 @@ class FixedRouteController:
             return self._brake(
                 frame, body, started, hold_position=True,
                 reason="cancel_braking", query_cache=query_cache,
-                ordinary_report=ordinary_report,
             )
 
         goal = self._geometry.goal
@@ -1819,6 +1149,12 @@ class FixedRouteController:
         )
         completion = (None if self._route.execution_contract is None else
                       self._route.execution_contract.completion_region)
+        if completion is not None:
+            at_goal = (completion.contains(frame.body.position)
+                       and (entry_matches is not False)
+                       and goal_support.status is QueryStatus.FEASIBLE
+                       and goal_support.support_fraction >= self.config.minimum_support_fraction
+                       and frame.body.is_on_ground)
         completion_speed = (
             self.config.handoff_entry_window.maximum_speed_blocks_per_second
             if self.config.handoff_entry_window is not None
@@ -1826,53 +1162,17 @@ class FixedRouteController:
             if self.config.handoff_speed_blocks_per_second is not None
             else self.config.stopped_speed_blocks_per_second
         )
-        completion_evaluation = None
-        if completion is not None:
-            completion_context = GroundTrackingContext(
-                body, frame.body.body_box, frame.body.position[1],
-                GroundTrackingRoute.from_fixed_route(self._route),
-                self._progress, self._segment_index, self._previous_movement,
-                (goal.x, goal.z), True, self.profile,
-                GroundTrackingLimits.from_fixed_route_config(self.config),
-                frame.world, query_cache,
-            )
-            completion_evaluation = (
-                GroundTrackingPolicy.completion_from_report(
-                    completion_context, ordinary_report,
-                    maximum_speed_blocks_per_second=completion_speed,
-                )
-                if ordinary_report is not None else
-                GroundTrackingPolicy.completion(
-                    completion_context,
-                    maximum_speed_blocks_per_second=completion_speed,
-                )
-            )
-            at_goal = (
-                completion_evaluation.satisfied
-                and (entry_matches is not False)
-                and goal_support.status is QueryStatus.FEASIBLE
-                and goal_support.support_fraction >= self.config.minimum_support_fraction
-                and frame.body.is_on_ground
-            )
-            current_distance = completion_evaluation.current_distance_to_completion_blocks
-            stopped_distance = completion_evaluation.predicted_stop_distance_to_completion_blocks
-            terminal_improved = (
-                current_distance + .005 < self._terminal_distance_anchor
-                or stopped_distance + .005 < self._terminal_stop_distance_anchor
-                or (speed + .05 < self._terminal_speed_anchor
-                    and current_distance <= self._terminal_distance_anchor + .005)
-            )
-            if terminal_improved:
-                self._terminal_distance_anchor = min(
-                    self._terminal_distance_anchor, current_distance,
-                )
-                self._terminal_stop_distance_anchor = min(
-                    self._terminal_stop_distance_anchor, stopped_distance,
-                )
-                self._terminal_speed_anchor = min(self._terminal_speed_anchor, speed)
-                self._no_progress_frames = 0
-                self._stall_detected = False
         if at_goal and speed <= completion_speed:
+            if completion is not None:
+                stopped = self._prepare_candidate_rollout(body, MovementV1(),
+                    (goal.x, goal.z), braking=True).states
+                if not all(completion.contains((s.x, frame.body.position[1], s.z)) for s in stopped):
+                    at_goal = False
+            if not at_goal:
+                self.state = FixedRouteState.BRAKING
+                return self._brake(frame, body, started, hold_position=False,
+                    reason="completion_region_tail_braking", query_cache=query_cache,
+                    physics_state=physics_state)
             self.state = FixedRouteState.SUCCEEDED
             self._progress = self._geometry.total_length
             return self._decision(
@@ -1891,7 +1191,6 @@ class FixedRouteController:
             return self._brake(
                 frame, body, started, hold_position=True,
                 reason="fixed_route_stall_braking", query_cache=query_cache,
-                ordinary_report=ordinary_report,
             )
 
         stop_distance = self._release_distance(body, completion_speed)
@@ -1904,7 +1203,6 @@ class FixedRouteController:
             return self._brake(
                 frame, body, started, hold_position=False,
                 reason="goal_braking", query_cache=query_cache, physics_state=physics_state,
-                ordinary_report=ordinary_report,
             )
 
         corner_distance=self._geometry.next_sharp_corner_distance(
@@ -1914,34 +1212,10 @@ class FixedRouteController:
                 and speed>self.config.corner_speed_blocks_per_second):
             corner_target=self._geometry.point_at(
                 min(self._geometry.total_length,self._progress+self.config.lookahead_min_blocks))
-            if ordinary_report is not None:
-                corner_context = GroundTrackingContext(
-                    body, frame.body.body_box, frame.body.position[1],
-                    GroundTrackingRoute.from_fixed_route(self._route),
-                    self._progress, self._segment_index, self._previous_movement,
-                    corner_target, True, self.profile,
-                    GroundTrackingLimits.from_fixed_route_config(self.config),
-                    frame.world, query_cache,
-                )
-                neutral_options = [
-                    value for value in GroundTrackingPolicy.verified_candidates(
-                        corner_context, ordinary_report,
-                    ) if value.movement == MovementV1()
-                ]
-                quality = min(
-                    neutral_options,
-                    key=GroundTrackingPolicy._candidate_key,
-                )
-                neutral = _Candidate(
-                    quality.movement, quality.score, quality.missing_cells,
-                    quality.blocked, quality.unsupported, quality.progress_gain,
-                    control_ticks=quality.control_ticks,
-                )
-            else:
-                neutral=self._evaluate_candidate(
-                    frame, body, MovementV1(), corner_target, braking=True,
-                    query_cache=query_cache,
-                )
+            neutral=self._evaluate_candidate(
+                frame, body, MovementV1(), corner_target, braking=True,
+                query_cache=query_cache,
+            )
             if not neutral.blocked and not neutral.unsupported and not neutral.missing:
                 self.state=FixedRouteState.RUNNING
                 return self._decision(started,MovementV1(),"corner_speed_control",preview_missing)
@@ -1959,31 +1233,10 @@ class FixedRouteController:
                 target = (hint.position[0], hint.position[2])
                 # Admission separately verifies the applied prefix. This proposal
                 # must preserve its original projection and full release tail.
-                if ordinary_report is not None:
-                    handoff_context = GroundTrackingContext(
-                        body, frame.body.body_box, frame.body.position[1],
-                        GroundTrackingRoute.from_fixed_route(self._route),
-                        self._progress, self._segment_index,
-                        self._previous_movement, target, False, self.profile,
-                        GroundTrackingLimits.from_fixed_route_config(self.config),
-                        frame.world, query_cache,
-                    )
-                    choices = [
-                        item for item in GroundTrackingPolicy.verified_candidates(
-                            handoff_context, ordinary_report,
-                        ) if item.movement == movement
-                    ]
-                    quality = min(choices, key=GroundTrackingPolicy._candidate_key)
-                    preferred = _Candidate(
-                        quality.movement, quality.score, quality.missing_cells,
-                        quality.blocked, quality.unsupported,
-                        quality.progress_gain, control_ticks=quality.control_ticks,
-                    )
-                else:
-                    preferred = self._evaluate_candidate(
-                        frame, body, movement, target, braking=False,
-                        query_cache=query_cache,
-                    )
+                preferred = self._evaluate_candidate(
+                    frame, body, movement, target, braking=False,
+                    query_cache=query_cache,
+                )
                 if (not preferred.blocked and not preferred.unsupported
                         and not preferred.missing):
                     self.state = FixedRouteState.RUNNING
@@ -1999,41 +1252,12 @@ class FixedRouteController:
                           )
                           for movement in _MOVEMENTS]
         else:
-            if ordinary_report is not None:
-                tracking_context = GroundTrackingContext(
-                    body, frame.body.body_box, frame.body.position[1],
-                    GroundTrackingRoute.from_fixed_route(self._route),
-                    self._progress, self._segment_index, self._previous_movement,
-                    target, False, self.profile,
-                    GroundTrackingLimits.from_fixed_route_config(self.config),
-                    frame.world, query_cache,
-                )
-                candidates = self._verified_ordinary_candidates(
-                    ordinary_report, tracking_context,
-                )
-            else:
-                candidates = self._ranked_tracking_candidates(
-                    frame, body, target, query_cache,
-                )
-                candidates = self._legacy_component_replay_candidates(
-                    candidates, frame, body, target, physics_state, query_cache,
-                    deadline_ns=started + 30_000_000,
-                )
-            if self._candidate_budget_exhausted:
-                if self._candidate_neutral_safe:
-                    self.state = FixedRouteState.RUNNING
-                    return self._decision(
-                        started, MovementV1(),
-                        "ground_candidate_budget_exhausted_neutral",
-                        (*preview_missing,), input_lease_ticks=1,
-                    )
-                self.state = FixedRouteState.NEEDS_REPLAN
-                return self._decision(
-                    started, MovementV1(),
-                    "ground_candidate_budget_exhausted_unproven",
-                    (*preview_missing,), input_lease_ticks=1,
-                    submit_input=False,
-                )
+            candidates = self._ranked_tracking_candidates(
+                frame, body, target, query_cache,
+            )
+            candidates = self._replay_rejected_candidates(
+                candidates, frame, body, target, physics_state, query_cache,
+            )
         feasible = [candidate for candidate in candidates
                     if not candidate.blocked and not candidate.unsupported and not candidate.missing]
         if feasible:
@@ -2052,7 +1276,9 @@ class FixedRouteController:
                 ))
                 self._mode_pending_frames += 1
             else:
-                selected = min(feasible, key=self._candidate_key)
+                selected = min(feasible, key=lambda candidate: (
+                    candidate.score, candidate.movement.forward, candidate.movement.strafe,
+                ))
                 # A declared upcoming interval must remain reachable by safe
                 # ordinary input. Neutral's support preference may otherwise
                 # stop before that entry despite a proved advancing candidate.
@@ -2086,17 +1312,12 @@ class FixedRouteController:
                 self.state = FixedRouteState.BLOCKED
                 return self._decision(started, MovementV1(), "fixed_route_has_no_forward_control")
             self.state = FixedRouteState.RUNNING
-            self._hold_selected_tail_proof(frame, selected)
             return self._decision(started, selected.movement,
                                   ("ground_mode_confirmation_pending" if mode_pending
                                    else ("tracking_fixed_route_geometric_support"
                                          if geometric_ground_support
                                          else "tracking_fixed_route")),
-                                  preview_missing,
-                                  input_lease_ticks=(
-                                      selected.control_ticks
-                                      if selected.control_ticks else None
-                                  ))
+                                  preview_missing)
         guard = self._enter_edge_guard(candidates, frame, body, target,
                                        physics_state, query_cache, started)
         if guard is not None:
@@ -2140,211 +1361,92 @@ class FixedRouteController:
         return distance
 
     @staticmethod
-    def _candidate_key(candidate: _Candidate) -> tuple:
-        if math.isfinite(candidate.completion_distance_blocks):
-            return (
-                candidate.completion_distance_blocks,
-                candidate.target_distance_blocks,
-                candidate.score,
-                candidate.control_ticks,
-                candidate.movement.forward,
-                candidate.movement.strafe,
-            )
+    def _candidate_key(candidate: _Candidate) -> tuple[float, int, int]:
         return (
             candidate.score,
             candidate.movement.forward,
             candidate.movement.strafe,
         )
 
-    def _legacy_component_replay_candidates(
+    def _replay_rejected_candidates(
         self, candidates: list[_Candidate], frame: NavigationFrame,
         body: PlanarBodyState, target: tuple[float, float],
         physics_state: PhysicsState | None, query_cache: WorldQueryCache,
-        *, deadline_ns: int | None = None,
     ) -> list[_Candidate]:
         if (not ground_route_state_matches(frame, physics_state)
                 or (self.mode_profile is not None
                     and self.mode_profile.mode is not MovementMode.WALK)):
             return candidates
         assert self._geometry is not None
-        if not any(
-                candidate.full_replay_eligible
-                and not candidate.missing and not candidate.unsupported
-                for candidate in candidates):
-            return candidates
-        assert self._route is not None
+        feasible = [c for c in candidates if not c.blocked and not c.unsupported and not c.missing]
+        winner = min(feasible, key=self._candidate_key) if feasible else None
+        rejected = sorted((self._prepare_candidate_rollout(body, c.movement, target, braking=False)
+                           for c in candidates if c.full_replay_eligible and not c.missing
+                           and not c.unsupported), key=self._rollout_key)
+        replacements = {}
         completion = (None if self._route.execution_contract is None else
                       self._route.execution_contract.completion_region)
-        context = GroundTrackingContext(
-            body, frame.body.body_box, frame.body.position[1],
-            GroundTrackingRoute.from_fixed_route(self._route),
-            self._progress, self._segment_index, self._previous_movement,
-            target, False, self.profile,
-            GroundTrackingLimits.from_fixed_route_config(self.config),
-            frame.world, query_cache,
-        )
-        quality = tuple(
-            GroundTrackingPolicy.safe_tail(context, movement, control_ticks)
-            for movement in CLOSED_GROUND_MOVEMENTS for control_ticks in (1, 2)
-        )
-        quality_by_key = {
-            (item.movement, item.control_ticks): item for item in quality
-        }
-        report = GroundCandidateVerifier().verify(
-            frame, physics_state, context,
-            tail_ticks=self.config.maximum_recovery_ticks,
-            minimum_support=self.config.minimum_support_fraction,
-            profile=self.profile, query_cache=query_cache,
-            deadline_ns=deadline_ns,
-        )
-        self._declared_candidates = len(report.candidates)
-        self._classified_candidates = sum(
-            item.status is not GroundCandidateSafety.BUDGET_EXHAUSTED
-            for item in report.candidates
-        )
-        self._candidate_neutral_safe = report.neutral_safe
-        self._candidate_budget_exhausted = (
-            report.status is GroundCandidateFamilyStatus.BUDGET_EXHAUSTED
-        )
-        self._physics_steps += report.stats.physics_steps
-        if self._candidate_budget_exhausted:
-            return candidates
-
-        evaluated = []
-        for proof in report.candidates:
-            key = (proof.movement, proof.control_ticks)
-            policy = quality_by_key[key]
-            result = proof.result
-            self._closed_route_fits[key] = proof.route_fit
-            if result is not None:
-                # A support-boundary rejection is still the typed evidence that
-                # permits the separately proved sneak edge guard. It never makes
-                # the ordinary command eligible.
-                self._closed_replays[key] = result
-            if not proof.eligible or result is None:
-                evaluated.append(_Candidate(
-                    proof.movement, math.inf, proof.missing_cells,
-                    (proof.status is GroundCandidateSafety.UNSAFE
-                     or (proof.status is GroundCandidateSafety.SAFE
-                         and not proof.route_fit.control_prefix_inside)),
-                    proof.status is GroundCandidateSafety.UNSUPPORTED,
-                    -math.inf, False,
-                    bool(result is not None and result.support_boundary_rejected),
-                    proof.control_ticks,
-                    policy.completion_distance_blocks,
-                    policy.target_distance_blocks,
-                ))
+        for rollout in rejected:
+            reserved_guard = (self._route.execution_contract is not None
+                              and self._edge_guard_permitted(
+                                  self._geometry.project_current(body.x, body.z).progress)
+                              and any(c.support_boundary for c in candidates))
+            if self._full_candidates >= (1 if reserved_guard else 3):
+                break
+            region_approach = (completion is not None and not completion.contains(frame.body.position)
+                               and self._completion_distance(rollout.tracking_end.x,
+                                                             rollout.tracking_end.z) + _EPSILON
+                                   < self._completion_distance(body.x, body.z))
+            if (winner is not None and self._rollout_key(rollout) >= self._candidate_key(winner)
+                    and not region_approach):
+                if completion is not None:
+                    continue
+                break
+            self._full_candidates += 1
+            result = verified_ground_route_candidate(
+                frame, physics_state, rollout.movement,
+                control_ticks=self.config.input_lease_ticks,
+                tail_ticks=self.config.maximum_recovery_ticks,
+                minimum_support=self.config.minimum_support_fraction,
+                profile=self.profile, query_cache=query_cache,
+            )
+            self._physics_steps += result.physics_steps
+            self._ordinary_replays[rollout.movement] = result
+            if result.status is not QueryStatus.FEASIBLE or result.tracking_end is None:
                 continue
-            self._ordinary_replays[proof.movement] = result
-            if result.tracking_end is None:
-                evaluated.append(_Candidate(
-                    proof.movement, math.inf, (), True, False, -math.inf,
-                    control_ticks=proof.control_ticks,
-                ))
-                continue
-            projections = tuple(self._geometry.project(
+            projections = [self._geometry.project(
                 state.position[0], state.position[2], self._progress,
                 self._segment_index, self.config.maximum_cross_track_blocks,
-            ) for state in result.trajectory)
+            ) for state in result.trajectory]
+            if any(p.distance > self.config.maximum_cross_track_blocks for p in projections):
+                continue
             # Contact must still advance on each leased tick. A head-on wall
             # cannot buy another lease by approaching it on only the first tick.
             if any(state.horizontal_collision and after.progress <= before.progress + _EPSILON
                    and not (completion is not None and completion.contains(state.position))
-                   for state, before, after in zip(result.trajectory[1:proof.control_ticks+1],
+                   for state, before, after in zip(result.trajectory[1:self.config.input_lease_ticks+1],
                                                     projections, projections[1:])):
-                evaluated.append(_Candidate(
-                    proof.movement, math.inf, (), True, False, -math.inf,
-                    control_ticks=proof.control_ticks,
-                ))
                 continue
             end = result.tracking_end
-            projection = projections[proof.control_ticks]
+            projection = projections[self.config.input_lease_ticks]
             gain = projection.progress - self._progress
             region_gain = (0. if completion is None else
                            self._completion_distance(body.x, body.z)
                            - self._completion_distance(end.position[0], end.position[2]))
             enters_region = completion is not None and completion.contains(end.position)
             if gain <= .005 and region_gain <= .005 and not enters_region:
-                evaluated.append(_Candidate(
-                    proof.movement, math.inf, (), True, False, -math.inf,
-                    control_ticks=proof.control_ticks,
-                ))
                 continue
             gain = max(gain, region_gain, .006 if enters_region else 0.)
-            input_switch = (proof.movement.forward != self._previous_movement.forward
-                            or proof.movement.strafe != self._previous_movement.strafe)
+            input_switch = (rollout.movement.forward != self._previous_movement.forward
+                            or rollout.movement.strafe != self._previous_movement.strafe)
             score = (math.hypot(end.position[0] - target[0], end.position[2] - target[1]) * 2
                      + projection.distance * 5 - gain * 7 + (.04 if input_switch else 0)
                      + max(0., self.config.preferred_support_fraction - result.minimum_support)**2 * 10)
-            stopped = result.trajectory[-1]
-            completion_distance = (
-                math.inf if completion is None else
-                self._completion_distance(stopped.position[0], stopped.position[2])
-            )
-            evaluated.append(_Candidate(
-                proof.movement, score, (), False, False, gain,
-                control_ticks=proof.control_ticks,
-                completion_distance_blocks=completion_distance,
-                target_distance_blocks=math.hypot(
-                    stopped.position[0]-target[0], stopped.position[2]-target[1],
-                ),
-            ))
-        return evaluated
-
-    def _verified_ordinary_candidates(
-        self,
-        report: GroundCandidateVerificationReport,
-        context: GroundTrackingContext,
-    ) -> list[_Candidate]:
-        """Adapt the single formal report to the existing typed controller view."""
-        if report.status is GroundCandidateFamilyStatus.BUDGET_EXHAUSTED:
-            return []
-        quality = GroundTrackingPolicy.verified_candidates(context, report)
-        evaluated = []
-        for item in quality:
-            key = (item.movement, item.control_ticks)
-            result = item.verification_result
-            if result is not None:
-                self._closed_replays[key] = result
-            self._closed_route_fits[key] = GroundRouteFit(
-                item.control_prefix_inside,
-                item.neutral_tail_inside,
-                item.maximum_control_prefix_deviation_blocks,
-                item.maximum_neutral_tail_deviation_blocks,
-            )
-            evaluated.append(_Candidate(
-                item.movement,
-                item.score,
-                item.missing_cells,
-                item.blocked,
-                item.unsupported,
-                item.progress_gain,
-                False,
-                item.support_boundary,
-                item.control_ticks,
-                item.completion_distance_blocks,
-                item.target_distance_blocks,
-            ))
-        return evaluated
-
-    def _hold_selected_tail_proof(
-        self,
-        frame: NavigationFrame,
-        candidate: _Candidate,
-    ) -> None:
-        """Hold one winning proof until observation or its stop horizon replaces it."""
-        key = (candidate.movement, candidate.control_ticks)
-        proof = self._closed_replays.get(key)
-        route_fit = self._closed_route_fits.get(key)
-        movement_tick = frame.body.movement_tick_id
-        if (proof is None or route_fit is None or movement_tick is None
-                or proof.tracking_end is None):
-            return
-        self._active_tail_dependencies = proof.dependencies
-        self._active_tail_valid_until_tick = (
-            movement_tick + max(0, len(proof.trajectory) - 1)
-        )
-        self._active_route_fit = route_fit
+            candidate = _Candidate(rollout.movement, score, (), False, False, gain)
+            replacements[rollout.movement] = candidate
+            if winner is None or self._candidate_key(candidate) < self._candidate_key(winner):
+                winner = candidate
+        return [replacements.get(c.movement, c) for c in candidates]
 
     def _edge_guard_permitted(self, progress: float) -> bool:
         contract = self._route.execution_contract if self._route is not None else None
@@ -2354,9 +1456,7 @@ class FixedRouteController:
     def _candidate_enters_guard_interval(
         self, candidate: _Candidate, body: PlanarBodyState, target: tuple[float, float],
     ) -> bool:
-        replay = self._closed_replays.get((candidate.movement, candidate.control_ticks))
-        if replay is None:
-            replay = self._ordinary_replays.get(candidate.movement)
+        replay = self._ordinary_replays.get(candidate.movement)
         if replay is not None and replay.tracking_end is not None:
             end = replay.tracking_end.position
             projection = self._geometry.project_current(end[0], end[2])
@@ -2366,9 +1466,7 @@ class FixedRouteController:
         return self._edge_guard_permitted(projection.progress)
 
     def _candidate_approaches_completion(self, candidate, body, target) -> bool:
-        replay = self._closed_replays.get((candidate.movement, candidate.control_ticks))
-        if replay is None:
-            replay = self._ordinary_replays.get(candidate.movement)
+        replay = self._ordinary_replays.get(candidate.movement)
         if replay is not None and replay.tracking_end is not None:
             x, _, z = replay.tracking_end.position
         else:
@@ -2421,19 +1519,11 @@ class FixedRouteController:
                 or not ground_route_state_matches(frame, physics_state)):
             return None
         # Only an actual support-boundary rejection admits the alternate input.
-        rejected = sorted((
-            (c, self._prepare_candidate_rollout(
-                body, c.movement, target, braking=False,
-            ))
-            for c in candidates if c.support_boundary
-            and not c.missing and not c.unsupported
-        ), key=lambda item: self._rollout_key(item[1]))
-        for candidate, rollout in rejected:
-            ordinary = self._closed_replays.get(
-                (candidate.movement, candidate.control_ticks),
-            )
-            if ordinary is None:
-                ordinary = self._ordinary_replays.get(rollout.movement)
+        rejected = sorted((self._prepare_candidate_rollout(body, c.movement, target, braking=False)
+                           for c in candidates if c.support_boundary
+                           and not c.missing and not c.unsupported), key=self._rollout_key)
+        for rollout in rejected:
+            ordinary = self._ordinary_replays.get(rollout.movement)
             if ordinary is None or not ordinary.support_boundary_rejected:
                 continue
             movement = replace(rollout.movement, sneak=True)
@@ -2588,26 +1678,6 @@ class FixedRouteController:
         progress and no-feasible cases still evaluate the remaining candidates
         needed for the existing information and failure classifications.
         """
-        if self._continuation is None:
-            assert self._route is not None
-            context = GroundTrackingContext(
-                body, frame.body.body_box, frame.body.position[1],
-                GroundTrackingRoute.from_fixed_route(self._route),
-                self._progress, self._segment_index, self._previous_movement,
-                target, False, self.profile,
-                GroundTrackingLimits.from_fixed_route_config(self.config),
-                frame.world, query_cache,
-            )
-            return [
-                _Candidate(
-                    item.movement, item.score, item.missing_cells,
-                    item.blocked, item.unsupported, item.progress_gain,
-                    item.full_replay_eligible, item.support_boundary,
-                    item.control_ticks, item.completion_distance_blocks,
-                    item.target_distance_blocks,
-                )
-                for item in GroundTrackingPolicy.candidates(context)
-            ]
         rollouts = tuple(
             self._prepare_candidate_rollout(body, movement, target, braking=False)
             for movement in _MOVEMENTS
@@ -2662,9 +1732,7 @@ class FixedRouteController:
     def _brake(self, frame: NavigationFrame, body: PlanarBodyState, started: int,
                *, hold_position: bool, reason: str,
                query_cache: WorldQueryCache,
-               physics_state: PhysicsState | None = None,
-               ordinary_report: GroundCandidateVerificationReport | None = None,
-               ) -> FixedRouteDecision:
+               physics_state: PhysicsState | None = None) -> FixedRouteDecision:
         target = (body.x, body.z) if hold_position else (
             self._geometry.goal.x, self._geometry.goal.z  # type: ignore[union-attr]
         )
@@ -2691,48 +1759,21 @@ class FixedRouteController:
                 window.reference_point[0] + dx * longitudinal - dz * lateral,
                 window.reference_point[2] + dz * longitudinal + dx * lateral,
             )
-        if ordinary_report is not None:
-            assert self._route is not None
-            braking_context = GroundTrackingContext(
-                body, frame.body.body_box, frame.body.position[1],
-                GroundTrackingRoute.from_fixed_route(self._route),
-                self._progress, self._segment_index, self._previous_movement,
-                target, True, self.profile,
-                GroundTrackingLimits.from_fixed_route_config(self.config),
-                frame.world, query_cache,
-            )
-            candidates = self._verified_ordinary_candidates(
-                ordinary_report, braking_context,
-            )
-        else:
-            candidates = self._ranked_braking_candidates(
-                frame, body, target, query_cache,
-            )
+        candidates = self._ranked_braking_candidates(
+            frame, body, target, query_cache,
+        )
         completion = (None if self._route.execution_contract is None else
                       self._route.execution_contract.completion_region)
         neutral = next((c for c in candidates if c.movement == MovementV1()), None)
         if not hold_position and completion is not None:
-            if neutral is None and ordinary_report is None:
+            if neutral is None:
                 neutral = self._evaluate_candidate(frame, body, MovementV1(), target,
                     braking=True, query_cache=query_cache)
-            proof = (None if neutral is None else self._closed_replays.get(
-                (neutral.movement, neutral.control_ticks),
-            ))
-            stopped = (
-                tuple(self._prepare_candidate_rollout(
-                    body, MovementV1(), target, braking=True,
-                ).states)
-                if proof is None else
-                tuple(GroundTrackingPolicy._planar_physics_state(value)
-                      for value in proof.trajectory)
-            )
-            if (neutral is not None and not neutral.blocked
-                    and not neutral.unsupported and not neutral.missing
-                    and all(completion.contains((s.x, frame.body.position[1], s.z))
-                            for s in stopped)):
+            stopped = self._prepare_candidate_rollout(body, MovementV1(), target, braking=True).states
+            if (not neutral.blocked and not neutral.unsupported and not neutral.missing
+                    and all(completion.contains((s.x, frame.body.position[1], s.z)) for s in stopped)):
                 return self._decision(started, MovementV1(), reason)
-        if (ordinary_report is None and not hold_position
-                and completion is not None and neutral is not None
+        if (not hold_position and completion is not None and neutral is not None
                 and neutral.full_replay_eligible and not neutral.missing and not neutral.unsupported
                 and self._full_candidates < 3 and ground_route_state_matches(frame, physics_state)):
             self._full_candidates += 1
@@ -2751,11 +1792,7 @@ class FixedRouteController:
         if feasible:
             selected = min(feasible, key=lambda candidate: (candidate.score, candidate.movement.forward,
                                                               candidate.movement.strafe))
-            return self._decision(
-                started, selected.movement, reason,
-                input_lease_ticks=(selected.control_ticks
-                                   if selected.control_ticks else None),
-            )
+            return self._decision(started, selected.movement, reason)
         missing = tuple(cell for candidate in candidates for cell in candidate.missing)
         if missing:
             # Releasing input is the bounded fallback when a more forceful brake cannot be proven.
@@ -2773,26 +1810,6 @@ class FixedRouteController:
         query_cache: WorldQueryCache,
     ) -> list[_Candidate]:
         """Validate only braking controls that can still win the safe ranking."""
-        if self._continuation is None:
-            assert self._route is not None
-            context = GroundTrackingContext(
-                body, frame.body.body_box, frame.body.position[1],
-                GroundTrackingRoute.from_fixed_route(self._route),
-                self._progress, self._segment_index, self._previous_movement,
-                target, True, self.profile,
-                GroundTrackingLimits.from_fixed_route_config(self.config),
-                frame.world, query_cache,
-            )
-            return [
-                _Candidate(
-                    item.movement, item.score, item.missing_cells,
-                    item.blocked, item.unsupported, item.progress_gain,
-                    item.full_replay_eligible, item.support_boundary,
-                    item.control_ticks, item.completion_distance_blocks,
-                    item.target_distance_blocks,
-                )
-                for item in GroundTrackingPolicy.candidates(context)
-            ]
         rollouts = tuple(
             self._prepare_candidate_rollout(body, movement, target, braking=True)
             for movement in _MOVEMENTS

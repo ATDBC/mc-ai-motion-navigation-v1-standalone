@@ -1,5 +1,0 @@
-# Windows formal platform; source commit 963d5b49 was clean before evidence commands.
-.venv\python.exe -m unittest tests.motion_nav.test_f2rh_runtime_worker_lifecycle tests.motion_nav.test_f2rh_motion_worker_delivery tests.motion_nav.test_b10_motion_worker tests.motion_nav.test_r28_planning_retry_successor tests.motion_nav.test_r27_async_admission tests.motion_nav.test_f2_ground_start_window tests.motion_nav.test_runtime_navigation_verified_handoff tests.motion_nav.test_ground_terminal_formal_chain
-.venv\python.exe -m unittest tests.motion_nav.test_f2cv_ground_candidate_verifier tests.motion_nav.test_f2ss_single_ground_candidate_source tests.motion_nav.test_f2wr_world_safety_route_fit tests.motion_nav.test_d061_long_session_benchmark
-.venv\python.exe scripts/f2r_piecewise_evidence.py clutter-formal --output .tmp/f2rh-formal-gate-963d5b49 --workers 1 --ids f2r/clutter/0.1/0/0/product f2r/clutter/0.1/0/1/product f2r/clutter/0.1/0/2/product f2r/clutter/0.1/0/3/product f2r/clutter/0.1/0/4/product
-.venv\python.exe scripts/run_motion_navigation_checks.py --output .tmp/f2rh-full-963d5b49.json

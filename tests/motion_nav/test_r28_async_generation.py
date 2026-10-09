@@ -16,7 +16,6 @@ from tests.motion_nav.test_b07_step_route import frame
 from tests.motion_nav import test_navigation_session as session_fixtures
 from tests.motion_nav import test_planning_coordinator as planning_fixtures
 from tests.motion_nav.test_navigation_session import _InlinePlanner, _goal
-from tests.motion_nav.test_navigation_session import _InlineMotionWorker
 from tests.motion_nav.test_planning_coordinator import _DeferredPlanner, _permit, _request, _world
 
 
@@ -461,7 +460,7 @@ class PlanningRevisionPreservationTests(unittest.TestCase):
                 request = replace(_request(world), maximum_planning_seconds=2.)
                 clock = [1_000_000_000]
                 session = NavigationSession(f'cadence-{cadence}',
-                    session_fixtures.NavigationSessionTests().profiles(), planner_worker=planner, motion_worker=session_fixtures._InlineMotionWorker(),
+                    session_fixtures.NavigationSessionTests().profiles(), planner_worker=planner,
                     clock_ns=lambda: clock[0])
                 try:
                     current = frame(world, 0, (-.5, 1., .5))
@@ -606,7 +605,7 @@ class ComputationGenerationTests(unittest.TestCase):
         request = _request(world)
         planner = _DeferredPlanner()
         session = NavigationSession("candidate-dependency-scope", session_fixtures.NavigationSessionTests().profiles(),
-            planner_worker=planner, motion_worker=session_fixtures._InlineMotionWorker(), clock_ns=lambda: 1_000_000_000)
+            planner_worker=planner, clock_ns=lambda: 1_000_000_000)
         try:
             current = frame(world, 0, (-.5, 1., .5))
             session.start(request, current)
@@ -697,7 +696,7 @@ class ComputationGenerationTests(unittest.TestCase):
         request = _request(world)
         planner = _InlinePlanner(hold_first=True)
         session = NavigationSession("stable-scope", session_fixtures.NavigationSessionTests().profiles(),
-            planner_worker=planner, motion_worker=session_fixtures._InlineMotionWorker(), clock_ns=lambda: 1_000_000_000)
+            planner_worker=planner, clock_ns=lambda: 1_000_000_000)
         current = frame(world, 0, (-.5, 1., .5))
         try:
             session.start(request, current)
@@ -746,7 +745,7 @@ class ComputationGenerationTests(unittest.TestCase):
         request = _request(world)
         planner = _InlinePlanner(hold_first=True)
         session = NavigationSession("scope-gate", session_fixtures.NavigationSessionTests().profiles(),
-            planner_worker=planner, motion_worker=session_fixtures._InlineMotionWorker(), clock_ns=lambda: 1_000_000_000)
+            planner_worker=planner, clock_ns=lambda: 1_000_000_000)
         current = frame(world, 0, (-.5, 1., .5))
         try:
             session.start(request, current)
@@ -813,7 +812,7 @@ class ComputationGenerationTests(unittest.TestCase):
         world = _world()
         request = _request(world)
         session = NavigationSession("scope-before-rebuild", session_fixtures.NavigationSessionTests().profiles(),
-            planner_worker=_InlinePlanner(hold_first=True), motion_worker=session_fixtures._InlineMotionWorker(), clock_ns=lambda: 1_000_000_000)
+            planner_worker=_InlinePlanner(hold_first=True), clock_ns=lambda: 1_000_000_000)
         continuation = None
         try:
             current = frame(world, 0, (-.5, 1., .5))
@@ -841,7 +840,7 @@ def goal_revision_retirement_probe(*, submitted: bool) -> dict:
     planner = _InlinePlanner(hold_first=True)
     session = NavigationSession(
         "a0-retirement", session_fixtures.NavigationSessionTests().profiles(),
-        planner_worker=planner, motion_worker=session_fixtures._InlineMotionWorker(), clock_ns=lambda: 1_000_000_000,
+        planner_worker=planner, clock_ns=lambda: 1_000_000_000,
         snapshot_cells_per_step=10_000 if submitted else 1,
     )
     try:
@@ -879,7 +878,7 @@ def same_task_successor_probe() -> dict:
     current = frame(world, 0, (-.5, 1., .5))
     session = NavigationSession(
         "a0-task-original", session_fixtures.NavigationSessionTests().profiles(),
-        planner_worker=_InlinePlanner(), motion_worker=_InlineMotionWorker(), clock_ns=lambda: 1_000_000_000,
+        planner_worker=_InlinePlanner(), clock_ns=lambda: 1_000_000_000,
     )
     successor = None
     try:

@@ -83,6 +83,7 @@ class StandaloneExportTests(unittest.TestCase):
             'docs/motion_navigation/decisions/0072-end-post-f1-cleanup-and-validate-action-spec.md',
             'docs/motion_navigation/stages/motion-navigation-middle-layer-M0-M1-plan.md',
             'docs/motion_navigation/acceptance/motion-navigation-middle-layer-M0-M1.md',
+            'docs/superpowers/plans/2026-10-06-motion-navigation-m0-m1.md',
             'evidence/motion_navigation/redesign-m0/baseline-manifest.json',
             'evidence/motion_navigation/redesign-m1/final-manifest.json',
         )
@@ -92,9 +93,6 @@ class StandaloneExportTests(unittest.TestCase):
             self.assertIn('M1', text)
             self.assertIn('结构止损', text)
             self.assertIn('M2', text)
-        self.assertFalse(
-            (self.root/'docs/superpowers/plans/2026-10-06-motion-navigation-m0-m1.md').exists()
-        )
         self.assertFalse(any('.tmp' in p.relative_to(self.root).parts
                              for p in self.root.rglob('*') if p.is_file()))
         for directory in ('redesign-m0', 'redesign-m1'):
@@ -106,6 +104,8 @@ class StandaloneExportTests(unittest.TestCase):
 
     def test_f2_export_has_current_entrypoints_and_preserves_final_evidence(self):
         required = (
+            "scripts/f2rec_r0_baseline.py",
+            "scripts/f2rec_r0_v9.py",
             "scripts/f2_ground_route_evidence.py",
             "scripts/f2_ground_route_quality.py",
             "scripts/f2_ground_route_runtime.py",
@@ -114,9 +114,6 @@ class StandaloneExportTests(unittest.TestCase):
             "tests/motion_nav/test_f2r_piecewise_completion.py",
             "evidence/motion_navigation/action-spec-hardening-v1/metrics-baseline-corrected.json",
             "evidence/motion_navigation/F2R-piecewise-completion-v1/red/geometry/summary.json",
-            "docs/motion_navigation/stages/F2S-support-region-convergence-before-route-optimization.md",
-            "docs/motion_navigation/acceptance/F2S-support-region-convergence.md",
-            "docs/motion_navigation/decisions/0076-unify-goal-completion-region-before-route-optimization.md",
             "evidence/motion_navigation/F2-ground-route-v1/baseline/measurement-v2/error-copies.json",
             "evidence/motion_navigation/F2-ground-route-v1/final/windows/forward-final.json",
             "evidence/motion_navigation/F2-ground-route-v1/final/windows/reverse-final.json",
@@ -124,14 +121,13 @@ class StandaloneExportTests(unittest.TestCase):
             "evidence/motion_navigation/F2-ground-route-v1/final/fabric/trials.jsonl",
             "evidence/motion_navigation/F2-ground-route-v1/final/fabric/external-force-earlier-bounded-result.json",
             "evidence/motion_navigation/F2-ground-route-v1/final/fabric/failures/corner-replay-red.json",
+            "evidence/motion_navigation/F2REC-recovery-v1/r0/f2r-production-semantic-hashes.json",
         )
         self.assertEqual(tuple(p for p in required if not (self.root/p).is_file()), ())
         self.assertFalse((self.root/'docs/superpowers/plans/2026-10-07-non-center-ground-route-execution.md').exists())
-        self.assertFalse((self.root/'docs/superpowers/plans/2026-10-06-motion-navigation-m0-m1.md').exists())
         for name in ("README.md", "AGENTS.md"):
             text = (self.root/name).read_text("utf-8")
             self.assertIn("F2", text)
-            self.assertIn("F2-S", text)
             self.assertIn("冻结范围验收通过", text)
             self.assertIn("1998/2000", text)
             self.assertIn("93/93", text)
@@ -142,32 +138,27 @@ class StandaloneExportTests(unittest.TestCase):
             if path.is_file() and "__pycache__" not in path.parts:
                 self.assertEqual((exported/path.relative_to(source)).read_bytes(), path.read_bytes())
 
-    def test_f2_export_preserves_history_and_matches_current_production_fingerprints(self):
-        historical_name = Path(
-            "evidence/motion_navigation/F2R-piecewise-completion-v1/"
-            "source-consistency.json"
-        )
-        self.assertEqual(
-            (self.root / historical_name).read_bytes(),
-            (ROOT / historical_name).read_bytes(),
-            "the frozen F2-R fingerprint record must be exported unchanged",
-        )
-
-        current_name = Path(
-            "evidence/motion_navigation/F2RH-runtime-worker-hotpath-v1/"
-            "formal-gate-summary.json"
-        )
-        report = json.loads((self.root / current_name).read_text("utf-8"))
-        self.assertTrue(
-            report["source_worktree_clean"],
-            "the current production fingerprint must come from a clean formal gate",
-        )
-        for name, expected in report["production_files"].items():
-            self.assertEqual(
-                hashlib.sha256((self.root / name).read_bytes()).hexdigest(),
-                expected,
-                f"current production fingerprint differs: {name}",
-            )
+    def test_f2_export_matches_frozen_production_fingerprints(self):
+        source = self.root / "evidence/motion_navigation/F2R-piecewise-completion-v1/source-consistency.json"
+        report = json.loads(source.read_text("utf-8"))
+        canonical = json.loads((
+            ROOT / "evidence/motion_navigation/F2REC-recovery-v1/r0/"
+            "f2r-production-semantic-hashes.json"
+        ).read_text("utf-8"))["files"]
+        r1 = json.loads((
+            ROOT / "evidence/motion_navigation/F2REC-recovery-v1/r1/"
+            "production-semantic-hashes.json"
+        ).read_text("utf-8"))["files"]
+        for name, expected in report["full_production_files"].items():
+            raw = (self.root/name).read_bytes()
+            lf = raw.replace(b"\r\n", b"\n")
+            raw_hash = hashlib.sha256(raw).hexdigest()
+            if raw_hash != expected:
+                self.assertEqual(
+                    hashlib.sha256(lf).hexdigest(),
+                    r1.get(name, canonical[name]),
+                    name,
+                )
 
     def test_export_has_no_local_artifacts_credentials_or_worlds(self):
         forbidden_parts = {".tmp", "artifacts", ".venv", ".gradle", "world", "worlds", "saves"}

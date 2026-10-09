@@ -1,0 +1,246 @@
+{
+  "mode": "formal",
+  "cases": 104,
+  "source_commit": "686cc0a78c379f2ef87fa3f6201e36fd2c98c49c",
+  "source_worktree_clean": false,
+  "production_sha256": "6cb3e7c8991a205dd5049abe723aa61324fd67d797ae7069a2829a2afbdc4679",
+  "manifest_sha256": "c29e9158f461a647ae1b34ace278a3652e67052e3d9fcb80282fe517bf09efd6",
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "by_layer": {
+    "diagonal_approach/melee": {
+      "cases": 8,
+      "results": {
+        "success": 8
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 8,
+      "control_ms": {
+        "p50": 0.6488,
+        "p95": 0.916,
+        "p99": 1.2818,
+        "maximum": 1.7819
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 0.9505
+    },
+    "diagonal_approach/product": {
+      "cases": 8,
+      "results": {
+        "success": 8
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 8,
+      "control_ms": {
+        "p50": 0.6818,
+        "p95": 1.6219,
+        "p99": 3.1978,
+        "maximum": 4.2435
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 2.0335
+    },
+    "diagonal_pillar/follow": {
+      "cases": 8,
+      "results": {
+        "success": 8
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 8,
+      "control_ms": {
+        "p50": 0.6952,
+        "p95": 1.0869,
+        "p99": 1.2186,
+        "maximum": 1.316
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 1.1368
+    },
+    "diagonal_pillar/melee": {
+      "cases": 8,
+      "results": {
+        "success": 8
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 8,
+      "control_ms": {
+        "p50": 0.6382,
+        "p95": 0.8857,
+        "p99": 1.0197,
+        "maximum": 1.0409
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 0.9604
+    },
+    "diagonal_pillar/product": {
+      "cases": 8,
+      "results": {
+        "success": 8
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 8,
+      "control_ms": {
+        "p50": 0.6675,
+        "p95": 1.6255,
+        "p99": 2.4067,
+        "maximum": 3.2914
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 2.1132
+    },
+    "multi_cell/follow": {
+      "cases": 8,
+      "results": {
+        "success": 8
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 8,
+      "control_ms": {
+        "p50": 0.663,
+        "p95": 0.9766,
+        "p99": 1.1959,
+        "maximum": 1.4331
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 1.1959
+    },
+    "multi_cell/product": {
+      "cases": 8,
+      "results": {
+        "success": 8
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 8,
+      "control_ms": {
+        "p50": 0.6651,
+        "p95": 1.0983,
+        "p99": 1.2231,
+        "maximum": 1.3031
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 1.1685
+    },
+    "outer_corner/follow": {
+      "cases": 8,
+      "results": {
+        "success": 8
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 8,
+      "control_ms": {
+        "p50": 0.6524,
+        "p95": 0.9817,
+        "p99": 1.2123,
+        "maximum": 1.2596
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 1.1214
+    },
+    "outer_corner/melee": {
+      "cases": 8,
+      "results": {
+        "success": 8
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 8,
+      "control_ms": {
+        "p50": 0.6285,
+        "p95": 0.8564,
+        "p99": 0.9895,
+        "maximum": 1.0462
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 0.8955
+    },
+    "outer_corner/product": {
+      "cases": 8,
+      "results": {
+        "success": 8
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 8,
+      "control_ms": {
+        "p50": 0.6572,
+        "p95": 1.5874,
+        "p99": 2.3763,
+        "maximum": 3.0581
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 1.8961
+    },
+    "two_pillars/follow": {
+      "cases": 8,
+      "results": {
+        "success": 8
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 8,
+      "control_ms": {
+        "p50": 0.6735,
+        "p95": 1.1282,
+        "p99": 1.948,
+        "maximum": 1.992
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 1.1995
+    },
+    "two_pillars/melee": {
+      "cases": 8,
+      "results": {
+        "success": 8
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 8,
+      "control_ms": {
+        "p50": 0.6764,
+        "p95": 1.5207,
+        "p99": 2.0281,
+        "maximum": 2.5369
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 1.876
+    },
+    "two_pillars/product": {
+      "cases": 8,
+      "results": {
+        "success": 8
+      },
+      "reasons": {},
+      "safety_events": 0,
+      "verification_complete": 8,
+      "control_ms": {
+        "p50": 0.7511,
+        "p95": 1.9521,
+        "p99": 3.4426,
+        "maximum": 4.5041
+      },
+      "point_feasible": 0,
+      "lost": 0,
+      "control_p95_ms_max": 2.1825
+    }
+  }
+}
