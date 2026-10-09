@@ -1,0 +1,117 @@
+{
+  "schema_version": "mc2p.f2rec-r2-revision-comparison.v1",
+  "order": [
+    "R0",
+    "R2",
+    "R2",
+    "R0"
+  ],
+  "baseline_source": "886ae1fc",
+  "candidate_source": "archive/f2rec-r2-stopped-20261009 (only selection implementation)",
+  "samples": {
+    "R0": {
+      "revisions": {
+        "samples": 222,
+        "p50_ns": 9658700,
+        "p95_ns": 11044100,
+        "p99_ns": 11140700,
+        "maximum_ns": 11199100,
+        "p50_ms": 9.6587,
+        "p95_ms": 11.0441,
+        "p99_ms": 11.1407,
+        "maximum_ms": 11.1991
+      },
+      "production": {
+        "samples": 1380,
+        "p50_ns": 3054100,
+        "p95_ns": 10379600,
+        "p99_ns": 11037600,
+        "maximum_ns": 11199100,
+        "p50_ms": 3.0541,
+        "p95_ms": 10.3796,
+        "p99_ms": 11.0376,
+        "maximum_ms": 11.1991
+      },
+      "full": {
+        "samples": 1380,
+        "p50_ns": 8041500,
+        "p95_ns": 28840800,
+        "p99_ns": 38990700,
+        "maximum_ns": 58479000,
+        "p50_ms": 8.0415,
+        "p95_ms": 28.8408,
+        "p99_ms": 38.9907,
+        "maximum_ms": 58.479
+      },
+      "backend": {
+        "samples": 1380,
+        "p50_ns": 4573200,
+        "p95_ns": 18236200,
+        "p99_ns": 32303800,
+        "maximum_ns": 48929400,
+        "p50_ms": 4.5732,
+        "p95_ms": 18.2362,
+        "p99_ms": 32.3038,
+        "maximum_ms": 48.9294
+      },
+      "full_frames_above50ms": 6,
+      "production_frames_above30ms": 0
+    },
+    "R2": {
+      "revisions": {
+        "samples": 222,
+        "p50_ns": 8625700,
+        "p95_ns": 9599000,
+        "p99_ns": 9686300,
+        "maximum_ns": 9770700,
+        "p50_ms": 8.6257,
+        "p95_ms": 9.599,
+        "p99_ms": 9.6863,
+        "maximum_ms": 9.7707
+      },
+      "production": {
+        "samples": 1380,
+        "p50_ns": 3054500,
+        "p95_ns": 8890400,
+        "p99_ns": 9545800,
+        "maximum_ns": 9770700,
+        "p50_ms": 3.0545,
+        "p95_ms": 8.8904,
+        "p99_ms": 9.5458,
+        "maximum_ms": 9.7707
+      },
+      "full": {
+        "samples": 1380,
+        "p50_ns": 8057700,
+        "p95_ns": 27293700,
+        "p99_ns": 34423100,
+        "maximum_ns": 57741900,
+        "p50_ms": 8.0577,
+        "p95_ms": 27.2937,
+        "p99_ms": 34.4231,
+        "maximum_ms": 57.7419
+      },
+      "backend": {
+        "samples": 1380,
+        "p50_ns": 4579300,
+        "p95_ns": 18226300,
+        "p99_ns": 28585400,
+        "maximum_ns": 48643100,
+        "p50_ms": 4.5793,
+        "p95_ms": 18.2263,
+        "p99_ms": 28.5854,
+        "maximum_ms": 48.6431
+      },
+      "full_frames_above50ms": 2,
+      "production_frames_above30ms": 0
+    }
+  },
+  "comparison_gates": {
+    "p95_ns": true,
+    "p99_ns": true
+  },
+  "safety_violations": 0,
+  "all_source_released": true,
+  "all_task_gates_pass": true,
+  "measurement_scope": "Additional high-revision-density clutter stress family. Relative revision gate only; absolute D058/D061 gates retain frozen official scenario set. Full/back-end overruns are separately reported performance debt; no real server is used."
+}

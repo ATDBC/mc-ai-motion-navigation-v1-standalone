@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "snapshot": "D:\\My_project\\mc_ai\\.tmp\\f2rec-r4-public-final",
+  "actual_four_full_runs": {
+    "source_forward": 1661,
+    "source_reverse": 1661,
+    "public_forward": 1661,
+    "public_reverse": 1661
+  },
+  "final_targeted_checks": {
+    "source": 16,
+    "public": 16
+  },
+  "identical_code_test_fixture_config_files": 640,
+  "subsequent_edits": "Documentation and compact evidence only; no executable, tests, fixture or config byte change since full runs.",
+  "initial_final_snapshot_verify_files": 1713,
+  "final_signature_and_audit_files_added_after_this_verify": [
+    "final-targeted-checks.json",
+    "final-public-export-closure.json"
+  ],
+  "docs_superpowers_absent": true,
+  "public_history_link_present": true,
+  "r3_and_r4_tools_present": true
+}

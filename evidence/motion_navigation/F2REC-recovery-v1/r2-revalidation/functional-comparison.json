@@ -1,0 +1,37 @@
+{
+  "f2-528": {
+    "cases": 528,
+    "changes": [],
+    "old_success_regressions": []
+  },
+  "v9": {
+    "cases": 216,
+    "changes": [
+      {
+        "id": "f2s/stair_edge/product/east/normal",
+        "key": "reason",
+        "old": "planning_unsupported",
+        "new": "goal_surface_unavailable"
+      },
+      {
+        "id": "f2s/stair_edge/product/east/first_late",
+        "key": "reason",
+        "old": "planning_unsupported",
+        "new": "goal_surface_unavailable"
+      },
+      {
+        "id": "f2s/stair_edge/product/north/normal",
+        "key": "reason",
+        "old": "planning_unsupported",
+        "new": "goal_surface_unavailable"
+      },
+      {
+        "id": "f2s/stair_edge/product/north/first_late",
+        "key": "reason",
+        "old": "planning_unsupported",
+        "new": "goal_surface_unavailable"
+      }
+    ],
+    "old_success_regressions": []
+  }
+}

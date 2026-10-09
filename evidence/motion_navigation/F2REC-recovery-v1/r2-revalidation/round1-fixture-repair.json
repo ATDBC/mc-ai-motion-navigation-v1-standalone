@@ -1,0 +1,41 @@
+{
+  "scope": "Only three test fixtures; restored R2 production remains byte-identical to archive candidate. No assertions on unsafe execution were removed.",
+  "initial_forward": {
+    "tests": 1668,
+    "passed": 1665,
+    "failures": 3,
+    "errors": 0,
+    "skipped": 0,
+    "scenario_hash_changed": false
+  },
+  "cause": "Fixtures relied on whole-target-column scanning. A complete known safe subregion now avoids facts belonging only to unselected candidates.",
+  "repairs": [
+    {
+      "test": "D062 seq64 equivalent air",
+      "fixture": "Move center from9.8 to9.95, same goal radius. Every safe completion now intersects unknown rowz10.",
+      "protected": "NEEDS_INFORMATION, seq64 air confirmation, local route admission, active exact proof revalidation, no task recovery."
+    },
+    {
+      "test": "D063 missing paging",
+      "fixture": "Query responses reveal obstacles until a final safe corner, instead of revealing air everywhere.",
+      "protected": "More than128 unique requests, pages<=128, no planning before facts, final selected node(3,9) with missing=(). Superseded3 halo facts may be pruned."
+    },
+    {
+      "test": "D064 revision information",
+      "fixture": "Three full unknown bands7..9,11..13,15..17, lateral[-3,3], body layers64/65; movement extends160ticks.",
+      "protected": ">=3 information waits, incumbent still running/braking, brake only in prior completion region, later target revision, no stop/recovery/planner submissions."
+    }
+  ],
+  "proof_command": "python -m unittest <the three exact test IDs>",
+  "proof_result": "3/3 pass",
+  "three_module_result": "32/32 pass",
+  "corrected_forward": {
+    "tests": 1668,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "expected_failures": 0,
+    "scenario_hash_changed": false,
+    "elapsed_seconds": 461.787
+  }
+}

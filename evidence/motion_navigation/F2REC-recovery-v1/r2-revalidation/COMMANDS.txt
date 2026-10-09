@@ -1,0 +1,19 @@
+# Windows / Python 3.11.16 / D:\My_project\mc_ai\.venv\python.exe
+# Baseline setup: git archive --format=zip 886ae1fc, extract into .tmp/f2rec-r0-886ae1fc.
+# Copy current scripts/ and tests/ (exclude __pycache__); copy config/motion-navigation/ byte-for-byte.
+# Do not copy or change baseline mc2p/. 194 production .py hashes are independently verified.
+# Pilot block0 is excluded; fixed retained order follows.
+# Run commands from baseline directory for R0; current checkout for R2.
+.venv/python.exe -m scripts.f2rec_r2_paired_revision --arm R0 --block 1 --output <block-1-R0.json>
+.venv/python.exe -m scripts.f2rec_r2_paired_revision --arm R2 --block 2 --output <block-2-R2.json>
+.venv/python.exe -m scripts.f2rec_r2_paired_revision --arm R2 --block 3 --output <block-3-R2.json>
+.venv/python.exe -m scripts.f2rec_r2_paired_revision --arm R0 --block 4 --output <block-4-R0.json>
+.venv/python.exe -m unittest tests.motion_nav.test_f2rec_r0_baseline tests.motion_nav.test_f2rec_r1_region_geometry tests.motion_nav.test_f2rec_r2_goal_selection tests.motion_nav.test_f2_ground_completion_region tests.motion_nav.test_f2r_piecewise_completion tests.motion_nav.test_standalone_export
+.venv/python.exe -m scripts.f2_ground_route_evidence --output <f2-528> --workers 4
+.venv/python.exe -m scripts.f2r_piecewise_evidence formal --output <v8-fixed> --workers 4
+.venv/python.exe -m scripts.f2r_piecewise_evidence clutter-formal --output <v8-clutter> --workers 4
+.venv/python.exe -m scripts.f2rec_r0_v9 --output <v9> --workers 4
+.venv/python.exe -m scripts.benchmark_d058_route_revalidation --output <d058>
+.venv/python.exe -m scripts.benchmark_d061_long_session --output <d061>
+.venv/python.exe -m scripts.run_motion_navigation_checks --output <full-forward.json>
+.venv/python.exe -m scripts.run_motion_navigation_checks --reverse --output <full-reverse.json>

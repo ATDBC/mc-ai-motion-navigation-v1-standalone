@@ -1,0 +1,78 @@
+{
+  "base_commit": "5a6cf463",
+  "production_files": [
+    {
+      "file": "mc2p/motion_nav/fixed_route.py",
+      "before_lines": 2087,
+      "after_lines": 1867,
+      "removed_definitions": {
+        "_edge_guard_permitted": 4,
+        "_candidate_enters_guard_interval": 11,
+        "_guard_replay": 29,
+        "_enter_edge_guard": 30,
+        "_guard_goal_progress": 5,
+        "_decide_edge_guard": 80,
+        "_stop_outside_guard_interval": 26
+      }
+    },
+    {
+      "file": "mc2p/motion_nav/ground_route_execution.py",
+      "before_lines": 120,
+      "after_lines": 71,
+      "removed_definitions": {
+        "GroundRouteCapability": 2,
+        "GroundRouteGuardPhase": 7,
+        "GroundRouteCapabilityInterval": 17,
+        "permits": 3,
+        "validate_length": 3
+      }
+    },
+    {
+      "file": "mc2p/motion_nav/safe_ground_control.py",
+      "before_lines": 292,
+      "after_lines": 283,
+      "removed_definitions": {}
+    }
+  ],
+  "formal_capability_producers": 0,
+  "retired_component_inputs": 8,
+  "removed_test_file": "tests/motion_nav/test_f2_ground_route_edge_guard.py",
+  "retained": [
+    "ordinary completion region and exact reference point",
+    "full released-input tail",
+    "undeclared edge rejection",
+    "Crouch mode",
+    "landing-edge probe",
+    "air landing recovery sneak",
+    "Minecraft sneak-edge physics",
+    "route projection used by ordinary safety"
+  ],
+  "worker_lifecycle": {
+    "decision": "retain explicit lifecycle debt",
+    "reason": "Runtime has no Session resource-registration contract; Session.close waits for body responsibility. Runtime-close cannot supply subsequent observations. Direct _finalize_close would bypass safe release. A separate resource-detach contract and owner registration are not within this cleanup.",
+    "probe": "worker-lifecycle.json",
+    "future_required_contract": [
+      "register the owner at a bounded public Runtime resource boundary",
+      "close only owner-held workers; repeated close must be harmless",
+      "retire computation without replacing business outcome or executor landing responsibility",
+      "transfer workers during successor creation without duplicate closure"
+    ]
+  },
+  "retired_tests": [
+    "test_unproven_outside_stop_replan_retains_supervisor_body_owner",
+    "test_reverse_displacement_releases_from_actual_position_then_replans",
+    "test_outside_retention_is_neutral_proved_and_bounded",
+    "test_declared_edge_completes_without_safety_violation",
+    "test_all_frozen_directions_and_first_late_inputs",
+    "test_ordinary_candidate_enters_interval_before_any_sneak_input",
+    "test_contract_is_typed_immutable_ordered_and_bounded",
+    "test_early_and_late_intervals_cannot_enable_outside_sneak",
+    "test_cancel_keeps_guard_until_stopped_and_observed_standing",
+    "test_input_loss_and_external_displacement_use_existing_exit",
+    "test_support_removal_rejects_guard_and_low_ceiling_rejects_success",
+    "test_explicit_replay_preserves_sneak_tail_and_reports_real_clip",
+    "test_safe_ordinary_routes_do_not_prefer_sneak_when_permission_exists",
+    "test_formal_action_route_propagates_contract_without_capability_branch",
+    "test_undeclared_edge_stays_safely_rejected"
+  ]
+}

@@ -26,8 +26,6 @@ class VerifiedGroundRouteCandidate:
     missing_cells: tuple[BlockPos, ...]
     physics_steps: int
     reason: str
-    sneak_edge_clipped: bool = False
-    support_boundary_rejected: bool = False
 
 
 class _CachedGroundPhysicsWorld(PhysicsWorldView):
@@ -58,8 +56,7 @@ class _CachedGroundPhysicsWorld(PhysicsWorldView):
                                tuple(missing), tuple(unsupported))
 
 
-def ground_route_state_matches(frame: NavigationFrame, state: PhysicsState | None,
-                               *, edge_guard: bool = False) -> bool:
+def ground_route_state_matches(frame: NavigationFrame, state: PhysicsState | None) -> bool:
     """Only the complete state of this observation can authorize contact replay.
 
     Body health has no PhysicsState counterpart and is not a projection input;
@@ -75,7 +72,7 @@ def ground_route_state_matches(frame: NavigationFrame, state: PhysicsState | Non
             and state.yaw_radians == frame.body.yaw_radians
             and state.pitch_radians == frame.body.pitch_radians
             and state.pose == frame.body.pose
-            and state.pose in (("standing", "crouching") if edge_guard else ("standing",))
+            and state.pose in ("standing",)
             and state.on_ground and frame.body.is_on_ground
             and state.horizontal_collision == frame.body.horizontal_collision
             and state.vertical_collision == frame.body.vertical_collision
@@ -98,7 +95,7 @@ def ground_route_state_matches(frame: NavigationFrame, state: PhysicsState | Non
                  or state.movement_tick_id == frame.body.movement_tick_id)
             and all(abs(state.velocity_blocks_per_tick[i] * 20
                         - frame.body.velocity_blocks_per_second[i]) <= 1.e-9 for i in range(3))
-            and not any((state.sneaking and not edge_guard, state.sprinting, state.swimming,
+            and not any((state.sneaking, state.sprinting, state.swimming,
                          state.submerged_in_water, state.climbing, state.fall_flying,
                          state.flying)))
 
@@ -107,7 +104,6 @@ def verified_ground_route_candidate(
     frame: NavigationFrame, state: PhysicsState | None, command: MovementV1,
     *, control_ticks: int, tail_ticks: int, minimum_support: float,
     profile: GroundMotionProfile, query_cache: WorldQueryCache,
-    edge_guard: bool = False,
 ) -> VerifiedGroundRouteCandidate:
     """Replay the complete lease and neutral drift; preserve collision positions."""
     query_cache.validate_for(frame.world)
@@ -116,17 +112,15 @@ def verified_ground_route_candidate(
     lowest_support = 1.0
     tracking_end = None
     steps = 0
-    clipped = False
 
-    def finish(status, reason, missing=(), *, support_boundary=False):
+    def finish(status, reason, missing=()):
         return VerifiedGroundRouteCandidate(status, tuple(trajectory), tracking_end,
                                             lowest_support, tuple(sorted(dependencies)),
-                                            tuple(sorted(set(missing))), steps, reason,
-                                            clipped, support_boundary)
+                                            tuple(sorted(set(missing))), steps, reason)
 
-    if not ground_route_state_matches(frame, state, edge_guard=edge_guard):
+    if not ground_route_state_matches(frame, state):
         return finish(QueryStatus.UNSUPPORTED, "state_unavailable_or_mismatched")
-    if (command.jump or command.sprint or (command.sneak and not edge_guard)
+    if (command.jump or command.sprint or command.sneak
             or profile.motion_catalog is None or profile.ground_model_id is None):
         return finish(QueryStatus.UNSUPPORTED, "ordinary_model_required")
     assert state is not None
@@ -154,16 +148,14 @@ def verified_ground_route_candidate(
         if calculated.status is not CalculationStatus.OK:
             return finish(QueryStatus.UNSUPPORTED, "calculator_rejected")
         assert calculated.next_state is not None
-        clipped = clipped or "sneak_edge_clipped" in calculated.events
         current = calculated.next_state
         trajectory.append(current)
         if index + 1 == control_ticks:
             tracking_end = current
         if (not current.on_ground or abs(current.position[1] - state.position[1]) > 1.e-9
-                or current.pose not in (("standing", "crouching") if edge_guard else ("standing",))
+                or current.pose not in ("standing",)
                 or current.fall_distance_blocks > 0):
-            return finish(QueryStatus.BLOCKED, "vertical_motion_or_lost_ground",
-                          support_boundary=not current.on_ground)
+            return finish(QueryStatus.BLOCKED, "vertical_motion_or_lost_ground")
         support = query_support(current.body_box, frame.world, query_cache=query_cache)
         dependencies.update(support.dependencies)
         if unsupported_motion_cells(profile.motion_catalog, frame.world,
@@ -171,12 +163,11 @@ def verified_ground_route_candidate(
                                     query_cache=query_cache):
             return finish(QueryStatus.UNSUPPORTED, "material_outside_active_model")
         if support.status is not QueryStatus.FEASIBLE:
-            return finish(support.status, "support_rejected", support.missing_cells,
-                          support_boundary=support.status is QueryStatus.BLOCKED)
+            return finish(support.status, "support_rejected", support.missing_cells)
         lowest_support = min(lowest_support, support.support_fraction)
         if (not set(support.support_materials).issubset(profile.support_materials)
                 or support.support_fraction < minimum_support):
-            return finish(QueryStatus.BLOCKED, "insufficient_support", support_boundary=True)
+            return finish(QueryStatus.BLOCKED, "insufficient_support")
     if math.hypot(current.velocity_blocks_per_tick[0], current.velocity_blocks_per_tick[2]) > 1.e-9:
         return finish(QueryStatus.BLOCKED, "stop_tail_did_not_settle")
     return finish(QueryStatus.FEASIBLE, "verified")

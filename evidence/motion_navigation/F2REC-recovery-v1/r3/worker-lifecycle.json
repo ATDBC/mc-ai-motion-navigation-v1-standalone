@@ -1,0 +1,68 @@
+{
+  "schema_version": "mc2p.f2rec-r0-worker-lifecycle.v1",
+  "probe_kind": "dynamic_formal_path",
+  "cases": {
+    "ready_after_death": {
+      "status": "PASS",
+      "risk": "closed",
+      "evidence": "Killed the live solver during an airborne verified action.",
+      "observed": {
+        "worker_alive_before": true,
+        "worker_alive_after_injection": false,
+        "airborne_owner_retained": true,
+        "neutral_or_bounded_safe_result": true,
+        "session_state": "executing",
+        "session_reason": "complete_verified_landing_after_cancel",
+        "runtime_state": "ready"
+      }
+    },
+    "cancel_backpressure": {
+      "status": "PASS",
+      "risk": "closed",
+      "evidence": "Held the production submit boundary under backpressure.",
+      "observed": {
+        "decision_count": 4,
+        "bounded_terminal_reached": true,
+        "terminal_reason": "motion_unsolvable:motion_solver_retry_exhausted",
+        "verified_command_executed": false,
+        "local_failure_count": 3,
+        "task_recovery_starts": 0
+      }
+    },
+    "pre_publish_invalidation": {
+      "status": "PASS",
+      "risk": "closed",
+      "evidence": "Delivered a completed old revision after replacement.",
+      "observed": {
+        "old_identity_retired": true,
+        "late_result_disposition": "discarded_late",
+        "late_result_identity_matched": true,
+        "retired_result_executable": false,
+        "replacement_identity_active": true
+      }
+    },
+    "runtime_close": {
+      "status": "PASS",
+      "risk": "lifecycle_debt",
+      "evidence": "Closed Runtime while its Session-owned worker was live.",
+      "observed": {
+        "worker_alive_before": true,
+        "worker_alive_after_runtime_close": true,
+        "neutral_release_sent": true,
+        "source_stats_before": {
+          "retained_slots": 1,
+          "active_sources": 1,
+          "active_intents": 0
+        },
+        "source_stats_after": {
+          "retained_slots": 0,
+          "active_sources": 0,
+          "active_intents": 0
+        },
+        "input_ownership_cleared": true,
+        "runtime_state": "closed"
+      }
+    }
+  },
+  "current_hard_risk": false
+}

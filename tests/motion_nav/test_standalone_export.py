@@ -83,11 +83,11 @@ class StandaloneExportTests(unittest.TestCase):
             'docs/motion_navigation/decisions/0072-end-post-f1-cleanup-and-validate-action-spec.md',
             'docs/motion_navigation/stages/motion-navigation-middle-layer-M0-M1-plan.md',
             'docs/motion_navigation/acceptance/motion-navigation-middle-layer-M0-M1.md',
-            'docs/superpowers/plans/2026-10-06-motion-navigation-m0-m1.md',
             'evidence/motion_navigation/redesign-m0/baseline-manifest.json',
             'evidence/motion_navigation/redesign-m1/final-manifest.json',
         )
         self.assertEqual(tuple(p for p in required if not (self.root/p).is_file()), ())
+        self.assertFalse((self.root/'docs/superpowers').exists())
         for name in ('README.md', 'AGENTS.md'):
             text = (self.root/name).read_text('utf-8')
             self.assertIn('M1', text)
@@ -149,6 +149,14 @@ class StandaloneExportTests(unittest.TestCase):
             ROOT / "evidence/motion_navigation/F2REC-recovery-v1/r1/"
             "production-semantic-hashes.json"
         ).read_text("utf-8"))["files"]
+        r2 = json.loads((
+            ROOT / "evidence/motion_navigation/F2REC-recovery-v1/r2-revalidation/"
+            "production-semantic-hashes.json"
+        ).read_text("utf-8"))["files"]
+        r3 = json.loads((
+            ROOT / "evidence/motion_navigation/F2REC-recovery-v1/r3/"
+            "production-semantic-hashes.json"
+        ).read_text("utf-8"))["files"]
         for name, expected in report["full_production_files"].items():
             raw = (self.root/name).read_bytes()
             lf = raw.replace(b"\r\n", b"\n")
@@ -156,7 +164,7 @@ class StandaloneExportTests(unittest.TestCase):
             if raw_hash != expected:
                 self.assertEqual(
                     hashlib.sha256(lf).hexdigest(),
-                    r1.get(name, canonical[name]),
+                    r3.get(name, r2.get(name, r1.get(name, canonical[name]))),
                     name,
                 )
 

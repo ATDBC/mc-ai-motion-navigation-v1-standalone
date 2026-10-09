@@ -1,0 +1,9 @@
+{
+  "files": {
+    "scripts/f2_ground_route_runtime.py": "ec70ebbd0b816628566628e8cdb271cbb4fc5ac39fc56868758809d95d7b619c",
+    "scripts/f2rec_r4_fabric.py": "f0da63a910f77c898982f7aab37c35889095f05e5e316d10ae29b3da97b645e0",
+    "tests/motion_nav/test_f2rec_r4_recovery.py": "2a46e6b090b39d8fbf56cd88850630de67c772adcd1c7aa791b0f42b95b73e0d"
+  },
+  "bridge_correction": "Supported survey standpoints only; original frozen solids, start and GoalState retained.",
+  "preservation_checks": "Four R4 tests passed in both source and public forward/reverse runs."
+}

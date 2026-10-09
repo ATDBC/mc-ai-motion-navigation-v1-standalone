@@ -105,6 +105,7 @@ def _initial_blocks():
 def _snapshot(
     *, sequence: int = 1,
     results: tuple[AirQueryResultV3, ...] = (),
+    additional_blocks=(),
 ):
     visible_air = tuple(
         observed_block(
@@ -120,7 +121,7 @@ def _snapshot(
         sequence=sequence,
         received=100_000_000 + sequence * 50_000_000,
         position=(.5, -60.0, .5),
-        blocks=_initial_blocks() + visible_air,
+        blocks=_initial_blocks() + visible_air + tuple(additional_blocks),
         entities=(),
         episode="d063-goal-surface",
         self_changes={"movement_tick_id": sequence},
@@ -296,14 +297,16 @@ class D063GoalSurfaceInformationTests(unittest.TestCase):
         expected = None
         try:
             for sequence in range(1, 8):
+                node, remaining = session._surface_for_goal(current, _wide_goal())
                 proposal = session.propose(
                     current,
                     _ground_anchor(current),
                     500_000_000,
                     input_ledger=ledger,
                 )
-                if proposal.report.reason != "goal_surface_requires_information":
+                if node is not None and not remaining:
                     break
+                self.assertIs(proposal.report.state, NavigationSessionState.NEEDS_INFORMATION)
                 if expected is None:
                     expected = proposal.report.missing_cells
                 page = proposal.control_frame.observation_request.air_positions
@@ -313,21 +316,31 @@ class D063GoalSurfaceInformationTests(unittest.TestCase):
                 requested.extend(page)
                 self.assertEqual(planner.jobs, [])
                 self.assertFalse(session.diagnostics.planning_work_owned)
+                # Revealing air everywhere would make the first page enough
+                # for a safe subregion.  Instead all early candidates are
+                # obstacles, with one clear corner completed on the last page.
+                clear = tuple(cell for cell in page
+                              if cell[0] in (3, 4) and cell[2] in (9, 10))
                 current = session.ingest(_snapshot(
                     sequence=sequence + 1,
-                    results=_visible_air_results(page),
+                    results=_visible_air_results(clear),
+                    additional_blocks=tuple(observed_block(cell)
+                                            for cell in page if cell not in clear),
                 ))
             else:
                 self.fail("bounded goal missing did not finish paging")
 
             self.assertGreater(len(requested), 128)
             self.assertEqual(len(requested), len(set(requested)))
-            self.assertEqual(set(requested), set(expected))
-            final = proposal
-            self.assertNotEqual(
-                final.report.reason,
-                "goal_surface_requires_information",
-            )
+            self.assertTrue(set(requested).issubset(expected))
+            # Discarded blocked candidates no longer require their far halo.
+            # The selected corner must nevertheless have no missing facts.
+            self.assertIsNotNone(node)
+            self.assertEqual(remaining, ())
+            self.assertEqual((node.column_x, node.column_z), (3, 9))
+            selected, missing = session._surface_for_goal(current, _wide_goal())
+            self.assertEqual(selected, node)
+            self.assertEqual(missing, ())
         finally:
             session.close()
 

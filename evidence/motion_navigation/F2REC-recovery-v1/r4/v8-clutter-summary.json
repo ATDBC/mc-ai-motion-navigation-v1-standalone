@@ -1,0 +1,10 @@
+{
+  "cases": 1800,
+  "current_cases": 1800,
+  "completed": 1717,
+  "common_field_differences": [],
+  "old_success_regressions": [],
+  "retired_components": [],
+  "original_manifest_unchanged": true,
+  "raw_sha256": "923b4a61a8477bf05b74a38496da04ab0993ba3e5a8ac699ef6b3f47dfc9d85e"
+}

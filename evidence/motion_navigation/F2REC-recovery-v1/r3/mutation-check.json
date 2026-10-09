@@ -1,0 +1,8 @@
+{
+  "mutant": "remove ordinary replay support-fraction threshold",
+  "detected": true,
+  "failures": [
+    "Traceback (most recent call last):\n  File \"D:\\My_project\\mc_ai\\tests\\motion_nav\\test_f2rec_r3_cleanup.py\", line 63, in test_ordinary_replay_retains_actual_support_threshold\n    self.assertIs(rejected.status, QueryStatus.BLOCKED)\nAssertionError: <QueryStatus.FEASIBLE: 'feasible'> is not <QueryStatus.BLOCKED: 'blocked'>\n"
+  ],
+  "errors": []
+}

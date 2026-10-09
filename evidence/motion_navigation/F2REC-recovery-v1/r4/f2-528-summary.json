@@ -1,0 +1,107 @@
+{
+  "cases": 528,
+  "current_cases": 520,
+  "completed": 464,
+  "common_field_differences": [],
+  "old_success_regressions": [],
+  "retired_components": [
+    {
+      "id": "f2/declared_edge/south/normal",
+      "outcome": "blocked",
+      "reason": "fixed_route_has_no_forward_control",
+      "input_sha256": "dde49557997c52c986a6c480125308780c48fa2cc9e82a3d431e3ddb5e5000c4",
+      "behavior_sha256": "fac913d353b1f0d84ca4d0a0d5e5f01d9ad916c651e6832a6f3786a0d8c3af7c",
+      "final_position": [
+        1.651623876382979,
+        64.0,
+        2.163050608534148
+      ]
+    },
+    {
+      "id": "f2/declared_edge/south/first_late",
+      "outcome": "blocked",
+      "reason": "fixed_route_has_no_forward_control",
+      "input_sha256": "c53d4a07b4ed5767af292978997456182358025e363c6b560d4c40bf042c633f",
+      "behavior_sha256": "fc48c946a41aa1a0ef6bd651d5084858bdb414d14a5fe5bc4a7891b2cc915687",
+      "final_position": [
+        1.651623876382979,
+        64.0,
+        2.163050608534148
+      ]
+    },
+    {
+      "id": "f2/declared_edge/east/normal",
+      "outcome": "blocked",
+      "reason": "fixed_route_has_no_forward_control",
+      "input_sha256": "5c5c11848d2f57319869ee4949729bdb715e5f8860710b086467a512c7cc3618",
+      "behavior_sha256": "196dacf2ee3b97ac905e22921504796204f1c032c697e64aa404b77e662f9c22",
+      "final_position": [
+        2.163050608534148,
+        64.0,
+        -1.6516238763829787
+      ]
+    },
+    {
+      "id": "f2/declared_edge/east/first_late",
+      "outcome": "blocked",
+      "reason": "fixed_route_has_no_forward_control",
+      "input_sha256": "02b5e7cee9cc1379c96f6429aa4539b7b7f5449550b563e22d7bc4230787ee4b",
+      "behavior_sha256": "5e450f8574a05aa624be071a7ec7c38e4b049092d857da6984d9bd8cdf5acf54",
+      "final_position": [
+        2.163050608534148,
+        64.0,
+        -1.6516238763829787
+      ]
+    },
+    {
+      "id": "f2/declared_edge/north/normal",
+      "outcome": "blocked",
+      "reason": "fixed_route_has_no_forward_control",
+      "input_sha256": "99bd8880da579e3af3e436ca215c6fd0aa137d02b1d10a7d32af3fd596ee38d4",
+      "behavior_sha256": "d7ff3db74ab1fdee461601aa736d6df4365941485e3691fe008cac93cfa45a0a",
+      "final_position": [
+        -1.651623876382979,
+        64.0,
+        -2.163050608534148
+      ]
+    },
+    {
+      "id": "f2/declared_edge/north/first_late",
+      "outcome": "blocked",
+      "reason": "fixed_route_has_no_forward_control",
+      "input_sha256": "0aa06f38acffaf77f7c1d462949b83fe9d731b29b236a5e7daa1d7f06c155f64",
+      "behavior_sha256": "eb29a95baebda5e1ae025f06c0c80f03c36c33441c3ba77894c306dace1b6bb1",
+      "final_position": [
+        -1.651623876382979,
+        64.0,
+        -2.163050608534148
+      ]
+    },
+    {
+      "id": "f2/declared_edge/west/normal",
+      "outcome": "blocked",
+      "reason": "fixed_route_has_no_forward_control",
+      "input_sha256": "6d07b541baf8fe397224365025f4fd53e1c93509d95d9612f255d151975c893f",
+      "behavior_sha256": "a571f01c0d85cb10bfe74366c2a27b64f1b831b51f21c320d79cb3de9632b0c2",
+      "final_position": [
+        -2.163050608534148,
+        64.0,
+        1.651623876382979
+      ]
+    },
+    {
+      "id": "f2/declared_edge/west/first_late",
+      "outcome": "blocked",
+      "reason": "fixed_route_has_no_forward_control",
+      "input_sha256": "c0216025ebc794dc44bc904d5383bf955d4e94f197ac2b55b3d9b7eb56df26ca",
+      "behavior_sha256": "622ac267e9a662b2e82e6d606c0e4de6147e252e1adbd52a8780994877821b34",
+      "final_position": [
+        -2.163050608534148,
+        64.0,
+        1.651623876382979
+      ]
+    }
+  ],
+  "original_manifest_unchanged": true,
+  "raw_sha256": "b71032b24553d25e8a2f59203ef468392229de223d378ef634a66c9398f3725e"
+}

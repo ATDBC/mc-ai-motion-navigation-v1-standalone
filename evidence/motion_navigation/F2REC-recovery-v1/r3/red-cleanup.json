@@ -1,0 +1,9 @@
+{
+  "tests": 3,
+  "passed": 2,
+  "failed": [
+    "test_retired_permission_has_no_production_api"
+  ],
+  "command": ".venv/python.exe -m unittest tests.motion_nav.test_f2rec_r3_cleanup -v",
+  "source": "5a6cf463"
+}

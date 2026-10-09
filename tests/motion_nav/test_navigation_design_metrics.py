@@ -7,8 +7,8 @@ from scripts.navigation_design_metrics import NON_IMPLEMENTATION_ENUMS, measure
 
 
 class NavigationDesignMetricsTests(unittest.TestCase):
-    def test_ground_route_guard_phase_is_internal_lifecycle(self):
-        self.assertIn('GroundRouteGuardPhase', NON_IMPLEMENTATION_ENUMS)
+    def test_handoff_disposition_is_internal_lifecycle(self):
+        self.assertIn('HandoffDisposition', NON_IMPLEMENTATION_ENUMS)
         root = Path(__file__).resolve().parents[2]
         report = measure(root)
         self.assertEqual(report['unclassified'], [])
@@ -16,7 +16,7 @@ class NavigationDesignMetricsTests(unittest.TestCase):
         self.assertEqual(len(report['proxy_implementation_dispatch']), 1)
         self.assertEqual(len(report['direct_action_dispatch']), 42)
         for rows in (report['proxy_implementation_dispatch'], report['direct_action_dispatch']):
-            self.assertFalse(any(row.get('classification') == 'GroundRouteGuardPhase' for row in rows))
+            self.assertFalse(any(row.get('classification') == 'HandoffDisposition' for row in rows))
 
     def test_reassigned_module_name_uses_aggregate_before_last_binding(self):
         declarations = '''

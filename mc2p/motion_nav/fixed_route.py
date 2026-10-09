@@ -23,7 +23,7 @@ from mc2p.motion_nav.ground_modes import (
     observed_ground_mode,
 )
 from mc2p.motion_nav.ground_route_execution import (
-    GroundRouteCapability, GroundRouteExecutionContract, GroundRouteGuardPhase,
+    GroundRouteExecutionContract,
 )
 from mc2p.motion_nav.movement_transition import MovementMode, GoalState
 from mc2p.motion_nav.online_motion import ProjectionStatus, project_movement_command
@@ -81,8 +81,6 @@ class FixedRoute:
         if self.execution_contract is not None:
             if type(self.execution_contract) is not GroundRouteExecutionContract:
                 raise ContractViolation("fixed route execution contract must be typed")
-            self.execution_contract.validate_length(sum(math.hypot(b.x-a.x, b.z-a.z)
-                                                       for a, b in zip(self.points, self.points[1:])))
             completion = self.execution_contract.completion_region
             if completion is not None and (self.points[-1].x, self.points[-1].y, self.points[-1].z) != completion.reference_point:
                 raise ContractViolation("fixed route endpoint differs from completion reference")
@@ -200,7 +198,6 @@ class FixedRouteDecision:
     handoff_disposition: GroundHandoffDisposition = GroundHandoffDisposition.NOT_REQUESTED
     full_candidates: int = 0
     physics_steps: int = 0
-    edge_guard_phase: GroundRouteGuardPhase = GroundRouteGuardPhase.INACTIVE
 
 
 @dataclass(frozen=True, slots=True)
@@ -326,7 +323,6 @@ class _Candidate:
     unsupported: bool
     progress_gain: float
     full_replay_eligible: bool = False
-    support_boundary: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -459,10 +455,7 @@ class FixedRouteController:
         self._continuation: MotionContinuationRequirement | None = None
         self._full_candidates = 0
         self._physics_steps = 0
-        self._guard_phase = GroundRouteGuardPhase.INACTIVE
         self._ordinary_replays: dict[MovementV1, VerifiedGroundRouteCandidate] = {}
-        self._guard_release_frames = 0
-        self._guard_outside_frames = 0
 
     def start(
         self, route: FixedRoute, frame: NavigationFrame, *,
@@ -477,7 +470,7 @@ class FixedRouteController:
                 raise ContractViolation("fixed route execution profile does not match controller")
             if (traversal_plan is not None or (self.mode_profile is not None
                     and self.mode_profile.mode is not MovementMode.WALK)):
-                raise ContractViolation("route edge guard requires ordinary fixed ground execution")
+                raise ContractViolation("completion region requires ordinary fixed ground execution")
         varying_height = (
             max(point.y for point in route.points)
             - min(point.y for point in route.points) > 0.05
@@ -522,9 +515,6 @@ class FixedRouteController:
         self._traversal_tick_index = 0
         self._traversal_replan_pending = False
         self._continuation = continuation
-        self._guard_phase = GroundRouteGuardPhase.INACTIVE
-        self._guard_release_frames = 0
-        self._guard_outside_frames = 0
         self.state = FixedRouteState.RUNNING
 
     def set_handoff_target(self, target: GroundHandoffTarget | None) -> None:
@@ -552,7 +542,6 @@ class FixedRouteController:
                   missing: tuple[BlockPos, ...] = (), *,
                   handoff_disposition: GroundHandoffDisposition | None = None) -> FixedRouteDecision:
         if (self.mode_profile is not None
-                and self._guard_phase is GroundRouteGuardPhase.INACTIVE
                 and not (self.mode_profile.mode is MovementMode.SPRINT
                          and self.state in {
                              FixedRouteState.BRAKING, FixedRouteState.CANCELLING,
@@ -574,7 +563,7 @@ class FixedRouteController:
             self.state, movement, self._progress, self._cross_track,
             tuple(sorted(set(missing))), time.perf_counter_ns() - started,
             self.config.input_lease_ticks, reason, handoff_disposition,
-            self._full_candidates, self._physics_steps, self._guard_phase,
+            self._full_candidates, self._physics_steps,
         )
 
     def _prepared_handoff_movement(self, frame: NavigationFrame) -> MovementV1 | None:
@@ -980,8 +969,6 @@ class FixedRouteController:
         current_support = query_support(
             frame.body.body_box, frame.world, query_cache=query_cache,
         )
-        if self._guard_phase is not GroundRouteGuardPhase.INACTIVE:
-            return self._decide_edge_guard(frame, physics_state, query_cache, started)
         mode_pending = False
         geometric_ground_support = False
         if self.mode_profile is None:
@@ -1279,14 +1266,12 @@ class FixedRouteController:
                 selected = min(feasible, key=lambda candidate: (
                     candidate.score, candidate.movement.forward, candidate.movement.strafe,
                 ))
-                # A declared upcoming interval must remain reachable by safe
-                # ordinary input. Neutral's support preference may otherwise
-                # stop before that entry despite a proved advancing candidate.
+                # A completion region must remain reachable by safe ordinary
+                # input despite neutral's support preference.
                 if selected.progress_gain <= .005 and self._route.execution_contract is not None:
                     entering = [c for c in feasible if c.progress_gain > .005
-                                and (self._candidate_enters_guard_interval(c, body, target)
-                                     or (completion is not None and not at_goal
-                                         and self._candidate_approaches_completion(c, body, target)))]
+                                and completion is not None and not at_goal
+                                and self._candidate_approaches_completion(c, body, target)]
                     if entering:
                         selected = min(entering, key=self._candidate_key)
             deferred = [candidate for candidate in candidates
@@ -1300,10 +1285,6 @@ class FixedRouteController:
             if (selected.movement == MovementV1()
                     and selected.progress_gain <= 0.005
                     and speed <= self.config.stopped_speed_blocks_per_second):
-                guard = self._enter_edge_guard(candidates, frame, body, target,
-                                               physics_state, query_cache, started)
-                if guard is not None:
-                    return guard
                 if any(candidate.unsupported for candidate in candidates):
                     self.state = FixedRouteState.UNSUPPORTED
                     return self._decision(
@@ -1318,10 +1299,6 @@ class FixedRouteController:
                                          if geometric_ground_support
                                          else "tracking_fixed_route")),
                                   preview_missing)
-        guard = self._enter_edge_guard(candidates, frame, body, target,
-                                       physics_state, query_cache, started)
-        if guard is not None:
-            return guard
         missing = tuple(cell for candidate in candidates for cell in candidate.missing)
         if missing:
             self.state = FixedRouteState.NEEDS_INFORMATION
@@ -1387,11 +1364,7 @@ class FixedRouteController:
         completion = (None if self._route.execution_contract is None else
                       self._route.execution_contract.completion_region)
         for rollout in rejected:
-            reserved_guard = (self._route.execution_contract is not None
-                              and self._edge_guard_permitted(
-                                  self._geometry.project_current(body.x, body.z).progress)
-                              and any(c.support_boundary for c in candidates))
-            if self._full_candidates >= (1 if reserved_guard else 3):
+            if self._full_candidates >= 3:
                 break
             region_approach = (completion is not None and not completion.contains(frame.body.position)
                                and self._completion_distance(rollout.tracking_end.x,
@@ -1448,22 +1421,6 @@ class FixedRouteController:
                 winner = candidate
         return [replacements.get(c.movement, c) for c in candidates]
 
-    def _edge_guard_permitted(self, progress: float) -> bool:
-        contract = self._route.execution_contract if self._route is not None else None
-        return contract is not None and contract.permits(
-            GroundRouteCapability.SNEAK_EDGE_GUARD, progress)
-
-    def _candidate_enters_guard_interval(
-        self, candidate: _Candidate, body: PlanarBodyState, target: tuple[float, float],
-    ) -> bool:
-        replay = self._ordinary_replays.get(candidate.movement)
-        if replay is not None and replay.tracking_end is not None:
-            end = replay.tracking_end.position
-            projection = self._geometry.project_current(end[0], end[2])
-        else:
-            end = self._prepare_candidate_rollout(body, candidate.movement, target, braking=False).tracking_end
-            projection = self._geometry.project_current(end.x, end.z)
-        return self._edge_guard_permitted(projection.progress)
 
     def _candidate_approaches_completion(self, candidate, body, target) -> bool:
         replay = self._ordinary_replays.get(candidate.movement)
@@ -1480,180 +1437,6 @@ class FixedRouteController:
         return math.hypot(max(b.min_x-x, x-b.max_x, 0.),
                           max(b.min_z-z, z-b.max_z, 0.))
 
-    def _guard_replay(
-        self, frame: NavigationFrame, physics_state: PhysicsState | None,
-        movement: MovementV1, query_cache: WorldQueryCache,
-    ) -> tuple[VerifiedGroundRouteCandidate, tuple[_Projection, ...]] | None:
-        if self._full_candidates >= 3:
-            return None
-        self._full_candidates += 1
-        result = verified_ground_route_candidate(
-            frame, physics_state, movement, control_ticks=self.config.input_lease_ticks,
-            tail_ticks=self.config.maximum_recovery_ticks,
-            minimum_support=self.config.minimum_support_fraction,
-            profile=self.profile, query_cache=query_cache, edge_guard=True,
-        )
-        self._physics_steps += result.physics_steps
-        if result.status is not QueryStatus.FEASIBLE or result.tracking_end is None:
-            return None
-        projections = [self._geometry.project_current(s.position[0], s.position[2])
-                       for s in result.trajectory]
-        if any(p.distance > self.config.maximum_cross_track_blocks for p in projections):
-            return None
-        if movement.sneak:
-            if (self._guard_phase is GroundRouteGuardPhase.OUTSIDE_STOPPING
-                    and movement == MovementV1(sneak=True)):
-                # This is a bounded protective stop, never route tracking.
-                if any(p.progress > projections[0].progress + _EPSILON for p in projections):
-                    return None
-            elif any(not self._edge_guard_permitted(p.progress) for p in projections):
-                return None
-        return result, tuple(projections)
-
-    def _enter_edge_guard(
-        self, candidates: list[_Candidate], frame: NavigationFrame, body: PlanarBodyState,
-        target: tuple[float, float], physics_state: PhysicsState | None,
-        query_cache: WorldQueryCache, started: int,
-    ) -> FixedRouteDecision | None:
-        if (not self._edge_guard_permitted(self._geometry.project_current(body.x, body.z).progress)
-                or not ground_route_state_matches(frame, physics_state)):
-            return None
-        # Only an actual support-boundary rejection admits the alternate input.
-        rejected = sorted((self._prepare_candidate_rollout(body, c.movement, target, braking=False)
-                           for c in candidates if c.support_boundary
-                           and not c.missing and not c.unsupported), key=self._rollout_key)
-        for rollout in rejected:
-            ordinary = self._ordinary_replays.get(rollout.movement)
-            if ordinary is None or not ordinary.support_boundary_rejected:
-                continue
-            movement = replace(rollout.movement, sneak=True)
-            reviewed = self._guard_replay(frame, physics_state, movement, query_cache)
-            if reviewed is None:
-                continue
-            result, projections = reviewed
-            gain = projections[self.config.input_lease_ticks].progress - self._progress
-            if gain <= .005 and not self._guard_goal_progress(frame, result.tracking_end):
-                continue
-            # The ordinary full lease/tail failed support; safe reduced motion
-            # is equivalent protection even before a calculator clip occurs.
-            self._guard_phase = GroundRouteGuardPhase.ACTIVE
-            self.state = FixedRouteState.RUNNING
-            return self._decision(started, movement, "tracking_declared_edge_guard")
-        return None
-
-    def _guard_goal_progress(self, frame: NavigationFrame, end: PhysicsState) -> bool:
-        goal = self._geometry.goal
-        return (self._progress >= self._geometry.total_length - self.config.endpoint_tolerance_blocks
-                and math.hypot(end.position[0]-goal.x, end.position[2]-goal.z) + .005
-                < math.hypot(frame.body.position[0]-goal.x, frame.body.position[2]-goal.z))
-
-    def _decide_edge_guard(
-        self, frame: NavigationFrame, physics_state: PhysicsState | None,
-        query_cache: WorldQueryCache, started: int,
-    ) -> FixedRouteDecision:
-        if not ground_route_state_matches(frame, physics_state, edge_guard=True):
-            self.state = FixedRouteState.UNSUPPORTED
-            return self._decision(started, MovementV1(), "edge_guard_state_unavailable")
-        body = self._planar(frame)
-        projection = self._geometry.project(body.x, body.z, self._progress,
-                                            self._segment_index, self.config.maximum_cross_track_blocks)
-        self._progress = max(self._progress, projection.progress)
-        self._segment_index = max(self._segment_index, projection.segment_index)
-        actual = self._geometry.project_current(body.x, body.z)
-        self._cross_track = actual.distance
-        speed = math.hypot(body.velocity_x, body.velocity_z)
-        if (self._cross_track > self.config.maximum_cross_track_blocks
-                or abs(frame.body.position[1] - self._geometry.points[0].y) > .10
-                or speed > self.profile.maximum_speed_blocks_per_second
-                    + self.config.speed_model_tolerance_blocks_per_second):
-            self.state = FixedRouteState.UNSUPPORTED
-            return self._decision(started, MovementV1(), "edge_guard_body_outside_route_model")
-        if (self._guard_phase in {GroundRouteGuardPhase.OUTSIDE_STOPPING,
-                                  GroundRouteGuardPhase.OUTSIDE_RELEASING}
-                or not self._edge_guard_permitted(actual.progress)):
-            return self._stop_outside_guard_interval(frame, physics_state, query_cache, started, speed)
-        goal = self._geometry.goal
-        at_goal = (self._progress >= self._geometry.total_length - self.config.endpoint_tolerance_blocks
-                   and math.hypot(body.x-goal.x, body.z-goal.z) <= self.config.endpoint_tolerance_blocks)
-        completion = self._route.execution_contract.completion_region
-        if completion is not None:
-            at_goal = completion.contains(frame.body.position)
-        if self._guard_phase is GroundRouteGuardPhase.RELEASING:
-            if not frame.body.is_sneaking and frame.body.pose == "standing":
-                self._guard_phase = GroundRouteGuardPhase.INACTIVE
-                # Resume the existing completion/cancel path on the next frame.
-                return self._decision(started, MovementV1(), "edge_guard_release_confirmed")
-            self._guard_release_frames += 1
-            if self._guard_release_frames >= self.config.maximum_recovery_ticks:
-                self.state = FixedRouteState.BLOCKED
-                return self._decision(started, MovementV1(), "edge_guard_standing_clearance_blocked")
-            return self._decision(started, MovementV1(), "edge_guard_release_pending")
-        must_stop = (self._cancel_requested or at_goal
-                     or self._guard_phase is GroundRouteGuardPhase.BRAKING
-                     or not self._edge_guard_permitted(actual.progress))
-        if must_stop:
-            self._guard_phase = GroundRouteGuardPhase.BRAKING
-            self.state = FixedRouteState.CANCELLING if self._cancel_requested else FixedRouteState.BRAKING
-            if speed <= 1.e-9:
-                released = self._guard_replay(frame, physics_state, MovementV1(), query_cache)
-                if (released is not None and released[0].trajectory[-1].pose == "standing"
-                        and not released[0].trajectory[-1].sneaking):
-                    self._guard_phase = GroundRouteGuardPhase.RELEASING
-                    self._guard_release_frames = 0
-                    return self._decision(started, MovementV1(), "edge_guard_release_requested")
-                self.state = FixedRouteState.BLOCKED
-                return self._decision(started, MovementV1(), "edge_guard_release_unsafe")
-            held = self._guard_replay(frame, physics_state, MovementV1(sneak=True), query_cache)
-            if held is not None:
-                return self._decision(started, MovementV1(sneak=True), "edge_guard_stopping")
-            self.state = FixedRouteState.BLOCKED
-            return self._decision(started, MovementV1(), "edge_guard_stop_unsafe")
-        target = self._geometry.point_at(self._progress + self.config.lookahead_min_blocks)
-        held = self._guard_replay(frame, physics_state, MovementV1(sneak=True), query_cache)
-        ordered = sorted((self._prepare_candidate_rollout(body, m, target, braking=False)
-                          for m in _MOVEMENTS if m != MovementV1()), key=self._rollout_key)
-        for rollout in ordered:
-            movement = replace(rollout.movement, sneak=True)
-            reviewed = self._guard_replay(frame, physics_state, movement, query_cache)
-            if reviewed is None:
-                continue
-            result, projections = reviewed
-            if (projections[self.config.input_lease_ticks].progress <= self._progress + .005
-                    and not self._guard_goal_progress(frame, result.tracking_end)):
-                continue
-            self.state = FixedRouteState.RUNNING
-            return self._decision(started, movement, "tracking_declared_edge_guard")
-        # Settle inside the interval before giving ordinary control another try.
-        self._guard_phase = GroundRouteGuardPhase.BRAKING
-        self.state = FixedRouteState.BRAKING if held is not None else FixedRouteState.BLOCKED
-        return self._decision(started, MovementV1(sneak=held is not None), "edge_guard_interval_stop")
-
-    def _stop_outside_guard_interval(
-        self, frame: NavigationFrame, physics_state: PhysicsState,
-        query_cache: WorldQueryCache, started: int, speed: float,
-    ) -> FixedRouteDecision:
-        self._guard_outside_frames += 1
-        self.state = FixedRouteState.CANCELLING if self._cancel_requested else FixedRouteState.BRAKING
-        if self._guard_phase is GroundRouteGuardPhase.OUTSIDE_RELEASING:
-            if not frame.body.is_sneaking and frame.body.pose == "standing" and speed <= 1.e-9:
-                self.state = FixedRouteState.CANCELLED if self._cancel_requested else FixedRouteState.NEEDS_REPLAN
-                return self._decision(started, MovementV1(), "edge_guard_outside_release_confirmed")
-            if self._guard_outside_frames >= self.config.maximum_recovery_ticks:
-                self.state = FixedRouteState.NEEDS_REPLAN
-            return self._decision(started, MovementV1(), "edge_guard_outside_release_pending")
-        released = self._guard_replay(frame, physics_state, MovementV1(), query_cache)
-        if (released is not None and released[0].trajectory[-1].pose == "standing"
-                and not released[0].trajectory[-1].sneaking):
-            self._guard_phase = GroundRouteGuardPhase.OUTSIDE_RELEASING
-            return self._decision(started, MovementV1(), "edge_guard_outside_release_requested")
-        self._guard_phase = GroundRouteGuardPhase.OUTSIDE_STOPPING
-        held = self._guard_replay(frame, physics_state, MovementV1(sneak=True), query_cache)
-        if held is None:
-            self.state = FixedRouteState.NEEDS_REPLAN
-            return self._decision(started, MovementV1(), "edge_guard_outside_stop_unproven")
-        if self._guard_outside_frames >= self.config.maximum_recovery_ticks:
-            self.state = FixedRouteState.NEEDS_REPLAN
-        return self._decision(started, MovementV1(sneak=True), "edge_guard_outside_protective_stop")
 
     @staticmethod
     def _rollout_key(rollout: _CandidateRollout) -> tuple[float, int, int]:
@@ -1951,7 +1734,6 @@ class FixedRouteController:
         blocked = False
         unsupported = False
         full_replay_eligible = False
-        support_boundary = False
         for state in states[1:]:
             delta = (state.x - previous_state.x, 0.0, state.z - previous_state.z)
             collision_box = _directional_prediction_box(
@@ -2022,7 +1804,6 @@ class FixedRouteController:
                 if evidence.status is QueryStatus.BLOCKED:
                     blocked = True
                     full_replay_eligible = not evidence.missing_cells
-                    support_boundary = True
                     break
                 if evidence.status is QueryStatus.NEEDS_INFORMATION:
                     missing.update(evidence.missing_cells)
@@ -2045,7 +1826,6 @@ class FixedRouteController:
             if worst_support < self.config.minimum_support_fraction:
                 blocked = True
                 full_replay_eligible = not missing
-                support_boundary = True
                 break
             shortfall = max(0.0, self.config.preferred_support_fraction - worst_support)
             support_penalty += shortfall * shortfall
@@ -2058,7 +1838,7 @@ class FixedRouteController:
         if blocked or unsupported:
             return _Candidate(
                 movement, math.inf, tuple(sorted(missing)), blocked, unsupported, -math.inf,
-                full_replay_eligible, support_boundary,
+                full_replay_eligible,
             )
         # The full release tail above answers whether the selected input remains
         # safe if the stream disappears.  It must not also define which movement

@@ -890,7 +890,9 @@ class D062DirectWalkValidationTests(unittest.TestCase):
             clock_ns=lambda: 1_000_000_000,
         )
         session.bind_source(_source())
-        session.start_goal("d062-seq64-goal", 13, _goal(9.8), initial)
+        # All safe completion points now need the unknown front row.  The
+        # old 9.8 goal allowed a known z=9 subregion and did not need to wait.
+        session.start_goal("d062-seq64-goal", 13, _goal(9.95), initial)
         try:
             waiting = session.propose(
                 initial,

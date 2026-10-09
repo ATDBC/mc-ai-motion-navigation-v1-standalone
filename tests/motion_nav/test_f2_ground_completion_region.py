@@ -135,7 +135,7 @@ class GroundCompletionRegionTests(unittest.TestCase):
         selected = standable_region_in_goal(frame.world, surface, goal.region)
         region = selected.completion_region
         route = FixedRoute('mismatch', (RoutePoint(.5, 64., .5), RoutePoint(*region.reference_point)),
-            GroundRouteExecutionContract((), region.dependencies, PROFILES.ground.profile_id,
+            GroundRouteExecutionContract(region.dependencies, PROFILES.ground.profile_id,
                                          completion_region=region))
         for wrong in (replace(state, body_width=state.body_width+1e-7),
                       replace(state, position=(.5+1e-10, 64., 9.4))):
@@ -198,7 +198,7 @@ class GroundCompletionRegionTests(unittest.TestCase):
         region = standable_region_in_goal(backend.world._world, surface, goal.region).completion_region
         state = replace(backend.state, position=(.5, 64., 9.55), velocity_blocks_per_tick=(0., 0., 0.))
         route = FixedRoute('region-before-guide', (RoutePoint(.5, 64., .5), RoutePoint(*region.reference_point)),
-            GroundRouteExecutionContract((), region.dependencies, PROFILES.ground.profile_id,
+            GroundRouteExecutionContract(region.dependencies, PROFILES.ground.profile_id,
                                          completion_region=region))
         controller = FixedRouteController(PROFILES.ground)
         controller.start(route, _frame(state, backend.world._world, 0))

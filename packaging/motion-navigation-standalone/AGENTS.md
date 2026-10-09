@@ -1,8 +1,8 @@
 # AGENTS.md
 
-2026-10-09，公开实现从 F2-R 按 [D090](docs/motion_navigation/decisions/0090-rebuild-main-from-f2r-and-recover-only-validated-parts.md) 恢复到已签署的 R1。R0 基线和 R1 完成区域几何已签署；R1 的 Windows 完整正序、逆序各 1661/1661，失败、错误、跳过均为 0。区域几何正式链完成 40/64；柱顶 `column_top` 24 项仍为 Walk→JumpUp 交接 RED，保持有界结束、零伤害、零安全违规及来源释放，尚未交付柱顶能力。范围调整见 [D091](docs/motion_navigation/decisions/0091-sign-region-geometry-and-defer-column-top-handoff.md)。
+2026-10-09，按D090—D092完成F2-R主线恢复，R0—R4已签署。Windows源树和独立公开快照正序、逆序各1661／1661，零失败／错误／跳过；43组Fabric、46个实际试次全部通过，20次首条晚1由真实应用确认，旧成功退步0。区域几何40／64；柱顶24项仍按D091保留为安全有界的Walk→JumpUp能力RED。修订8 ms目标与worker资源债未关闭。正式结果见 [F2REC阶段](docs/motion_navigation/stages/F2REC-rebuild-from-f2r.md)和[验收](docs/motion_navigation/acceptance/F2REC-rebuild-from-f2r.md)。
 
-R2 最小选面候选没有冻结旧成功退步，纯选面 P95 为 1.1873 ms；正式杂乱目标修订＋准备 P95 为 8.8542 ms，仍超过 8 ms。两轮限定优化后已止损，R2 未签署。公开 main 的生产代码保持已签署 R1，未签署的 R2 候选代码只保存在主项目本地归档，不进入公开快照。R3、R4 未开始，本次公开整理不代表恢复全阶段已经通过。当前入口为 [F2REC 阶段](docs/motion_navigation/stages/F2REC-rebuild-from-f2r.md)、[验收](docs/motion_navigation/acceptance/F2REC-rebuild-from-f2r.md)及 `evidence/motion_navigation/F2REC-recovery-v1/`。以下较早结果保留各自历史范围。
+R2按D092同机各222修订帧的P95/P99非退步门槛签署，修订8ms和压力族超限仍为债。R3删除了无正式生产者的防坠能力；Runtime关闭后的Session worker资源债未修复。历史停止、失败和归档保留，不把柱顶能力或资源债写成已通过。
 
 2026-10-07，F2 通用非中心地面路线执行与终点接近已按冻结范围验收通过。普通开阔路线保留快速路径，已知碰撞或支撑边界每帧最多复核三个候选；潜行只由路线区间授权，完成区域保持在原 `GoalState` 内。正式 Windows 完整正逆各 1627/1627，五组通过，产品 1998/2000，旧成功退步 0；玩家站位 187/400 → 400/400。Fabric 冻结清单 93/93 符合各自判定，80 正例完成、40 次首条晚一 tick 实际应用，三组路线／持续输入用时比为 1.000／1.235／1.074，连续 10 tick 非中性停滞为 0。首个静止普通 Walk 补一 tick 中性等价证明，命令租约与 Session／Runtime 生命周期未改。
 
@@ -46,7 +46,7 @@ Windows 是正式开发、自动验收和 Fabric 实机平台；Linux 仅用于�
 ```text
 python scripts/export_motion_navigation_standalone.py verify --root .
 python -m unittest discover -s tests/motion_nav -p "test_*.py" -v
-python -m unittest tests.motion_nav.test_f2_ground_route_gates tests.motion_nav.test_f2_non_center_ground_route tests.motion_nav.test_f2_ground_route_edge_guard tests.motion_nav.test_f2_ground_completion_region tests.motion_nav.test_f2_ground_start_window -q
+python -m unittest tests.motion_nav.test_f2_ground_route_gates tests.motion_nav.test_f2_non_center_ground_route tests.motion_nav.test_f2rec_r3_cleanup tests.motion_nav.test_f2_ground_completion_region tests.motion_nav.test_f2_ground_start_window -q
 python -m unittest tests.test_c1_melee_evidence tests.test_c1_moving_melee_evidence tests.test_c1_external_motion_evidence tests.test_c1_fixed_melee_runtime tests.test_c1_moving_melee_runtime tests.test_c1_external_motion_runtime -v
 python -m unittest tests.test_action_arbiter_v1 tests.test_action_receipt tests.test_player_runtime_v1 tests.test_runtime_failure_disposition tests.test_engagement_memory tests.test_fixed_melee tests.test_fixed_melee_driver tests.test_melee_strike_driver tests.test_moving_melee tests.test_moving_melee_driver tests.test_external_motion_recovery_driver tests.test_c1_navigation_session -v
 python -m unittest tests.test_b10_runtime_probe tests.test_b11_world_change_runtime tests.test_b12_attack_evidence_runtime tests.test_b12a_fabric_runtime tests.test_b12a_runtime_injection_acceptance tests.test_b12b_partial_combat_runtime tests.test_b12b_runtime_injection_acceptance tests.test_fabric_deployment_probe -v

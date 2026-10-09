@@ -163,8 +163,11 @@ from mc2p.motion_nav.safe_ground_control import (
     verified_ground_recovery_movement,
 )
 from mc2p.motion_nav.step_transition import StepProfile, load_step_profile
-from mc2p.motion_nav.support_surfaces import SurfaceNodeId, query_support_surfaces, standable_point_in_region
-from mc2p.motion_nav.world_model import BlockPos, CellKnowledge
+from mc2p.motion_nav.support_surfaces import (
+    SurfaceNodeId, query_support_surfaces, standable_point_in_region,
+    standable_region_in_goal,
+)
+from mc2p.motion_nav.world_model import BlockPos, CellKnowledge, WorldQueryCache
 
 
 _INFORMATION_WAIT_LIMIT_FRAMES = 40
@@ -4964,31 +4967,70 @@ class NavigationSession:
         frame: NavigationFrame,
         goal: GoalState,
     ) -> tuple[SurfaceNodeId | None, tuple[BlockPos, ...]]:
-        candidates = []
-        missing: set[BlockPos] = set()
-        max_x = math.floor(math.nextafter(goal.region.max_x, -math.inf))
-        max_z = math.floor(math.nextafter(goal.region.max_z, -math.inf))
-        for x in range(math.floor(goal.region.min_x), max_x + 1):
-            for z in range(math.floor(goal.region.min_z), max_z + 1):
-                result = query_support_surfaces(
-                    frame.world, x, z,
-                    goal.region.min_y, goal.region.max_y,
-                    collect_complete_missing=True,
-                )
-                missing.update(result.missing_cells)
-                for surface in result.surfaces:
-                    target = standable_point_in_region(frame.world, surface, goal.region)
-                    missing.update(target.missing_cells)
-                    if target.status is QueryStatus.FEASIBLE:
-                        candidates.append((surface, target.position))
-        if missing or not candidates:
-            return None, tuple(sorted(missing))
         center = (
             (goal.region.min_x + goal.region.max_x) / 2.0,
             (goal.region.min_y + goal.region.max_y) / 2.0,
             (goal.region.min_z + goal.region.max_z) / 2.0,
         )
-        return min(
-            candidates,
-            key=lambda item: math.dist(item[1], center),
-        )[0].node_id, tuple(sorted(missing))
+        cache = WorldQueryCache(frame.world)
+        missing: set[BlockPos] = set()
+        max_x = math.floor(math.nextafter(goal.region.max_x, -math.inf))
+        max_z = math.floor(math.nextafter(goal.region.max_z, -math.inf))
+        columns = []
+        for x in range(math.floor(goal.region.min_x), max_x + 1):
+            for z in range(math.floor(goal.region.min_z), max_z + 1):
+                nearest_x = min(max(center[0], max(goal.region.min_x, x)),
+                                min(goal.region.max_x, x + 1))
+                nearest_z = min(max(center[2], max(goal.region.min_z, z)),
+                                min(goal.region.max_z, z + 1))
+                columns.append((math.hypot(nearest_x-center[0], nearest_z-center[2]), x, z))
+        columns.sort()
+        best = None
+        best_rank = (math.inf, (math.inf, math.inf, math.inf))
+        point_missing: set[BlockPos] = set()
+        region_only = []
+        for column_lower_bound, x, z in columns:
+            if column_lower_bound > best_rank[0] + 1.0e-12:
+                break
+            result = query_support_surfaces(
+                frame.world, x, z,
+                goal.region.min_y, goal.region.max_y,
+                collect_complete_missing=True, query_cache=cache,
+            )
+            missing.update(result.missing_cells)
+            for index, surface in enumerate(result.surfaces):
+                # Preserve the F2-R point preference and original scan tie
+                # order. Geometric lower bounds skip only farther columns.
+                point = standable_point_in_region(
+                    frame.world, surface, goal.region, query_cache=cache,
+                )
+                point_missing.update(point.missing_cells)
+                if point.status is not QueryStatus.FEASIBLE:
+                    region_only.append(surface)
+                    continue
+                rank = (math.dist(point.position, center), (x, z, index))
+                if rank >= best_rank:
+                    continue
+                # The point only ranks a face; the signed region query is
+                # the final feasibility authority shared with admission.
+                target = standable_region_in_goal(
+                    frame.world, surface, goal.region, query_cache=cache,
+                )
+                if target.status is QueryStatus.FEASIBLE:
+                    best, best_rank = surface.node_id, rank
+                else:
+                    missing.update(target.missing_cells)
+        if missing:
+            return None, tuple(sorted(missing))
+        if best is not None:
+            return best, ()
+        # A positive region may exist even when none of the historical point
+        # samples is usable. Such faces cannot displace an old feasible choice.
+        for surface in region_only:
+            target = standable_region_in_goal(
+                frame.world, surface, goal.region, query_cache=cache,
+            )
+            if target.status is QueryStatus.FEASIBLE:
+                return surface.node_id, ()
+            missing.update(target.missing_cells)
+        return None, tuple(sorted(missing | point_missing))

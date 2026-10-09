@@ -1,0 +1,157 @@
+{
+  "method": "Read every indexed raw file from its actual client directory; compare SHA256; recount all trial IDs and source lifecycle events.",
+  "passed": true,
+  "actual_trials": 46,
+  "verified_files": 36,
+  "ordered_sources_registered": 43,
+  "ordered_sources_unregistered": 43,
+  "manual_reference_sources_cancelled": 3,
+  "batches": [
+    {
+      "raw_directory": "D:\\My_project\\mc_ai\\artifacts\\fabric-deployment\\20261009T093608945141Z-b297e5ca\\client-0",
+      "verified_files": {
+        "f2-plan.json": "dfb199a8b29eb99282c6dc67a104e625942bec8ebd53192da3bda08ae1a3ae64",
+        "f2-trials.jsonl": "3a4c541998457904a93a4906c7b704893711e46f0586043833bf4c337d71ea4f",
+        "f2-summary.json": "467914d6beda8d2690b6000df8e9967aa51a229637674f7067aebc182658d428",
+        "f2-frames.jsonl": "f42824d21c22909fb773fdbab28297b8eecd68c7247bd56b37ada82798b5cfe0",
+        "trace.jsonl": "0657518972e14b97a0b7f5323c9a7cd629a5db56948a8a4f2ce4eed3b0dda566",
+        "cleanup.json": "2f910040dbf414e36fc25be1012afc62d9b2aa7a4d7cfcf2de64b8d2a394bf13"
+      },
+      "trial_ids": [
+        "f2rec-f2s-platform_outer_corner-melee-south-normal",
+        "f2rec-f2s-platform_outer_corner-melee-south-first_late",
+        "f2rec-f2s-platform_outer_corner-melee-east-normal",
+        "f2rec-f2s-platform_outer_corner-melee-east-first_late",
+        "f2rec-f2s-platform_outer_corner-melee-north-normal",
+        "f2rec-f2s-platform_outer_corner-melee-north-first_late",
+        "f2rec-f2s-platform_outer_corner-melee-west-normal",
+        "f2rec-f2s-platform_outer_corner-melee-west-first_late"
+      ],
+      "ordered_registered": 8,
+      "ordered_unregistered": 8,
+      "manual_references_cancelled": []
+    },
+    {
+      "raw_directory": "D:\\My_project\\mc_ai\\artifacts\\fabric-deployment\\20261009T093915928781Z-1d15c1db\\client-0",
+      "verified_files": {
+        "f2-plan.json": "d743d9ddc15829a9767582bb9731627e1159e95df5dd54ec462fe6c6c9b60b2a",
+        "f2-trials.jsonl": "3fd91641789269d9d2e32b485db9baf4bcd5dcea47d08353e99e3cb527d2798a",
+        "f2-summary.json": "fb9e5ce42ba604d8c6e65366ee2a5526d8b703227e05ab301825ae336b55037d",
+        "f2-frames.jsonl": "adfc29f7fed7f6513f2759680b0acbd57f8b7a8a308878c698216e5efefeec3a",
+        "trace.jsonl": "44c7c92bd03317a736705d38eaa3155235b8b98f4d4277b0cf82acaa5f63fc60",
+        "cleanup.json": "23810d87fd2ad86d70f28d6e00883ce75c2402fd142d9ef6ba9663a60e2f6dd0"
+      },
+      "trial_ids": [
+        "f2rec-f2s-platform_outer_corner-follow-south-normal",
+        "f2rec-f2s-platform_outer_corner-follow-south-first_late",
+        "f2rec-f2s-platform_outer_corner-follow-east-normal",
+        "f2rec-f2s-platform_outer_corner-follow-east-first_late",
+        "f2rec-f2s-platform_outer_corner-follow-north-normal",
+        "f2rec-f2s-platform_outer_corner-follow-north-first_late",
+        "f2rec-f2s-platform_outer_corner-follow-west-normal",
+        "f2rec-f2s-platform_outer_corner-follow-west-first_late"
+      ],
+      "ordered_registered": 8,
+      "ordered_unregistered": 8,
+      "manual_references_cancelled": []
+    },
+    {
+      "raw_directory": "D:\\My_project\\mc_ai\\artifacts\\fabric-deployment\\20261009T094842958384Z-28139bb7\\client-0",
+      "verified_files": {
+        "f2-plan.json": "2a4c60bb81114a3303e20a62230a3527c95b23128f0ce6f056e467b2b9ce6bea",
+        "f2-trials.jsonl": "108f81888043f136955af8cac426171d0c44e213190fca2c1ee2d76707127587",
+        "f2-summary.json": "84e5bcf841afedf3c19bed6d634a94c52968d7f497642e15df4f0479b1fe3985",
+        "f2-frames.jsonl": "5a487189e4e189f8d67ed8a04b35f2973eb5c9318bd643dc4fd7716d45751bdb",
+        "trace.jsonl": "74213f038321017580a4301c1f3866ee5eca056e9f7ad7aa682756331eaa939c",
+        "cleanup.json": "d685fbbe8806e59b73dacb71aefbba6ea8e8b57c75be12704d3fbd154d243c92"
+      },
+      "trial_ids": [
+        "f2rec-f2s-bridge_head-melee-south-normal",
+        "f2rec-f2s-bridge_head-melee-south-first_late",
+        "f2rec-f2s-bridge_head-melee-east-normal",
+        "f2rec-f2s-bridge_head-melee-east-first_late",
+        "f2rec-f2s-bridge_head-melee-north-normal",
+        "f2rec-f2s-bridge_head-melee-north-first_late",
+        "f2rec-f2s-bridge_head-melee-west-normal",
+        "f2rec-f2s-bridge_head-melee-west-first_late"
+      ],
+      "ordered_registered": 8,
+      "ordered_unregistered": 8,
+      "manual_references_cancelled": []
+    },
+    {
+      "raw_directory": "D:\\My_project\\mc_ai\\artifacts\\fabric-deployment\\20261009T095127044723Z-a31f6578\\client-0",
+      "verified_files": {
+        "f2-plan.json": "41ff8f2ab0aae91edf771eaa1860d1c20ffbd92b9c7c800b38065733401bb2ee",
+        "f2-trials.jsonl": "54cd0a32a7397a194180edb453f1ced9c9e20d61151bba3a2d35175c9c2ceeb8",
+        "f2-summary.json": "b40cb1382b8b8f964a75c25cf499270ecabd386aa6de4d493608922828761102",
+        "f2-frames.jsonl": "4244c2fa3ad3b918d0c418873de30f1e95b958fa794ae1e4561d3ee910091d9b",
+        "trace.jsonl": "68dcaa6c7a9bff3b41406114daeb42dd899f28d130c61e09c4ea9349a78f1325",
+        "cleanup.json": "a0e58abfe160647a52a6d5dc1612cecc1662b684c6f0755e3f3dcd11eee488b8"
+      },
+      "trial_ids": [
+        "f2-f2r_outer_corner-0-normal",
+        "f2-f2r_outer_corner-0-late_first",
+        "f2-f2r_outer_corner-1-normal",
+        "f2-f2r_outer_corner-1-late_first",
+        "f2-f2r_outer_corner-2-normal",
+        "f2-f2r_outer_corner-2-late_first",
+        "f2-f2r_outer_corner-3-normal",
+        "f2-f2r_outer_corner-3-late_first"
+      ],
+      "ordered_registered": 8,
+      "ordered_unregistered": 8,
+      "manual_references_cancelled": []
+    },
+    {
+      "raw_directory": "D:\\My_project\\mc_ai\\artifacts\\fabric-deployment\\20261009T095415782505Z-ee639268\\client-0",
+      "verified_files": {
+        "f2-plan.json": "4163797694f0750622d2b64815d7fbe28179c4e950c9d0bd4a2fd26320d10086",
+        "f2-trials.jsonl": "450e4dd00ef8dc88810c2aa243e840336b963bfdfec3bdd394ef9ddcfa63dcba",
+        "f2-summary.json": "ef06e70dae388cb9629a33ab59adfacee81f1b0d4ea5a28af0ab71062c131eb6",
+        "f2-frames.jsonl": "22ecd8a84f9aa0ed34e1847ea1e8cfac71563299c9508d6415c675225b52d460",
+        "trace.jsonl": "be409c079d9f458ff935eae7fbadae42dacc6603da2652857afc3dee6e22fbed",
+        "cleanup.json": "59c18f06445607d917fa99529afdcd1178945019b5c1bae039aaf0cbff8fa8f5"
+      },
+      "trial_ids": [
+        "f2-f2r_diagonal_pillar-0-normal",
+        "f2-f2r_diagonal_pillar-0-late_first",
+        "f2-f2r_diagonal_pillar-1-normal",
+        "f2-f2r_diagonal_pillar-1-late_first",
+        "f2-f2r_diagonal_pillar-2-normal",
+        "f2-f2r_diagonal_pillar-2-late_first",
+        "f2-f2r_diagonal_pillar-3-normal",
+        "f2-f2r_diagonal_pillar-3-late_first"
+      ],
+      "ordered_registered": 8,
+      "ordered_unregistered": 8,
+      "manual_references_cancelled": []
+    },
+    {
+      "raw_directory": "D:\\My_project\\mc_ai\\artifacts\\fabric-deployment\\20261009T095812441671Z-6818eaed\\client-0",
+      "verified_files": {
+        "f2-plan.json": "e1fbc6917c75e8ea44eeeccc2a71f1efef4625037afd976a930e8c1ccef46d89",
+        "f2-trials.jsonl": "abc63e1d7b878324dff34c189ccdb5da0bcbccdf4a27be11451b5115671553c2",
+        "f2-summary.json": "4496c64c98f9958979fcf3482713f07df6e1a57bb616695291f85902740fed04",
+        "f2-frames.jsonl": "4a73b732ffb4173594b2abc74ec8ea70c8963298672801620824fecca9eef6e5",
+        "trace.jsonl": "6f10c6b25f4df60daa92189c609bee9aa29468f5143b2f34893e136a81b64aa9",
+        "cleanup.json": "fb7846eb1f082dfee6fde7dd5a8e12ca9836c1f4df7e72c69f8678c1918531d2"
+      },
+      "trial_ids": [
+        "f2-offset_mid-0-normal",
+        "f2-player_wall_head-0-normal",
+        "f2-player_ledge_2-0-normal",
+        "f2-reference-offset_mid",
+        "f2-reference-player_wall_head",
+        "f2-reference-player_ledge_2"
+      ],
+      "ordered_registered": 3,
+      "ordered_unregistered": 3,
+      "manual_references_cancelled": [
+        "f2-continuous-reference/f2-reference-offset_mid",
+        "f2-continuous-reference/f2-reference-player_ledge_2",
+        "f2-continuous-reference/f2-reference-player_wall_head"
+      ]
+    }
+  ]
+}

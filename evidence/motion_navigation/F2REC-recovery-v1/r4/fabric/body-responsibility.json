@@ -1,0 +1,7 @@
+{
+  "measured_navigation_frames": 2743,
+  "body_responsibility_frames": 2354,
+  "criterion": "not grounded or horizontal observed speed >0.1 blocks/s",
+  "owner_missing_frames": 0,
+  "raw_frames_sha256": "007ce0bbbd03c0d29632f592fa5f4a11a3774a4abd174081bd227f4a8be48446"
+}

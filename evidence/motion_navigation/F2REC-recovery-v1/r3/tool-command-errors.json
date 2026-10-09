@@ -1,0 +1,20 @@
+{
+  "errors": [
+    {
+      "command": ".venv/Scripts/python.exe",
+      "reason": "project conda interpreter is .venv/python.exe; no code ran"
+    },
+    {
+      "command": "tests.motion_nav.test_f2_ground_route_completion",
+      "reason": "incorrect module name; actual test_f2_ground_completion_region passed in corrected 73-test run"
+    },
+    {
+      "command": "scripts/f2rec_r3_cleanup_probe.py",
+      "reason": "direct script invocation lacked module path; corrected -m invocation passed"
+    },
+    {
+      "command": "tests.motion_nav.test_ground_modes",
+      "reason": "incorrect module name; actual test_b08_ground_modes covered by full suite"
+    }
+  ]
+}

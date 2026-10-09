@@ -130,9 +130,6 @@ def _frame(state, world, tick):
 def run_route(case):
     from mc2p.contracts.action_v1 import MovementV1
     from mc2p.motion_nav.fixed_route import FixedRoute, FixedRouteConfig, FixedRouteController, RoutePoint
-    from mc2p.motion_nav.ground_route_execution import (
-        GroundRouteCapability, GroundRouteCapabilityInterval, GroundRouteExecutionContract,
-    )
     from mc2p.motion_nav.ground_traversal import verify_ground_traversal
     from mc2p.motion_nav.navigation_session import NavigationSessionProfiles
     from mc2p.motion_nav.online_motion import project_movement_command
@@ -158,16 +155,10 @@ def run_route(case):
     actor = actor_world.view()
     profiles = NavigationSessionProfiles.load(ROOT / "config/motion-navigation")
     config = FixedRouteConfig(maximum_cross_track_blocks=case["corridor"])
-    # Task1 froze placeholder bounds before the typed contract existed. This
-    # test adapter explicitly intersects them with valid route progress; the
-    # production type itself rejects out-of-range intervals.
-    length = sum(math.dist(a[::2], b[::2]) for a, b in zip(case["route_points"], case["route_points"][1:]))
-    effective_intervals = [(max(0., a), min(length, b)) for a, b in case["capability_intervals"]]
-    assert all(a < b for a, b in effective_intervals)
-    contract = (GroundRouteExecutionContract(tuple(
-        GroundRouteCapabilityInterval(a, b, frozenset({GroundRouteCapability.SNEAK_EDGE_GUARD}))
-        for a, b in effective_intervals), (), profiles.ground.profile_id)
-        if case["capability_intervals"] else None)
+    # The old manifest remains byte-identical. Its declared-edge permission
+    # was a component-only experiment retired by F2REC R3.
+    effective_intervals = []
+    contract = None
     route = FixedRoute(case["id"], tuple(RoutePoint(*p) for p in case["route_points"]), contract)
     controller = FixedRouteController(profiles.ground, config=config)
     proof = None
@@ -210,17 +201,6 @@ def run_route(case):
         measured.update(controller_progress=decision.progress_blocks,
                         controller_cross_track=decision.cross_track_error_blocks,
                         reason=decision.reason)
-        if contract is not None:
-            measured.update(edge_guard_phase=decision.edge_guard_phase.value,
-                            execution_contract={**{k:v for k,v in asdict(contract).items()
-                                                    if k != 'completion_region' or v is not None}, "capability_intervals": [
-                                {"start_progress_blocks": i.start_progress_blocks,
-                                 "end_progress_blocks": i.end_progress_blocks,
-                                 "capabilities": sorted(c.value for c in i.capabilities)}
-                                for i in contract.capability_intervals]},
-                            original_intervals=case["capability_intervals"],
-                            effective_intervals=effective_intervals,
-                            sneak_edge_clipped="sneak_edge_clipped" in result.events)
         frames.append(measured)
         state, progress = next_state, measured["progress"] + measured["progress_delta"]
         if terminal:
@@ -252,7 +232,6 @@ def run_route(case):
             "execution_contract": frames[0].get("execution_contract") if frames else None,
             "original_intervals": case["capability_intervals"],
             "effective_intervals": effective_intervals,
-            "edge_guard_phase_frames": dict(Counter(r.get("edge_guard_phase", "inactive") for r in frames)),
             "sneak_frames": sum(r["sneak"] for r in frames),
             "sneak_edge_clip_frames": sum(r.get("sneak_edge_clipped", False) for r in frames),
             "lost_ground_frames": sum(not r["on_ground"] for r in frames),
@@ -278,9 +257,6 @@ def terminal_controller_evidence():
     def start(controller, route, frame, **kwargs):
         if route.execution_contract is not None:
             value = asdict(route.execution_contract)
-            value['capability_intervals'] = [{**asdict(i),
-                'capabilities': sorted(c.value for c in i.capabilities)}
-                for i in route.execution_contract.capability_intervals]
             records["contracts"].append(value)
         return original_start(controller, route, frame, **kwargs)
     def decide(controller, frame, **kwargs):
@@ -397,8 +373,8 @@ def collect(output, *, families=None, ids=None, workers=4, baseline=False):
                "coverage_limits": [limit for limit in manifest["coverage_limits"]
                                    if not limit.startswith(("Candidate and physics-step diagnostics are missing",
                                                             "Declared edge intervals are frozen placeholders"))],
-               "interval_adaptation": "Test adapter intersects frozen placeholder intervals with route length; original/effective bounds retained.",
-               "diagnostics_source": "Actual FixedRoute contract, FixedRouteDecision counters/guard phase, applied input and calculator state/events",
+               "interval_adaptation": "F2REC R3 retires component-only declared-edge permission; original manifest retained, no permission granted.",
+               "diagnostics_source": "Actual FixedRoute completion contract, FixedRouteDecision counters, applied input and calculator state/events",
                "pending_red": PENDING_DIAGNOSTICS}
     (output / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", "utf-8")
     index = {"schema_version": SCHEMA, "measurement_schema": MEASUREMENT_SCHEMA,

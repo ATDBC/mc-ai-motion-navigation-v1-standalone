@@ -1,0 +1,6 @@
+.venv/python.exe -m unittest tests.motion_nav.test_f2rec_r3_cleanup -v
+.venv/python.exe -m scripts.f2rec_r3_cleanup_probe --output evidence/motion_navigation/F2REC-recovery-v1/r3
+.venv/python.exe -m scripts.navigation_design_metrics --output evidence/motion_navigation/F2REC-recovery-v1/r3/design-metrics.json
+.venv/python.exe -m scripts.run_motion_navigation_checks --output evidence/motion_navigation/F2REC-recovery-v1/r3/full-forward.json
+.venv/python.exe -m scripts.run_motion_navigation_checks --reverse --output evidence/motion_navigation/F2REC-recovery-v1/r3/full-reverse.json
+.venv/python.exe -m unittest tests.motion_nav.test_navigation_design_metrics tests.motion_nav.test_f2rec_r3_cleanup -q

@@ -1,0 +1,13 @@
+{
+  "before_methods": 130,
+  "after_methods": 130,
+  "new_methods": [],
+  "removed_methods": [],
+  "changed_methods": [
+    "_surface_for_goal"
+  ],
+  "outside_selection_unchanged": true,
+  "new_Session_fields": 0,
+  "new_wait_retry_jobs": 0,
+  "test_fixture_changes": "Three information-path fixtures corrected after full RED; production still identical to archived candidate."
+}

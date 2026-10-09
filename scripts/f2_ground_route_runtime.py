@@ -47,7 +47,35 @@ NEGATIVES = ("head_wall_mid", "hazard_wall", "undeclared_edge", "low_ceiling")
 INTERRUPTIONS = ("revision", "cancel", "input_loss", "support_change", "external_force")
 
 
-def frozen_plan(*, f2r=False):
+def _original_goal(row, target):
+    if row.get("target_kind"):
+        from tests.sim.f2r_cases import goal_for
+        return goal_for(target, row["target_kind"])
+    return _goal(target)
+
+
+def frozen_plan(*, f2r=False, f2rec=False):
+    if f2rec:
+        from tests.sim.f2s_cases import support_region_cases
+        selected = {("platform_outer_corner", "melee"),
+                    ("platform_outer_corner", "follow"), ("bridge_head", "melee")}
+        rows = []
+        for case in support_region_cases():
+            if (case["family"], case["target"]) not in selected:
+                continue
+            direction = ("south", "east", "north", "west").index(case["direction"])
+            row = {"id": "f2rec-" + case["id"].replace("/", "-"),
+                "family": "f2rec_"+case["family"], "direction": direction,
+                "condition": "late_first" if case["condition"] == "first_late" else "normal",
+                "expected": "success", "target_kind": case["target"],
+                "frozen_v9_id": case["id"], "frozen_v9_input_sha256": digest(case)}
+            solids, start, target = fixture(row)
+            row["scene_sha256"] = digest(sorted((list(p),m) for p,m in solids.items()))
+            row["start_position"] = list(start)
+            row["goal_bounds"] = list(_original_goal(row, target).region.as_tuple())
+            rows.append(row)
+        assert len(rows) == 24
+        return rows
     families = ('f2r_outer_corner', 'f2r_diagonal_pillar') if f2r else FAMILIES
     rows = [{"id": f"f2-{family}-{direction}-{condition}", "family": family,
         "direction": direction, "condition": condition, "expected": "success"}
@@ -93,6 +121,13 @@ def frozen_plan(*, f2r=False):
 def fixture(row):
     """Freeze exact fixture geometry, start and original GoalState before run."""
     family = row["family"]
+    if family.startswith("f2rec_"):
+        from tests.sim.f2s_cases import support_region_cases
+        case = next(case for case in support_region_cases() if case["id"]==row["frozen_v9_id"])
+        assert digest(case) == row["frozen_v9_input_sha256"]
+        return ({(x,y+36,z):material for x,y,z,material in case["solids"]},
+                (case["start"][0],case["start"][1]+36,case["start"][2]),
+                (case["goal"][0],case["goal"][1]+36,case["goal"][2]))
     if family.startswith('f2r_'):
         from tests.sim.f2r_cases import layout
         scene, start, target = layout(family.removeprefix('f2r_'))
@@ -145,11 +180,30 @@ def _step(runtime, task, profile, deadline, request=None):
     return result
 
 
+def _survey_exterior(row):
+    if row["family"] == "f2rec_bridge_head":
+        # Every camera position is on the original bridge/base geometry.
+        points = ((-1.5,.5,-30),(1.5,.5,30),(.5,4.5,0),(.5,8.5,0))
+    else:
+        right_back_z = 10.5 if row["family"] == "f2r_outer_corner" else 9.5
+        points = ((-2.5,.5,-30),(-2.5,9.5,-150),(3.5,.5,30),(3.5,right_back_z,150))
+    return tuple((x,z,yaw,pitch) for x,z,yaw in points for pitch in (0,45))
+
+
+def _fixture_view_has_support(solids, row, x, z):
+    """Fixture-only preflight; never supplies a fact to the navigation actor."""
+    px,pz = _rotate(x,z,row["direction"])
+    area = sum(max(0., min(px+.3,bx+1)-max(px-.3,bx)) *
+               max(0., min(pz+.3,bz+1)-max(pz-.3,bz))
+               for bx,by,bz in solids if by==99)
+    return area >= .36-1e-9
+
+
 def _prepare_fixture(runtime, row, writer, task, profile, deadline, diagnostic):
     solids, start, target = fixture(row)
     assert row["scene_sha256"] == digest(sorted((list(p),m) for p,m in solids.items()))
     assert row["start_position"] == list(start)
-    assert row["goal_bounds"] == list(_goal(target).region.as_tuple())
+    assert row["goal_bounds"] == list(_original_goal(row,target).region.as_tuple())
     writer(("kill @e[tag=mc2p_f2_push]",
         "fill -20 96 -20 20 106 20 minecraft:air replace"))
     # Acquire the support layer before walls cover it. This is real historical
@@ -167,15 +221,13 @@ def _prepare_fixture(runtime, row, writer, task, profile, deadline, diagnostic):
             px,pz = _rotate(x+.5,z+.5,row["direction"])
             cells.extend((math.floor(px),y,math.floor(pz)) for y in range(98,104))
     cells = tuple(cells)
-    # Keep the preparation camera outside the wider F2-R building.
-    right_back_z = 10.5 if row["family"] == "f2r_outer_corner" else 9.5
-    exterior = tuple((x,z,yaw,pitch) for x,z,yaw in
-        ((-2.5,.5,-30),(-2.5,9.5,-150),(3.5,.5,30),(3.5,right_back_z,150))
-        for pitch in (0,45))
+    exterior = _survey_exterior(row)
     def survey(views, covered):
         for x,z,yaw,pitch in views:
             if covered and row["family"] == "low_ceiling" and z > 4:
                 z = 3.5
+            if row["family"] == "f2rec_bridge_head":
+                assert _fixture_view_has_support(solids,row,x,z), (row['id'],x,z)
             px,pz = _rotate(x,z,row["direction"])
             writer((f"tp MC2PProbe {px} 100 {pz} {yaw-90*row['direction']} {pitch}",))
             for offset in range(0,len(cells),128):
@@ -191,6 +243,11 @@ def _prepare_fixture(runtime, row, writer, task, profile, deadline, diagnostic):
         # The lower air just beyond the platform cannot be seen through its
         # top surface. Observe it from the last supported cell before start.
         views += ((.5,10.5,0,75),)
+    if row["family"] in {"f2rec_platform_outer_corner", "f2rec_bridge_head"}:
+        # Observe exposed lower air from an actually supported edge before the
+        # actor starts. These views request real profile-4 facts only.
+        views += (((3.5,9.5,0,75),(3.5,9.5,-90,75)) if
+            row["family"] == "f2rec_platform_outer_corner" else ((.5,8.5,0,75),))
     survey(views,True)
     writer((f"tp MC2PProbe {start[0]} {start[1]} {start[2]} {-90*row['direction']} 35",))
     for _ in range(4):
@@ -240,7 +297,7 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
     diagnostic()
     for row in selected:
         solids,start,target = _prepare_fixture(runtime,row,fixture_writer,task,profile,deadline_ns,diagnostic)
-        original_goal = _goal(target)
+        original_goal = _original_goal(row,target)
         current_goal = original_goal
         if row.get("reference"):
             assert row["reference_point"] == list(REFERENCE_POINTS[row["family"]])
@@ -506,8 +563,11 @@ def main(argv=None):
     parser.add_argument("--ids",nargs="+")
     parser.add_argument("--plan-only",action="store_true")
     parser.add_argument('--f2r', action='store_true', help='Frozen 16-case F2-R outer-corner/pillar matrix')
+    parser.add_argument('--f2rec', action='store_true', help='Frozen 24-case recovery support-edge matrix')
     args,launcher = parser.parse_known_args(argv)
-    selected = frozen_plan(f2r=args.f2r)
+    if args.f2r and args.f2rec:
+        parser.error('choose only one frozen matrix')
+    selected = frozen_plan(f2r=args.f2r, f2rec=args.f2rec)
     if args.smoke:
         selected = [r for r in selected if r["direction"] == 0 and (
             r["condition"] == "normal" or r["id"] == "f2-offset_mid-0-late_first"

@@ -1,5 +1,7 @@
 # 连续地面路线执行 V1
 
+当前状态（2026-10-09）：按 [D090](../decisions/0090-rebuild-main-from-f2r-and-recover-only-validated-parts.md) 和 [F2REC R3](../stages/F2REC-rebuild-from-f2r.md)，没有正式生产者的 `SNEAK_EDGE_GUARD` 已撤出。下文保留当时设计与验收的历史正文；普通完成区域、停止尾迹及未声明边缘拒绝仍有效。
+
 日期：2026-10-07。状态：已实施，冻结范围已通过 Windows 组合、串行性能和 Fabric 正式验收。
 
 ## 1. 要解决的问题

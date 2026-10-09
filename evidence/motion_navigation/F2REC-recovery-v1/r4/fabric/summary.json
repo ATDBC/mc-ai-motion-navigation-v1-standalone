@@ -1,0 +1,16 @@
+{
+  "groups": 43,
+  "actual_trials": 46,
+  "passed": 46,
+  "late_first_trials": 20,
+  "late_first_confirmed": 20,
+  "damage_points": 0.0,
+  "input_deadline_miss_count": 0,
+  "source_leaks": 0,
+  "owner_missing_frames": 0,
+  "first_16_pre_fixture_correction": true,
+  "bridge_8_after_supported_view_correction": true,
+  "ordered_navigation_sources_registered": 43,
+  "ordered_navigation_sources_unregistered": 43,
+  "manual_reference_sources_cancelled": 3
+}

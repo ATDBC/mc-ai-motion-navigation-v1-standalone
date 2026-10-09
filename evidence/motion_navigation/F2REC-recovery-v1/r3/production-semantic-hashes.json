@@ -1,0 +1,9 @@
+{
+  "schema": "mc2p.f2rec-production-semantic-hashes.v1",
+  "base_commit": "5a6cf463",
+  "files": {
+    "mc2p/motion_nav/fixed_route.py": "208e57f73302a50204fdc580a02d83da8094088cbd13dae72a59aa200c547db6",
+    "mc2p/motion_nav/ground_route_execution.py": "0fd5617300e66c3669675f0ffc72d276e7b12d37ace62d4247983f8d63d49c66",
+    "mc2p/motion_nav/safe_ground_control.py": "226620e255555ee2ce62ffc198e38d0cdba034e691fa720b3f29c2f5161e092c"
+  }
+}

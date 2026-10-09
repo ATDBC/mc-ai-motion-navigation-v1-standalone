@@ -1,0 +1,91 @@
+{
+  "schema_version": "mc2p.f2rec-r0-ground-hotpaths.v1",
+  "routes": {
+    "straight": {
+      "case_id": "f2/offset/south/normal",
+      "runs": 5,
+      "frame_samples": 175,
+      "median_control_ms": 0.7488,
+      "maximum_control_ms": 0.9063,
+      "safety_events": 0,
+      "outcomes": [
+        "succeeded",
+        "succeeded",
+        "succeeded",
+        "succeeded",
+        "succeeded"
+      ],
+      "behavior_sha256": [
+        "b53cfbc623529427ac3807f2474773421604d5afb9e680656b9c2d8d4f6efc40",
+        "b53cfbc623529427ac3807f2474773421604d5afb9e680656b9c2d8d4f6efc40",
+        "b53cfbc623529427ac3807f2474773421604d5afb9e680656b9c2d8d4f6efc40",
+        "b53cfbc623529427ac3807f2474773421604d5afb9e680656b9c2d8d4f6efc40",
+        "b53cfbc623529427ac3807f2474773421604d5afb9e680656b9c2d8d4f6efc40"
+      ]
+    },
+    "turn": {
+      "case_id": "f2/centre_to_offset/south/normal",
+      "runs": 5,
+      "frame_samples": 180,
+      "median_control_ms": 0.5573,
+      "maximum_control_ms": 0.7463,
+      "safety_events": 0,
+      "outcomes": [
+        "succeeded",
+        "succeeded",
+        "succeeded",
+        "succeeded",
+        "succeeded"
+      ],
+      "behavior_sha256": [
+        "5c34dd23b59ec6d924f54ac30080f802fc0369e25cd7baf2bdd6932367f6fa90",
+        "5c34dd23b59ec6d924f54ac30080f802fc0369e25cd7baf2bdd6932367f6fa90",
+        "5c34dd23b59ec6d924f54ac30080f802fc0369e25cd7baf2bdd6932367f6fa90",
+        "5c34dd23b59ec6d924f54ac30080f802fc0369e25cd7baf2bdd6932367f6fa90",
+        "5c34dd23b59ec6d924f54ac30080f802fc0369e25cd7baf2bdd6932367f6fa90"
+      ]
+    },
+    "wall_contact": {
+      "case_id": "f2/tangent/south/normal",
+      "runs": 5,
+      "frame_samples": 175,
+      "median_control_ms": 1.8632,
+      "maximum_control_ms": 2.051,
+      "safety_events": 0,
+      "outcomes": [
+        "succeeded",
+        "succeeded",
+        "succeeded",
+        "succeeded",
+        "succeeded"
+      ],
+      "behavior_sha256": [
+        "983245b3853c26cb225cffac294219468b5275597a599c878b836a3ac7a053ea",
+        "983245b3853c26cb225cffac294219468b5275597a599c878b836a3ac7a053ea",
+        "983245b3853c26cb225cffac294219468b5275597a599c878b836a3ac7a053ea",
+        "983245b3853c26cb225cffac294219468b5275597a599c878b836a3ac7a053ea",
+        "983245b3853c26cb225cffac294219468b5275597a599c878b836a3ac7a053ea"
+      ]
+    }
+  },
+  "baseline_comparison": {
+    "straight": {
+      "current_ms": 0.7488,
+      "baseline_ms": 0.7458,
+      "ratio": 1.00402252614642,
+      "passed": true
+    },
+    "turn": {
+      "current_ms": 0.5573,
+      "baseline_ms": 0.5597,
+      "ratio": 0.995711988565303,
+      "passed": true
+    },
+    "wall_contact": {
+      "current_ms": 1.8632,
+      "baseline_ms": 1.8696,
+      "ratio": 0.9965768078733419,
+      "passed": true
+    }
+  }
+}

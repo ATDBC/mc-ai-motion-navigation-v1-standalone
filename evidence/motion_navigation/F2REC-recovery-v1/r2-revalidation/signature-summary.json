@@ -1,0 +1,48 @@
+{
+  "status": "R2 signed under D092",
+  "production_candidate": "archive/f2rec-r2-stopped-20261009",
+  "source_head_during_run": "dffc328a97730bf244459226c96fcdf1f88bf5ad",
+  "worktree_clean_during_run": false,
+  "production_unchanged_between_forward_reverse": true,
+  "checks": {
+    "forward": {
+      "tests": 1668,
+      "elapsed_seconds": 461.787
+    },
+    "reverse": {
+      "tests": 1668,
+      "elapsed_seconds": 460.121
+    },
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "expected_failures": 0,
+    "shared_scene_hash_unchanged": true
+  },
+  "F2S_C04": "complete; no fallback search added",
+  "F2_528": "common published business fields/behavior hashes equal to signedR1",
+  "v8_completed": 1821,
+  "v8_cases": 1904,
+  "v9_completed": 152,
+  "v9_cases": 216,
+  "column_top": "0/24; deferred underD091",
+  "old_success_regressions": 0,
+  "production_scope": "Only NavigationSession._surface_for_goal and imports; zero new Session methods/fields/waits/jobs",
+  "revision_gate": "222 samples each; R2 P95/P99 lower than genuine F2-R886ae1fc",
+  "D058_applicable_gates_passed": true,
+  "D061_applicable_gates_passed": true,
+  "limitations": [
+    "No new Fabric evidence atR2",
+    "Pressure revision8ms/full50ms debt retained",
+    "D061 original toolpassed=false/exit1 retained; obsolete revision gate replaced byD092",
+    "Original fullforward3fixture failures retained; first authorized test-only repair passed fullforward/reverse"
+  ],
+  "next": "R3 may begin; R4 not started",
+  "post_document_targeted": {
+    "tests": 23,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "elapsed_seconds": 25.83
+  }
+}

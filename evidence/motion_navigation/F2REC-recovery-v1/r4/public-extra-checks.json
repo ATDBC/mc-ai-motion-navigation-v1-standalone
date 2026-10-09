@@ -1,0 +1,52 @@
+{
+  "readme_extended": {
+    "passed": true,
+    "checks_or_archives": 330,
+    "raw_log": ".tmp/f2rec-r4-public-readme-checks.log",
+    "raw_sha256": "2bf21615406cf9c06c6559aef4224fd43da36ea0931de24be42f446b1203dc4f",
+    "last_output": [
+      "complete tile cache invariants passed",
+      "----------------------------------------------------------------------",
+      "Ran 330 tests in 20.717s",
+      "",
+      "OK"
+    ]
+  },
+  "native": {
+    "passed": true,
+    "checks_or_archives": 14,
+    "raw_log": ".tmp/f2rec-r4-public-native-tests.log",
+    "raw_sha256": "aad4233ac0759b7242a0dc142670c6cce862dcc80dabb2c68bc15a668a35b45c",
+    "last_output": [
+      "----------------------------------------------------------------------",
+      "Ran 14 tests in 4.354s",
+      "",
+      "OK"
+    ]
+  },
+  "representative_archives": {
+    "passed": true,
+    "checks_or_archives": 10,
+    "raw_log": ".tmp/f2rec-r4-public-representative-verify.log",
+    "raw_sha256": "c45c2751ec3f24095b3eda79cf97ecec61dddea4949125b98c1961afbfd6b351",
+    "last_output": [
+      "PUBLIC_RUNTIME_EVIDENCE_OK archives=10 bytes=20191147"
+    ]
+  },
+  "native_build_corrected": {
+    "passed": true,
+    "checks_or_archives": null,
+    "raw_log": ".tmp/f2rec-r4-public-native-build-corrected.log",
+    "raw_sha256": "e5334195a7177c0eedf1e686567b1f542f2b9e923a4609567a275ee8dec74804",
+    "last_output": [
+      "  jni.cpp",
+      "  clipper.engine.cpp",
+      "  正在生成代码...",
+      "    正在创建库 D:/My_project/mc_ai/.tmp/f2rec-r4-public/artifacts/surface-cache/native-build/Release/surface_cache.lib 和对象 D:/My_project/mc_ai/.tmp/f2rec-r4-public/artifacts/surface-cache/native-build/Release/surface_cache.exp",
+      "  surface_cache.vcxproj -> D:\\My_project\\mc_ai\\.tmp\\f2rec-r4-public\\artifacts\\surface-cache\\native-build\\Release\\surface_cache.dll",
+      "  Building Custom Rule D:/My_project/mc_ai/.tmp/f2rec-r4-public/deployment/surface-depth-diagnostic/native/CMakeLists.txt",
+      "JNI cache smoke passed",
+      "D:\\My_project\\mc_ai\\.tmp\\f2rec-r4-public\\artifacts\\surface-cache\\native-build\\Release\\surface_cache.dll"
+    ]
+  }
+}

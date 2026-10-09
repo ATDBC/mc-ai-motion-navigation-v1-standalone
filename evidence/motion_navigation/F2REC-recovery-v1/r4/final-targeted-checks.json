@@ -1,0 +1,14 @@
+{
+  "source": {
+    "tests": 16,
+    "passed": true,
+    "raw_log": "D:\\My_project\\mc_ai\\.tmp\\f2rec-r4-final-targeted.log",
+    "sha256": "57142d7097fa099ebbdfb3501935adbebca2c1f5e99592ae544cdd7d1efa07f7"
+  },
+  "public": {
+    "tests": 16,
+    "passed": true,
+    "raw_log": "D:\\My_project\\mc_ai\\.tmp\\f2rec-r4-public-final-targeted.log",
+    "sha256": "25b4eda4d88b9bb87de1e4731d4fcef78c8bfa27543971bdc9aa8ce4e1010a2b"
+  }
+}

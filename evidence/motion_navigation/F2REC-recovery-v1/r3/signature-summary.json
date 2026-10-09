@@ -1,0 +1,43 @@
+{
+  "schema": "mc2p.f2rec-r3-signature.v1",
+  "status": "signed",
+  "base_commit": "5a6cf463",
+  "formal_platform": "Windows",
+  "source_worktree_clean": false,
+  "provenance": "uncommitted deletion production files identified by full-forward/full-reverse exact matching hashes; parent will commit the signed slice",
+  "full_checks": {
+    "forward": {
+      "tests": 1657,
+      "elapsed_seconds": 456.086,
+      "passed": true
+    },
+    "reverse": {
+      "tests": 1657,
+      "elapsed_seconds": 454.863,
+      "passed": true
+    },
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "expected_failures": 0,
+    "same_production_fingerprints": true,
+    "shared_scenario_hash": "05cfbd29ba3067b4ed2eece3f59b5afbbff619cb611fe9f0c30a776b4b813161"
+  },
+  "post_review_test_name_only_change": {
+    "test": "test_handoff_disposition_is_internal_lifecycle",
+    "affected_checks": 35,
+    "passed": true,
+    "assertions_changed": false
+  },
+  "active_component_equivalence": 104,
+  "retired_component_experiment": 8,
+  "retired_tests": 15,
+  "new_tests": 4,
+  "action_branches": 42,
+  "unclassified_action_branches": 0,
+  "production_net_deleted_lines": 278,
+  "worker_safety_cases": 4,
+  "worker_lifecycle_debt_preserved": true,
+  "r4_started": false,
+  "fabric_run": false
+}

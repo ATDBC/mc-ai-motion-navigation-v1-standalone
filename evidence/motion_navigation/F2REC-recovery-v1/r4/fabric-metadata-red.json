@@ -1,0 +1,8 @@
+{
+  "initial_failed_batch": "20261009T093200115958Z-98894d6d",
+  "trials_passed": 8,
+  "input_deadline_miss": 0,
+  "batch_passed": false,
+  "reason": "standalone-export-v1.json updated by R4 packaging while asynchronous Fabric was running; production Python unchanged",
+  "decision": "parent authorized one metadata-only correction; original failed batch retained; freeze all files and retry from first eight trials"
+}

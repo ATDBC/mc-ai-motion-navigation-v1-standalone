@@ -4,9 +4,11 @@
 
 默认分支 `main` 是项目方唯一的公开发布线，只接收固定导出脚本生成并校验通过的整理后快照。主项目的完整开发分支和提交历史不会直接推入本仓库。三方审查分支可以单独存在，用于保存审查报告和复现材料；它们不改变 `main` 的正式状态。
 
-2026-10-09，公开实现从 F2-R 按 [D090](docs/motion_navigation/decisions/0090-rebuild-main-from-f2r-and-recover-only-validated-parts.md) 恢复到已签署的 R1。R0 基线和 R1 完成区域几何已签署；R1 的 Windows 完整正序、逆序各 1661/1661，失败、错误、跳过均为 0。区域几何正式链完成 40/64；柱顶 `column_top` 24 项仍为 Walk→JumpUp 交接 RED，保持有界结束、零伤害、零安全违规及来源释放，尚未交付柱顶能力。范围调整见 [D091](docs/motion_navigation/decisions/0091-sign-region-geometry-and-defer-column-top-handoff.md)。
+2026-10-09，按D090—D092完成F2-R主线恢复，R0—R4已签署。Windows源树和独立公开快照正序、逆序各1661／1661，零失败／错误／跳过；43组Fabric、46个实际试次全部通过，20次首条晚1由真实应用确认，旧成功退步0。区域几何40／64；柱顶24项仍按D091保留为安全有界的Walk→JumpUp能力RED。修订8 ms目标与worker资源债未关闭。正式结果见 [F2REC阶段](docs/motion_navigation/stages/F2REC-rebuild-from-f2r.md)和[验收](docs/motion_navigation/acceptance/F2REC-rebuild-from-f2r.md)。
 
-R2 最小选面候选没有冻结旧成功退步，纯选面 P95 为 1.1873 ms；正式杂乱目标修订＋准备 P95 为 8.8542 ms，仍超过 8 ms。两轮限定优化后已止损，R2 未签署。公开 main 的生产代码保持已签署 R1，未签署的 R2 候选代码只保存在主项目本地归档，不进入公开快照。R3、R4 未开始，本次公开整理不代表恢复全阶段已经通过。当前入口为 [F2REC 阶段](docs/motion_navigation/stages/F2REC-rebuild-from-f2r.md)、[验收](docs/motion_navigation/acceptance/F2REC-rebuild-from-f2r.md)及 `evidence/motion_navigation/F2REC-recovery-v1/`。以下较早结果保留各自历史范围。
+R2按D092同机222帧配对签署；修订8ms仍是性能债。R3已删除没有正式生产者的潜行防坠状态机，探边、Crouch和原版潜行物理保留。Runtime关闭后的Session worker资源债仍保留。原停止、夹具失败与历史能力结果不回写。当前入口为 [F2REC 阶段](docs/motion_navigation/stages/F2REC-rebuild-from-f2r.md)、[验收](docs/motion_navigation/acceptance/F2REC-rebuild-from-f2r.md)及 `evidence/motion_navigation/F2REC-recovery-v1/`。以下较早结果保留各自历史范围。
+
+撤出的 D076—D088、F2-S 至 F2-RH 阶段与证据保留在公开历史提交 [2bad9bf](https://github.com/ATDBC/mc-ai-motion-navigation-v1-standalone/tree/2bad9bf)。该提交保存归档材料，不代表当前 main 的正式能力。
 
 2026-10-08，F2-R 已按冻结范围通过。外角、对角柱和杂乱地形中的完成区域，从原目标内的安全精确矩形中选择面积最大的一块；不使用外接矩形，不扩大原 `GoalState`。UNKNOWN 按整格最坏障碍裁剪，只允许完全已知的安全子区域。Windows 完整正逆各 1647/1647；v7 为 1998/2000，旧成功退步 0；v8 为 3817/3904，87 项失败全部保留。Fabric 两族四方向正常／首条晚1共 16/16，8 次晚1实际应用，零安全与期限违规，来源全部注销。
 
@@ -89,7 +91,7 @@ python -m unittest discover -s tests/motion_nav -p "test_*.py" -v
 快速检查 F2 的路线、潜行区间、原目标完成区域和正式启动窗口：
 
 ```text
-python -m unittest tests.motion_nav.test_f2_ground_route_gates tests.motion_nav.test_f2_non_center_ground_route tests.motion_nav.test_f2_ground_route_edge_guard tests.motion_nav.test_f2_ground_completion_region tests.motion_nav.test_f2_ground_start_window -q
+python -m unittest tests.motion_nav.test_f2_ground_route_gates tests.motion_nav.test_f2_non_center_ground_route tests.motion_nav.test_f2rec_r3_cleanup tests.motion_nav.test_f2_ground_completion_region tests.motion_nav.test_f2_ground_start_window -q
 ```
 
 重新生成 F2 的组件与玩家站位量尺时，必须使用新的空输出目录：

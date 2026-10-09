@@ -1,0 +1,60 @@
+mc2p\motion_nav\fixed_route.py:26:    GroundRouteCapability, GroundRouteExecutionContract, GroundRouteGuardPhase,
+mc2p\motion_nav\fixed_route.py:203:    edge_guard_phase: GroundRouteGuardPhase = GroundRouteGuardPhase.INACTIVE
+mc2p\motion_nav\fixed_route.py:462:        self._guard_phase = GroundRouteGuardPhase.INACTIVE
+mc2p\motion_nav\fixed_route.py:525:        self._guard_phase = GroundRouteGuardPhase.INACTIVE
+mc2p\motion_nav\fixed_route.py:555:                and self._guard_phase is GroundRouteGuardPhase.INACTIVE
+mc2p\motion_nav\fixed_route.py:983:        if self._guard_phase is not GroundRouteGuardPhase.INACTIVE:
+mc2p\motion_nav\fixed_route.py:1454:            GroundRouteCapability.SNEAK_EDGE_GUARD, progress)
+mc2p\motion_nav\fixed_route.py:1504:            if (self._guard_phase is GroundRouteGuardPhase.OUTSIDE_STOPPING
+mc2p\motion_nav\fixed_route.py:1539:            self._guard_phase = GroundRouteGuardPhase.ACTIVE
+mc2p\motion_nav\fixed_route.py:1571:        if (self._guard_phase in {GroundRouteGuardPhase.OUTSIDE_STOPPING,
+mc2p\motion_nav\fixed_route.py:1572:                                  GroundRouteGuardPhase.OUTSIDE_RELEASING}
+mc2p\motion_nav\fixed_route.py:1581:        if self._guard_phase is GroundRouteGuardPhase.RELEASING:
+mc2p\motion_nav\fixed_route.py:1583:                self._guard_phase = GroundRouteGuardPhase.INACTIVE
+mc2p\motion_nav\fixed_route.py:1592:                     or self._guard_phase is GroundRouteGuardPhase.BRAKING
+mc2p\motion_nav\fixed_route.py:1595:            self._guard_phase = GroundRouteGuardPhase.BRAKING
+mc2p\motion_nav\fixed_route.py:1601:                    self._guard_phase = GroundRouteGuardPhase.RELEASING
+mc2p\motion_nav\fixed_route.py:1627:        self._guard_phase = GroundRouteGuardPhase.BRAKING
+mc2p\motion_nav\fixed_route.py:1637:        if self._guard_phase is GroundRouteGuardPhase.OUTSIDE_RELEASING:
+mc2p\motion_nav\fixed_route.py:1647:            self._guard_phase = GroundRouteGuardPhase.OUTSIDE_RELEASING
+mc2p\motion_nav\fixed_route.py:1649:        self._guard_phase = GroundRouteGuardPhase.OUTSIDE_STOPPING
+mc2p\motion_nav\ground_route_execution.py:49:class GroundRouteCapability(StrEnum):
+mc2p\motion_nav\ground_route_execution.py:53:class GroundRouteGuardPhase(StrEnum):
+mc2p\motion_nav\ground_route_execution.py:63:class GroundRouteCapabilityInterval:
+mc2p\motion_nav\ground_route_execution.py:66:    capabilities: frozenset[GroundRouteCapability]
+mc2p\motion_nav\ground_route_execution.py:75:                or any(type(c) is not GroundRouteCapability for c in self.capabilities)):
+mc2p\motion_nav\ground_route_execution.py:84:    capability_intervals: tuple[GroundRouteCapabilityInterval, ...]
+mc2p\motion_nav\ground_route_execution.py:101:        if (type(self.capability_intervals) is not tuple
+mc2p\motion_nav\ground_route_execution.py:102:                or any(type(i) is not GroundRouteCapabilityInterval for i in self.capability_intervals)):
+mc2p\motion_nav\ground_route_execution.py:105:               for a, b in zip(self.capability_intervals, self.capability_intervals[1:])):
+mc2p\motion_nav\ground_route_execution.py:114:    def permits(self, capability: GroundRouteCapability, progress: float) -> bool:
+mc2p\motion_nav\ground_route_execution.py:116:                   for i in self.capability_intervals)
+mc2p\motion_nav\ground_route_execution.py:119:        if any(i.end_progress_blocks > length + 1.e-9 for i in self.capability_intervals):
+tests/motion_nav\test_f2rec_r3_cleanup.py:20:        self.assertFalse(hasattr(ground_route_execution, "GroundRouteCapability"))
+tests/motion_nav\test_f2rec_r3_cleanup.py:21:        self.assertFalse(hasattr(ground_route_execution, "GroundRouteGuardPhase"))
+scripts\f2_ground_route_evidence.py:134:        GroundRouteCapability, GroundRouteCapabilityInterval, GroundRouteExecutionContract,
+scripts\f2_ground_route_evidence.py:165:    effective_intervals = [(max(0., a), min(length, b)) for a, b in case["capability_intervals"]]
+scripts\f2_ground_route_evidence.py:168:        GroundRouteCapabilityInterval(a, b, frozenset({GroundRouteCapability.SNEAK_EDGE_GUARD}))
+scripts\f2_ground_route_evidence.py:170:        if case["capability_intervals"] else None)
+scripts\f2_ground_route_evidence.py:214:            measured.update(edge_guard_phase=decision.edge_guard_phase.value,
+scripts\f2_ground_route_evidence.py:216:                                                    if k != 'completion_region' or v is not None}, "capability_intervals": [
+scripts\f2_ground_route_evidence.py:220:                                for i in contract.capability_intervals]},
+scripts\f2_ground_route_evidence.py:221:                            original_intervals=case["capability_intervals"],
+scripts\f2_ground_route_evidence.py:253:            "original_intervals": case["capability_intervals"],
+scripts\f2_ground_route_evidence.py:255:            "edge_guard_phase_frames": dict(Counter(r.get("edge_guard_phase", "inactive") for r in frames)),
+scripts\f2_ground_route_evidence.py:281:            value['capability_intervals'] = [{**asdict(i),
+scripts\f2_ground_route_evidence.py:283:                for i in route.execution_contract.capability_intervals]
+tests/motion_nav\test_f2_ground_route_edge_guard.py:15:    GroundRouteCapability as Capability, GroundRouteCapabilityInterval as Interval,
+tests/motion_nav\test_f2_ground_route_edge_guard.py:16:    GroundRouteExecutionContract as Contract, GroundRouteGuardPhase as Phase,
+tests/motion_nav\test_f2_ground_route_edge_guard.py:170:        self.assertEqual(decision.edge_guard_phase.value, "outside_releasing")
+tests/motion_nav\test_f2_ground_route_edge_guard.py:202:            self.assertEqual(decision.edge_guard_phase.value, "outside_stopping")
+tests/motion_nav\test_f2_ground_route_edge_guard.py:234:                    self.assertEqual(row["execution_contract"]["capability_intervals"][0]["end_progress_blocks"], length)
+tests/motion_nav\test_f2_ground_route_edge_guard.py:236:                    self.assertGreater(row["edge_guard_phase_frames"].get("releasing", 0), 0)
+tests/motion_nav\test_f2_ground_route_edge_guard.py:273:        self.assertEqual(case("declared_edge")["capability_intervals"], [[1.7, 6.2]])
+tests/motion_nav\test_f2_ground_route_edge_guard.py:280:        interval = route.execution_contract.capability_intervals[0]
+tests/motion_nav\test_f2_ground_route_edge_guard.py:287:            item = {**case("declared_edge"), "capability_intervals": bounds}
+tests/motion_nav\test_f2_ground_route_edge_guard.py:302:                    phases.append(decision.edge_guard_phase)
+tests/motion_nav\test_f2_ground_route_edge_guard.py:385:        item = {**item, "capability_intervals": [[0., 6.]], "capability": "SNEAK_EDGE_GUARD"}
+tests/motion_nav\test_navigation_design_metrics.py:11:        self.assertIn('GroundRouteGuardPhase', NON_IMPLEMENTATION_ENUMS)
+tests/motion_nav\test_navigation_design_metrics.py:19:            self.assertFalse(any(row.get('classification') == 'GroundRouteGuardPhase' for row in rows))
+scripts\navigation_design_metrics.py:35:GoalSupport GroundHandoffDisposition GroundTraversalStatus GroundRouteGuardPhase HandoffDestination HandoffDisposition

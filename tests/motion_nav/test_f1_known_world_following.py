@@ -138,9 +138,12 @@ class F1KnownWorldFollowingTests(unittest.TestCase):
     def test_d064_three_revisions_request_facts_without_stopping_walk(self):
         unknown = tuple(
             (x, y, z)
-            for x in range(-2, 3)
+            for x in range(-3, 4)
             for y in (64, 65)
-            for z in (8, 12, 16)
+            # Cover the whole current target footprint at three separate
+            # crossings; a single unknown row can be bypassed within GoalState.
+            for low, high in ((7, 9), (11, 13), (15, 17))
+            for z in range(low, high + 1)
         )
         current_decisions, samples = [], []
         original = FixedRouteController.decide
@@ -158,7 +161,7 @@ class F1KnownWorldFollowingTests(unittest.TestCase):
             result = run_scenario_with_trace(FollowScenario(
                 "d064_three_revision_information",
                 2.0,
-                move_ticks=120,
+                move_ticks=160,
                 final_hold_ticks=20,
                 initial_unknown_cells=unknown,
             ), _RecordingTrace(), trajectory_sink=sample)

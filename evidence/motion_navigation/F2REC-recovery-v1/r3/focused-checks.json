@@ -1,0 +1,38 @@
+{
+  "source_base": "5a6cf463",
+  "runs": [
+    {
+      "modules": [
+        "test_f2rec_r3_cleanup",
+        "test_f2_non_center_ground_route",
+        "test_f2_ground_completion_region",
+        "test_f2_ground_route_gates",
+        "test_navigation_design_metrics",
+        "test_f2rec_r0_baseline"
+      ],
+      "tests": 73,
+      "passed": true,
+      "elapsed_seconds": 50.346,
+      "note": "before final removal of unused support_boundary metadata"
+    },
+    {
+      "modules": [
+        "test_f2rec_r3_cleanup"
+      ],
+      "tests": 4,
+      "passed": true,
+      "elapsed_seconds": 0.81
+    },
+    {
+      "modules": [
+        "test_standalone_export"
+      ],
+      "tests": 12,
+      "passed": true,
+      "elapsed_seconds": 22.413
+    }
+  ],
+  "full_final_checks": "full-forward.json and full-reverse.json",
+  "retired_tests": 15,
+  "new_tests": 4
+}

@@ -1,0 +1,36 @@
+{
+  "baseline_commit": "886ae1fc2084c86a3501dc0a34f05c77c5d6573f",
+  "candidate_head": "dffc328a97730bf244459226c96fcdf1f88bf5ad",
+  "candidate_dirty": true,
+  "candidate_production_hashes": {
+    "mc2p/motion_nav/navigation_session.py": "22f55df99aef6a1a4b1eac341f1a2af326c5f5e70f45fdb2455f57a234e28a24",
+    "mc2p/motion_nav/support_surfaces.py": "96a95033dc4c5970ca9db615996132a9c83bdf97db1b691a233512f6395d242f",
+    "mc2p/motion_nav/route_admission.py": "17299eed323b538fe9b86decda455efdc7896e886c08489fbda280301cd2dca8",
+    "mc2p/motion_nav/route_validation.py": "945f499bff0d5bc9dfd08c0b4cb8f54b1b9dab0a830e5e1fe7eea95df4be6867"
+  },
+  "common_tools": {
+    "scripts/f2rec_r2_paired_revision.py": {
+      "shared_sha256": "84877cf626876621fd28c47a426693f57c375f019d703af6e45a8f11ea6822a6",
+      "baseline_sha256": "84877cf626876621fd28c47a426693f57c375f019d703af6e45a8f11ea6822a6",
+      "identical_bytes": true
+    },
+    "scripts/benchmark_d061_long_session.py": {
+      "shared_sha256": "ec1d1fa8c0cda71098c6d8cbb9e851850c944183762944675da2b0f1259d0034",
+      "baseline_sha256": "ec1d1fa8c0cda71098c6d8cbb9e851850c944183762944675da2b0f1259d0034",
+      "identical_bytes": true
+    },
+    "tests/sim/known_world_following.py": {
+      "shared_sha256": "d50cfda133bf0a545110e4e2939f6e492235d35125b1cf0b1489a50b27948138",
+      "baseline_sha256": "d50cfda133bf0a545110e4e2939f6e492235d35125b1cf0b1489a50b27948138",
+      "identical_bytes": true
+    },
+    "tests/sim/runner.py": {
+      "shared_sha256": "6d4f8547c890f4c22a1d4d5b2e8c7c67c81c3f83861a1af42d633e203b59dc76",
+      "baseline_sha256": "6d4f8547c890f4c22a1d4d5b2e8c7c67c81c3f83861a1af42d633e203b59dc76",
+      "identical_bytes": true
+    }
+  },
+  "config_bytes": "Both use current checkout config/motion-navigation files; original baseline profile semantics unchanged, Windows frozen raw-byte identity restored after archive extraction. standalone-export config is test-only.",
+  "python_executable": "D:\\My_project\\mc_ai\\.venv\\python.exe",
+  "sample_plan": "Four independent process blocks R0,R2,R2,R0; each block repeats the identical fixed clutter-follow scene three times independently, first ten frames excluded; all222 valid revision frames included. Block0 is an excluded pilot. This measures repeatable fixed-scene cost, not a population of distinct terrains."
+}

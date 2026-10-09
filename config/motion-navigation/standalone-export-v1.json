@@ -87,7 +87,6 @@
     "tools/navigation_replay/**/*",
     "evidence/motion_navigation/redesign-m0/**/*",
     "evidence/motion_navigation/redesign-m1/**/*",
-    "docs/superpowers/plans/2026-10-06-motion-navigation-m0-m1.md",
     "evidence/motion_navigation/F2-ground-route-v1/final/**/*",
     "evidence/motion_navigation/F2-ground-route-v1/baseline/measurement-v2/error-copies.json",
     "evidence/motion_navigation/F2-ground-route-v1/task2/runs.jsonl",
@@ -181,7 +180,11 @@
     "scripts/f2_ground_route_runtime.py",
     "scripts/f2r_piecewise_evidence.py",
     "scripts/f2rec_r0_baseline.py",
-    "scripts/f2rec_r0_v9.py"
+    "scripts/f2rec_r0_v9.py",
+    "scripts/f2rec_r2_selection_probe.py",
+    "scripts/f2rec_r2_paired_revision.py",
+    "scripts/f2rec_r3_cleanup_probe.py",
+    "scripts/f2rec_r4_fabric.py"
   ],
   "required_paths": [
     "README.md",
@@ -410,7 +413,6 @@
     "docs/motion_navigation/decisions/0072-end-post-f1-cleanup-and-validate-action-spec.md",
     "docs/motion_navigation/stages/motion-navigation-middle-layer-M0-M1-plan.md",
     "docs/motion_navigation/acceptance/motion-navigation-middle-layer-M0-M1.md",
-    "docs/superpowers/plans/2026-10-06-motion-navigation-m0-m1.md",
     "evidence/motion_navigation/redesign-m0/baseline-manifest.json",
     "evidence/motion_navigation/redesign-m0/metrics-baseline.json",
     "evidence/motion_navigation/redesign-m1/final-manifest.json",
@@ -425,7 +427,6 @@
     "tests/sim/manifests/navigation-product-f2-ground-route-v1.json",
     "tests/motion_nav/test_f2_ground_route_gates.py",
     "tests/motion_nav/test_f2_non_center_ground_route.py",
-    "tests/motion_nav/test_f2_ground_route_edge_guard.py",
     "tests/motion_nav/test_f2_ground_completion_region.py",
     "tests/motion_nav/test_f2_ground_start_window.py",
     "scripts/f2r_piecewise_evidence.py",

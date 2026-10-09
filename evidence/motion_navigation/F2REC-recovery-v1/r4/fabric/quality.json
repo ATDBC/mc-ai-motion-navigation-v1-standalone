@@ -1,0 +1,96 @@
+{
+  "complete": true,
+  "pairs": [
+    {
+      "actor": "f2-offset_mid-0-normal",
+      "actor_reference_tick_ratio": 1.0,
+      "actor_timing": {
+        "completion_ticks": 42,
+        "driver_terminal_tick": 198,
+        "final_recorded_tick": 198,
+        "first_actual_non_neutral_tick": 156,
+        "first_region_entry_tick": 192,
+        "first_satisfied_observation_tick": 194,
+        "first_stopped_goal_tick": 197,
+        "stagnant_windows": [],
+        "stopped_speed_threshold_blocks_per_second": 0.1
+      },
+      "family": "offset_mid",
+      "passed": true,
+      "reference": "f2-reference-offset_mid",
+      "reference_timing": {
+        "completion_ticks": 42,
+        "final_recorded_tick": 810,
+        "first_actual_non_neutral_tick": 767,
+        "first_region_entry_tick": 802,
+        "first_satisfied_observation_tick": 805,
+        "first_stopped_goal_tick": 808,
+        "stagnant_windows": [],
+        "stopped_speed_threshold_blocks_per_second": 0.1
+      },
+      "same_scene_start_and_original_goal": true
+    },
+    {
+      "actor": "f2-player_wall_head-0-normal",
+      "actor_reference_tick_ratio": 1.2352941176470589,
+      "actor_timing": {
+        "completion_ticks": 42,
+        "driver_terminal_tick": 396,
+        "final_recorded_tick": 396,
+        "first_actual_non_neutral_tick": 354,
+        "first_region_entry_tick": 392,
+        "first_satisfied_observation_tick": 394,
+        "first_stopped_goal_tick": 395,
+        "stagnant_windows": [],
+        "stopped_speed_threshold_blocks_per_second": 0.1
+      },
+      "family": "player_wall_head",
+      "passed": true,
+      "reference": "f2-reference-player_wall_head",
+      "reference_timing": {
+        "completion_ticks": 34,
+        "final_recorded_tick": 994,
+        "first_actual_non_neutral_tick": 959,
+        "first_region_entry_tick": 987,
+        "first_satisfied_observation_tick": 989,
+        "first_stopped_goal_tick": 992,
+        "stagnant_windows": [],
+        "stopped_speed_threshold_blocks_per_second": 0.1
+      },
+      "same_scene_start_and_original_goal": true
+    },
+    {
+      "actor": "f2-player_ledge_2-0-normal",
+      "actor_reference_tick_ratio": 1.0740740740740742,
+      "actor_timing": {
+        "completion_ticks": 58,
+        "driver_terminal_tick": 618,
+        "final_recorded_tick": 618,
+        "first_actual_non_neutral_tick": 560,
+        "first_region_entry_tick": 613,
+        "first_satisfied_observation_tick": 615,
+        "first_stopped_goal_tick": 617,
+        "stagnant_windows": [],
+        "stopped_speed_threshold_blocks_per_second": 0.1
+      },
+      "family": "player_ledge_2",
+      "passed": true,
+      "reference": "f2-reference-player_ledge_2",
+      "reference_timing": {
+        "completion_ticks": 54,
+        "final_recorded_tick": 1206,
+        "first_actual_non_neutral_tick": 1151,
+        "first_region_entry_tick": 1199,
+        "first_satisfied_observation_tick": 1201,
+        "first_stopped_goal_tick": 1204,
+        "stagnant_windows": [],
+        "stopped_speed_threshold_blocks_per_second": 0.1
+      },
+      "same_scene_start_and_original_goal": true
+    }
+  ],
+  "passed": true,
+  "raw_plan": "D:\\My_project\\mc_ai\\.tmp\\f2rec-r4-fabric\\ordinary-final\\20261009T095811263281Z-026b2b36-plan.json",
+  "stopped_speed_blocks_per_second": 0.1,
+  "timing": "first actual non-neutral input through first neutral stopped original-GoalState observation"
+}
