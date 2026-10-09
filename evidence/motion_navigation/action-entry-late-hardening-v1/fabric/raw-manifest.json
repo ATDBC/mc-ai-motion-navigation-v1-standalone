@@ -1,0 +1,38 @@
+{
+  "raw_sources": [
+    {
+      "direction": 0,
+      "trial_id": "entry-late-handoff-f2s-column_top-product-south-normal",
+      "raw_directory": "D:\\My_project\\mc_ai\\artifacts\\fabric-deployment\\20261009T145552042545Z-f7998831",
+      "launcher_return_code": 1,
+      "manifest_sha256": "0d85534d276bc9b90e51adba55713244fdbed3b6ee7c9f7bc487b1fffd71ddac",
+      "trial_raw_sha256": "6f3dca8fe2cd647745f6cd4916975e793181df654201b76c616b9c6dd5fc5be7"
+    },
+    {
+      "direction": 1,
+      "trial_id": "entry-late-handoff-f2s-column_top-product-east-normal",
+      "raw_directory": "D:\\My_project\\mc_ai\\artifacts\\fabric-deployment\\20261009T145803154168Z-54a9b5e8",
+      "launcher_return_code": 1,
+      "manifest_sha256": "82c5eb28ef74c9bc8d96869876c9098e08375a73cddf2a3285e91d92e9de5f52",
+      "trial_raw_sha256": "87de326bb7805d342da37fd9debbb88bd5b321d42976254836835a8a4aed2717"
+    },
+    {
+      "direction": 2,
+      "trial_id": "entry-late-handoff-f2s-column_top-product-north-normal",
+      "raw_directory": "D:\\My_project\\mc_ai\\artifacts\\fabric-deployment\\20261009T145913411769Z-12d5267d",
+      "launcher_return_code": 1,
+      "manifest_sha256": "5db98b492462a27ed69b39ddbbba30efeeaa08ad1cba16e197f3794d7a7923c8",
+      "trial_raw_sha256": "166d4d26e94f0118b39c019e08895cf281dbbd7e5ccec11bfac5f406355382d0"
+    },
+    {
+      "direction": 3,
+      "trial_id": "entry-late-handoff-f2s-column_top-product-west-normal",
+      "raw_directory": "D:\\My_project\\mc_ai\\artifacts\\fabric-deployment\\20261009T150024155220Z-4541d0be",
+      "launcher_return_code": 1,
+      "manifest_sha256": "773b9c67b2291e48cacbe14ef8e1321e967d4c19dad75c6a8d8b73dc9f439a41",
+      "trial_raw_sha256": "c9447353e3c470a591b3f077531e9880a74180d8b325dc96c7690503e1128bb3"
+    }
+  ],
+  "production_source_manifest": "../final-source-manifest.json",
+  "sources_frozen_through_all_four_runs": true
+}

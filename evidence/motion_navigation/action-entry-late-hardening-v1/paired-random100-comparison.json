@@ -1,0 +1,34 @@
+{
+  "families": {
+    "column_outer_turn": {
+      "cases": 100,
+      "before_success": 37,
+      "after_success": 100,
+      "old_success_regressions": []
+    },
+    "column_outer_aligned": {
+      "cases": 100,
+      "before_success": 47,
+      "after_success": 100,
+      "old_success_regressions": []
+    },
+    "turn_jumpup": {
+      "cases": 100,
+      "before_success": 74,
+      "after_success": 99,
+      "old_success_regressions": []
+    },
+    "turn_drop": {
+      "cases": 100,
+      "before_success": 84,
+      "after_success": 100,
+      "old_success_regressions": []
+    }
+  },
+  "before_total_success": 242,
+  "after_total_success": 399,
+  "old_success_regressions": [],
+  "current_rows": 600,
+  "damage": 0.0,
+  "violations": 0
+}

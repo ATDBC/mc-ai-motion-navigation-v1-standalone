@@ -1,0 +1,9 @@
+{
+  "schema": "mc2p.action-entry-late-hardening-production-semantic-hashes.v1",
+  "base_commit": "d85ecba5",
+  "files": {
+    "mc2p/motion_nav/fixed_route.py": "9390425825f159b400fb6c1e00c19c6c9aed29f714fc05ee66cfe8bb39c80886",
+    "mc2p/motion_nav/action_route_executor.py": "0afbba245fd2e47d49450d8c4628421065a4baa38c7b76621a3c343c858d72a2",
+    "mc2p/motion_nav/navigation_session.py": "5c8e2b9db83278490270cec93d44e3eb83014e5d99197d11c174bb98ed3f5cee"
+  }
+}

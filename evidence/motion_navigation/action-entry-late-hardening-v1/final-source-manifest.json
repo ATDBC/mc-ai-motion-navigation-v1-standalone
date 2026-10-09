@@ -1,0 +1,35 @@
+{
+  "source_commit": "d85ecba595d9f90ccfc22558228d1966c978e8b6",
+  "source_worktree_clean": false,
+  "source_sha256": {
+    "mc2p/motion_nav/fixed_route.py": "6a0cc84c36e2a9c6dc23088f1c023f95cc852ae67d668c7cc9e1dd64e1a3dec3",
+    "mc2p/motion_nav/action_route_executor.py": "7c8d130f3f12c8ff998efce5d4099c6a83c59a58d7ac9fc43a4810e6077a12d1",
+    "mc2p/motion_nav/navigation_session.py": "c8e8ae9227418721197079089e117cd7a9bcaf67f1fddb2ec37bd58f98f64315",
+    "scripts/action_entry_late_hardening.py": "08ab853fd46e39983fa731d4db5cf54a09993238b19da587e17aa4740baab2d4",
+    "scripts/f2_ground_route_runtime.py": "508df2d2bce0f4c68846797544d3c4b5b2ab143d8878194d14a4755f533d950e",
+    "tests/motion_nav/test_action_entry_late_hardening.py": "07626bd345ad0b3a660deafd0945e8341ec819a0a446851fdb598162f64606c0"
+  },
+  "formal_platform": "Windows",
+  "formal_python": "3.11.16",
+  "behavior_gate_source_sha256": {
+    "mc2p/motion_nav/fixed_route.py": "6a0cc84c36e2a9c6dc23088f1c023f95cc852ae67d668c7cc9e1dd64e1a3dec3",
+    "mc2p/motion_nav/action_route_executor.py": "7c8d130f3f12c8ff998efce5d4099c6a83c59a58d7ac9fc43a4810e6077a12d1",
+    "mc2p/motion_nav/navigation_session.py": "c8e8ae9227418721197079089e117cd7a9bcaf67f1fddb2ec37bd58f98f64315",
+    "scripts/action_entry_late_hardening.py": "08ab853fd46e39983fa731d4db5cf54a09993238b19da587e17aa4740baab2d4",
+    "scripts/f2_ground_route_runtime.py": "508df2d2bce0f4c68846797544d3c4b5b2ab143d8878194d14a4755f533d950e",
+    "tests/motion_nav/test_action_entry_late_hardening.py": "07626bd345ad0b3a660deafd0945e8341ec819a0a446851fdb598162f64606c0"
+  },
+  "post_gate_tool_fix": "Legacy report without failure_cause yields None. No production code changed; final Windows forward/reverse 1681/1681 include the added tool-only regression.",
+  "pre_tool_fix_source_sha256": {
+    "mc2p/motion_nav/fixed_route.py": "6a0cc84c36e2a9c6dc23088f1c023f95cc852ae67d668c7cc9e1dd64e1a3dec3",
+    "mc2p/motion_nav/action_route_executor.py": "7c8d130f3f12c8ff998efce5d4099c6a83c59a58d7ac9fc43a4810e6077a12d1",
+    "mc2p/motion_nav/navigation_session.py": "c8e8ae9227418721197079089e117cd7a9bcaf67f1fddb2ec37bd58f98f64315",
+    "scripts/action_entry_late_hardening.py": "c048b30accd1734c8c0ebfea5375bc53ce39b59b70574ceb21b8809bb3530195",
+    "scripts/f2_ground_route_runtime.py": "508df2d2bce0f4c68846797544d3c4b5b2ab143d8878194d14a4755f533d950e",
+    "tests/motion_nav/test_action_entry_late_hardening.py": "2359c569696a68c0c7024f49c5514e2c8a08e20e323292cf5e8ec21620a2171c"
+  },
+  "full_check_reports": [
+    "full-forward.json",
+    "full-reverse.json"
+  ]
+}

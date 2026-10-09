@@ -161,6 +161,10 @@ class StandaloneExportTests(unittest.TestCase):
             ROOT / "evidence/motion_navigation/action-entry-handoff-v1/"
             "production-semantic-hashes.json"
         ).read_text("utf-8"))["files"]
+        late_handoff = json.loads((
+            ROOT / "evidence/motion_navigation/action-entry-late-hardening-v1/"
+            "production-semantic-hashes.json"
+        ).read_text("utf-8"))["files"]
         for name, expected in report["full_production_files"].items():
             raw = (self.root/name).read_bytes()
             lf = raw.replace(b"\r\n", b"\n")
@@ -168,9 +172,9 @@ class StandaloneExportTests(unittest.TestCase):
             if raw_hash != expected:
                 self.assertEqual(
                     hashlib.sha256(lf).hexdigest(),
-                    handoff.get(name, r3.get(
+                    late_handoff.get(name, handoff.get(name, r3.get(
                         name, r2.get(name, r1.get(name, canonical[name])),
-                    )),
+                    ))),
                     name,
                 )
 

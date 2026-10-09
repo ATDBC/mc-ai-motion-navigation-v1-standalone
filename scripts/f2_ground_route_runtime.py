@@ -7,7 +7,7 @@ All measured movement goes through RuntimeNavigationDriver and Runtime.
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict
+from dataclasses import asdict, replace
 import hashlib
 import json
 import math
@@ -24,6 +24,9 @@ from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.motion_nav.goal_observation import evaluate_observed_goal
+from mc2p.motion_nav.action_route import WalkSegment
+from mc2p.motion_nav.segment_entry import SegmentEntryWindow, body_fits_segment_entry
+from mc2p.motion_nav.ground_modes import observed_ground_mode
 from mc2p.motion_nav.navigation_session import NavigationSession, NavigationSessionProfiles
 from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver, RuntimeNavigationDriverState
 from scripts.control_probe_core import append_jsonl, write_json_atomic
@@ -54,12 +57,42 @@ def _original_goal(row, target):
     return _goal(target)
 
 
-def frozen_plan(*, f2r=False, f2rec=False, handoff=False):
-    if handoff:
+def _entry_late_walk_gate(session, frame, proposals):
+    """Evaluator-only trigger; no reason label participates in the choice."""
+    active = session._active_route
+    index = session.diagnostics.action_index
+    if (active is None or index is None
+            or index + 1 >= len(active.action_route.actions)
+            or type(active.action_route.actions[index]) is not WalkSegment
+            or not frame.body.is_on_ground
+            or not any(e.intent.movement is not None for p in proposals for e in p.intents)):
+        return None
+    window = getattr(active.action_route.actions[index + 1], "entry_window", None)
+    if type(window) is not SegmentEntryWindow:
+        return None
+    speed = math.hypot(frame.body.velocity_blocks_per_second[0],
+                       frame.body.velocity_blocks_per_second[2])
+    if (speed <= window.maximum_speed_blocks_per_second
+            or not body_fits_segment_entry(window,
+                replace(frame.body, velocity_blocks_per_second=(0., frame.body.velocity_blocks_per_second[1], 0.)),
+                observed_ground_mode(frame.body))):
+        return None
+    return {"movement_tick": frame.body.movement_tick_id,
+            "speed_blocks_per_second": speed,
+            "maximum_entry_speed_blocks_per_second": window.maximum_speed_blocks_per_second,
+            "reference_point": window.reference_point,
+            "position": frame.body.position, "on_ground": frame.body.is_on_ground,
+            "profile_id": window.profile_id}
+
+
+def frozen_plan(*, f2r=False, f2rec=False, handoff=False, handoff_entry_late=False):
+    if handoff or handoff_entry_late:
         from tests.sim.f2s_cases import support_region_cases
         rows = []
         for case in support_region_cases():
             if case["family"] != "column_top" or case["target"] != "product":
+                continue
+            if handoff_entry_late and case["condition"] != "normal":
                 continue
             direction = ("south", "east", "north", "west").index(
                 case["direction"],
@@ -77,6 +110,9 @@ def frozen_plan(*, f2r=False, f2rec=False, handoff=False):
                 "frozen_v9_id": case["id"],
                 "frozen_v9_input_sha256": digest(case),
             }
+            if handoff_entry_late:
+                row["id"] = "entry-late-" + row["id"]
+                row["condition"] = "late_entry"
             solids, start, target = fixture(row)
             row["scene_sha256"] = digest(sorted(
                 (list(position), material)
@@ -87,7 +123,7 @@ def frozen_plan(*, f2r=False, f2rec=False, handoff=False):
                 _original_goal(row, target).region.as_tuple()
             )
             rows.append(row)
-        assert len(rows) == 8
+        assert len(rows) == (4 if handoff_entry_late else 8)
         return rows
     if f2rec:
         from tests.sim.f2s_cases import support_region_cases
@@ -355,6 +391,7 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
         entry_yaws = {}
         injected = False
         interruption_evidence = None
+        entry_late_gate = None
         initial_health = _self_health(runtime)
         with terminal_controller_evidence() as actual,ground_start_evidence() as starts:
             try:
@@ -454,10 +491,15 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
                             for proposal in proposals
                             for envelope in proposal.intents
                         )
-                    delay = (row["condition"] in {"late_first", "late_two"}
+                    if row["condition"] == "late_entry":
+                        entry_late_gate = entry_late_gate or _entry_late_walk_gate(
+                            session, frame, proposals,
+                        )
+                        delayed_candidate = entry_late_gate is not None
+                    delay = (row["condition"] in {"late_first", "late_two", "late_entry"}
                              and late is None and delayed_candidate)
                     if delay:
-                        time.sleep(.055 if row["condition"] == "late_first" else .110)
+                        time.sleep(.110 if row["condition"] == "late_two" else .055)
                     result = runtime.control_frame(task,profile,deadline,proposals=proposals)
                     driver.adopt_result(result)
                     diagnostic()
@@ -478,7 +520,8 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
                             "valid_for_ticks":None if record is None else record.action.valid_for_ticks,
                             "actual_movement":None if record is None else asdict(record.action.movement),
                             "actual_ticks":applications,"actual_offset":None if not applications else min(applications)-before,
-                            "status":None if record is None else record.status.value}
+                            "status":None if record is None else record.status.value,
+                            "entry_gate":entry_late_gate}
                     activity = (None if fd is None
                                 or fd.movement_activity is None
                                 else fd.movement_activity)
@@ -516,6 +559,12 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
                         "selected_intents":None if result.decision is None else result.decision.selected_intents,
                         "activity":None if activity is None else asdict(activity)}
                     frames.append(sample)
+                    if row["condition"] == "late_entry":
+                        sample["pre_input_speed_blocks_per_second"] = speed
+                        sample["maximum_entry_speed_blocks_per_second"] = (
+                            None if entry_late_gate is None else
+                            entry_late_gate["maximum_entry_speed_blocks_per_second"]
+                        )
                     append_jsonl(directory/"f2-frames.jsonl",{"trial":row["id"],**sample})
                     if result.report.failure is not None:
                         raise RuntimeError(str(result.report.failure))
@@ -554,6 +603,9 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
                         or late["actual_offset"] != 3 or late["status"] != "applied_outside_window"
                         or late["latest_allowed_first_tick"] != late["requested_first_tick"]+1):
                     violations.append("outside_window_not_confirmed")
+                if row["condition"] == "late_entry" and (late is None
+                        or late["actual_offset"] != 2 or late["entry_gate"] is None):
+                    violations.append("late_entry_not_confirmed")
                 if row["family"] == "handoff_column_top":
                     jump_frames = [
                         value for value in frames
@@ -568,6 +620,13 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
                         for value in jump_frames
                     ):
                         violations.append("handoff_entry_yaw_outside_window")
+                    if row["condition"] == "late_entry" and jump_frames and any(
+                        value["maximum_entry_speed_blocks_per_second"] is None
+                        or value["pre_input_speed_blocks_per_second"]
+                            > value["maximum_entry_speed_blocks_per_second"] + 1.e-9
+                        for value in jump_frames
+                    ):
+                        violations.append("handoff_entry_speed_outside_window")
                 if row.get("injection") and not injected:
                     violations.append("injection_not_applied")
                 if row.get("injection") == "external_force" and injected:
@@ -656,11 +715,13 @@ def main(argv=None):
     parser.add_argument('--f2r', action='store_true', help='Frozen 16-case F2-R outer-corner/pillar matrix')
     parser.add_argument('--f2rec', action='store_true', help='Frozen 24-case recovery support-edge matrix')
     parser.add_argument('--handoff', action='store_true', help='Frozen 8-case Walk-to-JumpUp handoff matrix')
+    parser.add_argument('--handoff-entry-late', action='store_true', help='Four typed entry-braking Walk late probes')
     args,launcher = parser.parse_known_args(argv)
-    if sum((args.f2r, args.f2rec, args.handoff)) > 1:
+    if sum((args.f2r, args.f2rec, args.handoff, args.handoff_entry_late)) > 1:
         parser.error('choose only one frozen matrix')
     selected = frozen_plan(
         f2r=args.f2r, f2rec=args.f2rec, handoff=args.handoff,
+        handoff_entry_late=args.handoff_entry_late,
     )
     if args.smoke:
         selected = [r for r in selected if r["direction"] == 0 and (

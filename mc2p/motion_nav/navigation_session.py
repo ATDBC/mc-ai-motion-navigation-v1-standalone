@@ -274,6 +274,7 @@ class NavigationSessionReport:
     reach_policy: GoalReachPolicy = GoalReachPolicy.COMPLETE_ON_REACH
     observed_goal_status: ObservedGoalStatus | None = None
     planning_policy: GoalPlanningPolicy = GoalPlanningPolicy.BACKGROUND_PLANNER
+    failure_cause: StopCause | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -989,6 +990,8 @@ class NavigationSession:
             reach_policy=self._goal_requests.reach_policy,
             observed_goal_status=None if observed is None else observed.status,
             planning_policy=self._goal_requests.planning_policy,
+            failure_cause=(None if self._last_decision is None
+                           else self._last_decision.failure_cause),
         )
 
     def _observed_goal(self, frame: NavigationFrame) -> ObservedGoal | None:

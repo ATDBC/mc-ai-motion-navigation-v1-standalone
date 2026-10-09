@@ -1,0 +1,37 @@
+test_entry_permission_does_not_replace_walk_completion (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_entry_permission_does_not_replace_walk_completion) ... ok
+test_final_jump_safe_landing_short_of_goal_reports_input_loss (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_final_jump_safe_landing_short_of_goal_reports_input_loss) ... FAIL
+test_input_loss_classification_does_not_restart_safe_landing (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_input_loss_classification_does_not_restart_safe_landing) ... FAIL
+test_normal_final_jump_can_still_succeed (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_normal_final_jump_can_still_succeed) ... ok
+test_normal_goal_mismatch_does_not_become_input_loss (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_normal_goal_mismatch_does_not_become_input_loss) ... ok
+test_random_late_outer_corner_finishes (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_random_late_outer_corner_finishes) ... ok
+test_stopping_into_entry_brakes_instead_of_tracking_endpoint (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_stopping_into_entry_brakes_instead_of_tracking_endpoint) ... ok
+test_wrong_yaw_or_minimum_entry_speed_does_not_acquire_stopping_permission (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_wrong_yaw_or_minimum_entry_speed_does_not_acquire_stopping_permission) ... ok
+
+======================================================================
+FAIL: test_final_jump_safe_landing_short_of_goal_reports_input_loss (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_final_jump_safe_landing_short_of_goal_reports_input_loss)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_action_entry_late_hardening.py", line 68, in test_final_jump_safe_landing_short_of_goal_reports_input_loss
+    self.assertEqual(observed, [VerifiedMotionExecutorState.INPUT_LOST, ActionRouteState.FAILED])
+AssertionError: Lists differ: [<Ver[33 chars]ST: 'input_lost'>, <ActionRouteState.INPUT_LOST: 'input_lost'>] != [<Ver[33 chars]ST: 'input_lost'>, <ActionRouteState.FAILED: 'failed'>]
+
+First differing element 1:
+<ActionRouteState.INPUT_LOST: 'input_lost'>
+<ActionRouteState.FAILED: 'failed'>
+
+  [<VerifiedMotionExecutorState.INPUT_LOST: 'input_lost'>,
+-  <ActionRouteState.INPUT_LOST: 'input_lost'>]
++  <ActionRouteState.FAILED: 'failed'>]
+
+======================================================================
+FAIL: test_input_loss_classification_does_not_restart_safe_landing (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_input_loss_classification_does_not_restart_safe_landing)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_action_entry_late_hardening.py", line 90, in test_input_loss_classification_does_not_restart_safe_landing
+    self.assertIs(getattr(reports[-1], 'failure_cause', None), StopCause.INPUT_LOST)
+AssertionError: None is not <StopCause.INPUT_LOST: 'input_lost'>
+
+----------------------------------------------------------------------
+Ran 8 tests in 6.300s
+
+FAILED (failures=2)

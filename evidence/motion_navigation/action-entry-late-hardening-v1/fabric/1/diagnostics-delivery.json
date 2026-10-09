@@ -1,0 +1,1 @@
+{"accepted_records": 249, "capacity": 2048, "dropped_by_record_type": {}, "dropped_records": 0, "peak_depth": 1, "projection_timing_ns": {"count": 249, "maximum": 29400, "p95": 26700, "p99": 28900, "sample_count": 249, "total": 5731800}, "schema_version": "mc2p.trace-delivery-summary.v1", "worker_failed": false, "written_records": 249}

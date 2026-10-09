@@ -1,0 +1,30 @@
+[
+  {
+    "family": "column_outer_turn",
+    "first_jump_applied_tick": 71,
+    "first_off_ground_tick": 71,
+    "braking_ticks_before_takeoff": [
+      65,
+      66,
+      67
+    ]
+  },
+  {
+    "family": "column_outer_aligned",
+    "first_jump_applied_tick": 64,
+    "first_off_ground_tick": 64,
+    "braking_ticks_before_takeoff": []
+  },
+  {
+    "family": "turn_jumpup",
+    "first_jump_applied_tick": 61,
+    "first_off_ground_tick": 61,
+    "braking_ticks_before_takeoff": []
+  },
+  {
+    "family": "turn_drop",
+    "first_jump_applied_tick": null,
+    "first_off_ground_tick": 66,
+    "braking_ticks_before_takeoff": []
+  }
+]

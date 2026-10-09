@@ -1,0 +1,47 @@
+test_entry_permission_does_not_replace_walk_completion (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_entry_permission_does_not_replace_walk_completion) ... ok
+test_final_jump_safe_landing_short_of_goal_reports_input_loss (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_final_jump_safe_landing_short_of_goal_reports_input_loss) ... FAIL
+test_normal_final_jump_can_still_succeed (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_normal_final_jump_can_still_succeed) ... ok
+test_normal_goal_mismatch_does_not_become_input_loss (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_normal_goal_mismatch_does_not_become_input_loss) ... ok
+test_random_late_outer_corner_finishes (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_random_late_outer_corner_finishes) ... FAIL
+test_stopping_into_entry_brakes_instead_of_tracking_endpoint (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_stopping_into_entry_brakes_instead_of_tracking_endpoint) ... FAIL
+test_wrong_yaw_or_minimum_entry_speed_does_not_acquire_stopping_permission (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_wrong_yaw_or_minimum_entry_speed_does_not_acquire_stopping_permission) ... ok
+
+======================================================================
+FAIL: test_final_jump_safe_landing_short_of_goal_reports_input_loss (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_final_jump_safe_landing_short_of_goal_reports_input_loss)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d093-original\tests\motion_nav\test_action_entry_late_hardening.py", line 67, in test_final_jump_safe_landing_short_of_goal_reports_input_loss
+    self.assertEqual(observed, [VerifiedMotionExecutorState.INPUT_LOST, ActionRouteState.INPUT_LOST])
+AssertionError: Lists differ: [] != [<VerifiedMotionExecutorState.INPUT_LOST: [54 chars]st'>]
+
+Second list contains 2 additional elements.
+First extra element 0:
+<VerifiedMotionExecutorState.INPUT_LOST: 'input_lost'>
+
+- []
++ [<VerifiedMotionExecutorState.INPUT_LOST: 'input_lost'>,
++  <ActionRouteState.INPUT_LOST: 'input_lost'>]
+
+======================================================================
+FAIL: test_random_late_outer_corner_finishes (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_random_late_outer_corner_finishes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d093-original\tests\motion_nav\test_action_entry_late_hardening.py", line 48, in test_random_late_outer_corner_finishes
+    self.assertEqual(result['outcome'], 'success', result['reason'])
+AssertionError: 'failed' != 'success'
+- failed
++ success
+ : fixed_route_stalled
+
+======================================================================
+FAIL: test_stopping_into_entry_brakes_instead_of_tracking_endpoint (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_stopping_into_entry_brakes_instead_of_tracking_endpoint)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\d093-original\tests\motion_nav\test_action_entry_late_hardening.py", line 35, in test_stopping_into_entry_brakes_instead_of_tracking_endpoint
+    self.assertIs(decision.state, FixedRouteState.BRAKING)
+AssertionError: <FixedRouteState.RUNNING: 'running'> is not <FixedRouteState.BRAKING: 'braking'>
+
+----------------------------------------------------------------------
+Ran 7 tests in 4.537s
+
+FAILED (failures=3)

@@ -1,0 +1,72 @@
+{
+  "source_commit": "d85ecba595d9f90ccfc22558228d1966c978e8b6",
+  "source_fingerprints": {
+    "mc2p/motion_nav/fixed_route.py": "eefdd3a9fe4fc72fd250474f14ed143d7ba85551ee4050bf702941b5f1adefde",
+    "mc2p/motion_nav/action_route_executor.py": "3b983a31e1f8da6268c2bfbde4c019a85c7ef90395ce2a289a4628374bd2f6f3",
+    "mc2p/motion_nav/navigation_session.py": "9dc962290e62187b2b9ae0d3b64d18c7e9bba519d8c9f40be39e11d4710f70b5"
+  },
+  "formal_platform": "windows",
+  "seeds": 100,
+  "key_ticks": false,
+  "families": {
+    "column_outer_turn": {
+      "total": 100,
+      "outcomes": {
+        "failed": 63,
+        "success": 37
+      },
+      "reasons": {
+        "fixed_route_stalled": 61,
+        "goal_state_satisfied": 37,
+        "no_safe_ground_candidate": 1,
+        "fixed_route_has_no_forward_control": 1
+      },
+      "damage": 0.0,
+      "violations": 0
+    },
+    "column_outer_aligned": {
+      "total": 100,
+      "outcomes": {
+        "failed": 53,
+        "success": 47
+      },
+      "reasons": {
+        "fixed_route_stalled": 51,
+        "goal_state_satisfied": 47,
+        "fixed_route_has_no_forward_control": 2
+      },
+      "damage": 0.0,
+      "violations": 0
+    },
+    "turn_jumpup": {
+      "total": 100,
+      "outcomes": {
+        "success": 74,
+        "failed": 26
+      },
+      "reasons": {
+        "goal_state_satisfied": 74,
+        "fixed_route_stalled": 25,
+        "motion_unsolvable:needs_state": 1
+      },
+      "damage": 0.0,
+      "violations": 0
+    },
+    "turn_drop": {
+      "total": 100,
+      "outcomes": {
+        "success": 84,
+        "failed": 16
+      },
+      "reasons": {
+        "goal_state_satisfied": 84,
+        "fixed_route_stalled": 16
+      },
+      "damage": 0.0,
+      "violations": 0
+    }
+  },
+  "measured_platform": "Windows-10-10.0.26200-SP0",
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "python_executable": "D:\\My_project\\mc_ai\\.venv\\python.exe"
+}

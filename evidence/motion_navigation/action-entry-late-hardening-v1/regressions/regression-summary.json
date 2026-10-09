@@ -1,0 +1,60 @@
+{
+  "schema_version": "mc2p.action-entry-handoff-regression.v2",
+  "source_commit": "d85ecba5",
+  "comparison_basis": {
+    "v7": "navigation_structure_baseline.product_index",
+    "other_sets": "exact frozen-index fields",
+    "baseline_root": "evidence\\motion_navigation\\F2REC-recovery-v1\\r4"
+  },
+  "inputs": {
+    "v7_runs_sha256": "7d82c1ac0509c93cbf1036ee97a32180c331ab71a7c1eecf62c22e35011ca2cc",
+    "v7_index_sha256": "c628f512816d85fb2d8a832b1d7d99ded7eb8cdcebf06dcdde1326c022ec36b9",
+    "f2_runs_sha256": "92c15cef5a3ae49ceeaf84ea7aac9a8bada5a84309a8e32e259695fc809f6246",
+    "v8_fixed_runs_sha256": "09f9df62a966e0b27761f9718c38950f9c5f8b9c17410e703b7b75b6f0d995e9",
+    "v8_clutter_runs_sha256": "4f4ad9aafad134c35fe70e31c302604b350bbe45a7917ccc530c0d4eb3bea17e"
+  },
+  "sets": [
+    {
+      "name": "v7-product",
+      "current_cases": 2000,
+      "baseline_cases": 2000,
+      "common_cases": 2000,
+      "current_successes": 1998,
+      "old_successes": 1998,
+      "old_success_regressions": [],
+      "common_signature_differences": [],
+      "normalizer_version": "r28-structure-trajectory-v1",
+      "current_index_sha256": "b70ac9527da1548f631a7421a9d29a58ba29a3e74f14dc9292fb9e207d0fe8f7"
+    },
+    {
+      "name": "F2-528",
+      "current_cases": 528,
+      "baseline_cases": 528,
+      "common_cases": 528,
+      "current_successes": 464,
+      "old_successes": 464,
+      "old_success_regressions": [],
+      "common_signature_differences": []
+    },
+    {
+      "name": "v8-fixed",
+      "current_cases": 104,
+      "baseline_cases": 104,
+      "common_cases": 104,
+      "current_successes": 104,
+      "old_successes": 104,
+      "old_success_regressions": [],
+      "common_signature_differences": []
+    },
+    {
+      "name": "v8-clutter",
+      "current_cases": 1800,
+      "baseline_cases": 1800,
+      "common_cases": 1800,
+      "current_successes": 1717,
+      "old_successes": 1717,
+      "old_success_regressions": [],
+      "common_signature_differences": []
+    }
+  ]
+}

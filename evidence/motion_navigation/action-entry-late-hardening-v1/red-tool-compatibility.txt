@@ -1,0 +1,18 @@
+test_red_collector_accepts_legacy_terminal_report_without_failure_cause (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_red_collector_accepts_legacy_terminal_report_without_failure_cause) ... ERROR
+
+======================================================================
+ERROR: test_red_collector_accepts_legacy_terminal_report_without_failure_cause (tests.motion_nav.test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_red_collector_accepts_legacy_terminal_report_without_failure_cause)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_action_entry_late_hardening.py", line 33, in test_red_collector_accepts_legacy_terminal_report_without_failure_cause
+    result = run_case('column_outer_turn', None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\scripts\action_entry_late_hardening.py", line 83, in run_case
+    "task_failure_cause": (None if not reports or reports[-1].failure_cause is None
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'types.SimpleNamespace' object has no attribute 'failure_cause'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (errors=1)

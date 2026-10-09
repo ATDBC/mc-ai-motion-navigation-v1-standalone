@@ -1,0 +1,13 @@
+{
+  "formal_platform": "Windows",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "python_executable": "D:\\My_project\\mc_ai\\.venv\\python.exe",
+  "source_commit": "d85ecba595d9f90ccfc22558228d1966c978e8b6",
+  "source_worktree_clean": false,
+  "production_source_sha256": {
+    "mc2p/motion_nav/fixed_route.py": "6a0cc84c36e2a9c6dc23088f1c023f95cc852ae67d668c7cc9e1dd64e1a3dec3",
+    "mc2p/motion_nav/action_route_executor.py": "7c8d130f3f12c8ff998efce5d4099c6a83c59a58d7ac9fc43a4810e6077a12d1",
+    "mc2p/motion_nav/navigation_session.py": "c8e8ae9227418721197079089e117cd7a9bcaf67f1fddb2ec37bd58f98f64315"
+  }
+}

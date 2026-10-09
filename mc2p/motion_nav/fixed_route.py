@@ -1142,6 +1142,21 @@ class FixedRouteController:
                        and goal_support.status is QueryStatus.FEASIBLE
                        and goal_support.support_fraction >= self.config.minimum_support_fraction
                        and frame.body.is_on_ground)
+        stopping_fits_entry = (
+            route_complete
+            and (completion is None or completion.contains(frame.body.position))
+            and entry_matches is False
+            and frame.body.is_on_ground
+            and goal_support.status is QueryStatus.FEASIBLE
+            and goal_support.support_fraction >= self.config.minimum_support_fraction
+            and body_fits_segment_entry(
+                self.config.handoff_entry_window,
+                replace(frame.body, velocity_blocks_per_second=(
+                    0.0, frame.body.velocity_blocks_per_second[1], 0.0,
+                )),
+                observed_ground_mode(frame.body),
+            )
+        )
         completion_speed = (
             self.config.handoff_entry_window.maximum_speed_blocks_per_second
             if self.config.handoff_entry_window is not None
@@ -1182,7 +1197,7 @@ class FixedRouteController:
 
         stop_distance = self._release_distance(body, completion_speed)
         remaining = max(0.0, self._geometry.total_length - self._progress)
-        if (at_goal
+        if (at_goal or stopping_fits_entry
                 or (completion is None and speed > completion_speed
                     and remaining <= stop_distance
                     + self.config.endpoint_tolerance_blocks * 0.65)):

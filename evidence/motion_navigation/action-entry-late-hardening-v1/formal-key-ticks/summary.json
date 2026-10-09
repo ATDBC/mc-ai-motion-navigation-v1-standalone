@@ -1,0 +1,60 @@
+{
+  "source_commit": "d85ecba595d9f90ccfc22558228d1966c978e8b6",
+  "source_fingerprints": {
+    "mc2p/motion_nav/fixed_route.py": "6a0cc84c36e2a9c6dc23088f1c023f95cc852ae67d668c7cc9e1dd64e1a3dec3",
+    "mc2p/motion_nav/action_route_executor.py": "51b18c0d7d5f2cf016427323788740444f7c52fe14a35181fc40b1ac91df7958",
+    "mc2p/motion_nav/navigation_session.py": "9dc962290e62187b2b9ae0d3b64d18c7e9bba519d8c9f40be39e11d4710f70b5"
+  },
+  "formal_platform": "windows",
+  "seeds": 0,
+  "key_ticks": true,
+  "families": {
+    "column_outer_turn": {
+      "total": 9,
+      "outcomes": {
+        "success": 9
+      },
+      "reasons": {
+        "goal_state_satisfied": 9
+      },
+      "damage": 0.0,
+      "violations": 0
+    },
+    "column_outer_aligned": {
+      "total": 9,
+      "outcomes": {
+        "success": 9
+      },
+      "reasons": {
+        "goal_state_satisfied": 9
+      },
+      "damage": 0.0,
+      "violations": 0
+    },
+    "turn_jumpup": {
+      "total": 9,
+      "outcomes": {
+        "success": 9
+      },
+      "reasons": {
+        "goal_state_satisfied": 9
+      },
+      "damage": 0.0,
+      "violations": 0
+    },
+    "turn_drop": {
+      "total": 9,
+      "outcomes": {
+        "success": 9
+      },
+      "reasons": {
+        "goal_state_satisfied": 9
+      },
+      "damage": 0.0,
+      "violations": 0
+    }
+  },
+  "measured_platform": "Windows-10-10.0.26200-SP0",
+  "python_executable": "D:\\My_project\\mc_ai\\.venv\\python.exe",
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]"
+}

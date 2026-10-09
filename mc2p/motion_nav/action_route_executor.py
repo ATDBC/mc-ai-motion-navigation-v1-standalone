@@ -77,6 +77,7 @@ class ActionRouteDecision:
     body_phase: BodyControlPhase | None = None
     ground_handoff_disposition: GroundHandoffDisposition = GroundHandoffDisposition.NOT_REQUESTED
     route_progress_evidence: RouteProgressEvidence | None = None
+    failure_cause: StopCause | None = None
 
 
 def _ordinary_walk_start_window(
@@ -182,6 +183,7 @@ class ActionRouteExecutor:
         self._cancel_requested = False
         self._stop_cause: StopCause | None = None
         self._actions_finished = False
+        self._final_action_failure_cause: StopCause | None = None
         self._damage_budget = TaskDamageBudget()
         self._session = None
         self._verified_motion: dict[int, AdmittedMotionCandidate] = {}
@@ -478,6 +480,7 @@ class ActionRouteExecutor:
         self._cancel_requested = False
         self._stop_cause = None
         self._actions_finished = False
+        self._final_action_failure_cause: StopCause | None = None
         self._damage_budget = damage_budget
         self._session = frame.session
         self._verified_motion = {}
@@ -795,6 +798,8 @@ class ActionRouteExecutor:
             latest_movement_tick, requires_verified_motion,
             ground_handoff_disposition=ground_handoff_disposition,
             route_progress_evidence=route_progress_evidence,
+            failure_cause=(self._final_action_failure_cause
+                           if self.state is ActionRouteState.FAILED else None),
         )
 
     def prepare_ground_handoff(self, target: GroundHandoffTarget | None) -> None:
@@ -948,6 +953,7 @@ class ActionRouteExecutor:
                     frame, started, state_anchor=state_anchor,
                     input_ledger=input_ledger,
                     movement_yaw_radians=movement_yaw_radians,
+                    completed_after_input_loss=True,
                 )
             terminal = {
                 VerifiedMotionExecutorState.CANCELLED: ActionRouteState.CANCELLED,
@@ -1168,7 +1174,8 @@ class ActionRouteExecutor:
     def _advance(self, frame: NavigationFrame, started: int, *,
                  state_anchor: StateAnchor | None = None,
                  input_ledger: InputApplicationLedger | None = None,
-                 movement_yaw_radians: float | None = None) -> ActionRouteDecision:
+                 movement_yaw_radians: float | None = None,
+                 completed_after_input_loss: bool = False) -> ActionRouteDecision:
         assert self.route is not None
         completed = self.route.actions[self.action_index]
         self._commit_action_damage_if_started(completed, frame, force=True)
@@ -1177,6 +1184,9 @@ class ActionRouteExecutor:
         if self.action_index >= len(self.route.actions):
             self.action_index = len(self.route.actions) - 1
             self._actions_finished = True
+            self._final_action_failure_cause = (
+                StopCause.INPUT_LOST if completed_after_input_loss else None
+            )
             return self._finish_goal(frame, started, input_ledger, state_anchor)
         installed = self._verified_motion.get(self.action_index)
         if (installed is not None
@@ -1264,6 +1274,14 @@ class ActionRouteExecutor:
                 started, MovementV1(), 1, "aligning_goal_heading",
                 look=LookV1(observed.heading_delta_degrees, 0.0),
             )
+        if (self._final_action_failure_cause is StopCause.INPUT_LOST
+                and observed.status is ObservedGoalStatus.NOT_SATISFIED):
+            self.state = ActionRouteState.FAILED
+            return self._result(
+                started, MovementV1(), 1,
+                "input_lost_after_safe_landing_before_goal",
+            )
+        self._final_action_failure_cause = None
         self.state = ActionRouteState.FAILED
         return self._result(
             started, MovementV1(), 1,

@@ -1,0 +1,83 @@
+{
+  "formal_clutter_revisions": {
+    "cases": [
+      {
+        "id": "f2r/clutter/0.1/0/0/follow",
+        "revisions_accepted": 10,
+        "revisions_requested": 10,
+        "outcome": "cancelled",
+        "violations": [],
+        "damage": 0.0
+      },
+      {
+        "id": "f2r/clutter/0.1/0/1/follow",
+        "revisions_accepted": 10,
+        "revisions_requested": 10,
+        "outcome": "cancelled",
+        "violations": [],
+        "damage": 0.0
+      },
+      {
+        "id": "f2r/clutter/0.1/0/3/follow",
+        "revisions_accepted": 10,
+        "revisions_requested": 10,
+        "outcome": "cancelled",
+        "violations": [],
+        "damage": 0.0
+      },
+      {
+        "id": "f2r/clutter/0.2/0/0/follow",
+        "revisions_accepted": 10,
+        "revisions_requested": 10,
+        "outcome": "cancelled",
+        "violations": [],
+        "damage": 0.0
+      },
+      {
+        "id": "f2r/clutter/0.2/0/1/follow",
+        "revisions_accepted": 10,
+        "revisions_requested": 10,
+        "outcome": "cancelled",
+        "violations": [],
+        "damage": 0.0
+      },
+      {
+        "id": "f2r/clutter/0.2/0/3/follow",
+        "revisions_accepted": 10,
+        "revisions_requested": 10,
+        "outcome": "cancelled",
+        "violations": [],
+        "damage": 0.0
+      }
+    ],
+    "production_revision_prepare_ms": {
+      "samples": 60,
+      "p50": 6.1611,
+      "p95": 8.7884,
+      "p99": 9.7357,
+      "maximum": 9.7357
+    },
+    "synchronous_test_planner_ms": {
+      "samples": 60,
+      "p50": 4.2142,
+      "p95": 40.1218,
+      "p99": 80.335,
+      "maximum": 80.335
+    },
+    "full_revision_prepare_ms": {
+      "samples": 60,
+      "p50": 10.6694,
+      "p95": 45.7478,
+      "p99": 88.3262,
+      "maximum": 88.3262
+    },
+    "gates": {
+      "all_revisions_accepted": true,
+      "zero_safety_events": true,
+      "p95": false,
+      "p99": true,
+      "maximum": true
+    },
+    "timing_boundary": "replace_goal + prepare_proposals, backend advancement and synchronous test planner job excluded; latter reported separately."
+  }
+}

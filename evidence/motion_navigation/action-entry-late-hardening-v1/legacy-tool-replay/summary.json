@@ -1,0 +1,27 @@
+{
+  "source_commit": "d85ecba595d9f90ccfc22558228d1966c978e8b6",
+  "source_fingerprints": {
+    "mc2p/motion_nav/fixed_route.py": "eefdd3a9fe4fc72fd250474f14ed143d7ba85551ee4050bf702941b5f1adefde",
+    "mc2p/motion_nav/action_route_executor.py": "3b983a31e1f8da6268c2bfbde4c019a85c7ef90395ce2a289a4628374bd2f6f3",
+    "mc2p/motion_nav/navigation_session.py": "9dc962290e62187b2b9ae0d3b64d18c7e9bba519d8c9f40be39e11d4710f70b5"
+  },
+  "formal_platform": "windows",
+  "measured_platform": "Windows-10-10.0.26200-SP0",
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "python_executable": "D:\\My_project\\mc_ai\\.venv\\python.exe",
+  "seeds": 1,
+  "key_ticks": false,
+  "families": {
+    "column_outer_turn": {
+      "total": 1,
+      "outcomes": {
+        "failed": 1
+      },
+      "reasons": {
+        "fixed_route_stalled": 1
+      },
+      "damage": 0.0,
+      "violations": 0
+    }
+  }
+}

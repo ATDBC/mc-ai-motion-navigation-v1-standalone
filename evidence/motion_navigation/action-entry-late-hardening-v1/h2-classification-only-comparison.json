@@ -1,0 +1,96 @@
+{
+  "cases": 16,
+  "motion_and_input_windows_unchanged": 16,
+  "differences": [],
+  "comparison_fields": [
+    "movement_tick",
+    "position",
+    "velocity",
+    "on_ground",
+    "applied_movement",
+    "action_kind",
+    "input_window"
+  ],
+  "result_categories": {
+    "D093/column_landing_turn/1/None": {
+      "before": "goal_state_not_satisfied",
+      "after": "input_lost_after_safe_landing_before_goal",
+      "failure_cause": "input_lost"
+    },
+    "D093/column_landing_turn/2/None": {
+      "before": "goal_state_satisfied",
+      "after": "goal_state_satisfied",
+      "failure_cause": null
+    },
+    "D093/column_landing_turn/3/None": {
+      "before": "goal_state_not_satisfied",
+      "after": "input_lost_after_safe_landing_before_goal",
+      "failure_cause": "input_lost"
+    },
+    "D093/column_landing_turn/4/None": {
+      "before": "goal_state_not_satisfied",
+      "after": "input_lost_after_safe_landing_before_goal",
+      "failure_cause": "input_lost"
+    },
+    "D093/column_landing_turn/5/None": {
+      "before": "goal_state_satisfied",
+      "after": "goal_state_satisfied",
+      "failure_cause": null
+    },
+    "D093/column_landing_turn/6/None": {
+      "before": "goal_state_satisfied",
+      "after": "goal_state_satisfied",
+      "failure_cause": null
+    },
+    "D093/column_landing_turn/7/None": {
+      "before": "goal_state_not_satisfied",
+      "after": "input_lost_after_safe_landing_before_goal",
+      "failure_cause": "input_lost"
+    },
+    "D093/column_landing_turn/8/None": {
+      "before": "goal_state_not_satisfied",
+      "after": "input_lost_after_safe_landing_before_goal",
+      "failure_cause": "input_lost"
+    },
+    "D093/column_landing_aligned/1/None": {
+      "before": "goal_state_not_satisfied",
+      "after": "input_lost_after_safe_landing_before_goal",
+      "failure_cause": "input_lost"
+    },
+    "D093/column_landing_aligned/2/None": {
+      "before": "goal_state_satisfied",
+      "after": "goal_state_satisfied",
+      "failure_cause": null
+    },
+    "D093/column_landing_aligned/3/None": {
+      "before": "goal_state_not_satisfied",
+      "after": "input_lost_after_safe_landing_before_goal",
+      "failure_cause": "input_lost"
+    },
+    "D093/column_landing_aligned/4/None": {
+      "before": "goal_state_not_satisfied",
+      "after": "input_lost_after_safe_landing_before_goal",
+      "failure_cause": "input_lost"
+    },
+    "D093/column_landing_aligned/5/None": {
+      "before": "goal_state_not_satisfied",
+      "after": "input_lost_after_safe_landing_before_goal",
+      "failure_cause": "input_lost"
+    },
+    "D093/column_landing_aligned/6/None": {
+      "before": "goal_state_satisfied",
+      "after": "goal_state_satisfied",
+      "failure_cause": null
+    },
+    "D093/column_landing_aligned/7/None": {
+      "before": "goal_state_satisfied",
+      "after": "goal_state_satisfied",
+      "failure_cause": null
+    },
+    "D093/column_landing_aligned/8/None": {
+      "before": "goal_state_not_satisfied",
+      "after": "input_lost_after_safe_landing_before_goal",
+      "failure_cause": "input_lost"
+    }
+  }
+}
