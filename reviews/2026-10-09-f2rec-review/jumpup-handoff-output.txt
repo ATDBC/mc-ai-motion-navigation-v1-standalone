@@ -1,0 +1,46 @@
+## 02bc4c4
+### jumpup_direction_yaw
++z (south)  yaw 0     : cancelled/cancelled_after_stop final=(0.5, 64.0, 1.52) ['WalkSegment']
++z (south)  yaw facing: cancelled/cancelled_after_stop final=(0.5, 64.0, 1.52) ['WalkSegment']
+-z (north)  yaw 0     : failed/fixed_route_has_no_forward_control final=(0.5, 64.0, -0.52) ['WalkSegment']
+-z (north)  yaw facing: cancelled/cancelled_after_stop final=(0.5, 64.0, -0.52) ['WalkSegment']
++x (east)   yaw 0     : failed/fixed_route_has_no_forward_control final=(1.52, 64.0, 0.5) ['WalkSegment']
++x (east)   yaw facing: cancelled/cancelled_after_stop final=(1.52, 64.0, 0.5) ['WalkSegment']
+-x (west)   yaw 0     : failed/fixed_route_has_no_forward_control final=(-0.52, 64.0, 0.5) ['WalkSegment']
+-x (west)   yaw facing: cancelled/cancelled_after_stop final=(-0.52, 64.0, 0.5) ['WalkSegment']
+### jumpup_yaw_confirm
+goal (3.5, 65.0, 9.5) start yaw 0 (faces first leg +z)  : failed/fixed_route_stalled final=(2.44, 64.0, 9.56) ['WalkSegment']
+goal (3.5, 65.0, 9.5) start yaw -90 (faces jump +x)     : cancelled/cancelled_after_stop final=(2.44, 64.0, 9.56) ['WalkSegment']
+goal (4.7, 65.0, 10.7) start yaw 0 (faces first leg +z)  : failed/fixed_route_stalled final=(2.39, 64.0, 10.59) ['WalkSegment']
+goal (4.7, 65.0, 10.7) start yaw -90 (faces jump +x)     : success/goal_state_satisfied final=(4.59, 65.0, 10.59) ['WalkSegment', 'JumpUpSegment', 'WalkSegment']
+
+## 1ee76b6
+### jumpup_direction_yaw
++z (south)  yaw 0     : cancelled/cancelled_after_stop final=(0.5, 64.0, 1.52) ['WalkSegment']
++z (south)  yaw facing: cancelled/cancelled_after_stop final=(0.5, 64.0, 1.52) ['WalkSegment']
+-z (north)  yaw 0     : failed/fixed_route_has_no_forward_control final=(0.5, 64.0, -0.52) ['WalkSegment']
+-z (north)  yaw facing: cancelled/cancelled_after_stop final=(0.5, 64.0, -0.52) ['WalkSegment']
++x (east)   yaw 0     : failed/fixed_route_has_no_forward_control final=(1.52, 64.0, 0.5) ['WalkSegment']
++x (east)   yaw facing: cancelled/cancelled_after_stop final=(1.52, 64.0, 0.5) ['WalkSegment']
+-x (west)   yaw 0     : failed/fixed_route_has_no_forward_control final=(-0.52, 64.0, 0.5) ['WalkSegment']
+-x (west)   yaw facing: cancelled/cancelled_after_stop final=(-0.52, 64.0, 0.5) ['WalkSegment']
+### jumpup_yaw_confirm
+goal (3.5, 65.0, 9.5) start yaw 0 (faces first leg +z)  : failed/fixed_route_stalled final=(2.44, 64.0, 9.56) ['WalkSegment']
+goal (3.5, 65.0, 9.5) start yaw -90 (faces jump +x)     : cancelled/cancelled_after_stop final=(2.44, 64.0, 9.56) ['WalkSegment']
+goal (4.7, 65.0, 10.7) start yaw 0 (faces first leg +z)  : failed/goal_standing_point_unavailable final=(0.5, 64.0, 0.5) []
+goal (4.7, 65.0, 10.7) start yaw -90 (faces jump +x)     : failed/goal_standing_point_unavailable final=(0.5, 64.0, 0.5) []
+
+## 02bc4c4 jumpup_handoff_trace (v9 column_top scene, start yaw 0, goal 3.5,65,9.5)
+admitted route: f9df6ff8db92611dff68e8f6
+  [0] Walk points=[(0.5, 0.5), (0.5, 1.5), (0.5, 2.5), (0.5, 3.5), (0.5, 4.5), (0.5, 5.5), (0.5, 6.5), (0.5, 7.5), (0.5, 8.5), (0.5, 9.5), (1.5, 9.5), (2.5, 9.5)]
+  [1] JumpUp start=(2, 64, 9) end=(3, 65, 9)
+  JumpUp entry limits: centre tolerance 0.18, max entry speed 0.1
+outcome failed/fixed_route_stalled ticks 110 final (2.44, 64.0, 9.56)
+  pos=(2.439,64.00,9.496) speed=0.594 b/s action=0 exec=running controller=FixedRouteController endpoint_tol=0.18 reason=tracking_fixed_route
+  pos=(2.439,64.00,9.428) speed=0.746 b/s action=0 exec=running controller=FixedRouteController endpoint_tol=0.18 reason=tracking_fixed_route
+  pos=(2.439,64.00,9.489) speed=0.663 b/s action=0 exec=running controller=FixedRouteController endpoint_tol=0.18 reason=tracking_fixed_route
+  pos=(2.439,64.00,9.522) speed=0.362 b/s action=0 exec=running controller=FixedRouteController endpoint_tol=0.18 reason=fixed_route_stall_braking
+  pos=(2.439,64.00,9.540) speed=0.198 b/s action=0 exec=running controller=FixedRouteController endpoint_tol=0.18 reason=fixed_route_stall_braking
+  pos=(2.439,64.00,9.550) speed=0.108 b/s action=0 exec=running controller=FixedRouteController endpoint_tol=0.18 reason=fixed_route_stall_braking
+  pos=(2.439,64.00,9.555) speed=0.059 b/s action=0 exec=running controller=FixedRouteController endpoint_tol=0.18 reason=fixed_route_stall_braking
+  pos=(2.439,64.00,9.555) speed=0.000 b/s action=0 exec=blocked controller=FixedRouteController endpoint_tol=0.18 reason=fixed_route_stalled

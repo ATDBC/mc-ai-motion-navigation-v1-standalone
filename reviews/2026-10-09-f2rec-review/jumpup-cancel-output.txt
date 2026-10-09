@@ -1,0 +1,7 @@
+straight +z, 3-cell run-up, yaw facing
+  cancel from MotionRouteCoordinator._accept_result (line 807): motion_retry_exhausted:motion_negative_basis_changed; prepared=admission_rejected; upcoming action 1, executor at 0
+  cancel from MotionRouteCoordinator._accept_result (line 807): motion_retry_exhausted:motion_negative_basis_changed; prepared=admission_rejected; upcoming action 1, executor at 0
+  -> cancelled/cancelled_after_stop
+v9 column_top, yaw -90, goal (3.5,65,9.5)
+  cancel from MotionRouteCoordinator._accept_result (line 807): motion_retry_exhausted:motion_negative_basis_changed; prepared=admission_rejected; upcoming action 1, executor at 0
+  -> cancelled/cancelled_after_stop
