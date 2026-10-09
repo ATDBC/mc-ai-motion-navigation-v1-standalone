@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\scripts\probe_fabric_deployment_observation.py", line 1250, in run_worker
+    run_r25_planning_information_runtime(
+  File "D:\My_project\mc_ai\scripts\f2_ground_route_runtime.py", line 614, in run_f2_ground_route_runtime
+    raise AssertionError(f"F2 fail fast: {row['id']}: {violations}")
+AssertionError: F2 fail fast: handoff-f2s-column_top-product-south-first_late: ['late_first_not_confirmed', 'input_deadline_miss']

@@ -1,0 +1,19 @@
+BASELINE
+----------------------------------------------------------------------
+Ran 1 test in 0.589s
+
+OK
+
+MUTATION
+======================================================================
+FAIL: test_walk_owns_required_yaw_while_still_moving_before_jump (tests.motion_nav.test_action_entry_handoff_repair.ActionEntryHandoffRepairTests.test_walk_owns_required_yaw_while_still_moving_before_jump)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\action-entry-handoff-mutation-4fg6f5jb\export\tests\motion_nav\test_action_entry_handoff_repair.py", line 239, in test_walk_owns_required_yaw_while_still_moving_before_jump
+    self.assertTrue(jumps, "the formal route never entered JumpUp")
+AssertionError: [] is not true : the formal route never entered JumpUp
+
+----------------------------------------------------------------------
+Ran 1 test in 0.381s
+
+FAILED (failures=1)

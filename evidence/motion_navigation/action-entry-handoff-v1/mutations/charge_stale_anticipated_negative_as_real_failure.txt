@@ -1,0 +1,19 @@
+BASELINE
+----------------------------------------------------------------------
+Ran 1 test in 2.283s
+
+OK
+
+MUTATION
+======================================================================
+FAIL: test_stale_anticipated_negative_retires_without_buying_real_failure (tests.motion_nav.test_action_entry_handoff_repair.ActionEntryHandoffRepairTests.test_stale_anticipated_negative_retires_without_buying_real_failure)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\action-entry-handoff-mutation-4fg6f5jb\export\tests\motion_nav\test_action_entry_handoff_repair.py", line 541, in test_stale_anticipated_negative_retires_without_buying_real_failure
+    self.assertEqual(coordinator._local_attempts.failure_count, 0)
+AssertionError: 1 != 0
+
+----------------------------------------------------------------------
+Ran 1 test in 0.294s
+
+FAILED (failures=1)

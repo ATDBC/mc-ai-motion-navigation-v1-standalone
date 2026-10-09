@@ -802,6 +802,49 @@ class ActionRouteExecutor:
         if type(self._controller) is FixedRouteController:
             self._controller.set_handoff_target(target)
 
+    def _upcoming_entry_look(
+        self,
+        frame: NavigationFrame,
+        conditioned_yaw_radians: float | None,
+    ) -> tuple[float, LookV1] | None:
+        """Return the generic next-entry yaw while the current Walk owns approach.
+
+        The next segment declares the required yaw in its entry window.  This
+        executor only consumes that contract; it does not inspect the next
+        action type.  Starting within roughly one block gives the ordinary
+        ground controller room to keep tracking the same world-space route
+        while the view turns.
+        """
+        if (self.route is None
+                or self.action_index + 1 >= len(self.route.actions)):
+            return None
+        window = getattr(
+            self.route.actions[self.action_index + 1], "entry_window", None,
+        )
+        if window is None or window.required_yaw_radians is None:
+            return None
+        x, _, z = frame.body.position
+        rx, _, rz = window.reference_point
+        assert type(self._controller) is FixedRouteController
+        if (math.hypot(x - rx, z - rz)
+                > self._controller.config.lookahead_max_blocks):
+            return None
+        required = window.required_yaw_radians
+        observed_delta = math.atan2(
+            math.sin(required - frame.body.yaw_radians),
+            math.cos(required - frame.body.yaw_radians),
+        )
+        tolerance = window.maximum_yaw_error_radians or 0.0
+        if conditioned_yaw_radians is not None:
+            # The Runtime caller has already selected this frame's external
+            # combat/safety view.  Let ordinary Walk use that final yaw.  If
+            # it does not satisfy the next entry, the strict successor stays
+            # closed and the existing ground progress bound ends the wait.
+            return None
+        if abs(observed_delta) <= tolerance + 1.0e-9:
+            return None
+        return required, LookV1(math.degrees(observed_delta), 0.0)
+
     def decide(self, frame: NavigationFrame, *, input_confirmed: bool = True,
                state_anchor: StateAnchor | None = None,
                input_ledger: InputApplicationLedger | None = None,
@@ -950,6 +993,11 @@ class ActionRouteExecutor:
                 ),
             )
         if type(action) is WalkSegment:
+            entry_look = self._upcoming_entry_look(
+                frame, movement_yaw_radians,
+            )
+            if entry_look is not None:
+                movement_yaw_radians = entry_look[0]
             movement_frame = frame
             if movement_yaw_radians is not None:
                 movement_frame = replace(
@@ -1045,6 +1093,7 @@ class ActionRouteExecutor:
             return self._result(
                 started, decision.movement, decision.input_lease_ticks,
                 decision.reason, decision.missing_cells,
+                (entry_look[1] if entry_look is not None else None),
                 expected_movement_tick=(
                     None if ordinary_start_window is None
                     else ordinary_start_window[0]

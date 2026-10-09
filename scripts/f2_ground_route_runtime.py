@@ -54,7 +54,41 @@ def _original_goal(row, target):
     return _goal(target)
 
 
-def frozen_plan(*, f2r=False, f2rec=False):
+def frozen_plan(*, f2r=False, f2rec=False, handoff=False):
+    if handoff:
+        from tests.sim.f2s_cases import support_region_cases
+        rows = []
+        for case in support_region_cases():
+            if case["family"] != "column_top" or case["target"] != "product":
+                continue
+            direction = ("south", "east", "north", "west").index(
+                case["direction"],
+            )
+            row = {
+                "id": "handoff-" + case["id"].replace("/", "-"),
+                "family": "handoff_column_top",
+                "direction": direction,
+                "condition": (
+                    "late_first"
+                    if case["condition"] == "first_late" else "normal"
+                ),
+                "expected": "success",
+                "target_kind": case["target"],
+                "frozen_v9_id": case["id"],
+                "frozen_v9_input_sha256": digest(case),
+            }
+            solids, start, target = fixture(row)
+            row["scene_sha256"] = digest(sorted(
+                (list(position), material)
+                for position, material in solids.items()
+            ))
+            row["start_position"] = list(start)
+            row["goal_bounds"] = list(
+                _original_goal(row, target).region.as_tuple()
+            )
+            rows.append(row)
+        assert len(rows) == 8
+        return rows
     if f2rec:
         from tests.sim.f2s_cases import support_region_cases
         selected = {("platform_outer_corner", "melee"),
@@ -121,7 +155,7 @@ def frozen_plan(*, f2r=False, f2rec=False):
 def fixture(row):
     """Freeze exact fixture geometry, start and original GoalState before run."""
     family = row["family"]
-    if family.startswith("f2rec_"):
+    if row.get("frozen_v9_id") is not None:
         from tests.sim.f2s_cases import support_region_cases
         case = next(case for case in support_region_cases() if case["id"]==row["frozen_v9_id"])
         assert digest(case) == row["frozen_v9_input_sha256"]
@@ -318,6 +352,7 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
         driver.start(row["id"],1,original_goal,time.perf_counter_ns())
         frames,late = [],None
         routes = {}
+        entry_yaws = {}
         injected = False
         interruption_evidence = None
         initial_health = _self_health(runtime)
@@ -329,10 +364,17 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
                     frame = runtime.navigation_observation_adapter.latest_frame
                     active = session._active_route
                     if active is not None:
-                        for action in active.action_route.actions:
+                        for action_index, action in enumerate(
+                                active.action_route.actions):
                             route = getattr(action,"fixed_route",None)
                             if route is not None:
                                 routes[route.route_id] = [asdict(point) for point in route.points]
+                            window = getattr(action, "entry_window", None)
+                            if (window is not None
+                                    and window.required_yaw_radians is not None):
+                                entry_yaws[action_index] = (
+                                    window.required_yaw_radians
+                                )
                     speed = math.hypot(frame.body.velocity_blocks_per_second[0],
                         frame.body.velocity_blocks_per_second[2])
                     injection = row.get("injection")
@@ -400,7 +442,20 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
                     nonneutral = any(e.intent.movement is not None and e.intent.movement != MovementV1()
                         for p in proposals for e in p.intents)
                     before = frame.body.movement_tick_id
-                    delay = row["condition"] in {"late_first","late_two"} and late is None and nonneutral
+                    delayed_candidate = nonneutral
+                    if row["family"] == "handoff_column_top":
+                        # This matrix verifies the first strict action input,
+                        # whose proof explicitly allows one late tick.  The
+                        # preceding ordinary Walk has its own exact window and
+                        # is not the handoff boundary under test.
+                        delayed_candidate = any(
+                            envelope.intent.movement is not None
+                            and envelope.intent.movement.jump
+                            for proposal in proposals
+                            for envelope in proposal.intents
+                        )
+                    delay = (row["condition"] in {"late_first", "late_two"}
+                             and late is None and delayed_candidate)
                     if delay:
                         time.sleep(.055 if row["condition"] == "late_first" else .110)
                     result = runtime.control_frame(task,profile,deadline,proposals=proposals)
@@ -424,8 +479,26 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
                             "actual_movement":None if record is None else asdict(record.action.movement),
                             "actual_ticks":applications,"actual_offset":None if not applications else min(applications)-before,
                             "status":None if record is None else record.status.value}
+                    activity = (None if fd is None
+                                or fd.movement_activity is None
+                                else fd.movement_activity)
+                    required_yaw = (
+                        None if activity is None else
+                        entry_yaws.get(activity.action_index)
+                    )
+                    yaw_error = (
+                        None if required_yaw is None else math.degrees(abs(
+                            math.atan2(
+                                math.sin(frame.body.yaw_radians - required_yaw),
+                                math.cos(frame.body.yaw_radians - required_yaw),
+                            )
+                        ))
+                    )
                     sample = {"index":index,"tick":frame.body.movement_tick_id,"position":frame.body.position,
                         "velocity":frame.body.velocity_blocks_per_second,"pose":frame.body.pose,
+                        "yaw_radians":frame.body.yaw_radians,
+                        "required_entry_yaw_radians":required_yaw,
+                        "entry_yaw_error_degrees":yaw_error,
                         "on_ground":frame.body.is_on_ground,"sneaking":frame.body.is_sneaking,
                         "danger_contact":_danger_contact(frame.body.body_box,solids),
                         "health_points":_self_health(runtime),"state":driver.state.value,"reason":driver.reason,
@@ -441,7 +514,7 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
                         "request_sequence":sequence,"source":None if driver.source is None else asdict(driver.source),
                         "movement":None if result.decision is None else asdict(result.decision.action.movement),
                         "selected_intents":None if result.decision is None else result.decision.selected_intents,
-                        "activity":None if fd is None or fd.movement_activity is None else asdict(fd.movement_activity)}
+                        "activity":None if activity is None else asdict(activity)}
                     frames.append(sample)
                     append_jsonl(directory/"f2-frames.jsonl",{"trial":row["id"],**sample})
                     if result.report.failure is not None:
@@ -457,7 +530,10 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
                     violations.append("original_goal_not_satisfied")
                 if not frame.body.is_on_ground or frame.body.pose != "standing" or frame.body.is_sneaking:
                     violations.append("unstable_terminal_body")
-                if any(not f["on_ground"] or f["position"][1] < start[1]-.01 for f in frames):
+                if (row["family"] != "handoff_column_top"
+                        and any(not f["on_ground"]
+                                or f["position"][1] < start[1]-.01
+                                for f in frames)):
                     violations.append("drop")
                 if initial_health-_self_health(runtime) > 1e-6:
                     violations.append("damage")
@@ -478,6 +554,20 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
                         or late["actual_offset"] != 3 or late["status"] != "applied_outside_window"
                         or late["latest_allowed_first_tick"] != late["requested_first_tick"]+1):
                     violations.append("outside_window_not_confirmed")
+                if row["family"] == "handoff_column_top":
+                    jump_frames = [
+                        value for value in frames
+                        if value["movement"] is not None
+                        and value["movement"]["jump"]
+                    ]
+                    if not jump_frames:
+                        violations.append("handoff_jump_not_applied")
+                    elif any(
+                        value["entry_yaw_error_degrees"] is None
+                        or value["entry_yaw_error_degrees"] > 2.0 + 1.0e-9
+                        for value in jump_frames
+                    ):
+                        violations.append("handoff_entry_yaw_outside_window")
                 if row.get("injection") and not injected:
                     violations.append("injection_not_applied")
                 if row.get("injection") == "external_force" and injected:
@@ -490,7 +580,8 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
                 quality = motion_quality(frames,start)
                 quality["driver_terminal_tick"] = (frame.body.movement_tick_id
                     if driver.state in TERMINAL else None)
-                if quality["stagnant_windows"]:
+                if (row["family"] != "handoff_column_top"
+                        and quality["stagnant_windows"]):
                     violations.append("non_neutral_stagnation")
                 control = actual["frames"]
                 maximum = max((f["full_candidates"] for f in control),default=0)
@@ -564,10 +655,13 @@ def main(argv=None):
     parser.add_argument("--plan-only",action="store_true")
     parser.add_argument('--f2r', action='store_true', help='Frozen 16-case F2-R outer-corner/pillar matrix')
     parser.add_argument('--f2rec', action='store_true', help='Frozen 24-case recovery support-edge matrix')
+    parser.add_argument('--handoff', action='store_true', help='Frozen 8-case Walk-to-JumpUp handoff matrix')
     args,launcher = parser.parse_known_args(argv)
-    if args.f2r and args.f2rec:
+    if sum((args.f2r, args.f2rec, args.handoff)) > 1:
         parser.error('choose only one frozen matrix')
-    selected = frozen_plan(f2r=args.f2r, f2rec=args.f2rec)
+    selected = frozen_plan(
+        f2r=args.f2r, f2rec=args.f2rec, handoff=args.handoff,
+    )
     if args.smoke:
         selected = [r for r in selected if r["direction"] == 0 and (
             r["condition"] == "normal" or r["id"] == "f2-offset_mid-0-late_first"

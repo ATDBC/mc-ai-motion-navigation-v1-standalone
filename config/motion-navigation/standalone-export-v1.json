@@ -94,7 +94,8 @@
     "evidence/motion_navigation/F2-ground-route-v1/task4/microbenchmark.py",
     "evidence/motion_navigation/action-spec-hardening-v1/**/*",
     "evidence/motion_navigation/F2R-piecewise-completion-v1/**/*",
-    "evidence/motion_navigation/F2REC-recovery-v1/**/*"
+    "evidence/motion_navigation/F2REC-recovery-v1/**/*",
+    "evidence/motion_navigation/action-entry-handoff-v1/**/*"
   ],
   "python_entry_globs": [
     "scripts/export_motion_navigation_standalone.py",
@@ -184,7 +185,9 @@
     "scripts/f2rec_r2_selection_probe.py",
     "scripts/f2rec_r2_paired_revision.py",
     "scripts/f2rec_r3_cleanup_probe.py",
-    "scripts/f2rec_r4_fabric.py"
+    "scripts/f2rec_r4_fabric.py",
+    "scripts/action_entry_handoff_evidence.py",
+    "scripts/action_entry_handoff_regression.py"
   ],
   "required_paths": [
     "README.md",

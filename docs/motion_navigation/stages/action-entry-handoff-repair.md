@@ -1,6 +1,6 @@
 # 动作入口交接修复
 
-日期：2026-10-09。状态：已授权，待 F2REC R4 签署后实施。依据 [D092](../decisions/0092-revalidate-r2-and-repair-entry-handoff-within-existing-owners.md)。
+日期：2026-10-09。状态：H0—H3 已完成。依据 [D092](../decisions/0092-revalidate-r2-and-repair-entry-handoff-within-existing-owners.md)。
 
 ## 交付行为
 
@@ -43,3 +43,15 @@
 Fabric 抽查四个方向的转弯后 JumpUp。每方向 normal、首条 late1 各一项，共八项；保留真实应用 tick、起跳前 yaw、落地和来源注销。若缺 Fabric 环境，只能签署组件修复，不能写成阶段完成。
 
 每个生产批次使用一个实施子 agent，主 agent 复核边界和证据。每批最多两轮限定修正；新能力、清单外体验或性能余量不足登记到台账，不能顺手扩批。
+
+## 实际交付
+
+H0 在 `dfb74f9d` 的原代码副本上冻结了 80 项正式链正例：直线错朝向 8 项、90° 转弯 24 项、1／2／3 格短助跑 24 项、原 v9 柱顶 24 项。结果为 0／80，80 项都没有进入 JumpUp。旧结果保存在 `evidence/motion_navigation/action-entry-handoff-v1/h0-red/`，没有回写。
+
+H1 只修改 `ActionRouteExecutor`。当前段为 Walk、下一段公开 `SegmentEntryWindow.required_yaw_radians`、身体进入原有前视距离后，执行器提出视角。地面按同一帧最终视角计算输入。本轮新增的朝向准备分支不检查下一动作类型；下一段没有入口视角时不改变原行为。执行器中原有的入口速度、位置等动作差异仍按既有职责处理。战斗或安全视角已胜出时，Walk 直接按该视角计算，本次路线不伪装成已经完成转头，严格动作仍等真实观察满足原公差。
+
+H2 只修改 `MotionRouteCoordinator`。下一动作尚未开始、旧求解依据已经变化时，有类型的 `negative_stale` 结果只退场原工作，不增加真实失败次数。当前观察重新核对出的否定结果会清除这项资格，继续使用原三次上限。活动工作仍由原生命周期维护，没有增加 Session 字段、等待或作业类型。
+
+H3 的 Windows 正例为 80／80。80 次起跳都有入口视角记录，最大误差为 0°；零伤害、零安全事件、零来源泄漏。v7、F2 528、v8 固定和 v8 杂乱的旧成功退步均为 0。Fabric 四方向 normal／首条严格输入晚一 tick 共 8／8；四次晚到都在证明允许的第二个 tick 实际生效，入口误差均为 0°，期限错过、伤害和违规均为 0。
+
+本轮没有修改 Session、规划器、入口公差、求解域、速度域或动作证明。协调 smoke 中一个既有目标修订事件因提前转头由 tick 62 移到 tick 63；任务结果和安全事实不变，冻结清单已明确更新这个预期时刻。

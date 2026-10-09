@@ -1,0 +1,13 @@
+{
+  "schema_version": "mc2p.action-entry-handoff-fabric-summary.v1",
+  "deployment_run": "20261009T114059950212Z-a3e39991",
+  "trials": 8,
+  "passed": 8,
+  "task_success": 8,
+  "late_first_applied": 4,
+  "deadline_miss_count": 0,
+  "damage_points": 0.0,
+  "source_checks_passed": true,
+  "maximum_jump_entry_yaw_error_degrees": 0.0,
+  "violations": {}
+}

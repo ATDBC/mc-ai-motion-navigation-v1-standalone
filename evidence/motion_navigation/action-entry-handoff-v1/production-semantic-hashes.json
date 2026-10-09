@@ -1,0 +1,8 @@
+{
+  "schema": "mc2p.action-entry-handoff-production-semantic-hashes.v1",
+  "base_commit": "dfb74f9d",
+  "files": {
+    "mc2p/motion_nav/action_route_executor.py": "71f7c772ad20648eea61426ad3ada050f3331487975e2a6d6da795d0d24ec6e6",
+    "mc2p/motion_nav/motion_coordination.py": "cb7fa922fb421619df21710c1d214906685007d87c2adffeda3b01bcb1c8d199"
+  }
+}

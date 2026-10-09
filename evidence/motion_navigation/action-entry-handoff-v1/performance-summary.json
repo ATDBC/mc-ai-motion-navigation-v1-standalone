@@ -1,0 +1,62 @@
+{
+  "schema_version": "mc2p.action-entry-handoff-performance.v1",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "d058": {
+    "passed": true,
+    "samples": 3414,
+    "statistics": {
+      "maximum_ms": 15.4539,
+      "maximum_ns": 15453900,
+      "p50_ms": 3.1721,
+      "p50_ns": 3172100,
+      "p95_ms": 4.7755,
+      "p95_ns": 4775500,
+      "p99_ms": 5.9389,
+      "p99_ns": 5938900,
+      "samples": 3414
+    }
+  },
+  "d061": {
+    "passed": true,
+    "retained_frames": 4096,
+    "production": {
+      "maximum_ms": 7.5063,
+      "maximum_ns": 7506300,
+      "p50_ms": 4.7541,
+      "p50_ns": 4754100,
+      "p95_ms": 4.9597,
+      "p95_ns": 4959700,
+      "p99_ms": 5.193,
+      "p99_ns": 5193000,
+      "samples": 4096
+    },
+    "full": {
+      "maximum_ms": 29.1432,
+      "maximum_ns": 29143200,
+      "p50_ms": 8.2727,
+      "p50_ns": 8272700,
+      "p95_ms": 8.7788,
+      "p95_ns": 8778800,
+      "p99_ms": 24.3262,
+      "p99_ns": 24326200,
+      "samples": 4096
+    },
+    "revision": {
+      "maximum_ms": 7.5063,
+      "maximum_ns": 7506300,
+      "p50_ms": 6.7529,
+      "p50_ns": 6752900,
+      "p95_ms": 7.5063,
+      "p95_ns": 7506300,
+      "p99_ms": 7.5063,
+      "p99_ns": 7506300,
+      "samples": 19
+    },
+    "deadline_miss_count": 0
+  },
+  "raw_sha256": {
+    "d058": "be69aea613ca8567628e7a524e83d707783b1dc0e2fbd6a21f6c86d18950aa64",
+    "d061": "85f075cd364bc2dea381cdbc1917b1fec2b53be37638a8876b3294cf794405f0"
+  }
+}

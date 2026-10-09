@@ -1,0 +1,19 @@
+{
+  "schema_version": "mc2p.action-entry-handoff-evidence.v1",
+  "source_commit": "dfb74f9d8b4c4b767647f86e1133273356a9be42",
+  "formal_platform": "windows",
+  "measured_platform": "Windows-10-10.0.26200-SP0",
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "cases": 80,
+  "completed": 0,
+  "reason_counts": {
+    "cancelled_after_stop": 12,
+    "fixed_route_has_no_forward_control": 32,
+    "fixed_route_stalled": 36
+  },
+  "missing_jump": 80,
+  "entry_yaw_outside_two_degrees": 0,
+  "safety_events": 0,
+  "damage_events": 0,
+  "source_leaks": 0
+}

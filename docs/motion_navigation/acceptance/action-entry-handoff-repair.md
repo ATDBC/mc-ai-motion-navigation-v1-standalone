@@ -1,6 +1,6 @@
 # 动作入口交接验收
 
-日期：2026-10-09。状态：清单待 H0 冻结，尚无本阶段通过结果。阶段见 [方案](../stages/action-entry-handoff-repair.md)。
+日期：2026-10-09。状态：H0—H3 已通过。阶段见 [方案](../stages/action-entry-handoff-repair.md)。
 
 ## 固定正例
 
@@ -36,4 +36,46 @@ Fabric 共八项：转弯后 JumpUp 四方向，各 normal／首条 late1。全�
 
 ## 当前结果
 
-未运行。三方 Linux 复现仅为 H0 输入依据，不代替 Windows 或 Fabric 验收。
+### H0 RED 与修复后正式链
+
+| 集合 | 修复前 | 修复后 | 其他结果 |
+|---|---:|---:|---|
+| 直线错朝向，四方向 × normal／late1 | 0／8 | 8／8 | 起跳 yaw 全部在 2° 内 |
+| 90° 转弯，入口前 1／2／3 格 × 四方向 × normal／late1 | 0／24 | 24／24 | 没有靠起始视角对准 |
+| 1／2／3 格短助跑 × 四方向 × normal／late1 | 0／24 | 24／24 | 旧预计入口不会取消路线 |
+| v9 柱顶原输入 | 0／24 | 24／24 | 历史 RED 保持原字节 |
+
+修复前 80 项中，32 项结束于 `fixed_route_has_no_forward_control`，36 项结束于 `fixed_route_stalled`，12 项结束于 `cancelled_after_stop`。修复后 80／80 均为 `goal_state_satisfied`；缺少 Jump、入口视角缺失、2° 外起跳、伤害、安全事件和来源泄漏均为 0。原始行见 `evidence/motion_navigation/action-entry-handoff-v1/h0-red/` 与 `h3-formal/`。
+
+组件和正式链专项为 100／100。外部安全视角连续胜出时，实际视角按每帧 15° 改变，地面仍按该最终视角产生输入；JumpUp 没有提前启动，任务在原停滞上限内结束，Runtime 和输入来源正常收尾。旧预计入口否定只退场工作，真实失败计数保持 0；既有当前入口三次失败检查仍通过。
+
+签署复核又补了三条正式链／协调生命周期检查。连续旧预计入口否定至少实际提交两次作业；活动 worker 队列和结果邮箱均不超过一项，真实失败计数保持 0，任务由原地面无进展上限结束。入口转头已经发生后分别修改目标和取消任务，两条路径都确实派发中断；旧路线没有在中断后执行 Jump，最终来源释放且没有不变量违规。另有一条 south 转弯检查直接读取下一段声明的 yaw，确认首个 Jump 前的 Walk 先处于 2° 外，再在移动中进入 2° 内。
+
+三个隔离错误副本均被对应行为断言发现：忽略 Walk 预转、把 stale anticipated negative 计为真实失败、退休作业仍留在活动 mailbox。正常副本均通过；错误副本均正常导入后以断言失败结束，没有用语法或导入错误冒充检出。原始结果见 `mutations/`。
+
+### 回归与性能
+
+| 检查 | 结果 |
+|---|---|
+| v7 产品 2,000 项 | 1,998 项完成，与 R4 的 2,000 项签名逐项一致 |
+| F2 528 | 528 项签名与 R4 逐项一致；其中成功 464 项 |
+| v8 固定 | 104／104；与 R4 逐项一致 |
+| v8 杂乱 | 1,717／1,800；与 R4 逐项一致 |
+| 旧成功退步 | 0 |
+| D058 production | 3,414 样本；P95 4.7755 ms、P99 5.9389 ms、最大 15.4539 ms |
+| D061 production | 4,096 帧；P95 4.9597 ms、P99 5.1930 ms、最大 7.5063 ms |
+| D061 full | P95 8.7788 ms、P99 24.3262 ms、最大 29.1432 ms |
+| Windows 完整正序／逆序 | 1670／1670，1670／1670；零失败、错误、跳过 |
+| deadline miss | 0 |
+
+初版 `regression-summary.json` 曾把 v7 的嵌套 `metrics.success` 当成顶层字段，并把 R4 的签名索引当成普通运行记录，错误写成 0／2,000 和 2,000 项差异。现已用项目既有 `navigation_structure_baseline.product_index` 从原轨迹重新生成：成功 1,998／2,000，规范化签名 2,000／2,000 一致。公开证据同时保存 `v7-current-index.jsonl` 和可复跑脚本，门禁会直接与冻结 R4 索引核对。
+
+D058／D061 均通过原整体门槛。性能摘要和原始文件哈希见 `performance-summary.json`。完整 Windows 正序、逆序结果见同一证据目录；两者均要求零失败、错误和跳过。
+
+协调 smoke 的 `far_landing_L_goal_revised_at_30` 仍成功且无安全变化。入口提前转头使既有修订事件从 tick 62 移到 tick 63；清单已把这个有意时序变化固定为 63，没有把失败改写成通过。
+
+### Fabric
+
+运行 `20261009T114059950212Z-a3e39991` 完成 8／8：四方向各一项 normal 和首条严格输入 late1。四次 late1 的 Jump 输入都在请求后的第二个运动 tick 应用，状态为 `applied`，且仍在 `latest_allowed_first_tick` 内。八次起跳的入口 yaw 误差均为 0°；伤害、危险接触、期限错过和验收违规均为 0，来源检查通过。
+
+JumpUp 的正常离地和空中短暂低水平位移不套用原 F2 纯地面专用的 `drop` 与十 tick 地面停滞判据；离地帧和停顿窗口仍完整保存在原始帧中。验收仍直接检查任务完成、真实伤害、危险接触、严格输入窗口、入口 yaw、期限和来源注销。原始 `frames.jsonl`、`trials.jsonl` 和部署结果保存在 `evidence/motion_navigation/action-entry-handoff-v1/fabric/`。

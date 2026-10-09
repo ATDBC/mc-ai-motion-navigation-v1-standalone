@@ -796,7 +796,12 @@ class MotionRouteCoordinator:
                 # An anticipated entry can differ from the next observation.
                 # Keep the still-valid ground segment and try again from the
                 # next applied state instead of cancelling the whole route.
-                if prepared.retryable:
+                # A typed stale-basis result only supersedes that prediction;
+                # it is not evidence that the real entry has failed.  Current
+                # entry rejections were recomputed above and cleared the flag.
+                if negative_stale:
+                    self.last_failure_reason = ""
+                elif prepared.retryable:
                     registration = self._record_local_failure(
                         f"{connection}/prepare-{result.candidate_revision}"
                     )

@@ -1,0 +1,27 @@
+{
+  "schema_version": "mc2p.action-entry-handoff-mutations.v1",
+  "cases": [
+    {
+      "mutation": "ignore_next_entry_yaw_tolerance",
+      "test": "tests.motion_nav.test_action_entry_handoff_repair.ActionEntryHandoffRepairTests.test_walk_owns_required_yaw_while_still_moving_before_jump",
+      "baseline_exit": 0,
+      "mutation_exit": 1,
+      "detected": true
+    },
+    {
+      "mutation": "charge_stale_anticipated_negative_as_real_failure",
+      "test": "tests.motion_nav.test_action_entry_handoff_repair.ActionEntryHandoffRepairTests.test_stale_anticipated_negative_retires_without_buying_real_failure",
+      "baseline_exit": 0,
+      "mutation_exit": 1,
+      "detected": true
+    },
+    {
+      "mutation": "retain_retired_motion_mailbox",
+      "test": "tests.motion_nav.test_action_entry_handoff_repair.ActionEntryHandoffRepairTests.test_repeated_stale_anticipated_results_keep_one_job_and_end_bounded",
+      "baseline_exit": 0,
+      "mutation_exit": 1,
+      "detected": true
+    }
+  ],
+  "all_detected": true
+}

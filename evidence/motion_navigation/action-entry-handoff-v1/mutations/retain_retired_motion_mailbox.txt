@@ -1,0 +1,19 @@
+BASELINE
+----------------------------------------------------------------------
+Ran 1 test in 1.000s
+
+OK
+
+MUTATION
+======================================================================
+FAIL: test_repeated_stale_anticipated_results_keep_one_job_and_end_bounded (tests.motion_nav.test_action_entry_handoff_repair.ActionEntryHandoffRepairTests.test_repeated_stale_anticipated_results_keep_one_job_and_end_bounded)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\.tmp\action-entry-handoff-mutation-4fg6f5jb\export\tests\motion_nav\test_action_entry_handoff_repair.py", line 359, in test_repeated_stale_anticipated_results_keep_one_job_and_end_bounded
+    self.assertLessEqual(maximum_mailboxes, 1)
+AssertionError: 28 not less than or equal to 1
+
+----------------------------------------------------------------------
+Ran 1 test in 1.099s
+
+FAILED (failures=1)
