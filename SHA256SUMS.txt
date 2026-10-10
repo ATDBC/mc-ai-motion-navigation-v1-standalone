@@ -760,7 +760,11 @@ d064ac6256f97c1c5c0c6376954c707f5164c8fa36725a63ac2679ca1a8f6f94  reviews/2026-1
 2d74ed3b7bd35d682baeb22de5f0b43ef85310a1cf978ab441835fc923fca53d  reviews/2026-10-10-d097-m0-review.md
 1b51fc5f024195d760e6915a3064e633aa18e332599633b4fa9ab87ad3785b63  reviews/2026-10-10-d097-m0-review/mixed-case-output.txt
 6958939e5f8947f8c1bec2e4f5484ace7ccc99d1405291c7fd1b1844b454d04e  reviews/2026-10-10-d097-m0-review/mixed_case_probe.py
+95b65593871fe0ef96ea573f2d3d1fab5f12ce7e3c10e8f3b948b759cdfd6dfb  reviews/2026-10-10-d097a-trial-addendum-1.md
 c8a15d92122c43679ecfc48115ad046a094122cf9d09d5a0d5c99892690994a6  reviews/2026-10-10-d097a-trial.md
+770dc6b47b8e10687e3ffafc7a18f4b0c476e4ca0a281d049547efff86def506  reviews/2026-10-10-d097a-trial/entries-selftest-output.txt
+0f10753dd4b881da87224a5e534afb1b414ce95fe086f20e7993ca54fe32ad05  reviews/2026-10-10-d097a-trial/entries.py
+5a4df46890bb587671e730bcc41125945207d3bb1ccd4d8e698bc49f781e46b4  reviews/2026-10-10-d097a-trial/entries_selftest.py
 3138c39dd8fba22f981ea8f043ce28374cd0c877cc2e38923aa394136ff73630  reviews/2026-10-10-tp-5a-r/0096-tp-primitive-search-and-performance-gate-draft.md
 7e05dc26e217a2c7b6ee4d75761c28746f7ce05ebdb0a78116e60fc33a6cb2c4  reviews/2026-10-10-tp-5a-r/task-5a-r-brief.md
 c5564cc5fa3dce65a7e1cfd3c981a0b25af8c26370e89d7c9352a709185d89e3  reviews/2026-10-10-tp-5a-r/template-probe-interleaved-output.txt

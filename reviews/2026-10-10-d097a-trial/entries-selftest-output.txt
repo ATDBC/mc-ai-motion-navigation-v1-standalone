@@ -1,0 +1,22 @@
+corner/centre entries: valid=1197 invalid=0
+gap1    rest-C      entry z=0.500 x=0.500 v=0.00b/s -> found             steps=  1448 ticks=37 243 ms
+gap1    walk-C-s    entry z=0.500 x=0.500 v=2.29b/s -> found             steps=  1404 ticks=35 291 ms
+gap1    sprint-C-s  entry z=0.500 x=0.500 v=3.04b/s -> found             steps=  5904 ticks=33 772 ms
+gap2    rest-C      entry z=0.500 x=0.500 v=0.00b/s -> found             steps=  1784 ticks=38 267 ms
+gap2    walk-C-s    entry z=0.500 x=0.500 v=2.29b/s -> found             steps=  1838 ticks=36 242 ms
+gap2    sprint-C-s  entry z=0.500 x=0.500 v=3.04b/s -> found             steps=  8894 ticks=35 1458 ms
+gap3    rest-C      entry z=0.500 x=0.500 v=0.00b/s -> found             steps=  2422 ticks=38 314 ms
+gap3    walk-C-s    entry z=0.500 x=0.500 v=2.29b/s -> found             steps=  2666 ticks=37 524 ms
+gap3    sprint-C-s  entry z=0.500 x=0.500 v=3.04b/s -> found             steps=  7224 ticks=35 1098 ms
+gap2c   rest-C      entry z=0.500 x=0.500 v=0.00b/s -> found             steps=  1115 ticks=31 179 ms
+gap2c   walk-C-s    entry z=0.500 x=0.500 v=2.29b/s -> found             steps=  1128 ticks=30 189 ms
+gap2c   sprint-C-s  entry z=0.500 x=0.500 v=3.04b/s -> found             steps= 11533 ticks=28 1705 ms
+jumpup  rest-C      entry z=0.500 x=0.500 v=0.00b/s -> found             steps=   928 ticks=25 142 ms
+jumpup  walk-C-s    entry z=0.500 x=0.500 v=2.29b/s -> found             steps=   900 ticks=23 141 ms
+jumpup  sprint-C-s  entry z=0.500 x=0.500 v=3.04b/s -> found             steps=   912 ticks=23 137 ms
+turn    rest-C      entry z=0.500 x=0.500 v=0.00b/s -> found             steps=   435 ticks=16 69 ms
+turn    walk-C-s    entry z=0.500 x=0.500 v=2.29b/s -> found             steps=   455 ticks=16 80 ms
+turn    sprint-C-s  entry z=0.500 x=0.500 v=3.04b/s -> found             steps=   455 ticks=16 99 ms
+gap5    rest-C      entry z=0.500 x=0.500 v=0.00b/s -> search_exhausted  steps= 86023 ticks= 0 11077 ms
+gap5    walk-C-s    entry z=0.500 x=0.500 v=2.29b/s -> search_exhausted  steps= 86936 ticks= 0 11163 ms
+gap5    sprint-C-s  entry z=0.500 x=0.500 v=3.04b/s -> search_exhausted  steps= 84946 ticks= 0 10009 ms
