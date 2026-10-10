@@ -1,0 +1,3222 @@
+{
+  "schema": "incremental-motion-m0-v1",
+  "platform": {
+    "system": "Windows",
+    "release": "10",
+    "python": "3.11.16",
+    "executable": "D:\\My_project\\mc_ai\\.venv\\python.exe"
+  },
+  "measurement": {
+    "warmups": 3,
+    "rounds": 20,
+    "percentile": "nearest-rank",
+    "complete_scope": true
+  },
+  "modes": {
+    "formal": {
+      "name": "formal_no_floor",
+      "floor_prune": false,
+      "grounded_jump_only": true,
+      "cases": [
+        {
+          "scenario_id": "flat_walk",
+          "tier_id": "A3",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "59c8fd01f45315820854361f61f46dde6814cbd301a58c99657996b6f0e296ff",
+          "input_ticks": 12,
+          "physics_steps": 269,
+          "completed_candidates": 40,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 29.8491,
+            "p95_ms": 33.6126,
+            "p99_ms": 33.7078,
+            "max_ms": 33.7078
+          },
+          "known_input_cost": {
+            "rollout_steps": 24,
+            "goal_steps": 0,
+            "full_scan_steps": 161,
+            "full_scan_tail_ticks": 136,
+            "estimated_per_tick_steps": 16,
+            "estimated_commit_steps": 0,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 1.3362,
+              "p95_ms": 5.1228,
+              "p99_ms": 5.5437,
+              "max_ms": 5.5437
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.0788,
+              "p95_ms": 0.0826,
+              "p99_ms": 0.0865,
+              "max_ms": 0.0865
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 16.2584,
+              "p95_ms": 16.5448,
+              "p99_ms": 16.7565,
+              "max_ms": 16.7565
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 0.8908,
+              "p95_ms": 3.4152,
+              "p99_ms": 3.6958,
+              "max_ms": 3.6958
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.0,
+              "p95_ms": 0.0,
+              "p99_ms": 0.0,
+              "max_ms": 0.0
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "jump_up_straight",
+          "tier_id": "A3",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "fc8ebcb5da652355a0ed491b17d5ffbfeb3885d6951f897891cf9792e1b8d20e",
+          "input_ticks": 16,
+          "physics_steps": 482,
+          "completed_candidates": 81,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 46.6869,
+            "p95_ms": 50.014,
+            "p99_ms": 50.2495,
+            "max_ms": 50.2495
+          },
+          "known_input_cost": {
+            "rollout_steps": 32,
+            "goal_steps": 0,
+            "full_scan_steps": 297,
+            "full_scan_tail_ticks": 264,
+            "estimated_per_tick_steps": 28,
+            "estimated_commit_steps": 0,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 1.7342,
+              "p95_ms": 1.7488,
+              "p99_ms": 1.7491,
+              "max_ms": 1.7491
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.0877,
+              "p95_ms": 0.0898,
+              "p99_ms": 0.0903,
+              "max_ms": 0.0903
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 28.6938,
+              "p95_ms": 32.9653,
+              "p99_ms": 33.2848,
+              "max_ms": 33.2848
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 1.517425,
+              "p95_ms": 1.5302,
+              "p99_ms": 1.5304625,
+              "max_ms": 1.5304625
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.0,
+              "p95_ms": 0.0,
+              "p99_ms": 0.0,
+              "max_ms": 0.0
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "jump_gap_1",
+          "tier_id": "A3",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "8e1c73bf14b044c746c557b2e569198860ea9b25f00f646a17a370bc55af02ed",
+          "input_ticks": 23,
+          "physics_steps": 661,
+          "completed_candidates": 88,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 62.061,
+            "p95_ms": 65.8821,
+            "p99_ms": 66.8576,
+            "max_ms": 66.8576
+          },
+          "known_input_cost": {
+            "rollout_steps": 46,
+            "goal_steps": 0,
+            "full_scan_steps": 451,
+            "full_scan_tail_ticks": 404,
+            "estimated_per_tick_steps": 36,
+            "estimated_commit_steps": 12,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 2.4683,
+              "p95_ms": 2.5658,
+              "p99_ms": 2.5666,
+              "max_ms": 2.5666
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.0822,
+              "p95_ms": 0.0884,
+              "p99_ms": 0.1023,
+              "max_ms": 0.1023
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 43.0845,
+              "p95_ms": 43.4463,
+              "p99_ms": 43.7115,
+              "max_ms": 43.7115
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 1.931713043478261,
+              "p95_ms": 2.0080173913043478,
+              "p99_ms": 2.0086434782608698,
+              "max_ms": 2.0086434782608698
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.6439043478260871,
+              "p95_ms": 0.6693391304347825,
+              "p99_ms": 0.6695478260869565,
+              "max_ms": 0.6695478260869565
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_1_width_1",
+          "tier_id": "A3",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "8e1c73bf14b044c746c557b2e569198860ea9b25f00f646a17a370bc55af02ed",
+          "input_ticks": 23,
+          "physics_steps": 661,
+          "completed_candidates": 88,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 84.357,
+            "p95_ms": 86.1018,
+            "p99_ms": 86.9034,
+            "max_ms": 86.9034
+          },
+          "known_input_cost": {
+            "rollout_steps": 46,
+            "goal_steps": 0,
+            "full_scan_steps": 451,
+            "full_scan_tail_ticks": 404,
+            "estimated_per_tick_steps": 36,
+            "estimated_commit_steps": 12,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 2.5962,
+              "p95_ms": 2.7187,
+              "p99_ms": 2.7442,
+              "max_ms": 2.7442
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.0845,
+              "p95_ms": 0.0873,
+              "p99_ms": 0.0902,
+              "max_ms": 0.0902
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 43.3431,
+              "p95_ms": 43.9488,
+              "p99_ms": 48.2862,
+              "max_ms": 48.2862
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 2.031808695652174,
+              "p95_ms": 2.1276782608695655,
+              "p99_ms": 2.147634782608696,
+              "max_ms": 2.147634782608696
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.6772695652173913,
+              "p95_ms": 0.7092260869565218,
+              "p99_ms": 0.7158782608695653,
+              "max_ms": 0.7158782608695653
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_1_width_1",
+          "tier_id": "A5",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "8e1c73bf14b044c746c557b2e569198860ea9b25f00f646a17a370bc55af02ed",
+          "input_ticks": 23,
+          "physics_steps": 784,
+          "completed_candidates": 148,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 90.6942,
+            "p95_ms": 92.9618,
+            "p99_ms": 93.0763,
+            "max_ms": 93.0763
+          },
+          "known_input_cost": {
+            "rollout_steps": 46,
+            "goal_steps": 0,
+            "full_scan_steps": 451,
+            "full_scan_tail_ticks": 404,
+            "estimated_per_tick_steps": 36,
+            "estimated_commit_steps": 12,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 2.6145,
+              "p95_ms": 2.6885,
+              "p99_ms": 2.7337,
+              "max_ms": 2.7337
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.0852,
+              "p95_ms": 0.0905,
+              "p99_ms": 0.0917,
+              "max_ms": 0.0917
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 43.2246,
+              "p95_ms": 43.8307,
+              "p99_ms": 48.4118,
+              "max_ms": 48.4118
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 2.046130434782609,
+              "p95_ms": 2.1040434782608695,
+              "p99_ms": 2.139417391304348,
+              "max_ms": 2.139417391304348
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.6820434782608695,
+              "p95_ms": 0.7013478260869566,
+              "p99_ms": 0.7131391304347826,
+              "max_ms": 0.7131391304347826
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_1_width_1",
+          "tier_id": "A15",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "8e1c73bf14b044c746c557b2e569198860ea9b25f00f646a17a370bc55af02ed",
+          "input_ticks": 23,
+          "physics_steps": 784,
+          "completed_candidates": 148,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 91.2052,
+            "p95_ms": 92.4193,
+            "p99_ms": 93.0387,
+            "max_ms": 93.0387
+          },
+          "known_input_cost": {
+            "rollout_steps": 46,
+            "goal_steps": 0,
+            "full_scan_steps": 451,
+            "full_scan_tail_ticks": 404,
+            "estimated_per_tick_steps": 36,
+            "estimated_commit_steps": 12,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 2.6065,
+              "p95_ms": 2.6867,
+              "p99_ms": 7.5163,
+              "max_ms": 7.5163
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.0841,
+              "p95_ms": 0.0863,
+              "p99_ms": 0.0884,
+              "max_ms": 0.0884
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 43.3915,
+              "p95_ms": 44.3694,
+              "p99_ms": 47.7987,
+              "max_ms": 47.7987
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 2.0398695652173915,
+              "p95_ms": 2.1026347826086957,
+              "p99_ms": 5.882321739130434,
+              "max_ms": 5.882321739130434
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.6799565217391305,
+              "p95_ms": 0.7008782608695652,
+              "p99_ms": 1.9607739130434783,
+              "max_ms": 1.9607739130434783
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_1_width_2",
+          "tier_id": "A3",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "ecd3100ede92a92a9cd723ce9e24356ad5e64ee17194b04244d1a945a230fc83",
+          "input_ticks": 24,
+          "physics_steps": 1699,
+          "completed_candidates": 620,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 140.3898,
+            "p95_ms": 142.1633,
+            "p99_ms": 142.2536,
+            "max_ms": 142.2536
+          },
+          "known_input_cost": {
+            "rollout_steps": 48,
+            "goal_steps": 0,
+            "full_scan_steps": 435,
+            "full_scan_tail_ticks": 386,
+            "estimated_per_tick_steps": 30,
+            "estimated_commit_steps": 14,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 2.6176,
+              "p95_ms": 2.7679,
+              "p99_ms": 2.8357,
+              "max_ms": 2.8357
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.0984,
+              "p95_ms": 0.1003,
+              "p99_ms": 0.1007,
+              "max_ms": 0.1007
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 42.7603,
+              "p95_ms": 43.2416,
+              "p99_ms": 47.749,
+              "max_ms": 47.749
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 1.636,
+              "p95_ms": 1.7299375,
+              "p99_ms": 1.7723125,
+              "max_ms": 1.7723125
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.7634666666666666,
+              "p95_ms": 0.8073041666666666,
+              "p99_ms": 0.8270791666666667,
+              "max_ms": 0.8270791666666667
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_1_width_2",
+          "tier_id": "A5",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "ecd3100ede92a92a9cd723ce9e24356ad5e64ee17194b04244d1a945a230fc83",
+          "input_ticks": 24,
+          "physics_steps": 2111,
+          "completed_candidates": 824,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 162.0556,
+            "p95_ms": 164.1572,
+            "p99_ms": 164.2791,
+            "max_ms": 164.2791
+          },
+          "known_input_cost": {
+            "rollout_steps": 48,
+            "goal_steps": 0,
+            "full_scan_steps": 435,
+            "full_scan_tail_ticks": 386,
+            "estimated_per_tick_steps": 30,
+            "estimated_commit_steps": 14,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 2.7179,
+              "p95_ms": 2.825,
+              "p99_ms": 2.8569,
+              "max_ms": 2.8569
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.0988,
+              "p95_ms": 0.1023,
+              "p99_ms": 0.1023,
+              "max_ms": 0.1023
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 42.9616,
+              "p95_ms": 43.3964,
+              "p99_ms": 43.401,
+              "max_ms": 43.401
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 1.6986875000000001,
+              "p95_ms": 1.7656250000000002,
+              "p99_ms": 1.7855625000000002,
+              "max_ms": 1.7855625000000002
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.7927208333333333,
+              "p95_ms": 0.8239583333333335,
+              "p99_ms": 0.8332625,
+              "max_ms": 0.8332625
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_1_width_2",
+          "tier_id": "A15",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "ecd3100ede92a92a9cd723ce9e24356ad5e64ee17194b04244d1a945a230fc83",
+          "input_ticks": 24,
+          "physics_steps": 2111,
+          "completed_candidates": 824,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 162.8311,
+            "p95_ms": 164.4353,
+            "p99_ms": 164.8144,
+            "max_ms": 164.8144
+          },
+          "known_input_cost": {
+            "rollout_steps": 48,
+            "goal_steps": 0,
+            "full_scan_steps": 435,
+            "full_scan_tail_ticks": 386,
+            "estimated_per_tick_steps": 30,
+            "estimated_commit_steps": 14,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 2.6211,
+              "p95_ms": 2.7566,
+              "p99_ms": 2.762,
+              "max_ms": 2.762
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.0985,
+              "p95_ms": 0.1015,
+              "p99_ms": 0.1017,
+              "max_ms": 0.1017
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 42.981,
+              "p95_ms": 47.2131,
+              "p99_ms": 49.5258,
+              "max_ms": 49.5258
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 1.6381875000000001,
+              "p95_ms": 1.7228750000000002,
+              "p99_ms": 1.7262499999999998,
+              "max_ms": 1.7262499999999998
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.7644875,
+              "p95_ms": 0.8040083333333334,
+              "p99_ms": 0.8055833333333333,
+              "max_ms": 0.8055833333333333
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_4_width_1",
+          "tier_id": "A3",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "736567d285c33c83c4ec423eae23774ff79c217249cdd049ae802ea914940a2b",
+          "input_ticks": 37,
+          "physics_steps": 1151,
+          "completed_candidates": 197,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 124.8703,
+            "p95_ms": 125.6204,
+            "p99_ms": 125.8099,
+            "max_ms": 125.8099
+          },
+          "known_input_cost": {
+            "rollout_steps": 74,
+            "goal_steps": 0,
+            "full_scan_steps": 725,
+            "full_scan_tail_ticks": 650,
+            "estimated_per_tick_steps": 36,
+            "estimated_commit_steps": 12,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 4.191,
+              "p95_ms": 4.2668,
+              "p99_ms": 4.2713,
+              "max_ms": 4.2713
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.0852,
+              "p95_ms": 0.0883,
+              "p99_ms": 0.0884,
+              "max_ms": 0.0884
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 71.2547,
+              "p95_ms": 76.5193,
+              "p99_ms": 77.5452,
+              "max_ms": 77.5452
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 2.038864864864865,
+              "p95_ms": 2.0757405405405405,
+              "p99_ms": 2.0779297297297297,
+              "max_ms": 2.0779297297297297
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.6796216216216217,
+              "p95_ms": 0.6919135135135135,
+              "p99_ms": 0.6926432432432432,
+              "max_ms": 0.6926432432432432
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_4_width_1",
+          "tier_id": "A5",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "736567d285c33c83c4ec423eae23774ff79c217249cdd049ae802ea914940a2b",
+          "input_ticks": 37,
+          "physics_steps": 1448,
+          "completed_candidates": 344,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 141.0437,
+            "p95_ms": 142.5381,
+            "p99_ms": 143.5708,
+            "max_ms": 143.5708
+          },
+          "known_input_cost": {
+            "rollout_steps": 74,
+            "goal_steps": 0,
+            "full_scan_steps": 725,
+            "full_scan_tail_ticks": 650,
+            "estimated_per_tick_steps": 36,
+            "estimated_commit_steps": 12,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 4.205,
+              "p95_ms": 4.2394,
+              "p99_ms": 4.3085,
+              "max_ms": 4.3085
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.0859,
+              "p95_ms": 0.0902,
+              "p99_ms": 0.0908,
+              "max_ms": 0.0908
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 71.6311,
+              "p95_ms": 76.9039,
+              "p99_ms": 77.1495,
+              "max_ms": 77.1495
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 2.0456756756756755,
+              "p95_ms": 2.062410810810811,
+              "p99_ms": 2.096027027027027,
+              "max_ms": 2.096027027027027
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.6818918918918919,
+              "p95_ms": 0.6874702702702703,
+              "p99_ms": 0.6986756756756758,
+              "max_ms": 0.6986756756756758
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_4_width_1",
+          "tier_id": "A15",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "736567d285c33c83c4ec423eae23774ff79c217249cdd049ae802ea914940a2b",
+          "input_ticks": 37,
+          "physics_steps": 1448,
+          "completed_candidates": 344,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 141.4459,
+            "p95_ms": 143.6364,
+            "p99_ms": 143.9121,
+            "max_ms": 143.9121
+          },
+          "known_input_cost": {
+            "rollout_steps": 74,
+            "goal_steps": 0,
+            "full_scan_steps": 725,
+            "full_scan_tail_ticks": 650,
+            "estimated_per_tick_steps": 36,
+            "estimated_commit_steps": 12,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 4.2088,
+              "p95_ms": 4.2814,
+              "p99_ms": 4.2955,
+              "max_ms": 4.2955
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.0863,
+              "p95_ms": 0.0897,
+              "p99_ms": 0.09,
+              "max_ms": 0.09
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 71.5349,
+              "p95_ms": 72.9388,
+              "p99_ms": 77.0145,
+              "max_ms": 77.0145
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 2.0475243243243244,
+              "p95_ms": 2.082843243243243,
+              "p99_ms": 2.0897027027027026,
+              "max_ms": 2.0897027027027026
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.6825081081081081,
+              "p95_ms": 0.694281081081081,
+              "p99_ms": 0.6965675675675675,
+              "max_ms": 0.6965675675675675
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_4_width_2",
+          "tier_id": "A3",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "548690402cfffef5a753c9ef15ba43510dd7fe7df4727eb440f3d8923d27d1c3",
+          "input_ticks": 38,
+          "physics_steps": 1327,
+          "completed_candidates": 290,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 135.5003,
+            "p95_ms": 136.6176,
+            "p99_ms": 137.2041,
+            "max_ms": 137.2041
+          },
+          "known_input_cost": {
+            "rollout_steps": 76,
+            "goal_steps": 0,
+            "full_scan_steps": 723,
+            "full_scan_tail_ticks": 646,
+            "estimated_per_tick_steps": 32,
+            "estimated_commit_steps": 14,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 4.3544,
+              "p95_ms": 4.5273,
+              "p99_ms": 4.5657,
+              "max_ms": 4.5657
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.1017,
+              "p95_ms": 0.1073,
+              "p99_ms": 0.1078,
+              "max_ms": 0.1078
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 72.3379,
+              "p95_ms": 77.4807,
+              "p99_ms": 78.1566,
+              "max_ms": 78.1566
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 1.8334315789473685,
+              "p95_ms": 1.9062315789473685,
+              "p99_ms": 1.9223999999999999,
+              "max_ms": 1.9223999999999999
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.8021263157894737,
+              "p95_ms": 0.8339763157894737,
+              "p99_ms": 0.84105,
+              "max_ms": 0.84105
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_4_width_2",
+          "tier_id": "A5",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "548690402cfffef5a753c9ef15ba43510dd7fe7df4727eb440f3d8923d27d1c3",
+          "input_ticks": 38,
+          "physics_steps": 1784,
+          "completed_candidates": 517,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 159.4312,
+            "p95_ms": 161.1248,
+            "p99_ms": 161.2398,
+            "max_ms": 161.2398
+          },
+          "known_input_cost": {
+            "rollout_steps": 76,
+            "goal_steps": 0,
+            "full_scan_steps": 723,
+            "full_scan_tail_ticks": 646,
+            "estimated_per_tick_steps": 32,
+            "estimated_commit_steps": 14,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 4.3549,
+              "p95_ms": 4.4618,
+              "p99_ms": 4.4653,
+              "max_ms": 4.4653
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.1005,
+              "p95_ms": 0.1046,
+              "p99_ms": 0.1049,
+              "max_ms": 0.1049
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 72.1029,
+              "p95_ms": 77.9706,
+              "p99_ms": 78.0618,
+              "max_ms": 78.0618
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 1.8336421052631577,
+              "p95_ms": 1.8786526315789474,
+              "p99_ms": 1.8801263157894736,
+              "max_ms": 1.8801263157894736
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.8022184210526315,
+              "p95_ms": 0.8219105263157894,
+              "p99_ms": 0.8225552631578947,
+              "max_ms": 0.8225552631578947
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_4_width_2",
+          "tier_id": "A15",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "548690402cfffef5a753c9ef15ba43510dd7fe7df4727eb440f3d8923d27d1c3",
+          "input_ticks": 38,
+          "physics_steps": 1784,
+          "completed_candidates": 517,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 160.0192,
+            "p95_ms": 161.0307,
+            "p99_ms": 161.6592,
+            "max_ms": 161.6592
+          },
+          "known_input_cost": {
+            "rollout_steps": 76,
+            "goal_steps": 0,
+            "full_scan_steps": 723,
+            "full_scan_tail_ticks": 646,
+            "estimated_per_tick_steps": 32,
+            "estimated_commit_steps": 14,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 4.3353,
+              "p95_ms": 4.3919,
+              "p99_ms": 4.5467,
+              "max_ms": 4.5467
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.1003,
+              "p95_ms": 0.1041,
+              "p99_ms": 0.1047,
+              "max_ms": 0.1047
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 72.1303,
+              "p95_ms": 77.0486,
+              "p99_ms": 78.3322,
+              "max_ms": 78.3322
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 1.8253894736842107,
+              "p95_ms": 1.8492210526315789,
+              "p99_ms": 1.9144,
+              "max_ms": 1.9144
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.7986078947368421,
+              "p95_ms": 0.8090342105263157,
+              "p99_ms": 0.83755,
+              "max_ms": 0.83755
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_4_width_3",
+          "tier_id": "A5",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "ca0a7b064cc15c06b327a94a58079fca72eec576e42bbaa19bd8de8f82d65051",
+          "input_ticks": 38,
+          "physics_steps": 2422,
+          "completed_candidates": 830,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 192.5309,
+            "p95_ms": 194.3724,
+            "p99_ms": 194.8046,
+            "max_ms": 194.8046
+          },
+          "known_input_cost": {
+            "rollout_steps": 76,
+            "goal_steps": 0,
+            "full_scan_steps": 723,
+            "full_scan_tail_ticks": 646,
+            "estimated_per_tick_steps": 32,
+            "estimated_commit_steps": 14,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 4.3536,
+              "p95_ms": 4.4714,
+              "p99_ms": 4.5254,
+              "max_ms": 4.5254
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.1007,
+              "p95_ms": 0.1036,
+              "p99_ms": 0.1042,
+              "max_ms": 0.1042
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 72.0288,
+              "p95_ms": 77.8039,
+              "p99_ms": 77.8374,
+              "max_ms": 77.8374
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 1.8330947368421053,
+              "p95_ms": 1.8826947368421052,
+              "p99_ms": 1.9054315789473686,
+              "max_ms": 1.9054315789473686
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.8019789473684211,
+              "p95_ms": 0.8236789473684211,
+              "p99_ms": 0.8336263157894738,
+              "max_ms": 0.8336263157894738
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_4_width_3",
+          "tier_id": "A15",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "ca0a7b064cc15c06b327a94a58079fca72eec576e42bbaa19bd8de8f82d65051",
+          "input_ticks": 38,
+          "physics_steps": 2422,
+          "completed_candidates": 830,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 193.2772,
+            "p95_ms": 194.9086,
+            "p99_ms": 194.9098,
+            "max_ms": 194.9098
+          },
+          "known_input_cost": {
+            "rollout_steps": 76,
+            "goal_steps": 0,
+            "full_scan_steps": 723,
+            "full_scan_tail_ticks": 646,
+            "estimated_per_tick_steps": 32,
+            "estimated_commit_steps": 14,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 4.3519,
+              "p95_ms": 4.4678,
+              "p99_ms": 4.5012,
+              "max_ms": 4.5012
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.1005,
+              "p95_ms": 0.1042,
+              "p99_ms": 0.106,
+              "max_ms": 0.106
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 72.2966,
+              "p95_ms": 77.6823,
+              "p99_ms": 78.5669,
+              "max_ms": 78.5669
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 1.8323789473684209,
+              "p95_ms": 1.8811789473684213,
+              "p99_ms": 1.8952421052631578,
+              "max_ms": 1.8952421052631578
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.8016657894736842,
+              "p95_ms": 0.8230157894736843,
+              "p99_ms": 0.8291684210526316,
+              "max_ms": 0.8291684210526316
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "flat_sprint",
+          "tier_id": "A5",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "67e658a8c11e9c1581b20e490ca5cd9e6e8945f32ed5e2c194a5ccfe43505ed7",
+          "input_ticks": 40,
+          "physics_steps": 2481,
+          "completed_candidates": 808,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 203.0605,
+            "p95_ms": 205.0708,
+            "p99_ms": 205.5682,
+            "max_ms": 205.5682
+          },
+          "known_input_cost": {
+            "rollout_steps": 80,
+            "goal_steps": 0,
+            "full_scan_steps": 843,
+            "full_scan_tail_ticks": 762,
+            "estimated_per_tick_steps": 38,
+            "estimated_commit_steps": 0,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 4.5936,
+              "p95_ms": 4.6591,
+              "p99_ms": 4.6666,
+              "max_ms": 4.6666
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.0851,
+              "p95_ms": 0.0879,
+              "p99_ms": 0.0882,
+              "max_ms": 0.0882
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 83.4998,
+              "p95_ms": 89.2946,
+              "p99_ms": 89.9607,
+              "max_ms": 89.9607
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 2.18196,
+              "p95_ms": 2.2130724999999996,
+              "p99_ms": 2.2166349999999997,
+              "max_ms": 2.2166349999999997
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.0,
+              "p95_ms": 0.0,
+              "p99_ms": 0.0,
+              "max_ms": 0.0
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "turn_90",
+          "tier_id": "A15",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "7309d553ce7a22511550f82eb498b13a919dc812743d7dcd683a3b37464ceb70",
+          "input_ticks": 16,
+          "physics_steps": 435,
+          "completed_candidates": 67,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 65.41,
+            "p95_ms": 67.5978,
+            "p99_ms": 68.3007,
+            "max_ms": 68.3007
+          },
+          "known_input_cost": {
+            "rollout_steps": 32,
+            "goal_steps": 0,
+            "full_scan_steps": 239,
+            "full_scan_tail_ticks": 206,
+            "estimated_per_tick_steps": 18,
+            "estimated_commit_steps": 0,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 1.9587,
+              "p95_ms": 2.0214,
+              "p99_ms": 2.025,
+              "max_ms": 2.025
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.1152,
+              "p95_ms": 0.1176,
+              "p99_ms": 0.1177,
+              "max_ms": 0.1177
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 24.653,
+              "p95_ms": 25.3763,
+              "p99_ms": 29.9343,
+              "max_ms": 29.9343
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 1.10176875,
+              "p95_ms": 1.1370375,
+              "p99_ms": 1.1390624999999999,
+              "max_ms": 1.1390624999999999
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.0,
+              "p95_ms": 0.0,
+              "p99_ms": 0.0,
+              "max_ms": 0.0
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "jump_up_after_turn",
+          "tier_id": "A15",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "6822605ea1cead75d290fa967f66c1e5d005e6de5fa07de16f5b87b56f2246d9",
+          "input_ticks": 19,
+          "physics_steps": 1355,
+          "completed_candidates": 492,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 125.048,
+            "p95_ms": 126.9028,
+            "p99_ms": 126.9621,
+            "max_ms": 126.9621
+          },
+          "known_input_cost": {
+            "rollout_steps": 38,
+            "goal_steps": 0,
+            "full_scan_steps": 357,
+            "full_scan_tail_ticks": 318,
+            "estimated_per_tick_steps": 28,
+            "estimated_commit_steps": 0,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 2.1275,
+              "p95_ms": 2.1545,
+              "p99_ms": 2.1552,
+              "max_ms": 2.1552
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.1274,
+              "p95_ms": 0.1356,
+              "p99_ms": 0.1356,
+              "max_ms": 0.1356
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 36.1496,
+              "p95_ms": 36.5025,
+              "p99_ms": 36.745,
+              "max_ms": 36.745
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 1.5676315789473683,
+              "p95_ms": 1.5875263157894737,
+              "p99_ms": 1.5880421052631577,
+              "max_ms": 1.5880421052631577
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.0,
+              "p95_ms": 0.0,
+              "p99_ms": 0.0,
+              "max_ms": 0.0
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "jump_gap_continue",
+          "tier_id": "A3",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "e7e9c19783a5fe4eec64b9762fd84366a9132d929521319b79c664f5ebb96019",
+          "input_ticks": 17,
+          "physics_steps": 536,
+          "completed_candidates": 50,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 73.1881,
+            "p95_ms": 77.2221,
+            "p99_ms": 77.9882,
+            "max_ms": 77.9882
+          },
+          "known_input_cost": {
+            "rollout_steps": 34,
+            "goal_steps": 0,
+            "full_scan_steps": 407,
+            "full_scan_tail_ticks": 372,
+            "estimated_per_tick_steps": 36,
+            "estimated_commit_steps": 12,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 1.9899,
+              "p95_ms": 2.0524,
+              "p99_ms": 2.115,
+              "max_ms": 2.115
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.0841,
+              "p95_ms": 0.0875,
+              "p99_ms": 0.0881,
+              "max_ms": 0.0881
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 39.1939,
+              "p95_ms": 44.3008,
+              "p99_ms": 44.8142,
+              "max_ms": 44.8142
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 2.1069529411764707,
+              "p95_ms": 2.1731294117647058,
+              "p99_ms": 2.2394117647058827,
+              "max_ms": 2.2394117647058827
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.7023176470588235,
+              "p95_ms": 0.7243764705882353,
+              "p99_ms": 0.7464705882352942,
+              "max_ms": 0.7464705882352942
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "jump_up_after_turn_continue",
+          "tier_id": "A15",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "b378f423ce8460d5c9844099e3f2a72eb8639a3e53d39433e0b8055f63f5b2f0",
+          "input_ticks": 12,
+          "physics_steps": 714,
+          "completed_candidates": 201,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 84.8511,
+            "p95_ms": 85.6061,
+            "p99_ms": 86.2147,
+            "max_ms": 86.2147
+          },
+          "known_input_cost": {
+            "rollout_steps": 24,
+            "goal_steps": 0,
+            "full_scan_steps": 299,
+            "full_scan_tail_ticks": 274,
+            "estimated_per_tick_steps": 28,
+            "estimated_commit_steps": 0,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 1.367,
+              "p95_ms": 1.3885,
+              "p99_ms": 1.4637,
+              "max_ms": 1.4637
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.1268,
+              "p95_ms": 0.1316,
+              "p99_ms": 0.1322,
+              "max_ms": 0.1322
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 29.2509,
+              "p95_ms": 29.6587,
+              "p99_ms": 34.4808,
+              "max_ms": 34.4808
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 1.5948333333333333,
+              "p95_ms": 1.619916666666667,
+              "p99_ms": 1.7076500000000001,
+              "max_ms": 1.7076500000000001
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.0,
+              "p95_ms": 0.0,
+              "p99_ms": 0.0,
+              "max_ms": 0.0
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_4_width_3_a3",
+          "tier_id": null,
+          "expected_status": "search_exhausted",
+          "status": "search_exhausted",
+          "reason": "search_exhausted",
+          "input_hash": "",
+          "input_ticks": 0,
+          "physics_steps": 10616,
+          "completed_candidates": 5304,
+          "scan_count": 0,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 590.6702,
+            "p95_ms": 592.8496,
+            "p99_ms": 593.8242,
+            "max_ms": 593.8242
+          },
+          "known_input_cost": null
+        },
+        {
+          "scenario_id": "one_twelfth_support",
+          "tier_id": null,
+          "expected_status": "search_exhausted",
+          "status": "search_exhausted",
+          "reason": "search_exhausted",
+          "input_hash": "",
+          "input_ticks": 0,
+          "physics_steps": 2762,
+          "completed_candidates": 1377,
+          "scan_count": 0,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 199.0704,
+            "p95_ms": 200.9569,
+            "p99_ms": 201.3276,
+            "max_ms": 201.3276
+          },
+          "known_input_cost": null
+        },
+        {
+          "scenario_id": "resource_goal",
+          "tier_id": null,
+          "expected_status": "needs_information",
+          "status": "needs_information",
+          "reason": "unproven_resources",
+          "input_hash": "",
+          "input_ticks": 0,
+          "physics_steps": 0,
+          "completed_candidates": 0,
+          "scan_count": 0,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 25.744,
+            "p95_ms": 30.3092,
+            "p99_ms": 30.3667,
+            "max_ms": 30.3667
+          },
+          "known_input_cost": null
+        },
+        {
+          "scenario_id": "unknown_landing",
+          "tier_id": null,
+          "expected_status": "needs_information",
+          "status": "needs_information",
+          "reason": "needs_information",
+          "input_hash": "",
+          "input_ticks": 0,
+          "physics_steps": 918,
+          "completed_candidates": 436,
+          "scan_count": 0,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 73.1121,
+            "p95_ms": 77.1402,
+            "p99_ms": 77.4061,
+            "max_ms": 77.4061
+          },
+          "known_input_cost": null
+        },
+        {
+          "scenario_id": "tiny_budget",
+          "tier_id": null,
+          "expected_status": "budget_exhausted",
+          "status": "budget_exhausted",
+          "reason": "tiny_budget_classification",
+          "input_hash": "",
+          "input_ticks": 0,
+          "physics_steps": 0,
+          "completed_candidates": 0,
+          "scan_count": 0,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 25.8602,
+            "p95_ms": 30.5053,
+            "p99_ms": 30.7801,
+            "max_ms": 30.7801
+          },
+          "known_input_cost": null
+        },
+        {
+          "scenario_id": "collision_only",
+          "tier_id": null,
+          "expected_status": "search_exhausted",
+          "status": "search_exhausted",
+          "reason": "search_exhausted",
+          "input_hash": "",
+          "input_ticks": 0,
+          "physics_steps": 20,
+          "completed_candidates": 8,
+          "scan_count": 0,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 27.726,
+            "p95_ms": 32.213,
+            "p99_ms": 32.4516,
+            "max_ms": 32.4516
+          },
+          "known_input_cost": null
+        },
+        {
+          "scenario_id": "mixed_ground_jump_air",
+          "tier_id": null,
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "1b7355a956d00902534eedcac90f59eaef8a21a48dadec2f73db297fded66c28",
+          "input_ticks": 21,
+          "physics_steps": 10056,
+          "completed_candidates": 4780,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 585.4058,
+            "p95_ms": 587.5621,
+            "p99_ms": 587.9058,
+            "max_ms": 587.9058
+          },
+          "known_input_cost": {
+            "rollout_steps": 42,
+            "goal_steps": 0,
+            "full_scan_steps": 427,
+            "full_scan_tail_ticks": 384,
+            "estimated_per_tick_steps": 32,
+            "estimated_commit_steps": 16,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 2.2731,
+              "p95_ms": 2.489,
+              "p99_ms": 2.4958,
+              "max_ms": 2.4958
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.0837,
+              "p95_ms": 0.0861,
+              "p99_ms": 0.0877,
+              "max_ms": 0.0877
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 40.7313,
+              "p95_ms": 41.4316,
+              "p99_ms": 46.2533,
+              "max_ms": 46.2533
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 1.7318857142857143,
+              "p95_ms": 1.8963809523809523,
+              "p99_ms": 1.9015619047619048,
+              "max_ms": 1.9015619047619048
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.8659428571428571,
+              "p95_ms": 0.9481904761904761,
+              "p99_ms": 0.9507809523809524,
+              "max_ms": 0.9507809523809524
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        }
+      ]
+    },
+    "floor_diagnostic": {
+      "name": "diagnostic_floor",
+      "floor_prune": true,
+      "grounded_jump_only": true,
+      "cases": [
+        {
+          "scenario_id": "flat_walk",
+          "tier_id": "A3",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "59c8fd01f45315820854361f61f46dde6814cbd301a58c99657996b6f0e296ff",
+          "input_ticks": 12,
+          "physics_steps": 269,
+          "completed_candidates": 40,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 29.6596,
+            "p95_ms": 35.1155,
+            "p99_ms": 36.569,
+            "max_ms": 36.569
+          },
+          "known_input_cost": {
+            "rollout_steps": 24,
+            "goal_steps": 0,
+            "full_scan_steps": 161,
+            "full_scan_tail_ticks": 136,
+            "estimated_per_tick_steps": 16,
+            "estimated_commit_steps": 0,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 1.3413,
+              "p95_ms": 1.4466,
+              "p99_ms": 1.4541,
+              "max_ms": 1.4541
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.0783,
+              "p95_ms": 0.0881,
+              "p99_ms": 0.0963,
+              "max_ms": 0.0963
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 16.2477,
+              "p95_ms": 18.1399,
+              "p99_ms": 19.7139,
+              "max_ms": 19.7139
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 0.8942,
+              "p95_ms": 0.9644,
+              "p99_ms": 0.9693999999999999,
+              "max_ms": 0.9693999999999999
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.0,
+              "p95_ms": 0.0,
+              "p99_ms": 0.0,
+              "max_ms": 0.0
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "jump_up_straight",
+          "tier_id": "A3",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "fc8ebcb5da652355a0ed491b17d5ffbfeb3885d6951f897891cf9792e1b8d20e",
+          "input_ticks": 16,
+          "physics_steps": 482,
+          "completed_candidates": 81,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 46.5534,
+            "p95_ms": 47.1745,
+            "p99_ms": 47.9964,
+            "max_ms": 47.9964
+          },
+          "known_input_cost": {
+            "rollout_steps": 32,
+            "goal_steps": 0,
+            "full_scan_steps": 297,
+            "full_scan_tail_ticks": 264,
+            "estimated_per_tick_steps": 28,
+            "estimated_commit_steps": 0,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 1.739,
+              "p95_ms": 1.7723,
+              "p99_ms": 1.7743,
+              "max_ms": 1.7743
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.0887,
+              "p95_ms": 0.0928,
+              "p99_ms": 0.094,
+              "max_ms": 0.094
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 28.8549,
+              "p95_ms": 28.9999,
+              "p99_ms": 29.1359,
+              "max_ms": 29.1359
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 1.521625,
+              "p95_ms": 1.5507625,
+              "p99_ms": 1.5525125,
+              "max_ms": 1.5525125
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.0,
+              "p95_ms": 0.0,
+              "p99_ms": 0.0,
+              "max_ms": 0.0
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "jump_gap_1",
+          "tier_id": "A3",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "8e1c73bf14b044c746c557b2e569198860ea9b25f00f646a17a370bc55af02ed",
+          "input_ticks": 23,
+          "physics_steps": 578,
+          "completed_candidates": 47,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 57.1766,
+            "p95_ms": 61.1376,
+            "p99_ms": 61.475,
+            "max_ms": 61.475
+          },
+          "known_input_cost": {
+            "rollout_steps": 46,
+            "goal_steps": 0,
+            "full_scan_steps": 451,
+            "full_scan_tail_ticks": 404,
+            "estimated_per_tick_steps": 36,
+            "estimated_commit_steps": 12,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 2.4767,
+              "p95_ms": 2.589,
+              "p99_ms": 2.5898,
+              "max_ms": 2.5898
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.0821,
+              "p95_ms": 0.0856,
+              "p99_ms": 0.0924,
+              "max_ms": 0.0924
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 42.4959,
+              "p95_ms": 42.8969,
+              "p99_ms": 42.9387,
+              "max_ms": 42.9387
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 1.938286956521739,
+              "p95_ms": 2.026173913043478,
+              "p99_ms": 2.0267999999999997,
+              "max_ms": 2.0267999999999997
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.6460956521739131,
+              "p95_ms": 0.6753913043478261,
+              "p99_ms": 0.6756,
+              "max_ms": 0.6756
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_1_width_1",
+          "tier_id": "A3",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "8e1c73bf14b044c746c557b2e569198860ea9b25f00f646a17a370bc55af02ed",
+          "input_ticks": 23,
+          "physics_steps": 578,
+          "completed_candidates": 47,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 76.3681,
+            "p95_ms": 81.4785,
+            "p99_ms": 81.5561,
+            "max_ms": 81.5561
+          },
+          "known_input_cost": {
+            "rollout_steps": 46,
+            "goal_steps": 0,
+            "full_scan_steps": 451,
+            "full_scan_tail_ticks": 404,
+            "estimated_per_tick_steps": 36,
+            "estimated_commit_steps": 12,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 2.5986,
+              "p95_ms": 2.6224,
+              "p99_ms": 2.6665,
+              "max_ms": 2.6665
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.0853,
+              "p95_ms": 0.0879,
+              "p99_ms": 0.0883,
+              "max_ms": 0.0883
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 42.8213,
+              "p95_ms": 48.443,
+              "p99_ms": 48.5515,
+              "max_ms": 48.5515
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 2.033686956521739,
+              "p95_ms": 2.052313043478261,
+              "p99_ms": 2.086826086956522,
+              "max_ms": 2.086826086956522
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.677895652173913,
+              "p95_ms": 0.6841043478260869,
+              "p99_ms": 0.6956086956521739,
+              "max_ms": 0.6956086956521739
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_1_width_1",
+          "tier_id": "A5",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "8e1c73bf14b044c746c557b2e569198860ea9b25f00f646a17a370bc55af02ed",
+          "input_ticks": 23,
+          "physics_steps": 625,
+          "completed_candidates": 69,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 79.0206,
+            "p95_ms": 83.2631,
+            "p99_ms": 83.899,
+            "max_ms": 83.899
+          },
+          "known_input_cost": {
+            "rollout_steps": 46,
+            "goal_steps": 0,
+            "full_scan_steps": 451,
+            "full_scan_tail_ticks": 404,
+            "estimated_per_tick_steps": 36,
+            "estimated_commit_steps": 12,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 2.6062,
+              "p95_ms": 2.6712,
+              "p99_ms": 2.7037,
+              "max_ms": 2.7037
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.085,
+              "p95_ms": 0.0873,
+              "p99_ms": 0.0881,
+              "max_ms": 0.0881
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 42.9905,
+              "p95_ms": 47.17,
+              "p99_ms": 48.3812,
+              "max_ms": 48.3812
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 2.0396347826086956,
+              "p95_ms": 2.0905043478260867,
+              "p99_ms": 2.1159391304347825,
+              "max_ms": 2.1159391304347825
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.6798782608695652,
+              "p95_ms": 0.6968347826086956,
+              "p99_ms": 0.7053130434782608,
+              "max_ms": 0.7053130434782608
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_1_width_1",
+          "tier_id": "A15",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "8e1c73bf14b044c746c557b2e569198860ea9b25f00f646a17a370bc55af02ed",
+          "input_ticks": 23,
+          "physics_steps": 625,
+          "completed_candidates": 69,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 79.5483,
+            "p95_ms": 84.5164,
+            "p99_ms": 84.5616,
+            "max_ms": 84.5616
+          },
+          "known_input_cost": {
+            "rollout_steps": 46,
+            "goal_steps": 0,
+            "full_scan_steps": 451,
+            "full_scan_tail_ticks": 404,
+            "estimated_per_tick_steps": 36,
+            "estimated_commit_steps": 12,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 2.6137,
+              "p95_ms": 2.7106,
+              "p99_ms": 2.7118,
+              "max_ms": 2.7118
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.085,
+              "p95_ms": 0.0868,
+              "p99_ms": 0.0868,
+              "max_ms": 0.0868
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 43.0893,
+              "p95_ms": 43.4823,
+              "p99_ms": 48.3405,
+              "max_ms": 48.3405
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 2.0455043478260873,
+              "p95_ms": 2.121339130434783,
+              "p99_ms": 2.1222782608695656,
+              "max_ms": 2.1222782608695656
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.6818347826086957,
+              "p95_ms": 0.7071130434782609,
+              "p99_ms": 0.7074260869565219,
+              "max_ms": 0.7074260869565219
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_1_width_2",
+          "tier_id": "A3",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "ecd3100ede92a92a9cd723ce9e24356ad5e64ee17194b04244d1a945a230fc83",
+          "input_ticks": 24,
+          "physics_steps": 628,
+          "completed_candidates": 82,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 78.9778,
+            "p95_ms": 83.4068,
+            "p99_ms": 83.7313,
+            "max_ms": 83.7313
+          },
+          "known_input_cost": {
+            "rollout_steps": 48,
+            "goal_steps": 0,
+            "full_scan_steps": 435,
+            "full_scan_tail_ticks": 386,
+            "estimated_per_tick_steps": 30,
+            "estimated_commit_steps": 14,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 2.7454,
+              "p95_ms": 2.8126,
+              "p99_ms": 2.8273,
+              "max_ms": 2.8273
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.0985,
+              "p95_ms": 0.1054,
+              "p99_ms": 0.1208,
+              "max_ms": 0.1208
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 42.3609,
+              "p95_ms": 47.7055,
+              "p99_ms": 48.0649,
+              "max_ms": 48.0649
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 1.715875,
+              "p95_ms": 1.7578750000000003,
+              "p99_ms": 1.7670625,
+              "max_ms": 1.7670625
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.8007416666666667,
+              "p95_ms": 0.8203416666666667,
+              "p99_ms": 0.8246291666666666,
+              "max_ms": 0.8246291666666666
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_1_width_2",
+          "tier_id": "A5",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "ecd3100ede92a92a9cd723ce9e24356ad5e64ee17194b04244d1a945a230fc83",
+          "input_ticks": 24,
+          "physics_steps": 675,
+          "completed_candidates": 104,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 85.3772,
+            "p95_ms": 86.5277,
+            "p99_ms": 86.6757,
+            "max_ms": 86.6757
+          },
+          "known_input_cost": {
+            "rollout_steps": 48,
+            "goal_steps": 0,
+            "full_scan_steps": 435,
+            "full_scan_tail_ticks": 386,
+            "estimated_per_tick_steps": 30,
+            "estimated_commit_steps": 14,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 2.7525,
+              "p95_ms": 2.8349,
+              "p99_ms": 2.8982,
+              "max_ms": 2.8982
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.099,
+              "p95_ms": 0.101,
+              "p99_ms": 0.1027,
+              "max_ms": 0.1027
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 42.4616,
+              "p95_ms": 47.312,
+              "p99_ms": 48.1252,
+              "max_ms": 48.1252
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 1.7203125,
+              "p95_ms": 1.7718125000000002,
+              "p99_ms": 1.8113750000000002,
+              "max_ms": 1.8113750000000002
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.8028124999999999,
+              "p95_ms": 0.8268458333333334,
+              "p99_ms": 0.8453083333333334,
+              "max_ms": 0.8453083333333334
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_1_width_2",
+          "tier_id": "A15",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "ecd3100ede92a92a9cd723ce9e24356ad5e64ee17194b04244d1a945a230fc83",
+          "input_ticks": 24,
+          "physics_steps": 675,
+          "completed_candidates": 104,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 85.4521,
+            "p95_ms": 86.7783,
+            "p99_ms": 86.9757,
+            "max_ms": 86.9757
+          },
+          "known_input_cost": {
+            "rollout_steps": 48,
+            "goal_steps": 0,
+            "full_scan_steps": 435,
+            "full_scan_tail_ticks": 386,
+            "estimated_per_tick_steps": 30,
+            "estimated_commit_steps": 14,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 2.7487,
+              "p95_ms": 2.7846,
+              "p99_ms": 2.859,
+              "max_ms": 2.859
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.0985,
+              "p95_ms": 0.1007,
+              "p99_ms": 0.1009,
+              "max_ms": 0.1009
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 42.5345,
+              "p95_ms": 47.5936,
+              "p99_ms": 47.8802,
+              "max_ms": 47.8802
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 1.7179375000000001,
+              "p95_ms": 1.740375,
+              "p99_ms": 1.786875,
+              "max_ms": 1.786875
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.8017041666666667,
+              "p95_ms": 0.812175,
+              "p99_ms": 0.8338749999999999,
+              "max_ms": 0.8338749999999999
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_4_width_1",
+          "tier_id": "A3",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "736567d285c33c83c4ec423eae23774ff79c217249cdd049ae802ea914940a2b",
+          "input_ticks": 37,
+          "physics_steps": 1098,
+          "completed_candidates": 170,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 122.3395,
+            "p95_ms": 123.8795,
+            "p99_ms": 123.9466,
+            "max_ms": 123.9466
+          },
+          "known_input_cost": {
+            "rollout_steps": 74,
+            "goal_steps": 0,
+            "full_scan_steps": 725,
+            "full_scan_tail_ticks": 650,
+            "estimated_per_tick_steps": 36,
+            "estimated_commit_steps": 12,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 4.1906,
+              "p95_ms": 4.2587,
+              "p99_ms": 4.2787,
+              "max_ms": 4.2787
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.0861,
+              "p95_ms": 0.0904,
+              "p99_ms": 0.092,
+              "max_ms": 0.092
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 71.6471,
+              "p95_ms": 76.6159,
+              "p99_ms": 77.4293,
+              "max_ms": 77.4293
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 2.03867027027027,
+              "p95_ms": 2.0718,
+              "p99_ms": 2.0815297297297297,
+              "max_ms": 2.0815297297297297
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.6795567567567566,
+              "p95_ms": 0.6906000000000001,
+              "p99_ms": 0.6938432432432432,
+              "max_ms": 0.6938432432432432
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_4_width_1",
+          "tier_id": "A5",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "736567d285c33c83c4ec423eae23774ff79c217249cdd049ae802ea914940a2b",
+          "input_ticks": 37,
+          "physics_steps": 1339,
+          "completed_candidates": 289,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 136.1373,
+            "p95_ms": 138.0965,
+            "p99_ms": 138.2656,
+            "max_ms": 138.2656
+          },
+          "known_input_cost": {
+            "rollout_steps": 74,
+            "goal_steps": 0,
+            "full_scan_steps": 725,
+            "full_scan_tail_ticks": 650,
+            "estimated_per_tick_steps": 36,
+            "estimated_commit_steps": 12,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 4.1934,
+              "p95_ms": 4.2812,
+              "p99_ms": 4.301,
+              "max_ms": 4.301
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.0857,
+              "p95_ms": 0.0899,
+              "p99_ms": 0.1042,
+              "max_ms": 0.1042
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 71.4472,
+              "p95_ms": 76.5811,
+              "p99_ms": 77.5856,
+              "max_ms": 77.5856
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 2.040032432432432,
+              "p95_ms": 2.082745945945946,
+              "p99_ms": 2.0923783783783785,
+              "max_ms": 2.0923783783783785
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.6800108108108107,
+              "p95_ms": 0.6942486486486487,
+              "p99_ms": 0.6974594594594594,
+              "max_ms": 0.6974594594594594
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_4_width_1",
+          "tier_id": "A15",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "736567d285c33c83c4ec423eae23774ff79c217249cdd049ae802ea914940a2b",
+          "input_ticks": 37,
+          "physics_steps": 1339,
+          "completed_candidates": 289,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 168.0613,
+            "p95_ms": 173.0115,
+            "p99_ms": 173.2739,
+            "max_ms": 173.2739
+          },
+          "known_input_cost": {
+            "rollout_steps": 74,
+            "goal_steps": 0,
+            "full_scan_steps": 725,
+            "full_scan_tail_ticks": 650,
+            "estimated_per_tick_steps": 36,
+            "estimated_commit_steps": 12,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 5.2856,
+              "p95_ms": 5.4495,
+              "p99_ms": 16.4915,
+              "max_ms": 16.4915
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.1116,
+              "p95_ms": 0.1232,
+              "p99_ms": 0.1259,
+              "max_ms": 0.1259
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 88.9676,
+              "p95_ms": 97.184,
+              "p99_ms": 98.469,
+              "max_ms": 98.469
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 2.5713729729729726,
+              "p95_ms": 2.6511081081081076,
+              "p99_ms": 8.022891891891891,
+              "max_ms": 8.022891891891891
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.8571243243243243,
+              "p95_ms": 0.8837027027027026,
+              "p99_ms": 2.674297297297297,
+              "max_ms": 2.674297297297297
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_4_width_2",
+          "tier_id": "A3",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "548690402cfffef5a753c9ef15ba43510dd7fe7df4727eb440f3d8923d27d1c3",
+          "input_ticks": 38,
+          "physics_steps": 1177,
+          "completed_candidates": 213,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 158.0813,
+            "p95_ms": 161.186,
+            "p99_ms": 161.5092,
+            "max_ms": 161.5092
+          },
+          "known_input_cost": {
+            "rollout_steps": 76,
+            "goal_steps": 0,
+            "full_scan_steps": 723,
+            "full_scan_tail_ticks": 646,
+            "estimated_per_tick_steps": 32,
+            "estimated_commit_steps": 14,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 5.4447,
+              "p95_ms": 5.524,
+              "p99_ms": 5.7707,
+              "max_ms": 5.7707
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.127,
+              "p95_ms": 0.1305,
+              "p99_ms": 0.1341,
+              "max_ms": 0.1341
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 89.5342,
+              "p95_ms": 97.395,
+              "p99_ms": 97.4532,
+              "max_ms": 97.4532
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 2.292505263157895,
+              "p95_ms": 2.3258947368421055,
+              "p99_ms": 2.4297684210526316,
+              "max_ms": 2.4297684210526316
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 1.002971052631579,
+              "p95_ms": 1.0175789473684211,
+              "p99_ms": 1.0630236842105263,
+              "max_ms": 1.0630236842105263
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_4_width_2",
+          "tier_id": "A5",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "548690402cfffef5a753c9ef15ba43510dd7fe7df4727eb440f3d8923d27d1c3",
+          "input_ticks": 38,
+          "physics_steps": 1418,
+          "completed_candidates": 332,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 174.4216,
+            "p95_ms": 176.4704,
+            "p99_ms": 176.6803,
+            "max_ms": 176.6803
+          },
+          "known_input_cost": {
+            "rollout_steps": 76,
+            "goal_steps": 0,
+            "full_scan_steps": 723,
+            "full_scan_tail_ticks": 646,
+            "estimated_per_tick_steps": 32,
+            "estimated_commit_steps": 14,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 5.4671,
+              "p95_ms": 5.6173,
+              "p99_ms": 5.6468,
+              "max_ms": 5.6468
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.1279,
+              "p95_ms": 0.1328,
+              "p99_ms": 0.1386,
+              "max_ms": 0.1386
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 89.5843,
+              "p95_ms": 97.4115,
+              "p99_ms": 97.508,
+              "max_ms": 97.508
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 2.3019368421052633,
+              "p95_ms": 2.3651789473684213,
+              "p99_ms": 2.3775999999999997,
+              "max_ms": 2.3775999999999997
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 1.0070973684210527,
+              "p95_ms": 1.0347657894736844,
+              "p99_ms": 1.0401999999999998,
+              "max_ms": 1.0401999999999998
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_4_width_2",
+          "tier_id": "A15",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "548690402cfffef5a753c9ef15ba43510dd7fe7df4727eb440f3d8923d27d1c3",
+          "input_ticks": 38,
+          "physics_steps": 1418,
+          "completed_candidates": 332,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 175.4319,
+            "p95_ms": 177.6987,
+            "p99_ms": 177.7734,
+            "max_ms": 177.7734
+          },
+          "known_input_cost": {
+            "rollout_steps": 76,
+            "goal_steps": 0,
+            "full_scan_steps": 723,
+            "full_scan_tail_ticks": 646,
+            "estimated_per_tick_steps": 32,
+            "estimated_commit_steps": 14,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 5.4355,
+              "p95_ms": 5.5762,
+              "p99_ms": 5.6982,
+              "max_ms": 5.6982
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.1259,
+              "p95_ms": 0.1333,
+              "p99_ms": 0.1435,
+              "max_ms": 0.1435
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 89.7463,
+              "p95_ms": 98.3177,
+              "p99_ms": 99.1418,
+              "max_ms": 99.1418
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 2.2886315789473684,
+              "p95_ms": 2.3478736842105263,
+              "p99_ms": 2.399242105263158,
+              "max_ms": 2.399242105263158
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 1.0012763157894737,
+              "p95_ms": 1.0271947368421053,
+              "p99_ms": 1.0496684210526315,
+              "max_ms": 1.0496684210526315
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_4_width_3",
+          "tier_id": "A5",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "ca0a7b064cc15c06b327a94a58079fca72eec576e42bbaa19bd8de8f82d65051",
+          "input_ticks": 38,
+          "physics_steps": 1655,
+          "completed_candidates": 438,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 190.2163,
+            "p95_ms": 194.6514,
+            "p99_ms": 195.5,
+            "max_ms": 195.5
+          },
+          "known_input_cost": {
+            "rollout_steps": 76,
+            "goal_steps": 0,
+            "full_scan_steps": 723,
+            "full_scan_tail_ticks": 646,
+            "estimated_per_tick_steps": 32,
+            "estimated_commit_steps": 14,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 5.4975,
+              "p95_ms": 5.6276,
+              "p99_ms": 5.7661,
+              "max_ms": 5.7661
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.129,
+              "p95_ms": 0.1359,
+              "p99_ms": 0.1444,
+              "max_ms": 0.1444
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 90.0331,
+              "p95_ms": 98.0925,
+              "p99_ms": 98.4324,
+              "max_ms": 98.4324
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 2.314736842105263,
+              "p95_ms": 2.3695157894736845,
+              "p99_ms": 2.427831578947368,
+              "max_ms": 2.427831578947368
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 1.0126973684210527,
+              "p95_ms": 1.036663157894737,
+              "p99_ms": 1.0621763157894735,
+              "max_ms": 1.0621763157894735
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_4_width_3",
+          "tier_id": "A15",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "ca0a7b064cc15c06b327a94a58079fca72eec576e42bbaa19bd8de8f82d65051",
+          "input_ticks": 38,
+          "physics_steps": 1655,
+          "completed_candidates": 438,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 190.671,
+            "p95_ms": 196.6994,
+            "p99_ms": 197.2931,
+            "max_ms": 197.2931
+          },
+          "known_input_cost": {
+            "rollout_steps": 76,
+            "goal_steps": 0,
+            "full_scan_steps": 723,
+            "full_scan_tail_ticks": 646,
+            "estimated_per_tick_steps": 32,
+            "estimated_commit_steps": 14,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 5.4924,
+              "p95_ms": 5.6143,
+              "p99_ms": 5.643,
+              "max_ms": 5.643
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.1309,
+              "p95_ms": 0.1381,
+              "p99_ms": 0.1646,
+              "max_ms": 0.1646
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 90.1355,
+              "p95_ms": 98.5741,
+              "p99_ms": 99.3782,
+              "max_ms": 99.3782
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 2.3125894736842105,
+              "p95_ms": 2.363915789473684,
+              "p99_ms": 2.376,
+              "max_ms": 2.376
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 1.0117578947368422,
+              "p95_ms": 1.034213157894737,
+              "p99_ms": 1.0394999999999999,
+              "max_ms": 1.0394999999999999
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "flat_sprint",
+          "tier_id": "A5",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "67e658a8c11e9c1581b20e490ca5cd9e6e8945f32ed5e2c194a5ccfe43505ed7",
+          "input_ticks": 40,
+          "physics_steps": 2481,
+          "completed_candidates": 808,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 253.9296,
+            "p95_ms": 256.6376,
+            "p99_ms": 257.4355,
+            "max_ms": 257.4355
+          },
+          "known_input_cost": {
+            "rollout_steps": 80,
+            "goal_steps": 0,
+            "full_scan_steps": 843,
+            "full_scan_tail_ticks": 762,
+            "estimated_per_tick_steps": 38,
+            "estimated_commit_steps": 0,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 5.7986,
+              "p95_ms": 5.9995,
+              "p99_ms": 6.0407,
+              "max_ms": 6.0407
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.1131,
+              "p95_ms": 0.117,
+              "p99_ms": 0.1212,
+              "max_ms": 0.1212
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 103.8809,
+              "p95_ms": 111.7494,
+              "p99_ms": 112.881,
+              "max_ms": 112.881
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 2.754335,
+              "p95_ms": 2.8497624999999998,
+              "p99_ms": 2.8693325,
+              "max_ms": 2.8693325
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.0,
+              "p95_ms": 0.0,
+              "p99_ms": 0.0,
+              "max_ms": 0.0
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "turn_90",
+          "tier_id": "A15",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "7309d553ce7a22511550f82eb498b13a919dc812743d7dcd683a3b37464ceb70",
+          "input_ticks": 16,
+          "physics_steps": 435,
+          "completed_candidates": 67,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 81.956,
+            "p95_ms": 84.0975,
+            "p99_ms": 84.2135,
+            "max_ms": 84.2135
+          },
+          "known_input_cost": {
+            "rollout_steps": 32,
+            "goal_steps": 0,
+            "full_scan_steps": 239,
+            "full_scan_tail_ticks": 206,
+            "estimated_per_tick_steps": 18,
+            "estimated_commit_steps": 0,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 2.4441,
+              "p95_ms": 2.5936,
+              "p99_ms": 2.6011,
+              "max_ms": 2.6011
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.1446,
+              "p95_ms": 0.1528,
+              "p99_ms": 0.1618,
+              "max_ms": 0.1618
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 30.7934,
+              "p95_ms": 31.121,
+              "p99_ms": 31.2379,
+              "max_ms": 31.2379
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 1.37480625,
+              "p95_ms": 1.4588999999999999,
+              "p99_ms": 1.46311875,
+              "max_ms": 1.46311875
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.0,
+              "p95_ms": 0.0,
+              "p99_ms": 0.0,
+              "max_ms": 0.0
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "jump_up_after_turn",
+          "tier_id": "A15",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "6822605ea1cead75d290fa967f66c1e5d005e6de5fa07de16f5b87b56f2246d9",
+          "input_ticks": 19,
+          "physics_steps": 1355,
+          "completed_candidates": 492,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 155.1814,
+            "p95_ms": 156.9612,
+            "p99_ms": 157.3081,
+            "max_ms": 157.3081
+          },
+          "known_input_cost": {
+            "rollout_steps": 38,
+            "goal_steps": 0,
+            "full_scan_steps": 357,
+            "full_scan_tail_ticks": 318,
+            "estimated_per_tick_steps": 28,
+            "estimated_commit_steps": 0,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 2.6547,
+              "p95_ms": 2.6739,
+              "p99_ms": 2.704,
+              "max_ms": 2.704
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.1601,
+              "p95_ms": 0.1655,
+              "p99_ms": 0.1723,
+              "max_ms": 0.1723
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 44.2612,
+              "p95_ms": 44.8069,
+              "p99_ms": 45.041,
+              "max_ms": 45.041
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 1.956094736842105,
+              "p95_ms": 1.970242105263158,
+              "p99_ms": 1.9924210526315793,
+              "max_ms": 1.9924210526315793
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.0,
+              "p95_ms": 0.0,
+              "p99_ms": 0.0,
+              "max_ms": 0.0
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "jump_gap_continue",
+          "tier_id": "A3",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "e7e9c19783a5fe4eec64b9762fd84366a9132d929521319b79c664f5ebb96019",
+          "input_ticks": 17,
+          "physics_steps": 521,
+          "completed_candidates": 43,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 92.4617,
+            "p95_ms": 96.1005,
+            "p99_ms": 97.4416,
+            "max_ms": 97.4416
+          },
+          "known_input_cost": {
+            "rollout_steps": 34,
+            "goal_steps": 0,
+            "full_scan_steps": 407,
+            "full_scan_tail_ticks": 372,
+            "estimated_per_tick_steps": 36,
+            "estimated_commit_steps": 12,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 2.525,
+              "p95_ms": 2.6092,
+              "p99_ms": 2.7892,
+              "max_ms": 2.7892
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.108,
+              "p95_ms": 0.1178,
+              "p99_ms": 0.1262,
+              "max_ms": 0.1262
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 48.4362,
+              "p95_ms": 48.6722,
+              "p99_ms": 55.163,
+              "max_ms": 55.163
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 2.6735294117647057,
+              "p95_ms": 2.762682352941176,
+              "p99_ms": 2.9532705882352945,
+              "max_ms": 2.9532705882352945
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.8911764705882352,
+              "p95_ms": 0.9208941176470588,
+              "p99_ms": 0.9844235294117648,
+              "max_ms": 0.9844235294117648
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "jump_up_after_turn_continue",
+          "tier_id": "A15",
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "b378f423ce8460d5c9844099e3f2a72eb8639a3e53d39433e0b8055f63f5b2f0",
+          "input_ticks": 12,
+          "physics_steps": 714,
+          "completed_candidates": 201,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 103.9078,
+            "p95_ms": 107.2523,
+            "p99_ms": 108.3475,
+            "max_ms": 108.3475
+          },
+          "known_input_cost": {
+            "rollout_steps": 24,
+            "goal_steps": 0,
+            "full_scan_steps": 299,
+            "full_scan_tail_ticks": 274,
+            "estimated_per_tick_steps": 28,
+            "estimated_commit_steps": 0,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 1.7036,
+              "p95_ms": 1.7278,
+              "p99_ms": 1.7385,
+              "max_ms": 1.7385
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.1569,
+              "p95_ms": 0.1729,
+              "p99_ms": 0.1736,
+              "max_ms": 0.1736
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 35.8735,
+              "p95_ms": 42.5557,
+              "p99_ms": 43.2732,
+              "max_ms": 43.2732
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 1.9875333333333332,
+              "p95_ms": 2.0157666666666665,
+              "p99_ms": 2.02825,
+              "max_ms": 2.02825
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 0.0,
+              "p95_ms": 0.0,
+              "p99_ms": 0.0,
+              "max_ms": 0.0
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        },
+        {
+          "scenario_id": "gap_start_4_width_3_a3",
+          "tier_id": null,
+          "expected_status": "search_exhausted",
+          "status": "search_exhausted",
+          "reason": "search_exhausted",
+          "input_hash": "",
+          "input_ticks": 0,
+          "physics_steps": 5688,
+          "completed_candidates": 2778,
+          "scan_count": 0,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 416.7056,
+            "p95_ms": 420.3657,
+            "p99_ms": 420.5569,
+            "max_ms": 420.5569
+          },
+          "known_input_cost": null
+        },
+        {
+          "scenario_id": "one_twelfth_support",
+          "tier_id": null,
+          "expected_status": "search_exhausted",
+          "status": "search_exhausted",
+          "reason": "search_exhausted",
+          "input_hash": "",
+          "input_ticks": 0,
+          "physics_steps": 2390,
+          "completed_candidates": 1189,
+          "scan_count": 0,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 219.4423,
+            "p95_ms": 221.5578,
+            "p99_ms": 222.7666,
+            "max_ms": 222.7666
+          },
+          "known_input_cost": null
+        },
+        {
+          "scenario_id": "resource_goal",
+          "tier_id": null,
+          "expected_status": "needs_information",
+          "status": "needs_information",
+          "reason": "unproven_resources",
+          "input_hash": "",
+          "input_ticks": 0,
+          "physics_steps": 0,
+          "completed_candidates": 0,
+          "scan_count": 0,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 31.2723,
+            "p95_ms": 37.0036,
+            "p99_ms": 38.653,
+            "max_ms": 38.653
+          },
+          "known_input_cost": null
+        },
+        {
+          "scenario_id": "unknown_landing",
+          "tier_id": null,
+          "expected_status": "needs_information",
+          "status": "needs_information",
+          "reason": "needs_information",
+          "input_hash": "",
+          "input_ticks": 0,
+          "physics_steps": 593,
+          "completed_candidates": 272,
+          "scan_count": 0,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 70.0966,
+            "p95_ms": 74.9181,
+            "p99_ms": 74.9398,
+            "max_ms": 74.9398
+          },
+          "known_input_cost": null
+        },
+        {
+          "scenario_id": "tiny_budget",
+          "tier_id": null,
+          "expected_status": "budget_exhausted",
+          "status": "budget_exhausted",
+          "reason": "tiny_budget_classification",
+          "input_hash": "",
+          "input_ticks": 0,
+          "physics_steps": 0,
+          "completed_candidates": 0,
+          "scan_count": 0,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 32.8753,
+            "p95_ms": 40.6009,
+            "p99_ms": 42.0599,
+            "max_ms": 42.0599
+          },
+          "known_input_cost": null
+        },
+        {
+          "scenario_id": "collision_only",
+          "tier_id": null,
+          "expected_status": "search_exhausted",
+          "status": "search_exhausted",
+          "reason": "search_exhausted",
+          "input_hash": "",
+          "input_ticks": 0,
+          "physics_steps": 20,
+          "completed_candidates": 8,
+          "scan_count": 0,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 33.5989,
+            "p95_ms": 40.1199,
+            "p99_ms": 41.5496,
+            "max_ms": 41.5496
+          },
+          "known_input_cost": null
+        },
+        {
+          "scenario_id": "mixed_ground_jump_air",
+          "tier_id": null,
+          "expected_status": "found",
+          "status": "found",
+          "reason": "verified_candidate",
+          "input_hash": "1b7355a956d00902534eedcac90f59eaef8a21a48dadec2f73db297fded66c28",
+          "input_ticks": 21,
+          "physics_steps": 6383,
+          "completed_candidates": 2924,
+          "scan_count": 1,
+          "controller_ms": {
+            "samples": 20,
+            "p50_ms": 487.4405,
+            "p95_ms": 492.4646,
+            "p99_ms": 496.4871,
+            "max_ms": 496.4871
+          },
+          "known_input_cost": {
+            "rollout_steps": 42,
+            "goal_steps": 0,
+            "full_scan_steps": 427,
+            "full_scan_tail_ticks": 384,
+            "estimated_per_tick_steps": 32,
+            "estimated_commit_steps": 16,
+            "rollout_ms": {
+              "samples": 20,
+              "p50_ms": 2.9946,
+              "p95_ms": 3.1827,
+              "p99_ms": 3.3114,
+              "max_ms": 3.3114
+            },
+            "goal_ms": {
+              "samples": 20,
+              "p50_ms": 0.1171,
+              "p95_ms": 0.7341,
+              "p99_ms": 7.7405,
+              "max_ms": 7.7405
+            },
+            "full_scan_ms": {
+              "samples": 20,
+              "p50_ms": 50.4043,
+              "p95_ms": 57.4479,
+              "p99_ms": 57.8653,
+              "max_ms": 57.8653
+            },
+            "estimated_per_tick_ms": {
+              "samples": 20,
+              "p50_ms": 2.2816,
+              "p95_ms": 2.424914285714286,
+              "p99_ms": 2.5229714285714286,
+              "max_ms": 2.5229714285714286
+            },
+            "estimated_commit_ms": {
+              "samples": 20,
+              "p50_ms": 1.1408,
+              "p95_ms": 1.212457142857143,
+              "p99_ms": 1.2614857142857143,
+              "max_ms": 1.2614857142857143
+            },
+            "estimate_basis": "lazy step count multiplied by that run's rollout ms/step; M2 not implemented"
+          }
+        }
+      ]
+    }
+  },
+  "hashseed": {
+    "seeds": [
+      1,
+      77,
+      991
+    ],
+    "rows": [
+      [
+        "found",
+        "7309d553ce7a22511550f82eb498b13a919dc812743d7dcd683a3b37464ceb70",
+        435,
+        67,
+        1
+      ],
+      [
+        "found",
+        "7309d553ce7a22511550f82eb498b13a919dc812743d7dcd683a3b37464ceb70",
+        435,
+        67,
+        1
+      ],
+      [
+        "found",
+        "7309d553ce7a22511550f82eb498b13a919dc812743d7dcd683a3b37464ceb70",
+        435,
+        67,
+        1
+      ]
+    ],
+    "identical": true
+  },
+  "gate": {
+    "evaluated": true,
+    "passed": false,
+    "checks": {
+      "classifications_match": true,
+      "positive_max_ms_le_400": false,
+      "meaningful_negative_max_ms_le_800": true,
+      "estimated_incremental_p95_ms_le_10": true,
+      "rollout_p95_ms_le_15": true,
+      "hashseed_identical": true
+    },
+    "observed": {
+      "positive_max_ms": 587.9058,
+      "meaningful_negative_max_ms": 593.8242,
+      "estimated_incremental_p95_ms": 2.2130724999999996,
+      "rollout_p95_ms": 4.6591
+    },
+    "notes": [
+      "tiny_budget is classification-only and excluded from no-solution cost",
+      "incremental milliseconds are estimates; M2 has not implemented incremental proof"
+    ]
+  }
+}

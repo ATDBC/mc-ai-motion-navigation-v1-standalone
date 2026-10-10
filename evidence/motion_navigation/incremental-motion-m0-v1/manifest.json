@@ -1,0 +1,36 @@
+{
+  "schema": "incremental-motion-m0-evidence-v1",
+  "date": "2026-10-10",
+  "formal_platform": "Windows",
+  "source_parent": "3b313d2a",
+  "python": "3.11.16",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "commands": [
+    "python -m experiments.motion_navigation.trajectory_proto.m0_probe --output evidence/motion_navigation/incremental-motion-m0-v1/windows-m0.json",
+    "python -m unittest tests.motion_nav.test_trajectory_proto_m0_probe -q",
+    "python -m unittest tests.motion_nav.test_trajectory_proto_contracts tests.motion_nav.test_trajectory_proto_commitment tests.motion_nav.test_trajectory_proto_reference_search tests.motion_nav.test_trajectory_proto_primitive_matrix -q",
+    "python -m unittest tests.motion_nav.test_standalone_export -q"
+  ],
+  "results": {
+    "m0_gate": "failed",
+    "m1_started": false,
+    "m0_tests": "7/7",
+    "tp_regression": "94/94",
+    "standalone": "12/12",
+    "mc2p_changed": false
+  },
+  "sha256": {
+    "AGENTS.md": "207df9fcf04435609f8929ff456103bbfe50810676b0be28414fc6caa8df0839",
+    "docs/motion_navigation/decisions/0097-use-controller-table-and-incremental-safety-proof.md": "fb428cebe3f34eeee7cc519a04e4cf110203557287f59b02ae3da8413ac24452",
+    "docs/motion_navigation/architecture/incremental-motion-proof-v1.md": "a0eae1f52d7bee79d84a5dbfa7c184f6e302ecb5a491083385fad1b49b41914d",
+    "docs/motion_navigation/stages/continuous-motion-incremental-proof-plan.md": "2af9044ad55d6bfd5afad873f5e0b2e3e72ffc4f63f8e0ce0e521af6c0fb4694",
+    "docs/motion_navigation/acceptance/continuous-motion-incremental-proof.md": "2bbbcaf6fc89d19aa00e70697706fe35baf9c727faccb921c58b9fe8ad493a56",
+    "experiments/motion_navigation/trajectory_proto/m0_probe.py": "92c3f7c7cf59873e3b0cbe2073721f79def65404632ae0696ec3d26ff19ef7bc",
+    "tests/motion_nav/test_trajectory_proto_m0_probe.py": "4402bbdf845b183783211ee0c2889122a67984357f1882ff49109c9aa26cb981",
+    "evidence/motion_navigation/incremental-motion-m0-v1/windows-m0-first-run.json": "aeef7bcf9a0c2a752d084e0776534e2f91c3e81e55ec4e25710d4f26d8085eb3",
+    "evidence/motion_navigation/incremental-motion-m0-v1/windows-m0-second-run.json": "1c1d6c9deb3297f4ded4952729d533e5f3886ec6256055a684e381cfb35cc458",
+    "evidence/motion_navigation/incremental-motion-m0-v1/windows-m0.json": "bd8c870811d16fb67da0de2edf1bb3894097f092479898a7bfef07afebbce810",
+    "evidence/motion_navigation/incremental-motion-m0-v1/README.md": "6841465580f1d8850b84496077ee8fee7671a70b8c1347454622c9c1b0161ad4",
+    "evidence/motion_navigation/incremental-motion-m0-v1/verification.md": "8f41e6d0de998475204c8e8ced2dcf7aede81efcc88a3c87ba1209aec5735532"
+  }
+}

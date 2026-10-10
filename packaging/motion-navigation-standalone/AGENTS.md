@@ -1,5 +1,13 @@
 # AGENTS.md
 
+2026-10-10，D097 的连续动作控制器、离线表和增量证明路线在 M0 停止。正式 Windows 只读探针保持 22 个旧正例、6 个负例和混合动作元反例分类正确；混合反例固定使用 10,056 次物理计算，三轮正例最大耗时均超过 400 ms 门槛。M0 未通过，M1—M4 未开始，`mc2p` 未修改，也没有新的 Fabric 结论。单边界增量证明与已知输入 rollout 数字只是从完整扫描拆出的成本估算，不能作为执行许可。见 [D097](docs/motion_navigation/decisions/0097-use-controller-table-and-incremental-safety-proof.md)、[阶段](docs/motion_navigation/stages/continuous-motion-incremental-proof-plan.md)、[验收](docs/motion_navigation/acceptance/continuous-motion-incremental-proof.md)和 [M0 证据](evidence/motion_navigation/incremental-motion-m0-v1/README.md)。
+
+从仓库根目录运行 M0 只读探针：
+
+```text
+python -m unittest tests.motion_nav.test_trajectory_proto_m0_probe -q
+```
+
 2026-10-10，TP-0 正式对照已通过并冻结为 `da56bfa297cec6e9c0861bb976e608b462237cd2`，生产字节与 `c73c66ed96ce37760661265ae8228f5fca7fb135` 相同。恢复原因、终结不可改写和空中依赖撤销的正式检查通过；Windows 正序、逆序各1713／1713。正序只有直接 unittest 会话摘要，没有逐项结构化记录和场景哈希；逆序保留正式脚本报告且前后场景哈希相同。四方向入口前普通 Walk 均真实晚一 tick，任务4／4完成、零伤害、额外显式期限违规和来源泄漏；原始账本窗口外状态保留，普通延迟单列，不授予新窗口。D093旧失败不改写。见[阶段](docs/motion_navigation/stages/TP-continuous-short-trajectory-prototype-plan.md)、[验收](docs/motion_navigation/acceptance/TP-continuous-short-trajectory-prototype.md)和 `evidence/motion_navigation/trajectory-proto-tp0-v1/`。
 
 Task 3／4 的原型组件检查保留。Task 5A 的 `343d10de` 只保留为旧候选。D096 的 5A-R 中，R1 通过；R2 候选 `cfd36acd` 遗漏独立的地面、起跳和空中输入组合。限定修正关闭该反例后，三个冻结正例都耗尽原 65,536 次物理计算预算，因此 R2 未通过，R3 未开始，P0 未通过，不进入 5B。失败修正只保留为 diff 和结构化证据，候选源码恢复到 `cfd36acd`。公开快照包含隔离原型源码、测试、方案、报告与失败证据；正式 actor、Runtime 和脚本入口不得导入原型，也不能把旧矩阵 94／94 写成 R2 通过。见[5A-R 计划](docs/motion_navigation/stages/TP-task-5A-R-plan.md)、[D096](docs/motion_navigation/decisions/0096-repair-trajectory-proof-and-use-stable-motion-primitives.md)和[失败证据](evidence/motion_navigation/trajectory-proto-5ar-v1/README.md)。
