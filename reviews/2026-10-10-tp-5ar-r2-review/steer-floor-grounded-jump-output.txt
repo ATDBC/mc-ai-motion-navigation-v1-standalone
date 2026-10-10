@@ -1,0 +1,29 @@
+floor prune: True grounded jump: True
+flat_walk                      A3   -> found                            steps=   269 within completions=40 scans=1 ticks=12 47 ms  W0x5 N0x7
+jump_up_straight               A3   -> found                            steps=   482 within completions=81 scans=1 ticks=16 80 ms  J0x1 W0x5 N0x10
+jump_gap_1                     A3   -> found                            steps=   578 within completions=47 scans=1 ticks=23 103 ms  W0x5 J0x1 N0x17
+gap_start_1_width_1            A3   -> found                            steps=   578 within completions=47 scans=1 ticks=23 112 ms  W0x5 J0x1 N0x17
+gap_start_1_width_1            A5   -> found                            steps=   625 within completions=69 scans=1 ticks=23 110 ms  W0x5 J0x1 N0x17
+gap_start_1_width_1            A15  -> found                            steps=   625 within completions=69 scans=1 ticks=23 168 ms  W0x5 J0x1 N0x17
+gap_start_1_width_2            A3   -> found                            steps=   628 within completions=82 scans=1 ticks=24 195 ms  W0x5 J0x1 W0x4 N0x14
+gap_start_1_width_2            A5   -> found                            steps=   675 within completions=104 scans=1 ticks=24 200 ms  W0x5 J0x1 W0x4 N0x14
+gap_start_1_width_2            A15  -> found                            steps=   675 within completions=104 scans=1 ticks=24 130 ms  W0x5 J0x1 W0x4 N0x14
+gap_start_4_width_1            A3   -> found                            steps=  1098 within completions=170 scans=1 ticks=37 219 ms  W0x19 J0x1 N0x17
+gap_start_4_width_1            A5   -> found                            steps=  1339 within completions=289 scans=1 ticks=37 216 ms  W0x19 J0x1 N0x17
+gap_start_4_width_1            A15  -> found                            steps=  1339 within completions=289 scans=1 ticks=37 291 ms  W0x19 J0x1 N0x17
+gap_start_4_width_2            A3   -> found                            steps=  1177 within completions=213 scans=1 ticks=38 214 ms  W0x19 J0x1 W0x4 N0x14
+gap_start_4_width_2            A5   -> found                            steps=  1418 within completions=332 scans=1 ticks=38 206 ms  W0x19 J0x1 W0x4 N0x14
+gap_start_4_width_2            A15  -> found                            steps=  1418 within completions=332 scans=1 ticks=38 230 ms  W0x19 J0x1 W0x4 N0x14
+gap_start_4_width_3            A5   -> found                            steps=  1655 within completions=438 scans=1 ticks=38 239 ms  W0x19 SJ0x1 W0x3 N0x15
+gap_start_4_width_3            A15  -> found                            steps=  1655 within completions=438 scans=1 ticks=38 237 ms  W0x19 SJ0x1 W0x3 N0x15
+flat_sprint                    A5   -> found                            steps=  2481 within completions=808 scans=1 ticks=40 341 ms  W0x20 SJ0x1 W0x4 N0x15
+turn_90                        A15  -> found                            steps=   435 within completions=67 scans=1 ticks=16 71 ms  W90x8 N0x8
+jump_up_after_turn             A15  -> found                            steps=  1355 within completions=492 scans=1 ticks=19 185 ms  J90x1 W90x10 N0x8
+jump_gap_continue              A3   -> found                            steps=   521 within completions=43 scans=1 ticks=17 108 ms  W0x5 J0x1 W0x2 N0x9
+jump_up_after_turn_continue    A15  -> found                            steps=   714 within completions=201 scans=1 ticks=12 125 ms  J90x1 W90x10 N0x1
+gap_start_4_width_3_a3         None -> search_exhausted                 steps=  5688 within completions=2778 scans=0 ticks= 0 698 ms
+one_twelfth_support            None -> search_exhausted                 steps=  2390 within completions=1189 scans=0 ticks= 0 328 ms
+resource_goal                  None -> needs_information/unproven_resources steps=     0 completions=0 scans=0 ticks= 0 0 ms
+unknown_landing                None -> needs_information/unknown_world  steps=   593 within completions=272 scans=0 ticks= 0 64 ms
+tiny_budget                    None -> found                            steps=   237 OVER completions=32 scans=1 ticks=11 48 ms  W0x4 N0x7
+collision_only                 None -> search_exhausted                 steps=    20 within completions=8 scans=0 ticks= 0 3 ms

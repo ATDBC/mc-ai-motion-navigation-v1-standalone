@@ -1,0 +1,28 @@
+flat_walk                      A3   -> FOUND/verified_trajectory tier=A3 nodes=48 steps=531 completions=79 scans=1 ticks=18 259 ms | steps by tier A3:531
+jump_up_straight               A3   -> FOUND/verified_trajectory tier=A3 nodes=45 steps=451 completions=78 scans=1 ticks=16 139 ms | steps by tier A3:451
+jump_gap_1                     A3   -> FOUND/verified_trajectory tier=A3 nodes=64 steps=804 completions=213 scans=1 ticks=21 311 ms | steps by tier A3:804
+gap_start_1_width_1            A3   -> FOUND/verified_trajectory tier=A3 nodes=56 steps=686 completions=175 scans=1 ticks=19 208 ms | steps by tier A3:686
+gap_start_1_width_1            A5   -> FOUND/verified_trajectory tier=A3 nodes=56 steps=686 completions=175 scans=1 ticks=19 239 ms | steps by tier A3:686
+gap_start_1_width_1            A15  -> FOUND/verified_trajectory tier=A3 nodes=56 steps=686 completions=175 scans=1 ticks=19 362 ms | steps by tier A3:686
+gap_start_1_width_2            A3   -> FOUND/verified_trajectory tier=A3 nodes=134 steps=3468 completions=1524 scans=1 ticks=23 922 ms | steps by tier A3:3468
+gap_start_1_width_2            A5   -> FOUND/verified_trajectory tier=A3 nodes=134 steps=3468 completions=1524 scans=1 ticks=23 802 ms | steps by tier A3:3468
+gap_start_1_width_2            A15  -> FOUND/verified_trajectory tier=A3 nodes=134 steps=3468 completions=1524 scans=1 ticks=23 654 ms | steps by tier A3:3468
+gap_start_4_width_1            A3   -> FOUND/verified_trajectory tier=A3 nodes=314 steps=6079 completions=2721 scans=1 ticks=32 1063 ms | steps by tier A3:6079
+gap_start_4_width_1            A5   -> FOUND/verified_trajectory tier=A3 nodes=314 steps=6079 completions=2721 scans=1 ticks=32 1157 ms | steps by tier A3:6079
+gap_start_4_width_1            A15  -> FOUND/verified_trajectory tier=A3 nodes=314 steps=6079 completions=2721 scans=1 ticks=32 1633 ms | steps by tier A3:6079
+gap_start_4_width_2            A3   -> FOUND/verified_trajectory tier=A3 nodes=398 steps=9386 completions=4348 scans=1 ticks=37 1687 ms | steps by tier A3:9386
+gap_start_4_width_2            A5   -> FOUND/verified_trajectory tier=A3 nodes=398 steps=9386 completions=4348 scans=1 ticks=37 1775 ms | steps by tier A3:9386
+gap_start_4_width_2            A15  -> FOUND/verified_trajectory tier=A3 nodes=398 steps=9386 completions=4348 scans=1 ticks=37 1482 ms | steps by tier A3:9386
+gap_start_4_width_3            A5   -> FOUND/verified_trajectory tier=A5 nodes=674 steps=19859 completions=9614 scans=1 ticks=32 3452 ms | steps by tier A3:11026 A5:8833
+gap_start_4_width_3            A15  -> FOUND/verified_trajectory tier=A5 nodes=674 steps=19859 completions=9614 scans=1 ticks=32 2790 ms | steps by tier A3:11026 A5:8833
+flat_sprint                    A5   -> FOUND/verified_trajectory tier=A5 nodes=591 steps=13311 completions=6306 scans=1 ticks=32 1908 ms | steps by tier A3:8988 A5:4323
+turn_90                        A15  -> NO_TRAJECTORY_IN_BUDGET/physics_step_budget tier=None nodes=2675 steps=65536 completions=32769 scans=0 ticks=0 8920 ms | steps by tier A3:8988 A5:56549
+jump_up_after_turn             A15  -> NO_TRAJECTORY_IN_BUDGET/physics_step_budget tier=None nodes=2675 steps=65536 completions=32769 scans=0 ticks=0 8172 ms | steps by tier A3:8988 A5:56549
+jump_gap_continue              A3   -> FOUND/verified_trajectory tier=A3 nodes=46 steps=428 completions=64 scans=1 ticks=13 111 ms | steps by tier A3:428
+jump_up_after_turn_continue    A15  -> FOUND/verified_trajectory tier=A15 nodes=2788 steps=36879 completions=18291 scans=1 ticks=12 4965 ms | steps by tier A3:4596 A5:31888 A15:395
+gap_start_4_width_3_a3         None -> NO_TRAJECTORY_IN_BUDGET/search_exhausted tier=None nodes=378 steps=11026 completions=5509 scans=0 ticks=0 1663 ms | steps by tier A3:11026
+one_twelfth_support            None -> NO_TRAJECTORY_IN_BUDGET/search_exhausted tier=None nodes=472 steps=2769 completions=1379 scans=0 ticks=0 379 ms | steps by tier A3:2769
+resource_goal                  None -> NEEDS_INFORMATION/unproven_resources tier=None nodes=0 steps=0 completions=0 scans=0 ticks=0 0 ms | steps by tier
+unknown_landing                None -> NEEDS_INFORMATION/unknown_world tier=None nodes=6 steps=243 completions=122 scans=0 ticks=0 28 ms | steps by tier A3:243
+tiny_budget                    None -> NO_TRAJECTORY_IN_BUDGET/physics_step_budget tier=None nodes=1 steps=1 completions=1 scans=0 ticks=0 1 ms | steps by tier A3:2
+collision_only                 None -> NO_TRAJECTORY_IN_BUDGET/search_exhausted tier=None nodes=378 steps=22 completions=9 scans=0 ticks=0 14 ms | steps by tier A3:22

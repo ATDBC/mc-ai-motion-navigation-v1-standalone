@@ -1,0 +1,5 @@
+turn_90                        A15  -> FOUND/verified_trajectory tier=A15 nodes=808 steps=34945 completions=17272 scans=1 ticks=19 4729 ms | steps by tier A3:17008 A5:16928 A15:1009
+jump_up_after_turn             A15  -> FOUND/verified_trajectory tier=A15 nodes=810 steps=35021 completions=17333 scans=1 ticks=19 4780 ms | steps by tier A3:17008 A5:16928 A15:1085
+jump_up_after_turn_continue    A15  -> FOUND/verified_trajectory tier=A15 nodes=796 steps=34949 completions=17326 scans=1 ticks=12 4660 ms | steps by tier A3:17008 A5:16928 A15:1013
+flat_sprint                    A5   -> FOUND/verified_trajectory tier=A5 nodes=591 steps=25963 completions=12632 scans=1 ticks=32 3589 ms | steps by tier A3:17008 A5:8955
+gap_start_4_width_3            A5   -> FOUND/verified_trajectory tier=A5 nodes=674 steps=27744 completions=13546 scans=1 ticks=32 3771 ms | steps by tier A3:16798 A5:10946

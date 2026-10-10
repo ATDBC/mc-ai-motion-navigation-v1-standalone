@@ -1,0 +1,51 @@
+--- a/experiments/motion_navigation/trajectory_proto/reference_search.py
++++ b/experiments/motion_navigation/trajectory_proto/reference_search.py
+@@ -174,12 +174,19 @@
+     try:
+         state_cache = {(): request.entry_states}
+
++        failed = {}
++        FLOOR = min(request.anchor_state.position[1], request.goal.region.min_y)
++
+         def execute(inputs):
++            # Review variant: memoize failed prefixes too; a failure is final.
+             if inputs in state_cache:
+                 return state_cache[inputs], ()
++            if inputs in failed:
++                return None, failed[inputs]
+             parent = inputs[:-1]
+             states, missing = execute(parent)
+             if states is None:
++                failed[inputs] = missing
+                 return None, missing
+             next_states = []
+             for state in states:
+@@ -188,6 +195,10 @@
+                     return None, result.missing_cells
+                 if (result.status is not CalculationStatus.OK
+                         or result.next_state.horizontal_collision):
++                    failed[inputs] = ()
++                    return None, ()
++                if FLOOR is not None and result.next_state.position[1] < FLOOR - 1.e-7:
++                    failed[inputs] = ()
+                     return None, ()
+                 next_states.append(result.next_state)
+             state_cache[inputs] = tuple(next_states)
+@@ -259,6 +270,17 @@
+                     result = consider(brake_inputs, brake_states, tier)
+                     if result is not None:
+                         return result
++                    # Review variant: stop lengthening B once it cannot change the
++                    # verdict: every branch is grounded and stopped (a fixed point
++                    # under stop_input), or horizontal speed has fallen below the
++                    # goal minimum (it only decays under stop_input).
++                    speeds = [20. * math.hypot(state.velocity_blocks_per_tick[0],
++                                               state.velocity_blocks_per_tick[2])
++                              for state in brake_states]
++                    if (all(state.on_ground for state in brake_states) and max(speeds) == 0.) or (
++                            request.minimum_terminal_speed_blocks_per_second > 0.
++                            and max(speeds) + 1.e-12 < request.minimum_terminal_speed_blocks_per_second):
++                        break
+         reason = (SearchReason.TRAJECTORY_TICK_BUDGET
+                   if request.budget.max_trajectory_ticks < 40
+                   else SearchReason.SEARCH_EXHAUSTED)
