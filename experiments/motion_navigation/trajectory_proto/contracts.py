@@ -1,7 +1,7 @@
 """Immutable P0 request contracts; no search or production integration."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 import math
 
@@ -24,6 +24,7 @@ class SearchReason(StrEnum):
     VERIFIED_TRAJECTORY = "verified_trajectory"
     UNKNOWN_WORLD = "unknown_world"
     MISSING_INPUT_APPLICATION = "missing_input_application"
+    UNPROVEN_RESOURCES = "unproven_resources"
     KNOWN_NECESSARY_CONDITION = "known_necessary_condition"
     NODE_BUDGET = "node_budget"
     PHYSICS_STEP_BUDGET = "physics_step_budget"
@@ -40,7 +41,8 @@ class SearchReason(StrEnum):
     def status(self) -> SearchStatus:
         if self is SearchReason.VERIFIED_TRAJECTORY:
             return SearchStatus.FOUND
-        if self in (SearchReason.UNKNOWN_WORLD, SearchReason.MISSING_INPUT_APPLICATION):
+        if self in (SearchReason.UNKNOWN_WORLD, SearchReason.MISSING_INPUT_APPLICATION,
+                    SearchReason.UNPROVEN_RESOURCES):
             return SearchStatus.NEEDS_INFORMATION
         if self is SearchReason.KNOWN_NECESSARY_CONDITION:
             return SearchStatus.BLOCKED
@@ -119,6 +121,18 @@ def validate_timing_branches(value: tuple[TimingBranch, ...]) -> None:
 
 
 @dataclass(frozen=True, slots=True)
+class InputTier:
+    """One cumulative ordered input alphabet used by the primitive search."""
+
+    tier_id: str
+    inputs: tuple[TickInput, ...]
+
+    def __post_init__(self) -> None:
+        require_identifier(self.tier_id, "input tier id")
+        _typed_tuple(self.inputs, TickInput, "input tier inputs", nonempty=True)
+
+
+@dataclass(frozen=True, slots=True)
 class TrajectorySearchRequest:
     """First entry is the common anchor; late entry follows its known prelude.
 
@@ -142,9 +156,12 @@ class TrajectorySearchRequest:
     allowed_effect_ticks: tuple[int, ...]
     input_prefix: tuple[TickInput, ...]
     supported_inputs: tuple[TickInput, ...]
+    input_tiers: tuple[InputTier, ...]
     branch_preludes: tuple[tuple[KnownInputApplication, ...] | None, ...]
     first_candidate_control_sequence: int
     route_guidance: tuple[tuple[float, float, float], ...] = ()
+    minimum_terminal_speed_blocks_per_second: float = 0.
+    stop_input: TickInput = field(kw_only=True)
 
     def __post_init__(self) -> None:
         for name in ("request_id", "anchor_id", "input_ledger_id"):
@@ -191,6 +208,26 @@ class TrajectorySearchRequest:
                     raise ContractViolation("prelude application must precede the common candidate schedule")
         _typed_tuple(self.input_prefix, TickInput, "shared input prefix")
         _typed_tuple(self.supported_inputs, TickInput, "supported inputs", nonempty=True)
+        _typed_tuple(self.input_tiers, InputTier, "input tiers", nonempty=True)
+        if len({tier.tier_id for tier in self.input_tiers}) != len(self.input_tiers):
+            raise ContractViolation("input tier ids must be unique")
+        for previous, current in zip(self.input_tiers, self.input_tiers[1:]):
+            if (len(current.inputs) <= len(previous.inputs)
+                    or current.inputs[:len(previous.inputs)] != previous.inputs):
+                raise ContractViolation("each input tier must strictly extend the previous prefix")
+        if self.input_tiers[-1].inputs != self.supported_inputs:
+            raise ContractViolation("final input tier must equal supported inputs")
+        if (type(self.stop_input) is not TickInput
+                or self.stop_input.forward != 0. or self.stop_input.strafe != 0.
+                or self.stop_input.jump or self.stop_input.sneak or self.stop_input.sprint):
+            raise ContractViolation("stop input must be zero movement without action modifiers")
+        if any(self.stop_input not in tier.inputs for tier in self.input_tiers):
+            raise ContractViolation("stop input must belong to every declared input layer")
+        minimum_speed = self.minimum_terminal_speed_blocks_per_second
+        if (type(minimum_speed) not in (int, float) or not math.isfinite(minimum_speed)
+                or minimum_speed < 0.
+                or minimum_speed > self.goal.maximum_terminal_speed_blocks_per_second):
+            raise ContractViolation("minimum terminal speed must be finite, nonnegative and within goal maximum")
         if len(self.input_prefix) > self.budget.max_trajectory_ticks:
             raise ContractViolation("shared input prefix exceeds trajectory budget")
         if any(command not in self.supported_inputs for command in self.input_prefix):

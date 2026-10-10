@@ -1,0 +1,79 @@
+{
+  "schema": "mc2p.trajectory-proto-r2-independent-gja-failed.v1",
+  "date": "2026-10-10",
+  "candidate_commit": "cfd36acd27f03099ed3f6e1fb9434a2dd3553419",
+  "budget": {
+    "max_nodes": 4096,
+    "max_physics_steps": 65536,
+    "max_trajectory_ticks": 40,
+    "max_timing_branches": 2
+  },
+  "review_counterexample": {
+    "scenario": "gap_start_1_width_2",
+    "input_tier": "A5",
+    "inputs": ["Walk*1", "SprintJump*1", "Walk*5", "Neutral*14"],
+    "candidate_ticks": 21,
+    "terminal_positions": [[0.5, 1.0, 3.341460582123732], [0.5, 1.0, 3.341460582123732]],
+    "terminal_speeds_blocks_per_second": [0.0, 0.0],
+    "direct_scan": {
+      "status": "VERIFIED_CANDIDATE",
+      "nodes": 50,
+      "physics_steps": 427,
+      "tail_ticks": 384,
+      "goal_accepted": [true, true],
+      "support_fraction": [1.0, 1.0],
+      "risk_intervals": [[[0, 1, 13]], [[0, 1, 13]]]
+    },
+    "free_search": {
+      "status": "FOUND",
+      "reason": "verified_trajectory",
+      "winning_tier": "A5",
+      "same_inputs": true,
+      "nodes": 859,
+      "physics_steps": 23900,
+      "tail_ticks": 384,
+      "completed_candidates": 11565,
+      "commitment_scans": 1,
+      "expanded_nodes": 809
+    }
+  },
+  "frozen_positive_failures": [
+    {
+      "scenario": "turn_90",
+      "requested_tier": "A15",
+      "status": "NO_TRAJECTORY_IN_BUDGET",
+      "reason": "physics_step_budget",
+      "nodes": 1375,
+      "physics_steps": 65536,
+      "tail_ticks": 0,
+      "completed_candidates": 32769,
+      "commitment_scans": 0,
+      "expanded_nodes": 1375
+    },
+    {
+      "scenario": "jump_up_after_turn",
+      "requested_tier": "A15",
+      "status": "NO_TRAJECTORY_IN_BUDGET",
+      "reason": "physics_step_budget",
+      "nodes": 1375,
+      "physics_steps": 65536,
+      "tail_ticks": 0,
+      "completed_candidates": 32769,
+      "commitment_scans": 0,
+      "expanded_nodes": 1375
+    },
+    {
+      "scenario": "jump_up_after_turn_continue",
+      "requested_tier": "A15",
+      "status": "NO_TRAJECTORY_IN_BUDGET",
+      "reason": "physics_step_budget",
+      "nodes": 1375,
+      "physics_steps": 65536,
+      "tail_ticks": 0,
+      "completed_candidates": 32769,
+      "commitment_scans": 0,
+      "expanded_nodes": 1375
+    }
+  ],
+  "decision": "stop_tp_before_r3"
+}

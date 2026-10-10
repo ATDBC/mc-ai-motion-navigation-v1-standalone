@@ -1,7 +1,7 @@
 {
   "schema_version": "mc2p.motion-navigation-standalone-metadata.v1",
-  "source_commit": "b88ab34f8d3dc07831d9b9811d474c286113316a",
+  "source_commit": "d72000b13e27ca39a9f7e121842c333946bc3f6e",
   "source_worktree_dirty": false,
-  "export_manifest_sha256": "9a44d80a55c0452005636842c3de0b7e54adf15d8f4962390d85febd3ac27ba9",
-  "selected_source_file_count": 1964
+  "export_manifest_sha256": "baad00f8079bcefd21559ee624a747f7862525aaaa1c3968a8979389c072c95f",
+  "selected_source_file_count": 1979
 }

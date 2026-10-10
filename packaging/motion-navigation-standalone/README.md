@@ -2,12 +2,12 @@
 
 这个仓库是主项目按固定清单生成的源码快照。它包含当前正式实现、共享契约、配置、测试、Fabric 客户端代码和四类现行设计文档。`EXPORT-METADATA.json` 记录来源提交，`SHA256SUMS.txt` 覆盖导出的每个文件。
 
-2026-10-10，TP 连续短轨迹原型已公开为隔离实验材料。Task 3／4 的合同与承诺扫描组件检查保留；Task 5A 的 `343d10de` 只保留为候选实现。独立审查发现未关闭风险区间被丢弃的 P1，以及条件资源预测误判的 P2；准时支去重还存在晚支覆盖边界。Task 5A 已按预设门槛停止，未签署，P0 未通过，不进入 5B。三个默认代表找到和组件检查全绿不代表正式能力。正式 actor、Runtime 和脚本入口均不导入原型。
+2026-10-10，TP 连续短轨迹原型已结束。TP-0 正式对照通过；Task 5A 未签署，`343d10de` 只是旧候选。D096 授权的 5A-R 中，R1 证明修正通过；R2 候选 `cfd36acd` 在旧矩阵 94／94 时仍把地面、起跳和空中控制绑定在一起，遗漏合法混合动作元。唯一限定修正让审查反例转绿，但 `turn_90`、`jump_up_after_turn`、`jump_up_after_turn_continue` 三项冻结正例都精确耗尽 65,536 次物理计算预算。R2 未通过，R3 未开始，P0 未通过，不进入 5B。失败修正只保留为 diff 和结构化证据，没有进入候选源码。正式 actor、Runtime 和脚本入口均不导入原型。
 
-第三方可阅读[TP 阶段](docs/motion_navigation/stages/TP-continuous-short-trajectory-prototype-plan.md)、[验收](docs/motion_navigation/acceptance/TP-continuous-short-trajectory-prototype.md)、[Task 5A 报告](.superpowers/sdd/2026-10-10-continuous-short-trajectory-prototype/task-5a-report.md)和[独立审查](.superpowers/sdd/2026-10-10-continuous-short-trajectory-prototype/task-5a-review.md)，并从仓库根目录运行三个原型组件测试：
+第三方可阅读[TP 阶段](docs/motion_navigation/stages/TP-continuous-short-trajectory-prototype-plan.md)、[5A-R 计划](docs/motion_navigation/stages/TP-task-5A-R-plan.md)、[验收](docs/motion_navigation/acceptance/TP-continuous-short-trajectory-prototype.md)、[D096](docs/motion_navigation/decisions/0096-repair-trajectory-proof-and-use-stable-motion-primitives.md)和[失败证据](evidence/motion_navigation/trajectory-proto-5ar-v1/README.md)，并从仓库根目录运行四个原型组件测试：
 
 ```text
-python -m unittest tests.motion_nav.test_trajectory_proto_contracts tests.motion_nav.test_trajectory_proto_commitment tests.motion_nav.test_trajectory_proto_reference_search -q
+python -m unittest tests.motion_nav.test_trajectory_proto_contracts tests.motion_nav.test_trajectory_proto_commitment tests.motion_nav.test_trajectory_proto_reference_search tests.motion_nav.test_trajectory_proto_primitive_matrix -q
 ```
 
 2026-10-10，D094 的安全落地后补走已完成。末次严格输入失联但安全落地、且目标仍未满足时，正式链从当前观察重新规划并补走。六族 600 项恢复 122 项，旧成功退步 0；Windows 正序、逆序各 1705／1705；Fabric 四方向 4／4，四次严格空中命令均真实晚一 tick 生效并记录为 `applied_outside_window`，落地后保留 typed `INPUT_LOST`，零伤害、额外期限违规、来源泄漏和二次起跳。结果见[阶段](docs/motion_navigation/stages/post-input-loss-landing-recovery.md)、[验收](docs/motion_navigation/acceptance/post-input-loss-landing-recovery.md)和 `evidence/motion_navigation/post-input-loss-landing-v1/`。

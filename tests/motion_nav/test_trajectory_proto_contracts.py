@@ -2,12 +2,13 @@
 import ast
 from dataclasses import FrozenInstanceError, replace
 from enum import StrEnum
+import inspect
 from pathlib import Path
 import unittest
 
 from experiments.motion_navigation.trajectory_proto.contracts import (
-    ApplicationEvidence, KnownInputApplication, SearchBudget, SearchReason, SearchStatus, TimingBranch,
-    TrajectorySearchRequest, TrajectorySearchResult,
+    ApplicationEvidence, InputTier, KnownInputApplication, SearchBudget, SearchReason, SearchStatus,
+    TimingBranch, TrajectorySearchRequest, TrajectorySearchResult,
 )
 from experiments.motion_navigation.trajectory_proto.scenarios import P0_SCENARIOS
 from mc2p.contracts.common import ContractViolation
@@ -65,7 +66,10 @@ def request():
         allowed_effect_ticks=(11, 12), input_prefix=(command,),
         branch_preludes=((), (application(neutral, 11, 99),)),
         first_candidate_control_sequence=100,
-        supported_inputs=(command,), route_guidance=((0.5, 1.0, 3.0),),
+        supported_inputs=(command, neutral),
+        input_tiers=(InputTier("A3", (command, neutral)),),
+        route_guidance=((0.5, 1.0, 3.0),),
+        stop_input=neutral,
     )
 
 
@@ -77,6 +81,68 @@ def application(command, effect_tick, control_sequence, *, actual=False):
 
 
 class TrajectoryProtoContractsTests(unittest.TestCase):
+    def test_stop_input_is_required_keyword_only_and_strictly_neutral(self):
+        value = request()
+        parameter = inspect.signature(TrajectorySearchRequest).parameters["stop_input"]
+        self.assertIs(parameter.kind, inspect.Parameter.KEYWORD_ONLY)
+        self.assertIs(parameter.default, inspect.Parameter.empty)
+        self.assertEqual(value.stop_input, TickInput(0., 0., False, False, False, 0.))
+        for invalid in (
+                TickInput(1., 0., False, False, False, 0.),
+                TickInput(0., 1., False, False, False, 0.),
+                TickInput(0., 0., True, False, False, 0.),
+                TickInput(0., 0., False, True, False, 0.),
+                TickInput(0., 0., False, False, True, 0.)):
+            with self.subTest(invalid=invalid), self.assertRaises(ContractViolation):
+                replace(value, stop_input=invalid,
+                        supported_inputs=value.supported_inputs + (invalid,),
+                        input_tiers=(InputTier("A3", value.supported_inputs + (invalid,)),))
+        with self.assertRaises(ContractViolation):
+            replace(value, supported_inputs=(value.supported_inputs[0],),
+                    input_tiers=(InputTier("A3", (value.supported_inputs[0],)),))
+
+    def test_input_tiers_are_required_cumulative_prefixes_with_stop_in_every_layer(self):
+        value = request()
+        parameter = inspect.signature(TrajectorySearchRequest).parameters["input_tiers"]
+        self.assertIs(parameter.default, inspect.Parameter.empty)
+        walk, stop = value.supported_inputs
+        sprint = replace(walk, sprint=True)
+        turn = replace(walk, movement_yaw_radians=1.)
+        expanded = replace(
+            value,
+            supported_inputs=(walk, stop, sprint, turn),
+            input_tiers=(
+                InputTier("A3", (walk, stop)),
+                InputTier("A5", (walk, stop, sprint)),
+                InputTier("A15", (walk, stop, sprint, turn)),
+            ),
+        )
+        self.assertEqual(tuple(tier.tier_id for tier in expanded.input_tiers),
+                         ("A3", "A5", "A15"))
+        invalid = (
+            (InputTier("A3", (walk, stop)), InputTier("A5", (walk, sprint, stop))),
+            (InputTier("A3", (walk, stop)), InputTier("A5", (walk, stop))),
+            (InputTier("A3", (walk, stop)), InputTier("A5", (walk, stop, sprint)),
+             InputTier("A15", (walk, stop, sprint))),
+            (InputTier("A3", (walk,)), InputTier("A5", (walk, stop, sprint))),
+        )
+        for tiers in invalid:
+            with self.subTest(tiers=tiers), self.assertRaises(ContractViolation):
+                replace(expanded, input_tiers=tiers)
+        with self.assertRaises(ContractViolation):
+            replace(expanded, input_tiers=expanded.input_tiers[:-1])
+
+    def test_minimum_terminal_speed_is_finite_nonnegative_and_within_goal_maximum(self):
+        value = request()
+        self.assertEqual(value.minimum_terminal_speed_blocks_per_second, 0.)
+        allowed = replace(value, goal=replace(
+            value.goal, maximum_terminal_speed_blocks_per_second=2.),
+            minimum_terminal_speed_blocks_per_second=1.)
+        self.assertEqual(allowed.minimum_terminal_speed_blocks_per_second, 1.)
+        for invalid in (-1., float("inf"), float("nan"), 2.0001):
+            with self.subTest(value=invalid), self.assertRaises(ContractViolation):
+                replace(allowed, minimum_terminal_speed_blocks_per_second=invalid)
+
     def test_same_tick_entries_cannot_claim_real_late_branch(self):
         value = request()
         with self.assertRaises(ContractViolation):
@@ -99,6 +165,7 @@ class TrajectoryProtoContractsTests(unittest.TestCase):
             (SearchStatus.FOUND, SearchReason.VERIFIED_TRAJECTORY),
             (SearchStatus.NEEDS_INFORMATION, SearchReason.UNKNOWN_WORLD),
             (SearchStatus.NEEDS_INFORMATION, SearchReason.MISSING_INPUT_APPLICATION),
+            (SearchStatus.NEEDS_INFORMATION, SearchReason.UNPROVEN_RESOURCES),
             (SearchStatus.BLOCKED, SearchReason.KNOWN_NECESSARY_CONDITION),
             (SearchStatus.NO_TRAJECTORY_IN_BUDGET, SearchReason.TIMING_BRANCH_BUDGET),
             (SearchStatus.NO_TRAJECTORY_IN_BUDGET, SearchReason.NODE_BUDGET),

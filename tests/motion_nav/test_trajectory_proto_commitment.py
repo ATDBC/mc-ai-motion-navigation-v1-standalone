@@ -4,11 +4,11 @@ import unittest
 from unittest.mock import patch
 
 from experiments.motion_navigation.trajectory_proto.commitment import (
-    BoundaryInputs, CandidateRejection, ScanOptions, ScanStatus, TailStatus,
+    BoundaryInputs, CandidateRejection, ScanOptions, ScanStatus, StopTail, TailStatus,
     scan_commitment, validate_commitment,
 )
 from experiments.motion_navigation.trajectory_proto.contracts import (
-    SearchBudget, SearchReason, TimingBranch,
+    InputTier, SearchBudget, SearchReason, TimingBranch,
 )
 from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
@@ -56,6 +56,7 @@ def scan_request(inputs, *, state=None, two=False, budget=None, prelude=NEUTRAL,
                    allowed_effect_ticks=tuple(state.movement_tick_id + 1 + index
                                               for index in range(2 if two else 1)), input_prefix=(),
                    supported_inputs=(WALK, JUMP, NEUTRAL),
+                   input_tiers=(InputTier("A3", (WALK, JUMP, NEUTRAL)),),
                    branch_preludes=((), (application(prelude, state.movement_tick_id + 1, 99),))
                                     if two else ((),),
                    budget=budget or SearchBudget(200, 5000, 40, 2))
@@ -193,15 +194,16 @@ class TrajectoryProtoCommitmentTests(unittest.TestCase):
         self.assertIs(result.reason, CandidateRejection.PRELUDE_UNSAFE)
         self.assertIsNone(result.proof)
 
-    def test_wait_cannot_cross_last_safe_stop_even_with_known_support(self):
+    def test_stale_ground_contact_without_support_is_not_a_safe_stop(self):
         inputs = (JUMP,) + (WALK,) * 10 + (NEUTRAL,) * 20
         state = replace(physics_state(), position=(.5, 1., 1.),
                         velocity_blocks_per_tick=(0., -.0784, .1))
         local = world(gap=True)
         nominal = scan_request(inputs, state=state)
         nominal_result = scan_commitment(nominal, inputs, local, ledger(nominal, inputs))
-        self.assertIs(nominal_result.status, ScanStatus.VERIFIED_CANDIDATE)
-        self.assertIs(nominal_result.proof.branches[0].tails[0].status, TailStatus.SAFE_STOP)
+        self.assertIs(nominal_result.status, ScanStatus.CANDIDATE_REJECTED)
+        self.assertIs(nominal_result.reason, CandidateRejection.TAIL_NOT_SETTLED)
+        self.assertIsNone(nominal_result.proof)
         req = scan_request(inputs, state=state, two=True, prelude=WALK, local=local)
         late = req.entry_states[1]
         self.assertTrue(late.on_ground)
@@ -216,7 +218,7 @@ class TrajectoryProtoCommitmentTests(unittest.TestCase):
         self.assertIs(late_result.proof.branches[0].tails[0].status, TailStatus.UNSAFE)
         result = scan_commitment(req, inputs, local, ledger(req, inputs))
         self.assertIs(result.status, ScanStatus.CANDIDATE_REJECTED)
-        self.assertIs(result.reason, CandidateRejection.PRELUDE_UNSAFE)
+        self.assertIs(result.reason, CandidateRejection.TAIL_NOT_SETTLED)
         self.assertIsNone(result.proof)
 
     def test_wait_rejects_height_change_or_horizontal_collision(self):
@@ -496,8 +498,6 @@ class TrajectoryProtoCommitmentTests(unittest.TestCase):
             (SearchBudget(1, 5000, 40, 2), ScanOptions(), SearchReason.NODE_BUDGET),
             (SearchBudget(200, 1, 40, 2), ScanOptions(), SearchReason.PHYSICS_STEP_BUDGET),
             (SearchBudget(200, 5000, 1, 2), ScanOptions(), SearchReason.TRAJECTORY_TICK_BUDGET),
-            (SearchBudget(200, 5000, 40, 2), ScanOptions(max_tail_ticks=1),
-             SearchReason.TRAJECTORY_TICK_BUDGET),
         )
         for budget, options, reason in cases:
             req = scan_request(GAP_INPUTS, budget=budget)
@@ -507,6 +507,51 @@ class TrajectoryProtoCommitmentTests(unittest.TestCase):
             self.assertIs(result.reason, reason)
             self.assertLessEqual(result.counts.nodes, budget.max_nodes)
             self.assertLessEqual(result.counts.physics_steps, budget.max_physics_steps)
+
+    def test_tail_horizon_only_rejects_the_current_candidate(self):
+        inputs = (WALK,) * 4
+        req = scan_request(inputs)
+        result = scan_commitment(req, inputs, world(), ledger(req, inputs),
+                                 options=ScanOptions(max_tail_ticks=1))
+        self.assertIs(result.status, ScanStatus.CANDIDATE_REJECTED)
+        self.assertIs(result.reason, CandidateRejection.TAIL_NOT_SETTLED)
+        self.assertIsNone(result.proof)
+
+    def test_tail_uses_the_requests_declared_stop_input(self):
+        inputs = (WALK,) * 4
+        declared_stop = TickInput(0., 0., False, False, False, 1.)
+        supported = (WALK, JUMP, NEUTRAL, declared_stop)
+        req = replace(scan_request(inputs), stop_input=declared_stop,
+                      supported_inputs=supported,
+                      input_tiers=(InputTier("A3", supported),))
+        result = scan_commitment(req, inputs, world(), ledger(req, inputs))
+        self.assertIs(result.status, ScanStatus.VERIFIED_CANDIDATE)
+        self.assertEqual(result.proof.branches[0].tails[0].inputs[0], declared_stop)
+
+    def test_stop_tail_damage_uses_remaining_task_allowance(self):
+        from experiments.motion_navigation.trajectory_proto import commitment
+
+        inputs = (NEUTRAL,)
+
+        def one_point_tail(counter, boundary, prefix, commands, stop_input, local,
+                           minimum_y, maximum_damage, options):
+            status = TailStatus.SAFE_STOP if maximum_damage >= 1. else TailStatus.UNSAFE
+            return StopTail(boundary, status, (), (prefix[-1],), (), 1.,
+                            prefix[-1].movement_tick_id)
+
+        with patch.object(commitment, "_tail", side_effect=one_point_tail):
+            within = scan_request(inputs)
+            within = replace(within, task_damage_budget=TaskDamageBudget("bounded", 1.))
+            accepted = scan_commitment(within, inputs, world(), ledger(within, inputs))
+            self.assertIs(accepted.status, ScanStatus.VERIFIED_CANDIDATE)
+            self.assertEqual(accepted.proof.branches[0].damage_points, 0.)
+            self.assertEqual({tail.damage_points for tail in accepted.proof.branches[0].tails}, {1.})
+
+            over = replace(within, task_damage_budget=TaskDamageBudget("bounded", .5))
+            rejected = scan_commitment(over, inputs, world(), ledger(over, inputs))
+            self.assertIs(rejected.status, ScanStatus.CANDIDATE_REJECTED)
+            self.assertIs(rejected.reason, CandidateRejection.FINAL_STOP_UNSAFE)
+            self.assertIsNone(rejected.proof)
 
     def test_two_branches_replay_one_candidate_and_require_both(self):
         req = scan_request(GAP_INPUTS, two=True)

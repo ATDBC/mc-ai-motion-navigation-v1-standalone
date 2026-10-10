@@ -1,6 +1,6 @@
 # TP 连续短轨迹原型验收
 
-日期：2026-10-10。状态：TP-0 正式对照通过并冻结；Task 5A 已止损停止，未签署，P0 未通过。`343d10de` 是候选实现，三个默认代表找到不代表5A通过。
+日期：2026-10-10。状态：TP 已结束。TP-0 正式对照通过并冻结；Task 5A 未签署；5A-R 的 R1 通过、R2 未通过、R3 未开始；P0 未通过。`343d10de` 与 `cfd36acd` 都只是候选，旧失败不回写。
 
 ## 1. 证据等级
 
@@ -82,7 +82,7 @@ P1 最低门槛：稳态后台搜索 P95 ≤ 50 ms、P99 ≤ 100 ms；控制消�
 
 ## 7. 当前结论
 
-TP-0 的正式对照已经冻结。Task 5A 候选实现经过独立审查发现未关闭P1／P2，已按D089和预设门槛停止；5A未签署，P0未通过。完整18族搜索、runner、正式性能量尺及TP-P1—TP-P4均未开始，也不进入5B。D094和正式链结果不作为连续轨迹原型证据。
+TP-0 的正式对照已经冻结。Task 5A 候选实现经过独立审查发现未关闭P1／P2，未签署。D096 的5A-R只完成并通过R1；R2独立 G／J／A 限定修正使三个冻结A15正例耗尽physics step预算，R2未通过。R3、完整18族、runner、正式性能量尺及TP-P1—TP-P4均未开始，也不进入5B。D094和正式链结果不作为连续轨迹原型证据。
 
 ### 7.1 Task 5 前的时序证据更正
 
@@ -135,6 +135,24 @@ FOUND 保存同一输入、实际承诺证明和逐支 GoalState 检查；目标
 | nominal-only去重 | 入口jumping_cooldown_ticks=2；Jump／Neutral与Walk／Neutral两前缀的完整nominal状态相等，late高度分别为1.7532000064849853和1。继续相同输入后晚支结果不同 | 明确覆盖边界；可能丢失晚支轨迹或历史资格，不列为第三项交付阻塞，不宣称默认三族已因去重丢解 |
 
 5A已有恢复支撑的限定修正，并预先约定再出现同类交付阻塞就停止。上述P1触发该门槛，按D089结束本轮任务，不追加P1／P2修正，不进入5B。`343d10de`仅保留为候选实现，5A未签署，P0未通过。完整18族搜索、runner、正式性能量尺、闭环、Fabric、worker及TP-P1—TP-P4均未开始；外层单次耗时不改变这一结论。Task4历史报告、审查与原证据不回写。后续工作须另行明确授权并冻结范围。
+
+### 7.4 5A-R 验收与 TP 终结
+
+R1 修正提交为 `ce9b2dcf490c0be32da8e3d5646e379a07829a8d`，复审修正为 `104318a00e1af8302e986e1b6b465a99e6a7d71f`。安全支撑、未恢复风险、资源信息、停车尾迹、任务伤害余额与最小终速检查通过，R1签署。
+
+R2 候选 `cfd36acd27f03099ed3f6e1fb9434a2dd3553419` 在绑定式动作元下通过 TP 94／94、相关回归62／62、standalone 12／12。独立审查随后给出合法序列 `Walk×1 → SprintJump×1 → Walk×5 → Neutral×14`；候选不会枚举它，因此原94项没有覆盖完整R2合同。
+
+限定修正拆开 G、J、A 身份后，反例在 `gap_start_1_width_2/A5` 中转绿。直接 scanner 为50 nodes／427 physics steps／384 tail ticks，两支目标检查均通过；自由搜索返回同一21 tick输入，计数为859 nodes／23,900 physics steps／384 tail ticks／11,565 completed candidates／1次完整扫描。
+
+冻结矩阵复跑失败如下：
+
+| 场景 | 结果 | nodes | physics step | completed candidates | scans |
+|---|---|---:|---:|---:|---:|
+| `turn_90` | `NO_TRAJECTORY_IN_BUDGET/physics_step_budget` | 1,375 | 65,536 | 32,769 | 0 |
+| `jump_up_after_turn` | `NO_TRAJECTORY_IN_BUDGET/physics_step_budget` | 1,375 | 65,536 | 32,769 | 0 |
+| `jump_up_after_turn_continue` | `NO_TRAJECTORY_IN_BUDGET/physics_step_budget` | 1,375 | 65,536 | 32,769 | 0 |
+
+这三项是冻结正例，不得作为允许失败。原预算 `4096／65536／40／2` 没有放大，场景没有调整。R2不通过，R3未开始，TP按D096结束。失败修正的完整diff、JSON和说明保存在 `evidence/motion_navigation/trajectory-proto-5ar-v1/`；候选源码恢复到 `cfd36acd`，不把旧矩阵全绿写成R2通过。
 
 ## TP-0 任务 1 定向结果
 

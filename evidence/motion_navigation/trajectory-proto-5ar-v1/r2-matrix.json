@@ -1,0 +1,48 @@
+{
+  "schema": "mc2p.trajectory-proto-r2-matrix.v1",
+  "fields": ["scenario", "requested_tier", "status", "reason", "winning_tier", "candidate_ticks", "nodes", "physics_steps", "tail_ticks", "completed_candidates", "commitment_scans"],
+  "rows": [
+    ["flat_walk", "A3", "FOUND", "verified_trajectory", "A3", 18, 48, 791, 338, 209, 1],
+    ["jump_up_straight", "A3", "FOUND", "verified_trajectory", "A3", 16, 45, 779, 264, 242, 1],
+    ["jump_gap_1", "A3", "FOUND", "verified_trajectory", "A3", 21, 64, 1138, 334, 380, 1],
+    ["gap_start_1_width_1", "A3", "FOUND", "verified_trajectory", "A3", 19, 56, 856, 296, 260, 1],
+    ["gap_start_1_width_1", "A5", "FOUND", "verified_trajectory", "A3", 19, 56, 856, 296, 260, 1],
+    ["gap_start_1_width_1", "A15", "FOUND", "verified_trajectory", "A3", 19, 56, 856, 296, 260, 1],
+    ["gap_start_1_width_2", "A3", "FOUND", "verified_trajectory", "A3", 23, 134, 3837, 354, 1703, 1],
+    ["gap_start_1_width_2", "A5", "FOUND", "verified_trajectory", "A3", 23, 134, 3837, 354, 1703, 1],
+    ["gap_start_1_width_2", "A15", "FOUND", "verified_trajectory", "A3", 23, 134, 3837, 354, 1703, 1],
+    ["gap_start_4_width_1", "A3", "FOUND", "verified_trajectory", "A3", 32, 314, 11732, 538, 5538, 1],
+    ["gap_start_4_width_1", "A5", "FOUND", "verified_trajectory", "A3", 32, 314, 11732, 538, 5538, 1],
+    ["gap_start_4_width_1", "A15", "FOUND", "verified_trajectory", "A3", 32, 314, 11732, 538, 5538, 1],
+    ["gap_start_4_width_2", "A3", "FOUND", "verified_trajectory", "A3", 37, 398, 15164, 588, 7231, 1],
+    ["gap_start_4_width_2", "A5", "FOUND", "verified_trajectory", "A3", 37, 398, 15164, 588, 7231, 1],
+    ["gap_start_4_width_2", "A15", "FOUND", "verified_trajectory", "A3", 37, 398, 15164, 588, 7231, 1],
+    ["gap_start_4_width_3", "A5", "FOUND", "verified_trajectory", "A5", 32, 674, 27744, 522, 13546, 1],
+    ["gap_start_4_width_3", "A15", "FOUND", "verified_trajectory", "A5", 32, 674, 27744, 522, 13546, 1],
+    ["flat_sprint", "A5", "FOUND", "verified_trajectory", "A5", 32, 591, 25963, 636, 12632, 1],
+    ["turn_90", "A15", "FOUND", "verified_trajectory", "A15", 19, 808, 34945, 364, 17272, 1],
+    ["jump_up_after_turn", "A15", "FOUND", "verified_trajectory", "A15", 19, 810, 35021, 318, 17333, 1],
+    ["jump_gap_continue", "A3", "FOUND", "verified_trajectory", "A3", 13, 46, 930, 272, 315, 1],
+    ["jump_up_after_turn_continue", "A15", "FOUND", "verified_trajectory", "A15", 12, 796, 34949, 274, 17326, 1],
+    ["gap_start_4_width_3_a3", null, "NO_TRAJECTORY_IN_BUDGET", "search_exhausted", null, 0, 378, 16798, 0, 8392, 0],
+    ["one_twelfth_support", null, "NO_TRAJECTORY_IN_BUDGET", "search_exhausted", null, 0, 2192, 6377, 0, 3051, 0],
+    ["resource_goal", null, "NEEDS_INFORMATION", "unproven_resources", null, 0, 0, 0, 0, 0, 0],
+    ["unknown_landing", null, "NEEDS_INFORMATION", "unknown_world", null, 0, 6, 413, 0, 207, 0],
+    ["tiny_budget", null, "NO_TRAJECTORY_IN_BUDGET", "physics_step_budget", null, 0, 1, 1, 0, 1, 0],
+    ["collision_only", null, "NO_TRAJECTORY_IN_BUDGET", "search_exhausted", null, 0, 378, 471, 0, 48, 0]
+  ],
+  "flat_sprint_boundary": {
+    "a3_furthest_safe_stop_z": 6.962757644806954,
+    "a5_furthest_safe_stop_z": 9.970127011683733,
+    "goal_z": [7.5, 8.3],
+    "a3_result": ["NO_TRAJECTORY_IN_BUDGET", "search_exhausted", 378, 17008],
+    "a5_uses_sprint": true
+  },
+  "hashseed_check": {
+    "seeds": [1, 77, 991],
+    "scenario": "jump_gap_continue",
+    "result_hash": "18e3d9f6c7c45b36ed12a175fae238fab7b8b4628023a015752053aba750c892",
+    "proof_hash": "bf131c537499cf2213450a0dc2d6a4a2577b9ef1365f550a9011fa9e0ebf2989",
+    "counts": [46, 930, 315, 1]
+  }
+}

@@ -19,12 +19,9 @@ from .contracts import KnownInputApplication, SearchReason, TimingBranch, Trajec
 from .physics import CountedPhysics, CountLimit, ScanCounts, trajectory_digest
 
 
-# Source: motion_solver._release_recovery_evidence; deliberately no private import.
-# Reaching .01/tick only starts the stable phase; all drift to zero is replayed.
-STABLE_SPEED_LIMIT_PER_TICK = .01
 ZERO_SPEED_EPSILON = 1.e-9
 # Source: action_route_executor._safe_ground_state default execution floor.
-MINIMUM_PRELUDE_SUPPORT_FRACTION = .15
+MINIMUM_SAFE_SUPPORT_FRACTION = .15
 
 
 class ScanStatus(StrEnum):
@@ -41,6 +38,8 @@ class CandidateRejection(StrEnum):
     DAMAGE_ALLOWANCE = "damage_allowance"
     FINAL_EXIT_NOT_GROUNDED = "final_exit_not_grounded"
     FINAL_STOP_UNSAFE = "final_stop_unsafe"
+    TAIL_NOT_SETTLED = "tail_not_settled"
+    UNRECOVERED_RISK = "unrecovered_risk"
     PRELUDE_ENTRY_MISMATCH = "prelude_entry_mismatch"
     PRELUDE_UNSAFE = "prelude_outside_same_safe_support"
 
@@ -199,6 +198,11 @@ def _damage(states):
     return total + conservative_plain_fall_damage_points(peak)
 
 
+def support_is_safe(state, support):
+    return (state.on_ground and support.status is QueryStatus.FEASIBLE
+            and support.support_fraction >= MINIMUM_SAFE_SUPPORT_FRACTION - 1.e-9)
+
+
 def _safe_support(state, world, dependencies):
     """Use the public support query, because prior vertical contact can lag motion."""
     cells = required_cells_for_sweep(state.body_box, (0., -.05, 0.))
@@ -209,8 +213,15 @@ def _safe_support(state, world, dependencies):
     dependencies.update(support.dependencies)
     if support.missing_cells:
         raise _Incomplete(ScanStatus.NEEDS_INFORMATION, SearchReason.UNKNOWN_WORLD, support.missing_cells)
-    return (support.status is QueryStatus.FEASIBLE
-            and support.support_fraction >= MINIMUM_PRELUDE_SUPPORT_FRACTION - 1.e-9)
+    return support_is_safe(state, support)
+
+
+def _safe_stop(state, world, dependencies, *, minimum_y, damage, maximum_damage):
+    speed = math.hypot(state.velocity_blocks_per_tick[0], state.velocity_blocks_per_tick[2])
+    return (speed <= ZERO_SPEED_EPSILON
+            and state.position[1] >= minimum_y - 1.e-7
+            and damage <= maximum_damage + 1.e-9
+            and _safe_support(state, world, dependencies))
 
 
 def _prove_entry(counter, request, branch_index, world):
@@ -233,29 +244,28 @@ def _prove_entry(counter, request, branch_index, world):
     return tuple(states), tuple(sorted(dependencies))
 
 
-def _tail(counter, boundary, prefix, commands, world, minimum_y, normal_damage, options):
+def _tail(counter, boundary, prefix, commands, stop_input, world, minimum_y,
+          maximum_damage, options):
     counter.node()
     current = prefix[-1]
     states, inputs, dependencies = [current], [], set()
     for tick in range(options.max_tail_ticks):
-        command = (commands[tick] if tick < len(commands) else
-                   TickInput(0., 0., False, False, False, current.yaw_radians))
+        command = commands[tick] if tick < len(commands) else stop_input
         current = _calculated(counter, current, command, world, dependencies, tail=True)
         states.append(current)
         inputs.append(command)
         damage = _damage(prefix[:-1] + tuple(states))
-        if current.position[1] < minimum_y - 1.e-7 or damage > normal_damage + 1.e-9:
+        if current.position[1] < minimum_y - 1.e-7 or damage > maximum_damage + 1.e-9:
             return StopTail(boundary, TailStatus.UNSAFE, tuple(inputs), tuple(states),
                             tuple(sorted(dependencies)), damage, prefix[-1].movement_tick_id)
         # Even a fabricated grounded entry is stepped; successful downward
         # collision now establishes known support, not the entry flag alone.
-        speed = math.hypot(current.velocity_blocks_per_tick[0], current.velocity_blocks_per_tick[2])
-        if (tick + 1 >= len(commands) and current.on_ground
-                and speed <= STABLE_SPEED_LIMIT_PER_TICK + 1.e-9
-                and speed <= ZERO_SPEED_EPSILON):
+        if (tick + 1 >= len(commands)
+                and _safe_stop(current, world, dependencies, minimum_y=minimum_y,
+                               damage=damage, maximum_damage=maximum_damage)):
             return StopTail(boundary, TailStatus.SAFE_STOP, tuple(inputs), tuple(states),
                             tuple(sorted(dependencies)), damage, prefix[-1].movement_tick_id)
-    raise CountLimit(SearchReason.TRAJECTORY_TICK_BUDGET)
+    raise _Incomplete(ScanStatus.CANDIDATE_REJECTED, CandidateRejection.TAIL_NOT_SETTLED)
 
 
 def _risks(tails, counter, world, dependencies):
@@ -278,6 +288,8 @@ def _risks(tails, counter, world, dependencies):
                              tails[first].absolute_tick, tails[first].absolute_tick + 1,
                              tail.absolute_tick))
             first = None
+    if first is not None:
+        raise _Incomplete(ScanStatus.CANDIDATE_REJECTED, CandidateRejection.UNRECOVERED_RISK)
     return tuple(intervals)
 
 
@@ -334,7 +346,8 @@ def scan_commitment(request, inputs, world, boundary_inputs, *, options=ScanOpti
             tails = []
             for row in rows:
                 tail = _tail(counter, row.boundary, prelude_states[:-1] + states[:row.boundary + 1],
-                             row.irrevocable_inputs, world, minimum_y, normal_damage, options)
+                             row.irrevocable_inputs, request.stop_input, world, minimum_y,
+                             request.task_damage_budget.maximum_expected_damage_points, options)
                 dependencies.update(tail.dependencies)
                 if (request.branch_preludes[branch_index] and row.boundary == 0
                         and tail.status is not TailStatus.SAFE_STOP):

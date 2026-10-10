@@ -1,0 +1,191 @@
+diff --git a/experiments/motion_navigation/trajectory_proto/primitive_search.py b/experiments/motion_navigation/trajectory_proto/primitive_search.py
+index 85a5210f..3b8a753c 100644
+--- a/experiments/motion_navigation/trajectory_proto/primitive_search.py
++++ b/experiments/motion_navigation/trajectory_proto/primitive_search.py
+@@ -2,6 +2,7 @@
+ from __future__ import annotations
+ 
+ from dataclasses import dataclass, replace
++from typing import Iterator
+ 
+ from mc2p.motion_nav.physics_types import TickInput
+ from .contracts import InputTier
+@@ -12,14 +13,21 @@ class PrimitivePrefix:
+     """One G -> optional J -> A grid point before normal braking."""
+ 
+     tier_id: str
+-    gait_index: int
+-    movement_yaw_radians: float
++    ground_input_index: int
++    jump_input_index: int | None
++    air_input_index: int | None
++    ground_yaw_radians: float
++    jump_yaw_radians: float | None
++    air_yaw_radians: float | None
+     ground_ticks: int
+-    jumped: bool
+     air_ticks: int
+     brake_ticks: int
+     inputs: tuple[TickInput, ...]
+ 
++    @property
++    def jumped(self) -> bool:
++        return self.jump_input_index is not None
++
+     def with_brake(self, stop_input: TickInput, brake_ticks: int) -> "PrimitivePrefix":
+         if type(stop_input) is not TickInput or type(brake_ticks) is not int or brake_ticks < 0:
+             raise ValueError("brake identity requires a typed input and nonnegative tick count")
+@@ -32,30 +40,43 @@ def _gaits(tier: InputTier) -> tuple[tuple[int, TickInput], ...]:
+                  if not command.jump and (command.forward != 0. or command.strafe != 0.))
+ 
+ 
+-def _jump_for(gait: TickInput, tier: InputTier) -> TickInput | None:
+-    for command in tier.inputs:
+-        if (command.jump and command.forward == gait.forward
+-                and command.strafe == gait.strafe and command.sprint == gait.sprint
+-                and command.movement_yaw_radians == gait.movement_yaw_radians):
+-            return command
+-    return None
+-
+-
+-def primitive_prefixes(tier: InputTier) -> tuple[PrimitivePrefix, ...]:
+-    """Enumerate stable G(0..20), optional J1 and A(0..16) identities."""
+-    rows = []
+-    for gait_index, gait in _gaits(tier):
+-        jump = _jump_for(gait, tier)
+-        for ground_ticks in range(21):
+-            ground = (gait,) * ground_ticks
+-            rows.append(PrimitivePrefix(tier.tier_id, gait_index,
+-                                        gait.movement_yaw_radians, ground_ticks,
+-                                        False, 0, 0, ground))
+-            if jump is not None:
+-                for air_ticks in range(17):
+-                    rows.append(PrimitivePrefix(
+-                        tier.tier_id, gait_index, gait.movement_yaw_radians,
+-                        ground_ticks, True, air_ticks, 0,
+-                        ground + (jump,) + (gait,) * air_ticks,
+-                    ))
+-    return tuple(rows)
++def _jumps(tier: InputTier) -> tuple[tuple[int, TickInput], ...]:
++    return tuple((index, command) for index, command in enumerate(tier.inputs) if command.jump)
++
++
++def _same_control(*commands: TickInput) -> bool:
++    first = commands[0]
++    return all((command.forward, command.strafe, command.sprint,
++                command.movement_yaw_radians)
++               == (first.forward, first.strafe, first.sprint,
++                   first.movement_yaw_radians)
++               for command in commands[1:])
++
++
++def primitive_prefixes(tier: InputTier) -> Iterator[PrimitivePrefix]:
++    """Enumerate independent G, optional J1 and A identities in stable phases."""
++    gaits = _gaits(tier)
++    jumps = _jumps(tier)
++    for matched_phase in (True, False):
++        for ground_index, ground_input in gaits:
++            for ground_ticks in range(21):
++                ground = (ground_input,) * ground_ticks
++                if matched_phase:
++                    yield PrimitivePrefix(
++                        tier.tier_id, ground_index, None, None,
++                        ground_input.movement_yaw_radians, None, None,
++                        ground_ticks, 0, 0, ground,
++                    )
++                for jump_index, jump_input in jumps:
++                    for air_index, air_input in gaits:
++                        if _same_control(ground_input, jump_input, air_input) is not matched_phase:
++                            continue
++                        for air_ticks in range(17):
++                            yield PrimitivePrefix(
++                                tier.tier_id, ground_index, jump_index, air_index,
++                                ground_input.movement_yaw_radians,
++                                jump_input.movement_yaw_radians,
++                                air_input.movement_yaw_radians,
++                                ground_ticks, air_ticks, 0,
++                                ground + (jump_input,) + (air_input,) * air_ticks,
++                            )
+diff --git a/tests/motion_nav/test_trajectory_proto_primitive_matrix.py b/tests/motion_nav/test_trajectory_proto_primitive_matrix.py
+index d9fbd6f1..f21a93c3 100644
+--- a/tests/motion_nav/test_trajectory_proto_primitive_matrix.py
++++ b/tests/motion_nav/test_trajectory_proto_primitive_matrix.py
+@@ -105,19 +105,72 @@ class TrajectoryProtoPrimitiveMatrixTests(unittest.TestCase):
+         fixture = primitive_fixture("turn_90", "A15")
+         tier = fixture.request.input_tiers[-1]
+         row = next(item for item in primitive_prefixes(tier)
+-                   if item.gait_index == 5 and item.ground_ticks == 3
+-                   and item.jumped and item.air_ticks == 4)
++                   if item.ground_input_index == 5 and item.jump_input_index == 6
++                   and item.air_input_index == 5 and item.ground_ticks == 3
++                   and item.air_ticks == 4)
+         self.assertEqual(row.tier_id, "A15")
+-        self.assertEqual(row.movement_yaw_radians, math.pi / 2.)
++        self.assertEqual((row.ground_yaw_radians, row.jump_yaw_radians,
++                          row.air_yaw_radians),
++                         (math.pi / 2., math.pi / 2., math.pi / 2.))
+         self.assertEqual(row.brake_ticks, 0)
+         braked = row.with_brake(fixture.request.stop_input, 2)
+-        self.assertEqual((braked.tier_id, braked.gait_index,
+-                          braked.movement_yaw_radians,
++        self.assertEqual((braked.tier_id, braked.ground_input_index,
++                          braked.jump_input_index, braked.air_input_index,
+                           braked.ground_ticks, braked.jumped,
+                           braked.air_ticks, braked.brake_ticks),
+-                         ("A15", 5, math.pi / 2., 3, True, 4, 2))
++                         ("A15", 5, 6, 5, 3, True, 4, 2))
+         self.assertEqual(braked.inputs[-2:], (fixture.request.stop_input,) * 2)
+ 
++    def test_independent_ground_jump_and_air_controls_cover_review_counterexample(self):
++        fixture = primitive_fixture("gap_start_1_width_2", "A5")
++        walk, _, neutral, _, sprint_jump = fixture.request.supported_inputs
++        candidate = (walk, sprint_jump) + (walk,) * 5 + (neutral,) * 14
++        primitive = next(
++            (row for row in primitive_prefixes(fixture.request.input_tiers[-1])
++             if row.inputs == candidate[:-14]), None)
++        self.assertIsNotNone(primitive)
++        self.assertEqual((primitive.ground_input_index, primitive.jump_input_index,
++                          primitive.air_input_index), (0, 4, 0))
++        self.assertEqual((primitive.ground_ticks, primitive.air_ticks), (1, 5))
++
++        states = fixture.request.entry_states
++        for command in candidate:
++            results = tuple(step(state, command, fixture.world, JAVA_1_21_RULESET)
++                            for state in states)
++            self.assertTrue(all(result.status is CalculationStatus.OK
++                                and not result.next_state.horizontal_collision
++                                for result in results))
++            states = tuple(result.next_state for result in results)
++        self.assertTrue(all(state.on_ground for state in states))
++        speeds = tuple(20. * math.hypot(state.velocity_blocks_per_tick[0],
++                                        state.velocity_blocks_per_tick[2])
++                       for state in states)
++        goal = replace(
++            fixture.request.goal,
++            region=replace(fixture.request.goal.region,
++                           min_x=min(state.position[0] for state in states) - 1.e-6,
++                           max_x=max(state.position[0] for state in states) + 1.e-6,
++                           min_y=min(state.position[1] for state in states),
++                           max_y=max(state.position[1] for state in states) + .05,
++                           min_z=min(state.position[2] for state in states) - 1.e-6,
++                           max_z=max(state.position[2] for state in states) + 1.e-6),
++            maximum_terminal_speed_blocks_per_second=max(speeds) + 1.e-9,
++        )
++        request = replace(fixture.request, goal=goal)
++        counter = CountedPhysics(request.budget)
++        scan = scan_commitment(request, candidate, fixture.world,
++                               _boundary_evidence(request, candidate), counter=counter)
++        self.assertIs(scan.status, ScanStatus.VERIFIED_CANDIDATE)
++        checks = tuple(_goal_check(request, branch.timing_branch, branch.states[-1],
++                                   fixture.world, counter)[0]
++                       for branch in scan.proof.branches)
++        self.assertTrue(all(check.accepted for check in checks))
++
++        outcome = reference_search(request, fixture.world)
++        self.assertIs(outcome.status, SearchStatus.FOUND)
++        self.assertEqual(outcome.winning_tier, "A5")
++        self.assertEqual(outcome.inputs, candidate)
++
+     def test_frozen_input_layers_contain_real_paired_motion_inputs(self):
+         tiers = primitive_fixture("turn_90", "A15").request.input_tiers
+         self.assertEqual(tuple(len(tier.inputs) for tier in tiers), (3, 5, 15))
