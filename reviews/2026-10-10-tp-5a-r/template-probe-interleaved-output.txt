@@ -1,0 +1,22 @@
+order: interleaved
+repr flat_walk               FOUND        ticks=12 completions=6 scans=1 steps=241 44 ms  W0x5 N0x7
+repr jump_up_straight        FOUND        ticks=16 completions=7 scans=1 steps=451 78 ms  J0x1 W0x5 N0x10
+repr jump_gap_1              FOUND        ticks=21 completions=14 scans=1 steps=633 97 ms  J0x1 W0x12 N0x8
+gap start1 w1 A3             FOUND        ticks=21 completions=14 scans=1 steps=633 80 ms  J0x1 W0x12 N0x8
+gap start1 w1 A5             FOUND        ticks=21 completions=14 scans=1 steps=633 96 ms  J0x1 W0x12 N0x8
+gap start1 w1 A15            FOUND        ticks=21 completions=14 scans=1 steps=633 84 ms  J0x1 W0x12 N0x8
+gap start1 w2 A3             FOUND        ticks=24 completions=109 scans=1 steps=2024 211 ms  W0x4 J0x1 W0x9 N0x10
+gap start1 w2 A5             FOUND        ticks=21 completions=125 scans=14 steps=5390 564 ms  W0x1 J0x1 W0x5 N0x14
+gap start1 w2 A15            FOUND        ticks=21 completions=779 scans=14 steps=15252 1498 ms  W0x1 J0x1 W0x5 N0x14
+gap start4 w1 A3             FOUND        ticks=33 completions=437 scans=1 steps=9760 907 ms  W0x13 J0x1 W0x9 N0x10
+gap start4 w1 A5             FOUND        ticks=27 completions=640 scans=1 steps=14640 1481 ms  W0x6 J0x1 S0x10 N0x10
+gap start4 w1 A15            FOUND        ticks=27 completions=5506 scans=1 steps=122800 11933 ms  W0x6 J0x1 S0x10 N0x10
+gap start4 w2 A3             FOUND        ticks=37 completions=538 scans=1 steps=11241 1053 ms  W0x17 J0x1 W0x11 N0x8
+gap start4 w2 A5             FOUND        ticks=31 completions=1035 scans=1 steps=21926 2115 ms  W0x11 J0x1 S0x8 N0x11
+gap start4 w2 A15            FOUND        ticks=31 completions=9325 scans=1 steps=200732 19451 ms  W0x11 J0x1 S0x8 N0x11
+gap start4 w3 A3             none in grid ticks= 0 completions=1329 scans=0 steps=26073 2533 ms  —
+gap start4 w3 A5             FOUND        ticks=36 completions=1383 scans=1 steps=26959 2427 ms  W0x16 J0x1 S0x8 N0x11
+gap start4 w3 A15            FOUND        ticks=36 completions=12501 scans=1 steps=248551 23986 ms  W0x16 J0x1 S0x8 N0x11
+flat_sprint                  FOUND        ticks=25 completions=188 scans=1 steps=4877 500 ms  W0x1 J0x1 S0x15 N0x8
+turn_90                      FOUND        ticks=25 completions=18 scans=1 steps=941 129 ms  J0x1 W0x16 N0x8
+jump_up_after_turn           FOUND        ticks=20 completions=2091 scans=1 steps=40482 4213 ms  W0x3 J0x1 W-45x4 N0x12

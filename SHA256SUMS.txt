@@ -757,6 +757,12 @@ d3f35aa26a572524dac1f1136efc1ef58ed5d443a44ae392bed33f0842d5141a  reviews/2026-1
 63ec18b0f301dc59a03a86d090e2590d5e9ff40ad8204787238f774b2ab2b5ba  reviews/2026-10-10-d094-review/revision_then_failure_cause.py
 db1e3e0b5a4a944e7bb3b1432d5f2d3586f5d5d3d1430dbd3f9658e027e4f6dd  reviews/2026-10-10-d094-review/unittest-output.txt
 d064ac6256f97c1c5c0c6376954c707f5164c8fa36725a63ac2679ca1a8f6f94  reviews/2026-10-10-d094-review/unittest-patched-output.txt
+3138c39dd8fba22f981ea8f043ce28374cd0c877cc2e38923aa394136ff73630  reviews/2026-10-10-tp-5a-r/0096-tp-primitive-search-and-performance-gate-draft.md
+7e05dc26e217a2c7b6ee4d75761c28746f7ce05ebdb0a78116e60fc33a6cb2c4  reviews/2026-10-10-tp-5a-r/task-5a-r-brief.md
+c5564cc5fa3dce65a7e1cfd3c981a0b25af8c26370e89d7c9352a709185d89e3  reviews/2026-10-10-tp-5a-r/template-probe-interleaved-output.txt
+9ceb3e11b3eab94de110d88086c6d104a7a32f7c577859ab78fba8ba75e4b3c6  reviews/2026-10-10-tp-5a-r/template-probe-simple-first-output.txt
+75cf55cbb7d44e918cfafff8ab43e5ece03af5b37a432398c71ef13e621b91c4  reviews/2026-10-10-tp-5a-r/template-probe-steer-output.txt
+6e926e2dc102c317ca23bbea63e62367de29746f488b77bc979f4268ae382c44  reviews/2026-10-10-tp-5a-r/template_probe.py
 65597fba4729ede04bf7632319244ca92a8975c186ece62b1001ee9f08ba874c  reviews/2026-10-10-tp-5a-review.md
 4677cef59171676f4e273f099dd1ae2887db2453fbf67d3ce0fcd405c24014e4  reviews/2026-10-10-tp-5a-review/alphabet-probe-original-output.txt
 4f1ff0e1aae9546aa9d47c8294532f0bb3824d2a673a41c90510dad5fef8c134  reviews/2026-10-10-tp-5a-review/alphabet-probe-patched-output.txt

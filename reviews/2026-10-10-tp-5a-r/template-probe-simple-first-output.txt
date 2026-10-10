@@ -1,0 +1,22 @@
+order: simple-first
+repr flat_walk               FOUND        ticks=12 completions=6 scans=1 steps=271 59 ms  W0x5 N0x7
+repr jump_up_straight        FOUND        ticks=16 completions=29 scans=1 steps=544 81 ms  J0x1 W0x5 N0x10
+repr jump_gap_1              FOUND        ticks=23 completions=28 scans=1 steps=630 103 ms  W0x5 J0x1 N0x17
+gap start1 w1 A3             FOUND        ticks=23 completions=28 scans=1 steps=630 90 ms  W0x5 J0x1 N0x17
+gap start1 w1 A5             FOUND        ticks=23 completions=33 scans=1 steps=679 96 ms  W0x5 J0x1 N0x17
+gap start1 w1 A15            FOUND        ticks=23 completions=105 scans=1 steps=1163 132 ms  W0x5 J0x1 N0x17
+gap start1 w2 A3             FOUND        ticks=24 completions=35 scans=1 steps=766 102 ms  W0x5 J0x1 W0x7 N0x11
+gap start1 w2 A5             FOUND        ticks=24 completions=40 scans=1 steps=815 99 ms  W0x5 J0x1 W0x7 N0x11
+gap start1 w2 A15            FOUND        ticks=24 completions=112 scans=1 steps=1299 175 ms  W0x5 J0x1 W0x7 N0x11
+gap start4 w1 A3             FOUND        ticks=37 completions=42 scans=1 steps=1150 151 ms  W0x19 J0x1 N0x17
+gap start4 w1 A5             FOUND        ticks=37 completions=58 scans=1 steps=1393 167 ms  W0x19 J0x1 N0x17
+gap start4 w1 A15            FOUND        ticks=37 completions=178 scans=1 steps=2713 283 ms  W0x19 J0x1 N0x17
+gap start4 w2 A3             FOUND        ticks=38 completions=48 scans=1 steps=1291 157 ms  W0x19 J0x1 W0x6 N0x12
+gap start4 w2 A5             FOUND        ticks=38 completions=64 scans=1 steps=1534 187 ms  W0x19 J0x1 W0x6 N0x12
+gap start4 w2 A15            FOUND        ticks=38 completions=184 scans=1 steps=2854 306 ms  W0x19 J0x1 W0x6 N0x12
+gap start4 w3 A3             none in grid ticks= 0 completions=1329 scans=0 steps=26073 2217 ms  —
+gap start4 w3 A5             FOUND        ticks=39 completions=95 scans=1 steps=1944 227 ms  W0x19 J0x1 W0x4 N0x15
+gap start4 w3 A15            FOUND        ticks=39 completions=281 scans=1 steps=4116 414 ms  W0x19 J0x1 W0x4 N0x15
+flat_sprint                  FOUND        ticks=26 completions=40 scans=1 steps=1123 134 ms  S0x18 N0x8
+turn_90                      FOUND        ticks=32 completions=4600 scans=1 steps=96533 9560 ms  W0x14 J-45x1 N0x17
+jump_up_after_turn           FOUND        ticks=25 completions=448 scans=1 steps=7067 679 ms  W0x9 J0x1 W-45x2 N0x13
