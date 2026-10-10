@@ -68,6 +68,80 @@ class NavigationHandoffTests(unittest.TestCase):
             progress=progress,
         )
 
+    def test_finalized_limit_failure_cannot_be_refined_even_in_same_frame(self):
+        clock=_Clock()
+        budget=RetryLedger("dependency-budget",policy=RecoveryBudgetPolicy.persistent(
+            maximum_recoveries=12,recovery_window_ns=60,maximum_recovery_ns=10,
+            maximum_no_progress_ns=3),clock_ns=clock)
+        owner=NavigationHandoffCoordinator()
+        clock.now_ns=3
+        permit=self._permit(owner,budget)
+        self.assertIs(permit.limit_status,RecoveryLimitStatus.NO_PROGRESS_EXHAUSTED)
+        accepted=owner.stop_request
+        causal=owner.recovery_cause
+        result=owner.request_recovery(request_id="dependency-stop",destination=HandoffDestination.REPLAN,
+            reason="changed",budget=budget,cause=StopCause.DEPENDENCY_CHANGED,
+            activity_permit=permit,recovery_identity=RecoveryIdentity(1,"dependency-stop"))
+        self.assertIs(result.status,RecoveryRequestStatus.BUSY)
+        self.assertEqual(owner.stop_request,accepted)
+        self.assertIs(owner.recovery_cause,causal)
+
+    def test_explicit_risk_failure_replaces_an_input_loss_recovery_reason(self):
+        from tests.motion_nav.test_r27_async_admission import DeferredMotionWorker,gap_owner
+        _,frame,_,_,_=gap_owner(DeferredMotionWorker())
+        owner=NavigationHandoffCoordinator();budget=RetryLedger("risk-failure")
+        permit=self._permit(owner,budget)
+        self.assertTrue(owner.request_recovery(request_id="input-loss",destination=HandoffDestination.REPLAN,
+            reason="lost",budget=budget,cause=StopCause.INPUT_LOST,activity_permit=permit,
+            recovery_identity=RecoveryIdentity(1,"input-loss")))
+        failure=owner.request_recovery(request_id="risk-failed",destination=HandoffDestination.FAIL,
+            reason="risk_unavailable",budget=budget,cause=StopCause.MOTION_UNSOLVABLE)
+        self.assertTrue(failure)
+        self.assertIs(owner.stop_request.cause,StopCause.MOTION_UNSOLVABLE)
+        self.assertIs(owner.recovery_cause,StopCause.MOTION_UNSOLVABLE)
+
+    def test_new_frame_cannot_rewrite_an_already_accepted_limit_failure(self):
+        clock = _Clock()
+        budget = RetryLedger("immutable-limit", policy=RecoveryBudgetPolicy.persistent(
+            maximum_recoveries=12, recovery_window_ns=60, maximum_recovery_ns=10,
+            maximum_no_progress_ns=3), clock_ns=clock)
+        owner = NavigationHandoffCoordinator()
+        clock.now_ns = 3
+        first = self._permit(owner, budget, 1)
+        owner.request_recovery(request_id="first-lost", destination=HandoffDestination.REPLAN,
+            reason="lost", budget=budget, cause=StopCause.INPUT_LOST,
+            activity_permit=first, recovery_identity=RecoveryIdentity(1, "lost"))
+        accepted = owner.stop_request
+        causal = owner.recovery_cause
+        later = self._permit(owner, budget, 2)
+        result = owner.request_recovery(request_id="later-change", destination=HandoffDestination.REPLAN,
+            reason="changed", budget=budget, cause=StopCause.DEPENDENCY_CHANGED,
+            activity_permit=later, recovery_identity=RecoveryIdentity(1, "lost"))
+        self.assertIs(result.status, RecoveryRequestStatus.BUSY)
+        self.assertEqual(owner.stop_request, accepted)
+        self.assertIs(owner.recovery_cause, causal)
+
+    def test_dependency_request_which_exhausts_budget_keeps_its_own_cause(self):
+        from tests.motion_nav.test_r27_async_admission import DeferredMotionWorker, gap_owner
+        _, frame, _, _, _ = gap_owner(DeferredMotionWorker())
+        owner = NavigationHandoffCoordinator()
+        budget = RetryLedger("dependency-count-limit", policy=RecoveryBudgetPolicy.finite(maximum_recoveries=1))
+        first = self._permit(owner, budget, frame.body.sequence_id)
+        self.assertTrue(owner.request_recovery(request_id="first", destination=HandoffDestination.REPLAN,
+            reason="first", budget=budget, activity_permit=first,
+            recovery_identity=RecoveryIdentity(frame.body.sequence_id,"first")))
+        handoff = replace(_quiescent(),world_session=frame.session,
+            observation_sequence_id=frame.body.sequence_id)
+        self.assertIsNotNone(owner.advance(frame,handoff=handoff,budget=budget,
+            goal_ready=True,start_ready=True,missing_cells=(),unavailable_reason="unavailable"))
+        second = self._permit(owner,budget,frame.body.sequence_id+1)
+        exhausted = owner.request_recovery(request_id="dependency",destination=HandoffDestination.REPLAN,
+            reason="dependency",budget=budget,cause=StopCause.DEPENDENCY_CHANGED,
+            activity_permit=second,recovery_identity=RecoveryIdentity(frame.body.sequence_id+1,"dependency"))
+        self.assertIs(exhausted.status,RecoveryRequestStatus.LIMIT_EXHAUSTED)
+        self.assertIs(owner.stop_request.cause,StopCause.DEPENDENCY_CHANGED)
+        self.assertIs(owner.recovery_cause,StopCause.DEPENDENCY_CHANGED)
+
     def test_recovery_is_charged_once_and_waits_for_current_release(self):
         from tests.motion_nav.test_r27_async_admission import DeferredMotionWorker, gap_owner
         _, frame, _, _, _ = gap_owner(DeferredMotionWorker())
@@ -165,7 +239,7 @@ class NavigationHandoffTests(unittest.TestCase):
             activity_permit=permit,
             recovery_identity=RecoveryIdentity(1, "route/deviation"),
         )
-        self.assertIs(result.status, RecoveryRequestStatus.LIMIT_EXHAUSTED)
+        self.assertIs(result.status, RecoveryRequestStatus.BUSY)
         self.assertEqual(budget.total_recovery_starts, 0)
         self.assertIs(coordinator.stop_request.destination, HandoffDestination.FAIL)
         self.assertIs(

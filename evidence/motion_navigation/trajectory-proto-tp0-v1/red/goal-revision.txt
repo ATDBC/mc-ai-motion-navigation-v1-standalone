@@ -1,0 +1,14 @@
+test_failed_goal_revision_does_not_report_goal_revised_as_failure (tests.motion_nav.test_post_input_loss_landing_recovery.PostInputLossLandingRecoveryTests.test_failed_goal_revision_does_not_report_goal_revised_as_failure) ... FAIL
+
+======================================================================
+FAIL: test_failed_goal_revision_does_not_report_goal_revised_as_failure (tests.motion_nav.test_post_input_loss_landing_recovery.PostInputLossLandingRecoveryTests.test_failed_goal_revision_does_not_report_goal_revised_as_failure)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_post_input_loss_landing_recovery.py", line 303, in test_failed_goal_revision_does_not_report_goal_revised_as_failure
+    self.assertIsNone(reports[-1].failure_cause)
+AssertionError: <StopCause.GOAL_REVISED: 'goal_revised'> is not None
+
+----------------------------------------------------------------------
+Ran 1 test in 0.189s
+
+FAILED (failures=1)

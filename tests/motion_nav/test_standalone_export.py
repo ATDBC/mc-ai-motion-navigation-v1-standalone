@@ -169,6 +169,21 @@ class StandaloneExportTests(unittest.TestCase):
             ROOT / "evidence/motion_navigation/post-input-loss-landing-v1/"
             "production-semantic-hashes.json"
         ).read_text("utf-8"))["files"]
+        tp0 = json.loads((
+            self.root / "evidence/motion_navigation/trajectory-proto-tp0-v1/"
+            "production-semantic-hashes.json"
+        ).read_text("utf-8"))["files"]
+        current_semantics = {**canonical, **r1, **r2, **r3, **handoff,
+                             **late_handoff, **post_loss, **tp0}
+        tp0_root = self.root / "evidence/motion_navigation/trajectory-proto-tp0-v1"
+        frozen = json.loads((tp0_root / "frozen-control-manifest.json").read_text("utf-8"))
+        audit = json.loads((tp0_root / "fabric/audit-summary.json").read_text("utf-8"))
+        direct = json.loads((tp0_root / "checks-forward-direct-summary.json").read_text("utf-8"))
+        self.assertEqual(frozen["frozen_control_commit"], audit["frozen_control_commit"])
+        self.assertEqual(audit["cases"], 4)
+        self.assertTrue(audit["passed"])
+        self.assertFalse(direct["generated_by_run_motion_navigation_checks"])
+        self.assertIsNone(direct["shared_scenario_hash_after"])
         for name, expected in report["full_production_files"].items():
             raw = (self.root/name).read_bytes()
             lf = raw.replace(b"\r\n", b"\n")
@@ -176,11 +191,7 @@ class StandaloneExportTests(unittest.TestCase):
             if raw_hash != expected:
                 self.assertEqual(
                     hashlib.sha256(lf).hexdigest(),
-                    post_loss.get(name, late_handoff.get(name, handoff.get(
-                        name, r3.get(name, r2.get(
-                            name, r1.get(name, canonical[name]),
-                        )),
-                    ))),
+                    current_semantics[name],
                     name,
                 )
 

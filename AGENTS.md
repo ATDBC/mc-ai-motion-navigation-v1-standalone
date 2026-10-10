@@ -1,5 +1,15 @@
 # AGENTS.md
 
+2026-10-10，TP-0 正式对照已通过并冻结为 `da56bfa297cec6e9c0861bb976e608b462237cd2`，生产字节与 `c73c66ed96ce37760661265ae8228f5fca7fb135` 相同。恢复原因、终结不可改写和空中依赖撤销的正式检查通过；Windows 正序、逆序各1713／1713。正序只有直接 unittest 会话摘要，没有逐项结构化记录和场景哈希；逆序保留正式脚本报告且前后场景哈希相同。四方向入口前普通 Walk 均真实晚一 tick，任务4／4完成、零伤害、额外显式期限违规和来源泄漏；原始账本窗口外状态保留，普通延迟单列，不授予新窗口。D093旧失败不改写。见[阶段](docs/motion_navigation/stages/TP-continuous-short-trajectory-prototype-plan.md)、[验收](docs/motion_navigation/acceptance/TP-continuous-short-trajectory-prototype.md)和 `evidence/motion_navigation/trajectory-proto-tp0-v1/`。
+
+Task 3／4 的原型组件检查保留。Task 5A 的 `343d10de` 只保留为候选实现；独立审查发现未关闭风险区间被丢弃的 P1、条件资源预测误判的 P2，并说明准时支去重的晚支覆盖边界。Task 5A 已按预设门槛停止，未签署，P0 未通过，不进入 5B。公开快照包含隔离原型源码、测试、方案与报告，供第三方复现；正式 actor、Runtime 和脚本入口不得导入原型，也不能把三个默认代表找到写成正式能力。见[候选报告](.superpowers/sdd/2026-10-10-continuous-short-trajectory-prototype/task-5a-report.md)和[独立审查](.superpowers/sdd/2026-10-10-continuous-short-trajectory-prototype/task-5a-review.md)。
+
+从仓库根目录运行三个原型组件测试：
+
+```text
+python -m unittest tests.motion_nav.test_trajectory_proto_contracts tests.motion_nav.test_trajectory_proto_commitment tests.motion_nav.test_trajectory_proto_reference_search -q
+```
+
 2026-10-10，D094 的安全落地后补走已完成。末次严格输入失联但安全落地、且目标仍未满足时，正式链通过现有 `NEEDS_REPLAN` 从当前观察补走；正常目标不满足和其他不安全条件仍拒绝。六族 600 项恢复 122 项，旧成功退步 0；Windows 正序、逆序各 1705／1705；Fabric 四方向 4／4，四次严格空中命令均真实晚一 tick 生效并记录为 `applied_outside_window`，落地后保留 typed `INPUT_LOST` 并补走完成，零伤害、额外期限违规、来源泄漏和二次起跳。见[阶段](docs/motion_navigation/stages/post-input-loss-landing-recovery.md)、[验收](docs/motion_navigation/acceptance/post-input-loss-landing-recovery.md)和 `evidence/motion_navigation/post-input-loss-landing-v1/`。
 
 2026-10-09，D092 的动作入口交接 H0—H3 已完成。正式链 80 项从修复前 0／80 变为 80／80；本轮新增的 Walk 朝向准备分支读取下一段通用入口朝向，同帧地面输入按最终获胜视角计算。Windows 完整正序、逆序各 1670／1670；v7、F2 528、v8 的旧成功退步为 0。Fabric 四方向 normal／首条严格输入晚一 tick 共 8／8，四次晚到都在证明窗口内实际生效，起跳 yaw 误差 0°，零伤害、期限错过和来源泄漏。见[阶段](docs/motion_navigation/stages/action-entry-handoff-repair.md)、[验收](docs/motion_navigation/acceptance/action-entry-handoff-repair.md)和 `evidence/motion_navigation/action-entry-handoff-v1/`。
@@ -18,7 +28,7 @@ Windows 是正式开发、自动验收和 Fabric 实机平台；Linux 仅用于�
 
 历史 F1 按“功能通过、结构未通过”保存；R28 按“时间盒结束，部分交付通过”保存。历史 S0-R、v1—v7、R27 和连续高度 M3 的结果与边界均保留在各自验收及 `evidence/motion_navigation/` 中，不用 F2 的新结果覆盖。历史入口见 [F1 验收](docs/motion_navigation/acceptance/F1-known-world-following.md)、[R28 验收](docs/motion_navigation/acceptance/navigation-coordination-convergence.md)和 [S0-R 验收](docs/motion_navigation/acceptance/post-F1-navigation-structure-cleanup.md)。
 
-本仓库是主项目生成的源码快照。先读 F2REC 阶段和对应验收，再按任务读取相关架构与决定。
+本仓库是主项目生成的源码快照。先读最新 TP 阶段和对应验收，再按任务读取相关架构与决定；F2REC 及后续正式修复作为生产主线的历史依据保留。
 
 项目方只通过默认分支 `main` 发布由固定导出清单生成、校验通过的公开快照。不得把主项目的完整开发分支或提交历史直接推入本仓库。三方审查分支可以保留，但只保存审查者自己的报告和复现材料，不代表正式发布状态。
 

@@ -1,0 +1,6 @@
+test_session_dependency_change_and_activity_exhaustion_do_not_refine_ending (tests.motion_nav.test_post_input_loss_landing_recovery.PostInputLossLandingRecoveryTests.test_session_dependency_change_and_activity_exhaustion_do_not_refine_ending) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.012s
+
+OK

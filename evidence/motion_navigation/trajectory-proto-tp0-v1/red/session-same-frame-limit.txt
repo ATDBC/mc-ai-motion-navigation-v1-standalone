@@ -1,0 +1,14 @@
+test_session_dependency_change_and_activity_exhaustion_do_not_refine_ending (tests.motion_nav.test_post_input_loss_landing_recovery.PostInputLossLandingRecoveryTests.test_session_dependency_change_and_activity_exhaustion_do_not_refine_ending) ... FAIL
+
+======================================================================
+FAIL: test_session_dependency_change_and_activity_exhaustion_do_not_refine_ending (tests.motion_nav.test_post_input_loss_landing_recovery.PostInputLossLandingRecoveryTests.test_session_dependency_change_and_activity_exhaustion_do_not_refine_ending)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_post_input_loss_landing_recovery.py", line 403, in test_session_dependency_change_and_activity_exhaustion_do_not_refine_ending
+    self.assertIs(proposal.report.failure_cause,StopCause.MOTION_UNSOLVABLE)
+AssertionError: None is not <StopCause.MOTION_UNSOLVABLE: 'motion_unsolvable'>
+
+----------------------------------------------------------------------
+Ran 1 test in 0.012s
+
+FAILED (failures=1)

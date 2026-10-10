@@ -1,0 +1,14 @@
+test_new_frame_cannot_rewrite_an_already_accepted_limit_failure (tests.motion_nav.test_navigation_handoff.NavigationHandoffTests.test_new_frame_cannot_rewrite_an_already_accepted_limit_failure) ... FAIL
+
+======================================================================
+FAIL: test_new_frame_cannot_rewrite_an_already_accepted_limit_failure (tests.motion_nav.test_navigation_handoff.NavigationHandoffTests.test_new_frame_cannot_rewrite_an_already_accepted_limit_failure)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_navigation_handoff.py", line 118, in test_new_frame_cannot_rewrite_an_already_accepted_limit_failure
+    self.assertIs(result.status, RecoveryRequestStatus.BUSY)
+AssertionError: <RecoveryRequestStatus.LIMIT_EXHAUSTED: 'limit_exhausted'> is not <RecoveryRequestStatus.BUSY: 'busy'>
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (failures=1)

@@ -1,0 +1,26 @@
+{
+  "schema_version": "mc2p.tp0-direct-unittest-summary.v1",
+  "order": "forward",
+  "command": ".\\.venv\\python.exe -m unittest discover -s tests/motion_nav -q",
+  "formal_platform": "windows",
+  "tests": 1713,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "passed": true,
+  "elapsed_seconds": 511.059,
+  "reported_terminal_output": "Ran 1713 tests in 511.059s / OK",
+  "evidence_kind": "direct unittest session output reported by the root agent",
+  "structured_per_test_record_available": false,
+  "generated_by_run_motion_navigation_checks": false,
+  "source_commit_at_run_start": null,
+  "frozen_control_commit": "da56bfa297cec6e9c0861bb976e608b462237cd2",
+  "production_commit": "c73c66ed96ce37760661265ae8228f5fca7fb135",
+  "shared_scenario_hash_before": null,
+  "shared_scenario_hash_after": null,
+  "limitations": [
+    "This is a summary of the direct unittest session, not a run_motion_navigation_checks structured record.",
+    "The forward session did not print or capture a before/after shared-scenario hash.",
+    "The source commit at start and per-test outcomes were not captured."
+  ]
+}

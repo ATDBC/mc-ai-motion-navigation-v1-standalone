@@ -178,7 +178,7 @@ class PostInputLossLandingRecoveryTests(unittest.TestCase):
         owner.request_recovery(request_id="unrelated",destination=HandoffDestination.FAIL,
             reason="new-failure",budget=budget,cause=StopCause.CANCELLED)
         self.assertIs(owner.stop_request.cause,StopCause.CANCELLED)
-        self.assertIsNone(owner.recovery_cause)
+        self.assertIs(owner.recovery_cause,StopCause.CANCELLED)
         owner.clear_goal()
         self.assertIsNone(owner.recovery_cause)
         self.assertIsNone(NavigationHandoffCoordinator().recovery_cause)
@@ -260,6 +260,155 @@ class PostInputLossLandingRecoveryTests(unittest.TestCase):
         self.assertIs(duplicate.status,RecoveryRequestStatus.DUPLICATE)
         self.assertIs(owner.recovery_cause,StopCause.INPUT_LOST)
         self.assertIsNone(owner.stop_request)
+
+    def test_internal_failure_during_input_loss_replan_has_its_own_cause(self):
+        from mc2p.contracts.behavior import BehaviorProfileV0
+        from tests.sim.runner import run
+        from scripts.action_entry_late_hardening import scenario_for
+        reports=[];injected=False
+        def step(context):
+            nonlocal injected
+            context.driver.tick(BehaviorProfileV0(),context.clock[0]+500_000_000)
+            if not injected and context.session.report.failure_cause is StopCause.INPUT_LOST:
+                context.session.handle_internal_contract_failure("tp0_internal_fault")
+                injected=True
+            reports.append(context.session.report)
+            return ()
+        result=run(scenario_for("column_landing_turn",4),control_step=step)
+        self.assertTrue(injected)
+        self.assertEqual(result.outcome,"failed")
+        self.assertEqual(result.reason,"tp0_internal_fault")
+        self.assertIs(reports[-1].failure_cause,StopCause.CANCELLED)
+        self.assertFalse(result.violations)
+
+    def test_failed_goal_revision_does_not_report_goal_revised_as_failure(self):
+        from mc2p.contracts.behavior import BehaviorProfileV0
+        from tests.sim.runner import run
+        from scripts.action_entry_late_hardening import scenario_for
+        reports=[];accepted=False
+        inaccessible=GoalState(Aabb(3.4,63.99,9.4,3.6,64.01,9.6),GoalSupport.SOLID,
+            frozenset({MovementMode.WALK}),frozenset({"standing"}),.6)
+        def step(context):
+            nonlocal accepted
+            context.driver.tick(BehaviorProfileV0(),context.clock[0]+500_000_000)
+            report=context.session.report
+            if not accepted and report.state.value=="executing":
+                accepted=context.driver.replace_goal(report.goal_id,report.goal_revision+1,inaccessible,context.clock[0])
+            reports.append(context.session.report)
+            return ()
+        result=run(scenario_for("column_landing_turn",None),control_step=step)
+        self.assertTrue(accepted)
+        self.assertEqual(result.outcome,"failed")
+        self.assertEqual(result.reason,"goal_surface_unavailable")
+        self.assertIsNone(reports[-1].failure_cause)
+        self.assertFalse(result.violations)
+
+    def test_invalidated_air_proof_is_not_reenabled_by_later_cancel(self):
+        from mc2p.motion_nav.action_route import ActionRoute,JumpGapSegment
+        from mc2p.motion_nav.action_route_executor import ActionRouteExecutor
+        from mc2p.motion_nav.jump_gap import JumpGapEdge
+        from mc2p.motion_nav.motion_candidate import MotionCandidateAdmitter,MotionCandidateStatus
+        from mc2p.motion_nav.motion_risk import TaskDamageBudget
+        from mc2p.motion_nav.online_motion import InputApplicationLedger
+        from mc2p.motion_nav.support_surfaces import SupportSurface,HorizontalRegion
+        from tests.motion_nav.test_b10_gap_solver import fixture
+        from tests.motion_nav.test_b10_motion_candidate import (
+            solved_candidate, VerifiedMotionRouteIntegrationTests, VerifiedMotionExecutorTests,
+        )
+        from mc2p.motion_nav.action_route_executor import ActionRouteState
+        from tests.motion_nav.test_fixed_route_walk import profile as ground_profile
+        from tests.motion_nav.test_jump_up import jump_profile
+        from tests.motion_nav.test_b09_air_transitions import air_profile
+        anchor,reusable=solved_candidate()
+        reusable=replace(reusable,context=replace(reusable.context,action_index=0))
+        admitted=MotionCandidateAdmitter().admit(reusable,anchor,planning_request_id="request-1",
+            planning_generation=4,goal_id="goal-1",goal_revision=2,route_id="route-1",
+            route_revision=3,action_index=0,candidate_revision=5,damage_budget=TaskDamageBudget(),
+            intended_start_tick=11,changed_cells=())
+        self.assertIs(admitted.status,MotionCandidateStatus.ACCEPTED)
+        start_id=SurfaceNodeId(0,0,64,0);end_id=SurfaceNodeId(0,2,64,0)
+        surfaces=[SupportSurface(node,(.5,64.,z+.5),HorizontalRegion(0,z,1,z+1),
+            1.,("minecraft:grass_block",),()) for node,z in ((start_id,0),(end_id,2))]
+        route=ActionRoute("route-1",(JumpGapSegment(
+            JumpGapEdge(start_id,end_id,"test-jump-gap",.9,()),*surfaces,()),))
+        _,physics_world,_,_=fixture();world=physics_world._world
+        executor=ActionRouteExecutor(ground_profile(),jump_profile(),air_profiles=(air_profile(MovementMode.JUMP_GAP),))
+        frame_for=VerifiedMotionRouteIntegrationTests.frame
+        executor.start(route,frame_for(world,anchor.physics_state,anchor.observation_sequence_id),
+            verified_motion=(admitted.candidate,))
+        ledger = InputApplicationLedger()
+        first = executor.decide(frame_for(world,anchor.physics_state,anchor.observation_sequence_id),
+            state_anchor=anchor,input_ledger=ledger)
+        self.assertIs(first.state, ActionRouteState.RUNNING)
+        self.assertEqual(first.verified_command_index, 0)
+        self.assertTrue(first.movement.jump)
+        executor.register_verified_submission(0, control_sequence=100, requested_movement_tick=11)
+        VerifiedMotionExecutorTests.applied(ledger,anchor,100,11,first.movement)
+        airborne=replace(anchor,movement_tick_id=11,observation_sequence_id=anchor.observation_sequence_id+1,
+            physics_state=admitted.candidate.proof.trajectory[1])
+        self.assertFalse(airborne.physics_state.on_ground)
+        changed=(admitted.candidate.proof.world_dependencies[0],)
+        current=replace(frame_for(world,airborne.physics_state,airborne.observation_sequence_id),changed_cells=changed)
+        discarded=executor.decide(current,state_anchor=airborne,input_ledger=ledger)
+        self.assertIs(discarded.state, ActionRouteState.CANCELLING)
+        self.assertIsNone(discarded.verified_command_index)
+        from mc2p.contracts.action_v1 import MovementV1
+        self.assertEqual(discarded.movement, MovementV1())
+        executor.request_stop(StopCause.DEPENDENCY_CHANGED)
+        executor.request_stop(StopCause.CANCELLED)
+        later=replace(airborne,movement_tick_id=12,observation_sequence_id=airborne.observation_sequence_id+1,
+            physics_state=replace(airborne.physics_state,movement_tick_id=12))
+        stopped=executor.decide(frame_for(world,later.physics_state,later.observation_sequence_id),
+            state_anchor=later,input_ledger=ledger)
+        self.assertIsNone(stopped.verified_command_index)
+        self.assertFalse(stopped.movement.jump)
+        self.assertEqual(stopped.movement,discarded.movement)
+
+    def test_session_dependency_change_and_activity_exhaustion_do_not_refine_ending(self):
+        from tests.motion_nav.test_navigation_session import (
+            NavigationSessionTests, _InlinePlanner, _known_world, _nodes, _source, _goal, _ground_anchor,
+        )
+        from mc2p.motion_nav.navigation_session import NavigationSession, NavigationSessionState
+        from mc2p.motion_nav.navigation_handoff import HandoffDestination
+        from mc2p.motion_nav.retry_ledger import RecoveryBudgetPolicy
+        from mc2p.motion_nav.online_motion import InputApplicationLedger
+        from mc2p.motion_nav.world_model import ObservationStamp
+        from mc2p.motion_nav.route_validation import ActiveRouteValidationDisposition
+        world = _known_world({(x,0,0):BlockGeometry.full_cube("minecraft:stone") for x in range(4)})
+        start, goal = _nodes(world, (0,3))
+        now = [1_000_000_000]
+        policy = RecoveryBudgetPolicy.persistent(maximum_no_progress_ns=3_000_000_000)
+        with patch.object(NavigationSession, "_recovery_budget_policy", return_value=policy):
+            session = NavigationSession("tp0-same-frame-limit", NavigationSessionTests().profiles(),
+                planner_worker=_InlinePlanner(), clock_ns=lambda: now[0])
+            try:
+                session.bind_source(_source())
+                session.start_goal("tp0-task",1,_goal(goal.position),frame(world,0,start.position))
+                initial = frame(world,1,start.position)
+                proposal = session.propose(initial,_ground_anchor(initial),now[0]+500_000_000,
+                    input_ledger=InputApplicationLedger())
+                self.assertIsNotNone(session.active_route)
+                changed_cell = (2,1,0)
+                self.assertIn(changed_cell,session.active_route.action_route.dependencies)
+                now[0] += 3_000_000_000
+                world.observe_blocks(ObservationStamp(world.session,2,2,"test-clock",now[0]),
+                    {changed_cell:BlockGeometry.full_cube("minecraft:stone")})
+                current = replace(frame(world,2,start.position),changed_cells=(changed_cell,))
+                with patch.object(session._handoff,"request_recovery",wraps=session._handoff.request_recovery) as requests, \
+                     patch.object(session._supervisor,"request_route_stop",wraps=session._supervisor.request_route_stop) as stops:
+                    proposal = session.propose(current,_ground_anchor(current),now[0]+500_000_000,
+                        input_ledger=InputApplicationLedger())
+                self.assertIs(session.diagnostics.route_validation.incumbent.disposition,ActiveRouteValidationDisposition.STOP)
+                self.assertIs(proposal.report.state,NavigationSessionState.FAILED)
+                self.assertEqual(proposal.report.reason,"task_no_progress_deadline_exhausted")
+                self.assertIsNone(proposal.report.failure_cause)
+                self.assertIs(stops.call_args_list[-1].args[0], StopCause.MOTION_UNSOLVABLE)
+                self.assertTrue(any(call.kwargs.get("destination") is HandoffDestination.FAIL
+                    for call in requests.call_args_list))
+                self.assertFalse(any(call.kwargs.get("destination") is HandoffDestination.REPLAN
+                    for call in requests.call_args_list))
+            finally:
+                session.close()
 
     def test_normal_goal_mismatch_still_fails_without_replan(self):
         from mc2p.motion_nav.goal_observation import ObservedGoal,ObservedGoalStatus

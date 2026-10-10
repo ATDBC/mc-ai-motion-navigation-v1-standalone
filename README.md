@@ -2,6 +2,14 @@
 
 这个仓库是主项目按固定清单生成的源码快照。它包含当前正式实现、共享契约、配置、测试、Fabric 客户端代码和四类现行设计文档。`EXPORT-METADATA.json` 记录来源提交，`SHA256SUMS.txt` 覆盖导出的每个文件。
 
+2026-10-10，TP 连续短轨迹原型已公开为隔离实验材料。Task 3／4 的合同与承诺扫描组件检查保留；Task 5A 的 `343d10de` 只保留为候选实现。独立审查发现未关闭风险区间被丢弃的 P1，以及条件资源预测误判的 P2；准时支去重还存在晚支覆盖边界。Task 5A 已按预设门槛停止，未签署，P0 未通过，不进入 5B。三个默认代表找到和组件检查全绿不代表正式能力。正式 actor、Runtime 和脚本入口均不导入原型。
+
+第三方可阅读[TP 阶段](docs/motion_navigation/stages/TP-continuous-short-trajectory-prototype-plan.md)、[验收](docs/motion_navigation/acceptance/TP-continuous-short-trajectory-prototype.md)、[Task 5A 报告](.superpowers/sdd/2026-10-10-continuous-short-trajectory-prototype/task-5a-report.md)和[独立审查](.superpowers/sdd/2026-10-10-continuous-short-trajectory-prototype/task-5a-review.md)，并从仓库根目录运行三个原型组件测试：
+
+```text
+python -m unittest tests.motion_nav.test_trajectory_proto_contracts tests.motion_nav.test_trajectory_proto_commitment tests.motion_nav.test_trajectory_proto_reference_search -q
+```
+
 2026-10-10，D094 的安全落地后补走已完成。末次严格输入失联但安全落地、且目标仍未满足时，正式链从当前观察重新规划并补走。六族 600 项恢复 122 项，旧成功退步 0；Windows 正序、逆序各 1705／1705；Fabric 四方向 4／4，四次严格空中命令均真实晚一 tick 生效并记录为 `applied_outside_window`，落地后保留 typed `INPUT_LOST`，零伤害、额外期限违规、来源泄漏和二次起跳。结果见[阶段](docs/motion_navigation/stages/post-input-loss-landing-recovery.md)、[验收](docs/motion_navigation/acceptance/post-input-loss-landing-recovery.md)和 `evidence/motion_navigation/post-input-loss-landing-v1/`。
 
 默认分支 `main` 是项目方唯一的公开发布线，只接收固定导出脚本生成并校验通过的整理后快照。主项目的完整开发分支和提交历史不会直接推入本仓库。三方审查分支可以单独存在，用于保存审查报告和复现材料；它们不改变 `main` 的正式状态。

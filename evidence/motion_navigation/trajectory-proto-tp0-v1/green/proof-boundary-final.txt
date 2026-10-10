@@ -1,0 +1,6 @@
+test_invalidated_air_proof_is_not_reenabled_by_later_cancel (tests.motion_nav.test_post_input_loss_landing_recovery.PostInputLossLandingRecoveryTests.test_invalidated_air_proof_is_not_reenabled_by_later_cancel) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.053s
+
+OK

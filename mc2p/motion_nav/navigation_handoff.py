@@ -303,14 +303,16 @@ class NavigationHandoffCoordinator:
             budget=budget, observation_sequence=observation_sequence,
         )
 
-    def _stage_limit_failure(self, status: RecoveryLimitStatus) -> None:
+    def _stage_limit_failure(
+        self, status: RecoveryLimitStatus, *, cause: StopCause | None = None,
+    ) -> None:
         current = self._stop_request
         if self.accepted_ending:
             return
         reason = self._limit_reason(status)
         if current is None:
             self._stop_request = NavigationStopRequest(
-                self._recovery_cause or StopCause.MOTION_UNSOLVABLE, reason,
+                cause or self._recovery_cause or StopCause.MOTION_UNSOLVABLE, reason,
                 destination=HandoffDestination.FAIL,
                 request_id=(None if self._task_id is None else
                             f"{self._task_id}/recovery-limit"),
@@ -318,7 +320,8 @@ class NavigationHandoffCoordinator:
             )
             return
         self._stop_request = replace(
-            current, destination=HandoffDestination.FAIL, reason=reason,
+            current, cause=cause or current.cause,
+            destination=HandoffDestination.FAIL, reason=reason,
             planning_failure=None, recovery_limit_status=status,
         )
 
@@ -496,18 +499,6 @@ class NavigationHandoffCoordinator:
                 current.recovery_limit_status,
                 current.recovery_identity,
             )
-        if (destination is HandoffDestination.REPLAN
-                and type(activity_permit) is RecoveryActivityPermit
-                and activity_permit is self._activity_permit
-                and type(budget) is RetryLedger
-                and activity_permit.task_id == budget.task_id
-                and activity_permit.limit_status is not RecoveryLimitStatus.ALLOWED):
-            self._recovery_cause = cause
-            self._stage_limit_failure(activity_permit.limit_status)
-            return RecoveryRequestResult(
-                RecoveryRequestStatus.LIMIT_EXHAUSTED,
-                activity_permit.limit_status,
-            )
         if self.accepted_ending:
             return RecoveryRequestResult(RecoveryRequestStatus.BUSY)
         if current is not None and destination in {
@@ -542,7 +533,7 @@ class NavigationHandoffCoordinator:
             current_limit = budget.current_limit_status()
             if current_limit is not RecoveryLimitStatus.ALLOWED:
                 self._recovery_cause = cause
-                self._stage_limit_failure(current_limit)
+                self._stage_limit_failure(current_limit, cause=cause)
                 self._activity_consumed = True
                 return RecoveryRequestResult(
                     RecoveryRequestStatus.LIMIT_EXHAUSTED,
@@ -553,7 +544,7 @@ class NavigationHandoffCoordinator:
             registration = budget.begin_recovery(recovery_identity, retry_cause)
             if registration.status is not RecoveryLimitStatus.ALLOWED:
                 self._recovery_cause = cause
-                self._stage_limit_failure(registration.status)
+                self._stage_limit_failure(registration.status, cause=cause)
                 return RecoveryRequestResult(
                     RecoveryRequestStatus.LIMIT_EXHAUSTED,
                     registration.status,
@@ -575,7 +566,7 @@ class NavigationHandoffCoordinator:
             recovery_identity = None
         if destination in {
                 HandoffDestination.CANCEL, HandoffDestination.CLOSE,
-                HandoffDestination.COMPLETE}:
+                HandoffDestination.COMPLETE, HandoffDestination.FAIL}:
             self._recovery_cause = cause
         self._stop_request = NavigationStopRequest(
             cause, reason, destination=destination, request_id=request_id,
@@ -668,6 +659,10 @@ class NavigationHandoffCoordinator:
         self._finish_recovery_from_handoff(
             request, budget=budget, handoff=handoff, frame=frame,
         )
+        if request.cause is StopCause.GOAL_REVISED:
+            # A completed revision has no failure cause of its own. The
+            # resolution still reports unavailable geometry or missing facts.
+            self._recovery_cause = None
         self._stop_request = None
         self._pending_goal = None
         return resolution

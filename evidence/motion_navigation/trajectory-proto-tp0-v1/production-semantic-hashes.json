@@ -1,0 +1,11 @@
+{
+  "schema": "mc2p.trajectory-proto-tp0-production-semantic-hashes.v1",
+  "base_commit": "31354d9c",
+  "normalization": "CRLF is normalized to LF before SHA-256",
+  "files": {
+    "mc2p/motion_nav/navigation_handoff.py": "523cf411be671951920c6874e83662261d7013c8323a0597afe7518da23a9056"
+  },
+  "repair_base_commit": "1c1c76d2",
+  "frozen_control_commit": "da56bfa297cec6e9c0861bb976e608b462237cd2",
+  "production_commit": "c73c66ed96ce37760661265ae8228f5fca7fb135"
+}

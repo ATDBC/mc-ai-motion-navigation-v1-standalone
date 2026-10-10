@@ -97,8 +97,13 @@
     "evidence/motion_navigation/F2REC-recovery-v1/**/*",
     "evidence/motion_navigation/action-entry-handoff-v1/**/*",
     "evidence/motion_navigation/action-entry-late-hardening-v1/**/*",
-    "evidence/motion_navigation/post-input-loss-landing-v1/**/*"
+    "evidence/motion_navigation/post-input-loss-landing-v1/**/*",
+    "evidence/motion_navigation/trajectory-proto-tp0-v1/**/*",
+    "experiments/motion_navigation/trajectory_proto/*.py",
+    "tests/motion_nav/test_trajectory_proto_*.py",
+    ".superpowers/sdd/2026-10-10-continuous-short-trajectory-prototype/*.md"
   ],
+  "exclude_globs": [],
   "python_entry_globs": [
     "scripts/export_motion_navigation_standalone.py",
     "scripts/run_r28_player_boundary.py",
@@ -462,6 +467,28 @@
     "evidence/motion_navigation/F2-ground-route-v1/final/comparisons/five-group-summary.json",
     "evidence/motion_navigation/F2-ground-route-v1/final/comparisons/strict-goal-proof.json",
     "evidence/motion_navigation/F2-ground-route-v1/final/performance/d058-compact.json",
-    "evidence/motion_navigation/F2-ground-route-v1/final/performance/d061-compact.json"
+    "evidence/motion_navigation/F2-ground-route-v1/final/performance/d061-compact.json",
+    "docs/motion_navigation/decisions/0095-isolate-continuous-short-trajectory-prototype.md",
+    "docs/motion_navigation/stages/TP-continuous-short-trajectory-prototype-plan.md",
+    "docs/motion_navigation/acceptance/TP-continuous-short-trajectory-prototype.md",
+    "evidence/motion_navigation/trajectory-proto-tp0-v1/frozen-control-manifest.json",
+    "evidence/motion_navigation/trajectory-proto-tp0-v1/checks-forward-direct-summary.json",
+    "evidence/motion_navigation/trajectory-proto-tp0-v1/checks-reverse.json",
+    "evidence/motion_navigation/trajectory-proto-tp0-v1/fabric/source-byte-manifest.json",
+    "evidence/motion_navigation/trajectory-proto-tp0-v1/fabric/audit.py",
+    "evidence/motion_navigation/trajectory-proto-tp0-v1/fabric/audit-summary.json",
+    "evidence/motion_navigation/trajectory-proto-tp0-v1/fabric/raw/client-0/f2-trials.jsonl.gz",
+    "evidence/motion_navigation/trajectory-proto-tp0-v1/SHA256SUMS",
+    "experiments/motion_navigation/trajectory_proto/contracts.py",
+    "experiments/motion_navigation/trajectory_proto/physics.py",
+    "experiments/motion_navigation/trajectory_proto/scenarios.py",
+    "experiments/motion_navigation/trajectory_proto/commitment.py",
+    "experiments/motion_navigation/trajectory_proto/reference_search.py",
+    "tests/motion_nav/test_trajectory_proto_contracts.py",
+    "tests/motion_nav/test_trajectory_proto_commitment.py",
+    "tests/motion_nav/test_trajectory_proto_reference_search.py",
+    ".superpowers/sdd/2026-10-10-continuous-short-trajectory-prototype/task-5a-brief.md",
+    ".superpowers/sdd/2026-10-10-continuous-short-trajectory-prototype/task-5a-report.md",
+    ".superpowers/sdd/2026-10-10-continuous-short-trajectory-prototype/task-5a-review.md"
   ]
 }

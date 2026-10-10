@@ -1,0 +1,238 @@
+{
+  "schema_version": "mc2p.tp0-entry-late-fabric-audit.v1",
+  "frozen_control_commit": "da56bfa297cec6e9c0861bb976e608b462237cd2",
+  "production_commit": "c73c66ed96ce37760661265ae8228f5fca7fb135",
+  "cases": 4,
+  "passed": true,
+  "trials": [
+    {
+      "id": "entry-late-handoff-f2s-column_top-product-south-normal",
+      "direction": 0,
+      "passed": true,
+      "task_success": true,
+      "raw_injection_applied": false,
+      "late_input": {
+        "actual_movement": {
+          "forward": 1,
+          "jump": false,
+          "sneak": false,
+          "sprint": false,
+          "strafe": 0
+        },
+        "actual_offset": 2,
+        "actual_ticks": [
+          217
+        ],
+        "air_gate": null,
+        "before_tick": 215,
+        "entry_gate": {
+          "distance_before_entry_blocks": 0.6458023846091199,
+          "estimated_ticks_before_entry": 7,
+          "maximum_entry_speed_blocks_per_second": 0.1,
+          "movement_tick": 215,
+          "on_ground": true,
+          "position": [
+            1.6741976153908802,
+            100.0,
+            10.441407832446059
+          ],
+          "profile_id": "fabric-1_21-ordinary-adjacent-low-speed-b06-v1",
+          "reference_point": [
+            2.5,
+            100.0,
+            10.5
+          ],
+          "speed_blocks_per_second": 1.9696759778262012
+        },
+        "explicit_input_timing": false,
+        "latest_allowed_first_tick": 216,
+        "request_sequence": 215,
+        "requested_first_tick": 216,
+        "requested_last_tick": 216,
+        "status": "applied_outside_window",
+        "valid_for_ticks": 1
+      },
+      "raw_receipt_application_confirmed": true,
+      "unexpected_explicit_deadline_miss_count": 0,
+      "unwindowed_input_delay_count": 1,
+      "damage_points": 0.0,
+      "final_grounded": true
+    },
+    {
+      "id": "entry-late-handoff-f2s-column_top-product-east-normal",
+      "direction": 1,
+      "passed": true,
+      "task_success": true,
+      "raw_injection_applied": false,
+      "late_input": {
+        "actual_movement": {
+          "forward": 1,
+          "jump": false,
+          "sneak": false,
+          "sprint": false,
+          "strafe": 0
+        },
+        "actual_offset": 2,
+        "actual_ticks": [
+          470
+        ],
+        "air_gate": null,
+        "before_tick": 468,
+        "entry_gate": {
+          "distance_before_entry_blocks": 0.5846427585896954,
+          "estimated_ticks_before_entry": 5,
+          "maximum_entry_speed_blocks_per_second": 0.1,
+          "movement_tick": 468,
+          "on_ground": true,
+          "position": [
+            7.735357241410305,
+            100.0,
+            -4.450710565468479
+          ],
+          "profile_id": "fabric-1_21-ordinary-adjacent-low-speed-b06-v1",
+          "reference_point": [
+            8.5,
+            100.0,
+            -4.5
+          ],
+          "speed_blocks_per_second": 2.3571812986833436
+        },
+        "explicit_input_timing": false,
+        "latest_allowed_first_tick": 469,
+        "request_sequence": 466,
+        "requested_first_tick": 469,
+        "requested_last_tick": 469,
+        "status": "applied_outside_window",
+        "valid_for_ticks": 1
+      },
+      "raw_receipt_application_confirmed": true,
+      "unexpected_explicit_deadline_miss_count": 0,
+      "unwindowed_input_delay_count": 1,
+      "damage_points": 0.0,
+      "final_grounded": true
+    },
+    {
+      "id": "entry-late-handoff-f2s-column_top-product-north-normal",
+      "direction": 2,
+      "passed": true,
+      "task_success": true,
+      "raw_injection_applied": false,
+      "late_input": {
+        "actual_movement": {
+          "forward": 1,
+          "jump": false,
+          "sneak": false,
+          "sprint": false,
+          "strafe": 0
+        },
+        "actual_offset": 2,
+        "actual_ticks": [
+          719
+        ],
+        "air_gate": null,
+        "before_tick": 717,
+        "entry_gate": {
+          "distance_before_entry_blocks": 0.5846427585896954,
+          "estimated_ticks_before_entry": 5,
+          "maximum_entry_speed_blocks_per_second": 0.1,
+          "movement_tick": 717,
+          "on_ground": true,
+          "position": [
+            -4.45071056546848,
+            100.0,
+            -7.735357241410305
+          ],
+          "profile_id": "fabric-1_21-ordinary-adjacent-low-speed-b06-v1",
+          "reference_point": [
+            -4.5,
+            100.0,
+            -8.5
+          ],
+          "speed_blocks_per_second": 2.3571812986833436
+        },
+        "explicit_input_timing": false,
+        "latest_allowed_first_tick": 718,
+        "request_sequence": 713,
+        "requested_first_tick": 718,
+        "requested_last_tick": 718,
+        "status": "applied_outside_window",
+        "valid_for_ticks": 1
+      },
+      "raw_receipt_application_confirmed": true,
+      "unexpected_explicit_deadline_miss_count": 0,
+      "unwindowed_input_delay_count": 1,
+      "damage_points": 0.0,
+      "final_grounded": true
+    },
+    {
+      "id": "entry-late-handoff-f2s-column_top-product-west-normal",
+      "direction": 3,
+      "passed": true,
+      "task_success": true,
+      "raw_injection_applied": false,
+      "late_input": {
+        "actual_movement": {
+          "forward": 1,
+          "jump": false,
+          "sneak": false,
+          "sprint": false,
+          "strafe": 0
+        },
+        "actual_offset": 2,
+        "actual_ticks": [
+          968
+        ],
+        "air_gate": null,
+        "before_tick": 966,
+        "entry_gate": {
+          "distance_before_entry_blocks": 0.6458023846091199,
+          "estimated_ticks_before_entry": 7,
+          "maximum_entry_speed_blocks_per_second": 0.1,
+          "movement_tick": 966,
+          "on_ground": true,
+          "position": [
+            -10.441407832446059,
+            100.0,
+            1.6741976153908802
+          ],
+          "profile_id": "fabric-1_21-ordinary-adjacent-low-speed-b06-v1",
+          "reference_point": [
+            -10.5,
+            100.0,
+            2.5
+          ],
+          "speed_blocks_per_second": 1.9696759778262012
+        },
+        "explicit_input_timing": false,
+        "latest_allowed_first_tick": 967,
+        "request_sequence": 960,
+        "requested_first_tick": 967,
+        "requested_last_tick": 967,
+        "status": "applied_outside_window",
+        "valid_for_ticks": 1
+      },
+      "raw_receipt_application_confirmed": true,
+      "unexpected_explicit_deadline_miss_count": 0,
+      "unwindowed_input_delay_count": 1,
+      "damage_points": 0.0,
+      "final_grounded": true
+    }
+  ],
+  "registered_sources": [
+    "ordered/57cb0c72eb17472880ed307d6fbf354d/0/1",
+    "ordered/57cb0c72eb17472880ed307d6fbf354d/0/2",
+    "ordered/57cb0c72eb17472880ed307d6fbf354d/0/3",
+    "ordered/57cb0c72eb17472880ed307d6fbf354d/0/4"
+  ],
+  "released_sources": [
+    "ordered/57cb0c72eb17472880ed307d6fbf354d/0/1",
+    "ordered/57cb0c72eb17472880ed307d6fbf354d/0/2",
+    "ordered/57cb0c72eb17472880ed307d6fbf354d/0/3",
+    "ordered/57cb0c72eb17472880ed307d6fbf354d/0/4"
+  ],
+  "sources_all_released": true,
+  "client_cleanup_passed": true,
+  "timing_boundary": "Ordinary Walk delay is reported separately. This does not promise that every ordinary Walk tolerates a late tick.",
+  "injection_boundary": "late_input, entry_gate and actual receipt ticks prove this injection. injection_applied is only the separate external-force/world-change marker.",
+  "historical_d093_results_rewritten": false
+}

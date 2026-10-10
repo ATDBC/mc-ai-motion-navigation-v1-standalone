@@ -1,0 +1,15 @@
+Mutation: remove changed_cells only after observed verified-command application. Production source unchanged.
+test_invalidated_air_proof_is_not_reenabled_by_later_cancel (tp0_proof_dependency_mutation.PostInputLossLandingRecoveryTests.test_invalidated_air_proof_is_not_reenabled_by_later_cancel) ... FAIL
+
+======================================================================
+FAIL: test_invalidated_air_proof_is_not_reenabled_by_later_cancel (tp0_proof_dependency_mutation.PostInputLossLandingRecoveryTests.test_invalidated_air_proof_is_not_reenabled_by_later_cancel)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "tests\motion_nav\test_post_input_loss_landing_recovery.py", line 353, in test_invalidated_air_proof_is_not_reenabled_by_later_cancel
+    self.assertIs(discarded.state, ActionRouteState.CANCELLING)
+AssertionError: <ActionRouteState.RUNNING: 'running'> is not <ActionRouteState.CANCELLING: 'cancelling'>
+
+----------------------------------------------------------------------
+Ran 1 test in 0.054s
+
+FAILED (failures=1)

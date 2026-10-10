@@ -1,0 +1,65 @@
+test_internal_failure_during_input_loss_replan_has_its_own_cause (tests.motion_nav.test_post_input_loss_landing_recovery.PostInputLossLandingRecoveryTests.test_internal_failure_during_input_loss_replan_has_its_own_cause) ... FAIL
+test_failed_goal_revision_does_not_report_goal_revised_as_failure (tests.motion_nav.test_post_input_loss_landing_recovery.PostInputLossLandingRecoveryTests.test_failed_goal_revision_does_not_report_goal_revised_as_failure) ... ERROR
+test_dependency_cause_survives_exhausted_recovery_permission (tests.motion_nav.test_navigation_handoff.NavigationHandoffTests.test_dependency_cause_survives_exhausted_recovery_permission) ... FAIL
+test_explicit_risk_failure_replaces_an_input_loss_recovery_reason (tests.motion_nav.test_navigation_handoff.NavigationHandoffTests.test_explicit_risk_failure_replaces_an_input_loss_recovery_reason) ... FAIL
+
+======================================================================
+ERROR: test_failed_goal_revision_does_not_report_goal_revised_as_failure (tests.motion_nav.test_post_input_loss_landing_recovery.PostInputLossLandingRecoveryTests.test_failed_goal_revision_does_not_report_goal_revised_as_failure)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_post_input_loss_landing_recovery.py", line 299, in test_failed_goal_revision_does_not_report_goal_revised_as_failure
+    result=run(scenario_for("column_landing_turn",None),control_step=step)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\tests\sim\runner.py", line 351, in run
+    external_movement_intents = control_step(context) or ()
+                                ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\tests\motion_nav\test_post_input_loss_landing_recovery.py", line 296, in step
+    accepted=context.session.update_goal(report.goal_id,report.goal_revision+1,inaccessible)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\mc2p\motion_nav\navigation_session.py", line 1763, in update_goal
+    goal_node, missing = self._surface_for_goal(self._frame, goal_state)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\mc2p\motion_nav\navigation_session.py", line 5005, in _surface_for_goal
+    result = query_support_surfaces(
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\mc2p\motion_nav\support_surfaces.py", line 767, in query_support_surfaces
+    missing = tuple(
+              ^^^^^^
+  File "D:\My_project\mc_ai\mc2p\motion_nav\support_surfaces.py", line 770, in <genexpr>
+    else query_cache.cell(position)).knowledge is CellKnowledge.UNKNOWN
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\mc2p\motion_nav\world_model.py", line 385, in cell
+    fact = self.world._cell_at_valid_position(position)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\mc2p\motion_nav\world_model.py", line 325, in _cell_at_valid_position
+    raise ContractViolation("world view expired after section changed")
+mc2p.contracts.common.ContractViolation: world view expired after section changed
+
+======================================================================
+FAIL: test_internal_failure_during_input_loss_replan_has_its_own_cause (tests.motion_nav.test_post_input_loss_landing_recovery.PostInputLossLandingRecoveryTests.test_internal_failure_during_input_loss_replan_has_its_own_cause)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_post_input_loss_landing_recovery.py", line 281, in test_internal_failure_during_input_loss_replan_has_its_own_cause
+    self.assertIs(reports[-1].failure_cause,StopCause.CANCELLED)
+AssertionError: <StopCause.INPUT_LOST: 'input_lost'> is not <StopCause.CANCELLED: 'cancelled'>
+
+======================================================================
+FAIL: test_dependency_cause_survives_exhausted_recovery_permission (tests.motion_nav.test_navigation_handoff.NavigationHandoffTests.test_dependency_cause_survives_exhausted_recovery_permission)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_navigation_handoff.py", line 84, in test_dependency_cause_survives_exhausted_recovery_permission
+    self.assertIs(owner.stop_request.cause,StopCause.DEPENDENCY_CHANGED)
+AssertionError: <StopCause.MOTION_UNSOLVABLE: 'motion_unsolvable'> is not <StopCause.DEPENDENCY_CHANGED: 'dependency_changed'>
+
+======================================================================
+FAIL: test_explicit_risk_failure_replaces_an_input_loss_recovery_reason (tests.motion_nav.test_navigation_handoff.NavigationHandoffTests.test_explicit_risk_failure_replaces_an_input_loss_recovery_reason)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_navigation_handoff.py", line 99, in test_explicit_risk_failure_replaces_an_input_loss_recovery_reason
+    self.assertIs(owner.recovery_cause,StopCause.MOTION_UNSOLVABLE)
+AssertionError: <StopCause.INPUT_LOST: 'input_lost'> is not <StopCause.MOTION_UNSOLVABLE: 'motion_unsolvable'>
+
+----------------------------------------------------------------------
+Ran 4 tests in 1.251s
+
+FAILED (failures=3, errors=1)

@@ -1,0 +1,137 @@
+{
+  "schema_version": "mc2p.tp0-fabric-byte-archive.v1",
+  "formal_platform": "windows",
+  "frozen_control_commit": "da56bfa297cec6e9c0861bb976e608b462237cd2",
+  "production_commit": "c73c66ed96ce37760661265ae8228f5fca7fb135",
+  "source_root": "D:/My_project/mc_ai/artifacts/fabric-deployment/20261010T033053075976Z-c6913a74",
+  "historical_d093_evidence_unchanged": true,
+  "files": [
+    {
+      "source_path": "D:/My_project/mc_ai/artifacts/fabric-deployment/20261010T033053075976Z-c6913a74/server-cleanup.json",
+      "source_relative_path": "server-cleanup.json",
+      "archive_relative_path": "raw/server-cleanup.json",
+      "compression": "none",
+      "raw_bytes": 241,
+      "raw_sha256": "073c7a904500940ba09e1b567402d49901d9741f5519fb51cc84bf227cd488ee",
+      "archive_bytes": 241,
+      "archive_sha256": "073c7a904500940ba09e1b567402d49901d9741f5519fb51cc84bf227cd488ee"
+    },
+    {
+      "source_path": "D:/My_project/mc_ai/artifacts/fabric-deployment/20261010T033053075976Z-c6913a74/supervision.json",
+      "source_relative_path": "supervision.json",
+      "archive_relative_path": "raw/supervision.json",
+      "compression": "none",
+      "raw_bytes": 831,
+      "raw_sha256": "14b6f753e4eb6a37d33aa8405efe76bd570d1545c545e1f0d8e517ff4b2b918e",
+      "archive_bytes": 831,
+      "archive_sha256": "14b6f753e4eb6a37d33aa8405efe76bd570d1545c545e1f0d8e517ff4b2b918e"
+    },
+    {
+      "source_path": "D:/My_project/mc_ai/artifacts/fabric-deployment/20261010T033053075976Z-c6913a74/client-0/cleanup.json",
+      "source_relative_path": "client-0/cleanup.json",
+      "archive_relative_path": "raw/client-0/cleanup.json",
+      "compression": "none",
+      "raw_bytes": 241,
+      "raw_sha256": "4d5095edb9a641cf964b3c282ae19cf8c38e1b75b4a1c6131c4cf68539060406",
+      "archive_bytes": 241,
+      "archive_sha256": "4d5095edb9a641cf964b3c282ae19cf8c38e1b75b4a1c6131c4cf68539060406"
+    },
+    {
+      "source_path": "D:/My_project/mc_ai/artifacts/fabric-deployment/20261010T033053075976Z-c6913a74/client-0/connection-proof.json",
+      "source_relative_path": "client-0/connection-proof.json",
+      "archive_relative_path": "raw/client-0/connection-proof.json",
+      "compression": "none",
+      "raw_bytes": 509,
+      "raw_sha256": "b6d1105dd6eab8a2d91aeeeb0df48faacec27503918d6d3cae41e7d7c67e0706",
+      "archive_bytes": 509,
+      "archive_sha256": "b6d1105dd6eab8a2d91aeeeb0df48faacec27503918d6d3cae41e7d7c67e0706"
+    },
+    {
+      "source_path": "D:/My_project/mc_ai/artifacts/fabric-deployment/20261010T033053075976Z-c6913a74/client-0/identity.json",
+      "source_relative_path": "client-0/identity.json",
+      "archive_relative_path": "raw/client-0/identity.json",
+      "compression": "none",
+      "raw_bytes": 50,
+      "raw_sha256": "60ce5ca1cb6fc2c3bf6cd61ba966f6ea254f2e19be697a254b6b4e41384eb53f",
+      "archive_bytes": 50,
+      "archive_sha256": "60ce5ca1cb6fc2c3bf6cd61ba966f6ea254f2e19be697a254b6b4e41384eb53f"
+    },
+    {
+      "source_path": "D:/My_project/mc_ai/artifacts/fabric-deployment/20261010T033053075976Z-c6913a74/client-0/f2-plan.json",
+      "source_relative_path": "client-0/f2-plan.json",
+      "archive_relative_path": "raw/client-0/f2-plan.json",
+      "compression": "none",
+      "raw_bytes": 2306,
+      "raw_sha256": "acac51def0b2abb4ac6465e0cef12926114f23ff201cb3bdd74e271c0d90cfb0",
+      "archive_bytes": 2306,
+      "archive_sha256": "acac51def0b2abb4ac6465e0cef12926114f23ff201cb3bdd74e271c0d90cfb0"
+    },
+    {
+      "source_path": "D:/My_project/mc_ai/artifacts/fabric-deployment/20261010T033053075976Z-c6913a74/client-0/f2-trials.jsonl",
+      "source_relative_path": "client-0/f2-trials.jsonl",
+      "archive_relative_path": "raw/client-0/f2-trials.jsonl.gz",
+      "compression": "gzip",
+      "raw_bytes": 29497,
+      "raw_sha256": "b209aabb7f98a47152c8650d12e7069e98549f1f2cc87cae670c30e640305af5",
+      "archive_bytes": 5247,
+      "archive_sha256": "6535e61b4c85a3cf5be21d68975c8b3faa4ff5acb06ed927636eaf0b4552974f"
+    },
+    {
+      "source_path": "D:/My_project/mc_ai/artifacts/fabric-deployment/20261010T033053075976Z-c6913a74/client-0/f2-frames.jsonl",
+      "source_relative_path": "client-0/f2-frames.jsonl",
+      "archive_relative_path": "raw/client-0/f2-frames.jsonl.gz",
+      "compression": "gzip",
+      "raw_bytes": 652761,
+      "raw_sha256": "f03c09e9c894a6fa584e4466f8565e20f84246585e80c360ddcd84ebf961e75e",
+      "archive_bytes": 28773,
+      "archive_sha256": "ebe20acf3bdc5c57910dcfac16c85958000d6645f5fc36d86f193ba33a6d5423"
+    },
+    {
+      "source_path": "D:/My_project/mc_ai/artifacts/fabric-deployment/20261010T033053075976Z-c6913a74/client-0/mc2p-client-time.jsonl",
+      "source_relative_path": "client-0/mc2p-client-time.jsonl",
+      "archive_relative_path": "raw/client-0/mc2p-client-time.jsonl.gz",
+      "compression": "gzip",
+      "raw_bytes": 703817,
+      "raw_sha256": "f2f873a8376077355b055162ebaf07152d0de621a3d77e466ea4d75546eaa2d5",
+      "archive_bytes": 36133,
+      "archive_sha256": "dd5a12c2f9c84bf132da264c450e1f99e050e4c47c76c46780e46e18b80f4d1d"
+    },
+    {
+      "source_path": "D:/My_project/mc_ai/artifacts/fabric-deployment/20261010T033053075976Z-c6913a74/client-0/trace.jsonl",
+      "source_relative_path": "client-0/trace.jsonl",
+      "archive_relative_path": "raw/client-0/trace.jsonl.gz",
+      "compression": "gzip",
+      "raw_bytes": 43630410,
+      "raw_sha256": "7dcb84cb3223cb8ea9ed095a68f553a12ba20054c92778fbaac8cfc9e3b85ff4",
+      "archive_bytes": 2911671,
+      "archive_sha256": "577b1af812786c34ce97c0fa767d2f9c70c001bc0f569773d47ef793e68bfbb9"
+    },
+    {
+      "source_path": "D:/My_project/mc_ai/artifacts/f2-ground-route/20261010T033051810300Z-6aaad374-plan.json",
+      "archive_relative_path": "launcher/plan.json",
+      "compression": "none",
+      "raw_bytes": 2214,
+      "raw_sha256": "d61251ba0938a0fbf414ffab6b0ed612ae250582161b410a272d11331c2ab470",
+      "archive_bytes": 2214,
+      "archive_sha256": "d61251ba0938a0fbf414ffab6b0ed612ae250582161b410a272d11331c2ab470"
+    },
+    {
+      "source_path": "D:/My_project/mc_ai/artifacts/f2-ground-route/20261010T033051810300Z-6aaad374-runs.json",
+      "archive_relative_path": "launcher/runs.json",
+      "compression": "none",
+      "raw_bytes": 465,
+      "raw_sha256": "3f267329643565c33bdaa48e214b3c845962522b0744d522834c13ae41517809",
+      "archive_bytes": 465,
+      "archive_sha256": "3f267329643565c33bdaa48e214b3c845962522b0744d522834c13ae41517809"
+    },
+    {
+      "source_path": "D:/My_project/mc_ai/artifacts/f2-ground-route/20261010T033051810300Z-6aaad374-quality.json",
+      "archive_relative_path": "launcher/quality.json",
+      "compression": "none",
+      "raw_bytes": 302,
+      "raw_sha256": "ffe4762731545f0c0799d15298b57e0b606f03fcdfef4537659bc8294f448b12",
+      "archive_bytes": 302,
+      "archive_sha256": "ffe4762731545f0c0799d15298b57e0b606f03fcdfef4537659bc8294f448b12"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+======================================================================
+FAIL: test_f2_export_matches_frozen_production_fingerprints (tests.motion_nav.test_standalone_export.StandaloneExportTests.test_f2_export_matches_frozen_production_fingerprints)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_standalone_export.py", line 177, in test_f2_export_matches_frozen_production_fingerprints
+    self.assertEqual(
+AssertionError: 'f4758745575029e5fb18b5bd1726656d57130523c44d057abf0df51a18771dcb' != '31dc22a6c3cf0354b2637e4acb839a8f65b16f8069290edaae2d087632190cac'
+- f4758745575029e5fb18b5bd1726656d57130523c44d057abf0df51a18771dcb
++ 31dc22a6c3cf0354b2637e4acb839a8f65b16f8069290edaae2d087632190cac
+ : mc2p/motion_nav/navigation_handoff.py
+
+----------------------------------------------------------------------
+Ran 12 tests in 22.865s
+
+FAILED (failures=1)

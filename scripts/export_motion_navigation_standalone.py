@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import ast
 from dataclasses import dataclass
+import fnmatch
 import hashlib
 import importlib.util
 import json
@@ -41,6 +42,7 @@ class ExportManifest:
     include_globs: tuple[str, ...]
     python_entry_globs: tuple[str, ...]
     required_paths: tuple[PurePosixPath, ...]
+    exclude_globs: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,10 +83,12 @@ def load_manifest(path: Path | None = None) -> ExportManifest:
     include = document.get("include_globs")
     entries = document.get("python_entry_globs")
     required = document.get("required_paths")
+    excluded = document.get("exclude_globs", [])
     if (type(mappings) is not dict or not mappings
             or type(include) is not list or not include
             or type(entries) is not list or not entries
-            or type(required) is not list or not required):
+            or type(required) is not list or not required
+            or type(excluded) is not list):
         raise ExportViolation("standalone export manifest sections are incomplete")
     parsed_mappings = tuple(
         (_safe_relative(src, "template source"),
@@ -92,7 +96,8 @@ def load_manifest(path: Path | None = None) -> ExportManifest:
         for src, dst in sorted(mappings.items())
     )
     patterns = []
-    for label, values in (("include glob", include), ("python entry glob", entries)):
+    for label, values in (("include glob", include), ("python entry glob", entries),
+                          ("exclude glob", excluded)):
         for value in values:
             if type(value) is not str or not value or "\\" in value:
                 raise ExportViolation(f"{label} must use a non-empty POSIX pattern")
@@ -105,6 +110,7 @@ def load_manifest(path: Path | None = None) -> ExportManifest:
         tuple(include),
         tuple(entries),
         tuple(_safe_relative(item, "required path") for item in required),
+        tuple(excluded),
     )
 
 
@@ -207,8 +213,14 @@ def collect_export_files(manifest: ExportManifest) -> dict[PurePosixPath, Path]:
         files[destination] = path
     included = _glob_files(manifest.include_globs)
     entries = _glob_files(manifest.python_entry_globs)
+    def excluded(path: Path) -> bool:
+        relative = path.relative_to(ROOT).as_posix()
+        return any(fnmatch.fnmatchcase(relative, pattern) for pattern in manifest.exclude_globs)
+    entries = {path for path in entries if not excluded(path)}
     included.update(_python_closure(entries))
     for path in included:
+        if excluded(path):
+            continue
         relative = PurePosixPath(path.relative_to(ROOT).as_posix())
         existing = files.get(relative)
         if existing is not None and existing != path:
