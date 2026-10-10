@@ -1,0 +1,85 @@
+{
+ "available": true,
+ "path": "../m1/accepted_candidates.jsonl",
+ "merged_by_reviewer_from": [
+  "setd_shards/setd_shard_0_of_3.json",
+  "setd_shards/setd_shard_1_of_3.json",
+  "setd_shards/setd_shard_2_of_3.json"
+ ],
+ "shard_seconds": [
+  3213.5,
+  3198.1,
+  3216.0
+ ],
+ "platform": [
+  {
+   "system": "Linux",
+   "release": "6.18.44-fc-v114",
+   "python": "3.11.15",
+   "cpus": 4,
+   "loadavg_start": [
+    3.7783203125,
+    3.95556640625,
+    3.98388671875
+   ]
+  },
+  {
+   "system": "Linux",
+   "release": "6.18.44-fc-v114",
+   "python": "3.11.15",
+   "cpus": 4,
+   "loadavg_start": [
+    4.0,
+    4.00634765625,
+    4.0
+   ]
+  },
+  {
+   "system": "Linux",
+   "release": "6.18.44-fc-v114",
+   "python": "3.11.15",
+   "cpus": 4,
+   "loadavg_start": [
+    3.7783203125,
+    3.95556640625,
+    3.98388671875
+   ]
+  }
+ ],
+ "summary": {
+  "candidates": 25197,
+  "scan_verified": 25197,
+  "scan_not_verified": 0,
+  "scan_status_histogram": {
+   "VERIFIED_CANDIDATE": 25197
+  },
+  "scan_reason_histogram": {},
+  "status_mismatch": 0,
+  "reason_mismatch": 0,
+  "critical_lazy_verified_where_scan_not": 0,
+  "verified_not_equivalent": 0,
+  "verified_interval_key_mismatch": 0,
+  "verified_interval_count_mismatch": 0,
+  "verified_with_intervals": 10530,
+  "verified_with_2plus_intervals_in_a_branch": 0,
+  "verified_dependency_set_mismatch": 0,
+  "runahead_F1": {
+   "status_mismatch": 0,
+   "reason_mismatch": 0,
+   "critical_lazy_verified_where_scan_not": 0,
+   "verified_not_equivalent": 0,
+   "step_total_mismatch_vs_strict": 0,
+   "online_halt_mismatch_vs_strict": 0,
+   "dependency_set_mismatch_vs_strict": 0,
+   "rejected_with_fewer_permits_than_strict": 0,
+   "rejected_with_more_permits_than_strict": 0
+  },
+  "minimal_mode_informational": {
+   "status_mismatch": 0,
+   "reason_mismatch": 0,
+   "critical": 0,
+   "verified_intervals_not_equivalent": 0
+  }
+ },
+ "mismatches": []
+}

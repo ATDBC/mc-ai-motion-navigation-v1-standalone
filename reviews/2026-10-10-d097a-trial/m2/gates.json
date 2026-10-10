@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-10 17:10:41",
+ "generated": "2026-10-10 23:18:16",
  "notes": [],
  "G8": {
   "set_A": {
@@ -131,10 +131,44 @@
   "set_B_C_pass": true,
   "set_B_scan_rejections": 873,
   "runahead_F1_sets_A_B_C_pass": true,
-  "set_D": "not run",
-  "set_D_pass": null,
-  "passed": null,
-  "verdict": "A/B/C PASS; Set D not evaluated"
+  "set_D": {
+   "candidates": 25197,
+   "scan_verified": 25197,
+   "scan_not_verified": 0,
+   "scan_status_histogram": {
+    "VERIFIED_CANDIDATE": 25197
+   },
+   "scan_reason_histogram": {},
+   "status_mismatch": 0,
+   "reason_mismatch": 0,
+   "critical_lazy_verified_where_scan_not": 0,
+   "verified_not_equivalent": 0,
+   "verified_interval_key_mismatch": 0,
+   "verified_interval_count_mismatch": 0,
+   "verified_with_intervals": 10530,
+   "verified_with_2plus_intervals_in_a_branch": 0,
+   "verified_dependency_set_mismatch": 0,
+   "runahead_F1": {
+    "status_mismatch": 0,
+    "reason_mismatch": 0,
+    "critical_lazy_verified_where_scan_not": 0,
+    "verified_not_equivalent": 0,
+    "step_total_mismatch_vs_strict": 0,
+    "online_halt_mismatch_vs_strict": 0,
+    "dependency_set_mismatch_vs_strict": 0,
+    "rejected_with_fewer_permits_than_strict": 0,
+    "rejected_with_more_permits_than_strict": 0
+   },
+   "minimal_mode_informational": {
+    "status_mismatch": 0,
+    "reason_mismatch": 0,
+    "critical": 0,
+    "verified_intervals_not_equivalent": 0
+   }
+  },
+  "set_D_pass": true,
+  "passed": true,
+  "verdict": "PASS"
  },
  "G9": {
   "baseline_passes": true,

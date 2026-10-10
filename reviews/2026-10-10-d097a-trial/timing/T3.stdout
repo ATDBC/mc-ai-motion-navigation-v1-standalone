@@ -1,0 +1,6 @@
+RECORD: 25340 candidates, 1 passes, 10 warm-up candidates, loadavg (0.96142578125, 0.4775390625, 0.2138671875)
+  pass 1/1 done
+wrote performance_record.json
+strict tick n=637911 P95=4.26 ms commit n=10627 P95=63.03504
+strict_runahead tick n=637911 P95=10.83 ms commit n=10627 P95=0.113159
+step totals equal across configs: True

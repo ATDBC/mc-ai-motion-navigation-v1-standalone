@@ -1,0 +1,369 @@
+{
+ "G1": {
+  "observed": {
+   "gap1": {
+    "accepted": 4200,
+    "denominator": 4200,
+    "entry_invalid": 0,
+    "infeasible": 0,
+    "rate": 1.0
+   },
+   "gap2": {
+    "accepted": 4200,
+    "denominator": 4200,
+    "entry_invalid": 0,
+    "infeasible": 0,
+    "rate": 1.0
+   },
+   "gap2c": {
+    "accepted": 4200,
+    "denominator": 4200,
+    "entry_invalid": 0,
+    "infeasible": 0,
+    "rate": 1.0
+   },
+   "gap3": {
+    "accepted": 4199,
+    "denominator": 4200,
+    "entry_invalid": 0,
+    "infeasible": 0,
+    "rate": 0.9997619047619047
+   },
+   "jumpup": {
+    "accepted": 4198,
+    "denominator": 4200,
+    "entry_invalid": 0,
+    "infeasible": 0,
+    "rate": 0.9995238095238095
+   },
+   "turn": {
+    "accepted": 4200,
+    "denominator": 4200,
+    "entry_invalid": 0,
+    "infeasible": 0,
+    "rate": 1.0
+   }
+  },
+  "pass": true,
+  "threshold": ">= 0.99 per template (gap5 excluded)"
+ },
+ "G2": {
+  "observed": {
+   "accepted_candidates_file": 25197,
+   "accepted_samples": 25197,
+   "reverified_rejected": 0,
+   "table_only_accepts": 0
+  },
+  "pass": true,
+  "threshold": "every accepted candidate passes scan + two goal checks; table-only accepts == 0"
+ },
+ "G3": {
+  "observed": {
+   "bytes": 211242,
+   "identical": true,
+   "sha256_A": "fc33cec9c5d610c8b8bfb1106f9255235b7f5c35252294bcf1af03b1319c3fc7",
+   "sha256_B": "fc33cec9c5d610c8b8bfb1106f9255235b7f5c35252294bcf1af03b1319c3fc7",
+   "size_le_1MB": true
+  },
+  "pass": true,
+  "threshold": "rows keep bin->params->exit/boundary ranges; two generations byte-identical; <= 1 MB"
+ },
+ "G4": {
+  "observed": {
+   "errors": 0,
+   "failures": 0,
+   "identity_tests_passed": true,
+   "per_test": {
+    "test_cap_is_recorded_not_silently_dropped": true,
+    "test_current_code_changes_reject_a_previously_written_table": true,
+    "test_deterministic_and_prefix_sharing_does_not_change_result": true,
+    "test_feasible_mode_agrees_with_collect_and_infeasible_gap5": true,
+    "test_generated_table_size_bound_if_present": true,
+    "test_geometry_matches_entries_helpers": true,
+    "test_identity_change_in_any_field_rejects_load": true,
+    "test_identity_matching_table_loads": true,
+    "test_jump_only_when_every_branch_is_grounded": true,
+    "test_mixed_fixture_g6_expected_candidate_found": true,
+    "test_oracle_collect_equals_brute_force_over_whole_grid": true,
+    "test_params_round_trip_and_validation": true,
+    "test_row_structure_and_size_bound_for_a_real_row": true,
+    "test_serialization_is_deterministic_lf_and_round_trips": true,
+    "test_steering_minimises_heading_error_with_alphabet_tie_break": true,
+    "test_verify_accepts_mixed_fixture_candidate": true
+   },
+   "ran": 16,
+   "skipped": 0
+  },
+  "pass": true,
+  "threshold": "identity change -> load rejected (unit test)"
+ },
+ "G5": {
+  "observed": {
+   "generation_cpu_hours": 3.2587377353883333,
+   "max_gap5_point_steps": 44748,
+   "max_supported_point_steps_collect_mode": 33499,
+   "max_validation_oracle_steps_incl_scans": 1792,
+   "points": 1197,
+   "supported_points_over_40000": 0,
+   "validation_oracle_feasible_mode_runs": 3,
+   "validation_oracle_runs_over_40000": 0
+  },
+  "pass": true,
+  "threshold": "CPU <= 8 h; supported point <= 40,000 steps; gap5 point <= 200,000"
+ },
+ "G6": {
+  "observed": {
+   "classes": 363,
+   "collect_passing_params": 1,
+   "cpu_seconds": 2.807279983,
+   "feasible": true,
+   "inputs": [
+    [
+     1.0,
+     0.0,
+     false,
+     false,
+     false,
+     0.0
+    ],
+    [
+     1.0,
+     0.0,
+     true,
+     false,
+     true,
+     0.0
+    ],
+    [
+     1.0,
+     0.0,
+     false,
+     false,
+     false,
+     0.0
+    ],
+    [
+     1.0,
+     0.0,
+     false,
+     false,
+     false,
+     0.0
+    ],
+    [
+     1.0,
+     0.0,
+     false,
+     false,
+     false,
+     0.0
+    ],
+    [
+     1.0,
+     0.0,
+     false,
+     false,
+     false,
+     0.0
+    ],
+    [
+     1.0,
+     0.0,
+     false,
+     false,
+     false,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     false,
+     false,
+     false,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     false,
+     false,
+     false,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     false,
+     false,
+     false,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     false,
+     false,
+     false,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     false,
+     false,
+     false,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     false,
+     false,
+     false,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     false,
+     false,
+     false,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     false,
+     false,
+     false,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     false,
+     false,
+     false,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     false,
+     false,
+     false,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     false,
+     false,
+     false,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     false,
+     false,
+     false,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     false,
+     false,
+     false,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     false,
+     false,
+     false,
+     0.0
+    ]
+   ],
+   "inputs_alphabet_index": [
+    0,
+    4,
+    0,
+    0,
+    0,
+    0,
+    0,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "matches_expected_W1_SJ_W5_N14": true,
+   "params": {
+    "air_gait": "W",
+    "air_ticks": 5,
+    "brake_b": null,
+    "ground_gait": "W",
+    "jump_gait": "SJ",
+    "takeoff_d": 0.15
+   },
+   "scan_steps": 469,
+   "steps_collect_mode": 15866,
+   "steps_feasible_mode": 6986,
+   "verify": [
+    true,
+    "verified"
+   ]
+  },
+  "pass": true,
+  "threshold": "verified candidate on mixed fixture"
+ },
+ "G7": {
+  "observed": {
+   "denominator": 0,
+   "success_rate": null,
+   "unsupported": 4200
+  },
+  "pass": true,
+  "threshold": "all gap5 validation entries typed unsupported, zero permits"
+ },
+ "G7b": {
+  "observed": {
+   "max_ms": 167.987,
+   "p50_ms": 7.1042,
+   "p95_ms": 12.023700000000002,
+   "p99_ms": 15.008,
+   "single_process_rerun": {
+    "all_three_params_ms": {
+     "0.5": 6.899881,
+     "0.95": 9.184691,
+     "0.99": 22.522585,
+     "1.0": 39.470799
+    },
+    "as_run_ms": {
+     "0.5": 6.899881,
+     "0.95": 8.777495,
+     "0.99": 13.979434,
+     "1.0": 39.470799
+    },
+    "note": "single process, other agents' processes active; validation samples (seed 20261011), first per_bin of each bin",
+    "samples": 1260
+   },
+   "validation_run_samples": 25200
+  },
+  "pass": true,
+  "threshold": "P95 <= 15 ms, >= 200 samples"
+ }
+}

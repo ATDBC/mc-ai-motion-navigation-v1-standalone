@@ -1,0 +1,33 @@
+config kind group: n, ms P50/P95, steps P50/P95, median us/step (nonzero-step decisions)
+strict commit A 17 38.307 68.385 312 326 120.064
+strict commit C 80 38.229 55.758 308 333 122.695
+strict commit D-gap1 571 6.071 9.81 49 50 123.311
+strict commit D-gap2 2800 44.632 68.86 369 371 127.319
+strict commit D-gap2c 2960 42.675 62.244 348 371 124.742
+strict commit D-gap3 4199 41.494 61.618 313 353 122.516
+strict tick A 366 2.024 3.091 16 24 126.652
+strict tick C 2417 2.138 3.62 18 24 126.969
+strict tick D-gap1 140740 2.241 4.59 18 34 125.029
+strict tick D-gap2 123964 2.182 4.412 18 34 128.567
+strict tick D-gap2c 97360 2.274 4.513 18 34 123.368
+strict tick D-gap3 89645 2.088 3.463 18 18 128.965
+strict tick D-jumpup 102007 2.196 4.317 18 32 126.536
+strict tick D-turn 81412 2.103 3.25 16 18 139.937
+strict_runahead commit A 17 15.969 31.853 140 266 116.361
+strict_runahead commit C 80 0.047 0.089 0 0 None
+strict_runahead commit D-gap1 571 0.031 0.076 0 0 None
+strict_runahead commit D-gap2 2800 0.065 0.112 0 0 None
+strict_runahead commit D-gap2c 2960 0.061 0.108 0 0 None
+strict_runahead commit D-gap3 4199 0.063 0.117 0 0 None
+strict_runahead tick A 366 0.017 10.394 0 76 125.251
+strict_runahead tick C 2417 0.021 11.573 0 76 125.684
+strict_runahead tick D-gap1 140740 0.021 10.69 0 74 123.679
+strict_runahead tick D-gap2 123964 0.023 11.349 0 78 126.255
+strict_runahead tick D-gap2c 97360 0.029 11.967 0 78 123.349
+strict_runahead tick D-gap3 89645 0.023 11.395 0 80 125.582
+strict_runahead tick D-jumpup 102007 0.018 10.204 0 80 124.541
+strict_runahead tick D-turn 81412 0.02 9.6 0 70 137.053
+strict tick median us/step by tenth of the run: [125.088, 125.216, 127.817, 128.095, 128.113, 127.562, 123.46, 125.786, 129.381, 141.218]
+strict_runahead tick median us/step by tenth of the run: [124.293, 123.159, 126.973, 125.594, 124.493, 126.246, 125.308, 121.19, 125.18, 135.974]
+F1 tick decisions with zero physics steps: 0.6672 | P95 over the non-zero ones: 14.092 ms
+decisions over 100 ms: 38 {('strict_runahead', 'tick'): 19, ('strict', 'tick'): 16, ('strict', 'commit'): 3} max 726.533859
