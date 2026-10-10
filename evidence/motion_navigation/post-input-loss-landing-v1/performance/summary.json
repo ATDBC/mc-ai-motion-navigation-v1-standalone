@@ -1,0 +1,112 @@
+{
+  "schema_version": "mc2p.d094-performance-summary.v1",
+  "formal_platform": "windows",
+  "d058": {
+    "passed": true,
+    "complete_prepare": {
+      "p50_ms": 3.2021,
+      "p95_ms": 4.8724,
+      "p99_ms": 6.039,
+      "maximum_ms": 16.1865
+    },
+    "route_groups": {
+      "complex_shape_one_replay": {
+        "passed": true,
+        "statistics": {
+          "p50_ms": 0.1702,
+          "p95_ms": 0.192,
+          "p99_ms": 0.2154,
+          "maximum_ms": 0.3245
+        }
+      },
+      "incumbent_pending_four_replays": {
+        "passed": true,
+        "statistics": {
+          "p50_ms": 0.2868,
+          "p95_ms": 0.296,
+          "p99_ms": 0.3192,
+          "maximum_ms": 0.3722
+        }
+      },
+      "nonempty_no_intersection": {
+        "passed": true,
+        "statistics": {
+          "p50_ms": 0.0055,
+          "p95_ms": 0.0058,
+          "p99_ms": 0.0062,
+          "maximum_ms": 0.0074
+        }
+      },
+      "single_incumbent_two_replays": {
+        "passed": true,
+        "statistics": {
+          "p50_ms": 0.1594,
+          "p95_ms": 0.1633,
+          "p99_ms": 0.1741,
+          "maximum_ms": 0.2297
+        }
+      },
+      "standable_connection_one_replay": {
+        "passed": true,
+        "statistics": {
+          "p50_ms": 0.2249,
+          "p95_ms": 0.249,
+          "p99_ms": 0.2778,
+          "maximum_ms": 0.3894
+        }
+      },
+      "surface_edge_one_replay": {
+        "passed": true,
+        "statistics": {
+          "p50_ms": 0.1721,
+          "p95_ms": 0.1957,
+          "p99_ms": 0.2222,
+          "maximum_ms": 0.2974
+        }
+      }
+    }
+  },
+  "d061": {
+    "passed": true,
+    "complete_prepare": {
+      "p50_ms": 4.1118,
+      "p95_ms": 4.2789,
+      "p99_ms": 4.4242,
+      "maximum_ms": 5.3167
+    },
+    "production_prepare": {
+      "p50_ms": 5.107,
+      "p95_ms": 5.2988,
+      "p99_ms": 5.5015,
+      "maximum_ms": 7.7871
+    },
+    "simulation_backend": {
+      "p50_ms": 3.2705,
+      "p95_ms": 3.439,
+      "p99_ms": 17.7291,
+      "maximum_ms": 23.3437
+    },
+    "full_harness": {
+      "p50_ms": 8.906,
+      "p95_ms": 9.2631,
+      "p99_ms": 23.1901,
+      "maximum_ms": 28.9724
+    },
+    "formal_control_path": {
+      "p50_ms": 8.4377,
+      "p95_ms": 8.7175,
+      "p99_ms": 22.8292,
+      "maximum_ms": 28.5067
+    },
+    "following_revision_production": {
+      "p50_ms": 7.0997,
+      "p95_ms": 7.7871,
+      "p99_ms": 7.7871,
+      "maximum_ms": 7.7871
+    }
+  },
+  "raw_sha256": {
+    "d058": "13ce2ed34c93f10b2b9303ad5655145a97d684f48b5a2a5d7d1d9a1e916cb601",
+    "d061": "b53ef825f3e24b0d5e335bf6672d9876a657549ea5d72ce7b0840336b39397a6"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "schema": "mc2p.post-input-loss-landing-production-semantic-hashes.v1",
+  "base_commit": "d9ad674e6f8ded0545f32dd8454d910f64fc1afc",
+  "normalization": "CRLF is normalized to LF before SHA-256",
+  "files": {
+    "mc2p/motion_nav/action_route_executor.py": "bc192d3e797cf0bec4443b8d91379ceea6ebadafc027d66f113a3e1d8fe80e55",
+    "mc2p/motion_nav/navigation_handoff.py": "31dc22a6c3cf0354b2637e4acb839a8f65b16f8069290edaae2d087632190cac",
+    "mc2p/motion_nav/navigation_session.py": "41c066d409b01cde2760cddd1031af483a1d38c43d1dadd9a19e195f0580109b",
+    "mc2p/motion_nav/route_admission.py": "16e99e80d6f5640c3d2934b78288b3b90462a768972e57b16d985cfc75c0903b",
+    "mc2p/motion_nav/route_validation.py": "894009cb75fd9c7a51bd3ebd9ec7e9cfb56e9ed243088d34a6340925c892daf3",
+    "mc2p/motion_nav/support_surfaces.py": "7a465227d8046a570732415f38cbe8408ea370e0aa644e257ce0fbcdecfa3381"
+  }
+}

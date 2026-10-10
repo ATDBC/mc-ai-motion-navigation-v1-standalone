@@ -248,8 +248,14 @@ class StandableConnectionQueryArgs:
     connection_from: tuple[float, float, float]
     body_width_blocks: float
     body_height_blocks: float
+    observed_start_minimum_support: float | None = None
 
     def __post_init__(self) -> None:
+        if self.observed_start_minimum_support is not None and (
+                type(self.observed_start_minimum_support) not in (int, float)
+                or not math.isfinite(self.observed_start_minimum_support)
+                or not 0 < self.observed_start_minimum_support <= .5):
+            raise ContractViolation("observed start support minimum is invalid")
         if type(self.surface) is not SupportSurface:
             raise ContractViolation("standable connection recipe requires a surface")
         _point(self.position, "standable connection endpoint")
@@ -661,6 +667,7 @@ def replay_walk_validation_recipe(
             args.connection_from,
             body_width=args.body_width_blocks,
             body_height=args.body_height_blocks,
+            observed_start_minimum_support=args.observed_start_minimum_support,
             query_cache=cache,
         )
         status, dependencies = result.status, result.dependencies

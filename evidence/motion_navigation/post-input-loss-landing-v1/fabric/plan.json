@@ -1,0 +1,98 @@
+[
+  {
+    "id": "d094-landing-late-0",
+    "family": "handoff_column_top",
+    "direction": 0,
+    "condition": "late_air",
+    "expected": "success",
+    "d094_source_family": "column_landing_turn",
+    "injected_late_ticks": 1,
+    "late_air_command_index": 3,
+    "scene_sha256": "c5ecf848af61ed3c86966eaf53c413589384f558ee89d3569c552fe2ff38009e",
+    "start_position": [
+      0.5,
+      100.0,
+      0.5
+    ],
+    "goal_bounds": [
+      3.3,
+      100.92,
+      9.3,
+      3.7,
+      101.08,
+      9.7
+    ]
+  },
+  {
+    "id": "d094-landing-late-1",
+    "family": "handoff_column_top",
+    "direction": 1,
+    "condition": "late_air",
+    "expected": "success",
+    "d094_source_family": "column_landing_turn",
+    "injected_late_ticks": 1,
+    "late_air_command_index": 3,
+    "scene_sha256": "41a216a7f9dac4f2f4faff040e04b00cb43f37e180db179463b66018ac32d195",
+    "start_position": [
+      0.5,
+      100.0,
+      -0.5
+    ],
+    "goal_bounds": [
+      9.3,
+      100.92,
+      -3.7,
+      9.7,
+      101.08,
+      -3.3
+    ]
+  },
+  {
+    "id": "d094-landing-late-2",
+    "family": "handoff_column_top",
+    "direction": 2,
+    "condition": "late_air",
+    "expected": "success",
+    "d094_source_family": "column_landing_turn",
+    "injected_late_ticks": 1,
+    "late_air_command_index": 3,
+    "scene_sha256": "2edfcfeb4ae9666bf51626f35ff48a9caf3eb8cf7cca18a54bcd55c3c85240ee",
+    "start_position": [
+      -0.5,
+      100.0,
+      -0.5
+    ],
+    "goal_bounds": [
+      -3.7,
+      100.92,
+      -9.7,
+      -3.3,
+      101.08,
+      -9.3
+    ]
+  },
+  {
+    "id": "d094-landing-late-3",
+    "family": "handoff_column_top",
+    "direction": 3,
+    "condition": "late_air",
+    "expected": "success",
+    "d094_source_family": "column_landing_turn",
+    "injected_late_ticks": 1,
+    "late_air_command_index": 3,
+    "scene_sha256": "7dbe013651b8cd0197674920d0ff4daee41c5c5665f659bfefcfff6e276ca5ed",
+    "start_position": [
+      -0.5,
+      100.0,
+      0.5
+    ],
+    "goal_bounds": [
+      -9.7,
+      100.92,
+      3.3,
+      -9.3,
+      101.08,
+      3.7
+    ]
+  }
+]

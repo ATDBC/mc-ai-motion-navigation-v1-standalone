@@ -16,7 +16,7 @@ from mc2p.motion_nav.action_route import (
     StepSegment, WalkSegment, canonical_surface_node_path,
 )
 from mc2p.motion_nav.async_work import AsyncWorkIdentity
-from mc2p.motion_nav.fixed_route import FixedRoute, RoutePoint
+from mc2p.motion_nav.fixed_route import FixedRoute, FixedRouteConfig, RoutePoint
 from mc2p.motion_nav.geometry import QueryStatus, query_support, sweep
 from mc2p.motion_nav.ground_modes import observed_ground_mode
 from mc2p.motion_nav.ground_motion import GroundMotionProfile
@@ -758,6 +758,7 @@ class RouteAdmitter:
         route_suffix: str,
         node_ids: tuple[SurfaceNodeId, ...],
         completion_region: GroundCompletionRegion,
+        observed_start_minimum_support: float | None = None,
     ) -> AdmissionResult:
         route_id = f"{request.request_id}-{route_suffix}"
         contract = GroundRouteExecutionContract.for_completion(completion_region, dependencies,
@@ -779,6 +780,7 @@ class RouteAdmitter:
                 frame.body.position,
                 .6,
                 1.8,
+                observed_start_minimum_support,
             ),
             dependencies,
         )
@@ -1085,11 +1087,16 @@ class RouteAdmitter:
             )
         assert selected.position is not None
         endpoint = selected.position
+        observed_start_minimum = (
+            FixedRouteConfig().minimum_support_fraction
+            if frame.body.is_on_ground else None
+        )
         direct = query_standable_connection(
             frame.world,
             surface,
             endpoint,
             frame.body.position,
+            observed_start_minimum_support=observed_start_minimum,
         )
         if direct.status is not QueryStatus.FEASIBLE:
             return self._local_rejection(
@@ -1143,6 +1150,7 @@ class RouteAdmitter:
             route_suffix="local",
             node_ids=(request.start,),
             completion_region=selected.completion_region,
+            observed_start_minimum_support=observed_start_minimum,
         )
         return self._local_result(
             request,

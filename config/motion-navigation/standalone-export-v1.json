@@ -96,7 +96,8 @@
     "evidence/motion_navigation/F2R-piecewise-completion-v1/**/*",
     "evidence/motion_navigation/F2REC-recovery-v1/**/*",
     "evidence/motion_navigation/action-entry-handoff-v1/**/*",
-    "evidence/motion_navigation/action-entry-late-hardening-v1/**/*"
+    "evidence/motion_navigation/action-entry-late-hardening-v1/**/*",
+    "evidence/motion_navigation/post-input-loss-landing-v1/**/*"
   ],
   "python_entry_globs": [
     "scripts/export_motion_navigation_standalone.py",
@@ -189,7 +190,8 @@
     "scripts/f2rec_r4_fabric.py",
     "scripts/action_entry_handoff_evidence.py",
     "scripts/action_entry_handoff_regression.py",
-    "scripts/action_entry_late_hardening.py"
+    "scripts/action_entry_late_hardening.py",
+    "scripts/post_input_loss_landing_evidence.py"
   ],
   "required_paths": [
     "README.md",

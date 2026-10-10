@@ -1,0 +1,12 @@
+======================================================================
+FAIL: test_cancel_during_input_loss_replan_reports_cancellation (tests.motion_nav.test_post_input_loss_landing_recovery.PostInputLossLandingRecoveryTests.test_cancel_during_input_loss_replan_reports_cancellation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_post_input_loss_landing_recovery.py", line 236, in test_cancel_during_input_loss_replan_reports_cancellation
+    self.assertIs(reports[-1].failure_cause,StopCause.CANCELLED)
+AssertionError: <StopCause.INPUT_LOST: 'input_lost'> is not <StopCause.CANCELLED: 'cancelled'>
+
+----------------------------------------------------------------------
+Ran 1 test in 0.893s
+
+FAILED (failures=1)

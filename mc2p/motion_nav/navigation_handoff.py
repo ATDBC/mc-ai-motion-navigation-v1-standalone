@@ -193,6 +193,7 @@ class NavigationHandoffCoordinator:
     def __init__(self) -> None:
         self._pending_goal: PendingGoalRevision | None = None
         self._stop_request: NavigationStopRequest | None = None
+        self._recovery_cause: StopCause | None = None
         self._task_id: str | None = None
         self._permit_sequence = 0
         self._activity_permit: RecoveryActivityPermit | None = None
@@ -309,7 +310,7 @@ class NavigationHandoffCoordinator:
         reason = self._limit_reason(status)
         if current is None:
             self._stop_request = NavigationStopRequest(
-                StopCause.MOTION_UNSOLVABLE, reason,
+                self._recovery_cause or StopCause.MOTION_UNSOLVABLE, reason,
                 destination=HandoffDestination.FAIL,
                 request_id=(None if self._task_id is None else
                             f"{self._task_id}/recovery-limit"),
@@ -372,6 +373,17 @@ class NavigationHandoffCoordinator:
     @property
     def pending_goal(self) -> PendingGoalRevision | None:
         return self._pending_goal
+
+    @property
+    def recovery_cause(self) -> StopCause | None:
+        """Current handoff cause, superseded by explicit task endings/revisions."""
+        return self._recovery_cause
+
+    def complete_replanning(self) -> None:
+        """A successfully admitted replacement closes this recovery cause."""
+        if self._stop_request is not None:
+            raise ContractViolation("replanning cannot complete before body handoff")
+        self._recovery_cause = None
 
     @property
     def stop_request(self) -> NavigationStopRequest | None:
@@ -490,6 +502,7 @@ class NavigationHandoffCoordinator:
                 and type(budget) is RetryLedger
                 and activity_permit.task_id == budget.task_id
                 and activity_permit.limit_status is not RecoveryLimitStatus.ALLOWED):
+            self._recovery_cause = cause
             self._stage_limit_failure(activity_permit.limit_status)
             return RecoveryRequestResult(
                 RecoveryRequestStatus.LIMIT_EXHAUSTED,
@@ -528,6 +541,7 @@ class NavigationHandoffCoordinator:
                 )
             current_limit = budget.current_limit_status()
             if current_limit is not RecoveryLimitStatus.ALLOWED:
+                self._recovery_cause = cause
                 self._stage_limit_failure(current_limit)
                 self._activity_consumed = True
                 return RecoveryRequestResult(
@@ -538,6 +552,7 @@ class NavigationHandoffCoordinator:
             self._activity_consumed = True
             registration = budget.begin_recovery(recovery_identity, retry_cause)
             if registration.status is not RecoveryLimitStatus.ALLOWED:
+                self._recovery_cause = cause
                 self._stage_limit_failure(registration.status)
                 return RecoveryRequestResult(
                     RecoveryRequestStatus.LIMIT_EXHAUSTED,
@@ -550,6 +565,7 @@ class NavigationHandoffCoordinator:
                     registration.status,
                     recovery_identity,
                 )
+            self._recovery_cause = cause
             registration_cause = retry_cause
         elif current is not None:
             # A terminal request replaces the target purpose but keeps the
@@ -557,6 +573,10 @@ class NavigationHandoffCoordinator:
             recovery_identity = current.recovery_identity
         else:
             recovery_identity = None
+        if destination in {
+                HandoffDestination.CANCEL, HandoffDestination.CLOSE,
+                HandoffDestination.COMPLETE}:
+            self._recovery_cause = cause
         self._stop_request = NavigationStopRequest(
             cause, reason, destination=destination, request_id=request_id,
             retry_cause=registration_cause, missing_cells=missing_cells,
@@ -694,9 +714,11 @@ class NavigationHandoffCoordinator:
             raise ContractViolation(
                 "pending navigation goal revision must be newer"
             )
+        self._recovery_cause = StopCause.GOAL_REVISED
         self._pending_goal = pending_goal
 
     def clear_goal(self) -> PendingGoalRevision | None:
+        self._recovery_cause = None
         pending = self._pending_goal
         self._pending_goal = None
         self._stop_request = None

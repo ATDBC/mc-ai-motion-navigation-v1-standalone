@@ -570,8 +570,14 @@ def standable_point_in_region(world: WorldView, surface: SupportSurface, region:
                               *, body_width: float = .6, body_height: float = 1.8,
                               minimum_support_fraction: float = .5,
                               connection_from: tuple[float, float, float] | None = None,
+                              observed_start_minimum_support: float | None = None,
                               query_cache: WorldQueryCache | None = None) -> StandablePointResult:
     """Select a concrete goal position with the existing clearance/support rules."""
+    if observed_start_minimum_support is not None and (
+            type(observed_start_minimum_support) not in (int, float)
+            or not math.isfinite(observed_start_minimum_support)
+            or not 0 < observed_start_minimum_support <= minimum_support_fraction):
+        raise ContractViolation("observed start support minimum is invalid")
     if query_cache is not None and (
             type(query_cache) is not WorldQueryCache
             or query_cache.world is not world):
@@ -610,6 +616,8 @@ def standable_point_in_region(world: WorldView, surface: SupportSurface, region:
                     continue
                 count = max(1, math.ceil(math.hypot(dx, dz) / .1))
                 supported = True
+                previous_fraction = None
+                reached_margin = observed_start_minimum_support is None
                 for index in range(count + 1):
                     checked = query_support(
                         start.moved(dx * index / count, 0., dz * index / count),
@@ -619,7 +627,17 @@ def standable_point_in_region(world: WorldView, surface: SupportSurface, region:
                     dependencies.update(checked.dependencies)
                     missing.update(checked.missing_cells)
                     unsupported |= checked.status is QueryStatus.UNSUPPORTED
-                    supported &= checked.status is QueryStatus.FEASIBLE and checked.support_fraction + _EPSILON >= minimum_support_fraction
+                    fraction = checked.support_fraction
+                    fraction_ok = fraction + _EPSILON >= minimum_support_fraction
+                    if not reached_margin:
+                        fraction_ok = (
+                            fraction + _EPSILON >= observed_start_minimum_support
+                            and (previous_fraction is None
+                                 or fraction + _EPSILON >= previous_fraction)
+                        )
+                        reached_margin = fraction + _EPSILON >= minimum_support_fraction
+                        previous_fraction = fraction
+                    supported &= checked.status is QueryStatus.FEASIBLE and fraction_ok
                 if not supported:
                     continue
             return StandablePointResult(QueryStatus.FEASIBLE, (x, y, z), tuple(sorted(dependencies)))
@@ -631,6 +649,7 @@ def standable_point_in_region(world: WorldView, surface: SupportSurface, region:
 def query_standable_connection(world: WorldView, surface: SupportSurface,
                               position: tuple[float, float, float], connection_from,
                               *, body_width=.6, body_height=1.8,
+                              observed_start_minimum_support: float | None = None,
                               query_cache: WorldQueryCache | None = None):
     """Check exactly this endpoint; never select a different point."""
     x, y, z = position
@@ -638,7 +657,9 @@ def query_standable_connection(world: WorldView, surface: SupportSurface,
     result = standable_point_in_region(world, surface,
         Aabb(x-tiny, y-tiny, z-tiny, x+tiny, y+tiny, z+tiny),
         body_width=body_width, body_height=body_height,
-        connection_from=connection_from, query_cache=query_cache)
+        connection_from=connection_from,
+        observed_start_minimum_support=observed_start_minimum_support,
+        query_cache=query_cache)
     return StandablePointResult(result.status,
         position if result.status is QueryStatus.FEASIBLE else None,
         result.dependencies, result.missing_cells)

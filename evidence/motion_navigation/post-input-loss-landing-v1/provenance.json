@@ -1,0 +1,28 @@
+{
+  "source_commit": "d9ad674e6f8ded0545f32dd8454d910f64fc1afc",
+  "working_tree": true,
+  "matrix_source_fingerprints": {
+    "mc2p/motion_nav/action_route_executor.py": "641ffce7666613372ad5c5a489dfc93a269261f580ee322c53992383050440d1",
+    "mc2p/motion_nav/navigation_session.py": "7e77815a3cc190e0e7cf06e78810158707966728576c4722bf9aa362a567888f",
+    "mc2p/motion_nav/navigation_handoff.py": "fc5dc191c58a89bf29536f7748063141b3f349b1ca914e8fac266c1db6f91ec9",
+    "mc2p/motion_nav/route_admission.py": "771a78316832391f834012198bb4685b09cde2354f41efb05e0d7013c75fc24c",
+    "mc2p/motion_nav/route_validation.py": "2b3f061e6c0f3cda1f5d01357d2948d044bec2c9bb4429ddb3c637093520cb3c",
+    "mc2p/motion_nav/support_surfaces.py": "dfdb21b47b47cc854a045b71544aa8f102f1e48a51a1e5143d84535a5837ce5a"
+  },
+  "final_source_fingerprints": {
+    "mc2p/motion_nav/action_route_executor.py": "641ffce7666613372ad5c5a489dfc93a269261f580ee322c53992383050440d1",
+    "mc2p/motion_nav/navigation_session.py": "7e77815a3cc190e0e7cf06e78810158707966728576c4722bf9aa362a567888f",
+    "mc2p/motion_nav/navigation_handoff.py": "31dc22a6c3cf0354b2637e4acb839a8f65b16f8069290edaae2d087632190cac",
+    "mc2p/motion_nav/route_admission.py": "771a78316832391f834012198bb4685b09cde2354f41efb05e0d7013c75fc24c",
+    "mc2p/motion_nav/route_validation.py": "2b3f061e6c0f3cda1f5d01357d2948d044bec2c9bb4429ddb3c637093520cb3c",
+    "mc2p/motion_nav/support_surfaces.py": "dfdb21b47b47cc854a045b71544aa8f102f1e48a51a1e5143d84535a5837ce5a"
+  },
+  "post_matrix_changes": {
+    "mc2p/motion_nav/navigation_handoff.py": {
+      "matrix_sha256": "fc5dc191c58a89bf29536f7748063141b3f349b1ca914e8fac266c1db6f91ec9",
+      "final_sha256": "31dc22a6c3cf0354b2637e4acb839a8f65b16f8069290edaae2d087632190cac"
+    }
+  },
+  "reuse_basis": "Second bounded repair changes only handoff cause reporting for explicit cancellation, goal revision, and rejected recovery registrations; the six-family matrix has none of these injected events. Body commands, timing, geometry and solver are unchanged. Final focused tests cover these new event paths.",
+  "historical_evidence": "D093 docs and action-entry-late-hardening-v1 are unchanged; current tests advance to D094."
+}

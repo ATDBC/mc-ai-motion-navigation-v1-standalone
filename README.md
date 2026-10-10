@@ -2,6 +2,8 @@
 
 这个仓库是主项目按固定清单生成的源码快照。它包含当前正式实现、共享契约、配置、测试、Fabric 客户端代码和四类现行设计文档。`EXPORT-METADATA.json` 记录来源提交，`SHA256SUMS.txt` 覆盖导出的每个文件。
 
+2026-10-10，D094 的安全落地后补走已完成。末次严格输入失联但安全落地、且目标仍未满足时，正式链从当前观察重新规划并补走。六族 600 项恢复 122 项，旧成功退步 0；Windows 正序、逆序各 1705／1705；Fabric 四方向 4／4，四次严格空中命令均真实晚一 tick 生效并记录为 `applied_outside_window`，落地后保留 typed `INPUT_LOST`，零伤害、额外期限违规、来源泄漏和二次起跳。结果见[阶段](docs/motion_navigation/stages/post-input-loss-landing-recovery.md)、[验收](docs/motion_navigation/acceptance/post-input-loss-landing-recovery.md)和 `evidence/motion_navigation/post-input-loss-landing-v1/`。
+
 默认分支 `main` 是项目方唯一的公开发布线，只接收固定导出脚本生成并校验通过的整理后快照。主项目的完整开发分支和提交历史不会直接推入本仓库。三方审查分支可以单独存在，用于保存审查报告和复现材料；它们不改变 `main` 的正式状态。
 
 2026-10-09，D092 的动作入口交接 H0—H3 已完成。正式链 80 项从修复前 0／80 变为 80／80；本轮新增的 Walk 朝向准备分支读取下一段通用入口朝向，同帧地面输入按最终获胜视角计算。Windows 完整正序、逆序各 1670／1670；v7、F2 528、v8 的旧成功退步为 0。Fabric 四方向 normal／首条严格输入晚一 tick 共 8／8，四次晚到均在证明窗口内实际生效，起跳 yaw 误差 0°，零伤害、期限错过和来源泄漏。结果见[阶段](docs/motion_navigation/stages/action-entry-handoff-repair.md)、[验收](docs/motion_navigation/acceptance/action-entry-handoff-repair.md)和 `evidence/motion_navigation/action-entry-handoff-v1/`。

@@ -990,8 +990,11 @@ class NavigationSession:
             reach_policy=self._goal_requests.reach_policy,
             observed_goal_status=None if observed is None else observed.status,
             planning_policy=self._goal_requests.planning_policy,
-            failure_cause=(None if self._last_decision is None
-                           else self._last_decision.failure_cause),
+            failure_cause=(
+                None if self._state is NavigationSessionState.COMPLETE else
+                self._handoff.recovery_cause or
+                (None if self._last_decision is None else self._last_decision.failure_cause)
+            ),
         )
 
     def _observed_goal(self, frame: NavigationFrame) -> ObservedGoal | None:
@@ -3178,6 +3181,7 @@ class NavigationSession:
             recovery = self._handoff.request_recovery(
                 request_id=attempt_id, destination=HandoffDestination.REPLAN,
                 reason=decision.reason_code, budget=self._retry_ledger,
+                cause=decision.failure_cause or StopCause.MOTION_UNSOLVABLE,
                 missing_cells=decision.missing_cells,
                 activity_permit=activity_permit,
                 recovery_identity=RecoveryIdentity(
@@ -3945,6 +3949,7 @@ class NavigationSession:
                 active_route,
                 current_scope=self.current_computation_scope,
             )
+        self._handoff.complete_replanning()
         self._continue_execution('same_support_local_route_started')
         self._snapshot_missing = ()
 
@@ -4595,6 +4600,8 @@ class NavigationSession:
         if planning_result and self._planning_coordinator is not None:
             self._planning_coordinator.clear_changes()
         self._snapshot_missing = ()
+        if self._handoff.stop_request is None:
+            self._handoff.complete_replanning()
         self._continue_execution("route_admitted")
 
     def _apply_decision_state(self, decision: ActionRouteDecision) -> None:

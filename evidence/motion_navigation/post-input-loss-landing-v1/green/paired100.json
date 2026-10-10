@@ -1,0 +1,63 @@
+{
+  "baseline_sha256": "f7fa2d1024015313d41c56184fe1686aa7441e4252d00d616ce6b32cf5d0b8ee",
+  "current_sha256": "5dcc13bd8576bcc5426b2e55693fa4212a5b2f37ada2bd3afa1e69ccd7ff6730",
+  "paired_cases": 600,
+  "unchanged_cases": 478,
+  "recovered_cases": 122,
+  "failures": [],
+  "families": {
+    "column_landing_aligned": {
+      "completed": 99,
+      "reasons": {
+        "goal_state_satisfied": 99,
+        "motion_unsolvable:needs_state": 1
+      },
+      "recovery_extra_ticks_median": 10.0
+    },
+    "column_landing_turn": {
+      "completed": 99,
+      "reasons": {
+        "goal_state_satisfied": 99,
+        "motion_unsolvable:needs_state": 1
+      },
+      "recovery_extra_ticks_median": 10.0
+    },
+    "column_outer_aligned": {
+      "completed": 100,
+      "reasons": {
+        "goal_state_satisfied": 100
+      },
+      "recovery_extra_ticks_median": null
+    },
+    "column_outer_turn": {
+      "completed": 100,
+      "reasons": {
+        "goal_state_satisfied": 100
+      },
+      "recovery_extra_ticks_median": null
+    },
+    "turn_drop": {
+      "completed": 100,
+      "reasons": {
+        "goal_state_satisfied": 100
+      },
+      "recovery_extra_ticks_median": null
+    },
+    "turn_jumpup": {
+      "completed": 99,
+      "reasons": {
+        "goal_state_satisfied": 99,
+        "motion_unsolvable:needs_state": 1
+      },
+      "recovery_extra_ticks_median": null
+    }
+  },
+  "source_fingerprints": {
+    "mc2p/motion_nav/action_route_executor.py": "641ffce7666613372ad5c5a489dfc93a269261f580ee322c53992383050440d1",
+    "mc2p/motion_nav/navigation_session.py": "7e77815a3cc190e0e7cf06e78810158707966728576c4722bf9aa362a567888f",
+    "mc2p/motion_nav/navigation_handoff.py": "fc5dc191c58a89bf29536f7748063141b3f349b1ca914e8fac266c1db6f91ec9",
+    "mc2p/motion_nav/route_admission.py": "771a78316832391f834012198bb4685b09cde2354f41efb05e0d7013c75fc24c",
+    "mc2p/motion_nav/route_validation.py": "2b3f061e6c0f3cda1f5d01357d2948d044bec2c9bb4429ddb3c637093520cb3c",
+    "mc2p/motion_nav/support_surfaces.py": "dfdb21b47b47cc854a045b71544aa8f102f1e48a51a1e5143d84535a5837ce5a"
+  }
+}

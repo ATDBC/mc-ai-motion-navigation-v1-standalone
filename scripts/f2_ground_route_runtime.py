@@ -7,7 +7,7 @@ All measured movement goes through RuntimeNavigationDriver and Runtime.
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict, replace
+from dataclasses import asdict
 import hashlib
 import json
 import math
@@ -25,8 +25,9 @@ from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.motion_nav.goal_observation import evaluate_observed_goal
 from mc2p.motion_nav.action_route import WalkSegment
-from mc2p.motion_nav.segment_entry import SegmentEntryWindow, body_fits_segment_entry
-from mc2p.motion_nav.ground_modes import observed_ground_mode
+from mc2p.motion_nav.action_route_executor import ActionRouteState
+from mc2p.motion_nav.body_control import StopCause
+from mc2p.motion_nav.segment_entry import SegmentEntryWindow
 from mc2p.motion_nav.navigation_session import NavigationSession, NavigationSessionProfiles
 from mc2p.skills.navigation_session_driver import RuntimeNavigationDriver, RuntimeNavigationDriverState
 from scripts.control_probe_core import append_jsonl, write_json_atomic
@@ -57,7 +58,7 @@ def _original_goal(row, target):
     return _goal(target)
 
 
-def _entry_late_walk_gate(session, frame, proposals):
+def _entry_late_walk_gate(session, frame, proposals, *, route_decision=None):
     """Evaluator-only trigger; no reason label participates in the choice."""
     active = session._active_route
     index = session.diagnostics.action_index
@@ -65,27 +66,138 @@ def _entry_late_walk_gate(session, frame, proposals):
             or index + 1 >= len(active.action_route.actions)
             or type(active.action_route.actions[index]) is not WalkSegment
             or not frame.body.is_on_ground
-            or not any(e.intent.movement is not None for p in proposals for e in p.intents)):
+            or not any(e.intent.movement is not None
+                       and e.intent.movement != MovementV1()
+                       and not e.intent.movement.jump
+                       for p in proposals for e in p.intents)
+            or (route_decision is not None
+                and (route_decision.expected_movement_tick is not None
+                     or route_decision.verified_command_index is not None))):
         return None
     window = getattr(active.action_route.actions[index + 1], "entry_window", None)
     if type(window) is not SegmentEntryWindow:
         return None
     speed = math.hypot(frame.body.velocity_blocks_per_second[0],
                        frame.body.velocity_blocks_per_second[2])
+    dx = frame.body.position[0] - window.reference_point[0]
+    dz = frame.body.position[2] - window.reference_point[2]
+    ux, uz = window.horizontal_approach_direction
+    longitudinal = dx * ux + dz * uz
+    lateral = abs(dx * uz - dz * ux)
+    # Observe the approach before braking completes.  Projection onto the
+    # declared entry direction makes the trigger identical after rotation.
+    distance_before_entry = max(0., window.minimum_longitudinal_offset_blocks - longitudinal)
     if (speed <= window.maximum_speed_blocks_per_second
-            or not body_fits_segment_entry(window,
-                replace(frame.body, velocity_blocks_per_second=(0., frame.body.velocity_blocks_per_second[1], 0.)),
-                observed_ground_mode(frame.body))):
+            or distance_before_entry > .8
+            or longitudinal > window.maximum_longitudinal_offset_blocks
+            or lateral > max(.30, window.maximum_lateral_offset_blocks)
+            or not window.minimum_feet_y <= frame.body.position[1] <= window.maximum_feet_y):
         return None
     return {"movement_tick": frame.body.movement_tick_id,
             "speed_blocks_per_second": speed,
             "maximum_entry_speed_blocks_per_second": window.maximum_speed_blocks_per_second,
             "reference_point": window.reference_point,
             "position": frame.body.position, "on_ground": frame.body.is_on_ground,
-            "profile_id": window.profile_id}
+            "profile_id": window.profile_id,
+            "distance_before_entry_blocks": distance_before_entry,
+            "estimated_ticks_before_entry": math.ceil(distance_before_entry / (speed / 20.))}
 
 
-def frozen_plan(*, f2r=False, f2rec=False, handoff=False, handoff_entry_late=False):
+def _selected_input_has_declared_timing(prepared, decision):
+    """Timing belongs to the winning movement, not every submitted proposal."""
+    if (prepared is None or prepared.route_decision is None
+            or prepared.control_frame is None or decision is None):
+        return False
+    route = prepared.route_decision
+    movement_ids = {envelope.intent.intent_id
+                    for envelope in prepared.control_frame.intents
+                    if envelope.intent.movement is not None}
+    return (any(group == "movement" and intent in movement_ids
+                for group, intent in decision.selected_intents)
+            and (route.expected_movement_tick is not None
+                 or route.verified_command_index is not None))
+
+
+def _landing_late_air_gate(session, frame, route_decision, *, command_index=3):
+    """Inject only a declared command of the final action after departure."""
+    active = session._active_route
+    if (active is None or route_decision is None or frame.body.is_on_ground
+            or route_decision.action_index != len(active.action_route.actions) - 1
+            or route_decision.expected_movement_tick is None
+            or route_decision.verified_command_index != command_index
+            or not route_decision.submit_input):
+        return None
+    return {"movement_tick": frame.body.movement_tick_id,
+            "position": frame.body.position, "on_ground": False,
+            "action_index": route_decision.action_index,
+            "verified_command_index": route_decision.verified_command_index,
+            "expected_movement_tick": route_decision.expected_movement_tick,
+            "latest_movement_tick": route_decision.latest_movement_tick}
+
+
+def _should_inject_late_input(condition, late_record, delayed_candidate):
+    """The same once-per-trial guard is used by the fixture and its tests."""
+    return (condition in {"late_first", "late_two", "late_entry", "late_air"}
+            and late_record is None and delayed_candidate)
+
+
+def _input_timing_evidence(frames, *, task_success, expected_late_sequence=None):
+    """Keep ledger facts unchanged while distinguishing measured obligations."""
+    explicit_misses = []
+    unwindowed_delays = []
+    for frame in frames:
+        ticks = frame["actual_application_ticks"]
+        requested = frame["requested_first_tick"]
+        latest = frame["latest_allowed_first_tick"]
+        if not ticks or requested is None:
+            continue
+        if frame["explicit_input_timing"]:
+            if latest is not None and min(ticks) > latest:
+                explicit_misses.append(frame["request_sequence"])
+        elif min(ticks) > requested:
+            unwindowed_delays.append({
+                "request_sequence": frame["request_sequence"],
+                "requested_first_tick": requested,
+                "actual_application_ticks": ticks,
+                "delay_ticks": min(ticks) - requested,
+                "input_status": frame["input_status"],
+                "observation_tick": frame["tick"],
+                "position": frame["position"], "on_ground": frame["on_ground"],
+                "formal_goal_status": frame["formal_goal_status"],
+                "task_success": task_success,
+            })
+    return {
+        "input_deadline_miss_count": len(explicit_misses),
+        "expected_injected_explicit_miss_count": sum(
+            sequence == expected_late_sequence for sequence in explicit_misses),
+        "unexpected_explicit_deadline_miss_count": sum(
+            sequence != expected_late_sequence for sequence in explicit_misses),
+        "explicit_deadline_miss_sequences": explicit_misses,
+        "raw_applied_outside_window_count": sum(
+            frame["input_status"] == "applied_outside_window" for frame in frames),
+        "unwindowed_input_delay_count": len(unwindowed_delays),
+        "unwindowed_input_delays": unwindowed_delays,
+        "violations": (["input_deadline_miss"] if any(
+            sequence != expected_late_sequence for sequence in explicit_misses) else []),
+    }
+
+
+def frozen_plan(*, f2r=False, f2rec=False, handoff=False, handoff_entry_late=False,
+                d094_landing_late=False):
+    if d094_landing_late:
+        rows = []
+        for direction in range(4):
+            row = {"id": f"d094-landing-late-{direction}",
+                   "family": "handoff_column_top", "direction": direction,
+                   "condition": "late_air", "expected": "success",
+                   "d094_source_family": "column_landing_turn",
+                   "injected_late_ticks": 1, "late_air_command_index": 3}
+            solids, start, target = fixture(row)
+            row["scene_sha256"] = digest(sorted((list(p), m) for p, m in solids.items()))
+            row["start_position"] = list(start)
+            row["goal_bounds"] = list(_original_goal(row, target).region.as_tuple())
+            rows.append(row)
+        return rows
     if handoff or handoff_entry_late:
         from tests.sim.f2s_cases import support_region_cases
         rows = []
@@ -198,7 +310,11 @@ def fixture(row):
         return ({(x,y+36,z):material for x,y,z,material in case["solids"]},
                 (case["start"][0],case["start"][1]+36,case["start"][2]),
                 (case["goal"][0],case["goal"][1]+36,case["goal"][2]))
-    if family.startswith('f2r_'):
+    if row.get("d094_source_family") is not None:
+        from scripts.action_entry_late_hardening import scenario_for
+        scenario = scenario_for(row["d094_source_family"], None)
+        solids, start, target = dict(scenario.scene.solids), scenario.start, scenario.goal
+    elif family.startswith('f2r_'):
         from tests.sim.f2r_cases import layout
         scene, start, target = layout(family.removeprefix('f2r_'))
         solids = dict(scene.solids)
@@ -392,6 +508,8 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
         injected = False
         interruption_evidence = None
         entry_late_gate = None
+        landing_air_gate = None
+        landing_recovery_evidence = []
         initial_health = _self_health(runtime)
         with terminal_controller_evidence() as actual,ground_start_evidence() as starts:
             try:
@@ -475,6 +593,17 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
                     deadline = min(deadline_ns,time.perf_counter_ns()+500_000_000)
                     began = time.perf_counter_ns()
                     proposals = driver.prepare_proposals(deadline)
+                    prepared_navigation = driver._prepared_proposal
+                    prepared_route_decision = prepared_navigation.route_decision
+                    if (prepared_route_decision is not None
+                            and prepared_route_decision.state is ActionRouteState.NEEDS_REPLAN
+                            and prepared_route_decision.failure_cause is StopCause.INPUT_LOST):
+                        landing_recovery_evidence.append({
+                            "movement_tick": frame.body.movement_tick_id,
+                            "position": frame.body.position,
+                            "on_ground": frame.body.is_on_ground,
+                            "action_index": prepared_route_decision.action_index,
+                            "failure_cause": prepared_route_decision.failure_cause.value})
                     prepare_ns = time.perf_counter_ns()-began
                     nonneutral = any(e.intent.movement is not None and e.intent.movement != MovementV1()
                         for p in proposals for e in p.intents)
@@ -483,8 +612,8 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
                     if row["family"] == "handoff_column_top":
                         # This matrix verifies the first strict action input,
                         # whose proof explicitly allows one late tick.  The
-                        # preceding ordinary Walk has its own exact window and
-                        # is not the handoff boundary under test.
+                        # preceding ordinary Walk does not declare a timing
+                        # obligation and is not the strict boundary under test.
                         delayed_candidate = any(
                             envelope.intent.movement is not None
                             and envelope.intent.movement.jump
@@ -494,13 +623,22 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
                     if row["condition"] == "late_entry":
                         entry_late_gate = entry_late_gate or _entry_late_walk_gate(
                             session, frame, proposals,
+                            route_decision=prepared_navigation.route_decision,
                         )
                         delayed_candidate = entry_late_gate is not None
-                    delay = (row["condition"] in {"late_first", "late_two", "late_entry"}
-                             and late is None and delayed_candidate)
+                    if row["condition"] == "late_air":
+                        landing_air_gate = landing_air_gate or _landing_late_air_gate(
+                            session, frame, prepared_navigation.route_decision,
+                            command_index=row["late_air_command_index"])
+                        delayed_candidate = landing_air_gate is not None
+                    delay = _should_inject_late_input(row["condition"], late,
+                        delayed_candidate)
                     if delay:
                         time.sleep(.110 if row["condition"] == "late_two" else .055)
                     result = runtime.control_frame(task,profile,deadline,proposals=proposals)
+                    explicit_input_timing = _selected_input_has_declared_timing(
+                        prepared_navigation, result.decision,
+                    )
                     driver.adopt_result(result)
                     diagnostic()
                     frame = runtime.navigation_observation_adapter.latest_frame
@@ -515,13 +653,15 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
                     applications = [] if record is None else list(record.applied_ticks)
                     if delay:
                         late = {"before_tick":before,"requested_first_tick":None if record is None else record.requested_first_tick,
+                            "request_sequence":sequence,
                             "requested_last_tick":None if record is None else record.requested_last_tick,
                             "latest_allowed_first_tick":None if record is None else record.latest_allowed_first_tick,
                             "valid_for_ticks":None if record is None else record.action.valid_for_ticks,
                             "actual_movement":None if record is None else asdict(record.action.movement),
                             "actual_ticks":applications,"actual_offset":None if not applications else min(applications)-before,
                             "status":None if record is None else record.status.value,
-                            "entry_gate":entry_late_gate}
+                            "explicit_input_timing":explicit_input_timing,
+                            "entry_gate":entry_late_gate, "air_gate":landing_air_gate}
                     activity = (None if fd is None
                                 or fd.movement_activity is None
                                 else fd.movement_activity)
@@ -552,6 +692,16 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
                             for axis,value in zip("xyz",frame.body.position)),
                         "prepare_ns":prepare_ns,"actual_application_ticks":applications,
                         "input_status":None if record is None else record.status.value,
+                        "explicit_input_timing":explicit_input_timing,
+                        "expected_movement_tick":(
+                            prepared_navigation.route_decision.expected_movement_tick
+                            if explicit_input_timing else None),
+                        "verified_command_index":(
+                            prepared_navigation.route_decision.verified_command_index
+                            if explicit_input_timing else None),
+                        "latest_movement_tick":(
+                            prepared_navigation.route_decision.latest_movement_tick
+                            if explicit_input_timing else None),
                         "requested_first_tick":None if record is None else record.requested_first_tick,
                         "latest_allowed_first_tick":None if record is None else record.latest_allowed_first_tick,
                         "request_sequence":sequence,"source":None if driver.source is None else asdict(driver.source),
@@ -606,6 +756,23 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
                 if row["condition"] == "late_entry" and (late is None
                         or late["actual_offset"] != 2 or late["entry_gate"] is None):
                     violations.append("late_entry_not_confirmed")
+                if row["condition"] == "late_air":
+                    if not landing_recovery_evidence:
+                        violations.append("late_air_recovery_not_exercised")
+                    if (late is None or late["air_gate"] is None
+                            or not late["explicit_input_timing"]
+                            or late["actual_offset"] != 2
+                            or late["status"] != "applied_outside_window"):
+                        violations.append("late_air_not_confirmed")
+                    if late is not None:
+                        landed_after_late = next((i for i, value in enumerate(frames)
+                            if value["tick"] > late["before_tick"]
+                            and value["on_ground"]), None)
+                        if landed_after_late is None:
+                            violations.append("late_air_landing_not_confirmed")
+                        elif any(value["movement"] is not None and value["movement"]["jump"]
+                                 for value in frames[landed_after_late:]):
+                            violations.append("late_air_second_jump")
                 if row["family"] == "handoff_column_top":
                     jump_frames = [
                         value for value in frames
@@ -654,6 +821,7 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
                     "formal_goal_checks":actual["formal_goal_checks"],
                     "formal_goal_status":formal_goal.status.value,"final_body":asdict(frame.body),
                     "late_input":late,"injection_applied":injected,
+                    "landing_recovery_evidence":landing_recovery_evidence,
                     "start_prefix_proofs":starts,
                     "motion_quality":quality,
                     "interruption_evidence":interruption_evidence,"frames":len(frames),
@@ -666,12 +834,15 @@ def run_f2_ground_route_runtime(runtime, backend, episode, directory, deadline_n
                     "drop_frames":sum(not f["on_ground"] for f in frames),
                     "damage_points":max(0.,initial_health-_self_health(runtime)),
                     "danger_contact_frames":sum(f["danger_contact"] for f in frames)}
-                result_row["input_deadline_miss_count"] = sum(
-                    bool(f["actual_application_ticks"]) and f["latest_allowed_first_tick"] is not None
-                    and min(f["actual_application_ticks"]) > f["latest_allowed_first_tick"]
-                    for f in frames)
-                if (row["condition"] != "late_two" and not row.get("injection")
-                        and result_row["input_deadline_miss_count"]):
+                timing_evidence = _input_timing_evidence(frames,
+                    task_success=result_row["task_success"],
+                    expected_late_sequence=(
+                        late["request_sequence"]
+                        if row["condition"] in {"late_two", "late_air"}
+                        and late is not None else None))
+                result_row.update({key: value for key, value in timing_evidence.items()
+                                   if key != "violations"})
+                if (not row.get("injection") and timing_evidence["violations"]):
                     violations.append("input_deadline_miss")
                     result_row["passed"] = False
                 # Serialize typed contract enums using the established trace
@@ -716,17 +887,21 @@ def main(argv=None):
     parser.add_argument('--f2rec', action='store_true', help='Frozen 24-case recovery support-edge matrix')
     parser.add_argument('--handoff', action='store_true', help='Frozen 8-case Walk-to-JumpUp handoff matrix')
     parser.add_argument('--handoff-entry-late', action='store_true', help='Four typed entry-braking Walk late probes')
+    parser.add_argument('--d094-landing-late', action='store_true',
+        help='Four final JumpUp airborne-input-loss landing recovery probes')
     args,launcher = parser.parse_known_args(argv)
-    if sum((args.f2r, args.f2rec, args.handoff, args.handoff_entry_late)) > 1:
+    if sum((args.f2r, args.f2rec, args.handoff, args.handoff_entry_late,
+            args.d094_landing_late)) > 1:
         parser.error('choose only one frozen matrix')
     selected = frozen_plan(
         f2r=args.f2r, f2rec=args.f2rec, handoff=args.handoff,
         handoff_entry_late=args.handoff_entry_late,
+        d094_landing_late=args.d094_landing_late,
     )
     if args.smoke:
         selected = [r for r in selected if r["direction"] == 0 and (
             r["condition"] == "normal" or r["id"] == "f2-offset_mid-0-late_first"
-            or r["condition"] == "late_two")]
+            or r["condition"] in {"late_two", "late_entry", "late_air"})]
     if args.ids:
         selected = [r for r in selected if r["id"] in args.ids]
         if {r["id"] for r in selected} != set(args.ids):

@@ -1,0 +1,88 @@
+{
+  "source_commit": "d9ad674e6f8ded0545f32dd8454d910f64fc1afc",
+  "source_fingerprints": {
+    "mc2p/motion_nav/fixed_route.py": "6a0cc84c36e2a9c6dc23088f1c023f95cc852ae67d668c7cc9e1dd64e1a3dec3",
+    "mc2p/motion_nav/action_route_executor.py": "641ffce7666613372ad5c5a489dfc93a269261f580ee322c53992383050440d1",
+    "mc2p/motion_nav/navigation_session.py": "7e77815a3cc190e0e7cf06e78810158707966728576c4722bf9aa362a567888f"
+  },
+  "formal_platform": "windows",
+  "measured_platform": "Windows-10-10.0.26200-SP0",
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "python_executable": "D:\\My_project\\mc_ai\\.venv\\python.exe",
+  "seeds": 100,
+  "key_ticks": false,
+  "families": {
+    "column_outer_turn": {
+      "total": 100,
+      "outcomes": {
+        "success": 100
+      },
+      "reasons": {
+        "goal_state_satisfied": 100
+      },
+      "damage": 0.0,
+      "violations": 0
+    },
+    "column_outer_aligned": {
+      "total": 100,
+      "outcomes": {
+        "success": 100
+      },
+      "reasons": {
+        "goal_state_satisfied": 100
+      },
+      "damage": 0.0,
+      "violations": 0
+    },
+    "turn_jumpup": {
+      "total": 100,
+      "outcomes": {
+        "success": 99,
+        "failed": 1
+      },
+      "reasons": {
+        "goal_state_satisfied": 99,
+        "motion_unsolvable:needs_state": 1
+      },
+      "damage": 0.0,
+      "violations": 0
+    },
+    "turn_drop": {
+      "total": 100,
+      "outcomes": {
+        "success": 100
+      },
+      "reasons": {
+        "goal_state_satisfied": 100
+      },
+      "damage": 0.0,
+      "violations": 0
+    },
+    "column_landing_turn": {
+      "total": 100,
+      "outcomes": {
+        "success": 99,
+        "failed": 1
+      },
+      "reasons": {
+        "goal_state_satisfied": 99,
+        "motion_unsolvable:needs_state": 1
+      },
+      "damage": 0.0,
+      "violations": 0
+    },
+    "column_landing_aligned": {
+      "total": 100,
+      "outcomes": {
+        "success": 99,
+        "failed": 1
+      },
+      "reasons": {
+        "goal_state_satisfied": 99,
+        "motion_unsolvable:needs_state": 1
+      },
+      "damage": 0.0,
+      "violations": 0
+    }
+  }
+}

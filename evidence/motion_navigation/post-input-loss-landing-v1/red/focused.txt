@@ -1,0 +1,29 @@
+test_below_execution_minimum_and_airborne_start_reject (tests.motion_nav.test_post_input_loss_landing_recovery.PostInputLossLandingRecoveryTests.test_below_execution_minimum_and_airborne_start_reject) ... ok
+test_grounded_twenty_percent_support_walks_inward_and_replays (tests.motion_nav.test_post_input_loss_landing_recovery.PostInputLossLandingRecoveryTests.test_grounded_twenty_percent_support_walks_inward_and_replays) ... FAIL
+test_landing_input_loss_replans_on_the_formal_path (tests.motion_nav.test_post_input_loss_landing_recovery.PostInputLossLandingRecoveryTests.test_landing_input_loss_replans_on_the_formal_path) ... FAIL
+test_normal_goal_mismatch_still_fails_without_replan (tests.motion_nav.test_post_input_loss_landing_recovery.PostInputLossLandingRecoveryTests.test_normal_goal_mismatch_still_fails_without_replan) ... ok
+test_unsupported_material_is_not_granted_low_support_entry (tests.motion_nav.test_post_input_loss_landing_recovery.PostInputLossLandingRecoveryTests.test_unsupported_material_is_not_granted_low_support_entry) ... ok
+
+======================================================================
+FAIL: test_grounded_twenty_percent_support_walks_inward_and_replays (tests.motion_nav.test_post_input_loss_landing_recovery.PostInputLossLandingRecoveryTests.test_grounded_twenty_percent_support_walks_inward_and_replays)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_post_input_loss_landing_recovery.py", line 34, in test_grounded_twenty_percent_support_walks_inward_and_replays
+    self.assertIs(result.status,AdmissionStatus.ACCEPTED)
+AssertionError: <AdmissionStatus.REJECTED: 'rejected'> is not <AdmissionStatus.ACCEPTED: 'accepted'>
+
+======================================================================
+FAIL: test_landing_input_loss_replans_on_the_formal_path (tests.motion_nav.test_post_input_loss_landing_recovery.PostInputLossLandingRecoveryTests.test_landing_input_loss_replans_on_the_formal_path)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\tests\motion_nav\test_post_input_loss_landing_recovery.py", line 52, in test_landing_input_loss_replans_on_the_formal_path
+    self.assertEqual(result["outcome"],"success",result["reason"])
+AssertionError: 'failed' != 'success'
+- failed
++ success
+ : input_lost_after_safe_landing_before_goal
+
+----------------------------------------------------------------------
+Ran 5 tests in 1.720s
+
+FAILED (failures=2)

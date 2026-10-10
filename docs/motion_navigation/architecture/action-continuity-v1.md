@@ -306,3 +306,11 @@ revalidate_air_transition(
 D093 将“已经可以交接”与“停下来就能交接”分开。后者只授予既有刹车路径，仍检查当前完成区域、着地支撑和完整停止尾迹。真实身体满足原入口后才交接。
 
 最后严格动作因输入失联安全落地，但目标仍未满足时，执行器保持原 `FAILED` 终态。`ActionRouteDecision.failure_cause` 使用已有 `StopCause.INPUT_LOST`，`NavigationSessionReport.failure_cause` 将它传给任务层。原因字段用于报告，不触发新的入口恢复、等待或重试。普通目标不满足的分类不受影响。
+
+## 14. 失联安全落地后的剩余目标
+
+2026-10-10，D094 在 D093 分类之后增加限定恢复。末次严格动作实际失联、已确认安全落地、当前着地且目标尚未满足时，执行器给出已有 NEEDS_REPLAN，并携带 StopCause.INPUT_LOST。Session 用原任务额度重规划，不由执行器生成后续 Walk。正常终态不满足和空中失联仍使用原结果。
+
+恢复原因归原 NavigationHandoffCoordinator。身体交出之后，原因继续保留到替代路线成功接纳；因此后台规划失败、预算耗尽不会丢失 INPUT_LOST。替代路线接纳、清除目标或新任务结束这次原因，之后的无关失败不会继承它。Session 报告先读取尚未解决的恢复原因，再读取当前执行器原因。
+
+同面 local direct 允许已观察到着地的低支撑起点向内走。起点读取 FixedRouteConfig 的执行下限，当前为 0.15；达到规划支撑 0.5 前只能保持或增加支撑，之后保持原门槛，终点仍至少为 0.5。默认查询保持严格规则。例外的下限随 StandableConnectionQueryArgs 写入不可变配方，接纳和复核使用同一个查询，不另维护复核算法。

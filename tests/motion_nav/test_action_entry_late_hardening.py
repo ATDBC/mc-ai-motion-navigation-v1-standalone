@@ -86,13 +86,13 @@ class ActionEntryLateHardeningTests(unittest.TestCase):
 
         with patch.object(ActionRouteExecutor, '_advance', record):
             result = run_case('column_landing_turn', 4)
-        self.assertEqual(observed, [VerifiedMotionExecutorState.INPUT_LOST, ActionRouteState.FAILED])
-        self.assertEqual(result['reason'], 'input_lost_after_safe_landing_before_goal')
-        self.assertEqual(result['outcome'], 'failed')
+        self.assertEqual(observed, [VerifiedMotionExecutorState.INPUT_LOST, ActionRouteState.NEEDS_REPLAN])
+        self.assertEqual(result['reason'], 'goal_state_satisfied')
+        self.assertEqual(result['outcome'], 'success')
         self.assertFalse(result['violations'])
         self.assertEqual(result['damage'], 0)
 
-    def test_input_loss_classification_does_not_restart_safe_landing(self):
+    def test_input_loss_recovery_preserves_the_original_safe_landing_prefix(self):
         import json, gzip
         from pathlib import Path
         from mc2p.contracts.behavior import BehaviorProfileV0
@@ -108,7 +108,7 @@ class ActionEntryLateHardeningTests(unittest.TestCase):
 
         result=run(scenario_for('column_landing_turn',4),control_step=step)
         self.assertTrue(reports)
-        self.assertIs(getattr(reports[-1], 'failure_cause', None), StopCause.INPUT_LOST)
+        self.assertIsNone(getattr(reports[-1], 'failure_cause', None))
         baseline=Path(__file__).resolve().parents[2]/'evidence/motion_navigation/action-entry-late-hardening-v1/h1-only-landing-baseline/runs.jsonl.gz'
         with gzip.open(baseline,'rt') as stream:
             control=next(json.loads(line) for line in stream
@@ -116,8 +116,12 @@ class ActionEntryLateHardeningTests(unittest.TestCase):
         def motion(trace):
             return json.loads(json.dumps([(f['movement_tick'],f['position'],f['velocity'],f['on_ground'],
                      f['applied_movement'],f['action_kind'],f['input_window']) for f in trace]))
-        self.assertEqual(motion(result.trace),motion(control['trace']))
-        self.assertEqual(result.final_position,tuple(control['final_position']))
+        old=motion(control['trace'])
+        before=next(i for i,f in enumerate(control['trace']) if f['session_state']=='failed')
+        self.assertEqual(motion(result.trace)[:before],old[:before])
+        self.assertEqual(result.outcome,'success')
+        tail=result.trace[before:]
+        self.assertTrue(all(f['on_ground'] and not f['applied_movement']['jump'] for f in tail))
 
     def test_normal_final_jump_can_still_succeed(self):
         result = run_case('column_landing_turn', None)

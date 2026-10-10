@@ -1,0 +1,60 @@
+{
+  "schema_version": "mc2p.action-entry-handoff-regression.v2",
+  "source_commit": "d9ad674e6f8ded0545f32dd8454d910f64fc1afc",
+  "comparison_basis": {
+    "v7": "navigation_structure_baseline.product_index",
+    "other_sets": "exact frozen-index fields",
+    "baseline_root": "evidence\\motion_navigation\\F2REC-recovery-v1\\r4"
+  },
+  "inputs": {
+    "v7_runs_sha256": "649177fef90e1943c0d4ed2ec56decef9e32f229906a1e71e790be317d6ce9c2",
+    "v7_index_sha256": "c628f512816d85fb2d8a832b1d7d99ded7eb8cdcebf06dcdde1326c022ec36b9",
+    "f2_runs_sha256": "c00b8aa3026675faa1a088024f58da9f2efbdd566b6e3abda9b3551feec59be8",
+    "v8_fixed_runs_sha256": "682c77164d27457c09f26d55a8c5d08414658af80f9002bfb6ccd13218ff3f48",
+    "v8_clutter_runs_sha256": "82551e113ddc720024e92f3197e4ef8b6426f51b0a732bc318f8cfeea39b2293"
+  },
+  "sets": [
+    {
+      "name": "v7-product",
+      "current_cases": 2000,
+      "baseline_cases": 2000,
+      "common_cases": 2000,
+      "current_successes": 1998,
+      "old_successes": 1998,
+      "old_success_regressions": [],
+      "common_signature_differences": [],
+      "normalizer_version": "r28-structure-trajectory-v1",
+      "current_index_sha256": "b70ac9527da1548f631a7421a9d29a58ba29a3e74f14dc9292fb9e207d0fe8f7"
+    },
+    {
+      "name": "F2-528",
+      "current_cases": 528,
+      "baseline_cases": 528,
+      "common_cases": 528,
+      "current_successes": 464,
+      "old_successes": 464,
+      "old_success_regressions": [],
+      "common_signature_differences": []
+    },
+    {
+      "name": "v8-fixed",
+      "current_cases": 104,
+      "baseline_cases": 104,
+      "common_cases": 104,
+      "current_successes": 104,
+      "old_successes": 104,
+      "old_success_regressions": [],
+      "common_signature_differences": []
+    },
+    {
+      "name": "v8-clutter",
+      "current_cases": 1800,
+      "baseline_cases": 1800,
+      "common_cases": 1800,
+      "current_successes": 1717,
+      "old_successes": 1717,
+      "old_success_regressions": [],
+      "common_signature_differences": []
+    }
+  ]
+}

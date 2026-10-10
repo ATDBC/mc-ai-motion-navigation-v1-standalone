@@ -1,0 +1,82 @@
+{
+  "schema_version": "mc2p.d094-fabric-summary.v1",
+  "formal_platform": "windows",
+  "deployment_run": "20261010T013535791590Z-42242dc0",
+  "plan_sha256": "2ea31c3eabaacddb85c07e2b7d1b3a0e1a5db786bbd45a199d15d057dd112f83",
+  "cases": 4,
+  "passed": 4,
+  "all_task_success": true,
+  "all_actual_outside_window": true,
+  "actual_offsets": [
+    2
+  ],
+  "landing_recovery_events": 8,
+  "all_recovery_typed_input_lost": true,
+  "damage_points": 0.0,
+  "unexpected_explicit_deadline_misses": 0,
+  "unwindowed_input_delay_count": 0,
+  "violations": [],
+  "cases_summary": [
+    {
+      "id": "d094-landing-late-0",
+      "direction": 0,
+      "state": "success",
+      "reason": "goal_state_satisfied",
+      "task_success": true,
+      "damage_points": 0.0,
+      "unexpected_explicit_deadline_miss_count": 0,
+      "unwindowed_input_delay_count": 0,
+      "late_status": "applied_outside_window",
+      "actual_offset": 2,
+      "recovery_events": 2,
+      "trajectory_sha256": "ba4481478a05bba646fa242e1f85701b025ad84638126b1e9d82fc0c91a15897"
+    },
+    {
+      "id": "d094-landing-late-1",
+      "direction": 1,
+      "state": "success",
+      "reason": "goal_state_satisfied",
+      "task_success": true,
+      "damage_points": 0.0,
+      "unexpected_explicit_deadline_miss_count": 0,
+      "unwindowed_input_delay_count": 0,
+      "late_status": "applied_outside_window",
+      "actual_offset": 2,
+      "recovery_events": 2,
+      "trajectory_sha256": "a859e74e0d2a0778cf3f726738aed0ed30adf703b0939d5c3ff9496a57dd3505"
+    },
+    {
+      "id": "d094-landing-late-2",
+      "direction": 2,
+      "state": "success",
+      "reason": "goal_state_satisfied",
+      "task_success": true,
+      "damage_points": 0.0,
+      "unexpected_explicit_deadline_miss_count": 0,
+      "unwindowed_input_delay_count": 0,
+      "late_status": "applied_outside_window",
+      "actual_offset": 2,
+      "recovery_events": 2,
+      "trajectory_sha256": "4227a6cf8045c32c2d4f729080ac996d279ecc360e423531bd1d0d5b22096b4a"
+    },
+    {
+      "id": "d094-landing-late-3",
+      "direction": 3,
+      "state": "success",
+      "reason": "goal_state_satisfied",
+      "task_success": true,
+      "damage_points": 0.0,
+      "unexpected_explicit_deadline_miss_count": 0,
+      "unwindowed_input_delay_count": 0,
+      "late_status": "applied_outside_window",
+      "actual_offset": 2,
+      "recovery_events": 2,
+      "trajectory_sha256": "847430ee0c2c07ea0101ed967035b87cac5879dc06efd05607388d9c84f0e41f"
+    }
+  ],
+  "source_sha256": {
+    "f2-summary.json": "fcf84d76deada200caf45af8a8e98cc8c1c9f8638f27ccdec3714a85d59fc9cd",
+    "f2-trials.jsonl": "b3d72ebb247855a747aecd56218fc09edff73a4e998fd9b57050e2cd6f6d2230",
+    "f2-frames.jsonl": "feb8887f0a63232296c7d47c0a542a59738ba0b4c94ceb93ea6c370d13f149db"
+  }
+}

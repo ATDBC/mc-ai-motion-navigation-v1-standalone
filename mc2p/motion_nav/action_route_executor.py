@@ -799,7 +799,7 @@ class ActionRouteExecutor:
             ground_handoff_disposition=ground_handoff_disposition,
             route_progress_evidence=route_progress_evidence,
             failure_cause=(self._final_action_failure_cause
-                           if self.state is ActionRouteState.FAILED else None),
+                           if self.state in {ActionRouteState.FAILED, ActionRouteState.NEEDS_REPLAN} else None),
         )
 
     def prepare_ground_handoff(self, target: GroundHandoffTarget | None) -> None:
@@ -1273,6 +1273,14 @@ class ActionRouteExecutor:
             return self._result(
                 started, MovementV1(), 1, "aligning_goal_heading",
                 look=LookV1(observed.heading_delta_degrees, 0.0),
+            )
+        if (self._final_action_failure_cause is StopCause.INPUT_LOST
+                and observed.status is ObservedGoalStatus.NOT_SATISFIED
+                and frame.body.is_on_ground):
+            self.state = ActionRouteState.NEEDS_REPLAN
+            return self._result(
+                started, MovementV1(), 1,
+                "input_lost_landing_requires_replan",
             )
         if (self._final_action_failure_cause is StopCause.INPUT_LOST
                 and observed.status is ObservedGoalStatus.NOT_SATISFIED):
