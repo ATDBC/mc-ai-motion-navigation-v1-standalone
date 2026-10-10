@@ -810,6 +810,9 @@ b2a5285adfb1be81e0268915911a3313b2ba06f156e372ae2a6b1675e9991f36  reviews/2026-1
 b7f50383ce2a603cd838b4b97771e04da62792cad75dc05d8827563672bb49dd  reviews/2026-10-10-tp-5ar-r2-review/unbounded_probe.py
 b728ff4737a69e936454745d374ce2c8a4faa8dd577c42ec916b939426684f0e  reviews/2026-10-10-tp-5ar-r2-review/variant-v1.diff
 da6b69a660cf5b3d226532396bd34fb2ce2296bc63124dbc7cd41ce80ce8d1b5  reviews/2026-10-10-tp-5ar-r2-review/variant-v2.diff
+6cea6c3b17ce21cbd400b82e16c1cc542253e3b7411e8ef9f764fdb558d88155  reviews/2026-10-10-tp-next-method.md
+4b16fe2b22da5556ab35c397cf37bc23321f3d0f76d2bbf748d456258ca1cc12  reviews/2026-10-10-tp-next-method/verify-cost-output.txt
+bf7617aa995cac23f75f3db2212e17c0d65b3b747cdbb3cb276d183bc8c12045  reviews/2026-10-10-tp-next-method/verify_cost_probe.py
 09c3a5b337de4f64d65e188a2903c84cdd9a247da8f69e5155851f3b87287b95  scripts/active_perception_diagnostics.py
 1e6cfdc7c7f333624f0f3bdd57ff51d21454124d7e9bd27d247b9afc4db48442  scripts/active_perception_evidence.py
 a28fccf0fc5ae383fcee8023078b59cd0687ab9c54454adca02d90e142ff62d2  scripts/active_perception_metrics.py
