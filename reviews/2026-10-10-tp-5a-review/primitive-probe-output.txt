@@ -1,0 +1,10 @@
+start1 gap1 A3: FOUND ticks=21 steps=508 scans=1 95 ms  WJx1 Wx12 Nx8
+start1 gap1 A5: FOUND ticks=21 steps=508 scans=1 69 ms  WJx1 Wx12 Nx8
+start1 gap2 A3: FOUND ticks=24 steps=1270 scans=1 155 ms  Wx4 WJx1 Wx9 Nx10
+start1 gap2 A5: FOUND ticks=21 steps=4403 scans=14 486 ms  Wx1 SJx1 Wx5 Nx14
+start4 gap1 A3: FOUND ticks=33 steps=5221 scans=1 574 ms  Wx13 WJx1 Wx9 Nx10
+start4 gap1 A5: FOUND ticks=27 steps=7800 scans=1 818 ms  Wx6 SJx1 Sx10 Nx10
+start4 gap2 A3: FOUND ticks=37 steps=6022 scans=1 638 ms  Wx17 WJx1 Wx11 Nx8
+start4 gap2 A5: FOUND ticks=31 steps=11475 scans=1 1203 ms  Wx11 SJx1 Sx8 Nx11
+start4 gap3 A3: none in grid ticks=0 steps=5721 scans=0 620 ms  —
+start4 gap3 A5: FOUND ticks=36 steps=14214 scans=1 1256 ms  Wx16 SJx1 Sx8 Nx11

@@ -757,7 +757,7 @@ d3f35aa26a572524dac1f1136efc1ef58ed5d443a44ae392bed33f0842d5141a  reviews/2026-1
 63ec18b0f301dc59a03a86d090e2590d5e9ff40ad8204787238f774b2ab2b5ba  reviews/2026-10-10-d094-review/revision_then_failure_cause.py
 db1e3e0b5a4a944e7bb3b1432d5f2d3586f5d5d3d1430dbd3f9658e027e4f6dd  reviews/2026-10-10-d094-review/unittest-output.txt
 d064ac6256f97c1c5c0c6376954c707f5164c8fa36725a63ac2679ca1a8f6f94  reviews/2026-10-10-d094-review/unittest-patched-output.txt
-2edc2af9a9cb4f7daf369de2cf495509ab2a743aedbf8327572e78f42adabef5  reviews/2026-10-10-tp-5a-review.md
+65597fba4729ede04bf7632319244ca92a8975c186ece62b1001ee9f08ba874c  reviews/2026-10-10-tp-5a-review.md
 4677cef59171676f4e273f099dd1ae2887db2453fbf67d3ce0fcd405c24014e4  reviews/2026-10-10-tp-5a-review/alphabet-probe-original-output.txt
 4f1ff0e1aae9546aa9d47c8294532f0bb3824d2a673a41c90510dad5fef8c134  reviews/2026-10-10-tp-5a-review/alphabet-probe-patched-output.txt
 132856b0f135f0f966d15cc1ea0c91bea5f74bdf252ed428208a77e816d18370  reviews/2026-10-10-tp-5a-review/alphabet_probe.py
@@ -772,6 +772,8 @@ f7cd693896a404aecb1b9f129dc48d0da0f3df086ce1494b72e33cf236c593e1  reviews/2026-1
 1f7d9869cdf922d01f1c0257ef82565fc1c8ccda2b5603f38a4957d36e8da7ef  reviews/2026-10-10-tp-5a-review/matrix-p69b-output.txt
 4f64777afa6018c1b386b81f322f570077ce7962e7160027ff3cd38ed8260cd5  reviews/2026-10-10-tp-5a-review/matrix-p69c-output.txt
 0bd684a4ed4edb705bd99ca89adfcf4d871ed436a095fcf7bd720937c0aec0c1  reviews/2026-10-10-tp-5a-review/matrix_probe.py
+643b260e3630d26e83932a9bc266ab84ddb3a1ebfc439139a81295ab17f84970  reviews/2026-10-10-tp-5a-review/primitive-probe-output.txt
+b616404598208d45d4972c194b2ec60206b58b5277d16dc192588f2d46001e9b  reviews/2026-10-10-tp-5a-review/primitive_probe.py
 05e573d14a41949370d6f42df6485d1f4a4478c412297bfa8f932d358145bcd4  reviews/2026-10-10-tp-5a-review/proto-5a-fixes.diff
 33c7f8f8f017cbaf4cb3bddde2cabffe219dc1c3be2f3bda68d370308a8afc37  reviews/2026-10-10-tp-5a-review/proto-tests-original-output.txt
 76cb0fd6e525cc5e291b7fa4d03615eb77efb598c3420d0c885041aac6df7d18  reviews/2026-10-10-tp-5a-review/proto-tests-patched-output.txt
