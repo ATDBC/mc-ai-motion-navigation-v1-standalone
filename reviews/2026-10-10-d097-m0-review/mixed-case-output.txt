@@ -1,0 +1,7 @@
+formal            mixed: found steps=10056 completions=4780 scans=1 same_as_expected=True
+                  same grid, unreachable goal: search_exhausted steps=19752 completions=9766 -> mixed solution found after 50.9% of full-grid steps
+                  inputs: W SJ W W W W W N N N N N N N N N N N N N N
+floor_diagnostic  mixed: found steps=6383 completions=2924 scans=1 same_as_expected=True
+                  same grid, unreachable goal: search_exhausted steps=13023 completions=6369 -> mixed solution found after 49.0% of full-grid steps
+                  inputs: W SJ W W W W W N N N N N N N N N N N N N N
+online path with known parameters: rollout=42 steps (<=3 parameter sets: <= 126), lazy per-tick=32, commit=16, full scan (offline/acceptance only)=427
