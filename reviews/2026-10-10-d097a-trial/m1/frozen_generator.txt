@@ -1,0 +1,5 @@
+D097-A M1 generator frozen 2026-10-10T15:43:26Z before any validation-seed run
+pool_size=30 max_params=3 round_scan_budget=400 good_fraction=0.95 shortlist=family round-robin of best-per-(ground,jump,trigger)
+34327cdc407a79bc4f737c76d4c163e5a5822d10de4920fc63c12a189493b3d2  controller.py
+1f7ccc052eb9cf0e53bd5fceba4dcfd93c896c7db280d7bcd81537794b3620e7  oracle.py
+27b80ab1e80a6cdb2f8f2017f203e3856304eb183b1ff3a13d7646c059149e6b  table.py

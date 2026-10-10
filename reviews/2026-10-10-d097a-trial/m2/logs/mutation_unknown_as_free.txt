@@ -1,0 +1,73 @@
+test_frozen_matrix_subset_matches_scanner_exactly (test_m2.Equivalence.test_frozen_matrix_subset_matches_scanner_exactly) ... ok
+test_in_flight_command_is_part_of_the_tail (test_m2.Equivalence.test_in_flight_command_is_part_of_the_tail) ... ok
+test_lazy_does_the_same_physics_work_as_the_scanner_on_verified_candidates (test_m2.Equivalence.test_lazy_does_the_same_physics_work_as_the_scanner_on_verified_candidates) ... ok
+test_mixed_counterexample_has_one_commit_covering_both_branches (test_m2.Equivalence.test_mixed_counterexample_has_one_commit_covering_both_branches) ... ok
+test_locked_suffix_commands_are_allowed_only_unchanged (test_m2.ExecutorGate.test_locked_suffix_commands_are_allowed_only_unchanged) ... ok
+test_tick_permit_covers_one_command (test_m2.ExecutorGate.test_tick_permit_covers_one_command) ... ok
+test_all_seven_faults_are_defined (test_m2.FaultFlags.test_all_seven_faults_are_defined) ... ok
+test_unknown_fault_names_are_refused (test_m2.FaultFlags.test_unknown_fault_names_are_refused) ... ok
+test_changed_anchor_id (test_m2.Permits.test_changed_anchor_id) ... ok
+test_changed_dependency_cell (test_m2.Permits.test_changed_dependency_cell) ... ok
+test_changed_entry_state (test_m2.Permits.test_changed_entry_state) ... ok
+test_changed_goal_revision_and_goal (test_m2.Permits.test_changed_goal_revision_and_goal) ... ok
+test_changed_input_ledger (test_m2.Permits.test_changed_input_ledger) ... ok
+test_changed_request_identity_and_world_session (test_m2.Permits.test_changed_request_identity_and_world_session) ... ok
+test_dependency_that_became_unknown_needs_information (test_m2.Permits.test_dependency_that_became_unknown_needs_information) ... FAIL
+test_unchanged_world_and_request_are_valid (test_m2.Permits.test_unchanged_world_and_request_are_valid) ... ok
+test_unrelated_cell_change_does_not_stale_the_permit (test_m2.Permits.test_unrelated_cell_change_does_not_stale_the_permit) ... ok
+test_damage_allowance_zero_budget (test_m2.Rejection.test_damage_allowance_zero_budget) ... ok
+test_damage_within_budget_is_still_accepted (test_m2.Rejection.test_damage_within_budget_is_still_accepted) ... ok
+test_failure_of_the_late_branch_alone_is_not_missed (test_m2.Rejection.test_failure_of_the_late_branch_alone_is_not_missed)
+Jumping on the very first tick is fine for ON_TIME (interval opens at boundary 0) but the ... ok
+test_landing_must_be_proved_before_the_interval_closes (test_m2.Rejection.test_landing_must_be_proved_before_the_interval_closes) ... ok
+test_one_twelfth_support_landing_is_rejected (test_m2.Rejection.test_one_twelfth_support_landing_is_rejected) ... ok
+test_request_level_classes (test_m2.Rejection.test_request_level_classes) ... ok
+test_truncated_in_the_air_and_jump_replaced_by_walk (test_m2.Rejection.test_truncated_in_the_air_and_jump_replaced_by_walk) ... ok
+test_unknown_cell_on_the_route_is_not_free_space (test_m2.Rejection.test_unknown_cell_on_the_route_is_not_free_space)
+An unobserved cell the body sweeps through must stop the proof, not read as air. ... FAIL
+test_unknown_landing_is_needs_information_not_free (test_m2.Rejection.test_unknown_landing_is_needs_information_not_free) ... FAIL
+test_walk_straight_over_the_hole (test_m2.Rejection.test_walk_straight_over_the_hole) ... ok
+
+======================================================================
+FAIL: test_dependency_that_became_unknown_needs_information (test_m2.Permits.test_dependency_that_became_unknown_needs_information)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 277, in test_dependency_that_became_unknown_needs_information
+    self.assertEqual((check.status, check.reason),
+AssertionError: Tuples differ: (<PermitStatus.VALID: 'VALID'>, None) != (<PermitStatus.NEEDS_INFORMATION: 'NEEDS_INFORMATION'>, [41 chars]ld'>)
+
+First differing element 0:
+<PermitStatus.VALID: 'VALID'>
+<PermitStatus.NEEDS_INFORMATION: 'NEEDS_INFORMATION'>
+
+- (<PermitStatus.VALID: 'VALID'>, None)
++ (<PermitStatus.NEEDS_INFORMATION: 'NEEDS_INFORMATION'>,
++  <SearchReason.UNKNOWN_WORLD: 'unknown_world'>)
+
+======================================================================
+FAIL: test_unknown_cell_on_the_route_is_not_free_space (test_m2.Rejection.test_unknown_cell_on_the_route_is_not_free_space)
+An unobserved cell the body sweeps through must stop the proof, not read as air.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 148, in test_unknown_cell_on_the_route_is_not_free_space
+    scan, lazy = self.check_same(fixture.request, A["flat_walk:A3"], world,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 118, in check_same
+    self.assertNotEqual(lazy.status, ScanStatus.VERIFIED_CANDIDATE, "lazy verified a rejected candidate")
+AssertionError: <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'> == <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'> : lazy verified a rejected candidate
+
+======================================================================
+FAIL: test_unknown_landing_is_needs_information_not_free (test_m2.Rejection.test_unknown_landing_is_needs_information_not_free)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 140, in test_unknown_landing_is_needs_information_not_free
+    scan, lazy = self.check_same(fixture.request, A["gap_start_1_width_1:A3"], fixture.world,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 119, in check_same
+    self.assertEqual(lazy.status, scan.status)
+AssertionError: <ScanStatus.CANDIDATE_REJECTED: 'CANDIDATE_REJECTED'> != <ScanStatus.NEEDS_INFORMATION: 'NEEDS_INFORMATION'>
+
+----------------------------------------------------------------------
+Ran 27 tests in 9.412s
+
+FAILED (failures=3)

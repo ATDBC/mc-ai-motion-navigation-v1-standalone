@@ -1,0 +1,36 @@
+624 candidates
+100
+200
+300
+400
+500
+600
+{
+ "accept_stale": {},
+ "ignore_damage": {
+  "candidates": 624,
+  "reason_differs_only": 115,
+  "status_differs": 6,
+  "lazy_verified_scan_not": 6
+ },
+ "ignore_inflight": {
+  "candidates": 624,
+  "verified_but_intervals_or_tails_differ": 320
+ },
+ "no_landing_proof": {
+  "candidates": 624,
+  "verified_but_intervals_or_tails_differ": 134
+ },
+ "one_branch": {
+  "candidates": 624,
+  "verified_but_intervals_or_tails_differ": 334,
+  "status_differs": 3,
+  "lazy_verified_scan_not": 3
+ },
+ "swap_locked_command": {},
+ "unknown_as_free": {
+  "candidates": 624,
+  "status_differs": 38,
+  "lazy_verified_scan_not": 2
+ }
+}

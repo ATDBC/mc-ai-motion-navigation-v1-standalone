@@ -1,0 +1,206 @@
+{
+ "generated": "2026-10-10 16:05:17",
+ "notes": [],
+ "G8": {
+  "set_A": {
+   "candidates": 23,
+   "scan_verified": 23,
+   "scan_not_verified": 0,
+   "scan_status_histogram": {
+    "VERIFIED_CANDIDATE": 23
+   },
+   "scan_reason_histogram": {},
+   "status_mismatch": 0,
+   "reason_mismatch": 0,
+   "critical_lazy_verified_where_scan_not": 0,
+   "verified_not_equivalent": 0,
+   "verified_interval_key_mismatch": 0,
+   "verified_interval_count_mismatch": 0,
+   "verified_with_intervals": 17,
+   "verified_with_2plus_intervals_in_a_branch": 0,
+   "verified_dependency_set_mismatch": 0,
+   "minimal_mode_informational": {
+    "status_mismatch": 0,
+    "reason_mismatch": 0,
+    "critical": 0,
+    "verified_intervals_not_equivalent": 0
+   }
+  },
+  "set_B": {
+   "candidates": 1605,
+   "scan_verified": 732,
+   "scan_not_verified": 873,
+   "scan_status_histogram": {
+    "VERIFIED_CANDIDATE": 732,
+    "CANDIDATE_REJECTED": 764,
+    "NO_TRAJECTORY_IN_BUDGET": 20,
+    "NEEDS_INFORMATION": 86,
+    "STALE": 3
+   },
+   "scan_reason_histogram": {
+    "CANDIDATE_REJECTED/final_exit_not_grounded": 402,
+    "CANDIDATE_REJECTED/damage_allowance": 268,
+    "CANDIDATE_REJECTED/tail_not_settled": 75,
+    "CANDIDATE_REJECTED/final_stop_unsafe": 12,
+    "CANDIDATE_REJECTED/prelude_outside_same_safe_support": 3,
+    "NO_TRAJECTORY_IN_BUDGET/trajectory_tick_budget": 3,
+    "NEEDS_INFORMATION/unknown_world": 84,
+    "NO_TRAJECTORY_IN_BUDGET/physics_step_budget": 15,
+    "NEEDS_INFORMATION/missing_input_application": 2,
+    "STALE/input_ledger": 2,
+    "STALE/world_dependency": 1,
+    "NO_TRAJECTORY_IN_BUDGET/timing_branch_budget": 1,
+    "NO_TRAJECTORY_IN_BUDGET/node_budget": 1,
+    "CANDIDATE_REJECTED/prelude_entry_mismatch": 2,
+    "CANDIDATE_REJECTED/unsupported_physics": 2
+   },
+   "status_mismatch": 0,
+   "reason_mismatch": 0,
+   "critical_lazy_verified_where_scan_not": 0,
+   "verified_not_equivalent": 0,
+   "verified_interval_key_mismatch": 0,
+   "verified_interval_count_mismatch": 0,
+   "verified_with_intervals": 189,
+   "verified_with_2plus_intervals_in_a_branch": 1,
+   "verified_dependency_set_mismatch": 0,
+   "minimal_mode_informational": {
+    "status_mismatch": 14,
+    "reason_mismatch": 14,
+    "critical": 14,
+    "verified_intervals_not_equivalent": 0
+   }
+  },
+  "set_C": {
+   "candidates": 120,
+   "scan_verified": 120,
+   "scan_not_verified": 0,
+   "scan_status_histogram": {
+    "VERIFIED_CANDIDATE": 120
+   },
+   "scan_reason_histogram": {},
+   "status_mismatch": 0,
+   "reason_mismatch": 0,
+   "critical_lazy_verified_where_scan_not": 0,
+   "verified_not_equivalent": 0,
+   "verified_interval_key_mismatch": 0,
+   "verified_interval_count_mismatch": 0,
+   "verified_with_intervals": 80,
+   "verified_with_2plus_intervals_in_a_branch": 0,
+   "verified_dependency_set_mismatch": 0,
+   "minimal_mode_informational": {
+    "status_mismatch": 0,
+    "reason_mismatch": 0,
+    "critical": 0,
+    "verified_intervals_not_equivalent": 0
+   }
+  },
+  "set_A_pass": true,
+  "set_B_C_pass": true,
+  "set_B_scan_rejections": 873,
+  "set_D": "not run",
+  "set_D_pass": null,
+  "passed": null,
+  "verdict": "A/B/C PASS; Set D not evaluated"
+ },
+ "G9": {
+  "baseline_passes": true,
+  "faults": {
+   "no_landing_proof": {
+    "detected": true,
+    "failing_tests": [
+     "test_m2.Equivalence.test_frozen_matrix_subset_matches_scanner_exactly",
+     "test_m2.Rejection.test_landing_must_be_proved_before_the_interval_closes",
+     "test_m2.Equivalence.test_lazy_does_the_same_physics_work_as_the_scanner_on_verified_candidates"
+    ]
+   },
+   "unknown_as_free": {
+    "detected": true,
+    "failing_tests": [
+     "test_m2.Permits.test_dependency_that_became_unknown_needs_information",
+     "test_m2.Rejection.test_unknown_cell_on_the_route_is_not_free_space",
+     "test_m2.Rejection.test_unknown_landing_is_needs_information_not_free"
+    ]
+   },
+   "one_branch": {
+    "detected": true,
+    "failing_tests": [
+     "test_m2.Rejection.test_failure_of_the_late_branch_alone_is_not_missed",
+     "test_m2.Equivalence.test_frozen_matrix_subset_matches_scanner_exactly",
+     "test_m2.Rejection.test_landing_must_be_proved_before_the_interval_closes",
+     "test_m2.Equivalence.test_lazy_does_the_same_physics_work_as_the_scanner_on_verified_candidates",
+     "test_m2.Equivalence.test_mixed_counterexample_has_one_commit_covering_both_branches",
+     "test_m2.Rejection.test_request_level_classes"
+    ]
+   },
+   "ignore_inflight": {
+    "detected": true,
+    "failing_tests": [
+     "test_m2.Rejection.test_failure_of_the_late_branch_alone_is_not_missed",
+     "test_m2.Equivalence.test_frozen_matrix_subset_matches_scanner_exactly",
+     "test_m2.Equivalence.test_in_flight_command_is_part_of_the_tail",
+     "test_m2.Rejection.test_landing_must_be_proved_before_the_interval_closes",
+     "test_m2.Equivalence.test_lazy_does_the_same_physics_work_as_the_scanner_on_verified_candidates",
+     "test_m2.Equivalence.test_mixed_counterexample_has_one_commit_covering_both_branches"
+    ]
+   },
+   "accept_stale": {
+    "detected": true,
+    "failing_tests": [
+     "test_m2.Permits.test_changed_anchor_id",
+     "test_m2.Permits.test_changed_dependency_cell",
+     "test_m2.Permits.test_changed_entry_state",
+     "test_m2.Permits.test_changed_goal_revision_and_goal",
+     "test_m2.Permits.test_changed_input_ledger",
+     "test_m2.Permits.test_changed_request_identity_and_world_session",
+     "test_m2.Permits.test_dependency_that_became_unknown_needs_information"
+    ]
+   },
+   "ignore_damage": {
+    "detected": true,
+    "failing_tests": [
+     "test_m2.Rejection.test_damage_allowance_zero_budget",
+     "test_m2.Rejection.test_truncated_in_the_air_and_jump_replaced_by_walk",
+     "test_m2.Rejection.test_walk_straight_over_the_hole"
+    ]
+   },
+   "swap_locked_command": {
+    "detected": true,
+    "failing_tests": [
+     "test_m2.ExecutorGate.test_locked_suffix_commands_are_allowed_only_unchanged",
+     "test_m2.ExecutorGate.test_tick_permit_covers_one_command"
+    ]
+   }
+  },
+  "passed": true
+ },
+ "G10": {
+  "tick_samples": 8349,
+  "commit_samples": 291,
+  "tick_p95_ms_cold_pooled": 3.918658,
+  "tick_p95_ms_cold_worst_pass": 3.954731,
+  "tick_p95_ms_warm_pooled": 3.898299,
+  "commit_p95_ms_cold_pooled": 66.202563,
+  "commit_p95_ms_cold_worst_pass": 67.501566,
+  "commit_p95_ms_warm_pooled": 66.013927,
+  "thresholds": {
+   "tick_p95_ms": 10.0,
+   "commit_p95_ms": 50.0,
+   "min_tick_samples": 1000
+  },
+  "minimal_mode_commit_p95_ms_cold": 23.35561,
+  "tick_pass": true,
+  "commit_pass": false,
+  "samples_pass": true,
+  "interpretation": "stricter reading: max(pooled P95, worst per-pass P95), cold shape cache, strict mode",
+  "passed": false,
+  "population": "verified Set A + Set C candidates (+ Set D when present at run time)",
+  "supplementary_all_verified_set_B": {
+   "tick_samples": 15377,
+   "tick_p95_ms_cold": 4.629965,
+   "commit_samples": 190,
+   "commit_p95_ms_cold": 66.351512,
+   "tick_pass": true,
+   "commit_pass": false
+  }
+ }
+}

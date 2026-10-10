@@ -1,0 +1,122 @@
+{
+ "faults": {
+  "no_landing_proof": {
+   "fault": "no_landing_proof",
+   "returncode": 1,
+   "passed": false,
+   "tests_run": 27,
+   "skipped": 0,
+   "failing_tests": [
+    "test_m2.Equivalence.test_frozen_matrix_subset_matches_scanner_exactly",
+    "test_m2.Rejection.test_landing_must_be_proved_before_the_interval_closes",
+    "test_m2.Equivalence.test_lazy_does_the_same_physics_work_as_the_scanner_on_verified_candidates"
+   ],
+   "seconds": 7.2,
+   "detected": true
+  },
+  "unknown_as_free": {
+   "fault": "unknown_as_free",
+   "returncode": 1,
+   "passed": false,
+   "tests_run": 27,
+   "skipped": 0,
+   "failing_tests": [
+    "test_m2.Permits.test_dependency_that_became_unknown_needs_information",
+    "test_m2.Rejection.test_unknown_cell_on_the_route_is_not_free_space",
+    "test_m2.Rejection.test_unknown_landing_is_needs_information_not_free"
+   ],
+   "seconds": 10.0,
+   "detected": true
+  },
+  "one_branch": {
+   "fault": "one_branch",
+   "returncode": 1,
+   "passed": false,
+   "tests_run": 27,
+   "skipped": 0,
+   "failing_tests": [
+    "test_m2.Rejection.test_failure_of_the_late_branch_alone_is_not_missed",
+    "test_m2.Equivalence.test_frozen_matrix_subset_matches_scanner_exactly",
+    "test_m2.Rejection.test_landing_must_be_proved_before_the_interval_closes",
+    "test_m2.Equivalence.test_lazy_does_the_same_physics_work_as_the_scanner_on_verified_candidates",
+    "test_m2.Equivalence.test_mixed_counterexample_has_one_commit_covering_both_branches",
+    "test_m2.Rejection.test_request_level_classes"
+   ],
+   "seconds": 6.7,
+   "detected": true
+  },
+  "ignore_inflight": {
+   "fault": "ignore_inflight",
+   "returncode": 1,
+   "passed": false,
+   "tests_run": 27,
+   "skipped": 0,
+   "failing_tests": [
+    "test_m2.Rejection.test_failure_of_the_late_branch_alone_is_not_missed",
+    "test_m2.Equivalence.test_frozen_matrix_subset_matches_scanner_exactly",
+    "test_m2.Equivalence.test_in_flight_command_is_part_of_the_tail",
+    "test_m2.Rejection.test_landing_must_be_proved_before_the_interval_closes",
+    "test_m2.Equivalence.test_lazy_does_the_same_physics_work_as_the_scanner_on_verified_candidates",
+    "test_m2.Equivalence.test_mixed_counterexample_has_one_commit_covering_both_branches"
+   ],
+   "seconds": 6.8,
+   "detected": true
+  },
+  "accept_stale": {
+   "fault": "accept_stale",
+   "returncode": 1,
+   "passed": false,
+   "tests_run": 27,
+   "skipped": 0,
+   "failing_tests": [
+    "test_m2.Permits.test_changed_anchor_id",
+    "test_m2.Permits.test_changed_dependency_cell",
+    "test_m2.Permits.test_changed_entry_state",
+    "test_m2.Permits.test_changed_goal_revision_and_goal",
+    "test_m2.Permits.test_changed_input_ledger",
+    "test_m2.Permits.test_changed_request_identity_and_world_session",
+    "test_m2.Permits.test_dependency_that_became_unknown_needs_information"
+   ],
+   "seconds": 7.2,
+   "detected": true
+  },
+  "ignore_damage": {
+   "fault": "ignore_damage",
+   "returncode": 1,
+   "passed": false,
+   "tests_run": 27,
+   "skipped": 0,
+   "failing_tests": [
+    "test_m2.Rejection.test_damage_allowance_zero_budget",
+    "test_m2.Rejection.test_truncated_in_the_air_and_jump_replaced_by_walk",
+    "test_m2.Rejection.test_walk_straight_over_the_hole"
+   ],
+   "seconds": 7.5,
+   "detected": true
+  },
+  "swap_locked_command": {
+   "fault": "swap_locked_command",
+   "returncode": 1,
+   "passed": false,
+   "tests_run": 27,
+   "skipped": 0,
+   "failing_tests": [
+    "test_m2.ExecutorGate.test_locked_suffix_commands_are_allowed_only_unchanged",
+    "test_m2.ExecutorGate.test_tick_permit_covers_one_command"
+   ],
+   "seconds": 7.3,
+   "detected": true
+  }
+ },
+ "baseline": {
+  "fault": null,
+  "returncode": 0,
+  "passed": true,
+  "tests_run": 27,
+  "skipped": 0,
+  "failing_tests": [],
+  "seconds": 6.7
+ },
+ "all_detected": true,
+ "baseline_passes": true
+}

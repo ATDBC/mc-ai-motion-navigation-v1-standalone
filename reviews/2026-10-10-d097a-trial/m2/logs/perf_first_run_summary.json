@@ -1,0 +1,11 @@
+{
+  "note": "First perf run (superseded as the archived performance.json by the final rerun with the final code). Copied from the terminal output; loadavg at start/end about 1.8/1.7/1.2 and 2.0/1.9/1.4 (M1 running at lower intensity). Same population: 143 verified A+C candidates, 3 passes, cold-cache view.",
+  "strict_cold_tick_ms": {"samples": 8349, "p50": 2.2007, "p95": 4.0198, "p99": 5.2773, "max": 12.8624, "steps_p95": 24},
+  "strict_cold_commit_ms": {"samples": 291, "p50": 40.5389, "p95": 61.9784, "p99": 70.9540, "max": 73.7448, "steps_p50": 308, "steps_p95": 333, "per_pass_p95": [60.89, 60.72, 68.87]},
+  "strict_warm_tick_p95_ms": 4.0046,
+  "strict_warm_commit_p95_ms": 66.4163,
+  "minimal_cold_commit_ms": {"samples": 291, "p50": 6.4247, "p95": 27.6929, "p99": 38.2690, "max": 42.6986, "steps_p95": 183},
+  "full_scan_ms": {"p50": 147.07, "p95": 232.59},
+  "lazy_strict_total_ms": {"p50": 91.38, "p95": 137.77},
+  "supplementary_B_verified_cold": {"tick_samples": 15377, "tick_p95_ms": 4.7361, "commit_samples": 190, "commit_p95_ms": 61.4486}
+}

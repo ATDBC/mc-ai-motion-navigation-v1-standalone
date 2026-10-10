@@ -1,0 +1,713 @@
+{
+ "candidates": 624,
+ "counts": {
+  "accept_stale": {},
+  "ignore_damage": {
+   "candidates": 624,
+   "reason_differs_only": 115,
+   "status_differs": 6,
+   "lazy_verified_scan_not": 6
+  },
+  "ignore_inflight": {
+   "candidates": 624,
+   "verified_but_intervals_or_tails_differ": 320
+  },
+  "no_landing_proof": {
+   "candidates": 624,
+   "verified_but_intervals_or_tails_differ": 134
+  },
+  "one_branch": {
+   "candidates": 624,
+   "verified_but_intervals_or_tails_differ": 334,
+   "status_differs": 3,
+   "lazy_verified_scan_not": 3
+  },
+  "swap_locked_command": {},
+  "unknown_as_free": {
+   "candidates": 624,
+   "status_differs": 38,
+   "lazy_verified_scan_not": 2
+  }
+ },
+ "examples": {
+  "accept_stale": [],
+  "ignore_damage": [
+   {
+    "id": "drop/drop_depth4_budget0",
+    "scan": [
+     "CANDIDATE_REJECTED",
+     "damage_allowance"
+    ],
+    "lazy": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "intervals_scan": null,
+    "intervals_lazy": null
+   },
+   {
+    "id": "drop/drop_depth5_budget0",
+    "scan": [
+     "CANDIDATE_REJECTED",
+     "damage_allowance"
+    ],
+    "lazy": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "intervals_scan": null,
+    "intervals_lazy": null
+   },
+   {
+    "id": "drop/drop_depth5_budget1",
+    "scan": [
+     "CANDIDATE_REJECTED",
+     "damage_allowance"
+    ],
+    "lazy": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "intervals_scan": null,
+    "intervals_lazy": null
+   },
+   {
+    "id": "drop/drop_depth6_budget0",
+    "scan": [
+     "CANDIDATE_REJECTED",
+     "damage_allowance"
+    ],
+    "lazy": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "intervals_scan": null,
+    "intervals_lazy": null
+   },
+   {
+    "id": "drop/drop_depth6_budget1",
+    "scan": [
+     "CANDIDATE_REJECTED",
+     "damage_allowance"
+    ],
+    "lazy": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "intervals_scan": null,
+    "intervals_lazy": null
+   }
+  ],
+  "ignore_inflight": [
+   {
+    "id": "flat_walk:A3",
+    "scan": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "lazy": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "intervals_scan": [
+     [],
+     []
+    ],
+    "intervals_lazy": [
+     [],
+     []
+    ]
+   },
+   {
+    "id": "jump_up_straight:A3",
+    "scan": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "lazy": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "intervals_scan": [
+     [],
+     []
+    ],
+    "intervals_lazy": [
+     [],
+     []
+    ]
+   },
+   {
+    "id": "jump_gap_1:A3",
+    "scan": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "lazy": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "intervals_scan": [
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ],
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ]
+    ],
+    "intervals_lazy": [
+     [
+      [
+       3,
+       4,
+       17
+      ]
+     ],
+     [
+      [
+       3,
+       4,
+       17
+      ]
+     ]
+    ]
+   },
+   {
+    "id": "gap_start_1_width_1:A3",
+    "scan": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "lazy": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "intervals_scan": [
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ],
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ]
+    ],
+    "intervals_lazy": [
+     [
+      [
+       3,
+       4,
+       17
+      ]
+     ],
+     [
+      [
+       3,
+       4,
+       17
+      ]
+     ]
+    ]
+   },
+   {
+    "id": "gap_start_1_width_1:A5",
+    "scan": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "lazy": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "intervals_scan": [
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ],
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ]
+    ],
+    "intervals_lazy": [
+     [
+      [
+       3,
+       4,
+       17
+      ]
+     ],
+     [
+      [
+       3,
+       4,
+       17
+      ]
+     ]
+    ]
+   }
+  ],
+  "no_landing_proof": [
+   {
+    "id": "jump_gap_1:A3",
+    "scan": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "lazy": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "intervals_scan": [
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ],
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ]
+    ],
+    "intervals_lazy": [
+     [
+      [
+       2,
+       3,
+       4
+      ]
+     ],
+     [
+      [
+       2,
+       3,
+       4
+      ]
+     ]
+    ]
+   },
+   {
+    "id": "gap_start_1_width_1:A3",
+    "scan": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "lazy": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "intervals_scan": [
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ],
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ]
+    ],
+    "intervals_lazy": [
+     [
+      [
+       2,
+       3,
+       4
+      ]
+     ],
+     [
+      [
+       2,
+       3,
+       4
+      ]
+     ]
+    ]
+   },
+   {
+    "id": "gap_start_1_width_1:A5",
+    "scan": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "lazy": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "intervals_scan": [
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ],
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ]
+    ],
+    "intervals_lazy": [
+     [
+      [
+       2,
+       3,
+       4
+      ]
+     ],
+     [
+      [
+       2,
+       3,
+       4
+      ]
+     ]
+    ]
+   },
+   {
+    "id": "gap_start_1_width_1:A15",
+    "scan": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "lazy": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "intervals_scan": [
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ],
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ]
+    ],
+    "intervals_lazy": [
+     [
+      [
+       2,
+       3,
+       4
+      ]
+     ],
+     [
+      [
+       2,
+       3,
+       4
+      ]
+     ]
+    ]
+   },
+   {
+    "id": "gap_start_1_width_2:A3",
+    "scan": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "lazy": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "intervals_scan": [
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ],
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ]
+    ],
+    "intervals_lazy": [
+     [
+      [
+       2,
+       3,
+       4
+      ],
+      [
+       4,
+       5,
+       17
+      ]
+     ],
+     [
+      [
+       2,
+       3,
+       4
+      ],
+      [
+       4,
+       5,
+       17
+      ]
+     ]
+    ]
+   }
+  ],
+  "one_branch": [
+   {
+    "id": "flat_walk:A3",
+    "scan": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "lazy": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "intervals_scan": [
+     [],
+     []
+    ],
+    "intervals_lazy": [
+     []
+    ]
+   },
+   {
+    "id": "jump_up_straight:A3",
+    "scan": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "lazy": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "intervals_scan": [
+     [],
+     []
+    ],
+    "intervals_lazy": [
+     []
+    ]
+   },
+   {
+    "id": "jump_gap_1:A3",
+    "scan": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "lazy": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "intervals_scan": [
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ],
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ]
+    ],
+    "intervals_lazy": [
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ]
+    ]
+   },
+   {
+    "id": "gap_start_1_width_1:A3",
+    "scan": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "lazy": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "intervals_scan": [
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ],
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ]
+    ],
+    "intervals_lazy": [
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ]
+    ]
+   },
+   {
+    "id": "gap_start_1_width_1:A5",
+    "scan": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "lazy": [
+     "VERIFIED_CANDIDATE",
+     null
+    ],
+    "intervals_scan": [
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ],
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ]
+    ],
+    "intervals_lazy": [
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ]
+    ]
+   }
+  ],
+  "swap_locked_command": [],
+  "unknown_as_free": [
+   {
+    "id": "fixture/unknown_landing/gap_start_1_width_1:A3/orig",
+    "scan": [
+     "NEEDS_INFORMATION",
+     "unknown_world"
+    ],
+    "lazy": [
+     "CANDIDATE_REJECTED",
+     "damage_allowance"
+    ],
+    "intervals_scan": null,
+    "intervals_lazy": null
+   },
+   {
+    "id": "fixture/unknown_landing/gap_start_1_width_1:A3/truncate_1",
+    "scan": [
+     "NEEDS_INFORMATION",
+     "unknown_world"
+    ],
+    "lazy": [
+     "CANDIDATE_REJECTED",
+     "damage_allowance"
+    ],
+    "intervals_scan": null,
+    "intervals_lazy": null
+   },
+   {
+    "id": "fixture/unknown_landing/gap_start_1_width_1:A3/truncate_2",
+    "scan": [
+     "NEEDS_INFORMATION",
+     "unknown_world"
+    ],
+    "lazy": [
+     "CANDIDATE_REJECTED",
+     "damage_allowance"
+    ],
+    "intervals_scan": null,
+    "intervals_lazy": null
+   },
+   {
+    "id": "fixture/unknown_landing/gap_start_1_width_1:A3/truncate_3",
+    "scan": [
+     "NEEDS_INFORMATION",
+     "unknown_world"
+    ],
+    "lazy": [
+     "CANDIDATE_REJECTED",
+     "damage_allowance"
+    ],
+    "intervals_scan": null,
+    "intervals_lazy": null
+   },
+   {
+    "id": "fixture/unknown_landing/gap_start_1_width_1:A3/truncate_5",
+    "scan": [
+     "NEEDS_INFORMATION",
+     "unknown_world"
+    ],
+    "lazy": [
+     "CANDIDATE_REJECTED",
+     "final_exit_not_grounded"
+    ],
+    "intervals_scan": null,
+    "intervals_lazy": null
+   }
+  ]
+ },
+ "note": "accept_stale and swap_locked_command act on permits/executor, covered by unit tests only"
+}
