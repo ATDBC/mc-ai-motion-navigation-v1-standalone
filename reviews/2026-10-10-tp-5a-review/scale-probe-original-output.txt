@@ -1,0 +1,17 @@
+calibration flat_walk          FOUND nodes=49 steps=227 59 ms
+calibration jump_up_straight   FOUND nodes=58 steps=368 88 ms
+calibration jump_gap_1         FOUND nodes=251 steps=1061 217 ms
+gap1 A3 walk/jump/neutral     budget=4096/65536 -> FOUND/verified_trajectory expanded=193 nodes=251 steps=1061 tail=436 ticks=24 249 ms
+gap1 A5 +sprint/sprint_jump   budget=4096/65536 -> FOUND/verified_trajectory expanded=21 nodes=67 steps=553 tail=412 ticks=20 150 ms
+gap1 A6 +back                 budget=4096/65536 -> FOUND/verified_trajectory expanded=18 nodes=58 steps=489 tail=352 ticks=17 106 ms
+gap2 A3 walk/jump/neutral     budget=4096/65536 -> FOUND/verified_trajectory expanded=57 nodes=115 steps=629 tail=410 ticks=25 141 ms
+gap2 A5 +sprint/sprint_jump   budget=4096/65536 -> NO_TRAJECTORY_IN_BUDGET/node_budget expanded=481 nodes=4096 steps=29588 tail=20967 ticks=0 2987 ms
+gap2 A5 +sprint/sprint_jump   budget=200000/4000000 -> NO_TRAJECTORY_IN_BUDGET/node_budget expanded=43364 nodes=200000 steps=1418319 tail=938367 ticks=0 144580 ms
+gap2 A6 +back                 budget=4096/65536 -> NO_TRAJECTORY_IN_BUDGET/node_budget expanded=160 nodes=4096 steps=29818 tail=22008 ticks=0 2850 ms
+gap2 A6 +back                 budget=200000/4000000 -> NO_TRAJECTORY_IN_BUDGET/node_budget expanded=16726 nodes=200000 steps=1600260 tail=1193248 ticks=0 154360 ms
+gap3 A3 walk/jump/neutral     budget=4096/65536 -> NO_TRAJECTORY_IN_BUDGET/node_budget expanded=4096 nodes=4096 steps=12288 tail=0 ticks=0 1145 ms
+gap3 A3 walk/jump/neutral     budget=200000/4000000 -> NO_TRAJECTORY_IN_BUDGET/node_budget expanded=200000 nodes=200000 steps=600000 tail=0 ticks=0 62769 ms
+gap3 A5 +sprint/sprint_jump   budget=4096/65536 -> NO_TRAJECTORY_IN_BUDGET/node_budget expanded=4096 nodes=4096 steps=20480 tail=0 ticks=0 1809 ms
+gap3 A5 +sprint/sprint_jump   budget=200000/4000000 -> NO_TRAJECTORY_IN_BUDGET/node_budget expanded=200000 nodes=200000 steps=1000000 tail=0 ticks=0 98822 ms
+gap3 A6 +back                 budget=4096/65536 -> NO_TRAJECTORY_IN_BUDGET/node_budget expanded=4096 nodes=4096 steps=24576 tail=0 ticks=0 2560 ms
+gap3 A6 +back                 budget=200000/4000000 -> NO_TRAJECTORY_IN_BUDGET/node_budget expanded=200000 nodes=200000 steps=1200000 tail=0 ticks=0 114939 ms

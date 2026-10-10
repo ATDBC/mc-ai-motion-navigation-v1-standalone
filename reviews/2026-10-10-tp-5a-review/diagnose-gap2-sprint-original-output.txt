@@ -1,0 +1,3 @@
+outcome NO_TRAJECTORY_IN_BUDGET node_budget ScanCounts(nodes=4096, physics_steps=29588, tail_ticks=20967) expanded 481
+scan results [(('CANDIDATE_REJECTED', 'prelude_outside_same_safe_support'), 94), (('NO_TRAJECTORY_IN_BUDGET', 'node_budget'), 1)]
+first three commands of scanned candidates [('SJ S S', 95)]

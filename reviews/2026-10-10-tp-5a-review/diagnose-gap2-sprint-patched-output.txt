@@ -1,0 +1,3 @@
+outcome FOUND verified_trajectory ScanCounts(nodes=77, physics_steps=698, tail_ticks=447) expanded 22
+scan results [(('VERIFIED_CANDIDATE', 'None'), 1)]
+first three commands of scanned candidates [('S SJ S', 1)]

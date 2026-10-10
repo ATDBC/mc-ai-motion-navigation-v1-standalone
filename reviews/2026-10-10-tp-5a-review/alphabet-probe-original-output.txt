@@ -1,0 +1,6 @@
+jump_up A15                        -> FOUND/verified_trajectory expanded=19 nodes=99 steps=916 ticks=17 300 ms
+gap2 A15                           -> NO_TRAJECTORY_IN_BUDGET/node_budget expanded=161 nodes=4096 steps=31287 ticks=0 6632 ms
+gap3 A15                           -> NO_TRAJECTORY_IN_BUDGET/node_budget expanded=4096 nodes=4096 steps=61440 ticks=0 9641 ms
+jump_up A15 yaw0-first             -> FOUND/verified_trajectory expanded=18 nodes=58 steps=578 ticks=17 216 ms
+gap2 A15 yaw0-first                -> NO_TRAJECTORY_IN_BUDGET/node_budget expanded=161 nodes=4096 steps=31287 ticks=0 6321 ms
+gap3 A15 yaw0-first                -> NO_TRAJECTORY_IN_BUDGET/node_budget expanded=4096 nodes=4096 steps=61440 ticks=0 6191 ms

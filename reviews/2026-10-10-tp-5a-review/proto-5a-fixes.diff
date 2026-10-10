@@ -1,0 +1,221 @@
+diff --git a/experiments/motion_navigation/trajectory_proto/commitment.py b/experiments/motion_navigation/trajectory_proto/commitment.py
+index e9918f7..a315f38 100644
+--- a/experiments/motion_navigation/trajectory_proto/commitment.py
++++ b/experiments/motion_navigation/trajectory_proto/commitment.py
+@@ -41,6 +41,7 @@ class CandidateRejection(StrEnum):
+     DAMAGE_ALLOWANCE = "damage_allowance"
+     FINAL_EXIT_NOT_GROUNDED = "final_exit_not_grounded"
+     FINAL_STOP_UNSAFE = "final_stop_unsafe"
++    UNRECOVERED_RISK = "unrecovered_risk"
+     PRELUDE_ENTRY_MISMATCH = "prelude_entry_mismatch"
+     PRELUDE_UNSAFE = "prelude_outside_same_safe_support"
+
+@@ -253,7 +254,11 @@ def _tail(counter, boundary, prefix, commands, world, minimum_y, normal_damage,
+         if (tick + 1 >= len(commands) and current.on_ground
+                 and speed <= STABLE_SPEED_LIMIT_PER_TICK + 1.e-9
+                 and speed <= ZERO_SPEED_EPSILON):
+-            return StopTail(boundary, TailStatus.SAFE_STOP, tuple(inputs), tuple(states),
++            # One safe-stop predicate: the same public support floor that
++            # closes a risk interval and accepts a goal.
++            status = (TailStatus.SAFE_STOP if _safe_support(current, world, dependencies)
++                      else TailStatus.UNSAFE)
++            return StopTail(boundary, status, tuple(inputs), tuple(states),
+                             tuple(sorted(dependencies)), damage, prefix[-1].movement_tick_id)
+     raise CountLimit(SearchReason.TRAJECTORY_TICK_BUDGET)
+
+@@ -278,6 +283,9 @@ def _risks(tails, counter, world, dependencies):
+                              tails[first].absolute_tick, tails[first].absolute_tick + 1,
+                              tail.absolute_tick))
+             first = None
++    if first is not None:
++        # A proof must not omit a commitment that never recovered.
++        raise _Incomplete(ScanStatus.CANDIDATE_REJECTED, CandidateRejection.UNRECOVERED_RISK)
+     return tuple(intervals)
+
+
+diff --git a/experiments/motion_navigation/trajectory_proto/contracts.py b/experiments/motion_navigation/trajectory_proto/contracts.py
+index a0e565a..edda02c 100644
+--- a/experiments/motion_navigation/trajectory_proto/contracts.py
++++ b/experiments/motion_navigation/trajectory_proto/contracts.py
+@@ -24,6 +24,7 @@ class SearchReason(StrEnum):
+     VERIFIED_TRAJECTORY = "verified_trajectory"
+     UNKNOWN_WORLD = "unknown_world"
+     MISSING_INPUT_APPLICATION = "missing_input_application"
++    UNPROVEN_RESOURCES = "unproven_resources"
+     KNOWN_NECESSARY_CONDITION = "known_necessary_condition"
+     NODE_BUDGET = "node_budget"
+     PHYSICS_STEP_BUDGET = "physics_step_budget"
+@@ -40,7 +41,8 @@ class SearchReason(StrEnum):
+     def status(self) -> SearchStatus:
+         if self is SearchReason.VERIFIED_TRAJECTORY:
+             return SearchStatus.FOUND
+-        if self in (SearchReason.UNKNOWN_WORLD, SearchReason.MISSING_INPUT_APPLICATION):
++        if self in (SearchReason.UNKNOWN_WORLD, SearchReason.MISSING_INPUT_APPLICATION,
++                    SearchReason.UNPROVEN_RESOURCES):
+             return SearchStatus.NEEDS_INFORMATION
+         if self is SearchReason.KNOWN_NECESSARY_CONDITION:
+             return SearchStatus.BLOCKED
+diff --git a/experiments/motion_navigation/trajectory_proto/reference_search.py b/experiments/motion_navigation/trajectory_proto/reference_search.py
+index fee0608..cf8483b 100644
+--- a/experiments/motion_navigation/trajectory_proto/reference_search.py
++++ b/experiments/motion_navigation/trajectory_proto/reference_search.py
+@@ -14,7 +14,10 @@ from mc2p.motion_nav.movement_transition import GoalSupport, MovementMode, Resou
+ from mc2p.motion_nav.physics_adapter import PhysicsWorldView
+ from mc2p.motion_nav.physics_types import CalculationStatus, JAVA_1_21_RULESET, PhysicsState, TickInput
+ from mc2p.motion_nav.world_model import BlockPos, CellFact, WorldView
+-from .commitment import BoundaryInputs, CommitmentProof, ScanStatus, ZERO_SPEED_EPSILON, scan_commitment
++from .commitment import (
++    BoundaryInputs, CommitmentProof, MINIMUM_PRELUDE_SUPPORT_FRACTION, ScanOptions, ScanStatus,
++    TailStatus, ZERO_SPEED_EPSILON, _Incomplete, _tail, scan_commitment,
++)
+ from .contracts import (
+     ApplicationEvidence, KnownInputApplication, SearchReason, SearchStatus,
+     TimingBranch, TrajectorySearchRequest,
+@@ -24,7 +27,8 @@ from .physics import CountedPhysics, CountLimit, ScanCounts, trajectory_digest
+
+ COVERAGE = (
+     "Deterministic greedy best-first over the declared ordered TickInput alphabet; "
+-    "one tick per expansion; exact complete PhysicsState equality only; "
++    "one tick per expansion; every timing branch expanded in lockstep; "
++    "merge only on exact complete PhysicsState equality in every timing branch; "
+     "horizontal collision and unsupported/invalid steps discarded; "
+     "fixed count and candidate horizon caps; no global completeness or optimality claim."
+ )
+@@ -77,10 +81,15 @@ def _distance(state, goal):
+                              (region.max_x, region.max_y, region.max_z))))
+
+
+-def _priority(state, goal):
++class _Unknown(Exception):
++    def __init__(self, missing):
++        self.missing = missing
++
++
++def _priority(states, goal):
+     # This estimates ranking only; it neither predicts physics nor prunes nodes.
+-    return _distance(state, goal) + .25 * math.hypot(
+-        state.velocity_blocks_per_tick[0], state.velocity_blocks_per_tick[2])
++    return max(_distance(state, goal) + .25 * math.hypot(
++        state.velocity_blocks_per_tick[0], state.velocity_blocks_per_tick[2]) for state in states)
+
+
+ def _potential_goal(state, goal):
+@@ -101,7 +110,8 @@ def _goal_check(request, branch, state, world, counter):
+     mode = (MovementMode.CRAWL if state.pose == "swimming" else
+             MovementMode.CROUCH if state.sneaking else
+             MovementMode.SPRINT if state.sprinting else MovementMode.WALK)
+-    solid = state.on_ground and support.status is QueryStatus.FEASIBLE
++    solid = (state.on_ground and support.status is QueryStatus.FEASIBLE
++             and support.support_fraction >= MINIMUM_PRELUDE_SUPPORT_FRACTION - 1.e-9)
+     stopped = math.hypot(state.velocity_blocks_per_tick[0], state.velocity_blocks_per_tick[2]) <= ZERO_SPEED_EPSILON
+     accepted = solid and stopped and request.goal.accepts(
+         position=state.position, support=GoalSupport.SOLID, mode=mode, pose=state.pose,
+@@ -157,15 +167,53 @@ def reference_search(request, world):
+         return outcome(SearchReason.MISSING_INPUT_APPLICATION)
+     if len(request.entry_states) > request.budget.max_timing_branches:
+         return outcome(SearchReason.TIMING_BRANCH_BUDGET)
+-    try:
+-        current = request.anchor_state
+-        for command in request.input_prefix:
+-            result = counter.step(current, command, world)
++    if request.goal.minimum_resources.values:
++        # Every 1.21 step reports CONDITIONAL resources: the hunger clock is
++        # not in PhysicsState, so a resource floor cannot be proven here.
++        return outcome(SearchReason.UNPROVEN_RESOURCES)
++
++    def advance(states, command):
++        """Step every timing branch; None discards this shared command."""
++        successors = []
++        for state in states:
++            result = counter.step(state, command, world)
+             if result.status is CalculationStatus.NEEDS_WORLD:
+-                return outcome(SearchReason.UNKNOWN_WORLD, missing=result.missing_cells)
++                raise _Unknown(result.missing_cells)
+             if result.status is not CalculationStatus.OK or result.next_state.horizontal_collision:
++                return None
++            successors.append(result.next_state)
++        return tuple(successors)
++
++    def first_command_keeps_wait_safe(command):
++        """Prune what the scanner must later reject as PRELUDE_UNSAFE.
++
++        A waiting branch must still stop safely after the first shared command.
++        The bounds are conservative for every completion: the final height is
++        at least the goal floor and normal damage at most the allowance.
++        """
++        for entry, prelude in zip(request.entry_states, request.branch_preludes):
++            if not prelude:
++                continue
++            try:
++                tail = _tail(counter, 0, (request.anchor_state, entry), (command,), world,
++                             min(entry.position[1], request.goal.region.min_y),
++                             request.task_damage_budget.maximum_expected_damage_points, ScanOptions())
++            except _Incomplete as incomplete:
++                if incomplete.status is ScanStatus.CANDIDATE_REJECTED:
++                    return False
++                raise
++            if tail.status is not TailStatus.SAFE_STOP:
++                return False
++        return True
++
++    try:
++        if request.input_prefix and not first_command_keeps_wait_safe(request.input_prefix[0]):
++            return outcome(SearchReason.SEARCH_EXHAUSTED)
++        current = request.entry_states
++        for command in request.input_prefix:
++            current = advance(current, command)
++            if current is None:
+                 return outcome(SearchReason.SEARCH_EXHAUSTED)
+-            current = result.next_state
+         serial = 0
+         frontier = [(_priority(current, request.goal), serial, current, request.input_prefix)]
+         seen = {current}
+@@ -174,7 +222,7 @@ def reference_search(request, world):
+             _, _, current, inputs = heapq.heappop(frontier)
+             counter.node()
+             expanded += 1
+-            if _potential_goal(current, request.goal):
++            if all(_potential_goal(state, request.goal) for state in current):
+                 scan = scan_commitment(request, inputs, world, _boundary_evidence(request, inputs),
+                                        counter=counter)
+                 if scan.status in (ScanStatus.NEEDS_INFORMATION, ScanStatus.STALE,
+@@ -200,13 +248,10 @@ def reference_search(request, world):
+                 horizon_cut = True
+                 continue
+             for command in request.supported_inputs:
+-                result = counter.step(current, command, world)
+-                if result.status is CalculationStatus.NEEDS_WORLD:
+-                    return outcome(SearchReason.UNKNOWN_WORLD, missing=result.missing_cells)
+-                if result.status is not CalculationStatus.OK or result.next_state.horizontal_collision:
++                if not inputs and not first_command_keeps_wait_safe(command):
+                     continue
+-                successor = result.next_state
+-                if successor in seen:
++                successor = advance(current, command)
++                if successor is None or successor in seen:
+                     continue
+                 seen.add(successor)
+                 serial += 1
+@@ -215,3 +260,7 @@ def reference_search(request, world):
+         return outcome(SearchReason.TRAJECTORY_TICK_BUDGET if horizon_cut else SearchReason.SEARCH_EXHAUSTED)
+     except CountLimit as limited:
+         return outcome(limited.reason)
++    except _Unknown as unknown:
++        return outcome(SearchReason.UNKNOWN_WORLD, missing=unknown.missing)
++    except _Incomplete as incomplete:
++        return outcome(incomplete.reason, missing=incomplete.missing)
+diff --git a/tests/motion_nav/test_trajectory_proto_commitment.py b/tests/motion_nav/test_trajectory_proto_commitment.py
+index cf45f0b..c57d5b5 100644
+--- a/tests/motion_nav/test_trajectory_proto_commitment.py
++++ b/tests/motion_nav/test_trajectory_proto_commitment.py
+@@ -201,7 +201,9 @@ class TrajectoryProtoCommitmentTests(unittest.TestCase):
+         nominal = scan_request(inputs, state=state)
+         nominal_result = scan_commitment(nominal, inputs, local, ledger(nominal, inputs))
+         self.assertIs(nominal_result.status, ScanStatus.VERIFIED_CANDIDATE)
+-        self.assertIs(nominal_result.proof.branches[0].tails[0].status, TailStatus.SAFE_STOP)
++        # Unified safe-stop floor: the boundary-0 tail settles with 0.1426
++        # support, below the 0.15 floor, so the nominal risk opens at entry.
++        self.assertIs(nominal_result.proof.branches[0].tails[0].status, TailStatus.UNSAFE)
+         req = scan_request(inputs, state=state, two=True, prelude=WALK, local=local)
+         late = req.entry_states[1]
+         self.assertTrue(late.on_ground)

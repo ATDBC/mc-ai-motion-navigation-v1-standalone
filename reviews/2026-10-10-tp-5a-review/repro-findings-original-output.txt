@@ -1,0 +1,12 @@
+== P1 未关闭风险区间被丢弃
+status FOUND verified_trajectory counts ScanCounts(nodes=73, physics_steps=509, tail_ticks=436)
+  ON_TIME        final=(1.25, 1.0, 2.900102689134391) support=0.0833 unsafe_boundaries=[3, 4] risk_intervals=()
+  LATE_ONE_TICK  final=(1.25, 1.0, 2.900102689134391) support=0.0833 unsafe_boundaries=[3, 4] risk_intervals=()
+== P2 条件资源被当成已证明
+status FOUND verified_trajectory
+  final food 20 saturation 0.0 summed exhaustion_delta 0.05
+  goal accepted per branch [True, True]
+  per-step resource status ["('conditional', ('server_hunger_clock_not_in_physics_state',))"]
+== 去重只看 nominal 状态
+  nominal equal: True
+  late equal: False late y: 1.7532000064849853 1.0

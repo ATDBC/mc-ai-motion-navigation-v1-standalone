@@ -1,0 +1,18 @@
+repr flat_walk           -> FOUND/verified_trajectory expanded=6 nodes=38 steps=317 ticks=12 60 ms
+repr jump_up_straight    -> FOUND/verified_trajectory expanded=7 nodes=48 steps=638 ticks=16 108 ms
+repr jump_gap_1          -> FOUND/verified_trajectory expanded=18 nodes=91 steps=1613 ticks=30 253 ms
+start1 gap1 A3           -> FOUND/verified_trajectory expanded=18 nodes=91 steps=1613 ticks=30 246 ms
+start1 gap1 A5           -> FOUND/verified_trajectory expanded=3 nodes=52 steps=698 ticks=19 131 ms
+start1 gap1 A15          -> FOUND/verified_trajectory expanded=3 nodes=62 steps=1046 ticks=19 158 ms
+start1 gap2 A3           -> NO_TRAJECTORY_IN_BUDGET/physics_step_budget expanded=2812 nodes=2815 steps=65536 ticks=0 5776 ms
+start1 gap2 A5           -> FOUND/verified_trajectory expanded=16 nodes=91 steps=1762 ticks=31 290 ms
+start1 gap2 A15          -> FOUND/verified_trajectory expanded=40 nodes=127 steps=4480 ticks=31 542 ms
+start4 gap1 A3           -> NO_TRAJECTORY_IN_BUDGET/physics_step_budget expanded=1686 nodes=1689 steps=65536 ticks=0 6299 ms
+start4 gap1 A5           -> FOUND/verified_trajectory expanded=257 nodes=330 steps=16966 ticks=31 1612 ms
+start4 gap1 A15          -> NO_TRAJECTORY_IN_BUDGET/physics_step_budget expanded=797 nodes=812 steps=65536 ticks=0 6151 ms
+start4 gap2 A3           -> NO_TRAJECTORY_IN_BUDGET/physics_step_budget expanded=2614 nodes=2617 steps=65536 ticks=0 5859 ms
+start4 gap2 A5           -> FOUND/verified_trajectory expanded=14 nodes=87 steps=1874 ticks=31 276 ms
+start4 gap2 A15          -> FOUND/verified_trajectory expanded=14 nodes=97 steps=3316 ticks=31 424 ms
+start4 gap3 A3           -> NO_TRAJECTORY_IN_BUDGET/physics_step_budget expanded=2614 nodes=2617 steps=65536 ticks=0 5605 ms
+start4 gap3 A5           -> NO_TRAJECTORY_IN_BUDGET/physics_step_budget expanded=1617 nodes=1622 steps=65536 ticks=0 5574 ms
+start4 gap3 A15          -> NO_TRAJECTORY_IN_BUDGET/physics_step_budget expanded=1085 nodes=1100 steps=65536 ticks=0 5650 ms

@@ -1,0 +1,6 @@
+jump_up A15                        -> FOUND/verified_trajectory expanded=19 nodes=114 steps=1310 ticks=17 494 ms
+gap2 A15                           -> FOUND/verified_trajectory expanded=23 nodes=138 steps=1675 ticks=21 646 ms
+gap3 A15                           -> NO_TRAJECTORY_IN_BUDGET/physics_step_budget expanded=3769 nodes=3784 steps=65536 ticks=0 10881 ms
+jump_up A15 yaw0-first             -> FOUND/verified_trajectory expanded=18 nodes=73 steps=957 ticks=17 296 ms
+gap2 A15 yaw0-first                -> FOUND/verified_trajectory expanded=22 nodes=87 steps=1200 ticks=21 445 ms
+gap3 A15 yaw0-first                -> NO_TRAJECTORY_IN_BUDGET/physics_step_budget expanded=3769 nodes=3784 steps=65536 ticks=0 11179 ms

@@ -1,0 +1,9 @@
+runup gap2 A3 walk/jump/neutral     budget=4096/65536 -> FOUND/verified_trajectory expanded=71 nodes=160 steps=1194 tail=695 ticks=39 237 ms
+runup gap2 A5 +sprint/sprint_jump   budget=4096/65536 -> NO_TRAJECTORY_IN_BUDGET/node_budget expanded=4091 nodes=4096 steps=37312 tail=52 ticks=0 3806 ms
+runup gap2 A5 +sprint/sprint_jump   budget=16384/262144 -> NO_TRAJECTORY_IN_BUDGET/node_budget expanded=16379 nodes=16384 steps=145202 tail=52 ticks=0 18983 ms
+runup gap2 A6 +back                 budget=4096/65536 -> FOUND/verified_trajectory expanded=27 nodes=91 steps=1116 tail=751 ticks=26 227 ms
+runup gap2 A15 3 yaws x 5           budget=4096/65536 -> NO_TRAJECTORY_IN_BUDGET/physics_step_budget expanded=2245 nodes=2260 steps=65536 tail=150 ticks=0 6661 ms
+runup gap2 A15 3 yaws x 5           budget=16384/262144 -> NO_TRAJECTORY_IN_BUDGET/physics_step_budget expanded=9202 nodes=9217 steps=262144 tail=150 ticks=0 27317 ms
+runup gap3 A5 +sprint/sprint_jump   budget=4096/65536 -> FOUND/verified_trajectory expanded=34 nodes=113 steps=1157 tail=760 ticks=33 235 ms
+runup gap3 A6 +back                 budget=4096/65536 -> FOUND/verified_trajectory expanded=31 nodes=105 steps=1144 tail=723 ticks=30 227 ms
+runup gap3 A15 3 yaws x 5           budget=4096/65536 -> FOUND/verified_trajectory expanded=35 nodes=198 steps=2720 tail=1566 ticks=33 425 ms

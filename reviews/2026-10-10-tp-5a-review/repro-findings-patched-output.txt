@@ -1,0 +1,10 @@
+== P1 未关闭风险区间被丢弃
+status NO_TRAJECTORY_IN_BUDGET trajectory_tick_budget counts ScanCounts(nodes=28, physics_steps=297, tail_ticks=225)
+== P2 条件资源被当成已证明
+status NEEDS_INFORMATION unproven_resources
+  final food 20 saturation 0.0 summed exhaustion_delta 0.0
+  goal accepted per branch []
+  per-step resource status []
+== 去重只看 nominal 状态
+  nominal equal: True
+  late equal: False late y: 1.7532000064849853 1.0
