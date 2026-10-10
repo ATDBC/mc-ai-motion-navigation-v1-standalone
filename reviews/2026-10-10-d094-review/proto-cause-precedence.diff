@@ -1,0 +1,27 @@
+diff --git a/mc2p/motion_nav/navigation_handoff.py b/mc2p/motion_nav/navigation_handoff.py
+index eccc558..c7512f2 100644
+--- a/mc2p/motion_nav/navigation_handoff.py
++++ b/mc2p/motion_nav/navigation_handoff.py
+@@ -577,6 +577,12 @@ class NavigationHandoffCoordinator:
+                 HandoffDestination.CANCEL, HandoffDestination.CLOSE,
+                 HandoffDestination.COMPLETE}:
+             self._recovery_cause = cause
++        elif destination is HandoffDestination.FAIL and not (
++                current is not None
++                and (current.planning_failure is not None
++                     or current.recovery_limit_status is not None)):
++            # Only a failure produced by this recovery keeps its cause.
++            self._recovery_cause = None
+         self._stop_request = NavigationStopRequest(
+             cause, reason, destination=destination, request_id=request_id,
+             retry_cause=registration_cause, missing_cells=missing_cells,
+@@ -714,7 +720,8 @@ class NavigationHandoffCoordinator:
+             raise ContractViolation(
+                 "pending navigation goal revision must be newer"
+             )
+-        self._recovery_cause = StopCause.GOAL_REVISED
++        # A revision supersedes the old recovery; it is not a failure cause.
++        self._recovery_cause = None
+         self._pending_goal = pending_goal
+
+     def clear_goal(self) -> PendingGoalRevision | None:

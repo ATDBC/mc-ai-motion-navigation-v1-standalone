@@ -1,0 +1,8 @@
+== 34d8ba1 (D094)
+explicit cancel (baseline)   outcome=cancelled reason=probe_cancel                             report.failure_cause=cancelled    last_stop_request.cause=cancelled
+internal contract failure    outcome=failed    reason=probe_internal_fault                     report.failure_cause=input_lost   last_stop_request.cause=cancelled
+risk ledger failure          outcome=failed    reason=risk_probe                               report.failure_cause=input_lost   last_stop_request.cause=cancelled
+== 34d8ba1 + proto-cause-precedence.diff
+explicit cancel (baseline)   outcome=cancelled reason=probe_cancel                             report.failure_cause=cancelled    last_stop_request.cause=cancelled
+internal contract failure    outcome=failed    reason=probe_internal_fault                     report.failure_cause=None         last_stop_request.cause=cancelled
+risk ledger failure          outcome=failed    reason=risk_probe                               report.failure_cause=None         last_stop_request.cause=cancelled

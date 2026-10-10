@@ -1,0 +1,12 @@
+== Linux rerun on 34d8ba1 (final source), real	7m51.894s
+cases: published 600, rerun 600
+inputs.json identical (parsed JSON): True
+index field differences: none (fields compared: damage, family, final_position, late_ticks, outcome, reason, seed, single_late_tick, task_failure_cause, ticks, violations)
+identical per-tick motion traces: 600/600
+  column_outer_turn        {'success': 100}
+  column_outer_aligned     {'success': 100}
+  turn_jumpup              {'success': 99, 'failed': 1}
+  turn_drop                {'success': 100}
+  column_landing_turn      {'success': 99, 'failed': 1}
+  column_landing_aligned   {'success': 99, 'failed': 1}
+rerun failures: [(('turn_jumpup', 36), 'motion_unsolvable:needs_state'), (('column_landing_turn', 36), 'motion_unsolvable:needs_state'), (('column_landing_aligned', 29), 'motion_unsolvable:needs_state')]

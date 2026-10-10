@@ -1,0 +1,8 @@
+== 19231c6 (D093)
+recovery cause=dependency_changed   -> status, (destination, stop cause) = ('limit_exhausted', ('fail', 'motion_unsolvable'))
+recovery cause=input_lost           -> status, (destination, stop cause) = ('limit_exhausted', ('fail', 'motion_unsolvable'))
+recovery cause=motion_unsolvable    -> status, (destination, stop cause) = ('limit_exhausted', ('fail', 'motion_unsolvable'))
+== 34d8ba1 (D094)
+recovery cause=dependency_changed   -> status, (destination, stop cause) = ('limit_exhausted', ('fail', 'dependency_changed'))
+recovery cause=input_lost           -> status, (destination, stop cause) = ('limit_exhausted', ('fail', 'input_lost'))
+recovery cause=motion_unsolvable    -> status, (destination, stop cause) = ('limit_exhausted', ('fail', 'motion_unsolvable'))

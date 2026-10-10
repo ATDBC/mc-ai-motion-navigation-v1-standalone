@@ -1,0 +1,37 @@
+== 34d8ba1, Linux, PYTHONPATH=. python -m unittest discover -s tests/motion_nav -p 'test_*.py'
+real	10m27.799s
+........................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.11/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/multiprocessing/spawn.py", line 132, in _main
+    self = reduction.pickle.load(from_parent)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/multiprocessing/synchronize.py", line 115, in __setstate__
+    self._semlock = _multiprocessing.SemLock._rebuild(*state)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory
+........................................................................................................................................................................................usage: python -m unittest scenario [-h] --output OUTPUT --id
+                                   {straight_2_0,lateral_2_0,move_stop_800_resume_2_0,normal_cancel_2_0,first_input_late_one_tick_2_0}
+python -m unittest scenario: error: argument --id: invalid choice: 'all' (choose from 'straight_2_0', 'lateral_2_0', 'move_stop_800_resume_2_0', 'normal_cancel_2_0', 'first_input_late_one_tick_2_0')
+usage: python -m unittest scenario [-h] --output OUTPUT --id
+                                   {straight_2_0,lateral_2_0,move_stop_800_resume_2_0,normal_cancel_2_0,first_input_late_one_tick_2_0}
+python -m unittest scenario: error: the following arguments are required: --id
+.................................................................................................................................................................................................................................................................................................................................................................................................................................................................................Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.11/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/multiprocessing/spawn.py", line 132, in _main
+    self = reduction.pickle.load(from_parent)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/multiprocessing/synchronize.py", line 115, in __setstate__
+    self._semlock = _multiprocessing.SemLock._rebuild(*state)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory
+........................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 1705 tests in 626.011s
+
+OK

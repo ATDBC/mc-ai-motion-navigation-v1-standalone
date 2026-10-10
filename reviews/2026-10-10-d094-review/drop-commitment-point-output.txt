@@ -1,0 +1,18 @@
+== 19231c6 (D093)
+clean: success goal_state_satisfied; departure tick 41
+remove at departure-6 (tick 35, clean z=2.858): failed   no_route_within_complete_scope   damage=0.0 min_y=64.00 violations=0
+remove at departure-5 (tick 36, clean z=2.858): failed   landing_support_missing          damage=0.0 min_y=64.00 violations=0
+remove at departure-4 (tick 37, clean z=2.956): failed   landing_support_missing          damage=0.0 min_y=64.00 violations=0
+remove at departure-3 (tick 38, clean z=3.108): failed   landing_support_missing          damage=8.0 min_y=53.00 violations=1
+remove at departure-2 (tick 39, clean z=3.289): failed   no_route_within_complete_scope   damage=8.0 min_y=53.00 violations=1
+remove at departure-1 (tick 40, clean z=3.387): failed   verified_exit_not_observed       damage=8.0 min_y=53.00 violations=1
+remove at departure-0 (tick 41, clean z=3.441): failed   verified_exit_not_observed       damage=8.0 min_y=53.00 violations=1
+== 34d8ba1 (D094)
+clean: success goal_state_satisfied; departure tick 41
+remove at departure-6 (tick 35, clean z=2.858): failed   no_route_within_complete_scope   damage=0.0 min_y=64.00 violations=0
+remove at departure-5 (tick 36, clean z=2.858): failed   landing_support_missing          damage=0.0 min_y=64.00 violations=0
+remove at departure-4 (tick 37, clean z=2.956): failed   landing_support_missing          damage=0.0 min_y=64.00 violations=0
+remove at departure-3 (tick 38, clean z=3.108): failed   landing_support_missing          damage=8.0 min_y=53.00 violations=1
+remove at departure-2 (tick 39, clean z=3.289): failed   no_route_within_complete_scope   damage=8.0 min_y=53.00 violations=1
+remove at departure-1 (tick 40, clean z=3.387): failed   verified_exit_not_observed       damage=8.0 min_y=53.00 violations=1
+remove at departure-0 (tick 41, clean z=3.441): failed   verified_exit_not_observed       damage=8.0 min_y=53.00 violations=1
