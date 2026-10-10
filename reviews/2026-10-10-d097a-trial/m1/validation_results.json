@@ -1,0 +1,1516 @@
+{
+ "cpu_seconds_total": 3675.1608052549996,
+ "per_bin": [
+  {
+   "accepted": 200,
+   "bin": "rest-L",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap1",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "rest-C",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap1",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "rest-R",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap1",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-L-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap1",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-L-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap1",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-L-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap1",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-C-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap1",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-C-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap1",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-C-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap1",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-R-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap1",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-R-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap1",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-R-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap1",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-L-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap1",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-L-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap1",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-L-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap1",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-C-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap1",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-C-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap1",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-C-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap1",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-R-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap1",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-R-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap1",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-R-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap1",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "rest-L",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "rest-C",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "rest-R",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-L-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-L-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-L-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-C-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-C-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-C-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-R-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-R-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-R-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-L-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-L-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-L-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-C-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-C-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-C-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-R-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-R-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-R-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "rest-L",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap3",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "rest-C",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap3",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "rest-R",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap3",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-L-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap3",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-L-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap3",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-L-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap3",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-C-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap3",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-C-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap3",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-C-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap3",
+   "unsupported": 0
+  },
+  {
+   "accepted": 199,
+   "bin": "walk-R-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 1,
+   "template": "gap3",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-R-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap3",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-R-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap3",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-L-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap3",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-L-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap3",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-L-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap3",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-C-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap3",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-C-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap3",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-C-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap3",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-R-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap3",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-R-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap3",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-R-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap3",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "rest-L",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2c",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "rest-C",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2c",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "rest-R",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2c",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-L-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2c",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-L-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2c",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-L-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2c",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-C-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2c",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-C-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2c",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-C-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2c",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-R-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2c",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-R-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2c",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-R-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2c",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-L-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2c",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-L-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2c",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-L-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2c",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-C-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2c",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-C-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2c",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-C-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2c",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-R-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2c",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-R-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2c",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-R-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap2c",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "rest-L",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "jumpup",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "rest-C",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "jumpup",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "rest-R",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "jumpup",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-L-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "jumpup",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-L-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "jumpup",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-L-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "jumpup",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-C-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "jumpup",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-C-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "jumpup",
+   "unsupported": 0
+  },
+  {
+   "accepted": 198,
+   "bin": "walk-C-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 2,
+   "template": "jumpup",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-R-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "jumpup",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-R-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "jumpup",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-R-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "jumpup",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-L-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "jumpup",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-L-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "jumpup",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-L-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "jumpup",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-C-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "jumpup",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-C-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "jumpup",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-C-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "jumpup",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-R-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "jumpup",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-R-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "jumpup",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-R-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "jumpup",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "rest-L",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "turn",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "rest-C",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "turn",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "rest-R",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "turn",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-L-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "turn",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-L-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "turn",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-L-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "turn",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-C-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "turn",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-C-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "turn",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-C-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "turn",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-R-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "turn",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-R-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "turn",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "walk-R-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "turn",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-L-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "turn",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-L-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "turn",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-L-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "turn",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-C-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "turn",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-C-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "turn",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-C-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "turn",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-R-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "turn",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-R-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "turn",
+   "unsupported": 0
+  },
+  {
+   "accepted": 200,
+   "bin": "sprint-R-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "turn",
+   "unsupported": 0
+  },
+  {
+   "accepted": 0,
+   "bin": "rest-L",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap5",
+   "unsupported": 200
+  },
+  {
+   "accepted": 0,
+   "bin": "rest-C",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap5",
+   "unsupported": 200
+  },
+  {
+   "accepted": 0,
+   "bin": "rest-R",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap5",
+   "unsupported": 200
+  },
+  {
+   "accepted": 0,
+   "bin": "walk-L-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap5",
+   "unsupported": 200
+  },
+  {
+   "accepted": 0,
+   "bin": "walk-L-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap5",
+   "unsupported": 200
+  },
+  {
+   "accepted": 0,
+   "bin": "walk-L-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap5",
+   "unsupported": 200
+  },
+  {
+   "accepted": 0,
+   "bin": "walk-C-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap5",
+   "unsupported": 200
+  },
+  {
+   "accepted": 0,
+   "bin": "walk-C-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap5",
+   "unsupported": 200
+  },
+  {
+   "accepted": 0,
+   "bin": "walk-C-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap5",
+   "unsupported": 200
+  },
+  {
+   "accepted": 0,
+   "bin": "walk-R-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap5",
+   "unsupported": 200
+  },
+  {
+   "accepted": 0,
+   "bin": "walk-R-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap5",
+   "unsupported": 200
+  },
+  {
+   "accepted": 0,
+   "bin": "walk-R-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap5",
+   "unsupported": 200
+  },
+  {
+   "accepted": 0,
+   "bin": "sprint-L-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap5",
+   "unsupported": 200
+  },
+  {
+   "accepted": 0,
+   "bin": "sprint-L-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap5",
+   "unsupported": 200
+  },
+  {
+   "accepted": 0,
+   "bin": "sprint-L-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap5",
+   "unsupported": 200
+  },
+  {
+   "accepted": 0,
+   "bin": "sprint-C-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap5",
+   "unsupported": 200
+  },
+  {
+   "accepted": 0,
+   "bin": "sprint-C-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap5",
+   "unsupported": 200
+  },
+  {
+   "accepted": 0,
+   "bin": "sprint-C-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap5",
+   "unsupported": 200
+  },
+  {
+   "accepted": 0,
+   "bin": "sprint-R-n",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap5",
+   "unsupported": 200
+  },
+  {
+   "accepted": 0,
+   "bin": "sprint-R-s",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap5",
+   "unsupported": 200
+  },
+  {
+   "accepted": 0,
+   "bin": "sprint-R-p",
+   "entry_invalid": 0,
+   "infeasible": 0,
+   "oracle_unresolved": 0,
+   "table_miss": 0,
+   "template": "gap5",
+   "unsupported": 200
+  }
+ ],
+ "per_template": {
+  "gap1": {
+   "accepted": 4200,
+   "denominator": 4200,
+   "success_rate": 1.0
+  },
+  "gap2": {
+   "accepted": 4200,
+   "denominator": 4200,
+   "success_rate": 1.0
+  },
+  "gap2c": {
+   "accepted": 4200,
+   "denominator": 4200,
+   "success_rate": 1.0
+  },
+  "gap3": {
+   "accepted": 4199,
+   "denominator": 4200,
+   "success_rate": 0.9997619047619047,
+   "table_miss": 1
+  },
+  "gap5": {
+   "denominator": 0,
+   "success_rate": null,
+   "unsupported": 4200
+  },
+  "jumpup": {
+   "accepted": 4198,
+   "denominator": 4200,
+   "success_rate": 0.9995238095238095,
+   "table_miss": 2
+  },
+  "turn": {
+   "accepted": 4200,
+   "denominator": 4200,
+   "success_rate": 1.0
+  }
+ },
+ "table_sha256": "fc33cec9c5d610c8b8bfb1106f9255235b7f5c35252294bcf1af03b1319c3fc7",
+ "wall_seconds": 1245.6627037525177
+}
