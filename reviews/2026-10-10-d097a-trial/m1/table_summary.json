@@ -1,0 +1,104 @@
+{
+ "per_template": {
+  "gap1": {
+   "max_point_steps_collect": 26085,
+   "params_per_row": {
+    "1": 21
+   },
+   "points_over_cap": 0,
+   "rows": 21,
+   "rows_below_99pct_train": [],
+   "supported": 21,
+   "train_covered_min": null,
+   "train_covered_total": 4200,
+   "train_samples_total": 4200,
+   "unsupported": 0
+  },
+  "gap2": {
+   "max_point_steps_collect": 27567,
+   "params_per_row": {
+    "1": 21
+   },
+   "points_over_cap": 0,
+   "rows": 21,
+   "rows_below_99pct_train": [],
+   "supported": 21,
+   "train_covered_min": null,
+   "train_covered_total": 4200,
+   "train_samples_total": 4200,
+   "unsupported": 0
+  },
+  "gap2c": {
+   "max_point_steps_collect": 16527,
+   "params_per_row": {
+    "1": 21
+   },
+   "points_over_cap": 0,
+   "rows": 21,
+   "rows_below_99pct_train": [],
+   "supported": 21,
+   "train_covered_min": null,
+   "train_covered_total": 4200,
+   "train_samples_total": 4200,
+   "unsupported": 0
+  },
+  "gap3": {
+   "max_point_steps_collect": 33499,
+   "params_per_row": {
+    "1": 19,
+    "3": 2
+   },
+   "points_over_cap": 0,
+   "rows": 21,
+   "rows_below_99pct_train": [],
+   "supported": 21,
+   "train_covered_min": null,
+   "train_covered_total": 4200,
+   "train_samples_total": 4200,
+   "unsupported": 0
+  },
+  "gap5": {
+   "max_point_steps_collect": 44748,
+   "params_per_row": {
+    "0": 21
+   },
+   "points_over_cap": 0,
+   "rows": 21,
+   "rows_below_99pct_train": [],
+   "supported": 0,
+   "train_covered_min": null,
+   "train_covered_total": 0,
+   "train_samples_total": 0,
+   "unsupported": 21
+  },
+  "jumpup": {
+   "max_point_steps_collect": 10694,
+   "params_per_row": {
+    "1": 21
+   },
+   "points_over_cap": 0,
+   "rows": 21,
+   "rows_below_99pct_train": [],
+   "supported": 21,
+   "train_covered_min": null,
+   "train_covered_total": 4200,
+   "train_samples_total": 4200,
+   "unsupported": 0
+  },
+  "turn": {
+   "max_point_steps_collect": 288,
+   "params_per_row": {
+    "1": 21
+   },
+   "points_over_cap": 0,
+   "rows": 21,
+   "rows_below_99pct_train": [],
+   "supported": 21,
+   "train_covered_min": null,
+   "train_covered_total": 4200,
+   "train_samples_total": 4200,
+   "unsupported": 0
+  }
+ },
+ "table_sha256": "fc33cec9c5d610c8b8bfb1106f9255235b7f5c35252294bcf1af03b1319c3fc7"
+}

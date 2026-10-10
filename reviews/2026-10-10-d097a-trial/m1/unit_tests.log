@@ -1,0 +1,21 @@
+test_deterministic_and_prefix_sharing_does_not_change_result (__main__.ControllerTests.test_deterministic_and_prefix_sharing_does_not_change_result) ... ok
+test_geometry_matches_entries_helpers (__main__.ControllerTests.test_geometry_matches_entries_helpers) ... ok
+test_jump_only_when_every_branch_is_grounded (__main__.ControllerTests.test_jump_only_when_every_branch_is_grounded) ... ok
+test_mixed_fixture_g6_expected_candidate_found (__main__.ControllerTests.test_mixed_fixture_g6_expected_candidate_found) ... ok
+test_steering_minimises_heading_error_with_alphabet_tie_break (__main__.ControllerTests.test_steering_minimises_heading_error_with_alphabet_tie_break) ... ok
+test_verify_accepts_mixed_fixture_candidate (__main__.ControllerTests.test_verify_accepts_mixed_fixture_candidate) ... ok
+test_cap_is_recorded_not_silently_dropped (__main__.OracleTests.test_cap_is_recorded_not_silently_dropped) ... ok
+test_feasible_mode_agrees_with_collect_and_infeasible_gap5 (__main__.OracleTests.test_feasible_mode_agrees_with_collect_and_infeasible_gap5) ... ok
+test_oracle_collect_equals_brute_force_over_whole_grid (__main__.OracleTests.test_oracle_collect_equals_brute_force_over_whole_grid) ... ok
+test_current_code_changes_reject_a_previously_written_table (__main__.TableTests.test_current_code_changes_reject_a_previously_written_table) ... ok
+test_generated_table_size_bound_if_present (__main__.TableTests.test_generated_table_size_bound_if_present) ... ok
+test_identity_change_in_any_field_rejects_load (__main__.TableTests.test_identity_change_in_any_field_rejects_load) ... ok
+test_identity_matching_table_loads (__main__.TableTests.test_identity_matching_table_loads) ... ok
+test_params_round_trip_and_validation (__main__.TableTests.test_params_round_trip_and_validation) ... ok
+test_row_structure_and_size_bound_for_a_real_row (__main__.TableTests.test_row_structure_and_size_bound_for_a_real_row) ... ok
+test_serialization_is_deterministic_lf_and_round_trips (__main__.TableTests.test_serialization_is_deterministic_lf_and_round_trips) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 38.712s
+
+OK

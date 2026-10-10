@@ -227,12 +227,11 @@ class TableTests(unittest.TestCase):
 
 if __name__ == "__main__":
     suite = unittest.defaultTestLoader.loadTestsFromModule(__import__(__name__))
+    # Reviewer fix: collect ids before running; Python 3.11 TestSuite drops tests after they run.
+    ids = [test.id().split(".")[-1] for group in suite for test in group]
     result = unittest.TextTestRunner(verbosity=2).run(suite)
     failed = {str(t[0]) for t in result.failures + result.errors}
-    names = {}
-    for group in suite:
-        for test in group:
-            names[test.id().split(".")[-1]] = not any(test.id().split(".")[-1] in f for f in failed)
+    names = {name: not any(name in f for f in failed) for name in ids}
     summary = {"ran": result.testsRun, "failures": len(result.failures), "errors": len(result.errors),
                "skipped": len(result.skipped), "per_test": names,
                "identity_tests_passed": all(v for k, v in names.items() if "identity" in k)}
