@@ -1,0 +1,52 @@
+{
+ "shard": 0,
+ "shards": 3,
+ "platform": {
+  "system": "Linux",
+  "release": "6.18.44-fc-v114",
+  "python": "3.11.15",
+  "cpus": 4,
+  "loadavg_start": [
+   3.7783203125,
+   3.95556640625,
+   3.98388671875
+  ]
+ },
+ "summary": {
+  "candidates": 8399,
+  "scan_verified": 8399,
+  "scan_not_verified": 0,
+  "scan_status_histogram": {
+   "VERIFIED_CANDIDATE": 8399
+  },
+  "scan_reason_histogram": {},
+  "status_mismatch": 0,
+  "reason_mismatch": 0,
+  "critical_lazy_verified_where_scan_not": 0,
+  "verified_not_equivalent": 0,
+  "verified_interval_key_mismatch": 0,
+  "verified_interval_count_mismatch": 0,
+  "verified_with_intervals": 3505,
+  "verified_with_2plus_intervals_in_a_branch": 0,
+  "verified_dependency_set_mismatch": 0,
+  "runahead_F1": {
+   "status_mismatch": 0,
+   "reason_mismatch": 0,
+   "critical_lazy_verified_where_scan_not": 0,
+   "verified_not_equivalent": 0,
+   "step_total_mismatch_vs_strict": 0,
+   "online_halt_mismatch_vs_strict": 0,
+   "dependency_set_mismatch_vs_strict": 0,
+   "rejected_with_fewer_permits_than_strict": 0,
+   "rejected_with_more_permits_than_strict": 0
+  },
+  "minimal_mode_informational": {
+   "status_mismatch": 0,
+   "reason_mismatch": 0,
+   "critical": 0,
+   "verified_intervals_not_equivalent": 0
+  }
+ },
+ "seconds": 3213.5,
+ "mismatches": []
+}

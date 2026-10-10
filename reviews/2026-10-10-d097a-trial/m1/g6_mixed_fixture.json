@@ -1,0 +1,215 @@
+{
+ "classes": 363,
+ "collect_passing_params": 1,
+ "cpu_seconds": 2.807279983,
+ "feasible": true,
+ "inputs": [
+  [
+   1.0,
+   0.0,
+   false,
+   false,
+   false,
+   0.0
+  ],
+  [
+   1.0,
+   0.0,
+   true,
+   false,
+   true,
+   0.0
+  ],
+  [
+   1.0,
+   0.0,
+   false,
+   false,
+   false,
+   0.0
+  ],
+  [
+   1.0,
+   0.0,
+   false,
+   false,
+   false,
+   0.0
+  ],
+  [
+   1.0,
+   0.0,
+   false,
+   false,
+   false,
+   0.0
+  ],
+  [
+   1.0,
+   0.0,
+   false,
+   false,
+   false,
+   0.0
+  ],
+  [
+   1.0,
+   0.0,
+   false,
+   false,
+   false,
+   0.0
+  ],
+  [
+   0.0,
+   0.0,
+   false,
+   false,
+   false,
+   0.0
+  ],
+  [
+   0.0,
+   0.0,
+   false,
+   false,
+   false,
+   0.0
+  ],
+  [
+   0.0,
+   0.0,
+   false,
+   false,
+   false,
+   0.0
+  ],
+  [
+   0.0,
+   0.0,
+   false,
+   false,
+   false,
+   0.0
+  ],
+  [
+   0.0,
+   0.0,
+   false,
+   false,
+   false,
+   0.0
+  ],
+  [
+   0.0,
+   0.0,
+   false,
+   false,
+   false,
+   0.0
+  ],
+  [
+   0.0,
+   0.0,
+   false,
+   false,
+   false,
+   0.0
+  ],
+  [
+   0.0,
+   0.0,
+   false,
+   false,
+   false,
+   0.0
+  ],
+  [
+   0.0,
+   0.0,
+   false,
+   false,
+   false,
+   0.0
+  ],
+  [
+   0.0,
+   0.0,
+   false,
+   false,
+   false,
+   0.0
+  ],
+  [
+   0.0,
+   0.0,
+   false,
+   false,
+   false,
+   0.0
+  ],
+  [
+   0.0,
+   0.0,
+   false,
+   false,
+   false,
+   0.0
+  ],
+  [
+   0.0,
+   0.0,
+   false,
+   false,
+   false,
+   0.0
+  ],
+  [
+   0.0,
+   0.0,
+   false,
+   false,
+   false,
+   0.0
+  ]
+ ],
+ "inputs_alphabet_index": [
+  0,
+  4,
+  0,
+  0,
+  0,
+  0,
+  0,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2
+ ],
+ "matches_expected_W1_SJ_W5_N14": true,
+ "params": {
+  "air_gait": "W",
+  "air_ticks": 5,
+  "brake_b": null,
+  "ground_gait": "W",
+  "jump_gait": "SJ",
+  "takeoff_d": 0.15
+ },
+ "scan_steps": 469,
+ "steps_collect_mode": 15866,
+ "steps_feasible_mode": 6986,
+ "verify": [
+  true,
+  "verified"
+ ]
+}

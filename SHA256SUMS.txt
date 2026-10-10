@@ -776,6 +776,8 @@ d3cb01d534ba43addd5a19b07be2b6f5ebbdf763a4552d5735be0d8f3646b380  reviews/2026-1
 34327cdc407a79bc4f737c76d4c163e5a5822d10de4920fc63c12a189493b3d2  reviews/2026-10-10-d097a-trial/m1/controller.py
 73e4916eb196983988666311cab86f23925ed5d818aa5984ec05d366c00642a6  reviews/2026-10-10-d097a-trial/m1/frozen_generator.txt
 91683c49a54f6e38f537b2da7a173e97cb6250df68a529b6cccf8624871d84e0  reviews/2026-10-10-d097a-trial/m1/frozen_table.txt
+1846c23dfd9dc89ec38c5e456f4f1a530dfc5d8e61daf716a7b8a02d6241a7cf  reviews/2026-10-10-d097a-trial/m1/g6_mixed_fixture.json
+4b345ac0860999505c46a33175ce19c60726a446c97a4a86798eab542d9f6b29  reviews/2026-10-10-d097a-trial/m1/g7b_timing_single_process.json
 bbfe96e1f6c33c52acf4cb0e320d6a6f701dfdd1ed3f720b6836f0d84fcde3be  reviews/2026-10-10-d097a-trial/m1/generation_A.json
 8cf382f091b82d9105cf76427605313505cef413a879379ca19b8e1c16849f18  reviews/2026-10-10-d097a-trial/m1/generation_A.log
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  reviews/2026-10-10-d097a-trial/m1/generation_A.stdout
@@ -783,6 +785,8 @@ e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  reviews/2026-1
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  reviews/2026-10-10-d097a-trial/m1/generation_B.stdout
 00b1ac8a7797d6a8a462eceea3ecadc5214326aff270310455269868d7beaab6  reviews/2026-10-10-d097a-trial/m1/logs/generation_A_interrupted.log
 1f7ccc052eb9cf0e53bd5fceba4dcfd93c896c7db280d7bcd81537794b3620e7  reviews/2026-10-10-d097a-trial/m1/oracle.py
+5b0f00e7bf0c2c9bd6beed4d316f0e47fdec3632e1333910496ca356f7a05b7e  reviews/2026-10-10-d097a-trial/m1/reverify.json
+e0a780ba1b924cef0881d682a12331f2de1811c312622a0911459caf5fde489e  reviews/2026-10-10-d097a-trial/m1/reverify.stdout
 6cbbe64a1b3a7fd0b3b4ad23825678505969ffadf5c74fe8a8ab92a8b0ee8da5  reviews/2026-10-10-d097a-trial/m1/run_m1.py
 fc33cec9c5d610c8b8bfb1106f9255235b7f5c35252294bcf1af03b1319c3fc7  reviews/2026-10-10-d097a-trial/m1/table.json
 27b80ab1e80a6cdb2f8f2017f203e3856304eb183b1ff3a13d7646c059149e6b  reviews/2026-10-10-d097a-trial/m1/table.py
@@ -840,6 +844,12 @@ d5cb9bd493b9605d697583c0b80decd8cd465535300f03fb00ab30d1bf8f9a7d  reviews/2026-1
 4701a338ba1587a11525b48fcf1bdb512fc8059b5b65c06f6e61316c17d61fda  reviews/2026-10-10-d097a-trial/m2/test_m2.py
 c9cb90a674006e288c3a3fda59921fc28bdfe9fd5e5deaec4e43d66953ae3bfc  reviews/2026-10-10-d097a-trial/m2/witness_search.py
 553d64c440641aef8626ce7e32f8f92078ea03d4e63f7547bfa456b8eab39692  reviews/2026-10-10-d097a-trial/review_setd_shard.py
+19b03436c93b5220370ecbd97ae276accd5c94a1ee85d722cd0e4978e87ce2f6  reviews/2026-10-10-d097a-trial/setd_shards/setd_shard_0_of_3.json
+33339009e9d164df37ea6d0edfba299d12d5a4517b8e84ed11f95bf451fa5419  reviews/2026-10-10-d097a-trial/setd_shards/setd_shard_1_of_3.json
+cb05c090adf9d94d6242e713f98d019bedab8a8afd310169eb31897160e82f18  reviews/2026-10-10-d097a-trial/setd_shards/setd_shard_2_of_3.json
+a03fe060b399c9e442088ed498c47950e7eefb905991988b3d19181ef3c2b1a0  reviews/2026-10-10-d097a-trial/setd_shards/shard_0.log
+6a23f23fcde4f64bc09d1471b7b4d1409d5ac58722e71cc8f408b0bb296740a5  reviews/2026-10-10-d097a-trial/setd_shards/shard_1.log
+ad793455ff38e98684f4596de104a79004e79e4eb2e0626936de75bb91d31787  reviews/2026-10-10-d097a-trial/setd_shards/shard_2.log
 3138c39dd8fba22f981ea8f043ce28374cd0c877cc2e38923aa394136ff73630  reviews/2026-10-10-tp-5a-r/0096-tp-primitive-search-and-performance-gate-draft.md
 7e05dc26e217a2c7b6ee4d75761c28746f7ce05ebdb0a78116e60fc33a6cb2c4  reviews/2026-10-10-tp-5a-r/task-5a-r-brief.md
 c5564cc5fa3dce65a7e1cfd3c981a0b25af8c26370e89d7c9352a709185d89e3  reviews/2026-10-10-tp-5a-r/template-probe-interleaved-output.txt

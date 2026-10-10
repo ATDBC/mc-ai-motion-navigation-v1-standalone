@@ -1,0 +1,16 @@
+{
+ "all_three_params_ms": {
+  "0.5": 6.899881,
+  "0.95": 9.184691,
+  "0.99": 22.522585,
+  "1.0": 39.470799
+ },
+ "as_run_ms": {
+  "0.5": 6.899881,
+  "0.95": 8.777495,
+  "0.99": 13.979434,
+  "1.0": 39.470799
+ },
+ "note": "single process, other agents' processes active; validation samples (seed 20261011), first per_bin of each bin",
+ "samples": 1260
+}
