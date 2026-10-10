@@ -27,12 +27,19 @@ test_unknown_cell_on_the_route_is_not_free_space (test_m2.Rejection.test_unknown
 An unobserved cell the body sweeps through must stop the proof, not read as air. ... ok
 test_unknown_landing_is_needs_information_not_free (test_m2.Rejection.test_unknown_landing_is_needs_information_not_free) ... ok
 test_walk_straight_over_the_hole (test_m2.Rejection.test_walk_straight_over_the_hole) ... ok
+test_commit_without_enough_ticks_before_it_still_does_its_own_missing_tails (test_m2.RunAhead.test_commit_without_enough_ticks_before_it_still_does_its_own_missing_tails) ... ok
+test_error_in_a_look_ahead_tail_halts_earlier_with_the_same_verdict (test_m2.RunAhead.test_error_in_a_look_ahead_tail_halts_earlier_with_the_same_verdict) ... ok
+test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) ... ok
+test_runahead_steps_must_be_positive (test_m2.RunAhead.test_runahead_steps_must_be_positive) ... ok
+test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) ... ok
+test_ticks_look_ahead_until_the_step_budget_and_the_commit_gets_cheaper (test_m2.RunAhead.test_ticks_look_ahead_until_the_step_budget_and_the_commit_gets_cheaper) ... ok
+test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) ... ok
 
 ======================================================================
 FAIL: test_locked_suffix_commands_are_allowed_only_unchanged (test_m2.ExecutorGate.test_locked_suffix_commands_are_allowed_only_unchanged)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 310, in test_locked_suffix_commands_are_allowed_only_unchanged
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 410, in test_locked_suffix_commands_are_allowed_only_unchanged
     self.assertEqual(self.check(permit, swapped, boundary), I.ExecutionCheck.COMMAND_MISMATCH,
 AssertionError: <ExecutionCheck.ALLOWED: 'ALLOWED'> != <ExecutionCheck.COMMAND_MISMATCH: 'COMMAND_MISMATCH'> : locked command 1 was swapped
 
@@ -40,11 +47,11 @@ AssertionError: <ExecutionCheck.ALLOWED: 'ALLOWED'> != <ExecutionCheck.COMMAND_M
 FAIL: test_tick_permit_covers_one_command (test_m2.ExecutorGate.test_tick_permit_covers_one_command)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 315, in test_tick_permit_covers_one_command
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 415, in test_tick_permit_covers_one_command
     self.assertEqual(self.check(self.tick, self.inputs[1], 1), I.ExecutionCheck.OUT_OF_RANGE)
 AssertionError: <ExecutionCheck.ALLOWED: 'ALLOWED'> != <ExecutionCheck.OUT_OF_RANGE: 'OUT_OF_RANGE'>
 
 ----------------------------------------------------------------------
-Ran 27 tests in 6.892s
+Ran 34 tests in 17.451s
 
 FAILED (failures=2)

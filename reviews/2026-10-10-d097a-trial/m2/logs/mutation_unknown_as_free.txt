@@ -27,12 +27,20 @@ test_unknown_cell_on_the_route_is_not_free_space (test_m2.Rejection.test_unknown
 An unobserved cell the body sweeps through must stop the proof, not read as air. ... FAIL
 test_unknown_landing_is_needs_information_not_free (test_m2.Rejection.test_unknown_landing_is_needs_information_not_free) ... FAIL
 test_walk_straight_over_the_hole (test_m2.Rejection.test_walk_straight_over_the_hole) ... ok
+test_commit_without_enough_ticks_before_it_still_does_its_own_missing_tails (test_m2.RunAhead.test_commit_without_enough_ticks_before_it_still_does_its_own_missing_tails) ... ok
+test_error_in_a_look_ahead_tail_halts_earlier_with_the_same_verdict (test_m2.RunAhead.test_error_in_a_look_ahead_tail_halts_earlier_with_the_same_verdict) ... ok
+test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) ...
+  test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) [unknown_landing] ... FAIL
+test_runahead_steps_must_be_positive (test_m2.RunAhead.test_runahead_steps_must_be_positive) ... ok
+test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) ... ok
+test_ticks_look_ahead_until_the_step_budget_and_the_commit_gets_cheaper (test_m2.RunAhead.test_ticks_look_ahead_until_the_step_budget_and_the_commit_gets_cheaper) ... ok
+test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) ... ok
 
 ======================================================================
 FAIL: test_dependency_that_became_unknown_needs_information (test_m2.Permits.test_dependency_that_became_unknown_needs_information)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 277, in test_dependency_that_became_unknown_needs_information
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 377, in test_dependency_that_became_unknown_needs_information
     self.assertEqual((check.status, check.reason),
 AssertionError: Tuples differ: (<PermitStatus.VALID: 'VALID'>, None) != (<PermitStatus.NEEDS_INFORMATION: 'NEEDS_INFORMATION'>, [41 chars]ld'>)
 
@@ -67,7 +75,24 @@ Traceback (most recent call last):
     self.assertEqual(lazy.status, scan.status)
 AssertionError: <ScanStatus.CANDIDATE_REJECTED: 'CANDIDATE_REJECTED'> != <ScanStatus.NEEDS_INFORMATION: 'NEEDS_INFORMATION'>
 
+======================================================================
+FAIL: test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) [unknown_landing]
 ----------------------------------------------------------------------
-Ran 27 tests in 9.412s
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 301, in test_rejections_match_scanner_in_runahead_mode
+    self.assertEqual((ahead.status, ahead.reason), (scan.status, scan.reason))
+AssertionError: Tuples differ: (<ScanStatus.CANDIDATE_REJECTED: 'CANDIDATE_REJECTED'>[55 chars]ce'>) != (<ScanStatus.NEEDS_INFORMATION: 'NEEDS_INFORMATION'>, [41 chars]ld'>)
 
-FAILED (failures=3)
+First differing element 0:
+<ScanStatus.CANDIDATE_REJECTED: 'CANDIDATE_REJECTED'>
+<ScanStatus.NEEDS_INFORMATION: 'NEEDS_INFORMATION'>
+
+- (<ScanStatus.CANDIDATE_REJECTED: 'CANDIDATE_REJECTED'>,
+-  <CandidateRejection.DAMAGE_ALLOWANCE: 'damage_allowance'>)
++ (<ScanStatus.NEEDS_INFORMATION: 'NEEDS_INFORMATION'>,
++  <SearchReason.UNKNOWN_WORLD: 'unknown_world'>)
+
+----------------------------------------------------------------------
+Ran 34 tests in 25.934s
+
+FAILED (failures=4)

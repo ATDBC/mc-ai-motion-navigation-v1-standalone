@@ -40,6 +40,36 @@ test_unknown_cell_on_the_route_is_not_free_space (test_m2.Rejection.test_unknown
 An unobserved cell the body sweeps through must stop the proof, not read as air. ... ok
 test_unknown_landing_is_needs_information_not_free (test_m2.Rejection.test_unknown_landing_is_needs_information_not_free) ... ok
 test_walk_straight_over_the_hole (test_m2.Rejection.test_walk_straight_over_the_hole) ... ok
+test_commit_without_enough_ticks_before_it_still_does_its_own_missing_tails (test_m2.RunAhead.test_commit_without_enough_ticks_before_it_still_does_its_own_missing_tails) ... FAIL
+test_error_in_a_look_ahead_tail_halts_earlier_with_the_same_verdict (test_m2.RunAhead.test_error_in_a_look_ahead_tail_halts_earlier_with_the_same_verdict) ... ok
+test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) ...
+  test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) [request_level/physics_budget_300] ... FAIL
+  test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) [request_level/prelude_input_mismatch] ... FAIL
+  test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) [request_level/late_entry_moved] ... FAIL
+test_runahead_steps_must_be_positive (test_m2.RunAhead.test_runahead_steps_must_be_positive) ... ok
+test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) ...
+  test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) [mixed_ground_jump_air:] ... FAIL
+  test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) [gap_start_1_width_2:A5] ... FAIL
+  test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) [gap_start_4_width_3:A15] ... FAIL
+  test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) [jump_gap_continue:A3] ... FAIL
+  test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) [jump_up_after_turn:A15] ... FAIL
+  test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) [flat_sprint:A5] ... FAIL
+  test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) [turn_90:A15] ... FAIL
+  test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) [jump_up_straight:A3] ... FAIL
+  test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) [gap_start_4_width_3:A15] ... FAIL
+  test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) [gap_start_1_width_1:A3] ... FAIL
+test_ticks_look_ahead_until_the_step_budget_and_the_commit_gets_cheaper (test_m2.RunAhead.test_ticks_look_ahead_until_the_step_budget_and_the_commit_gets_cheaper) ... ok
+test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) ...
+  test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) [mixed_ground_jump_air:] ... FAIL
+  test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) [gap_start_1_width_2:A5] ... FAIL
+  test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) [gap_start_4_width_3:A15] ... FAIL
+  test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) [jump_gap_continue:A3] ... FAIL
+  test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) [jump_up_after_turn:A15] ... FAIL
+  test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) [flat_sprint:A5] ... FAIL
+  test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) [turn_90:A15] ... FAIL
+  test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) [jump_up_straight:A3] ... FAIL
+  test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) [gap_start_4_width_3:A15] ... FAIL
+  test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) [gap_start_1_width_1:A3] ... FAIL
 
 ======================================================================
 FAIL: test_frozen_matrix_subset_matches_scanner_exactly (test_m2.Equivalence.test_frozen_matrix_subset_matches_scanner_exactly) [mixed_ground_jump_air:]
@@ -212,7 +242,206 @@ Traceback (most recent call last):
     self.assertNotEqual(lazy.status, ScanStatus.VERIFIED_CANDIDATE, "lazy verified a rejected candidate")
 AssertionError: <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'> == <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'> : lazy verified a rejected candidate
 
+======================================================================
+FAIL: test_commit_without_enough_ticks_before_it_still_does_its_own_missing_tails (test_m2.RunAhead.test_commit_without_enough_ticks_before_it_still_does_its_own_missing_tails)
 ----------------------------------------------------------------------
-Ran 27 tests in 6.229s
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 271, in test_commit_without_enough_ticks_before_it_still_does_its_own_missing_tails
+    self.assertEqual(interval_keys(ahead.branches), [[(0, 1, 13)], [(0, 1, 13)]])
+AssertionError: Lists differ: [[(0, 1, 13)]] != [[(0, 1, 13)], [(0, 1, 13)]]
 
-FAILED (failures=16)
+Second list contains 1 additional elements.
+First extra element 1:
+[(0, 1, 13)]
+
+- [[(0, 1, 13)]]
++ [[(0, 1, 13)], [(0, 1, 13)]]
+
+======================================================================
+FAIL: test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) [request_level/physics_budget_300]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 300, in test_rejections_match_scanner_in_runahead_mode
+    self.assertNotEqual(ahead.status, ScanStatus.VERIFIED_CANDIDATE)
+AssertionError: <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'> == <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'>
+
+======================================================================
+FAIL: test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) [request_level/prelude_input_mismatch]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 300, in test_rejections_match_scanner_in_runahead_mode
+    self.assertNotEqual(ahead.status, ScanStatus.VERIFIED_CANDIDATE)
+AssertionError: <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'> == <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'>
+
+======================================================================
+FAIL: test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) [request_level/late_entry_moved]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 300, in test_rejections_match_scanner_in_runahead_mode
+    self.assertNotEqual(ahead.status, ScanStatus.VERIFIED_CANDIDATE)
+AssertionError: <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'> == <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'>
+
+======================================================================
+FAIL: test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) [mixed_ground_jump_air:]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 245, in test_step_total_equals_strict_mode_exactly
+    self.assertEqual(self.total(ahead), scan.counts.physics_steps)
+AssertionError: 213 != 427
+
+======================================================================
+FAIL: test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) [gap_start_1_width_2:A5]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 245, in test_step_total_equals_strict_mode_exactly
+    self.assertEqual(self.total(ahead), scan.counts.physics_steps)
+AssertionError: 217 != 435
+
+======================================================================
+FAIL: test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) [gap_start_4_width_3:A15]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 245, in test_step_total_equals_strict_mode_exactly
+    self.assertEqual(self.total(ahead), scan.counts.physics_steps)
+AssertionError: 361 != 723
+
+======================================================================
+FAIL: test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) [jump_gap_continue:A3]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 245, in test_step_total_equals_strict_mode_exactly
+    self.assertEqual(self.total(ahead), scan.counts.physics_steps)
+AssertionError: 203 != 407
+
+======================================================================
+FAIL: test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) [jump_up_after_turn:A15]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 245, in test_step_total_equals_strict_mode_exactly
+    self.assertEqual(self.total(ahead), scan.counts.physics_steps)
+AssertionError: 178 != 357
+
+======================================================================
+FAIL: test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) [flat_sprint:A5]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 245, in test_step_total_equals_strict_mode_exactly
+    self.assertEqual(self.total(ahead), scan.counts.physics_steps)
+AssertionError: 421 != 843
+
+======================================================================
+FAIL: test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) [turn_90:A15]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 245, in test_step_total_equals_strict_mode_exactly
+    self.assertEqual(self.total(ahead), scan.counts.physics_steps)
+AssertionError: 119 != 239
+
+======================================================================
+FAIL: test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) [jump_up_straight:A3]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 245, in test_step_total_equals_strict_mode_exactly
+    self.assertEqual(self.total(ahead), scan.counts.physics_steps)
+AssertionError: 148 != 297
+
+======================================================================
+FAIL: test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) [gap_start_4_width_3:A15]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 245, in test_step_total_equals_strict_mode_exactly
+    self.assertEqual(self.total(ahead), scan.counts.physics_steps)
+AssertionError: 361 != 723
+
+======================================================================
+FAIL: test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) [gap_start_1_width_1:A3]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 245, in test_step_total_equals_strict_mode_exactly
+    self.assertEqual(self.total(ahead), scan.counts.physics_steps)
+AssertionError: 225 != 451
+
+======================================================================
+FAIL: test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) [mixed_ground_jump_air:]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 234, in test_verdict_and_intervals_equal_scanner_and_strict
+    self.assertTrue(row["equivalent"], row)
+AssertionError: False is not true : {'scan_status': 'VERIFIED_CANDIDATE', 'scan_reason': None, 'lazy_status': 'VERIFIED_CANDIDATE', 'lazy_reason': None, 'status_match': True, 'reason_match': True, 'critical': False, 'scan_steps': 427, 'lazy_steps': 213, 'scan_nodes': 48, 'lazy_nodes': 24, 'intervals_scan': [[[0, 1, 13]], [[0, 1, 13]]], 'intervals_lazy': [[[0, 1, 13]]], 'interval_keys_match': False, 'interval_counts_match': False, 'interval_full_match': False, 'tail_status_match': False, 'states_match': True, 'dependencies_match': True, 'n_intervals': [1, 1], 'equivalent': False}
+
+======================================================================
+FAIL: test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) [gap_start_1_width_2:A5]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 234, in test_verdict_and_intervals_equal_scanner_and_strict
+    self.assertTrue(row["equivalent"], row)
+AssertionError: False is not true : {'scan_status': 'VERIFIED_CANDIDATE', 'scan_reason': None, 'lazy_status': 'VERIFIED_CANDIDATE', 'lazy_reason': None, 'status_match': True, 'reason_match': True, 'critical': False, 'scan_steps': 435, 'lazy_steps': 217, 'scan_nodes': 54, 'lazy_nodes': 27, 'intervals_scan': [[[2, 3, 17]], [[2, 3, 17]]], 'intervals_lazy': [[[2, 3, 17]]], 'interval_keys_match': False, 'interval_counts_match': False, 'interval_full_match': False, 'tail_status_match': False, 'states_match': True, 'dependencies_match': True, 'n_intervals': [1, 1], 'equivalent': False}
+
+======================================================================
+FAIL: test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) [gap_start_4_width_3:A15]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 234, in test_verdict_and_intervals_equal_scanner_and_strict
+    self.assertTrue(row["equivalent"], row)
+AssertionError: False is not true : {'scan_status': 'VERIFIED_CANDIDATE', 'scan_reason': None, 'lazy_status': 'VERIFIED_CANDIDATE', 'lazy_reason': None, 'status_match': True, 'reason_match': True, 'critical': False, 'scan_steps': 723, 'lazy_steps': 361, 'scan_nodes': 82, 'lazy_nodes': 41, 'intervals_scan': [[[16, 17, 31]], [[16, 17, 31]]], 'intervals_lazy': [[[16, 17, 31]]], 'interval_keys_match': False, 'interval_counts_match': False, 'interval_full_match': False, 'tail_status_match': False, 'states_match': True, 'dependencies_match': True, 'n_intervals': [1, 1], 'equivalent': False}
+
+======================================================================
+FAIL: test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) [jump_gap_continue:A3]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 234, in test_verdict_and_intervals_equal_scanner_and_strict
+    self.assertTrue(row["equivalent"], row)
+AssertionError: False is not true : {'scan_status': 'VERIFIED_CANDIDATE', 'scan_reason': None, 'lazy_status': 'VERIFIED_CANDIDATE', 'lazy_reason': None, 'status_match': True, 'reason_match': True, 'critical': False, 'scan_steps': 407, 'lazy_steps': 203, 'scan_nodes': 42, 'lazy_nodes': 21, 'intervals_scan': [[[2, 3, 17]], [[2, 3, 17]]], 'intervals_lazy': [[[2, 3, 17]]], 'interval_keys_match': False, 'interval_counts_match': False, 'interval_full_match': False, 'tail_status_match': False, 'states_match': True, 'dependencies_match': True, 'n_intervals': [1, 1], 'equivalent': False}
+
+======================================================================
+FAIL: test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) [jump_up_after_turn:A15]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 234, in test_verdict_and_intervals_equal_scanner_and_strict
+    self.assertTrue(row["equivalent"], row)
+AssertionError: False is not true : {'scan_status': 'VERIFIED_CANDIDATE', 'scan_reason': None, 'lazy_status': 'VERIFIED_CANDIDATE', 'lazy_reason': None, 'status_match': True, 'reason_match': True, 'critical': False, 'scan_steps': 357, 'lazy_steps': 178, 'scan_nodes': 42, 'lazy_nodes': 21, 'intervals_scan': [[], []], 'intervals_lazy': [[]], 'interval_keys_match': False, 'interval_counts_match': False, 'interval_full_match': False, 'tail_status_match': False, 'states_match': True, 'dependencies_match': False, 'n_intervals': [0, 0], 'equivalent': False}
+
+======================================================================
+FAIL: test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) [flat_sprint:A5]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 234, in test_verdict_and_intervals_equal_scanner_and_strict
+    self.assertTrue(row["equivalent"], row)
+AssertionError: False is not true : {'scan_status': 'VERIFIED_CANDIDATE', 'scan_reason': None, 'lazy_status': 'VERIFIED_CANDIDATE', 'lazy_reason': None, 'status_match': True, 'reason_match': True, 'critical': False, 'scan_steps': 843, 'lazy_steps': 421, 'scan_nodes': 84, 'lazy_nodes': 42, 'intervals_scan': [[], []], 'intervals_lazy': [[]], 'interval_keys_match': False, 'interval_counts_match': False, 'interval_full_match': False, 'tail_status_match': False, 'states_match': True, 'dependencies_match': True, 'n_intervals': [0, 0], 'equivalent': False}
+
+======================================================================
+FAIL: test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) [turn_90:A15]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 234, in test_verdict_and_intervals_equal_scanner_and_strict
+    self.assertTrue(row["equivalent"], row)
+AssertionError: False is not true : {'scan_status': 'VERIFIED_CANDIDATE', 'scan_reason': None, 'lazy_status': 'VERIFIED_CANDIDATE', 'lazy_reason': None, 'status_match': True, 'reason_match': True, 'critical': False, 'scan_steps': 239, 'lazy_steps': 119, 'scan_nodes': 36, 'lazy_nodes': 18, 'intervals_scan': [[], []], 'intervals_lazy': [[]], 'interval_keys_match': False, 'interval_counts_match': False, 'interval_full_match': False, 'tail_status_match': False, 'states_match': True, 'dependencies_match': True, 'n_intervals': [0, 0], 'equivalent': False}
+
+======================================================================
+FAIL: test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) [jump_up_straight:A3]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 234, in test_verdict_and_intervals_equal_scanner_and_strict
+    self.assertTrue(row["equivalent"], row)
+AssertionError: False is not true : {'scan_status': 'VERIFIED_CANDIDATE', 'scan_reason': None, 'lazy_status': 'VERIFIED_CANDIDATE', 'lazy_reason': None, 'status_match': True, 'reason_match': True, 'critical': False, 'scan_steps': 297, 'lazy_steps': 148, 'scan_nodes': 36, 'lazy_nodes': 18, 'intervals_scan': [[], []], 'intervals_lazy': [[]], 'interval_keys_match': False, 'interval_counts_match': False, 'interval_full_match': False, 'tail_status_match': False, 'states_match': True, 'dependencies_match': False, 'n_intervals': [0, 0], 'equivalent': False}
+
+======================================================================
+FAIL: test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) [gap_start_4_width_3:A15]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 234, in test_verdict_and_intervals_equal_scanner_and_strict
+    self.assertTrue(row["equivalent"], row)
+AssertionError: False is not true : {'scan_status': 'VERIFIED_CANDIDATE', 'scan_reason': None, 'lazy_status': 'VERIFIED_CANDIDATE', 'lazy_reason': None, 'status_match': True, 'reason_match': True, 'critical': False, 'scan_steps': 723, 'lazy_steps': 361, 'scan_nodes': 82, 'lazy_nodes': 41, 'intervals_scan': [[[16, 17, 31]], [[16, 17, 31]]], 'intervals_lazy': [[[16, 17, 31]]], 'interval_keys_match': False, 'interval_counts_match': False, 'interval_full_match': False, 'tail_status_match': False, 'states_match': True, 'dependencies_match': True, 'n_intervals': [1, 1], 'equivalent': False}
+
+======================================================================
+FAIL: test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) [gap_start_1_width_1:A3]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 234, in test_verdict_and_intervals_equal_scanner_and_strict
+    self.assertTrue(row["equivalent"], row)
+AssertionError: False is not true : {'scan_status': 'VERIFIED_CANDIDATE', 'scan_reason': None, 'lazy_status': 'VERIFIED_CANDIDATE', 'lazy_reason': None, 'status_match': True, 'reason_match': True, 'critical': False, 'scan_steps': 451, 'lazy_steps': 225, 'scan_nodes': 54, 'lazy_nodes': 27, 'intervals_scan': [[[2, 3, 17]], [[2, 3, 17]]], 'intervals_lazy': [[[2, 3, 17]]], 'interval_keys_match': False, 'interval_counts_match': False, 'interval_full_match': False, 'tail_status_match': False, 'states_match': True, 'dependencies_match': True, 'n_intervals': [1, 1], 'equivalent': False}
+
+----------------------------------------------------------------------
+Ran 34 tests in 15.842s
+
+FAILED (failures=40)

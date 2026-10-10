@@ -22,6 +22,16 @@ errors, then UNRECOVERED_RISK.  The online phase halts at the first error in tim
 stops there).  `lazy_prove` then finishes the earlier-ordered branches offline (not counted in any
 decision) so that the returned status/reason is the one the scanner would return.
 
+Mode "strict_runahead" (addendum 2, fix F1): identical semantics to "strict", but an ordinary tick
+decision keeps computing the tails of LATER boundaries (boundary order, all branches, risk bookkeeping
+applied as each tail becomes available) until the decision has used at least `runahead_steps` physics
+steps or the last boundary is reached; a commit decision only computes the tails not yet available.
+All work is charged to the decision that does it, so the per-candidate step total equals strict mode.
+An error found in a look-ahead tail halts the online loop earlier; the final status/reason is the same
+as strict (and as the scanner) because the offline `resolve()` phase is unchanged.
+Online premise (not exercised here): the look-ahead uses the plan's predicted rollout states; if the
+real anchor deviates from the prediction the precomputed tails must be discarded (M3 question).
+
 Fault flags exist only for mutation testing and are off by default.
 """
 from __future__ import annotations
@@ -44,6 +54,7 @@ from mc2p.motion_nav.physics_adapter import PhysicsWorldView
 from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET, TickInput
 from mc2p.motion_nav.world_model import BlockPos, CellFact, CellKnowledge
 
+MODES = ("strict", "minimal", "strict_runahead")
 FAULTS = frozenset({
     "no_landing_proof", "unknown_as_free", "one_branch", "ignore_inflight",
     "accept_stale", "ignore_damage", "swap_locked_command",
@@ -169,6 +180,7 @@ class Decision:
     wall_ns: int
     outcome: str              # "permitted" | "verified" | "rejected"
     permit: Permit | None = None
+    computed_to: int = -1     # highest boundary whose tails exist for every branch after this decision
 
 
 @dataclass(frozen=True, slots=True)
@@ -237,6 +249,7 @@ class _Branch:
         self.intervals = []
         self.open_first = None
         self.next_boundary = 0
+        self.open_after = {}               # boundary -> open_first right after that boundary's tail
         self.plan_error = self.tail_error = self.risk_error = None
 
 
@@ -246,8 +259,12 @@ class _Run:
         self.options, self.counter, self.mode, self.faults, self.clock = options, counter, mode, faults, clock
         self.n = len(inputs)
         self.branches = []
-        self.all_deps = set()
-        self.cur_deps = set()
+        self.plan_deps = set()
+        self.dep_by_boundary = {}          # boundary -> cells read while computing that boundary
+        self.cur_deps = self.plan_deps     # sink for the work currently being done
+        self.frontier = -1                 # tails exist for every branch up to this boundary
+        self.last_attempt = -1
+        self.runahead_steps = 0
         self.plan_facts = ()
         self.decisions = []
         self.maximum_damage = request.task_damage_budget.maximum_expected_damage_points
@@ -255,19 +272,27 @@ class _Run:
 
     # ---- decision bookkeeping
     def _begin(self):
-        self.cur_deps = set()
         self.pre_n, self.pre_s, self.pre_t = self.counter.nodes, self.counter.physics_steps, self.clock()
 
     def _end(self, kind, boundary, end, outcome, permit=None):
         wall = self.clock() - self.pre_t
         self.decisions.append(Decision(kind, boundary, end, self.counter.physics_steps - self.pre_s,
-                                       self.counter.nodes - self.pre_n, wall, outcome, permit))
-        self.all_deps |= self.cur_deps
+                                       self.counter.nodes - self.pre_n, wall, outcome, permit,
+                                       self.frontier))
+
+    def all_dependencies(self):
+        out = set(self.plan_deps)
+        for cells in self.dep_by_boundary.values():
+            out |= cells
+        return frozenset(out)
 
     def _permit(self, kind, k, j):
         n = self.n
         last = min(j, n - 1)
-        facts = self.plan_facts + tuple((p, self.world.cell(p)) for p in sorted(self.cur_deps))
+        cells = set()
+        for boundary in range(k, j + 1):
+            cells |= self.dep_by_boundary.get(boundary, ())
+        facts = self.plan_facts + tuple((p, self.world.cell(p)) for p in sorted(cells))
         locked = 0 if kind == "tick" else j - k if j < n else n - k
         request = self.request
         return Permit(kind, k, self.inputs[k:last + 1], locked, request.request_id, request.anchor_id,
@@ -279,6 +304,7 @@ class _Run:
     def plan(self):
         request, faults = self.request, self.faults
         self._begin()
+        self.cur_deps = self.plan_deps
         timing = request.timing_branches[:1] if "one_branch" in faults else request.timing_branches
         for index, timing_branch in enumerate(timing):
             branch = _Branch(index, timing_branch)
@@ -305,7 +331,7 @@ class _Run:
                 branch.plan_error = _Err(ScanStatus.NO_TRAJECTORY_IN_BUDGET, limited.reason)
             if branch.plan_error is not None:
                 break          # the scanner never plans a later branch after an earlier plan error
-        self.plan_facts = tuple((p, self.world.cell(p)) for p in sorted(self.cur_deps))
+        self.plan_facts = tuple((p, self.world.cell(p)) for p in sorted(self.plan_deps))
         self._end("plan", -1, -1, "rejected" if self.failed() else "permitted")
 
     def _rollout_step(self, state, command):
@@ -362,6 +388,7 @@ class _Run:
         branch.open_first = None
 
     def advance_branch(self, branch, j, support_known=False):
+        self.cur_deps = self.dep_by_boundary.setdefault(j, set())
         row = self.rows[branch.index][j]
         try:
             tail = self._tail(branch, row)
@@ -386,9 +413,11 @@ class _Run:
                 branch.risk_error = _Err(incomplete.status, incomplete.reason, incomplete.missing, j)
             except CountLimit as limited:
                 branch.risk_error = _Err(ScanStatus.NO_TRAJECTORY_IN_BUDGET, limited.reason, (), j)
+        branch.open_after[j] = branch.open_first
 
     def _advance_open_minimal(self, branch, j):
         """Minimal mode: an open branch only needs its first grounded, supported boundary."""
+        self.cur_deps = self.dep_by_boundary.setdefault(j, set())
         state = branch.states[j]
         branch.next_boundary = j + 1
         if not state.on_ground:
@@ -407,6 +436,7 @@ class _Run:
 
     def advance(self, j, committing=False):
         """Compute the tail at boundary j for every branch; the first error stops the boundary."""
+        self.last_attempt = j
         for branch in self.branches:
             if self.error(branch) is not None:
                 return
@@ -417,6 +447,7 @@ class _Run:
                 self.advance_branch(branch, j)
             if self.error(branch) is not None:
                 return
+        self.frontier = j
 
     # ---- error view in the scanner's per-branch order
     def error(self, branch):
@@ -440,6 +471,10 @@ class _Run:
     def any_open(self):
         return any(branch.open_first is not None for branch in self.branches)
 
+    def open_at(self, j):
+        """Was any branch inside a risk interval right after boundary j's tail?"""
+        return any(branch.open_after.get(j) is not None for branch in self.branches)
+
     # ---- phase A: the online decision loop
     def online(self):
         n = self.n
@@ -459,6 +494,41 @@ class _Run:
                 kind = "tick"
             if self.failed():
                 self._end(kind, k, j, "rejected")
+                return False
+            if j == n:
+                self._end(kind, k, j, "verified", self._permit("commit", k, j) if kind == "commit" else None)
+                return True
+            self._end(kind, k, j, "permitted", self._permit(kind, k, j))
+            k = j + 1
+
+    def online_runahead(self):
+        """Same decisions as `online`, with the look-ahead of fix F1 (see module docstring)."""
+        n = self.n
+        k = 0
+        while True:
+            self._begin()
+            if k > self.frontier:
+                self.advance(k)
+            j = k
+            if self.failed():
+                kind = "final" if k == n else "tick"
+            elif k == n:
+                kind = "final"
+            elif self.open_at(k):
+                kind = "commit"
+                while self.open_at(j) and j < n:
+                    j += 1
+                    if j > self.frontier:
+                        self.advance(j)
+                        if self.failed():
+                            break
+            else:
+                kind = "tick"
+                while (self.frontier < n and not self.failed()
+                       and self.counter.physics_steps - self.pre_s < self.runahead_steps):
+                    self.advance(self.frontier + 1)
+            if self.failed():
+                self._end(kind, k, self.last_attempt, "rejected")
                 return False
             if j == n:
                 self._end(kind, k, j, "verified", self._permit("commit", k, j) if kind == "commit" else None)
@@ -487,11 +557,14 @@ class _Run:
 
 
 def lazy_prove(request, inputs, world, boundary_inputs, *, mode="strict", faults=frozenset(),
-               counter=None, options=ScanOptions(), clock=time.perf_counter_ns) -> LazyResult:
+               counter=None, options=ScanOptions(), clock=time.perf_counter_ns,
+               runahead_steps=60) -> LazyResult:
     """Offline simulation of rolling submission; see the module docstring."""
     faults = check_faults(faults)
-    if mode not in ("strict", "minimal"):
-        raise ValueError("mode must be 'strict' or 'minimal'")
+    if mode not in MODES:
+        raise ValueError(f"mode must be one of {MODES}")
+    if type(runahead_steps) is not int or runahead_steps < 1:
+        raise ValueError("runahead_steps must be a positive integer")
     if type(request) is not TrajectorySearchRequest or type(options) is not ScanOptions:
         raise ContractViolation("proof requires a typed request and options")
     C._inputs(inputs)
@@ -528,16 +601,17 @@ def lazy_prove(request, inputs, world, boundary_inputs, *, mode="strict", faults
 
     run_world = _unknown_as_air(world) if "unknown_as_free" in faults else world
     run = _Run(request, inputs, run_world, boundary_inputs, options, counter, mode, faults, clock)
+    run.runahead_steps = runahead_steps
     run.plan()
     verified = False
     halt = None
     if not run.failed():
-        verified = run.online()
+        verified = run.online_runahead() if mode == "strict_runahead" else run.online()
     if not verified:
         error = run.first_error()
         halt = (run.decisions[-1].end_boundary, error.status, error.reason)
     resolution = 0
-    if not verified and mode == "strict":
+    if not verified and mode in ("strict", "strict_runahead"):
         resolution = run.resolve()
     error = None if verified else run.first_error()
     if error is None and not verified:       # minimal mode may halt on a not-yet-complete view
@@ -546,6 +620,6 @@ def lazy_prove(request, inputs, world, boundary_inputs, *, mode="strict", faults
                                 b.normal_damage) for b in run.branches)
     if verified:
         return LazyResult(ScanStatus.VERIFIED_CANDIDATE, None, branches, tuple(run.decisions),
-                          counter.counts, frozenset(run.all_deps), (), None, 0, mode, faults)
+                          counter.counts, run.all_dependencies(), (), None, 0, mode, faults)
     return LazyResult(error.status, error.reason, branches, tuple(run.decisions), counter.counts,
-                      frozenset(run.all_deps), tuple(error.missing), halt, resolution, mode, faults)
+                      run.all_dependencies(), tuple(error.missing), halt, resolution, mode, faults)

@@ -1,0 +1,12 @@
+16:58:31 [1/147] gap1/rest-C supported covered=200 cpu=83s maxsteps=24976
+16:58:35 [2/147] gap1/rest-L supported covered=200 cpu=89s maxsteps=24990
+16:59:59 [3/147] gap1/rest-R supported covered=200 cpu=86s maxsteps=24990
+17:00:39 [4/147] gap1/walk-L-n supported covered=200 cpu=121s maxsteps=26061
+17:02:15 [5/147] gap1/walk-L-s supported covered=200 cpu=124s maxsteps=25993
+17:03:07 [6/147] gap1/walk-L-p supported covered=200 cpu=125s maxsteps=26085
+17:05:22 [7/147] gap1/walk-C-n supported covered=200 cpu=139s maxsteps=26085
+17:06:14 [8/147] gap1/walk-C-s supported covered=200 cpu=136s maxsteps=25973
+17:08:25 [9/147] gap1/walk-C-p supported covered=200 cpu=138s maxsteps=26085
+17:09:08 [10/147] gap1/walk-R-n supported covered=200 cpu=131s maxsteps=26085
+17:11:03 [11/147] gap1/walk-R-s supported covered=200 cpu=126s maxsteps=25993
+17:11:40 [12/147] gap1/walk-R-p supported covered=200 cpu=128s maxsteps=26061

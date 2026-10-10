@@ -64,8 +64,10 @@ def run_candidate(cand):
     scan = equiv.scan_commitment(cand.request, cand.inputs, cand.world, evidence)
     lazy = I.lazy_prove(cand.request, cand.inputs, cand.world, evidence)
     minimal = I.lazy_prove(cand.request, cand.inputs, cand.world, evidence, mode="minimal")
+    ahead = I.lazy_prove(cand.request, cand.inputs, cand.world, evidence, mode="strict_runahead")
     row = equiv.compare(scan, lazy)
     mini = equiv.compare(scan, minimal)
+    fix = equiv.compare(scan, ahead)
     row.update({
         "set": cand.set, "id": cand.id, "ticks": len(cand.inputs),
         "decisions": collections.Counter(d.kind for d in lazy.decisions),
@@ -76,6 +78,24 @@ def run_candidate(cand):
                     "intervals_equivalent": mini.get("interval_keys_match", False)
                     and mini.get("interval_full_match", False),
                     "steps": mini["lazy_steps"]},
+        # fix F1 (addendum 2): same verdict as the scanner AND as strict; step totals equal strict's
+        "runahead": {
+            "status": fix["lazy_status"], "reason": fix["lazy_reason"],
+            "status_match": fix["status_match"], "reason_match": fix["reason_match"],
+            "critical": fix["critical"], "equivalent": fix["equivalent"],
+            "intervals_scan": fix.get("intervals_scan"), "intervals_lazy": fix.get("intervals_lazy"),
+            "decision_steps_total": sum(d.physics_steps for d in ahead.decisions),
+            "strict_decision_steps_total": sum(d.physics_steps for d in lazy.decisions),
+            "step_total_equal": (sum(d.physics_steps for d in ahead.decisions)
+                                 == sum(d.physics_steps for d in lazy.decisions)
+                                 and ahead.counts == lazy.counts
+                                 and ahead.resolution_steps == lazy.resolution_steps),
+            "online_halt_equal": ahead.online_halt == lazy.online_halt,
+            "online_halt": None if ahead.online_halt is None else list(map(str, ahead.online_halt)),
+            "strict_online_halt": None if lazy.online_halt is None else list(map(str, lazy.online_halt)),
+            "permits": len(ahead.permits), "strict_permits": len(lazy.permits),
+            "dependencies_equal": ahead.dependencies == lazy.dependencies,
+        },
     })
     row["decisions"] = dict(row["decisions"])
     return row
@@ -103,6 +123,19 @@ def summarize_rows(rows):
         "verified_with_2plus_intervals_in_a_branch": sum(
             1 for r in scan_verified if max(r.get("n_intervals", [0])) >= 2),
         "verified_dependency_set_mismatch": sum(not r.get("dependencies_match", True) for r in scan_verified),
+        "runahead_F1": {
+            "status_mismatch": sum(not r["runahead"]["status_match"] for r in rows),
+            "reason_mismatch": sum(not r["runahead"]["reason_match"] for r in rows),
+            "critical_lazy_verified_where_scan_not": sum(r["runahead"]["critical"] for r in rows),
+            "verified_not_equivalent": sum(not r["runahead"]["equivalent"] for r in scan_verified),
+            "step_total_mismatch_vs_strict": sum(not r["runahead"]["step_total_equal"] for r in rows),
+            "online_halt_mismatch_vs_strict": sum(not r["runahead"]["online_halt_equal"] for r in rows),
+            "dependency_set_mismatch_vs_strict": sum(not r["runahead"]["dependencies_equal"] for r in rows),
+            "rejected_with_fewer_permits_than_strict": sum(
+                1 for r in rejected if r["runahead"]["permits"] < r["runahead"]["strict_permits"]),
+            "rejected_with_more_permits_than_strict": sum(
+                1 for r in rejected if r["runahead"]["permits"] > r["runahead"]["strict_permits"]),
+        },
         "minimal_mode_informational": {
             "status_mismatch": sum(not r["minimal"]["status_match"] for r in rows),
             "reason_mismatch": sum(not r["minimal"]["reason_match"] for r in rows),
@@ -116,8 +149,12 @@ def summarize_rows(rows):
 def mismatch_details(rows, limit=40):
     keep = ("set", "id", "scan_status", "scan_reason", "lazy_status", "lazy_reason", "intervals_scan",
             "intervals_lazy", "critical")
-    return [{k: r.get(k) for k in keep} for r in rows
-            if not (r["equivalent"] and r["reason_match"])][:limit]
+    def bad(r):
+        ra = r["runahead"]
+        return (not (r["equivalent"] and r["reason_match"])
+                or not (ra["equivalent"] and ra["reason_match"] and ra["step_total_equal"]
+                        and ra["online_halt_equal"]))
+    return [{**{k: r.get(k) for k in keep}, "runahead": r["runahead"]} for r in rows if bad(r)][:limit]
 
 
 def run_set(cands, label):
@@ -268,6 +305,127 @@ def cmd_perf(args):
         print(key, json.dumps(stats[key]["ms"]), json.dumps(stats[key]["physics_steps"]))
 
 
+# ------------------------------------------------------------------------------ record timing
+RECORD_CONFIGS = ("strict", "strict_runahead", "full_scan")
+RECORD_FILES = ("incremental.py", "run_m2.py", "candidates.py", "equiv.py", "common.py")
+
+
+def _file_hashes():
+    import hashlib
+    return {name: hashlib.sha256((HERE / name).read_bytes()).hexdigest() for name in RECORD_FILES}
+
+
+def _record_run(cand, config):
+    """One measured run with its own cold-shape-cache world view.  Returns (rows, total_ms, steps)."""
+    world = common.fresh_world(cand.world)
+    evidence = _boundary_evidence(cand.request, cand.inputs)       # outside the timed region
+    if config == "full_scan":
+        started = time.perf_counter_ns()
+        scan = scan_commitment(cand.request, cand.inputs, world, evidence)
+        wall = (time.perf_counter_ns() - started) / 1e6
+        assert scan.status is ScanStatus.VERIFIED_CANDIDATE, cand.id
+        return [("full_scan", scan.counts.physics_steps, wall)], wall, scan.counts.physics_steps
+    result = I.lazy_prove(cand.request, cand.inputs, world, evidence, mode=config)
+    assert result.status is ScanStatus.VERIFIED_CANDIDATE, (cand.id, config, result.status, result.reason)
+    rows = [(d.kind, d.physics_steps, d.wall_ns / 1e6) for d in result.decisions]
+    return rows, sum(r[2] for r in rows), sum(r[1] for r in rows)
+
+
+def cmd_perf_record(args):
+    """Three configurations in ONE process on the same candidates: strict (no fix), strict_runahead
+    (F1, 60 steps) and the full scan.  Warm-up first (not recorded).  `--limit N` makes a labelled
+    smoke test written to performance_record_smoke.json - never to performance_record.json."""
+    smoke = args.limit is not None
+    cands = K.set_a() + K.set_c()
+    set_d = K.M1_ACCEPTED.exists() and not args.no_setd
+    if set_d:
+        cands += K.set_d()
+    if smoke:
+        stride = max(1, len(cands) // args.limit)
+        cands = cands[::stride][:args.limit]
+    load_start = os.getloadavg()
+    warm = cands[:min(args.warmup, len(cands))]
+    print(f"{'SMOKE' if smoke else 'RECORD'}: {len(cands)} candidates, {args.passes} passes, "
+          f"{len(warm)} warm-up candidates, loadavg {load_start}", flush=True)
+    for cand in warm:                        # warm-up: interpreter, caches, allocator; not recorded
+        for config in RECORD_CONFIGS:
+            _record_run(cand, config)
+    samples, totals, violations = [], [], []
+    for pass_index in range(args.passes):
+        for index, cand in enumerate(cands):
+            order = RECORD_CONFIGS[(index + pass_index) % 3:] + RECORD_CONFIGS[:(index + pass_index) % 3]
+            steps_by_config = {}
+            for config in order:             # rotate the order so no configuration always runs first
+                rows, total_ms, total_steps = _record_run(cand, config)
+                steps_by_config[config] = total_steps
+                totals.append((pass_index, config, cand.id, total_ms, total_steps))
+                for kind, steps, ms in rows:
+                    samples.append((pass_index, config, cand.id, kind, steps, ms))
+            if len(set(steps_by_config.values())) != 1:
+                violations.append({"cand": cand.id, "pass": pass_index, "steps": steps_by_config})
+        print(f"  pass {pass_index + 1}/{args.passes} done", flush=True)
+    load_end = os.getloadavg()
+
+    def pick(config, kind, column, pass_index=None):
+        return [row[column] for row in samples if row[1] == config and row[3] == kind
+                and (pass_index is None or row[0] == pass_index)]
+
+    configs = {}
+    for config in RECORD_CONFIGS:
+        kinds = ("full_scan",) if config == "full_scan" else ("plan", "tick", "commit", "final")
+        configs[config] = {}
+        for kind in kinds:
+            configs[config][kind] = {
+                "ms": summarize(pick(config, kind, 5)), "steps": summarize(pick(config, kind, 4)),
+                "ms_p95_per_pass": [summarize(pick(config, kind, 5, p)).get("p95")
+                                    for p in range(args.passes)]}
+        configs[config]["candidate_total"] = {
+            "ms": summarize([t[3] for t in totals if t[1] == config]),
+            "steps": summarize([t[4] for t in totals if t[1] == config])}
+    view = {}
+    for config in ("strict", "strict_runahead"):
+        tick, commit = configs[config]["tick"], configs[config]["commit"]
+        per_pass_tick = [x for x in tick["ms_p95_per_pass"] if x is not None]
+        per_pass_commit = [x for x in commit["ms_p95_per_pass"] if x is not None]
+        tick_p95 = max([tick["ms"]["p95"]] + per_pass_tick)
+        commit_p95 = max([commit["ms"]["p95"]] + per_pass_commit) if commit["ms"]["samples"] else None
+        view[config] = {
+            "tick_samples": tick["ms"]["samples"], "commit_samples": commit["ms"]["samples"],
+            "tick_p95_ms_strictest_of_pooled_and_per_pass": tick_p95,
+            "commit_p95_ms_strictest_of_pooled_and_per_pass": commit_p95,
+            "tick_le_10ms": tick_p95 <= 10., "commit_le_50ms": commit_p95 is not None and commit_p95 <= 50.,
+            "tick_samples_ge_1000": tick["ms"]["samples"] >= 1000}
+    payload = {
+        "schema": "d097a-m2-perf-record-v1",
+        "SMOKE_TEST_NOT_A_RECORD": smoke,
+        "platform": platform_info(), "loadavg_end": load_end,
+        "idle_check": {"loadavg_1min_at_start": load_start[0], "looks_idle_below_0.5": load_start[0] < 0.5,
+                       "note": "the record must be taken on an idle machine; this field only reports"},
+        "code_sha256": _file_hashes(),
+        "population": {"candidates": len(cands), "by_set": dict(collections.Counter(c.set for c in cands)),
+                       "set_d_included": set_d, "passes": args.passes, "warmup_candidates": len(warm)},
+        "method": ("each measured run uses a fresh PhysicsWorldView (cold shape cache); evidence is built "
+                   "outside the timed region; configuration order rotates per candidate and pass; decision "
+                   "wall time = time.perf_counter_ns from decision start to permit built (look-ahead work is "
+                   "charged to the decision that does it); percentiles nearest-rank; thresholds 10 ms tick, "
+                   "50 ms commit, >=1000 tick decisions"),
+        "step_total_check": {"candidates_runs_checked": len(totals) // 3, "violations": violations,
+                             "all_equal": not violations},
+        "configs": configs, "gate_view": view,
+    }
+    out = HERE / ("performance_record_smoke.json" if smoke else "performance_record.json")
+    out.write_text(json.dumps(payload, indent=1), encoding="utf-8")
+    if not smoke:
+        (HERE / "performance_record_samples.json").write_text(json.dumps(
+            {"columns": ["pass", "config", "cand", "kind", "steps", "ms"], "rows": samples}), encoding="utf-8")
+    print(f"wrote {out.name}{' (SMOKE TEST, not the record)' if smoke else ''}")
+    for config in ("strict", "strict_runahead"):
+        v = view[config]
+        print(config, f"tick n={v['tick_samples']} P95={v['tick_p95_ms_strictest_of_pooled_and_per_pass']:.2f} ms",
+              f"commit n={v['commit_samples']} P95={v['commit_p95_ms_strictest_of_pooled_and_per_pass']}")
+    print("step totals equal across configs:", not violations)
+
+
 # ------------------------------------------------------------------------------ gates
 def cmd_gates(args):
     gates = {"generated": time.strftime("%Y-%m-%d %H:%M:%S"), "notes": []}
@@ -281,8 +439,16 @@ def cmd_gates(args):
         b, c = summ["B"], summ["C"]
         bc_ok = all(s["status_mismatch"] == 0 and s["critical_lazy_verified_where_scan_not"] == 0
                     and s["verified_not_equivalent"] == 0 for s in (b, c))
+        def ra_ok(summary):
+            r = summary["runahead_F1"]
+            return all(r[k] == 0 for k in ("status_mismatch", "reason_mismatch",
+                                            "critical_lazy_verified_where_scan_not", "verified_not_equivalent",
+                                            "step_total_mismatch_vs_strict", "online_halt_mismatch_vs_strict",
+                                            "dependency_set_mismatch_vs_strict"))
+        runahead_ok = all(ra_ok(x) for x in (a, b, c))
         g8 = {"set_A": a, "set_B": b, "set_C": c, "set_A_pass": a_ok, "set_B_C_pass": bc_ok,
-              "set_B_scan_rejections": b["scan_not_verified"]}
+              "set_B_scan_rejections": b["scan_not_verified"],
+              "runahead_F1_sets_A_B_C_pass": runahead_ok}
     else:
         g8 = {"error": "equivalence_results.json missing"}
         a_ok = bc_ok = False
@@ -302,7 +468,8 @@ def cmd_gates(args):
     else:
         g8["set_D"] = "not run"
         g8["set_D_pass"] = None
-    g8["passed"] = bool(a_ok and bc_ok and d_ok) if d_ok is not None else None
+    g8["passed"] = (bool(a_ok and bc_ok and d_ok and g8.get("runahead_F1_sets_A_B_C_pass"))
+                    if d_ok is not None else None)
     g8["verdict"] = ("PASS" if g8["passed"] else "FAIL" if (g8["passed"] is False and d_ok is not None)
                      else "A/B/C " + ("PASS" if (a_ok and bc_ok) else "FAIL") + "; Set D not evaluated")
     gates["G8"] = g8
@@ -316,7 +483,7 @@ def cmd_gates(args):
                                       and len(m["faults"]) == 7)}
     else:
         gates["G9"] = {"error": "mutation_results.json missing", "passed": None}
-    # ---- G10
+    # ---- G10: the record is the reviewer's idle-machine run (addendum 2); numbers below are history
     if OUT["perf"].exists():
         p = json.loads(OUT["perf"].read_text())
         st = p["stats"]
@@ -336,7 +503,13 @@ def cmd_gates(args):
             "samples_pass": tick["ms"]["samples"] >= 1000,
             "interpretation": "stricter reading: max(pooled P95, worst per-pass P95), cold shape cache, strict mode",
         }
-        g10["passed"] = bool(g10["tick_pass"] and g10["commit_pass"] and g10["samples_pass"])
+        g10["passed"] = None
+        g10["verdict"] = ("PENDING reviewer's idle-machine run of `run_m2.py perf_record` "
+                          "(addendum 2: strict vs strict_runahead F1 vs full scan)")
+        g10["loaded_machine_no_fix_result"] = ("tick pass, commit fail: "
+                                               f"tick P95 {g10['tick_p95_ms_cold_pooled']:.2f} ms, "
+                                               f"commit P95 {g10['commit_p95_ms_cold_pooled']:.2f} ms "
+                                               "(M1 running concurrently; pre-F1 code); kept, not the record")
         g10["population"] = "verified Set A + Set C candidates (+ Set D when present at run time)"
         if OUT["perf_b"].exists():
             pb = json.loads(OUT["perf_b"].read_text())["stats"]
@@ -345,6 +518,12 @@ def cmd_gates(args):
                 "tick_samples": tb["ms"]["samples"], "tick_p95_ms_cold": tb["ms"]["p95"],
                 "commit_samples": cb["ms"]["samples"], "commit_p95_ms_cold": cb["ms"]["p95"],
                 "tick_pass": tb["ms"]["p95"] <= 10., "commit_pass": cb["ms"]["p95"] <= 50.}
+        record = HERE / "performance_record.json"
+        if record.exists():
+            rec = json.loads(record.read_text())
+            g10["record_file_present"] = {"idle_check": rec["idle_check"], "gate_view": rec["gate_view"],
+                                          "step_total_check_all_equal": rec["step_total_check"]["all_equal"],
+                                          "note": "reviewer interprets; verdict above is not auto-updated"}
         gates["G10"] = g10
     else:
         gates["G10"] = {"error": "performance.json missing", "passed": None}
@@ -364,9 +543,15 @@ def main(argv=None):
     p.add_argument("--no-setd", action="store_true")
     p.add_argument("--population", choices=("main", "b"), default="main")
     p.add_argument("--strict-only", action="store_true")
+    p = sub.add_parser("perf_record")
+    p.add_argument("--passes", type=int, default=3)
+    p.add_argument("--warmup", type=int, default=10)
+    p.add_argument("--limit", type=int, default=None, help="smoke test on N candidates (not a record)")
+    p.add_argument("--no-setd", action="store_true")
     sub.add_parser("gates")
     args = parser.parse_args(argv)
-    return {"equiv": cmd_equiv, "setd": cmd_setd, "perf": cmd_perf, "gates": cmd_gates}[args.cmd](args) or 0
+    return {"equiv": cmd_equiv, "setd": cmd_setd, "perf": cmd_perf, "perf_record": cmd_perf_record,
+            "gates": cmd_gates}[args.cmd](args) or 0
 
 
 if __name__ == "__main__":

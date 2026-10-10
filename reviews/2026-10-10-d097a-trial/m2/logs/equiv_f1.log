@@ -1,0 +1,145 @@
+set A: 23 candidates
+{
+ "candidates": 23,
+ "scan_verified": 23,
+ "scan_not_verified": 0,
+ "scan_status_histogram": {
+  "VERIFIED_CANDIDATE": 23
+ },
+ "scan_reason_histogram": {},
+ "status_mismatch": 0,
+ "reason_mismatch": 0,
+ "critical_lazy_verified_where_scan_not": 0,
+ "verified_not_equivalent": 0,
+ "verified_interval_key_mismatch": 0,
+ "verified_interval_count_mismatch": 0,
+ "verified_with_intervals": 17,
+ "verified_with_2plus_intervals_in_a_branch": 0,
+ "verified_dependency_set_mismatch": 0,
+ "runahead_F1": {
+  "status_mismatch": 0,
+  "reason_mismatch": 0,
+  "critical_lazy_verified_where_scan_not": 0,
+  "verified_not_equivalent": 0,
+  "step_total_mismatch_vs_strict": 0,
+  "online_halt_mismatch_vs_strict": 0,
+  "dependency_set_mismatch_vs_strict": 0,
+  "rejected_with_fewer_permits_than_strict": 0,
+  "rejected_with_more_permits_than_strict": 0
+ },
+ "minimal_mode_informational": {
+  "status_mismatch": 0,
+  "reason_mismatch": 0,
+  "critical": 0,
+  "verified_intervals_not_equivalent": 0
+ }
+}
+set B: 1605 candidates
+  B: 100/1605
+  B: 200/1605
+  B: 300/1605
+  B: 400/1605
+  B: 500/1605
+  B: 600/1605
+  B: 700/1605
+  B: 800/1605
+  B: 900/1605
+  B: 1000/1605
+  B: 1100/1605
+  B: 1200/1605
+  B: 1300/1605
+  B: 1400/1605
+  B: 1500/1605
+  B: 1600/1605
+{
+ "candidates": 1605,
+ "scan_verified": 732,
+ "scan_not_verified": 873,
+ "scan_status_histogram": {
+  "VERIFIED_CANDIDATE": 732,
+  "CANDIDATE_REJECTED": 764,
+  "NO_TRAJECTORY_IN_BUDGET": 20,
+  "NEEDS_INFORMATION": 86,
+  "STALE": 3
+ },
+ "scan_reason_histogram": {
+  "CANDIDATE_REJECTED/final_exit_not_grounded": 402,
+  "CANDIDATE_REJECTED/damage_allowance": 268,
+  "CANDIDATE_REJECTED/tail_not_settled": 75,
+  "CANDIDATE_REJECTED/final_stop_unsafe": 12,
+  "CANDIDATE_REJECTED/prelude_outside_same_safe_support": 3,
+  "NO_TRAJECTORY_IN_BUDGET/trajectory_tick_budget": 3,
+  "NEEDS_INFORMATION/unknown_world": 84,
+  "NO_TRAJECTORY_IN_BUDGET/physics_step_budget": 15,
+  "NEEDS_INFORMATION/missing_input_application": 2,
+  "STALE/input_ledger": 2,
+  "STALE/world_dependency": 1,
+  "NO_TRAJECTORY_IN_BUDGET/timing_branch_budget": 1,
+  "NO_TRAJECTORY_IN_BUDGET/node_budget": 1,
+  "CANDIDATE_REJECTED/prelude_entry_mismatch": 2,
+  "CANDIDATE_REJECTED/unsupported_physics": 2
+ },
+ "status_mismatch": 0,
+ "reason_mismatch": 0,
+ "critical_lazy_verified_where_scan_not": 0,
+ "verified_not_equivalent": 0,
+ "verified_interval_key_mismatch": 0,
+ "verified_interval_count_mismatch": 0,
+ "verified_with_intervals": 189,
+ "verified_with_2plus_intervals_in_a_branch": 1,
+ "verified_dependency_set_mismatch": 0,
+ "runahead_F1": {
+  "status_mismatch": 0,
+  "reason_mismatch": 0,
+  "critical_lazy_verified_where_scan_not": 0,
+  "verified_not_equivalent": 0,
+  "step_total_mismatch_vs_strict": 0,
+  "online_halt_mismatch_vs_strict": 0,
+  "dependency_set_mismatch_vs_strict": 0,
+  "rejected_with_fewer_permits_than_strict": 74,
+  "rejected_with_more_permits_than_strict": 0
+ },
+ "minimal_mode_informational": {
+  "status_mismatch": 14,
+  "reason_mismatch": 14,
+  "critical": 14,
+  "verified_intervals_not_equivalent": 0
+ }
+}
+set C: 120 candidates
+  C: 100/120
+{
+ "candidates": 120,
+ "scan_verified": 120,
+ "scan_not_verified": 0,
+ "scan_status_histogram": {
+  "VERIFIED_CANDIDATE": 120
+ },
+ "scan_reason_histogram": {},
+ "status_mismatch": 0,
+ "reason_mismatch": 0,
+ "critical_lazy_verified_where_scan_not": 0,
+ "verified_not_equivalent": 0,
+ "verified_interval_key_mismatch": 0,
+ "verified_interval_count_mismatch": 0,
+ "verified_with_intervals": 80,
+ "verified_with_2plus_intervals_in_a_branch": 0,
+ "verified_dependency_set_mismatch": 0,
+ "runahead_F1": {
+  "status_mismatch": 0,
+  "reason_mismatch": 0,
+  "critical_lazy_verified_where_scan_not": 0,
+  "verified_not_equivalent": 0,
+  "step_total_mismatch_vs_strict": 0,
+  "online_halt_mismatch_vs_strict": 0,
+  "dependency_set_mismatch_vs_strict": 0,
+  "rejected_with_fewer_permits_than_strict": 0,
+  "rejected_with_more_permits_than_strict": 0
+ },
+ "minimal_mode_informational": {
+  "status_mismatch": 0,
+  "reason_mismatch": 0,
+  "critical": 0,
+  "verified_intervals_not_equivalent": 0
+ }
+}

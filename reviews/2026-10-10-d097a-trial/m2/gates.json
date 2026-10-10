@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-10 16:05:17",
+ "generated": "2026-10-10 17:10:41",
  "notes": [],
  "G8": {
   "set_A": {
@@ -19,6 +19,17 @@
    "verified_with_intervals": 17,
    "verified_with_2plus_intervals_in_a_branch": 0,
    "verified_dependency_set_mismatch": 0,
+   "runahead_F1": {
+    "status_mismatch": 0,
+    "reason_mismatch": 0,
+    "critical_lazy_verified_where_scan_not": 0,
+    "verified_not_equivalent": 0,
+    "step_total_mismatch_vs_strict": 0,
+    "online_halt_mismatch_vs_strict": 0,
+    "dependency_set_mismatch_vs_strict": 0,
+    "rejected_with_fewer_permits_than_strict": 0,
+    "rejected_with_more_permits_than_strict": 0
+   },
    "minimal_mode_informational": {
     "status_mismatch": 0,
     "reason_mismatch": 0,
@@ -63,6 +74,17 @@
    "verified_with_intervals": 189,
    "verified_with_2plus_intervals_in_a_branch": 1,
    "verified_dependency_set_mismatch": 0,
+   "runahead_F1": {
+    "status_mismatch": 0,
+    "reason_mismatch": 0,
+    "critical_lazy_verified_where_scan_not": 0,
+    "verified_not_equivalent": 0,
+    "step_total_mismatch_vs_strict": 0,
+    "online_halt_mismatch_vs_strict": 0,
+    "dependency_set_mismatch_vs_strict": 0,
+    "rejected_with_fewer_permits_than_strict": 74,
+    "rejected_with_more_permits_than_strict": 0
+   },
    "minimal_mode_informational": {
     "status_mismatch": 14,
     "reason_mismatch": 14,
@@ -87,6 +109,17 @@
    "verified_with_intervals": 80,
    "verified_with_2plus_intervals_in_a_branch": 0,
    "verified_dependency_set_mismatch": 0,
+   "runahead_F1": {
+    "status_mismatch": 0,
+    "reason_mismatch": 0,
+    "critical_lazy_verified_where_scan_not": 0,
+    "verified_not_equivalent": 0,
+    "step_total_mismatch_vs_strict": 0,
+    "online_halt_mismatch_vs_strict": 0,
+    "dependency_set_mismatch_vs_strict": 0,
+    "rejected_with_fewer_permits_than_strict": 0,
+    "rejected_with_more_permits_than_strict": 0
+   },
    "minimal_mode_informational": {
     "status_mismatch": 0,
     "reason_mismatch": 0,
@@ -97,6 +130,7 @@
   "set_A_pass": true,
   "set_B_C_pass": true,
   "set_B_scan_rejections": 873,
+  "runahead_F1_sets_A_B_C_pass": true,
   "set_D": "not run",
   "set_D_pass": null,
   "passed": null,
@@ -110,13 +144,15 @@
     "failing_tests": [
      "test_m2.Equivalence.test_frozen_matrix_subset_matches_scanner_exactly",
      "test_m2.Rejection.test_landing_must_be_proved_before_the_interval_closes",
-     "test_m2.Equivalence.test_lazy_does_the_same_physics_work_as_the_scanner_on_verified_candidates"
+     "test_m2.Equivalence.test_lazy_does_the_same_physics_work_as_the_scanner_on_verified_candidates",
+     "test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict"
     ]
    },
    "unknown_as_free": {
     "detected": true,
     "failing_tests": [
      "test_m2.Permits.test_dependency_that_became_unknown_needs_information",
+     "test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode",
      "test_m2.Rejection.test_unknown_cell_on_the_route_is_not_free_space",
      "test_m2.Rejection.test_unknown_landing_is_needs_information_not_free"
     ]
@@ -124,23 +160,31 @@
    "one_branch": {
     "detected": true,
     "failing_tests": [
+     "test_m2.RunAhead.test_commit_without_enough_ticks_before_it_still_does_its_own_missing_tails",
      "test_m2.Rejection.test_failure_of_the_late_branch_alone_is_not_missed",
      "test_m2.Equivalence.test_frozen_matrix_subset_matches_scanner_exactly",
      "test_m2.Rejection.test_landing_must_be_proved_before_the_interval_closes",
      "test_m2.Equivalence.test_lazy_does_the_same_physics_work_as_the_scanner_on_verified_candidates",
      "test_m2.Equivalence.test_mixed_counterexample_has_one_commit_covering_both_branches",
-     "test_m2.Rejection.test_request_level_classes"
+     "test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode",
+     "test_m2.Rejection.test_request_level_classes",
+     "test_m2.RunAhead.test_step_total_equals_strict_mode_exactly",
+     "test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict"
     ]
    },
    "ignore_inflight": {
     "detected": true,
     "failing_tests": [
+     "test_m2.RunAhead.test_commit_without_enough_ticks_before_it_still_does_its_own_missing_tails",
+     "test_m2.RunAhead.test_error_in_a_look_ahead_tail_halts_earlier_with_the_same_verdict",
      "test_m2.Rejection.test_failure_of_the_late_branch_alone_is_not_missed",
      "test_m2.Equivalence.test_frozen_matrix_subset_matches_scanner_exactly",
      "test_m2.Equivalence.test_in_flight_command_is_part_of_the_tail",
      "test_m2.Rejection.test_landing_must_be_proved_before_the_interval_closes",
      "test_m2.Equivalence.test_lazy_does_the_same_physics_work_as_the_scanner_on_verified_candidates",
-     "test_m2.Equivalence.test_mixed_counterexample_has_one_commit_covering_both_branches"
+     "test_m2.Equivalence.test_mixed_counterexample_has_one_commit_covering_both_branches",
+     "test_m2.RunAhead.test_step_total_equals_strict_mode_exactly",
+     "test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict"
     ]
    },
    "accept_stale": {
@@ -159,6 +203,7 @@
     "detected": true,
     "failing_tests": [
      "test_m2.Rejection.test_damage_allowance_zero_budget",
+     "test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode",
      "test_m2.Rejection.test_truncated_in_the_air_and_jump_replaced_by_walk",
      "test_m2.Rejection.test_walk_straight_over_the_hole"
     ]
@@ -192,7 +237,9 @@
   "commit_pass": false,
   "samples_pass": true,
   "interpretation": "stricter reading: max(pooled P95, worst per-pass P95), cold shape cache, strict mode",
-  "passed": false,
+  "passed": null,
+  "verdict": "PENDING reviewer's idle-machine run of `run_m2.py perf_record` (addendum 2: strict vs strict_runahead F1 vs full scan)",
+  "loaded_machine_no_fix_result": "tick pass, commit fail: tick P95 3.92 ms, commit P95 66.20 ms (M1 running concurrently; pre-F1 code); kept, not the record",
   "population": "verified Set A + Set C candidates (+ Set D when present at run time)",
   "supplementary_all_verified_set_B": {
    "tick_samples": 15377,

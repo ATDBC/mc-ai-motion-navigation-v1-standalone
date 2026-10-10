@@ -8,10 +8,10 @@
 | 门槛 | 观测值 | 阈值 | 结论 |
 |---|---|---|---|
 | G8 等价性 | A 集 23/23 与完整扫描逐项相同；B 集 1,605 个候选（764 个被扫描拒绝，另 109 个得到“信息不足／预算／过期”分类，共 873 个非 VERIFIED）状态 0 不符、原因 0 不符、0 个“逐次放行而扫描不放行”；C 集 120/120 相同。**D 集（M1 验证候选）未运行**：运行时 `../m1/accepted_candidates.jsonl` 尚不存在 | 全部一致，且不得在扫描拒绝时放行 | **A/B/C 通过；D 待 M1 产出后重跑（命令见 §6）。G8 在 D 集完成前不能整体判通过。** |
-| G9 变异 | 基线 27 项测试全过；7 种注入缺陷各至少被 2 项测试发现（7/7） | 7/7 | **通过** |
-| G10 性能 | 普通 tick 决定 P95 = **3.92 ms**（8,349 个样本）；越过承诺点的决定 P95 = **66.2 ms**（291 个样本；三轮各自 P95 为 67.0／67.5／64.6 ms；第一次运行为 62.0 ms，轻负载下） | tick ≤ 10 ms；承诺 ≤ 50 ms | **tick 通过；承诺决定在两次运行中都未通过（62–66 ms 对 50 ms）。G10 判为不通过。** |
+| G9 变异 | 基线 34 项测试全过（含 F1 新增 7 项）；7 种注入缺陷各至少被 2 项测试发现（7/7） | 7/7 | **通过**（F1 之后重跑） |
+| G10 性能 | 普通 tick 决定 P95 = **3.92 ms**（8,349 个样本）；越过承诺点的决定 P95 = **66.2 ms**（291 个样本；三轮各自 P95 为 67.0／67.5／64.6 ms；第一次运行为 62.0 ms，轻负载下） | tick ≤ 10 ms；承诺 ≤ 50 ms | **待审查方空闲机器复测（补记 2，含 F1）。** 并发负载下、不修正的结果：tick 通过，承诺决定在两次运行中都未通过（62–66 ms 对 50 ms）；这两次是历史记录，不是 G10 的记录结果 |
 
-按预登记第 7 节，G10 未过即 D097-A 在该门槛“走不通”。我没有使用“一次限定性能修正”的名额（见 §4 的选项分析，该修正若采用 minimal 模式则不再与扫描器等价，需要项目方决定）。
+上表 G10 行的数字是在 M1 并发运行、机器负载 3–4 时对“不修正”代码测得的历史数据。补记 2 决定：记录结果改由审查方在空闲机器上用 `run_m2.py perf_record` 复测，并使用唯一一次性能修正 F1（见 §9）。G10 的判定因此**保持“待审查方空闲机器复测”**，我没有给出记录性的计时数字。minimal 模式（§4）仍然不等价，没有被采用。
 
 三条要点：
 
@@ -54,7 +54,7 @@ VERIFIED 的候选里：A 集 17、B 集 189、C 集 80 个带风险区间；1 �
 
 ### 2.3 变异 `test_m2.py`、`run_mutation.py`
 
-27 项 unittest（约 7 秒）：冻结矩阵子集的精确等价、与扫描器相同的物理工作量、混合反例的决定结构（tick／commit／final、锁定 12 条）、在途命令（边界 1 的尾部 UNSAFE）、被拒绝候选（空中截断、跳跃改走、走过空洞、未知落点、未知路径格、1/12 支撑、只有迟到分支失败的候选、伤害额度零、额度内伤害仍放行、14 种请求层、双跳单区间）、许可（未变、锚点 ID、入口状态、目标／目标修订、账本、请求 ID／世界会话、依赖格变化、依赖格变未知、无关格变化不过期）、执行门（锁定后缀每条被换均拒绝、tick 许可范围）。环境变量 `D097A_FAULT=<name>` 让所有 lazy／许可／执行门调用带上该缺陷。`run_mutation.py` 先跑无缺陷基线（必须全过），再对 7 种缺陷各跑一遍（必须有失败）。
+34 项 unittest（空闲时约 8 秒，其中 F1 新增 7 项，见 §9）：冻结矩阵子集的精确等价、与扫描器相同的物理工作量、混合反例的决定结构（tick／commit／final、锁定 12 条）、在途命令（边界 1 的尾部 UNSAFE）、被拒绝候选（空中截断、跳跃改走、走过空洞、未知落点、未知路径格、1/12 支撑、只有迟到分支失败的候选、伤害额度零、额度内伤害仍放行、14 种请求层、双跳单区间）、许可（未变、锚点 ID、入口状态、目标／目标修订、账本、请求 ID／世界会话、依赖格变化、依赖格变未知、无关格变化不过期）、执行门（锁定后缀每条被换均拒绝、tick 许可范围）。环境变量 `D097A_FAULT=<name>` 让所有 lazy／许可／执行门调用带上该缺陷。`run_mutation.py` 先跑无缺陷基线（必须全过），再对 7 种缺陷各跑一遍（必须有失败）。
 
 结果（`mutation_results.json`、`logs/mutation_*.txt`）：
 
@@ -142,6 +142,7 @@ python3 m2/run_m2.py perf --passes 3            # G10 主总体，约 4 分钟
 python3 m2/run_m2.py perf --population b --passes 1 --strict-only   # 补充总体
 python3 m2/run_mutation.py        # G9（基线 + 7 种缺陷），约 1.5 分钟
 python3 m2/fault_coverage.py      # 补充：数据层面的缺陷检出
+python3 m2/run_m2.py perf_record  # 补记 2 的记录命令（见 §9），由审查方在空闲机器上运行
 python3 m2/run_m2.py gates        # 汇总 gates.json
 python3 -m unittest test_m2 -v    # 单跑测试（D097A_FAULT=<name> 注入缺陷）
 ```
@@ -163,4 +164,53 @@ python3 -m unittest test_m2 -v    # 单跑测试（D097A_FAULT=<name> 注入缺�
 
 - 代码：`incremental.py`（逐次证明、许可、执行门、缺陷）、`equiv.py`（比较）、`candidates.py`（A–D 集构造）、`mutants.py`、`common.py`、`gen_inputs.py`、`run_m2.py`、`run_mutation.py`、`fault_coverage.py`、`witness_search.py`、`test_m2.py`
 - 输入数据：`set_a_inputs.json`、`set_c_inputs.json`（`logs/set_c_inputs_first_pass_60.json` 是第一次只取每箱 1 个样本的 60 行，是现行文件的子集）
-- 结果：`equivalence_results.json`、`performance.json`、`performance_b.json`、`performance_samples.json`、`mutation_results.json`、`mutation_log.txt`、`fault_coverage.json`、`gates.json`、`logs/`
+- 结果：`performance_record_smoke.json`（**冒烟测试，不是记录**）、`equivalence_results.json`、`performance.json`、`performance_b.json`、`performance_samples.json`、`mutation_results.json`、`mutation_log.txt`、`fault_coverage.json`、`gates.json`、`logs/`
+
+## 9. 补记 2：修正 F1（run-ahead）
+
+依据 `../../2026-10-10-d097a-trial-addendum-2.md`。F1 是预登记允许的唯一一次 M2 限定性能修正。**G10 的判定仍为“待审查方空闲机器复测”**；本节不含记录性计时。
+
+### 9.1 实现（`incremental.py`）
+
+- 新模式 `lazy_prove(..., mode="strict_runahead", runahead_steps=60)`。语义与 `strict` 相同：同样的尾部、同样的 `_risk_step`（尾部一出现就按边界顺序记账）、同样的 `resolve()` 镜像。
+- 普通 tick 决定：先算自己边界 k 的尾部（若已被前面的决定预算过则不再算），然后按边界顺序继续算后面边界的尾部（所有分支），直到本决定累计至少用掉 `runahead_steps` 次 physics step，或到了最后一个边界。步数按整边界累计，所以单个 tick 决定会超过 60 步（最多约再多一个边界的两个分支，约 +24 步）。
+- 承诺决定：只算还没有的尾部（k..r 中尚未预算的），不再向前预算。final 决定同理。
+- 所有工作记在做它的那个决定上；计划阶段不变；没有任何工作被丢弃。
+- 为此做的小重构：风险区间“某边界之后是否处于开区间”改存为 `open_after[边界]`；依赖格改为按边界保存（`dep_by_boundary`），许可的事实集合取自它所覆盖的边界 k..r，因此严格模式的许可内容与改动前相同。
+- 提前发现的错误：look-ahead 尾部出错时，本决定即拒绝，在线在更早的决定停下（`online_halt` 记的仍是出错的边界）；之后 `resolve()` 与严格模式完全相同，所以最终 status/reason 与严格模式、与扫描器一致。
+- 在线前提（本试做不测）：预算用的是计划 rollout 的预测状态；真实执行中锚点偏离预测时，预算好的尾部必须作废重算，这是 M3 的问题。
+
+### 9.2 检查结果
+
+G8 等价比较按原样重跑，并对 `strict_runahead` 同时与扫描器、与 `strict` 比较（`equivalence_results.json` 的 `runahead` 字段与 `runahead_F1` 汇总）：
+
+| 集 | 候选数 | 状态不符 | 原因不符 | 逐次放行而扫描不放行 | VERIFIED 候选不等价 | 步数总和与 strict 不等 | online_halt 与 strict 不同 |
+|---|---|---|---|---|---|---|---|
+| A | 23 | 0 | 0 | 0 | 0 | 0 | 0 |
+| B | 1,605 | 0 | 0 | 0 | 0 | 0 | 0 |
+| C | 120 | 0 | 0 | 0 | 0 | 0 | 0 |
+| D | 未运行（`../m1/accepted_candidates.jsonl` 仍不存在） | | | | | | |
+
+- “步数总和”检查对**每个**候选做，不只是 VERIFIED：全部决定的 physics step 之和、`counts` 和 `resolution_steps` 与 strict 完全相同（1,748/1,748）。原因是两种模式按同一个边界顺序、同样的分支顺序做同样的计算，只是分到不同的决定里。
+- B 集有 74 个被拒绝的候选，run-ahead 比 strict 少发了许可（更早发现 look-ahead 尾部里的错误，如 `tail_not_settled`）；没有一个更晚。
+- 许可的命令序列与 strict 相同（单元测试在 `gap_start_4_width_3:A15` 上逐决定核对；其余候选只核对了状态、区间、步数总和）。
+- 单元测试新增 7 项（`RunAhead` 类）：与扫描器和 strict 的等价、步数总和等于 strict、tick 的 look-ahead 与承诺变便宜、没有足够前置 tick 时承诺仍要自己算缺的尾部、look-ahead 错误更早停下且结论相同、拒绝类候选与扫描器一致、参数检查。变异运行器重跑：基线 34 项通过，7 种缺陷仍全部被检出。
+
+### 9.3 记录命令（由审查方在空闲机器上运行）
+
+```
+cd <project checkout, be38685>
+PYTHONPATH=<checkout>:<reviews>/2026-10-10-d097a-trial:<reviews>/2026-10-10-d097a-trial/m2 \
+  python3 <reviews>/2026-10-10-d097a-trial/m2/run_m2.py perf_record
+```
+
+默认 3 轮、10 个预热候选；同一进程里对同一组候选（A 集 23 + C 集 120，若 `../m1/accepted_candidates.jsonl` 存在则加上 D 集；`--no-setd` 可排除）依次测 `strict`（不修正）、`strict_runahead`（F1）和完整扫描，每次测量用新的 `PhysicsWorldView`（冷形状缓存），三种配置的顺序按候选与轮次轮换。输出 `performance_record.json`（汇总、每种决定的 P50/P95/P99/max 的 ms 与 step、各轮 P95、`gate_view`、步数总和检查、负载与代码哈希）和 `performance_record_samples.json`（原始样本）。`gate_view` 只列出观测值与阈值的比较，不是裁决。`idle_check` 记录起始 1 分钟负载，供审查方确认机器空闲。
+
+`--limit N` 只做冒烟测试，输出写入 `performance_record_smoke.json` 并标记 `SMOKE_TEST_NOT_A_RECORD: true`，不会覆盖记录文件。`performance_record_smoke.json` 是我在机器负载约 4.9 时用 6 个候选、1 轮做的命令检查，**不是记录，也不应引用其中的数字**。
+
+### 9.4 疑点
+
+1. **tick 门槛可能被 F1 自己顶到边缘**：“至少 60 步”按整边界累计，预算好的 tick 决定常在 60–84 步之间（例如 `gap_start_4_width_3:A15` 的 tick 决定为 60–82 步），而 tick 决定的单步成本约 0.12 ms，也就是说 tick P95 有可能接近或超过 10 ms。这是预登记的做法，没有改动；是否过要看空闲机器上的记录。
+2. **F1 对“承诺点前面前置 tick 太少”的候选没有帮助**：混合反例的第二条命令就是起跳，承诺决定仍要算 266 步（strict 为 312）。有 ≥5 个前置 tick 的候选（如 `gap_start_4_width_3:A15`，承诺在边界 17）承诺决定降为 0 步，代价移到前面的 tick 上。
+3. 总工作量不变（本节的步数总和检查）；F1 只是把成本前移，所以在线真实执行里若锚点偏离预测要重算（§9.1），实际总成本会更高。
+4. `performance.json`、`performance_b.json` 是 F1 实现之前的代码（严格模式路径除依赖记账重构外无行为变化）在并发负载下的历史测量，保留不改。

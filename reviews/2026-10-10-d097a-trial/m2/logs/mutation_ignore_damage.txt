@@ -30,6 +30,17 @@ test_unknown_cell_on_the_route_is_not_free_space (test_m2.Rejection.test_unknown
 An unobserved cell the body sweeps through must stop the proof, not read as air. ... ok
 test_unknown_landing_is_needs_information_not_free (test_m2.Rejection.test_unknown_landing_is_needs_information_not_free) ... ok
 test_walk_straight_over_the_hole (test_m2.Rejection.test_walk_straight_over_the_hole) ... FAIL
+test_commit_without_enough_ticks_before_it_still_does_its_own_missing_tails (test_m2.RunAhead.test_commit_without_enough_ticks_before_it_still_does_its_own_missing_tails) ... ok
+test_error_in_a_look_ahead_tail_halts_earlier_with_the_same_verdict (test_m2.RunAhead.test_error_in_a_look_ahead_tail_halts_earlier_with_the_same_verdict) ... ok
+test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) ...
+  test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) [gap_start_4_width_3_a3] ... FAIL
+  test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) [drop/drop_depth4_budget0] ... FAIL
+  test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) [drop/drop_depth5_budget0] ... FAIL
+  test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) [drop/drop_depth5_budget1] ... FAIL
+test_runahead_steps_must_be_positive (test_m2.RunAhead.test_runahead_steps_must_be_positive) ... ok
+test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) ... ok
+test_ticks_look_ahead_until_the_step_budget_and_the_commit_gets_cheaper (test_m2.RunAhead.test_ticks_look_ahead_until_the_step_budget_and_the_commit_gets_cheaper) ... ok
+test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) ... ok
 
 ======================================================================
 FAIL: test_damage_allowance_zero_budget (test_m2.Rejection.test_damage_allowance_zero_budget) [drop/drop_depth5_budget0]
@@ -81,7 +92,47 @@ Traceback (most recent call last):
     self.assertEqual(lazy.reason, scan.reason)
 AssertionError: <CandidateRejection.FINAL_EXIT_NOT_GROUNDED: 'final_exit_not_grounded'> != <CandidateRejection.DAMAGE_ALLOWANCE: 'damage_allowance'>
 
+======================================================================
+FAIL: test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) [gap_start_4_width_3_a3]
 ----------------------------------------------------------------------
-Ran 27 tests in 6.901s
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 301, in test_rejections_match_scanner_in_runahead_mode
+    self.assertEqual((ahead.status, ahead.reason), (scan.status, scan.reason))
+AssertionError: Tuples differ: (<Sca[60 chars]eRejection.FINAL_EXIT_NOT_GROUNDED: 'final_exit_not_grounded'>) != (<Sca[60 chars]eRejection.DAMAGE_ALLOWANCE: 'damage_allowance'>)
 
-FAILED (failures=5)
+First differing element 1:
+<CandidateRejection.FINAL_EXIT_NOT_GROUNDED: 'final_exit_not_grounded'>
+<CandidateRejection.DAMAGE_ALLOWANCE: 'damage_allowance'>
+
+  (<ScanStatus.CANDIDATE_REJECTED: 'CANDIDATE_REJECTED'>,
+-  <CandidateRejection.FINAL_EXIT_NOT_GROUNDED: 'final_exit_not_grounded'>)
++  <CandidateRejection.DAMAGE_ALLOWANCE: 'damage_allowance'>)
+
+======================================================================
+FAIL: test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) [drop/drop_depth4_budget0]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 300, in test_rejections_match_scanner_in_runahead_mode
+    self.assertNotEqual(ahead.status, ScanStatus.VERIFIED_CANDIDATE)
+AssertionError: <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'> == <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'>
+
+======================================================================
+FAIL: test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) [drop/drop_depth5_budget0]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 300, in test_rejections_match_scanner_in_runahead_mode
+    self.assertNotEqual(ahead.status, ScanStatus.VERIFIED_CANDIDATE)
+AssertionError: <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'> == <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'>
+
+======================================================================
+FAIL: test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) [drop/drop_depth5_budget1]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 300, in test_rejections_match_scanner_in_runahead_mode
+    self.assertNotEqual(ahead.status, ScanStatus.VERIFIED_CANDIDATE)
+AssertionError: <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'> == <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'>
+
+----------------------------------------------------------------------
+Ran 34 tests in 19.022s
+
+FAILED (failures=9)

@@ -210,6 +210,106 @@ class Rejection(unittest.TestCase):
         self.assertTrue(equiv.compare(scan, lazy)["equivalent"])
 
 
+class RunAhead(unittest.TestCase):
+    """Fix F1 (addendum 2): mode "strict_runahead" must be strict mode with the work reordered."""
+    KEYS = Equivalence.KEYS + ("gap_start_4_width_3:A15", "gap_start_1_width_1:A3")
+
+    def three(self, request, inputs, world, evidence=None):
+        evidence = _boundary_evidence(request, inputs) if evidence is None else evidence
+        scan = scan_commitment(request, inputs, world, evidence)
+        strict = I.lazy_prove(request, inputs, world, evidence, faults=FAULTS)
+        ahead = I.lazy_prove(request, inputs, world, evidence, mode="strict_runahead", faults=FAULTS)
+        return scan, strict, ahead
+
+    @staticmethod
+    def total(result):
+        return sum(d.physics_steps for d in result.decisions)
+
+    def test_verdict_and_intervals_equal_scanner_and_strict(self):
+        for key in self.KEYS:
+            with self.subTest(key):
+                request, world = fx(key).request, fx(key).world
+                scan, strict, ahead = self.three(request, A[key], world)
+                row = equiv.compare(scan, ahead)
+                self.assertTrue(row["equivalent"], row)
+                self.assertEqual(interval_keys(ahead.branches), interval_keys(strict.branches))
+                self.assertEqual(ahead.dependencies, strict.dependencies)
+
+    def test_step_total_equals_strict_mode_exactly(self):
+        for key in self.KEYS:
+            with self.subTest(key):
+                request, world = fx(key).request, fx(key).world
+                scan, strict, ahead = self.three(request, A[key], world)
+                self.assertEqual(self.total(ahead), self.total(strict))
+                self.assertEqual(ahead.counts, strict.counts)
+                self.assertEqual(self.total(ahead), scan.counts.physics_steps)
+
+    def test_ticks_look_ahead_until_the_step_budget_and_the_commit_gets_cheaper(self):
+        key = "gap_start_4_width_3:A15"
+        request, world = fx(key).request, fx(key).world
+        scan, strict, ahead = self.three(request, A[key], world)
+        n = len(A[key])
+        ticks = [d for d in ahead.decisions if d.kind == "tick"]
+        self.assertTrue(all(d.physics_steps >= 60 for d in ticks if d.computed_to < n))
+        self.assertTrue(any(d.computed_to > d.end_boundary for d in ticks), "ticks must compute later boundaries")
+        commits = {m: next(d for d in r.decisions if d.kind == "commit") for m, r in
+                   (("strict", strict), ("ahead", ahead))}
+        self.assertLess(commits["ahead"].physics_steps, commits["strict"].physics_steps)
+        # work is only moved between decisions: the plan stage is untouched
+        self.assertEqual(ahead.decisions[0].physics_steps, strict.decisions[0].physics_steps)
+        self.assertEqual([d.kind for d in ahead.decisions], [d.kind for d in strict.decisions])
+        self.assertEqual([d.permit.commands for d in ahead.decisions if d.permit],
+                         [d.permit.commands for d in strict.decisions if d.permit])
+
+    def test_commit_without_enough_ticks_before_it_still_does_its_own_missing_tails(self):
+        key = "mixed_ground_jump_air:"          # the jump is already the second command
+        request, world = fx(key).request, fx(key).world
+        scan, strict, ahead = self.three(request, A[key], world)
+        commit = next(d for d in ahead.decisions if d.kind == "commit")
+        self.assertEqual((commit.boundary, commit.end_boundary, commit.permit.locked_count), (1, 13, 12))
+        self.assertGreater(commit.physics_steps, 0)
+        self.assertEqual(interval_keys(ahead.branches), [[(0, 1, 13)], [(0, 1, 13)]])
+
+    def test_error_in_a_look_ahead_tail_halts_earlier_with_the_same_verdict(self):
+        fixture = common.fixture_for("one_twelfth_support", None)
+        scan, strict, ahead = self.three(fixture.request, A["gap_start_1_width_1:A3"], fixture.world)
+        self.assertEqual((scan.status, scan.reason),
+                         (ScanStatus.CANDIDATE_REJECTED, CandidateRejection.TAIL_NOT_SETTLED))
+        for result in (strict, ahead):
+            self.assertEqual((result.status, result.reason), (scan.status, scan.reason))
+        self.assertEqual(ahead.online_halt, strict.online_halt)          # same offending boundary
+        self.assertEqual(ahead.online_halt[0], 5)
+        self.assertLess(len(ahead.permits), len(strict.permits))          # ... detected before permitting 1,2
+        self.assertEqual(self.total(ahead), self.total(strict))
+
+    def test_rejections_match_scanner_in_runahead_mode(self):
+        cases = []
+        for scenario, source in (("unknown_landing", "gap_start_1_width_1:A3"),
+                                 ("one_twelfth_support", "jump_gap_continue:A3"),
+                                 ("gap_start_4_width_3_a3", "gap_start_4_width_2:A3")):
+            f = common.fixture_for(scenario, None)
+            cases.append((scenario, f.request, f.world, A[source]))
+        key = "gap_start_1_width_1:A3"
+        cases.append(("truncated", fx(key).request, fx(key).world, A[key][:12]))
+        for c in K.drop_cands()[:12] + K.request_level_cases():
+            cases.append((c.id, c.request, c.world, c.inputs, c.evidence))
+        for name, request, world, inputs, *extra in cases:
+            with self.subTest(name):
+                scan, strict, ahead = self.three(request, inputs, world, *(extra or [None]))
+                if scan.status is not ScanStatus.VERIFIED_CANDIDATE:
+                    self.assertNotEqual(ahead.status, ScanStatus.VERIFIED_CANDIDATE)
+                self.assertEqual((ahead.status, ahead.reason), (scan.status, scan.reason))
+                self.assertEqual(ahead.online_halt, strict.online_halt)
+                self.assertEqual(self.total(ahead), self.total(strict))
+
+    def test_runahead_steps_must_be_positive(self):
+        key = "flat_walk:A3"
+        request, world = fx(key).request, fx(key).world
+        with self.assertRaises(ValueError):
+            I.lazy_prove(request, A[key], world, _boundary_evidence(request, A[key]),
+                         mode="strict_runahead", runahead_steps=0)
+
+
 class Permits(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

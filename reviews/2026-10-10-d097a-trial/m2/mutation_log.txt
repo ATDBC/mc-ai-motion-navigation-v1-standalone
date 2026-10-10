@@ -1,15 +1,5 @@
-=== baseline (no fault): passed=True ran=27 skipped=0 6.7s
-_are_defined (test_m2.FaultFlags.test_all_seven_faults_are_defined) ... ok
-test_unknown_fault_names_are_refused (test_m2.FaultFlags.test_unknown_fault_names_are_refused) ... ok
-test_changed_anchor_id (test_m2.Permits.test_changed_anchor_id) ... ok
-test_changed_dependency_cell (test_m2.Permits.test_changed_dependency_cell) ... ok
-test_changed_entry_state (test_m2.Permits.test_changed_entry_state) ... ok
-test_changed_goal_revision_and_goal (test_m2.Permits.test_changed_goal_revision_and_goal) ... ok
-test_changed_input_ledger (test_m2.Permits.test_changed_input_ledger) ... ok
-test_changed_request_identity_and_world_session (test_m2.Permits.test_changed_request_identity_and_world_session) ... ok
-test_dependency_that_became_unknown_needs_information (test_m2.Permits.test_dependency_that_became_unknown_needs_information) ... ok
-test_unchanged_world_and_request_are_valid (test_m2.Permits.test_unchanged_world_and_request_are_valid) ... ok
-test_unrelated_cell_change_does_not_stale_the_permit (test_m2.Permits.test_unrelated_cell_change_does_not_stale_the_permit) ... ok
+=== baseline (no fault): passed=True ran=34 skipped=0 18.1s
+oes_not_stale_the_permit (test_m2.Permits.test_unrelated_cell_change_does_not_stale_the_permit) ... ok
 test_damage_allowance_zero_budget (test_m2.Rejection.test_damage_allowance_zero_budget) ... ok
 test_damage_within_budget_is_still_accepted (test_m2.Rejection.test_damage_within_budget_is_still_accepted) ... ok
 test_failure_of_the_late_branch_alone_is_not_missed (test_m2.Rejection.test_failure_of_the_late_branch_alone_is_not_missed)
@@ -22,156 +12,106 @@ test_unknown_cell_on_the_route_is_not_free_space (test_m2.Rejection.test_unknown
 An unobserved cell the body sweeps through must stop the proof, not read as air. ... ok
 test_unknown_landing_is_needs_information_not_free (test_m2.Rejection.test_unknown_landing_is_needs_information_not_free) ... ok
 test_walk_straight_over_the_hole (test_m2.Rejection.test_walk_straight_over_the_hole) ... ok
+test_commit_without_enough_ticks_before_it_still_does_its_own_missing_tails (test_m2.RunAhead.test_commit_without_enough_ticks_before_it_still_does_its_own_missing_tails) ... ok
+test_error_in_a_look_ahead_tail_halts_earlier_with_the_same_verdict (test_m2.RunAhead.test_error_in_a_look_ahead_tail_halts_earlier_with_the_same_verdict) ... ok
+test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) ... ok
+test_runahead_steps_must_be_positive (test_m2.RunAhead.test_runahead_steps_must_be_positive) ... ok
+test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) ... ok
+test_ticks_look_ahead_until_the_step_budget_and_the_commit_gets_cheaper (test_m2.RunAhead.test_ticks_look_ahead_until_the_step_budget_and_the_commit_gets_cheaper) ... ok
+test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) ... ok
 
 ----------------------------------------------------------------------
-Ran 27 tests in 6.216s
+Ran 34 tests in 17.668s
 
 OK
 
 
-=== fault no_landing_proof: detected=True failing=['test_m2.Equivalence.test_frozen_matrix_subset_matches_scanner_exactly', 'test_m2.Rejection.test_landing_must_be_proved_before_the_interval_closes', 'test_m2.Equivalence.test_lazy_does_the_same_physics_work_as_the_scanner_on_verified_candidates'] 7.2s
- element 1:
-46
-48
-
-- (427, 46)
-?        ^
-
-+ (427, 48)
-?        ^
-
+=== fault no_landing_proof: detected=True failing=['test_m2.Equivalence.test_frozen_matrix_subset_matches_scanner_exactly', 'test_m2.Rejection.test_landing_must_be_proved_before_the_interval_closes', 'test_m2.Equivalence.test_lazy_does_the_same_physics_work_as_the_scanner_on_verified_candidates', 'test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict'] 19.5s
+ 'lazy_status': 'VERIFIED_CANDIDATE', 'lazy_reason': None, 'status_match': True, 'reason_match': True, 'critical': False, 'scan_steps': 723, 'lazy_steps': 723, 'scan_nodes': 82, 'lazy_nodes': 80, 'intervals_scan': [[[16, 17, 31]], [[16, 17, 31]]], 'intervals_lazy': [[[16, 17, 18], [18, 19, 31]], [[16, 17, 18], [18, 19, 31]]], 'interval_keys_match': False, 'interval_counts_match': False, 'interval_full_match': False, 'tail_status_match': True, 'states_match': True, 'dependencies_match': True, 'n_intervals': [1, 1], 'equivalent': False}
 
 ======================================================================
-FAIL: test_lazy_does_the_same_physics_work_as_the_scanner_on_verified_candidates (test_m2.Equivalence.test_lazy_does_the_same_physics_work_as_the_scanner_on_verified_candidates) [gap_start_1_width_1:A3]
+FAIL: test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) [gap_start_1_width_1:A3]
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 77, in test_lazy_does_the_same_physics_work_as_the_scanner_on_verified_candidates
-    self.assertEqual((lazy.counts.physics_steps, lazy.counts.nodes),
-AssertionError: Tuples differ: (451, 50) != (451, 54)
-
-First differing element 1:
-50
-54
-
-- (451, 50)
-?        ^
-
-+ (451, 54)
-?        ^
-
-
-======================================================================
-FAIL: test_landing_must_be_proved_before_the_interval_closes (test_m2.Rejection.test_landing_must_be_proved_before_the_interval_closes)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 209, in test_landing_must_be_proved_before_the_interval_closes
-    self.assertEqual(interval_keys(lazy.branches), interval_keys(scan.proof.branches))
-AssertionError: Lists differ: [[(0, 1, 13)], [(0, 1, 13)]] != [[(0, 1, 25)], [(0, 1, 25)]]
-
-First differing element 0:
-[(0, 1, 13)]
-[(0, 1, 25)]
-
-- [[(0, 1, 13)], [(0, 1, 13)]]
-?          ^^            ^^
-
-+ [[(0, 1, 25)], [(0, 1, 25)]]
-?          ^^            ^^
-
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 234, in test_verdict_and_intervals_equal_scanner_and_strict
+    self.assertTrue(row["equivalent"], row)
+AssertionError: False is not true : {'scan_status': 'VERIFIED_CANDIDATE', 'scan_reason': None, 'lazy_status': 'VERIFIED_CANDIDATE', 'lazy_reason': None, 'status_match': True, 'reason_match': True, 'critical': False, 'scan_steps': 451, 'lazy_steps': 451, 'scan_nodes': 54, 'lazy_nodes': 50, 'intervals_scan': [[[2, 3, 17]], [[2, 3, 17]]], 'intervals_lazy': [[[2, 3, 4]], [[2, 3, 4]]], 'interval_keys_match': False, 'interval_counts_match': True, 'interval_full_match': False, 'tail_status_match': True, 'states_match': True, 'dependencies_match': True, 'n_intervals': [1, 1], 'equivalent': False}
 
 ----------------------------------------------------------------------
-Ran 27 tests in 6.712s
+Ran 34 tests in 19.035s
 
-FAILED (failures=6)
+FAILED (failures=11)
 
 
-=== fault unknown_as_free: detected=True failing=['test_m2.Permits.test_dependency_that_became_unknown_needs_information', 'test_m2.Rejection.test_unknown_cell_on_the_route_is_not_free_space', 'test_m2.Rejection.test_unknown_landing_is_needs_information_not_free'] 10.0s
-ast):
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 148, in test_unknown_cell_on_the_route_is_not_free_space
-    scan, lazy = self.check_same(fixture.request, A["flat_walk:A3"], world,
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 118, in check_same
-    self.assertNotEqual(lazy.status, ScanStatus.VERIFIED_CANDIDATE, "lazy verified a rejected candidate")
-AssertionError: <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'> == <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'> : lazy verified a rejected candidate
-
-======================================================================
-FAIL: test_unknown_landing_is_needs_information_not_free (test_m2.Rejection.test_unknown_landing_is_needs_information_not_free)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 140, in test_unknown_landing_is_needs_information_not_free
+=== fault unknown_as_free: detected=True failing=['test_m2.Permits.test_dependency_that_became_unknown_needs_information', 'test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode', 'test_m2.Rejection.test_unknown_cell_on_the_route_is_not_free_space', 'test_m2.Rejection.test_unknown_landing_is_needs_information_not_free'] 26.4s
+026-10-10-d097a-trial/m2/test_m2.py", line 140, in test_unknown_landing_is_needs_information_not_free
     scan, lazy = self.check_same(fixture.request, A["gap_start_1_width_1:A3"], fixture.world,
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 119, in check_same
     self.assertEqual(lazy.status, scan.status)
 AssertionError: <ScanStatus.CANDIDATE_REJECTED: 'CANDIDATE_REJECTED'> != <ScanStatus.NEEDS_INFORMATION: 'NEEDS_INFORMATION'>
 
-----------------------------------------------------------------------
-Ran 27 tests in 9.412s
-
-FAILED (failures=3)
-
-
-=== fault one_branch: detected=True failing=['test_m2.Rejection.test_failure_of_the_late_branch_alone_is_not_missed', 'test_m2.Equivalence.test_frozen_matrix_subset_matches_scanner_exactly', 'test_m2.Rejection.test_landing_must_be_proved_before_the_interval_closes', 'test_m2.Equivalence.test_lazy_does_the_same_physics_work_as_the_scanner_on_verified_candidates', 'test_m2.Equivalence.test_mixed_counterexample_has_one_commit_covering_both_branches', 'test_m2.Rejection.test_request_level_classes'] 6.7s
-quest_level_classes) [request_level/prelude_input_mismatch]
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 197, in test_request_level_classes
-    self.check_same(c.request, c.inputs, c.world, evidence=c.evidence)
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 118, in check_same
-    self.assertNotEqual(lazy.status, ScanStatus.VERIFIED_CANDIDATE, "lazy verified a rejected candidate")
-AssertionError: <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'> == <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'> : lazy verified a rejected candidate
-
 ======================================================================
-FAIL: test_request_level_classes (test_m2.Rejection.test_request_level_classes) [request_level/late_entry_moved]
+FAIL: test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) [unknown_landing]
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 197, in test_request_level_classes
-    self.check_same(c.request, c.inputs, c.world, evidence=c.evidence)
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 118, in check_same
-    self.assertNotEqual(lazy.status, ScanStatus.VERIFIED_CANDIDATE, "lazy verified a rejected candidate")
-AssertionError: <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'> == <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'> : lazy verified a rejected candidate
-
-----------------------------------------------------------------------
-Ran 27 tests in 6.229s
-
-FAILED (failures=16)
-
-
-=== fault ignore_inflight: detected=True failing=['test_m2.Rejection.test_failure_of_the_late_branch_alone_is_not_missed', 'test_m2.Equivalence.test_frozen_matrix_subset_matches_scanner_exactly', 'test_m2.Equivalence.test_in_flight_command_is_part_of_the_tail', 'test_m2.Rejection.test_landing_must_be_proved_before_the_interval_closes', 'test_m2.Equivalence.test_lazy_does_the_same_physics_work_as_the_scanner_on_verified_candidates', 'test_m2.Equivalence.test_mixed_counterexample_has_one_commit_covering_both_branches'] 6.8s
------------------------------------------------------
-Traceback (most recent call last):
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 164, in test_failure_of_the_late_branch_alone_is_not_missed
-    scan, lazy = self.check_same(request, inputs, world, ScanStatus.CANDIDATE_REJECTED,
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 118, in check_same
-    self.assertNotEqual(lazy.status, ScanStatus.VERIFIED_CANDIDATE, "lazy verified a rejected candidate")
-AssertionError: <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'> == <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'> : lazy verified a rejected candidate
-
-======================================================================
-FAIL: test_landing_must_be_proved_before_the_interval_closes (test_m2.Rejection.test_landing_must_be_proved_before_the_interval_closes)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 209, in test_landing_must_be_proved_before_the_interval_closes
-    self.assertEqual(interval_keys(lazy.branches), interval_keys(scan.proof.branches))
-AssertionError: Lists differ: [[(1, 2, 13), (13, 14, 25)], [(1, 2, 13), (13, 14, 25)]] != [[(0, 1, 25)], [(0, 1, 25)]]
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 301, in test_rejections_match_scanner_in_runahead_mode
+    self.assertEqual((ahead.status, ahead.reason), (scan.status, scan.reason))
+AssertionError: Tuples differ: (<ScanStatus.CANDIDATE_REJECTED: 'CANDIDATE_REJECTED'>[55 chars]ce'>) != (<ScanStatus.NEEDS_INFORMATION: 'NEEDS_INFORMATION'>, [41 chars]ld'>)
 
 First differing element 0:
-[(1, 2, 13), (13, 14, 25)]
-[(0, 1, 25)]
+<ScanStatus.CANDIDATE_REJECTED: 'CANDIDATE_REJECTED'>
+<ScanStatus.NEEDS_INFORMATION: 'NEEDS_INFORMATION'>
 
-- [[(1, 2, 13), (13, 14, 25)], [(1, 2, 13), (13, 14, 25)]]
-+ [[(0, 1, 25)], [(0, 1, 25)]]
+- (<ScanStatus.CANDIDATE_REJECTED: 'CANDIDATE_REJECTED'>,
+-  <CandidateRejection.DAMAGE_ALLOWANCE: 'damage_allowance'>)
++ (<ScanStatus.NEEDS_INFORMATION: 'NEEDS_INFORMATION'>,
++  <SearchReason.UNKNOWN_WORLD: 'unknown_world'>)
 
 ----------------------------------------------------------------------
-Ran 27 tests in 6.294s
+Ran 34 tests in 25.934s
 
-FAILED (failures=15)
+FAILED (failures=4)
 
 
-=== fault accept_stale: detected=True failing=['test_m2.Permits.test_changed_anchor_id', 'test_m2.Permits.test_changed_dependency_cell', 'test_m2.Permits.test_changed_entry_state', 'test_m2.Permits.test_changed_goal_revision_and_goal', 'test_m2.Permits.test_changed_input_ledger', 'test_m2.Permits.test_changed_request_identity_and_world_session', 'test_m2.Permits.test_dependency_that_became_unknown_needs_information'] 7.2s
-m2/test_m2.py", line 256, in test_changed_request_identity_and_world_session
+=== fault one_branch: detected=True failing=['test_m2.RunAhead.test_commit_without_enough_ticks_before_it_still_does_its_own_missing_tails', 'test_m2.Rejection.test_failure_of_the_late_branch_alone_is_not_missed', 'test_m2.Equivalence.test_frozen_matrix_subset_matches_scanner_exactly', 'test_m2.Rejection.test_landing_must_be_proved_before_the_interval_closes', 'test_m2.Equivalence.test_lazy_does_the_same_physics_work_as_the_scanner_on_verified_candidates', 'test_m2.Equivalence.test_mixed_counterexample_has_one_commit_covering_both_branches', 'test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode', 'test_m2.Rejection.test_request_level_classes', 'test_m2.RunAhead.test_step_total_equals_strict_mode_exactly', 'test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict'] 16.3s
+n_status': 'VERIFIED_CANDIDATE', 'scan_reason': None, 'lazy_status': 'VERIFIED_CANDIDATE', 'lazy_reason': None, 'status_match': True, 'reason_match': True, 'critical': False, 'scan_steps': 723, 'lazy_steps': 361, 'scan_nodes': 82, 'lazy_nodes': 41, 'intervals_scan': [[[16, 17, 31]], [[16, 17, 31]]], 'intervals_lazy': [[[16, 17, 31]]], 'interval_keys_match': False, 'interval_counts_match': False, 'interval_full_match': False, 'tail_status_match': False, 'states_match': True, 'dependencies_match': True, 'n_intervals': [1, 1], 'equivalent': False}
+
+======================================================================
+FAIL: test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) [gap_start_1_width_1:A3]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 234, in test_verdict_and_intervals_equal_scanner_and_strict
+    self.assertTrue(row["equivalent"], row)
+AssertionError: False is not true : {'scan_status': 'VERIFIED_CANDIDATE', 'scan_reason': None, 'lazy_status': 'VERIFIED_CANDIDATE', 'lazy_reason': None, 'status_match': True, 'reason_match': True, 'critical': False, 'scan_steps': 451, 'lazy_steps': 225, 'scan_nodes': 54, 'lazy_nodes': 27, 'intervals_scan': [[[2, 3, 17]], [[2, 3, 17]]], 'intervals_lazy': [[[2, 3, 17]]], 'interval_keys_match': False, 'interval_counts_match': False, 'interval_full_match': False, 'tail_status_match': False, 'states_match': True, 'dependencies_match': True, 'n_intervals': [1, 1], 'equivalent': False}
+
+----------------------------------------------------------------------
+Ran 34 tests in 15.842s
+
+FAILED (failures=40)
+
+
+=== fault ignore_inflight: detected=True failing=['test_m2.RunAhead.test_commit_without_enough_ticks_before_it_still_does_its_own_missing_tails', 'test_m2.RunAhead.test_error_in_a_look_ahead_tail_halts_earlier_with_the_same_verdict', 'test_m2.Rejection.test_failure_of_the_late_branch_alone_is_not_missed', 'test_m2.Equivalence.test_frozen_matrix_subset_matches_scanner_exactly', 'test_m2.Equivalence.test_in_flight_command_is_part_of_the_tail', 'test_m2.Rejection.test_landing_must_be_proved_before_the_interval_closes', 'test_m2.Equivalence.test_lazy_does_the_same_physics_work_as_the_scanner_on_verified_candidates', 'test_m2.Equivalence.test_mixed_counterexample_has_one_commit_covering_both_branches', 'test_m2.RunAhead.test_step_total_equals_strict_mode_exactly', 'test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict'] 18.2s
+TE', 'scan_reason': None, 'lazy_status': 'VERIFIED_CANDIDATE', 'lazy_reason': None, 'status_match': True, 'reason_match': True, 'critical': False, 'scan_steps': 723, 'lazy_steps': 649, 'scan_nodes': 82, 'lazy_nodes': 82, 'intervals_scan': [[[16, 17, 31]], [[16, 17, 31]]], 'intervals_lazy': [[[17, 18, 31]], [[17, 18, 31]]], 'interval_keys_match': False, 'interval_counts_match': True, 'interval_full_match': False, 'tail_status_match': False, 'states_match': True, 'dependencies_match': True, 'n_intervals': [1, 1], 'equivalent': False}
+
+======================================================================
+FAIL: test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) [gap_start_1_width_1:A3]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 234, in test_verdict_and_intervals_equal_scanner_and_strict
+    self.assertTrue(row["equivalent"], row)
+AssertionError: False is not true : {'scan_status': 'VERIFIED_CANDIDATE', 'scan_reason': None, 'lazy_status': 'VERIFIED_CANDIDATE', 'lazy_reason': None, 'status_match': True, 'reason_match': True, 'critical': False, 'scan_steps': 451, 'lazy_steps': 407, 'scan_nodes': 54, 'lazy_nodes': 52, 'intervals_scan': [[[2, 3, 17]], [[2, 3, 17]]], 'intervals_lazy': [[[3, 4, 17]], [[3, 4, 17]]], 'interval_keys_match': False, 'interval_counts_match': True, 'interval_full_match': False, 'tail_status_match': False, 'states_match': True, 'dependencies_match': True, 'n_intervals': [1, 1], 'equivalent': False}
+
+----------------------------------------------------------------------
+Ran 34 tests in 17.730s
+
+FAILED (failures=37)
+
+
+=== fault accept_stale: detected=True failing=['test_m2.Permits.test_changed_anchor_id', 'test_m2.Permits.test_changed_dependency_cell', 'test_m2.Permits.test_changed_entry_state', 'test_m2.Permits.test_changed_goal_revision_and_goal', 'test_m2.Permits.test_changed_input_ledger', 'test_m2.Permits.test_changed_request_identity_and_world_session', 'test_m2.Permits.test_dependency_that_became_unknown_needs_information'] 18.9s
+2/test_m2.py", line 356, in test_changed_request_identity_and_world_session
     self.assertStale(self.validate(request=replace(self.request, request_id="other-request")),
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 227, in assertStale
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 327, in assertStale
     self.assertEqual((check.status, check.reason), (I.PermitStatus.STALE, reason))
 AssertionError: Tuples differ: (<PermitStatus.VALID: 'VALID'>, None) != (<PermitStatus.STALE: 'STALE'>, <SearchReason.REQUEST_ID[23 chars]ty'>)
 
@@ -187,7 +127,7 @@ First differing element 0:
 FAIL: test_dependency_that_became_unknown_needs_information (test_m2.Permits.test_dependency_that_became_unknown_needs_information)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 277, in test_dependency_that_became_unknown_needs_information
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 377, in test_dependency_that_became_unknown_needs_information
     self.assertEqual((check.status, check.reason),
 AssertionError: Tuples differ: (<PermitStatus.VALID: 'VALID'>, None) != (<PermitStatus.NEEDS_INFORMATION: 'NEEDS_INFORMATION'>, [41 chars]ld'>)
 
@@ -200,49 +140,48 @@ First differing element 0:
 +  <SearchReason.UNKNOWN_WORLD: 'unknown_world'>)
 
 ----------------------------------------------------------------------
-Ran 27 tests in 6.786s
+Ran 34 tests in 18.533s
 
 FAILED (failures=7)
 
 
-=== fault ignore_damage: detected=True failing=['test_m2.Rejection.test_damage_allowance_zero_budget', 'test_m2.Rejection.test_truncated_in_the_air_and_jump_replaced_by_walk', 'test_m2.Rejection.test_walk_straight_over_the_hole'] 7.5s
-==============================================================
-FAIL: test_truncated_in_the_air_and_jump_replaced_by_walk (test_m2.Rejection.test_truncated_in_the_air_and_jump_replaced_by_walk)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 130, in test_truncated_in_the_air_and_jump_replaced_by_walk
-    self.check_same(request, walked, world, ScanStatus.CANDIDATE_REJECTED)
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 120, in check_same
-    self.assertEqual(lazy.reason, scan.reason)
-AssertionError: <CandidateRejection.FINAL_EXIT_NOT_GROUNDED: 'final_exit_not_grounded'> != <CandidateRejection.DAMAGE_ALLOWANCE: 'damage_allowance'>
+=== fault ignore_damage: detected=True failing=['test_m2.Rejection.test_damage_allowance_zero_budget', 'test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode', 'test_m2.Rejection.test_truncated_in_the_air_and_jump_replaced_by_walk', 'test_m2.Rejection.test_walk_straight_over_the_hole'] 19.6s
+-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 300, in test_rejections_match_scanner_in_runahead_mode
+    self.assertNotEqual(ahead.status, ScanStatus.VERIFIED_CANDIDATE)
+AssertionError: <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'> == <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'>
 
 ======================================================================
-FAIL: test_walk_straight_over_the_hole (test_m2.Rejection.test_walk_straight_over_the_hole)
+FAIL: test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) [drop/drop_depth5_budget0]
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 135, in test_walk_straight_over_the_hole
-    self.check_same(request, (request.supported_inputs[0],) * 30, world,
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 120, in check_same
-    self.assertEqual(lazy.reason, scan.reason)
-AssertionError: <CandidateRejection.FINAL_EXIT_NOT_GROUNDED: 'final_exit_not_grounded'> != <CandidateRejection.DAMAGE_ALLOWANCE: 'damage_allowance'>
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 300, in test_rejections_match_scanner_in_runahead_mode
+    self.assertNotEqual(ahead.status, ScanStatus.VERIFIED_CANDIDATE)
+AssertionError: <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'> == <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'>
+
+======================================================================
+FAIL: test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) [drop/drop_depth5_budget1]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 300, in test_rejections_match_scanner_in_runahead_mode
+    self.assertNotEqual(ahead.status, ScanStatus.VERIFIED_CANDIDATE)
+AssertionError: <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'> == <ScanStatus.VERIFIED_CANDIDATE: 'VERIFIED_CANDIDATE'>
 
 ----------------------------------------------------------------------
-Ran 27 tests in 6.901s
+Ran 34 tests in 19.022s
 
-FAILED (failures=5)
+FAILED (failures=9)
 
 
-=== fault swap_locked_command: detected=True failing=['test_m2.ExecutorGate.test_locked_suffix_commands_are_allowed_only_unchanged', 'test_m2.ExecutorGate.test_tick_permit_covers_one_command'] 7.3s
-ute_is_not_free_space)
-An unobserved cell the body sweeps through must stop the proof, not read as air. ... ok
-test_unknown_landing_is_needs_information_not_free (test_m2.Rejection.test_unknown_landing_is_needs_information_not_free) ... ok
-test_walk_straight_over_the_hole (test_m2.Rejection.test_walk_straight_over_the_hole) ... ok
+=== fault swap_locked_command: detected=True failing=['test_m2.ExecutorGate.test_locked_suffix_commands_are_allowed_only_unchanged', 'test_m2.ExecutorGate.test_tick_permit_covers_one_command'] 17.9s
+als_strict_mode_exactly) ... ok
+test_ticks_look_ahead_until_the_step_budget_and_the_commit_gets_cheaper (test_m2.RunAhead.test_ticks_look_ahead_until_the_step_budget_and_the_commit_gets_cheaper) ... ok
+test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) ... ok
 
 ======================================================================
 FAIL: test_locked_suffix_commands_are_allowed_only_unchanged (test_m2.ExecutorGate.test_locked_suffix_commands_are_allowed_only_unchanged)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 310, in test_locked_suffix_commands_are_allowed_only_unchanged
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 410, in test_locked_suffix_commands_are_allowed_only_unchanged
     self.assertEqual(self.check(permit, swapped, boundary), I.ExecutionCheck.COMMAND_MISMATCH,
 AssertionError: <ExecutionCheck.ALLOWED: 'ALLOWED'> != <ExecutionCheck.COMMAND_MISMATCH: 'COMMAND_MISMATCH'> : locked command 1 was swapped
 
@@ -250,11 +189,11 @@ AssertionError: <ExecutionCheck.ALLOWED: 'ALLOWED'> != <ExecutionCheck.COMMAND_M
 FAIL: test_tick_permit_covers_one_command (test_m2.ExecutorGate.test_tick_permit_covers_one_command)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 315, in test_tick_permit_covers_one_command
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 415, in test_tick_permit_covers_one_command
     self.assertEqual(self.check(self.tick, self.inputs[1], 1), I.ExecutionCheck.OUT_OF_RANGE)
 AssertionError: <ExecutionCheck.ALLOWED: 'ALLOWED'> != <ExecutionCheck.OUT_OF_RANGE: 'OUT_OF_RANGE'>
 
 ----------------------------------------------------------------------
-Ran 27 tests in 6.892s
+Ran 34 tests in 17.451s
 
 FAILED (failures=2)

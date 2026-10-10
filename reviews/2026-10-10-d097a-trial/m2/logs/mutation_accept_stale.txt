@@ -27,14 +27,21 @@ test_unknown_cell_on_the_route_is_not_free_space (test_m2.Rejection.test_unknown
 An unobserved cell the body sweeps through must stop the proof, not read as air. ... ok
 test_unknown_landing_is_needs_information_not_free (test_m2.Rejection.test_unknown_landing_is_needs_information_not_free) ... ok
 test_walk_straight_over_the_hole (test_m2.Rejection.test_walk_straight_over_the_hole) ... ok
+test_commit_without_enough_ticks_before_it_still_does_its_own_missing_tails (test_m2.RunAhead.test_commit_without_enough_ticks_before_it_still_does_its_own_missing_tails) ... ok
+test_error_in_a_look_ahead_tail_halts_earlier_with_the_same_verdict (test_m2.RunAhead.test_error_in_a_look_ahead_tail_halts_earlier_with_the_same_verdict) ... ok
+test_rejections_match_scanner_in_runahead_mode (test_m2.RunAhead.test_rejections_match_scanner_in_runahead_mode) ... ok
+test_runahead_steps_must_be_positive (test_m2.RunAhead.test_runahead_steps_must_be_positive) ... ok
+test_step_total_equals_strict_mode_exactly (test_m2.RunAhead.test_step_total_equals_strict_mode_exactly) ... ok
+test_ticks_look_ahead_until_the_step_budget_and_the_commit_gets_cheaper (test_m2.RunAhead.test_ticks_look_ahead_until_the_step_budget_and_the_commit_gets_cheaper) ... ok
+test_verdict_and_intervals_equal_scanner_and_strict (test_m2.RunAhead.test_verdict_and_intervals_equal_scanner_and_strict) ... ok
 
 ======================================================================
 FAIL: test_changed_anchor_id (test_m2.Permits.test_changed_anchor_id)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 234, in test_changed_anchor_id
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 334, in test_changed_anchor_id
     self.assertStale(self.validate(request=replace(self.request, anchor_id="anchor-21")),
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 227, in assertStale
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 327, in assertStale
     self.assertEqual((check.status, check.reason), (I.PermitStatus.STALE, reason))
 AssertionError: Tuples differ: (<PermitStatus.VALID: 'VALID'>, None) != (<PermitStatus.STALE: 'STALE'>, <SearchReason.ANCHOR: 'anchor'>)
 
@@ -49,9 +56,9 @@ First differing element 0:
 FAIL: test_changed_dependency_cell (test_m2.Permits.test_changed_dependency_cell)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 269, in test_changed_dependency_cell
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 369, in test_changed_dependency_cell
     self.assertStale(self.validate(world=changed), SearchReason.WORLD_DEPENDENCY)
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 227, in assertStale
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 327, in assertStale
     self.assertEqual((check.status, check.reason), (I.PermitStatus.STALE, reason))
 AssertionError: Tuples differ: (<PermitStatus.VALID: 'VALID'>, None) != (<PermitStatus.STALE: 'STALE'>, <SearchReason.WORLD_DEPE[23 chars]cy'>)
 
@@ -67,9 +74,9 @@ First differing element 0:
 FAIL: test_changed_entry_state (test_m2.Permits.test_changed_entry_state)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 240, in test_changed_entry_state
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 340, in test_changed_entry_state
     self.assertStale(self.validate(request=replace(self.request, entry_states=(moved, late))),
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 227, in assertStale
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 327, in assertStale
     self.assertEqual((check.status, check.reason), (I.PermitStatus.STALE, reason))
 AssertionError: Tuples differ: (<PermitStatus.VALID: 'VALID'>, None) != (<PermitStatus.STALE: 'STALE'>, <SearchReason.ANCHOR: 'anchor'>)
 
@@ -84,9 +91,9 @@ First differing element 0:
 FAIL: test_changed_goal_revision_and_goal (test_m2.Permits.test_changed_goal_revision_and_goal)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 244, in test_changed_goal_revision_and_goal
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 344, in test_changed_goal_revision_and_goal
     self.assertStale(self.validate(request=replace(self.request, goal_revision=2)),
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 227, in assertStale
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 327, in assertStale
     self.assertEqual((check.status, check.reason), (I.PermitStatus.STALE, reason))
 AssertionError: Tuples differ: (<PermitStatus.VALID: 'VALID'>, None) != (<PermitStatus.STALE: 'STALE'>, <SearchReason.GOAL_REVISION: 'goal_revision'>)
 
@@ -101,9 +108,9 @@ First differing element 0:
 FAIL: test_changed_input_ledger (test_m2.Permits.test_changed_input_ledger)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 250, in test_changed_input_ledger
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 350, in test_changed_input_ledger
     self.assertStale(self.validate(request=replace(self.request, input_ledger_id="ledger-100")),
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 227, in assertStale
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 327, in assertStale
     self.assertEqual((check.status, check.reason), (I.PermitStatus.STALE, reason))
 AssertionError: Tuples differ: (<PermitStatus.VALID: 'VALID'>, None) != (<PermitStatus.STALE: 'STALE'>, <SearchReason.INPUT_LEDGER: 'input_ledger'>)
 
@@ -118,9 +125,9 @@ First differing element 0:
 FAIL: test_changed_request_identity_and_world_session (test_m2.Permits.test_changed_request_identity_and_world_session)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 256, in test_changed_request_identity_and_world_session
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 356, in test_changed_request_identity_and_world_session
     self.assertStale(self.validate(request=replace(self.request, request_id="other-request")),
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 227, in assertStale
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 327, in assertStale
     self.assertEqual((check.status, check.reason), (I.PermitStatus.STALE, reason))
 AssertionError: Tuples differ: (<PermitStatus.VALID: 'VALID'>, None) != (<PermitStatus.STALE: 'STALE'>, <SearchReason.REQUEST_ID[23 chars]ty'>)
 
@@ -136,7 +143,7 @@ First differing element 0:
 FAIL: test_dependency_that_became_unknown_needs_information (test_m2.Permits.test_dependency_that_became_unknown_needs_information)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 277, in test_dependency_that_became_unknown_needs_information
+  File "/home/user/mc-ai-motion-navigation-v1-standalone/reviews/2026-10-10-d097a-trial/m2/test_m2.py", line 377, in test_dependency_that_became_unknown_needs_information
     self.assertEqual((check.status, check.reason),
 AssertionError: Tuples differ: (<PermitStatus.VALID: 'VALID'>, None) != (<PermitStatus.NEEDS_INFORMATION: 'NEEDS_INFORMATION'>, [41 chars]ld'>)
 
@@ -149,6 +156,6 @@ First differing element 0:
 +  <SearchReason.UNKNOWN_WORLD: 'unknown_world'>)
 
 ----------------------------------------------------------------------
-Ran 27 tests in 6.786s
+Ran 34 tests in 18.533s
 
 FAILED (failures=7)
