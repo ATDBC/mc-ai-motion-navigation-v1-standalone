@@ -1,0 +1,26 @@
+# Step 1 only (executor returns NEEDS_REPLAN; connection rule unchanged)
+# scripts/action_entry_late_hardening.py --seeds 8 --families column_landing_turn column_landing_aligned
+column_landing_turn 1 failed same_support_local_path_unavailable [2.85, 65.0, 9.56] ticks 102 damage 0.0 violations 0
+column_landing_turn 2 success goal_state_satisfied [3.36, 65.0, 9.56] ticks 100 damage 0.0 violations 0
+column_landing_turn 3 success goal_state_satisfied [3.45, 65.0, 9.56] ticks 120 damage 0.0 violations 0
+column_landing_turn 4 failed same_support_local_path_unavailable [2.82, 65.0, 9.56] ticks 102 damage 0.0 violations 0
+column_landing_turn 5 success goal_state_satisfied [3.36, 65.0, 9.56] ticks 105 damage 0.0 violations 0
+column_landing_turn 6 success goal_state_satisfied [3.36, 65.0, 9.41] ticks 109 damage 0.0 violations 0
+column_landing_turn 7 success goal_state_satisfied [3.45, 65.0, 9.56] ticks 113 damage 0.0 violations 0
+column_landing_turn 8 success goal_state_satisfied [3.55, 65.0, 9.56] ticks 116 damage 0.0 violations 0
+column_landing_aligned 1 failed same_support_local_path_unavailable [2.82, 65.0, 9.56] ticks 121 damage 0.0 violations 0
+column_landing_aligned 2 success goal_state_satisfied [3.36, 65.0, 9.56] ticks 105 damage 0.0 violations 0
+column_landing_aligned 3 failed same_support_local_path_unavailable [2.82, 65.0, 9.56] ticks 105 damage 0.0 violations 0
+column_landing_aligned 4 success goal_state_satisfied [3.55, 65.0, 9.56] ticks 119 damage 0.0 violations 0
+column_landing_aligned 5 failed same_support_local_path_unavailable [2.82, 65.0, 9.56] ticks 108 damage 0.0 violations 0
+column_landing_aligned 6 success goal_state_satisfied [3.36, 65.0, 9.56] ticks 109 damage 0.0 violations 0
+column_landing_aligned 7 success goal_state_satisfied [3.36, 65.0, 9.56] ticks 124 damage 0.0 violations 0
+column_landing_aligned 8 failed same_support_local_path_unavailable [2.98, 65.0, 9.56] ticks 165 damage 0.0 violations 0
+
+# local_direct_reason_probe.py column_landing_aligned 1, step 1 only (rejection)
+admit_local_direct (2.824, 65.0, 9.557) rejected current_body_cannot_connect phase=exact_connection exact_status=blocked selected_position=(3.5, 65, 9.5) body_surface_node=(3, 9, 65, 0) goal_region x[3.3,3.7] z[9.3,9.7]
+failed same_support_local_path_unavailable (2.82, 65.0, 9.56)
+
+# same probe, steps 1+2 (proto-h02-replan.diff)
+admit_local_direct (2.824, 65.0, 9.557) accepted candidate_admitted phase=route_build
+success goal_state_satisfied (3.62, 65.0, 9.41)

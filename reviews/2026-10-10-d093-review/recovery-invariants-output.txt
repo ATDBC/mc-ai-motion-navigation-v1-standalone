@@ -1,0 +1,7 @@
+recovered cases checked: 122
+identical prefix before the baseline's failure frame: 122/122
+no jump input after that point: 122/122
+always on ground after that point: 122/122
+always at y=65 after that point: 122/122
+action kinds after that point: ['JumpUpSegment', 'WalkSegment']
+session states after that point: ['complete', 'stopping']

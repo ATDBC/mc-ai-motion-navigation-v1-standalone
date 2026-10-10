@@ -1,0 +1,5 @@
+inward from 20% edge support (column-top short landing) strict=blocked   grounded=feasible  expect=accept
+along the edge at 20%, then inward                      strict=blocked   grounded=feasible  expect=accept
+outward toward the edge                                 strict=blocked   grounded=blocked   expect=reject
+from 20% edge across the inner notch (support drops)    strict=blocked   grounded=blocked   expect=reject
+ALL AS EXPECTED

@@ -1,0 +1,42 @@
+# proto (19231c6 + proto-h02-replan.diff), full tests/motion_nav (Linux)
+Ran 1681 tests in 618.797s
+FAILED (failures=3)
+
+FAIL: test_final_jump_safe_landing_short_of_goal_reports_input_loss (test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_final_jump_safe_landing_short_of_goal_reports_input_loss)
+FAIL: test_input_loss_classification_does_not_restart_safe_landing (test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_input_loss_classification_does_not_restart_safe_landing)
+FAIL: test_f2_export_matches_frozen_production_fingerprints (test_standalone_export.StandaloneExportTests.test_f2_export_matches_frozen_production_fingerprints)
+
+FAIL: test_final_jump_safe_landing_short_of_goal_reports_input_loss (test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_final_jump_safe_landing_short_of_goal_reports_input_loss)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "tests/motion_nav/test_action_entry_late_hardening.py", line 89, in test_final_jump_safe_landing_short_of_goal_reports_input_loss
+    self.assertEqual(observed, [VerifiedMotionExecutorState.INPUT_LOST, ActionRouteState.FAILED])
+AssertionError: Lists differ: [<Ver[37 chars]'input_lost'>, <ActionRouteState.NEEDS_REPLAN: 'needs_replan'>] != [<Ver[37 chars]'input_lost'>, <ActionRouteState.FAILED: 'failed'>]
+
+First differing element 1:
+<ActionRouteState.NEEDS_REPLAN: 'needs_replan'>
+<ActionRouteState.FAILED: 'failed'>
+
+  [<VerifiedMotionExecutorState.INPUT_LOST: 'input_lost'>,
+-  <ActionRouteState.NEEDS_REPLAN: 'needs_replan'>]
++  <ActionRouteState.FAILED: 'failed'>]
+
+======================================================================
+FAIL: test_input_loss_classification_does_not_restart_safe_landing (test_action_entry_late_hardening.ActionEntryLateHardeningTests.test_input_loss_classification_does_not_restart_safe_landing)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "tests/motion_nav/test_action_entry_late_hardening.py", line 111, in test_input_loss_classification_does_not_restart_safe_landing
+    self.assertIs(getattr(reports[-1], 'failure_cause', None), StopCause.INPUT_LOST)
+AssertionError: None is not <StopCause.INPUT_LOST: 'input_lost'>
+
+======================================================================
+FAIL: test_f2_export_matches_frozen_production_fingerprints (test_standalone_export.StandaloneExportTests.test_f2_export_matches_frozen_production_fingerprints)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "tests/motion_nav/test_standalone_export.py", line 173, in test_f2_export_matches_frozen_production_fingerprints
+    self.assertEqual(
+AssertionError: '9de609b121b754e55b8710a97e0f6eeaceaf024988113d3c8f8f08e425b15cea' != '0afbba245fd2e47d49450d8c4628421065a4baa38c7b76621a3c343c858d72a2'
+- 9de609b121b754e55b8710a97e0f6eeaceaf024988113d3c8f8f08e425b15cea
++ 0afbba245fd2e47d49450d8c4628421065a4baa38c7b76621a3c343c858d72a2
+ : mc2p/motion_nav/action_route_executor.py
+

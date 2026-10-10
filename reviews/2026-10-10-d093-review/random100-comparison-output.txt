@@ -1,0 +1,15 @@
+Linux 19231c6 vs published evidence, landing families: identical outcome/reason/ticks 200/200
+old successes regressed: []
+column_outer_turn        (published -> proto) {('success', 'success'): 100} damage=0.0 violations=0
+column_outer_aligned     (published -> proto) {('success', 'success'): 100} damage=0.0 violations=0
+turn_jumpup              (published -> proto) {('success', 'success'): 99, ('failed', 'failed'): 1} damage=0.0 violations=0
+turn_drop                (published -> proto) {('success', 'success'): 100} damage=0.0 violations=0
+column_landing_turn      (published -> proto) {('failed', 'success'): 58, ('success', 'success'): 41, ('failed', 'failed'): 1} damage=0.0 violations=0
+column_landing_aligned   (published -> proto) {('failed', 'success'): 64, ('success', 'success'): 35, ('failed', 'failed'): 1} damage=0.0 violations=0
+proto failures: [(('turn_jumpup', 36), 'motion_unsolvable:needs_state', 'motion_unsolvable:needs_state'), (('column_landing_turn', 36), 'motion_unsolvable:needs_state', 'motion_unsolvable:needs_state'), (('column_landing_aligned', 29), 'motion_unsolvable:needs_state', 'motion_unsolvable:needs_state')]
+column_outer_turn        cases whose ticks or final position changed: 0
+column_outer_aligned     cases whose ticks or final position changed: 0
+turn_jumpup              cases whose ticks or final position changed: 0
+turn_drop                cases whose ticks or final position changed: 0
+column_landing_turn      kept successes with identical ticks 41/41; recovered 58 cases, ticks median 116.0 max 156; kept-success ticks median 111
+column_landing_aligned   kept successes with identical ticks 35/35; recovered 64 cases, ticks median 119.0 max 184; kept-success ticks median 110
