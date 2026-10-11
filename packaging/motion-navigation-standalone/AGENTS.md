@@ -1,5 +1,7 @@
 # AGENTS.md
 
+2026-10-11，D100 已冻结连续偏离恢复的设计：宽阔、已知且可停车的安全区域默认保持运动；位置、速度和落点偏差优先在运动中局部接回原路线。后段失效但当前前段仍安全时，继续安全前段并后台重规划；被外力推向坑边等危险时，先让短期运动远离危险；越过起跳、离边或下落承诺点后，由原 owner 负责安全落地，再从真实位置继续任务。偏离按当前风险和承诺阶段处理，不为动作组合或偏离原因增加专用状态机。D100 目前只冻结设计，尚未授权实现、正式链接入、P4 或新 Fabric；D098 的 P3 失败与原证据保持不变。现行入口为 [D100](docs/motion_navigation/decisions/0100-use-risk-aware-continuous-deviation-recovery.md) 和[按风险连续运动架构](docs/motion_navigation/architecture/risk-aware-continuous-motion-v1.md)。
+
 2026-10-11，D099 已确定后续连续运动的设计方向：优先利用 Minecraft 稳定、确定且可直接读取事件与事实的特点，采用“短开环输入包＋逐 tick 廉价监视＋事件触发重算＋关键节点严格检查”。普通安全场景不默认每 tick 完整重证；高危任务可以由后续上层策略拒绝、换路、先处理威胁或改变地形。该决定尚未授权实现、P4、正式链接入或新 Fabric；D098 的 P3 失败与证据保持不变。现行入口为 [D099](docs/motion_navigation/decisions/0099-adopt-game-first-risk-graded-short-open-loop-control.md)。
 
 2026-10-11，D098 的隔离实验停止于 P3。Windows 原样复测与三方 D097-A 的 1,423,766 条非计时样本逐项一致；项目自有控制器、冻结表、可信轨迹、增量伤害、主轨迹复用和 24-step 分摊已经完成。P3 的 37×3 场景产生 1,338 个完整决定，P50／P95／P99／最大值为 0.2521／15.8503／19.8099／20.0919 ms。1,227 次后端推进均有 owner、实验账本和许可来源，但承诺后恢复为 0／27，并有 54 次身体责任未解决和 6 次伤害额度超出。P3 未通过，P4 与正式链适配未授权；`mc2p` 未修改，没有新的 Fabric 结论。现行入口为 [D098](docs/motion_navigation/decisions/0098-validate-and-optimize-incremental-motion-proof-on-windows.md)、[阶段](docs/motion_navigation/stages/continuous-motion-proof-performance-r98-plan.md)、[验收](docs/motion_navigation/acceptance/continuous-motion-proof-performance-r98.md)及 `evidence/motion_navigation/incremental-motion-r98-v1/`。
