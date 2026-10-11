@@ -1,5 +1,7 @@
 # AGENTS.md
 
+2026-10-11，D099 已确定后续连续运动的设计方向：优先利用 Minecraft 稳定、确定且可直接读取事件与事实的特点，采用“短开环输入包＋逐 tick 廉价监视＋事件触发重算＋关键节点严格检查”。普通安全场景不默认每 tick 完整重证；高危任务可以由后续上层策略拒绝、换路、先处理威胁或改变地形。该决定尚未授权实现、P4、正式链接入或新 Fabric；D098 的 P3 失败与证据保持不变。现行入口为 [D099](docs/motion_navigation/decisions/0099-adopt-game-first-risk-graded-short-open-loop-control.md)。
+
 2026-10-11，D098 的隔离实验停止于 P3。Windows 原样复测与三方 D097-A 的 1,423,766 条非计时样本逐项一致；项目自有控制器、冻结表、可信轨迹、增量伤害、主轨迹复用和 24-step 分摊已经完成。P3 的 37×3 场景产生 1,338 个完整决定，P50／P95／P99／最大值为 0.2521／15.8503／19.8099／20.0919 ms。1,227 次后端推进均有 owner、实验账本和许可来源，但承诺后恢复为 0／27，并有 54 次身体责任未解决和 6 次伤害额度超出。P3 未通过，P4 与正式链适配未授权；`mc2p` 未修改，没有新的 Fabric 结论。现行入口为 [D098](docs/motion_navigation/decisions/0098-validate-and-optimize-incremental-motion-proof-on-windows.md)、[阶段](docs/motion_navigation/stages/continuous-motion-proof-performance-r98-plan.md)、[验收](docs/motion_navigation/acceptance/continuous-motion-proof-performance-r98.md)及 `evidence/motion_navigation/incremental-motion-r98-v1/`。
 
 2026-10-10，D097 的连续动作控制器、离线表和增量证明路线在 M0 停止。正式 Windows 只读探针保持 22 个旧正例、6 个负例和混合动作元反例分类正确；混合反例固定使用 10,056 次物理计算，三轮正例最大耗时均超过 400 ms 门槛。M0 未通过，M1—M4 未开始，`mc2p` 未修改，也没有新的 Fabric 结论。单边界增量证明与已知输入 rollout 数字只是从完整扫描拆出的成本估算，不能作为执行许可。见 [D097](docs/motion_navigation/decisions/0097-use-controller-table-and-incremental-safety-proof.md)、[阶段](docs/motion_navigation/stages/continuous-motion-incremental-proof-plan.md)、[验收](docs/motion_navigation/acceptance/continuous-motion-incremental-proof.md)和 [M0 证据](evidence/motion_navigation/incremental-motion-m0-v1/README.md)。
@@ -50,6 +52,8 @@ Windows 是正式开发、自动验收和 Fabric 实机平台；Linux 仅用于�
 - 动作发出不等于成功，必须读取客户端实际应用回执和后续观察。
 - 每类长期状态只有一个拥有者。不要复制地图、目标、路线、动作许可或输入账本。
 - 不为尚未进入当前阶段的能力建立空框架。
+- 新增防御逻辑必须对应现行能力、真实失败、可信复现或冻结验收。假想极端风险先记录边界，不继续堆叠状态、等待、重试和恢复分支。
+- 高危任务可以由上层拒绝、换路、先消除威胁或改变地形；底层应报告风险和能力不足，不为强行通过自动放宽安全条件。
 - 当前仓库只包含独立 Fabric 正式路径。CraftGround 和旧射线兼容代码只在主仓库作历史参照。
 - 采用 fail fast（尽早发现失败）：先用低成本检查验证正式调用链和最容易暴露问题的代表性边界场景；专项检查稳定后，再扩大到完整矩阵和实机验收。
 - 出现未预期失败时，先停止扩大验收，保留失败证据，定位根因并检查共同规则；修复后先复跑直接相关场景，不带着已知问题继续批量运行。

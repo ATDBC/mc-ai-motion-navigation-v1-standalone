@@ -2,9 +2,11 @@
 
 这个仓库是主项目按固定清单生成的源码快照。它包含当前正式实现、共享契约、配置、测试、Fabric 客户端代码和四类现行设计文档。`EXPORT-METADATA.json` 记录来源提交，`SHA256SUMS.txt` 覆盖导出的每个文件。
 
+2026-10-11，[D099](docs/motion_navigation/decisions/0099-adopt-game-first-risk-graded-short-open-loop-control.md) 已记录后续连续运动方向：利用 Minecraft 稳定、确定且可直接读取事件与事实的特点，采用“短开环输入包＋逐 tick 廉价监视＋事件触发重算＋关键节点严格检查”。普通安全场景不默认每 tick 完整重证；高危任务可以由后续上层策略拒绝、换路、先处理威胁或改变地形。D099 只是设计决定，尚未授权实现、P4、正式链接入或新 Fabric，D098 的失败证据保持原样。
+
 2026-10-11，D098 的隔离实验已经停止于 P3。Windows 原样复测与三方 D097-A 的 1,423,766 条非计时样本逐项一致；项目自有控制器、冻结表、可信轨迹、增量伤害、主轨迹复用和 24-step 分摊已经完成。P3 滚动闭环最终运行 37 个场景各 3 轮，共 1,338 个完整决定；P50／P95／P99／最大值为 0.2521／15.8503／19.8099／20.0919 ms。所有 1,227 次后端推进均有 owner、实验账本和许可来源，但承诺后恢复为 0／27，并有 54 次身体责任未解决和 6 次伤害额度超出。因此 P3 未通过，P4 和正式链适配未授权；`mc2p` 没有修改，也没有新的 Fabric 结论。
 
-当前先读 [D098](docs/motion_navigation/decisions/0098-validate-and-optimize-incremental-motion-proof-on-windows.md)、[阶段计划](docs/motion_navigation/stages/continuous-motion-proof-performance-r98-plan.md)、[验收](docs/motion_navigation/acceptance/continuous-motion-proof-performance-r98.md)和 `evidence/motion_navigation/incremental-motion-r98-v1/`。P1—P3 的隔离实验检查可以运行：
+当前先读 [D099](docs/motion_navigation/decisions/0099-adopt-game-first-risk-graded-short-open-loop-control.md)，再读 [D098](docs/motion_navigation/decisions/0098-validate-and-optimize-incremental-motion-proof-on-windows.md)、[阶段计划](docs/motion_navigation/stages/continuous-motion-proof-performance-r98-plan.md)、[验收](docs/motion_navigation/acceptance/continuous-motion-proof-performance-r98.md)和 `evidence/motion_navigation/incremental-motion-r98-v1/`。P1—P3 的隔离实验检查可以运行：
 
 ```text
 python -m unittest tests.motion_nav.test_incremental_motion_controller tests.motion_nav.test_incremental_motion_table tests.motion_nav.test_incremental_motion_proof tests.motion_nav.test_incremental_motion_performance tests.motion_nav.test_incremental_motion_closed_loop tests.motion_nav.test_incremental_motion_closed_loop_measurement -q
