@@ -1,0 +1,8 @@
+run-up: speed after 12 sprint ticks = 3.062 b/s
+first jump: distance 3.629 blocks, air ticks 12, speed at touchdown 5.186 b/s
+wait 0 ground tick(s): speed at 2nd takeoff 5.186 b/s, 2nd jump distance 4.151 blocks (+0.0% vs wait 0), air ticks 12
+wait 1 ground tick(s): speed at 2nd takeoff 4.223 b/s, 2nd jump distance 3.914 blocks (-5.7% vs wait 0), air ticks 12
+wait 2 ground tick(s): speed at 2nd takeoff 3.697 b/s, 2nd jump distance 3.785 blocks (-8.8% vs wait 0), air ticks 12
+wait 3 ground tick(s): speed at 2nd takeoff 3.410 b/s, 2nd jump distance 3.714 blocks (-10.5% vs wait 0), air ticks 12
+chain of 4 jumps, 0 ground ticks between: [4.151, 4.252, 4.271, 4.275] speed 5.695 b/s
+chain of 4 jumps, 1 ground tick between: [3.914, 3.944, 3.947, 3.948] speed 5.437 b/s

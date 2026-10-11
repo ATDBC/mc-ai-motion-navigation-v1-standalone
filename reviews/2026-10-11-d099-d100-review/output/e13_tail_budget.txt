@@ -1,0 +1,42 @@
+{'case': 'flat_walk:A3', 'ticks': 12, 'D098': 161, 'ON_TIME': 80, 'packet3': 37, 'packet6': 26, 'key_only': 20, 'unsafe_tail_steps': 0, 'risk': []}
+{'case': 'jump_gap_1:A3', 'ticks': 23, 'D098': 451, 'ON_TIME': 225, 'packet3': 52, 'packet6': 50, 'key_only': 45, 'unsafe_tail_steps': 7, 'risk': [(2, 3, 17)], 'commit_steps': {'D098_twobranch_full': 416, 'ON_TIME_full': 208, 'D099_to_landing': 21}}
+{'case': 'turn_90:A15', 'ticks': 16, 'D098': 239, 'ON_TIME': 119, 'packet3': 53, 'packet6': 37, 'key_only': 24, 'unsafe_tail_steps': 0, 'risk': []}
+{'case': 'jump_up_after_turn:A15', 'ticks': 19, 'D098': 357, 'ON_TIME': 178, 'packet3': 77, 'packet6': 52, 'key_only': 34, 'unsafe_tail_steps': 0, 'risk': []}
+{'case': 'gap1/rest-L/0', 'ticks': 37, 'D098': 725, 'ON_TIME': 362, 'packet3': 109, 'packet6': 79, 'key_only': 60, 'unsafe_tail_steps': 6, 'risk': [(16, 17, 31)], 'commit_steps': {'D098_twobranch_full': 416, 'ON_TIME_full': 208, 'D099_to_landing': 21}}
+{'case': 'gap2/rest-L/1', 'ticks': 38, 'D098': 723, 'ON_TIME': 361, 'packet3': 113, 'packet6': 82, 'key_only': 62, 'unsafe_tail_steps': 39, 'risk': [(16, 17, 31)], 'commit_steps': {'D098_twobranch_full': 414, 'ON_TIME_full': 207, 'D099_to_landing': 22}}
+{'case': 'gap3/rest-L/2', 'ticks': 38, 'D098': 723, 'ON_TIME': 361, 'packet3': 113, 'packet6': 82, 'key_only': 62, 'unsafe_tail_steps': 39, 'risk': [(16, 17, 31)], 'commit_steps': {'D098_twobranch_full': 414, 'ON_TIME_full': 207, 'D099_to_landing': 22}}
+{'case': 'gap2c/rest-L/3', 'ticks': 31, 'D098': 665, 'ON_TIME': 332, 'packet3': 98, 'packet6': 72, 'key_only': 54, 'unsafe_tail_steps': 39, 'risk': [(16, 17, 31)], 'commit_steps': {'D098_twobranch_full': 356, 'ON_TIME_full': 178, 'D099_to_landing': 22}}
+{'case': 'jumpup/rest-L/4', 'ticks': 25, 'D098': 473, 'ON_TIME': 236, 'packet3': 100, 'packet6': 63, 'key_only': 33, 'unsafe_tail_steps': 0, 'risk': []}
+{'case': 'turn/rest-L/5', 'ticks': 15, 'D098': 219, 'ON_TIME': 109, 'packet3': 49, 'packet6': 35, 'key_only': 23, 'unsafe_tail_steps': 0, 'risk': []}
+{'case': 'gap1/rest-L/0', 'ticks': 37, 'D098': 763, 'ON_TIME': 381, 'packet3': 155, 'packet6': 100, 'key_only': 45, 'unsafe_tail_steps': 0, 'risk': []}
+{'case': 'gap1/walk-L-n/1', 'ticks': 35, 'D098': 736, 'ON_TIME': 367, 'packet3': 151, 'packet6': 94, 'key_only': 44, 'unsafe_tail_steps': 0, 'risk': []}
+{'case': 'gap1/sprint-L-n/2', 'ticks': 31, 'D098': 665, 'ON_TIME': 332, 'packet3': 134, 'packet6': 84, 'key_only': 41, 'unsafe_tail_steps': 0, 'risk': []}
+{'case': 'gap2/rest-L/3', 'ticks': 37, 'D098': 779, 'ON_TIME': 389, 'packet3': 158, 'packet6': 102, 'key_only': 45, 'unsafe_tail_steps': 0, 'risk': []}
+{'case': 'gap2/walk-L-n/4', 'ticks': 39, 'D098': 817, 'ON_TIME': 410, 'packet3': 163, 'packet6': 106, 'key_only': 48, 'unsafe_tail_steps': 0, 'risk': []}
+{'case': 'gap2/sprint-L-n/5', 'ticks': 36, 'D098': 746, 'ON_TIME': 376, 'packet3': 171, 'packet6': 113, 'key_only': 74, 'unsafe_tail_steps': 4, 'risk': [(11, 12, 13)], 'commit_steps': {'D098_twobranch_full': 525, 'ON_TIME_full': 266, 'D099_to_landing': 21}}
+{'case': 'gap3/rest-L/6', 'ticks': 39, 'D098': 721, 'ON_TIME': 360, 'packet3': 127, 'packet6': 95, 'key_only': 65, 'unsafe_tail_steps': 63, 'risk': [(16, 17, 29)], 'commit_steps': {'D098_twobranch_full': 412, 'ON_TIME_full': 206, 'D099_to_landing': 22}}
+{'case': 'gap3/walk-L-n/7', 'ticks': 36, 'D098': 714, 'ON_TIME': 351, 'packet3': 108, 'packet6': 87, 'key_only': 63, 'unsafe_tail_steps': 50, 'risk': [(15, 16, 28)], 'commit_steps': {'D098_twobranch_full': 413, 'ON_TIME_full': 201, 'D099_to_landing': 21}}
+{'case': 'gap3/sprint-L-n/8', 'ticks': 33, 'D098': 676, 'ON_TIME': 334, 'packet3': 97, 'packet6': 73, 'key_only': 61, 'unsafe_tail_steps': 37, 'risk': [(11, 12, 25)], 'commit_steps': {'D098_twobranch_full': 455, 'ON_TIME_full': 224, 'D099_to_landing': 23}}
+{'case': 'gap2c/rest-L/9', 'ticks': 32, 'D098': 755, 'ON_TIME': 377, 'packet3': 154, 'packet6': 102, 'key_only': 46, 'unsafe_tail_steps': 0, 'risk': []}
+{'case': 'gap2c/walk-L-n/10', 'ticks': 31, 'D098': 638, 'ON_TIME': 309, 'packet3': 110, 'packet6': 92, 'key_only': 65, 'unsafe_tail_steps': 72, 'risk': [(15, 16, 28)], 'commit_steps': {'D098_twobranch_full': 342, 'ON_TIME_full': 162, 'D099_to_landing': 22}}
+{'case': 'gap2c/sprint-L-n/11', 'ticks': 30, 'D098': 706, 'ON_TIME': 356, 'packet3': 162, 'packet6': 107, 'key_only': 74, 'unsafe_tail_steps': 4, 'risk': [(11, 12, 13)], 'commit_steps': {'D098_twobranch_full': 485, 'ON_TIME_full': 246, 'D099_to_landing': 21}}
+{'case': 'jumpup/rest-L/12', 'ticks': 23, 'D098': 457, 'ON_TIME': 228, 'packet3': 92, 'packet6': 57, 'key_only': 31, 'unsafe_tail_steps': 0, 'risk': []}
+{'case': 'jumpup/walk-L-n/13', 'ticks': 28, 'D098': 534, 'ON_TIME': 266, 'packet3': 109, 'packet6': 69, 'key_only': 37, 'unsafe_tail_steps': 0, 'risk': []}
+{'case': 'jumpup/sprint-L-n/14', 'ticks': 23, 'D098': 457, 'ON_TIME': 228, 'packet3': 94, 'packet6': 63, 'key_only': 33, 'unsafe_tail_steps': 0, 'risk': []}
+{'case': 'turn/rest-L/15', 'ticks': 21, 'D098': 327, 'ON_TIME': 163, 'packet3': 71, 'packet6': 49, 'key_only': 29, 'unsafe_tail_steps': 0, 'risk': []}
+{'case': 'turn/walk-L-n/16', 'ticks': 18, 'D098': 280, 'ON_TIME': 139, 'packet3': 61, 'packet6': 41, 'key_only': 26, 'unsafe_tail_steps': 0, 'risk': []}
+{'case': 'turn/sprint-L-n/17', 'ticks': 19, 'D098': 301, 'ON_TIME': 150, 'packet3': 66, 'packet6': 45, 'key_only': 28, 'unsafe_tail_steps': 0, 'risk': []}
+
+== whole-action proof steps (28 cases) ==
+   D098      median= 665.0 P95=  779 max=  817 sum=15808
+   ON_TIME   median= 332.0 P95=  389 max=  410 sum=7879
+   packet3   median= 108.5 P95=  163 max=  171 sum=2984
+   packet6   median=  76.0 P95=  107 max=  113 sum=2057
+   key_only  median=  45.0 P95=   74 max=   74 sum=1272
+
+== steps that must be done at the commit decision (cases with a risk interval) ==
+   D098_twobranch_full  n=11 median= 414.0 P95=  525 max=  525
+   ON_TIME_full         n=11 median= 207.0 P95=  266 max=  266
+   D099_to_landing      n=11 median=  22.0 P95=   23 max=   23
+
+jump_gap_1:A3: {'case': 'jump_gap_1:A3', 'ticks': 23, 'D098': 451, 'ON_TIME': 225, 'packet3': 52, 'packet6': 50, 'key_only': 45, 'unsafe_tail_steps': 7, 'risk': [(2, 3, 17)], 'commit_steps': {'D098_twobranch_full': 416, 'ON_TIME_full': 208, 'D099_to_landing': 21}}

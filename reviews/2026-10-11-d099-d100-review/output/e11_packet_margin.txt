@@ -1,0 +1,61 @@
+flat_walk:A3                 entry  b= 0 n=12 along+=0.320 along-=0.320 across+=0.320 across-=0.320 speed+=0.200 speed-=0.200  | goal: along+=0.320 along-=0.040 across+=0.080 across-=0.080
+jump_gap_1:A3                entry  b= 0 n=23 along+=0.040 along-=0.040 across+=0.320 across-=0.320 speed+=0.200 speed-=0.200  | goal: along+=0.040 along-=0.040 across+=0.080 across-=0.080
+jump_gap_1:A3                commit b= 2 n=21 along+=0.040 along-=0.040 across+=0.320 across-=0.320 speed+=0.200 speed-=0.200  | goal: along+=0.040 along-=0.040 across+=0.080 across-=0.080
+turn_90:A15                  entry  b= 0 n=16 along+=0.320 along-=0.320 across+=0.320 across-=0.320 speed+=0.200 speed-=0.200  | goal: along+=0.320 along-=0.160 across+=0.160 across-=0.160
+jump_up_after_turn:A15       entry  b= 0 n=19 along+=0.320 along-=0.320 across+=0.320 across-=0.320 speed+=0.200 speed-=0.200  | goal: along+=0.020 along-=0.080 across+=0.160 across-=0.160
+gap1/rest-L/0                entry  b= 0 n=37 along+=0.040 along-=0.080 across+=0.320 across-=0.320 speed+=0.200 speed-=0.200  | goal: along+=0.040 along-=0.080 across+=0.080 across-=0.160
+gap1/rest-L/0                commit b=16 n=21 along+=0.040 along-=0.080 across+=0.320 across-=0.320 speed+=0.100 speed-=0.200  | goal: along+=0.040 along-=0.080 across+=0.080 across-=0.160
+gap2/rest-L/1                entry  b= 0 n=38 along+=0.040 along-=0.080 across+=0.320 across-=0.320 speed+=0.200 speed-=0.200  | goal: along+=0.040 along-=0.040 across+=0.080 across-=0.160
+gap2/rest-L/1                commit b=16 n=22 along+=0.040 along-=0.080 across+=0.320 across-=0.320 speed+=0.100 speed-=0.200  | goal: along+=0.040 along-=0.040 across+=0.080 across-=0.160
+gap3/rest-L/2                entry  b= 0 n=38 along+=0.040 along-=0.080 across+=0.320 across-=0.320 speed+=0.200 speed-=0.200  | goal: along+=0.040 along-=0.080 across+=0.080 across-=0.160
+gap3/rest-L/2                commit b=16 n=22 along+=0.040 along-=0.080 across+=0.320 across-=0.320 speed+=0.100 speed-=0.200  | goal: along+=0.040 along-=0.080 across+=0.080 across-=0.160
+gap2c/rest-L/3               entry  b= 0 n=31 along+=0.040 along-=0.080 across+=0.320 across-=0.320 speed+=0.200 speed-=0.200  | goal: along+=0.040 along-=0.000 across+=0.080 across-=0.160
+gap2c/rest-L/3               commit b=16 n=15 along+=0.040 along-=0.080 across+=0.320 across-=0.320 speed+=0.100 speed-=0.200  | goal: along+=0.040 along-=0.000 across+=0.080 across-=0.160
+jumpup/rest-L/4              entry  b= 0 n=25 along+=0.320 along-=0.320 across+=0.320 across-=0.320 speed+=0.200 speed-=0.200  | goal: along+=0.160 along-=0.080 across+=0.080 across-=0.160
+turn/rest-L/5                entry  b= 0 n=15 along+=0.320 along-=0.320 across+=0.320 across-=0.320 speed+=0.200 speed-=0.200  | goal: along+=0.320 along-=0.040 across+=0.160 across-=0.320
+gap1/rest-L/0                entry  b= 0 n=37 along+=0.040 along-=0.320 across+=0.320 across-=0.320 speed+=0.200 speed-=0.200  | goal: along+=0.040 along-=0.320 across+=0.160 across-=0.160
+gap1/walk-L-n/1              entry  b= 0 n=35 along+=0.160 along-=0.320 across+=0.320 across-=0.320 speed+=0.200 speed-=0.200  | goal: along+=0.160 along-=0.320 across+=0.160 across-=0.160
+gap1/sprint-L-n/2            entry  b= 0 n=31 along+=0.320 along-=0.320 across+=0.320 across-=0.320 speed+=0.200 speed-=0.200  | goal: along+=0.320 along-=0.320 across+=0.160 across-=0.160
+gap2/rest-L/3                entry  b= 0 n=37 along+=0.040 along-=0.320 across+=0.320 across-=0.320 speed+=0.200 speed-=0.200  | goal: along+=0.040 along-=0.320 across+=0.160 across-=0.160
+gap2/walk-L-n/4              entry  b= 0 n=39 along+=0.040 along-=0.320 across+=0.320 across-=0.320 speed+=0.200 speed-=0.200  | goal: along+=0.040 along-=0.320 across+=0.160 across-=0.080
+gap2/sprint-L-n/5            entry  b= 0 n=36 along+=0.010 along-=0.320 across+=0.320 across-=0.320 speed+=0.020 speed-=0.200  | goal: along+=0.010 along-=0.320 across+=0.160 across-=0.160
+gap2/sprint-L-n/5            commit b=11 n=25 along+=0.010 along-=0.320 across+=0.320 across-=0.320 speed+=0.020 speed-=0.200  | goal: along+=0.010 along-=0.320 across+=0.160 across-=0.160
+gap3/rest-L/6                entry  b= 0 n=39 along+=0.040 along-=0.080 across+=0.320 across-=0.320 speed+=0.200 speed-=0.200  | goal: along+=0.040 along-=0.080 across+=0.160 across-=0.160
+gap3/rest-L/6                commit b=16 n=23 along+=0.040 along-=0.080 across+=0.320 across-=0.320 speed+=0.100 speed-=0.200  | goal: along+=0.040 along-=0.080 across+=0.160 across-=0.160
+gap3/walk-L-n/7              entry  b= 0 n=36 along+=0.005 along-=0.080 across+=0.320 across-=0.320 speed+=0.020 speed-=0.200  | goal: along+=0.005 along-=0.080 across+=0.080 across-=0.160
+gap3/walk-L-n/7              commit b=15 n=21 along+=0.005 along-=0.080 across+=0.320 across-=0.320 speed+=0.020 speed-=0.100  | goal: along+=0.005 along-=0.080 across+=0.080 across-=0.160
+gap3/sprint-L-n/8            entry  b= 0 n=33 along+=0.010 along-=0.320 across+=0.320 across-=0.320 speed+=0.050 speed-=0.200  | goal: along+=0.010 along-=0.320 across+=0.080 across-=0.160
+gap3/sprint-L-n/8            commit b=11 n=22 along+=0.010 along-=0.320 across+=0.320 across-=0.320 speed+=0.050 speed-=0.200  | goal: along+=0.010 along-=0.320 across+=0.080 across-=0.160
+gap2c/rest-L/9               entry  b= 0 n=32 along+=0.040 along-=0.320 across+=0.320 across-=0.320 speed+=0.200 speed-=0.200  | goal: along+=0.040 along-=0.320 across+=0.160 across-=0.160
+gap2c/walk-L-n/10            entry  b= 0 n=31 along+=0.040 along-=0.020 across+=0.320 across-=0.320 speed+=0.200 speed-=0.100  | goal: along+=0.040 along-=0.020 across+=0.160 across-=0.160
+gap2c/walk-L-n/10            commit b=15 n=16 along+=0.040 along-=0.020 across+=0.320 across-=0.320 speed+=0.200 speed-=0.050  | goal: along+=0.040 along-=0.020 across+=0.160 across-=0.160
+gap2c/sprint-L-n/11          entry  b= 0 n=30 along+=0.010 along-=0.320 across+=0.320 across-=0.320 speed+=0.020 speed-=0.200  | goal: along+=0.010 along-=0.320 across+=0.160 across-=0.160
+gap2c/sprint-L-n/11          commit b=11 n=19 along+=0.010 along-=0.320 across+=0.320 across-=0.320 speed+=0.020 speed-=0.200  | goal: along+=0.010 along-=0.320 across+=0.160 across-=0.160
+jumpup/rest-L/12             entry  b= 0 n=23 along+=0.320 along-=0.320 across+=0.320 across-=0.320 speed+=0.200 speed-=0.200  | goal: along+=0.160 along-=0.320 across+=0.080 across-=0.160
+jumpup/walk-L-n/13           entry  b= 0 n=28 along+=0.320 along-=0.320 across+=0.320 across-=0.320 speed+=0.200 speed-=0.200  | goal: along+=0.320 along-=0.320 across+=0.040 across-=0.320
+jumpup/sprint-L-n/14         entry  b= 0 n=23 along+=0.160 along-=0.320 across+=0.320 across-=0.320 speed+=0.200 speed-=0.200  | goal: along+=0.160 along-=0.320 across+=0.160 across-=0.160
+turn/rest-L/15               entry  b= 0 n=21 along+=0.320 along-=0.320 across+=0.320 across-=0.320 speed+=0.200 speed-=0.200  | goal: along+=0.320 along-=0.320 across+=0.320 across-=0.320
+turn/walk-L-n/16             entry  b= 0 n=18 along+=0.320 along-=0.320 across+=0.320 across-=0.320 speed+=0.200 speed-=0.200  | goal: along+=0.320 along-=0.320 across+=0.320 across-=0.320
+turn/sprint-L-n/17           entry  b= 0 n=19 along+=0.320 along-=0.320 across+=0.320 across-=0.320 speed+=0.200 speed-=0.200  | goal: along+=0.320 along-=0.320 across+=0.320 across-=0.320
+
+== summary (safety only; 0 means the first grid value already fails) ==
+entry: n=28
+   along+   min=0.005 median=0.040 count(<0.02)=4 count(<0.08)=15
+   along-   min=0.020 median=0.320 count(<0.02)=0 count(<0.08)=2
+   across+  min=0.320 median=0.320 count(<0.02)=0 count(<0.08)=0
+   across-  min=0.320 median=0.320 count(<0.02)=0 count(<0.08)=0
+   speed+   min=0.020 median=0.200 count(<0.02)=0 count(<0.08)=4
+   speed-   min=0.100 median=0.200 count(<0.02)=0 count(<0.08)=0
+   tightest position margin per case: min=0.005 median=0.040 count(<0.02)=4 count(<0.08)=15
+commit: n=11
+   along+   min=0.005 median=0.040 count(<0.02)=4 count(<0.08)=11
+   along-   min=0.020 median=0.080 count(<0.02)=0 count(<0.08)=2
+   across+  min=0.320 median=0.320 count(<0.02)=0 count(<0.08)=0
+   across-  min=0.320 median=0.320 count(<0.02)=0 count(<0.08)=0
+   speed+   min=0.020 median=0.100 count(<0.02)=0 count(<0.08)=4
+   speed-   min=0.050 median=0.200 count(<0.02)=0 count(<0.08)=1
+   tightest position margin per case: min=0.005 median=0.040 count(<0.02)=4 count(<0.08)=11
+
+real	2m29.171s
+user	2m27.480s
+sys	0m0.357s
