@@ -1,2 +1,4 @@
-*.json text eol=lf
-*.md text eol=lf
+# These historical Windows records are hashed byte-for-byte by the evidence
+# manifest and the standalone snapshot.  Never normalize them on checkout.
+*.json -text
+*.md -text
