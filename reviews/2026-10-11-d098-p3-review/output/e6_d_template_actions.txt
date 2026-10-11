@@ -1,0 +1,160 @@
+== NONE: 7 D template actions with a commitment, 84 runs
+  airborne  late_application     bounded_failure                  5
+  airborne  late_application     completed                        2
+  airborne  missing_application  body_responsibility_unresolved   2
+  airborne  missing_application  bounded_failure                  5
+  airborne  position_0_03        body_responsibility_unresolved   2
+  airborne  position_0_03        bounded_failure                  5
+  airborne  yaw_5deg             body_responsibility_unresolved   2
+  airborne  yaw_5deg             bounded_failure                  5
+  commit    late_application     bounded_failure                  5
+  commit    late_application     completed                        2
+  commit    missing_application  body_responsibility_unresolved   2
+  commit    missing_application  bounded_failure                  5
+  commit    position_0_03        body_responsibility_unresolved   3
+  commit    position_0_03        bounded_failure                  4
+  commit    yaw_5deg             body_responsibility_unresolved   3
+  commit    yaw_5deg             bounded_failure                  4
+  commit+1  late_application     bounded_failure                  5
+  commit+1  late_application     completed                        2
+  commit+1  missing_application  body_responsibility_unresolved   2
+  commit+1  missing_application  bounded_failure                  5
+  commit+1  position_0_03        body_responsibility_unresolved   2
+  commit+1  position_0_03        bounded_failure                  5
+  commit+1  yaw_5deg             body_responsibility_unresolved   2
+  commit+1  yaw_5deg             bounded_failure                  5
+  failure reasons: {'landing_recovery_not_proved': 58, 'prelude_outside_same_safe_support': 20}
+  totals: completed 6 | fell (damage>0) 0 | unresolved 20 | bounded 58
+== E34: 7 D template actions with a commitment, 84 runs
+  airborne  late_application     body_responsibility_unresolved   2
+  airborne  late_application     bounded_failure                  5
+  airborne  missing_application  body_responsibility_unresolved   2
+  airborne  missing_application  bounded_failure                  5
+  airborne  position_0_03        bounded_failure                  5
+  airborne  position_0_03        completed                        2
+  airborne  yaw_5deg             bounded_failure                  5
+  airborne  yaw_5deg             completed                        2
+  commit    late_application     bounded_failure                  5
+  commit    late_application     completed                        2
+  commit    missing_application  body_responsibility_unresolved   2
+  commit    missing_application  bounded_failure                  5
+  commit    position_0_03        bounded_failure                  5
+  commit    position_0_03        completed                        2
+  commit    yaw_5deg             bounded_failure                  5
+  commit    yaw_5deg             completed                        2
+  commit+1  late_application     body_responsibility_unresolved   1
+  commit+1  late_application     bounded_failure                  5
+  commit+1  late_application     completed                        1
+  commit+1  missing_application  body_responsibility_unresolved   2
+  commit+1  missing_application  bounded_failure                  5
+  commit+1  position_0_03        bounded_failure                  5
+  commit+1  position_0_03        completed                        2
+  commit+1  yaw_5deg             bounded_failure                  5
+  commit+1  yaw_5deg             completed                        2
+  failure reasons: {'landing_recovery_not_proved': 60, 'candidate_terminal_goal_mismatch': 9}
+  totals: completed 15 | fell (damage>0) 0 | unresolved 9 | bounded 60
+== E34+CTRL: 7 D template actions with a commitment, 84 runs
+  airborne  late_application     body_responsibility_unresolved   2
+  airborne  late_application     bounded_failure                  5
+  airborne  missing_application  body_responsibility_unresolved   2
+  airborne  missing_application  bounded_failure                  5
+  airborne  position_0_03        body_responsibility_unresolved   2
+  airborne  position_0_03        bounded_failure                  5
+  airborne  yaw_5deg             body_responsibility_unresolved   2
+  airborne  yaw_5deg             bounded_failure                  5
+  commit    late_application     body_responsibility_unresolved   1
+  commit    late_application     bounded_failure                  5
+  commit    late_application     completed                        1
+  commit    missing_application  bounded_failure                  5
+  commit    missing_application  completed                        2
+  commit    position_0_03        bounded_failure                  5
+  commit    position_0_03        completed                        2
+  commit    yaw_5deg             bounded_failure                  5
+  commit    yaw_5deg             completed                        2
+  commit+1  late_application     body_responsibility_unresolved   1
+  commit+1  late_application     bounded_failure                  5
+  commit+1  late_application     completed                        1
+  commit+1  missing_application  body_responsibility_unresolved   1
+  commit+1  missing_application  bounded_failure                  5
+  commit+1  missing_application  completed                        1
+  commit+1  position_0_03        body_responsibility_unresolved   1
+  commit+1  position_0_03        bounded_failure                  5
+  commit+1  position_0_03        completed                        1
+  commit+1  yaw_5deg             body_responsibility_unresolved   1
+  commit+1  yaw_5deg             bounded_failure                  5
+  commit+1  yaw_5deg             completed                        1
+  failure reasons: {'landing_recovery_not_proved': 60, 'controller_miss': 13}
+  totals: completed 11 | fell (damage>0) 0 | unresolved 13 | bounded 60
+== G: 7 D template actions with a commitment, 84 runs
+  airborne  late_application     completed                        7
+  airborne  missing_application  body_responsibility_unresolved   7
+  airborne  position_0_03        body_responsibility_unresolved   7
+  airborne  yaw_5deg             body_responsibility_unresolved   7
+  commit    late_application     completed                        7
+  commit    missing_application  body_responsibility_unresolved   7
+  commit    position_0_03        body_responsibility_unresolved   7
+  commit    yaw_5deg             body_responsibility_unresolved   7
+  commit+1  late_application     completed                        7
+  commit+1  missing_application  body_responsibility_unresolved   7
+  commit+1  position_0_03        body_responsibility_unresolved   6
+  commit+1  position_0_03        completed                        1
+  commit+1  yaw_5deg             body_responsibility_unresolved   6
+  commit+1  yaw_5deg             completed                        1
+  failure reasons: {'prelude_outside_same_safe_support': 61}
+  totals: completed 23 | fell (damage>0) 0 | unresolved 61 | bounded 0
+== G+E34: 7 D template actions with a commitment, 84 runs
+  airborne  late_application     body_responsibility_unresolved   2
+  airborne  late_application     completed                        5
+  airborne  missing_application  body_responsibility_unresolved   2
+  airborne  missing_application  completed                        5
+  airborne  position_0_03        completed                        7
+  airborne  yaw_5deg             completed                        7
+  commit    late_application     completed                        7
+  commit    missing_application  body_responsibility_unresolved   4
+  commit    missing_application  completed                        3
+  commit    position_0_03        completed                        7
+  commit    yaw_5deg             completed                        7
+  commit+1  late_application     body_responsibility_unresolved   1
+  commit+1  late_application     completed                        6
+  commit+1  missing_application  body_responsibility_unresolved   4
+  commit+1  missing_application  completed                        3
+  commit+1  position_0_03        completed                        7
+  commit+1  yaw_5deg             completed                        7
+  failure reasons: {'candidate_terminal_goal_mismatch': 13}
+  totals: completed 71 | fell (damage>0) 0 | unresolved 13 | bounded 0
+== G+E34+BOTH: 7 D template actions with a commitment, 84 runs
+  airborne  late_application     body_responsibility_unresolved   2
+  airborne  late_application     completed                        5
+  airborne  missing_application  body_responsibility_unresolved   2
+  airborne  missing_application  completed                        5
+  airborne  position_0_03        completed                        7
+  airborne  yaw_5deg             completed                        7
+  commit    late_application     completed                        7
+  commit    missing_application  completed                        7
+  commit    position_0_03        completed                        7
+  commit    yaw_5deg             completed                        7
+  commit+1  late_application     body_responsibility_unresolved   1
+  commit+1  late_application     completed                        6
+  commit+1  missing_application  body_responsibility_unresolved   1
+  commit+1  missing_application  completed                        6
+  commit+1  position_0_03        completed                        7
+  commit+1  yaw_5deg             completed                        7
+  failure reasons: {'candidate_terminal_goal_mismatch': 6}
+  totals: completed 78 | fell (damage>0) 0 | unresolved 6 | bounded 0
+== G+E34+BOTH+SAFEGOAL: 7 D template actions with a commitment, 84 runs
+  airborne  late_application     body_responsibility_unresolved   1
+  airborne  late_application     completed                        6
+  airborne  missing_application  body_responsibility_unresolved   1
+  airborne  missing_application  completed                        6
+  airborne  position_0_03        completed                        7
+  airborne  yaw_5deg             completed                        7
+  commit    late_application     completed                        7
+  commit    missing_application  completed                        7
+  commit    position_0_03        completed                        7
+  commit    yaw_5deg             completed                        7
+  commit+1  late_application     completed                        7
+  commit+1  missing_application  completed                        7
+  commit+1  position_0_03        completed                        7
+  commit+1  yaw_5deg             completed                        7
+  failure reasons: {'candidate_terminal_goal_mismatch': 2}
+  totals: completed 82 | fell (damage>0) 0 | unresolved 2 | bounded 0

@@ -1,0 +1,18 @@
+gap1/rest-L/0            interval=[] landing z=    - goal z=[5.02,6.15] -> completed        None
+gap1/walk-L-n/1          interval=[] landing z=    - goal z=[5.02,6.15] -> completed        None
+gap1/sprint-L-n/2        interval=[] landing z=    - goal z=[5.02,6.15] -> completed        None
+gap2/rest-L/3            interval=[] landing z=    - goal z=[6.02,7.15] -> completed        None
+gap2/walk-L-n/4          interval=[] landing z=    - goal z=[6.02,7.15] -> bounded_failure  landing_recovery_not_proved
+gap2/sprint-L-n/5        interval=[(12, 13)] landing z= 4.14 goal z=[6.02,7.15] -> bounded_failure  landing_recovery_not_proved
+gap3/rest-L/6            interval=[(17, 29)] landing z= 7.07 goal z=[7.02,8.15] -> completed        None
+gap3/walk-L-n/7          interval=[(16, 28)] landing z= 6.94 goal z=[7.02,8.15] -> bounded_failure  landing_recovery_not_proved
+gap3/sprint-L-n/8        interval=[(12, 25)] landing z= 7.48 goal z=[7.02,8.15] -> completed        None
+gap2c/rest-L/9           interval=[] landing z=    - goal z=[6.02,7.15] -> completed        None
+gap2c/walk-L-n/10        interval=[(16, 28)] landing z= 5.91 goal z=[6.02,7.15] -> bounded_failure  landing_recovery_not_proved
+gap2c/sprint-L-n/11      interval=[(12, 13)] landing z= 4.15 goal z=[6.02,7.15] -> bounded_failure  landing_recovery_not_proved
+jumpup/rest-L/12         interval=[] landing z=    - goal z=[3.50,4.50] -> completed        None
+jumpup/walk-L-n/13       interval=[] landing z=    - goal z=[3.50,4.50] -> completed        None
+jumpup/sprint-L-n/14     interval=[] landing z=    - goal z=[3.50,4.50] -> completed        None
+turn/rest-L/15           interval=[] landing z=    - goal z=[0.30,1.80] -> completed        None
+turn/walk-L-n/16         interval=[] landing z=    - goal z=[0.30,1.80] -> completed        None
+turn/sprint-L-n/17       interval=[] landing z=    - goal z=[0.30,1.80] -> completed        None

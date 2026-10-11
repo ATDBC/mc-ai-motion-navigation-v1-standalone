@@ -1,0 +1,19 @@
+position_0_01-commit_boundary        | hold last input: y=-45.0 damage=44 | stop input: y=1.0 damage=0
+position_0_01-post_commit            | hold last input: y=-47.2 damage=46 | stop input: y=-42.9 damage=41
+position_0_03-commit_boundary        | hold last input: y=-45.0 damage=44 | stop input: y=1.0 damage=0
+position_0_03-post_commit            | hold last input: y=-47.2 damage=46 | stop input: y=-42.9 damage=41
+yaw_2deg-commit_boundary             | hold last input: y=-45.0 damage=44 | stop input: y=1.0 damage=0
+yaw_2deg-post_commit                 | hold last input: y=-47.2 damage=46 | stop input: y=-42.9 damage=41
+yaw_5deg-commit_boundary             | hold last input: y=-45.0 damage=44 | stop input: y=1.0 damage=0
+yaw_5deg-post_commit                 | hold last input: y=-47.2 damage=46 | stop input: y=-42.9 damage=41
+dependency_changed-commit_boundary   | hold last input: y=-45.0 damage=44 | stop input: y=1.0 damage=0
+dependency_changed-post_commit       | hold last input: y=-47.2 damage=46 | stop input: y=-42.9 damage=41
+dependency_unknown-commit_boundary   | hold last input: y=-45.0 damage=44 | stop input: y=1.0 damage=0
+dependency_unknown-post_commit       | hold last input: y=-47.2 damage=46 | stop input: y=-42.9 damage=41
+goal_revision-commit_boundary        | hold last input: y=-45.0 damage=44 | stop input: y=1.0 damage=0
+goal_revision-post_commit            | hold last input: y=-47.2 damage=46 | stop input: y=-42.9 damage=41
+cancel-commit_boundary               | hold last input: y=-45.0 damage=44 | stop input: y=1.0 damage=0
+cancel-post_commit                   | hold last input: y=-47.2 damage=46 | stop input: y=-42.9 damage=41
+missing_application-commit_boundary  | hold last input: y=-47.2 damage=46 (fell out of the known box) | stop input: y=-47.2 damage=46 (fell out of the known box)
+missing_application-post_commit      | hold last input: y=-47.2 damage=46 (fell out of the known box) | stop input: y=-47.2 damage=46 (fell out of the known box)
+{('hold last input', 'falls'): 18, ('stop input', 'stays'): 8, ('stop input', 'falls'): 10}

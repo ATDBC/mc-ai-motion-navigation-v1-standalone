@@ -1,0 +1,10 @@
+inputs: 0:W 1:W 2:W 3:W 4:W 5:J 6:N 7:N 8:N 9:N 10:N 11:N 12:N 13:N 14:N 15:N 16:N 17:N 18:N 19:N 20:N 21:N 22:N
+goal region x[0.350,0.650] y[1.000,1.050] z[2.300,3.300] min terminal speed 0.0 damage budget 0.0
+terrain y=0 along x=0: ####.######## (z=-3..9)
+hole depth at z=1..: [None]
+branch 0 final (0.5, 1.0, 2.451) on_ground True
+   z by boundary: [0.5, 0.6, 0.75, 0.93, 1.13, 1.33, 1.54, 1.66, 1.76, 1.86, 1.94, 2.02, 2.09, 2.16, 2.22, 2.27, 2.32, 2.37, 2.41, 2.43, 2.44, 2.45, 2.45, 2.45]
+   ground by boundary: GGGGGG...........GGGGGGG
+branch 1 final (0.5, 1.0, 2.451) on_ground True
+   z by boundary: [0.5, 0.6, 0.75, 0.93, 1.13, 1.33, 1.54, 1.66, 1.76, 1.86, 1.94, 2.02, 2.09, 2.16, 2.22, 2.27, 2.32, 2.37, 2.41, 2.43, 2.44, 2.45, 2.45, 2.45]
+   ground by boundary: GGGGGG...........GGGGGGG

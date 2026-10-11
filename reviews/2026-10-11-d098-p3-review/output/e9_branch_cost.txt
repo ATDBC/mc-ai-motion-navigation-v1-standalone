@@ -1,0 +1,10 @@
+== two branches: 28 cases x5
+   plan   n=  140 ms P50=  6.87 P95= 10.83 max= 14.48 | steps P95=79 max=79
+   tick   n= 3200 ms P50=  3.17 P95=  5.56 max= 67.36 | steps P95=42 max=56
+   commit n=   60 ms P50=  6.72 P95= 32.98 max= 34.00 | steps P95=276 max=276
+   jump_gap_1:A3 commit decision (boundary, steps, ms): (3, 276, 29.687012) median ms 32.98
+== ON_TIME only: 28 cases x5
+   plan   n=  140 ms P50=  3.31 P95=  5.89 max=  7.51 | steps P95=39 max=39
+   tick   n= 3355 ms P50=  0.02 P95=  4.68 max=  7.82 | steps P95=32 max=41
+   commit n=   55 ms P50=  0.05 P95= 10.64 max= 15.80 | steps P95=90 max=90
+   jump_gap_1:A3 commit decision (boundary, steps, ms): (3, 90, 15.799154) median ms 10.64
