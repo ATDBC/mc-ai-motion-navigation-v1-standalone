@@ -1,0 +1,49 @@
+{
+ "files": [
+  {
+   "bytes": 211242,
+   "path": "d097a-m1-table.json",
+   "sha256": "fc33cec9c5d610c8b8bfb1106f9255235b7f5c35252294bcf1af03b1319c3fc7"
+  },
+  {
+   "bytes": 13641,
+   "path": "d097a-set-a-sample.json",
+   "sha256": "54abdf2dce9d97fca16b805841deb5427e0959b1de5f0eded50a94174c1adae3"
+  },
+  {
+   "bytes": 16025,
+   "path": "d097a-set-c-sample.json",
+   "sha256": "a7682588812d44d2b237eb30caf163bae0c8c8f9634f981abfa464b7abee9e48"
+  },
+  {
+   "bytes": 50460,
+   "path": "d097a-accepted-sample.json",
+   "sha256": "b38fe48660f7f80e337f257a66ce1b2647dae21562d814f2b665f1c795eda8b4"
+  },
+  {
+   "bytes": 13871,
+   "path": "d097a-pre-p1-equivalence-sample.json",
+   "sha256": "7b229d648733529a315b1d3859b49c03186accda6fe31f52f0347f4806e817e1"
+  },
+  {
+   "bytes": 51441,
+   "path": "d098-reference-signatures-v1.json",
+   "sha256": "9d0cfe29bc7590276763ed6350da70985ac87aa43aa2f378c7f777fe566216b7"
+  }
+ ],
+ "reference_signature_generator": {
+  "baseline_commit": "d01d378f",
+  "command": ".venv/python.exe scripts/generate_d098_reference_signatures.py --check",
+  "generator_sha256": "31ad887a14cb59a54e5bc2a79ee1a2101b35fe6a603a60d74f10b8bbbc06ed5b",
+  "input_sha256": "54abdf2dce9d97fca16b805841deb5427e0959b1de5f0eded50a94174c1adae3",
+  "scanner_sha256": "015e404bef642d5684f4f9c3559490aee5727dff91c5b79a5b88a31f93c914a7"
+ },
+ "schema": "d098-p1-import-manifest-v1",
+ "source_commit": "f5e43e74",
+ "source_role": "migration reference only; no runtime dependency on review checkout",
+ "table_generator_hashes": {
+  "controller.py": "34327cdc407a79bc4f737c76d4c163e5a5822d10de4920fc63c12a189493b3d2",
+  "oracle.py": "1f7ccc052eb9cf0e53bd5fceba4dcfd93c896c7db280d7bcd81537794b3620e7",
+  "table.py": "27b80ab1e80a6cdb2f8f2017f203e3856304eb183b1ff3a13d7646c059149e6b"
+ }
+}

@@ -1,0 +1,107 @@
+{
+  "schema": "d098-w0-integrity-recheck-v2",
+  "rechecked_utc": "2026-10-11T01:57:28.102282+00:00",
+  "original_record_commit": "0ec6cd5dbb07f43fa89fc15959ec015197ef19d4",
+  "timing_rerun": false,
+  "recheck_wrapper_sha256": "c5b203ae3ef223bcd6d4f7fca4aacd65322dc1db704dc1f71604cf3720615755",
+  "original_execution_wrapper_sha256": {
+    "T2": "79f26d7b75e287e81ad55e4cf9ab1bd500a43dee335eb2d1956412904895aa19",
+    "T3": "79f26d7b75e287e81ad55e4cf9ab1bd500a43dee335eb2d1956412904895aa19"
+  },
+  "original_v1_result_sha256": {
+    "T2": "33b929d9fb560e9f632429256b0ff9cf4b2d238c85815b70ced69dc0bd3e78e6",
+    "T3": "16b50ffe20fe013cbc567d2e1b4854ce163d78bb3490f185238796dda233d146"
+  },
+  "raw_record_files_unchanged": true,
+  "original_record_sha256": {
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/T2-summary.json": "5fb0a11e59365faf4443f63ca1418f7e21d4421886fab912490a3c4c1a9a3cc7",
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/T2-samples.json.gz": "72e17048f918613d2a3bcad3d990ccaabc38ecb5763ebe05eae36d2209a66ef8",
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/T2-execution.json": "23582e8f4d7071209d12e300a615b59b0ea6ee21d1de3e66390b7c8a13cec557",
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/T3-summary.json": "848c60a18599b557b862220c799b0e3386e8329df5e0333e197c71ac6288a840",
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/T3-samples.json.gz": "0b21107feb6164d890e3c2b9cfd3fbd6019184e43e7dca99fad538c8ca2ebc09",
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/T3-execution.json": "fb8f38f3603541abd9a059ece12b11adb358501249e9923571d1faa2d2bd74a9"
+  },
+  "commands": {
+    "T2": ".venv/python.exe scripts/measure_d098_trial_windows.py T2 --trial-dir .tmp/d098-review-f5e43e7/reviews/2026-10-10-d097a-trial --output-dir evidence/motion_navigation/incremental-motion-r98-v1/w0 --recheck-evidence",
+    "T3": ".venv/python.exe scripts/measure_d098_trial_windows.py T3 --trial-dir .tmp/d098-review-f5e43e7/reviews/2026-10-10-d097a-trial --output-dir evidence/motion_navigation/incremental-motion-r98-v1/w0 --recheck-evidence"
+  },
+  "results": {
+    "T2": {
+      "reproduction_integrity_passed": true,
+      "candidate_coverage": {
+        "complete": true,
+        "expected_candidate_runs": 429,
+        "candidate_ids_per_pass": 125,
+        "repeated_candidate_id_occurrences_per_pass": 18,
+        "candidate_occurrence_counts_match": true,
+        "configs": {
+          "strict": {
+            "rows": 9483,
+            "candidate_runs": 375,
+            "candidate_occurrences": 429,
+            "missing_candidate_runs": 0,
+            "extra_candidate_runs": 0
+          },
+          "strict_runahead": {
+            "rows": 9483,
+            "candidate_runs": 375,
+            "candidate_occurrences": 429,
+            "missing_candidate_runs": 0,
+            "extra_candidate_runs": 0
+          },
+          "full_scan": {
+            "rows": 429,
+            "candidate_runs": 375,
+            "candidate_occurrences": 429,
+            "missing_candidate_runs": 0,
+            "extra_candidate_runs": 0
+          }
+        },
+        "invalid_rows": 0,
+        "unexpected_configs": [],
+        "full_scan_kinds_valid": true
+      },
+      "non_time_sha256": "514bbec58ad9897c7b04661733de14e1c4131f53d512858e6ef29597863ebfee"
+    },
+    "T3": {
+      "reproduction_integrity_passed": true,
+      "candidate_coverage": {
+        "complete": true,
+        "expected_candidate_runs": 25340,
+        "candidate_ids_per_pass": 25322,
+        "repeated_candidate_id_occurrences_per_pass": 18,
+        "candidate_occurrence_counts_match": true,
+        "configs": {
+          "strict": {
+            "rows": 699213,
+            "candidate_runs": 25322,
+            "candidate_occurrences": 25340,
+            "missing_candidate_runs": 0,
+            "extra_candidate_runs": 0
+          },
+          "strict_runahead": {
+            "rows": 699213,
+            "candidate_runs": 25322,
+            "candidate_occurrences": 25340,
+            "missing_candidate_runs": 0,
+            "extra_candidate_runs": 0
+          },
+          "full_scan": {
+            "rows": 25340,
+            "candidate_runs": 25322,
+            "candidate_occurrences": 25340,
+            "missing_candidate_runs": 0,
+            "extra_candidate_runs": 0
+          }
+        },
+        "invalid_rows": 0,
+        "unexpected_configs": [],
+        "full_scan_kinds_valid": true
+      },
+      "non_time_sha256": "8a48c5683cae9b74813f6f6bd0dbf62417c1abe5a6b637656f2059c7be5762b8"
+    }
+  },
+  "classification_source": "Samples have no verdict column. Complete coverage and occurrence counts, frozen asserting-harness hashes and column-aware non-time signatures provide the classification audit.",
+  "fresh_output_guard_applies_to_future_invocations": true,
+  "fresh_output_guard_retroactively_verified": false
+}

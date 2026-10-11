@@ -1,0 +1,795 @@
+{
+ "rows": [
+  {
+   "critical": false,
+   "decisions": {
+    "final": 1,
+    "plan": 1,
+    "tick": 12
+   },
+   "dependencies_match": true,
+   "equivalent": true,
+   "id": "flat_walk:A3",
+   "interval_counts_match": true,
+   "interval_full_match": true,
+   "interval_keys_match": true,
+   "intervals_lazy": [
+    [],
+    []
+   ],
+   "intervals_scan": [
+    [],
+    []
+   ],
+   "lazy_nodes": 28,
+   "lazy_reason": null,
+   "lazy_status": "VERIFIED_CANDIDATE",
+   "lazy_steps": 161,
+   "minimal": {
+    "critical": false,
+    "intervals_equivalent": true,
+    "reason": null,
+    "reason_match": true,
+    "status": "VERIFIED_CANDIDATE",
+    "status_match": true,
+    "steps": 161
+   },
+   "n_intervals": [
+    0,
+    0
+   ],
+   "reason_match": true,
+   "runahead": {
+    "critical": false,
+    "decision_steps_total": 161,
+    "dependencies_equal": true,
+    "equivalent": true,
+    "intervals_lazy": [
+     [],
+     []
+    ],
+    "intervals_scan": [
+     [],
+     []
+    ],
+    "online_halt": null,
+    "online_halt_equal": true,
+    "permits": 12,
+    "reason": null,
+    "reason_match": true,
+    "status": "VERIFIED_CANDIDATE",
+    "status_match": true,
+    "step_total_equal": true,
+    "strict_decision_steps_total": 161,
+    "strict_online_halt": null,
+    "strict_permits": 12
+   },
+   "scan_nodes": 28,
+   "scan_reason": null,
+   "scan_status": "VERIFIED_CANDIDATE",
+   "scan_steps": 161,
+   "set": "A",
+   "states_match": true,
+   "status_match": true,
+   "tail_status_match": true,
+   "ticks": 12
+  },
+  {
+   "critical": false,
+   "decisions": {
+    "final": 1,
+    "plan": 1,
+    "tick": 16
+   },
+   "dependencies_match": true,
+   "equivalent": true,
+   "id": "jump_up_straight:A3",
+   "interval_counts_match": true,
+   "interval_full_match": true,
+   "interval_keys_match": true,
+   "intervals_lazy": [
+    [],
+    []
+   ],
+   "intervals_scan": [
+    [],
+    []
+   ],
+   "lazy_nodes": 36,
+   "lazy_reason": null,
+   "lazy_status": "VERIFIED_CANDIDATE",
+   "lazy_steps": 297,
+   "minimal": {
+    "critical": false,
+    "intervals_equivalent": true,
+    "reason": null,
+    "reason_match": true,
+    "status": "VERIFIED_CANDIDATE",
+    "status_match": true,
+    "steps": 297
+   },
+   "n_intervals": [
+    0,
+    0
+   ],
+   "reason_match": true,
+   "runahead": {
+    "critical": false,
+    "decision_steps_total": 297,
+    "dependencies_equal": true,
+    "equivalent": true,
+    "intervals_lazy": [
+     [],
+     []
+    ],
+    "intervals_scan": [
+     [],
+     []
+    ],
+    "online_halt": null,
+    "online_halt_equal": true,
+    "permits": 16,
+    "reason": null,
+    "reason_match": true,
+    "status": "VERIFIED_CANDIDATE",
+    "status_match": true,
+    "step_total_equal": true,
+    "strict_decision_steps_total": 297,
+    "strict_online_halt": null,
+    "strict_permits": 16
+   },
+   "scan_nodes": 36,
+   "scan_reason": null,
+   "scan_status": "VERIFIED_CANDIDATE",
+   "scan_steps": 297,
+   "set": "A",
+   "states_match": true,
+   "status_match": true,
+   "tail_status_match": true,
+   "ticks": 16
+  },
+  {
+   "critical": false,
+   "decisions": {
+    "commit": 1,
+    "final": 1,
+    "plan": 1,
+    "tick": 8
+   },
+   "dependencies_match": true,
+   "equivalent": true,
+   "id": "jump_gap_1:A3",
+   "interval_counts_match": true,
+   "interval_full_match": true,
+   "interval_keys_match": true,
+   "intervals_lazy": [
+    [
+     [
+      2,
+      3,
+      17
+     ]
+    ],
+    [
+     [
+      2,
+      3,
+      17
+     ]
+    ]
+   ],
+   "intervals_scan": [
+    [
+     [
+      2,
+      3,
+      17
+     ]
+    ],
+    [
+     [
+      2,
+      3,
+      17
+     ]
+    ]
+   ],
+   "lazy_nodes": 54,
+   "lazy_reason": null,
+   "lazy_status": "VERIFIED_CANDIDATE",
+   "lazy_steps": 451,
+   "minimal": {
+    "critical": false,
+    "intervals_equivalent": true,
+    "reason": null,
+    "reason_match": true,
+    "status": "VERIFIED_CANDIDATE",
+    "status_match": true,
+    "steps": 151
+   },
+   "n_intervals": [
+    1,
+    1
+   ],
+   "reason_match": true,
+   "runahead": {
+    "critical": false,
+    "decision_steps_total": 451,
+    "dependencies_equal": true,
+    "equivalent": true,
+    "intervals_lazy": [
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ],
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ]
+    ],
+    "intervals_scan": [
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ],
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ]
+    ],
+    "online_halt": null,
+    "online_halt_equal": true,
+    "permits": 9,
+    "reason": null,
+    "reason_match": true,
+    "status": "VERIFIED_CANDIDATE",
+    "status_match": true,
+    "step_total_equal": true,
+    "strict_decision_steps_total": 451,
+    "strict_online_halt": null,
+    "strict_permits": 9
+   },
+   "scan_nodes": 54,
+   "scan_reason": null,
+   "scan_status": "VERIFIED_CANDIDATE",
+   "scan_steps": 451,
+   "set": "A",
+   "states_match": true,
+   "status_match": true,
+   "tail_status_match": true,
+   "ticks": 23
+  },
+  {
+   "critical": false,
+   "decisions": {
+    "commit": 1,
+    "final": 1,
+    "plan": 1,
+    "tick": 9
+   },
+   "dependencies_match": true,
+   "equivalent": true,
+   "id": "gap_start_1_width_2:A5",
+   "interval_counts_match": true,
+   "interval_full_match": true,
+   "interval_keys_match": true,
+   "intervals_lazy": [
+    [
+     [
+      2,
+      3,
+      17
+     ]
+    ],
+    [
+     [
+      2,
+      3,
+      17
+     ]
+    ]
+   ],
+   "intervals_scan": [
+    [
+     [
+      2,
+      3,
+      17
+     ]
+    ],
+    [
+     [
+      2,
+      3,
+      17
+     ]
+    ]
+   ],
+   "lazy_nodes": 54,
+   "lazy_reason": null,
+   "lazy_status": "VERIFIED_CANDIDATE",
+   "lazy_steps": 435,
+   "minimal": {
+    "critical": false,
+    "intervals_equivalent": true,
+    "reason": null,
+    "reason_match": true,
+    "status": "VERIFIED_CANDIDATE",
+    "status_match": true,
+    "steps": 167
+   },
+   "n_intervals": [
+    1,
+    1
+   ],
+   "reason_match": true,
+   "runahead": {
+    "critical": false,
+    "decision_steps_total": 435,
+    "dependencies_equal": true,
+    "equivalent": true,
+    "intervals_lazy": [
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ],
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ]
+    ],
+    "intervals_scan": [
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ],
+     [
+      [
+       2,
+       3,
+       17
+      ]
+     ]
+    ],
+    "online_halt": null,
+    "online_halt_equal": true,
+    "permits": 10,
+    "reason": null,
+    "reason_match": true,
+    "status": "VERIFIED_CANDIDATE",
+    "status_match": true,
+    "step_total_equal": true,
+    "strict_decision_steps_total": 435,
+    "strict_online_halt": null,
+    "strict_permits": 10
+   },
+   "scan_nodes": 54,
+   "scan_reason": null,
+   "scan_status": "VERIFIED_CANDIDATE",
+   "scan_steps": 435,
+   "set": "A",
+   "states_match": true,
+   "status_match": true,
+   "tail_status_match": true,
+   "ticks": 24
+  },
+  {
+   "critical": false,
+   "decisions": {
+    "commit": 1,
+    "final": 1,
+    "plan": 1,
+    "tick": 23
+   },
+   "dependencies_match": true,
+   "equivalent": true,
+   "id": "gap_start_4_width_3:A15",
+   "interval_counts_match": true,
+   "interval_full_match": true,
+   "interval_keys_match": true,
+   "intervals_lazy": [
+    [
+     [
+      16,
+      17,
+      31
+     ]
+    ],
+    [
+     [
+      16,
+      17,
+      31
+     ]
+    ]
+   ],
+   "intervals_scan": [
+    [
+     [
+      16,
+      17,
+      31
+     ]
+    ],
+    [
+     [
+      16,
+      17,
+      31
+     ]
+    ]
+   ],
+   "lazy_nodes": 82,
+   "lazy_reason": null,
+   "lazy_status": "VERIFIED_CANDIDATE",
+   "lazy_steps": 723,
+   "minimal": {
+    "critical": false,
+    "intervals_equivalent": true,
+    "reason": null,
+    "reason_match": true,
+    "status": "VERIFIED_CANDIDATE",
+    "status_match": true,
+    "steps": 441
+   },
+   "n_intervals": [
+    1,
+    1
+   ],
+   "reason_match": true,
+   "runahead": {
+    "critical": false,
+    "decision_steps_total": 723,
+    "dependencies_equal": true,
+    "equivalent": true,
+    "intervals_lazy": [
+     [
+      [
+       16,
+       17,
+       31
+      ]
+     ],
+     [
+      [
+       16,
+       17,
+       31
+      ]
+     ]
+    ],
+    "intervals_scan": [
+     [
+      [
+       16,
+       17,
+       31
+      ]
+     ],
+     [
+      [
+       16,
+       17,
+       31
+      ]
+     ]
+    ],
+    "online_halt": null,
+    "online_halt_equal": true,
+    "permits": 24,
+    "reason": null,
+    "reason_match": true,
+    "status": "VERIFIED_CANDIDATE",
+    "status_match": true,
+    "step_total_equal": true,
+    "strict_decision_steps_total": 723,
+    "strict_online_halt": null,
+    "strict_permits": 24
+   },
+   "scan_nodes": 82,
+   "scan_reason": null,
+   "scan_status": "VERIFIED_CANDIDATE",
+   "scan_steps": 723,
+   "set": "A",
+   "states_match": true,
+   "status_match": true,
+   "tail_status_match": true,
+   "ticks": 38
+  },
+  {
+   "critical": false,
+   "decisions": {
+    "final": 1,
+    "plan": 1,
+    "tick": 16
+   },
+   "dependencies_match": true,
+   "equivalent": true,
+   "id": "turn_90:A15",
+   "interval_counts_match": true,
+   "interval_full_match": true,
+   "interval_keys_match": true,
+   "intervals_lazy": [
+    [],
+    []
+   ],
+   "intervals_scan": [
+    [],
+    []
+   ],
+   "lazy_nodes": 36,
+   "lazy_reason": null,
+   "lazy_status": "VERIFIED_CANDIDATE",
+   "lazy_steps": 239,
+   "minimal": {
+    "critical": false,
+    "intervals_equivalent": true,
+    "reason": null,
+    "reason_match": true,
+    "status": "VERIFIED_CANDIDATE",
+    "status_match": true,
+    "steps": 239
+   },
+   "n_intervals": [
+    0,
+    0
+   ],
+   "reason_match": true,
+   "runahead": {
+    "critical": false,
+    "decision_steps_total": 239,
+    "dependencies_equal": true,
+    "equivalent": true,
+    "intervals_lazy": [
+     [],
+     []
+    ],
+    "intervals_scan": [
+     [],
+     []
+    ],
+    "online_halt": null,
+    "online_halt_equal": true,
+    "permits": 16,
+    "reason": null,
+    "reason_match": true,
+    "status": "VERIFIED_CANDIDATE",
+    "status_match": true,
+    "step_total_equal": true,
+    "strict_decision_steps_total": 239,
+    "strict_online_halt": null,
+    "strict_permits": 16
+   },
+   "scan_nodes": 36,
+   "scan_reason": null,
+   "scan_status": "VERIFIED_CANDIDATE",
+   "scan_steps": 239,
+   "set": "A",
+   "states_match": true,
+   "status_match": true,
+   "tail_status_match": true,
+   "ticks": 16
+  },
+  {
+   "critical": false,
+   "decisions": {
+    "final": 1,
+    "plan": 1,
+    "tick": 19
+   },
+   "dependencies_match": true,
+   "equivalent": true,
+   "id": "jump_up_after_turn:A15",
+   "interval_counts_match": true,
+   "interval_full_match": true,
+   "interval_keys_match": true,
+   "intervals_lazy": [
+    [],
+    []
+   ],
+   "intervals_scan": [
+    [],
+    []
+   ],
+   "lazy_nodes": 42,
+   "lazy_reason": null,
+   "lazy_status": "VERIFIED_CANDIDATE",
+   "lazy_steps": 357,
+   "minimal": {
+    "critical": false,
+    "intervals_equivalent": true,
+    "reason": null,
+    "reason_match": true,
+    "status": "VERIFIED_CANDIDATE",
+    "status_match": true,
+    "steps": 357
+   },
+   "n_intervals": [
+    0,
+    0
+   ],
+   "reason_match": true,
+   "runahead": {
+    "critical": false,
+    "decision_steps_total": 357,
+    "dependencies_equal": true,
+    "equivalent": true,
+    "intervals_lazy": [
+     [],
+     []
+    ],
+    "intervals_scan": [
+     [],
+     []
+    ],
+    "online_halt": null,
+    "online_halt_equal": true,
+    "permits": 19,
+    "reason": null,
+    "reason_match": true,
+    "status": "VERIFIED_CANDIDATE",
+    "status_match": true,
+    "step_total_equal": true,
+    "strict_decision_steps_total": 357,
+    "strict_online_halt": null,
+    "strict_permits": 19
+   },
+   "scan_nodes": 42,
+   "scan_reason": null,
+   "scan_status": "VERIFIED_CANDIDATE",
+   "scan_steps": 357,
+   "set": "A",
+   "states_match": true,
+   "status_match": true,
+   "tail_status_match": true,
+   "ticks": 19
+  },
+  {
+   "critical": false,
+   "decisions": {
+    "commit": 1,
+    "final": 1,
+    "plan": 1,
+    "tick": 8
+   },
+   "dependencies_match": true,
+   "equivalent": true,
+   "id": "mixed_ground_jump_air:",
+   "interval_counts_match": true,
+   "interval_full_match": true,
+   "interval_keys_match": true,
+   "intervals_lazy": [
+    [
+     [
+      0,
+      1,
+      13
+     ]
+    ],
+    [
+     [
+      0,
+      1,
+      13
+     ]
+    ]
+   ],
+   "intervals_scan": [
+    [
+     [
+      0,
+      1,
+      13
+     ]
+    ],
+    [
+     [
+      0,
+      1,
+      13
+     ]
+    ]
+   ],
+   "lazy_nodes": 48,
+   "lazy_reason": null,
+   "lazy_status": "VERIFIED_CANDIDATE",
+   "lazy_steps": 427,
+   "minimal": {
+    "critical": false,
+    "intervals_equivalent": true,
+    "reason": null,
+    "reason_match": true,
+    "status": "VERIFIED_CANDIDATE",
+    "status_match": true,
+    "steps": 155
+   },
+   "n_intervals": [
+    1,
+    1
+   ],
+   "reason_match": true,
+   "runahead": {
+    "critical": false,
+    "decision_steps_total": 427,
+    "dependencies_equal": true,
+    "equivalent": true,
+    "intervals_lazy": [
+     [
+      [
+       0,
+       1,
+       13
+      ]
+     ],
+     [
+      [
+       0,
+       1,
+       13
+      ]
+     ]
+    ],
+    "intervals_scan": [
+     [
+      [
+       0,
+       1,
+       13
+      ]
+     ],
+     [
+      [
+       0,
+       1,
+       13
+      ]
+     ]
+    ],
+    "online_halt": null,
+    "online_halt_equal": true,
+    "permits": 9,
+    "reason": null,
+    "reason_match": true,
+    "status": "VERIFIED_CANDIDATE",
+    "status_match": true,
+    "step_total_equal": true,
+    "strict_decision_steps_total": 427,
+    "strict_online_halt": null,
+    "strict_permits": 9
+   },
+   "scan_nodes": 48,
+   "scan_reason": null,
+   "scan_status": "VERIFIED_CANDIDATE",
+   "scan_steps": 427,
+   "set": "A",
+   "states_match": true,
+   "status_match": true,
+   "tail_status_match": true,
+   "ticks": 21
+  }
+ ],
+ "schema": "d098-pre-p1-equivalence-sample-v1",
+ "source_commit": "f5e43e74",
+ "source_file_sha256": "85dff459d690bcc848b0030abd1d25b6e5e847dbdacbd766ee80b6e7d00e4911"
+}

@@ -1,0 +1,154 @@
+{
+  "base_commit": "97953458",
+  "budgets": [
+    {
+      "commitment_ms": {
+        "max": 19.6852,
+        "p50": 3.8533,
+        "p95": 19.6569,
+        "p99": 19.6838,
+        "physics_steps": 9600,
+        "samples": 100
+      },
+      "ordinary_ms": {
+        "max": 31.9964,
+        "p50": 1.9664,
+        "p95": 7.4811,
+        "p99": 15.7879,
+        "physics_steps": 85120,
+        "samples": 3600
+      },
+      "passes_calibration_gate": true,
+      "runahead_steps": 24,
+      "semantic_signatures_match": true,
+      "total_physics_steps": 94720
+    },
+    {
+      "commitment_ms": {
+        "max": 17.6721,
+        "p50": 0.0711,
+        "p95": 17.3857,
+        "p99": 17.4726,
+        "physics_steps": 4840,
+        "samples": 100
+      },
+      "ordinary_ms": {
+        "max": 18.0515,
+        "p50": 2.3875,
+        "p95": 9.2113,
+        "p99": 17.5475,
+        "physics_steps": 89880,
+        "samples": 3600
+      },
+      "passes_calibration_gate": false,
+      "runahead_steps": 32,
+      "semantic_signatures_match": true,
+      "total_physics_steps": 94720
+    },
+    {
+      "commitment_ms": {
+        "max": 15.1431,
+        "p50": 0.0701,
+        "p95": 15.0882,
+        "p99": 15.101,
+        "physics_steps": 4200,
+        "samples": 100
+      },
+      "ordinary_ms": {
+        "max": 18.6334,
+        "p50": 0.0468,
+        "p95": 8.8753,
+        "p99": 17.5289,
+        "physics_steps": 90520,
+        "samples": 3600
+      },
+      "passes_calibration_gate": false,
+      "runahead_steps": 40,
+      "semantic_signatures_match": true,
+      "total_physics_steps": 94720
+    },
+    {
+      "commitment_ms": {
+        "max": 13.113,
+        "p50": 0.0702,
+        "p95": 13.0394,
+        "p99": 13.0741,
+        "physics_steps": 3600,
+        "samples": 100
+      },
+      "ordinary_ms": {
+        "max": 19.5814,
+        "p50": 0.0426,
+        "p95": 10.2757,
+        "p99": 18.7492,
+        "physics_steps": 91120,
+        "samples": 3600
+      },
+      "passes_calibration_gate": false,
+      "runahead_steps": 48,
+      "semantic_signatures_match": true,
+      "total_physics_steps": 94720
+    },
+    {
+      "commitment_ms": {
+        "max": 13.0947,
+        "p50": 0.0712,
+        "p95": 13.0464,
+        "p99": 13.0886,
+        "physics_steps": 3600,
+        "samples": 100
+      },
+      "ordinary_ms": {
+        "max": 19.5697,
+        "p50": 0.0409,
+        "p95": 10.084,
+        "p99": 18.8697,
+        "physics_steps": 91120,
+        "samples": 3600
+      },
+      "passes_calibration_gate": false,
+      "runahead_steps": 60,
+      "semantic_signatures_match": true,
+      "total_physics_steps": 94720
+    }
+  ],
+  "calibration_sets": [
+    "A",
+    "C"
+  ],
+  "d_verification": {
+    "commitment_ms": {
+      "max": 28.4262,
+      "p50": 0.0729,
+      "p95": 13.4152,
+      "p99": 28.4262,
+      "physics_steps": 3560,
+      "samples": 40
+    },
+    "frozen_runahead_steps": 24,
+    "ordinary_ms": {
+      "max": 36.8319,
+      "p50": 1.9507,
+      "p95": 3.2616,
+      "p99": 21.5821,
+      "physics_steps": 95160,
+      "samples": 3960
+    },
+    "schema": "d098-p2.3-runahead-d-verification-v1",
+    "semantic_signatures_match": true,
+    "total_physics_steps": 98720,
+    "verification_set": "D"
+  },
+  "formal_8_15_30_closed": false,
+  "formal_boundary": "P2 calibration passes 8/45 P95; AC and D still exceed the later P99/max closed-loop limits",
+  "regenerable_raw": {
+    "ac_sha256": "acf8ac6c1cc9fcb550c0c4223dee5bf3498728acbb47e9a24a112e36bcae5604",
+    "command_ac": ".venv/python.exe scripts/measure_incremental_motion_r98.py --calibrate-runahead --limit 6 --rounds 20 --output p23-ac-calibration.json",
+    "command_d": ".venv/python.exe scripts/measure_incremental_motion_r98.py --verify-runahead 24 --limit 6 --rounds 20 --output p23-d-verification.json",
+    "d_sha256": "67711cabe9bed4d3990a1f7b523c7a0044b3a02240b2f4a37b115eeea8783208",
+    "raw_rows_committed": false
+  },
+  "schema": "d098-p2.3-fixed-runahead-summary-v2",
+  "selected_runahead_steps": 24,
+  "selection_before_d_verification": true
+}

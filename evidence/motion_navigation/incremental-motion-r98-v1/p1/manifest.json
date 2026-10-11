@@ -1,0 +1,67 @@
+{
+  "base_commit": "d01d378f",
+  "data_sha256": {
+    "experiments/motion_navigation/trajectory_proto/data/d097a-accepted-sample.json": "b38fe48660f7f80e337f257a66ce1b2647dae21562d814f2b665f1c795eda8b4",
+    "experiments/motion_navigation/trajectory_proto/data/d097a-m1-table.json": "fc33cec9c5d610c8b8bfb1106f9255235b7f5c35252294bcf1af03b1319c3fc7",
+    "experiments/motion_navigation/trajectory_proto/data/d097a-pre-p1-equivalence-sample.json": "7b229d648733529a315b1d3859b49c03186accda6fe31f52f0347f4806e817e1",
+    "experiments/motion_navigation/trajectory_proto/data/d097a-set-a-sample.json": "54abdf2dce9d97fca16b805841deb5427e0959b1de5f0eded50a94174c1adae3",
+    "experiments/motion_navigation/trajectory_proto/data/d097a-set-c-sample.json": "a7682588812d44d2b237eb30caf163bae0c8c8f9634f981abfa464b7abee9e48",
+    "experiments/motion_navigation/trajectory_proto/data/d098-p1-import-manifest.json": "799d14a2ec2f830df8b1c62687398c843db3970468f834281abc7b17a56d174a",
+    "experiments/motion_navigation/trajectory_proto/data/d098-reference-signatures-v1.json": "9d0cfe29bc7590276763ed6350da70985ac87aa43aa2f378c7f777fe566216b7"
+  },
+  "fabric_run": false,
+  "formal_platform": "Windows",
+  "formal_runtime_integration": false,
+  "mc2p_changed_from_base": [],
+  "measurement": {
+    "input_sources": {
+      "A": "frozen_input",
+      "C": "frozen_input",
+      "D": "table_controller"
+    },
+    "path": "evidence/motion_navigation/incremental-motion-r98-v1/p1/windows-decision-baseline.json",
+    "physics_steps_include": [
+      "controller",
+      "trace",
+      "proof"
+    ],
+    "samples": 320,
+    "sha256": "b6ad630e8509a7317e677c3eaecaffebd19928ac5abc5ff63582f7e7ff3c1674",
+    "summary_ms": {
+      "max": 66.719,
+      "p50": 53.8193,
+      "p95": 66.4301,
+      "p99": 66.6814,
+      "samples": 320
+    }
+  },
+  "platform": "Windows-10-10.0.26200-SP0",
+  "python": "3.11.16",
+  "review_fix_base_commit": "6aabec5b",
+  "schema": "d098-p1-evidence-manifest-v1",
+  "source_sha256": {
+    "config/motion-navigation/standalone-export-v1.json": "691e392214ee763133ad1b365bf6ff620fd8864fd86785d2ce3d471746628b57",
+    "experiments/motion_navigation/trajectory_proto/decision.py": "b77b7ebaa6dc0a9154f7467f3f43101809427944acfd472433efdbb712b05f03",
+    "experiments/motion_navigation/trajectory_proto/frozen_templates.py": "ac4022bd1e034ce25cf5b962169f59ec5e0ed5caa864bf902dd73a756613002a",
+    "experiments/motion_navigation/trajectory_proto/incremental_proof.py": "e1e31e68c6f0a8a36636252d2db534fe1e965111ed2f9b92c544c754e125c89c",
+    "experiments/motion_navigation/trajectory_proto/measurement.py": "c65225469df97e80fe7eae3f243466786900546bfcfb73a50c8a59a88c5186c3",
+    "experiments/motion_navigation/trajectory_proto/motion_table.py": "04d469ccd103a5a5fdc250ff2c34d56631058fa99c231b3e0c1c85e74fad6a00",
+    "experiments/motion_navigation/trajectory_proto/reference_signature_generator.py": "31ad887a14cb59a54e5bc2a79ee1a2101b35fe6a603a60d74f10b8bbbc06ed5b",
+    "experiments/motion_navigation/trajectory_proto/rollout_trace.py": "c1dd5ec90cb1c02f5dd65216eb2523e2e4a91f2ccb7182ee59f44ce89ccfbf50",
+    "experiments/motion_navigation/trajectory_proto/template_controller.py": "a0e68e43eb2f0c2317351d417abae8b303df09b293502964c71d2caac307e308",
+    "scripts/generate_d098_reference_signatures.py": "c7f0456e2a40001e1745eed65145aaa106ee9f8ea45aae8fdba81c7f9878da71",
+    "scripts/measure_incremental_motion_r98.py": "9f7eaa4b2536da54cca54a7e577e1059a7a38852132de5aa1bdd12684c4d9592",
+    "tests/motion_nav/test_incremental_motion_controller.py": "1a1325de1f3fa93b0472f6841c9d7e25e0bf15ffdfedad873a5114fe90360243",
+    "tests/motion_nav/test_incremental_motion_performance.py": "b72ce7c17a57b568f265a640daf3675309788b2d86910f114c458dfce61401fc",
+    "tests/motion_nav/test_incremental_motion_proof.py": "e124c0542423942d078f99fbd1bb758f762745262a97a37bb42cdddab18cd10b",
+    "tests/motion_nav/test_incremental_motion_table.py": "d28195801fd0531183a3313f7be149db0636e3b25c6139f7f41161b1de9fea65"
+  },
+  "verification": {
+    "compileall": "passed",
+    "git_diff_check": "passed",
+    "p1_direct": "24/24",
+    "reference_generator_check": "passed",
+    "scanner_unchanged_from_d01d378f": "passed",
+    "tp_d097_and_export": "113/113"
+  }
+}

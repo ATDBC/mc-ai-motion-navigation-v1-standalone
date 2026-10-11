@@ -1,0 +1,74 @@
+{
+  "base_commit": "744b6038",
+  "fabric_run": false,
+  "files": [
+    {
+      "bytes": 8897,
+      "path": "experiments/motion_navigation/trajectory_proto/decision.py",
+      "sha256": "195788e6be4841116870e179854b464a9d7de1cd7a824dc27bb53b83dff56a1b"
+    },
+    {
+      "bytes": 31119,
+      "path": "experiments/motion_navigation/trajectory_proto/incremental_proof.py",
+      "sha256": "e8910dc67f07cdcefe739bbbb0429bbebf05e45feb56615289016c68f3e69319"
+    },
+    {
+      "bytes": 12003,
+      "path": "experiments/motion_navigation/trajectory_proto/measurement.py",
+      "sha256": "046c48d71e8139506c4ad5a89ded06c7f596ae471345a3c375f872cd5152a809"
+    },
+    {
+      "bytes": 23219,
+      "path": "experiments/motion_navigation/trajectory_proto/rollout_trace.py",
+      "sha256": "272b8129960d6a12082b354f23fded670e2abcded1866086cfdef60f063b99dd"
+    },
+    {
+      "bytes": 5011,
+      "path": "tests/motion_nav/test_incremental_motion_performance.py",
+      "sha256": "88c5f658ee4ff0765b40e599bbc08e326f70fe4391385eeb243f04e3e8986768"
+    },
+    {
+      "bytes": 26605,
+      "path": "tests/motion_nav/test_incremental_motion_proof.py",
+      "sha256": "884827f0bfc3a8be951203bab9512f636db4fbaf86a5b5d98af7b3e22681a3c1"
+    },
+    {
+      "bytes": 191830,
+      "path": "evidence/motion_navigation/incremental-motion-r98-v1/p2/p21-incremental-damage.json",
+      "sha256": "e1e6db620c9751f7f8e7fd6e4de8e059e5d5191d72686cc1936cbd7ea41d019f"
+    },
+    {
+      "bytes": 1574,
+      "path": "evidence/motion_navigation/incremental-motion-r98-v1/p2/p21-summary.json",
+      "sha256": "afa7361cff2da43ea979d66d06716e1c0a3e91af63a6fedc43858b3d7c840e13"
+    },
+    {
+      "bytes": 201441,
+      "path": "evidence/motion_navigation/incremental-motion-r98-v1/p2/p22-trace-reuse.json",
+      "sha256": "e52a49677d54945f0dce6ecba64a9dea9e2f76051aa3a77087fe98717a5f9ab8"
+    },
+    {
+      "bytes": 568,
+      "path": "evidence/motion_navigation/incremental-motion-r98-v1/p2/p22-summary.json",
+      "sha256": "cedd976f2b7f73076f8c718b9a4497dd8fc976b6a273ff372219bb8f1ac67240"
+    },
+    {
+      "bytes": 4068,
+      "path": "evidence/motion_navigation/incremental-motion-r98-v1/p2/p23-summary.json",
+      "sha256": "bab014dc2bc29c70a6e63ee05e9fc2a7e3bb949c304dfa610f90ca4bcad5a277"
+    },
+    {
+      "bytes": 2630,
+      "path": "evidence/motion_navigation/incremental-motion-r98-v1/p2/verification.md",
+      "sha256": "8b2710e8a6426e97c28193f1ca5ca5bec24fc7c5f6b97fdfcb3abf525cf0e44e"
+    }
+  ],
+  "formal_platform": "Windows",
+  "mc2p_modified": false,
+  "schema": "d098-p2-evidence-manifest-v1",
+  "slice_commits": {
+    "p2.1": "960d8b06",
+    "p2.2": "97953458",
+    "p2.3": "d1ed9da3"
+  }
+}

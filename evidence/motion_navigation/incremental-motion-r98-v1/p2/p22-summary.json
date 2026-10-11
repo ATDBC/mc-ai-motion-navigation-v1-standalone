@@ -1,0 +1,24 @@
+{
+  "all_trace_reuse_valid": true,
+  "base_commit": "960d8b06",
+  "p21_physics_steps": 212520,
+  "p21_summary_ms": {
+    "max": 93.4979,
+    "p50": 57.8802,
+    "p95": 77.7264,
+    "p99": 78.1063,
+    "samples": 320
+  },
+  "p22_physics_steps": 193440,
+  "physics_steps_removed": 19080,
+  "samples": 320,
+  "schema": "d098-p2.2-trusted-trace-reuse-summary-v1",
+  "source_sha256": "e52a49677d54945f0dce6ecba64a9dea9e2f76051aa3a77087fe98717a5f9ab8",
+  "summary_ms": {
+    "max": 69.862,
+    "p50": 49.5152,
+    "p95": 60.741,
+    "p99": 61.0683,
+    "samples": 320
+  }
+}

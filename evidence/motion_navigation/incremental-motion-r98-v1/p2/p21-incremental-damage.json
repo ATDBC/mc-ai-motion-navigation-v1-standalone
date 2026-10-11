@@ -1,0 +1,7701 @@
+{
+  "gate": "P1 baseline only; no 10/50 or 8/15/30 claim",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "python": "3.11.16",
+  "rounds": 20,
+  "rows": [
+    {
+      "case": "flat_walk:A3",
+      "damage_state_updates": 163,
+      "decision_ms": 13.0589,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "legacy_damage_state_visits": 1321,
+      "measured_parts_ms": 13.0444,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1371,
+        "proof_ms": 10.1288,
+        "trace_ms": 2.7785
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "damage_state_updates": 453,
+      "decision_ms": 30.6597,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "legacy_damage_state_visits": 6961,
+      "measured_parts_ms": 30.6508,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1403,
+        "proof_ms": 26.0889,
+        "trace_ms": 4.4216
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "damage_state_updates": 241,
+      "decision_ms": 18.8515,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "legacy_damage_state_visits": 2460,
+      "measured_parts_ms": 18.8427,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2211,
+        "proof_ms": 15.0273,
+        "trace_ms": 3.5943
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "damage_state_updates": 359,
+      "decision_ms": 26.3725,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "legacy_damage_state_visits": 4364,
+      "measured_parts_ms": 26.3634,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.3025,
+        "proof_ms": 21.9472,
+        "trace_ms": 4.1137
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 727,
+      "decision_ms": 50.1984,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 15930,
+      "measured_parts_ms": 50.1883,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5112,
+        "proof_ms": 42.4543,
+        "trace_ms": 7.2228
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "damage_state_updates": 725,
+      "decision_ms": 50.9555,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 50.9446,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6271,
+        "proof_ms": 42.8691,
+        "trace_ms": 7.4484
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "damage_state_updates": 725,
+      "decision_ms": 51.1542,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 51.142,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6766,
+        "proof_ms": 43.0589,
+        "trace_ms": 7.4065
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "damage_state_updates": 667,
+      "decision_ms": 46.1428,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 14218,
+      "measured_parts_ms": 46.1283,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4751,
+        "proof_ms": 39.4032,
+        "trace_ms": 6.25
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "damage_state_updates": 475,
+      "decision_ms": 33.7513,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "legacy_damage_state_visits": 7460,
+      "measured_parts_ms": 33.7412,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4448,
+        "proof_ms": 28.145,
+        "trace_ms": 5.1514
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "damage_state_updates": 221,
+      "decision_ms": 17.5108,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "legacy_damage_state_visits": 2141,
+      "measured_parts_ms": 17.5037,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2077,
+        "proof_ms": 13.8989,
+        "trace_ms": 3.3971
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 765,
+      "decision_ms": 58.0176,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 16893,
+      "measured_parts_ms": 57.9931,
+      "parts_ms": {
+        "controller_ms": 4.3509,
+        "lookup_ms": 0.008,
+        "permit_ms": 0.9875,
+        "proof_ms": 45.5041,
+        "trace_ms": 7.1426
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "damage_state_updates": 738,
+      "decision_ms": 55.6499,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "legacy_damage_state_visits": 15512,
+      "measured_parts_ms": 55.626,
+      "parts_ms": {
+        "controller_ms": 4.0142,
+        "lookup_ms": 0.0058,
+        "permit_ms": 0.954,
+        "proof_ms": 43.8356,
+        "trace_ms": 6.8164
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "damage_state_updates": 667,
+      "decision_ms": 50.2899,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 12458,
+      "measured_parts_ms": 50.2678,
+      "parts_ms": {
+        "controller_ms": 3.5648,
+        "lookup_ms": 0.0054,
+        "permit_ms": 0.8923,
+        "proof_ms": 39.6031,
+        "trace_ms": 6.2022
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "damage_state_updates": 781,
+      "decision_ms": 59.301,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 17499,
+      "measured_parts_ms": 59.2757,
+      "parts_ms": {
+        "controller_ms": 4.2989,
+        "lookup_ms": 0.0052,
+        "permit_ms": 1.1054,
+        "proof_ms": 46.6449,
+        "trace_ms": 7.2213
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "damage_state_updates": 819,
+      "decision_ms": 61.7926,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "legacy_damage_state_visits": 18578,
+      "measured_parts_ms": 61.7657,
+      "parts_ms": {
+        "controller_ms": 4.4372,
+        "lookup_ms": 0.0062,
+        "permit_ms": 1.1509,
+        "proof_ms": 48.6241,
+        "trace_ms": 7.5473
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "damage_state_updates": 748,
+      "decision_ms": 56.1469,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "legacy_damage_state_visits": 15840,
+      "measured_parts_ms": 56.1221,
+      "parts_ms": {
+        "controller_ms": 4.1132,
+        "lookup_ms": 0.0059,
+        "permit_ms": 0.6417,
+        "proof_ms": 44.3077,
+        "trace_ms": 7.0536
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "damage_state_updates": 163,
+      "decision_ms": 12.5357,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "legacy_damage_state_visits": 1321,
+      "measured_parts_ms": 12.5279,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1205,
+        "proof_ms": 9.801,
+        "trace_ms": 2.6064
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "damage_state_updates": 453,
+      "decision_ms": 30.5125,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "legacy_damage_state_visits": 6961,
+      "measured_parts_ms": 30.506,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1399,
+        "proof_ms": 25.999,
+        "trace_ms": 4.3671
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "damage_state_updates": 241,
+      "decision_ms": 18.8235,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "legacy_damage_state_visits": 2460,
+      "measured_parts_ms": 18.8154,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2219,
+        "proof_ms": 15.0673,
+        "trace_ms": 3.5262
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "damage_state_updates": 359,
+      "decision_ms": 26.3367,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "legacy_damage_state_visits": 4364,
+      "measured_parts_ms": 26.3283,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2995,
+        "proof_ms": 22.003,
+        "trace_ms": 4.0258
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 727,
+      "decision_ms": 49.8331,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 15930,
+      "measured_parts_ms": 49.8241,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5217,
+        "proof_ms": 42.2624,
+        "trace_ms": 7.04
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "damage_state_updates": 725,
+      "decision_ms": 50.595,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 50.5856,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6291,
+        "proof_ms": 42.7413,
+        "trace_ms": 7.2152
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "damage_state_updates": 725,
+      "decision_ms": 50.7031,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 50.6937,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6902,
+        "proof_ms": 42.7291,
+        "trace_ms": 7.2744
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "damage_state_updates": 667,
+      "decision_ms": 45.7081,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 14218,
+      "measured_parts_ms": 45.6993,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4666,
+        "proof_ms": 39.0433,
+        "trace_ms": 6.1894
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "damage_state_updates": 475,
+      "decision_ms": 33.7526,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "legacy_damage_state_visits": 7460,
+      "measured_parts_ms": 33.7428,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4408,
+        "proof_ms": 28.2696,
+        "trace_ms": 5.0324
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "damage_state_updates": 221,
+      "decision_ms": 17.5172,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "legacy_damage_state_visits": 2141,
+      "measured_parts_ms": 17.5093,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2077,
+        "proof_ms": 13.95,
+        "trace_ms": 3.3516
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 765,
+      "decision_ms": 57.578,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 16893,
+      "measured_parts_ms": 57.5525,
+      "parts_ms": {
+        "controller_ms": 4.195,
+        "lookup_ms": 0.0072,
+        "permit_ms": 0.993,
+        "proof_ms": 45.2241,
+        "trace_ms": 7.1332
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "damage_state_updates": 738,
+      "decision_ms": 55.6591,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "legacy_damage_state_visits": 15512,
+      "measured_parts_ms": 55.6337,
+      "parts_ms": {
+        "controller_ms": 4.0009,
+        "lookup_ms": 0.008,
+        "permit_ms": 0.9664,
+        "proof_ms": 43.8573,
+        "trace_ms": 6.8011
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "damage_state_updates": 667,
+      "decision_ms": 50.0541,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 12458,
+      "measured_parts_ms": 50.0325,
+      "parts_ms": {
+        "controller_ms": 3.5296,
+        "lookup_ms": 0.0044,
+        "permit_ms": 0.8779,
+        "proof_ms": 39.462,
+        "trace_ms": 6.1586
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "damage_state_updates": 781,
+      "decision_ms": 58.8947,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 17499,
+      "measured_parts_ms": 58.8702,
+      "parts_ms": {
+        "controller_ms": 4.218,
+        "lookup_ms": 0.004,
+        "permit_ms": 1.112,
+        "proof_ms": 46.3581,
+        "trace_ms": 7.1781
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "damage_state_updates": 819,
+      "decision_ms": 62.7399,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "legacy_damage_state_visits": 18578,
+      "measured_parts_ms": 62.7135,
+      "parts_ms": {
+        "controller_ms": 4.4209,
+        "lookup_ms": 0.0044,
+        "permit_ms": 1.1566,
+        "proof_ms": 49.5817,
+        "trace_ms": 7.5499
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "damage_state_updates": 748,
+      "decision_ms": 56.3746,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "legacy_damage_state_visits": 15840,
+      "measured_parts_ms": 56.3491,
+      "parts_ms": {
+        "controller_ms": 4.101,
+        "lookup_ms": 0.0066,
+        "permit_ms": 0.6526,
+        "proof_ms": 44.5007,
+        "trace_ms": 7.0882
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "damage_state_updates": 163,
+      "decision_ms": 12.5285,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "legacy_damage_state_visits": 1321,
+      "measured_parts_ms": 12.5199,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.121,
+        "proof_ms": 9.873,
+        "trace_ms": 2.5259
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "damage_state_updates": 453,
+      "decision_ms": 30.3678,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "legacy_damage_state_visits": 6961,
+      "measured_parts_ms": 30.3597,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1386,
+        "proof_ms": 25.915,
+        "trace_ms": 4.3061
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "damage_state_updates": 241,
+      "decision_ms": 18.7728,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "legacy_damage_state_visits": 2460,
+      "measured_parts_ms": 18.7653,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2213,
+        "proof_ms": 15.0261,
+        "trace_ms": 3.5179
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "damage_state_updates": 359,
+      "decision_ms": 26.3863,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "legacy_damage_state_visits": 4364,
+      "measured_parts_ms": 26.3787,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.3154,
+        "proof_ms": 22.0649,
+        "trace_ms": 3.9984
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 727,
+      "decision_ms": 49.8379,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 15930,
+      "measured_parts_ms": 49.8292,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5184,
+        "proof_ms": 42.3002,
+        "trace_ms": 7.0106
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "damage_state_updates": 725,
+      "decision_ms": 50.6355,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 50.6264,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6256,
+        "proof_ms": 42.7513,
+        "trace_ms": 7.2495
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "damage_state_updates": 725,
+      "decision_ms": 50.7304,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 50.72,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6815,
+        "proof_ms": 42.7294,
+        "trace_ms": 7.3091
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "damage_state_updates": 667,
+      "decision_ms": 45.6411,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 14218,
+      "measured_parts_ms": 45.6318,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4764,
+        "proof_ms": 39.0466,
+        "trace_ms": 6.1088
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "damage_state_updates": 475,
+      "decision_ms": 33.6361,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "legacy_damage_state_visits": 7460,
+      "measured_parts_ms": 33.6265,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.437,
+        "proof_ms": 28.184,
+        "trace_ms": 5.0055
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "damage_state_updates": 221,
+      "decision_ms": 17.4867,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "legacy_damage_state_visits": 2141,
+      "measured_parts_ms": 17.4791,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2072,
+        "proof_ms": 13.9252,
+        "trace_ms": 3.3467
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 765,
+      "decision_ms": 57.6284,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 16893,
+      "measured_parts_ms": 57.605,
+      "parts_ms": {
+        "controller_ms": 4.2111,
+        "lookup_ms": 0.0055,
+        "permit_ms": 0.9809,
+        "proof_ms": 45.3196,
+        "trace_ms": 7.0879
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "damage_state_updates": 738,
+      "decision_ms": 55.5089,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "legacy_damage_state_visits": 15512,
+      "measured_parts_ms": 55.4855,
+      "parts_ms": {
+        "controller_ms": 3.9907,
+        "lookup_ms": 0.005,
+        "permit_ms": 0.9625,
+        "proof_ms": 43.7067,
+        "trace_ms": 6.8206
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "damage_state_updates": 667,
+      "decision_ms": 50.0938,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 12458,
+      "measured_parts_ms": 50.0717,
+      "parts_ms": {
+        "controller_ms": 3.527,
+        "lookup_ms": 0.0047,
+        "permit_ms": 0.8972,
+        "proof_ms": 39.5127,
+        "trace_ms": 6.1301
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "damage_state_updates": 781,
+      "decision_ms": 59.107,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 17499,
+      "measured_parts_ms": 59.0828,
+      "parts_ms": {
+        "controller_ms": 4.2506,
+        "lookup_ms": 0.0044,
+        "permit_ms": 1.1234,
+        "proof_ms": 46.5204,
+        "trace_ms": 7.184
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "damage_state_updates": 819,
+      "decision_ms": 61.8831,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "legacy_damage_state_visits": 18578,
+      "measured_parts_ms": 61.8568,
+      "parts_ms": {
+        "controller_ms": 4.4452,
+        "lookup_ms": 0.0053,
+        "permit_ms": 1.156,
+        "proof_ms": 48.6687,
+        "trace_ms": 7.5816
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "damage_state_updates": 748,
+      "decision_ms": 56.0292,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "legacy_damage_state_visits": 15840,
+      "measured_parts_ms": 56.005,
+      "parts_ms": {
+        "controller_ms": 4.0727,
+        "lookup_ms": 0.0052,
+        "permit_ms": 0.6584,
+        "proof_ms": 44.2151,
+        "trace_ms": 7.0536
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "damage_state_updates": 163,
+      "decision_ms": 12.5642,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "legacy_damage_state_visits": 1321,
+      "measured_parts_ms": 12.5561,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1199,
+        "proof_ms": 9.9155,
+        "trace_ms": 2.5207
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "damage_state_updates": 453,
+      "decision_ms": 30.3637,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "legacy_damage_state_visits": 6961,
+      "measured_parts_ms": 30.3563,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1377,
+        "proof_ms": 25.9183,
+        "trace_ms": 4.3003
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "damage_state_updates": 241,
+      "decision_ms": 18.8864,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "legacy_damage_state_visits": 2460,
+      "measured_parts_ms": 18.8789,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2214,
+        "proof_ms": 15.1488,
+        "trace_ms": 3.5087
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "damage_state_updates": 359,
+      "decision_ms": 26.4898,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "legacy_damage_state_visits": 4364,
+      "measured_parts_ms": 26.4821,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.3014,
+        "proof_ms": 22.1424,
+        "trace_ms": 4.0383
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 727,
+      "decision_ms": 49.9041,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 15930,
+      "measured_parts_ms": 49.8954,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5128,
+        "proof_ms": 42.3706,
+        "trace_ms": 7.012
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "damage_state_updates": 725,
+      "decision_ms": 50.7094,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 50.6998,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6292,
+        "proof_ms": 42.8101,
+        "trace_ms": 7.2605
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "damage_state_updates": 725,
+      "decision_ms": 51.0766,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 51.0667,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6774,
+        "proof_ms": 43.0588,
+        "trace_ms": 7.3305
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "damage_state_updates": 667,
+      "decision_ms": 45.8289,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 14218,
+      "measured_parts_ms": 45.8192,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4691,
+        "proof_ms": 39.2135,
+        "trace_ms": 6.1366
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "damage_state_updates": 475,
+      "decision_ms": 34.7245,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "legacy_damage_state_visits": 7460,
+      "measured_parts_ms": 34.7128,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5455,
+        "proof_ms": 29.1224,
+        "trace_ms": 5.0449
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "damage_state_updates": 221,
+      "decision_ms": 22.0921,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "legacy_damage_state_visits": 2141,
+      "measured_parts_ms": 22.0802,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2641,
+        "proof_ms": 17.5659,
+        "trace_ms": 4.2502
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 765,
+      "decision_ms": 72.6063,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 16893,
+      "measured_parts_ms": 72.5706,
+      "parts_ms": {
+        "controller_ms": 5.2933,
+        "lookup_ms": 0.0081,
+        "permit_ms": 1.2518,
+        "proof_ms": 57.0554,
+        "trace_ms": 8.962
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "damage_state_updates": 738,
+      "decision_ms": 69.7071,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "legacy_damage_state_visits": 15512,
+      "measured_parts_ms": 69.673,
+      "parts_ms": {
+        "controller_ms": 5.0208,
+        "lookup_ms": 0.0079,
+        "permit_ms": 1.1639,
+        "proof_ms": 54.915,
+        "trace_ms": 8.5654
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "damage_state_updates": 667,
+      "decision_ms": 62.9637,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 12458,
+      "measured_parts_ms": 62.9296,
+      "parts_ms": {
+        "controller_ms": 4.4239,
+        "lookup_ms": 0.0075,
+        "permit_ms": 1.0895,
+        "proof_ms": 49.6557,
+        "trace_ms": 7.753
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "damage_state_updates": 781,
+      "decision_ms": 74.2134,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 17499,
+      "measured_parts_ms": 74.1764,
+      "parts_ms": {
+        "controller_ms": 5.3645,
+        "lookup_ms": 0.0068,
+        "permit_ms": 1.4069,
+        "proof_ms": 58.3624,
+        "trace_ms": 9.0358
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "damage_state_updates": 819,
+      "decision_ms": 77.7294,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "legacy_damage_state_visits": 18578,
+      "measured_parts_ms": 77.6899,
+      "parts_ms": {
+        "controller_ms": 5.5597,
+        "lookup_ms": 0.007,
+        "permit_ms": 1.4618,
+        "proof_ms": 61.1997,
+        "trace_ms": 9.4617
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "damage_state_updates": 748,
+      "decision_ms": 70.4261,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "legacy_damage_state_visits": 15840,
+      "measured_parts_ms": 70.3882,
+      "parts_ms": {
+        "controller_ms": 5.1402,
+        "lookup_ms": 0.007,
+        "permit_ms": 0.8074,
+        "proof_ms": 55.5788,
+        "trace_ms": 8.8548
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "damage_state_updates": 163,
+      "decision_ms": 15.776,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "legacy_damage_state_visits": 1321,
+      "measured_parts_ms": 15.7624,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1554,
+        "proof_ms": 12.4409,
+        "trace_ms": 3.1661
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "damage_state_updates": 453,
+      "decision_ms": 38.0889,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "legacy_damage_state_visits": 6961,
+      "measured_parts_ms": 38.0773,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1777,
+        "proof_ms": 32.4957,
+        "trace_ms": 5.4039
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "damage_state_updates": 241,
+      "decision_ms": 23.6963,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "legacy_damage_state_visits": 2460,
+      "measured_parts_ms": 23.6835,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2785,
+        "proof_ms": 18.9975,
+        "trace_ms": 4.4075
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "damage_state_updates": 359,
+      "decision_ms": 33.2441,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "legacy_damage_state_visits": 4364,
+      "measured_parts_ms": 33.2312,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.3796,
+        "proof_ms": 27.7614,
+        "trace_ms": 5.0902
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 727,
+      "decision_ms": 62.8205,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 15930,
+      "measured_parts_ms": 62.807,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6528,
+        "proof_ms": 53.3069,
+        "trace_ms": 8.8473
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "damage_state_updates": 725,
+      "decision_ms": 63.7452,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 63.73,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.7772,
+        "proof_ms": 53.8125,
+        "trace_ms": 9.1403
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "damage_state_updates": 725,
+      "decision_ms": 63.8795,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 63.8658,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.841,
+        "proof_ms": 53.8185,
+        "trace_ms": 9.2063
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "damage_state_updates": 667,
+      "decision_ms": 57.3973,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 14218,
+      "measured_parts_ms": 57.3834,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.582,
+        "proof_ms": 49.1066,
+        "trace_ms": 7.6948
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "damage_state_updates": 475,
+      "decision_ms": 42.3707,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "legacy_damage_state_visits": 7460,
+      "measured_parts_ms": 42.3562,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5497,
+        "proof_ms": 35.4808,
+        "trace_ms": 6.3257
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "damage_state_updates": 221,
+      "decision_ms": 21.9787,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "legacy_damage_state_visits": 2141,
+      "measured_parts_ms": 21.9667,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2645,
+        "proof_ms": 17.4708,
+        "trace_ms": 4.2314
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 765,
+      "decision_ms": 72.8382,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 16893,
+      "measured_parts_ms": 72.8003,
+      "parts_ms": {
+        "controller_ms": 5.2998,
+        "lookup_ms": 0.0065,
+        "permit_ms": 1.2105,
+        "proof_ms": 57.387,
+        "trace_ms": 8.8965
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "damage_state_updates": 738,
+      "decision_ms": 70.0426,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "legacy_damage_state_visits": 15512,
+      "measured_parts_ms": 70.0034,
+      "parts_ms": {
+        "controller_ms": 5.0485,
+        "lookup_ms": 0.0069,
+        "permit_ms": 1.1849,
+        "proof_ms": 55.1733,
+        "trace_ms": 8.5898
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "damage_state_updates": 667,
+      "decision_ms": 63.0261,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 12458,
+      "measured_parts_ms": 62.9899,
+      "parts_ms": {
+        "controller_ms": 4.4343,
+        "lookup_ms": 0.0071,
+        "permit_ms": 1.093,
+        "proof_ms": 49.6905,
+        "trace_ms": 7.765
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "damage_state_updates": 781,
+      "decision_ms": 74.615,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 17499,
+      "measured_parts_ms": 74.5765,
+      "parts_ms": {
+        "controller_ms": 5.3659,
+        "lookup_ms": 0.0076,
+        "permit_ms": 1.3874,
+        "proof_ms": 58.7815,
+        "trace_ms": 9.0341
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "damage_state_updates": 819,
+      "decision_ms": 78.0697,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "legacy_damage_state_visits": 18578,
+      "measured_parts_ms": 78.0286,
+      "parts_ms": {
+        "controller_ms": 5.5589,
+        "lookup_ms": 0.0069,
+        "permit_ms": 1.4405,
+        "proof_ms": 61.5021,
+        "trace_ms": 9.5202
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "damage_state_updates": 748,
+      "decision_ms": 70.8044,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "legacy_damage_state_visits": 15840,
+      "measured_parts_ms": 70.7697,
+      "parts_ms": {
+        "controller_ms": 5.1507,
+        "lookup_ms": 0.0075,
+        "permit_ms": 0.8204,
+        "proof_ms": 55.9392,
+        "trace_ms": 8.8519
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "damage_state_updates": 163,
+      "decision_ms": 15.9276,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "legacy_damage_state_visits": 1321,
+      "measured_parts_ms": 15.9147,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1561,
+        "proof_ms": 12.5745,
+        "trace_ms": 3.1841
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "damage_state_updates": 453,
+      "decision_ms": 38.3631,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "legacy_damage_state_visits": 6961,
+      "measured_parts_ms": 38.3505,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1796,
+        "proof_ms": 32.7585,
+        "trace_ms": 5.4124
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "damage_state_updates": 241,
+      "decision_ms": 23.7598,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "legacy_damage_state_visits": 2460,
+      "measured_parts_ms": 23.7461,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.301,
+        "proof_ms": 19.0063,
+        "trace_ms": 4.4388
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "damage_state_updates": 359,
+      "decision_ms": 33.2997,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "legacy_damage_state_visits": 4364,
+      "measured_parts_ms": 33.2861,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.3809,
+        "proof_ms": 27.8165,
+        "trace_ms": 5.0887
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 727,
+      "decision_ms": 62.926,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 15930,
+      "measured_parts_ms": 62.9119,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6495,
+        "proof_ms": 53.4452,
+        "trace_ms": 8.8172
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "damage_state_updates": 725,
+      "decision_ms": 63.8708,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 63.8569,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.7734,
+        "proof_ms": 53.9961,
+        "trace_ms": 9.0874
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "damage_state_updates": 725,
+      "decision_ms": 64.0985,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 64.0832,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.8494,
+        "proof_ms": 54.0512,
+        "trace_ms": 9.1826
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "damage_state_updates": 667,
+      "decision_ms": 57.8607,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 14218,
+      "measured_parts_ms": 57.8455,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5979,
+        "proof_ms": 49.4555,
+        "trace_ms": 7.7921
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "damage_state_updates": 475,
+      "decision_ms": 42.6131,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "legacy_damage_state_visits": 7460,
+      "measured_parts_ms": 42.5989,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.554,
+        "proof_ms": 35.6875,
+        "trace_ms": 6.3574
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "damage_state_updates": 221,
+      "decision_ms": 22.0022,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "legacy_damage_state_visits": 2141,
+      "measured_parts_ms": 21.9891,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2641,
+        "proof_ms": 17.4972,
+        "trace_ms": 4.2278
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 765,
+      "decision_ms": 72.4146,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 16893,
+      "measured_parts_ms": 72.3718,
+      "parts_ms": {
+        "controller_ms": 5.2817,
+        "lookup_ms": 0.0074,
+        "permit_ms": 1.2208,
+        "proof_ms": 56.9426,
+        "trace_ms": 8.9193
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "damage_state_updates": 738,
+      "decision_ms": 69.8808,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "legacy_damage_state_visits": 15512,
+      "measured_parts_ms": 69.8435,
+      "parts_ms": {
+        "controller_ms": 5.0436,
+        "lookup_ms": 0.0071,
+        "permit_ms": 1.1812,
+        "proof_ms": 55.0804,
+        "trace_ms": 8.5312
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "damage_state_updates": 667,
+      "decision_ms": 63.2877,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 12458,
+      "measured_parts_ms": 63.2513,
+      "parts_ms": {
+        "controller_ms": 4.4157,
+        "lookup_ms": 0.0076,
+        "permit_ms": 1.1052,
+        "proof_ms": 49.905,
+        "trace_ms": 7.8178
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "damage_state_updates": 781,
+      "decision_ms": 74.6763,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 17499,
+      "measured_parts_ms": 74.6314,
+      "parts_ms": {
+        "controller_ms": 5.3945,
+        "lookup_ms": 0.0079,
+        "permit_ms": 1.423,
+        "proof_ms": 58.7515,
+        "trace_ms": 9.0545
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "damage_state_updates": 819,
+      "decision_ms": 78.0525,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "legacy_damage_state_visits": 18578,
+      "measured_parts_ms": 78.0116,
+      "parts_ms": {
+        "controller_ms": 5.6021,
+        "lookup_ms": 0.0074,
+        "permit_ms": 1.5087,
+        "proof_ms": 61.4331,
+        "trace_ms": 9.4603
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "damage_state_updates": 748,
+      "decision_ms": 70.6884,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "legacy_damage_state_visits": 15840,
+      "measured_parts_ms": 70.6473,
+      "parts_ms": {
+        "controller_ms": 5.1553,
+        "lookup_ms": 0.0073,
+        "permit_ms": 0.8113,
+        "proof_ms": 55.8009,
+        "trace_ms": 8.8725
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "damage_state_updates": 163,
+      "decision_ms": 15.8522,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "legacy_damage_state_visits": 1321,
+      "measured_parts_ms": 15.8384,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1582,
+        "proof_ms": 12.5291,
+        "trace_ms": 3.1511
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "damage_state_updates": 453,
+      "decision_ms": 38.3154,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "legacy_damage_state_visits": 6961,
+      "measured_parts_ms": 38.3019,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1771,
+        "proof_ms": 32.6868,
+        "trace_ms": 5.438
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "damage_state_updates": 241,
+      "decision_ms": 23.8175,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "legacy_damage_state_visits": 2460,
+      "measured_parts_ms": 23.8026,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2803,
+        "proof_ms": 19.0724,
+        "trace_ms": 4.4499
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "damage_state_updates": 359,
+      "decision_ms": 33.3585,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "legacy_damage_state_visits": 4364,
+      "measured_parts_ms": 33.3456,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.3748,
+        "proof_ms": 27.824,
+        "trace_ms": 5.1468
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 727,
+      "decision_ms": 62.7853,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 15930,
+      "measured_parts_ms": 62.7704,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.658,
+        "proof_ms": 53.3146,
+        "trace_ms": 8.7978
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "damage_state_updates": 725,
+      "decision_ms": 63.94,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 63.9231,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.7889,
+        "proof_ms": 54.0789,
+        "trace_ms": 9.0553
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "damage_state_updates": 725,
+      "decision_ms": 64.9968,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 64.98,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.854,
+        "proof_ms": 54.7679,
+        "trace_ms": 9.3581
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "damage_state_updates": 667,
+      "decision_ms": 58.369,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 14218,
+      "measured_parts_ms": 58.353,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5914,
+        "proof_ms": 49.8115,
+        "trace_ms": 7.9501
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "damage_state_updates": 475,
+      "decision_ms": 42.6525,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "legacy_damage_state_visits": 7460,
+      "measured_parts_ms": 42.6358,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5478,
+        "proof_ms": 35.7433,
+        "trace_ms": 6.3447
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "damage_state_updates": 221,
+      "decision_ms": 22.1942,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "legacy_damage_state_visits": 2141,
+      "measured_parts_ms": 22.1813,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2682,
+        "proof_ms": 17.6014,
+        "trace_ms": 4.3117
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 765,
+      "decision_ms": 72.6862,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 16893,
+      "measured_parts_ms": 72.647,
+      "parts_ms": {
+        "controller_ms": 5.3162,
+        "lookup_ms": 0.0074,
+        "permit_ms": 1.2428,
+        "proof_ms": 57.1226,
+        "trace_ms": 8.958
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "damage_state_updates": 738,
+      "decision_ms": 69.931,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "legacy_damage_state_visits": 15512,
+      "measured_parts_ms": 69.8902,
+      "parts_ms": {
+        "controller_ms": 5.0479,
+        "lookup_ms": 0.0076,
+        "permit_ms": 1.1903,
+        "proof_ms": 55.0874,
+        "trace_ms": 8.557
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "damage_state_updates": 667,
+      "decision_ms": 63.2618,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 12458,
+      "measured_parts_ms": 63.2268,
+      "parts_ms": {
+        "controller_ms": 4.4931,
+        "lookup_ms": 0.0074,
+        "permit_ms": 1.1135,
+        "proof_ms": 49.8807,
+        "trace_ms": 7.7321
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "damage_state_updates": 781,
+      "decision_ms": 74.2,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 17499,
+      "measured_parts_ms": 74.1648,
+      "parts_ms": {
+        "controller_ms": 5.3698,
+        "lookup_ms": 0.0069,
+        "permit_ms": 1.3669,
+        "proof_ms": 58.4149,
+        "trace_ms": 9.0063
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "damage_state_updates": 819,
+      "decision_ms": 77.9731,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "legacy_damage_state_visits": 18578,
+      "measured_parts_ms": 77.9342,
+      "parts_ms": {
+        "controller_ms": 5.6,
+        "lookup_ms": 0.0066,
+        "permit_ms": 1.4313,
+        "proof_ms": 61.4393,
+        "trace_ms": 9.457
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "damage_state_updates": 748,
+      "decision_ms": 70.8644,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "legacy_damage_state_visits": 15840,
+      "measured_parts_ms": 70.8229,
+      "parts_ms": {
+        "controller_ms": 5.1472,
+        "lookup_ms": 0.0077,
+        "permit_ms": 0.8009,
+        "proof_ms": 55.9504,
+        "trace_ms": 8.9167
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "damage_state_updates": 163,
+      "decision_ms": 15.883,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "legacy_damage_state_visits": 1321,
+      "measured_parts_ms": 15.8696,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1535,
+        "proof_ms": 12.4949,
+        "trace_ms": 3.2212
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "damage_state_updates": 453,
+      "decision_ms": 38.3036,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "legacy_damage_state_visits": 6961,
+      "measured_parts_ms": 38.2913,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1791,
+        "proof_ms": 32.679,
+        "trace_ms": 5.4332
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "damage_state_updates": 241,
+      "decision_ms": 23.8273,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "legacy_damage_state_visits": 2460,
+      "measured_parts_ms": 23.8144,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2829,
+        "proof_ms": 19.1025,
+        "trace_ms": 4.429
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "damage_state_updates": 359,
+      "decision_ms": 33.2518,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "legacy_damage_state_visits": 4364,
+      "measured_parts_ms": 33.2396,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.3769,
+        "proof_ms": 27.7578,
+        "trace_ms": 5.1049
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 727,
+      "decision_ms": 62.9015,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 15930,
+      "measured_parts_ms": 62.8878,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6511,
+        "proof_ms": 53.4434,
+        "trace_ms": 8.7933
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "damage_state_updates": 725,
+      "decision_ms": 63.9899,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 63.9756,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.7724,
+        "proof_ms": 54.0321,
+        "trace_ms": 9.1711
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "damage_state_updates": 725,
+      "decision_ms": 64.2215,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 64.2071,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.8506,
+        "proof_ms": 54.1552,
+        "trace_ms": 9.2013
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "damage_state_updates": 667,
+      "decision_ms": 57.7198,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 14218,
+      "measured_parts_ms": 57.7062,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5928,
+        "proof_ms": 49.417,
+        "trace_ms": 7.6964
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "damage_state_updates": 475,
+      "decision_ms": 42.5272,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "legacy_damage_state_visits": 7460,
+      "measured_parts_ms": 42.512,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5455,
+        "proof_ms": 35.5788,
+        "trace_ms": 6.3877
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "damage_state_updates": 221,
+      "decision_ms": 22.0368,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "legacy_damage_state_visits": 2141,
+      "measured_parts_ms": 22.0242,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2654,
+        "proof_ms": 17.4888,
+        "trace_ms": 4.27
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 765,
+      "decision_ms": 72.5513,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 16893,
+      "measured_parts_ms": 72.5146,
+      "parts_ms": {
+        "controller_ms": 5.2922,
+        "lookup_ms": 0.008,
+        "permit_ms": 1.2454,
+        "proof_ms": 57.0654,
+        "trace_ms": 8.9036
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "damage_state_updates": 738,
+      "decision_ms": 69.9431,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "legacy_damage_state_visits": 15512,
+      "measured_parts_ms": 69.9049,
+      "parts_ms": {
+        "controller_ms": 5.0018,
+        "lookup_ms": 0.0072,
+        "permit_ms": 1.1963,
+        "proof_ms": 55.1542,
+        "trace_ms": 8.5454
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "damage_state_updates": 667,
+      "decision_ms": 63.3104,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 12458,
+      "measured_parts_ms": 63.2761,
+      "parts_ms": {
+        "controller_ms": 4.4498,
+        "lookup_ms": 0.0077,
+        "permit_ms": 1.1249,
+        "proof_ms": 49.9561,
+        "trace_ms": 7.7376
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "damage_state_updates": 781,
+      "decision_ms": 74.7583,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 17499,
+      "measured_parts_ms": 74.7124,
+      "parts_ms": {
+        "controller_ms": 5.413,
+        "lookup_ms": 0.007,
+        "permit_ms": 1.3889,
+        "proof_ms": 58.8359,
+        "trace_ms": 9.0676
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "damage_state_updates": 819,
+      "decision_ms": 77.9282,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "legacy_damage_state_visits": 18578,
+      "measured_parts_ms": 77.8849,
+      "parts_ms": {
+        "controller_ms": 5.6074,
+        "lookup_ms": 0.0072,
+        "permit_ms": 1.4256,
+        "proof_ms": 61.4188,
+        "trace_ms": 9.4259
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "damage_state_updates": 748,
+      "decision_ms": 70.8382,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "legacy_damage_state_visits": 15840,
+      "measured_parts_ms": 70.7988,
+      "parts_ms": {
+        "controller_ms": 5.1639,
+        "lookup_ms": 0.0074,
+        "permit_ms": 0.827,
+        "proof_ms": 55.8748,
+        "trace_ms": 8.9257
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "damage_state_updates": 163,
+      "decision_ms": 15.899,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "legacy_damage_state_visits": 1321,
+      "measured_parts_ms": 15.8861,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1615,
+        "proof_ms": 12.536,
+        "trace_ms": 3.1886
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "damage_state_updates": 453,
+      "decision_ms": 38.5312,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "legacy_damage_state_visits": 6961,
+      "measured_parts_ms": 38.5174,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.181,
+        "proof_ms": 32.797,
+        "trace_ms": 5.5394
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "damage_state_updates": 241,
+      "decision_ms": 23.9445,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "legacy_damage_state_visits": 2460,
+      "measured_parts_ms": 23.9299,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2866,
+        "proof_ms": 19.1641,
+        "trace_ms": 4.4792
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "damage_state_updates": 359,
+      "decision_ms": 33.3157,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "legacy_damage_state_visits": 4364,
+      "measured_parts_ms": 33.3018,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.3831,
+        "proof_ms": 27.8298,
+        "trace_ms": 5.0889
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 727,
+      "decision_ms": 63.0598,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 15930,
+      "measured_parts_ms": 63.0448,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6429,
+        "proof_ms": 53.5366,
+        "trace_ms": 8.8653
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "damage_state_updates": 725,
+      "decision_ms": 63.8702,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 63.8565,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.7758,
+        "proof_ms": 54.012,
+        "trace_ms": 9.0687
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "damage_state_updates": 725,
+      "decision_ms": 64.1121,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 64.0987,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.8445,
+        "proof_ms": 54.0558,
+        "trace_ms": 9.1984
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "damage_state_updates": 667,
+      "decision_ms": 57.7322,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 14218,
+      "measured_parts_ms": 57.7173,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6095,
+        "proof_ms": 49.4372,
+        "trace_ms": 7.6706
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "damage_state_updates": 475,
+      "decision_ms": 42.4712,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "legacy_damage_state_visits": 7460,
+      "measured_parts_ms": 42.4558,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5588,
+        "proof_ms": 35.5531,
+        "trace_ms": 6.3439
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "damage_state_updates": 221,
+      "decision_ms": 22.1856,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "legacy_damage_state_visits": 2141,
+      "measured_parts_ms": 22.172,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2674,
+        "proof_ms": 17.6161,
+        "trace_ms": 4.2885
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 765,
+      "decision_ms": 73.0047,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 16893,
+      "measured_parts_ms": 72.9644,
+      "parts_ms": {
+        "controller_ms": 5.3112,
+        "lookup_ms": 0.008,
+        "permit_ms": 1.2245,
+        "proof_ms": 57.4213,
+        "trace_ms": 8.9994
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "damage_state_updates": 738,
+      "decision_ms": 69.9024,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "legacy_damage_state_visits": 15512,
+      "measured_parts_ms": 69.8646,
+      "parts_ms": {
+        "controller_ms": 5.0305,
+        "lookup_ms": 0.0064,
+        "permit_ms": 1.2041,
+        "proof_ms": 55.0163,
+        "trace_ms": 8.6073
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "damage_state_updates": 667,
+      "decision_ms": 63.0666,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 12458,
+      "measured_parts_ms": 63.033,
+      "parts_ms": {
+        "controller_ms": 4.4245,
+        "lookup_ms": 0.0071,
+        "permit_ms": 1.1122,
+        "proof_ms": 49.7383,
+        "trace_ms": 7.7509
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "damage_state_updates": 781,
+      "decision_ms": 74.847,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 17499,
+      "measured_parts_ms": 74.8065,
+      "parts_ms": {
+        "controller_ms": 5.3629,
+        "lookup_ms": 0.0068,
+        "permit_ms": 1.4131,
+        "proof_ms": 58.9808,
+        "trace_ms": 9.0429
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "damage_state_updates": 819,
+      "decision_ms": 78.0155,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "legacy_damage_state_visits": 18578,
+      "measured_parts_ms": 77.9722,
+      "parts_ms": {
+        "controller_ms": 5.6278,
+        "lookup_ms": 0.007,
+        "permit_ms": 1.4263,
+        "proof_ms": 61.3831,
+        "trace_ms": 9.528
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "damage_state_updates": 748,
+      "decision_ms": 70.8386,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "legacy_damage_state_visits": 15840,
+      "measured_parts_ms": 70.8034,
+      "parts_ms": {
+        "controller_ms": 5.1485,
+        "lookup_ms": 0.0077,
+        "permit_ms": 0.8196,
+        "proof_ms": 55.898,
+        "trace_ms": 8.9296
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "damage_state_updates": 163,
+      "decision_ms": 15.833,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "legacy_damage_state_visits": 1321,
+      "measured_parts_ms": 15.8191,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1596,
+        "proof_ms": 12.4999,
+        "trace_ms": 3.1596
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "damage_state_updates": 453,
+      "decision_ms": 38.2823,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "legacy_damage_state_visits": 6961,
+      "measured_parts_ms": 38.2692,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1815,
+        "proof_ms": 32.6612,
+        "trace_ms": 5.4265
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "damage_state_updates": 241,
+      "decision_ms": 23.8889,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "legacy_damage_state_visits": 2460,
+      "measured_parts_ms": 23.8752,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.279,
+        "proof_ms": 19.1418,
+        "trace_ms": 4.4544
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "damage_state_updates": 359,
+      "decision_ms": 33.3982,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "legacy_damage_state_visits": 4364,
+      "measured_parts_ms": 33.3852,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.378,
+        "proof_ms": 27.9189,
+        "trace_ms": 5.0883
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 727,
+      "decision_ms": 62.8602,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 15930,
+      "measured_parts_ms": 62.8457,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6526,
+        "proof_ms": 53.3549,
+        "trace_ms": 8.8382
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "damage_state_updates": 725,
+      "decision_ms": 63.7953,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 63.781,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.7922,
+        "proof_ms": 53.8856,
+        "trace_ms": 9.1032
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "damage_state_updates": 725,
+      "decision_ms": 64.1957,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 64.1806,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.8377,
+        "proof_ms": 54.1556,
+        "trace_ms": 9.1873
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "damage_state_updates": 667,
+      "decision_ms": 57.8154,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 14218,
+      "measured_parts_ms": 57.8013,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.599,
+        "proof_ms": 49.4286,
+        "trace_ms": 7.7737
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "damage_state_updates": 475,
+      "decision_ms": 42.5112,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "legacy_damage_state_visits": 7460,
+      "measured_parts_ms": 42.4966,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5704,
+        "proof_ms": 35.625,
+        "trace_ms": 6.3012
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "damage_state_updates": 221,
+      "decision_ms": 22.0864,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "legacy_damage_state_visits": 2141,
+      "measured_parts_ms": 22.073,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2635,
+        "proof_ms": 17.5674,
+        "trace_ms": 4.2421
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 765,
+      "decision_ms": 72.8112,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 16893,
+      "measured_parts_ms": 72.7723,
+      "parts_ms": {
+        "controller_ms": 5.2986,
+        "lookup_ms": 0.0078,
+        "permit_ms": 1.2282,
+        "proof_ms": 57.2747,
+        "trace_ms": 8.963
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "damage_state_updates": 738,
+      "decision_ms": 70.0523,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "legacy_damage_state_visits": 15512,
+      "measured_parts_ms": 70.0174,
+      "parts_ms": {
+        "controller_ms": 5.0138,
+        "lookup_ms": 0.0066,
+        "permit_ms": 1.2578,
+        "proof_ms": 55.1654,
+        "trace_ms": 8.5738
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "damage_state_updates": 667,
+      "decision_ms": 63.3722,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 12458,
+      "measured_parts_ms": 63.3371,
+      "parts_ms": {
+        "controller_ms": 4.4302,
+        "lookup_ms": 0.0075,
+        "permit_ms": 1.1114,
+        "proof_ms": 50.0437,
+        "trace_ms": 7.7443
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "damage_state_updates": 781,
+      "decision_ms": 74.8531,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 17499,
+      "measured_parts_ms": 74.8131,
+      "parts_ms": {
+        "controller_ms": 5.375,
+        "lookup_ms": 0.0074,
+        "permit_ms": 1.4018,
+        "proof_ms": 58.9446,
+        "trace_ms": 9.0843
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "damage_state_updates": 819,
+      "decision_ms": 78.1063,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "legacy_damage_state_visits": 18578,
+      "measured_parts_ms": 78.065,
+      "parts_ms": {
+        "controller_ms": 5.6254,
+        "lookup_ms": 0.007,
+        "permit_ms": 1.4321,
+        "proof_ms": 61.4068,
+        "trace_ms": 9.5937
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "damage_state_updates": 748,
+      "decision_ms": 71.0191,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "legacy_damage_state_visits": 15840,
+      "measured_parts_ms": 70.9795,
+      "parts_ms": {
+        "controller_ms": 5.1646,
+        "lookup_ms": 0.008,
+        "permit_ms": 0.8161,
+        "proof_ms": 56.082,
+        "trace_ms": 8.9088
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "damage_state_updates": 163,
+      "decision_ms": 15.9572,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "legacy_damage_state_visits": 1321,
+      "measured_parts_ms": 15.9424,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1577,
+        "proof_ms": 12.5498,
+        "trace_ms": 3.2349
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "damage_state_updates": 453,
+      "decision_ms": 38.4,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "legacy_damage_state_visits": 6961,
+      "measured_parts_ms": 38.3866,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1822,
+        "proof_ms": 32.7613,
+        "trace_ms": 5.4431
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "damage_state_updates": 241,
+      "decision_ms": 23.8749,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "legacy_damage_state_visits": 2460,
+      "measured_parts_ms": 23.8607,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2874,
+        "proof_ms": 19.0804,
+        "trace_ms": 4.4929
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "damage_state_updates": 359,
+      "decision_ms": 33.4122,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "legacy_damage_state_visits": 4364,
+      "measured_parts_ms": 33.3991,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.3907,
+        "proof_ms": 27.9084,
+        "trace_ms": 5.1
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 727,
+      "decision_ms": 63.128,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 15930,
+      "measured_parts_ms": 63.1125,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6499,
+        "proof_ms": 53.6349,
+        "trace_ms": 8.8277
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "damage_state_updates": 725,
+      "decision_ms": 63.9827,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 63.9686,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.796,
+        "proof_ms": 53.9946,
+        "trace_ms": 9.178
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "damage_state_updates": 725,
+      "decision_ms": 64.1509,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 64.1365,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.839,
+        "proof_ms": 54.1177,
+        "trace_ms": 9.1798
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "damage_state_updates": 667,
+      "decision_ms": 57.8845,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 14218,
+      "measured_parts_ms": 57.8693,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5904,
+        "proof_ms": 49.5337,
+        "trace_ms": 7.7452
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "damage_state_updates": 475,
+      "decision_ms": 42.596,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "legacy_damage_state_visits": 7460,
+      "measured_parts_ms": 42.5798,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5565,
+        "proof_ms": 35.625,
+        "trace_ms": 6.3983
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "damage_state_updates": 221,
+      "decision_ms": 22.0344,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "legacy_damage_state_visits": 2141,
+      "measured_parts_ms": 22.0207,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2623,
+        "proof_ms": 17.5036,
+        "trace_ms": 4.2548
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 765,
+      "decision_ms": 72.7772,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 16893,
+      "measured_parts_ms": 72.7416,
+      "parts_ms": {
+        "controller_ms": 5.3183,
+        "lookup_ms": 0.0076,
+        "permit_ms": 1.2462,
+        "proof_ms": 57.2336,
+        "trace_ms": 8.9359
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "damage_state_updates": 738,
+      "decision_ms": 70.1677,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "legacy_damage_state_visits": 15512,
+      "measured_parts_ms": 70.1302,
+      "parts_ms": {
+        "controller_ms": 5.0411,
+        "lookup_ms": 0.0071,
+        "permit_ms": 1.178,
+        "proof_ms": 55.3162,
+        "trace_ms": 8.5878
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "damage_state_updates": 667,
+      "decision_ms": 63.3779,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 12458,
+      "measured_parts_ms": 63.3375,
+      "parts_ms": {
+        "controller_ms": 4.4482,
+        "lookup_ms": 0.0074,
+        "permit_ms": 1.1291,
+        "proof_ms": 49.948,
+        "trace_ms": 7.8048
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "damage_state_updates": 781,
+      "decision_ms": 74.8127,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 17499,
+      "measured_parts_ms": 74.7712,
+      "parts_ms": {
+        "controller_ms": 5.3733,
+        "lookup_ms": 0.0076,
+        "permit_ms": 1.4158,
+        "proof_ms": 58.8354,
+        "trace_ms": 9.1391
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "damage_state_updates": 819,
+      "decision_ms": 77.8787,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "legacy_damage_state_visits": 18578,
+      "measured_parts_ms": 77.8381,
+      "parts_ms": {
+        "controller_ms": 5.5887,
+        "lookup_ms": 0.0075,
+        "permit_ms": 1.4153,
+        "proof_ms": 61.3007,
+        "trace_ms": 9.5259
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "damage_state_updates": 748,
+      "decision_ms": 70.7743,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "legacy_damage_state_visits": 15840,
+      "measured_parts_ms": 70.7385,
+      "parts_ms": {
+        "controller_ms": 5.1518,
+        "lookup_ms": 0.0073,
+        "permit_ms": 0.8,
+        "proof_ms": 55.8879,
+        "trace_ms": 8.8915
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "damage_state_updates": 163,
+      "decision_ms": 15.8327,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "legacy_damage_state_visits": 1321,
+      "measured_parts_ms": 15.8196,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1565,
+        "proof_ms": 12.502,
+        "trace_ms": 3.1611
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "damage_state_updates": 453,
+      "decision_ms": 38.2665,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "legacy_damage_state_visits": 6961,
+      "measured_parts_ms": 38.2553,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1959,
+        "proof_ms": 32.6404,
+        "trace_ms": 5.419
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "damage_state_updates": 241,
+      "decision_ms": 23.7729,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "legacy_damage_state_visits": 2460,
+      "measured_parts_ms": 23.7607,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2817,
+        "proof_ms": 19.0552,
+        "trace_ms": 4.4238
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "damage_state_updates": 359,
+      "decision_ms": 33.2679,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "legacy_damage_state_visits": 4364,
+      "measured_parts_ms": 33.2551,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.3765,
+        "proof_ms": 27.7954,
+        "trace_ms": 5.0832
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 727,
+      "decision_ms": 62.8882,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 15930,
+      "measured_parts_ms": 62.875,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.644,
+        "proof_ms": 53.3642,
+        "trace_ms": 8.8668
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "damage_state_updates": 725,
+      "decision_ms": 63.9623,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 63.9477,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.7614,
+        "proof_ms": 54.067,
+        "trace_ms": 9.1193
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "damage_state_updates": 725,
+      "decision_ms": 64.089,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 64.0731,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.8433,
+        "proof_ms": 53.9985,
+        "trace_ms": 9.2313
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "damage_state_updates": 667,
+      "decision_ms": 57.6839,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 14218,
+      "measured_parts_ms": 57.6687,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5996,
+        "proof_ms": 49.3256,
+        "trace_ms": 7.7435
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "damage_state_updates": 475,
+      "decision_ms": 42.4541,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "legacy_damage_state_visits": 7460,
+      "measured_parts_ms": 42.4385,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5549,
+        "proof_ms": 35.5694,
+        "trace_ms": 6.3142
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "damage_state_updates": 221,
+      "decision_ms": 22.0282,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "legacy_damage_state_visits": 2141,
+      "measured_parts_ms": 22.0151,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2698,
+        "proof_ms": 17.4961,
+        "trace_ms": 4.2492
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 765,
+      "decision_ms": 72.818,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 16893,
+      "measured_parts_ms": 72.7791,
+      "parts_ms": {
+        "controller_ms": 5.3431,
+        "lookup_ms": 0.0071,
+        "permit_ms": 1.2436,
+        "proof_ms": 57.2632,
+        "trace_ms": 8.9221
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "damage_state_updates": 738,
+      "decision_ms": 70.3817,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "legacy_damage_state_visits": 15512,
+      "measured_parts_ms": 70.3416,
+      "parts_ms": {
+        "controller_ms": 5.0412,
+        "lookup_ms": 0.0074,
+        "permit_ms": 1.1936,
+        "proof_ms": 55.4772,
+        "trace_ms": 8.6222
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "damage_state_updates": 667,
+      "decision_ms": 64.1016,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 12458,
+      "measured_parts_ms": 64.0606,
+      "parts_ms": {
+        "controller_ms": 4.7934,
+        "lookup_ms": 0.0076,
+        "permit_ms": 1.0882,
+        "proof_ms": 50.1096,
+        "trace_ms": 8.0618
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "damage_state_updates": 781,
+      "decision_ms": 74.9484,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 17499,
+      "measured_parts_ms": 74.9095,
+      "parts_ms": {
+        "controller_ms": 5.3988,
+        "lookup_ms": 0.007,
+        "permit_ms": 1.4081,
+        "proof_ms": 58.9775,
+        "trace_ms": 9.1181
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "damage_state_updates": 819,
+      "decision_ms": 78.2093,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "legacy_damage_state_visits": 18578,
+      "measured_parts_ms": 78.1701,
+      "parts_ms": {
+        "controller_ms": 5.6014,
+        "lookup_ms": 0.0067,
+        "permit_ms": 1.4352,
+        "proof_ms": 61.6627,
+        "trace_ms": 9.4641
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "damage_state_updates": 748,
+      "decision_ms": 70.8982,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "legacy_damage_state_visits": 15840,
+      "measured_parts_ms": 70.8591,
+      "parts_ms": {
+        "controller_ms": 5.209,
+        "lookup_ms": 0.0078,
+        "permit_ms": 0.8104,
+        "proof_ms": 55.9259,
+        "trace_ms": 8.906
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "damage_state_updates": 163,
+      "decision_ms": 15.9004,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "legacy_damage_state_visits": 1321,
+      "measured_parts_ms": 15.8869,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1556,
+        "proof_ms": 12.5181,
+        "trace_ms": 3.2132
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "damage_state_updates": 453,
+      "decision_ms": 38.3147,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "legacy_damage_state_visits": 6961,
+      "measured_parts_ms": 38.3022,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1763,
+        "proof_ms": 32.6722,
+        "trace_ms": 5.4537
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "damage_state_updates": 241,
+      "decision_ms": 23.7552,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "legacy_damage_state_visits": 2460,
+      "measured_parts_ms": 23.7416,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2785,
+        "proof_ms": 19.0245,
+        "trace_ms": 4.4386
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "damage_state_updates": 359,
+      "decision_ms": 33.3778,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "legacy_damage_state_visits": 4364,
+      "measured_parts_ms": 33.3662,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4013,
+        "proof_ms": 27.8489,
+        "trace_ms": 5.116
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 727,
+      "decision_ms": 62.9092,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 15930,
+      "measured_parts_ms": 62.8943,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6424,
+        "proof_ms": 53.4072,
+        "trace_ms": 8.8447
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "damage_state_updates": 725,
+      "decision_ms": 63.9538,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 63.9382,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.7825,
+        "proof_ms": 54.0498,
+        "trace_ms": 9.1059
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "damage_state_updates": 725,
+      "decision_ms": 64.2945,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 64.2783,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.8551,
+        "proof_ms": 54.2334,
+        "trace_ms": 9.1898
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "damage_state_updates": 667,
+      "decision_ms": 57.8671,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 14218,
+      "measured_parts_ms": 57.8514,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.601,
+        "proof_ms": 49.5223,
+        "trace_ms": 7.7281
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "damage_state_updates": 475,
+      "decision_ms": 42.7012,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "legacy_damage_state_visits": 7460,
+      "measured_parts_ms": 42.6846,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.562,
+        "proof_ms": 35.6811,
+        "trace_ms": 6.4415
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "damage_state_updates": 221,
+      "decision_ms": 22.2923,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "legacy_damage_state_visits": 2141,
+      "measured_parts_ms": 22.2769,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2695,
+        "proof_ms": 17.7022,
+        "trace_ms": 4.3052
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 765,
+      "decision_ms": 72.8583,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 16893,
+      "measured_parts_ms": 72.8193,
+      "parts_ms": {
+        "controller_ms": 5.3081,
+        "lookup_ms": 0.0075,
+        "permit_ms": 1.2462,
+        "proof_ms": 57.2746,
+        "trace_ms": 8.9829
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "damage_state_updates": 738,
+      "decision_ms": 70.0747,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "legacy_damage_state_visits": 15512,
+      "measured_parts_ms": 70.0383,
+      "parts_ms": {
+        "controller_ms": 5.0427,
+        "lookup_ms": 0.0069,
+        "permit_ms": 1.2094,
+        "proof_ms": 55.2165,
+        "trace_ms": 8.5628
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "damage_state_updates": 667,
+      "decision_ms": 63.3332,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 12458,
+      "measured_parts_ms": 63.2945,
+      "parts_ms": {
+        "controller_ms": 4.4341,
+        "lookup_ms": 0.0072,
+        "permit_ms": 1.1182,
+        "proof_ms": 49.8748,
+        "trace_ms": 7.8602
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "damage_state_updates": 781,
+      "decision_ms": 74.8613,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 17499,
+      "measured_parts_ms": 74.8172,
+      "parts_ms": {
+        "controller_ms": 5.4014,
+        "lookup_ms": 0.0073,
+        "permit_ms": 1.3805,
+        "proof_ms": 58.9345,
+        "trace_ms": 9.0935
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "damage_state_updates": 819,
+      "decision_ms": 77.8552,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "legacy_damage_state_visits": 18578,
+      "measured_parts_ms": 77.8149,
+      "parts_ms": {
+        "controller_ms": 5.5942,
+        "lookup_ms": 0.0068,
+        "permit_ms": 1.4235,
+        "proof_ms": 61.3057,
+        "trace_ms": 9.4847
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "damage_state_updates": 748,
+      "decision_ms": 70.9166,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "legacy_damage_state_visits": 15840,
+      "measured_parts_ms": 70.8761,
+      "parts_ms": {
+        "controller_ms": 5.1573,
+        "lookup_ms": 0.0075,
+        "permit_ms": 0.8287,
+        "proof_ms": 55.9648,
+        "trace_ms": 8.9178
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "damage_state_updates": 163,
+      "decision_ms": 15.8769,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "legacy_damage_state_visits": 1321,
+      "measured_parts_ms": 15.8627,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1542,
+        "proof_ms": 12.5134,
+        "trace_ms": 3.1951
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "damage_state_updates": 453,
+      "decision_ms": 38.3307,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "legacy_damage_state_visits": 6961,
+      "measured_parts_ms": 38.318,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1777,
+        "proof_ms": 32.6964,
+        "trace_ms": 5.4439
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "damage_state_updates": 241,
+      "decision_ms": 23.9574,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "legacy_damage_state_visits": 2460,
+      "measured_parts_ms": 23.9431,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2831,
+        "proof_ms": 19.1818,
+        "trace_ms": 4.4782
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "damage_state_updates": 359,
+      "decision_ms": 33.4273,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "legacy_damage_state_visits": 4364,
+      "measured_parts_ms": 33.4135,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.3815,
+        "proof_ms": 27.8803,
+        "trace_ms": 5.1517
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 727,
+      "decision_ms": 62.9311,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 15930,
+      "measured_parts_ms": 62.9155,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6434,
+        "proof_ms": 53.3463,
+        "trace_ms": 8.9258
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "damage_state_updates": 725,
+      "decision_ms": 63.9093,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 63.8939,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.7871,
+        "proof_ms": 53.9539,
+        "trace_ms": 9.1529
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "damage_state_updates": 725,
+      "decision_ms": 64.2309,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 64.2154,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.8406,
+        "proof_ms": 54.1773,
+        "trace_ms": 9.1975
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "damage_state_updates": 667,
+      "decision_ms": 57.8191,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 14218,
+      "measured_parts_ms": 57.8044,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5887,
+        "proof_ms": 49.451,
+        "trace_ms": 7.7647
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "damage_state_updates": 475,
+      "decision_ms": 42.4319,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "legacy_damage_state_visits": 7460,
+      "measured_parts_ms": 42.4162,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5523,
+        "proof_ms": 35.5343,
+        "trace_ms": 6.3296
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "damage_state_updates": 221,
+      "decision_ms": 22.1769,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "legacy_damage_state_visits": 2141,
+      "measured_parts_ms": 22.1632,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2642,
+        "proof_ms": 17.5969,
+        "trace_ms": 4.3021
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 765,
+      "decision_ms": 73.0467,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 16893,
+      "measured_parts_ms": 73.0019,
+      "parts_ms": {
+        "controller_ms": 5.3366,
+        "lookup_ms": 0.0075,
+        "permit_ms": 1.2459,
+        "proof_ms": 57.353,
+        "trace_ms": 9.0589
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "damage_state_updates": 738,
+      "decision_ms": 70.2571,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "legacy_damage_state_visits": 15512,
+      "measured_parts_ms": 70.2205,
+      "parts_ms": {
+        "controller_ms": 5.0467,
+        "lookup_ms": 0.0076,
+        "permit_ms": 1.1766,
+        "proof_ms": 55.3559,
+        "trace_ms": 8.6337
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "damage_state_updates": 667,
+      "decision_ms": 63.3234,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 12458,
+      "measured_parts_ms": 63.2866,
+      "parts_ms": {
+        "controller_ms": 4.4624,
+        "lookup_ms": 0.0079,
+        "permit_ms": 1.0968,
+        "proof_ms": 49.9457,
+        "trace_ms": 7.7738
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "damage_state_updates": 781,
+      "decision_ms": 74.6124,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 17499,
+      "measured_parts_ms": 74.5748,
+      "parts_ms": {
+        "controller_ms": 5.3487,
+        "lookup_ms": 0.0078,
+        "permit_ms": 1.4033,
+        "proof_ms": 58.7589,
+        "trace_ms": 9.0561
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "damage_state_updates": 819,
+      "decision_ms": 78.154,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "legacy_damage_state_visits": 18578,
+      "measured_parts_ms": 78.1145,
+      "parts_ms": {
+        "controller_ms": 5.6027,
+        "lookup_ms": 0.0073,
+        "permit_ms": 1.4372,
+        "proof_ms": 61.5727,
+        "trace_ms": 9.4946
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "damage_state_updates": 748,
+      "decision_ms": 71.0199,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "legacy_damage_state_visits": 15840,
+      "measured_parts_ms": 70.9769,
+      "parts_ms": {
+        "controller_ms": 5.1813,
+        "lookup_ms": 0.0075,
+        "permit_ms": 0.8265,
+        "proof_ms": 56.0193,
+        "trace_ms": 8.9423
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "damage_state_updates": 163,
+      "decision_ms": 15.9039,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "legacy_damage_state_visits": 1321,
+      "measured_parts_ms": 15.8889,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1543,
+        "proof_ms": 12.5112,
+        "trace_ms": 3.2234
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "damage_state_updates": 453,
+      "decision_ms": 38.3621,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "legacy_damage_state_visits": 6961,
+      "measured_parts_ms": 38.3475,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1803,
+        "proof_ms": 32.7146,
+        "trace_ms": 5.4526
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "damage_state_updates": 241,
+      "decision_ms": 23.7878,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "legacy_damage_state_visits": 2460,
+      "measured_parts_ms": 23.7737,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2824,
+        "proof_ms": 19.05,
+        "trace_ms": 4.4413
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "damage_state_updates": 359,
+      "decision_ms": 33.3581,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "legacy_damage_state_visits": 4364,
+      "measured_parts_ms": 33.3451,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.3745,
+        "proof_ms": 27.8855,
+        "trace_ms": 5.0851
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 727,
+      "decision_ms": 63.0121,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 15930,
+      "measured_parts_ms": 62.9981,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6475,
+        "proof_ms": 53.4932,
+        "trace_ms": 8.8574
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "damage_state_updates": 725,
+      "decision_ms": 64.0572,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 64.042,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.7712,
+        "proof_ms": 54.1545,
+        "trace_ms": 9.1163
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "damage_state_updates": 725,
+      "decision_ms": 64.2405,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 64.2255,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.8367,
+        "proof_ms": 54.169,
+        "trace_ms": 9.2198
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "damage_state_updates": 667,
+      "decision_ms": 57.7037,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 14218,
+      "measured_parts_ms": 57.6891,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6064,
+        "proof_ms": 49.38,
+        "trace_ms": 7.7027
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "damage_state_updates": 475,
+      "decision_ms": 42.4589,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "legacy_damage_state_visits": 7460,
+      "measured_parts_ms": 42.4445,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5555,
+        "proof_ms": 35.5201,
+        "trace_ms": 6.3689
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "damage_state_updates": 221,
+      "decision_ms": 22.1024,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "legacy_damage_state_visits": 2141,
+      "measured_parts_ms": 22.0898,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2655,
+        "proof_ms": 17.5163,
+        "trace_ms": 4.308
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 765,
+      "decision_ms": 72.5142,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 16893,
+      "measured_parts_ms": 72.4787,
+      "parts_ms": {
+        "controller_ms": 5.3016,
+        "lookup_ms": 0.0074,
+        "permit_ms": 1.2336,
+        "proof_ms": 57.0158,
+        "trace_ms": 8.9203
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "damage_state_updates": 738,
+      "decision_ms": 69.8997,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "legacy_damage_state_visits": 15512,
+      "measured_parts_ms": 69.8629,
+      "parts_ms": {
+        "controller_ms": 5.0171,
+        "lookup_ms": 0.0073,
+        "permit_ms": 1.1763,
+        "proof_ms": 55.0608,
+        "trace_ms": 8.6014
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "damage_state_updates": 667,
+      "decision_ms": 63.2231,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 12458,
+      "measured_parts_ms": 63.185,
+      "parts_ms": {
+        "controller_ms": 4.4859,
+        "lookup_ms": 0.0081,
+        "permit_ms": 1.1041,
+        "proof_ms": 49.8434,
+        "trace_ms": 7.7435
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "damage_state_updates": 781,
+      "decision_ms": 74.6115,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 17499,
+      "measured_parts_ms": 74.5701,
+      "parts_ms": {
+        "controller_ms": 5.3585,
+        "lookup_ms": 0.0071,
+        "permit_ms": 1.4119,
+        "proof_ms": 58.7706,
+        "trace_ms": 9.022
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "damage_state_updates": 819,
+      "decision_ms": 77.9426,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "legacy_damage_state_visits": 18578,
+      "measured_parts_ms": 77.9003,
+      "parts_ms": {
+        "controller_ms": 5.6034,
+        "lookup_ms": 0.0071,
+        "permit_ms": 1.4506,
+        "proof_ms": 61.2808,
+        "trace_ms": 9.5584
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "damage_state_updates": 748,
+      "decision_ms": 70.7824,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "legacy_damage_state_visits": 15840,
+      "measured_parts_ms": 70.745,
+      "parts_ms": {
+        "controller_ms": 5.1485,
+        "lookup_ms": 0.0072,
+        "permit_ms": 0.8181,
+        "proof_ms": 55.8575,
+        "trace_ms": 8.9137
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "damage_state_updates": 163,
+      "decision_ms": 15.9095,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "legacy_damage_state_visits": 1321,
+      "measured_parts_ms": 15.8956,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1572,
+        "proof_ms": 12.5363,
+        "trace_ms": 3.2021
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "damage_state_updates": 453,
+      "decision_ms": 38.4469,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "legacy_damage_state_visits": 6961,
+      "measured_parts_ms": 38.4335,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1762,
+        "proof_ms": 32.7812,
+        "trace_ms": 5.4761
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "damage_state_updates": 241,
+      "decision_ms": 23.8098,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "legacy_damage_state_visits": 2460,
+      "measured_parts_ms": 23.7962,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.28,
+        "proof_ms": 19.0467,
+        "trace_ms": 4.4695
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "damage_state_updates": 359,
+      "decision_ms": 33.3106,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "legacy_damage_state_visits": 4364,
+      "measured_parts_ms": 33.2978,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.3832,
+        "proof_ms": 27.8171,
+        "trace_ms": 5.0975
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 727,
+      "decision_ms": 62.7994,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 15930,
+      "measured_parts_ms": 62.7858,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6336,
+        "proof_ms": 53.3155,
+        "trace_ms": 8.8367
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "damage_state_updates": 725,
+      "decision_ms": 63.9066,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 63.8929,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.7785,
+        "proof_ms": 53.9528,
+        "trace_ms": 9.1616
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "damage_state_updates": 725,
+      "decision_ms": 64.0303,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 64.0153,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.8282,
+        "proof_ms": 54.0253,
+        "trace_ms": 9.1618
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "damage_state_updates": 667,
+      "decision_ms": 57.8172,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 14218,
+      "measured_parts_ms": 57.803,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.589,
+        "proof_ms": 49.5128,
+        "trace_ms": 7.7012
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "damage_state_updates": 475,
+      "decision_ms": 42.5686,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "legacy_damage_state_visits": 7460,
+      "measured_parts_ms": 42.5531,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5516,
+        "proof_ms": 35.5912,
+        "trace_ms": 6.4103
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "damage_state_updates": 221,
+      "decision_ms": 22.0403,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "legacy_damage_state_visits": 2141,
+      "measured_parts_ms": 22.0267,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2629,
+        "proof_ms": 17.4978,
+        "trace_ms": 4.266
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 765,
+      "decision_ms": 72.5875,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 16893,
+      "measured_parts_ms": 72.5482,
+      "parts_ms": {
+        "controller_ms": 5.2949,
+        "lookup_ms": 0.0073,
+        "permit_ms": 1.2169,
+        "proof_ms": 57.0902,
+        "trace_ms": 8.9389
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "damage_state_updates": 738,
+      "decision_ms": 69.9273,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "legacy_damage_state_visits": 15512,
+      "measured_parts_ms": 69.8919,
+      "parts_ms": {
+        "controller_ms": 5.0141,
+        "lookup_ms": 0.0066,
+        "permit_ms": 1.1806,
+        "proof_ms": 55.101,
+        "trace_ms": 8.5896
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "damage_state_updates": 667,
+      "decision_ms": 63.0691,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 12458,
+      "measured_parts_ms": 63.0341,
+      "parts_ms": {
+        "controller_ms": 4.4527,
+        "lookup_ms": 0.0076,
+        "permit_ms": 1.0925,
+        "proof_ms": 49.7534,
+        "trace_ms": 7.7279
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "damage_state_updates": 781,
+      "decision_ms": 74.5435,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 17499,
+      "measured_parts_ms": 74.5027,
+      "parts_ms": {
+        "controller_ms": 5.3708,
+        "lookup_ms": 0.0073,
+        "permit_ms": 1.3914,
+        "proof_ms": 58.5868,
+        "trace_ms": 9.1464
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "damage_state_updates": 819,
+      "decision_ms": 78.0377,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "legacy_damage_state_visits": 18578,
+      "measured_parts_ms": 77.9974,
+      "parts_ms": {
+        "controller_ms": 5.5714,
+        "lookup_ms": 0.0064,
+        "permit_ms": 1.424,
+        "proof_ms": 61.5303,
+        "trace_ms": 9.4653
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "damage_state_updates": 748,
+      "decision_ms": 70.8142,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "legacy_damage_state_visits": 15840,
+      "measured_parts_ms": 70.7766,
+      "parts_ms": {
+        "controller_ms": 5.1744,
+        "lookup_ms": 0.0076,
+        "permit_ms": 0.8199,
+        "proof_ms": 55.8791,
+        "trace_ms": 8.8956
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "damage_state_updates": 163,
+      "decision_ms": 15.9247,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "legacy_damage_state_visits": 1321,
+      "measured_parts_ms": 15.911,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1575,
+        "proof_ms": 12.5516,
+        "trace_ms": 3.2019
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "damage_state_updates": 453,
+      "decision_ms": 38.2048,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "legacy_damage_state_visits": 6961,
+      "measured_parts_ms": 38.1925,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1772,
+        "proof_ms": 32.5895,
+        "trace_ms": 5.4258
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "damage_state_updates": 241,
+      "decision_ms": 23.7919,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "legacy_damage_state_visits": 2460,
+      "measured_parts_ms": 23.7778,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2803,
+        "proof_ms": 19.0494,
+        "trace_ms": 4.4481
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "damage_state_updates": 359,
+      "decision_ms": 33.4647,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "legacy_damage_state_visits": 4364,
+      "measured_parts_ms": 33.451,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.3765,
+        "proof_ms": 27.9723,
+        "trace_ms": 5.1022
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 727,
+      "decision_ms": 93.4979,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 15930,
+      "measured_parts_ms": 93.4804,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6517,
+        "proof_ms": 53.7839,
+        "trace_ms": 39.0448
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "damage_state_updates": 725,
+      "decision_ms": 64.442,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 64.4251,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.8065,
+        "proof_ms": 54.3979,
+        "trace_ms": 9.2207
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "damage_state_updates": 725,
+      "decision_ms": 64.4712,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 64.4567,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.851,
+        "proof_ms": 54.433,
+        "trace_ms": 9.1727
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "damage_state_updates": 667,
+      "decision_ms": 57.5221,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 14218,
+      "measured_parts_ms": 57.5076,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5791,
+        "proof_ms": 49.1714,
+        "trace_ms": 7.7571
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "damage_state_updates": 475,
+      "decision_ms": 42.4537,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "legacy_damage_state_visits": 7460,
+      "measured_parts_ms": 42.4397,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5749,
+        "proof_ms": 35.508,
+        "trace_ms": 6.3568
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "damage_state_updates": 221,
+      "decision_ms": 22.0229,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "legacy_damage_state_visits": 2141,
+      "measured_parts_ms": 22.0089,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2686,
+        "proof_ms": 17.4686,
+        "trace_ms": 4.2717
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 765,
+      "decision_ms": 73.106,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 16893,
+      "measured_parts_ms": 73.0656,
+      "parts_ms": {
+        "controller_ms": 5.28,
+        "lookup_ms": 0.0086,
+        "permit_ms": 1.2665,
+        "proof_ms": 57.5186,
+        "trace_ms": 8.9919
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "damage_state_updates": 738,
+      "decision_ms": 70.139,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "legacy_damage_state_visits": 15512,
+      "measured_parts_ms": 70.1038,
+      "parts_ms": {
+        "controller_ms": 5.0326,
+        "lookup_ms": 0.0075,
+        "permit_ms": 1.214,
+        "proof_ms": 55.2825,
+        "trace_ms": 8.5672
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "damage_state_updates": 667,
+      "decision_ms": 63.2949,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 12458,
+      "measured_parts_ms": 63.2618,
+      "parts_ms": {
+        "controller_ms": 4.4385,
+        "lookup_ms": 0.0075,
+        "permit_ms": 1.1352,
+        "proof_ms": 49.9385,
+        "trace_ms": 7.7421
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "damage_state_updates": 781,
+      "decision_ms": 74.5422,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 17499,
+      "measured_parts_ms": 74.5055,
+      "parts_ms": {
+        "controller_ms": 5.3448,
+        "lookup_ms": 0.0067,
+        "permit_ms": 1.3898,
+        "proof_ms": 58.7369,
+        "trace_ms": 9.0273
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "damage_state_updates": 819,
+      "decision_ms": 77.7057,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "legacy_damage_state_visits": 18578,
+      "measured_parts_ms": 77.6662,
+      "parts_ms": {
+        "controller_ms": 5.5705,
+        "lookup_ms": 0.0066,
+        "permit_ms": 1.4545,
+        "proof_ms": 61.2033,
+        "trace_ms": 9.4313
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "damage_state_updates": 748,
+      "decision_ms": 70.8077,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "legacy_damage_state_visits": 15840,
+      "measured_parts_ms": 70.7704,
+      "parts_ms": {
+        "controller_ms": 5.1118,
+        "lookup_ms": 0.0068,
+        "permit_ms": 0.8361,
+        "proof_ms": 55.9499,
+        "trace_ms": 8.8658
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "damage_state_updates": 163,
+      "decision_ms": 15.8519,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "legacy_damage_state_visits": 1321,
+      "measured_parts_ms": 15.8386,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1589,
+        "proof_ms": 12.4895,
+        "trace_ms": 3.1902
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "damage_state_updates": 453,
+      "decision_ms": 38.5025,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "legacy_damage_state_visits": 6961,
+      "measured_parts_ms": 38.4889,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1784,
+        "proof_ms": 32.8615,
+        "trace_ms": 5.449
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "damage_state_updates": 241,
+      "decision_ms": 23.7111,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "legacy_damage_state_visits": 2460,
+      "measured_parts_ms": 23.6978,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2832,
+        "proof_ms": 18.9591,
+        "trace_ms": 4.4555
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "damage_state_updates": 359,
+      "decision_ms": 33.2329,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "legacy_damage_state_visits": 4364,
+      "measured_parts_ms": 33.2194,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.3881,
+        "proof_ms": 27.7652,
+        "trace_ms": 5.0661
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 727,
+      "decision_ms": 62.9445,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 15930,
+      "measured_parts_ms": 62.9297,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6497,
+        "proof_ms": 53.4849,
+        "trace_ms": 8.7951
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "damage_state_updates": 725,
+      "decision_ms": 63.7889,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 63.7735,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.7657,
+        "proof_ms": 53.836,
+        "trace_ms": 9.1718
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "damage_state_updates": 725,
+      "decision_ms": 64.0024,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 63.9867,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.8476,
+        "proof_ms": 54.0527,
+        "trace_ms": 9.0864
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "damage_state_updates": 667,
+      "decision_ms": 57.9791,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 14218,
+      "measured_parts_ms": 57.964,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5896,
+        "proof_ms": 49.6222,
+        "trace_ms": 7.7522
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "damage_state_updates": 475,
+      "decision_ms": 42.5462,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "legacy_damage_state_visits": 7460,
+      "measured_parts_ms": 42.5302,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5627,
+        "proof_ms": 35.6427,
+        "trace_ms": 6.3248
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "damage_state_updates": 221,
+      "decision_ms": 22.027,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "legacy_damage_state_visits": 2141,
+      "measured_parts_ms": 22.0139,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2632,
+        "proof_ms": 17.5025,
+        "trace_ms": 4.2482
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 765,
+      "decision_ms": 72.7163,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 16893,
+      "measured_parts_ms": 72.6786,
+      "parts_ms": {
+        "controller_ms": 5.2787,
+        "lookup_ms": 0.008,
+        "permit_ms": 1.2425,
+        "proof_ms": 57.2255,
+        "trace_ms": 8.9239
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "damage_state_updates": 738,
+      "decision_ms": 70.1595,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "legacy_damage_state_visits": 15512,
+      "measured_parts_ms": 70.1195,
+      "parts_ms": {
+        "controller_ms": 5.0181,
+        "lookup_ms": 0.0072,
+        "permit_ms": 1.2064,
+        "proof_ms": 55.3265,
+        "trace_ms": 8.5613
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "damage_state_updates": 667,
+      "decision_ms": 63.3186,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 12458,
+      "measured_parts_ms": 63.2813,
+      "parts_ms": {
+        "controller_ms": 4.4377,
+        "lookup_ms": 0.0069,
+        "permit_ms": 1.103,
+        "proof_ms": 50.001,
+        "trace_ms": 7.7327
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "damage_state_updates": 781,
+      "decision_ms": 74.5554,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 17499,
+      "measured_parts_ms": 74.5169,
+      "parts_ms": {
+        "controller_ms": 5.3543,
+        "lookup_ms": 0.0076,
+        "permit_ms": 1.38,
+        "proof_ms": 58.6624,
+        "trace_ms": 9.1126
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "damage_state_updates": 819,
+      "decision_ms": 77.7264,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "legacy_damage_state_visits": 18578,
+      "measured_parts_ms": 77.6855,
+      "parts_ms": {
+        "controller_ms": 5.5746,
+        "lookup_ms": 0.0076,
+        "permit_ms": 1.427,
+        "proof_ms": 61.2624,
+        "trace_ms": 9.4139
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "damage_state_updates": 748,
+      "decision_ms": 70.6563,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "legacy_damage_state_visits": 15840,
+      "measured_parts_ms": 70.6184,
+      "parts_ms": {
+        "controller_ms": 5.127,
+        "lookup_ms": 0.007,
+        "permit_ms": 0.7933,
+        "proof_ms": 55.821,
+        "trace_ms": 8.8701
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "damage_state_updates": 163,
+      "decision_ms": 15.9363,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "legacy_damage_state_visits": 1321,
+      "measured_parts_ms": 15.9222,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1609,
+        "proof_ms": 12.5494,
+        "trace_ms": 3.2119
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "damage_state_updates": 453,
+      "decision_ms": 39.234,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "legacy_damage_state_visits": 6961,
+      "measured_parts_ms": 39.219,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1825,
+        "proof_ms": 33.3535,
+        "trace_ms": 5.683
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "damage_state_updates": 241,
+      "decision_ms": 23.937,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "legacy_damage_state_visits": 2460,
+      "measured_parts_ms": 23.9206,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2845,
+        "proof_ms": 19.1193,
+        "trace_ms": 4.5168
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "damage_state_updates": 359,
+      "decision_ms": 33.4526,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "legacy_damage_state_visits": 4364,
+      "measured_parts_ms": 33.4382,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.3867,
+        "proof_ms": 27.9146,
+        "trace_ms": 5.1369
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 727,
+      "decision_ms": 62.9913,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 15930,
+      "measured_parts_ms": 62.976,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6488,
+        "proof_ms": 53.4725,
+        "trace_ms": 8.8547
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "damage_state_updates": 725,
+      "decision_ms": 63.9987,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 63.9833,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.7849,
+        "proof_ms": 54.0849,
+        "trace_ms": 9.1135
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "damage_state_updates": 725,
+      "decision_ms": 64.0635,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 64.0486,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.8401,
+        "proof_ms": 54.0041,
+        "trace_ms": 9.2044
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "damage_state_updates": 667,
+      "decision_ms": 57.5517,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 14218,
+      "measured_parts_ms": 57.5369,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5939,
+        "proof_ms": 49.1819,
+        "trace_ms": 7.7611
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "damage_state_updates": 475,
+      "decision_ms": 42.3276,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "legacy_damage_state_visits": 7460,
+      "measured_parts_ms": 42.3125,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5437,
+        "proof_ms": 35.467,
+        "trace_ms": 6.3018
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "damage_state_updates": 221,
+      "decision_ms": 22.0556,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "legacy_damage_state_visits": 2141,
+      "measured_parts_ms": 22.0424,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2649,
+        "proof_ms": 17.5002,
+        "trace_ms": 4.2773
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 765,
+      "decision_ms": 72.706,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 16893,
+      "measured_parts_ms": 72.6613,
+      "parts_ms": {
+        "controller_ms": 5.3626,
+        "lookup_ms": 0.0079,
+        "permit_ms": 1.238,
+        "proof_ms": 57.1408,
+        "trace_ms": 8.912
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "damage_state_updates": 738,
+      "decision_ms": 70.2391,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "legacy_damage_state_visits": 15512,
+      "measured_parts_ms": 70.2015,
+      "parts_ms": {
+        "controller_ms": 5.0216,
+        "lookup_ms": 0.0071,
+        "permit_ms": 1.1774,
+        "proof_ms": 55.3769,
+        "trace_ms": 8.6185
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "damage_state_updates": 667,
+      "decision_ms": 63.3876,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 12458,
+      "measured_parts_ms": 63.3495,
+      "parts_ms": {
+        "controller_ms": 4.4555,
+        "lookup_ms": 0.0071,
+        "permit_ms": 1.0963,
+        "proof_ms": 49.8897,
+        "trace_ms": 7.9009
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "damage_state_updates": 781,
+      "decision_ms": 74.4426,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 17499,
+      "measured_parts_ms": 74.4027,
+      "parts_ms": {
+        "controller_ms": 5.3188,
+        "lookup_ms": 0.0075,
+        "permit_ms": 1.378,
+        "proof_ms": 58.6471,
+        "trace_ms": 9.0513
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "damage_state_updates": 819,
+      "decision_ms": 77.8257,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "legacy_damage_state_visits": 18578,
+      "measured_parts_ms": 77.785,
+      "parts_ms": {
+        "controller_ms": 5.5778,
+        "lookup_ms": 0.0071,
+        "permit_ms": 1.4281,
+        "proof_ms": 61.3376,
+        "trace_ms": 9.4344
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "damage_state_updates": 748,
+      "decision_ms": 70.8404,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "legacy_damage_state_visits": 15840,
+      "measured_parts_ms": 70.8046,
+      "parts_ms": {
+        "controller_ms": 5.1328,
+        "lookup_ms": 0.0075,
+        "permit_ms": 0.8048,
+        "proof_ms": 55.9846,
+        "trace_ms": 8.8749
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "damage_state_updates": 163,
+      "decision_ms": 15.795,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "legacy_damage_state_visits": 1321,
+      "measured_parts_ms": 15.781,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.157,
+        "proof_ms": 12.4487,
+        "trace_ms": 3.1753
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "damage_state_updates": 453,
+      "decision_ms": 38.4669,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "legacy_damage_state_visits": 6961,
+      "measured_parts_ms": 38.4548,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1763,
+        "proof_ms": 32.8667,
+        "trace_ms": 5.4118
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "damage_state_updates": 241,
+      "decision_ms": 23.7045,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "legacy_damage_state_visits": 2460,
+      "measured_parts_ms": 23.692,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2806,
+        "proof_ms": 18.995,
+        "trace_ms": 4.4164
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "damage_state_updates": 359,
+      "decision_ms": 33.356,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "legacy_damage_state_visits": 4364,
+      "measured_parts_ms": 33.3432,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.3764,
+        "proof_ms": 27.9118,
+        "trace_ms": 5.055
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 727,
+      "decision_ms": 62.8467,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 15930,
+      "measured_parts_ms": 62.8344,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6429,
+        "proof_ms": 53.3756,
+        "trace_ms": 8.8159
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "damage_state_updates": 725,
+      "decision_ms": 63.9813,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 63.9672,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.7716,
+        "proof_ms": 54.0976,
+        "trace_ms": 9.098
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "damage_state_updates": 725,
+      "decision_ms": 64.2872,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "legacy_damage_state_visits": 15902,
+      "measured_parts_ms": 64.2719,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.8486,
+        "proof_ms": 54.2823,
+        "trace_ms": 9.141
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "damage_state_updates": 667,
+      "decision_ms": 57.8802,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 14218,
+      "measured_parts_ms": 57.8653,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5872,
+        "proof_ms": 49.4352,
+        "trace_ms": 7.8429
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "damage_state_updates": 475,
+      "decision_ms": 42.4994,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "legacy_damage_state_visits": 7460,
+      "measured_parts_ms": 42.4848,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5504,
+        "proof_ms": 35.623,
+        "trace_ms": 6.3114
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "damage_state_updates": 221,
+      "decision_ms": 22.0321,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "legacy_damage_state_visits": 2141,
+      "measured_parts_ms": 22.019,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2637,
+        "proof_ms": 17.5025,
+        "trace_ms": 4.2528
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "damage_state_updates": 765,
+      "decision_ms": 72.582,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 16893,
+      "measured_parts_ms": 72.5446,
+      "parts_ms": {
+        "controller_ms": 5.2969,
+        "lookup_ms": 0.0073,
+        "permit_ms": 1.2094,
+        "proof_ms": 57.0842,
+        "trace_ms": 8.9468
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "damage_state_updates": 738,
+      "decision_ms": 70.2098,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "legacy_damage_state_visits": 15512,
+      "measured_parts_ms": 70.174,
+      "parts_ms": {
+        "controller_ms": 5.04,
+        "lookup_ms": 0.0067,
+        "permit_ms": 1.2073,
+        "proof_ms": 55.3492,
+        "trace_ms": 8.5708
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "damage_state_updates": 667,
+      "decision_ms": 63.405,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "legacy_damage_state_visits": 12458,
+      "measured_parts_ms": 63.3699,
+      "parts_ms": {
+        "controller_ms": 4.4572,
+        "lookup_ms": 0.0076,
+        "permit_ms": 1.087,
+        "proof_ms": 49.9851,
+        "trace_ms": 7.833
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "damage_state_updates": 781,
+      "decision_ms": 74.7655,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "legacy_damage_state_visits": 17499,
+      "measured_parts_ms": 74.7276,
+      "parts_ms": {
+        "controller_ms": 5.3739,
+        "lookup_ms": 0.0071,
+        "permit_ms": 1.3719,
+        "proof_ms": 58.937,
+        "trace_ms": 9.0377
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "damage_state_updates": 819,
+      "decision_ms": 77.7299,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "legacy_damage_state_visits": 18578,
+      "measured_parts_ms": 77.6865,
+      "parts_ms": {
+        "controller_ms": 5.6094,
+        "lookup_ms": 0.0069,
+        "permit_ms": 1.4403,
+        "proof_ms": 61.1895,
+        "trace_ms": 9.4404
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "damage_state_updates": 748,
+      "decision_ms": 70.6819,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "legacy_damage_state_visits": 15840,
+      "measured_parts_ms": 70.6441,
+      "parts_ms": {
+        "controller_ms": 5.1224,
+        "lookup_ms": 0.0083,
+        "permit_ms": 0.7957,
+        "proof_ms": 55.8714,
+        "trace_ms": 8.8463
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    }
+  ],
+  "schema": "d098-p1-complete-decision-baseline-v2",
+  "sets": [
+    "A",
+    "C",
+    "D"
+  ],
+  "summary_ms": {
+    "max": 93.4979,
+    "p50": 57.8802,
+    "p95": 77.7264,
+    "p99": 78.1063,
+    "samples": 320
+  }
+}

@@ -2,6 +2,14 @@
 
 这个仓库是主项目按固定清单生成的源码快照。它包含当前正式实现、共享契约、配置、测试、Fabric 客户端代码和四类现行设计文档。`EXPORT-METADATA.json` 记录来源提交，`SHA256SUMS.txt` 覆盖导出的每个文件。
 
+2026-10-11，D098 的隔离实验已经停止于 P3。Windows 原样复测与三方 D097-A 的 1,423,766 条非计时样本逐项一致；项目自有控制器、冻结表、可信轨迹、增量伤害、主轨迹复用和 24-step 分摊已经完成。P3 滚动闭环最终运行 37 个场景各 3 轮，共 1,338 个完整决定；P50／P95／P99／最大值为 0.2521／15.8503／19.8099／20.0919 ms。所有 1,227 次后端推进均有 owner、实验账本和许可来源，但承诺后恢复为 0／27，并有 54 次身体责任未解决和 6 次伤害额度超出。因此 P3 未通过，P4 和正式链适配未授权；`mc2p` 没有修改，也没有新的 Fabric 结论。
+
+当前先读 [D098](docs/motion_navigation/decisions/0098-validate-and-optimize-incremental-motion-proof-on-windows.md)、[阶段计划](docs/motion_navigation/stages/continuous-motion-proof-performance-r98-plan.md)、[验收](docs/motion_navigation/acceptance/continuous-motion-proof-performance-r98.md)和 `evidence/motion_navigation/incremental-motion-r98-v1/`。P1—P3 的隔离实验检查可以运行：
+
+```text
+python -m unittest tests.motion_nav.test_incremental_motion_controller tests.motion_nav.test_incremental_motion_table tests.motion_nav.test_incremental_motion_proof tests.motion_nav.test_incremental_motion_performance tests.motion_nav.test_incremental_motion_closed_loop tests.motion_nav.test_incremental_motion_closed_loop_measurement -q
+```
+
 2026-10-10，D097 的连续动作新路线在 M0 成本门槛停止。正式 Windows 探针保持 22 个旧正例、6 个负例和新增混合动作元反例的分类正确；混合反例三轮都固定使用 10,056 次物理计算，三轮正例最大耗时分别为 587.9058、591.1611 和 736.8842 ms，超过 400 ms 门槛。负例最大 744.7585 ms；单边界增量证明和已知输入 rollout 仍只是从完整扫描拆出的 2.7390／5.7393 ms 成本估算，不是执行许可。M0 未通过，M1—M4 未开始，`mc2p` 没有修改，也没有运行新的 Fabric 实机批次。
 
 第三方可阅读 [D097](docs/motion_navigation/decisions/0097-use-controller-table-and-incremental-safety-proof.md)、[增量证明架构](docs/motion_navigation/architecture/incremental-motion-proof-v1.md)、[阶段方案](docs/motion_navigation/stages/continuous-motion-incremental-proof-plan.md)、[验收](docs/motion_navigation/acceptance/continuous-motion-incremental-proof.md)和 [M0 证据](evidence/motion_navigation/incremental-motion-m0-v1/README.md)。只读探针可从仓库根目录运行：

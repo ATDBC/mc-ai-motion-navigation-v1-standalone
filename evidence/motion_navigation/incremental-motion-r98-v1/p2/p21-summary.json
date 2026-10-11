@@ -1,0 +1,100 @@
+{
+  "avoided_state_visits": 3483300,
+  "base_commit": "744b6038",
+  "damage_state_updates": 185480,
+  "interpretation": "semantic work reduction is proven; wall time is recorded without claiming improvement over the non-interleaved P1 run",
+  "legacy_damage_state_visits": 3668780,
+  "physics_step_pairs": [
+    [
+      "A",
+      "flat_walk:A3",
+      186
+    ],
+    [
+      "A",
+      "jump_gap_1:A3",
+      498
+    ],
+    [
+      "A",
+      "jump_up_after_turn:A15",
+      396
+    ],
+    [
+      "A",
+      "turn_90:A15",
+      272
+    ],
+    [
+      "C",
+      "gap1/rest-L/0",
+      800
+    ],
+    [
+      "C",
+      "gap2/rest-L/1",
+      800
+    ],
+    [
+      "C",
+      "gap2c/rest-L/3",
+      728
+    ],
+    [
+      "C",
+      "gap3/rest-L/2",
+      800
+    ],
+    [
+      "C",
+      "jumpup/rest-L/4",
+      524
+    ],
+    [
+      "C",
+      "turn/rest-L/5",
+      250
+    ],
+    [
+      "D",
+      "gap1/rest-L/0",
+      912
+    ],
+    [
+      "D",
+      "gap1/sprint-L-n/2",
+      790
+    ],
+    [
+      "D",
+      "gap1/walk-L-n/1",
+      877
+    ],
+    [
+      "D",
+      "gap2/rest-L/3",
+      928
+    ],
+    [
+      "D",
+      "gap2/sprint-L-n/5",
+      891
+    ],
+    [
+      "D",
+      "gap2/walk-L-n/4",
+      974
+    ]
+  ],
+  "remaining_fraction": 0.050556315723483014,
+  "samples": 320,
+  "schema": "d098-p2.1-incremental-damage-summary-v1",
+  "source_sha256": "e1e6db620c9751f7f8e7fd6e4de8e059e5d5191d72686cc1936cbd7ea41d019f",
+  "summary_ms": {
+    "max": 93.4979,
+    "p50": 57.8802,
+    "p95": 77.7264,
+    "p99": 78.1063,
+    "samples": 320
+  }
+}

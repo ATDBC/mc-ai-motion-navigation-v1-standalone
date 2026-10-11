@@ -352,6 +352,16 @@ class TrajectoryProtoContractsTests(unittest.TestCase):
         exported = {str(path) for path in files}
         for name in ("contracts", "physics", "scenarios", "commitment", "reference_search"):
             self.assertIn(f"experiments/motion_navigation/trajectory_proto/{name}.py", exported)
+        for name in ("template_controller", "motion_table", "rollout_trace",
+                     "incremental_proof", "measurement", "frozen_templates"):
+            self.assertIn(f"experiments/motion_navigation/trajectory_proto/{name}.py", exported)
+        self.assertIn(
+            "experiments/motion_navigation/trajectory_proto/data/d097a-m1-table.json",
+            exported,
+        )
+        self.assertIn("scripts/measure_incremental_motion_r98.py", exported)
+        self.assertIn("scripts/generate_d098_reference_signatures.py", exported)
+        self.assertIn("tests/motion_nav/test_incremental_motion_proof.py", exported)
 
     def test_standalone_export_includes_prototype_tests_plans_and_reviews(self):
         manifest = load_manifest()

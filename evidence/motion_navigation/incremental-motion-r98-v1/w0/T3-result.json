@@ -1,0 +1,105 @@
+{
+  "integrity_schema": "d098-w0-sample-audit-v2",
+  "integrity_checks": {
+    "population_match": true,
+    "trial_code_hashes_match": true,
+    "sample_columns_match_reference": true,
+    "all_configurations_cover_complete_candidate_runs": true,
+    "all_candidates_verified_in_original_harness": true,
+    "step_totals_equal_across_three_configs": true,
+    "step_total_check_matches_reference": true,
+    "every_sample_non_time_fields_match_reference": true,
+    "all_step_distributions_match_reference": true,
+    "not_smoke": true
+  },
+  "reproduction_integrity_passed": true,
+  "candidate_coverage": {
+    "complete": true,
+    "expected_candidate_runs": 25340,
+    "candidate_ids_per_pass": 25322,
+    "repeated_candidate_id_occurrences_per_pass": 18,
+    "candidate_occurrence_counts_match": true,
+    "configs": {
+      "strict": {
+        "rows": 699213,
+        "candidate_runs": 25322,
+        "candidate_occurrences": 25340,
+        "missing_candidate_runs": 0,
+        "extra_candidate_runs": 0
+      },
+      "strict_runahead": {
+        "rows": 699213,
+        "candidate_runs": 25322,
+        "candidate_occurrences": 25340,
+        "missing_candidate_runs": 0,
+        "extra_candidate_runs": 0
+      },
+      "full_scan": {
+        "rows": 25340,
+        "candidate_runs": 25322,
+        "candidate_occurrences": 25340,
+        "missing_candidate_runs": 0,
+        "extra_candidate_runs": 0
+      }
+    },
+    "invalid_rows": 0,
+    "unexpected_configs": [],
+    "full_scan_kinds_valid": true
+  },
+  "classification_check_source": "Complete named-column (pass,cand) coverage in all three configurations, full_scan row count equal to candidates*passes, plan/full_scan occurrence counters matching even for repeated cand names, frozen asserting-harness code hashes and column-aware non-time sample signature equal to the frozen record; no independent verdict column is present.",
+  "actual_sample_signature": {
+    "columns": [
+      "pass",
+      "config",
+      "cand",
+      "kind",
+      "steps",
+      "ms"
+    ],
+    "wall_time_column": "ms",
+    "rows": 1423766,
+    "non_time_sha256": "8a48c5683cae9b74813f6f6bd0dbf62417c1abe5a6b637656f2059c7be5762b8"
+  },
+  "reference_sample_signature": {
+    "columns": [
+      "pass",
+      "config",
+      "cand",
+      "kind",
+      "steps",
+      "ms"
+    ],
+    "wall_time_column": "ms",
+    "rows": 1423766,
+    "non_time_sha256": "8a48c5683cae9b74813f6f6bd0dbf62417c1abe5a6b637656f2059c7be5762b8"
+  },
+  "reference_summary_sha256": "50785d199ea790ad5bde1f1989b75141fcde7c6410882e11d3f69df59af81836",
+  "reference_samples_uncompressed_sha256": "0d2c9ddb60cc4e5a9d667622592db4e866aac4c259595e296d9682f598e9f67b",
+  "samples_uncompressed_sha256": "f13bff857091fb6019b8cda68851087a4460b4d74915a0664c17fcccc0d73338",
+  "samples_uncompressed_bytes": 97593203,
+  "samples_gzip_sha256": "0b21107feb6164d890e3c2b9cfd3fbd6019184e43e7dca99fad538c8ca2ebc09",
+  "samples_gzip_bytes": 6515127,
+  "summary_sha256": "848c60a18599b557b862220c799b0e3386e8329df5e0333e197c71ac6288a840",
+  "F1_exploration_gate": {
+    "tick_samples": 637911,
+    "commit_samples": 10627,
+    "tick_p95_ms_strictest_of_pooled_and_per_pass": 5.2729,
+    "commit_p95_ms_strictest_of_pooled_and_per_pass": 0.0316,
+    "tick_le_10ms": true,
+    "commit_le_50ms": true,
+    "tick_samples_ge_1000": true
+  },
+  "performance_baseline_passed": true,
+  "scope": "W0 exploration only; not the formal 8/15/30 ms gate",
+  "audit_provenance": {
+    "kind": "reanalysis_of_saved_summary_and_gzip",
+    "timing_rerun": false,
+    "previous_result_sha256": "adc1d056ec059126260e4a81219909e3f2d9d99f2b59b02af4f8f6e564aab9d7",
+    "original_execution_wrapper_sha256": "79f26d7b75e287e81ad55e4cf9ab1bd500a43dee335eb2d1956412904895aa19",
+    "original_execution_started_utc": "2026-10-11T00:39:32.242352+00:00",
+    "recheck_wrapper_sha256": "c5b203ae3ef223bcd6d4f7fca4aacd65322dc1db704dc1f71604cf3720615755",
+    "raw_summary_and_gzip_unchanged": true,
+    "fresh_output_guard_retroactively_verified": false,
+    "note": "Execution metadata keeps its historical v1 audit; this result is the current v2 audit."
+  }
+}

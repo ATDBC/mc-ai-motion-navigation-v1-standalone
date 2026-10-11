@@ -1,0 +1,7061 @@
+{
+  "gate": "P1 baseline only; no 10/50 or 8/15/30 claim",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "python": "3.11.16",
+  "rounds": 20,
+  "rows": [
+    {
+      "case": "flat_walk:A3",
+      "decision_ms": 37.4973,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "measured_parts_ms": 37.4806,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1411,
+        "proof_ms": 34.6054,
+        "trace_ms": 2.7341
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "decision_ms": 32.2534,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "measured_parts_ms": 32.242,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1399,
+        "proof_ms": 27.5287,
+        "trace_ms": 4.5734
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "decision_ms": 19.6712,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "measured_parts_ms": 19.6609,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2219,
+        "proof_ms": 15.804,
+        "trace_ms": 3.635
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "decision_ms": 27.2627,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "measured_parts_ms": 27.253,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2972,
+        "proof_ms": 22.7955,
+        "trace_ms": 4.1603
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 54.2357,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "measured_parts_ms": 54.2239,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5132,
+        "proof_ms": 46.4418,
+        "trace_ms": 7.2689
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "decision_ms": 54.878,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.8654,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6163,
+        "proof_ms": 46.7912,
+        "trace_ms": 7.4579
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "decision_ms": 55.1119,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 55.0996,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6747,
+        "proof_ms": 46.9507,
+        "trace_ms": 7.4742
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "decision_ms": 49.5516,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "measured_parts_ms": 49.5355,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4769,
+        "proof_ms": 42.7719,
+        "trace_ms": 6.2867
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "decision_ms": 35.6054,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "measured_parts_ms": 35.595,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4437,
+        "proof_ms": 30.0322,
+        "trace_ms": 5.1191
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "decision_ms": 18.2176,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "measured_parts_ms": 18.2087,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2059,
+        "proof_ms": 14.5524,
+        "trace_ms": 3.4504
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 62.3647,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 62.3396,
+      "parts_ms": {
+        "controller_ms": 4.3772,
+        "lookup_ms": 0.0085,
+        "permit_ms": 0.9948,
+        "proof_ms": 49.7554,
+        "trace_ms": 7.2037
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "decision_ms": 59.5939,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "measured_parts_ms": 59.5677,
+      "parts_ms": {
+        "controller_ms": 4.0514,
+        "lookup_ms": 0.0082,
+        "permit_ms": 0.9597,
+        "proof_ms": 47.6413,
+        "trace_ms": 6.9071
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "decision_ms": 53.0371,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "measured_parts_ms": 53.0125,
+      "parts_ms": {
+        "controller_ms": 3.594,
+        "lookup_ms": 0.0079,
+        "permit_ms": 0.8723,
+        "proof_ms": 42.3157,
+        "trace_ms": 6.2226
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "decision_ms": 63.7091,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 63.6833,
+      "parts_ms": {
+        "controller_ms": 4.3866,
+        "lookup_ms": 0.0069,
+        "permit_ms": 1.1181,
+        "proof_ms": 50.9367,
+        "trace_ms": 7.235
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "decision_ms": 66.4091,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "measured_parts_ms": 66.3822,
+      "parts_ms": {
+        "controller_ms": 4.4965,
+        "lookup_ms": 0.0069,
+        "permit_ms": 1.1494,
+        "proof_ms": 53.1557,
+        "trace_ms": 7.5737
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "decision_ms": 60.4419,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "measured_parts_ms": 60.4149,
+      "parts_ms": {
+        "controller_ms": 4.1288,
+        "lookup_ms": 0.0077,
+        "permit_ms": 0.6439,
+        "proof_ms": 48.5544,
+        "trace_ms": 7.0801
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "decision_ms": 13.018,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "measured_parts_ms": 13.0084,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.123,
+        "proof_ms": 10.3063,
+        "trace_ms": 2.5791
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "decision_ms": 31.9469,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "measured_parts_ms": 31.9374,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1411,
+        "proof_ms": 27.3748,
+        "trace_ms": 4.4215
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "decision_ms": 19.5491,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "measured_parts_ms": 19.539,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2189,
+        "proof_ms": 15.7781,
+        "trace_ms": 3.542
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "decision_ms": 27.0864,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "measured_parts_ms": 27.0773,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2993,
+        "proof_ms": 22.7384,
+        "trace_ms": 4.0396
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 54.8949,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "measured_parts_ms": 54.8827,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5284,
+        "proof_ms": 46.7793,
+        "trace_ms": 7.575
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "decision_ms": 54.8306,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.82,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6327,
+        "proof_ms": 46.8945,
+        "trace_ms": 7.2928
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "decision_ms": 54.9053,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.8955,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6902,
+        "proof_ms": 46.862,
+        "trace_ms": 7.3433
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "decision_ms": 49.4218,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "measured_parts_ms": 49.4124,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4707,
+        "proof_ms": 42.7681,
+        "trace_ms": 6.1736
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "decision_ms": 35.621,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "measured_parts_ms": 35.611,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4341,
+        "proof_ms": 30.1012,
+        "trace_ms": 5.0757
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "decision_ms": 18.1081,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "measured_parts_ms": 18.1005,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2074,
+        "proof_ms": 14.5139,
+        "trace_ms": 3.3792
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 62.1554,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 62.1294,
+      "parts_ms": {
+        "controller_ms": 4.2824,
+        "lookup_ms": 0.0082,
+        "permit_ms": 0.9874,
+        "proof_ms": 49.6464,
+        "trace_ms": 7.205
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "decision_ms": 59.6238,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "measured_parts_ms": 59.597,
+      "parts_ms": {
+        "controller_ms": 4.0567,
+        "lookup_ms": 0.0098,
+        "permit_ms": 0.9638,
+        "proof_ms": 47.6608,
+        "trace_ms": 6.9059
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "decision_ms": 53.1403,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "measured_parts_ms": 53.1172,
+      "parts_ms": {
+        "controller_ms": 3.5803,
+        "lookup_ms": 0.006,
+        "permit_ms": 0.8804,
+        "proof_ms": 42.392,
+        "trace_ms": 6.2585
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "decision_ms": 63.6425,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 63.6157,
+      "parts_ms": {
+        "controller_ms": 4.2875,
+        "lookup_ms": 0.0055,
+        "permit_ms": 1.1055,
+        "proof_ms": 50.9412,
+        "trace_ms": 7.276
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "decision_ms": 66.6828,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "measured_parts_ms": 66.6549,
+      "parts_ms": {
+        "controller_ms": 4.5232,
+        "lookup_ms": 0.0062,
+        "permit_ms": 1.1509,
+        "proof_ms": 53.3627,
+        "trace_ms": 7.6119
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "decision_ms": 60.1969,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "measured_parts_ms": 60.1704,
+      "parts_ms": {
+        "controller_ms": 4.1626,
+        "lookup_ms": 0.0068,
+        "permit_ms": 0.6452,
+        "proof_ms": 48.2564,
+        "trace_ms": 7.0994
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "decision_ms": 12.9784,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "measured_parts_ms": 12.9695,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1205,
+        "proof_ms": 10.2836,
+        "trace_ms": 2.5654
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "decision_ms": 31.7991,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "measured_parts_ms": 31.7919,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1393,
+        "proof_ms": 27.3325,
+        "trace_ms": 4.3201
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "decision_ms": 19.6096,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "measured_parts_ms": 19.6022,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2184,
+        "proof_ms": 15.8386,
+        "trace_ms": 3.5452
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "decision_ms": 27.2144,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "measured_parts_ms": 27.2075,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2987,
+        "proof_ms": 22.8968,
+        "trace_ms": 4.012
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 53.879,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "measured_parts_ms": 53.8692,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5149,
+        "proof_ms": 46.2992,
+        "trace_ms": 7.0551
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "decision_ms": 54.6836,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.6727,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6195,
+        "proof_ms": 46.7477,
+        "trace_ms": 7.3055
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "decision_ms": 55.1057,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 55.0943,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6831,
+        "proof_ms": 47.1042,
+        "trace_ms": 7.307
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "decision_ms": 49.6029,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "measured_parts_ms": 49.592,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4751,
+        "proof_ms": 42.9208,
+        "trace_ms": 6.1961
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "decision_ms": 35.4818,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "measured_parts_ms": 35.4718,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4389,
+        "proof_ms": 29.9668,
+        "trace_ms": 5.0661
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "decision_ms": 18.1574,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "measured_parts_ms": 18.1494,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2088,
+        "proof_ms": 14.5553,
+        "trace_ms": 3.3853
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 62.0851,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 62.0589,
+      "parts_ms": {
+        "controller_ms": 4.2768,
+        "lookup_ms": 0.0069,
+        "permit_ms": 0.9967,
+        "proof_ms": 49.614,
+        "trace_ms": 7.1645
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "decision_ms": 59.4539,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "measured_parts_ms": 59.4285,
+      "parts_ms": {
+        "controller_ms": 4.0649,
+        "lookup_ms": 0.0058,
+        "permit_ms": 0.9627,
+        "proof_ms": 47.5397,
+        "trace_ms": 6.8554
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "decision_ms": 53.1279,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "measured_parts_ms": 53.1052,
+      "parts_ms": {
+        "controller_ms": 3.5633,
+        "lookup_ms": 0.005,
+        "permit_ms": 0.8876,
+        "proof_ms": 42.4484,
+        "trace_ms": 6.2009
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "decision_ms": 63.4112,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 63.3853,
+      "parts_ms": {
+        "controller_ms": 4.2831,
+        "lookup_ms": 0.0049,
+        "permit_ms": 1.1079,
+        "proof_ms": 50.7638,
+        "trace_ms": 7.2256
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "decision_ms": 66.4075,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "measured_parts_ms": 66.3797,
+      "parts_ms": {
+        "controller_ms": 4.5141,
+        "lookup_ms": 0.0055,
+        "permit_ms": 1.1436,
+        "proof_ms": 53.127,
+        "trace_ms": 7.5895
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "decision_ms": 59.9623,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "measured_parts_ms": 59.9373,
+      "parts_ms": {
+        "controller_ms": 4.1093,
+        "lookup_ms": 0.0057,
+        "permit_ms": 0.6388,
+        "proof_ms": 48.1038,
+        "trace_ms": 7.0797
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "decision_ms": 12.9866,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "measured_parts_ms": 12.979,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1201,
+        "proof_ms": 10.3212,
+        "trace_ms": 2.5377
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "decision_ms": 31.821,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "measured_parts_ms": 31.8143,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.136,
+        "proof_ms": 27.3595,
+        "trace_ms": 4.3188
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "decision_ms": 19.4968,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "measured_parts_ms": 19.4897,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2197,
+        "proof_ms": 15.7525,
+        "trace_ms": 3.5175
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "decision_ms": 27.0926,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "measured_parts_ms": 27.0851,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.3017,
+        "proof_ms": 22.7479,
+        "trace_ms": 4.0355
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 53.7682,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "measured_parts_ms": 53.7595,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5158,
+        "proof_ms": 46.2193,
+        "trace_ms": 7.0244
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "decision_ms": 54.7382,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.7284,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6162,
+        "proof_ms": 46.8334,
+        "trace_ms": 7.2788
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "decision_ms": 54.9744,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.9632,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6796,
+        "proof_ms": 46.9172,
+        "trace_ms": 7.3664
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "decision_ms": 49.3622,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "measured_parts_ms": 49.3522,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4733,
+        "proof_ms": 42.7145,
+        "trace_ms": 6.1644
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "decision_ms": 35.5376,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "measured_parts_ms": 35.5275,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4448,
+        "proof_ms": 30.029,
+        "trace_ms": 5.0537
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "decision_ms": 18.166,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "measured_parts_ms": 18.1577,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2092,
+        "proof_ms": 14.5683,
+        "trace_ms": 3.3802
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 62.101,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 62.0744,
+      "parts_ms": {
+        "controller_ms": 4.2591,
+        "lookup_ms": 0.0063,
+        "permit_ms": 0.9943,
+        "proof_ms": 49.6628,
+        "trace_ms": 7.1519
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "decision_ms": 59.6358,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "measured_parts_ms": 59.6106,
+      "parts_ms": {
+        "controller_ms": 4.0549,
+        "lookup_ms": 0.0065,
+        "permit_ms": 0.945,
+        "proof_ms": 47.725,
+        "trace_ms": 6.8792
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "decision_ms": 53.7433,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "measured_parts_ms": 53.718,
+      "parts_ms": {
+        "controller_ms": 3.5813,
+        "lookup_ms": 0.0063,
+        "permit_ms": 0.8909,
+        "proof_ms": 43.0158,
+        "trace_ms": 6.2237
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "decision_ms": 63.9839,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 63.9555,
+      "parts_ms": {
+        "controller_ms": 4.336,
+        "lookup_ms": 0.0055,
+        "permit_ms": 1.1207,
+        "proof_ms": 51.176,
+        "trace_ms": 7.3173
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "decision_ms": 66.5904,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "measured_parts_ms": 66.5631,
+      "parts_ms": {
+        "controller_ms": 4.4734,
+        "lookup_ms": 0.006,
+        "permit_ms": 1.1464,
+        "proof_ms": 53.3536,
+        "trace_ms": 7.5837
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "decision_ms": 60.1592,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "measured_parts_ms": 60.1323,
+      "parts_ms": {
+        "controller_ms": 4.1227,
+        "lookup_ms": 0.0069,
+        "permit_ms": 0.6531,
+        "proof_ms": 48.1693,
+        "trace_ms": 7.1803
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "decision_ms": 13.0379,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "measured_parts_ms": 13.028,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.121,
+        "proof_ms": 10.3346,
+        "trace_ms": 2.5724
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "decision_ms": 31.93,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "measured_parts_ms": 31.9206,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1399,
+        "proof_ms": 27.4478,
+        "trace_ms": 4.3329
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "decision_ms": 19.6473,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "measured_parts_ms": 19.6379,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2216,
+        "proof_ms": 15.8554,
+        "trace_ms": 3.5609
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "decision_ms": 27.1726,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "measured_parts_ms": 27.1631,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.3015,
+        "proof_ms": 22.8167,
+        "trace_ms": 4.0449
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 63.4865,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "measured_parts_ms": 63.4734,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5666,
+        "proof_ms": 55.7896,
+        "trace_ms": 7.1172
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "decision_ms": 60.7872,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 60.7722,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6467,
+        "proof_ms": 50.4981,
+        "trace_ms": 9.6274
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "decision_ms": 55.1183,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 55.1063,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6669,
+        "proof_ms": 47.0314,
+        "trace_ms": 7.408
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "decision_ms": 49.4819,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "measured_parts_ms": 49.4709,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4652,
+        "proof_ms": 42.7986,
+        "trace_ms": 6.2071
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "decision_ms": 35.4804,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "measured_parts_ms": 35.4697,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4413,
+        "proof_ms": 29.976,
+        "trace_ms": 5.0524
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "decision_ms": 18.2356,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "measured_parts_ms": 18.2263,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2107,
+        "proof_ms": 14.6315,
+        "trace_ms": 3.3841
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 62.0365,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 62.0094,
+      "parts_ms": {
+        "controller_ms": 4.2601,
+        "lookup_ms": 0.006,
+        "permit_ms": 0.9711,
+        "proof_ms": 49.5831,
+        "trace_ms": 7.1891
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "decision_ms": 59.501,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "measured_parts_ms": 59.4755,
+      "parts_ms": {
+        "controller_ms": 4.0543,
+        "lookup_ms": 0.0063,
+        "permit_ms": 0.9549,
+        "proof_ms": 47.5623,
+        "trace_ms": 6.8977
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "decision_ms": 53.3026,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "measured_parts_ms": 53.2782,
+      "parts_ms": {
+        "controller_ms": 3.5815,
+        "lookup_ms": 0.006,
+        "permit_ms": 0.8713,
+        "proof_ms": 42.5412,
+        "trace_ms": 6.2782
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "decision_ms": 63.7757,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 63.7497,
+      "parts_ms": {
+        "controller_ms": 4.2948,
+        "lookup_ms": 0.0062,
+        "permit_ms": 1.1259,
+        "proof_ms": 51.0127,
+        "trace_ms": 7.3101
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "decision_ms": 66.4939,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "measured_parts_ms": 66.4662,
+      "parts_ms": {
+        "controller_ms": 4.4818,
+        "lookup_ms": 0.0053,
+        "permit_ms": 1.1358,
+        "proof_ms": 53.2362,
+        "trace_ms": 7.6071
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "decision_ms": 60.1612,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "measured_parts_ms": 60.1343,
+      "parts_ms": {
+        "controller_ms": 4.1401,
+        "lookup_ms": 0.0053,
+        "permit_ms": 0.6427,
+        "proof_ms": 48.2503,
+        "trace_ms": 7.0959
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "decision_ms": 13.0299,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "measured_parts_ms": 13.0215,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1199,
+        "proof_ms": 10.3228,
+        "trace_ms": 2.5788
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "decision_ms": 31.8725,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "measured_parts_ms": 31.8661,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1392,
+        "proof_ms": 27.3965,
+        "trace_ms": 4.3304
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "decision_ms": 19.6092,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "measured_parts_ms": 19.6016,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2195,
+        "proof_ms": 15.8435,
+        "trace_ms": 3.5386
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "decision_ms": 27.105,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "measured_parts_ms": 27.0976,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.3003,
+        "proof_ms": 22.7785,
+        "trace_ms": 4.0188
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 53.927,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "measured_parts_ms": 53.9182,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5145,
+        "proof_ms": 46.3536,
+        "trace_ms": 7.0501
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "decision_ms": 55.0899,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 55.0809,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6224,
+        "proof_ms": 47.1648,
+        "trace_ms": 7.2937
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "decision_ms": 55.0575,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 55.0477,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6846,
+        "proof_ms": 47.0252,
+        "trace_ms": 7.3379
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "decision_ms": 49.4584,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "measured_parts_ms": 49.4487,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4818,
+        "proof_ms": 42.8229,
+        "trace_ms": 6.144
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "decision_ms": 35.5044,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "measured_parts_ms": 35.4952,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4413,
+        "proof_ms": 30.0169,
+        "trace_ms": 5.037
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "decision_ms": 18.2134,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "measured_parts_ms": 18.2058,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2077,
+        "proof_ms": 14.6029,
+        "trace_ms": 3.3952
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 62.0823,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 62.0568,
+      "parts_ms": {
+        "controller_ms": 4.262,
+        "lookup_ms": 0.0055,
+        "permit_ms": 0.9856,
+        "proof_ms": 49.6457,
+        "trace_ms": 7.158
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "decision_ms": 60.3084,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "measured_parts_ms": 60.2821,
+      "parts_ms": {
+        "controller_ms": 4.0523,
+        "lookup_ms": 0.0053,
+        "permit_ms": 0.9812,
+        "proof_ms": 48.3837,
+        "trace_ms": 6.8596
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "decision_ms": 53.9264,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "measured_parts_ms": 53.902,
+      "parts_ms": {
+        "controller_ms": 3.6436,
+        "lookup_ms": 0.0073,
+        "permit_ms": 0.8935,
+        "proof_ms": 42.961,
+        "trace_ms": 6.3966
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "decision_ms": 63.7698,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 63.7432,
+      "parts_ms": {
+        "controller_ms": 4.3326,
+        "lookup_ms": 0.0063,
+        "permit_ms": 1.1134,
+        "proof_ms": 51.0324,
+        "trace_ms": 7.2585
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "decision_ms": 66.6814,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "measured_parts_ms": 66.6536,
+      "parts_ms": {
+        "controller_ms": 4.5088,
+        "lookup_ms": 0.0053,
+        "permit_ms": 1.1429,
+        "proof_ms": 53.4072,
+        "trace_ms": 7.5894
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "decision_ms": 60.1306,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "measured_parts_ms": 60.105,
+      "parts_ms": {
+        "controller_ms": 4.1255,
+        "lookup_ms": 0.0056,
+        "permit_ms": 0.6459,
+        "proof_ms": 48.2159,
+        "trace_ms": 7.1121
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "decision_ms": 13.0401,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "measured_parts_ms": 13.0319,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1218,
+        "proof_ms": 10.3555,
+        "trace_ms": 2.5546
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "decision_ms": 31.8235,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "measured_parts_ms": 31.8154,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1391,
+        "proof_ms": 27.3443,
+        "trace_ms": 4.332
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "decision_ms": 19.6213,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "measured_parts_ms": 19.6129,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2209,
+        "proof_ms": 15.8325,
+        "trace_ms": 3.5595
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "decision_ms": 27.2021,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "measured_parts_ms": 27.1938,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.3016,
+        "proof_ms": 22.8371,
+        "trace_ms": 4.0551
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 54.0408,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "measured_parts_ms": 54.0321,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5148,
+        "proof_ms": 46.4569,
+        "trace_ms": 7.0604
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "decision_ms": 54.7621,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.7516,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6126,
+        "proof_ms": 46.8156,
+        "trace_ms": 7.3234
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "decision_ms": 54.9251,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.9149,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6721,
+        "proof_ms": 46.8698,
+        "trace_ms": 7.373
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "decision_ms": 49.2913,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "measured_parts_ms": 49.2814,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4621,
+        "proof_ms": 42.6659,
+        "trace_ms": 6.1534
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "decision_ms": 35.7886,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "measured_parts_ms": 35.7785,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4388,
+        "proof_ms": 30.1785,
+        "trace_ms": 5.1612
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "decision_ms": 18.1677,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "measured_parts_ms": 18.1594,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2078,
+        "proof_ms": 14.5601,
+        "trace_ms": 3.3915
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 62.3073,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 62.2801,
+      "parts_ms": {
+        "controller_ms": 4.2643,
+        "lookup_ms": 0.0058,
+        "permit_ms": 0.9919,
+        "proof_ms": 49.7933,
+        "trace_ms": 7.2248
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "decision_ms": 59.6335,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "measured_parts_ms": 59.6085,
+      "parts_ms": {
+        "controller_ms": 4.0487,
+        "lookup_ms": 0.0054,
+        "permit_ms": 0.9468,
+        "proof_ms": 47.7098,
+        "trace_ms": 6.8978
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "decision_ms": 53.2877,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "measured_parts_ms": 53.2647,
+      "parts_ms": {
+        "controller_ms": 3.6073,
+        "lookup_ms": 0.0057,
+        "permit_ms": 0.8961,
+        "proof_ms": 42.4972,
+        "trace_ms": 6.2584
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "decision_ms": 63.6398,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 63.6144,
+      "parts_ms": {
+        "controller_ms": 4.2929,
+        "lookup_ms": 0.0051,
+        "permit_ms": 1.1056,
+        "proof_ms": 50.9671,
+        "trace_ms": 7.2437
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "decision_ms": 66.5525,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "measured_parts_ms": 66.5266,
+      "parts_ms": {
+        "controller_ms": 4.4863,
+        "lookup_ms": 0.0064,
+        "permit_ms": 1.1532,
+        "proof_ms": 53.2832,
+        "trace_ms": 7.5975
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "decision_ms": 60.2574,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "measured_parts_ms": 60.232,
+      "parts_ms": {
+        "controller_ms": 4.1588,
+        "lookup_ms": 0.0059,
+        "permit_ms": 0.6419,
+        "proof_ms": 48.2948,
+        "trace_ms": 7.1306
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "decision_ms": 13.0281,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "measured_parts_ms": 13.019,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1197,
+        "proof_ms": 10.3223,
+        "trace_ms": 2.577
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "decision_ms": 31.8431,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "measured_parts_ms": 31.8356,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1385,
+        "proof_ms": 27.3726,
+        "trace_ms": 4.3245
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "decision_ms": 19.6012,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "measured_parts_ms": 19.5931,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2197,
+        "proof_ms": 15.834,
+        "trace_ms": 3.5394
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "decision_ms": 27.1568,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "measured_parts_ms": 27.1492,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2987,
+        "proof_ms": 22.8044,
+        "trace_ms": 4.0461
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 53.8193,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "measured_parts_ms": 53.8106,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5123,
+        "proof_ms": 46.2242,
+        "trace_ms": 7.0741
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "decision_ms": 54.8566,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.8462,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.622,
+        "proof_ms": 46.892,
+        "trace_ms": 7.3322
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "decision_ms": 55.0061,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.9958,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6735,
+        "proof_ms": 46.979,
+        "trace_ms": 7.3433
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "decision_ms": 49.4112,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "measured_parts_ms": 49.4014,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4657,
+        "proof_ms": 42.7648,
+        "trace_ms": 6.1709
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "decision_ms": 35.4755,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "measured_parts_ms": 35.4655,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4377,
+        "proof_ms": 29.9676,
+        "trace_ms": 5.0602
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "decision_ms": 18.2182,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "measured_parts_ms": 18.2096,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2128,
+        "proof_ms": 14.6158,
+        "trace_ms": 3.381
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 62.5806,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 62.5534,
+      "parts_ms": {
+        "controller_ms": 4.2645,
+        "lookup_ms": 0.0067,
+        "permit_ms": 0.9833,
+        "proof_ms": 50.0906,
+        "trace_ms": 7.2083
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "decision_ms": 59.7228,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "measured_parts_ms": 59.6967,
+      "parts_ms": {
+        "controller_ms": 4.1373,
+        "lookup_ms": 0.0063,
+        "permit_ms": 0.9502,
+        "proof_ms": 47.6847,
+        "trace_ms": 6.9182
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "decision_ms": 53.2087,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "measured_parts_ms": 53.1854,
+      "parts_ms": {
+        "controller_ms": 3.6372,
+        "lookup_ms": 0.0294,
+        "permit_ms": 0.886,
+        "proof_ms": 42.3845,
+        "trace_ms": 6.2483
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "decision_ms": 63.5577,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 63.5316,
+      "parts_ms": {
+        "controller_ms": 4.2931,
+        "lookup_ms": 0.0055,
+        "permit_ms": 1.1126,
+        "proof_ms": 50.8843,
+        "trace_ms": 7.2361
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "decision_ms": 66.6291,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "measured_parts_ms": 66.6021,
+      "parts_ms": {
+        "controller_ms": 4.4876,
+        "lookup_ms": 0.0052,
+        "permit_ms": 1.1428,
+        "proof_ms": 53.4024,
+        "trace_ms": 7.5641
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "decision_ms": 60.1561,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "measured_parts_ms": 60.131,
+      "parts_ms": {
+        "controller_ms": 4.1434,
+        "lookup_ms": 0.0053,
+        "permit_ms": 0.6379,
+        "proof_ms": 48.2314,
+        "trace_ms": 7.113
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "decision_ms": 13.0049,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "measured_parts_ms": 12.9963,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1206,
+        "proof_ms": 10.3234,
+        "trace_ms": 2.5523
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "decision_ms": 31.8148,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "measured_parts_ms": 31.8077,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1396,
+        "proof_ms": 27.3291,
+        "trace_ms": 4.339
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "decision_ms": 19.5707,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "measured_parts_ms": 19.5629,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2188,
+        "proof_ms": 15.8303,
+        "trace_ms": 3.5138
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "decision_ms": 27.1169,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "measured_parts_ms": 27.1085,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2994,
+        "proof_ms": 22.7438,
+        "trace_ms": 4.0653
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 53.9137,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "measured_parts_ms": 53.9049,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5166,
+        "proof_ms": 46.3335,
+        "trace_ms": 7.0548
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "decision_ms": 54.8728,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.8624,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6255,
+        "proof_ms": 46.9459,
+        "trace_ms": 7.291
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "decision_ms": 54.9817,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.9703,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.667,
+        "proof_ms": 46.9481,
+        "trace_ms": 7.3552
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "decision_ms": 49.2968,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "measured_parts_ms": 49.2876,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4658,
+        "proof_ms": 42.6576,
+        "trace_ms": 6.1642
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "decision_ms": 35.604,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "measured_parts_ms": 35.5946,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4344,
+        "proof_ms": 30.1158,
+        "trace_ms": 5.0444
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "decision_ms": 18.1842,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "measured_parts_ms": 18.1764,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2081,
+        "proof_ms": 14.5783,
+        "trace_ms": 3.39
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 62.0198,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 61.9957,
+      "parts_ms": {
+        "controller_ms": 4.278,
+        "lookup_ms": 0.0058,
+        "permit_ms": 0.9971,
+        "proof_ms": 49.5528,
+        "trace_ms": 7.162
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "decision_ms": 59.5115,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "measured_parts_ms": 59.4873,
+      "parts_ms": {
+        "controller_ms": 4.078,
+        "lookup_ms": 0.0053,
+        "permit_ms": 0.9535,
+        "proof_ms": 47.5706,
+        "trace_ms": 6.8799
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "decision_ms": 53.156,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "measured_parts_ms": 53.1326,
+      "parts_ms": {
+        "controller_ms": 3.5744,
+        "lookup_ms": 0.0053,
+        "permit_ms": 0.8903,
+        "proof_ms": 42.3887,
+        "trace_ms": 6.2739
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "decision_ms": 63.5429,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 63.5169,
+      "parts_ms": {
+        "controller_ms": 4.279,
+        "lookup_ms": 0.0053,
+        "permit_ms": 1.1057,
+        "proof_ms": 50.9281,
+        "trace_ms": 7.1988
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "decision_ms": 66.4949,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "measured_parts_ms": 66.466,
+      "parts_ms": {
+        "controller_ms": 4.481,
+        "lookup_ms": 0.0058,
+        "permit_ms": 1.1497,
+        "proof_ms": 53.2517,
+        "trace_ms": 7.5778
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "decision_ms": 60.8228,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "measured_parts_ms": 60.7962,
+      "parts_ms": {
+        "controller_ms": 4.1923,
+        "lookup_ms": 0.0072,
+        "permit_ms": 0.6423,
+        "proof_ms": 48.8417,
+        "trace_ms": 7.1127
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "decision_ms": 13.0269,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "measured_parts_ms": 13.0186,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1207,
+        "proof_ms": 10.3542,
+        "trace_ms": 2.5437
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "decision_ms": 31.7439,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "measured_parts_ms": 31.7367,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1365,
+        "proof_ms": 27.2577,
+        "trace_ms": 4.3425
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "decision_ms": 19.5942,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "measured_parts_ms": 19.5872,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2187,
+        "proof_ms": 15.8394,
+        "trace_ms": 3.5291
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "decision_ms": 27.147,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "measured_parts_ms": 27.1397,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.299,
+        "proof_ms": 22.7717,
+        "trace_ms": 4.069
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 54.2666,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "measured_parts_ms": 54.2574,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.513,
+        "proof_ms": 46.5912,
+        "trace_ms": 7.1532
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "decision_ms": 54.9014,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.8902,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6206,
+        "proof_ms": 46.9845,
+        "trace_ms": 7.2851
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "decision_ms": 55.0332,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 55.0215,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6818,
+        "proof_ms": 46.9788,
+        "trace_ms": 7.3609
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "decision_ms": 50.1567,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "measured_parts_ms": 50.1447,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4712,
+        "proof_ms": 43.4689,
+        "trace_ms": 6.2046
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "decision_ms": 35.7967,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "measured_parts_ms": 35.7865,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4377,
+        "proof_ms": 30.2164,
+        "trace_ms": 5.1324
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "decision_ms": 18.1958,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "measured_parts_ms": 18.1877,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.207,
+        "proof_ms": 14.5906,
+        "trace_ms": 3.3901
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 62.0999,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 62.0752,
+      "parts_ms": {
+        "controller_ms": 4.2629,
+        "lookup_ms": 0.0063,
+        "permit_ms": 0.9819,
+        "proof_ms": 49.5952,
+        "trace_ms": 7.2289
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "decision_ms": 59.7093,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "measured_parts_ms": 59.684,
+      "parts_ms": {
+        "controller_ms": 4.0339,
+        "lookup_ms": 0.0054,
+        "permit_ms": 0.9477,
+        "proof_ms": 47.7456,
+        "trace_ms": 6.9514
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "decision_ms": 53.0592,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "measured_parts_ms": 53.036,
+      "parts_ms": {
+        "controller_ms": 3.5709,
+        "lookup_ms": 0.006,
+        "permit_ms": 0.8835,
+        "proof_ms": 42.3229,
+        "trace_ms": 6.2527
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "decision_ms": 63.5972,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 63.5713,
+      "parts_ms": {
+        "controller_ms": 4.2694,
+        "lookup_ms": 0.0047,
+        "permit_ms": 1.1161,
+        "proof_ms": 50.9453,
+        "trace_ms": 7.2358
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "decision_ms": 66.719,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "measured_parts_ms": 66.6905,
+      "parts_ms": {
+        "controller_ms": 4.4805,
+        "lookup_ms": 0.0065,
+        "permit_ms": 1.1667,
+        "proof_ms": 53.4344,
+        "trace_ms": 7.6024
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "decision_ms": 60.1563,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "measured_parts_ms": 60.1308,
+      "parts_ms": {
+        "controller_ms": 4.138,
+        "lookup_ms": 0.0065,
+        "permit_ms": 0.6373,
+        "proof_ms": 48.2413,
+        "trace_ms": 7.1077
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "decision_ms": 12.9986,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "measured_parts_ms": 12.9901,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.123,
+        "proof_ms": 10.2856,
+        "trace_ms": 2.5815
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "decision_ms": 31.9547,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "measured_parts_ms": 31.9467,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1409,
+        "proof_ms": 27.4352,
+        "trace_ms": 4.3706
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "decision_ms": 19.6758,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "measured_parts_ms": 19.6673,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2209,
+        "proof_ms": 15.8517,
+        "trace_ms": 3.5947
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "decision_ms": 27.1904,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "measured_parts_ms": 27.1827,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2961,
+        "proof_ms": 22.8473,
+        "trace_ms": 4.0393
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 54.0285,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "measured_parts_ms": 54.0191,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5176,
+        "proof_ms": 46.4446,
+        "trace_ms": 7.0569
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "decision_ms": 54.9356,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.9237,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6129,
+        "proof_ms": 46.9648,
+        "trace_ms": 7.346
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "decision_ms": 55.0348,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 55.0239,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6715,
+        "proof_ms": 46.9986,
+        "trace_ms": 7.3538
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "decision_ms": 49.4244,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "measured_parts_ms": 49.4143,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4698,
+        "proof_ms": 42.7659,
+        "trace_ms": 6.1786
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "decision_ms": 35.9027,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "measured_parts_ms": 35.8909,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4411,
+        "proof_ms": 30.385,
+        "trace_ms": 5.0648
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "decision_ms": 18.3528,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "measured_parts_ms": 18.3432,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2079,
+        "proof_ms": 14.6817,
+        "trace_ms": 3.4536
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 62.3253,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 62.2988,
+      "parts_ms": {
+        "controller_ms": 4.3027,
+        "lookup_ms": 0.0061,
+        "permit_ms": 0.9854,
+        "proof_ms": 49.7602,
+        "trace_ms": 7.2444
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "decision_ms": 59.6376,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "measured_parts_ms": 59.6109,
+      "parts_ms": {
+        "controller_ms": 4.0627,
+        "lookup_ms": 0.0049,
+        "permit_ms": 0.9542,
+        "proof_ms": 47.7028,
+        "trace_ms": 6.8863
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "decision_ms": 53.1303,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "measured_parts_ms": 53.1059,
+      "parts_ms": {
+        "controller_ms": 3.6113,
+        "lookup_ms": 0.0059,
+        "permit_ms": 0.8868,
+        "proof_ms": 42.3673,
+        "trace_ms": 6.2346
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "decision_ms": 63.6249,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 63.5987,
+      "parts_ms": {
+        "controller_ms": 4.2843,
+        "lookup_ms": 0.0049,
+        "permit_ms": 1.1077,
+        "proof_ms": 50.9624,
+        "trace_ms": 7.2394
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "decision_ms": 66.4914,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "measured_parts_ms": 66.4637,
+      "parts_ms": {
+        "controller_ms": 4.4876,
+        "lookup_ms": 0.0069,
+        "permit_ms": 1.1489,
+        "proof_ms": 53.2515,
+        "trace_ms": 7.5688
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "decision_ms": 60.391,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "measured_parts_ms": 60.3661,
+      "parts_ms": {
+        "controller_ms": 4.121,
+        "lookup_ms": 0.0066,
+        "permit_ms": 0.644,
+        "proof_ms": 48.454,
+        "trace_ms": 7.1405
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "decision_ms": 13.0223,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "measured_parts_ms": 13.0141,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1239,
+        "proof_ms": 10.336,
+        "trace_ms": 2.5542
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "decision_ms": 31.9329,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "measured_parts_ms": 31.9255,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1386,
+        "proof_ms": 27.4191,
+        "trace_ms": 4.3678
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "decision_ms": 19.621,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "measured_parts_ms": 19.6135,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2161,
+        "proof_ms": 15.8564,
+        "trace_ms": 3.541
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "decision_ms": 27.1291,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "measured_parts_ms": 27.1207,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2983,
+        "proof_ms": 22.8001,
+        "trace_ms": 4.0223
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 54.1223,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "measured_parts_ms": 54.1115,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5152,
+        "proof_ms": 46.43,
+        "trace_ms": 7.1663
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "decision_ms": 54.8342,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.8227,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6205,
+        "proof_ms": 46.9099,
+        "trace_ms": 7.2923
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "decision_ms": 55.0193,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 55.0074,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6745,
+        "proof_ms": 46.9415,
+        "trace_ms": 7.3914
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "decision_ms": 49.3309,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "measured_parts_ms": 49.32,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4678,
+        "proof_ms": 42.677,
+        "trace_ms": 6.1752
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "decision_ms": 35.4815,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "measured_parts_ms": 35.4705,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4436,
+        "proof_ms": 29.9594,
+        "trace_ms": 5.0675
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "decision_ms": 18.1465,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "measured_parts_ms": 18.1366,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2064,
+        "proof_ms": 14.529,
+        "trace_ms": 3.4012
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 62.3791,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 62.3513,
+      "parts_ms": {
+        "controller_ms": 4.2771,
+        "lookup_ms": 0.0065,
+        "permit_ms": 0.9844,
+        "proof_ms": 49.8146,
+        "trace_ms": 7.2687
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "decision_ms": 59.7617,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "measured_parts_ms": 59.7357,
+      "parts_ms": {
+        "controller_ms": 4.0644,
+        "lookup_ms": 0.0055,
+        "permit_ms": 0.9649,
+        "proof_ms": 47.7775,
+        "trace_ms": 6.9234
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "decision_ms": 53.2098,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "measured_parts_ms": 53.1866,
+      "parts_ms": {
+        "controller_ms": 3.5659,
+        "lookup_ms": 0.0061,
+        "permit_ms": 0.8951,
+        "proof_ms": 42.4323,
+        "trace_ms": 6.2872
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "decision_ms": 63.7146,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 63.6891,
+      "parts_ms": {
+        "controller_ms": 4.2972,
+        "lookup_ms": 0.0051,
+        "permit_ms": 1.107,
+        "proof_ms": 51.0686,
+        "trace_ms": 7.2112
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "decision_ms": 66.4671,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "measured_parts_ms": 66.4404,
+      "parts_ms": {
+        "controller_ms": 4.4828,
+        "lookup_ms": 0.0054,
+        "permit_ms": 1.1539,
+        "proof_ms": 53.1691,
+        "trace_ms": 7.6292
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "decision_ms": 60.2283,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "measured_parts_ms": 60.2046,
+      "parts_ms": {
+        "controller_ms": 4.1191,
+        "lookup_ms": 0.0055,
+        "permit_ms": 0.6449,
+        "proof_ms": 48.3461,
+        "trace_ms": 7.089
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "decision_ms": 13.0137,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "measured_parts_ms": 13.0046,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1218,
+        "proof_ms": 10.3267,
+        "trace_ms": 2.5561
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "decision_ms": 31.8203,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "measured_parts_ms": 31.8127,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1369,
+        "proof_ms": 27.3333,
+        "trace_ms": 4.3425
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "decision_ms": 19.6042,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "measured_parts_ms": 19.5965,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2328,
+        "proof_ms": 15.8218,
+        "trace_ms": 3.5419
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "decision_ms": 27.1652,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "measured_parts_ms": 27.158,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.3,
+        "proof_ms": 22.8201,
+        "trace_ms": 4.0379
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 54.0048,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "measured_parts_ms": 53.9953,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.517,
+        "proof_ms": 46.4231,
+        "trace_ms": 7.0552
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "decision_ms": 54.7367,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.7258,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6162,
+        "proof_ms": 46.8033,
+        "trace_ms": 7.3063
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "decision_ms": 54.9802,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.9695,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6818,
+        "proof_ms": 46.9306,
+        "trace_ms": 7.3571
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "decision_ms": 49.3423,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "measured_parts_ms": 49.3321,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4611,
+        "proof_ms": 42.6943,
+        "trace_ms": 6.1767
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "decision_ms": 35.3945,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "measured_parts_ms": 35.3852,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4357,
+        "proof_ms": 29.9057,
+        "trace_ms": 5.0438
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "decision_ms": 18.0912,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "measured_parts_ms": 18.0832,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.207,
+        "proof_ms": 14.5071,
+        "trace_ms": 3.3691
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 61.9685,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 61.9436,
+      "parts_ms": {
+        "controller_ms": 4.255,
+        "lookup_ms": 0.0058,
+        "permit_ms": 0.9943,
+        "proof_ms": 49.5182,
+        "trace_ms": 7.1703
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "decision_ms": 59.4572,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "measured_parts_ms": 59.4317,
+      "parts_ms": {
+        "controller_ms": 4.0409,
+        "lookup_ms": 0.0057,
+        "permit_ms": 0.9558,
+        "proof_ms": 47.5298,
+        "trace_ms": 6.8995
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "decision_ms": 54.0478,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "measured_parts_ms": 54.0172,
+      "parts_ms": {
+        "controller_ms": 3.8143,
+        "lookup_ms": 0.0094,
+        "permit_ms": 0.8962,
+        "proof_ms": 42.9061,
+        "trace_ms": 6.3912
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "decision_ms": 63.8414,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 63.8134,
+      "parts_ms": {
+        "controller_ms": 4.3355,
+        "lookup_ms": 0.0064,
+        "permit_ms": 1.1216,
+        "proof_ms": 51.0513,
+        "trace_ms": 7.2986
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "decision_ms": 66.6199,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "measured_parts_ms": 66.5921,
+      "parts_ms": {
+        "controller_ms": 4.5018,
+        "lookup_ms": 0.0066,
+        "permit_ms": 1.1626,
+        "proof_ms": 53.3417,
+        "trace_ms": 7.5794
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "decision_ms": 60.6534,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "measured_parts_ms": 60.6276,
+      "parts_ms": {
+        "controller_ms": 4.1261,
+        "lookup_ms": 0.0064,
+        "permit_ms": 0.6514,
+        "proof_ms": 48.7272,
+        "trace_ms": 7.1165
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "decision_ms": 13.0175,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "measured_parts_ms": 13.0068,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1229,
+        "proof_ms": 10.2807,
+        "trace_ms": 2.6032
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "decision_ms": 31.8772,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "measured_parts_ms": 31.8682,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1411,
+        "proof_ms": 27.3683,
+        "trace_ms": 4.3588
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "decision_ms": 19.5873,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "measured_parts_ms": 19.5784,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2202,
+        "proof_ms": 15.7966,
+        "trace_ms": 3.5616
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "decision_ms": 27.0993,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "measured_parts_ms": 27.0906,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2983,
+        "proof_ms": 22.7458,
+        "trace_ms": 4.0465
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 53.98,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "measured_parts_ms": 53.9706,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.517,
+        "proof_ms": 46.3831,
+        "trace_ms": 7.0705
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "decision_ms": 54.7482,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.7386,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6155,
+        "proof_ms": 46.8277,
+        "trace_ms": 7.2954
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "decision_ms": 54.9663,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.9549,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.676,
+        "proof_ms": 46.9476,
+        "trace_ms": 7.3313
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "decision_ms": 49.3918,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "measured_parts_ms": 49.3804,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4692,
+        "proof_ms": 42.7448,
+        "trace_ms": 6.1664
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "decision_ms": 35.476,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "measured_parts_ms": 35.4658,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4398,
+        "proof_ms": 29.9811,
+        "trace_ms": 5.0449
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "decision_ms": 18.1805,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "measured_parts_ms": 18.1723,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.206,
+        "proof_ms": 14.5706,
+        "trace_ms": 3.3957
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 62.1894,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 62.1642,
+      "parts_ms": {
+        "controller_ms": 4.2811,
+        "lookup_ms": 0.0057,
+        "permit_ms": 0.9898,
+        "proof_ms": 49.6965,
+        "trace_ms": 7.1911
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "decision_ms": 59.6284,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "measured_parts_ms": 59.6039,
+      "parts_ms": {
+        "controller_ms": 4.0476,
+        "lookup_ms": 0.0058,
+        "permit_ms": 0.9596,
+        "proof_ms": 47.6953,
+        "trace_ms": 6.8956
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "decision_ms": 53.0256,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "measured_parts_ms": 53.0022,
+      "parts_ms": {
+        "controller_ms": 3.576,
+        "lookup_ms": 0.0053,
+        "permit_ms": 0.8701,
+        "proof_ms": 42.3332,
+        "trace_ms": 6.2176
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "decision_ms": 63.4288,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 63.4034,
+      "parts_ms": {
+        "controller_ms": 4.2683,
+        "lookup_ms": 0.0047,
+        "permit_ms": 1.1134,
+        "proof_ms": 50.8149,
+        "trace_ms": 7.2021
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "decision_ms": 66.2343,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "measured_parts_ms": 66.208,
+      "parts_ms": {
+        "controller_ms": 4.4841,
+        "lookup_ms": 0.0055,
+        "permit_ms": 1.1405,
+        "proof_ms": 53.0097,
+        "trace_ms": 7.5682
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "decision_ms": 60.2871,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "measured_parts_ms": 60.2631,
+      "parts_ms": {
+        "controller_ms": 4.1283,
+        "lookup_ms": 0.0056,
+        "permit_ms": 0.649,
+        "proof_ms": 48.3415,
+        "trace_ms": 7.1387
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "decision_ms": 12.9577,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "measured_parts_ms": 12.949,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1199,
+        "proof_ms": 10.2948,
+        "trace_ms": 2.5343
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "decision_ms": 31.7846,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "measured_parts_ms": 31.7771,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1415,
+        "proof_ms": 27.312,
+        "trace_ms": 4.3236
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "decision_ms": 19.5609,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "measured_parts_ms": 19.5528,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2212,
+        "proof_ms": 15.8027,
+        "trace_ms": 3.5289
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "decision_ms": 27.0582,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "measured_parts_ms": 27.0502,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2982,
+        "proof_ms": 22.7141,
+        "trace_ms": 4.0379
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 53.966,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "measured_parts_ms": 53.9573,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5106,
+        "proof_ms": 46.3707,
+        "trace_ms": 7.076
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "decision_ms": 54.7161,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.7066,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6243,
+        "proof_ms": 46.7765,
+        "trace_ms": 7.3058
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "decision_ms": 54.8464,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.8356,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6855,
+        "proof_ms": 46.8084,
+        "trace_ms": 7.3417
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "decision_ms": 49.4032,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "measured_parts_ms": 49.3927,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4714,
+        "proof_ms": 42.7462,
+        "trace_ms": 6.1751
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "decision_ms": 35.4006,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "measured_parts_ms": 35.3905,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4316,
+        "proof_ms": 29.9064,
+        "trace_ms": 5.0525
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "decision_ms": 18.1844,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "measured_parts_ms": 18.176,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2081,
+        "proof_ms": 14.5896,
+        "trace_ms": 3.3783
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 61.9535,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 61.9277,
+      "parts_ms": {
+        "controller_ms": 4.2781,
+        "lookup_ms": 0.0052,
+        "permit_ms": 0.9937,
+        "proof_ms": 49.4858,
+        "trace_ms": 7.1649
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "decision_ms": 59.4969,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "measured_parts_ms": 59.4725,
+      "parts_ms": {
+        "controller_ms": 4.0344,
+        "lookup_ms": 0.0058,
+        "permit_ms": 0.946,
+        "proof_ms": 47.5971,
+        "trace_ms": 6.8892
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "decision_ms": 52.9491,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "measured_parts_ms": 52.9257,
+      "parts_ms": {
+        "controller_ms": 3.55,
+        "lookup_ms": 0.0055,
+        "permit_ms": 0.885,
+        "proof_ms": 42.273,
+        "trace_ms": 6.2122
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "decision_ms": 63.9981,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 63.9708,
+      "parts_ms": {
+        "controller_ms": 4.2794,
+        "lookup_ms": 0.0054,
+        "permit_ms": 1.1078,
+        "proof_ms": 51.1929,
+        "trace_ms": 7.3853
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "decision_ms": 66.4301,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "measured_parts_ms": 66.4028,
+      "parts_ms": {
+        "controller_ms": 4.4844,
+        "lookup_ms": 0.0052,
+        "permit_ms": 1.1497,
+        "proof_ms": 53.2082,
+        "trace_ms": 7.5553
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "decision_ms": 60.079,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "measured_parts_ms": 60.0541,
+      "parts_ms": {
+        "controller_ms": 4.1044,
+        "lookup_ms": 0.0052,
+        "permit_ms": 0.6464,
+        "proof_ms": 48.2031,
+        "trace_ms": 7.095
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "decision_ms": 13.0057,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "measured_parts_ms": 12.9965,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1226,
+        "proof_ms": 10.3182,
+        "trace_ms": 2.5557
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "decision_ms": 31.8113,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "measured_parts_ms": 31.804,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1394,
+        "proof_ms": 27.3277,
+        "trace_ms": 4.3369
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "decision_ms": 19.606,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "measured_parts_ms": 19.598,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2183,
+        "proof_ms": 15.8473,
+        "trace_ms": 3.5324
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "decision_ms": 27.1297,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "measured_parts_ms": 27.1219,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2974,
+        "proof_ms": 22.7822,
+        "trace_ms": 4.0423
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 53.9903,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "measured_parts_ms": 53.9808,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5122,
+        "proof_ms": 46.3668,
+        "trace_ms": 7.1018
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "decision_ms": 55.7143,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 55.7025,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.629,
+        "proof_ms": 47.5684,
+        "trace_ms": 7.5051
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "decision_ms": 55.353,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 55.3421,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6811,
+        "proof_ms": 47.2779,
+        "trace_ms": 7.3831
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "decision_ms": 49.6086,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "measured_parts_ms": 49.5976,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4813,
+        "proof_ms": 42.882,
+        "trace_ms": 6.2343
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "decision_ms": 35.5996,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "measured_parts_ms": 35.589,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4365,
+        "proof_ms": 30.0905,
+        "trace_ms": 5.062
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "decision_ms": 18.1119,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "measured_parts_ms": 18.1036,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2089,
+        "proof_ms": 14.5095,
+        "trace_ms": 3.3852
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 62.0949,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 62.0703,
+      "parts_ms": {
+        "controller_ms": 4.2668,
+        "lookup_ms": 0.0058,
+        "permit_ms": 1.0018,
+        "proof_ms": 49.6228,
+        "trace_ms": 7.1731
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "decision_ms": 59.5271,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "measured_parts_ms": 59.5019,
+      "parts_ms": {
+        "controller_ms": 4.0515,
+        "lookup_ms": 0.0051,
+        "permit_ms": 0.9556,
+        "proof_ms": 47.6195,
+        "trace_ms": 6.8702
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "decision_ms": 53.1046,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "measured_parts_ms": 53.0806,
+      "parts_ms": {
+        "controller_ms": 3.5839,
+        "lookup_ms": 0.005,
+        "permit_ms": 0.8803,
+        "proof_ms": 42.4067,
+        "trace_ms": 6.2047
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "decision_ms": 63.8419,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 63.8154,
+      "parts_ms": {
+        "controller_ms": 4.2972,
+        "lookup_ms": 0.0056,
+        "permit_ms": 1.1046,
+        "proof_ms": 51.1191,
+        "trace_ms": 7.2889
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "decision_ms": 66.565,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "measured_parts_ms": 66.5382,
+      "parts_ms": {
+        "controller_ms": 4.4991,
+        "lookup_ms": 0.0054,
+        "permit_ms": 1.1665,
+        "proof_ms": 53.2401,
+        "trace_ms": 7.6271
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "decision_ms": 60.1059,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "measured_parts_ms": 60.0807,
+      "parts_ms": {
+        "controller_ms": 4.1196,
+        "lookup_ms": 0.0049,
+        "permit_ms": 0.6435,
+        "proof_ms": 48.2151,
+        "trace_ms": 7.0976
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "decision_ms": 12.9222,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "measured_parts_ms": 12.9137,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1213,
+        "proof_ms": 10.2621,
+        "trace_ms": 2.5303
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "decision_ms": 31.788,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "measured_parts_ms": 31.7806,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1405,
+        "proof_ms": 27.2968,
+        "trace_ms": 4.3433
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "decision_ms": 19.6021,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "measured_parts_ms": 19.5944,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2173,
+        "proof_ms": 15.8506,
+        "trace_ms": 3.5265
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "decision_ms": 27.169,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "measured_parts_ms": 27.1617,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.3019,
+        "proof_ms": 22.8195,
+        "trace_ms": 4.0403
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 54.0786,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "measured_parts_ms": 54.07,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5145,
+        "proof_ms": 46.4821,
+        "trace_ms": 7.0734
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "decision_ms": 54.8638,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.8537,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6135,
+        "proof_ms": 46.9144,
+        "trace_ms": 7.3258
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "decision_ms": 55.0418,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 55.0319,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6726,
+        "proof_ms": 47.0329,
+        "trace_ms": 7.3264
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "decision_ms": 49.3708,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "measured_parts_ms": 49.3612,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4668,
+        "proof_ms": 42.7225,
+        "trace_ms": 6.1719
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "decision_ms": 35.5839,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "measured_parts_ms": 35.5735,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4368,
+        "proof_ms": 30.0979,
+        "trace_ms": 5.0388
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "decision_ms": 18.2032,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "measured_parts_ms": 18.1953,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2124,
+        "proof_ms": 14.6041,
+        "trace_ms": 3.3788
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 62.2298,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 62.2045,
+      "parts_ms": {
+        "controller_ms": 4.2768,
+        "lookup_ms": 0.0057,
+        "permit_ms": 0.9689,
+        "proof_ms": 49.7765,
+        "trace_ms": 7.1766
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "decision_ms": 59.6112,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "measured_parts_ms": 59.5865,
+      "parts_ms": {
+        "controller_ms": 4.0746,
+        "lookup_ms": 0.006,
+        "permit_ms": 0.9583,
+        "proof_ms": 47.6941,
+        "trace_ms": 6.8535
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "decision_ms": 53.112,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "measured_parts_ms": 53.089,
+      "parts_ms": {
+        "controller_ms": 3.5922,
+        "lookup_ms": 0.0052,
+        "permit_ms": 0.8886,
+        "proof_ms": 42.3784,
+        "trace_ms": 6.2246
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "decision_ms": 63.631,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 63.6061,
+      "parts_ms": {
+        "controller_ms": 4.2964,
+        "lookup_ms": 0.0048,
+        "permit_ms": 1.1175,
+        "proof_ms": 50.9691,
+        "trace_ms": 7.2183
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "decision_ms": 66.6646,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "measured_parts_ms": 66.6381,
+      "parts_ms": {
+        "controller_ms": 4.5488,
+        "lookup_ms": 0.0052,
+        "permit_ms": 1.1461,
+        "proof_ms": 53.3309,
+        "trace_ms": 7.6071
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "decision_ms": 60.3053,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "measured_parts_ms": 60.2811,
+      "parts_ms": {
+        "controller_ms": 4.136,
+        "lookup_ms": 0.0052,
+        "permit_ms": 0.6457,
+        "proof_ms": 48.3838,
+        "trace_ms": 7.1104
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "decision_ms": 12.9983,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "measured_parts_ms": 12.9898,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1212,
+        "proof_ms": 10.3265,
+        "trace_ms": 2.5421
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "decision_ms": 31.8585,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "measured_parts_ms": 31.8514,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1375,
+        "proof_ms": 27.3895,
+        "trace_ms": 4.3244
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "decision_ms": 19.6383,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "measured_parts_ms": 19.6305,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2192,
+        "proof_ms": 15.8907,
+        "trace_ms": 3.5206
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "decision_ms": 27.1471,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "measured_parts_ms": 27.1393,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.3013,
+        "proof_ms": 22.7995,
+        "trace_ms": 4.0385
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 53.9769,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "measured_parts_ms": 53.9674,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5145,
+        "proof_ms": 46.3326,
+        "trace_ms": 7.1203
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "decision_ms": 54.7094,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.6993,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6128,
+        "proof_ms": 46.8001,
+        "trace_ms": 7.2864
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "decision_ms": 55.0822,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 55.0709,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6773,
+        "proof_ms": 46.9882,
+        "trace_ms": 7.4054
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "decision_ms": 49.3736,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "measured_parts_ms": 49.3621,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4669,
+        "proof_ms": 42.7148,
+        "trace_ms": 6.1804
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "decision_ms": 35.4134,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "measured_parts_ms": 35.4038,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4413,
+        "proof_ms": 29.8844,
+        "trace_ms": 5.0781
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "decision_ms": 18.0988,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "measured_parts_ms": 18.0906,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2079,
+        "proof_ms": 14.5003,
+        "trace_ms": 3.3824
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 62.1835,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 62.1581,
+      "parts_ms": {
+        "controller_ms": 4.2451,
+        "lookup_ms": 0.0064,
+        "permit_ms": 0.9849,
+        "proof_ms": 49.7145,
+        "trace_ms": 7.2072
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "decision_ms": 59.6269,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "measured_parts_ms": 59.6018,
+      "parts_ms": {
+        "controller_ms": 4.0556,
+        "lookup_ms": 0.0055,
+        "permit_ms": 0.9528,
+        "proof_ms": 47.6664,
+        "trace_ms": 6.9215
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "decision_ms": 53.1066,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "measured_parts_ms": 53.0833,
+      "parts_ms": {
+        "controller_ms": 3.5622,
+        "lookup_ms": 0.0052,
+        "permit_ms": 0.9405,
+        "proof_ms": 42.3417,
+        "trace_ms": 6.2337
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "decision_ms": 63.5135,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 63.4878,
+      "parts_ms": {
+        "controller_ms": 4.2918,
+        "lookup_ms": 0.006,
+        "permit_ms": 1.1033,
+        "proof_ms": 50.871,
+        "trace_ms": 7.2157
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "decision_ms": 66.5429,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "measured_parts_ms": 66.5166,
+      "parts_ms": {
+        "controller_ms": 4.4755,
+        "lookup_ms": 0.005,
+        "permit_ms": 1.1574,
+        "proof_ms": 53.3009,
+        "trace_ms": 7.5778
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "decision_ms": 60.2183,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "measured_parts_ms": 60.1939,
+      "parts_ms": {
+        "controller_ms": 4.1031,
+        "lookup_ms": 0.0057,
+        "permit_ms": 0.6735,
+        "proof_ms": 48.3029,
+        "trace_ms": 7.1087
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "decision_ms": 13.08,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "measured_parts_ms": 13.071,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1196,
+        "proof_ms": 10.3699,
+        "trace_ms": 2.5815
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "decision_ms": 31.7612,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "measured_parts_ms": 31.7542,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1402,
+        "proof_ms": 27.2823,
+        "trace_ms": 4.3317
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "decision_ms": 19.5638,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "measured_parts_ms": 19.5564,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2193,
+        "proof_ms": 15.7999,
+        "trace_ms": 3.5372
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "decision_ms": 27.164,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "measured_parts_ms": 27.1568,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2958,
+        "proof_ms": 22.7862,
+        "trace_ms": 4.0748
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 54.0573,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "measured_parts_ms": 54.0484,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5157,
+        "proof_ms": 46.4193,
+        "trace_ms": 7.1134
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "decision_ms": 54.7972,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.7865,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6148,
+        "proof_ms": 46.8821,
+        "trace_ms": 7.2896
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "decision_ms": 54.8968,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 54.8867,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6692,
+        "proof_ms": 46.8818,
+        "trace_ms": 7.3357
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "decision_ms": 49.4891,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "measured_parts_ms": 49.4803,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4649,
+        "proof_ms": 42.8204,
+        "trace_ms": 6.195
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "decision_ms": 35.5848,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "measured_parts_ms": 35.5757,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.436,
+        "proof_ms": 30.074,
+        "trace_ms": 5.0657
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "decision_ms": 18.1229,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "measured_parts_ms": 18.1148,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2057,
+        "proof_ms": 14.5466,
+        "trace_ms": 3.3625
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 62.767,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 62.7367,
+      "parts_ms": {
+        "controller_ms": 4.4807,
+        "lookup_ms": 0.0063,
+        "permit_ms": 0.9821,
+        "proof_ms": 49.9766,
+        "trace_ms": 7.291
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "decision_ms": 59.7732,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "measured_parts_ms": 59.7482,
+      "parts_ms": {
+        "controller_ms": 4.086,
+        "lookup_ms": 0.0057,
+        "permit_ms": 0.9555,
+        "proof_ms": 47.815,
+        "trace_ms": 6.886
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "decision_ms": 53.2557,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "measured_parts_ms": 53.2301,
+      "parts_ms": {
+        "controller_ms": 3.5853,
+        "lookup_ms": 0.0063,
+        "permit_ms": 0.8819,
+        "proof_ms": 42.5064,
+        "trace_ms": 6.2502
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "decision_ms": 64.0634,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 64.0358,
+      "parts_ms": {
+        "controller_ms": 4.2831,
+        "lookup_ms": 0.0058,
+        "permit_ms": 1.1045,
+        "proof_ms": 51.2256,
+        "trace_ms": 7.4168
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "decision_ms": 66.5695,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "measured_parts_ms": 66.5409,
+      "parts_ms": {
+        "controller_ms": 4.4884,
+        "lookup_ms": 0.0056,
+        "permit_ms": 1.1556,
+        "proof_ms": 53.2771,
+        "trace_ms": 7.6142
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "decision_ms": 60.2122,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "measured_parts_ms": 60.1873,
+      "parts_ms": {
+        "controller_ms": 4.1056,
+        "lookup_ms": 0.006,
+        "permit_ms": 0.6452,
+        "proof_ms": 48.329,
+        "trace_ms": 7.1015
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    },
+    {
+      "case": "flat_walk:A3",
+      "decision_ms": 12.9757,
+      "input_source": "frozen_input",
+      "input_ticks": 12,
+      "measured_parts_ms": 12.9673,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1393,
+        "proof_ms": 10.2699,
+        "trace_ms": 2.5581
+      },
+      "permits": 12,
+      "physics_steps": 186,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 161,
+        "trace": 25
+      }
+    },
+    {
+      "case": "jump_gap_1:A3",
+      "decision_ms": 31.8824,
+      "input_source": "frozen_input",
+      "input_ticks": 23,
+      "measured_parts_ms": 31.8753,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.1401,
+        "proof_ms": 27.4191,
+        "trace_ms": 4.3161
+      },
+      "permits": 9,
+      "physics_steps": 498,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 451,
+        "trace": 47
+      }
+    },
+    {
+      "case": "turn_90:A15",
+      "decision_ms": 19.5844,
+      "input_source": "frozen_input",
+      "input_ticks": 16,
+      "measured_parts_ms": 19.5769,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2174,
+        "proof_ms": 15.8072,
+        "trace_ms": 3.5523
+      },
+      "permits": 16,
+      "physics_steps": 272,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 239,
+        "trace": 33
+      }
+    },
+    {
+      "case": "jump_up_after_turn:A15",
+      "decision_ms": 27.0842,
+      "input_source": "frozen_input",
+      "input_ticks": 19,
+      "measured_parts_ms": 27.0761,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2996,
+        "proof_ms": 22.7587,
+        "trace_ms": 4.0178
+      },
+      "permits": 19,
+      "physics_steps": 396,
+      "set": "A",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 357,
+        "trace": 39
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 54.3149,
+      "input_source": "frozen_input",
+      "input_ticks": 37,
+      "measured_parts_ms": 54.3057,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.5188,
+        "proof_ms": 46.712,
+        "trace_ms": 7.0749
+      },
+      "permits": 23,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 725,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/rest-L/1",
+      "decision_ms": 55.1555,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 55.145,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6322,
+        "proof_ms": 47.1078,
+        "trace_ms": 7.405
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap3/rest-L/2",
+      "decision_ms": 55.1388,
+      "input_source": "frozen_input",
+      "input_ticks": 38,
+      "measured_parts_ms": 55.1283,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.6743,
+        "proof_ms": 47.0666,
+        "trace_ms": 7.3874
+      },
+      "permits": 24,
+      "physics_steps": 800,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 723,
+        "trace": 77
+      }
+    },
+    {
+      "case": "gap2c/rest-L/3",
+      "decision_ms": 49.4841,
+      "input_source": "frozen_input",
+      "input_ticks": 31,
+      "measured_parts_ms": 49.4737,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.4752,
+        "proof_ms": 42.7847,
+        "trace_ms": 6.2138
+      },
+      "permits": 18,
+      "physics_steps": 728,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "jumpup/rest-L/4",
+      "decision_ms": 35.5742,
+      "input_source": "frozen_input",
+      "input_ticks": 25,
+      "measured_parts_ms": 35.5638,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.437,
+        "proof_ms": 30.0632,
+        "trace_ms": 5.0636
+      },
+      "permits": 25,
+      "physics_steps": 524,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 473,
+        "trace": 51
+      }
+    },
+    {
+      "case": "turn/rest-L/5",
+      "decision_ms": 18.166,
+      "input_source": "frozen_input",
+      "input_ticks": 15,
+      "measured_parts_ms": 18.1583,
+      "parts_ms": {
+        "controller_ms": 0.0,
+        "lookup_ms": 0.0,
+        "permit_ms": 0.2064,
+        "proof_ms": 14.5484,
+        "trace_ms": 3.4035
+      },
+      "permits": 15,
+      "physics_steps": 250,
+      "set": "C",
+      "stage_physics_steps": {
+        "controller": 0,
+        "proof": 219,
+        "trace": 31
+      }
+    },
+    {
+      "case": "gap1/rest-L/0",
+      "decision_ms": 62.1243,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 62.0988,
+      "parts_ms": {
+        "controller_ms": 4.2573,
+        "lookup_ms": 0.006,
+        "permit_ms": 0.9744,
+        "proof_ms": 49.6713,
+        "trace_ms": 7.1898
+      },
+      "permits": 37,
+      "physics_steps": 912,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 763,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap1/walk-L-n/1",
+      "decision_ms": 59.545,
+      "input_source": "table_controller",
+      "input_ticks": 35,
+      "measured_parts_ms": 59.5204,
+      "parts_ms": {
+        "controller_ms": 4.051,
+        "lookup_ms": 0.0054,
+        "permit_ms": 0.955,
+        "proof_ms": 47.6307,
+        "trace_ms": 6.8783
+      },
+      "permits": 35,
+      "physics_steps": 877,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 70,
+        "proof": 736,
+        "trace": 71
+      }
+    },
+    {
+      "case": "gap1/sprint-L-n/2",
+      "decision_ms": 53.0034,
+      "input_source": "table_controller",
+      "input_ticks": 31,
+      "measured_parts_ms": 52.9795,
+      "parts_ms": {
+        "controller_ms": 3.5707,
+        "lookup_ms": 0.0059,
+        "permit_ms": 0.8794,
+        "proof_ms": 42.2969,
+        "trace_ms": 6.2266
+      },
+      "permits": 31,
+      "physics_steps": 790,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 62,
+        "proof": 665,
+        "trace": 63
+      }
+    },
+    {
+      "case": "gap2/rest-L/3",
+      "decision_ms": 63.5525,
+      "input_source": "table_controller",
+      "input_ticks": 37,
+      "measured_parts_ms": 63.5265,
+      "parts_ms": {
+        "controller_ms": 4.289,
+        "lookup_ms": 0.0047,
+        "permit_ms": 1.1271,
+        "proof_ms": 50.87,
+        "trace_ms": 7.2357
+      },
+      "permits": 37,
+      "physics_steps": 928,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 74,
+        "proof": 779,
+        "trace": 75
+      }
+    },
+    {
+      "case": "gap2/walk-L-n/4",
+      "decision_ms": 66.689,
+      "input_source": "table_controller",
+      "input_ticks": 39,
+      "measured_parts_ms": 66.6616,
+      "parts_ms": {
+        "controller_ms": 4.4733,
+        "lookup_ms": 0.005,
+        "permit_ms": 1.1444,
+        "proof_ms": 53.4385,
+        "trace_ms": 7.6004
+      },
+      "permits": 38,
+      "physics_steps": 974,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 78,
+        "proof": 817,
+        "trace": 79
+      }
+    },
+    {
+      "case": "gap2/sprint-L-n/5",
+      "decision_ms": 60.2317,
+      "input_source": "table_controller",
+      "input_ticks": 36,
+      "measured_parts_ms": 60.2061,
+      "parts_ms": {
+        "controller_ms": 4.15,
+        "lookup_ms": 0.0056,
+        "permit_ms": 0.6474,
+        "proof_ms": 48.2601,
+        "trace_ms": 7.143
+      },
+      "permits": 22,
+      "physics_steps": 891,
+      "set": "D",
+      "stage_physics_steps": {
+        "controller": 72,
+        "proof": 746,
+        "trace": 73
+      }
+    }
+  ],
+  "schema": "d098-p1-complete-decision-baseline-v2",
+  "sets": [
+    "A",
+    "C",
+    "D"
+  ],
+  "summary_ms": {
+    "max": 66.719,
+    "p50": 53.8193,
+    "p95": 66.4301,
+    "p99": 66.6814,
+    "samples": 320
+  }
+}

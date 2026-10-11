@@ -1,0 +1,60 @@
+{
+  "base_commit": "4ccb1309",
+  "fabric_run": false,
+  "files": [
+    {
+      "bytes": 41046,
+      "path": "experiments/motion_navigation/trajectory_proto/closed_loop.py",
+      "sha256": "4dc23b93d7ad64e6da1c091b2d8984bdf440579de46b34ebc5d32efdd8eb8b0c"
+    },
+    {
+      "bytes": 20552,
+      "path": "experiments/motion_navigation/trajectory_proto/closed_loop_measurement.py",
+      "sha256": "d1ec16ca38a64ee96086e27a42b3ce91581f890edf591b4f97107a80d07cd691"
+    },
+    {
+      "bytes": 37227,
+      "path": "experiments/motion_navigation/trajectory_proto/incremental_proof.py",
+      "sha256": "90f29723a817a8953234b05c94361ec485cd5419969a2684e39ff21287102478"
+    },
+    {
+      "bytes": 1169,
+      "path": "scripts/measure_incremental_motion_p3.py",
+      "sha256": "6a52e3bcfa9853003f3848c9b229b80040bb6442739a3613733530096e670451"
+    },
+    {
+      "bytes": 16961,
+      "path": "tests/motion_nav/test_incremental_motion_closed_loop.py",
+      "sha256": "bd7090a3eb6ea1f7456cd0e2162179b674604b43292ad6059ba829fef56c35a6"
+    },
+    {
+      "bytes": 4637,
+      "path": "tests/motion_nav/test_incremental_motion_closed_loop_measurement.py",
+      "sha256": "6bdcdc4444e745d5fb25f753a0eb958b9563c2c247faec518db49eac1a2cbb65"
+    },
+    {
+      "bytes": 28022,
+      "path": "tests/motion_nav/test_incremental_motion_proof.py",
+      "sha256": "6280089f2eb96229a54d31153b1b91583d10d2cbe48272112b5be3ac0ee98414"
+    },
+    {
+      "bytes": 582138,
+      "path": "evidence/motion_navigation/incremental-motion-r98-v1/p3/closed-loop-matrix.json",
+      "sha256": "fafab88d272f39b99b55e614b55f54a6dd802a80d17634175685c838346b5f3a"
+    },
+    {
+      "bytes": 819,
+      "path": "evidence/motion_navigation/incremental-motion-r98-v1/p3/README.md",
+      "sha256": "22dc889406f0511698455cf42d65d76bf4e3ac40f3ea85ced8fb97b11b059d41"
+    },
+    {
+      "bytes": 1678,
+      "path": "evidence/motion_navigation/incremental-motion-r98-v1/p3/verification.md",
+      "sha256": "65c09dcb7a4a36083479a8e2200428e83a5f3761bdf640856d008b7445b6d601"
+    }
+  ],
+  "formal_platform": "Windows",
+  "mc2p_modified": false,
+  "schema": "d098-p3-evidence-manifest-v1",
+  "stage_status": "failed_at_p3"
+}

@@ -1,0 +1,101 @@
+{
+  "schema": "d098-w0-readonly-verification-v1",
+  "signed_audit_source_commit": "9a48803774759205c638a6c93e2ac62747bd71a1",
+  "readonly_recheck_integration": {
+    "signed_snapshot_commit": "9a48803774759205c638a6c93e2ac62747bd71a1",
+    "daily_recheck_runs": [
+      {
+        "repetition": 1,
+        "label": "T2",
+        "result": {
+          "label": "T2",
+          "timing_rerun": false,
+          "read_only": true,
+          "reproduction_integrity_passed": true
+        }
+      },
+      {
+        "repetition": 1,
+        "label": "T3",
+        "result": {
+          "label": "T3",
+          "timing_rerun": false,
+          "read_only": true,
+          "reproduction_integrity_passed": true
+        }
+      },
+      {
+        "repetition": 2,
+        "label": "T2",
+        "result": {
+          "label": "T2",
+          "timing_rerun": false,
+          "read_only": true,
+          "reproduction_integrity_passed": true
+        }
+      },
+      {
+        "repetition": 2,
+        "label": "T3",
+        "result": {
+          "label": "T3",
+          "timing_rerun": false,
+          "read_only": true,
+          "reproduction_integrity_passed": true
+        }
+      }
+    ],
+    "all_evidence_files_unchanged": true,
+    "signed_evidence_sha256": {
+      "hash-verification.json": "4874137d01e1e14652ecc2905403c77068acedb1aaeb72fbc28f633821b70d57",
+      "integrity-recheck.json": "f4e0c48219f4bb27aa9d8ab415f3efa4638ff27860881db42e1a02c291bb0b44",
+      "manifest.json": "efbd780d0927511d68708d971556a1dbfa8d0eed2efe4a7f7c1b3f82e680bbb4",
+      "README.md": "e7ae4ca334bba5637666f337211ae5dce2407227743199ab489f227814a16650",
+      "T2-execution.json": "23582e8f4d7071209d12e300a615b59b0ea6ee21d1de3e66390b7c8a13cec557",
+      "T2-result.json": "707553997b196921abbf60c33c97fdfea7c1f107f86d527d13dd0c8c17e07d15",
+      "T2-samples.json.gz": "72e17048f918613d2a3bcad3d990ccaabc38ecb5763ebe05eae36d2209a66ef8",
+      "T2-summary.json": "5fb0a11e59365faf4443f63ca1418f7e21d4421886fab912490a3c4c1a9a3cc7",
+      "T3-execution.json": "fb8f38f3603541abd9a059ece12b11adb358501249e9923571d1faa2d2bd74a9",
+      "T3-result.json": "47fd6078a22fd051016016187e2b78e02a11482c1f95e4eaec31c37b57b86151",
+      "T3-samples.json.gz": "0b21107feb6164d890e3c2b9cfd3fbd6019184e43e7dca99fad538c8ca2ebc09",
+      "T3-summary.json": "848c60a18599b557b862220c799b0e3386e8329df5e0333e197c71ac6288a840",
+      "verification.md": "137f4f3767f4e71d17d0d407e557a34bb703b1e1f15aedda124cb25948e261c6"
+    },
+    "audit_rejects_existing_v2": true,
+    "timing_rerun": false
+  },
+  "historical_signed_hash_checks": {
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/integrity-recheck.json": true,
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/README.md": true,
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/T2-execution.json": true,
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/T2-result.json": true,
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/T2-samples.json.gz": true,
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/T2-summary.json": true,
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/T3-execution.json": true,
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/T3-result.json": true,
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/T3-samples.json.gz": true,
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/T3-summary.json": true,
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/verification.md": true,
+    "scripts/measure_d098_trial_windows.py": true,
+    "tests/motion_nav/test_d098_windows_trial_wrapper.py": true,
+    "T2_uncompressed_samples": true,
+    "T3_uncompressed_samples": true
+  },
+  "historical_signed_hashes_all_match": true,
+  "current_checker_sha256": {
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/verification.md": "ff7ddc162aedbfc1357af392d809cc17b56bfbfd7a10a52e769024b06a8df927",
+    "scripts/measure_d098_trial_windows.py": "24ada059a36ad254e32e5e25d6bb093e6d6e0232c66c55af324afa68c23cbf69",
+    "tests/motion_nav/test_d098_windows_trial_wrapper.py": "13cab363b0a71c78007e53a69188b6978f7ed87d15441bc175b12a278b0a8a58"
+  },
+  "tests": {
+    "wrapper": "16/16",
+    "TP_D097_and_standalone": "113/113"
+  },
+  "signed_result_manifest_and_provenance_unchanged": true,
+  "historical_hashes_for_modified_sources_read_from_source_commit": [
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/verification.md",
+    "scripts/measure_d098_trial_windows.py",
+    "tests/motion_nav/test_d098_windows_trial_wrapper.py"
+  ],
+  "note": "The existing W0 manifest and v2 provenance remain immutable. Current checker hashes are recorded separately; daily recheck does not write either record."
+}

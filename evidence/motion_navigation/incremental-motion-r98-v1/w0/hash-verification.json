@@ -1,0 +1,23 @@
+{
+  "checked": 15,
+  "all_match": true,
+  "checks": {
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/integrity-recheck.json": true,
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/README.md": true,
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/T2-execution.json": true,
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/T2-result.json": true,
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/T2-samples.json.gz": true,
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/T2-summary.json": true,
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/T3-execution.json": true,
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/T3-result.json": true,
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/T3-samples.json.gz": true,
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/T3-summary.json": true,
+    "evidence/motion_navigation/incremental-motion-r98-v1/w0/verification.md": true,
+    "scripts/measure_d098_trial_windows.py": true,
+    "tests/motion_nav/test_d098_windows_trial_wrapper.py": true,
+    "T2_samples_uncompressed": true,
+    "T3_samples_uncompressed": true
+  },
+  "git_index_sha256_checked": 13,
+  "all_index_hashes_match": true
+}

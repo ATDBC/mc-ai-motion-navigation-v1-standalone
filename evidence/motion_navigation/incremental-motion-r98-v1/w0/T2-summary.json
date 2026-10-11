@@ -1,0 +1,337 @@
+{
+ "schema": "d097a-m2-perf-record-v1",
+ "SMOKE_TEST_NOT_A_RECORD": false,
+ "platform": {
+  "system": "Windows",
+  "release": "10",
+  "python": "3.11.16",
+  "cpus": 24,
+  "loadavg_start": [
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "loadavg_end": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "idle_check": {
+  "loadavg_1min_at_start": 0.0,
+  "looks_idle_below_0.5": true,
+  "note": "the record must be taken on an idle machine; this field only reports"
+ },
+ "code_sha256": {
+  "incremental.py": "a4c3b83fb0b3c451254202ffaeb9f1157b6957f9a5ab950f68adc55a6a1f9c97",
+  "run_m2.py": "20c31a097405582496526d3cc436b461ad61a0cf1aea60d39d039277960d94ee",
+  "candidates.py": "2fa6eac9af19ba4212a963e701828f41164f66cc46fdb998150009db3d7e1748",
+  "equiv.py": "19d03f1d0f5efb37ddefa3d40e90c772bcc5bce5c94a6d0b7ef8b8b46f9ccbd4",
+  "common.py": "2aced9116f3c5d1d84aac058ebc7b30653782d1dd4ffd38ed254cd7a3a1930a2"
+ },
+ "population": {
+  "candidates": 143,
+  "by_set": {
+   "A": 23,
+   "C": 120
+  },
+  "set_d_included": false,
+  "passes": 3,
+  "warmup_candidates": 10
+ },
+ "method": "each measured run uses a fresh PhysicsWorldView (cold shape cache); evidence is built outside the timed region; configuration order rotates per candidate and pass; decision wall time = time.perf_counter_ns from decision start to permit built (look-ahead work is charged to the decision that does it); percentiles nearest-rank; thresholds 10 ms tick, 50 ms commit, >=1000 tick decisions",
+ "step_total_check": {
+  "candidates_runs_checked": 429,
+  "violations": [],
+  "all_equal": true
+ },
+ "configs": {
+  "strict": {
+   "plan": {
+    "ms": {
+     "samples": 429,
+     "p50": 4.4424,
+     "p95": 5.4944,
+     "p99": 6.0756,
+     "max": 6.1955,
+     "mean": 4.22385501165501
+    },
+    "steps": {
+     "samples": 429,
+     "p50": 63,
+     "p95": 77,
+     "p99": 77,
+     "max": 81,
+     "mean": 58.95804195804196
+    },
+    "ms_p95_per_pass": [
+     5.4778,
+     5.5034,
+     5.4982
+    ]
+   },
+   "tick": {
+    "ms": {
+     "samples": 8349,
+     "p50": 1.4004,
+     "p95": 1.8436,
+     "p99": 2.3414,
+     "max": 3.1542,
+     "mean": 1.250722793148885
+    },
+    "steps": {
+     "samples": 8349,
+     "p50": 18,
+     "p95": 24,
+     "p99": 30,
+     "max": 38,
+     "mean": 15.39885016169601
+    },
+    "ms_p95_per_pass": [
+     1.7593,
+     1.8639,
+     1.8616
+    ]
+   },
+   "commit": {
+    "ms": {
+     "samples": 291,
+     "p50": 24.1779,
+     "p95": 26.7808,
+     "p99": 27.6937,
+     "max": 29.8973,
+     "mean": 23.003052920962197
+    },
+    "steps": {
+     "samples": 291,
+     "p50": 308,
+     "p95": 333,
+     "p99": 351,
+     "max": 351,
+     "mean": 295.74226804123714
+    },
+    "ms_p95_per_pass": [
+     26.7537,
+     26.7965,
+     26.8568
+    ]
+   },
+   "final": {
+    "ms": {
+     "samples": 414,
+     "p50": 0.2512,
+     "p95": 1.1681,
+     "p99": 1.1947,
+     "max": 1.416,
+     "mean": 0.3562374396135269
+    },
+    "steps": {
+     "samples": 414,
+     "p50": 2,
+     "p95": 14,
+     "p99": 14,
+     "max": 16,
+     "mean": 3.347826086956522
+    },
+    "ms_p95_per_pass": [
+     1.0518,
+     1.1693,
+     1.1703
+    ]
+   },
+   "candidate_total": {
+    "ms": {
+     "samples": 429,
+     "p50": 51.1558,
+     "p95": 59.230999999999995,
+     "p99": 63.7007,
+     "max": 68.76729999999999,
+     "mean": 44.512095804195845
+    },
+    "steps": {
+     "samples": 429,
+     "p50": 647,
+     "p95": 736,
+     "p99": 740,
+     "max": 843,
+     "mean": 562.4825174825174
+    }
+   }
+  },
+  "strict_runahead": {
+   "plan": {
+    "ms": {
+     "samples": 429,
+     "p50": 4.4088,
+     "p95": 5.468,
+     "p99": 6.0385,
+     "max": 6.1883,
+     "mean": 4.206932167832169
+    },
+    "steps": {
+     "samples": 429,
+     "p50": 63,
+     "p95": 77,
+     "p99": 77,
+     "max": 81,
+     "mean": 58.95804195804196
+    },
+    "ms_p95_per_pass": [
+     5.4441,
+     5.4708,
+     5.4761
+    ]
+   },
+   "tick": {
+    "ms": {
+     "samples": 8349,
+     "p50": 0.0124,
+     "p95": 6.0973,
+     "p99": 6.6056,
+     "max": 7.2456,
+     "mean": 2.0276591208527894
+    },
+    "steps": {
+     "samples": 8349,
+     "p50": 0,
+     "p95": 76,
+     "p99": 84,
+     "max": 87,
+     "mean": 25.302910528206972
+    },
+    "ms_p95_per_pass": [
+     5.9803,
+     6.1298,
+     6.1356
+    ]
+   },
+   "commit": {
+    "ms": {
+     "samples": 291,
+     "p50": 0.0287,
+     "p95": 11.1908,
+     "p99": 15.7946,
+     "max": 19.7161,
+     "mean": 1.1952470790378007
+    },
+    "steps": {
+     "samples": 291,
+     "p50": 0,
+     "p95": 180,
+     "p99": 266,
+     "max": 266,
+     "mean": 16.350515463917525
+    },
+    "ms_p95_per_pass": [
+     10.7826,
+     13.6474,
+     13.5831
+    ]
+   },
+   "final": {
+    "ms": {
+     "samples": 414,
+     "p50": 0.002,
+     "p95": 0.0022,
+     "p99": 0.0023,
+     "max": 0.0024,
+     "mean": 0.0019531400966183586
+    },
+    "steps": {
+     "samples": 414,
+     "p50": 0,
+     "p95": 0,
+     "p99": 0,
+     "max": 0,
+     "mean": 0.0
+    },
+    "ms_p95_per_pass": [
+     0.0022,
+     0.0022,
+     0.0022
+    ]
+   },
+   "candidate_total": {
+    "ms": {
+     "samples": 429,
+     "p50": 51.1237,
+     "p95": 59.146300000000004,
+     "p99": 63.729200000000006,
+     "max": 68.24300000000001,
+     "mean": 44.480944988344994
+    },
+    "steps": {
+     "samples": 429,
+     "p50": 647,
+     "p95": 736,
+     "p99": 740,
+     "max": 843,
+     "mean": 562.4825174825174
+    }
+   }
+  },
+  "full_scan": {
+   "full_scan": {
+    "ms": {
+     "samples": 429,
+     "p50": 79.0171,
+     "p95": 91.5599,
+     "p99": 143.7418,
+     "max": 167.9987,
+     "mean": 69.47706363636362
+    },
+    "steps": {
+     "samples": 429,
+     "p50": 647,
+     "p95": 736,
+     "p99": 740,
+     "max": 843,
+     "mean": 562.4825174825174
+    },
+    "ms_p95_per_pass": [
+     91.4582,
+     92.2119,
+     91.7448
+    ]
+   },
+   "candidate_total": {
+    "ms": {
+     "samples": 429,
+     "p50": 79.0171,
+     "p95": 91.5599,
+     "p99": 143.7418,
+     "max": 167.9987,
+     "mean": 69.47706363636362
+    },
+    "steps": {
+     "samples": 429,
+     "p50": 647,
+     "p95": 736,
+     "p99": 740,
+     "max": 843,
+     "mean": 562.4825174825174
+    }
+   }
+  }
+ },
+ "gate_view": {
+  "strict": {
+   "tick_samples": 8349,
+   "commit_samples": 291,
+   "tick_p95_ms_strictest_of_pooled_and_per_pass": 1.8639,
+   "commit_p95_ms_strictest_of_pooled_and_per_pass": 26.8568,
+   "tick_le_10ms": true,
+   "commit_le_50ms": true,
+   "tick_samples_ge_1000": true
+  },
+  "strict_runahead": {
+   "tick_samples": 8349,
+   "commit_samples": 291,
+   "tick_p95_ms_strictest_of_pooled_and_per_pass": 6.1356,
+   "commit_p95_ms_strictest_of_pooled_and_per_pass": 13.6474,
+   "tick_le_10ms": true,
+   "commit_le_50ms": true,
+   "tick_samples_ge_1000": true
+  }
+ }
+}
