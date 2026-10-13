@@ -1,0 +1,4 @@
+key boundaries per branch: [(0, 2, 17, 23), (0, 2, 17, 23)]
+full scan_commitment: 451 physics steps, Linux median 90.9 ms
+key-node tails only : 91 physics steps, Linux median 15.7 ms (17% of full)
+Windows estimate from D101 M0 (48.35 ms for the full proof): key-node ~ 8.3 ms

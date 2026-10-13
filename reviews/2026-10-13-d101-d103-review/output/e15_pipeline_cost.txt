@@ -1,0 +1,34 @@
+scan_commitment (D101 M0 initial proof, two branches, every boundary): 451 steps, Linux median 111.3 ms; D101 M0 Windows P50 48.35 ms -> Windows/Linux ~ 0.43
+
+== snapshot: full fixture window: 6496 cells, 1514939 canonical bytes
+   validate_sealed_snapshot              median   1469.6 ms
+   worker prepare_fixed_motion (total)   median   1792.8 ms  (451 physics steps)
+   worker seal_bundle                    median    172.2 ms  (message 774509 bytes)
+   receiver _validate_for_registration   median   2653.9 ms  -> registered
+      sha256(payload)                        median     1.99 ms
+      pickle.loads                           median     4.43 ms
+      require_immutable_graph(bundle)        median    22.53 ms
+      _validate_values (re-run constructors) median   487.08 ms
+      canonical_motion_digest(proof)         median    71.08 ms
+      _parent_mismatch (identity checks)     median     0.79 ms
+
+== snapshot: local (dependency bbox +1): 120 cells, 28953 canonical bytes
+   validate_sealed_snapshot              median     38.6 ms
+   worker prepare_fixed_motion (total)   median    381.0 ms  (451 physics steps)
+   worker seal_bundle                    median    182.2 ms  (message 774509 bytes)
+   receiver _validate_for_registration   median   1249.0 ms  -> registered
+      sha256(payload)                        median     2.65 ms
+      pickle.loads                           median     5.69 ms
+      require_immutable_graph(bundle)        median    32.81 ms
+      _validate_values (re-run constructors) median   507.47 ms
+      canonical_motion_digest(proof)         median   101.28 ms
+      _parent_mismatch (identity checks)     median     1.43 ms
+
+proof content: 2 branches, main-trajectory states 48, 48 safety tails holding 516 states; pickled main 9192 bytes, tails 95993 bytes
+   on_time: tail states per boundary [8, 9, 9, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 2]; tails only at [0, 2, 3, 23] -> 40 states
+   late_one: tail states per boundary [8, 9, 9, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 2]; tails only at [0, 2, 3, 23] -> 40 states
+
+verified_ground_rollout closeout/fallback (0 + 8 ticks)  Linux median 1.18 ms max 2.25 ms (Windows ~0.51 ms)  result=state
+verified_ground_rollout neutral check (1 + 0)            Linux median 0.15 ms max 0.19 ms (Windows ~0.07 ms)  result=state
+verified_ground_rollout settle (1 + 8)                   Linux median 1.31 ms max 1.35 ms (Windows ~0.57 ms)  result=state
+EXIT 0

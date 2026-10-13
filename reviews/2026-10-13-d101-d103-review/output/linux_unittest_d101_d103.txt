@@ -1,0 +1,45 @@
+# Linux 上运行 07fa1d7 新增的 D101／D102／D103 测试（Windows 为正式平台，本结果只作补充）
+# 命令：python -m unittest tests.motion_nav.test_d101_input_stream tests.motion_nav.test_d101_continuous_probe tests.motion_nav.test_d101_measurement tests.motion_nav.test_d102_contracts tests.motion_nav.test_d102_prepared_proof tests.motion_nav.test_d102_receiver tests.motion_nav.test_d102_world_snapshot tests.motion_nav.test_d102_registry_lifecycle tests.motion_nav.test_d102_action_handoff tests.motion_nav.test_d102_runtime_activation tests.motion_nav.test_d102_contract_red tests.motion_nav.test_d103_observation_hot_path tests.motion_nav.test_runtime_navigation_verified_handoff -q
+======================================================================
+ERROR: test_existing_evidence_is_never_overwritten (tests.motion_nav.test_d101_measurement.M0MeasurementTests.test_existing_evidence_is_never_overwritten)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-mc-ai-motion-navigation-v1-standalone/7b6c23a8-548e-536b-b677-503d1715db15/scratchpad/r103/tests/motion_nav/test_d101_measurement.py", line 86, in test_existing_evidence_is_never_overwritten
+    run_m0(rounds=1, output=output)
+  File "/tmp/claude-0/-home-user-mc-ai-motion-navigation-v1-standalone/7b6c23a8-548e-536b-b677-503d1715db15/scratchpad/r103/experiments/motion_navigation/trajectory_proto/d101_measurement.py", line 202, in run_m0
+    raise ValueError("formal D101 M0 requires the project's Windows environment")
+ValueError: formal D101 M0 requires the project's Windows environment
+
+======================================================================
+ERROR: test_m0_summary_has_both_start_branches_and_no_safety_failure (tests.motion_nav.test_d101_measurement.M0MeasurementTests.test_m0_summary_has_both_start_branches_and_no_safety_failure)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-mc-ai-motion-navigation-v1-standalone/7b6c23a8-548e-536b-b677-503d1715db15/scratchpad/r103/tests/motion_nav/test_d101_measurement.py", line 20, in test_m0_summary_has_both_start_branches_and_no_safety_failure
+    summary = run_m0(rounds=1, output=Path(folder) / "m0")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-mc-ai-motion-navigation-v1-standalone/7b6c23a8-548e-536b-b677-503d1715db15/scratchpad/r103/experiments/motion_navigation/trajectory_proto/d101_measurement.py", line 202, in run_m0
+    raise ValueError("formal D101 M0 requires the project's Windows environment")
+ValueError: formal D101 M0 requires the project's Windows environment
+
+======================================================================
+FAIL: test_expected_close_feeder_errors_are_counted_and_other_errors_are_logged (tests.motion_nav.test_d102_registry_lifecycle.RegistryTests.test_expected_close_feeder_errors_are_counted_and_other_errors_are_logged)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-mc-ai-motion-navigation-v1-standalone/7b6c23a8-548e-536b-b677-503d1715db15/scratchpad/r103/tests/motion_nav/test_d102_registry_lifecycle.py", line 671, in test_expected_close_feeder_errors_are_counted_and_other_errors_are_logged
+    self.assertEqual(logger.call_count, 1, "only the expected close error is kept as a diagnostic")
+AssertionError: 2 != 1 : only the expected close error is kept as a diagnostic
+
+======================================================================
+FAIL: test_full_native_request_queue_and_feeder_close_are_bounded (tests.motion_nav.test_d102_registry_lifecycle.RegistryTests.test_full_native_request_queue_and_feeder_close_are_bounded)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-mc-ai-motion-navigation-v1-standalone/7b6c23a8-548e-536b-b677-503d1715db15/scratchpad/r103/tests/motion_nav/test_d102_registry_lifecycle.py", line 568, in test_full_native_request_queue_and_feeder_close_are_bounded
+    self.assertEqual(stderr.getvalue(), "", "queue teardown raised an unhandled exception")
+AssertionError: 'Traceback (most recent call last):\n  Fil[751 chars]ed\n' != ''
+Diff is 813 characters long. Set self.maxDiff to None to see it. : queue teardown raised an unhandled exception
+
+----------------------------------------------------------------------
+Ran 261 tests in 682.750s
+
+FAILED (failures=2, errors=2, skipped=3)
+EXIT 1
