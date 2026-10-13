@@ -1,0 +1,47 @@
+== 1. 28 frozen A/C/D samples, both start branches ==
+flat_walk:A3               old  161 | A  161 (cert  0 exact 26 skip  0) = | B   25 (cert 26 exact  0 skip  0) = ()
+jump_gap_1:A3              old  451 | A  151 (cert  0 exact 24 skip 24) = | B  119 (cert 12 exact 12 skip 24) = ((2, 3, 17),)
+turn_90:A15                old  239 | A  239 (cert  0 exact 34 skip  0) = | B   33 (cert 34 exact  0 skip  0) = ()
+jump_up_after_turn:A15     old  357 | A  357 (cert  0 exact 40 skip  0) = | B  283 (cert 18 exact 22 skip  0) = ()
+gap1/rest-L/0              old  725 | A  425 (cert  0 exact 52 skip 24) = | B  153 (cert 40 exact 12 skip 24) = ((16, 17, 31),)
+gap2/rest-L/1              old  723 | A  441 (cert  0 exact 54 skip 24) = | B  201 (cert 28 exact 26 skip 24) = ((16, 17, 31),)
+gap3/rest-L/2              old  723 | A  441 (cert  0 exact 54 skip 24) = | B  201 (cert 28 exact 26 skip 24) = ((16, 17, 31),)
+gap2c/rest-L/3             old  665 | A  383 (cert  0 exact 40 skip 24) = | B  143 (cert 28 exact 12 skip 24) = ((16, 17, 31),)
+jumpup/rest-L/4            old  473 | A  473 (cert  0 exact 52 skip  0) = | B  279 (cert 32 exact 20 skip  0) = ()
+turn/rest-L/5              old  219 | A  219 (cert  0 exact 32 skip  0) = | B   31 (cert 32 exact  0 skip  0) = ()
+gap1/rest-L/0              old  763 | A  763 (cert  0 exact 76 skip  0) = | B  465 (cert 44 exact 32 skip  0) = ()
+gap1/walk-L-n/1            old  736 | A  736 (cert  0 exact 72 skip  0) = | B  454 (cert 41 exact 31 skip  0) = ()
+gap1/sprint-L-n/2          old  665 | A  665 (cert  0 exact 64 skip  0) = | B  412 (cert 39 exact 25 skip  0) = ()
+gap2/rest-L/3              old  779 | A  779 (cert  0 exact 76 skip  0) = | B  481 (cert 44 exact 32 skip  0) = ()
+gap2/walk-L-n/4            old  817 | A  817 (cert  0 exact 80 skip  0) = | B  484 (cert 48 exact 32 skip  0) = ()
+gap2/sprint-L-n/5          old  746 | A  575 (cert  0 exact 62 skip 12) = | B  290 (cert 43 exact 19 skip 12) = ((11, 12, 13),)
+gap3/rest-L/6              old  721 | A  507 (cert  0 exact 58 skip 22) = | B  209 (cert 44 exact 14 skip 22) = ((16, 17, 29),)
+gap3/walk-L-n/7            old  714 | A  454 (cert  0 exact 52 skip 22) = | B  213 (cert 31 exact 21 skip 22) = ((15, 16, 28),)
+gap3/sprint-L-n/8          old  676 | A  372 (cert  0 exact 45 skip 23) = | B  150 (cert 34 exact 11 skip 23) = ((11, 12, 25),)
+gap2c/rest-L/9             old  755 | A  755 (cert  0 exact 66 skip  0) = | B  471 (cert 34 exact 32 skip  0) = ()
+gap2c/walk-L-n/10          old  638 | A  436 (cert  0 exact 42 skip 22) = | B  200 (cert 27 exact 15 skip 22) = ((15, 16, 28),)
+gap2c/sprint-L-n/11        old  706 | A  535 (cert  0 exact 50 skip 12) = | B  278 (cert 31 exact 19 skip 12) = ((11, 12, 13),)
+jumpup/rest-L/12           old  457 | A  457 (cert  0 exact 48 skip  0) = | B  283 (cert 30 exact 18 skip  0) = ()
+jumpup/walk-L-n/13         old  534 | A  534 (cert  0 exact 58 skip  0) = | B  321 (cert 35 exact 23 skip  0) = ()
+jumpup/sprint-L-n/14       old  457 | A  457 (cert  0 exact 48 skip  0) = | B  285 (cert 30 exact 18 skip  0) = ()
+turn/rest-L/15             old  327 | A  327 (cert  0 exact 44 skip  0) = | B   43 (cert 44 exact  0 skip  0) = ()
+turn/walk-L-n/16           old  280 | A  280 (cert  0 exact 38 skip  0) = | B   37 (cert 38 exact  0 skip  0) = ()
+turn/sprint-L-n/17         old  301 | A  301 (cert  0 exact 40 skip  0) = | B   39 (cert 40 exact  0 skip  0) = ()
+physics steps total: old 15808, A 13040 (82%), B 6583 (42%); interval mismatches vs old: 0
+D18 (K0 set) physics steps: old 11072, A 9750, B 5115  (K1 candidate on Windows: 11,072 -> 5,263)
+Linux wall time sum of medians: old 3767 ms, A 1954 ms, B 978 ms
+jump_gap_1:A3 (D101 M0 action) mode A: 151 steps vs old 451; Linux 17.5 ms vs 88.3 ms -> Windows est. 9.6 ms; intervals (((2, 3, 17),), ((2, 3, 17),)) equal; {'certified': 0, 'exact': 24, 'skipped': 24}
+jump_gap_1:A3 (D101 M0 action) mode B: 119 steps vs old 451; Linux 13.6 ms vs 88.3 ms -> Windows est. 7.5 ms; intervals (((2, 3, 17),), ((2, 3, 17),)) equal; {'certified': 12, 'exact': 12, 'skipped': 24}
+jump_gap_1:A3 K1 candidate (unsound, for calibration): 233 steps, Linux 44.4 ms = 50% of old; its Windows M0 P99 was 18.25 ms (old 48.61 ms)
+
+== 2. K1 reproduction: _tail forced UNSAFE at boundary 5 on flat ground ==
+mode A: intervals (((4, 5, 6),), ((4, 5, 6),)) vs old (((4, 5, 6),), ((4, 5, 6),)) -> equal; {'certified': 0, 'exact': 22, 'skipped': 0}
+mode B: intervals ((), ()) vs old (((4, 5, 6),), ((4, 5, 6),)) -> DIFF; {'certified': 22, 'exact': 0, 'skipped': 0}
+   (B's envelope proves boundary 5 safe from geometry and never calls the mocked _tail there; the mock is not a physical world, so B must be tested with world mutations instead — part 3)
+
+== 3. world-mutation property test ==
+{'trials': 420, 'main_ok': 385, 'certified': 4920, 'violations': 0, 'hidden_short': 130, 'hidden_missed_by_k1': 0, 'old_ok': 346, 'a_equal': 346, 'b_equal': 346, 'a_superset': 0, 'b_superset': 0, 'b_reject_old_ok': 0}
+violations must be 0: an envelope-certified boundary whose real tail is not SAFE
+a_equal/b_equal count mutated worlds where the old scanner accepts and the intervals are identical (out of old_ok);
+*_superset counts worlds the old scanner rejects but the sparse scan accepts (skipped tails would have hit UNKNOWN/unsettled).
+EXIT 0

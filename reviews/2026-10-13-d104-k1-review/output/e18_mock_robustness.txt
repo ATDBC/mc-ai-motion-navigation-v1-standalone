@@ -1,0 +1,2 @@
+mutated runs: 1120; identical accept/reject and intervals: 1120; different: 0; {'both_accept': 942, 'both_reject': 178}
+EXIT 0
