@@ -1,0 +1,201 @@
+{
+  "authorized_test_registration": {
+    "allowed_imports": [
+      "experiments.motion_navigation.trajectory_proto.d101_measurement",
+      "experiments.motion_navigation.trajectory_proto.physics"
+    ],
+    "exact_runner": "scripts/measure_continuous_motion_d101.py",
+    "other_scripts_and_mc2p_remain_rejected": true,
+    "path": "tests/motion_nav/test_trajectory_proto_contracts.py",
+    "sha256": "fad6172afe6f000d05fa856d3f3c861c0836540862fd02cf69d5afcc0bfa7a44"
+  },
+  "boundaries": {
+    "d098_p3_passed": false,
+    "deployment_probe_changed": false,
+    "experimental_behavior_changed_during_closure": false,
+    "fabric_run": false,
+    "formal_client_queue_delivered": false,
+    "full_stream_lifecycle_delivered": false,
+    "m1_worker_implemented": false,
+    "mc2p_changed": false,
+    "original_m0_evidence_changed": false,
+    "push_performed": false
+  },
+  "branch": "codex/f2r-recovery",
+  "date": "2026-10-11",
+  "last_fully_passed_stage": null,
+  "last_run_stage": "M0",
+  "m0_implementation_commit": "97b13ea5c160becdb6ec0b86482d5ded537e76ad",
+  "m0_provenance": {
+    "archive_source_and_artifact_hashes_match": true,
+    "input_hash": "8e1c73bf14b044c746c557b2e569198860ea9b25f00f646a17a370bc55af02ed",
+    "measured_bytes_zip_file_count": 103,
+    "measurement_parent_commit": "68ac47d8a131398684c20cdc4ba186cfe85a0f48",
+    "retained_file_sha256": {
+      "audit-summary.json": "c1285115a002929512c2b9aecc7999bac1fa188ea12c594d6cef80242d072b65",
+      "decisions.jsonl.gz": "106251107d5a6d78a9e9c28d6fe9bf1c97470575257092beb496e839a6847bd5",
+      "fixture.jsonl.gz": "4162ab9335f5a58f18a489cab0ecd7d41c4182c0ef2e96aa68fd3fc43c510cbe",
+      "manifest.json": "45abd578f47de7ca89c06569a02ba2b7c4594da1d3d6067213756ba30f7f2728",
+      "measured-bytes.zip": "e0b0b2cf80eb59ca5237d6dea8f38b407d7e9160a46f1c4517250f996e2f0a1d",
+      "recompute_evidence.py": "1d50c9febc2e6d6a5a79a922915ca69f07204926e1ddda8faf6d4fef1e1f1f4a",
+      "runs.jsonl.gz": "e33f66c62b4ff3822b53649e312f505f248ad0a3876d8fa7ba852606271c5d74",
+      "source-hashes.json": "cc4fadb3743dbdb04de6e880c956d7b1a4d67aaaef6f6b05b97b34505aedc710",
+      "summary.json": "e0110e0455c01817d5c69b928d1cfa552f4d4226caab5e189acbaabed84d5e8e",
+      "verification.json": "4c42e0b923872b0272c1fdf511358f5f6ca98e1e6d0135275696eb57028bb33b"
+    },
+    "source_tree_hash": "4aeea7d920cba0b730ba545426a9abfebaf3c6442d3d90ca63df159bbe9f1500"
+  },
+  "m0_statistics": {
+    "compare_only_count": 400,
+    "decision_count": 4710,
+    "full_proof_calls": 204,
+    "key_node_full_proof_calls": 0,
+    "max_ms": 57.5597,
+    "negative_classifications": {
+      "duplicate_first": "CONTRACT_REJECTED",
+      "first_late_two": "CONTRACT_REJECTED",
+      "middle_late_one": "BOUNDED_DEVIATION",
+      "out_of_order_first": "CONTRACT_REJECTED"
+    },
+    "p50_ms": 0.0886,
+    "p95_ms": 0.1683,
+    "p99_ms": 48.6079,
+    "physics_steps": 87735,
+    "positive_groups": {
+      "late_one": {
+        "completed": 100,
+        "runs": 100
+      },
+      "on_time": {
+        "completed": 100,
+        "runs": 100
+      }
+    },
+    "safety_violations": 0,
+    "unowned_advances": 0,
+    "wrong_branch_survivals": 0,
+    "wrong_generation_acceptances": 0
+  },
+  "missing_stage_checks": {
+    "absent_paths": [
+      "evidence/motion_navigation/continuous-motion-d101-v1/m1",
+      "evidence/motion_navigation/continuous-motion-d101-v1/m2",
+      "scripts/d101_fabric_tick_runtime.py",
+      "scripts/run_d101_fabric_tick_probe.py",
+      "tests/motion_nav/test_d101_fabric_tick_probe_options.py",
+      "tests/java/D101TickTraceTest.java",
+      "deployment/fabric-observation-probe/src/main/java/com/mc2p/deployment/D101TickTrace.java"
+    ],
+    "all_paths_absent": true,
+    "m1_definitions_absent": true,
+    "m1_definitions_checked": [
+      "TwoJumpProbeSpec",
+      "PreparedSecondJump",
+      "D101PrecomputeWorker",
+      "SecondJumpPreparationRequest",
+      "run_two_jump_probe",
+      "TwoJumpProbeResult",
+      "M1Summary",
+      "run_m1"
+    ],
+    "m1_files_checked": [
+      "experiments/motion_navigation/trajectory_proto/d101_continuous_probe.py",
+      "experiments/motion_navigation/trajectory_proto/d101_measurement.py",
+      "scripts/measure_continuous_motion_d101.py",
+      "tests/motion_nav/test_d101_continuous_probe.py",
+      "tests/motion_nav/test_d101_measurement.py"
+    ],
+    "m2_probe_markers_absent": [
+      "MC2P_D101_TICK_PROBE",
+      "D101TickTrace",
+      "run_d101_fabric_tick_runtime"
+    ]
+  },
+  "passed": false,
+  "platform": "Windows-10-10.0.26200-SP0",
+  "python": "3.11.16",
+  "schema_version": "d101-stage-closure-v1",
+  "source_kind": "PROJECT_WINDOWS",
+  "stages": {
+    "M0": {
+      "functional_gate_passed": true,
+      "gate_failures": [
+        "p99_above_15ms",
+        "max_not_below_30ms"
+      ],
+      "implemented": true,
+      "passed": false,
+      "performance_gate_passed": false,
+      "run": true,
+      "safety_gate_passed": true,
+      "summary_path": "m0/summary.json"
+    },
+    "M1": {
+      "authorized": false,
+      "evidence_directory_exists": false,
+      "implemented": false,
+      "run": false
+    },
+    "M2": {
+      "authorized": false,
+      "evidence_directory_exists": false,
+      "implemented": false,
+      "run": false
+    }
+  },
+  "status": "STOPPED_AT_M0_PERFORMANCE_FAILURE",
+  "verification": {
+    "final_suite": {
+      "command": ".venv\\python.exe -m unittest tests.motion_nav.test_trajectory_proto_contracts tests.motion_nav.test_trajectory_proto_m0_probe tests.motion_nav.test_incremental_motion_controller tests.motion_nav.test_incremental_motion_proof tests.motion_nav.test_incremental_motion_closed_loop tests.motion_nav.test_d101_input_stream tests.motion_nav.test_d101_continuous_probe tests.motion_nav.test_d101_measurement tests.test_standalone_java_gates -q",
+      "environment": {
+        "JAVA_HOME": "D:\\My_project\\mc_ai\\.venv\\Library\\lib\\jvm",
+        "PATH_prefix": "%JAVA_HOME%\\bin"
+      },
+      "errors": 0,
+      "exit_code": 0,
+      "failures": 0,
+      "jdk_version": "21.0.10",
+      "output": "Ran 97 tests in 51.131s\nOK",
+      "skips": 0,
+      "tests_run": 97
+    },
+    "first_suite": {
+      "command": ".venv\\python.exe -m unittest tests.motion_nav.test_trajectory_proto_contracts tests.motion_nav.test_trajectory_proto_m0_probe tests.motion_nav.test_incremental_motion_controller tests.motion_nav.test_incremental_motion_proof tests.motion_nav.test_incremental_motion_closed_loop tests.motion_nav.test_d101_input_stream tests.motion_nav.test_d101_continuous_probe tests.motion_nav.test_d101_measurement tests.test_standalone_java_gates -q",
+      "errors": 3,
+      "exit_code": 1,
+      "failures": 1,
+      "reason": "Task 2 experimental runner was not registered by production import boundary test; shell did not expose existing JDK 21",
+      "tests_run": 96
+    },
+    "independent_replay": {
+      "audit_passed": true,
+      "command": ".venv\\python.exe evidence/motion_navigation/continuous-motion-d101-v1/m0/recompute_evidence.py",
+      "exit_code": 0,
+      "new_timing_samples": 0,
+      "proof_recalculation_count": 204,
+      "recalculated_proof_steps": 83028,
+      "record_replay_count": 4707
+    },
+    "omitted_uncreated_module": {
+      "counted_as_pass_or_skip": false,
+      "module": "tests.motion_nav.test_d101_fabric_tick_probe_options",
+      "reason": "Task 5 creates this module; M0 failure stopped authorization before Task 3/4/5",
+      "status": "NOT_AUTHORIZED_NOT_CREATED_NOT_RUN"
+    },
+    "raw_summary_recompute": {
+      "command": ".venv\\python.exe scripts/measure_continuous_motion_d101.py M0 --output evidence/motion_navigation/continuous-motion-d101-v1/m0 --recompute",
+      "exit_code": 1,
+      "new_timing_samples": 0,
+      "reason": "original M0 performance failure retained",
+      "summary_matches_original": true
+    }
+  },
+  "worker_lifecycle": {
+    "close_records_required": 0,
+    "close_records_status": "NO_WORKER_CREATED",
+    "host_census_scope": "Win32_Process command lines containing d101-precompute, excluding inspecting PowerShell process",
+    "host_command_line_census_matches": 0,
+    "worker_alive_at_end": 0,
+    "worker_created": 0
+  }
+}

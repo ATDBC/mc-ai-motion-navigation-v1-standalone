@@ -9,9 +9,9 @@ from enum import StrEnum
 import math
 import time
 
-from mc2p.contracts.action_v1 import MovementV1
+from mc2p.contracts.action_v1 import MovementTickWindowV1, MovementV1
 from mc2p.contracts.action_v1 import LookV1
-from mc2p.contracts.common import ContractViolation
+from mc2p.contracts.common import ContractViolation, require_identifier, require_nonnegative_int
 from mc2p.motion_nav.body_control import StopCause, BodyControlPhase
 from mc2p.motion_nav.action_route import (
     ActionRoute, JumpGapSegment, JumpUpSegment,
@@ -48,6 +48,12 @@ from mc2p.motion_nav.online_motion import (
     assess_input_responsibility,
 )
 from mc2p.motion_nav.physics_types import PhysicsState
+from mc2p.motion_nav.prepared_motion import (
+    PreparedMotionHandle, ProofConsumerIdentity, ProofReleaseEvidence, ProofUse,
+    PreparedProofUsePort, ReferenceRejectReason, ReferenceResult, ReferenceStatus,
+    PreparedActionHandoff, PreparedHandoffApproval, PreparedHandoffQueryPort,
+    PreparedHandoffStatus, PreparedQueryStatus,
+)
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.route_validation import RouteProgressEvidence
 from mc2p.motion_nav.segment_entry import body_fits_segment_entry
@@ -57,7 +63,6 @@ from mc2p.motion_nav.safe_ground_control import (
 )
 from mc2p.motion_nav.world_model import BlockPos, WorldQueryCache
 from mc2p.motion_nav.geometry import QueryStatus
-
 
 @dataclass(frozen=True, slots=True)
 class ActionRouteDecision:
@@ -78,6 +83,23 @@ class ActionRouteDecision:
     ground_handoff_disposition: GroundHandoffDisposition = GroundHandoffDisposition.NOT_REQUESTED
     route_progress_evidence: RouteProgressEvidence | None = None
     failure_cause: StopCause | None = None
+
+
+def decision_input_window(decision: ActionRouteDecision) -> MovementTickWindowV1 | None:
+    """Carry an action's proved start window without inventing timing slack."""
+    if type(decision) is not ActionRouteDecision:
+        raise ContractViolation("input window requires an action route decision")
+    earliest, latest = decision.expected_movement_tick, decision.latest_movement_tick
+    if earliest is None and latest is None:
+        if decision.verified_command_index is not None:
+            raise ContractViolation("verified command requires both movement window endpoints")
+        return None
+    if earliest is None or latest is None:
+        raise ContractViolation("movement window requires both endpoints")
+    window = MovementTickWindowV1(earliest, latest)
+    if window.latest_tick - window.earliest_tick > 1:
+        raise ContractViolation("action movement window exceeds one tick of start slack")
+    return window
 
 
 def _ordinary_walk_start_window(
@@ -193,6 +215,228 @@ class ActionRouteExecutor:
         self._committed_damage_actions: set[int] = set()
         self._input_scope_floor: int | None = None
         self._pending_action_boundary_index: int | None = None
+        self._prepared_result_inbox: PreparedProofUsePort | None = None
+        self._prepared_body_owner_id: str | None = None
+        self._prepared_action_indices: frozenset[int] = frozenset()
+        self._prepared_route_revision: int | None = None
+        self._prepared_generation_for = None
+        self._prepared_handoff_supervisor = None
+        self._prepared_ledger_id: str | None = None
+        self._last_prepared_frame: NavigationFrame | None = None
+        self._last_prepared_anchor: StateAnchor | None = None
+        self._last_prepared_ledger: InputApplicationLedger | None = None
+        self._prepared_delivery_controller: VerifiedMotionExecutor | None = None
+
+    @property
+    def prepared_controller(self) -> VerifiedMotionExecutor | None:
+        controller = self._controller
+        return (controller if type(controller) is VerifiedMotionExecutor
+                and controller.prepared_handle is not None else None)
+
+    def deliver_prepared_activation(self, handle, transaction, accepted):
+        """Stage only the successor executor; current action and owner stay intact."""
+        from mc2p.contracts.motion_activation import ActivationResult, ActivationStatus, ActivationRejectReason
+        if (self._cancel_requested or self._pending_action_boundary_index != handle.action_index
+                or handle.action_index != self.action_index + 1):
+            return ActivationResult._from_native_references(ActivationStatus.ACTIVATION_MISMATCH, ActivationRejectReason.HANDOFF)
+        controller = VerifiedMotionExecutor(prepared_handle=handle)
+        delivered = controller.prepare_activation(transaction, accepted)
+        if not isinstance(delivered, ActivationResult):
+            self._prepared_delivery_controller = controller
+        return delivered
+
+    def abort_prepared_activation(self) -> None:
+        self._prepared_delivery_controller = None
+
+    def commit_prepared_activation(self, delivered):
+        """Called within the registry's short commit; no queries, sequences or send."""
+        from mc2p.contracts.motion_activation import ActivationResult, ActivationStatus, ActivationRejectReason
+        controller = self._prepared_delivery_controller
+        if (controller is None or delivered is not controller.activation_delivery
+                or self._cancel_requested or self.route is None
+                or self._pending_action_boundary_index != self.action_index + 1
+                or controller.prepared_handle.action_index != self.action_index + 1
+                or controller.prepared_handle.route_id != self.route.route_id):
+            return ActivationResult._from_native_references(ActivationStatus.ACTIVATION_MISMATCH, ActivationRejectReason.HANDOFF)
+        controller.commit_activation(delivered)
+        self.action_index += 1
+        self._controller = controller
+        self._pending_action_boundary_index = None
+        self._prepared_delivery_controller = None
+        self.state = ActionRouteState.RUNNING
+        return ActivationResult._from_native_references(ActivationStatus.ACTIVATED)
+
+    def bind_prepared_result_inbox(self, inbox: PreparedProofUsePort, *, owner_id: str) -> None:
+        """Borrow the existing use registry; do not store a second handle map."""
+        if not isinstance(inbox, PreparedProofUsePort):
+            raise ContractViolation("prepared proof uses require a registry use port")
+        require_identifier(owner_id, "prepared body consumer id")
+        current = getattr(self, "_prepared_result_inbox", None)
+        if current is not None and (current is not inbox or self._prepared_body_owner_id != owner_id):
+            raise ContractViolation("an executor cannot change its prepared service or body consumer")
+        self._prepared_result_inbox, self._prepared_body_owner_id = inbox, owner_id
+
+    def bind_prepared_handoff_context(self, *, route_revision: int, generation_for) -> None:
+        """Borrow the coordinator's generation lookup; never produce a stream."""
+        require_nonnegative_int(route_revision, "prepared route revision")
+        if not callable(generation_for):
+            raise ContractViolation("prepared handoff needs its coordinator lookup")
+        self._prepared_route_revision = route_revision
+        self._prepared_generation_for = generation_for
+
+    def require_prepared_action(self, action_index: int, *, ledger_identity: str) -> None:
+        require_nonnegative_int(action_index, "prepared action index")
+        require_identifier(ledger_identity, "prepared ledger identity")
+        if self.route is None or not self.action_index <= action_index < min(len(self.route.actions), self.action_index + 2):
+            raise ContractViolation("preparation is limited to the current action and its successor")
+        self._prepared_action_indices = self._prepared_action_indices | {action_index}
+        self._prepared_ledger_id = ledger_identity
+
+    @property
+    def preparation_ledger(self) -> InputApplicationLedger | None:
+        return self._last_prepared_ledger
+
+    @property
+    def preparation_anchor(self) -> StateAnchor | None:
+        return self._last_prepared_anchor
+
+    @property
+    def prepared_successor_required(self) -> bool:
+        return self.action_index + 1 in self._prepared_action_indices
+
+    def selected_motion(self, action_index: int):
+        """An existing SOLVE choice is preparation input, never a handle."""
+        candidate = self._verified_motion.get(action_index)
+        return None if candidate is None else candidate.proof
+
+    def _prepared_handle(self, action_index: int) -> PreparedMotionHandle | None:
+        inbox = self._prepared_result_inbox
+        if not isinstance(inbox, PreparedHandoffQueryPort) or self._prepared_generation_for is None:
+            return None
+        stream = self._prepared_generation_for(action_index)
+        return next((handle for handle in inbox.registered_handles
+            if stream is not None and handle.hot_view.stream == stream
+            and handle.owner_id == self._prepared_body_owner_id
+            and self.route is not None and handle.route_id == self.route.route_id
+            and handle.action_index == action_index and inbox.usage_active(handle, ProofUse.CANDIDATE)), None)
+
+    def install_prepared_motion(self, handle: PreparedMotionHandle) -> None:
+        """Verify an existing candidate reference without starting or retiring it."""
+        inbox = self._prepared_result_inbox
+        if (type(handle) is not PreparedMotionHandle or not isinstance(inbox, PreparedHandoffQueryPort)
+                or not inbox.has_registered_handle(handle)
+                or not inbox.usage_active(handle, ProofUse.CANDIDATE)
+                or self.route is None or handle.route_id != self.route.route_id
+                or handle.owner_id != self._prepared_body_owner_id
+                or handle.hot_view.route_revision != self._prepared_route_revision
+                or self._prepared_generation_for is None
+                or handle.hot_view.stream != self._prepared_generation_for(handle.action_index)
+                or handle.action_index not in self._prepared_action_indices):
+            raise ContractViolation("prepared installation requires this owner's exact registered candidate")
+        # The registry already retains the handle. Installation needs no map,
+        # use conversion, action advance, or speculative sequence allocation.
+
+    def stage_prepared_action(self, frame: NavigationFrame, anchor: StateAnchor) -> PreparedActionHandoff:
+        if (type(frame) is not NavigationFrame or type(anchor) is not StateAnchor
+                or self.route is None or self._prepared_body_owner_id is None
+                or self._prepared_ledger_id is None or self._prepared_route_revision is None
+                or self.action_index + 1 >= len(self.route.actions)):
+            raise ContractViolation("prepared action staging requires a current route and real body anchor")
+        index = self.action_index + 1
+        handle = self._prepared_handle(index)
+        hot = None if handle is None else handle.hot_view
+        status = PreparedQueryStatus.NOT_READY
+        if hot is not None:
+            if anchor.movement_tick_id > hot.deadline_tick:
+                status = PreparedQueryStatus.OVERDUE
+            elif (frame.session != anchor.session or frame.body.sequence_id != anchor.observation_sequence_id
+                    or frame.body.movement_tick_id != anchor.movement_tick_id
+                    or frame.body.position != anchor.physics_state.position
+                    or frame.body.velocity_blocks_per_second != tuple(v * 20. for v in anchor.physics_state.velocity_blocks_per_tick)
+                    or frame.body.yaw_radians != anchor.physics_state.yaw_radians
+                    or frame.body.pose != anchor.physics_state.pose
+                    or frame.body.is_on_ground != anchor.physics_state.on_ground
+                    or not any(branch.trajectory[0] == anchor.physics_state for branch in hot.branches)):
+                status = PreparedQueryStatus.ENTRY_MISMATCH
+            elif not hot.requested_window.allows_start(anchor.movement_tick_id + 1):
+                status = PreparedQueryStatus.TIMING_MISMATCH
+            elif any(frame.world.cell(position) != fact for position, fact in hot.dependency_facts):
+                status = PreparedQueryStatus.DEPENDENCY_CHANGED
+            else:
+                source = frame.world._owner
+                versions = (None if source is None else source.dependency_versions(
+                    tuple(position for position, _ in hot.dependency_versions)))
+                status = (PreparedQueryStatus.DEPENDENCY_CHANGED if versions is not None
+                          and versions != hot.dependency_versions else PreparedQueryStatus.READY_MATCH)
+        ledger = self._last_prepared_ledger
+        records = () if ledger is None else ledger.snapshot()
+        window = None if hot is None else hot.requested_window
+        # An elapsed authorization window never proves client revocation.
+        # Keep the bounded ledger facts, including unresolved older sequences.
+        conflicts = tuple(record for record in records if record.session == frame.session)
+        latest = max((record for record in records if record.applied_ticks),
+                     key=lambda record: (record.applied_ticks[-1], record.control_sequence), default=None)
+        inbox = self._prepared_result_inbox
+        old = (None if not isinstance(inbox, PreparedHandoffQueryPort) else next((item
+            for item in inbox.registered_handles if item.owner_id == self._prepared_body_owner_id
+            and item.route_id == self.route.route_id and item.action_index == self.action_index
+            and (inbox.usage_active(item, ProofUse.EXECUTING) or inbox.usage_active(item, ProofUse.SAFE_TAIL))), None))
+        command = None if hot is None else hot.commands[0]
+        return PreparedActionHandoff(
+            f"handoff/{index}/{anchor.observation_sequence_id}/{('pending' if handle is None else handle.proof_token)}",
+            self._prepared_body_owner_id, self.route.route_id, self._prepared_route_revision,
+            self.action_index, index, None if old is None else old.proof_token,
+            None if old is None else old.generation_id, None if handle is None else handle.proof_token,
+            None if handle is None else handle.generation_id, self._prepared_ledger_id,
+            frame.session.value, anchor.observation_sequence_id, anchor.physics_state, window, status,
+            self._pending_action_boundary_index == index and index in self._prepared_action_indices
+                and not self._cancel_requested,
+            conflicts, None if latest is None else latest.action,
+            None if command is None else command.movement,
+            None if command is None else command.required_movement_yaw_radians)
+
+    def prepared_action_proposal(self, approval: PreparedHandoffApproval | None, *, control=None):
+        from mc2p.motion_nav.execution_supervisor import ExecutionSupervisor
+        supervisor = self._prepared_handoff_supervisor
+        if (type(approval) is not PreparedHandoffApproval or approval.status is not PreparedHandoffStatus.APPROVED
+                or type(supervisor) is not ExecutionSupervisor
+                or not ExecutionSupervisor.prepared_approval_is_current(supervisor, approval, control=control)
+                or control.executor is not self
+                or self._last_prepared_frame is None or self._last_prepared_anchor is None):
+            return None
+        fresh = self.stage_prepared_action(self._last_prepared_frame, self._last_prepared_anchor)
+        if fresh != approval.proposal or fresh.entry_result is not PreparedQueryStatus.READY_MATCH:
+            return None
+        handle = self._prepared_handle(fresh.new_action_index)
+        return None if handle is None else VerifiedMotionExecutor.prepared_action_proposal(
+            handle, approval, supervisor=supervisor, control=control)
+
+    def discard_prepared_candidates(self, *, action_index: int | None = None) -> int:
+        """Publish unused-action retirement; body uses require explicit facts."""
+        if action_index is not None:
+            require_nonnegative_int(action_index, "discarded prepared action index")
+        inbox = getattr(self, "_prepared_result_inbox", None)
+        if inbox is None or self.route is None:
+            return 0
+        released = 0
+        for handle in inbox.registered_handles:  # At most eight registry records.
+            if (handle.owner_id != self._prepared_body_owner_id or handle.route_id != self.route.route_id
+                    or (action_index is not None and handle.action_index != action_index)):
+                continue
+            consumer = ProofConsumerIdentity.from_handle(handle, ProofUse.CANDIDATE)
+            result = inbox.release_usage(handle, use=ProofUse.CANDIDATE,
+                                         evidence=ProofReleaseEvidence(consumer, None, None, None))
+            released += result.status is ReferenceStatus.RELEASED
+        return released
+
+    def release_prepared_usage(self, handle: PreparedMotionHandle, *, use: ProofUse,
+                              evidence: ProofReleaseEvidence) -> ReferenceResult:
+        """Forward ledger/owner/supervisor facts without inventing an ending."""
+        inbox = getattr(self, "_prepared_result_inbox", None)
+        if (inbox is None or type(handle) is not PreparedMotionHandle
+                or handle.owner_id != self._prepared_body_owner_id):
+            return ReferenceResult(ReferenceStatus.REJECTED, ReferenceRejectReason.CONSUMER)
+        return inbox.release_usage(handle, use=use, evidence=evidence)
 
     @property
     def completed_movement_damage_points(self) -> float:
@@ -474,6 +718,7 @@ class ActionRouteExecutor:
             raise ContractViolation("required verified motion indices are invalid")
         if self.state in {ActionRouteState.RUNNING, ActionRouteState.CANCELLING}:
             raise ContractViolation("action route executor is already active")
+        self.discard_prepared_candidates()
         self.route = route
         self.state = ActionRouteState.RUNNING
         self.action_index = 0
@@ -484,6 +729,10 @@ class ActionRouteExecutor:
         self._damage_budget = damage_budget
         self._session = frame.session
         self._verified_motion = {}
+        self._prepared_action_indices = frozenset()
+        self._last_prepared_frame = None
+        self._last_prepared_anchor = None
+        self._last_prepared_ledger = None
         self._require_verified_gap_motion = require_verified_gap_motion
         self._required_verified_motion = frozenset({
             *require_verified_motion_actions,
@@ -541,6 +790,7 @@ class ActionRouteExecutor:
                 and current.context.candidate_revision
                     >= candidate.context.candidate_revision):
             raise ContractViolation("verified motion revision did not advance")
+        self.discard_prepared_candidates(action_index=index)
         self._verified_motion[index] = candidate
         if activating_current:
             controller = VerifiedMotionExecutor()
@@ -563,6 +813,10 @@ class ActionRouteExecutor:
         if type(self._controller) is not VerifiedMotionExecutor:
             return None
         return self._controller.entry_state()
+
+    def active_verified_exit_hold_input(self):
+        controller = self._controller
+        return None if type(controller) is not VerifiedMotionExecutor else controller.predicted_exit_hold_input()
 
     def current_verified_action_started(self) -> bool:
         """Return whether the current verified action owns the body already."""
@@ -590,6 +844,7 @@ class ActionRouteExecutor:
             raise ContractViolation(
                 "started verified motion cannot return to entry solving"
             )
+        self.discard_prepared_candidates(action_index=self.action_index)
         self._verified_motion.pop(self.action_index, None)
         self._controller = None
         return True
@@ -616,6 +871,7 @@ class ActionRouteExecutor:
                 or not frame.body.is_on_ground
                 or self.action_index not in self._required_verified_motion):
             return False
+        self.discard_prepared_candidates(action_index=self.action_index)
         self._verified_motion.pop(self.action_index, None)
         self._controller = None
         self.state = ActionRouteState.RUNNING
@@ -857,6 +1113,9 @@ class ActionRouteExecutor:
         started = time.perf_counter_ns()
         if type(frame) is not NavigationFrame:
             raise ContractViolation("action route decision requires a navigation frame")
+        self._last_prepared_frame = frame
+        self._last_prepared_anchor = state_anchor
+        self._last_prepared_ledger = input_ledger
         if (movement_yaw_radians is not None
                 and (type(movement_yaw_radians) not in (int, float)
                      or not math.isfinite(movement_yaw_radians))):
@@ -1177,8 +1436,16 @@ class ActionRouteExecutor:
                  movement_yaw_radians: float | None = None,
                  completed_after_input_loss: bool = False) -> ActionRouteDecision:
         assert self.route is not None
+        next_index = self.action_index + 1
+        if next_index in self._prepared_action_indices and not self._cancel_requested:
+            # This is only the owner's boundary fact. Task 8 must obtain registry
+            # acceptance and delivery before it can commit an action advance.
+            self._pending_action_boundary_index = next_index
+            return self._result(started, MovementV1(), 1, "prepared_action_boundary",
+                                submit_input=False)
         completed = self.route.actions[self.action_index]
         self._commit_action_damage_if_started(completed, frame, force=True)
+        self.discard_prepared_candidates(action_index=self.action_index)
         self.clear_pending_action_boundary()
         self.action_index += 1
         if self.action_index >= len(self.route.actions):
@@ -1204,6 +1471,7 @@ class ActionRouteExecutor:
                 # The preceding action ended outside every proved start
                 # variant.  No proof command has been submitted, so return to
                 # solving rather than misclassifying drift as input loss.
+                self.discard_prepared_candidates(action_index=self.action_index)
                 self._verified_motion.pop(self.action_index, None)
         self._activate(frame)
         self.state = ActionRouteState.RUNNING

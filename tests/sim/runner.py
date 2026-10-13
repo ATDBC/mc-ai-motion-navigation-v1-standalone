@@ -16,6 +16,7 @@ from copy import deepcopy
 from pathlib import Path
 import math
 import random
+import threading
 from typing import Callable
 
 from mc2p.contracts.action_v1 import MovementV1
@@ -105,24 +106,31 @@ class InlineMotionWorker:
 
     def __init__(self, *_, **__):
         self._pending = []
+        self._pending_lock = threading.Lock()
         self.activity = []
 
     def is_alive(self) -> bool:
         return True
 
     def submit(self, job) -> bool:
-        self._pending.append(job)
-        self.activity.append(ObservedAsyncActivity(job.work_identity, "submit"))
+        with self._pending_lock:
+            self._pending.append(job)
+            self.activity.append(ObservedAsyncActivity(job.work_identity, "submit"))
         return True
 
     def poll_available(self):
-        done = tuple(motion_worker._execute_job(job) for job in self._pending)
-        self.activity.extend(ObservedAsyncActivity(job.work_identity, "poll") for job in self._pending)
-        self._pending = []
+        # Taking the batch and appending another submission are linearized.
+        # Calculation stays outside the lock, so a new submission is retained.
+        with self._pending_lock:
+            pending, self._pending = tuple(self._pending), []
+        done = tuple(motion_worker._execute_job(job) for job in pending)
+        with self._pending_lock:
+            self.activity.extend(ObservedAsyncActivity(job.work_identity, "poll") for job in pending)
         return done
 
     def close(self) -> None:
-        self._pending = []
+        with self._pending_lock:
+            self._pending = []
 
 
 @dataclass
@@ -283,6 +291,19 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
                                 motion_worker=motion,
                                 risk_ledger=risk_ledger,
                                 clock_ns=lambda: clock[0])
+    if isinstance(motion, InlineMotionWorker):
+        # This harness advances a simulated clock without waiting 50 ms. Its
+        # explicit barrier supplies deterministic delivery from the real inbox
+        # receiver before the next simulated decision. No production control
+        # method waits, polls, unpickles or uses a wall clock to choose behavior.
+        inbox = session._motion_result_inbox
+        original_drain = inbox.drain_once
+        def fixture_drain(worker, sequence):
+            inbox.attach_worker(worker)
+            if not inbox.wait_for_receiver(timeout=10.):
+                raise AssertionError("the motion receiver failed the fixture delivery barrier")
+            return original_drain(worker, sequence)
+        inbox.drain_once = fixture_drain
     driver = RuntimeNavigationDriver(runtime, session, clock_ns=lambda: clock[0])
     backend.set_external_perturbation_guard(lambda: (
         driver.source is not None

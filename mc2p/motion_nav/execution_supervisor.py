@@ -5,6 +5,7 @@ import math
 from collections import deque
 from dataclasses import dataclass
 from enum import StrEnum
+from uuid import uuid4
 
 from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.common import ContractViolation
@@ -18,8 +19,20 @@ from mc2p.motion_nav.route_body_controller import RouteAdvance, RouteControl
 from mc2p.motion_nav.action_route_executor import ActionRouteDecision, ActionRouteState
 from mc2p.motion_nav.landing_edge_probe import LandingEdgeProbeState
 from mc2p.motion_nav.online_motion import (
-    InputApplicationLedger, InputResponsibilityDisposition,
+    InputApplicationLedger, InputApplicationStatus, InputResponsibilityDisposition,
     StateAnchor, assess_input_responsibility,
+    input_application_has_finished, project_movement_command,
+)
+from mc2p.contracts.motion_activation import (
+    ActivationRejectReason, ActivationResult, ActivationStatus,
+    PreparedActivationTransaction, StreamActivationBinding,
+    PreparedActivationAcceptance, PreparedActivationDelivery, FirstStreamApplication,
+    StreamApplicationResult, StreamApplicationStatus, StreamApplicationReason,
+    PreparedStreamDispatch,
+)
+from mc2p.motion_nav.prepared_motion import (
+    PreparedActionHandoff, PreparedHandoffApproval, PreparedHandoffRejectReason,
+    PreparedHandoffStatus, PreparedQueryStatus,
 )
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.async_work import AsyncComputationScope
@@ -41,6 +54,41 @@ _TERMINAL_DECISIONS = frozenset({
 _REJECTED_CANDIDATE_STATES = _TERMINAL_DECISIONS - {
     ActionRouteState.COMPLETE, ActionRouteState.CANCELLED,
 }
+
+
+def prepare_action_activation(control: RouteControl, approval: PreparedHandoffApproval,
+                              binding: StreamActivationBinding) -> PreparedActivationTransaction | ActivationResult:
+    """Bind an existing permission to actual Runtime facts, without committing."""
+    if type(control) is not RouteControl or type(binding) is not StreamActivationBinding:
+        raise ContractViolation("action activation preparation requires typed control and binding")
+    supervisor = control.executor._prepared_handoff_supervisor
+    if (type(supervisor) is not ExecutionSupervisor
+            or not ExecutionSupervisor.prepared_approval_is_current(supervisor, approval, control=control)):
+        return ActivationResult._from_native_references(
+            ActivationStatus.ACTIVATION_MISMATCH, ActivationRejectReason.HANDOFF)
+    first = control.prepared_action_proposal(approval)
+    mismatch = ActivationStatus.ACTIVATION_MISMATCH
+    if first is None:
+        return ActivationResult._from_native_references(mismatch, ActivationRejectReason.HANDOFF)
+    if binding.generation_id != first.generation_id:
+        return ActivationResult._from_native_references(ActivationStatus.STALE_GENERATION, ActivationRejectReason.GENERATION)
+    for name, reason in (("proof_token", ActivationRejectReason.PROOF), ("owner_id", ActivationRejectReason.OWNER),
+                         ("ledger_id", ActivationRejectReason.LEDGER), ("world_session_id", ActivationRejectReason.WORLD_SESSION)):
+        if getattr(binding, name) != getattr(first, name):
+            return ActivationResult._from_native_references(mismatch, reason)
+    proposal = approval.proposal
+    if binding.requested_window != first.requested_window or binding.submitted_movement_tick != proposal.entry_state.movement_tick_id:
+        return ActivationResult._from_native_references(mismatch, ActivationRejectReason.WINDOW)
+    handle = control.executor._prepared_handle(proposal.new_action_index)
+    yaw = proposal.entry_state.yaw_radians + math.radians(binding.compound_action.look.yaw_delta_degrees)
+    projected = project_movement_command(proposal.entry_state, binding.compound_action.movement,
+                                         movement_yaw_radians=yaw)
+    if (binding.compound_action.valid_for_ticks != 1 or handle is None
+            or projected.tick_input != handle.hot_view.inputs[0]):
+        return ActivationResult._from_native_references(mismatch, ActivationRejectReason.MOVEMENT)
+    return PreparedActivationTransaction._from_native_references(
+        transaction_token="transaction-" + uuid4().hex, binding=binding, old_action=proposal.current_command,
+        new_action=binding.compound_action, permission_token=approval.approval_token, handoff_token=proposal.handoff_token)
 
 
 class BodySelectionKind(StrEnum):
@@ -94,6 +142,222 @@ class ExecutionSupervisor:
         self._pending_route_input_floor = 0
         self._support_fraction: float | None = None
         self._async_history = deque(maxlen=64)
+        self._prepared_approval: PreparedHandoffApproval | None = None
+        self._prepared_approval_control: RouteControl | None = None
+
+    def prepared_approval_is_current(self, approval: PreparedHandoffApproval,
+                                     *, control: RouteControl | None = None) -> bool:
+        """Check this caller's control against the one permission issued here."""
+        if (type(approval) is not PreparedHandoffApproval or approval is not self._prepared_approval
+                or type(control) is not RouteControl or control is not self._prepared_approval_control
+                or self._route is not control
+                or self._probe is not None and self._probe.probe.owned):
+            return False
+        proposal = approval.proposal
+        if (proposal.owner_id != control.owner_id or proposal.route_id != control.route.route_id
+                or proposal.route_revision != control.route.route_revision
+                or proposal.world_session_id != control.route.world_session
+                or proposal.old_action_index != control.action_index):
+            return False
+        executor = control.executor
+        if executor._prepared_handoff_supervisor is not self:
+            return False
+        anchor, frame, ledger = executor.preparation_anchor, executor._last_prepared_frame, executor.preparation_ledger
+        return (anchor is not None and frame is not None and ledger is not None
+                and ledger.latest_movement_tick_id == approval.proposal.entry_state.movement_tick_id
+                and executor.stage_prepared_action(frame, anchor) == approval.proposal)
+
+    def approve_action_handoff(self, control: RouteControl, proposal: PreparedActionHandoff,
+                               frame: NavigationFrame, ledger: InputApplicationLedger) -> PreparedHandoffApproval:
+        """Compare real owner/entry/command facts; permission acquires no body use."""
+        if (type(control) is not RouteControl or type(proposal) is not PreparedActionHandoff
+                or type(frame) is not NavigationFrame or type(ledger) is not InputApplicationLedger):
+            raise ContractViolation("prepared handoff approval requires typed current facts")
+        reason = None
+        if (self._route is not control or self._probe is not None and self._probe.probe.owned
+                or control.executor._prepared_handoff_supervisor is not None
+                    and control.executor._prepared_handoff_supervisor is not self
+                or proposal.owner_id != control.owner_id or proposal.route_id != control.route.route_id
+                or proposal.route_revision != control.route.route_revision
+                or proposal.old_action_index != control.action_index):
+            reason = PreparedHandoffRejectReason.OWNER
+        elif not proposal.boundary_reached:
+            reason = PreparedHandoffRejectReason.BOUNDARY
+        elif ledger is not control.executor.preparation_ledger or ledger.latest_movement_tick_id != proposal.entry_state.movement_tick_id:
+            reason = PreparedHandoffRejectReason.LEDGER
+        elif proposal.entry_result is not PreparedQueryStatus.READY_MATCH:
+            reason = (PreparedHandoffRejectReason.TIMING if proposal.entry_result in {
+                PreparedQueryStatus.OVERDUE, PreparedQueryStatus.TIMING_MISMATCH} else PreparedHandoffRejectReason.ENTRY)
+        else:
+            anchor = control.executor.preparation_anchor
+            fresh = None if anchor is None else control.executor.stage_prepared_action(frame, anchor)
+            if fresh != proposal:
+                reason = PreparedHandoffRejectReason.ENTRY
+            elif any(not input_application_has_finished(record, by_tick=proposal.entry_state.movement_tick_id)
+                     for record in proposal.conflicting_commands):
+                reason = PreparedHandoffRejectReason.COMMANDS
+        if reason is not None:
+            return PreparedHandoffApproval(PreparedHandoffStatus.REJECTED, proposal, reason=reason)
+        approval = PreparedHandoffApproval(PreparedHandoffStatus.APPROVED, proposal, "approval-" + uuid4().hex)
+        self._prepared_approval, self._prepared_approval_control = approval, control
+        # No predicate-binding API: the actual issuer lends its own identity
+        # only after it has stored this exact permission for this body owner.
+        control.executor._prepared_handoff_supervisor = self
+        return approval
+
+    def prepare_action_activation(self, control: RouteControl, approval: PreparedHandoffApproval,
+                                  binding: StreamActivationBinding) -> PreparedActivationTransaction | ActivationResult:
+        if self._route is not control:
+            return ActivationResult._from_native_references(ActivationStatus.ACTIVATION_MISMATCH, ActivationRejectReason.OWNER)
+        if not ExecutionSupervisor.prepared_approval_is_current(self, approval, control=control):
+            return ActivationResult._from_native_references(ActivationStatus.ACTIVATION_MISMATCH, ActivationRejectReason.HANDOFF)
+        return prepare_action_activation(control, approval, binding)
+
+    def prepare_activation(self, binding: StreamActivationBinding):
+        control, approval = self._prepared_approval_control, self._prepared_approval
+        if control is None or approval is None:
+            return ActivationResult._from_native_references(ActivationStatus.ACTIVATION_MISMATCH, ActivationRejectReason.HANDOFF)
+        return self.prepare_action_activation(control, approval, binding)
+
+    def _activation_is_current(self, transaction: PreparedActivationTransaction) -> bool:
+        control, approval = self._prepared_approval_control, self._prepared_approval
+        if (type(transaction) is not PreparedActivationTransaction or approval is None or control is None
+                or not self.prepared_approval_is_current(approval, control=control)
+                or transaction.permission_token != approval.approval_token
+                or transaction.handoff_token != approval.proposal.handoff_token):
+            return False
+        checked = self.prepare_action_activation(control, approval, transaction.binding)
+        return (type(checked) is PreparedActivationTransaction
+                and checked.old_action == transaction.old_action
+                and checked.new_action is transaction.new_action)
+
+    def accept_activation(self, transaction: PreparedActivationTransaction):
+        if not self._activation_is_current(transaction):
+            return ActivationResult._from_native_references(ActivationStatus.ACTIVATION_MISMATCH, ActivationRejectReason.HANDOFF)
+        control, proposal = self._prepared_approval_control, self._prepared_approval.proposal
+        registry = control.activation_registry
+        handle = control.executor._prepared_handle(proposal.new_action_index)
+        if registry is None or handle is None:
+            return ActivationResult._from_native_references(ActivationStatus.ACTIVATION_MISMATCH, ActivationRejectReason.PROOF)
+        if not self._refresh_activation_observation(control, handle):
+            return ActivationResult._from_native_references(ActivationStatus.STALE_GENERATION, ActivationRejectReason.GENERATION)
+        binding = transaction.binding
+        handoff = HandoffEvidence(control.owner_id, control.executor.preparation_anchor.session,
+            HandoffDisposition.TRANSFERABLE, proposal.observation_sequence_id,
+            binding.submitted_movement_tick, binding.compound_action.movement, "prepared_action_selected",
+            control.owner_id, binding.first_control_sequence, proposal.route_revision, proposal.new_action_index)
+        accepted = registry.accept_activation(handle, transaction, handoff)
+        if (type(accepted) is PreparedActivationAcceptance and not self._activation_is_current(transaction)):
+            registry.abort_activation(accepted)
+            return ActivationResult._from_native_references(ActivationStatus.ACTIVATION_MISMATCH, ActivationRejectReason.HANDOFF)
+        return accepted
+
+    @staticmethod
+    def _refresh_activation_observation(control, handle):
+        executor, coordinator = control.executor, control.coordinator
+        anchor, ledger, frame = executor.preparation_anchor, executor.preparation_ledger, executor._last_prepared_frame
+        if coordinator is None or anchor is None or ledger is None or frame is None or frame.world._owner is None:
+            return False
+        versions = frame.world._owner.dependency_versions(tuple(position for position, _ in handle.dependency_versions))
+        remaining = max(0., coordinator.damage_budget.maximum_expected_damage_points
+                        - executor.completed_movement_damage_points)
+        return control.activation_registry.refresh_activation_observation(handle,
+            scope=coordinator.computation_scope, state=anchor.physics_state, dependency_versions=versions,
+            ledger_id=ledger.ledger_identity, damage_remaining=remaining)
+
+    def deliver_activation(self, transaction: PreparedActivationTransaction, accepted: PreparedActivationAcceptance):
+        control = self._prepared_approval_control
+        if not self._activation_is_current(transaction):
+            if control is not None and control.activation_registry is not None:
+                control.activation_registry.abort_activation(accepted)
+            return ActivationResult._from_native_references(ActivationStatus.ACTIVATION_MISMATCH, ActivationRejectReason.HANDOFF)
+        handle = control.executor._prepared_handle(self._prepared_approval.proposal.new_action_index)
+        delivered = control.executor.deliver_prepared_activation(handle, transaction, accepted)
+        if type(delivered) is ActivationResult:
+            control.activation_registry.abort_activation(accepted)
+            control.executor.abort_prepared_activation()
+        return delivered
+
+    def commit_activation(self, transaction: PreparedActivationTransaction, accepted: PreparedActivationAcceptance,
+                          delivered: PreparedActivationDelivery) -> ActivationResult:
+        control = self._prepared_approval_control
+        if not self._activation_is_current(transaction):
+            if control is not None and control.activation_registry is not None:
+                control.activation_registry.abort_activation(accepted)
+                control.executor.abort_prepared_activation()
+            return ActivationResult._from_native_references(ActivationStatus.ACTIVATION_MISMATCH, ActivationRejectReason.HANDOFF)
+        handle = control.executor._prepared_handle(self._prepared_approval.proposal.new_action_index)
+        if handle is None or not self._refresh_activation_observation(control, handle):
+            control.activation_registry.abort_activation(accepted)
+            control.executor.abort_prepared_activation()
+            return ActivationResult._from_native_references(ActivationStatus.STALE_GENERATION, ActivationRejectReason.GENERATION)
+        result = control.activation_registry.commit_activation(accepted, delivered, action_commit=control)
+        if result.status is not ActivationStatus.ACTIVATED:
+            control.activation_registry.abort_activation(accepted)
+            control.executor.abort_prepared_activation()
+        return result
+
+    @property
+    def active_activation(self):
+        control = self._route
+        controller = None if control is None else control.executor.prepared_controller
+        return None if controller is None else controller.stream_tracker.activation_binding
+
+    @property
+    def next_command_index(self) -> int:
+        control = self._route
+        controller = None if control is None else control.executor.prepared_controller
+        return 0 if controller is None else controller._command_index
+
+    def record_application(self, application: FirstStreamApplication) -> StreamApplicationResult:
+        control = self._route
+        controller = None if control is None else control.executor.prepared_controller
+        ledger = None if control is None else control.executor.preparation_ledger
+        fact = None if ledger is None else ledger.stream_command(application.control_sequence)
+        if (controller is None or fact is None
+                or fact.generation_id != application.generation_id
+                or controller.prepared_handle.generation_id != application.generation_id):
+            return StreamApplicationResult._from_native_references(StreamApplicationStatus.REJECTED, reason=StreamApplicationReason.GENERATION)
+        record = ledger.record(application.control_sequence)
+        sample = next((sample for sample in record.samples if sample.movement_tick_id == application.effect_tick), None)
+        movement = application.movement
+        if (record.status not in {InputApplicationStatus.APPLIED, InputApplicationStatus.APPLIED_OUTSIDE_WINDOW}
+                or sample is None or sample.state not in {"leased", "neutral"}
+                or (sample.forward, sample.strafe, sample.jump, sample.sneak, sample.sprint)
+                != (movement.forward, movement.strafe, movement.jump, movement.sneak, movement.sprint)):
+            return controller.record_missing_application(command_index=fact.command_index)
+        return controller.record_application(application, command_index=fact.command_index)
+
+    def record_missing_application(self, *, command_index: int):
+        controller = None if self._route is None else self._route.executor.prepared_controller
+        return None if controller is None else controller.record_missing_application(command_index=command_index)
+
+    def abort_activation(self, accepted):
+        control = self._prepared_approval_control
+        if control is not None and control.activation_registry is not None:
+            control.activation_registry.abort_activation(accepted)
+            control.executor.abort_prepared_activation()
+
+    def record_command(self, action):
+        """Associate the next actual command with the already executing proof."""
+        control = self._route
+        controller = None if control is None else control.executor.prepared_controller
+        if controller is None or controller.state.value != "running":
+            return ActivationResult._from_native_references(ActivationStatus.ACTIVATION_MISMATCH, ActivationRejectReason.HANDOFF)
+        handle, tracker, index = controller.prepared_handle, controller.stream_tracker, controller._command_index
+        if tracker.start_branch is None or index >= len(handle.hot_view.commands):
+            return ActivationResult._from_native_references(ActivationStatus.ACTIVATION_MISMATCH, ActivationRejectReason.WINDOW)
+        ledger = control.executor.preparation_ledger
+        command = handle.hot_view.commands[index]
+        if (ledger is None or ledger.ledger_identity != handle.hot_view.ledger_id
+                or ledger.latest_movement_tick_id + 1 != tracker.expected_effect_tick(index)
+                or action.movement != command.movement or action.valid_for_ticks != 1):
+            return ActivationResult._from_native_references(ActivationStatus.ACTIVATION_MISMATCH, ActivationRejectReason.MOVEMENT)
+        result = control.activation_registry.record_command(handle, command_index=index, action=action)
+        from mc2p.motion_nav.prepared_motion import ReferenceStatus
+        return ActivationResult._from_native_references(
+            ActivationStatus.ACTIVATED if result.status is ReferenceStatus.RETAINED else ActivationStatus.ACTIVATION_MISMATCH,
+            None if result.status is ReferenceStatus.RETAINED else ActivationRejectReason.PROOF)
 
     @property
     def async_work_diagnostics(self):

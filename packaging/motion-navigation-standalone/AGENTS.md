@@ -1,5 +1,9 @@
 # AGENTS.md
 
+2026-10-13，D103 G2-F2 止于 Task C。Task A 已统一执行窗口转换并关闭 11／12 tick 漏传；Task B 已把观察请求容量编码移出控制路径，同时保留公共校验和真实 backend 编码。Task C 的真实 spawn 前置试验证明 legacy 第一段没有 registry handle 或登记安全尾迹，late delivery、fallback 与正常 closeout 仍需在控制线程现场 `verified_ground_rollout`。该结果触发预登记止损：Task C 未实现，Task D、唯一正式 F2、Task 10、G3 和 Fabric 均未运行；G2 继续 **FAILED／STOPPED**。先读 [D103](docs/motion_navigation/decisions/0103-repair-g2-window-and-control-hot-path.md)、[G2-F2 计划及结果](docs/motion_navigation/stages/prepared-motion-proof-g2-f2-remediation-plan.md)和[D102 正式验收](docs/motion_navigation/acceptance/prepared-motion-proof-pipeline-d102.md)。
+
+2026-10-11，D101 最小原型止于 M0。安全结果通过，但完整决定 P99 和最大值超过冻结门槛；M0 整体未通过，正式链接入和 Fabric 未授权。现行证据入口为 `evidence/motion_navigation/continuous-motion-d101-v1/`。
+
 2026-10-11，D100 已冻结连续偏离恢复的设计：宽阔、已知且可停车的安全区域默认保持运动；位置、速度和落点偏差优先在运动中局部接回原路线。后段失效但当前前段仍安全时，继续安全前段并后台重规划；被外力推向坑边等危险时，先让短期运动远离危险；越过起跳、离边或下落承诺点后，由原 owner 负责安全落地，再从真实位置继续任务。偏离按当前风险和承诺阶段处理，不为动作组合或偏离原因增加专用状态机。D100 目前只冻结设计，尚未授权实现、正式链接入、P4 或新 Fabric；D098 的 P3 失败与原证据保持不变。现行入口为 [D100](docs/motion_navigation/decisions/0100-use-risk-aware-continuous-deviation-recovery.md) 和[按风险连续运动架构](docs/motion_navigation/architecture/risk-aware-continuous-motion-v1.md)。
 
 2026-10-11，D099 已确定后续连续运动的设计方向：优先利用 Minecraft 稳定、确定且可直接读取事件与事实的特点，采用“短开环输入包＋逐 tick 廉价监视＋事件触发重算＋关键节点严格检查”。普通安全场景不默认每 tick 完整重证；高危任务可以由后续上层策略拒绝、换路、先处理威胁或改变地形。该决定尚未授权实现、P4、正式链接入或新 Fabric；D098 的 P3 失败与证据保持不变。现行入口为 [D099](docs/motion_navigation/decisions/0099-adopt-game-first-risk-graded-short-open-loop-control.md)。

@@ -2,6 +2,7 @@
 from dataclasses import dataclass, replace
 from enum import StrEnum
 import json
+import math
 import threading
 import time
 from typing import Callable, TypeVar
@@ -11,6 +12,11 @@ from mc2p.contracts.action_v1 import (
 )
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.common import ContractViolation, require_nonnegative_int
+from mc2p.contracts.motion_activation import (
+    ActivationRejectReason, ActivationResult, ActivationStatus, FirstStreamApplication,
+    PreparedActivationTransaction, PreparedActivationAcceptance, PreparedActivationDelivery,
+    PreparedStreamDispatch, StreamActivationBinding,
+)
 from mc2p.contracts.intent_source import (
     ControlFrameProposalV1, IntentSourceV1, OrderedIntentV1,
 )
@@ -31,11 +37,12 @@ from mc2p.runtime.failure_disposition import (
 )
 from mc2p.runtime.trace import TraceSinkV0
 from mc2p.motion_nav.online_motion import (
-    CandidateExecutionWindow, InputApplicationLedger,
+    CandidateExecutionWindow, InputApplicationLedger, InputApplicationStatus,
 )
 from mc2p.motion_nav.runtime_adapter import (
     NavigationObservationAdapter, world_session_from_observation,
 )
+from mc2p.motion_nav.world_model import WorldKnowledge
 
 _OrderedResult = TypeVar('_OrderedResult')
 
@@ -56,6 +63,7 @@ class RuntimeStepResultV1:
     report: ExecutionReportV0
     backend_result: BackendStepResultV1 | None = None
     dispatched_monotonic_ns: int | None = None
+    stream_activation: ActivationResult | None = None
 
 
 class PlayerRuntimeV1:
@@ -82,6 +90,7 @@ class PlayerRuntimeV1:
         self._backend_elapsed_ns_total = 0
         self._backend_blocking_io_ns_total = 0
         self._input_ledger = InputApplicationLedger()
+        self._prepared_application_port = None
         # Keep one navigation world owner for the Runtime session.  Individual
         # tasks may create and retire navigation sessions without losing or
         # duplicating the live map.
@@ -112,6 +121,11 @@ class PlayerRuntimeV1:
     def navigation_observation_adapter(self) -> NavigationObservationAdapter:
         """The sole live world/observation owner shared by Runtime tasks."""
         return self._navigation_observation_adapter
+
+    @property
+    def snapshot_world_port(self) -> WorldKnowledge | None:
+        """Expose the Runtime's current world owner without creating another map."""
+        return self._navigation_observation_adapter.snapshot_world_port
 
     @property
     def last_failure_disposition(self) -> FailureDispositionDecision | None:
@@ -337,10 +351,14 @@ class PlayerRuntimeV1:
         *,
         proposals: tuple[ControlFrameProposalV1, ...] = (),
         input_execution_window: CandidateExecutionWindow | None = None,
+        prepared_streams: tuple[PreparedStreamDispatch, ...] = (),
     ) -> RuntimeStepResultV1:
         """Submit all skill proposals, then advance the backend exactly once."""
         with self._io_lock:
             self._require_ready()
+            if (type(prepared_streams) is not tuple or len(prepared_streams) > 8
+                    or any(type(dispatch) is not PreparedStreamDispatch for dispatch in prepared_streams)):
+                raise ContractViolation("prepared streams require a bounded local dispatch tuple")
             if (type(proposals) is not tuple
                     or any(type(proposal) is not ControlFrameProposalV1
                            for proposal in proposals)):
@@ -367,11 +385,13 @@ class PlayerRuntimeV1:
                 task, profile, deadline_monotonic_ns,
                 observation_request=observation_request,
                 input_execution_window=input_execution_window,
+                prepared_streams=prepared_streams,
             )
 
     def step(self, task: TaskIntentV0, profile: BehaviorProfileV0,
              deadline_monotonic_ns: int, *, observation_request: ObservationRequestV3 | None = None,
-             input_execution_window: CandidateExecutionWindow | None = None) -> RuntimeStepResultV1:
+             input_execution_window: CandidateExecutionWindow | None = None,
+             prepared_streams: tuple[PreparedStreamDispatch, ...] = ()) -> RuntimeStepResultV1:
         with self._io_lock:
             self._require_ready()
             if (input_execution_window is not None
@@ -389,6 +409,8 @@ class PlayerRuntimeV1:
             deadline = min(deadline_monotonic_ns, task.deadline_monotonic_ns)
             self._step_number += 1
             decision = backend_result = None
+            activation = None
+            selected_stream = None
             phase_code = FailureCodeV0.CONTRACT
             try:
                 self._check_deadline(deadline)
@@ -414,21 +436,35 @@ class PlayerRuntimeV1:
                     )
                 )
                 action = decision.action
-                self._request_sequence += 1
                 phase_code = FailureCodeV0.TRACE_IO
                 self._trace.write("dispatch", {"decision": decision, "task": task, "profile": profile,
                                                 "observation_request": request})
+                activation, selected_stream = self._activate_prepared_stream(decision, prepared_streams)
+                if (activation is not None and activation.status in {
+                        ActivationStatus.ACTIVATION_MISMATCH, ActivationStatus.STALE_GENERATION}):
+                    report = self._report(task, decision, ExecutionStatusV0.RUNNING,
+                                          "prepared_activation_rejected", None, obs)
+                    return RuntimeStepResultV1(obs, decision, report, stream_activation=activation)
+                self._request_sequence += 1
                 phase_code = FailureCodeV0.BACKEND_IO
                 self._submit_input_record(action, selected_execution_window)
+                if selected_stream is not None:
+                    self._input_ledger.bind_stream(action.request_sequence_id,
+                        generation_id=selected_stream.proposal.generation_id,
+                        command_index=getattr(selected_stream.port, "next_command_index", 0))
+                    self._prepared_application_port = selected_stream.port
                 dispatched_ns = self._clock()
                 backend_result = self._backend_step(action, action.deadline_monotonic_ns, request)
-                self._check_deadline(action.deadline_monotonic_ns)
                 self._validate_result(action, backend_result, request)
                 self._ensure_input_record(
                     action, backend_result, selected_execution_window,
                 )
                 self._input_ledger.observe_receipt(backend_result.receipt)
+                self._report_stream_applications(backend_result)
                 self._observation = backend_result.observation
+                # Returned application facts already happened. A deadline may
+                # prevent subsequent work, but cannot discard those facts.
+                self._check_deadline(action.deadline_monotonic_ns)
                 if type(self._observation) is ObservationSnapshotV3:
                     ingest_started = time.perf_counter_ns()
                     self._navigation_observation_adapter.ingest(self._observation)
@@ -476,22 +512,151 @@ class PlayerRuntimeV1:
                                           "backend_result": backend_result, "report": report,
                                           "dispatched_monotonic_ns": dispatched_ns,
                                           "decision_observation_received_ns": obs.received_at_monotonic_ns})
-                return RuntimeStepResultV1(self._observation, decision, report, backend_result, dispatched_ns)
+                return RuntimeStepResultV1(self._observation, decision, report, backend_result, dispatched_ns, activation)
             except Exception as error:
                 failure = self._exception_failure(error, phase_code)
                 self._apply_failure(failure, record=False)
                 report = self._report(task, decision,
                     ExecutionStatusV0.TIMED_OUT if failure.code is FailureCodeV0.DEADLINE_EXCEEDED else ExecutionStatusV0.FAILED,
-                    "runtime_failure", failure, None)
+                    ("BODY_RESPONSIBILITY_UNRESOLVED" if activation is not None
+                     and activation.status is ActivationStatus.ACTIVATED else "runtime_failure"), failure, None)
                 self._record_failure("step_failure", {
                     "decision": decision,
                     "backend_result": backend_result,
                     "report": report,
                 })
-                return RuntimeStepResultV1(None, decision, report)
+                return RuntimeStepResultV1(None, decision, report, stream_activation=activation)
             except BaseException:
                 self._seal()
                 raise
+
+    def _activate_prepared_stream(self, decision, dispatches):
+        if not dispatches:
+            return None, None
+        selected = dict(decision.selected_intents).get("movement")
+        matching = tuple(item for item in dispatches if item.proposal.movement_intent_id == selected)
+        if not matching:
+            return ActivationResult._from_native_references(ActivationStatus.NOT_SELECTED), None
+        mismatch = lambda reason: (ActivationResult._from_native_references(
+            ActivationStatus.ACTIVATION_MISMATCH, reason), None)
+        if len(matching) != 1:
+            return mismatch(ActivationRejectReason.GENERATION)
+        dispatch, action = matching[0], decision.action
+        proposal = dispatch.proposal
+        if any(item.proposal.owner_id == proposal.owner_id
+               and item.proposal.generation_id != proposal.generation_id for item in dispatches):
+            return mismatch(ActivationRejectReason.GENERATION)
+        obs = self._observation
+        own = None if type(obs) is not ObservationSnapshotV3 else obs.self_state.value
+        if own is None or own.movement_tick_id is None:
+            return mismatch(ActivationRejectReason.WINDOW)
+        if proposal.ledger_id != self._input_ledger.ledger_identity:
+            return mismatch(ActivationRejectReason.LEDGER)
+        session = world_session_from_observation(obs)
+        if proposal.world_session_id != session.value:
+            return mismatch(ActivationRejectReason.WORLD_SESSION)
+        yaw = math.radians(own.yaw_degrees + action.look.yaw_delta_degrees)
+        difference = math.atan2(math.sin(yaw - proposal.expected_yaw_radians),
+                                math.cos(yaw - proposal.expected_yaw_radians))
+        if (action.movement != proposal.expected_movement or abs(difference) > 1.e-9
+                or action.valid_for_ticks != 1):
+            return mismatch(ActivationRejectReason.MOVEMENT)
+        window = proposal.requested_window
+        if (decision.movement_tick_window != window
+                or not window.earliest_tick <= own.movement_tick_id + 1 <= window.latest_tick):
+            return mismatch(ActivationRejectReason.WINDOW)
+        self._input_ledger.check_submission_capacity()
+        active = getattr(dispatch.port, "active_activation", None)
+        if active is not None:
+            if (active.generation_id != proposal.generation_id or active.proof_token != proposal.proof_token
+                    or active.owner_id != proposal.owner_id):
+                return mismatch(ActivationRejectReason.GENERATION)
+            record_command = getattr(dispatch.port, "record_command", None)
+            if record_command is None:
+                return mismatch(ActivationRejectReason.TRANSACTION)
+            result = record_command(action)
+            return result, dispatch if result.status is ActivationStatus.ACTIVATED else None
+        # The action has already won final arbitration. This is the actual
+        # global sequence; preparation never reads or reserves the counter.
+        binding = StreamActivationBinding._from_native_references(proof_token=proposal.proof_token,
+            generation_id=proposal.generation_id, owner_id=proposal.owner_id, ledger_id=self._input_ledger.ledger_identity,
+            world_session_id=session.value, first_control_sequence=action.request_sequence_id,
+            requested_window=window, submitted_movement_tick=own.movement_tick_id, compound_action=action)
+        transaction = dispatch.port.prepare_activation(binding)
+        if type(transaction) is ActivationResult:
+            return transaction, None
+        if type(transaction) is not PreparedActivationTransaction:
+            return mismatch(ActivationRejectReason.TRANSACTION)
+        accepted = dispatch.port.accept_activation(transaction)
+        if type(accepted) is ActivationResult:
+            return accepted, None
+        if type(accepted) is not PreparedActivationAcceptance:
+            return mismatch(ActivationRejectReason.TRANSACTION)
+        committed = False
+        try:
+            delivered = dispatch.port.deliver_activation(transaction, accepted)
+            if type(delivered) is ActivationResult:
+                return delivered, None
+            if type(delivered) is not PreparedActivationDelivery:
+                return mismatch(ActivationRejectReason.TRANSACTION)
+            # Linearize Runtime cancellation with the bounded owner/registry
+            # commit. No backend or worker I/O runs inside this boundary.
+            with self._cancel_lock:
+                if self._cancel_reason is not None:
+                    return mismatch(ActivationRejectReason.HANDOFF)
+                result = dispatch.port.commit_activation(transaction, accepted, delivered)
+                committed = result.status is ActivationStatus.ACTIVATED
+            return result, dispatch if committed else None
+        finally:
+            if not committed:
+                abort = getattr(dispatch.port, "abort_activation", None)
+                if abort is not None:
+                    abort(accepted)
+
+    def _report_stream_applications(self, result):
+        """Notify the borrowed owner at ledger update, before returning to a driver."""
+        port = self._prepared_application_port
+        if port is None or type(result.receipt) is not ClientBehaviorReceiptV3:
+            return
+        for sample in result.receipt.input_applications:
+            if sample.request_sequence_id is None:
+                continue
+            fact = self._input_ledger.stream_command(sample.request_sequence_id)
+            if fact is None:
+                continue
+            binding = getattr(port, "active_activation", None)
+            if binding is None or binding.generation_id != fact.generation_id:
+                continue
+            record = self._input_ledger.record(fact.sequence)
+            if (sample.state not in {"leased", "neutral"}
+                    or record.status not in {InputApplicationStatus.APPLIED, InputApplicationStatus.APPLIED_OUTSIDE_WINDOW}
+                    or sample not in record.samples):
+                missing = getattr(port, "record_missing_application", None)
+                if missing is not None:
+                    missing(command_index=fact.command_index)
+                continue
+            if sample.forward not in (-1., 0., 1.) or sample.strafe not in (-1., 0., 1.):
+                missing = getattr(port, "record_missing_application", None)
+                if missing is not None:
+                    missing(command_index=fact.command_index)
+                continue
+            # These are the actual sampled controls; do not reuse requested
+            # movement to conceal a changed application.
+            movement = MovementV1(int(sample.forward), int(sample.strafe), sample.jump, sample.sneak, sample.sprint)
+            own = result.observation.self_state.value
+            application = FirstStreamApplication._from_native_references(generation_id=fact.generation_id,
+                control_sequence=fact.sequence, effect_tick=sample.movement_tick_id,
+                movement=movement, movement_yaw_radians=math.radians(own.yaw_degrees))
+            port.record_application(application)
+        current = self._input_ledger.stream_command(result.receipt.request_sequence_id)
+        if current is not None and not any(sample.request_sequence_id == current.sequence
+                                          for sample in result.receipt.input_applications):
+            record = self._input_ledger.record(current.sequence)
+            own = result.observation.self_state.value
+            if (own is not None and own.movement_tick_id >= record.latest_allowed_first_tick):
+                missing = getattr(port, "record_missing_application", None)
+                if missing is not None:
+                    missing(command_index=current.command_index)
 
     def _backend_step(self, action, deadline, request):
         if self._backend.observation_schema_version != self._observation_schema:
@@ -541,10 +706,12 @@ class PlayerRuntimeV1:
                     request = resolve_observation_request(self._observation_schema, None)
                     self._submit_input_record(action)
                     result = self._backend_step(action, deadline, request)
-                    self._check_deadline(deadline)
                     self._validate_result(action, result, request)
                     self._ensure_input_record(action, result)
                     self._input_ledger.observe_receipt(result.receipt)
+                    self._report_stream_applications(result)
+                    self._observation = result.observation
+                    self._check_deadline(deadline)
                     if result.receipt.status not in {"executed", "confirmed_local"}:
                         raise ContractViolation("close neutral was not locally accepted")
                     self._trace.write("close_release", {"action": action, "backend_result": result})

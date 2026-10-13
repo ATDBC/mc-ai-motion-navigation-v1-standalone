@@ -25,6 +25,25 @@ from scripts.export_motion_navigation_standalone import collect_export_files, lo
 
 ROOT = Path(__file__).resolve().parents[2]
 
+EXPERIMENTAL_RUNNER_IMPORTS = {
+    "scripts/measure_continuous_motion_d101.py": frozenset({
+        "experiments.motion_navigation.trajectory_proto.d101_measurement",
+        "experiments.motion_navigation.trajectory_proto.physics",
+    }),
+}
+
+
+def experimental_import_violations(relative_path, source):
+    allowed = EXPERIMENTAL_RUNNER_IMPORTS.get(relative_path, frozenset())
+    violations = []
+    for node in ast.walk(ast.parse(source)):
+        names = ([alias.name for alias in node.names] if isinstance(node, ast.Import)
+                 else [node.module or ""] if isinstance(node, ast.ImportFrom) else [])
+        for name in names:
+            if (name == "experiments" or name.startswith("experiments.")) and name not in allowed:
+                violations.append((relative_path, name))
+    return violations
+
 
 def physics_state():
     return PhysicsState(
@@ -339,13 +358,21 @@ class TrajectoryProtoContractsTests(unittest.TestCase):
         violations = []
         paths = tuple((ROOT / "mc2p").rglob("*.py")) + tuple((ROOT / "scripts").rglob("*.py"))
         for path in paths:
-            for node in ast.walk(ast.parse(path.read_text("utf-8-sig"))):
-                names = ([alias.name for alias in node.names] if isinstance(node, ast.Import)
-                         else [node.module or ""] if isinstance(node, ast.ImportFrom) else [])
-                for name in names:
-                    if name == "experiments" or name.startswith("experiments."):
-                        violations.append((str(path.relative_to(ROOT)), name))
+            violations.extend(experimental_import_violations(
+                path.relative_to(ROOT).as_posix(), path.read_text("utf-8-sig")))
         self.assertEqual(violations, [])
+
+    def test_experimental_runner_exception_does_not_allow_other_production_imports(self):
+        name = "experiments.motion_navigation.trajectory_proto.d101_measurement"
+        source = f"from {name} import run_m0"
+        for path in ("scripts/other.py", "scripts/nested/measure_continuous_motion_d101.py",
+                     "mc2p/measure_continuous_motion_d101.py"):
+            with self.subTest(path=path):
+                self.assertEqual(experimental_import_violations(path, source), [(path, name)])
+        path = "scripts/measure_continuous_motion_d101.py"
+        self.assertEqual(experimental_import_violations(path, source), [])
+        self.assertEqual(experimental_import_violations(path, "import experiments"),
+                         [(path, "experiments")])
 
     def test_standalone_export_includes_isolated_prototype_sources(self):
         files = collect_export_files(load_manifest())

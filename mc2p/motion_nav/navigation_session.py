@@ -19,8 +19,9 @@ from typing import Callable, Protocol, runtime_checkable
 
 from mc2p.contracts.action import ActionPriorityV0
 from mc2p.contracts.action_v1 import (
-    ActionIntentV1, LookV1, MovementTickWindowV1, MovementV1,
+    ActionIntentV1, LookV1, MovementV1,
 )
+from mc2p.contracts.motion_activation import PreparedStreamDispatch, StreamActivationProposal
 from mc2p.contracts.common import ContractViolation, require_identifier
 from mc2p.contracts.intent_source import (
     ControlFrameEventV1,
@@ -40,6 +41,7 @@ from mc2p.motion_nav.action_route_executor import (
     ActionRouteDecision,
     ActionRouteExecutor,
     ActionRouteState,
+    decision_input_window,
 )
 from mc2p.motion_nav.action_preconditions import (
     AcquisitionGrant,
@@ -346,6 +348,7 @@ class NavigationSessionProposal:
     route_owner_id: str | None = None
     risk_action_id: str | None = None
     body_activity: BodyControlActivity | None = None
+    prepared_streams: tuple[PreparedStreamDispatch, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -487,6 +490,7 @@ class NavigationSession:
         planner_worker: PlannerWorkerPort | None = None,
         owns_planner_worker: bool = True,
         motion_worker: MotionWorkerPort | None = None,
+        motion_result_inbox: MotionResultInbox | None = None,
         observation_adapter: NavigationObservationAdapter | None = None,
         route_admitter: RouteAdmitter | None = None,
         clock_ns: Callable[[], int] = time.perf_counter_ns,
@@ -509,6 +513,8 @@ class NavigationSession:
             raise ContractViolation("planner worker does not satisfy its protocol")
         if motion_worker is not None and not isinstance(motion_worker, MotionWorkerPort):
             raise ContractViolation("motion worker does not satisfy its protocol")
+        if motion_result_inbox is not None and type(motion_result_inbox) is not MotionResultInbox:
+            raise ContractViolation("navigation motion result service must be the existing typed inbox")
         if type(snapshot_cells_per_step) is not int or snapshot_cells_per_step < 1:
             raise ContractViolation("snapshot step budget must be positive")
         if type(planning_margin_cells) is not int or not 0 <= planning_margin_cells <= 16:
@@ -524,7 +530,9 @@ class NavigationSession:
         self._planner = planner_worker or PlannerWorker()
         self._owns_planner_worker = owns_planner_worker
         self._motion_worker = motion_worker
-        self._motion_result_inbox = MotionResultInbox(max_results=64)
+        self._motion_result_inbox = motion_result_inbox or MotionResultInbox(max_results=64)
+        self._owns_motion_result_inbox = True
+        self._motion_close_report = None
         from mc2p.motion_nav.async_work import AsyncOwnerScope
         self._execution_instances = AsyncOwnerScope()
         self._motion_result_poll_sequence = 0
@@ -3459,6 +3467,7 @@ class NavigationSession:
             planner_worker=self._planner,
             owns_planner_worker=self._owns_planner_worker,
             motion_worker=self._motion_worker,
+            motion_result_inbox=self._motion_result_inbox,
             observation_adapter=self._adapter,
             route_admitter=self._admitter,
             clock_ns=self._clock,
@@ -3470,6 +3479,7 @@ class NavigationSession:
         successor._owns_motion_worker = self._owns_motion_worker
         self._owns_planner_worker = False
         self._owns_motion_worker = False
+        self._owns_motion_result_inbox = False
         self._finalize_close()
         return successor
 
@@ -3526,6 +3536,7 @@ class NavigationSession:
             planner_worker=self._planner,
             owns_planner_worker=self._owns_planner_worker,
             motion_worker=self._motion_worker,
+            motion_result_inbox=self._motion_result_inbox,
             observation_adapter=self._adapter,
             route_admitter=self._admitter,
             clock_ns=self._clock,
@@ -3547,6 +3558,7 @@ class NavigationSession:
         continuation._owns_motion_worker = self._owns_motion_worker
         self._owns_planner_worker = False
         self._owns_motion_worker = False
+        self._owns_motion_result_inbox = False
         self._finalize_close()
         continuation._goal_requests.resume_computation_after_reanchor(self._goal_requests)
         return continuation
@@ -3559,13 +3571,18 @@ class NavigationSession:
         if self._planning_coordinator is not None:
             self._planning_coordinator.cancel_work("session_closed")
         self._closed = True
+        # The successor receives this same service. Only its current shell
+        # may close it; retained proof uses stay readable after compute close.
+        if self._owns_motion_result_inbox:
+            if self._motion_worker is not None and self._owns_motion_worker:
+                self._motion_result_inbox.attach_worker(self._motion_worker)
+            self._motion_close_report = self._motion_result_inbox.close(close_worker=self._owns_motion_worker)
         if self._owns_planner_worker and hasattr(self._planner, "close"):
             self._planner.close()
-        if self._motion_worker is not None and self._owns_motion_worker:
-            self._motion_worker.close()
         # COMPLETE/CANCELLED/FAILED describe the task result and remain
         # immutable after they are reached.  ``_closed`` separately records
-        # that workers and input resources have been released.
+        # that this session shell is closed. The report separately records
+        # timed-out computation resources and unresolved body references.
         if self._state not in {
             NavigationSessionState.COMPLETE,
             NavigationSessionState.CANCELLED,
@@ -4647,6 +4664,28 @@ class NavigationSession:
         retain_body_input: bool = False,
         movement_required: bool = True,
     ) -> NavigationSessionProposal:
+        prepared = None
+        prepared_control = route_control or self._supervisor.route
+        if (route_decision is not None and prepared_control is not None and self._frame is not None
+                and route_decision.reason_code == "prepared_action_boundary"):
+            executor = prepared_control.executor
+            anchor, ledger = executor.preparation_anchor, executor.preparation_ledger
+            if anchor is not None and ledger is not None:
+                staged = executor.stage_prepared_action(self._frame, anchor)
+                approved = self._supervisor.approve_action_handoff(prepared_control, staged, self._frame, ledger)
+                prepared = prepared_control.prepared_action_proposal(approved)
+                if prepared is not None:
+                    movement = prepared.expected_movement
+                    delta = math.atan2(math.sin(prepared.expected_yaw_radians - self._frame.body.yaw_radians),
+                                       math.cos(prepared.expected_yaw_radians - self._frame.body.yaw_radians))
+                    look, lease_ticks = LookV1(math.degrees(delta), 0.), 1
+                    route_decision = replace(route_decision, movement=movement, look=look, submit_input=True,
+                        verified_command_index=0, expected_movement_tick=prepared.requested_window.earliest_tick,
+                        latest_movement_tick=prepared.requested_window.latest_tick)
+        elif route_decision is not None and prepared_control is not None:
+            controller = prepared_control.executor.prepared_controller
+            if controller is not None:
+                prepared = controller.prepared_command_proposal(route_decision)
         if self._frame is not None:
             _, newly_exhausted = self._finalize_task_activity(self._frame)
             if newly_exhausted and not (safety_guard or retain_body_input):
@@ -4680,6 +4719,10 @@ class NavigationSession:
             expires = min(deadline_ns, now + 250_000_000)
             if expires <= now:
                 raise ContractViolation("navigation intent window expired")
+            input_window = (None if route_decision is None else decision_input_window(route_decision))
+            if (input_window is not None and self._frame.body.movement_tick_id is not None
+                    and input_window.latest_tick <= self._frame.body.movement_tick_id):
+                raise ContractViolation("navigation movement window expired")
             self._intent_sequence += 1
             identity = ordered_intent_id(self._source, self._intent_sequence)
             current_action = None
@@ -4748,19 +4791,14 @@ class NavigationSession:
                 movement_conditioned_look_intent_id=(
                     conditioned_look_intent_id if look_conditioned else None
                 ),
-                movement_tick_window=(
-                    MovementTickWindowV1(
-                        route_decision.expected_movement_tick,
-                        route_decision.latest_movement_tick,
-                    )
-                    if (
-                        route_decision is not None
-                        and route_decision.expected_movement_tick is not None
-                        and route_decision.latest_movement_tick is not None
-                    )
-                    else None
-                ),
+                movement_tick_window=input_window,
             )
+            if prepared is not None:
+                prepared = StreamActivationProposal._from_native_references(
+                    proof_token=prepared.proof_token, generation_id=prepared.generation_id, owner_id=prepared.owner_id,
+                    ledger_id=prepared.ledger_id, world_session_id=prepared.world_session_id, movement_intent_id=identity,
+                    expected_movement=prepared.expected_movement, expected_yaw_radians=prepared.expected_yaw_radians,
+                    requested_window=prepared.requested_window, handoff_token=prepared.handoff_token)
             intents = [
                 OrderedIntentV1(self._source, self._intent_sequence, intent),
             ]
@@ -4810,6 +4848,7 @@ class NavigationSession:
             (route_owner.activity(self._frame, route_decision)
              if route_owner is not None else next(iter(
                  self._supervisor.activities(self._frame, route_decision)), None)),
+            (() if prepared is None else (PreparedStreamDispatch(prepared, self._supervisor),)),
         )
 
     def _information_look(self, frame: NavigationFrame) -> LookV1 | None:

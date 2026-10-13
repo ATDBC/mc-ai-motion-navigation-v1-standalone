@@ -4,8 +4,15 @@ from __future__ import annotations
 from dataclasses import dataclass, fields
 from enum import StrEnum
 import math
+from uuid import uuid4
 
-from mc2p.contracts.action_v1 import LookV1, MovementV1
+from mc2p.contracts.action_v1 import LookV1, MovementTickWindowV1, MovementV1
+from mc2p.contracts.motion_activation import (
+    ActivationRejectReason, ActivationResult, ActivationStatus, FirstStreamApplication,
+    PreparedActivationAcceptance, PreparedActivationDelivery, PreparedActivationTransaction,
+    StreamActivationProposal, StreamApplicationReason, StreamApplicationResult,
+    StreamApplicationStatus, StreamStartBranch,
+)
 from mc2p.contracts.common import (
     ContractViolation, require_identifier, require_nonnegative_int,
 )
@@ -403,7 +410,7 @@ class _PendingSubmission:
 class VerifiedMotionExecutor:
     """Execute one admitted proof and advance only from exact client receipts."""
 
-    def __init__(self) -> None:
+    def __init__(self, *, prepared_handle=None) -> None:
         self.state = VerifiedMotionExecutorState.IDLE
         self._candidate: AdmittedMotionCandidate | None = None
         self._start_variant: VerifiedMotionStartVariant | None = None
@@ -415,6 +422,178 @@ class VerifiedMotionExecutor:
         self._recovery_uses_verified_remainder = False
         self._terminal_after_recovery = VerifiedMotionExecutorState.INPUT_LOST
         self._coast_checked_through_tick: int | None = None
+        self._prepared_handle = prepared_handle
+        self._activation_delivery: PreparedActivationDelivery | None = None
+        self._activation_handoff_token: str | None = None
+        self._stream_tracker = None
+        self._application_result: StreamApplicationResult | None = None
+
+    @property
+    def prepared_handle(self):
+        return self._prepared_handle
+
+    @property
+    def activation_delivery(self):
+        return self._activation_delivery
+
+    @property
+    def stream_tracker(self):
+        return self._stream_tracker
+
+    @property
+    def remaining_start_branches(self):
+        if self._prepared_handle is None:
+            return ()
+        branches = self._prepared_handle.hot_view.branches
+        selected = None if self._stream_tracker is None else self._stream_tracker.start_branch
+        return branches if selected is None else tuple(branch for branch in branches if branch.start_branch is selected)
+
+    def prepare_activation(self, transaction: PreparedActivationTransaction,
+                           accepted: PreparedActivationAcceptance) -> PreparedActivationDelivery | ActivationResult:
+        """Deliver a checked binding to an idle executor, without starting it."""
+        from mc2p.motion_nav.prepared_motion import PreparedMotionHandle
+        from mc2p.motion_nav.input_stream import InputStreamTracker
+        if (type(transaction) is not PreparedActivationTransaction or type(accepted) is not PreparedActivationAcceptance
+                or type(self._prepared_handle) is not PreparedMotionHandle):
+            return ActivationResult._from_native_references(ActivationStatus.ACTIVATION_MISMATCH, ActivationRejectReason.TRANSACTION)
+        handle, binding = self._prepared_handle, transaction.binding
+        if (self.state is not VerifiedMotionExecutorState.IDLE or self._activation_delivery is not None
+                or accepted.transaction_token != transaction.transaction_token or accepted.binding is not binding
+                or accepted.permission_token != transaction.permission_token
+                or binding.proof_token != handle.proof_token or binding.ledger_id != handle.hot_view.ledger_id):
+            return ActivationResult._from_native_references(ActivationStatus.ACTIVATION_MISMATCH, ActivationRejectReason.TRANSACTION)
+        tracker = InputStreamTracker.start(handle.hot_view.stream)
+        bound = tracker.bind_activation(binding)
+        if bound.status is not ActivationStatus.ACTIVATED:
+            return bound
+        delivered = PreparedActivationDelivery._from_native_references(transaction.transaction_token, accepted.acceptance_token,
+            binding, "delivery-" + uuid4().hex, transaction.new_action)
+        self._activation_delivery, self._stream_tracker = delivered, tracker
+        self._activation_handoff_token = transaction.handoff_token
+        return delivered
+
+    def commit_activation(self, delivered: PreparedActivationDelivery) -> None:
+        """Consume this executor's exact delivery once; perform no registry or I/O work."""
+        if (type(delivered) is not PreparedActivationDelivery or delivered is not self._activation_delivery
+                or self.state is not VerifiedMotionExecutorState.IDLE or self._stream_tracker is None):
+            raise ContractViolation("activation commit requires this idle executor's exact delivered binding")
+        self._command_index = 0
+        self._start_tick = delivered.binding.requested_window.earliest_tick
+        self.state = VerifiedMotionExecutorState.RUNNING
+
+    def record_application(self, application: FirstStreamApplication, *, command_index: int) -> StreamApplicationResult:
+        if self._stream_tracker is None or self.state is VerifiedMotionExecutorState.IDLE:
+            raise ContractViolation("stream receipt requires a committed delivered activation")
+        require_nonnegative_int(command_index, "command index")
+        facts = self._stream_tracker.command_facts
+        if command_index < len(facts):
+            fact = facts[command_index]
+            exact = (type(application) is FirstStreamApplication
+                     and application.generation_id == fact.generation_id
+                     and application.control_sequence == fact.sequence
+                     and application.effect_tick == self._stream_tracker.expected_effect_tick(command_index)
+                     and self._stream_tracker._matches_input(application, command_index))
+            result = StreamApplicationResult._from_native_references(
+                StreamApplicationStatus.APPLIED if exact else StreamApplicationStatus.DEVIATION,
+                self._stream_tracker.start_branch,
+                None if exact else StreamApplicationReason.DUPLICATE)
+            if not exact:
+                self._application_result = result
+                self.state = VerifiedMotionExecutorState.RECOVERING
+            return result
+        result = (self._stream_tracker.record_first_application(application) if command_index == 0 else
+                  self._stream_tracker.record_application(application, command_index=command_index))
+        self._application_result = result
+        if result.status is StreamApplicationStatus.APPLIED:
+            self._command_index = command_index + 1
+            self._start_tick = application.effect_tick - command_index
+            self._pending = None
+        else:
+            self.state = VerifiedMotionExecutorState.RECOVERING
+        return result
+
+    def prepared_command_proposal(self, decision):
+        if (self._prepared_handle is None or self.state is not VerifiedMotionExecutorState.RUNNING
+                or self._activation_handoff_token is None or not decision.submit_input
+                or decision.verified_command_index != self._command_index
+                or decision.expected_movement_tick is None or decision.latest_movement_tick is None):
+            return None
+        handle = self._prepared_handle
+        command = handle.hot_view.commands[self._command_index]
+        return StreamActivationProposal._from_native_references(
+            proof_token=handle.proof_token, generation_id=handle.generation_id, owner_id=handle.owner_id,
+            ledger_id=handle.hot_view.ledger_id, world_session_id=handle.hot_view.world_session_id,
+            movement_intent_id="prepared-stream-command", expected_movement=command.movement,
+            expected_yaw_radians=command.required_movement_yaw_radians,
+            requested_window=MovementTickWindowV1(decision.expected_movement_tick, decision.latest_movement_tick),
+            handoff_token=self._activation_handoff_token)
+
+    def record_missing_application(self, *, command_index: int) -> StreamApplicationResult:
+        require_nonnegative_int(command_index, "missing command index")
+        result = StreamApplicationResult._from_native_references(StreamApplicationStatus.DEVIATION,
+            None if self._stream_tracker is None else self._stream_tracker.start_branch,
+            StreamApplicationReason.TIMING)
+        self._application_result = result
+        self.state = VerifiedMotionExecutorState.RECOVERING
+        return result
+
+    def prepared_decision(self, anchor: StateAnchor) -> VerifiedMotionDecision:
+        """Compare the registered branch, preserving responsibility on any deviation."""
+        handle, tracker = self._prepared_handle, self._stream_tracker
+        if self.state is VerifiedMotionExecutorState.RECOVERING or tracker.start_branch is None:
+            return VerifiedMotionDecision(self.state, None, None, self._command_index, None, None, 1,
+                                          "BODY_RESPONSIBILITY_UNRESOLVED")
+        branch, = self.remaining_start_branches
+        index = self._command_index
+        if (index >= len(branch.trajectory) or anchor.physics_state != branch.trajectory[index]):
+            self.state = VerifiedMotionExecutorState.RECOVERING
+            return VerifiedMotionDecision(self.state, None, None, index, None, None, 1,
+                                          "BODY_RESPONSIBILITY_UNRESOLVED")
+        if index == len(handle.hot_view.commands):
+            self.state = VerifiedMotionExecutorState.COMPLETE
+            return VerifiedMotionDecision(self.state, None, None, index, None, None, 1, "prepared_motion_complete")
+        command = handle.hot_view.commands[index]
+        tick = tracker.expected_effect_tick(index)
+        return VerifiedMotionDecision(self.state, command.movement, command.required_movement_yaw_radians,
+                                      index, tick, tick, 1, "prepared_stream_command", True)
+
+    @staticmethod
+    def prepared_action_proposal(handle, approval, *, supervisor=None, control=None) -> StreamActivationProposal | None:
+        """Propose the frozen first input only after supervisor permission.
+
+        This does not start an executor, choose a stream branch, or allocate a
+        sequence. The actual activation belongs to Runtime in Task 8.
+        """
+        from mc2p.motion_nav.prepared_motion import (
+            PreparedHandoffApproval, PreparedHandoffStatus, PreparedMotionHandle,
+        )
+        from mc2p.motion_nav.execution_supervisor import ExecutionSupervisor
+        if (type(handle) is not PreparedMotionHandle or type(approval) is not PreparedHandoffApproval
+                or type(supervisor) is not ExecutionSupervisor
+                or not ExecutionSupervisor.prepared_approval_is_current(supervisor, approval, control=control)):
+            return None
+        proposal = approval.proposal
+        if (approval.status is not PreparedHandoffStatus.APPROVED
+                or proposal.proof_token != handle.proof_token
+                or proposal.generation_id != handle.generation_id
+                or proposal.owner_id != handle.owner_id
+                or proposal.route_id != handle.route_id
+                or proposal.route_revision != handle.hot_view.route_revision
+                or proposal.ledger_id != handle.hot_view.ledger_id
+                or proposal.world_session_id != handle.hot_view.world_session_id
+                or proposal.permitted_window != handle.hot_view.requested_window
+                or proposal.expected_movement != handle.hot_view.commands[0].movement
+                or proposal.expected_yaw_radians != handle.hot_view.commands[0].required_movement_yaw_radians
+                or proposal.new_action_index != handle.action_index):
+            return None
+        command, window = handle.hot_view.commands[0], handle.hot_view.requested_window
+        return StreamActivationProposal._from_native_references(
+            proof_token=handle.proof_token, generation_id=handle.generation_id, owner_id=handle.owner_id,
+            ledger_id=handle.hot_view.ledger_id, world_session_id=handle.hot_view.world_session_id,
+            movement_intent_id=f"prepared/{handle.proof_token}/0", expected_movement=command.movement,
+            expected_yaw_radians=command.required_movement_yaw_radians,
+            requested_window=MovementTickWindowV1(window.earliest_start_tick, window.latest_start_tick),
+            handoff_token=proposal.handoff_token)
 
     def start(self, candidate: AdmittedMotionCandidate) -> None:
         if type(candidate) is not AdmittedMotionCandidate:
@@ -491,6 +670,12 @@ class VerifiedMotionExecutor:
                 or self._command_index < 1 or self._start_variant is None):
             return None
         return self._start_variant.exit_state
+
+    def predicted_exit_hold_input(self):
+        """Read the confirmed branch's incumbent input at its proved exit."""
+        if self.predicted_exit_state() is None:
+            return None
+        return self._start_variant.tick_inputs[-1]
 
     def entry_state(self) -> PhysicsState | None:
         """Return the selected proof entry for bounded grounded recovery."""
@@ -581,6 +766,10 @@ class VerifiedMotionExecutor:
         still owns the body and sends neutral movement until a later anchor can
         confirm landing and finish the recovery.
         """
+        if self._prepared_handle is not None and self._stream_tracker is not None:
+            self.state = VerifiedMotionExecutorState.RECOVERING
+            return VerifiedMotionDecision(self.state, None, None, self._command_index, None, None, 1,
+                                          "BODY_RESPONSIBILITY_UNRESOLVED")
         if self._candidate is None:
             self.state = VerifiedMotionExecutorState.IDLE
             return self._decision(None, None, "not_started")
@@ -798,6 +987,10 @@ class VerifiedMotionExecutor:
                 or type(ledger) is not InputApplicationLedger
                 or type(changed_cells) is not tuple):
             raise ContractViolation("verified decision requires anchor and input ledger")
+        if self._prepared_handle is not None:
+            if any(position in changed_cells for position, _ in self._prepared_handle.dependency_versions):
+                self.state = VerifiedMotionExecutorState.RECOVERING
+            return self.prepared_decision(anchor)
         if self._candidate is None:
             self.state = VerifiedMotionExecutorState.IDLE
             return self._decision(None, None, "not_started")

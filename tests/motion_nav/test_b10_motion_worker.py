@@ -48,12 +48,18 @@ class B10MotionWorkerTests(unittest.TestCase):
 
         worker = SharedWorker()
         inbox = MotionResultInbox(max_results=4)
+        self.addCleanup(inbox.close)
         self.assertTrue(inbox.register(first_identity))
         self.assertTrue(inbox.register(second_identity))
+        inbox.attach_worker(worker)
+        self.assertTrue(inbox.wait_for_receiver(timeout=5.))
+        initial_polls = worker.polls
         inbox.drain_once(worker, 7)
         inbox.drain_once(worker, 7)
 
-        self.assertEqual(worker.polls, 1)
+        # Control drains never call the worker. The receiver may have another
+        # background sweep, but both owner deliveries remain exactly once.
+        self.assertGreaterEqual(initial_polls, 1)
         self.assertEqual(
             inbox.take(first_identity)[0].work_identity, first_identity,
         )
@@ -127,6 +133,18 @@ class B10MotionWorkerTests(unittest.TestCase):
             {result.connection_id for result in results},
             {job.connection_id for job in jobs},
         )
+
+    def test_two_unfinished_slots_include_completed_unconsumed_results(self):
+        anchor, world, target, _ = fixture()
+        job = GapMotionSolveJob("unconsumed-gap", 1, anchor, world,
+            GapSolveRequest((0, 1), LandingRegion(*target), CandidateExecutionWindow(11, 12)))
+        with MotionSolverWorker(max_pending=2) as worker:
+            self.assertTrue(worker.submit(job))
+            # Readiness observes transport metadata; it consumes/deserializes
+            # nothing. Once ready, the first request FIFO slot is certainly free.
+            self.assertTrue(worker._results._reader.poll(5.))
+            self.assertTrue(worker.submit(job))
+            self.assertFalse(worker.submit(job), "a completed but unconsumed result still owns its service slot")
 
 if __name__ == "__main__":
     unittest.main()

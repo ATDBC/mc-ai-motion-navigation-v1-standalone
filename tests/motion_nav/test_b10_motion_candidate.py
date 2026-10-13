@@ -4,6 +4,7 @@ from mc2p.motion_nav.async_work import (
 )
 from dataclasses import replace
 import math
+import threading
 import unittest
 from dataclasses import replace
 from unittest.mock import patch
@@ -1067,6 +1068,8 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
                             worker, "submit",
                             side_effect=lambda job: jobs.append(job) or True,
                         ):
+                    coordinator.result_inbox.wake_receiver()
+                    self.assertTrue(coordinator.result_inbox.wait_for_receiver(timeout=5))
                     coordinator.decide(
                         self.frame(
                             physics_world._world,
@@ -1191,18 +1194,32 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
             old_result = _execute_job(jobs[0])
             old_identity = jobs[0].work_identity
             clock[0] += 1_100_000_000
+            deliver_late = threading.Event()
             with patch.object(worker, "is_alive", return_value=True), \
                     patch.object(
-                        worker, "poll_available", return_value=(old_result,),
+                        worker, "poll_available",
+                        side_effect=lambda: (old_result,) if deliver_late.is_set() else (),
                     ), patch.object(
                         worker, "submit",
                         side_effect=lambda job: jobs.append(job) or True,
                     ):
+                # Expire the old computation before the background receiver
+                # sees its mocked late result.
+                coordinator.decide(
+                    self.frame(physics_world._world, anchor.physics_state, 2),
+                    anchor, InputApplicationLedger(max_records=64),
+                    physics_world, changed_cells=(),
+                    current_scope=coordinator.computation_scope,
+                )
+                deliver_late.set()
+                coordinator.result_inbox.wake_receiver()
+                self.assertTrue(coordinator.result_inbox.wait_for_receiver(timeout=5))
                 decision = coordinator.decide(
                     self.frame(physics_world._world, anchor.physics_state, 2),
                     anchor, InputApplicationLedger(max_records=64),
                     physics_world, changed_cells=(),
                     current_scope=coordinator.computation_scope,
+                    result_poll_sequence=3,
                 )
 
             self.assertEqual(len(jobs), 2)
@@ -1808,6 +1825,8 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
                 patch.object(worker, "is_alive", return_value=True),
                 patch.object(worker, "poll_available", return_value=(solved,)),
             ):
+                coordinator.result_inbox.wake_receiver()
+                self.assertTrue(coordinator.result_inbox.wait_for_receiver(timeout=5))
                 handoff = coordinator.decide(
                     predicted_frame, boundary_anchor,
                     ledger,

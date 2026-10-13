@@ -156,6 +156,15 @@ class NavigationObservationAdapter:
         """Return the current immutable projection without ingesting again."""
         return self._latest_frame
 
+    @property
+    def snapshot_world_port(self) -> WorldKnowledge | None:
+        """The existing world owner, captured per preparation for eventual release.
+
+        A session change replaces the live owner. Preparation retains this port
+        so its old leases can still be released through their original owner.
+        """
+        return self._world
+
     def seed_test_oracle_memory(
         self, authority: object, blocks: dict[BlockPos, BlockGeometry],
         air: tuple[BlockPos, ...],

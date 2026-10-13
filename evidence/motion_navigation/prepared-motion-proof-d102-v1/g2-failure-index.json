@@ -1,0 +1,828 @@
+{
+  "schema": "d102-g2-failure-index-v1",
+  "stage": "G2",
+  "status": "FAILED",
+  "all_gates_passed": false,
+  "evidence_kind": "failure_pointers_only",
+  "success_exported": false,
+  "formal_platform": "Windows",
+  "source_base": "acd53ac468b5f4beb15d4f0dffc0adcea45a5880",
+  "branch": "codex/f2r-recovery",
+  "manifest": {
+    "path": "tests/sim/manifests/prepared-motion-proof-d102-v1.json",
+    "sha256": "975a0358afdfe3768df5a802e2dfd43291545905dca61d0da75940dd8cdd796f"
+  },
+  "frozen_denominators": {
+    "fast": 144,
+    "representative_negative": 12,
+    "spawn_smoke": 7,
+    "realtime": 60,
+    "fallback": 6,
+    "realtime_warmup": 10
+  },
+  "unexecuted": {
+    "representative_negative": 0,
+    "spawn_smoke": 0,
+    "realtime": 0,
+    "fallback": 0,
+    "realtime_warmup": 0,
+    "formal_performance_samples": 0,
+    "task10": false,
+    "fabric": false
+  },
+  "correction": {
+    "id": "G2-F1",
+    "authorized": true,
+    "scope": "只修fast夹具等待原生job完成；不改产品deadline、production、manifest、verifier或旧raw",
+    "second_round_authorized": false
+  },
+  "signed_predecessors": [
+    {
+      "stage": "G0",
+      "path": ".tmp/d102-formal-v1/red/20261012T0209255251309Z-53798e265e2e4b96955aa672fef74d0c/index.json",
+      "sha256": "e643368dfaea5aa4f75e67d556feeabf20b22fe9cde0e4b9ec872ab295afa04c"
+    },
+    {
+      "stage": "G1",
+      "path": ".tmp/d102-formal-v1/g1/20261012T1551530188773Z-b35e2558f46543bfb63bd790f794a3fb/index.json",
+      "sha256": "766dcfc04981bb3f6ed949d3d920890650f91e4c234758256a9e2c47564655f9"
+    }
+  ],
+  "runs": [
+    {
+      "label": "original",
+      "index_path": ".tmp/d102-formal-v1/g2/fast/index.json",
+      "index_sha256": "e6f55246861d3dd5e76d6f922df0dca0e31fe20e2b9dea0a7a0d53977cd26a37",
+      "run_id": "fbf26293968d423c8a3650e8962b0f0e",
+      "command": "D:\\My_project\\mc_ai\\.venv\\python.exe scripts/measure_prepared_motion_d102.py --stage fast --manifest tests/sim/manifests/prepared-motion-proof-d102-v1.json --output .tmp/d102-formal-v1/g2/fast",
+      "environment": {
+        "executable": "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+        "system": "Windows"
+      },
+      "source": {
+        "archives": {
+          "docs/motion_navigation/acceptance/prepared-motion-proof-pipeline-d102.md": "source/docs/motion_navigation/acceptance/prepared-motion-proof-pipeline-d102.md",
+          "mc2p/contracts/action_v1.py": "source/mc2p/contracts/action_v1.py",
+          "mc2p/contracts/common.py": "source/mc2p/contracts/common.py",
+          "mc2p/contracts/motion_activation.py": "source/mc2p/contracts/motion_activation.py",
+          "mc2p/motion_nav/action_route_executor.py": "source/mc2p/motion_nav/action_route_executor.py",
+          "mc2p/motion_nav/async_work.py": "source/mc2p/motion_nav/async_work.py",
+          "mc2p/motion_nav/execution_supervisor.py": "source/mc2p/motion_nav/execution_supervisor.py",
+          "mc2p/motion_nav/input_stream.py": "source/mc2p/motion_nav/input_stream.py",
+          "mc2p/motion_nav/motion_candidate.py": "source/mc2p/motion_nav/motion_candidate.py",
+          "mc2p/motion_nav/motion_coordination.py": "source/mc2p/motion_nav/motion_coordination.py",
+          "mc2p/motion_nav/motion_risk.py": "source/mc2p/motion_nav/motion_risk.py",
+          "mc2p/motion_nav/motion_solver.py": "source/mc2p/motion_nav/motion_solver.py",
+          "mc2p/motion_nav/motion_worker.py": "source/mc2p/motion_nav/motion_worker.py",
+          "mc2p/motion_nav/navigation_session.py": "source/mc2p/motion_nav/navigation_session.py",
+          "mc2p/motion_nav/online_motion.py": "source/mc2p/motion_nav/online_motion.py",
+          "mc2p/motion_nav/physics_1_21.py": "source/mc2p/motion_nav/physics_1_21.py",
+          "mc2p/motion_nav/physics_adapter.py": "source/mc2p/motion_nav/physics_adapter.py",
+          "mc2p/motion_nav/physics_rollout.py": "source/mc2p/motion_nav/physics_rollout.py",
+          "mc2p/motion_nav/physics_types.py": "source/mc2p/motion_nav/physics_types.py",
+          "mc2p/motion_nav/prepared_motion.py": "source/mc2p/motion_nav/prepared_motion.py",
+          "mc2p/motion_nav/prepared_motion_proof.py": "source/mc2p/motion_nav/prepared_motion_proof.py",
+          "mc2p/motion_nav/prepared_motion_validation.py": "source/mc2p/motion_nav/prepared_motion_validation.py",
+          "mc2p/motion_nav/route_body_controller.py": "source/mc2p/motion_nav/route_body_controller.py",
+          "mc2p/motion_nav/world_model.py": "source/mc2p/motion_nav/world_model.py",
+          "mc2p/motion_nav/world_snapshot.py": "source/mc2p/motion_nav/world_snapshot.py",
+          "mc2p/runtime/player_runtime_v1.py": "source/mc2p/runtime/player_runtime_v1.py",
+          "mc2p/skills/navigation_session_driver.py": "source/mc2p/skills/navigation_session_driver.py",
+          "scripts/measure_prepared_motion_d102.py": "source/scripts/measure_prepared_motion_d102.py",
+          "scripts/verify_prepared_motion_d102.py": "source/scripts/verify_prepared_motion_d102.py",
+          "tests/follow_v3_fixtures.py": "source/tests/follow_v3_fixtures.py",
+          "tests/motion_nav/d102_contract_cases.py": "source/tests/motion_nav/d102_contract_cases.py",
+          "tests/motion_nav/test_b10_gap_solver.py": "source/tests/motion_nav/test_b10_gap_solver.py",
+          "tests/motion_nav/test_b10_motion_candidate.py": "source/tests/motion_nav/test_b10_motion_candidate.py",
+          "tests/motion_nav/test_d102_action_handoff.py": "source/tests/motion_nav/test_d102_action_handoff.py",
+          "tests/motion_nav/test_d102_contract_red.py": "source/tests/motion_nav/test_d102_contract_red.py",
+          "tests/motion_nav/test_d102_evidence_contract.py": "source/tests/motion_nav/test_d102_evidence_contract.py",
+          "tests/motion_nav/test_d102_receiver.py": "source/tests/motion_nav/test_d102_receiver.py",
+          "tests/motion_nav/test_d102_runtime_activation.py": "source/tests/motion_nav/test_d102_runtime_activation.py",
+          "tests/motion_nav/test_d102_windows_matrix.py": "source/tests/motion_nav/test_d102_windows_matrix.py",
+          "tests/motion_nav/test_fixed_route_walk.py": "source/tests/motion_nav/test_fixed_route_walk.py",
+          "tests/motion_nav/test_jump_up.py": "source/tests/motion_nav/test_jump_up.py",
+          "tests/sim/d102_prepared_motion.py": "source/tests/sim/d102_prepared_motion.py",
+          "tests/sim/manifests/prepared-motion-proof-d102-v1.json": "source/tests/sim/manifests/prepared-motion-proof-d102-v1.json",
+          "tests/test_action_receipt.py": "source/tests/test_action_receipt.py",
+          "tests/test_player_runtime.py": "source/tests/test_player_runtime.py"
+        },
+        "commit": "acd53ac468b5f4beb15d4f0dffc0adcea45a5880",
+        "files": {
+          "docs/motion_navigation/acceptance/prepared-motion-proof-pipeline-d102.md": "b69a89cf576322fd6a86ca4ca376427182bffd656405ddc5bd5ff6886280adf2",
+          "mc2p/contracts/action_v1.py": "587e0f2bd3afba606ca8971388ce541c7cc69ed27db95aeae4a404432f575725",
+          "mc2p/contracts/common.py": "7f0eda025e7f1307d160902ee4815bb81f87c89193261dcfee0bed07241a5096",
+          "mc2p/contracts/motion_activation.py": "2636bdf81e07d87cc9aec8e344d2b9add0ac36a0b2711ce5dea5ff386c85ff00",
+          "mc2p/motion_nav/action_route_executor.py": "176d031376d0d2cc06045358de68c46464c7a0efe7ac943df171a6b2f671e66a",
+          "mc2p/motion_nav/async_work.py": "80e417f90e013e72dcdab26f88374f5d6ec73a2f2617cd5297b450241b8ae0bb",
+          "mc2p/motion_nav/execution_supervisor.py": "65f98fcc8de1beb71278d616da1ede29e9af96ab3d0c4be6024e57304ee348ef",
+          "mc2p/motion_nav/input_stream.py": "5d2d2dd67a442be3253e703150400c4bab7a8b915aeee00c160bb08df57d0f9e",
+          "mc2p/motion_nav/motion_candidate.py": "2357816c6469e58544db130ce13f7b3993a421893c5cac3eb3d5f0e73bbd56dc",
+          "mc2p/motion_nav/motion_coordination.py": "96cf087125ccbce95256f69a6de03b4c6e61436eabd10712d49746862dd21688",
+          "mc2p/motion_nav/motion_risk.py": "2acaaf68cfd367275f89e516105aac73f2f6182a29d4d629e8a110f73bdce286",
+          "mc2p/motion_nav/motion_solver.py": "d6f7a006b42bf28c9d812c81f29270d4aee99badff0ec9b4cc99cc0c00bffcf4",
+          "mc2p/motion_nav/motion_worker.py": "27994b315590d8da468cfba3d2e7146fcf4015e383dd97b7f4c9e74403ae54e4",
+          "mc2p/motion_nav/navigation_session.py": "1b7bdc091cb4a220bbeaee4a63845e8b15ca462bd46f1f939a809b053cdb1810",
+          "mc2p/motion_nav/online_motion.py": "27349c00de577ad7c20aa2ced67d67c8ab89bb90fef511cc1a27903ad9c24135",
+          "mc2p/motion_nav/physics_1_21.py": "2020dde8bf327e51156c9fae5c3dbb70d63759b88f2d39bb7f8b639a0de70fea",
+          "mc2p/motion_nav/physics_adapter.py": "f5dfdd0c7ef1e5f353e6cc8fb5bf08e0be21ea28c04fbfa0d0981a3a664eb0b7",
+          "mc2p/motion_nav/physics_rollout.py": "a4792651c191b002443a9968b29f05d48fc5f77b033399ac97b0122bcd374eab",
+          "mc2p/motion_nav/physics_types.py": "65c3228ff591373669c382f094b3f28910be51058fe28f65b9a18427867c89a5",
+          "mc2p/motion_nav/prepared_motion.py": "669710c0d5e2c81d965a7935c5d695ac70da846200b77b79eb7594e69f96bba9",
+          "mc2p/motion_nav/prepared_motion_proof.py": "6ce390aba818ebec746f0c737a1d6d6e0aa633a9dac756cfd4ac6916ef25e4e6",
+          "mc2p/motion_nav/prepared_motion_validation.py": "ba78d9881fce7fd5dd67720f3a04439f8ec96a33a3b1a4b6aa9e6a5f0b3a538d",
+          "mc2p/motion_nav/route_body_controller.py": "e53b73ce00348b7b7272191297c87cf4809a90e2720235bc6c63394c8ff051be",
+          "mc2p/motion_nav/world_model.py": "c4f91f1d5be5491d46b7ca462c3321a82162e5f3bca9d0a06fc1b617f2061d7a",
+          "mc2p/motion_nav/world_snapshot.py": "717fda88e2b6d2f48347075a60db32197fb6567588769a8916aac0297b137b46",
+          "mc2p/runtime/player_runtime_v1.py": "7b63e305bb3cd0fa98cc0c50d308dff018e77bd9ff6276714180a250b54ebd2d",
+          "mc2p/skills/navigation_session_driver.py": "da316b586c781dc8b95a0100791ae8fce0704788b8b07c92eeba303fcc3c4574",
+          "scripts/measure_prepared_motion_d102.py": "9ffc32122a6fd01bfc5daaec0fbb0dd7ee9dd39abc2f81ed4b9029c37a3b56c7",
+          "scripts/verify_prepared_motion_d102.py": "7dd1b864e17894d5f330d292e2dd301ff364c5aef8822f96c803f988cca40bf9",
+          "tests/follow_v3_fixtures.py": "85779d3f2cc9be612589433f706c37a1b5eb29a10a7551714e3057a9dec15a35",
+          "tests/motion_nav/d102_contract_cases.py": "b303418e2a1718c58119ba10db683f96ad1dcd3ab79cab1c3494064fc5633756",
+          "tests/motion_nav/test_b10_gap_solver.py": "350d287f9288c1a877b51c1703021ea9faf3c6b9b42d7be94306ed9e19413366",
+          "tests/motion_nav/test_b10_motion_candidate.py": "0c40e77f6ec98ad93dc3b73e0da64d2aa04d81e7ca35e589f47b1a1e8b39969c",
+          "tests/motion_nav/test_d102_action_handoff.py": "c6d81b9f672e22de33ffb0324f9b05883945ec168b3714c124a9208d2014fba0",
+          "tests/motion_nav/test_d102_contract_red.py": "8aca6c085672bebcd1bcc90c728e7be1bbf1ed841c1b8a018de0025e149111f5",
+          "tests/motion_nav/test_d102_evidence_contract.py": "91a60fcd2504eef19c2ee767eed057d0e868914e80c36d935701e2824f2dd714",
+          "tests/motion_nav/test_d102_receiver.py": "acb38f55a11d8b5634d778d1a0113fcb10fe7f21dd1b3c4ef191b8a5de440e36",
+          "tests/motion_nav/test_d102_runtime_activation.py": "fc5dc9f4767b5684445b3efc5fde48139f6843aeea51930bd680936d7eca6621",
+          "tests/motion_nav/test_d102_windows_matrix.py": "c16d4185aa287f27430b072e9ce894aa950cf8661f138cdc9a14b385e0ff072e",
+          "tests/motion_nav/test_fixed_route_walk.py": "d22f715de3b9595127c2d847cca51c6ce5524d8b16c6dd3d0747fad69a72a21e",
+          "tests/motion_nav/test_jump_up.py": "e027d5c53c8f8ce192caa3ce5ece409b9f6bcab836cc067da87ff3d61ea745bf",
+          "tests/sim/d102_prepared_motion.py": "7d9b1988be9d1544b5077f90fd4e83e3b58b7cb047bf835dfa24b23c5b6e2419",
+          "tests/sim/manifests/prepared-motion-proof-d102-v1.json": "975a0358afdfe3768df5a802e2dfd43291545905dca61d0da75940dd8cdd796f",
+          "tests/test_action_receipt.py": "7484c81ad72768c8e1a9d1a9a3ad18afa7a5655044f8f6fc760e64fda323d278",
+          "tests/test_player_runtime.py": "575b7e1cf86b59fd3ed1fb0c3aa75f695c3af114bdef3f0801abac89fcd8a778"
+        },
+        "measured_worktree": true,
+        "measurement_uses_archived_bytes": true
+      },
+      "summary_path": ".tmp/d102-formal-v1/g2/fast/summary.json",
+      "summary_sha256": "fdc9a66572f0394260730e597adea54634a3ff087c32abe233a24ff06bd85a9b",
+      "capacity_path": ".tmp/d102-formal-v1/g2/fast/capacity.json",
+      "capacity_sha256": "edc11d0b08d3093db9be1cef306aaf5b5397025856013277f4fbfd3c10236a1f",
+      "command_exit_code": 1,
+      "diagnostic_only_timings": true,
+      "attempted_cases": 1,
+      "completed_cases": 0,
+      "representative_negative_cases": 0,
+      "decision_samples": 14,
+      "diagnostic_distributions": {
+        "complete": {
+          "count": 14,
+          "p95_ms": 4.85,
+          "p99_ms": 4.85,
+          "max_ms": 4.85
+        },
+        "start": {
+          "count": 1,
+          "p95_ms": 4.85,
+          "p99_ms": 4.85,
+          "max_ms": 4.85
+        },
+        "handoff": {
+          "count": 0,
+          "p95_ms": null,
+          "p99_ms": null,
+          "max_ms": null
+        }
+      },
+      "hot_path_calls": {
+        "blocking_wait": 0,
+        "deserialize": 0,
+        "immutable_graph": 0,
+        "long_lock_wait": 0,
+        "physics_replay": 0,
+        "proof_hash": 0,
+        "scan": 0,
+        "search": 0,
+        "serialize": 14,
+        "snapshot": 0
+      },
+      "final_resources": {
+        "activation_refs": 0,
+        "bytes": 0,
+        "candidate_refs": 0,
+        "executing_refs": 0,
+        "leases": 0,
+        "live_receiver": 0,
+        "live_returner": 0,
+        "live_worker": 0,
+        "queue_feeders": 0,
+        "queued_returns": 0,
+        "safe_tail_refs": 0,
+        "unfinished_jobs": 0
+      },
+      "native_close_report": {
+        "activation_references": 0,
+        "candidate_references": 0,
+        "executing_references": 0,
+        "expected_close_feeder_errors": 0,
+        "lease_count": 0,
+        "live_lease_returners": 0,
+        "live_queue_feeders": 0,
+        "live_receivers": 0,
+        "live_workers": 0,
+        "queued_returns": 0,
+        "retained_bytes": 0,
+        "retained_responsibilities": [],
+        "safe_tail_references": 0,
+        "timed_out": false,
+        "unexpected_feeder_errors": 0,
+        "unfinished_computations": 0,
+        "worker_exit_code": -15
+      },
+      "gate_errors": [
+        "fast-001: ready must be actual receiver publish and first control consume",
+        "fast-001: normal case did not complete",
+        "fast-001: first start offset lacks actual native application evidence",
+        "fast-001: missing physical body trace",
+        "fast-001: actual safety or authorization gate failed",
+        "fast-001: timely prepared case stopped or missed continuous input",
+        "frozen functional matrix did not pass: fast",
+        "twelve representative negatives did not pass",
+        "run did not retain one native spawn worker and receiver",
+        "hot-path forbidden calls occurred"
+      ],
+      "raw_files": [
+        {
+          "case_id": "fast-001",
+          "axes": {
+            "backlog": 0,
+            "direction": "south",
+            "entry_offset": -0.05,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "FAIL",
+          "path": ".tmp/d102-formal-v1/g2/fast/raw/fast-001.json",
+          "sha256": "2fa5102cb464eda6a234e84f1af257e11599702d2f8ae1ee0d986ad7779c2e0c"
+        }
+      ],
+      "stop": {
+        "case_id": "fast-001",
+        "typed_result": null,
+        "failure_reason": "prepared successor was not actually published before handoff",
+        "staged_entry_result": null,
+        "boundary_reached": null,
+        "supervisor_status": null,
+        "supervisor_reason": null,
+        "first_ledger_record": null,
+        "second_jump_authorizations": 0,
+        "reported_unattributed_body_steps": null,
+        "physical_safety_violations": null
+      }
+    },
+    {
+      "label": "G2-F1",
+      "index_path": ".tmp/d102-formal-v1/g2/f1/fast/index.json",
+      "index_sha256": "c150c8bf2613c5fc03a723bfc7c4ed01075a64377d0bbc10bad114d3230b8ec6",
+      "run_id": "1beaf5f6578b4990a49f659b73c695be",
+      "command": "D:\\My_project\\mc_ai\\.venv\\python.exe scripts/measure_prepared_motion_d102.py --stage fast --manifest tests/sim/manifests/prepared-motion-proof-d102-v1.json --output .tmp/d102-formal-v1/g2/f1/fast",
+      "environment": {
+        "executable": "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+        "system": "Windows"
+      },
+      "source": {
+        "archives": {
+          "docs/motion_navigation/acceptance/prepared-motion-proof-pipeline-d102.md": "source/docs/motion_navigation/acceptance/prepared-motion-proof-pipeline-d102.md",
+          "mc2p/contracts/action_v1.py": "source/mc2p/contracts/action_v1.py",
+          "mc2p/contracts/common.py": "source/mc2p/contracts/common.py",
+          "mc2p/contracts/motion_activation.py": "source/mc2p/contracts/motion_activation.py",
+          "mc2p/motion_nav/action_route_executor.py": "source/mc2p/motion_nav/action_route_executor.py",
+          "mc2p/motion_nav/async_work.py": "source/mc2p/motion_nav/async_work.py",
+          "mc2p/motion_nav/execution_supervisor.py": "source/mc2p/motion_nav/execution_supervisor.py",
+          "mc2p/motion_nav/input_stream.py": "source/mc2p/motion_nav/input_stream.py",
+          "mc2p/motion_nav/motion_candidate.py": "source/mc2p/motion_nav/motion_candidate.py",
+          "mc2p/motion_nav/motion_coordination.py": "source/mc2p/motion_nav/motion_coordination.py",
+          "mc2p/motion_nav/motion_risk.py": "source/mc2p/motion_nav/motion_risk.py",
+          "mc2p/motion_nav/motion_solver.py": "source/mc2p/motion_nav/motion_solver.py",
+          "mc2p/motion_nav/motion_worker.py": "source/mc2p/motion_nav/motion_worker.py",
+          "mc2p/motion_nav/navigation_session.py": "source/mc2p/motion_nav/navigation_session.py",
+          "mc2p/motion_nav/online_motion.py": "source/mc2p/motion_nav/online_motion.py",
+          "mc2p/motion_nav/physics_1_21.py": "source/mc2p/motion_nav/physics_1_21.py",
+          "mc2p/motion_nav/physics_adapter.py": "source/mc2p/motion_nav/physics_adapter.py",
+          "mc2p/motion_nav/physics_rollout.py": "source/mc2p/motion_nav/physics_rollout.py",
+          "mc2p/motion_nav/physics_types.py": "source/mc2p/motion_nav/physics_types.py",
+          "mc2p/motion_nav/prepared_motion.py": "source/mc2p/motion_nav/prepared_motion.py",
+          "mc2p/motion_nav/prepared_motion_proof.py": "source/mc2p/motion_nav/prepared_motion_proof.py",
+          "mc2p/motion_nav/prepared_motion_validation.py": "source/mc2p/motion_nav/prepared_motion_validation.py",
+          "mc2p/motion_nav/route_body_controller.py": "source/mc2p/motion_nav/route_body_controller.py",
+          "mc2p/motion_nav/world_model.py": "source/mc2p/motion_nav/world_model.py",
+          "mc2p/motion_nav/world_snapshot.py": "source/mc2p/motion_nav/world_snapshot.py",
+          "mc2p/runtime/player_runtime_v1.py": "source/mc2p/runtime/player_runtime_v1.py",
+          "mc2p/skills/navigation_session_driver.py": "source/mc2p/skills/navigation_session_driver.py",
+          "scripts/measure_prepared_motion_d102.py": "source/scripts/measure_prepared_motion_d102.py",
+          "scripts/verify_prepared_motion_d102.py": "source/scripts/verify_prepared_motion_d102.py",
+          "tests/follow_v3_fixtures.py": "source/tests/follow_v3_fixtures.py",
+          "tests/motion_nav/d102_contract_cases.py": "source/tests/motion_nav/d102_contract_cases.py",
+          "tests/motion_nav/test_b10_gap_solver.py": "source/tests/motion_nav/test_b10_gap_solver.py",
+          "tests/motion_nav/test_b10_motion_candidate.py": "source/tests/motion_nav/test_b10_motion_candidate.py",
+          "tests/motion_nav/test_d102_action_handoff.py": "source/tests/motion_nav/test_d102_action_handoff.py",
+          "tests/motion_nav/test_d102_contract_red.py": "source/tests/motion_nav/test_d102_contract_red.py",
+          "tests/motion_nav/test_d102_evidence_contract.py": "source/tests/motion_nav/test_d102_evidence_contract.py",
+          "tests/motion_nav/test_d102_receiver.py": "source/tests/motion_nav/test_d102_receiver.py",
+          "tests/motion_nav/test_d102_runtime_activation.py": "source/tests/motion_nav/test_d102_runtime_activation.py",
+          "tests/motion_nav/test_d102_windows_matrix.py": "source/tests/motion_nav/test_d102_windows_matrix.py",
+          "tests/motion_nav/test_fixed_route_walk.py": "source/tests/motion_nav/test_fixed_route_walk.py",
+          "tests/motion_nav/test_jump_up.py": "source/tests/motion_nav/test_jump_up.py",
+          "tests/sim/d102_prepared_motion.py": "source/tests/sim/d102_prepared_motion.py",
+          "tests/sim/manifests/prepared-motion-proof-d102-v1.json": "source/tests/sim/manifests/prepared-motion-proof-d102-v1.json",
+          "tests/test_action_receipt.py": "source/tests/test_action_receipt.py",
+          "tests/test_player_runtime.py": "source/tests/test_player_runtime.py"
+        },
+        "commit": "acd53ac468b5f4beb15d4f0dffc0adcea45a5880",
+        "files": {
+          "docs/motion_navigation/acceptance/prepared-motion-proof-pipeline-d102.md": "b69a89cf576322fd6a86ca4ca376427182bffd656405ddc5bd5ff6886280adf2",
+          "mc2p/contracts/action_v1.py": "587e0f2bd3afba606ca8971388ce541c7cc69ed27db95aeae4a404432f575725",
+          "mc2p/contracts/common.py": "7f0eda025e7f1307d160902ee4815bb81f87c89193261dcfee0bed07241a5096",
+          "mc2p/contracts/motion_activation.py": "2636bdf81e07d87cc9aec8e344d2b9add0ac36a0b2711ce5dea5ff386c85ff00",
+          "mc2p/motion_nav/action_route_executor.py": "176d031376d0d2cc06045358de68c46464c7a0efe7ac943df171a6b2f671e66a",
+          "mc2p/motion_nav/async_work.py": "80e417f90e013e72dcdab26f88374f5d6ec73a2f2617cd5297b450241b8ae0bb",
+          "mc2p/motion_nav/execution_supervisor.py": "65f98fcc8de1beb71278d616da1ede29e9af96ab3d0c4be6024e57304ee348ef",
+          "mc2p/motion_nav/input_stream.py": "5d2d2dd67a442be3253e703150400c4bab7a8b915aeee00c160bb08df57d0f9e",
+          "mc2p/motion_nav/motion_candidate.py": "2357816c6469e58544db130ce13f7b3993a421893c5cac3eb3d5f0e73bbd56dc",
+          "mc2p/motion_nav/motion_coordination.py": "96cf087125ccbce95256f69a6de03b4c6e61436eabd10712d49746862dd21688",
+          "mc2p/motion_nav/motion_risk.py": "2acaaf68cfd367275f89e516105aac73f2f6182a29d4d629e8a110f73bdce286",
+          "mc2p/motion_nav/motion_solver.py": "d6f7a006b42bf28c9d812c81f29270d4aee99badff0ec9b4cc99cc0c00bffcf4",
+          "mc2p/motion_nav/motion_worker.py": "27994b315590d8da468cfba3d2e7146fcf4015e383dd97b7f4c9e74403ae54e4",
+          "mc2p/motion_nav/navigation_session.py": "1b7bdc091cb4a220bbeaee4a63845e8b15ca462bd46f1f939a809b053cdb1810",
+          "mc2p/motion_nav/online_motion.py": "27349c00de577ad7c20aa2ced67d67c8ab89bb90fef511cc1a27903ad9c24135",
+          "mc2p/motion_nav/physics_1_21.py": "2020dde8bf327e51156c9fae5c3dbb70d63759b88f2d39bb7f8b639a0de70fea",
+          "mc2p/motion_nav/physics_adapter.py": "f5dfdd0c7ef1e5f353e6cc8fb5bf08e0be21ea28c04fbfa0d0981a3a664eb0b7",
+          "mc2p/motion_nav/physics_rollout.py": "a4792651c191b002443a9968b29f05d48fc5f77b033399ac97b0122bcd374eab",
+          "mc2p/motion_nav/physics_types.py": "65c3228ff591373669c382f094b3f28910be51058fe28f65b9a18427867c89a5",
+          "mc2p/motion_nav/prepared_motion.py": "669710c0d5e2c81d965a7935c5d695ac70da846200b77b79eb7594e69f96bba9",
+          "mc2p/motion_nav/prepared_motion_proof.py": "6ce390aba818ebec746f0c737a1d6d6e0aa633a9dac756cfd4ac6916ef25e4e6",
+          "mc2p/motion_nav/prepared_motion_validation.py": "ba78d9881fce7fd5dd67720f3a04439f8ec96a33a3b1a4b6aa9e6a5f0b3a538d",
+          "mc2p/motion_nav/route_body_controller.py": "e53b73ce00348b7b7272191297c87cf4809a90e2720235bc6c63394c8ff051be",
+          "mc2p/motion_nav/world_model.py": "c4f91f1d5be5491d46b7ca462c3321a82162e5f3bca9d0a06fc1b617f2061d7a",
+          "mc2p/motion_nav/world_snapshot.py": "717fda88e2b6d2f48347075a60db32197fb6567588769a8916aac0297b137b46",
+          "mc2p/runtime/player_runtime_v1.py": "7b63e305bb3cd0fa98cc0c50d308dff018e77bd9ff6276714180a250b54ebd2d",
+          "mc2p/skills/navigation_session_driver.py": "da316b586c781dc8b95a0100791ae8fce0704788b8b07c92eeba303fcc3c4574",
+          "scripts/measure_prepared_motion_d102.py": "9ffc32122a6fd01bfc5daaec0fbb0dd7ee9dd39abc2f81ed4b9029c37a3b56c7",
+          "scripts/verify_prepared_motion_d102.py": "7dd1b864e17894d5f330d292e2dd301ff364c5aef8822f96c803f988cca40bf9",
+          "tests/follow_v3_fixtures.py": "85779d3f2cc9be612589433f706c37a1b5eb29a10a7551714e3057a9dec15a35",
+          "tests/motion_nav/d102_contract_cases.py": "b303418e2a1718c58119ba10db683f96ad1dcd3ab79cab1c3494064fc5633756",
+          "tests/motion_nav/test_b10_gap_solver.py": "350d287f9288c1a877b51c1703021ea9faf3c6b9b42d7be94306ed9e19413366",
+          "tests/motion_nav/test_b10_motion_candidate.py": "0c40e77f6ec98ad93dc3b73e0da64d2aa04d81e7ca35e589f47b1a1e8b39969c",
+          "tests/motion_nav/test_d102_action_handoff.py": "c6d81b9f672e22de33ffb0324f9b05883945ec168b3714c124a9208d2014fba0",
+          "tests/motion_nav/test_d102_contract_red.py": "8aca6c085672bebcd1bcc90c728e7be1bbf1ed841c1b8a018de0025e149111f5",
+          "tests/motion_nav/test_d102_evidence_contract.py": "91a60fcd2504eef19c2ee767eed057d0e868914e80c36d935701e2824f2dd714",
+          "tests/motion_nav/test_d102_receiver.py": "acb38f55a11d8b5634d778d1a0113fcb10fe7f21dd1b3c4ef191b8a5de440e36",
+          "tests/motion_nav/test_d102_runtime_activation.py": "fc5dc9f4767b5684445b3efc5fde48139f6843aeea51930bd680936d7eca6621",
+          "tests/motion_nav/test_d102_windows_matrix.py": "04d0c3e1faa4d73dd299fb4eb4cf46e080c52a6aa73fa4ac12613cc3f7693c6b",
+          "tests/motion_nav/test_fixed_route_walk.py": "d22f715de3b9595127c2d847cca51c6ce5524d8b16c6dd3d0747fad69a72a21e",
+          "tests/motion_nav/test_jump_up.py": "e027d5c53c8f8ce192caa3ce5ece409b9f6bcab836cc067da87ff3d61ea745bf",
+          "tests/sim/d102_prepared_motion.py": "cff9d4bb28cd94873a73ce64a31cd972f18b1396da77400ec3c15474025840b8",
+          "tests/sim/manifests/prepared-motion-proof-d102-v1.json": "975a0358afdfe3768df5a802e2dfd43291545905dca61d0da75940dd8cdd796f",
+          "tests/test_action_receipt.py": "7484c81ad72768c8e1a9d1a9a3ad18afa7a5655044f8f6fc760e64fda323d278",
+          "tests/test_player_runtime.py": "575b7e1cf86b59fd3ed1fb0c3aa75f695c3af114bdef3f0801abac89fcd8a778"
+        },
+        "measured_worktree": true,
+        "measurement_uses_archived_bytes": true
+      },
+      "summary_path": ".tmp/d102-formal-v1/g2/f1/fast/summary.json",
+      "summary_sha256": "087a9630b528792892f7a97e6e3a88b1a1e142fcbd381fe09d9c2e552202111b",
+      "capacity_path": ".tmp/d102-formal-v1/g2/f1/fast/capacity.json",
+      "capacity_sha256": "edc11d0b08d3093db9be1cef306aaf5b5397025856013277f4fbfd3c10236a1f",
+      "command_exit_code": 1,
+      "diagnostic_only_timings": true,
+      "attempted_cases": 25,
+      "completed_cases": 24,
+      "representative_negative_cases": 0,
+      "decision_samples": 759,
+      "diagnostic_distributions": {
+        "complete": {
+          "count": 759,
+          "p95_ms": 5.0243,
+          "p99_ms": 42.4998,
+          "max_ms": 42.6212
+        },
+        "start": {
+          "count": 25,
+          "p95_ms": 4.7058,
+          "p99_ms": 4.811,
+          "max_ms": 4.811
+        },
+        "handoff": {
+          "count": 25,
+          "p95_ms": 42.5533,
+          "p99_ms": 42.6212,
+          "max_ms": 42.6212
+        }
+      },
+      "hot_path_calls": {
+        "blocking_wait": 0,
+        "deserialize": 0,
+        "immutable_graph": 1178,
+        "long_lock_wait": 0,
+        "physics_replay": 81,
+        "proof_hash": 0,
+        "scan": 0,
+        "search": 0,
+        "serialize": 750,
+        "snapshot": 0
+      },
+      "final_resources": {
+        "activation_refs": 0,
+        "bytes": 0,
+        "candidate_refs": 0,
+        "executing_refs": 0,
+        "leases": 0,
+        "live_receiver": 0,
+        "live_returner": 0,
+        "live_worker": 0,
+        "queue_feeders": 0,
+        "queued_returns": 0,
+        "safe_tail_refs": 0,
+        "unfinished_jobs": 0
+      },
+      "native_close_report": {
+        "activation_references": 0,
+        "candidate_references": 0,
+        "executing_references": 0,
+        "expected_close_feeder_errors": 0,
+        "lease_count": 0,
+        "live_lease_returners": 0,
+        "live_queue_feeders": 0,
+        "live_receivers": 0,
+        "live_workers": 0,
+        "queued_returns": 0,
+        "retained_bytes": 0,
+        "retained_responsibilities": [],
+        "safe_tail_references": 0,
+        "timed_out": false,
+        "unexpected_feeder_errors": 0,
+        "unfinished_computations": 0,
+        "worker_exit_code": 0
+      },
+      "gate_errors": [
+        "fast-025: normal case did not complete",
+        "fast-025: actual safety or authorization gate failed",
+        "fast-025: timely prepared case stopped or missed continuous input",
+        "frozen functional matrix did not pass: fast",
+        "twelve representative negatives did not pass",
+        "hot-path forbidden calls occurred"
+      ],
+      "raw_files": [
+        {
+          "case_id": "fast-001",
+          "axes": {
+            "backlog": 0,
+            "direction": "south",
+            "entry_offset": -0.05,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "PASS",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-001.json",
+          "sha256": "d77655334800a096db5474330a9a6cca783c8a96383e45b66009361b9e7bf005"
+        },
+        {
+          "case_id": "fast-002",
+          "axes": {
+            "backlog": 1,
+            "direction": "south",
+            "entry_offset": -0.05,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "PASS",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-002.json",
+          "sha256": "3fabc01fea01c2d2d59b41389e0d89c98a05f836bd711a516d0c091884bfae42"
+        },
+        {
+          "case_id": "fast-003",
+          "axes": {
+            "backlog": 0,
+            "direction": "west",
+            "entry_offset": -0.05,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "PASS",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-003.json",
+          "sha256": "4940b0d809cb4f9a62f25a52fa2a4d5653c2483ace778863023d94954e67dccb"
+        },
+        {
+          "case_id": "fast-004",
+          "axes": {
+            "backlog": 1,
+            "direction": "west",
+            "entry_offset": -0.05,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "PASS",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-004.json",
+          "sha256": "e4c54df64892ab5addce211c3bfb5f46d736415a4c4b9f843d5870ef002c2eab"
+        },
+        {
+          "case_id": "fast-005",
+          "axes": {
+            "backlog": 0,
+            "direction": "north",
+            "entry_offset": -0.05,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "PASS",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-005.json",
+          "sha256": "ab02a6ae81211998eb18e2557c14656de5e8d59ba32600a604ce2b773a2e3ab3"
+        },
+        {
+          "case_id": "fast-006",
+          "axes": {
+            "backlog": 1,
+            "direction": "north",
+            "entry_offset": -0.05,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "PASS",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-006.json",
+          "sha256": "584053d66dd120b5f1d61434d17ff5b2ae14989b38ce8d83beaf3a0296853e70"
+        },
+        {
+          "case_id": "fast-007",
+          "axes": {
+            "backlog": 0,
+            "direction": "east",
+            "entry_offset": -0.05,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "PASS",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-007.json",
+          "sha256": "062900fa2a16da9f7082f067c38f885d53798a14c2bfdfe13b9a005d85610fed"
+        },
+        {
+          "case_id": "fast-008",
+          "axes": {
+            "backlog": 1,
+            "direction": "east",
+            "entry_offset": -0.05,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "PASS",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-008.json",
+          "sha256": "fd0ef2d41dfea35cf6ef2a29e0cbfe515935e62c5998821560ba68427d967f5b"
+        },
+        {
+          "case_id": "fast-009",
+          "axes": {
+            "backlog": 0,
+            "direction": "south",
+            "entry_offset": 0,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "PASS",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-009.json",
+          "sha256": "8ad40edb73dbfb0739f0b84ce34a4228f5598955bc395667f86bc6690e67a6f9"
+        },
+        {
+          "case_id": "fast-010",
+          "axes": {
+            "backlog": 1,
+            "direction": "south",
+            "entry_offset": 0,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "PASS",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-010.json",
+          "sha256": "2babca430a36a9e7ed199d868043205fd96766a510847b92ae3ce6d635f56af5"
+        },
+        {
+          "case_id": "fast-011",
+          "axes": {
+            "backlog": 0,
+            "direction": "west",
+            "entry_offset": 0,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "PASS",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-011.json",
+          "sha256": "c039d9e19fa9fdd1312faf440c1b0524f853075d8773817892c75af784ee108f"
+        },
+        {
+          "case_id": "fast-012",
+          "axes": {
+            "backlog": 1,
+            "direction": "west",
+            "entry_offset": 0,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "PASS",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-012.json",
+          "sha256": "57a23581db37cb13230ebbb40b029174895b017a5dd1d1fbd83a85e03f343c81"
+        },
+        {
+          "case_id": "fast-013",
+          "axes": {
+            "backlog": 0,
+            "direction": "north",
+            "entry_offset": 0,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "PASS",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-013.json",
+          "sha256": "6462bf408c28760bfd7d54ecbf94a46f56f00c818b069ef76d664c3963d69223"
+        },
+        {
+          "case_id": "fast-014",
+          "axes": {
+            "backlog": 1,
+            "direction": "north",
+            "entry_offset": 0,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "PASS",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-014.json",
+          "sha256": "7f203358ab7004c9a2003a7b83173aadf1705e430006b9ab230395eba04e7a30"
+        },
+        {
+          "case_id": "fast-015",
+          "axes": {
+            "backlog": 0,
+            "direction": "east",
+            "entry_offset": 0,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "PASS",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-015.json",
+          "sha256": "49c5e65746f71d499fe73f784c078cda55609017c61668c3c5c2662bae44230e"
+        },
+        {
+          "case_id": "fast-016",
+          "axes": {
+            "backlog": 1,
+            "direction": "east",
+            "entry_offset": 0,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "PASS",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-016.json",
+          "sha256": "48b9b05ea9aeb011efc3e88389b11d612aea62f74eea1bad267ec46842a67775"
+        },
+        {
+          "case_id": "fast-017",
+          "axes": {
+            "backlog": 0,
+            "direction": "south",
+            "entry_offset": 0.05,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "PASS",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-017.json",
+          "sha256": "6585dff43bc85b196b20adcb328711657fcb6b0446252d25a55e82699ac77363"
+        },
+        {
+          "case_id": "fast-018",
+          "axes": {
+            "backlog": 1,
+            "direction": "south",
+            "entry_offset": 0.05,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "PASS",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-018.json",
+          "sha256": "2ec53e2bfa1247102b0e3b45de5e6b2d99608626d8dcf3b63c37fedb72d35929"
+        },
+        {
+          "case_id": "fast-019",
+          "axes": {
+            "backlog": 0,
+            "direction": "west",
+            "entry_offset": 0.05,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "PASS",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-019.json",
+          "sha256": "260e586eaeb61437d40c2c7f9a9a73a6cebb9344a0aeaaf76a344a52e49cbc06"
+        },
+        {
+          "case_id": "fast-020",
+          "axes": {
+            "backlog": 1,
+            "direction": "west",
+            "entry_offset": 0.05,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "PASS",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-020.json",
+          "sha256": "13d07bd9cb6afb0b73386478625aa0a938c24cc1799ce21bbcc71cd6d199782c"
+        },
+        {
+          "case_id": "fast-021",
+          "axes": {
+            "backlog": 0,
+            "direction": "north",
+            "entry_offset": 0.05,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "PASS",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-021.json",
+          "sha256": "b123b9ca54c46f6859bc1fe3d6c2c61385b5f030f112c160b790e7a836ea4e12"
+        },
+        {
+          "case_id": "fast-022",
+          "axes": {
+            "backlog": 1,
+            "direction": "north",
+            "entry_offset": 0.05,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "PASS",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-022.json",
+          "sha256": "768d32f3390bc7405781c3fdd7d4c00d77277a8b25de1596a65443ed076fedaa"
+        },
+        {
+          "case_id": "fast-023",
+          "axes": {
+            "backlog": 0,
+            "direction": "east",
+            "entry_offset": 0.05,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "PASS",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-023.json",
+          "sha256": "7c48e704445ad27417b3cdcad6a2ce1db85ff8f810db88a2a5ac88f520434608"
+        },
+        {
+          "case_id": "fast-024",
+          "axes": {
+            "backlog": 1,
+            "direction": "east",
+            "entry_offset": 0.05,
+            "platform_width": 2,
+            "start_offset": 0
+          },
+          "status": "PASS",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-024.json",
+          "sha256": "f9860eae7a72cb6336f29ebf8544d0ea3bf8144d34dcf4225ff10fd07c0b091f"
+        },
+        {
+          "case_id": "fast-025",
+          "axes": {
+            "backlog": 0,
+            "direction": "south",
+            "entry_offset": -0.05,
+            "platform_width": 2,
+            "start_offset": 1
+          },
+          "status": "FAIL",
+          "path": ".tmp/d102-formal-v1/g2/f1/fast/raw/fast-025.json",
+          "sha256": "bfa822d14e85470cf5742c664e2aa1731db2261a55afb1e1921f66321b662b25"
+        }
+      ],
+      "stop": {
+        "case_id": "fast-025",
+        "typed_result": "NOT_READY",
+        "failure_reason": null,
+        "staged_entry_result": "not_ready",
+        "boundary_reached": false,
+        "supervisor_status": "rejected",
+        "supervisor_reason": "boundary",
+        "first_ledger_record": {
+          "control_sequence": 0,
+          "requested_first_tick": 11,
+          "latest_allowed_first_tick": 11,
+          "applied_ticks": [
+            12
+          ],
+          "status": "applied_outside_window"
+        },
+        "second_jump_authorizations": 0,
+        "reported_unattributed_body_steps": 5,
+        "physical_safety_violations": 0
+      }
+    }
+  ],
+  "limitations": [
+    "首轮失败raw缺少完整身体/激活/worker provenance，不能签署安全或性能。",
+    "G2-F1第25项首次Runtime intent未携带证明11/12窗口；账本将tick12归为窗口外应用，不能证明late1正例通过。",
+    "第25项5个Neutral发送没有量尺认可的authorization_source；原owner仍相同。这不能单独证明生产发送无人负责。",
+    "fast为无50ms节拍的功能诊断；759个决定不属于正式realtime性能样本。",
+    "没有导出通过版G2紧凑证据，没有启动第二轮修正。"
+  ]
+}

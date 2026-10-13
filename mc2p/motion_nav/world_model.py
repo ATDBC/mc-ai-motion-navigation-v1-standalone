@@ -4,10 +4,22 @@ from __future__ import annotations
 from dataclasses import dataclass
 from collections import deque
 from enum import StrEnum
+from functools import wraps
 import math
-from typing import Iterable, Mapping
+import threading
+from typing import TYPE_CHECKING, Iterable, Mapping
+import uuid
+from weakref import WeakValueDictionary
 
 from mc2p.contracts.common import ContractViolation, require_identifier, require_nonnegative_int
+
+if TYPE_CHECKING:
+    from mc2p.motion_nav.physics_adapter import PhysicsWorldBounds
+    from mc2p.motion_nav.physics_types import PhysicsRuleset
+    from mc2p.motion_nav.prepared_motion import (
+        DependencyVersions, SnapshotLease, SnapshotLeaseResult, WorldSnapshotVersion,
+    )
+    from mc2p.motion_nav.world_snapshot import DependencyCheck, SealedSnapshot
 
 
 BlockPos = tuple[int, int, int]
@@ -15,6 +27,9 @@ SectionPos = tuple[int, int, int]
 WORLD_SECTION_SIZE = 16
 DEFAULT_MAX_KNOWN_CELLS = 262_144
 DEFAULT_PROTECTION_RADIUS_BLOCKS = 32.0
+DEFAULT_MAX_SNAPSHOT_LEASES = 8
+DEFAULT_MAX_SNAPSHOT_CELLS = 16_384
+DEFAULT_MAX_SNAPSHOT_BYTES = 16 * 1024 * 1024
 _EPSILON = 1.0e-9
 MIN_BLOCK_COLLISION_Y = 0.0
 MAX_BLOCK_COLLISION_Y = 2.0
@@ -238,6 +253,55 @@ class CellFact:
 UNKNOWN_CELL = CellFact(CellKnowledge.UNKNOWN)
 
 
+@dataclass(frozen=True, slots=True)
+class ImmutableWorldSection:
+    """One observed section's persistent storage, shared by borrowed versions."""
+
+    position: SectionPos
+    facts: tuple[tuple[BlockPos, CellFact], ...]
+    dependency_versions: tuple[tuple[BlockPos, int], ...]
+
+    def __post_init__(self) -> None:
+        from mc2p.contracts.motion_activation import validate_frozen_value
+        validate_frozen_value(self)
+        _section(self.position)
+        positions = tuple(position for position, _ in self.facts)
+        if positions != tuple(sorted(set(positions))):
+            raise ContractViolation("section facts must be sorted and unique")
+        if positions != tuple(position for position, _ in self.dependency_versions):
+            raise ContractViolation("section versions must cover its facts")
+        for position, fact in self.facts:
+            if block_section(position) != self.position or type(fact) is not CellFact:
+                raise ContractViolation("snapshot cell does not belong to its declared section")
+        for _, number in self.dependency_versions:
+            require_nonnegative_int(number, "semantic cell version")
+
+
+@dataclass(frozen=True, slots=True, weakref_slot=True)
+class SnapshotSourceProvenance:
+    """Owner-issued witness to the original metadata and section references.
+
+    The owner's weak issuance index authenticates object identity, not a token
+    supplied by the caller. It does not extend the lifetime of these facts.
+    """
+
+    token: str
+    metadata: tuple[object, ...]
+    section_references: tuple[ImmutableWorldSection, ...]
+
+
+def _snapshot_observation(method):
+    """Commit immutable sections once per observation batch, under the owner lock."""
+    @wraps(method)
+    def apply(self, *args, **kwargs):
+        with self._snapshot_version_lock:
+            try:
+                return method(self, *args, **kwargs)
+            finally:
+                self._commit_snapshot_sections()
+    return apply
+
+
 class WorldUpdateStatus(StrEnum):
     APPLIED = "applied"
     PARTIAL = "partial"
@@ -280,10 +344,21 @@ class WorldView:
     _snapshot_facts: dict[BlockPos, CellFact] | None = None
     _section_geometry_revisions: dict[SectionPos, int] | None = None
     _section_evidence_revisions: dict[SectionPos, int] | None = None
+    _sealed_snapshot: object | None = None
 
     def __post_init__(self) -> None:
-        if (self._owner is None) == (self._snapshot_facts is None):
+        if sum(source is not None for source in (
+                self._owner, self._snapshot_facts, self._sealed_snapshot)) != 1:
             raise ContractViolation("world view requires exactly one fact source")
+
+    @classmethod
+    def from_sealed_snapshot(cls, snapshot) -> WorldView:
+        from mc2p.motion_nav.world_snapshot import SealedSnapshot
+        if type(snapshot) is not SealedSnapshot:
+            raise ContractViolation("world view requires a sealed snapshot")
+        identity = snapshot.identity
+        return cls(WorldSessionId(identity.world_session_id), identity.geometry_revision,
+                   identity.evidence_revision, None, _sealed_snapshot=snapshot)
 
     @classmethod
     def detached(cls, session: WorldSessionId, geometry_revision: int,
@@ -314,6 +389,8 @@ class WorldView:
 
     def _cell_at_valid_position(self, position: BlockPos) -> CellFact:
         """Read one already validated position for a per-decision query cache."""
+        if self._sealed_snapshot is not None:
+            return self._sealed_snapshot.cell(position)
         if self._owner is not None:
             section = _block_section_from_valid_position(position)
             geometry = 0 if self._section_geometry_revisions is None \
@@ -414,6 +491,10 @@ class WorldKnowledge:
         *,
         max_known_cells: int = DEFAULT_MAX_KNOWN_CELLS,
         protection_radius_blocks: float = DEFAULT_PROTECTION_RADIUS_BLOCKS,
+        max_snapshot_versions: int = 8,
+        max_snapshot_leases: int = DEFAULT_MAX_SNAPSHOT_LEASES,
+        max_snapshot_bytes: int = DEFAULT_MAX_SNAPSHOT_BYTES,
+        max_snapshot_cells: int = DEFAULT_MAX_SNAPSHOT_CELLS,
     ) -> None:
         if type(session) is not WorldSessionId:
             raise ContractViolation("world knowledge requires a session")
@@ -422,6 +503,14 @@ class WorldKnowledge:
         _finite(protection_radius_blocks, "world protection radius")
         if protection_radius_blocks < 0:
             raise ContractViolation("world protection radius must be nonnegative")
+        for capacity in (max_snapshot_versions, max_snapshot_leases,
+                         max_snapshot_bytes, max_snapshot_cells):
+            if type(capacity) is not int or capacity < 1:
+                raise ContractViolation("snapshot capacities must be positive integers")
+        if (max_snapshot_leases > DEFAULT_MAX_SNAPSHOT_LEASES
+                or max_snapshot_cells > DEFAULT_MAX_SNAPSHOT_CELLS
+                or max_snapshot_bytes > DEFAULT_MAX_SNAPSHOT_BYTES):
+            raise ContractViolation("snapshot capacities exceed the frozen D102 limits")
         self.session = session
         self._max_known_cells = max_known_cells
         self._max_tombstones = max_known_cells
@@ -438,6 +527,25 @@ class WorldKnowledge:
         self._section_last_order: dict[SectionPos, tuple[int, int]] = {}
         self._protection_center: tuple[float, float, float] | None = None
         self._protected_dependency_sections: frozenset[SectionPos] = frozenset()
+        self._snapshot_version_lock = threading.RLock()
+        self._snapshot_publication_lock = threading.Lock()
+        self._snapshot_sections: dict[SectionPos, ImmutableWorldSection] = {}
+        self._snapshot_dirty_sections: set[SectionPos] = set()
+        self._snapshot_changed_positions: set[BlockPos] = set()
+        self._cell_semantic_versions: dict[BlockPos, int] = {}
+        self._snapshot_epoch = uuid.uuid4().int << 64
+        self._snapshot_local_revision = 0
+        self._snapshot_lease_sequence = 0
+        self._max_snapshot_versions = max_snapshot_versions
+        self._max_snapshot_leases = max_snapshot_leases
+        self._max_snapshot_bytes = max_snapshot_bytes
+        self._max_snapshot_cells = max_snapshot_cells
+        self._published_snapshots: dict[int, SealedSnapshot] = {}
+        self._snapshot_leases: dict[str, SnapshotLease] = {}
+        self._snapshot_reference_counts: dict[int, int] = {}
+        self._ready_snapshot_revisions: set[int] = set()
+        self._published_snapshot_bytes = 0
+        self._snapshot_sources: WeakValueDictionary[str, SnapshotSourceProvenance] = WeakValueDictionary()
 
     @property
     def known_cell_count(self) -> int:
@@ -454,9 +562,15 @@ class WorldKnowledge:
     def _record_geometry_changes(self, positions: Iterable[BlockPos]) -> None:
         for position in positions:
             if len(self._geometry_changes) >= 4096:
-                revision, _ = self._geometry_changes.popleft()
+                revision, old_position = self._geometry_changes.popleft()
                 self._changes_complete_after = max(self._changes_complete_after, revision)
+                if (self._cell_semantic_versions.get(old_position) == revision
+                        and self._cell(old_position) is UNKNOWN_CELL):
+                    self._cell_semantic_versions.pop(old_position, None)
             self._geometry_changes.append((self._geometry_revision, position))
+            self._cell_semantic_versions[position] = self._geometry_revision
+            self._snapshot_dirty_sections.add(block_section(position))
+            self._snapshot_changed_positions.add(position)
 
     @property
     def section_count(self) -> int:
@@ -519,6 +633,7 @@ class WorldKnowledge:
         result, _ = self.observe_blocks_with_changes(stamp, blocks)
         return result
 
+    @_snapshot_observation
     def observe_blocks_with_changes(
         self,
         stamp: ObservationStamp,
@@ -557,6 +672,7 @@ class WorldKnowledge:
             evicted.update(removed)
         return self._update_result(results, evicted), tuple(changed)
 
+    @_snapshot_observation
     def confirm_air(
         self, stamp: ObservationStamp, positions: tuple[BlockPos, ...],
         visual_evidence: Mapping[BlockPos, VisualAirEvidence] | None = None,
@@ -666,6 +782,7 @@ class WorldKnowledge:
             self._section_last_order[section_position] = incoming.stamp.causal_order
         self._evidence_revision += 1
         self._section_evidence_revisions[section_position] = self._evidence_revision
+        self._snapshot_dirty_sections.add(section_position)
         if semantic_changed:
             self._geometry_revision += 1
             self._record_geometry_changes((position,))
@@ -714,6 +831,7 @@ class WorldKnowledge:
         self._section_evidence_revisions.pop(selected, None)
         return removed
 
+    @_snapshot_observation
     def invalidate(self, stamp: ObservationStamp, positions: tuple[BlockPos, ...]) -> None:
         """Apply a world-change tombstone so delayed facts cannot restore old geometry."""
         self._stamp(stamp)
@@ -750,6 +868,230 @@ class WorldKnowledge:
             self._section_evidence_revisions[section_position] = \
                 self._evidence_revision
         self._prune_tombstones()
+
+    def _commit_snapshot_sections(self) -> None:
+        for position in self._snapshot_dirty_sections:
+            cells = self._sections.get(position)
+            if not cells:
+                self._snapshot_sections.pop(position, None)
+                continue
+            facts = tuple(sorted(cells.items()))
+            versions = tuple((cell, self._snapshot_epoch + self._cell_semantic_versions[cell])
+                             for cell, _ in facts)
+            self._snapshot_sections[position] = ImmutableWorldSection(position, facts, versions)
+        self._snapshot_dirty_sections.clear()
+        if self._snapshot_changed_positions:
+            with self._snapshot_publication_lock:
+                for revision in tuple(self._ready_snapshot_revisions):
+                    bounds = self._published_snapshots[revision].identity.bounds
+                    if any(bounds.min_x <= x < bounds.max_x and bounds.min_y <= y < bounds.max_y
+                           and bounds.min_z <= z < bounds.max_z
+                           for x, y, z in self._snapshot_changed_positions):
+                        self._ready_snapshot_revisions.discard(revision)
+            self._snapshot_changed_positions.clear()
+
+    def dependency_versions(self, positions: tuple[BlockPos, ...]) -> DependencyVersions:
+        if type(positions) is not tuple:
+            raise ContractViolation("dependency positions must be immutable")
+        for position in positions:
+            _position(position)
+        with self._snapshot_version_lock:
+            return tuple((position, self._snapshot_epoch + self._cell_semantic_versions.get(
+                position, self._geometry_revision)) for position in sorted(set(positions)))
+
+    def dependency_changes(self, versions: DependencyVersions) -> DependencyCheck:
+        from mc2p.motion_nav.world_snapshot import DependencyCheck, DependencyStatus
+        if type(versions) is not tuple:
+            raise ContractViolation("dependency versions must be immutable")
+        changed = []
+        incomplete = False
+        with self._snapshot_version_lock:
+            positions = tuple(position for position, _ in versions)
+            if positions != tuple(sorted(set(positions))):
+                raise ContractViolation("dependency positions must be sorted and unique")
+            for position, version in versions:
+                _position(position)
+                require_nonnegative_int(version, "semantic cell version")
+                revision = version - self._snapshot_epoch
+                if not 0 <= revision <= self._geometry_revision:
+                    changed.append(position)
+                    continue
+                current = self._cell_semantic_versions.get(position)
+                if current is not None:
+                    if current != revision:
+                        changed.append(position)
+                elif revision < self._changes_complete_after:
+                    incomplete = True
+                elif any(number > revision and cell == position
+                         for number, cell in self._geometry_changes):
+                    changed.append(position)
+        status = (DependencyStatus.CHANGED if changed else
+                  DependencyStatus.HISTORY_INCOMPLETE if incomplete else DependencyStatus.UNCHANGED)
+        return DependencyCheck(status, tuple(changed))
+
+    def borrow_snapshot_version(self, bounds: PhysicsWorldBounds, *,
+                                ruleset: PhysicsRuleset) -> WorldSnapshotVersion | None:
+        from mc2p.motion_nav.physics_adapter import PhysicsWorldBounds
+        from mc2p.motion_nav.physics_types import PhysicsRuleset
+        from mc2p.motion_nav.prepared_motion import WorldSnapshotVersion
+        if type(bounds) is not PhysicsWorldBounds or type(ruleset) is not PhysicsRuleset:
+            raise ContractViolation("snapshot borrowing requires bounds and ruleset")
+        size = ((bounds.max_x - bounds.min_x + 1) * (bounds.max_y - bounds.min_y + 1)
+                * (bounds.max_z - bounds.min_z + 1))
+        if size > self._max_snapshot_cells or not self._snapshot_version_lock.acquire(False):
+            return None
+        try:
+            references = tuple(self._snapshot_sections[position]
+                               for x in range(bounds.min_x // WORLD_SECTION_SIZE,
+                                              bounds.max_x // WORLD_SECTION_SIZE + 1)
+                               for y in range(bounds.min_y // WORLD_SECTION_SIZE,
+                                              bounds.max_y // WORLD_SECTION_SIZE + 1)
+                               for z in range(bounds.min_z // WORLD_SECTION_SIZE,
+                                              bounds.max_z // WORLD_SECTION_SIZE + 1)
+                               if (position := (x, y, z)) in self._snapshot_sections)
+            self._snapshot_local_revision += 1
+            metadata = (self.session.value, self._geometry_revision, self._evidence_revision,
+                        self._snapshot_epoch + self._snapshot_local_revision,
+                        Aabb(bounds.min_x, bounds.min_y, bounds.min_z,
+                             bounds.max_x + 1, bounds.max_y + 1, bounds.max_z + 1), ruleset)
+            source = SnapshotSourceProvenance(uuid.uuid4().hex, metadata, references)
+            self._snapshot_sources[source.token] = source
+            return WorldSnapshotVersion(*metadata, references, source)
+        finally:
+            self._snapshot_version_lock.release()
+
+    def publish_sealed_snapshot(self, version: WorldSnapshotVersion, sealed: SealedSnapshot) -> bool:
+        from mc2p.motion_nav.prepared_motion import WorldSnapshotVersion
+        from mc2p.contracts.motion_activation import validate_frozen_value
+        from mc2p.motion_nav.world_snapshot import (
+            SealedSnapshot, snapshot_version_content, validate_sealed_snapshot,
+        )
+        if type(version) is not WorldSnapshotVersion or type(sealed) is not SealedSnapshot:
+            raise ContractViolation("publication requires a borrowed version and sealed snapshot")
+        try:
+            if type(sealed.canonical_bytes) is not bytes:
+                return False
+            size = len(sealed.canonical_bytes)
+            if size > self._max_snapshot_bytes:
+                return False
+            validate_frozen_value(version)
+            source = version.source_provenance
+            metadata = (version.world_session_id, version.geometry_revision, version.evidence_revision,
+                        version.local_revision, version.bounds, version.ruleset)
+            with self._snapshot_version_lock:
+                if (source is None or self._snapshot_sources.get(source.token) is not source
+                        or metadata != source.metadata
+                        or len(version.section_references) != len(source.section_references)
+                        or any(candidate is not original for candidate, original in zip(
+                            version.section_references, source.section_references))
+                        or version.world_session_id != self.session.value):
+                    return False
+            # Pickle bypasses dataclass construction. Repeat the full immutable
+            # graph, canonical-byte and digest checks at this admission boundary.
+            validate_sealed_snapshot(sealed)
+            identity = sealed.identity
+            sealed_metadata = (identity.world_session_id, identity.geometry_revision,
+                               identity.evidence_revision, identity.local_revision,
+                               identity.bounds, identity.ruleset)
+            if (sealed_metadata != source.metadata
+                    or (sealed.facts, sealed.dependency_versions) != snapshot_version_content(version)):
+                return False
+        except (ContractViolation, AttributeError, TypeError, ValueError):
+            return False
+        # The expensive content comparison above uses only immutable references.
+        # Locks below protect bounded metadata and reference publication only.
+        with self._snapshot_version_lock:
+            changes = self.changes_since(version.geometry_revision)
+            region = identity.bounds
+            current = changes is not None and not any(
+                region.min_x <= x < region.max_x and region.min_y <= y < region.max_y
+                and region.min_z <= z < region.max_z for x, y, z in changes)
+            with self._snapshot_publication_lock:
+                if identity.local_revision in self._published_snapshots:
+                    return self._published_snapshots[identity.local_revision].identity == identity
+                # Only unleased storage may be reclaimed. Never revoke another lease.
+                reclaimable = [revision for revision in self._published_snapshots
+                               if self._snapshot_reference_counts.get(revision, 0) == 0]
+                while (len(self._published_snapshots) >= self._max_snapshot_versions
+                       or self._published_snapshot_bytes + size > self._max_snapshot_bytes):
+                    if not reclaimable:
+                        return False
+                    old = reclaimable.pop(0)
+                    removed = self._published_snapshots.pop(old)
+                    self._ready_snapshot_revisions.discard(old)
+                    self._published_snapshot_bytes -= len(removed.canonical_bytes)
+                self._published_snapshots[identity.local_revision] = sealed
+                if current:
+                    self._ready_snapshot_revisions.add(identity.local_revision)
+                self._published_snapshot_bytes += size
+                return True
+
+    def acquire_published_snapshot(self, bounds: PhysicsWorldBounds, *,
+                                   ruleset: PhysicsRuleset) -> SnapshotLeaseResult:
+        from mc2p.motion_nav.physics_adapter import PhysicsWorldBounds
+        from mc2p.motion_nav.physics_types import PhysicsRuleset
+        from mc2p.motion_nav.prepared_motion import SnapshotLease, SnapshotLeaseResult, SnapshotLeaseStatus
+        if type(bounds) is not PhysicsWorldBounds or type(ruleset) is not PhysicsRuleset:
+            raise ContractViolation("snapshot acquisition requires bounds and ruleset")
+        not_ready = SnapshotLeaseResult(SnapshotLeaseStatus.NOT_READY)
+        if not self._snapshot_version_lock.acquire(False):
+            return not_ready
+        if not self._snapshot_publication_lock.acquire(False):
+            self._snapshot_version_lock.release()
+            return not_ready
+        try:
+            for revision, snapshot in reversed(self._published_snapshots.items()):
+                if revision not in self._ready_snapshot_revisions:
+                    continue
+                identity = snapshot.identity
+                region = identity.bounds
+                if (identity.ruleset != ruleset
+                        or not (region.min_x <= bounds.min_x and bounds.max_x < region.max_x
+                                and region.min_y <= bounds.min_y and bounds.max_y < region.max_y
+                                and region.min_z <= bounds.min_z and bounds.max_z < region.max_z)):
+                    continue
+                if len(self._snapshot_leases) >= self._max_snapshot_leases:
+                    return SnapshotLeaseResult(SnapshotLeaseStatus.CAPACITY)
+                self._snapshot_lease_sequence += 1
+                token = f"snapshot-{self._snapshot_epoch:x}-{self._snapshot_lease_sequence}"
+                lease = SnapshotLease(token, snapshot)
+                self._snapshot_leases[token] = lease
+                self._snapshot_reference_counts[identity.local_revision] = \
+                    self._snapshot_reference_counts.get(identity.local_revision, 0) + 1
+                return SnapshotLeaseResult(SnapshotLeaseStatus.READY, lease)
+            return not_ready
+        finally:
+            self._snapshot_publication_lock.release()
+            self._snapshot_version_lock.release()
+
+    def snapshot_lease_is_live(self, lease) -> bool:
+        """Read only exact issued-lease membership; never renew the lease."""
+        from mc2p.motion_nav.prepared_motion import SnapshotLease
+        if type(lease) is not SnapshotLease or not self._snapshot_publication_lock.acquire(False):
+            return False
+        try:
+            return (self._snapshot_leases.get(lease.lease_token) is lease
+                    and self._published_snapshots.get(lease.identity.local_revision) is lease.snapshot)
+        finally:
+            self._snapshot_publication_lock.release()
+
+    def release_snapshot(self, lease_token: str, *, expected_snapshot=None, expected_lease=None) -> bool:
+        require_identifier(lease_token, "snapshot lease token")
+        with self._snapshot_publication_lock:
+            lease = self._snapshot_leases.get(lease_token)
+            if lease is None or (expected_lease is not None and lease is not expected_lease):
+                return False
+            revision = lease.identity.local_revision
+            if (expected_snapshot is not None
+                    and self._published_snapshots.get(revision) is not expected_snapshot):
+                return False
+            del self._snapshot_leases[lease_token]
+            remaining = self._snapshot_reference_counts[revision] - 1
+            if remaining:
+                self._snapshot_reference_counts[revision] = remaining
+            else:
+                del self._snapshot_reference_counts[revision]
+            return True
 
     def _prune_tombstones(self) -> None:
         while len(self._invalidated_at) > self._max_tombstones:

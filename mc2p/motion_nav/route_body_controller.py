@@ -32,6 +32,7 @@ from mc2p.motion_nav.movement_transition import MovementMode
 from mc2p.motion_nav.physics_adapter import PhysicsWorldView
 from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET
 from mc2p.motion_nav.safe_ground_control import verified_ground_rollout
+from mc2p.motion_nav.prepared_motion import PreparedHandoffApproval, PreparedActivationRegistryPort
 
 
 _TERMINAL_ROUTE_STATES = frozenset({
@@ -144,6 +145,24 @@ class RouteControl:
 
     def requires_safe_handoff(self, frame: NavigationFrame) -> bool:
         return self.executor.requires_safe_handoff(frame)
+
+    def prepared_action_proposal(self, approval: PreparedHandoffApproval | None):
+        """Read the approved first proposal without advancing this owner."""
+        return self.executor.prepared_action_proposal(approval, control=self)
+
+    @property
+    def activation_registry(self) -> PreparedActivationRegistryPort | None:
+        registry = self.executor._prepared_result_inbox
+        return registry if isinstance(registry, PreparedActivationRegistryPort) else None
+
+    def commit_prepared_activation(self, delivered):
+        supervisor = self.executor._prepared_handoff_supervisor
+        if (supervisor is None or supervisor.route is not self
+                or self.executor._prepared_body_owner_id != self.owner_id
+                or self.executor._prepared_route_revision != self.route.route_revision):
+            from mc2p.contracts.motion_activation import ActivationResult, ActivationStatus, ActivationRejectReason
+            return ActivationResult._from_native_references(ActivationStatus.ACTIVATION_MISMATCH, ActivationRejectReason.OWNER)
+        return self.executor.commit_prepared_activation(delivered)
 
     def advance(
         self, frame: NavigationFrame,

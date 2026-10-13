@@ -173,8 +173,12 @@ class StandaloneExportTests(unittest.TestCase):
             self.root / "evidence/motion_navigation/trajectory-proto-tp0-v1/"
             "production-semantic-hashes.json"
         ).read_text("utf-8"))["files"]
+        published = json.loads((
+            self.root / "evidence/motion_navigation/prepared-motion-proof-d102-v1/"
+            "published-production-semantic-hashes.json"
+        ).read_text("utf-8"))["files"]
         current_semantics = {**canonical, **r1, **r2, **r3, **handoff,
-                             **late_handoff, **post_loss, **tp0}
+                             **late_handoff, **post_loss, **tp0, **published}
         tp0_root = self.root / "evidence/motion_navigation/trajectory-proto-tp0-v1"
         frozen = json.loads((tp0_root / "frozen-control-manifest.json").read_text("utf-8"))
         audit = json.loads((tp0_root / "fabric/audit-summary.json").read_text("utf-8"))
@@ -196,6 +200,10 @@ class StandaloneExportTests(unittest.TestCase):
                 )
 
     def test_export_has_no_local_artifacts_credentials_or_worlds(self):
+        self.assertFalse(
+            (self.root / "tests/motion_nav/test_d102_evidence_contract.py").exists(),
+            "local-raw D102 evidence tests must not enter the source-only snapshot",
+        )
         forbidden_parts = {".tmp", "artifacts", ".venv", ".gradle", "world", "worlds", "saves"}
         forbidden_names = {".env", "credentials.json", "secrets.json", "launcher_accounts.json", "level.dat"}
         for path in self.root.rglob("*"):

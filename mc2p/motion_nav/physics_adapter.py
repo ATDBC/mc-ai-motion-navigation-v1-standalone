@@ -124,6 +124,13 @@ class PhysicsWorldView:
 
     _MAX_SHAPE_CACHE_ENTRIES = 1024
 
+    @classmethod
+    def from_snapshot(cls, snapshot) -> "PhysicsWorldView":
+        from mc2p.motion_nav.world_snapshot import SealedSnapshot
+        if type(snapshot) is not SealedSnapshot:
+            raise ContractViolation("physics snapshot view requires a sealed snapshot")
+        return cls(WorldView.from_sealed_snapshot(snapshot), snapshot.identity.ruleset)
+
     def __init__(self, world: WorldView, ruleset: PhysicsRuleset,
                  *, expected_session: WorldSessionId | None = None) -> None:
         if type(world) is not WorldView or type(ruleset) is not PhysicsRuleset:
@@ -133,6 +140,27 @@ class PhysicsWorldView:
         self._world = world
         self.ruleset = ruleset
         self._shape_cache: dict[tuple[BlockPos, ...], WorldShapeQuery] = {}
+
+    def __getstate__(self):
+        """Legacy explicit serialization exports facts, never a live world owner.
+
+        Prepared requests use SealedSnapshot instead. This compatibility export
+        is not a control acquisition or submission operation.
+        """
+        world = self._world
+        if world._owner is not None:
+            owner = world._owner
+            with owner._snapshot_version_lock:
+                # This exports the entire map, including sections since removed
+                # from owner._sections. The complete source version must match.
+                if (world.geometry_revision != owner._geometry_revision
+                        or world.evidence_revision != owner._evidence_revision):
+                    raise ContractViolation("world view expired after section changed")
+                facts = {position: fact for section in owner._sections.values()
+                         for position, fact in section.items()}
+                world = WorldView.detached(world.session, world.geometry_revision,
+                                           world.evidence_revision, facts)
+        return {"_world": world, "ruleset": self.ruleset, "_shape_cache": {}}
 
     @property
     def session(self) -> WorldSessionId:
@@ -144,7 +172,7 @@ class PhysicsWorldView:
 
     @property
     def is_detached(self) -> bool:
-        return self._world._owner is None
+        return getattr(self._world, "_owner", None) is None
 
     def snapshot(self, bounds: PhysicsWorldBounds) -> "PhysicsWorldView":
         if type(bounds) is not PhysicsWorldBounds:

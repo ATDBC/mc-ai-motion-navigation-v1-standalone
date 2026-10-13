@@ -4,12 +4,14 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from enum import StrEnum
 import math
+from uuid import uuid4
 
 from mc2p.contracts.action_receipt import (
     ClientBehaviorReceipt, ClientBehaviorReceiptV2, ClientBehaviorReceiptV3,
     ClientInputApplicationV1,
 )
 from mc2p.contracts.action_v1 import ActionSnapshotV1, LookV1, MovementV1
+from mc2p.contracts.motion_activation import InputStreamCommandFact
 from mc2p.contracts.common import ContractViolation, require_identifier, require_nonnegative_int
 from mc2p.motion_nav.physics_types import PhysicsRuleset, PhysicsState, TickInput
 from mc2p.motion_nav.world_model import WorldSessionId
@@ -162,14 +164,8 @@ def assess_input_responsibility(
     )
 
 
-_TERMINAL_INPUT_STATES = frozenset({
-    InputApplicationStatus.APPLIED,
-    InputApplicationStatus.APPLIED_OUTSIDE_WINDOW,
-    InputApplicationStatus.EXPIRED,
-    InputApplicationStatus.REJECTED,
-    InputApplicationStatus.AMBIGUOUS,
-    InputApplicationStatus.SUPERSEDED,
-})
+class InputLedgerCapacityExceeded(ContractViolation):
+    """A new submission cannot displace an unresolved input responsibility."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -184,6 +180,7 @@ class InputApplicationRecord:
     applied_ticks: tuple[int, ...] = ()
     samples: tuple[ClientInputApplicationV1, ...] = ()
     resolved_at_tick: int | None = None
+    stream_command: InputStreamCommandFact | None = None
 
     def __post_init__(self) -> None:
         if type(self.session) is not WorldSessionId or type(self.action) is not ActionSnapshotV1:
@@ -205,6 +202,24 @@ class InputApplicationRecord:
             raise ContractViolation("applied ticks must be sorted and unique")
         if len(self.applied_ticks) != len(self.samples):
             raise ContractViolation("applied tick and sample records disagree")
+        if (self.stream_command is not None
+                and (type(self.stream_command) is not InputStreamCommandFact
+                     or self.stream_command.sequence != self.control_sequence)):
+            raise ContractViolation("stream fact must bind this actual command")
+
+
+def input_application_has_finished(record: InputApplicationRecord, *, by_tick: int | None = None) -> bool:
+    """Real termination, shared by ledger capacity and prepared handoff checks."""
+    if type(record) is not InputApplicationRecord or record.resolved_at_tick is None:
+        return False
+    if by_tick is not None and record.resolved_at_tick > by_tick:
+        return False
+    if record.status in {InputApplicationStatus.REJECTED, InputApplicationStatus.EXPIRED}:
+        return True
+    if record.status in {InputApplicationStatus.APPLIED, InputApplicationStatus.APPLIED_OUTSIDE_WINDOW}:
+        return (len(record.applied_ticks) >= record.action.valid_for_ticks
+                and (by_tick is None or record.applied_ticks[-1] <= by_tick))
+    return False
 
 
 class InputApplicationLedger:
@@ -214,6 +229,7 @@ class InputApplicationLedger:
         if type(max_records) is not int or max_records < 1:
             raise ContractViolation("input ledger limit must be positive")
         self._max_records = max_records
+        self._ledger_identity = "ledger-" + uuid4().hex
         self._records: dict[int, InputApplicationRecord] = {}
         self._observed_samples: dict[int, ClientInputApplicationV1] = {}
         self._max_samples = max_records * 20 + 1
@@ -223,6 +239,37 @@ class InputApplicationLedger:
         self._baseline_session: WorldSessionId | None = None
         self._baseline_episode_id: str | None = None
         self._baseline_movement_tick_id: int | None = None
+
+    @property
+    def ledger_identity(self) -> str:
+        return self._ledger_identity
+
+    def bind_stream(self, sequence: int, *, generation_id: str, command_index: int) -> InputStreamCommandFact:
+        """Annotate an actual submitted command; never reserve a future sequence."""
+        record = self.record(sequence)
+        if record is None:
+            raise ContractViolation("stream binding requires an actual input record")
+        fact = InputStreamCommandFact._from_native_references(sequence, generation_id, command_index)
+        if record.stream_command is not None:
+            if record.stream_command != fact:
+                raise ContractViolation("actual command is already bound to another stream")
+            return record.stream_command
+        if any(item.stream_command is not None
+               and item.stream_command.generation_id == generation_id
+               and item.stream_command.command_index == command_index for item in self._records.values()):
+            raise ContractViolation("stream command index already names another actual sequence")
+        self._records[sequence] = replace(record, stream_command=fact)
+        return fact
+
+    def stream_command(self, sequence: int) -> InputStreamCommandFact | None:
+        record = self.record(sequence)
+        return None if record is None else record.stream_command
+
+    def check_submission_capacity(self) -> None:
+        """Read the existing capacity before an activation commit, without eviction."""
+        if (len(self._records) >= self._max_records
+                and not any(input_application_has_finished(item) for item in self._records.values())):
+            raise InputLedgerCapacityExceeded("input ledger is full of unresolved records")
 
     def establish_baseline(
         self,
@@ -491,9 +538,7 @@ class InputApplicationLedger:
         record = self._records.get(sequence)
         if record is None:
             raise ContractViolation("unknown control sequence")
-        if record.status not in {
-                InputApplicationStatus.IN_FLIGHT,
-                InputApplicationStatus.PARTIALLY_APPLIED}:
+        if input_application_has_finished(record):
             return record
         updated = replace(record, status=status, resolved_at_tick=tick)
         self._records[sequence] = updated
@@ -503,9 +548,9 @@ class InputApplicationLedger:
         if len(self._records) < self._max_records:
             return
         evictable = next((key for key, record in self._records.items()
-                          if record.status in _TERMINAL_INPUT_STATES), None)
+                          if input_application_has_finished(record)), None)
         if evictable is None:
-            raise ContractViolation("input ledger is full of unresolved records")
+            raise InputLedgerCapacityExceeded("input ledger is full of unresolved records")
         self._records.pop(evictable)
 
 

@@ -1,0 +1,112 @@
+{
+  "schema": "d102-acceptance-manifest-v1",
+  "evidence_semantics_revision": 2,
+  "g0_legacy_manifest_sha256": ["f8f77a87fc4c18db39478672cc867d8f5a0831c6ee130b23a42a51bd6f1bcd8e"],
+  "formal_platform": "Windows",
+  "stage_order": ["G0", "G1", "G2", "G3", "F-TICK", "F-CONTINUITY", "G4"],
+  "historical_d101_m0": "FAILED",
+  "historical_d098_p3": "FAILED",
+  "historical_evidence": [
+    {"path": "evidence/motion_navigation/continuous-motion-d101-v1/manifest.json", "sha256": "f3189c60dff31c701c53bf199250e8bcf3d6931bd04e375d688fb5abd4640395"},
+    {"path": "evidence/motion_navigation/incremental-motion-r98-v1/p3/manifest.json", "sha256": "3e21d35cdb41a7a30020b7b05cd3b1635e8d19c18dec154cfd43c9ec8a34e26a"}
+  ],
+  "capacities": {
+    "unfinished_jobs_total": 2,
+    "request_fifo": 2,
+    "result_fifo": 2,
+    "registered_bundles": 8,
+    "snapshot_leases": 8,
+    "snapshot_cells": 16384,
+    "sealed_request_bytes": 2097152,
+    "sealed_result_bytes": 2097152,
+    "deduplicated_total_bytes": 16777216,
+    "diagnostic_history": 64,
+    "third_unfinished_job_result": "QUEUE_FULL",
+    "responsibility_references_may_be_evicted": false
+  },
+  "scan_budget": {"physics_steps": 65536, "trajectory_ticks": 40, "start_branches": 2, "tail_ticks_per_boundary": 80},
+  "matrix_axes": {
+    "platform_width_blocks": [2, 3, 4],
+    "start_offset_ticks": [0, 1],
+    "entry_offset_blocks": [-0.05, 0, 0.05],
+    "entry_offset_application": "independently vary one declared entry coordinate; never expand a singleton proof",
+    "directions": ["south", "west", "north", "east"],
+    "backlog_jobs": [0, 1],
+    "realtime_repetitions": 5,
+    "fabric_tick_repetitions_per_direction": 10
+  },
+  "representative_negative_case_ids": ["identity", "scope", "inputs", "ruleset", "unknown", "entry", "dependency", "cancel_before_publish", "cancel_after_publish", "late_delivery", "midstream_missing", "worker_hard_exit"],
+  "realtime": {"direction": "south", "entry_offset_blocks": 0, "period_ms": 50, "persistent_spawn_workers": 1, "persistent_receivers": 1, "warmup_runs": 10, "warmup_counted_in_denominator": false},
+  "fallback": {"must_cross_actual_movement_tick_handoff_deadline": true, "second_jump_authorizations": 0},
+  "fabric": {"seed": 21001, "tick_event_capacity": 1024, "overflow_result": "INCOMPLETE", "unknown_id": null, "tick_classifications": ["NEXT_MOVEMENT_TICK", "LATER_MOVEMENT_TICK", "INCOMPLETE"]},
+  "stage_denominators": {
+    "G0": {"contract_red": 5},
+    "G1": {"direct_contract": 13},
+    "G2": {"fast": 144, "representative_negative": 12, "spawn_smoke": 7, "realtime": 60, "fallback": 6},
+    "G3": {"formal_python": 24},
+    "F-TICK": {"tick_order": 40},
+    "F-CONTINUITY": {"smoke": 1, "positive": 24, "fallback": 4},
+    "G4": {"v7": 2000, "F2": 528, "v8": 1904, "v9": 216, "coordination": 1448}
+  },
+  "g0_red_case_ids": [
+    "tests.motion_nav.test_d102_contract_red.ContractRedTests.test_parent_inputs_are_independent",
+    "tests.motion_nav.test_d102_contract_red.ContractRedTests.test_snapshot_graph_is_immutable",
+    "tests.motion_nav.test_d102_contract_red.ContractRedTests.test_control_drain_is_not_receiver",
+    "tests.motion_nav.test_d102_contract_red.ContractRedTests.test_job_retirement_preserves_execution_refs",
+    "tests.motion_nav.test_d102_contract_red.ContractRedTests.test_overdue_keeps_registered_tail"
+  ],
+  "g1_case_ids": [
+    "contract_value_immutability", "snapshot_version_lease", "fixed_input_binding",
+    "proof_ruleset_dependency_validation", "receiver_single_consumer_atomic_publish",
+    "candidate_execution_tail_reference_lifecycle", "same_owner_action_handoff",
+    "runtime_post_arbitration_activation", "first_receipt_branch_pruning",
+    "midstream_deviation", "cancel_publish_race", "overdue_safe_tail",
+    "close_with_unresolved_responsibility"
+  ],
+  "g1_case_semantics": {
+    "contract_value_immutability": {"operations": ["immutable_graph_checked"], "reject_reasons": ["MUTABLE_GRAPH"]},
+    "snapshot_version_lease": {"operations": ["snapshot_pinned", "lease_reference_released", "dependency_change_checked"], "reject_reasons": ["WORLD_SNAPSHOT"]},
+    "fixed_input_binding": {"operations": ["parent_inputs_retained", "returned_inputs_compared"], "reject_reasons": ["INPUTS"]},
+    "proof_ruleset_dependency_validation": {"operations": ["full_proof_checked", "ruleset_three_way_checked", "dependency_facts_checked"], "reject_reasons": ["PROOF", "RULESET", "DEPENDENCY"]},
+    "receiver_single_consumer_atomic_publish": {"operations": ["single_receiver_checked", "cancel_publish_atomicity_checked"], "publish": true, "reject_reasons": ["MESSAGE", "REQUEST"]},
+    "candidate_execution_tail_reference_lifecycle": {"operations": ["reference_lifecycle_checked"], "publish": true, "activate": true, "uses": ["candidate", "executing", "safe-tail"], "release": true},
+    "same_owner_action_handoff": {"operations": ["same_owner_handoff_checked"], "publish": true, "activate": true, "uses": ["executing"], "handoff": true, "reject_reasons": ["OWNER", "ROUTE_ACTION"]},
+    "runtime_post_arbitration_activation": {"operations": ["runtime_activation_checked"], "publish": true, "activate": true, "reject_reasons": ["ACTIVATION", "GENERATION", "LEDGER"]},
+    "first_receipt_branch_pruning": {"operations": ["first_receipt_branch_checked"], "publish": true, "activate": true, "first_receipt": true},
+    "midstream_deviation": {"operations": ["midstream_deviation_checked"], "publish": true, "activate": true, "deviation": true},
+    "cancel_publish_race": {"operations": ["both_cancel_orders_checked"], "publish": true, "uses": ["candidate"], "race": true},
+    "overdue_safe_tail": {"operations": ["overdue_tail_checked"], "publish": true, "activate": true, "uses": ["safe-tail"], "tail": true},
+    "close_with_unresolved_responsibility": {"operations": ["unresolved_close_checked"], "publish": true, "activate": true, "uses": ["safe-tail"], "close": true}
+  },
+  "g1_producer_prefix": "tests.motion_nav.d102_contract_cases.",
+  "payload_schemas": {
+    "request": {"schema": "d102-prepared-request-v1", "required": ["identity", "computation_scope", "owner_instance_id", "request_budget", "expected_inputs", "expected_inputs_sha256", "requested_start_tick", "effect_window", "entry", "exit", "damage_budget", "world", "inherited_dependencies"]},
+    "snapshot": {"schema": "d102-snapshot-v1", "required": ["world_session", "source_revision", "snapshot_revision", "ruleset", "lease_identity", "coverage", "facts"]},
+    "proof": {"schema": "d102-motion-proof-v1", "required": ["identity", "computation_scope", "owner_instance_id", "request_budget", "scan_counts", "inputs", "inputs_sha256", "ruleset", "snapshot_sha256", "requested_start_tick", "effect_window", "entry", "exit", "damage_budget", "dependency_facts", "trajectory", "branches"]},
+    "identity_fields": ["request_id", "job_token", "stream_generation", "body_owner", "route_id", "action_id", "ledger_identity", "session_identity"],
+    "body_fields": ["position", "velocity", "yaw", "pose", "support_fraction", "on_ground"],
+    "reference_uses": ["candidate", "executing", "safe-tail"],
+    "reference_operations": ["retain", "transfer", "job_retired", "release", "qualification_revoked", "responsibility_retained"],
+    "complete_ruleset_type": "mc2p.motion_nav.physics_types.PhysicsRuleset",
+    "complete_trajectory_state_type": "mc2p.motion_nav.physics_types.PhysicsState",
+    "event_binding_fields": ["proof_token", "generation", "body_owner", "ledger_identity", "session_identity", "operation", "timestamp_ns"],
+    "terminal_event_fields": ["event_id", "producer", "action_id", "sequence", "status", "terminal_tick"],
+    "supervisor_event_fields": ["event_id", "producer", "action_id", "use", "command_terminal_event_ids", "safe_boundary"],
+    "release_association_fields": ["command_terminal_event_ids", "supervisor_event_id"]
+  },
+  "typed_reject_reasons": [
+    "MESSAGE", "PROOF", "MUTABLE_GRAPH", "REQUEST", "GENERATION", "OWNER",
+    "ROUTE_ACTION", "INPUTS", "LEDGER", "RULESET", "WORLD_SNAPSHOT", "DEPENDENCY", "ACTIVATION"
+  ],
+  "performance": {"complete_decision_p95_ms_lte": 8, "complete_decision_p99_ms_lte": 15, "complete_decision_max_ms_lt": 30, "quantile": "nearest_rank", "hot_path_forbidden_calls": 0, "landing_to_effective_input_gap_ticks_lte": 1},
+  "safety": {"unauthorized_body_steps": 0, "safety_violations": 0, "unresolved_body_responsibility_is_pass": false, "fallback_counts_as_task_success": false, "historical_success_regressions": 0},
+  "schemas": {"index": "d102-stage-index-v1", "raw": "d102-contract-raw-v1"},
+  "runtime_activation": {
+    "producer": "Runtime",
+    "boundary": "final_arbitration_send",
+    "prepare_reserves_control_sequence": false,
+    "must_arrive_before_first_application_receipt": true,
+    "rejected_binding_body_steps": 0,
+    "required_fields": ["proof_token", "generation", "body_owner", "ledger_identity", "session_identity", "first_control_sequence", "requested_start_tick", "effect_window", "submission_tick", "composite_command_identity"]
+  }
+}

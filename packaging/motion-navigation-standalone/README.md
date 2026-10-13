@@ -2,13 +2,19 @@
 
 这个仓库是主项目按固定清单生成的源码快照。它包含当前正式实现、共享契约、配置、测试、Fabric 客户端代码和四类现行设计文档。`EXPORT-METADATA.json` 记录来源提交，`SHA256SUMS.txt` 覆盖导出的每个文件。
 
+2026-10-13，D103 G2-F2 已按预登记止损。Task A 已统一执行窗口转换，修复 11／12 tick 窗口在量尺适配处丢失；Task B 已把观察请求容量编码移出控制路径，同时保留公共校验与真实 backend 编码。Task C 的真实 spawn 前置试验确认，legacy 第一段没有 registry handle 或登记安全尾迹，late delivery、fallback 和正常 closeout 仍会在控制线程现场运行 `verified_ground_rollout`。因此 Task C 没有实现，Task D、唯一正式 F2、Task 10、G3 和 Fabric 均未运行。G2 保持 **FAILED／STOPPED**，不能作为后续阶段的通过依据。现行入口为 [D103](docs/motion_navigation/decisions/0103-repair-g2-window-and-control-hot-path.md)、[G2-F2 计划及结果](docs/motion_navigation/stages/prepared-motion-proof-g2-f2-remediation-plan.md)和[D102 正式验收](docs/motion_navigation/acceptance/prepared-motion-proof-pipeline-d102.md)。
+
+2026-10-11，D101 最小原型止于 M0。按时和整体晚一 tick 各 100／100 安全落地，400 次关键节点只比较，没有新增完整证明或安全违规；但完整决定 P99／最大值为 48.6079／57.5597 ms，超过 15／30 ms 门槛。M0 整体未通过，后续任务、正式链接入和 Fabric 均未授权。证据位于 `evidence/motion_navigation/continuous-motion-d101-v1/`。
+
+D102 的公开证据只包含紧凑失败索引、D102／D103 前置试验和可独立运行的代码检查。`test_d102_evidence_contract.py` 依赖约 46 MiB 的本地 G0／G1 原始目录，按公开包不上传大型原始证据的规则不进入快照；缺少这些原始字节时不能声称重新核验了 G0／G1。公开树仍可核对 G2 的失败边界，但不能把失败指针当作完整正式运行。
+
 2026-10-11，[D100](docs/motion_navigation/decisions/0100-use-risk-aware-continuous-deviation-recovery.md) 已冻结连续偏离恢复的设计。宽阔、已知且可停车的安全区域默认保持运动；位置、速度和落点出现偏差时，优先在运动中局部接回路线。后段失效但当前前段仍安全时，继续安全前段并在后台重规划；被外力推向坑边等危险时，先让短期运动远离危险；越过起跳、离边或下落承诺点后，由原 owner 负责安全落地，再从真实位置继续任务。偏离按当前风险和承诺阶段处理，不为每种动作组合或偏离原因增加专用状态机。D100 目前只冻结设计，尚未授权实现、正式链接入、P4 或新 Fabric；D098 的失败证据保持原样。架构说明见[按风险连续运动架构](docs/motion_navigation/architecture/risk-aware-continuous-motion-v1.md)。
 
 2026-10-11，[D099](docs/motion_navigation/decisions/0099-adopt-game-first-risk-graded-short-open-loop-control.md) 已记录后续连续运动方向：利用 Minecraft 稳定、确定且可直接读取事件与事实的特点，采用“短开环输入包＋逐 tick 廉价监视＋事件触发重算＋关键节点严格检查”。普通安全场景不默认每 tick 完整重证；高危任务可以由后续上层策略拒绝、换路、先处理威胁或改变地形。D099 只是设计决定，尚未授权实现、P4、正式链接入或新 Fabric，D098 的失败证据保持原样。
 
 2026-10-11，D098 的隔离实验已经停止于 P3。Windows 原样复测与三方 D097-A 的 1,423,766 条非计时样本逐项一致；项目自有控制器、冻结表、可信轨迹、增量伤害、主轨迹复用和 24-step 分摊已经完成。P3 滚动闭环最终运行 37 个场景各 3 轮，共 1,338 个完整决定；P50／P95／P99／最大值为 0.2521／15.8503／19.8099／20.0919 ms。所有 1,227 次后端推进均有 owner、实验账本和许可来源，但承诺后恢复为 0／27，并有 54 次身体责任未解决和 6 次伤害额度超出。因此 P3 未通过，P4 和正式链适配未授权；`mc2p` 没有修改，也没有新的 Fabric 结论。
 
-当前先读 [D100](docs/motion_navigation/decisions/0100-use-risk-aware-continuous-deviation-recovery.md) 和[按风险连续运动架构](docs/motion_navigation/architecture/risk-aware-continuous-motion-v1.md)，再读 [D099](docs/motion_navigation/decisions/0099-adopt-game-first-risk-graded-short-open-loop-control.md)、[D098](docs/motion_navigation/decisions/0098-validate-and-optimize-incremental-motion-proof-on-windows.md)、[阶段计划](docs/motion_navigation/stages/continuous-motion-proof-performance-r98-plan.md)、[验收](docs/motion_navigation/acceptance/continuous-motion-proof-performance-r98.md)和 `evidence/motion_navigation/incremental-motion-r98-v1/`。P1—P3 的隔离实验检查可以运行：
+当前先读 D103、G2-F2 计划和 D102 正式验收。需要追溯连续运动设计时，再读 [D101](docs/motion_navigation/decisions/0101-clarify-short-open-loop-timing-and-lifecycle.md)、[D100](docs/motion_navigation/decisions/0100-use-risk-aware-continuous-deviation-recovery.md)、[按风险连续运动架构](docs/motion_navigation/architecture/risk-aware-continuous-motion-v1.md)、[D099](docs/motion_navigation/decisions/0099-adopt-game-first-risk-graded-short-open-loop-control.md)和 [D098](docs/motion_navigation/decisions/0098-validate-and-optimize-incremental-motion-proof-on-windows.md)。P1—P3 的历史隔离实验检查可以运行：
 
 ```text
 python -m unittest tests.motion_nav.test_incremental_motion_controller tests.motion_nav.test_incremental_motion_table tests.motion_nav.test_incremental_motion_proof tests.motion_nav.test_incremental_motion_performance tests.motion_nav.test_incremental_motion_closed_loop tests.motion_nav.test_incremental_motion_closed_loop_measurement -q

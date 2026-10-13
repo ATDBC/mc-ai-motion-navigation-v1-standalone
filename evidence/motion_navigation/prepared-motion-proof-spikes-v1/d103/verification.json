@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "raw_rows": 13685,
+  "trials": 246,
+  "replayed_ticks": 12567,
+  "freshly_rescanned_proofs": 738,
+  "fresh_scan_physics_steps": 178022,
+  "verified_receipts": 492,
+  "compare_only_nodes": 972,
+  "new_performance_samples": 0,
+  "raw_unchanged": true,
+  "source_hashes_match": true,
+  "original_d101_artifacts_match": true,
+  "summary_exact_match": true,
+  "all_counterexamples_zero_advance": true,
+  "all_lifecycle_paths_closed": true,
+  "parent_expected_inputs_bound": true,
+  "prior_attempt_original_bytes_preserved": true,
+  "independent_alternate_inputs_legal": true,
+  "independent_alternate_input_scan_physics_steps": 212
+}

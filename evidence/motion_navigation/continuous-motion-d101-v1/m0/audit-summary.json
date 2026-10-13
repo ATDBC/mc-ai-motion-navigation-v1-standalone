@@ -1,0 +1,12 @@
+{
+  "all_decisions": {"samples": 4710, "p50_ms": 0.0886, "p95_ms": 0.1683, "p99_ms": 48.6079, "max_ms": 57.5597},
+  "audit_passed": true,
+  "formal_m0_passed": false,
+  "initial_proof_decisions": {"samples": 204, "p50_ms": 48.3461, "p95_ms": 48.993, "p99_ms": 57.2872, "max_ms": 57.5597},
+  "manifest_sha256": "45abd578f47de7ca89c06569a02ba2b7c4594da1d3d6067213756ba30f7f2728",
+  "new_timing_samples": 0,
+  "other_decisions": {"samples": 4506, "p50_ms": 0.0884, "p95_ms": 0.1146, "p99_ms": 0.1675, "max_ms": 0.1893},
+  "proof_recalculation_count": 204,
+  "recalculated_proof_steps": 83028,
+  "record_replay_count": 4707
+}

@@ -6,6 +6,7 @@ from enum import StrEnum
 import json
 import math
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.common import (
@@ -25,6 +26,10 @@ from mc2p.motion_nav.physics_types import (
 )
 from mc2p.motion_nav.world_model import BlockPos
 from mc2p.motion_nav.segment_entry import MotionContinuationRequirement
+
+if TYPE_CHECKING:
+    from mc2p.motion_nav.prepared_motion import PreparedComputeResult, PreparedMotionRequest
+    from mc2p.motion_nav.world_snapshot import SealedSnapshot
 
 
 SOLVER_ID = "r4-moving-one-cell-gap-command-search-v1"
@@ -685,6 +690,17 @@ class SolveResult:
             raise ContractViolation("only a solved result can carry a proof")
         if type(self.candidates_evaluated) is not int or self.candidates_evaluated < 0:
             raise ContractViolation("invalid evaluated candidate count")
+
+
+def prepare_fixed_motion(request: PreparedMotionRequest,
+                         snapshot: SealedSnapshot) -> PreparedComputeResult:
+    """Use the existing compute surface for a separately authorized fixed proof.
+
+    A SOLVE result remains a selected candidate; it is not this complete
+    preparation and does not establish registered execution authority.
+    """
+    from mc2p.motion_nav.prepared_motion_proof import prepare_fixed_motion as prepare
+    return prepare(request, snapshot)
 
 
 def _angle_error(a: float, b: float) -> float:

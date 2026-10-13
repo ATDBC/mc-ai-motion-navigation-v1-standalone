@@ -32,6 +32,7 @@ from mc2p.motion_nav.navigation_session import (
     NavigationSessionPort, NavigationSessionProposal, NavigationSessionState,
 )
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
+from mc2p.motion_nav.online_motion import input_application_has_finished
 from mc2p.runtime.player_runtime_v1 import (
     PlayerRuntimeV1, RuntimeStateV1, RuntimeStepResultV1,
 )
@@ -138,6 +139,11 @@ class RuntimeNavigationDriver:
     @property
     def has_prepared_frame(self) -> bool:
         return self._prepared_deadline_ns is not None
+
+    @property
+    def prepared_streams(self):
+        proposal = self._prepared_proposal
+        return () if proposal is None else proposal.prepared_streams
 
     @property
     def goal_id(self) -> str | None:
@@ -260,6 +266,7 @@ class RuntimeNavigationDriver:
         try:
             result = self.runtime.control_frame(
                 self._task(deadline), profile, deadline, proposals=proposals,
+                prepared_streams=self.prepared_streams,
             )
         except BaseException:
             self.discard_prepared()
@@ -383,6 +390,10 @@ class RuntimeNavigationDriver:
                 f"{result.report.failure.code.value}:"
                 f"{result.report.failure.message}"
             )
+            if result.report.phase == "BODY_RESPONSIBILITY_UNRESOLVED":
+                self._set_state(RuntimeNavigationDriverState.STOPPING,
+                                "BODY_RESPONSIBILITY_UNRESOLVED")
+                return
             if self.runtime.state is not RuntimeStateV1.READY:
                 self._finish_control_unavailable()
                 return
@@ -407,7 +418,11 @@ class RuntimeNavigationDriver:
                     in result.decision.selected_intents
                     if group == "movement"
                 }
-                if navigation_intents.intersection(selected_movement):
+                if proposal.prepared_streams:
+                    # Runtime delivered and consumed the real first receipt
+                    # before returning. Driver adoption cannot register it again.
+                    pass
+                elif navigation_intents.intersection(selected_movement):
                     self.session.register_verified_submission(
                         proposal,
                         control_sequence=(
@@ -453,6 +468,9 @@ class RuntimeNavigationDriver:
             raise ContractViolation("runtime navigation stop requires profile and reason")
         if self.source is None:
             raise ContractViolation("runtime navigation driver has no input owner")
+        if (self.runtime.state is not RuntimeStateV1.READY
+                and self._prepared_body_release_pending()):
+            raise ContractViolation("BODY_RESPONSIBILITY_UNRESOLVED: navigation retains its input owner")
         report = self.session.report
         if report.state not in {
             NavigationSessionState.COMPLETE,
@@ -531,6 +549,8 @@ class RuntimeNavigationDriver:
         return True
 
     def _release_if_quiescent(self) -> _ReleaseResult:
+        if self._prepared_body_release_pending():
+            return _ReleaseResult.PENDING
         if self.runtime.state is not RuntimeStateV1.READY:
             return _ReleaseResult.CONTROL_UNAVAILABLE
         evidence = self.session.body_handoff(
@@ -542,10 +562,14 @@ class RuntimeNavigationDriver:
         return _ReleaseResult.RELEASED
 
     def _finish_control_unavailable(self) -> None:
+        if self._prepared_body_release_pending():
+            return
         if self.session.report.terminal:
             # An earlier business result stays immutable. Control loss does
             # not provide the missing physical release evidence for its tail.
             self._sync_report(unavailable_runtime=self.runtime.state)
+            if any(record.stream_command is not None for record in self.runtime.input_ledger.snapshot()):
+                self._release_source()
             return
         self.session.handle_control_unavailable()
         self._sync_report()
@@ -608,11 +632,27 @@ class RuntimeNavigationDriver:
         source = self.source
         if source is None:
             return
+        if self._prepared_body_release_pending():
+            raise ContractViolation("BODY_RESPONSIBILITY_UNRESOLVED: navigation retains its input owner")
         if self.runtime.state is RuntimeStateV1.READY:
             self.runtime.cancel_source(source.source_id)
             self.runtime.unregister_ordered_source(source)
         self.session.unbind_source(source)
         self.source = None
+
+    def _prepared_body_release_pending(self) -> bool:
+        """Business failure and compute close cannot resolve a submitted stream."""
+        ledger = self.runtime.input_ledger
+        records = tuple(record for record in ledger.snapshot() if record.stream_command is not None)
+        if not records:
+            return False
+        pending = any(not input_application_has_finished(record) for record in records)
+        if not pending:
+            evidence = self.session.body_handoff(self.runtime.observation, ledger)
+            pending = evidence.disposition is not HandoffDisposition.QUIESCENT
+        if pending:
+            self._set_state(RuntimeNavigationDriverState.STOPPING, "BODY_RESPONSIBILITY_UNRESOLVED")
+        return pending
 
     def _sync_report(self, *, unavailable_runtime: RuntimeStateV1 | None = None) -> None:
         report = self.session.report

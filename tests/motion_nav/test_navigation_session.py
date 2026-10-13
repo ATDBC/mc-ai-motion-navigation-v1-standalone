@@ -133,6 +133,7 @@ class _DelayedCancelExecutor(ActionRouteExecutor):
         self.action_index = 0
         self.decisions = 0
         self.state = ActionRouteState.RUNNING
+        self._controller = None
 
     def cancel(self) -> None:
         self.cancel_requested = True
@@ -1265,6 +1266,7 @@ class NavigationSessionTests(unittest.TestCase):
 
         route_control = Mock()
         route_control.executor.route = None
+        route_control.executor.prepared_controller = None
         route_control.route.route_id = "waiting-route"
         proposal = session._proposal(
             MovementV1(sneak=True), None, 1, 2_000_000_000,

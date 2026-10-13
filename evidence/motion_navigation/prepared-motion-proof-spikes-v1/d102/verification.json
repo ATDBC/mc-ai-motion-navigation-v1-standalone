@@ -1,0 +1,26 @@
+{
+  "passed": true,
+  "raw_rows": 2833,
+  "new_timing_samples": 0,
+  "hot": 400,
+  "fresh_equivalence": 400,
+  "negative": 25,
+  "worker_jobs": 200,
+  "lifecycle_paths": [
+    "normal",
+    "constructor_exception",
+    "parent_exception",
+    "worker_exception"
+  ],
+  "original_d101_artifact_hashes": {
+    "decisions.jsonl.gz": true,
+    "fixture.jsonl.gz": true,
+    "runs.jsonl.gz": true,
+    "source-hashes.json": true,
+    "summary.json": true
+  },
+  "raw_sha256": "d9863c03a127f6ccc610397daca1395b72c4d7426708fcf43e35f5e637c0490c",
+  "summary_sha256": "81063ecd0a141be78fe95cdc712e45541f6b879ad337e08f3a4f67c93e183160",
+  "script_sha256": "43189806cc23e1583d93090d166da07b334594134ad294cf7fe756d8a7e67c5a",
+  "report_sha256": "948d7ce6f82f8d9d2b521a63567a9e505843af185a970b134023d2db300d9799"
+}

@@ -43,15 +43,19 @@ class _DeliveryWorker(InlineMotionWorker):
         self.delivery_polls = delivery_polls
         self.first_delivery_polls = first_delivery_polls
         self.poll_count = 0
+        self.observed_movement_tick = None
         self.jobs = []
         self.results = []
         self.deliveries = []
+        self.observed_deliveries = []
 
     def submit(self, job) -> bool:
         wait = (self.first_delivery_polls if not self.jobs
                 and self.first_delivery_polls is not None else self.delivery_polls)
         self.jobs.append(job)
-        self._pending.append((self.poll_count + wait, job))
+        clock_tick = (self.poll_count if self.observed_movement_tick is None
+                      else self.observed_movement_tick)
+        self._pending.append((clock_tick + wait, job))
         self.activity.append(ObservedAsyncActivity(job.work_identity, "submit"))
         return True
 
@@ -59,11 +63,14 @@ class _DeliveryWorker(InlineMotionWorker):
         self.poll_count += 1
         ready = []
         pending = []
+        clock_tick = (self.poll_count if self.observed_movement_tick is None
+                      else self.observed_movement_tick)
         for due, job in self._pending:
-            if due <= self.poll_count:
+            if due <= clock_tick:
                 result = motion_worker._execute_job(job)
                 self.results.append(result)
                 self.deliveries.append((self.poll_count, job))
+                self.observed_deliveries.append((self.observed_movement_tick, job))
                 self.activity.append(ObservedAsyncActivity(job.work_identity, "poll"))
                 ready.append(result)
             else:
@@ -204,6 +211,10 @@ class ActionContinuityFormalTests(unittest.TestCase):
         original_control = kwargs.pop("control_step", None)
 
         def recorded_control(context):
+            if first_delivery_polls is not None:
+                # Receiver polls can happen repeatedly between observations.
+                # The cold-delivery fixture advances only with actual control.
+                worker.observed_movement_tick = context.backend.movement_tick
             first = context.backend.movement_tick + 1
             if original_control is None:
                 context.driver.tick(BehaviorProfileV0(), context.clock[0] + 500_000_000)
@@ -328,7 +339,12 @@ class ActionContinuityFormalTests(unittest.TestCase):
         self.assertEqual(metrics.prefix_calls, 2, metrics)
         self.assertEqual(metrics.revalidation_calls, 1, metrics)
         first_job, revalidation = worker.jobs
+        first_delivery_tick, delivered_job = worker.observed_deliveries[0]
+        self.assertIs(delivered_job, first_job)
+        self.assertGreater(first_delivery_tick + 1,
+                           first_job.request.execution_window.latest_start_tick)
         self.assertIs(revalidation.operation, motion_worker.MotionJobOperation.REVALIDATE)
+        self.assertGreaterEqual(revalidation.anchor.movement_tick_id, first_delivery_tick)
         self.assertGreater(revalidation.anchor.movement_tick_id + 1,
                            first_job.request.execution_window.latest_start_tick)
         end_prefix_tick = first_job.anchor.movement_tick_id + len(first_job.entry_prefix)

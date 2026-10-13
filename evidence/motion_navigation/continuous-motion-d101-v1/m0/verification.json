@@ -1,0 +1,61 @@
+{
+  "artifact_hashes": {
+    "audit-summary.json": "c1285115a002929512c2b9aecc7999bac1fa188ea12c594d6cef80242d072b65",
+    "decisions.jsonl.gz": "106251107d5a6d78a9e9c28d6fe9bf1c97470575257092beb496e839a6847bd5",
+    "fixture.jsonl.gz": "4162ab9335f5a58f18a489cab0ecd7d41c4182c0ef2e96aa68fd3fc43c510cbe",
+    "manifest.json": "45abd578f47de7ca89c06569a02ba2b7c4594da1d3d6067213756ba30f7f2728",
+    "measured-bytes.zip": "e0b0b2cf80eb59ca5237d6dea8f38b407d7e9160a46f1c4517250f996e2f0a1d",
+    "recompute_evidence.py": "1d50c9febc2e6d6a5a79a922915ca69f07204926e1ddda8faf6d4fef1e1f1f4a",
+    "runs.jsonl.gz": "e33f66c62b4ff3822b53649e312f505f248ad0a3876d8fa7ba852606271c5d74",
+    "source-hashes.json": "cc4fadb3743dbdb04de6e880c956d7b1a4d67aaaef6f6b05b97b34505aedc710",
+    "summary.json": "e0110e0455c01817d5c69b928d1cfa552f4d4226caab5e189acbaabed84d5e8e"
+  },
+  "commands": [
+    {
+      "command": ".venv\\python.exe -m unittest tests.motion_nav.test_d101_continuous_probe -q",
+      "exit_code": 1,
+      "phase": "red_probe",
+      "result": "ModuleNotFoundError: d101_continuous_probe"
+    },
+    {
+      "command": ".venv\\python.exe -m unittest tests.motion_nav.test_d101_measurement -q",
+      "exit_code": 1,
+      "phase": "red_measurement",
+      "result": "ModuleNotFoundError: d101_measurement"
+    },
+    {
+      "command": ".venv\\python.exe -m unittest tests.motion_nav.test_d101_input_stream tests.motion_nav.test_d101_continuous_probe tests.motion_nav.test_d101_measurement -q",
+      "exit_code": 0,
+      "phase": "green",
+      "result": "OK",
+      "tests": 23
+    },
+    {
+      "command": ".venv\\python.exe scripts/measure_continuous_motion_d101.py M0 --rounds 100 --output evidence/motion_navigation/continuous-motion-d101-v1/m0",
+      "exit_code": 1,
+      "phase": "formal",
+      "result": "passed=false; p99_above_15ms; max_not_below_30ms"
+    },
+    {
+      "command": ".venv\\python.exe scripts/measure_continuous_motion_d101.py M0 --rounds 100 --output evidence/motion_navigation/continuous-motion-d101-v1/m0 --recompute",
+      "exit_code": 1,
+      "phase": "recompute",
+      "result": "same failed gate from original records"
+    },
+    {
+      "command": ".venv\\python.exe evidence/motion_navigation/continuous-motion-d101-v1/m0/recompute_evidence.py",
+      "exit_code": 0,
+      "phase": "independent_audit",
+      "result": "204 proofs recalculated; 4707 movement records replayed; no new timing samples"
+    }
+  ],
+  "fabric_run": false,
+  "formal_m0_passed": false,
+  "later_stages_run": [],
+  "measured_bytes_archive": {
+    "byte_checks_passed": true,
+    "path": "measured-bytes.zip",
+    "reason": "preserve exact measured bytes across core.autocrlf checkout conversion"
+  },
+  "platform": "Windows-10-10.0.26200-SP0"
+}

@@ -143,6 +143,23 @@ from mc2p.motion_nav.external_motion_recovery import (
     ExternalMotionRecoveryConfig, ExternalMotionRecoveryController,
     ExternalMotionRecoveryDecision, RecoveryDirective,
 )
+from mc2p.contracts.motion_activation import (
+    ActivationRejectReason, ActivationResult, ActivationStatus, FirstStreamApplication,
+    InputStreamCommandFact, PreparedActivationAcceptance, PreparedActivationDelivery,
+    PreparedActivationTransaction, PreparedStreamActivationPort, PreparedStreamDispatch,
+    StreamActivationBinding, StreamActivationProposal, StreamApplicationReason,
+    StreamApplicationResult, StreamApplicationStatus, StreamStartBranch,
+)
+from mc2p.motion_nav.prepared_motion import (
+    PreparedAdmissionResult, PreparedAdmissionStatus, PreparedBranchProof,
+    PreparedComputeResult, PreparedComputeStatus, PreparedCurrentFacts,
+    PreparedMotionBundle, PreparedMotionHandle, PreparedMotionHotView,
+    PreparedMotionProof, PreparedMotionRequest, PreparedQueryResult, PreparedQueryStatus,
+    PreparedRejectReason, PreparedSafetyTail, PreparedScanBudget, PreparedSubmitResult,
+    PreparedSubmitStatus, SnapshotIdentity, SnapshotLease, SnapshotLeaseResult,
+    SnapshotLeaseStatus, StreamGeneration, WorldSnapshotVersion,
+)
+from mc2p.motion_nav.input_stream import InputStreamTracker
 
 __all__ = (
     "Aabb", "BlockGeometry", "CellKnowledge", "ObservationStamp",
@@ -229,4 +246,16 @@ __all__ = (
     "verify_ground_traversal",
     "ExternalMotionRecoveryConfig", "ExternalMotionRecoveryController",
     "ExternalMotionRecoveryDecision", "RecoveryDirective",
+    "ActivationRejectReason", "ActivationResult", "ActivationStatus", "FirstStreamApplication",
+    "InputStreamCommandFact", "PreparedActivationAcceptance", "PreparedActivationDelivery",
+    "PreparedActivationTransaction", "PreparedStreamActivationPort", "PreparedStreamDispatch",
+    "StreamActivationBinding", "StreamActivationProposal", "StreamApplicationReason",
+    "StreamApplicationResult", "StreamApplicationStatus", "StreamStartBranch",
+    "PreparedAdmissionResult", "PreparedAdmissionStatus", "PreparedBranchProof",
+    "PreparedComputeResult", "PreparedComputeStatus", "PreparedCurrentFacts",
+    "PreparedMotionBundle", "PreparedMotionHandle", "PreparedMotionHotView",
+    "PreparedMotionProof", "PreparedMotionRequest", "PreparedQueryResult", "PreparedQueryStatus",
+    "PreparedRejectReason", "PreparedSafetyTail", "PreparedScanBudget", "PreparedSubmitResult",
+    "PreparedSubmitStatus", "SnapshotIdentity", "SnapshotLease", "SnapshotLeaseResult",
+    "SnapshotLeaseStatus", "StreamGeneration", "WorldSnapshotVersion", "InputStreamTracker",
 )

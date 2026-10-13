@@ -1,0 +1,305 @@
+{
+  "cold_start_ms": 344.5348,
+  "equivalence_count": 400,
+  "equivalence_passed": 400,
+  "existing_proof_hash": {
+    "max_ms": 26.6306,
+    "n": 400,
+    "p50_ms": 16.9137,
+    "p95_ms": 24.7235,
+    "p99_ms": 25.5345
+  },
+  "existing_validate": {
+    "max_ms": 19.3831,
+    "n": 400,
+    "p50_ms": 17.0649,
+    "p95_ms": 17.4525,
+    "p99_ms": 17.7467
+  },
+  "fresh_scan_physics_steps": 162800,
+  "hot": {
+    "max_ms": 0.4525,
+    "n": 400,
+    "p50_ms": 0.3471,
+    "p95_ms": 0.4061,
+    "p99_ms": 0.4257
+  },
+  "hot_accepted": 400,
+  "hot_by_branch": {
+    "LATE_ONE": {
+      "max_ms": 0.4525,
+      "n": 200,
+      "p50_ms": 0.3849,
+      "p95_ms": 0.4142,
+      "p99_ms": 0.4336
+    },
+    "ON_TIME": {
+      "max_ms": 0.3563,
+      "n": 200,
+      "p50_ms": 0.3107,
+      "p95_ms": 0.3436,
+      "p99_ms": 0.3498
+    }
+  },
+  "hot_full_proof_calls": 0,
+  "hot_gate_passed": true,
+  "hot_guarded_full_proof_or_search_calls": 0,
+  "hot_physics_steps": 600,
+  "lifecycle": [
+    {
+      "active_children": [],
+      "alive_at_end": false,
+      "exitcode": 0,
+      "kind": "lifecycle",
+      "path": "normal"
+    },
+    {
+      "active_children": [],
+      "alive_at_end": false,
+      "exitcode": 0,
+      "kind": "lifecycle",
+      "path": "constructor_exception"
+    },
+    {
+      "active_children": [],
+      "alive_at_end": false,
+      "exitcode": 0,
+      "kind": "lifecycle",
+      "path": "parent_exception"
+    },
+    {
+      "active_children": [],
+      "alive_at_end": false,
+      "exitcode": 0,
+      "kind": "lifecycle",
+      "path": "worker_exception"
+    }
+  ],
+  "local_admission": {
+    "max_ms": 29.9259,
+    "n": 400,
+    "p50_ms": 20.7899,
+    "p95_ms": 28.8226,
+    "p99_ms": 29.6585
+  },
+  "metadata": {
+    "git_status_before": "",
+    "input_hash": "8e1c73bf14b044c746c557b2e569198860ea9b25f00f646a17a370bc55af02ed",
+    "kind": "metadata",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python": "D:\\My_project\\mc_ai\\.venv\\python.exe",
+    "python_version": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+    "sample_plan": {
+      "fresh_scan": 400,
+      "hot_each_branch": 200,
+      "worker_measured": 200,
+      "worker_warmup": 10
+    },
+    "source_hashes": {
+      "experiments/motion_navigation/trajectory_proto/closed_loop.py": "4dc23b93d7ad64e6da1c091b2d8984bdf440579de46b34ebc5d32efdd8eb8b0c",
+      "experiments/motion_navigation/trajectory_proto/commitment.py": "015e404bef642d5684f4f9c3559490aee5727dff91c5b79a5b88a31f93c914a7",
+      "experiments/motion_navigation/trajectory_proto/d101_continuous_probe.py": "cff175a37f202376d5c78d8545f6a08d21853539d4441c1e8ddfb59072c9a35a",
+      "experiments/motion_navigation/trajectory_proto/d101_input_stream.py": "c8dabf763e085d30a641686b79c1b2aa3a5ea786cc14acfe337af72be64c9483",
+      "experiments/motion_navigation/trajectory_proto/physics.py": "6f858eb8a9f86d46884d2353b3f492634a3d72600d0fc09e30086dfad654c24d",
+      "mc2p/motion_nav/physics_1_21.py": "2020dde8bf327e51156c9fae5c3dbb70d63759b88f2d39bb7f8b639a0de70fea"
+    },
+    "source_revision": "c181f414cc9d22b5d13165cbe094c031e6231174",
+    "spike_sha256": "43189806cc23e1583d93090d166da07b334594134ad294cf7fe756d8a7e67c5a"
+  },
+  "negative_body_advances": 0,
+  "negative_count": 25,
+  "negative_reasons": {
+    "anchor_id": "ANCHOR_ENTRY",
+    "bundle_generation": "GENERATION",
+    "bundle_inputs": "INPUTS",
+    "bundle_payload": "UNREGISTERED_BUNDLE",
+    "dataclass_replace_identical": "UNREGISTERED_BUNDLE",
+    "dependency_cell": "DEPENDENCY",
+    "entry_state": "ANCHOR_ENTRY",
+    "first_sequence": "INPUT_LEDGER",
+    "generation": "GENERATION",
+    "goal": "GOAL",
+    "goal_revision": "GOAL",
+    "inputs": "INPUTS",
+    "ledger": "INPUT_LEDGER",
+    "owner": "GENERATION",
+    "proof_hash": "PROOF_INTEGRITY",
+    "proof_object_hash": "PROOF_INTEGRITY",
+    "proof_ruleset_resealed_admission": "RULESET",
+    "proof_states_same_claimed_hash": "UNREGISTERED_BUNDLE",
+    "request_id": "REQUEST_ID",
+    "ruleset": "RULESET",
+    "runtime_first_sequence": "INPUT_LEDGER",
+    "runtime_ledger": "INPUT_LEDGER",
+    "unregistered": "UNREGISTERED_BUNDLE",
+    "world_revision": "WORLD_IDENTITY",
+    "world_session": "WORLD_IDENTITY"
+  },
+  "negatives_rejected": 25,
+  "prepare": {
+    "max_ms": 78.8662,
+    "n": 400,
+    "p50_ms": 69.0923,
+    "p95_ms": 76.9043,
+    "p99_ms": 78.1197
+  },
+  "prepare_full_proof_calls": 400,
+  "prepare_physics_steps": 162800,
+  "prepare_scan": {
+    "max_ms": 57.4689,
+    "n": 400,
+    "p50_ms": 48.0182,
+    "p95_ms": 55.8428,
+    "p99_ms": 56.7968
+  },
+  "schema": "d102-prepared-proof-spike-v1",
+  "worker": {
+    "deserialize_ns": {
+      "max_ms": 2.9313,
+      "n": 200,
+      "p50_ms": 2.5144,
+      "p95_ms": 2.6797,
+      "p99_ms": 2.7629
+    },
+    "parent_full_validation_ns": {
+      "max_ms": 32.3343,
+      "n": 200,
+      "p50_ms": 21.9861,
+      "p95_ms": 22.971,
+      "p99_ms": 31.846
+    },
+    "parent_receive_validate_register_ns": {
+      "max_ms": 35.4011,
+      "n": 200,
+      "p50_ms": 24.6336,
+      "p95_ms": 25.5703,
+      "p99_ms": 34.6822
+    },
+    "poll_max_ns": {
+      "max_ms": 0.4122,
+      "n": 200,
+      "p50_ms": 0.1822,
+      "p95_ms": 0.3018,
+      "p99_ms": 0.373
+    },
+    "poll_total_ns": {
+      "max_ms": 0.8339,
+      "n": 200,
+      "p50_ms": 0.4909,
+      "p95_ms": 0.6286,
+      "p99_ms": 0.8048
+    },
+    "prepare_ns": {
+      "max_ms": 78.026,
+      "n": 200,
+      "p50_ms": 69.8835,
+      "p95_ms": 77.465,
+      "p99_ms": 77.8581
+    },
+    "ready_ns": {
+      "max_ms": 108.5532,
+      "n": 200,
+      "p50_ms": 97.5099,
+      "p95_ms": 105.9756,
+      "p99_ms": 107.5297
+    },
+    "received_ns": {
+      "max_ms": 81.0583,
+      "n": 200,
+      "p50_ms": 72.8988,
+      "p95_ms": 80.4645,
+      "p99_ms": 81.0114
+    },
+    "scan_ns": {
+      "max_ms": 56.9332,
+      "n": 200,
+      "p50_ms": 48.7311,
+      "p95_ms": 56.3051,
+      "p99_ms": 56.8164
+    },
+    "serialize_ns": {
+      "max_ms": 2.1425,
+      "n": 200,
+      "p50_ms": 1.8994,
+      "p95_ms": 2.0735,
+      "p99_ms": 2.1093
+    },
+    "submit_ns": {
+      "max_ms": 0.014,
+      "n": 200,
+      "p50_ms": 0.0113,
+      "p95_ms": 0.0126,
+      "p99_ms": 0.0138
+    }
+  },
+  "worker_hot": {
+    "max_ms": 0.6262,
+    "n": 200,
+    "p50_ms": 0.4233,
+    "p95_ms": 0.5051,
+    "p99_ms": 0.5277
+  },
+  "worker_parent_parts": {
+    "binding_integrity_ns": {
+      "max_ms": 0.7715,
+      "n": 200,
+      "p50_ms": 0.6617,
+      "p95_ms": 0.7373,
+      "p99_ms": 0.7551
+    },
+    "dependency_check_ns": {
+      "max_ms": 0.0314,
+      "n": 200,
+      "p50_ms": 0.0275,
+      "p95_ms": 0.0294,
+      "p99_ms": 0.0302
+    },
+    "deserialize_ns": {
+      "max_ms": 2.9313,
+      "n": 200,
+      "p50_ms": 2.5144,
+      "p95_ms": 2.6797,
+      "p99_ms": 2.7629
+    },
+    "full_proof_hash_ns": {
+      "max_ms": 27.628,
+      "n": 200,
+      "p50_ms": 17.3319,
+      "p95_ms": 18.0591,
+      "p99_ms": 27.1271
+    },
+    "identity_check_ns": {
+      "max_ms": 0.0379,
+      "n": 200,
+      "p50_ms": 0.0304,
+      "p95_ms": 0.0328,
+      "p99_ms": 0.034
+    },
+    "immutable_graph_ns": {
+      "max_ms": 4.5558,
+      "n": 200,
+      "p50_ms": 3.9269,
+      "p95_ms": 4.0325,
+      "p99_ms": 4.1468
+    },
+    "message_digest_ns": {
+      "max_ms": 0.1685,
+      "n": 200,
+      "p50_ms": 0.1346,
+      "p95_ms": 0.1376,
+      "p99_ms": 0.1433
+    },
+    "registration_ns": {
+      "max_ms": 0.0006,
+      "n": 200,
+      "p50_ms": 0.0002,
+      "p95_ms": 0.0004,
+      "p99_ms": 0.0005
+    }
+  },
+  "worker_physics_steps": 81400,
+  "worker_ready_le100_ratio": 0.875,
+  "worker_ready_le50_ratio": 0.0,
+  "worker_received_le100_ratio": 1.0,
+  "worker_received_le50_ratio": 0.0
+}

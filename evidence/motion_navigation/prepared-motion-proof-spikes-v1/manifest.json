@@ -1,0 +1,161 @@
+{
+  "schema": "prepared-motion-proof-spikes-v1",
+  "date": "2026-10-12",
+  "status": "设计冻结；尚未实施正式链",
+  "source_revision": "c181f414cc9d22b5d13165cbe094c031e6231174",
+  "formal_platform": "Windows",
+  "observed_platform": "Windows-10-10.0.26200-SP0",
+  "python_version": "3.11.16",
+  "simulation_only": true,
+  "fabric_run": false,
+  "production_or_test_code_modified": false,
+  "new_performance_samples": 0,
+  "evidence_attempts": {
+    "d102": "attempt3, final review APPROVED",
+    "d103": "formal second batch after expected-input binding, final review APPROVED"
+  },
+  "artifacts": [
+    {
+      "export_path": "evidence/motion_navigation/prepared-motion-proof-spikes-v1/d102/summary.json",
+      "source_path": ".tmp/d102-prepared-proof/summary.json",
+      "sha256": "81063ecd0a141be78fe95cdc712e45541f6b879ad337e08f3a4f67c93e183160",
+      "bytes": 8062
+    },
+    {
+      "export_path": "evidence/motion_navigation/prepared-motion-proof-spikes-v1/d102/verification.json",
+      "source_path": ".tmp/d102-prepared-proof/verification.json",
+      "sha256": "4f0609bb3fdf19292b809667774a91199bfe50c3d8ec73aa34836aa2e77fff7c",
+      "bytes": 828
+    },
+    {
+      "export_path": "evidence/motion_navigation/prepared-motion-proof-spikes-v1/d102/report.md",
+      "source_path": ".tmp/d102-prepared-proof/report.md",
+      "sha256": "948d7ce6f82f8d9d2b521a63567a9e505843af185a970b134023d2db300d9799",
+      "bytes": 10928
+    },
+    {
+      "export_path": "evidence/motion_navigation/prepared-motion-proof-spikes-v1/d102/review.md",
+      "source_path": ".tmp/d102-prepared-proof/review.md",
+      "sha256": "96524fa1f70185d8cdfaafdd964c1672c4201f828ef7345bc2a490262ea31538",
+      "bytes": 13902
+    },
+    {
+      "export_path": "evidence/motion_navigation/prepared-motion-proof-spikes-v1/d103/summary.json",
+      "source_path": ".tmp/d103-continuous-prepared-proof/formal/summary.json",
+      "sha256": "14cd11113cd5d71a735f3cad43757e6c61cd8bc4c1a4ad535f7c9aa66da2aa36",
+      "bytes": 22471
+    },
+    {
+      "export_path": "evidence/motion_navigation/prepared-motion-proof-spikes-v1/d103/verification.json",
+      "source_path": ".tmp/d103-continuous-prepared-proof/formal/verification.json",
+      "sha256": "b7266167f14dd94edf71f355d795b95c996aa33a1a425f583715700dcdf279dc",
+      "bytes": 672
+    },
+    {
+      "export_path": "evidence/motion_navigation/prepared-motion-proof-spikes-v1/d103/report.md",
+      "source_path": ".tmp/d103-continuous-prepared-proof/formal/report.md",
+      "sha256": "2fbc835a91d25cd71895c1de160361504fda12bb8c2ce6400bb5932c1b5659b9",
+      "bytes": 15283
+    },
+    {
+      "export_path": "evidence/motion_navigation/prepared-motion-proof-spikes-v1/d103/review.md",
+      "source_path": ".tmp/d103-continuous-prepared-proof/review.md",
+      "sha256": "27d916dd7a2fd4f63a86441bf51936bdb4dd48c12685cbed7845afa49c0b055c",
+      "bytes": 15360
+    }
+  ],
+  "export_boundary": {
+    "root": "evidence/motion_navigation/prepared-motion-proof-spikes-v1",
+    "files": [
+      ".gitattributes",
+      "manifest.json",
+      "d102/summary.json",
+      "d102/verification.json",
+      "d102/report.md",
+      "d102/review.md",
+      "d103/summary.json",
+      "d103/verification.json",
+      "d103/report.md",
+      "d103/review.md"
+    ],
+    "byte_preservation_rules": {
+      "path": "evidence/motion_navigation/prepared-motion-proof-spikes-v1/.gitattributes",
+      "sha256": "86b7680c273a7faaa8892a363cfcc3527700c78ddc503bce99fb3994f9225b1f",
+      "bytes": 245
+    },
+    "copied_artifact_bytes": 87506,
+    "notes": "仅导出八份原字节紧凑证据、来源清单和该目录的换行保护规则。manifest 不自记摘要。"
+  },
+  "measurement_source_references_not_exported": [
+    {
+      "path": ".tmp/d102-prepared-proof/spike.py",
+      "sha256": "43189806cc23e1583d93090d166da07b334594134ad294cf7fe756d8a7e67c5a",
+      "bytes": 36608
+    },
+    {
+      "path": ".tmp/d103-continuous-prepared-proof/formal/spike-source.py",
+      "sha256": "07d3ede3314b4277a00096245d7b6ea2cf6ff6aa0d627bfd5cdceef9be2e7a8d",
+      "bytes": 43996
+    }
+  ],
+  "original_manifest_references_not_exported": [
+    {
+      "path": ".tmp/d102-prepared-proof/attempt3-manifest.json",
+      "sha256": "06b39955c0864f5844ed73dd72c12be94edeb00049caa301ad9c815f75832cf8",
+      "bytes": 2220
+    },
+    {
+      "path": ".tmp/d103-continuous-prepared-proof/manifest.json",
+      "sha256": "ce6d097b5d91be55903d0c31cca15d3e5e2fa38f03dd13fa910b828b1e83ec43",
+      "bytes": 92188
+    },
+    {
+      "path": ".tmp/d103-continuous-prepared-proof/attempt-before-input-binding/archive-manifest.json",
+      "sha256": "f92f246d2efa8aaea7bf4f996475ae73dcbe839f9e4e9fd70f42e89ce7775b63",
+      "bytes": 26480
+    },
+    {
+      "path": ".tmp/d103-continuous-prepared-proof/preflight-source-manifest.json",
+      "sha256": "04d4068b2aec5e03474d1ae81276aed041a5b1964ece722fbdd835460de77b54",
+      "bytes": 775
+    }
+  ],
+  "raw_artifacts_not_exported": [
+    {
+      "path": ".tmp/d102-prepared-proof/raw.jsonl.gz",
+      "sha256": "d9863c03a127f6ccc610397daca1395b72c4d7426708fcf43e35f5e637c0490c",
+      "bytes": 115942
+    },
+    {
+      "path": ".tmp/d103-continuous-prepared-proof/formal/raw.jsonl",
+      "sha256": "52e60b61914dd643e91163b1b17583d5d1bfb1fe784614101148933975345731",
+      "bytes": 33398608
+    }
+  ],
+  "proof_artifacts_not_exported": {
+    "source_glob": ".tmp/d103-continuous-prepared-proof/formal/proofs-*.pkl.gz",
+    "count": 246,
+    "total_bytes": 16560604,
+    "index_sha256": "1f81ee1f3e3e9cd3b606cd186b00b7884bd04b754c749e190509875ab69bbf2f",
+    "index_encoding": "UTF-8 JSON of sorted path/sha256/bytes entries; sort_keys=True; separators=(comma,colon); no trailing newline",
+    "per_file_hash_source": ".tmp/d103-continuous-prepared-proof/manifest.json artifacts"
+  },
+  "historical_evidence_not_exported": [
+    ".tmp/d102-prepared-proof/attempt1/",
+    ".tmp/d102-prepared-proof/attempt2/",
+    ".tmp/d102-prepared-proof/attempt3/",
+    ".tmp/d103-continuous-prepared-proof/attempt-before-input-binding/",
+    ".tmp/d103-continuous-prepared-proof/preflight*/",
+    ".tmp/d103-continuous-prepared-proof/input-binding-preflight/"
+  ],
+  "limits": [
+    "紧凑包支持来源摘要、正式结果与审查历史核对；不能独立重算原始分位数或回放 proof/tick。",
+    "原始 raw/proof、试验脚本、完整旧批次和预跑保留于本地 gitignored .tmp，未复制入 Git。",
+    "D102 只覆盖固定单跳开始至首条回执；worker 成本未含真实世界快照、队列积压与持续控制争用。",
+    "D103 只覆盖朝南 2/3/4 格固定模拟平台、精确预测入口、0/1 项积压；不能外推到 Fabric、±0.05 偏差、多方向、多并发或复杂材料。",
+    "D103 注册时间略早于 handle 字典发布，实际输入接续另有逐 tick 记录。",
+    "D101 M0 整体未通过、M1/M2 未实施未运行；D098 P3 失败保持不变。",
+    "复制的原报告、审查内绝对 .tmp 链接保留原字节，不保证其他检出可访问。",
+    "SHA-256 用于数据完整性；可信计算代码和完整绑定是语义来源，不认证外部不可信证明。"
+  ]
+}

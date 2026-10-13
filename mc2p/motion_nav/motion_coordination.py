@@ -7,9 +7,10 @@ from dataclasses import dataclass, replace
 from enum import StrEnum
 import math
 import time
+from uuid import uuid4
 
 from mc2p.contracts.action_v1 import LookV1, MovementV1
-from mc2p.contracts.common import ContractViolation, require_nonnegative_int
+from mc2p.contracts.common import ContractViolation, require_identifier, require_nonnegative_int
 from mc2p.motion_nav.async_work import (
     AsyncComputationScope,
     AsyncAdmissionDisposition,
@@ -53,7 +54,7 @@ from mc2p.motion_nav.online_motion import (
 )
 from mc2p.motion_nav.physics_adapter import PhysicsWorldBounds, PhysicsWorldView
 from mc2p.motion_nav.physics_1_21 import step
-from mc2p.motion_nav.physics_types import CalculationStatus, JAVA_1_21_RULESET
+from mc2p.motion_nav.physics_types import CalculationStatus, JAVA_1_21_RULESET, TickInput
 from mc2p.motion_nav.route_admission import ActiveRoute, RouteAdmitter
 from mc2p.motion_nav.runtime_adapter import NavigationFrame
 from mc2p.motion_nav.safe_ground_control import (
@@ -64,6 +65,10 @@ from mc2p.motion_nav.world_model import BlockPos
 from mc2p.motion_nav.segment_entry import MotionContinuationRequirement, SegmentEntryWindow
 from mc2p.motion_nav.movement_transition import MovementMode
 from mc2p.motion_nav.fixed_route import GroundHandoffDisposition
+from mc2p.motion_nav.prepared_motion import (
+    PreparedActionPreparation, PreparedComputeStatus, PreparedScanBudget,
+    PreparedSubmitResult, PreparedSubmitStatus, StreamGeneration,
+)
 
 
 _RESOURCE_ASSUMPTIONS = ("server_hunger_clock_not_in_physics_state",)
@@ -71,6 +76,7 @@ _MAX_ENTRY_ALIGNMENT_DEGREES_PER_TICK = 36.0
 _GROUNDED_ENTRY_RECOVERY_POLICY = WaitPolicy(40, 2_000_000_000)
 _MOTION_SOLVE_LIMIT_NS = 1_000_000_000
 _MOTION_SOLVE_LIMIT_TICKS = 20
+_PREPARED_ACTION_SCAN_BUDGET = PreparedScanBudget(65_536, 65_536, 1)
 
 
 def _gap_physics_bounds(
@@ -523,6 +529,7 @@ class MotionRouteCoordinator:
         self.computation_scope = computation_scope
         self._owns_result_inbox = result_inbox is None
         self.result_inbox = result_inbox or MotionResultInbox()
+        self.executor.bind_prepared_result_inbox(self.result_inbox, owner_id=f"route/{route.route_id}")
         self._clock = clock_ns
         from mc2p.motion_nav.async_work import AsyncOwnerScope
         self._owner_instance_id = owner_instance_id or AsyncOwnerScope().allocate()
@@ -546,11 +553,196 @@ class MotionRouteCoordinator:
         self._local_attempts = LocalAttemptChain(maximum_failures=3)
         self._local_attempt_action_index = executor.action_index
         self._reanchor_after_landing_action: int | None = None
+        self._prepared_streams: dict[int, StreamGeneration] = {}
+        self._prepared_signature: tuple | None = None
+        self._prepared_fields: PreparedActionPreparation | None = None
+        self._prepared_submission: PreparedSubmitResult | None = None
+        self._selected_preparation: tuple[int, VerifiedMotionResult] | None = None
+        self._selection_request = None
+        self._selection_anchor: StateAnchor | None = None
+        self._selection_ledger_id: str | None = None
+        self.executor.bind_prepared_handoff_context(route_revision=route.route_revision,
+                                                    generation_for=self.generation_for)
+
+    def generation_for(self, action_index: int) -> StreamGeneration | None:
+        require_nonnegative_int(action_index, "prepared stream action index")
+        return self._prepared_streams.get(action_index)
+
+    def prepare_upcoming_action(self, anchor: StateAnchor, world: PhysicsWorldView, *, ledger_identity: str):
+        """Select a strict successor from the branch confirmed by a real receipt."""
+        require_identifier(ledger_identity, "prepared ledger identity")
+        exit_state = self.executor.active_verified_exit_state()
+        index = self.executor.action_index + 1
+        if (type(anchor) is not StateAnchor or type(world) is not PhysicsWorldView or exit_state is None
+                or index >= len(self.route.action_route.actions) or _air_action_kind(self.route.action_route.actions[index]) is None):
+            raise ContractViolation("upcoming preparation requires a confirmed incumbent branch and strict successor")
+        if self._work_identity is not None:
+            return self._prepared_submission
+        predicted = replace(anchor, movement_tick_id=exit_state.movement_tick_id, physics_state=exit_state)
+        window = CandidateExecutionWindow(exit_state.movement_tick_id + 1, exit_state.movement_tick_id + 2)
+        action = self.route.action_route.actions[index]
+        request, _ = (_planned_gap_request(self.route, index, predicted, window, self.gap_solver_policy)
+            if type(action) is JumpGapSegment else _planned_air_transition_request(
+                self.route, index, predicted, window, self.damage_budget, self.air_transition_policies))
+        if request is None:
+            raise ContractViolation("the admitted successor has no supported motion selection contract")
+        source = self.executor._last_prepared_frame.world._owner
+        if source is None:
+            raise ContractViolation("next action selection needs the formal world snapshot owner")
+        self.result_inbox.bind_world(source)
+        self._candidate_revision += 1
+        connection = self._connection_id(index)
+        identity = AsyncWorkIdentity(self.computation_scope, self._owner_instance_id,
+                                     AsyncWorkKind.MOTION_SOLVE, connection, self._candidate_revision)
+        result = self.result_inbox.register_action_selection(identity, predicted, request,
+                                                             _gap_physics_bounds(world, predicted, request))
+        if result.status is PreparedSubmitStatus.ACCEPTED:
+            now = self._clock()
+            work_window = AsyncWorkWindow(anchor.movement_tick_id, now, now + _MOTION_SOLVE_LIMIT_NS)
+            self._work.begin(identity, work_window)
+            self._remember_work_window(identity, work_window)
+            self._pending_connection, self._pending_action_index = connection, index
+            self._pending_submitted_tick = anchor.movement_tick_id
+            self._selection_request, self._selection_anchor, self._selection_ledger_id = request, predicted, ledger_identity
+            self.executor.require_prepared_action(index, ledger_identity=ledger_identity)
+        return result
+
+    def _accept_upcoming_selection(self, result: GapMotionSolveResult, *, current_scope: AsyncComputationScope):
+        request, predicted, ledger_id = self._selection_request, self._selection_anchor, self._selection_ledger_id
+        index = self._pending_action_index
+        proof = result.solve_result.proof
+        valid = (request is not None and predicted is not None and index is not None
+            and result.work_identity == self._work_identity and result.connection_id == self._pending_connection
+            and result.candidate_revision == self._candidate_revision and current_scope == self.computation_scope
+            and result.solve_result.status is SolveStatus.SOLVED and proof is not None
+            and proof.entry_state == predicted.physics_state and proof.execution_window == request.execution_window
+            and proof.direction == request.direction and _same_landing_region(proof.landing, request.landing)
+            and proof.exit_direction == request.exit_direction and proof.exit_motion_ticks == request.exit_motion_ticks
+            and proof.continuation == request.continuation
+            and proof.ruleset_id == JAVA_1_21_RULESET.ruleset_id)
+        self._retire_work("upcoming_motion_selected" if valid else "upcoming_motion_selection_rejected")
+        if valid:
+            self._selected_preparation = (index, proof)
+            return self.prepare_action(index, proof.commands, predicted, ledger_identity=ledger_id)
+        return None
+
+    def prepare_action(self, action_index: int, selected_commands: tuple[MotionCommandTick, ...],
+                       anchor: StateAnchor, *, ledger_identity: str) -> PreparedSubmitResult:
+        """Freeze a parent input choice; the sole receiver completes its request."""
+        require_nonnegative_int(action_index, "prepared action index")
+        require_identifier(ledger_identity, "prepared ledger identity")
+        if (type(anchor) is not StateAnchor or type(selected_commands) is not tuple
+                or not 1 <= len(selected_commands) <= 40
+                or any(type(command) is not MotionCommandTick for command in selected_commands)
+                or not self.executor.action_index <= action_index < min(
+                    len(self.route.action_route.actions), self.executor.action_index + 2)):
+            raise ContractViolation("action preparation requires the current or immediately following selected action")
+        selected = (self._selected_preparation[1] if self._selected_preparation is not None
+                    and self._selected_preparation[0] == action_index else self.executor.selected_motion(action_index))
+        if (selected is None or selected.commands != selected_commands
+                or selected.entry_state != anchor.physics_state
+                or selected.kind is not action_spec(self.route.action_route.actions[action_index]).solve_kind):
+            raise ContractViolation("fixed preparation must retain its independent SOLVE choice and exact entry")
+        real_anchor, ledger = self.executor.preparation_anchor, self.executor.preparation_ledger
+        if real_anchor is None or ledger is None:
+            raise ContractViolation("preparation needs the incumbent's actual input and body facts")
+        source = self.executor._last_prepared_frame.world._owner
+        if source is None:
+            raise ContractViolation("formal action preparation needs the existing world snapshot owner")
+        self.result_inbox.bind_world(source)
+        inputs = tuple(project_movement_command(anchor.physics_state, command.movement,
+            movement_yaw_radians=command.required_movement_yaw_radians).tick_input for command in selected_commands)
+        if any(item is None for item in inputs):
+            raise ContractViolation("selected inputs do not have a supported formal projection")
+        versions = source.dependency_versions(selected.world_dependencies)
+        suffix = ("known-stop-or-proved-landing", selected.recovery_horizon_ticks,
+                  selected.landing, selected.continuation)
+        action = self.route.action_route.actions[action_index]
+        remaining = max(0., self.damage_budget.maximum_expected_damage_points
+                        - self.executor.completed_movement_damage_points)
+        hold = None
+        if (action_index == self.executor.action_index + 1
+                and self.executor.active_verified_exit_state() == anchor.physics_state):
+            # A real first receipt selected this incumbent branch. Its last
+            # consumed input is the owner's confirmed wait at the future exit.
+            hold = self.executor.active_verified_exit_hold_input()
+        else:
+            sample = ledger.sample(real_anchor.movement_tick_id)
+            record = (None if sample is None or sample.request_sequence_id is None
+                      else ledger.record(sample.request_sequence_id))
+            if (sample is not None and ledger.latest_movement_tick_id == real_anchor.movement_tick_id
+                    and (sample.request_sequence_id is None
+                         or record is not None and record.session == real_anchor.session)):
+                # Samples already include the client's sneak slowdown. Never
+                # reconstruct the wait from a requested, expired or rejected action.
+                hold = TickInput(float(sample.forward), float(sample.strafe), sample.jump,
+                                 sample.sneak, sample.sprint, real_anchor.physics_state.yaw_radians)
+        if hold is None:
+            return PreparedSubmitResult(PreparedSubmitStatus.INPUT_UNCONFIRMED)
+        signature = (action_index, inputs, anchor.physics_state, selected.execution_window,
+                     action.entry_window, suffix, versions, JAVA_1_21_RULESET, self.damage_budget, remaining,
+                     ledger_identity, self.route.route_revision, hold)
+        stream = self.generation_for(action_index)
+        same_stream = stream is not None and signature == self._prepared_signature
+        if (same_stream and self._prepared_fields is not None
+                and self._prepared_fields.async_identity.scope == self.computation_scope
+                and self._prepared_submission is not None):
+            return self._prepared_submission
+        if self._work_identity is not None:
+            self._retire_work("prepared_action_replaced")
+        if not same_stream:
+            stream = StreamGeneration.from_selected_fields(generation_id="stream-" + uuid4().hex,
+                owner_id=f"route/{self.route.route_id}", request_id="motion-" + uuid4().hex,
+                route_id=self.route.route_id, action_index=action_index, expected_inputs=inputs,
+                entry_identity=(anchor.physics_state,), requested_window=selected.execution_window,
+                suffix_identity=suffix, late_start_hold_input=hold)
+            self.executor.discard_prepared_candidates(action_index=action_index)
+            self._prepared_streams = {index: value for index, value in self._prepared_streams.items()
+                                      if self.executor.action_index <= index <= self.executor.action_index + 1}
+            self._prepared_streams[action_index] = stream
+            self._prepared_signature = signature
+        self._candidate_revision += 1
+        identity = AsyncWorkIdentity(self.computation_scope, self._owner_instance_id,
+                                     AsyncWorkKind.MOTION_SOLVE, stream.request_id, self._candidate_revision)
+        fields = PreparedActionPreparation("job-" + uuid4().hex, identity, stream,
+            self.route.route_revision, self._candidate_revision, self.route.goal_revision, selected_commands,
+            selected.exit_state, ledger_identity, real_anchor.physics_state, versions,
+            JAVA_1_21_RULESET, self.damage_budget, remaining, _PREPARED_ACTION_SCAN_BUDGET)
+        states = selected.trajectory
+        positions = selected.world_dependencies
+        bounds = PhysicsWorldBounds(
+            min(math.floor(state.position[0] - state.body_width / 2) for state in states) - 2,
+            max(math.floor(state.position[0] + state.body_width / 2) for state in states) + 2,
+            min(math.floor(state.position[1]) for state in states) - 2,
+            max(math.floor(state.position[1] + state.body_height) for state in states) + 2,
+            min(math.floor(state.position[2] - state.body_width / 2) for state in states) - 2,
+            max(math.floor(state.position[2] + state.body_width / 2) for state in states) + 2)
+        if positions:
+            bounds = PhysicsWorldBounds(min(bounds.min_x, min(pos[0] for pos in positions)),
+                max(bounds.max_x, max(pos[0] for pos in positions)),
+                min(bounds.min_y, min(pos[1] for pos in positions)),
+                max(bounds.max_y, max(pos[1] for pos in positions)),
+                min(bounds.min_z, min(pos[2] for pos in positions)),
+                max(bounds.max_z, max(pos[2] for pos in positions)))
+        submitted = self.result_inbox.register_action_preparation(fields, bounds)
+        self._prepared_fields, self._prepared_submission = fields, submitted
+        self.executor.require_prepared_action(action_index, ledger_identity=ledger_identity)
+        if submitted.status is PreparedSubmitStatus.ACCEPTED:
+            now = self._clock()
+            window = AsyncWorkWindow(real_anchor.movement_tick_id, now, now + _MOTION_SOLVE_LIMIT_NS)
+            self._work.begin(identity, window)
+            self._remember_work_window(identity, window)
+            self._pending_connection, self._pending_action_index = stream.request_id, action_index
+            self._pending_submitted_tick = real_anchor.movement_tick_id
+        return submitted
 
     def start(self, frame: NavigationFrame) -> None:
         if type(frame) is not NavigationFrame:
             raise ContractViolation("motion route coordinator requires a frame")
         self._retire_work("motion_restarted")
+        self._prepared_streams.clear()
+        self._prepared_signature = self._prepared_fields = self._prepared_submission = None
+        self._selected_preparation = None
         self.last_admission = None
         self.last_failure_attempt_id = None
         self.last_failure_reason = ""
@@ -828,6 +1020,8 @@ class MotionRouteCoordinator:
             self._expire_delivered_result(result)
             return False
         self.executor.install_verified_motion(prepared.candidate)
+        # Candidate installation precedes computation retirement. D102 use
+        # records live in result_inbox, independently of this job lifecycle.
         self._record_admission(
             AsyncAdmissionDisposition.APPLIED,
             identity_matched=True,
@@ -948,6 +1142,7 @@ class MotionRouteCoordinator:
         self._pending_submitted_tick = anchor.movement_tick_id
         submitted = self.worker.submit(self._pending_job)
         if submitted:
+            self.result_inbox.mark_submitted(self._pending_job.work_identity)
             self._pending_job = None
             self.last_failure_reason = ""
         else:
@@ -967,6 +1162,7 @@ class MotionRouteCoordinator:
         if self._pending_job is None:
             return
         if self.worker.submit(self._pending_job):
+            self.result_inbox.mark_submitted(self._pending_job.work_identity)
             self._pending_job = None
             self.last_failure_reason = ""
 
@@ -975,6 +1171,8 @@ class MotionRouteCoordinator:
         self._submit_action(self.executor.action_index, anchor, world)
 
     def _work_expired(self, anchor: StateAnchor) -> bool:
+        if (self._prepared_fields is not None and self._work_identity == self._prepared_fields.async_identity):
+            return anchor.movement_tick_id > self._prepared_fields.stream.requested_window.earliest_start_tick
         window = self._work_window
         if window is None:
             return (
@@ -995,6 +1193,8 @@ class MotionRouteCoordinator:
         self.executor.prepare_ground_handoff(None)
         identity = self._work_identity
         if identity is not None:
+            # Ends computation only; body proof uses need ledger/handoff and
+            # supervisor release evidence, even when this scope is obsolete.
             self.result_inbox.retire(identity)
             self._work.finish(identity, _cause, self._clock())
         self._pending_job = None
@@ -1002,6 +1202,7 @@ class MotionRouteCoordinator:
         self._pending_action_index = None
         self._pending_submitted_tick = None
         self._solve_basis_job = None
+        self._selection_request = self._selection_anchor = self._selection_ledger_id = None
 
     def _record_admission(
         self,
@@ -1177,6 +1378,8 @@ class MotionRouteCoordinator:
             raise ContractViolation("motion route decision requires current typed state")
         installed = False
         worker_available = True
+        future_work = (self.executor.prepared_successor_required or self._pending_action_index is not None
+                       and self._pending_action_index > self.executor.action_index)
         self._sync_local_attempt_chain()
         starting_action_index = self.executor.action_index
         if current_scope != self.computation_scope:
@@ -1184,13 +1387,25 @@ class MotionRouteCoordinator:
             # keeps the executor responsible for in-flight inputs and landing.
             self._retire_work("motion_scope_invalidated")
             self.last_failure_reason = "motion_scope_invalidated"
-            self.executor.cancel()
+            if not future_work:
+                self.executor.cancel()
             worker_available = False
         elif not self.worker.is_alive():
             worker_available = False
             self._retire_work("motion_solver_worker_died")
             self.last_failure_reason = "motion_solver_worker_died"
-            self.executor.cancel()
+            if not future_work:
+                self.executor.cancel()
+        elif self._prepared_fields is not None and self._work_identity == self._prepared_fields.async_identity:
+            fields = self._prepared_fields
+            query = self.result_inbox.query_prepared(fields.async_identity, movement_tick=anchor.movement_tick_id)
+            if query.handle is not None:
+                self.executor.install_prepared_motion(query.handle)
+                self._record_admission(AsyncAdmissionDisposition.APPLIED, identity_matched=True, facts_valid=True)
+                self._retire_work("prepared_motion_installed")
+                installed = True
+            elif self._work_expired(anchor) or self.result_inbox.prepared_compute_result(fields.async_identity) is not None:
+                self._retire_work("prepared_motion_unavailable")
         elif self._work_expired(anchor):
             expired_connection = self._pending_connection
             expired_action_index = (
@@ -1219,29 +1434,29 @@ class MotionRouteCoordinator:
         elif self._pending_job is not None:
             self._flush_pending_job()
         available_results = ()
-        if self._owns_result_inbox and self._work_identity is None:
-            available_results = self.worker.poll_available()
-        else:
-            discarded = self.result_inbox.drain_once(
-                self.worker,
-                (frame.body.sequence_id if result_poll_sequence is None
-                 else result_poll_sequence),
-            )
-            for result in discarded:
-                if result.work_identity in self._known_work_windows:
-                    self._record_admission(
-                        AsyncAdmissionDisposition.DISCARDED_LATE,
-                        identity_matched=False, facts_valid=None,
-                        result_identity=result.work_identity,
-                    )
-            if self._work_identity is not None:
-                result = self.result_inbox.peek(self._work_identity)
-                if result is not None:
-                    self._sample_solve_delivery(result, anchor, current_scope=current_scope)
-                proof = None if result is None else result.solve_result.proof
-                if proof is None or anchor.movement_tick_id + 1 >= proof.execution_window.earliest_start_tick:
-                    available_results = self.result_inbox.take(self._work_identity)
+        discarded = self.result_inbox.drain_once(
+            self.worker,
+            (frame.body.sequence_id if result_poll_sequence is None
+             else result_poll_sequence),
+        )
+        for result in discarded:
+            if result.work_identity in self._known_work_windows:
+                self._record_admission(
+                    AsyncAdmissionDisposition.DISCARDED_LATE,
+                    identity_matched=False, facts_valid=None,
+                    result_identity=result.work_identity,
+                )
+        if self._work_identity is not None:
+            result = self.result_inbox.peek(self._work_identity)
+            if result is not None:
+                self._sample_solve_delivery(result, anchor, current_scope=current_scope)
+            proof = None if result is None else result.solve_result.proof
+            if self._selection_request is not None or proof is None or anchor.movement_tick_id + 1 >= proof.execution_window.earliest_start_tick:
+                available_results = self.result_inbox.take(self._work_identity)
         for result in available_results:
+            if self._selection_request is not None:
+                self._accept_upcoming_selection(result, current_scope=current_scope)
+                continue
             installed = self._accept_result(
                 result, anchor, world, changed_cells, ledger,
                 current_scope=current_scope,

@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 from dataclasses import replace
+import threading
 import time
 import unittest
 from unittest.mock import patch
 
 from mc2p.contracts.action_receipt import behavior_receipt_from_mapping
-from mc2p.contracts.action_v1 import ActionSnapshotV1, MovementV1
+from mc2p.contracts.action import ActionPriorityV0
+from mc2p.contracts.action_v1 import ActionIntentV1, ActionSnapshotV1, MovementV1
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.common import ContractViolation
 from mc2p.contracts.reset import ResetRequestV0, ResetResultV0
@@ -18,6 +20,7 @@ from mc2p.motion_nav.navigation_session import (
 )
 from mc2p.motion_nav.movement_transition import MovementMode
 from mc2p.motion_nav.online_motion import InputApplicationStatus
+from mc2p.motion_nav.action_route_executor import ActionRouteDecision, ActionRouteState
 from mc2p.motion_nav.motion_worker import MotionSolverWorker
 from mc2p.runtime.backend_v1 import BackendStepResultV1
 from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1
@@ -228,7 +231,168 @@ class _AnchorInjectionSession(NavigationSession):
         return super().execution_anchor(snapshot, ledger)
 
 
+class RuntimeDecisionWindowTests(unittest.TestCase):
+    def session_fixture(self):
+        clock = [100_000_000]
+        backend = _GapRuntimeBackend(clock)
+        backend.movement_tick = 10
+        runtime = PlayerRuntimeV1(backend, _RecordingTrace(), lambda: clock[0])
+        runtime.reset(ResetRequestV0(
+            "reset-window", "episode-verified-runtime", "test", 1, 2_000_000_000,
+        ))
+        session = NavigationSession(
+            "decision-window", NavigationSessionProfiles(ordinary_profile(), jump_profile(), step_profile()),
+            planner_worker=_InlinePlanner(), clock_ns=lambda: clock[0],
+        )
+        session.bind_source(runtime.register_ordered_source("decision-window"))
+        session.ingest(runtime.observation)
+        self.addCleanup(runtime.close)
+        self.addCleanup(session.close)
+        return clock, backend, runtime, session
+
+    @staticmethod
+    def decision(**changes):
+        return replace(ActionRouteDecision(
+            ActionRouteState.RUNNING, MovementV1(forward=1), None, 1, 0,
+            "submit_verified_command", (), 0, verified_command_index=0,
+            expected_movement_tick=11, latest_movement_tick=12,
+        ), **changes)
+
+    def propose(self, session, decision):
+        return session._proposal(
+            decision.movement, decision.look, decision.input_lease_ticks,
+            session._clock() + 1_000_000_000, route_decision=decision,
+        )
+
+    def test_half_window_is_rejected_without_exact_tick_fallback(self):
+        _, backend, _, session = self.session_fixture()
+        for endpoints in ((11, None), (None, 12)):
+            with self.subTest(endpoints=endpoints), self.assertRaises(ContractViolation):
+                self.propose(session, self.decision(
+                    expected_movement_tick=endpoints[0], latest_movement_tick=endpoints[1],
+                ))
+        self.assertEqual(backend.actions, [])
+        self.assertIsNotNone(session._source)
+
+    def test_verified_command_without_both_endpoints_is_rejected(self):
+        _, _, _, session = self.session_fixture()
+        with self.assertRaises(ContractViolation):
+            self.propose(session, self.decision(expected_movement_tick=None, latest_movement_tick=None))
+
+    def test_invalid_start_window_order_width_and_endpoint_types_are_rejected(self):
+        _, _, _, session = self.session_fixture()
+        for endpoints in ((12, 11), (11, 13), (True, 12), (11, 12.0), (-1, 0)):
+            with self.subTest(endpoints=endpoints), self.assertRaises(ContractViolation):
+                self.propose(session, self.decision(
+                    expected_movement_tick=endpoints[0], latest_movement_tick=endpoints[1],
+                ))
+
+    def test_expired_window_is_rejected_before_send_and_keeps_source(self):
+        _, backend, _, session = self.session_fixture()
+        source = session._source
+        with self.assertRaisesRegex(ContractViolation, "expired"):
+            self.propose(session, self.decision(expected_movement_tick=9, latest_movement_tick=10))
+        self.assertEqual(backend.actions, [])
+        self.assertIs(session._source, source)
+
+    def test_another_movement_winner_does_not_borrow_verified_start_slack(self):
+        clock, backend, runtime, session = self.session_fixture()
+        proposal = self.propose(session, self.decision())
+        runtime.submit_intent(ActionIntentV1(
+            "safety-winner", "safety", "episode-verified-runtime", runtime.observation.sequence_id,
+            ActionPriorityV0.SAFETY, clock[0], clock[0] + 1_000_000_000,
+            movement=MovementV1(strafe=1),
+        ))
+        from tests.test_player_runtime import _task
+        result = runtime.control_frame(
+            _task(clock[0] + 1_000_000_000), BehaviorProfileV0(), clock[0] + 1_000_000_000,
+            proposals=(proposal.control_frame,),
+        )
+        self.assertEqual(backend.actions[-1].movement, MovementV1(strafe=1))
+        self.assertIsNone(result.decision.movement_tick_window)
+        record = runtime.input_ledger.record(backend.actions[-1].request_sequence_id)
+        self.assertIs(record.status, InputApplicationStatus.APPLIED)
+        self.assertEqual((record.requested_first_tick, record.latest_allowed_first_tick), (11, 11))
+
+    def test_ordinary_unverified_input_keeps_exact_next_tick_default(self):
+        clock, backend, runtime, session = self.session_fixture()
+        proposal = self.propose(session, self.decision(
+            verified_command_index=None, expected_movement_tick=None, latest_movement_tick=None,
+        ))
+        from tests.test_player_runtime import _task
+        result = runtime.control_frame(
+            _task(clock[0] + 1_000_000_000), BehaviorProfileV0(), clock[0] + 1_000_000_000,
+            proposals=(proposal.control_frame,),
+        )
+        self.assertIsNone(result.decision.movement_tick_window)
+        record = runtime.input_ledger.record(backend.actions[-1].request_sequence_id)
+        self.assertEqual((record.requested_first_tick, record.latest_allowed_first_tick), (11, 11))
+
+
 class RuntimeVerifiedMotionHandoffTests(unittest.TestCase):
+    def test_fixture_waits_for_unique_receiver_publication_before_next_tick(self):
+        from mc2p.motion_nav.motion_worker import MotionResultInbox
+        from mc2p.motion_nav.motion_coordination import MotionRouteCoordinator
+        reached, resume, waiting = threading.Event(), threading.Event(), threading.Event()
+        outputs, failures, backends, publications, grants = [], [], [], [], []
+        native_backend = _GapRuntimeBackend.__init__
+        native_publish = MotionResultInbox._process_legacy
+        native_wait = MotionResultInbox.wait_for_receiver
+        native_accept = MotionRouteCoordinator._accept_result
+        def backend_created(backend, *args, **kwargs):
+            native_backend(backend, *args, **kwargs)
+            backends.append(backend)
+        def held_publication(inbox, result):
+            if not reached.is_set():
+                reached.set()
+                if not resume.wait(5.):
+                    raise AssertionError("receiver publication barrier was not released")
+            native_publish(inbox, result)
+            publications.append((inbox, threading.get_ident(), result,
+                                 inbox.peek(result.work_identity)))
+        def receiver_wait(inbox, **kwargs):
+            waiting.set()
+            return native_wait(inbox, **kwargs)
+        def grant_checked(owner, result, anchor, *args, **kwargs):
+            accepted = native_accept(owner, result, anchor, *args, **kwargs)
+            proof = result.solve_result.proof
+            grants.append((accepted, anchor.movement_tick_id, proof.execution_window))
+            return accepted
+        def run_fixture():
+            try:
+                outputs.append(self._running_gap(apply_jump_one_tick_late=True))
+            except BaseException as error:
+                failures.append(error)
+        with patch.object(_GapRuntimeBackend, "__init__", backend_created), \
+                patch.object(MotionResultInbox, "_process_legacy", held_publication), \
+                patch.object(MotionResultInbox, "wait_for_receiver", receiver_wait), \
+                patch.object(MotionRouteCoordinator, "_accept_result", grant_checked):
+            runner = threading.Thread(target=run_fixture, name="fixture-clock-driver")
+            runner.start()
+            try:
+                self.assertTrue(reached.wait(5.), "the original receiver did not receive the process result")
+                self.assertTrue(waiting.wait(2.), "fixture advanced ticks before waiting for receiver publication")
+                self.assertEqual(backends[0].movement_tick, 3)
+                self.assertEqual(publications, [])
+            finally:
+                resume.set()
+                runner.join(10.)
+        self.assertFalse(runner.is_alive())
+        if failures:
+            raise failures[0]
+        self.assertEqual(len(outputs), 1)
+        _, backend, runtime, session, _ = outputs[0]
+        self.addCleanup(runtime.close)
+        self.addCleanup(session._motion_result_inbox.close)
+        self.addCleanup(session.close)
+        inbox = session._motion_result_inbox
+        self.assertEqual({thread_id for _, thread_id, _, _ in publications}, {inbox.receiver_thread_id})
+        self.assertTrue(all(source is inbox and published is result
+                            for source, _, result, published in publications))
+        self.assertEqual([(tick, window.earliest_start_tick, window.latest_start_tick)
+                          for accepted, tick, window in grants if accepted], [(3, 4, 5)])
+        self.assertEqual(backend.movement_tick, 5)
+
     def _running_gap(
         self, *, change_landing_on_jump=False,
         apply_jump_one_tick_late=False,
@@ -279,6 +443,10 @@ class RuntimeVerifiedMotionHandoffTests(unittest.TestCase):
                 worker = session._motion_worker
                 if worker is not None:
                     worker.await_fixture_delivery()
+                    # A ready worker result may still be in this fixture's
+                    # delivery buffer. The same receiver must publish it
+                    # before the next simulated client tick consumes slack.
+                    self.assertTrue(session._motion_result_inbox.wait_for_receiver(timeout=5.))
         self.fail("runtime bridge did not submit the verified gap command")
 
     def test_fixture_delivery_delay_does_not_spend_simulated_motion_window(self):
