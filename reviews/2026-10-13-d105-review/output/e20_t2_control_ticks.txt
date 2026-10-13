@@ -1,0 +1,35 @@
+== 0. Windows 正式 T2 spawn probe（量尺开启，check_performance=False）
+  Windows spawn：status PASS；普通控制 tick 中位 4.40 ms，最大 4.99 ms
+    start    tick 10:    4.87 ms  分段 {'handoff': 1.01, 'send': 2.81}
+    handoff  tick 24:   43.44 ms  分段 {'arbitration': 34.42, 'handoff': 5.73, 'send': 2.6}
+    finish   tick 40:    5.35 ms  分段 {'comparison': 1.91, 'ledger_receipt': 0.52, 'send': 2.44}
+    closeout tick 41:   58.42 ms  分段 {'comparison': 6.3, 'handle': 38.81, 'handoff': 12.8}
+    若打开 check_performance：('control percentile exceeded: complete', 'control maximum exceeded: complete', 'control percentile exceeded: handoff', 'control maximum exceeded: handoff')
+
+== 1. Linux inline，量尺开启（与正式口径相同）
+  Linux 量尺开启：status PASS；普通控制 tick 中位 8.63 ms，最大 16.53 ms
+    start    tick 10:   10.14 ms  分段 {'comparison': 0.62, 'handoff': 2.53, 'arbitration': 1.01, 'send': 5.4}
+    handoff  tick 24:  101.71 ms  分段 {'ledger_receipt': 1.42, 'handoff': 11.11, 'arbitration': 80.68, 'send': 7.94}
+    finish   tick 40:    9.40 ms  分段 {'comparison': 3.12, 'ledger_receipt': 0.93, 'arbitration': 0.65, 'send': 4.35}
+    closeout tick 41:  100.76 ms  分段 {'observation': 0.88, 'handle': 67.16, 'comparison': 10.84, 'handoff': 21.82}
+
+== 2. Linux inline，量尺的 sys.setprofile 换成空操作
+  Linux 无量尺（第 1 次）：status PASS；普通控制 tick 中位 1.65 ms，最大 2.18 ms
+    start    tick 10:    2.15 ms  分段 {'handoff': 0.5, 'send': 1.02}
+    handoff  tick 24:    9.63 ms  分段 {'handoff': 1.46, 'arbitration': 6.67, 'send': 1.14}
+    finish   tick 40:    1.64 ms  分段 {'send': 0.78}
+    closeout tick 41:   15.04 ms  分段 {'handle': 8.85, 'comparison': 1.87, 'handoff': 3.79}
+    start    5 次中位   2.06 ms（2.15, 2.04, 2.06, 1.85, 2.40）
+    handoff  5 次中位   9.74 ms（9.63, 9.74, 15.65, 10.01, 9.51）
+    finish   5 次中位   1.82 ms（1.64, 1.82, 2.71, 1.82, 1.94）
+    closeout 5 次中位  15.04 ms（15.04, 12.32, 22.86, 12.47, 20.43）
+
+== 3. 交接／收尾 tick 在控制线程构造对象时的整图不可变遍历（无量尺，5 次中位）
+    closeout MotionCloseReport                次数    1  合计   0.33 ms
+    closeout PreparedAdmissionResult          次数    1  合计   0.12 ms
+    closeout ProofActionExitEvidence          次数    2  合计   0.48 ms
+    closeout ProofReleaseEvidence             次数    2  合计   4.88 ms
+    closeout ProofSupervisorReleaseEvidence   次数    2  合计   0.44 ms
+    closeout ReferenceResult                  次数    2  合计   0.31 ms
+    handoff: 整图遍历合计中位 0.00 ms，占该 tick 0%（嵌套构造会重复计入外层，合计可能略高）
+    closeout: 整图遍历合计中位 6.66 ms，占该 tick 44%（嵌套构造会重复计入外层，合计可能略高）

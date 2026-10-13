@@ -1,0 +1,22 @@
+eec26af759ea2b166d63dc3b3c175e72dddffb03
+.......................FF.....................................................................................................s.....
+======================================================================
+FAIL: test_actual_generation_commands_resolve_repository_python (tests.motion_nav.test_d105_t2_evidence.T2EvidenceTests.test_actual_generation_commands_resolve_repository_python)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-mc-ai-motion-navigation-v1-standalone/7b6c23a8-548e-536b-b677-503d1715db15/scratchpad/r105/tests/motion_nav/test_d105_t2_evidence.py", line 52, in test_actual_generation_commands_resolve_repository_python
+    self.assertTrue(result["passed"], result["errors"])
+AssertionError: False is not true : ['generation command interpreter does not exist: receiver_timing', 'generation command interpreter does not exist: receiver_recompute', 'generation command interpreter does not exist: evidence_verify', 'receiver timing argv interpreter does not exist']
+
+======================================================================
+FAIL: test_actual_index_recomputes_every_declared_evidence_hash (tests.motion_nav.test_d105_t2_evidence.T2EvidenceTests.test_actual_index_recomputes_every_declared_evidence_hash)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-mc-ai-motion-navigation-v1-standalone/7b6c23a8-548e-536b-b677-503d1715db15/scratchpad/r105/tests/motion_nav/test_d105_t2_evidence.py", line 25, in test_actual_index_recomputes_every_declared_evidence_hash
+    self.assertTrue(result["passed"], result["errors"])
+AssertionError: False is not true : ['generation command interpreter does not exist: receiver_timing', 'generation command interpreter does not exist: receiver_recompute', 'generation command interpreter does not exist: evidence_verify', 'receiver timing argv interpreter does not exist']
+
+----------------------------------------------------------------------
+Ran 132 tests in 133.516s
+
+FAILED (failures=2, skipped=1)
