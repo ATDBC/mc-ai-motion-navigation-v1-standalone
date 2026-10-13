@@ -1,0 +1,66 @@
+{
+  "artifacts": {
+    "m0/decisions.jsonl.gz": "f127ccc265b3a56136f408fa686b3fec9e26a1c251977ff98413ae242ee52db5",
+    "m0/fixture.jsonl.gz": "4162ab9335f5a58f18a489cab0ecd7d41c4182c0ef2e96aa68fd3fc43c510cbe",
+    "m0/manifest.json": "6291f8eea9b6025eae9eb99c4ff0b7d3d1ff12792c67a70282617e7199b254f4",
+    "m0/runs.jsonl.gz": "042df1647d1738d5a58bcebf632a1912b1f3c6e73412777df8c16689062b44a7",
+    "m0/source-hashes.json": "94f74beb1c5f2e075ee6631b357caf0bc20ea6a73217564d6bf5a4925018ae03",
+    "m0/summary.json": "b862131ff8aa00b51b3323ea90a35df1318625293a65ba18df48f8ee23924294",
+    "verification.json": "b0ef195760cb92c713d382d99a67abe5e20c722cd725acbb5a7c7fdf742f77b0"
+  },
+  "authorized_test_registration": {
+    "exact_runner": "scripts/measure_sound_sparse_motion_d105.py",
+    "path": "tests/motion_nav/test_trajectory_proto_contracts.py",
+    "sha256": "ee0d4eda5a6112eb56a8b604e116c311d5ae37307e0b4d57ed81db63d157072e"
+  },
+  "commands": {
+    "a0_a2": ".venv/python.exe scripts/verify_sound_sparse_motion_proof_d105.py --output evidence/motion_navigation/sound-motion-proof-d105-v1/t1/verification.json",
+    "m0": ".venv/python.exe scripts/measure_sound_sparse_motion_d105.py M0 --rounds 100 --output evidence/motion_navigation/sound-motion-proof-d105-v1/t1/m0",
+    "m0_recompute": ".venv/python.exe scripts/measure_sound_sparse_motion_d105.py M0 --output evidence/motion_navigation/sound-motion-proof-d105-v1/t1/m0 --recompute"
+  },
+  "formal_set": {
+    "expected": 18,
+    "passed": 18,
+    "set": "D"
+  },
+  "m0": {
+    "decision_count": 4710,
+    "full_proof_calls": 204,
+    "gate_failures": [
+      "p99_above_15ms",
+      "max_not_below_30ms"
+    ],
+    "max_ms": 30.4564,
+    "p50_ms": 0.0722,
+    "p95_ms": 0.1317,
+    "p99_ms": 23.7115,
+    "passed": false,
+    "positive_completed": 200,
+    "positive_runs": 200,
+    "runs": 204,
+    "safety_violations": 0
+  },
+  "passed": false,
+  "post_run_source_drift": {
+    "affects_raw_timing_samples": false,
+    "current_sha256": "48bef654c65a8d0e78c99600ab00f0cb9bcdc37ed9acb8f3eff789283bd56597",
+    "expected_sha256_at_run": "968a5abbe2b35bf5a6d29e4b9ce14027aa405d556bb31d82374a367b5ed1ffa5",
+    "path": "mc2p/motion_nav/prepared_motion_validation.py",
+    "reason": "independent T2 work changed an over-inclusive imported-module source after M0 completed",
+    "t1_sources_match": true
+  },
+  "scope": "T1-A0/A1/A2 approved; T1-A3 stopped at Windows M0 performance gate",
+  "schema": "d105-t1-index-v1",
+  "supplemental_sets": {
+    "A": {
+      "expected": 4,
+      "passed": 4
+    },
+    "C": {
+      "expected": 6,
+      "passed": 6
+    }
+  },
+  "stop_reason": "sound sparse proof is functionally safe but performance is insufficient; do not implement scheme B in this stage",
+  "windows_m0_run": true
+}

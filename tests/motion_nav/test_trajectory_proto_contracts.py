@@ -30,6 +30,18 @@ EXPERIMENTAL_RUNNER_IMPORTS = {
         "experiments.motion_navigation.trajectory_proto.d101_measurement",
         "experiments.motion_navigation.trajectory_proto.physics",
     }),
+    "scripts/verify_sound_sparse_motion_proof_d105.py": frozenset({
+        "experiments.motion_navigation.trajectory_proto.commitment",
+        "experiments.motion_navigation.trajectory_proto.m0_probe",
+        "experiments.motion_navigation.trajectory_proto.sound_sparse_proof",
+        "experiments.motion_navigation.trajectory_proto.measurement",
+        "experiments.motion_navigation.trajectory_proto.physics",
+        "experiments.motion_navigation.trajectory_proto.reference_search",
+    }),
+    "scripts/measure_sound_sparse_motion_d105.py": frozenset({
+        "experiments.motion_navigation.trajectory_proto.d105_measurement",
+        "experiments.motion_navigation.trajectory_proto.physics",
+    }),
 }
 
 

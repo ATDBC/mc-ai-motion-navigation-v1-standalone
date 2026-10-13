@@ -4,6 +4,7 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.mc2p.diagnostics.ClientControlDiagnostics;
+import com.mc2p.diagnostics.ClientFtickDiagnostics;
 import com.mc2p.observation.ClientObservationCollector;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen;
@@ -109,6 +110,8 @@ public final class ClientBehaviorExecutor {
         executionThread = Thread.currentThread().getName();
         onClientThread = client.isOnThread();
         long now = System.nanoTime();
+        ClientFtickDiagnostics.frameReceived(
+                action.episode(), action.observation(), action.sequence(), now);
         long budget = ClientRequestGate.remainingBudget(action.budgetNs(), action.observationBudgetNs(),
                                                          now - observationAnchorNs);
         String denied = action.cancel() == null
@@ -442,6 +445,14 @@ public final class ClientBehaviorExecutor {
             applications.add(applied);
         }
         result.add("input_applications", applications);
+        if (lastRequest != null) {
+            var lastSample = input == null ? null : input.lastSample();
+            ClientFtickDiagnostics.observationSent(
+                    lastRequest.episode(), lastRequest.observation(),
+                    lastRequest.sequence(), generation,
+                    lastSample == null ? null : lastSample.movementTickId(),
+                    System.nanoTime());
+        }
         return result;
     }
 

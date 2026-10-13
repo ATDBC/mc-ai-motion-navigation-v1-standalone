@@ -29,6 +29,7 @@ public final class ClientTimeDiagnostics {
         if (ClientMovementDiagnostics.ENABLED && !ENABLED) throw new IllegalStateException("movement diagnostics require explicit time diagnostics");
         if (ClientControlDiagnostics.ENABLED && !ENABLED) throw new IllegalStateException("control diagnostics require explicit time diagnostics");
         if (ClientPhysicsTickDiagnostics.ENABLED && !ENABLED) throw new IllegalStateException("physics tick diagnostics require explicit time diagnostics");
+        if (ClientFtickDiagnostics.ENABLED && !ENABLED) throw new IllegalStateException("F-TICK diagnostics require explicit time diagnostics");
         if (initialized || closed) return;
         try {
             if (ENABLED && !shutdownHookInstalled) {
@@ -40,6 +41,7 @@ public final class ClientTimeDiagnostics {
             ClientMovementDiagnostics.initialize(ENABLED);
             ClientControlDiagnostics.initialize(ENABLED);
             ClientPhysicsTickDiagnostics.initialize(ENABLED);
+            ClientFtickDiagnostics.initialize(ENABLED);
             initialized = true;
         } catch (IOException error) { throw new UncheckedIOException(error); }
     }
@@ -52,7 +54,7 @@ public final class ClientTimeDiagnostics {
         finally {
             for (Runnable diagnosticClose : new Runnable[]{
                     ClientMovementDiagnostics::close, ClientControlDiagnostics::close,
-                    ClientPhysicsTickDiagnostics::close}) {
+                    ClientPhysicsTickDiagnostics::close, ClientFtickDiagnostics::close}) {
                 try { diagnosticClose.run(); }
                 catch (RuntimeException error) {
                     if (primary == null) primary = error;

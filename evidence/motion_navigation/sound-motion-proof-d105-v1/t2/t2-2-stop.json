@@ -1,0 +1,36 @@
+{
+  "schema": "mc2p.d105-t2-snapshot-stop.v1",
+  "recorded_at_utc": "2026-10-13T13:34:55.7712232Z",
+  "platform": "Windows",
+  "status": "FAILED_STOPPED",
+  "required": [
+    "action-template maximum reachable envelope",
+    "entry body width",
+    "landing region",
+    "one-cell outward boundary",
+    "out-of-range NEEDS_WORLD",
+    "actual returned dependencies",
+    "pre-execution formal-world dependency check"
+  ],
+  "observed": {
+    "prepared_bounds_source": "selected trajectory states plus selected world dependencies plus a fixed two-cell margin",
+    "action_spec_geometry_fields": [
+      "direction",
+      "landing",
+      "start",
+      "maximum_ticks"
+    ],
+    "maximum_reachable_envelope_field": false,
+    "prepared_request_carries_action_template": false,
+    "prepared_request_carries_landing_region": false
+  },
+  "stop_reason": "The parent cannot derive the required final detached range from an action-template maximum envelope. Proving a conservative multi-template physics envelope would add the unimplemented envelope algorithm, so the current selected-trajectory margin cannot be signed as T2-2.",
+  "retained_results": [
+    "T2-0",
+    "T2-1"
+  ],
+  "not_run": [
+    "T2-3"
+  ],
+  "production_changes_for_t2_2": false
+}

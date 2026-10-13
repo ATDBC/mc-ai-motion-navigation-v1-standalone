@@ -3,6 +3,7 @@ package com.mc2p.deployment.mixin;
 import com.mc2p.actions.ClientBehaviorHooks;
 import com.mc2p.actions.ClientBehaviorInput;
 import com.mc2p.diagnostics.ClientPhysicsTickDiagnostics;
+import com.mc2p.diagnostics.ClientFtickDiagnostics;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
@@ -33,13 +34,21 @@ public abstract class BehaviorPlayerMixin {
                     sample.episodeId(), sample.requestSequenceId(), sample.sampledAtJvmNs(),
                     sample.state(), sample.forward(), sample.strafe(), sample.jump(),
                     sample.sneak(), sample.sprint());
+            ClientFtickDiagnostics.inputSampled(
+                    sample.episodeId(), sample.requestSequenceId(),
+                    sample.movementTickId(), sample.sampledAtJvmNs());
         }
     }
     @Inject(method = "tickMovement", at = @At("TAIL"))
     private void afterMovement(CallbackInfo ci) {
         var player = (ClientPlayerEntity) (Object) this;
-        if (player.input instanceof ClientBehaviorInput)
+        if (player.input instanceof ClientBehaviorInput input) {
             ClientPhysicsTickDiagnostics.afterMovement(MinecraftClient.getInstance());
+            var sample = input.lastSample();
+            ClientFtickDiagnostics.movementApplied(
+                    sample.episodeId(), sample.requestSequenceId(),
+                    sample.movementTickId(), System.nanoTime());
+        }
     }
     @Redirect(method = "tickMovement", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))

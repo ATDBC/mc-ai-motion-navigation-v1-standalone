@@ -108,7 +108,8 @@ def write_argument_file(target: Path, arguments: list[str]) -> None:
 def client_environment(base: dict[str, str], *, token: str, server_port: int, ipc_port: int,
                        time_diagnostics: bool = False, block_parity_diagnostics: bool = False,
                        physics_tick_diagnostics: bool = False,
-                       control_diagnostics: bool = False) -> dict[str, str]:
+                       control_diagnostics: bool = False,
+                       ftick_diagnostics: bool = False) -> dict[str, str]:
     _port(server_port)
     _port(ipc_port)
     if type(token) is not str or re.fullmatch("[0-9a-f]{64}", token) is None:
@@ -125,8 +126,10 @@ def client_environment(base: dict[str, str], *, token: str, server_port: int, ip
         raise ValueError('physics tick diagnostics selection must be boolean')
     if type(control_diagnostics) is not bool:
         raise ValueError('control diagnostics selection must be boolean')
-    if (physics_tick_diagnostics or control_diagnostics) and not time_diagnostics:
-        raise ValueError('physics and control diagnostics require time diagnostics')
+    if type(ftick_diagnostics) is not bool:
+        raise ValueError('F-TICK diagnostics selection must be boolean')
+    if (physics_tick_diagnostics or control_diagnostics or ftick_diagnostics) and not time_diagnostics:
+        raise ValueError('physics, control and F-TICK diagnostics require time diagnostics')
     if not SURFACE_NATIVE_LIBRARY.is_file():
         raise FileNotFoundError(
             "formal surface perception native library has not been built"
@@ -144,4 +147,6 @@ def client_environment(base: dict[str, str], *, token: str, server_port: int, ip
         result['MC2P_PHYSICS_TICK_DIAGNOSTICS']='1'
     if control_diagnostics:
         result['MC2P_CONTROL_DIAGNOSTICS']='1'
+    if ftick_diagnostics:
+        result['MC2P_FTICK_DIAGNOSTICS']='1'
     return result

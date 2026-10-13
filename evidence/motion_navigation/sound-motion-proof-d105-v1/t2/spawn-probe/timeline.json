@@ -1,0 +1,44 @@
+{
+  "clock_affects_behavior": false,
+  "final_resources": {
+    "activation_refs": 0,
+    "bytes": 0,
+    "candidate_refs": 0,
+    "executing_refs": 0,
+    "leases": 0,
+    "live_receiver": 0,
+    "live_returner": 0,
+    "live_worker": 0,
+    "queue_feeders": 0,
+    "queued_returns": 0,
+    "safe_tail_refs": 0,
+    "unfinished_jobs": 0
+  },
+  "passed": true,
+  "platform": "Windows",
+  "probe_errors": [],
+  "probe_status": "PASS",
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "schema": "mc2p.d105-t2-timeline.v1",
+  "timeline": {
+    "complete": true,
+    "events_ns": {
+      "first_consume": 913169036805000,
+      "receiver_publish": 913169036452300,
+      "submit": 913168706384200,
+      "worker_result_received": 913169006827900
+    },
+    "gate_inputs": [],
+    "identity": {
+      "job_token": "job-bc8818281b454c0aae3d9454039562b7",
+      "proof_token": "e58a256f59cc4a719b2b2d56b771a0f3"
+    },
+    "segments_ns": {
+      "receiver_publish_to_first_consume": 352700,
+      "submit_to_first_consume": 330420800,
+      "submit_to_worker_result_received": 300443700,
+      "worker_result_received_to_receiver_publish": 29624400
+    },
+    "worker_completion_boundary": "parent_observed_result_receive"
+  }
+}

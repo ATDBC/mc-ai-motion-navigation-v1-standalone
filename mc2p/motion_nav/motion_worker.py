@@ -1422,8 +1422,12 @@ class MotionResultInbox:
         reserve_live = True
         decoded_bytes = None
         try:
-            validated = prepared_motion_validation._validate_for_registration(
-                message, record.request, record.lease.sealed_snapshot(), current)
+            arguments = (message, record.request, record.lease.sealed_snapshot(), current)
+            if prepared_motion_validation.local_worker_result_is_trusted(self._worker):
+                validated = prepared_motion_validation._validate_for_registration(
+                    *arguments, trusted_local_worker=True)
+            else:
+                validated = prepared_motion_validation._validate_for_registration(*arguments)
             if validated.bundle is not None and record.world_port is not None:
                 # These are reads from the formal owner, outside inbox locks.
                 # A source lease is not authenticated by matching token text.

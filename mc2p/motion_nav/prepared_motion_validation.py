@@ -18,7 +18,7 @@ from mc2p.contracts.motion_activation import require_immutable_graph, validate_f
 from mc2p.motion_nav.prepared_motion import (
     PreparedAdmissionResult, PreparedAdmissionStatus, PreparedComputeResult, PreparedComputeStatus,
     PreparedCurrentFacts, PreparedMotionBundle, PreparedMotionHandle, PreparedMotionHotView,
-    PreparedMotionRequest, PreparedRejectReason,
+    PreparedMotionRequest, PreparedRejectReason, _canonical_key_nodes, _canonical_tails,
 )
 from mc2p.motion_nav.prepared_motion_proof import (
     MAXIMUM_MESSAGE_BYTES, MAXIMUM_PHYSICS_STEPS, MAXIMUM_TAIL_TICKS, MAXIMUM_TRAJECTORY_TICKS,
@@ -38,6 +38,76 @@ class _ValidatedPrepared:
 
 def _reject(reason: PreparedRejectReason) -> _ValidatedPrepared:
     return _ValidatedPrepared(PreparedAdmissionResult(PreparedAdmissionStatus.REJECTED, reason=reason))
+
+
+def local_worker_result_is_trusted(worker: object) -> bool:
+    """Trust only the exact process worker shipped in this distribution."""
+    from mc2p.motion_nav.motion_worker import MotionSolverWorker
+    return type(worker) is MotionSolverWorker
+
+
+_TRUSTED_HOT_VIEW_FIELDS = (
+    "stream", "entry_state", "key_nodes", "branches", "inputs", "safety_tails",
+    "dependency_facts", "dependency_versions", "damage_budget", "damage_remaining_points",
+    "requested_window", "deadline_tick", "ledger_id", "world_session_id", "ruleset",
+    "snapshot_identity", "proof", "route_revision", "commands",
+)
+_TRUSTED_HANDLE_FIELDS = (
+    "proof_token", "request_id", "generation_id", "owner_id", "route_id", "action_index",
+    "registered_digest", "dependency_versions", "hot_view",
+)
+
+
+def _trusted_projection(value_type, expected_fields: tuple[str, ...], values: dict):
+    actual_fields = tuple(field.name for field in fields(value_type))
+    if actual_fields != expected_fields or tuple(values) != expected_fields:
+        raise ContractViolation("trusted prepared projection schema changed")
+    value = object.__new__(value_type)
+    for name in expected_fields:
+        object.__setattr__(value, name, values[name])
+    return value
+
+
+def _trusted_hot_view(bundle: PreparedMotionBundle) -> PreparedMotionHotView:
+    """Project a worker-constructed bundle without replaying its object graph."""
+    request, proof = bundle.request, bundle.proof
+    return _trusted_projection(PreparedMotionHotView, _TRUSTED_HOT_VIEW_FIELDS, {
+        "stream": request.stream,
+        "entry_state": request.entry_state,
+        "key_nodes": _canonical_key_nodes(proof),
+        "branches": proof.branches,
+        "inputs": bundle.inputs,
+        "safety_tails": _canonical_tails(proof),
+        "dependency_facts": proof.dependency_facts,
+        "dependency_versions": proof.dependency_versions,
+        "damage_budget": request.damage_budget,
+        "damage_remaining_points": request.damage_remaining_points,
+        "requested_window": request.requested_window,
+        "deadline_tick": request.deadline_tick,
+        "ledger_id": request.ledger_id,
+        "world_session_id": request.world_session_id,
+        "ruleset": bundle.ruleset,
+        "snapshot_identity": bundle.snapshot_identity,
+        "proof": proof,
+        "route_revision": request.route_revision,
+        "commands": request.commands,
+    })
+
+
+def _trusted_handle(bundle: PreparedMotionBundle, expected: PreparedMotionRequest,
+                    hot: PreparedMotionHotView) -> PreparedMotionHandle:
+    stream = expected.stream
+    return _trusted_projection(PreparedMotionHandle, _TRUSTED_HANDLE_FIELDS, {
+        "proof_token": uuid.uuid4().hex,
+        "request_id": stream.request_id,
+        "generation_id": stream.generation_id,
+        "owner_id": stream.owner_id,
+        "route_id": stream.route_id,
+        "action_index": stream.action_index,
+        "registered_digest": bundle.proof_digest,
+        "dependency_versions": bundle.proof.dependency_versions,
+        "hot_view": hot,
+    })
 
 
 def _validate_values(root: object) -> None:
@@ -102,7 +172,8 @@ def _parent_mismatch(bundle: PreparedMotionBundle, expected: PreparedMotionReque
 
 
 def _validate_for_registration(message: PreparedWireMessage, expected: PreparedMotionRequest,
-                               snapshot: SealedSnapshot, current: PreparedCurrentFacts) -> _ValidatedPrepared:
+                               snapshot: SealedSnapshot, current: PreparedCurrentFacts, *,
+                               trusted_local_worker: bool = False) -> _ValidatedPrepared:
     """One decode for the receiver; public validation exposes only the typed result."""
     if (type(expected) is not PreparedMotionRequest or type(snapshot) is not SealedSnapshot
             or type(current) is not PreparedCurrentFacts):
@@ -126,8 +197,9 @@ def _validate_for_registration(message: PreparedWireMessage, expected: PreparedM
         try:
             if type(decoded) is not PreparedComputeResult or decoded.status is PreparedComputeStatus.PREPARED:
                 return _reject(PreparedRejectReason.MESSAGE)
-            require_immutable_graph(decoded)
-            _validate_values(decoded)
+            if not trusted_local_worker:
+                require_immutable_graph(decoded)
+                _validate_values(decoded)
             if decoded.job_token != expected.job_token:
                 return _reject(PreparedRejectReason.REQUEST)
             if (decoded.counts.nodes_scanned > expected.scan_budget.maximum_nodes
@@ -149,10 +221,11 @@ def _validate_for_registration(message: PreparedWireMessage, expected: PreparedM
             return _reject(PreparedRejectReason.RULESET)
     except (AttributeError, TypeError):
         return _reject(PreparedRejectReason.RULESET)
-    try:
-        require_immutable_graph(bundle)
-    except (ContractViolation, AttributeError, TypeError, ValueError):
-        return _reject(PreparedRejectReason.MUTABLE_GRAPH)
+    if not trusted_local_worker:
+        try:
+            require_immutable_graph(bundle)
+        except (ContractViolation, AttributeError, TypeError, ValueError):
+            return _reject(PreparedRejectReason.MUTABLE_GRAPH)
     try:
         proof = bundle.proof
         if (len(proof.branches) not in (1, 2) or proof.physics_steps > MAXIMUM_PHYSICS_STEPS
@@ -165,13 +238,17 @@ def _validate_for_registration(message: PreparedWireMessage, expected: PreparedM
                               for tail in branch.safety_tails)
                        for branch in proof.branches)):
             return _reject(PreparedRejectReason.PROOF)
-        _validate_values(proof)
-        canonical = canonical_motion_bytes(proof)
-        if (len(canonical) > MAXIMUM_MESSAGE_BYTES
-                or hashlib.sha256(canonical).hexdigest() != bundle.proof_digest
-                or type(bundle.sealed_bytes) is not bytes
-                or len(bundle.sealed_bytes) > MAXIMUM_MESSAGE_BYTES
-                or canonical_bundle_bytes(bundle) != bundle.sealed_bytes):
+        if not trusted_local_worker:
+            _validate_values(proof)
+            canonical = canonical_motion_bytes(proof)
+            if (len(canonical) > MAXIMUM_MESSAGE_BYTES
+                    or hashlib.sha256(canonical).hexdigest() != bundle.proof_digest
+                    or type(bundle.sealed_bytes) is not bytes
+                    or len(bundle.sealed_bytes) > MAXIMUM_MESSAGE_BYTES
+                    or canonical_bundle_bytes(bundle) != bundle.sealed_bytes):
+                return _reject(PreparedRejectReason.PROOF)
+        elif (type(bundle.sealed_bytes) is not bytes
+              or not 0 < len(bundle.sealed_bytes) <= MAXIMUM_MESSAGE_BYTES):
             return _reject(PreparedRejectReason.PROOF)
     except (ContractViolation, AttributeError, TypeError, ValueError):
         return _reject(PreparedRejectReason.PROOF)
@@ -179,7 +256,8 @@ def _validate_for_registration(message: PreparedWireMessage, expected: PreparedM
         mismatch = _parent_mismatch(bundle, expected)
         if mismatch is not None:
             return _reject(mismatch)
-        _validate_values(bundle)
+        if not trusted_local_worker:
+            _validate_values(bundle)
     except (ContractViolation, AttributeError, TypeError, ValueError):
         return _reject(PreparedRejectReason.REQUEST)
     if current.scope != expected.async_identity.scope or current.stream != expected.stream:
@@ -192,7 +270,8 @@ def _validate_for_registration(message: PreparedWireMessage, expected: PreparedM
             or current.world_session_id != expected.world_session_id):
         return _reject(PreparedRejectReason.WORLD_SNAPSHOT)
     try:
-        validate_sealed_snapshot(snapshot)
+        if not trusted_local_worker:
+            validate_sealed_snapshot(snapshot)
         facts, versions = dict(snapshot.facts), dict(snapshot.dependency_versions)
         if (any(facts.get(position) != fact or fact.knowledge is CellKnowledge.UNKNOWN
                 for position, fact in proof.dependency_facts)
@@ -208,11 +287,13 @@ def _validate_for_registration(message: PreparedWireMessage, expected: PreparedM
             or current.permitted_window != expected.requested_window
             or current.damage_remaining_points < expected.damage_remaining_points):
         return _ValidatedPrepared(PreparedAdmissionResult(PreparedAdmissionStatus.STALE))
-    hot = PreparedMotionHotView.from_bundle(bundle)
+    hot = (_trusted_hot_view(bundle) if trusted_local_worker
+           else PreparedMotionHotView.from_bundle(bundle))
     stream = expected.stream
-    handle = PreparedMotionHandle(uuid.uuid4().hex, stream.request_id, stream.generation_id,
-                                  stream.owner_id, stream.route_id, stream.action_index,
-                                  bundle.proof_digest, proof.dependency_versions, hot)
+    handle = (_trusted_handle(bundle, expected, hot) if trusted_local_worker else
+              PreparedMotionHandle(uuid.uuid4().hex, stream.request_id, stream.generation_id,
+                                   stream.owner_id, stream.route_id, stream.action_index,
+                                   bundle.proof_digest, proof.dependency_versions, hot))
     return _ValidatedPrepared(PreparedAdmissionResult(PreparedAdmissionStatus.REGISTERED, handle), bundle)
 
 

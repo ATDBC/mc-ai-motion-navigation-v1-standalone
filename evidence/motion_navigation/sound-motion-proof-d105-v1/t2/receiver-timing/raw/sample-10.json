@@ -1,0 +1,12 @@
+{
+  "bundle_canonical_bytes": 673452,
+  "full_audit_elapsed_ns": 1222145600,
+  "full_audit_status": "REGISTERED",
+  "message_payload_bytes": 774509,
+  "sample_index": 10,
+  "schema": "mc2p.d105-t2-receiver-timing-raw.v1",
+  "snapshot_canonical_bytes": 1514939,
+  "snapshot_cells": 6496,
+  "trusted_local_elapsed_ns": 16731300,
+  "trusted_local_status": "REGISTERED"
+}

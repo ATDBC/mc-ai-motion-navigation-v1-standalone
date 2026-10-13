@@ -1,0 +1,73 @@
+{
+  "schema": "mc2p.d105-t2-local-receiver.v1",
+  "recorded_at_utc": "2026-10-13T13:34:55.7712232Z",
+  "platform": "Windows",
+  "trust_boundary": {
+    "accepted_worker_type": "exact mc2p.motion_nav.motion_worker.MotionSolverWorker",
+    "subclass_trusted": false,
+    "custom_port_trusted": false
+  },
+  "removed_from_local_hot_path": [
+    "recursive immutable graph audit",
+    "restored object constructor replay",
+    "complete proof canonicalization",
+    "complete bundle canonicalization",
+    "repeated sealed snapshot canonicalization"
+  ],
+  "retained_checks": [
+    "message type",
+    "schema",
+    "payload size",
+    "payload digest before decode",
+    "request and compute identity",
+    "generation",
+    "owner",
+    "route and action revisions",
+    "ledger",
+    "world session and snapshot identity",
+    "ruleset",
+    "expected inputs and digest",
+    "effect window and deadline",
+    "damage balance",
+    "actual dependency facts and versions",
+    "publish and cancel race"
+  ],
+  "receiver_measurement": {
+    "index": "receiver-timing/index.json",
+    "sample_count": 10,
+    "message_payload_bytes": 774509,
+    "bundle_canonical_bytes": 673452,
+    "snapshot_canonical_bytes": 1514939,
+    "snapshot_cells": 6496,
+    "full_audit_median_ns": 1218995350.0,
+    "trusted_local_median_ns": 16950750.0,
+    "median_reduction_percent": 98.609449,
+    "clock_affects_behavior": false,
+    "offline_recompute": "PASS"
+  },
+  "targeted_red": {
+    "command": ".\\.venv\\python.exe -m unittest tests.motion_nav.test_d105_receiver_trust_boundary -v",
+    "tests_run": 3,
+    "errors": 14,
+    "reason": "trusted_local_worker and exact local-worker trust boundary did not exist"
+  },
+  "targeted_green": {
+    "command": ".\\.venv\\python.exe -m unittest tests.motion_nav.test_d105_receiver_trust_boundary -v",
+    "tests_run": 5,
+    "failures": 0,
+    "errors": 0
+  },
+  "review_round1_red": {
+    "command": ".\\.venv\\python.exe -m unittest tests.motion_nav.test_d105_receiver_trust_boundary.LocalReceiverTrustTests.test_trusted_hot_view_rejects_dataclass_field_drift tests.motion_nav.test_d105_receiver_trust_boundary.LocalReceiverTrustTests.test_trusted_handle_rejects_dataclass_field_drift tests.motion_nav.test_d105_t2_evidence.T2EvidenceTests.test_lf_hash_is_independent_of_worktree_newlines tests.motion_nav.test_d105_t2_evidence.T2EvidenceTests.test_actual_index_recomputes_every_declared_evidence_hash tests.motion_nav.test_d105_t2_evidence.T2EvidenceTests.test_actual_receiver_timing_recomputes_without_new_measurement -v",
+    "tests_run": 5,
+    "failures": 2,
+    "errors": 3
+  },
+  "spawn_probe": {
+    "path": "spawn-probe/timeline.json",
+    "status": "PASS",
+    "timeline_complete": true,
+    "final_resources_zero": true
+  },
+  "passed": true
+}

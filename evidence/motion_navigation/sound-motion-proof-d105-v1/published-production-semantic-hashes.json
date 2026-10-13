@@ -1,0 +1,10 @@
+{
+  "schema": "mc2p.public-production-semantic-hashes.v1",
+  "scope": "D105 T2-1 trusted local receiver path",
+  "source_commit": "8b834bcf5a83529449c71b9b26e84d940268fbf7",
+  "normalization": "CRLF_TO_LF",
+  "files": {
+    "mc2p/motion_nav/motion_worker.py": "6007aee6fb57e26c0318e04785f929efc43610a652b8af459ae1c15b667d1eb5",
+    "mc2p/motion_nav/prepared_motion_validation.py": "48bef654c65a8d0e78c99600ab00f0cb9bcdc37ed9acb8f3eff789283bd56597"
+  }
+}

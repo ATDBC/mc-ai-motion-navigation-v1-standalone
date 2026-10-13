@@ -1,0 +1,69 @@
+{
+  "generation_command": ".\\.venv\\python.exe scripts\\measure_sound_motion_t2_d105.py --record-receiver --output evidence\\motion_navigation\\sound-motion-proof-d105-v1\\t2\\receiver-timing",
+  "generation_command_argv": [
+    ".\\.venv\\python.exe",
+    "scripts\\measure_sound_motion_t2_d105.py",
+    "--record-receiver",
+    "--output",
+    "evidence\\motion_navigation\\sound-motion-proof-d105-v1\\t2\\receiver-timing"
+  ],
+  "hash_domain": "sha256_lf_bytes_v1",
+  "raw_samples": [
+    {
+      "path": "raw/sample-01.json",
+      "sample_index": 1,
+      "sha256": "35dc9bb5434d79e1c45128215bb1af67fbde17e14017fc56effacbea4acee78b"
+    },
+    {
+      "path": "raw/sample-02.json",
+      "sample_index": 2,
+      "sha256": "e2a00a1418bb83b1c0268e10b6cf96ca15cf7a7ef889cd3682ffcefaf551c346"
+    },
+    {
+      "path": "raw/sample-03.json",
+      "sample_index": 3,
+      "sha256": "5395da2de48d7e15dcc45eae0f2e846e67899f36bfdf944f5908620e231d17ab"
+    },
+    {
+      "path": "raw/sample-04.json",
+      "sample_index": 4,
+      "sha256": "feeaa162aebd3199dc76a4ed788a6f809ed6394ff0198302f4f84d520078fb35"
+    },
+    {
+      "path": "raw/sample-05.json",
+      "sample_index": 5,
+      "sha256": "570ea1979c29fa6127e767d546dc886fdc95d5bf020c49a117c6153aae5203fd"
+    },
+    {
+      "path": "raw/sample-06.json",
+      "sample_index": 6,
+      "sha256": "58c4f9ba35a5ea62cf2b2d5fa4972b72270824e04bcdd76d7d5c83cb7536b698"
+    },
+    {
+      "path": "raw/sample-07.json",
+      "sample_index": 7,
+      "sha256": "787776ec2def54459f06abfedaacc6c494c242ab822a0ba63fc47b03ef9a7bc4"
+    },
+    {
+      "path": "raw/sample-08.json",
+      "sample_index": 8,
+      "sha256": "80b609e0aebba3bb2f3a024fd4f0d5ccacb079d4ab3fc09c91b20bb3810be939"
+    },
+    {
+      "path": "raw/sample-09.json",
+      "sample_index": 9,
+      "sha256": "3e49439396eb2db53f9e8af01fa3c1ab8c6ef43d339f57e034b7e124059a8c06"
+    },
+    {
+      "path": "raw/sample-10.json",
+      "sample_index": 10,
+      "sha256": "719e4e2d74f1dad0197948bd7ab72f5be7c4bd1c31cbe1074c6450d6a8808812"
+    }
+  ],
+  "sample_count": 10,
+  "schema": "mc2p.d105-t2-receiver-timing.v1",
+  "summary": {
+    "path": "summary.json",
+    "sha256": "74959f8a061e64e7736a08626cd9526ed027aa4a607e8c1f72c868e294cb4b18"
+  }
+}

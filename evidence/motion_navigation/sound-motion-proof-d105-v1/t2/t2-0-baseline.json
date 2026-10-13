@@ -1,0 +1,70 @@
+{
+  "schema": "mc2p.d105-t2-baseline.v1",
+  "recorded_at_utc": "2026-10-13T13:34:55.7712232Z",
+  "platform": "Windows",
+  "baseline_source_commit": "3a2b5f8f",
+  "message": {
+    "schema": "mc2p.prepared-motion-bundle.v1",
+    "payload_bytes": 774509,
+    "bundle_canonical_bytes": 673452
+  },
+  "snapshot": {
+    "cells": 6496,
+    "canonical_bytes": 1514939
+  },
+  "receiver_full_audit_ns": {
+    "sample_count": 1,
+    "value": 1224951900,
+    "clock_affects_behavior": false
+  },
+  "capacities": {
+    "unfinished_jobs": 2,
+    "registered_bundles": 8,
+    "snapshot_leases": 8,
+    "retained_bytes": 16777216,
+    "diagnostic_history": 64
+  },
+  "rejection_matrix": {
+    "message_digest": "MESSAGE",
+    "request": "REQUEST",
+    "generation": "GENERATION",
+    "owner": "OWNER",
+    "route_action": "ROUTE_ACTION",
+    "ledger": "LEDGER",
+    "world_session_or_snapshot": "WORLD_SNAPSHOT",
+    "inputs": "INPUTS",
+    "ruleset": "RULESET",
+    "window": "STALE",
+    "damage": "STALE",
+    "dependency": "DEPENDENCY",
+    "cancel_at_publish": "CANCELLED",
+    "scope_change_at_publish": "STALE"
+  },
+  "body_uses": [
+    "candidate",
+    "executing",
+    "safe-tail"
+  ],
+  "close_resources": {
+    "candidate_refs": 0,
+    "executing_refs": 0,
+    "safe_tail_refs": 0,
+    "activation_refs": 0,
+    "leases": 0,
+    "bytes": 0,
+    "live_worker": 0,
+    "live_receiver": 0,
+    "live_returner": 0,
+    "unfinished_jobs": 0,
+    "queue_feeders": 0,
+    "queued_returns": 0
+  },
+  "verification": {
+    "command": ".\\.venv\\python.exe -m unittest tests.motion_nav.test_d102_receiver tests.motion_nav.test_d102_world_snapshot tests.motion_nav.test_d102_registry_lifecycle -v",
+    "tests_run": 94,
+    "failures": 0,
+    "errors": 0,
+    "elapsed_seconds": 104.221
+  },
+  "passed": true
+}

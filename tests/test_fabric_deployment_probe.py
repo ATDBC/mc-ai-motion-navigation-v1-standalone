@@ -12,6 +12,16 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class FabricDeploymentProbeTests(unittest.TestCase):
+    def test_ftick_cli_requires_time_diagnostics(self):
+        script = ROOT / "scripts/probe_fabric_deployment_observation.py"
+        missing_time = subprocess.run(
+            [sys.executable, str(script), "--b10-gap-solver-probe",
+             "--ftick-diagnostics"],
+            cwd=ROOT, capture_output=True, text=True,
+        )
+        self.assertNotEqual(missing_time.returncode, 0)
+        self.assertIn("requires --time-diagnostics", missing_time.stderr)
+
     def test_formal_run_manifest_names_surface_visibility_contract(self):
         source = (ROOT / "scripts/probe_fabric_deployment_observation.py").read_text("utf-8")
         self.assertIn('sensor_profile_revision=4', source)

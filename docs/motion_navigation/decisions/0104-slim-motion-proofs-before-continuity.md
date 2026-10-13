@@ -1,5 +1,7 @@
 # D104：先缩小运动证明，再恢复连续动作试验
 
+> 2026-10-13 后注：本决定止于 K1，失败结论和证据保持不变。后续工作改由 [D105](0105-restart-sound-proof-slimming-and-decouple-tracks.md) 重新定义。
+
 日期：2026-10-13。状态：**K0 已验证；K1 完整性门槛失败，后续停止。**
 
 本决定接续 [D103](0103-repair-g2-window-and-control-hot-path.md)。D103 的 G2-F2 仍保持 `FAILED／STOPPED`，历史证据不改写。新的实施方案见[关键边界证明与连续动作计划](../stages/key-boundary-motion-proof-and-continuity-plan.md)，结果记录见[对应验收文档](../acceptance/key-boundary-motion-proof-and-continuity.md)。

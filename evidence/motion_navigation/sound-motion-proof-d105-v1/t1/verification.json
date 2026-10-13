@@ -1,0 +1,951 @@
+{
+  "claim": "risk open/close equivalence with intentionally narrower airborne hypothetical-tail veto authority",
+  "command": ".venv/python.exe scripts/verify_sound_sparse_motion_proof_d105.py --output evidence/motion_navigation/sound-motion-proof-d105-v1/t1/verification.json",
+  "counterexamples": {
+    "airborne_omission_scope": {
+      "omitted_boundaries": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          0,
+          7
+        ],
+        [
+          0,
+          8
+        ],
+        [
+          0,
+          9
+        ],
+        [
+          0,
+          10
+        ],
+        [
+          0,
+          11
+        ],
+        [
+          0,
+          12
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          1,
+          6
+        ],
+        [
+          1,
+          7
+        ],
+        [
+          1,
+          8
+        ],
+        [
+          1,
+          9
+        ],
+        [
+          1,
+          10
+        ],
+        [
+          1,
+          11
+        ],
+        [
+          1,
+          12
+        ]
+      ],
+      "passed": true
+    },
+    "failures": [],
+    "frozen_a_gap_boundary_six_hypothetical_failure": {
+      "actual": "VERIFIED_CANDIDATE/None",
+      "passed": true
+    },
+    "hidden_short_risk": {
+      "actual": [
+        [
+          {
+            "first_committed_boundary": 5,
+            "last_abandon_boundary": 4,
+            "recovered_boundary": 6
+          }
+        ],
+        [
+          {
+            "first_committed_boundary": 5,
+            "last_abandon_boundary": 4,
+            "recovered_boundary": 6
+          }
+        ]
+      ],
+      "expected": [
+        [
+          {
+            "first_committed_boundary": 5,
+            "last_abandon_boundary": 4,
+            "recovered_boundary": 6
+          }
+        ],
+        [
+          {
+            "first_committed_boundary": 5,
+            "last_abandon_boundary": 4,
+            "recovered_boundary": 6
+          }
+        ]
+      ],
+      "passed": true
+    },
+    "passed": true,
+    "two_distinct_risks": {
+      "actual": [
+        [
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            6,
+            7,
+            8
+          ]
+        ],
+        [
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            6,
+            7,
+            8
+          ]
+        ]
+      ],
+      "expected": [
+        [
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            6,
+            7,
+            8
+          ]
+        ],
+        [
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            6,
+            7,
+            8
+          ]
+        ]
+      ],
+      "passed": true
+    },
+    "unbound_deviation_reproof_absent": true,
+    "unsafe_boundary_zero_not_compacted": {
+      "passed": true,
+      "risks": [
+        [
+          null,
+          0,
+          1
+        ]
+      ],
+      "safety_tail_boundaries": [
+        1,
+        10
+      ]
+    }
+  },
+  "exception_matrix": {
+    "passed": true,
+    "rows": [
+      {
+        "actual": "VERIFIED_CANDIDATE",
+        "injected": "unknown",
+        "passed": true,
+        "site": "omitted_air_tail"
+      },
+      {
+        "actual": "VERIFIED_CANDIDATE",
+        "injected": "unsupported",
+        "passed": true,
+        "site": "omitted_air_tail"
+      },
+      {
+        "actual": "VERIFIED_CANDIDATE",
+        "injected": "tail_not_settled",
+        "passed": true,
+        "site": "omitted_air_tail"
+      },
+      {
+        "actual": "NEEDS_INFORMATION/unknown_world",
+        "injected": "unknown",
+        "passed": true,
+        "site": "required_tail"
+      },
+      {
+        "actual": "CANDIDATE_REJECTED/unsupported_physics",
+        "injected": "unsupported",
+        "passed": true,
+        "site": "required_tail"
+      },
+      {
+        "actual": "CANDIDATE_REJECTED/tail_not_settled",
+        "injected": "tail_not_settled",
+        "passed": true,
+        "site": "required_tail"
+      },
+      {
+        "actual": "NEEDS_INFORMATION/unknown_world",
+        "injected": "unknown",
+        "passed": true,
+        "site": "main_trajectory"
+      },
+      {
+        "actual": "CANDIDATE_REJECTED/unsupported_physics",
+        "injected": "unsupported",
+        "passed": true,
+        "site": "main_trajectory"
+      },
+      {
+        "actual": "NEEDS_INFORMATION/unknown_world",
+        "injected": "unknown",
+        "passed": true,
+        "site": "grounded_recovery_support"
+      },
+      {
+        "actual": "CANDIDATE_REJECTED/unrecovered_risk",
+        "injected": "unsafe",
+        "passed": true,
+        "site": "grounded_recovery_support"
+      }
+    ]
+  },
+  "formal_denominator": {
+    "expected": 18,
+    "passed": 18,
+    "set": "D"
+  },
+  "grounded_query_order": {
+    "events": [
+      [
+        "tail",
+        0
+      ],
+      [
+        "tail",
+        1
+      ],
+      [
+        "tail",
+        13
+      ],
+      [
+        "support",
+        23
+      ],
+      [
+        "tail",
+        14
+      ],
+      [
+        "tail",
+        15
+      ],
+      [
+        "tail",
+        16
+      ],
+      [
+        "tail",
+        17
+      ],
+      [
+        "tail",
+        18
+      ],
+      [
+        "tail",
+        19
+      ],
+      [
+        "tail",
+        20
+      ],
+      [
+        "tail",
+        21
+      ],
+      [
+        "tail",
+        22
+      ],
+      [
+        "tail",
+        23
+      ],
+      [
+        "tail",
+        24
+      ],
+      [
+        "tail",
+        25
+      ],
+      [
+        "tail",
+        26
+      ],
+      [
+        "tail",
+        27
+      ],
+      [
+        "tail",
+        28
+      ],
+      [
+        "tail",
+        29
+      ],
+      [
+        "tail",
+        30
+      ],
+      [
+        "tail",
+        31
+      ],
+      [
+        "tail",
+        32
+      ],
+      [
+        "tail",
+        33
+      ],
+      [
+        "tail",
+        0
+      ],
+      [
+        "tail",
+        1
+      ],
+      [
+        "tail",
+        13
+      ],
+      [
+        "support",
+        24
+      ],
+      [
+        "tail",
+        14
+      ],
+      [
+        "tail",
+        15
+      ],
+      [
+        "tail",
+        16
+      ],
+      [
+        "tail",
+        17
+      ],
+      [
+        "tail",
+        18
+      ],
+      [
+        "tail",
+        19
+      ],
+      [
+        "tail",
+        20
+      ],
+      [
+        "tail",
+        21
+      ],
+      [
+        "tail",
+        22
+      ],
+      [
+        "tail",
+        23
+      ],
+      [
+        "tail",
+        24
+      ],
+      [
+        "tail",
+        25
+      ],
+      [
+        "tail",
+        26
+      ],
+      [
+        "tail",
+        27
+      ],
+      [
+        "tail",
+        28
+      ],
+      [
+        "tail",
+        29
+      ],
+      [
+        "tail",
+        30
+      ],
+      [
+        "tail",
+        31
+      ],
+      [
+        "tail",
+        32
+      ],
+      [
+        "tail",
+        33
+      ]
+    ],
+    "later_required_tail_precedes_earlier_support_failure": {
+      "actual": "CANDIDATE_REJECTED/unsupported_physics",
+      "passed": true
+    },
+    "passed": true,
+    "recovery_boundaries": [
+      13
+    ]
+  },
+  "mutation_checks": {
+    "passed": true,
+    "rows": [
+      {
+        "caught": true,
+        "mutation": "omitted_tail_dependency"
+      },
+      {
+        "caught": true,
+        "mutation": "drop_second_risk_interval"
+      },
+      {
+        "caught": true,
+        "mutation": "remove_grounded_support_query"
+      },
+      {
+        "caught": true,
+        "mutation": "attach_legacy_tail_to_open_risk_air_boundary"
+      }
+    ]
+  },
+  "passed": true,
+  "platform": "Windows-10-10.0.26200-SP0",
+  "python": "3.11.16",
+  "schema": "d105-t1-a0-a2-verification-v1",
+  "sets": {
+    "A": {
+      "expected": 4,
+      "failures": [],
+      "passed": 4,
+      "rows": [
+        {
+          "airborne_hypothetical_tails_omitted": 0,
+          "case": "flat_walk:A3",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 161,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "A",
+          "sound_sparse_physics_steps": 161
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 22,
+          "case": "jump_gap_1:A3",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 451,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "A",
+          "sound_sparse_physics_steps": 187
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 0,
+          "case": "turn_90:A15",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 239,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "A",
+          "sound_sparse_physics_steps": 239
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 0,
+          "case": "jump_up_after_turn:A15",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 357,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "A",
+          "sound_sparse_physics_steps": 357
+        }
+      ]
+    },
+    "C": {
+      "expected": 6,
+      "failures": [],
+      "passed": 6,
+      "rows": [
+        {
+          "airborne_hypothetical_tails_omitted": 22,
+          "case": "gap1/rest-L/0",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 725,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "C",
+          "sound_sparse_physics_steps": 461
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 22,
+          "case": "gap2/rest-L/1",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 723,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "C",
+          "sound_sparse_physics_steps": 465
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 22,
+          "case": "gap3/rest-L/2",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 723,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "C",
+          "sound_sparse_physics_steps": 465
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 22,
+          "case": "gap2c/rest-L/3",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 665,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "C",
+          "sound_sparse_physics_steps": 407
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 0,
+          "case": "jumpup/rest-L/4",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 473,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "C",
+          "sound_sparse_physics_steps": 473
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 0,
+          "case": "turn/rest-L/5",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 219,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "C",
+          "sound_sparse_physics_steps": 219
+        }
+      ]
+    },
+    "D": {
+      "expected": 18,
+      "failures": [],
+      "passed": 18,
+      "rows": [
+        {
+          "airborne_hypothetical_tails_omitted": 0,
+          "case": "gap1/rest-L/0",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 763,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "D",
+          "sound_sparse_physics_steps": 763
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 0,
+          "case": "gap1/walk-L-n/1",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 736,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "D",
+          "sound_sparse_physics_steps": 736
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 0,
+          "case": "gap1/sprint-L-n/2",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 665,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "D",
+          "sound_sparse_physics_steps": 665
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 0,
+          "case": "gap2/rest-L/3",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 779,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "D",
+          "sound_sparse_physics_steps": 779
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 0,
+          "case": "gap2/walk-L-n/4",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 817,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "D",
+          "sound_sparse_physics_steps": 817
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 11,
+          "case": "gap2/sprint-L-n/5",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 746,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "D",
+          "sound_sparse_physics_steps": 594
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 22,
+          "case": "gap3/rest-L/6",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 721,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "D",
+          "sound_sparse_physics_steps": 507
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 22,
+          "case": "gap3/walk-L-n/7",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 714,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "D",
+          "sound_sparse_physics_steps": 454
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 22,
+          "case": "gap3/sprint-L-n/8",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 676,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "D",
+          "sound_sparse_physics_steps": 384
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 0,
+          "case": "gap2c/rest-L/9",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 755,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "D",
+          "sound_sparse_physics_steps": 755
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 22,
+          "case": "gap2c/walk-L-n/10",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 638,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "D",
+          "sound_sparse_physics_steps": 436
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 11,
+          "case": "gap2c/sprint-L-n/11",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 706,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "D",
+          "sound_sparse_physics_steps": 554
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 0,
+          "case": "jumpup/rest-L/12",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 457,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "D",
+          "sound_sparse_physics_steps": 457
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 0,
+          "case": "jumpup/walk-L-n/13",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 534,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "D",
+          "sound_sparse_physics_steps": 534
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 0,
+          "case": "jumpup/sprint-L-n/14",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 457,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "D",
+          "sound_sparse_physics_steps": 457
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 0,
+          "case": "turn/rest-L/15",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 327,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "D",
+          "sound_sparse_physics_steps": 327
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 0,
+          "case": "turn/walk-L-n/16",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 280,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "D",
+          "sound_sparse_physics_steps": 280
+        },
+        {
+          "airborne_hypothetical_tails_omitted": 0,
+          "case": "turn/sprint-L-n/17",
+          "failures": [],
+          "final_open_risk_airborne_boundaries_all_omitted": true,
+          "legacy_physics_steps": 301,
+          "legacy_repeat_equal": true,
+          "main_trajectory_equal": true,
+          "passed": true,
+          "retained_executable_tails_equal": true,
+          "risk_open_close_equal": true,
+          "set": "D",
+          "sound_sparse_physics_steps": 301
+        }
+      ]
+    }
+  },
+  "source_hashes": {
+    "experiments/motion_navigation/trajectory_proto/commitment.py": "015e404bef642d5684f4f9c3559490aee5727dff91c5b79a5b88a31f93c914a7",
+    "experiments/motion_navigation/trajectory_proto/data/d097a-accepted-sample.json": "b38fe48660f7f80e337f257a66ce1b2647dae21562d814f2b665f1c795eda8b4",
+    "experiments/motion_navigation/trajectory_proto/data/d097a-set-a-sample.json": "54abdf2dce9d97fca16b805841deb5427e0959b1de5f0eded50a94174c1adae3",
+    "experiments/motion_navigation/trajectory_proto/data/d097a-set-c-sample.json": "a7682588812d44d2b237eb30caf163bae0c8c8f9634f981abfa464b7abee9e48",
+    "experiments/motion_navigation/trajectory_proto/frozen_templates.py": "ac4022bd1e034ce25cf5b962169f59ec5e0ed5caa864bf902dd73a756613002a",
+    "experiments/motion_navigation/trajectory_proto/m0_probe.py": "92c3f7c7cf59873e3b0cbe2073721f79def65404632ae0696ec3d26ff19ef7bc",
+    "experiments/motion_navigation/trajectory_proto/measurement.py": "046c48d71e8139506c4ad5a89ded06c7f596ae471345a3c375f872cd5152a809",
+    "experiments/motion_navigation/trajectory_proto/physics.py": "6f858eb8a9f86d46884d2353b3f492634a3d72600d0fc09e30086dfad654c24d",
+    "experiments/motion_navigation/trajectory_proto/reference_search.py": "7f10d4e91c1ab14bd7bdf1e2bb5a193662434578ec69db0e0252bc58eda22c54",
+    "experiments/motion_navigation/trajectory_proto/scenarios.py": "2217f1f2cc91200ccd58e92b6a9d5535c312d31f0c6e3965161af46226dfa2fe",
+    "experiments/motion_navigation/trajectory_proto/sound_sparse_proof.py": "3a721551311f48350b46683681d742b030f0566216eb715e04593973b74a5cf0",
+    "scripts/verify_sound_sparse_motion_proof_d105.py": "8a5742e0dcbf42c39e028f9a8e560e00a31b5fc20770b9aaa14b1ba270010ed9",
+    "tests/motion_nav/test_sound_sparse_motion_proof_d105.py": "46f2daaa2cfc437030e5e2e5c5c099dcc021567ba37b7bc0a2cf5da8cb20ec4c"
+  },
+  "stage": "T1-A0/A1/A2",
+  "supplemental_denominators": {
+    "A": {
+      "expected": 4,
+      "passed": 4
+    },
+    "C": {
+      "expected": 6,
+      "passed": 6
+    }
+  },
+  "windows_m0_run": false
+}

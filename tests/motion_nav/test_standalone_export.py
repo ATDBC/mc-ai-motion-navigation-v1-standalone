@@ -177,8 +177,12 @@ class StandaloneExportTests(unittest.TestCase):
             self.root / "evidence/motion_navigation/prepared-motion-proof-d102-v1/"
             "published-production-semantic-hashes.json"
         ).read_text("utf-8"))["files"]
+        d105 = json.loads((
+            self.root / "evidence/motion_navigation/sound-motion-proof-d105-v1/"
+            "published-production-semantic-hashes.json"
+        ).read_text("utf-8"))["files"]
         current_semantics = {**canonical, **r1, **r2, **r3, **handoff,
-                             **late_handoff, **post_loss, **tp0, **published}
+                             **late_handoff, **post_loss, **tp0, **published, **d105}
         tp0_root = self.root / "evidence/motion_navigation/trajectory-proto-tp0-v1"
         frozen = json.loads((tp0_root / "frozen-control-manifest.json").read_text("utf-8"))
         audit = json.loads((tp0_root / "fabric/audit-summary.json").read_text("utf-8"))

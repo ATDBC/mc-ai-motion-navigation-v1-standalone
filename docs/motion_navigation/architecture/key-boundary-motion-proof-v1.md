@@ -1,5 +1,7 @@
 # 关键边界运动证明 v1
 
+> 2026-10-13 后注：本设计对应的 D104 实现已在 K1 停止。新的可靠稀疏规则见[可靠稀疏运动证明 v1](sound-sparse-motion-proof-v1.md)。
+
 状态：设计冻结，尚未完成正式验收。决定见 [D104](../decisions/0104-slim-motion-proofs-before-continuity.md)。
 
 ## 1. 证明回答什么

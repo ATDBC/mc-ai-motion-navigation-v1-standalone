@@ -120,7 +120,10 @@ def _envelope(generation, branch, state, boundary, commitment):
     )
 
 
-def _run_one(spec, fixture, inputs):
+def _run_one(spec, fixture, inputs, *, scanner=None, tail_resolver=None):
+    scanner = scan_commitment if scanner is None else scanner
+    tail_resolver = ((lambda branch, boundary: branch.tails[boundary])
+                     if tail_resolver is None else tail_resolver)
     serial = next(_GENERATION_SEQUENCE)
     start_ns = time.perf_counter_ns()
     first_sequence = serial * _SEQUENCE_STRIDE
@@ -139,7 +142,7 @@ def _run_one(spec, fixture, inputs):
     # premises, allowing the scanner to prove a stop if the next input is late.
     evidence = tuple(tuple(replace(row, irrevocable_inputs=(), applications=()) for row in rows)
                      for rows in _boundary_evidence(request, inputs))
-    scanned = scan_commitment(request, inputs, fixture.world, evidence, counter=counter)
+    scanned = scanner(request, inputs, fixture.world, evidence, counter=counter)
     if scanned.status is not ScanStatus.VERIFIED_CANDIDATE:
         raise ContractViolation(f"frozen D101 candidate lacks proof: {scanned.status}:{scanned.reason}")
     proof = scanned.proof
@@ -233,7 +236,7 @@ def _run_one(spec, fixture, inputs):
                     # backend does not apply it. Its due tick uses the already
                     # proved empty-in-flight stop tail, not an invented neutral.
                     effect += 1
-                    tail = branch.tails[cursor]
+                    tail = tail_resolver(branch, cursor)
                     if tail.status is not TailStatus.SAFE_STOP:
                         raise ContractViolation("negative injection lacks a proved bounded exit")
                     command = tail.inputs[0]

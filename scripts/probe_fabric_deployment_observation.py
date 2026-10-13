@@ -919,7 +919,8 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                b12a_attack_evidence_probe: bool = False,
                b12b_partial_combat_probe: bool = False,
                surface_cost_probe: bool = False,
-               physics_tick_diagnostics: bool = False) -> int:
+               physics_tick_diagnostics: bool = False,
+               ftick_diagnostics: bool = False) -> int:
     c1_probe = (c1_fixed_melee_probe or c1_moving_melee_probe
                 or c1_external_motion_probe or c1r_control_frame_probe
                 or b12a_attack_evidence_probe or b12b_partial_combat_probe)
@@ -1043,6 +1044,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
             environment = client_environment(dict(os.environ), token=token, server_port=server_port, ipc_port=ipc_port,
                 time_diagnostics=time_diagnostics,block_parity_diagnostics=block_parity,
                 physics_tick_diagnostics=physics_tick_diagnostics,
+                ftick_diagnostics=ftick_diagnostics,
                 control_diagnostics=(
                     c1r_control_frame_probe or b12b_partial_combat_probe
                 ))
@@ -2089,6 +2091,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
         perception_config=asdict(PerceptionConfig()) if mining_probe else None,
         time_diagnostics=time_diagnostics,
         physics_tick_diagnostics=physics_tick_diagnostics,
+        ftick_diagnostics=ftick_diagnostics,
         status="passed" if failure is None and not cleanup_failures else "failed", checks=checks,
         primary_failure=failure, cleanup_failures=cleanup_failures, diagnostic_failures=diagnostic_failures, sessions=sessions,
         limits=["local vanilla server/direct client interface slice only", "no complete timing, visibility or training acceptance"])
@@ -2108,6 +2111,8 @@ def main(argv=None) -> int:
     parser.add_argument("--time-diagnostics", action="store_true", help="record read-only tick/time-packet attribution outside actor payloads")
     parser.add_argument("--physics-tick-diagnostics", action="store_true",
                         help="join pre-state, sampled input and post-state for each actor movement tick")
+    parser.add_argument("--ftick-diagnostics", action="store_true",
+                        help="record a read-only action-to-movement tick sidecar")
     parser.add_argument('--visibility-probe',action='store_true',help='run the shared original-speed visibility scene')
     parser.add_argument('--block-parity', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--b02-air-probe',action='store_true',help='measure bounded positive-only air confirmation')
@@ -2192,6 +2197,10 @@ def main(argv=None) -> int:
         parser.error('matrix shards require --continuous-height-full-matrix')
     if args.physics_tick_diagnostics and not args.time_diagnostics:
         parser.error('physics tick diagnostics require --time-diagnostics')
+    if args.ftick_diagnostics and not args.time_diagnostics:
+        parser.error('F-TICK diagnostics requires --time-diagnostics')
+    if args.ftick_diagnostics and not args.b10_gap_solver_probe:
+        parser.error('F-TICK diagnostics requires --b10-gap-solver-probe')
     if (args.c1r_control_frame_probe or args.b12b_partial_combat_probe
             or args.surface_cost_probe) \
             and not args.time_diagnostics:
@@ -2249,7 +2258,8 @@ def main(argv=None) -> int:
                           args.b12a_attack_evidence_probe,
                           args.b12b_partial_combat_probe,
                           args.surface_cost_probe,
-                          args.physics_tick_diagnostics)
+                          args.physics_tick_diagnostics,
+                          args.ftick_diagnostics)
 
     if not port_free(args.server_port) or not port_free(args.ipc_port):
         parser.error("a local test port is occupied")
@@ -2280,6 +2290,8 @@ def main(argv=None) -> int:
         command.append("--time-diagnostics")
     if args.physics_tick_diagnostics:
         command.append("--physics-tick-diagnostics")
+    if args.ftick_diagnostics:
+        command.append("--ftick-diagnostics")
     if args.visibility_probe: command.append('--visibility-probe')
     if args.block_parity: command.append('--block-parity')
     if args.b02_air_probe: command.append('--b02-air-probe')

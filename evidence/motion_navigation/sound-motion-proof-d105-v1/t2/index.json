@@ -1,0 +1,93 @@
+{
+  "schema": "mc2p.d105-t2-index.v2",
+  "hash_domain": "sha256_lf_bytes_v1",
+  "hash_domain_definition": "SHA-256 over file bytes after CRLF and CR are normalized to LF; index.json is self-excluded",
+  "recorded_at_utc": "2026-10-13T13:34:55.7712232Z",
+  "platform": "Windows",
+  "status": "PARTIAL_STOPPED",
+  "steps": {
+    "T2-0": "PASS",
+    "T2-1": "PASS",
+    "T2-2": "FAILED_STOPPED",
+    "T2-3": "NOT_RUN"
+  },
+  "source_files": [
+    {"path": "mc2p/motion_nav/motion_worker.py", "sha256": "6007aee6fb57e26c0318e04785f929efc43610a652b8af459ae1c15b667d1eb5"},
+    {"path": "mc2p/motion_nav/prepared_motion_validation.py", "sha256": "48bef654c65a8d0e78c99600ab00f0cb9bcdc37ed9acb8f3eff789283bd56597"},
+    {"path": "mc2p/motion_nav/motion_coordination.py", "sha256": "c8e762fa25d3340516a0e387c21e618c91deefbe3fed0fc38bf299d46fd135a8"},
+    {"path": "mc2p/motion_nav/prepared_motion.py", "sha256": "669710c0d5e2c81d965a7935c5d695ac70da846200b77b79eb7594e69f96bba9"},
+    {"path": "scripts/measure_sound_motion_t2_d105.py", "sha256": "6b0b1ad9647e6a7c6de6164e573bb4644c55f85c80b02d99c154da4cc8a7a8e8"},
+    {"path": "tests/motion_nav/test_d105_receiver_trust_boundary.py", "sha256": "32efc5059bf9cb7c1942fca080fc55bc2a58c5731b6974f2e5ae06e10702ed7b"},
+    {"path": "tests/motion_nav/test_d105_t2_evidence.py", "sha256": "419cf637244c1fbc2e2751235fe5261fb343ccf4710fbc0e71d7f29cec0630f8"}
+  ],
+  "evidence_files": [
+    {"path": "receiver-timing/index.json", "sha256": "14a1fc0fbe9715df4677352cad2ddd8594b0ae736445592e56a39c1ea5af8c59"},
+    {"path": "receiver-timing/raw/sample-01.json", "sha256": "35dc9bb5434d79e1c45128215bb1af67fbde17e14017fc56effacbea4acee78b"},
+    {"path": "receiver-timing/raw/sample-02.json", "sha256": "e2a00a1418bb83b1c0268e10b6cf96ca15cf7a7ef889cd3682ffcefaf551c346"},
+    {"path": "receiver-timing/raw/sample-03.json", "sha256": "5395da2de48d7e15dcc45eae0f2e846e67899f36bfdf944f5908620e231d17ab"},
+    {"path": "receiver-timing/raw/sample-04.json", "sha256": "feeaa162aebd3199dc76a4ed788a6f809ed6394ff0198302f4f84d520078fb35"},
+    {"path": "receiver-timing/raw/sample-05.json", "sha256": "570ea1979c29fa6127e767d546dc886fdc95d5bf020c49a117c6153aae5203fd"},
+    {"path": "receiver-timing/raw/sample-06.json", "sha256": "58c4f9ba35a5ea62cf2b2d5fa4972b72270824e04bcdd76d7d5c83cb7536b698"},
+    {"path": "receiver-timing/raw/sample-07.json", "sha256": "787776ec2def54459f06abfedaacc6c494c242ab822a0ba63fc47b03ef9a7bc4"},
+    {"path": "receiver-timing/raw/sample-08.json", "sha256": "80b609e0aebba3bb2f3a024fd4f0d5ccacb079d4ab3fc09c91b20bb3810be939"},
+    {"path": "receiver-timing/raw/sample-09.json", "sha256": "3e49439396eb2db53f9e8af01fa3c1ab8c6ef43d339f57e034b7e124059a8c06"},
+    {"path": "receiver-timing/raw/sample-10.json", "sha256": "719e4e2d74f1dad0197948bd7ab72f5be7c4bd1c31cbe1074c6450d6a8808812"},
+    {"path": "receiver-timing/summary.json", "sha256": "74959f8a061e64e7736a08626cd9526ed027aa4a607e8c1f72c868e294cb4b18"},
+    {"path": "spawn-probe/index.json", "sha256": "250d2ca12dd467e8e0720f3d75054e3dc037374264a62643a8b62e3a1c8c007d"},
+    {"path": "spawn-probe/raw/probe.json", "sha256": "174edaba9eaf90fe9b5657bedeeacbb5b6c3831e696d0a26c4f2d3000859e82b"},
+    {"path": "spawn-probe/timeline.json", "sha256": "e5e8074c5bc098f10006550b89c412d540d618346dfdf9bac50b07faf6d6005f"},
+    {"path": "t2-0-baseline.json", "sha256": "f08ec58390caf526710d80db2b0633d606b825c5ae0fda901606a3b00eea55b6"},
+    {"path": "t2-1-result.json", "sha256": "d38aac57705797a54f688359063e3b65ecfb38ba4dd1e136575aa8e5a4eb8bc7"},
+    {"path": "t2-2-stop.json", "sha256": "60bfd39306420d2bff9e2ef190c7c1897745f27c82faa12a59cf93be7fc22170"}
+  ],
+  "generation_commands": {
+    "receiver_timing": ".\\.venv\\python.exe scripts\\measure_sound_motion_t2_d105.py --record-receiver --output evidence\\motion_navigation\\sound-motion-proof-d105-v1\\t2\\receiver-timing",
+    "receiver_recompute": ".\\.venv\\python.exe scripts\\measure_sound_motion_t2_d105.py --recompute --input evidence\\motion_navigation\\sound-motion-proof-d105-v1\\t2\\receiver-timing\\index.json",
+    "evidence_verify": ".\\.venv\\python.exe scripts\\measure_sound_motion_t2_d105.py --verify-evidence --input evidence\\motion_navigation\\sound-motion-proof-d105-v1\\t2\\index.json"
+  },
+  "review_round1_red": {
+    "tests_run": 5,
+    "failures": 2,
+    "errors": 3
+  },
+  "review_round1_green": [
+    {
+      "command": ".\\.venv\\python.exe scripts\\measure_sound_motion_t2_d105.py --recompute --input evidence\\motion_navigation\\sound-motion-proof-d105-v1\\t2\\receiver-timing\\index.json",
+      "status": "PASS",
+      "raw_samples": 10
+    },
+    {
+      "command": ".\\.venv\\python.exe scripts\\measure_sound_motion_t2_d105.py --verify-evidence --input evidence\\motion_navigation\\sound-motion-proof-d105-v1\\t2\\index.json",
+      "status": "PASS",
+      "verified_evidence_files": 18
+    },
+    {
+      "command": ".\\.venv\\python.exe -m unittest tests.motion_nav.test_d105_receiver_trust_boundary tests.motion_nav.test_d105_t2_evidence -v",
+      "status": "PASS",
+      "tests_run": 10
+    },
+    {
+      "command": ".\\.venv\\python.exe -m unittest tests.motion_nav.test_d102_receiver tests.motion_nav.test_d102_windows_matrix.MatrixTests.test_spawn_probe_waits_for_this_job_publication_before_movement_handoff -v",
+      "status": "PASS",
+      "tests_run": 32,
+      "elapsed_seconds": 45.685
+    }
+  ],
+  "review_round2": {
+    "red": {
+      "command": ".\\.venv\\python.exe -m unittest tests.motion_nav.test_d105_t2_evidence.T2EvidenceTests.test_actual_generation_commands_resolve_repository_python -v",
+      "tests_run": 1,
+      "errors": 1
+    },
+    "green": {
+      "evidence_verifier": "PASS",
+      "receiver_recompute": "PASS",
+      "targeted_tests": "11/11"
+    }
+  },
+  "review_round3": {
+    "red": "same interpreter with a different receiver command was accepted",
+    "green": "root receiver_timing, timing generation_command and timing argv match after repository-relative path normalization"
+  },
+  "continuous_two_jump_authorized": false
+}
