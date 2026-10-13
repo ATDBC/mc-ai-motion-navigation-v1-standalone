@@ -2,6 +2,8 @@
 
 日期：2026-10-12。状态：**设计冻结；尚未实施正式链。**
 
+> 2026-10-13：D103 已在 G2-F2 Task C 止损。[D104](../decisions/0104-slim-motion-proofs-before-continuity.md) 改为先缩小证明，再简化 receiver 与快照。本文中“每个边界保存完整尾迹”“receiver 重构造整份对象图”和旧 G2 零物理调用门槛，不再作为后续实施要求；历史试验事实保持不变。
+
 决定见 [D102](../decisions/0102-prepare-and-register-motion-proof-ahead-of-handoff.md)，试验依据见[D102／D103 验收](../acceptance/prepared-motion-proof-spikes-d102-d103.md)。本规格沿用 [D099](../decisions/0099-adopt-game-first-risk-graded-short-open-loop-control.md)、[D100](../decisions/0100-use-risk-aware-continuous-deviation-recovery.md)、[D101](../decisions/0101-clarify-short-open-loop-timing-and-lifecycle.md)和[按风险连续运动架构](risk-aware-continuous-motion-v1.md)。下文是正式契约要求，不表示对应能力已经实现。
 
 ## 1. 目标和边界

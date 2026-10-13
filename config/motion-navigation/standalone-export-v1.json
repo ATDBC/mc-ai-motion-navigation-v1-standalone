@@ -105,6 +105,7 @@
     "evidence/motion_navigation/continuous-motion-d101-v1/**/*",
     "evidence/motion_navigation/prepared-motion-proof-d102-v1/**/*",
     "evidence/motion_navigation/prepared-motion-proof-spikes-v1/**/*",
+    "evidence/motion_navigation/key-boundary-motion-proof-d104-v1/**/*",
     "experiments/motion_navigation/trajectory_proto/*.py",
     "experiments/motion_navigation/trajectory_proto/data/*.json",
     "scripts/measure_incremental_motion_r98.py",

@@ -1,0 +1,26 @@
+{
+  "schema": "d104-failure-index-v1",
+  "stage": "K1",
+  "status": "FAILED_STOPPED",
+  "reason": "hidden_short_risk_between_sampled_boundaries",
+  "formal_platform": "Windows",
+  "k0_passed": true,
+  "k1_passed": false,
+  "k2_run_valid": false,
+  "historical_evidence_rewritten": false,
+  "active_experiment_integration_reverted": true,
+  "old_scanner_risk": {
+    "last_abandon": 4,
+    "commitment": 5,
+    "recovered": 6
+  },
+  "candidate_risk_count": 0,
+  "artifacts": {
+    "prototype-key-boundary-proof.py": "46a7599a2e71a94045d499e5c478ff3f319455b3820eaa0776d59096fef81dda",
+    "k1-hidden-risk-review.md": "71059b466a535e9d26a46db6523cb0cacf9bc0ceca6d9cbda486348dd3888f95",
+    "k0-oracle-k1-candidate\\manifest.json": "ee6e85c086888d7e9718c4cadd823eac2caa97915621ea3109421dfc661c63e4",
+    "k0-oracle-k1-candidate\\oracle.json": "cdd26d8bcc3c75cabae95ea91d8ec9f6a5014d1a5f07b0d3b5ec6a004dc647c2",
+    "diagnostic-k2-invalidated\\manifest.json": "2f0032fc4172c962aaf33d1a3bc4d53faf535dd8f558191ae96d45a0d36d15e0",
+    "diagnostic-k2-invalidated\\summary.json": "4341442e4b25f7663b6ecbe33cb80e930327d5212d61ede490fac1291821ff29"
+  }
+}

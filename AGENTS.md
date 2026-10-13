@@ -1,5 +1,7 @@
 # AGENTS.md
 
+2026-10-13，D104 止于 K1。K0 冻结的 18 个旧扫描样本可重复；关键边界候选虽在这些样本上减少了物理计算，但独立反例证明它可能漏掉两个采样点之间短暂的 `UNSAFE→SAFE` 风险。候选已从活动 D101 路径撤回，后续性能运行只作诊断，不构成 K2。K2—K7、receiver／快照简化、F-TICK、连续两跳和 Fabric 均未运行。先读 [D104](docs/motion_navigation/decisions/0104-slim-motion-proofs-before-continuity.md)、[阶段](docs/motion_navigation/stages/key-boundary-motion-proof-and-continuity-plan.md)、[验收](docs/motion_navigation/acceptance/key-boundary-motion-proof-and-continuity.md)和[失败索引](evidence/motion_navigation/key-boundary-motion-proof-d104-v1/failure-index.json)。
+
 2026-10-13，D103 G2-F2 止于 Task C。Task A 已统一执行窗口转换并关闭 11／12 tick 漏传；Task B 已把观察请求容量编码移出控制路径，同时保留公共校验和真实 backend 编码。Task C 的真实 spawn 前置试验证明 legacy 第一段没有 registry handle 或登记安全尾迹，late delivery、fallback 与正常 closeout 仍需在控制线程现场 `verified_ground_rollout`。该结果触发预登记止损：Task C 未实现，Task D、唯一正式 F2、Task 10、G3 和 Fabric 均未运行；G2 继续 **FAILED／STOPPED**。先读 [D103](docs/motion_navigation/decisions/0103-repair-g2-window-and-control-hot-path.md)、[G2-F2 计划及结果](docs/motion_navigation/stages/prepared-motion-proof-g2-f2-remediation-plan.md)和[D102 正式验收](docs/motion_navigation/acceptance/prepared-motion-proof-pipeline-d102.md)。
 
 2026-10-11，D101 最小原型止于 M0。安全结果通过，但完整决定 P99 和最大值超过冻结门槛；M0 整体未通过，正式链接入和 Fabric 未授权。现行证据入口为 `evidence/motion_navigation/continuous-motion-d101-v1/`。

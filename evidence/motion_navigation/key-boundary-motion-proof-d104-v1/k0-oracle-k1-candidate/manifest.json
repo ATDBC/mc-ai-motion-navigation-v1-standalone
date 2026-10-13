@@ -1,0 +1,14 @@
+{
+  "artifacts": {
+    "oracle.json": "cdd26d8bcc3c75cabae95ea91d8ec9f6a5014d1a5f07b0d3b5ec6a004dc647c2"
+  },
+  "command": "scripts/measure_key_boundary_d104.py --output <fresh-directory>",
+  "formal_platform": "Windows-10-10.0.26200-SP0",
+  "git_parent_commit": "503ba736bd0af337a539e58ffa041522541e0adf",
+  "historical_evidence_rewritten": false,
+  "passed": true,
+  "production_motion_code_changed": false,
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "schema": "d104-k0-k1-oracle-v1",
+  "stage": "K0-K1"
+}

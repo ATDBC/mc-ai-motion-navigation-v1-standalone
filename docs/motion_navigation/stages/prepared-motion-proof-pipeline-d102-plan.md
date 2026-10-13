@@ -1,5 +1,7 @@
 # D102 提前准备与可信注册运动证明 Implementation Plan
 
+> 2026-10-13：本计划止于 D103 G2-F2 Task C。Task D、旧 Task 10、G3、F-TICK 与 F-CONTINUITY 不再按本文顺序实施。后续使用 [D104 关键边界证明与连续动作计划](key-boundary-motion-proof-and-continuity-plan.md)；本文保留为历史计划。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 2026-10-12。状态：**实施计划草案，尚未实施。** 规格基线为 `3668cb3c1fc55c9ba44a36208fecafa0286cb8ee`。本次只写计划，不改生产代码、不启动 Fabric、不提交。任务之间的门槛表示先后依赖，不表示自动获得下一阶段授权；执行前以用户明确授权为准。

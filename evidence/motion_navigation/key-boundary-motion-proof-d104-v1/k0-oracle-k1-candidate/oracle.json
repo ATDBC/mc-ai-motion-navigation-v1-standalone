@@ -1,0 +1,2453 @@
+{
+  "compact_equivalent_on_frozen_scope": true,
+  "d101_reference": {
+    "case_id": "jump_gap_1:A3/d101-empty-in-flight",
+    "compact_counts": {
+      "nodes": 22,
+      "physics_steps": 177,
+      "tail_ticks": 130
+    },
+    "compact_risks": [
+      [
+        {
+          "first_committed_boundary": 4,
+          "last_abandon_boundary": 3,
+          "recovered_boundary": 17
+        }
+      ],
+      [
+        {
+          "first_committed_boundary": 4,
+          "last_abandon_boundary": 3,
+          "recovered_boundary": 17
+        }
+      ]
+    ],
+    "compact_tail_boundaries": [
+      [
+        0,
+        3,
+        17,
+        23
+      ],
+      [
+        0,
+        3,
+        17,
+        23
+      ]
+    ],
+    "compact_tail_lengths": [
+      [
+        1,
+        7,
+        6,
+        1
+      ],
+      [
+        1,
+        7,
+        6,
+        1
+      ]
+    ],
+    "inputs_equal": true,
+    "old_counts": {
+      "nodes": 52,
+      "physics_steps": 407,
+      "tail_ticks": 360
+    },
+    "old_risks": [
+      [
+        {
+          "first_committed_boundary": 4,
+          "last_abandon_boundary": 3,
+          "recovered_boundary": 17
+        }
+      ],
+      [
+        {
+          "first_committed_boundary": 4,
+          "last_abandon_boundary": 3,
+          "recovered_boundary": 17
+        }
+      ]
+    ],
+    "risks_equal": true,
+    "states_equal": true
+  },
+  "formal_platform": "Windows",
+  "old_oracle_repeatable": true,
+  "passed": true,
+  "rows": [
+    {
+      "case_id": "gap1/rest-L/0",
+      "compact_counts": {
+        "nodes": 32,
+        "physics_steps": 343,
+        "tail_ticks": 268
+      },
+      "compact_reason": null,
+      "compact_risks": [
+        [],
+        []
+      ],
+      "compact_status": "VERIFIED_CANDIDATE",
+      "compact_tail_boundaries": [
+        [
+          0,
+          37
+        ],
+        [
+          0,
+          37
+        ]
+      ],
+      "compact_tail_lengths": [
+        [
+          7,
+          1
+        ],
+        [
+          7,
+          1
+        ]
+      ],
+      "input_hash": "7f009ffdfff88feee1afd37e32614bdc89e3ba9b7eb203369cd06e02dd0d4df0",
+      "inputs_equal": true,
+      "old_counts": {
+        "nodes": 78,
+        "physics_steps": 763,
+        "tail_ticks": 688
+      },
+      "old_reason": null,
+      "old_risks": [
+        [],
+        []
+      ],
+      "old_signature": "a7409d3488d58c9ea4b02b26c0e488a105f7dbe2bcd87e7d0105f99b1866d1a4",
+      "old_status": "VERIFIED_CANDIDATE",
+      "old_tail_lengths": [
+        [
+          7,
+          8,
+          8,
+          8,
+          8,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          18,
+          17,
+          16,
+          16,
+          15,
+          14,
+          13,
+          12,
+          12,
+          11,
+          10,
+          9,
+          5,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ],
+        [
+          7,
+          8,
+          8,
+          8,
+          8,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          18,
+          17,
+          16,
+          16,
+          15,
+          14,
+          13,
+          12,
+          12,
+          11,
+          10,
+          9,
+          5,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ]
+      ],
+      "repeated_signature": "a7409d3488d58c9ea4b02b26c0e488a105f7dbe2bcd87e7d0105f99b1866d1a4",
+      "risks_equal": true,
+      "states_equal": true
+    },
+    {
+      "case_id": "gap1/walk-L-n/1",
+      "compact_counts": {
+        "nodes": 28,
+        "physics_steps": 298,
+        "tail_ticks": 227
+      },
+      "compact_reason": null,
+      "compact_risks": [
+        [],
+        []
+      ],
+      "compact_status": "VERIFIED_CANDIDATE",
+      "compact_tail_boundaries": [
+        [
+          0,
+          35
+        ],
+        [
+          0,
+          35
+        ]
+      ],
+      "compact_tail_lengths": [
+        [
+          8,
+          1
+        ],
+        [
+          9,
+          1
+        ]
+      ],
+      "input_hash": "533e485e5390b028400ba9d0c7328b88f28ecc1763495039f6e82de857701f5b",
+      "inputs_equal": true,
+      "old_counts": {
+        "nodes": 74,
+        "physics_steps": 736,
+        "tail_ticks": 665
+      },
+      "old_reason": null,
+      "old_risks": [
+        [],
+        []
+      ],
+      "old_signature": "4287824d31af220479e52153a88bf91950509169c485f70217fd5bbfb1cb42e7",
+      "old_status": "VERIFIED_CANDIDATE",
+      "old_tail_lengths": [
+        [
+          8,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          18,
+          17,
+          16,
+          16,
+          15,
+          14,
+          13,
+          12,
+          12,
+          11,
+          10,
+          9,
+          6,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ],
+        [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          18,
+          17,
+          16,
+          16,
+          15,
+          14,
+          13,
+          12,
+          12,
+          11,
+          10,
+          9,
+          6,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ]
+      ],
+      "repeated_signature": "4287824d31af220479e52153a88bf91950509169c485f70217fd5bbfb1cb42e7",
+      "risks_equal": true,
+      "states_equal": true
+    },
+    {
+      "case_id": "gap1/sprint-L-n/2",
+      "compact_counts": {
+        "nodes": 32,
+        "physics_steps": 339,
+        "tail_ticks": 276
+      },
+      "compact_reason": null,
+      "compact_risks": [
+        [],
+        []
+      ],
+      "compact_status": "VERIFIED_CANDIDATE",
+      "compact_tail_boundaries": [
+        [
+          0,
+          31
+        ],
+        [
+          0,
+          31
+        ]
+      ],
+      "compact_tail_lengths": [
+        [
+          9,
+          1
+        ],
+        [
+          9,
+          1
+        ]
+      ],
+      "input_hash": "a1563e7420e5c402b783abb17e025b327ea92e2f10cf90517cccf952d04f3956",
+      "inputs_equal": true,
+      "old_counts": {
+        "nodes": 66,
+        "physics_steps": 665,
+        "tail_ticks": 602
+      },
+      "old_reason": null,
+      "old_risks": [
+        [],
+        []
+      ],
+      "old_signature": "655e96f88b427f29c4ec22283e3c7f44694e3c3b19b16e1e9059ce65cb049cb0",
+      "old_status": "VERIFIED_CANDIDATE",
+      "old_tail_lengths": [
+        [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          19,
+          18,
+          17,
+          17,
+          16,
+          15,
+          14,
+          13,
+          12,
+          11,
+          10,
+          9,
+          7,
+          6,
+          8,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ],
+        [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          19,
+          18,
+          17,
+          17,
+          16,
+          15,
+          14,
+          13,
+          12,
+          11,
+          10,
+          9,
+          7,
+          6,
+          8,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ]
+      ],
+      "repeated_signature": "655e96f88b427f29c4ec22283e3c7f44694e3c3b19b16e1e9059ce65cb049cb0",
+      "risks_equal": true,
+      "states_equal": true
+    },
+    {
+      "case_id": "gap2/rest-L/3",
+      "compact_counts": {
+        "nodes": 32,
+        "physics_steps": 351,
+        "tail_ticks": 276
+      },
+      "compact_reason": null,
+      "compact_risks": [
+        [],
+        []
+      ],
+      "compact_status": "VERIFIED_CANDIDATE",
+      "compact_tail_boundaries": [
+        [
+          0,
+          37
+        ],
+        [
+          0,
+          37
+        ]
+      ],
+      "compact_tail_lengths": [
+        [
+          7,
+          1
+        ],
+        [
+          7,
+          1
+        ]
+      ],
+      "input_hash": "47472174c00f5e2852b9117a5a183d4c775a52cdbc29d5f8eb4a190a7770e4c0",
+      "inputs_equal": true,
+      "old_counts": {
+        "nodes": 78,
+        "physics_steps": 779,
+        "tail_ticks": 704
+      },
+      "old_reason": null,
+      "old_risks": [
+        [],
+        []
+      ],
+      "old_signature": "9a3f744ee95c1740e23ed3a029a25326a269bda966e17a2c1e920ee72d0c7ae5",
+      "old_status": "VERIFIED_CANDIDATE",
+      "old_tail_lengths": [
+        [
+          7,
+          8,
+          8,
+          8,
+          8,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          19,
+          18,
+          17,
+          16,
+          16,
+          15,
+          14,
+          13,
+          12,
+          11,
+          10,
+          9,
+          6,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ],
+        [
+          7,
+          8,
+          8,
+          8,
+          8,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          19,
+          18,
+          17,
+          16,
+          16,
+          15,
+          14,
+          13,
+          12,
+          11,
+          10,
+          9,
+          6,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ]
+      ],
+      "repeated_signature": "9a3f744ee95c1740e23ed3a029a25326a269bda966e17a2c1e920ee72d0c7ae5",
+      "risks_equal": true,
+      "states_equal": true
+    },
+    {
+      "case_id": "gap2/walk-L-n/4",
+      "compact_counts": {
+        "nodes": 33,
+        "physics_steps": 359,
+        "tail_ticks": 280
+      },
+      "compact_reason": null,
+      "compact_risks": [
+        [],
+        [
+          {
+            "first_committed_boundary": 15,
+            "last_abandon_boundary": 14,
+            "recovered_boundary": 16
+          }
+        ]
+      ],
+      "compact_status": "VERIFIED_CANDIDATE",
+      "compact_tail_boundaries": [
+        [
+          0,
+          39
+        ],
+        [
+          0,
+          14,
+          16,
+          39
+        ]
+      ],
+      "compact_tail_lengths": [
+        [
+          8,
+          1
+        ],
+        [
+          8,
+          9,
+          19,
+          1
+        ]
+      ],
+      "input_hash": "487c2224cb6cc918d986d2d46aa2168a46ff8c211144b26e9d315149cb45e583",
+      "inputs_equal": true,
+      "old_counts": {
+        "nodes": 83,
+        "physics_steps": 817,
+        "tail_ticks": 738
+      },
+      "old_reason": null,
+      "old_risks": [
+        [],
+        [
+          {
+            "first_committed_boundary": 15,
+            "last_abandon_boundary": 14,
+            "recovered_boundary": 16
+          }
+        ]
+      ],
+      "old_signature": "14e7498d2f1f94971db00958e181446312b175a20435fd54085ecd2fdc4ca6d4",
+      "old_status": "VERIFIED_CANDIDATE",
+      "old_tail_lengths": [
+        [
+          8,
+          8,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          19,
+          18,
+          17,
+          16,
+          16,
+          15,
+          14,
+          13,
+          12,
+          11,
+          10,
+          9,
+          7,
+          7,
+          8,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ],
+        [
+          8,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          4,
+          19,
+          18,
+          17,
+          16,
+          16,
+          15,
+          14,
+          13,
+          12,
+          11,
+          10,
+          9,
+          7,
+          7,
+          8,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ]
+      ],
+      "repeated_signature": "14e7498d2f1f94971db00958e181446312b175a20435fd54085ecd2fdc4ca6d4",
+      "risks_equal": true,
+      "states_equal": true
+    },
+    {
+      "case_id": "gap2/sprint-L-n/5",
+      "compact_counts": {
+        "nodes": 39,
+        "physics_steps": 407,
+        "tail_ticks": 334
+      },
+      "compact_reason": null,
+      "compact_risks": [
+        [
+          {
+            "first_committed_boundary": 12,
+            "last_abandon_boundary": 11,
+            "recovered_boundary": 13
+          }
+        ],
+        [
+          {
+            "first_committed_boundary": 11,
+            "last_abandon_boundary": 10,
+            "recovered_boundary": 25
+          }
+        ]
+      ],
+      "compact_status": "VERIFIED_CANDIDATE",
+      "compact_tail_boundaries": [
+        [
+          0,
+          11,
+          13,
+          36
+        ],
+        [
+          0,
+          10,
+          25,
+          36
+        ]
+      ],
+      "compact_tail_lengths": [
+        [
+          9,
+          9,
+          19,
+          1
+        ],
+        [
+          9,
+          9,
+          5,
+          1
+        ]
+      ],
+      "input_hash": "317f8b45dd03079a6f0c2f7bf916d45d49f51c22146a61649191d673869763ae",
+      "inputs_equal": true,
+      "old_counts": {
+        "nodes": 79,
+        "physics_steps": 746,
+        "tail_ticks": 673
+      },
+      "old_reason": null,
+      "old_risks": [
+        [
+          {
+            "first_committed_boundary": 12,
+            "last_abandon_boundary": 11,
+            "recovered_boundary": 13
+          }
+        ],
+        [
+          {
+            "first_committed_boundary": 11,
+            "last_abandon_boundary": 10,
+            "recovered_boundary": 25
+          }
+        ]
+      ],
+      "old_signature": "b66cf0805b0ad7b12bf5adb1c860a5af391dfb7653df25d3ebfc051d16cb36ec",
+      "old_status": "VERIFIED_CANDIDATE",
+      "old_tail_lengths": [
+        [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          4,
+          19,
+          18,
+          17,
+          17,
+          16,
+          15,
+          14,
+          13,
+          12,
+          11,
+          10,
+          9,
+          5,
+          7,
+          8,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ],
+        [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          4,
+          2,
+          19,
+          18,
+          17,
+          17,
+          16,
+          15,
+          14,
+          13,
+          12,
+          11,
+          10,
+          9,
+          5,
+          7,
+          8,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ]
+      ],
+      "repeated_signature": "b66cf0805b0ad7b12bf5adb1c860a5af391dfb7653df25d3ebfc051d16cb36ec",
+      "risks_equal": true,
+      "states_equal": true
+    },
+    {
+      "case_id": "gap3/rest-L/6",
+      "compact_counts": {
+        "nodes": 26,
+        "physics_steps": 267,
+        "tail_ticks": 188
+      },
+      "compact_reason": null,
+      "compact_risks": [
+        [
+          {
+            "first_committed_boundary": 17,
+            "last_abandon_boundary": 16,
+            "recovered_boundary": 29
+          }
+        ],
+        [
+          {
+            "first_committed_boundary": 17,
+            "last_abandon_boundary": 16,
+            "recovered_boundary": 29
+          }
+        ]
+      ],
+      "compact_status": "VERIFIED_CANDIDATE",
+      "compact_tail_boundaries": [
+        [
+          0,
+          16,
+          29,
+          39
+        ],
+        [
+          0,
+          16,
+          29,
+          39
+        ]
+      ],
+      "compact_tail_lengths": [
+        [
+          7,
+          9,
+          9,
+          1
+        ],
+        [
+          7,
+          9,
+          9,
+          1
+        ]
+      ],
+      "input_hash": "8a0c3aec06fa4f0b20a40080492c2c09500f3c5bb5f6c764261ff80f9b4a704f",
+      "inputs_equal": true,
+      "old_counts": {
+        "nodes": 84,
+        "physics_steps": 721,
+        "tail_ticks": 642
+      },
+      "old_reason": null,
+      "old_risks": [
+        [
+          {
+            "first_committed_boundary": 17,
+            "last_abandon_boundary": 16,
+            "recovered_boundary": 29
+          }
+        ],
+        [
+          {
+            "first_committed_boundary": 17,
+            "last_abandon_boundary": 16,
+            "recovered_boundary": 29
+          }
+        ]
+      ],
+      "old_signature": "f64f0c66e812958cff74a85176a1883be918b2d0ee66060976d87dda20c847a3",
+      "old_status": "VERIFIED_CANDIDATE",
+      "old_tail_lengths": [
+        [
+          7,
+          8,
+          8,
+          8,
+          8,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          12,
+          11,
+          10,
+          9,
+          8,
+          7,
+          6,
+          13,
+          12,
+          11,
+          10,
+          10,
+          9,
+          9,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ],
+        [
+          7,
+          8,
+          8,
+          8,
+          8,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          12,
+          11,
+          10,
+          9,
+          8,
+          7,
+          6,
+          13,
+          12,
+          11,
+          10,
+          10,
+          9,
+          9,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ]
+      ],
+      "repeated_signature": "f64f0c66e812958cff74a85176a1883be918b2d0ee66060976d87dda20c847a3",
+      "risks_equal": true,
+      "states_equal": true
+    },
+    {
+      "case_id": "gap3/walk-L-n/7",
+      "compact_counts": {
+        "nodes": 29,
+        "physics_steps": 315,
+        "tail_ticks": 242
+      },
+      "compact_reason": null,
+      "compact_risks": [
+        [
+          {
+            "first_committed_boundary": 16,
+            "last_abandon_boundary": 15,
+            "recovered_boundary": 28
+          }
+        ],
+        [
+          {
+            "first_committed_boundary": 15,
+            "last_abandon_boundary": 14,
+            "recovered_boundary": 28
+          }
+        ]
+      ],
+      "compact_status": "VERIFIED_CANDIDATE",
+      "compact_tail_boundaries": [
+        [
+          0,
+          15,
+          28,
+          36
+        ],
+        [
+          0,
+          14,
+          28,
+          36
+        ]
+      ],
+      "compact_tail_lengths": [
+        [
+          9,
+          9,
+          8,
+          1
+        ],
+        [
+          9,
+          9,
+          8,
+          1
+        ]
+      ],
+      "input_hash": "f118985cb826b8f7e51a5e6f5a78f1fbee1531cd299280516ba973213121264f",
+      "inputs_equal": true,
+      "old_counts": {
+        "nodes": 78,
+        "physics_steps": 714,
+        "tail_ticks": 641
+      },
+      "old_reason": null,
+      "old_risks": [
+        [
+          {
+            "first_committed_boundary": 16,
+            "last_abandon_boundary": 15,
+            "recovered_boundary": 28
+          }
+        ],
+        [
+          {
+            "first_committed_boundary": 15,
+            "last_abandon_boundary": 14,
+            "recovered_boundary": 28
+          }
+        ]
+      ],
+      "old_signature": "e4819e99d1feefb51b29d4d10e5739add9e775d517cfda9f0dc9d171f7d9f222",
+      "old_status": "VERIFIED_CANDIDATE",
+      "old_tail_lengths": [
+        [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          12,
+          11,
+          10,
+          9,
+          8,
+          15,
+          14,
+          13,
+          12,
+          11,
+          10,
+          9,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ],
+        [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          4,
+          12,
+          11,
+          10,
+          17,
+          16,
+          15,
+          14,
+          13,
+          12,
+          11,
+          10,
+          9,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ]
+      ],
+      "repeated_signature": "e4819e99d1feefb51b29d4d10e5739add9e775d517cfda9f0dc9d171f7d9f222",
+      "risks_equal": true,
+      "states_equal": true
+    },
+    {
+      "case_id": "gap3/sprint-L-n/8",
+      "compact_counts": {
+        "nodes": 31,
+        "physics_steps": 279,
+        "tail_ticks": 212
+      },
+      "compact_reason": null,
+      "compact_risks": [
+        [
+          {
+            "first_committed_boundary": 12,
+            "last_abandon_boundary": 11,
+            "recovered_boundary": 25
+          }
+        ],
+        [
+          {
+            "first_committed_boundary": 11,
+            "last_abandon_boundary": 10,
+            "recovered_boundary": 25
+          }
+        ]
+      ],
+      "compact_status": "VERIFIED_CANDIDATE",
+      "compact_tail_boundaries": [
+        [
+          0,
+          11,
+          25,
+          33
+        ],
+        [
+          0,
+          10,
+          25,
+          33
+        ]
+      ],
+      "compact_tail_lengths": [
+        [
+          9,
+          9,
+          9,
+          1
+        ],
+        [
+          9,
+          9,
+          9,
+          1
+        ]
+      ],
+      "input_hash": "53becb75c1f01547d192936a4c30d6601b8648390f7f06e5b07f5f5e56f93c5b",
+      "inputs_equal": true,
+      "old_counts": {
+        "nodes": 72,
+        "physics_steps": 676,
+        "tail_ticks": 609
+      },
+      "old_reason": null,
+      "old_risks": [
+        [
+          {
+            "first_committed_boundary": 12,
+            "last_abandon_boundary": 11,
+            "recovered_boundary": 25
+          }
+        ],
+        [
+          {
+            "first_committed_boundary": 11,
+            "last_abandon_boundary": 10,
+            "recovered_boundary": 25
+          }
+        ]
+      ],
+      "old_signature": "b2c9cf044ec924daed6cd249cf40467b33401a65f508355c4ccce3f7d67a3231",
+      "old_status": "VERIFIED_CANDIDATE",
+      "old_tail_lengths": [
+        [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          4,
+          12,
+          11,
+          10,
+          17,
+          16,
+          15,
+          14,
+          13,
+          12,
+          11,
+          10,
+          10,
+          9,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ],
+        [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          4,
+          2,
+          12,
+          18,
+          17,
+          17,
+          16,
+          15,
+          14,
+          13,
+          12,
+          11,
+          10,
+          10,
+          9,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ]
+      ],
+      "repeated_signature": "b2c9cf044ec924daed6cd249cf40467b33401a65f508355c4ccce3f7d67a3231",
+      "risks_equal": true,
+      "states_equal": true
+    },
+    {
+      "case_id": "gap2c/rest-L/9",
+      "compact_counts": {
+        "nodes": 28,
+        "physics_steps": 345,
+        "tail_ticks": 280
+      },
+      "compact_reason": null,
+      "compact_risks": [
+        [],
+        []
+      ],
+      "compact_status": "VERIFIED_CANDIDATE",
+      "compact_tail_boundaries": [
+        [
+          0,
+          32
+        ],
+        [
+          0,
+          32
+        ]
+      ],
+      "compact_tail_lengths": [
+        [
+          7,
+          7
+        ],
+        [
+          7,
+          7
+        ]
+      ],
+      "input_hash": "6bfe50b7964b2425506641e61db64d9d997c97137e0061af91ec3a4069d902dd",
+      "inputs_equal": true,
+      "old_counts": {
+        "nodes": 68,
+        "physics_steps": 755,
+        "tail_ticks": 690
+      },
+      "old_reason": null,
+      "old_risks": [
+        [],
+        []
+      ],
+      "old_signature": "ff28834649dc04b3a7d38000ecae8ecc6dd714ff1feb4d6a8dd3e7e08e1bd9b7",
+      "old_status": "VERIFIED_CANDIDATE",
+      "old_tail_lengths": [
+        [
+          7,
+          8,
+          8,
+          8,
+          8,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          19,
+          18,
+          17,
+          16,
+          16,
+          15,
+          14,
+          13,
+          12,
+          11,
+          10,
+          9,
+          6,
+          7,
+          8,
+          7
+        ],
+        [
+          7,
+          8,
+          8,
+          8,
+          8,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          19,
+          18,
+          17,
+          16,
+          16,
+          15,
+          14,
+          13,
+          12,
+          11,
+          10,
+          9,
+          6,
+          7,
+          8,
+          7
+        ]
+      ],
+      "repeated_signature": "ff28834649dc04b3a7d38000ecae8ecc6dd714ff1feb4d6a8dd3e7e08e1bd9b7",
+      "risks_equal": true,
+      "states_equal": true
+    },
+    {
+      "case_id": "gap2c/walk-L-n/10",
+      "compact_counts": {
+        "nodes": 23,
+        "physics_steps": 256,
+        "tail_ticks": 193
+      },
+      "compact_reason": null,
+      "compact_risks": [
+        [
+          {
+            "first_committed_boundary": 16,
+            "last_abandon_boundary": 15,
+            "recovered_boundary": 28
+          }
+        ],
+        [
+          {
+            "first_committed_boundary": 15,
+            "last_abandon_boundary": 14,
+            "recovered_boundary": 28
+          }
+        ]
+      ],
+      "compact_status": "VERIFIED_CANDIDATE",
+      "compact_tail_boundaries": [
+        [
+          0,
+          15,
+          28,
+          31
+        ],
+        [
+          0,
+          14,
+          28,
+          31
+        ]
+      ],
+      "compact_tail_lengths": [
+        [
+          8,
+          9,
+          9,
+          8
+        ],
+        [
+          8,
+          9,
+          9,
+          8
+        ]
+      ],
+      "input_hash": "07ff35b4cea080a21cc86709c2dc84cbc500c4d81cfba8e95960be97fba710fb",
+      "inputs_equal": true,
+      "old_counts": {
+        "nodes": 68,
+        "physics_steps": 638,
+        "tail_ticks": 575
+      },
+      "old_reason": null,
+      "old_risks": [
+        [
+          {
+            "first_committed_boundary": 16,
+            "last_abandon_boundary": 15,
+            "recovered_boundary": 28
+          }
+        ],
+        [
+          {
+            "first_committed_boundary": 15,
+            "last_abandon_boundary": 14,
+            "recovered_boundary": 28
+          }
+        ]
+      ],
+      "old_signature": "3bd0928acc8e3857eb79bfc1b50448d2249c5a9ebd3dc83e0396dd25666b6f82",
+      "old_status": "VERIFIED_CANDIDATE",
+      "old_tail_lengths": [
+        [
+          8,
+          8,
+          8,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          12,
+          11,
+          10,
+          9,
+          8,
+          7,
+          6,
+          5,
+          4,
+          11,
+          10,
+          9,
+          9,
+          9,
+          9,
+          8
+        ],
+        [
+          8,
+          8,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          5,
+          12,
+          11,
+          10,
+          9,
+          8,
+          7,
+          13,
+          12,
+          12,
+          11,
+          10,
+          9,
+          9,
+          9,
+          9,
+          8
+        ]
+      ],
+      "repeated_signature": "3bd0928acc8e3857eb79bfc1b50448d2249c5a9ebd3dc83e0396dd25666b6f82",
+      "risks_equal": true,
+      "states_equal": true
+    },
+    {
+      "case_id": "gap2c/sprint-L-n/11",
+      "compact_counts": {
+        "nodes": 33,
+        "physics_steps": 379,
+        "tail_ticks": 318
+      },
+      "compact_reason": null,
+      "compact_risks": [
+        [
+          {
+            "first_committed_boundary": 12,
+            "last_abandon_boundary": 11,
+            "recovered_boundary": 13
+          }
+        ],
+        [
+          {
+            "first_committed_boundary": 11,
+            "last_abandon_boundary": 10,
+            "recovered_boundary": 25
+          }
+        ]
+      ],
+      "compact_status": "VERIFIED_CANDIDATE",
+      "compact_tail_boundaries": [
+        [
+          0,
+          11,
+          13,
+          30
+        ],
+        [
+          0,
+          10,
+          25,
+          30
+        ]
+      ],
+      "compact_tail_lengths": [
+        [
+          9,
+          9,
+          19,
+          7
+        ],
+        [
+          9,
+          9,
+          5,
+          7
+        ]
+      ],
+      "input_hash": "cca13f0e835260ef30edc0b75b0888ae8042128fd4a862e2e10515d07ef68235",
+      "inputs_equal": true,
+      "old_counts": {
+        "nodes": 67,
+        "physics_steps": 706,
+        "tail_ticks": 645
+      },
+      "old_reason": null,
+      "old_risks": [
+        [
+          {
+            "first_committed_boundary": 12,
+            "last_abandon_boundary": 11,
+            "recovered_boundary": 13
+          }
+        ],
+        [
+          {
+            "first_committed_boundary": 11,
+            "last_abandon_boundary": 10,
+            "recovered_boundary": 25
+          }
+        ]
+      ],
+      "old_signature": "4b3c97d759d9ba9e63c24680945d928bb7da143b87c1ff0c4dfcf2a158249966",
+      "old_status": "VERIFIED_CANDIDATE",
+      "old_tail_lengths": [
+        [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          4,
+          19,
+          18,
+          17,
+          17,
+          16,
+          15,
+          14,
+          13,
+          12,
+          11,
+          10,
+          9,
+          5,
+          7,
+          8,
+          8,
+          8,
+          7
+        ],
+        [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          4,
+          2,
+          19,
+          18,
+          17,
+          17,
+          16,
+          15,
+          14,
+          13,
+          12,
+          11,
+          10,
+          9,
+          5,
+          7,
+          8,
+          8,
+          8,
+          7
+        ]
+      ],
+      "repeated_signature": "4b3c97d759d9ba9e63c24680945d928bb7da143b87c1ff0c4dfcf2a158249966",
+      "risks_equal": true,
+      "states_equal": true
+    },
+    {
+      "case_id": "jumpup/rest-L/12",
+      "compact_counts": {
+        "nodes": 28,
+        "physics_steps": 265,
+        "tail_ticks": 218
+      },
+      "compact_reason": null,
+      "compact_risks": [
+        [],
+        []
+      ],
+      "compact_status": "VERIFIED_CANDIDATE",
+      "compact_tail_boundaries": [
+        [
+          0,
+          23
+        ],
+        [
+          0,
+          23
+        ]
+      ],
+      "compact_tail_lengths": [
+        [
+          7,
+          1
+        ],
+        [
+          7,
+          1
+        ]
+      ],
+      "input_hash": "a6f1f7fdf353eed6e19d8169523b51991d24e5a460c3f7e6accb0819a6141ed1",
+      "inputs_equal": true,
+      "old_counts": {
+        "nodes": 50,
+        "physics_steps": 457,
+        "tail_ticks": 410
+      },
+      "old_reason": null,
+      "old_risks": [
+        [],
+        []
+      ],
+      "old_signature": "29f6abb376ab2fb1817942bcfc7e69388663746a63044abb34e813bcf56036c6",
+      "old_status": "VERIFIED_CANDIDATE",
+      "old_tail_lengths": [
+        [
+          7,
+          8,
+          8,
+          8,
+          8,
+          9,
+          9,
+          17,
+          16,
+          15,
+          14,
+          13,
+          12,
+          11,
+          10,
+          10,
+          8,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ],
+        [
+          7,
+          8,
+          8,
+          8,
+          8,
+          9,
+          9,
+          17,
+          16,
+          15,
+          14,
+          13,
+          12,
+          11,
+          10,
+          10,
+          8,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ]
+      ],
+      "repeated_signature": "29f6abb376ab2fb1817942bcfc7e69388663746a63044abb34e813bcf56036c6",
+      "risks_equal": true,
+      "states_equal": true
+    },
+    {
+      "case_id": "jumpup/walk-L-n/13",
+      "compact_counts": {
+        "nodes": 34,
+        "physics_steps": 315,
+        "tail_ticks": 258
+      },
+      "compact_reason": null,
+      "compact_risks": [
+        [],
+        []
+      ],
+      "compact_status": "VERIFIED_CANDIDATE",
+      "compact_tail_boundaries": [
+        [
+          0,
+          28
+        ],
+        [
+          0,
+          28
+        ]
+      ],
+      "compact_tail_lengths": [
+        [
+          8,
+          1
+        ],
+        [
+          8,
+          1
+        ]
+      ],
+      "input_hash": "069e8f78ad3747b60b30a78d49a576629877eb7332704cfa3e2f2292d96b13c4",
+      "inputs_equal": true,
+      "old_counts": {
+        "nodes": 60,
+        "physics_steps": 534,
+        "tail_ticks": 477
+      },
+      "old_reason": null,
+      "old_risks": [
+        [],
+        []
+      ],
+      "old_signature": "108b6d1551ee45e92e6d2cb396d973c034e31ae5b67fe982ad0ebf12317df5eb",
+      "old_status": "VERIFIED_CANDIDATE",
+      "old_tail_lengths": [
+        [
+          8,
+          8,
+          8,
+          9,
+          9,
+          9,
+          9,
+          15,
+          15,
+          14,
+          13,
+          12,
+          11,
+          11,
+          10,
+          9,
+          9,
+          9,
+          8,
+          6,
+          7,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ],
+        [
+          8,
+          8,
+          9,
+          9,
+          9,
+          9,
+          9,
+          15,
+          15,
+          14,
+          13,
+          12,
+          11,
+          11,
+          10,
+          9,
+          9,
+          9,
+          8,
+          6,
+          7,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ]
+      ],
+      "repeated_signature": "108b6d1551ee45e92e6d2cb396d973c034e31ae5b67fe982ad0ebf12317df5eb",
+      "risks_equal": true,
+      "states_equal": true
+    },
+    {
+      "case_id": "jumpup/sprint-L-n/14",
+      "compact_counts": {
+        "nodes": 30,
+        "physics_steps": 293,
+        "tail_ticks": 246
+      },
+      "compact_reason": null,
+      "compact_risks": [
+        [],
+        []
+      ],
+      "compact_status": "VERIFIED_CANDIDATE",
+      "compact_tail_boundaries": [
+        [
+          0,
+          23
+        ],
+        [
+          0,
+          23
+        ]
+      ],
+      "compact_tail_lengths": [
+        [
+          9,
+          1
+        ],
+        [
+          9,
+          1
+        ]
+      ],
+      "input_hash": "177876e3a9ee71dfa9d2330615fc2572e4216050c4b5ea3d09fe29f7a42d95f8",
+      "inputs_equal": true,
+      "old_counts": {
+        "nodes": 50,
+        "physics_steps": 457,
+        "tail_ticks": 410
+      },
+      "old_reason": null,
+      "old_risks": [
+        [],
+        []
+      ],
+      "old_signature": "501dbb290a4bc71e6d2353cfde4f4c258bd6661484713e235f19d77a8f6e1b39",
+      "old_status": "VERIFIED_CANDIDATE",
+      "old_tail_lengths": [
+        [
+          9,
+          9,
+          9,
+          9,
+          17,
+          16,
+          15,
+          14,
+          13,
+          12,
+          11,
+          11,
+          10,
+          8,
+          5,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ],
+        [
+          9,
+          9,
+          9,
+          9,
+          17,
+          16,
+          15,
+          14,
+          13,
+          12,
+          11,
+          11,
+          10,
+          8,
+          5,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ]
+      ],
+      "repeated_signature": "501dbb290a4bc71e6d2353cfde4f4c258bd6661484713e235f19d77a8f6e1b39",
+      "risks_equal": true,
+      "states_equal": true
+    },
+    {
+      "case_id": "turn/rest-L/15",
+      "compact_counts": {
+        "nodes": 28,
+        "physics_steps": 217,
+        "tail_ticks": 174
+      },
+      "compact_reason": null,
+      "compact_risks": [
+        [],
+        []
+      ],
+      "compact_status": "VERIFIED_CANDIDATE",
+      "compact_tail_boundaries": [
+        [
+          0,
+          21
+        ],
+        [
+          0,
+          21
+        ]
+      ],
+      "compact_tail_lengths": [
+        [
+          7,
+          1
+        ],
+        [
+          7,
+          1
+        ]
+      ],
+      "input_hash": "ec887ea130ce763ff69f177bb6d059229eb496c7ace5c8ef8c50a78896e6109d",
+      "inputs_equal": true,
+      "old_counts": {
+        "nodes": 46,
+        "physics_steps": 327,
+        "tail_ticks": 284
+      },
+      "old_reason": null,
+      "old_risks": [
+        [],
+        []
+      ],
+      "old_signature": "d1a5f382600da45e98e5145c0ff790ea27827910f67372220be1a40ef0768411",
+      "old_status": "VERIFIED_CANDIDATE",
+      "old_tail_lengths": [
+        [
+          7,
+          8,
+          8,
+          8,
+          8,
+          9,
+          9,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ],
+        [
+          7,
+          8,
+          8,
+          8,
+          8,
+          9,
+          9,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ]
+      ],
+      "repeated_signature": "d1a5f382600da45e98e5145c0ff790ea27827910f67372220be1a40ef0768411",
+      "risks_equal": true,
+      "states_equal": true
+    },
+    {
+      "case_id": "turn/walk-L-n/16",
+      "compact_counts": {
+        "nodes": 16,
+        "physics_steps": 116,
+        "tail_ticks": 79
+      },
+      "compact_reason": null,
+      "compact_risks": [
+        [],
+        []
+      ],
+      "compact_status": "VERIFIED_CANDIDATE",
+      "compact_tail_boundaries": [
+        [
+          0,
+          18
+        ],
+        [
+          0,
+          18
+        ]
+      ],
+      "compact_tail_lengths": [
+        [
+          7,
+          1
+        ],
+        [
+          8,
+          1
+        ]
+      ],
+      "input_hash": "acd7685bfe861384051d0edf58eddc86c471ac8e35ffd67eaf0d5df43f01c872",
+      "inputs_equal": true,
+      "old_counts": {
+        "nodes": 40,
+        "physics_steps": 280,
+        "tail_ticks": 243
+      },
+      "old_reason": null,
+      "old_risks": [
+        [],
+        []
+      ],
+      "old_signature": "09b333bc89c38096995a31b4b2d8b0044962674d71a095a2d17e82d903e83482",
+      "old_status": "VERIFIED_CANDIDATE",
+      "old_tail_lengths": [
+        [
+          7,
+          8,
+          8,
+          8,
+          8,
+          9,
+          9,
+          9,
+          9,
+          9,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ],
+        [
+          8,
+          8,
+          8,
+          8,
+          8,
+          9,
+          9,
+          9,
+          9,
+          9,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ]
+      ],
+      "repeated_signature": "09b333bc89c38096995a31b4b2d8b0044962674d71a095a2d17e82d903e83482",
+      "risks_equal": true,
+      "states_equal": true
+    },
+    {
+      "case_id": "turn/sprint-L-n/17",
+      "compact_counts": {
+        "nodes": 16,
+        "physics_steps": 119,
+        "tail_ticks": 80
+      },
+      "compact_reason": null,
+      "compact_risks": [
+        [],
+        []
+      ],
+      "compact_status": "VERIFIED_CANDIDATE",
+      "compact_tail_boundaries": [
+        [
+          0,
+          19
+        ],
+        [
+          0,
+          19
+        ]
+      ],
+      "compact_tail_lengths": [
+        [
+          8,
+          1
+        ],
+        [
+          8,
+          1
+        ]
+      ],
+      "input_hash": "d25cc66049357466032f016fa88c61211d9979515df0da1c18ee9573f320e389",
+      "inputs_equal": true,
+      "old_counts": {
+        "nodes": 42,
+        "physics_steps": 301,
+        "tail_ticks": 262
+      },
+      "old_reason": null,
+      "old_risks": [
+        [],
+        []
+      ],
+      "old_signature": "c3b7fb49404f0142a45d273407d67864d46a2c8ea94131bf9d9060efd9ce230e",
+      "old_status": "VERIFIED_CANDIDATE",
+      "old_tail_lengths": [
+        [
+          8,
+          8,
+          8,
+          8,
+          8,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ],
+        [
+          8,
+          8,
+          8,
+          8,
+          8,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1
+        ]
+      ],
+      "repeated_signature": "c3b7fb49404f0142a45d273407d67864d46a2c8ea94131bf9d9060efd9ce230e",
+      "risks_equal": true,
+      "states_equal": true
+    }
+  ],
+  "sample_count": 18,
+  "schema": "d104-k0-k1-oracle-v1",
+  "wall_clock_affects_behavior": false
+}
