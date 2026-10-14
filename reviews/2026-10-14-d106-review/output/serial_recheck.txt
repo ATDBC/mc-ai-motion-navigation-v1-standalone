@@ -1,0 +1,120 @@
+分片中报告失败的模块在 98a0542 上串行重跑（Linux，逐模块），用于区分并行争用、平台专用与真实失败
+=== test_action_preconditions
+      3 ValueError: semaphore or lock released too many times
+      3 OSError: [Errno 9] Bad file descriptor
+      1 Ran 29 tests in 17.386s
+      1 OK
+=== test_async_gap_revalidation_delivery
+      4 AssertionError: False is not true : {'tick': 58, 'position': (0.5, 64.0, 0.5), 'on_ground': True, 'source_owned': False, 'driver_state': 'failed', 'driver_reason': 'motion_unsolvable:motion_solver_retry_exhausted', 'events': ['old_owner_stopped', 'same_goal_successor_started', 'old_failure_delivered', 'interleaved_results_delivered'], 'async_events': [], 'actual_applied': (59, None, MovementV1(forward=0, strafe=0, jump=False, sneak=False, sprint=False))}
+      1 Ran 2 tests in 7.155s
+      1 FAILED (failures=4)
+      1 FAIL: test_delayed_interleaved_result_gets_real_background_revalidation (tests.motion_nav.test_async_gap_revalidation_delivery.AsyncGapRevalidationDeliveryTests.test_delayed_interleaved_result_gets_real_background_revalidation) (seed=270064)
+      1 FAIL: test_delayed_interleaved_result_gets_real_background_revalidation (tests.motion_nav.test_async_gap_revalidation_delivery.AsyncGapRevalidationDeliveryTests.test_delayed_interleaved_result_gets_real_background_revalidation) (seed=270016)
+      1 FAIL: test_delayed_interleaved_result_gets_real_background_revalidation (tests.motion_nav.test_async_gap_revalidation_delivery.AsyncGapRevalidationDeliveryTests.test_delayed_interleaved_result_gets_real_background_revalidation) (seed=270002)
+      1 FAIL: test_delayed_interleaved_result_gets_real_background_revalidation (tests.motion_nav.test_async_gap_revalidation_delivery.AsyncGapRevalidationDeliveryTests.test_delayed_interleaved_result_gets_real_background_revalidation) (seed=270001)
+=== test_action_entry_handoff_repair
+      1 ValueError: semaphore or lock released too many times
+      1 Ran 9 tests in 75.238s
+      1 OSError: [Errno 9] Bad file descriptor
+      1 OK
+=== test_b10_motion_worker
+      1 Ran 5 tests in 2.748s
+      1 OK
+=== test_b10_motion_candidate
+      6 ValueError: semaphore or lock released too many times
+      6 OSError: [Errno 9] Bad file descriptor
+      1 Ran 45 tests in 20.363s
+      1 OK
+=== test_d101_measurement
+      2 ValueError: formal D101 M0 requires the project's Windows environment
+      1 Ran 6 tests in 0.362s
+      1 FAILED (errors=2)
+      1 ERROR: test_m0_summary_has_both_start_branches_and_no_safety_failure (tests.motion_nav.test_d101_measurement.M0MeasurementTests.test_m0_summary_has_both_start_branches_and_no_safety_failure)
+      1 ERROR: test_existing_evidence_is_never_overwritten (tests.motion_nav.test_d101_measurement.M0MeasurementTests.test_existing_evidence_is_never_overwritten)
+=== test_d102_prepared_proof
+      1 Ran 11 tests in 52.317s
+      1 OK
+=== test_d102_registry_lifecycle
+      1 Ran 34 tests in 111.957s
+      1 FAILED (failures=2, skipped=3)
+      1 FAIL: test_full_native_request_queue_and_feeder_close_are_bounded (tests.motion_nav.test_d102_registry_lifecycle.RegistryTests.test_full_native_request_queue_and_feeder_close_are_bounded)
+      1 FAIL: test_expected_close_feeder_errors_are_counted_and_other_errors_are_logged (tests.motion_nav.test_d102_registry_lifecycle.RegistryTests.test_expected_close_feeder_errors_are_counted_and_other_errors_are_logged)
+      1 AssertionError: 2 != 1 : only the expected close error is kept as a diagnostic
+      1 AssertionError: 'Traceback (most recent call last):\n  Fil[751 chars]ed\n' != ''
+=== test_d105_t2_evidence
+      2 AssertionError: False is not true : ['generation command interpreter does not exist: receiver_timing', 'generation command interpreter does not exist: receiver_recompute', 'generation command interpreter does not exist: evidence_verify', 'receiver timing argv interpreter does not exist']
+      1 Ran 6 tests in 0.048s
+      1 FAILED (failures=2)
+      1 FAIL: test_actual_index_recomputes_every_declared_evidence_hash (tests.motion_nav.test_d105_t2_evidence.T2EvidenceTests.test_actual_index_recomputes_every_declared_evidence_hash)
+      1 FAIL: test_actual_generation_commands_resolve_repository_python (tests.motion_nav.test_d105_t2_evidence.T2EvidenceTests.test_actual_generation_commands_resolve_repository_python)
+=== test_f2rec_r0_baseline
+      2 ValueError: semaphore or lock released too many times
+      2 OSError: [Errno 9] Bad file descriptor
+      1 Ran 5 tests in 5.815s
+      1 FAILED (errors=1)
+      1 ERROR: test_worker_lifecycle_probe_covers_all_four_frozen_boundaries (tests.motion_nav.test_f2rec_r0_baseline.F2RecoveryR0BaselineTests.test_worker_lifecycle_probe_covers_all_four_frozen_boundaries)
+      1 AttributeError: 'NoneType' object has no attribute 'disposition'
+=== test_motion_baseline_recovery
+      1 Ran 6 tests in 20.344s
+      1 FAILED (failures=1)
+      1 FAIL: test_changed_heading_during_background_revalidation_can_realign (tests.motion_nav.test_motion_baseline_recovery.MotionBaselineRecoveryTests.test_changed_heading_during_background_revalidation_can_realign)
+      1 AssertionError: 0 != 1
+=== test_motion_start_delivery
+      2 AssertionError: 1 != 4
+      1 Ran 11 tests in 141.548s
+      1 FAILED (failures=5)
+      1 FAIL: test_fast_alignment_revalidation_keeps_complete_solve_preparation (tests.motion_nav.test_motion_start_delivery.StartDeliveryFormalTests.test_fast_alignment_revalidation_keeps_complete_solve_preparation)
+      1 FAIL: test_delivery_beyond_prefix_bound_is_bounded_without_unsafe_start (tests.motion_nav.test_motion_start_delivery.StartDeliveryFormalTests.test_delivery_beyond_prefix_bound_is_bounded_without_unsafe_start)
+      1 FAIL: test_complete_solve_samples_once_at_delivery_before_entry_wait (tests.motion_nav.test_motion_start_delivery.StartDeliveryFormalTests.test_complete_solve_samples_once_at_delivery_before_entry_wait) (delay=7)
+      1 FAIL: test_complete_solve_samples_once_at_delivery_before_entry_wait (tests.motion_nav.test_motion_start_delivery.StartDeliveryFormalTests.test_complete_solve_samples_once_at_delivery_before_entry_wait) (delay=4)
+      1 FAIL: test_complete_solve_samples_once_at_delivery_before_entry_wait (tests.motion_nav.test_motion_start_delivery.StartDeliveryFormalTests.test_complete_solve_samples_once_at_delivery_before_entry_wait) (delay=2)
+=== test_navigation_design_metrics
+      2 AssertionError: Lists differ: [{'file': 'action_route_executor.py', 'lin[13784 chars]ED'}] != []
+      1 Ran 31 tests in 11.479s
+      1 FAILED (failures=2)
+      1 FAIL: test_repository_derived_details_are_deterministic_and_constraints_are_visible (tests.motion_nav.test_navigation_design_metrics.NavigationDesignMetricsTests.test_repository_derived_details_are_deterministic_and_constraints_are_visible)
+      1 FAIL: test_handoff_disposition_is_internal_lifecycle (tests.motion_nav.test_navigation_design_metrics.NavigationDesignMetricsTests.test_handoff_disposition_is_internal_lifecycle)
+=== test_navigation_product_delivery
+      1 Ran 4 tests in 19.779s
+      1 FAILED (failures=1)
+      1 FAIL: test_v7_record_and_metadata_include_frozen_delivery_identity (tests.motion_nav.test_navigation_product_delivery.ProductDeliveryTests.test_v7_record_and_metadata_include_frozen_delivery_identity)
+      1 AssertionError: Lists differ: [{'id': 'drop-normal-000000', 'fields': ['motion_jobs']}] != []
+=== test_public_repository_completeness
+      1 Ran 4 tests in 14.078s
+      1 FAILED (failures=1)
+      1 FAIL: test_standalone_manifest_contains_formal_probe_sources_not_old_ray_evidence (tests.motion_nav.test_public_repository_completeness.PublicRepositoryCompletenessTests.test_standalone_manifest_contains_formal_probe_sources_not_old_ray_evidence)
+      1 AssertionError: True is not false
+=== test_r27_async_admission
+     13 AssertionError: <MotionJobOperation.SOLVE: 'solve'> is not <MotionJobOperation.REVALIDATE: 'revalidate'>
+      1 Ran 25 tests in 16.879s
+      1 FAILED (failures=15, errors=1)
+      1 FAIL: test_unknown_duplicates_and_retired_results_cannot_evict_active_result (tests.motion_nav.test_r27_async_admission.R27IdentityTests.test_unknown_duplicates_and_retired_results_cannot_evict_active_result)
+      1 FAIL: test_seeded_formal_successor_delivery_orders (tests.motion_nav.test_r27_async_admission.R27IdentityTests.test_seeded_formal_successor_delivery_orders) (seed=9)
+      1 FAIL: test_seeded_formal_successor_delivery_orders (tests.motion_nav.test_r27_async_admission.R27IdentityTests.test_seeded_formal_successor_delivery_orders) (seed=8)
+      1 FAIL: test_seeded_formal_successor_delivery_orders (tests.motion_nav.test_r27_async_admission.R27IdentityTests.test_seeded_formal_successor_delivery_orders) (seed=7)
+      1 FAIL: test_seeded_formal_successor_delivery_orders (tests.motion_nav.test_r27_async_admission.R27IdentityTests.test_seeded_formal_successor_delivery_orders) (seed=6)
+=== test_r28_planning_retry_successor
+      3 TypeError: int() argument must be a string, a bytes-like object or a real number, not 'Mock'
+      2 ERROR: test_mismatched_successor_start_preserves_fresh_state_and_allows_retry (tests.motion_nav.test_r28_planning_retry_successor.SuccessorAndContinuationContractTests.test_mismatched_successor_start_preserves_fresh_state_and_allows_retry)
+      1 Ran 14 tests in 0.267s
+      1 FAILED (errors=3)
+      1 ERROR: test_successor_requires_explicit_new_task_before_worker_transfer (tests.motion_nav.test_r28_planning_retry_successor.SuccessorAndContinuationContractTests.test_successor_requires_explicit_new_task_before_worker_transfer)
+=== test_r28_reanchor_handoff
+      3 AttributeError: '_RepeatingRecoveryExecutor' object has no attribute '_controller'
+      1 Ran 14 tests in 36.307s
+      1 FAILED (errors=3)
+      1 ERROR: test_free_reanchor_does_not_preempt_probe_action_failure (tests.motion_nav.test_r28_reanchor_handoff.ReanchorConsumptionTests.test_free_reanchor_does_not_preempt_probe_action_failure) (state=<ActionRouteState.UNSUPPORTED: 'unsupported'>)
+      1 ERROR: test_free_reanchor_does_not_preempt_probe_action_failure (tests.motion_nav.test_r28_reanchor_handoff.ReanchorConsumptionTests.test_free_reanchor_does_not_preempt_probe_action_failure) (state=<ActionRouteState.FAILED: 'failed'>)
+      1 ERROR: test_free_reanchor_does_not_preempt_probe_action_failure (tests.motion_nav.test_r28_reanchor_handoff.ReanchorConsumptionTests.test_free_reanchor_does_not_preempt_probe_action_failure) (state=<ActionRouteState.BLOCKED: 'blocked'>)
+=== test_r28_persistent_budget_formal
+      1 Ran 8 tests in 165.030s
+      1 FAILED (failures=2)
+      1 FAIL: test_thirty_virtual_minutes_allow_twenty_low_rate_recoveries (tests.motion_nav.test_r28_persistent_budget_formal.PersistentBudgetFormalTests.test_thirty_virtual_minutes_allow_twenty_low_rate_recoveries)
+      1 FAIL: test_thirteenth_recovery_with_planning_timeouts_is_typed_and_bounded (tests.motion_nav.test_r28_persistent_budget_formal.PersistentBudgetFormalTests.test_thirteenth_recovery_with_planning_timeouts_is_typed_and_bounded)
+      1 AssertionError: 'failed' != 'cancelled'
+      1 AssertionError: 'control_unavailable' != 'task_recovery_rate_exhausted'
+=== test_d058_route_revalidation_benchmark
+      1 Ran 1 test in 120.110s
+      1 FAILED (errors=1)
+      1 ERROR: test_cli_writes_schema_and_refuses_overwrite (tests.motion_nav.test_d058_route_revalidation_benchmark.D058RouteRevalidationBenchmarkTests.test_cli_writes_schema_and_refuses_overwrite)
+SERIALDONE

@@ -1,0 +1,69 @@
+######## 5c1485d Publish D100 risk-aware continuous recovery design
+  test_async_gap_revalidation_delivery: Ran 2 tests in 1.700s OK
+  test_f2rec_r0_baseline: Ran 5 tests in 2.672s OK
+  test_motion_baseline_recovery: Ran 6 tests in 1.858s OK
+  test_motion_start_delivery: Ran 11 tests in 12.141s OK
+  test_navigation_design_metrics: Ran 31 tests in 9.280s OK
+  test_navigation_product_delivery: Ran 4 tests in 4.539s OK
+  test_public_repository_completeness: Ran 4 tests in 12.056s OK
+  test_r27_async_admission: Ran 25 tests in 5.427s OK
+  test_r28_planning_retry_successor: Ran 14 tests in 0.056s OK
+  test_r28_reanchor_handoff: Ran 14 tests in 3.252s OK
+  test_r28_persistent_budget_formal: Ran 8 tests in 25.578s OK
+######## 07fa1d7 Publish D103 stopped prepared-motion state
+  test_async_gap_revalidation_delivery: Ran 2 tests in 7.037s FAILED (failures=4)
+            4 AssertionError: False is not true : {'tick': 58, 'position': (0.5, 64.0, 0.5), 'on_ground': True, 'source_owned': False, 'driver_state': 'failed', 'driver_reason': 'motion_unsolvable:motion_solver_ret
+  test_f2rec_r0_baseline: Ran 5 tests in 5.904s FAILED (errors=1)
+            1 AttributeError: 'NoneType' object has no attribute 'disposition'
+  test_motion_baseline_recovery: Ran 6 tests in 18.582s FAILED (failures=1)
+            1 AssertionError: 0 != 1
+  test_motion_start_delivery: Ran 11 tests in 127.753s FAILED (failures=5)
+            2 AssertionError: 1 != 4
+            1 AssertionError: [] is not true
+            1 AssertionError: 1 != 2
+  test_navigation_design_metrics: Ran 31 tests in 11.124s FAILED (failures=2)
+            2 AssertionError: Lists differ: [{'file': 'action_route_executor.py', 'lin[13784 chars]ED'}] != []
+  test_navigation_product_delivery: Ran 4 tests in 19.140s FAILED (failures=1)
+            1 AssertionError: Lists differ: [{'id': 'drop-normal-000000', 'fields': ['motion_jobs']}] != []
+  test_public_repository_completeness: Ran 4 tests in 13.667s OK
+  test_r27_async_admission: Ran 25 tests in 16.289s FAILED (failures=14, errors=1)
+           12 AssertionError: <MotionJobOperation.SOLVE: 'solve'> is not <MotionJobOperation.REVALIDATE: 'revalidate'>
+            1 AssertionError: False is not true
+            1 AssertionError: 1 not greater than or equal to 2
+  test_r28_planning_retry_successor: Ran 14 tests in 0.201s FAILED (errors=3)
+            3 TypeError: int() argument must be a string, a bytes-like object or a real number, not 'Mock'
+  test_r28_reanchor_handoff: Ran 14 tests in 34.693s FAILED (errors=3)
+            3 AttributeError: '_RepeatingRecoveryExecutor' object has no attribute '_controller'
+  test_r28_persistent_budget_formal: Ran 8 tests in 156.462s FAILED (failures=2)
+            1 AssertionError: 'failed' != 'cancelled'
+            1 AssertionError: 'control_unavailable' != 'task_recovery_rate_exhausted'
+######## 98a0542 Publish D106 remediation evidence
+  test_async_gap_revalidation_delivery: Ran 2 tests in 5.707s FAILED (failures=4)
+            3 AssertionError: False is not true : {'tick': 58, 'position': (0.5, 64.0, 0.5), 'on_ground': True, 'source_owned': False, 'driver_state': 'failed', 'driver_reason': 'motion_unsolvable:motion_solver_ret
+            1 AssertionError: False is not true : {'tick': 57, 'position': (0.5, 64.0, 0.5), 'on_ground': True, 'source_owned': False, 'driver_state': 'failed', 'driver_reason': 'motion_unsolvable:motion_solver_ret
+  test_f2rec_r0_baseline: Ran 5 tests in 5.480s FAILED (errors=1)
+            1 AttributeError: 'NoneType' object has no attribute 'disposition'
+  test_motion_baseline_recovery: Ran 6 tests in 19.427s FAILED (failures=1)
+            1 AssertionError: 0 != 1
+  test_motion_start_delivery: Ran 11 tests in 128.229s FAILED (failures=5)
+            2 AssertionError: 1 != 4
+            1 AssertionError: [] is not true
+            1 AssertionError: 1 != 2
+  test_navigation_design_metrics: Ran 31 tests in 11.654s FAILED (failures=2)
+            2 AssertionError: Lists differ: [{'file': 'action_route_executor.py', 'lin[13784 chars]ED'}] != []
+  test_navigation_product_delivery: Ran 4 tests in 21.521s FAILED (failures=1)
+            1 AssertionError: Lists differ: [{'id': 'drop-normal-000000', 'fields': ['motion_jobs']}] != []
+  test_public_repository_completeness: Ran 4 tests in 14.229s FAILED (failures=1)
+            1 AssertionError: True is not false
+  test_r27_async_admission: Ran 25 tests in 17.082s FAILED (failures=16, errors=1)
+           13 AssertionError: <MotionJobOperation.SOLVE: 'solve'> is not <MotionJobOperation.REVALIDATE: 'revalidate'>
+            1 AssertionError: Tuples differ: () != (GapMotionSolveResult(connection_id='edge'[413 chars]1)),)
+            1 AssertionError: Tuples differ: () != (AsyncWorkIdentity(scope=AsyncComputationS[174 chars]=1),)
+  test_r28_planning_retry_successor: Ran 14 tests in 0.147s FAILED (errors=3)
+            3 TypeError: int() argument must be a string, a bytes-like object or a real number, not 'Mock'
+  test_r28_reanchor_handoff: Ran 14 tests in 36.108s FAILED (errors=3)
+            3 AttributeError: '_RepeatingRecoveryExecutor' object has no attribute '_controller'
+  test_r28_persistent_budget_formal: Ran 8 tests in 166.241s FAILED (failures=2)
+            1 AssertionError: 'failed' != 'cancelled'
+            1 AssertionError: 'control_unavailable' != 'task_recovery_rate_exhausted'
+E25DONE

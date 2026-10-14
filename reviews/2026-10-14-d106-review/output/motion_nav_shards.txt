@@ -1,0 +1,181 @@
+  1200.0 s  tests.motion_nav.test_f1_known_world_following  NO-SUMMARY(timeout?)
+   373.8 s  tests.motion_nav.test_f2_ground_completion_region  Ran 13 tests in 373.183s OK
+   362.1 s  tests.motion_nav.test_d094_fabric_timing_metric  Ran 7 tests in 361.411s OK
+   281.1 s  tests.motion_nav.test_navigation_closed_loop  Ran 56 tests in 280.717s OK
+   258.9 s  tests.motion_nav.test_navigation_supervised_interruptions  Ran 28 tests in 258.441s OK
+   234.6 s  tests.motion_nav.test_d058_runtime_validation  Ran 104 tests in 233.901s OK
+   188.5 s  tests.motion_nav.test_d102_runtime_activation  Ran 37 tests in 188.025s OK
+   165.1 s  tests.motion_nav.test_r28_persistent_budget_formal  Ran 8 tests in 164.489s FAILED (failures=2)
+   160.5 s  tests.motion_nav.test_r28_migration_faults  Ran 3 tests in 159.916s OK
+   145.6 s  tests.motion_nav.test_continuous_height_full_matrix  Ran 15 tests in 145.019s OK
+   135.9 s  tests.motion_nav.test_motion_start_delivery  Ran 11 tests in 135.424s FAILED (failures=5)
+   120.2 s  tests.motion_nav.test_d058_route_revalidation_benchmark  Ran 1 test in 120.119s FAILED (errors=1)
+   110.7 s  tests.motion_nav.test_d102_registry_lifecycle  Ran 34 tests in 110.274s FAILED (failures=2, skipped=3)
+   107.8 s  tests.motion_nav.test_d102_windows_matrix  Ran 36 tests in 107.569s OK
+   104.6 s  tests.motion_nav.test_r28_corner_progress  Ran 1 test in 104.089s OK
+   103.3 s  tests.motion_nav.test_route_body_advance  Ran 20 tests in 102.818s OK
+   101.2 s  tests.motion_nav.test_action_entry_late_hardening  Ran 11 tests in 100.537s OK
+    98.1 s  tests.motion_nav.test_navigation_event_sequences  Ran 21 tests in 97.564s OK
+    93.9 s  tests.motion_nav.test_post_input_loss_landing_recovery  Ran 21 tests in 93.315s OK
+    86.1 s  tests.motion_nav.test_d102_action_handoff  Ran 36 tests in 85.609s OK
+    86.1 s  tests.motion_nav.test_b10_gap_solver  Ran 21 tests in 85.634s OK
+    83.7 s  tests.motion_nav.test_d102_receiver  Ran 31 tests in 83.207s OK
+    77.4 s  tests.motion_nav.test_action_entry_handoff_repair  Ran 9 tests in 76.752s FAILED (errors=1)
+    69.6 s  tests.motion_nav.test_async_work_verification  Ran 14 tests in 69.028s OK
+    65.7 s  tests.motion_nav.test_r28_generation_formal_chain  Ran 11 tests in 65.146s OK
+    65.1 s  tests.motion_nav.test_r28_world_change_retirement  Ran 2 tests in 64.469s OK
+    63.4 s  tests.motion_nav.test_navigation_route_handoff  Ran 7 tests in 62.797s OK
+    60.8 s  tests.motion_nav.test_trajectory_proto_primitive_matrix  Ran 9 tests in 60.139s OK
+    58.5 s  tests.motion_nav.test_d063_goal_surface_information  Ran 8 tests in 57.910s OK
+    55.7 s  tests.motion_nav.test_d102_prepared_proof  Ran 11 tests in 55.158s FAILED (errors=1)
+    55.0 s  tests.motion_nav.test_simulation_isolation  Ran 2 tests in 54.490s OK
+    54.6 s  tests.motion_nav.test_b02_geometry_acceptance  Ran 5 tests in 54.175s OK
+    51.9 s  tests.motion_nav.test_navigation_product_metrics  Ran 22 tests in 51.375s OK
+    51.0 s  tests.motion_nav.test_goal_reach_policy  Ran 15 tests in 50.456s OK
+    44.7 s  tests.motion_nav.test_r28_screening_retirement  Ran 2 tests in 44.104s OK
+    35.3 s  tests.motion_nav.test_r28_reanchor_handoff  Ran 14 tests in 34.827s FAILED (errors=3)
+    34.1 s  tests.motion_nav.test_r28_shared_recovery  Ran 5 tests in 33.582s OK
+    28.6 s  tests.motion_nav.test_r28_terminal_approach  Ran 9 tests in 28.043s OK
+    28.6 s  tests.motion_nav.test_r28_product_repairs  Ran 5 tests in 28.155s OK
+    26.8 s  tests.motion_nav.test_d102_contract_red  Ran 5 tests in 26.264s OK
+    24.7 s  tests.motion_nav.test_s0r_evidence  Ran 8 tests in 24.023s OK
+    22.5 s  tests.motion_nav.test_navigation_product_delivery  Ran 4 tests in 21.926s FAILED (failures=1)
+    21.8 s  tests.motion_nav.test_r28_planning_failure_handoff  Ran 13 tests in 21.256s OK
+    21.6 s  tests.motion_nav.test_fixed_route_walk  Ran 25 tests in 21.188s OK
+    20.9 s  tests.motion_nav.test_action_continuity_formal  Ran 9 tests in 20.283s OK
+    19.3 s  tests.motion_nav.test_b10_motion_candidate  Ran 45 tests in 18.838s FAILED (errors=2)
+    19.1 s  tests.motion_nav.test_motion_baseline_recovery  Ran 6 tests in 18.687s FAILED (failures=1)
+    18.3 s  tests.motion_nav.test_r27_async_admission  Ran 25 tests in 17.687s FAILED (failures=16, errors=1)
+    18.3 s  tests.motion_nav.test_f2r_piecewise_completion  Ran 8 tests in 17.682s OK
+    17.9 s  tests.motion_nav.test_runtime_backend_io  Ran 7 tests in 17.475s OK
+    17.9 s  tests.motion_nav.test_action_preconditions  Ran 29 tests in 17.380s FAILED (errors=1)
+    17.6 s  tests.motion_nav.test_d061_long_session_benchmark  Ran 6 tests in 17.091s OK
+    16.6 s  tests.motion_nav.test_f2rec_r2_goal_selection  Ran 6 tests in 16.104s OK
+    16.5 s  tests.motion_nav.test_public_repository_completeness  Ran 4 tests in 15.987s FAILED (failures=1)
+    15.9 s  tests.motion_nav.test_f2_non_center_ground_route  Ran 6 tests in 15.433s OK
+    15.2 s  tests.motion_nav.test_motion_continuation_quality  Ran 10 tests in 14.683s OK
+    14.6 s  tests.motion_nav.test_continuous_descent  Ran 11 tests in 14.085s OK
+    13.7 s  tests.motion_nav.test_world_knowledge_geometry  Ran 24 tests in 13.243s OK
+    13.7 s  tests.motion_nav.test_r28_async_generation  Ran 36 tests in 13.283s OK
+    13.6 s  tests.motion_nav.test_trajectory_proto_m0_probe  Ran 7 tests in 13.111s OK
+    13.4 s  tests.motion_nav.test_jump_up  Ran 17 tests in 12.861s OK
+    12.2 s  tests.motion_nav.test_standalone_export  Ran 12 tests in 12.067s OK
+    11.3 s  tests.motion_nav.test_trajectory_proto_contracts  Ran 24 tests in 10.817s OK
+    11.3 s  tests.motion_nav.test_navigation_design_metrics  Ran 31 tests in 11.234s FAILED (failures=2)
+    10.9 s  tests.motion_nav.test_b11_world_change_navigation  Ran 15 tests in 10.370s OK
+    10.3 s  tests.motion_nav.test_b08_ground_modes  Ran 23 tests in 9.825s OK
+    10.1 s  tests.motion_nav.test_f2rec_r3_cleanup  Ran 4 tests in 9.550s OK
+     9.4 s  tests.motion_nav.test_b07_surface_planning  Ran 18 tests in 8.777s OK
+     8.6 s  tests.motion_nav.test_air_transition_solver  Ran 6 tests in 8.140s OK
+     8.4 s  tests.motion_nav.test_known_map_planning  Ran 17 tests in 7.952s OK
+     8.2 s  tests.motion_nav.test_async_gap_revalidation_delivery  Ran 2 tests in 7.646s FAILED (failures=4)
+     7.4 s  tests.motion_nav.test_f2_ground_route_gates  Ran 15 tests in 7.257s OK
+     7.2 s  tests.motion_nav.test_ground_continuation_quality  Ran 11 tests in 6.771s OK
+     6.9 s  tests.motion_nav.test_action_continuity_solver_limits  Ran 15 tests in 6.154s OK
+     6.5 s  tests.motion_nav.test_navigation_session  Ran 62 tests in 6.029s OK
+     6.2 s  tests.motion_nav.test_runtime_navigation_verified_handoff  Ran 13 tests in 5.670s OK
+     6.2 s  tests.motion_nav.test_planner_worker  Ran 15 tests in 5.696s OK
+     6.2 s  tests.motion_nav.test_f2rec_r0_baseline  Ran 5 tests in 6.097s FAILED (errors=1)
+     6.1 s  tests.motion_nav.test_trajectory_proto_reference_search  Ran 25 tests in 5.648s OK
+     6.0 s  tests.motion_nav.test_d106_local_snapshot  Ran 5 tests in 5.416s OK
+     5.8 s  tests.motion_nav.test_motion_benchmarks  Ran 3 tests in 5.679s OK
+     5.5 s  tests.motion_nav.test_incremental_motion_proof  Ran 18 tests in 4.975s OK
+     5.3 s  tests.motion_nav.test_r28_information_planning_updates  Ran 12 tests in 4.625s OK
+     5.1 s  tests.motion_nav.test_b06_ordinary_profiles  Ran 7 tests in 4.724s OK
+     4.8 s  tests.motion_nav.test_runtime_navigation_state_consumers  Ran 2 tests in 4.725s OK
+     4.8 s  tests.motion_nav.test_d105_receiver_trust_boundary  Ran 5 tests in 4.300s OK
+     3.8 s  tests.motion_nav.test_trajectory_proto_commitment  Ran 37 tests in 3.322s OK
+     3.8 s  tests.motion_nav.test_f2rec_r4_recovery  Ran 4 tests in 3.274s OK
+     3.6 s  tests.motion_nav.test_b06_movement_contracts  Ran 14 tests in 3.149s OK
+     3.5 s  tests.motion_nav.test_d059_validation_diagnostics  Ran 4 tests in 3.160s OK
+     3.5 s  tests.motion_nav.test_b10_motion_worker  Ran 5 tests in 3.098s FAILED (errors=2)
+     3.4 s  tests.motion_nav.test_probe_handoff_resolution  Ran 10 tests in 2.755s OK
+     3.3 s  tests.motion_nav.test_continuous_height_planning  Ran 9 tests in 2.805s OK
+     2.7 s  tests.motion_nav.test_navigation_handoff  Ran 22 tests in 2.312s OK
+     2.7 s  tests.motion_nav.test_b10_foundation_tools  Ran 2 tests in 2.565s OK
+     2.6 s  tests.motion_nav.test_f2rec_r1_region_geometry  Ran 7 tests in 1.933s OK
+     2.6 s  tests.motion_nav.test_action_spec_integration  Ran 9 tests in 2.082s OK
+     2.5 s  tests.motion_nav.test_ground_traversal  Ran 6 tests in 1.954s OK
+     2.5 s  tests.motion_nav.test_f2_ground_start_window  Ran 9 tests in 2.038s OK
+     2.4 s  tests.motion_nav.test_sim_visual_air_query_short_circuit  Ran 8 tests in 2.057s OK
+     2.4 s  tests.motion_nav.test_action_continuity_admission  Ran 4 tests in 1.689s OK
+     2.3 s  tests.motion_nav.test_incremental_motion_closed_loop_measurement  Ran 5 tests in 2.171s OK
+     2.1 s  tests.motion_nav.test_continuous_height_execution  Ran 5 tests in 1.591s OK
+     2.0 s  tests.motion_nav.test_r28_dual_planning  Ran 16 tests in 1.470s OK
+     1.9 s  tests.motion_nav.test_r28_planning_history  Ran 4 tests in 1.428s OK
+     1.9 s  tests.motion_nav.test_d102_world_snapshot  Ran 29 tests in 1.358s OK
+     1.9 s  tests.motion_nav.test_b09_air_transitions  Ran 22 tests in 1.421s OK
+     1.6 s  tests.motion_nav.test_incremental_motion_controller  Ran 4 tests in 1.002s OK
+     1.6 s  tests.motion_nav.test_b09r_physics_step  Ran 25 tests in 1.168s OK
+     1.5 s  tests.motion_nav.test_incremental_motion_performance  Ran 6 tests in 1.369s OK
+     1.5 s  tests.motion_nav.test_incremental_motion_closed_loop  Ran 18 tests in 1.412s OK
+     1.5 s  tests.motion_nav.test_d102_contracts  Ran 37 tests in 0.837s OK
+     1.5 s  tests.motion_nav.test_d059_terminal_selection_dependencies  Ran 8 tests in 0.973s OK
+     1.5 s  tests.motion_nav.test_b09r_physics_rollout  Ran 6 tests in 1.067s OK
+     1.4 s  tests.motion_nav.test_d101_continuous_probe  Ran 5 tests in 0.913s OK
+     1.2 s  tests.motion_nav.test_retry_ledger  Ran 30 tests in 0.862s OK
+     1.2 s  tests.motion_nav.test_d064_ground_direct_handoff  Ran 21 tests in 0.524s OK
+     1.1 s  tests.motion_nav.test_sound_sparse_motion_proof_d105  Ran 15 tests in 0.608s OK
+     1.1 s  tests.motion_nav.test_segment_entry  Ran 6 tests in 0.661s OK
+     1.1 s  tests.motion_nav.test_inline_planning_clock  Ran 4 tests in 0.595s OK
+     1.1 s  tests.motion_nav.test_d105_ftick  Ran 12 tests in 0.507s OK
+     1.1 s  tests.motion_nav.test_d057_route_prefix  Ran 5 tests in 0.625s OK
+     1.1 s  tests.motion_nav.test_action_continuity_fabric_options  Ran 4 tests in 0.142s OK
+     1.0 s  tests.motion_nav.test_d059_consumers_and_identity  Ran 9 tests in 0.474s OK
+     1.0 s  tests.motion_nav.test_action_controller_adapter  Ran 5 tests in 0.471s OK
+     0.9 s  tests.motion_nav.test_planning_coordinator  Ran 20 tests in 0.355s OK
+     0.9 s  tests.motion_nav.test_d105_sound_sparse_m0  Ran 4 tests in 0.326s OK
+     0.9 s  tests.motion_nav.test_d101_measurement  Ran 6 tests in 0.340s FAILED (errors=2)
+     0.8 s  tests.motion_nav.test_d058_validation_plan  Ran 11 tests in 0.332s OK
+     0.7 s  tests.motion_nav.test_navigation_dead_path_probe  Ran 1 test in 0.001s OK
+     0.7 s  tests.motion_nav.test_motion_residual  Ran 5 tests in 0.111s OK
+     0.7 s  tests.motion_nav.test_execution_supervisor  Ran 5 tests in 0.224s OK
+     0.7 s  tests.motion_nav.test_d062_direct_walk_validation  Ran 16 tests in 0.197s OK
+     0.7 s  tests.motion_nav.test_b11_bridge_planning  Ran 8 tests in 0.209s OK
+     0.6 s  tests.motion_nav.test_r28_planning_retry_successor  Ran 14 tests in 0.147s FAILED (errors=3)
+     0.6 s  tests.motion_nav.test_navigation_lifecycle  Ran 11 tests in 0.150s OK
+     0.6 s  tests.motion_nav.test_f1_known_world_following_fabric  Ran 17 tests in 0.127s OK
+     0.6 s  tests.motion_nav.test_external_motion  Ran 20 tests in 0.069s OK
+     0.6 s  tests.motion_nav.test_d060_terminal_node_exact_proof  Ran 6 tests in 0.126s OK
+     0.6 s  tests.motion_nav.test_b11_block_placement  Ran 16 tests in 0.103s OK
+     0.6 s  tests.motion_nav.test_b07_shape_matrix  Ran 5 tests in 0.122s OK
+     0.5 s  tests.motion_nav.test_runtime_navigation_driver_state  Ran 3 tests in 0.020s OK
+     0.5 s  tests.motion_nav.test_runtime_adapter  Ran 14 tests in 0.027s OK
+     0.5 s  tests.motion_nav.test_reference_evidence  Ran 2 tests in 0.362s OK
+     0.5 s  tests.motion_nav.test_reference_baselines  Ran 3 tests in 0.364s OK
+     0.5 s  tests.motion_nav.test_r28_baseline_alignment  Ran 9 tests in 0.023s OK
+     0.5 s  tests.motion_nav.test_navigation_owners  Ran 3 tests in 0.000s OK
+     0.5 s  tests.motion_nav.test_motion_risk  Ran 4 tests in 0.001s OK
+     0.5 s  tests.motion_nav.test_known_world_follow_driver  Ran 19 tests in 0.074s OK
+     0.5 s  tests.motion_nav.test_jump_up_calibration  Ran 3 tests in 0.000s OK
+     0.5 s  tests.motion_nav.test_input_responsibility  Ran 10 tests in 0.001s OK
+     0.5 s  tests.motion_nav.test_incremental_motion_table  Ran 4 tests in 0.350s OK
+     0.5 s  tests.motion_nav.test_d101_input_stream  Ran 12 tests in 0.012s OK
+     0.5 s  tests.motion_nav.test_b10_online_motion  Ran 23 tests in 0.003s OK
+     0.5 s  tests.motion_nav.test_b09r_physics_validation  Ran 3 tests in 0.075s OK
+     0.5 s  tests.motion_nav.test_b07_step_transition  Ran 11 tests in 0.100s OK
+     0.5 s  tests.motion_nav.test_b07_step_route  Ran 6 tests in 0.052s OK
+     0.5 s  tests.motion_nav.test_b06_fabric_material_probe  Ran 2 tests in 0.001s OK
+     0.5 s  tests.motion_nav.test_action_specs  Ran 7 tests in 0.003s OK
+     0.5 s  tests.motion_nav.test_action_spec_boundaries  Ran 3 tests in 0.386s OK
+     0.4 s  tests.motion_nav.test_task_risk_ledger  Ran 17 tests in 0.006s OK
+     0.4 s  tests.motion_nav.test_package_boundaries  Ran 4 tests in 0.336s OK
+     0.4 s  tests.motion_nav.test_navigation_interrupt_matrix  Ran 1 test in 0.000s OK
+     0.4 s  tests.motion_nav.test_ground_motion  Ran 5 tests in 0.001s OK
+     0.4 s  tests.motion_nav.test_ground_calibration  Ran 3 tests in 0.001s OK
+     0.4 s  tests.motion_nav.test_b09r_physics_contracts  Ran 10 tests in 0.012s OK
+     0.4 s  tests.motion_nav.test_b07_support_surfaces  Ran 11 tests in 0.063s OK
+     0.4 s  tests.motion_nav.test_b07_step_runtime  Ran 1 test in 0.000s OK
+     0.4 s  tests.motion_nav.test_b06_environment_identity  Ran 6 tests in 0.002s OK
+     0.4 s  tests.motion_nav.test_b06_block_motion_traits  Ran 5 tests in 0.005s OK
+     0.3 s  tests.motion_nav.test_shape_trials  Ran 4 tests in 0.001s OK
+     0.3 s  tests.motion_nav.test_external_motion_recovery  Ran 7 tests in 0.016s OK
+     0.3 s  tests.motion_nav.test_d103_observation_hot_path  Ran 5 tests in 0.012s OK
+     0.2 s  tests.motion_nav.test_planning_ownership_gate  Ran 5 tests in 0.149s OK
+     0.2 s  tests.motion_nav.test_navigation_layer_live  Ran 5 tests in 0.003s OK
+     0.2 s  tests.motion_nav.test_d105_t2_evidence  Ran 6 tests in 0.071s FAILED (failures=2)
+     0.1 s  tests.motion_nav.test_navigation_structure_baseline  Ran 4 tests in 0.001s OK
+     0.1 s  tests.motion_nav.test_navigation_seed_scan  Ran 1 test in 0.000s OK
+     0.1 s  tests.motion_nav.test_navigation_replay_known_map  Ran 2 tests in 0.003s OK
+     0.1 s  tests.motion_nav.test_d098_windows_trial_wrapper  Ran 16 tests in 0.019s OK
+     0.1 s  tests.motion_nav.test_b06_registry_export  Ran 1 test in 0.003s OK

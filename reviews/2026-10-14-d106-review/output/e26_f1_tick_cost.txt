@@ -1,0 +1,10 @@
+检出 5c1485d：场景 e26_short，上限 80 tick，墙钟 1.6 s，约 19 ms/tick
+  apply_observed_blocks 共 41 次，0.0 s（占 2%）
+  validate_frozen_value：该检出中不存在或未被调用
+  safety_violations=[] source_released=True
+检出 98a0542：场景 e26_short，上限 80 tick，墙钟 25.1 s，约 314 ms/tick
+  apply_observed_blocks 共 41 次，16.5 s（占 66%）
+  _commit_snapshot_sections 共 53 次，23.2 s（占 92%；含在 apply 内）
+  validate_frozen_value 共 177 次，21.8 s（占 87%；含 apply 内部）
+  ImmutableWorldSection 构造 177 次，section 事实数中位 3408、最大 3584；合计 22.4 s，约 51.3 ms／千格
+  safety_violations=[] source_released=True

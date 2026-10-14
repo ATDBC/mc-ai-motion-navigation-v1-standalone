@@ -1,0 +1,19 @@
+E27：最慢的 6 个模块在 D103 前后串行运行（Linux，单核绑定，同一机器）
+== 5c1485d（D103 前）
+   59.5 s  test_f2_ground_completion_region  Ran 13 tests in 58.841s OK
+   20.0 s  test_d094_fabric_timing_metric  Ran 7 tests in 19.422s OK
+   28.1 s  test_navigation_closed_loop  Ran 56 tests in 27.637s OK
+   25.3 s  test_navigation_supervised_interruptions  Ran 28 tests in 24.812s OK
+    9.3 s  test_d058_runtime_validation  Ran 104 tests in 8.828s OK
+   85.0 s  test_f1_known_world_following  Ran 8 tests in 85.396s OK
+== 98a0542（D106）
+  354.6 s  test_f2_ground_completion_region  Ran 13 tests in 354.062s OK
+  341.8 s  test_d094_fabric_timing_metric  Ran 7 tests in 341.388s OK
+  283.0 s  test_navigation_closed_loop  Ran 56 tests in 282.394s OK
+  252.9 s  test_navigation_supervised_interruptions  Ran 28 tests in 252.373s OK
+  219.7 s  test_d058_runtime_validation  Ran 104 tests in 218.928s OK
+  >900   s  test_f1_known_world_following  第一项 test_00 单独运行 15 分钟未结束（timeout 退出码 124）；4 路并行分片中 20 分钟未结束
+
+== test_d058_route_revalidation_benchmark（子进程运行 F1 straight_2_0）
+  5c1485d：Ran 1 test in 11.739s OK
+  98a0542：子进程 120 s 后 subprocess.TimeoutExpired（ERROR）

@@ -1,0 +1,20 @@
+夹具：入口 (0.5, 1.0, 0.5)，出口 (0.5, 1.0, 2.450724978009654)，完整快照 6496 格；完整求解 1625.0 ms；实际依赖 16 格
+完整快照复核（validate_sealed_snapshot）1324.7 ms
+
+范围                             格数                     状态    与完整一致    复核 ms    求解 ms
+R3 答案范围（依赖包围盒）                 18               PREPARED     True     5.13    264.6
+事前范围 m=0 d=1 h=2               15    MISSING_INFORMATION    False     2.92      4.9  [(0, -1, 1)]
+事前范围 m=0 d=2 h=2               18               PREPARED     True     3.49    280.3
+事前范围 m=1 d=1 h=2               75    MISSING_INFORMATION    False    19.73     23.2  [(0, -1, 1)]
+事前范围 m=1 d=2 h=2               90               PREPARED     True    25.06    445.8
+事前范围 m=2 d=1 h=2              175    MISSING_INFORMATION    False    44.59     33.3  [(0, -1, 1)]
+事前范围 m=2 d=2 h=2              210               PREPARED     True    55.51    466.2
+
+实际依赖：[(0, -1, 0), (0, -1, 1), (0, -1, 2), (0, 0, 0), (0, 0, 1), (0, 0, 2), (0, 1, 0), (0, 1, 1), (0, 1, 2), (0, 2, 0), (0, 2, 1), (0, 2, 2), (0, 3, 1), (0, 3, 2), (0, 4, 1), (0, 4, 2)]
+
+== 2. worker 侧 prepare_fixed_motion 拆分（90 格事前范围，Linux，7 次平均）
+  总计中位 347.3 ms
+  prepared_motion 构造器里的整图不可变遍历（外层构造会重走已验证过的内层对象）140.2 ms
+  canonical_motion_bytes（规范 bytes，含摘要所需部分）117.7 ms
+  其余（物理推演、尾迹、组装等）约 89.5 ms
+说明：PREPARED 且与完整一致＝首次命中；MISSING_INFORMATION＝需要补取，不会产生假 SAFE。
