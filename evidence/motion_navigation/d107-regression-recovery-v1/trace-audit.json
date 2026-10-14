@@ -1,0 +1,289 @@
+{
+  "causal_boundary": "The pre-D103 2026-09-25 raw run directory is unavailable. D105 and D106 traces can describe their own timing but cannot prove whether D103 caused a B10 timing change.",
+  "causal_conclusion": "unavailable",
+  "method": {
+    "control_prepare": "trace step dispatched_monotonic_ns minus decision_observation_received_ns",
+    "movement_tick_continuity": "sorted unique receipt application tick ids",
+    "over_50ms": "strictly greater than 50.0 ms",
+    "percentiles": "nearest-rank"
+  },
+  "runs": [
+    {
+      "control_frames": {
+        "reason": "client-0/b10-coordinator-control-frames.jsonl is absent",
+        "status": "unavailable"
+      },
+      "ftick": {
+        "event_sources": [
+          "artifacts/fabric-deployment/20261013T131224340162Z-90a78bfa/client-0/ftick-events/segment-00000000.jsonl"
+        ],
+        "input_sampled_ticks": {
+          "application_count": 456,
+          "contiguous": true,
+          "duplicate_count": 0,
+          "first": 1,
+          "gaps": [],
+          "last": 456,
+          "unique_tick_count": 456
+        },
+        "kind_counts": {
+          "CLIENT_FRAME_RECEIVED": 453,
+          "CLIENT_OBSERVATION_SENT": 453,
+          "INPUT_SAMPLED": 456,
+          "MOVEMENT_APPLIED": 456,
+          "SUMMARY": 1
+        },
+        "movement_applied_ticks": {
+          "application_count": 456,
+          "contiguous": true,
+          "duplicate_count": 0,
+          "first": 1,
+          "gaps": [],
+          "last": 456,
+          "unique_tick_count": 456
+        },
+        "status": "available",
+        "summary": "unavailable",
+        "summary_reason": "ftick summary file is absent; event counts are reported"
+      },
+      "label": "d105_20261013",
+      "path": "artifacts/fabric-deployment/20261013T131224340162Z-90a78bfa",
+      "status": "available",
+      "trace": {
+        "application_state_counts": {
+          "lease_exhausted": 2,
+          "leased": 48,
+          "neutral": 404
+        },
+        "control_prepare_ms": {
+          "maximum": 62.7074,
+          "over_50ms_count": 2,
+          "p50": 12.6924,
+          "p95": 33.8375,
+          "p99": 34.9894,
+          "sample_count": 452
+        },
+        "lease_exhausted": {
+          "application_count": 2,
+          "frame_count": 2
+        },
+        "missing_fields": {
+          "input_application_frames": 0,
+          "invalid_timing_frames": 0,
+          "receipt_frames": 0,
+          "timing_frames": 0
+        },
+        "movement_ticks": {
+          "application_count": 454,
+          "contiguous": true,
+          "duplicate_count": 0,
+          "first": 1,
+          "gaps": [],
+          "last": 454,
+          "unique_tick_count": 454
+        },
+        "receipt_applications_per_frame": {
+          "maximum": 2,
+          "minimum": 1,
+          "sample_count": 452,
+          "total": 454
+        },
+        "source": "artifacts/fabric-deployment/20261013T131224340162Z-90a78bfa/client-0/trace.jsonl",
+        "status": "available",
+        "step_frames": 452
+      }
+    },
+    {
+      "control_frames": {
+        "reason": "client-0/b10-coordinator-control-frames.jsonl is absent",
+        "status": "unavailable"
+      },
+      "ftick": {
+        "event_sources": [
+          "artifacts/fabric-deployment/20261014T012937677931Z-99f5767c/client-0/ftick-events/segment-00000000.jsonl"
+        ],
+        "input_sampled_ticks": {
+          "application_count": 73,
+          "contiguous": true,
+          "duplicate_count": 0,
+          "first": 1,
+          "gaps": [],
+          "last": 73,
+          "unique_tick_count": 73
+        },
+        "kind_counts": {
+          "CLIENT_FRAME_RECEIVED": 72,
+          "CLIENT_OBSERVATION_SENT": 72,
+          "INPUT_SAMPLED": 73,
+          "MOVEMENT_APPLIED": 73,
+          "SUMMARY": 1
+        },
+        "movement_applied_ticks": {
+          "application_count": 73,
+          "contiguous": true,
+          "duplicate_count": 0,
+          "first": 1,
+          "gaps": [],
+          "last": 73,
+          "unique_tick_count": 73
+        },
+        "status": "available",
+        "summary": "unavailable",
+        "summary_reason": "ftick summary file is absent; event counts are reported"
+      },
+      "label": "d106_round1_20261014",
+      "path": "artifacts/fabric-deployment/20261014T012937677931Z-99f5767c",
+      "status": "available",
+      "trace": {
+        "application_state_counts": {
+          "lease_exhausted": 1,
+          "leased": 7,
+          "neutral": 64
+        },
+        "control_prepare_ms": {
+          "maximum": 41.0317,
+          "over_50ms_count": 0,
+          "p50": 8.8623,
+          "p95": 31.2649,
+          "p99": 41.0317,
+          "sample_count": 71
+        },
+        "lease_exhausted": {
+          "application_count": 1,
+          "frame_count": 1
+        },
+        "missing_fields": {
+          "input_application_frames": 0,
+          "invalid_timing_frames": 0,
+          "receipt_frames": 0,
+          "timing_frames": 0
+        },
+        "movement_ticks": {
+          "application_count": 72,
+          "contiguous": true,
+          "duplicate_count": 0,
+          "first": 1,
+          "gaps": [],
+          "last": 72,
+          "unique_tick_count": 72
+        },
+        "receipt_applications_per_frame": {
+          "maximum": 2,
+          "minimum": 1,
+          "sample_count": 71,
+          "total": 72
+        },
+        "source": "artifacts/fabric-deployment/20261014T012937677931Z-99f5767c/client-0/trace.jsonl",
+        "status": "available",
+        "step_frames": 71
+      }
+    },
+    {
+      "control_frames": {
+        "control_wall_ms": {
+          "maximum": 52.5369,
+          "over_50ms_count": 13,
+          "p50": 48.0148,
+          "p95": 50.4687,
+          "p99": 52.2836,
+          "sample_count": 182
+        },
+        "missing_control_wall_frames": 0,
+        "reason_counts": {
+          "awaiting_verified_motion": 10,
+          "coast_to_verified_landing": 140,
+          "no_known_route_requires_information": 1,
+          "planning_submitted": 11,
+          "submit_verified_command": 20
+        },
+        "source": "artifacts/fabric-deployment/20261014T014559863045Z-42781cde/client-0/b10-coordinator-control-frames.jsonl",
+        "status": "available"
+      },
+      "ftick": {
+        "event_sources": [
+          "artifacts/fabric-deployment/20261014T014559863045Z-42781cde/client-0/ftick-events/segment-00000000.jsonl"
+        ],
+        "input_sampled_ticks": {
+          "application_count": 2777,
+          "contiguous": true,
+          "duplicate_count": 0,
+          "first": 1,
+          "gaps": [],
+          "last": 2777,
+          "unique_tick_count": 2777
+        },
+        "kind_counts": {
+          "CLIENT_FRAME_RECEIVED": 2772,
+          "CLIENT_OBSERVATION_SENT": 2772,
+          "INPUT_SAMPLED": 2777,
+          "MOVEMENT_APPLIED": 2777,
+          "SUMMARY": 1
+        },
+        "movement_applied_ticks": {
+          "application_count": 2777,
+          "contiguous": true,
+          "duplicate_count": 0,
+          "first": 1,
+          "gaps": [],
+          "last": 2777,
+          "unique_tick_count": 2777
+        },
+        "status": "available",
+        "summary": "unavailable",
+        "summary_reason": "ftick summary file is absent; event counts are reported"
+      },
+      "label": "d106_round2_20261014",
+      "path": "artifacts/fabric-deployment/20261014T014559863045Z-42781cde",
+      "status": "available",
+      "trace": {
+        "application_state_counts": {
+          "lease_exhausted": 4,
+          "leased": 622,
+          "neutral": 2149
+        },
+        "control_prepare_ms": {
+          "maximum": 47.2847,
+          "over_50ms_count": 0,
+          "p50": 11.6071,
+          "p95": 33.5568,
+          "p99": 39.0341,
+          "sample_count": 2771
+        },
+        "lease_exhausted": {
+          "application_count": 4,
+          "frame_count": 4
+        },
+        "missing_fields": {
+          "input_application_frames": 0,
+          "invalid_timing_frames": 0,
+          "receipt_frames": 0,
+          "timing_frames": 0
+        },
+        "movement_ticks": {
+          "application_count": 2775,
+          "contiguous": true,
+          "duplicate_count": 0,
+          "first": 1,
+          "gaps": [],
+          "last": 2775,
+          "unique_tick_count": 2775
+        },
+        "receipt_applications_per_frame": {
+          "maximum": 2,
+          "minimum": 1,
+          "sample_count": 2771,
+          "total": 2775
+        },
+        "source": "artifacts/fabric-deployment/20261014T014559863045Z-42781cde/client-0/trace.jsonl",
+        "status": "available",
+        "step_frames": 2771
+      }
+    },
+    {
+      "label": "d103_pre_20260925",
+      "reason": "The original 2026-09-25 Fabric run directory is absent from this workspace and the public evidence package; no pre-D103 timing can be measured.",
+      "status": "unavailable"
+    }
+  ],
+  "schema_version": "mc2p.d107-b10-trace-audit.v1"
+}

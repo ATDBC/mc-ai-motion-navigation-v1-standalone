@@ -33,7 +33,9 @@ from mc2p.motion_nav.movement_transition import MovementMode
 from tests.sim.f2s_cases import materialized_manifest
 from tests.sim.f2s_cases import scene_for
 from tests.sim.f2r_cases import goal_for
-from tests.sim.runner import Event, ObservedAsyncActivity, Scenario, run, _goal
+from tests.sim.runner import (
+    Event, InlineMotionWorker, ObservedAsyncActivity, Scenario, run, _goal,
+)
 from tests.test_player_runtime import _task
 from mc2p.motion_nav.world_model import Aabb
 
@@ -74,7 +76,7 @@ class _HoldExternalLook:
         return (intent.intent_id,)
 
 
-class _StaleNegativeWorker:
+class _StaleNegativeWorker(InlineMotionWorker):
     """Return one typed negative on the tick after every anticipated solve."""
 
     pid = None

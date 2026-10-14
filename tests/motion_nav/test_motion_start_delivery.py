@@ -63,6 +63,22 @@ class PreparedRevalidationTests(unittest.TestCase):
         self.assertEqual(result.proof.anchor_movement_tick_id, 11)
         self.assertEqual(result.proof.commands, self.proof.commands)
 
+    def test_delivery_delay_uses_movement_ticks_instead_of_receiver_polls(self):
+        worker = continuity._DeliveryWorker(delivery_polls=2)
+        job = GapMotionSolveJob(
+            "movement-tick-delivery", 1, self.anchor, self.world, self.request,
+        )
+        worker.observe_simulated_movement_tick(10)
+        self.assertTrue(worker.submit(job))
+        for _ in range(8):
+            self.assertEqual(worker.poll_available(), ())
+        worker.observe_simulated_movement_tick(11)
+        self.assertEqual(worker.poll_available(), ())
+        worker.observe_simulated_movement_tick(12)
+        delivered = worker.poll_available()
+        self.assertEqual(len(delivered), 1)
+        self.assertIs(delivered[0].solve_result.status, SolveStatus.SOLVED)
+
     def test_revalidation_cannot_detach_window_or_invent_ground_preparation(self):
         for prefix, window in (
                 (self.prefix, CandidateExecutionWindow(11, 12)),
@@ -156,12 +172,17 @@ class StartDeliveryFormalTests(unittest.TestCase):
             nonlocal source
             runtime, driver = context.driver.runtime, context.driver
             deadline = context.clock[0] + 500_000_000
+            worker.observed_movement_tick = context.backend.movement_tick
+            if (worker._pending and worker._pending[0][0] <= worker.observed_movement_tick
+                    and not context.session._motion_result_inbox.wait_for_receiver(timeout=10)):
+                raise AssertionError("motion receiver did not publish the movement-tick delivery")
             if source is not None:
                 runtime.cancel_source(source.source_id)
             proposals = driver.prepare_proposals(deadline)
             external = ()
             if (len(worker.jobs) == 1 and worker._pending
-                    and worker.poll_count == worker._pending[0][0] - 1 and not stolen):
+                    and worker.observed_movement_tick == worker._pending[0][0] - 1
+                    and not stolen):
                 source = runtime.register_ordered_source('delivery-alignment-look')
                 intent = ActionIntentV1(ordered_intent_id(source, 1), source.source_id,
                     source.episode_id, runtime.observation.sequence_id, ActionPriorityV0.SAFETY,

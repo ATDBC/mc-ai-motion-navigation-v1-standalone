@@ -36,7 +36,7 @@ PRE_CHANGE_SOUTH = {
 
 
 class _DeliveryWorker(InlineMotionWorker):
-    """Hold each real worker result for a fixed number of observation polls."""
+    """Hold each real worker result for a fixed number of movement ticks."""
 
     def __init__(self, delivery_polls: int = 1, *, first_delivery_polls=None) -> None:
         super().__init__()
@@ -49,12 +49,21 @@ class _DeliveryWorker(InlineMotionWorker):
         self.deliveries = []
         self.observed_deliveries = []
 
+    def observe_simulated_movement_tick(self, movement_tick: int) -> None:
+        if type(movement_tick) is not int or movement_tick < 0:
+            raise AssertionError("simulated movement tick must be a non-negative integer")
+        if (self.observed_movement_tick is not None
+                and movement_tick < self.observed_movement_tick):
+            raise AssertionError("simulated movement tick cannot move backwards")
+        self.observed_movement_tick = movement_tick
+
     def submit(self, job) -> bool:
         wait = (self.first_delivery_polls if not self.jobs
                 and self.first_delivery_polls is not None else self.delivery_polls)
         self.jobs.append(job)
-        clock_tick = (self.poll_count if self.observed_movement_tick is None
-                      else self.observed_movement_tick)
+        if self.observed_movement_tick is None:
+            raise AssertionError("delivery worker requires the simulated movement tick")
+        clock_tick = self.observed_movement_tick
         self._pending.append((clock_tick + wait, job))
         self.activity.append(ObservedAsyncActivity(job.work_identity, "submit"))
         return True
@@ -63,8 +72,9 @@ class _DeliveryWorker(InlineMotionWorker):
         self.poll_count += 1
         ready = []
         pending = []
-        clock_tick = (self.poll_count if self.observed_movement_tick is None
-                      else self.observed_movement_tick)
+        if self.observed_movement_tick is None:
+            raise AssertionError("delivery worker requires the simulated movement tick")
+        clock_tick = self.observed_movement_tick
         for due, job in self._pending:
             if due <= clock_tick:
                 result = motion_worker._execute_job(job)
@@ -211,10 +221,6 @@ class ActionContinuityFormalTests(unittest.TestCase):
         original_control = kwargs.pop("control_step", None)
 
         def recorded_control(context):
-            if first_delivery_polls is not None:
-                # Receiver polls can happen repeatedly between observations.
-                # The cold-delivery fixture advances only with actual control.
-                worker.observed_movement_tick = context.backend.movement_tick
             first = context.backend.movement_tick + 1
             if original_control is None:
                 context.driver.tick(BehaviorProfileV0(), context.clock[0] + 500_000_000)

@@ -155,6 +155,7 @@ class _DelayedCancelExecutor(ActionRouteExecutor):
 
 class _RepeatingRecoveryExecutor(ActionRouteExecutor):
     def __init__(self, state: ActionRouteState, reason: str) -> None:
+        super().__init__(ordinary_profile(), jump_profile(), step_profile())
         self.state = state
         self.reason = reason
         self.route = None

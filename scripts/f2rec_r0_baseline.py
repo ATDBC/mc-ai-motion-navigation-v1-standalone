@@ -207,17 +207,31 @@ def _probe_retired_late_result() -> dict:
                 physics_world, changed_cells=(),
                 current_scope=coordinator.computation_scope,
             )
+        if not coordinator.result_inbox.wait_for_receiver(timeout=10):
+            raise RuntimeError("motion receiver did not observe the submitted baseline job")
         old_result = _execute_job(jobs[0])
         old_identity = jobs[0].work_identity
         clock[0] += 1_100_000_000
         with patch.object(worker, "is_alive", return_value=True), \
-                patch.object(worker, "poll_available", return_value=(old_result,)), \
+                patch.object(worker, "poll_available", return_value=()), \
                 patch.object(
                     worker, "submit",
                     side_effect=lambda job: jobs.append(job) or True,
                 ):
             decision = coordinator.decide(
                 fixture.frame(physics_world._world, anchor.physics_state, 2),
+                anchor, InputApplicationLedger(max_records=64), physics_world,
+                changed_cells=(), current_scope=coordinator.computation_scope,
+            )
+        with patch.object(worker, "is_alive", return_value=True), \
+                patch.object(worker, "poll_available", return_value=(old_result,)):
+            if not coordinator.result_inbox.wait_for_receiver(timeout=10):
+                raise RuntimeError("motion receiver did not consume the explicit late result")
+        with patch.object(worker, "is_alive", return_value=True), \
+                patch.object(worker, "poll_available", return_value=()), \
+                patch.object(worker, "submit", side_effect=lambda job: jobs.append(job) or True):
+            decision = coordinator.decide(
+                fixture.frame(physics_world._world, anchor.physics_state, 3),
                 anchor, InputApplicationLedger(max_records=64), physics_world,
                 changed_cells=(), current_scope=coordinator.computation_scope,
             )

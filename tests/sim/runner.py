@@ -112,6 +112,9 @@ class InlineMotionWorker:
     def is_alive(self) -> bool:
         return True
 
+    def observe_simulated_movement_tick(self, movement_tick: int) -> None:
+        """Receive the harness clock without changing ordinary inline delivery."""
+
     def submit(self, job) -> bool:
         with self._pending_lock:
             self._pending.append(job)
@@ -287,6 +290,7 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
     profiles = NavigationSessionProfiles.load(CONFIG)
     planner = planner_factory()
     motion = motion_factory()
+    motion.observe_simulated_movement_tick(backend.movement_tick)
     session = NavigationSession("sim", profiles, planner_worker=planner,
                                 motion_worker=motion,
                                 risk_ledger=risk_ledger,
@@ -341,6 +345,7 @@ def run(scenario: Scenario, *, after_terminal_ticks: int = 20,
     try:
         for tick in range(1, scenario.max_ticks + 1):
             context.tick = tick
+            motion.observe_simulated_movement_tick(backend.movement_tick)
             planner_activity_start = len(planner.activity)
             external_movement_intents: tuple[str, ...] = ()
             movement_tick_before = backend.movement_tick

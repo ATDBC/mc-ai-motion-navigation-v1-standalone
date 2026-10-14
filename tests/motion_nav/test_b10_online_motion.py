@@ -10,7 +10,8 @@ from mc2p.contracts.common import ContractViolation
 from mc2p.motion_nav.online_motion import (
     AnchorBuildStatus, CandidateExecutionWindow, InputApplicationLedger,
     InputApplicationStatus, MotionTickPhase, PredictionValidity,
-    ProjectionStatus, StateAnchorBuilder, project_movement_command,
+    ProjectionStatus, StateAnchorBuilder, input_application_has_finished,
+    project_movement_command,
 )
 from mc2p.motion_nav.physics_types import JAVA_1_21_RULESET, PhysicsState
 from mc2p.motion_nav.world_model import WorldSessionId
@@ -142,6 +143,38 @@ class InputApplicationLedgerTests(unittest.TestCase):
         )
         self.assertEqual(ledger.record(1).applied_ticks, (4,))
         ledger.submit(SESSION, action(3), requested_first_tick=6)
+
+    def test_partially_applied_lease_finishes_after_successor_actually_supersedes_it(self):
+        ledger = InputApplicationLedger(max_records=2)
+        ledger.submit(SESSION, action(1, lease=2), requested_first_tick=4)
+        partial = ledger.observe_sample(sample(1, 4))
+        self.assertFalse(input_application_has_finished(partial))
+        ledger.submit(SESSION, action(2), requested_first_tick=5)
+
+        ledger.observe_sample(sample(2, 5))
+
+        superseded = ledger.record(1)
+        self.assertIs(superseded.status, InputApplicationStatus.SUPERSEDED)
+        self.assertEqual(superseded.applied_ticks, (4,))
+        self.assertTrue(input_application_has_finished(superseded))
+        ledger.submit(SESSION, action(3), requested_first_tick=6)
+        self.assertIsNone(ledger.record(1))
+        self.assertIsNotNone(ledger.record(2))
+
+    def test_never_applied_superseded_command_still_may_arrive_late(self):
+        ledger = InputApplicationLedger(max_records=2)
+        ledger.submit(SESSION, action(1), requested_first_tick=4)
+        ledger.submit(SESSION, action(2), requested_first_tick=5)
+
+        ledger.observe_sample(sample(2, 5))
+
+        superseded = ledger.record(1)
+        self.assertIs(superseded.status, InputApplicationStatus.SUPERSEDED)
+        self.assertEqual(superseded.applied_ticks, ())
+        self.assertFalse(input_application_has_finished(superseded))
+        ledger.submit(SESSION, action(3), requested_first_tick=6)
+        with self.assertRaises(ContractViolation):
+            ledger.submit(SESSION, action(4), requested_first_tick=7)
 
     def test_single_tick_command_keeps_start_window_separate_from_lease(self):
         ledger = InputApplicationLedger(max_records=1)

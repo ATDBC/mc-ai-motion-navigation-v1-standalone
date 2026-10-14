@@ -630,10 +630,14 @@ class MotionResultInbox:
         """Record the legacy owner's existing nonblocking submission fact."""
         if type(identity) is not AsyncWorkIdentity:
             raise ContractViolation("motion submission requires the existing typed computation identity")
+        submitted = False
         with self._lock:
             record = self._active.get(identity)
             if record is not None and not record.finished:
                 record.submitted = True
+                submitted = True
+        if submitted:
+            self._wake.set()
 
     def prepare_snapshot(self, bounds: PhysicsWorldBounds, *, ruleset: PhysicsRuleset,
                          identity: AsyncWorkIdentity) -> SnapshotLeaseResult:

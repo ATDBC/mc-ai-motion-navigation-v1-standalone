@@ -1,5 +1,7 @@
 # AGENTS.md
 
+2026-10-14，D107 已完成。D103 留下的观察热路径和异步测试回归已经关闭：F1 缩短场景由约 182 ms/tick 降至 14.57 ms/tick；同语义观察只更新证据，不再重建约 3,400 格的不可变 section；几何变化仍立即使旧依赖失效。计划登记的 11 个回归模块全部恢复。Windows 正序、逆序各 184／184 个独立模块、2264 项检查通过，零失败、错误、超时和跳过。D106 的停止结论保持不变。先读 [D107](docs/motion_navigation/decisions/0107-repair-d103-regressions-before-new-motion-work.md)、[阶段](docs/motion_navigation/stages/d103-regression-recovery-plan.md)、[验收](docs/motion_navigation/acceptance/d103-regression-recovery.md)和 `evidence/motion_navigation/d107-regression-recovery-v1/`。
+
 2026-10-14，D106 已部分完成并停止。R1 去掉重复证明摘要后仍未达到 Windows M0 的 P99 15 ms 门槛；R2 的调用计数与性能计时已经分开；R3 已证明现有 UNKNOWN 与依赖复核足以让局部快照保守失败。R4 的第二轮 Fabric 取得 40／40 `NEXT_MOVEMENT_TICK`，但旧 B10 移动入口夹具随后因一次观察跨两个 movement tick、没有进入 `(0.5, 1.0)` 速度带而失败。该失败发生在动作求解前，身体全程安全。连续两跳、零等待交接、T2-3 和新动作仍未授权。先读 [D106](docs/motion_navigation/decisions/0106-repair-d105-cost-measurement-and-tick-diagnostics.md)、[阶段](docs/motion_navigation/stages/d105-cost-measurement-and-tick-remediation-plan.md)、[验收](docs/motion_navigation/acceptance/d105-cost-measurement-and-tick-remediation.md)和 `evidence/motion_navigation/sound-motion-proof-d106-v1/`。
 
 2026-10-13，D105 已按三条独立轨道止损，原失败保持不变。D106 只在各自轨道内修正量尺、复核局部快照和诊断 B10 时间线，不把 D105 的失败改写成通过。历史入口为[架构](docs/motion_navigation/architecture/sound-sparse-motion-proof-v1.md)、[阶段](docs/motion_navigation/stages/sound-motion-proof-and-independent-tracks-plan.md)、[验收](docs/motion_navigation/acceptance/sound-motion-proof-and-independent-tracks.md)和 `evidence/motion_navigation/sound-motion-proof-d105-v1/`。
@@ -52,7 +54,7 @@ Windows 是正式开发、自动验收和 Fabric 实机平台；Linux 仅用于�
 
 历史 F1 按“功能通过、结构未通过”保存；R28 按“时间盒结束，部分交付通过”保存。历史 S0-R、v1—v7、R27 和连续高度 M3 的结果与边界均保留在各自验收及 `evidence/motion_navigation/` 中，不用 F2 的新结果覆盖。历史入口见 [F1 验收](docs/motion_navigation/acceptance/F1-known-world-following.md)、[R28 验收](docs/motion_navigation/acceptance/navigation-coordination-convergence.md)和 [S0-R 验收](docs/motion_navigation/acceptance/post-F1-navigation-structure-cleanup.md)。
 
-本仓库是主项目生成的源码快照。先读最新 TP 阶段和对应验收，再按任务读取相关架构与决定；F2REC 及后续正式修复作为生产主线的历史依据保留。
+本仓库是主项目生成的源码快照。先读 D107 阶段和对应验收，再按任务读取相关架构与决定；F2REC 及后续正式修复作为生产主线的历史依据保留。
 
 项目方只通过默认分支 `main` 发布由固定导出清单生成、校验通过的公开快照。不得把主项目的完整开发分支或提交历史直接推入本仓库。三方审查分支可以保留，但只保存审查者自己的报告和复现材料，不代表正式发布状态。
 

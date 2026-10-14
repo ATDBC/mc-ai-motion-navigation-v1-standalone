@@ -1,0 +1,1680 @@
+{
+  "schema": "mc2p.motion-nav-shard-summary.v1",
+  "source_report_sha256": "398e557b8b08920699d7b3d1bcd95cf4018e90a7612a3a1445570d54583d68e3",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "python_version": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "order": "forward",
+  "timeout_seconds": 300.0,
+  "selected_modules": 184,
+  "completed_modules": 184,
+  "summary": {
+    "passed": 184,
+    "failed": 0,
+    "error": 0,
+    "timeout": 0,
+    "launch_error": 0
+  },
+  "tests_run": 2264,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "duration_seconds": 1058.642411098699,
+  "modules": [
+    {
+      "module": "tests.motion_nav.test_action_continuity_admission",
+      "status": "passed",
+      "duration_seconds": 0.6694440999999642,
+      "tests_run": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_action_continuity_fabric_options",
+      "status": "passed",
+      "duration_seconds": 0.5183460999978706,
+      "tests_run": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_action_continuity_formal",
+      "status": "passed",
+      "duration_seconds": 3.550447800080292,
+      "tests_run": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_action_continuity_solver_limits",
+      "status": "passed",
+      "duration_seconds": 1.313043100060895,
+      "tests_run": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_action_controller_adapter",
+      "status": "passed",
+      "duration_seconds": 0.49101290001999587,
+      "tests_run": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_action_entry_handoff_repair",
+      "status": "passed",
+      "duration_seconds": 7.773849499993958,
+      "tests_run": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_action_entry_late_hardening",
+      "status": "passed",
+      "duration_seconds": 8.246939899981953,
+      "tests_run": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_action_preconditions",
+      "status": "passed",
+      "duration_seconds": 8.394240099936724,
+      "tests_run": 29,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_action_spec_boundaries",
+      "status": "passed",
+      "duration_seconds": 0.48043849994428456,
+      "tests_run": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_action_spec_integration",
+      "status": "passed",
+      "duration_seconds": 0.7907066999468952,
+      "tests_run": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_action_specs",
+      "status": "passed",
+      "duration_seconds": 0.45409840007778257,
+      "tests_run": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_air_transition_solver",
+      "status": "passed",
+      "duration_seconds": 2.7177244999911636,
+      "tests_run": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_async_gap_revalidation_delivery",
+      "status": "passed",
+      "duration_seconds": 1.678402499994263,
+      "tests_run": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_async_work_verification",
+      "status": "passed",
+      "duration_seconds": 6.670807900023647,
+      "tests_run": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b02_geometry_acceptance",
+      "status": "passed",
+      "duration_seconds": 16.466938099940307,
+      "tests_run": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b06_block_motion_traits",
+      "status": "passed",
+      "duration_seconds": 0.43485489999875426,
+      "tests_run": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b06_environment_identity",
+      "status": "passed",
+      "duration_seconds": 0.423009300022386,
+      "tests_run": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b06_fabric_material_probe",
+      "status": "passed",
+      "duration_seconds": 0.44548540003597736,
+      "tests_run": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b06_movement_contracts",
+      "status": "passed",
+      "duration_seconds": 0.8573505999520421,
+      "tests_run": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b06_ordinary_profiles",
+      "status": "passed",
+      "duration_seconds": 0.8965901000192389,
+      "tests_run": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b06_registry_export",
+      "status": "passed",
+      "duration_seconds": 0.15798219991847873,
+      "tests_run": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b07_shape_matrix",
+      "status": "passed",
+      "duration_seconds": 0.44762019999325275,
+      "tests_run": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b07_step_route",
+      "status": "passed",
+      "duration_seconds": 0.5154101999942213,
+      "tests_run": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b07_step_runtime",
+      "status": "passed",
+      "duration_seconds": 0.45458439993672073,
+      "tests_run": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b07_step_transition",
+      "status": "passed",
+      "duration_seconds": 0.4276642999611795,
+      "tests_run": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b07_support_surfaces",
+      "status": "passed",
+      "duration_seconds": 0.4583011999493465,
+      "tests_run": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b07_surface_planning",
+      "status": "passed",
+      "duration_seconds": 2.314016299904324,
+      "tests_run": 18,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b08_ground_modes",
+      "status": "passed",
+      "duration_seconds": 1.8783706999383867,
+      "tests_run": 23,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b09_air_transitions",
+      "status": "passed",
+      "duration_seconds": 1.1209354000166059,
+      "tests_run": 22,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b09r_physics_contracts",
+      "status": "passed",
+      "duration_seconds": 0.451087599969469,
+      "tests_run": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b09r_physics_rollout",
+      "status": "passed",
+      "duration_seconds": 0.5739219000097364,
+      "tests_run": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b09r_physics_step",
+      "status": "passed",
+      "duration_seconds": 0.5475217000348493,
+      "tests_run": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b09r_physics_validation",
+      "status": "passed",
+      "duration_seconds": 0.45427600003313273,
+      "tests_run": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b10_foundation_tools",
+      "status": "passed",
+      "duration_seconds": 0.6169897000072524,
+      "tests_run": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b10_gap_solver",
+      "status": "passed",
+      "duration_seconds": 14.721240199985914,
+      "tests_run": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b10_motion_candidate",
+      "status": "passed",
+      "duration_seconds": 8.405062500038184,
+      "tests_run": 45,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b10_motion_worker",
+      "status": "passed",
+      "duration_seconds": 4.09024089993909,
+      "tests_run": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b10_online_motion",
+      "status": "passed",
+      "duration_seconds": 0.444095499929972,
+      "tests_run": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b11_block_placement",
+      "status": "passed",
+      "duration_seconds": 0.4757996000116691,
+      "tests_run": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b11_bridge_planning",
+      "status": "passed",
+      "duration_seconds": 0.5902433999581262,
+      "tests_run": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_b11_world_change_navigation",
+      "status": "passed",
+      "duration_seconds": 2.059758299961686,
+      "tests_run": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_continuous_descent",
+      "status": "passed",
+      "duration_seconds": 4.9540715999901295,
+      "tests_run": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_continuous_height_execution",
+      "status": "passed",
+      "duration_seconds": 0.7656094999983907,
+      "tests_run": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_continuous_height_full_matrix",
+      "status": "passed",
+      "duration_seconds": 8.927414399920963,
+      "tests_run": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_continuous_height_planning",
+      "status": "passed",
+      "duration_seconds": 0.8468000000575557,
+      "tests_run": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d057_route_prefix",
+      "status": "passed",
+      "duration_seconds": 0.7429567999206483,
+      "tests_run": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d058_route_revalidation_benchmark",
+      "status": "passed",
+      "duration_seconds": 9.157759199966677,
+      "tests_run": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d058_runtime_validation",
+      "status": "passed",
+      "duration_seconds": 6.7792965999105945,
+      "tests_run": 104,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d058_validation_plan",
+      "status": "passed",
+      "duration_seconds": 0.6296046000206843,
+      "tests_run": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d059_consumers_and_identity",
+      "status": "passed",
+      "duration_seconds": 0.634749999968335,
+      "tests_run": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d059_terminal_selection_dependencies",
+      "status": "passed",
+      "duration_seconds": 0.6982339000096545,
+      "tests_run": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d059_validation_diagnostics",
+      "status": "passed",
+      "duration_seconds": 0.7393356999382377,
+      "tests_run": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d060_terminal_node_exact_proof",
+      "status": "passed",
+      "duration_seconds": 0.5480521999998018,
+      "tests_run": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d061_long_session_benchmark",
+      "status": "passed",
+      "duration_seconds": 3.008438399992883,
+      "tests_run": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d062_direct_walk_validation",
+      "status": "passed",
+      "duration_seconds": 0.5916349999606609,
+      "tests_run": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d063_goal_surface_information",
+      "status": "passed",
+      "duration_seconds": 4.039782900013961,
+      "tests_run": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d064_ground_direct_handoff",
+      "status": "passed",
+      "duration_seconds": 0.6701514000305906,
+      "tests_run": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d094_fabric_timing_metric",
+      "status": "passed",
+      "duration_seconds": 12.28779799991753,
+      "tests_run": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d098_windows_trial_wrapper",
+      "status": "passed",
+      "duration_seconds": 0.26825329998973757,
+      "tests_run": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d101_continuous_probe",
+      "status": "passed",
+      "duration_seconds": 0.9794193999841809,
+      "tests_run": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d101_input_stream",
+      "status": "passed",
+      "duration_seconds": 0.5056369000812992,
+      "tests_run": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d101_measurement",
+      "status": "passed",
+      "duration_seconds": 1.2928753999294713,
+      "tests_run": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d102_action_handoff",
+      "status": "passed",
+      "duration_seconds": 46.68574200000148,
+      "tests_run": 36,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d102_contract_red",
+      "status": "passed",
+      "duration_seconds": 13.371479399967939,
+      "tests_run": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d102_contracts",
+      "status": "passed",
+      "duration_seconds": 0.7955615000100806,
+      "tests_run": 37,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d102_evidence_contract",
+      "status": "passed",
+      "duration_seconds": 57.07670759991743,
+      "tests_run": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d102_prepared_proof",
+      "status": "passed",
+      "duration_seconds": 27.57757840002887,
+      "tests_run": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d102_receiver",
+      "status": "passed",
+      "duration_seconds": 44.14256629999727,
+      "tests_run": 32,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d102_registry_lifecycle",
+      "status": "passed",
+      "duration_seconds": 63.64540580008179,
+      "tests_run": 34,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d102_runtime_activation",
+      "status": "passed",
+      "duration_seconds": 102.15833369991742,
+      "tests_run": 37,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d102_windows_matrix",
+      "status": "passed",
+      "duration_seconds": 55.013120600022376,
+      "tests_run": 36,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d102_world_snapshot",
+      "status": "passed",
+      "duration_seconds": 0.6499474999727681,
+      "tests_run": 32,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d103_observation_hot_path",
+      "status": "passed",
+      "duration_seconds": 0.21785969997290522,
+      "tests_run": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d105_ftick",
+      "status": "passed",
+      "duration_seconds": 0.8847281999187544,
+      "tests_run": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d105_receiver_trust_boundary",
+      "status": "passed",
+      "duration_seconds": 2.8965004000347108,
+      "tests_run": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d105_sound_sparse_m0",
+      "status": "passed",
+      "duration_seconds": 0.627585000009276,
+      "tests_run": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d105_t2_evidence",
+      "status": "passed",
+      "duration_seconds": 0.3067775999661535,
+      "tests_run": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d106_local_snapshot",
+      "status": "passed",
+      "duration_seconds": 3.599931100034155,
+      "tests_run": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d107_b10_trace_audit",
+      "status": "passed",
+      "duration_seconds": 0.312920100055635,
+      "tests_run": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_d107_shard_runner",
+      "status": "passed",
+      "duration_seconds": 2.327695299987681,
+      "tests_run": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_execution_supervisor",
+      "status": "passed",
+      "duration_seconds": 0.49372779997065663,
+      "tests_run": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_external_motion",
+      "status": "passed",
+      "duration_seconds": 0.4596175999613479,
+      "tests_run": 20,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_external_motion_recovery",
+      "status": "passed",
+      "duration_seconds": 0.39729029999580234,
+      "tests_run": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_f1_known_world_following",
+      "status": "passed",
+      "duration_seconds": 48.879738999996334,
+      "tests_run": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_f1_known_world_following_fabric",
+      "status": "passed",
+      "duration_seconds": 0.5625001000007614,
+      "tests_run": 17,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_f2_ground_completion_region",
+      "status": "passed",
+      "duration_seconds": 30.465212999959476,
+      "tests_run": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_f2_ground_route_gates",
+      "status": "passed",
+      "duration_seconds": 1.4193426000420004,
+      "tests_run": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_f2_ground_start_window",
+      "status": "passed",
+      "duration_seconds": 0.8653771999524906,
+      "tests_run": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_f2_non_center_ground_route",
+      "status": "passed",
+      "duration_seconds": 2.543599000084214,
+      "tests_run": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_f2r_piecewise_completion",
+      "status": "passed",
+      "duration_seconds": 2.0956956999143586,
+      "tests_run": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_f2rec_r0_baseline",
+      "status": "passed",
+      "duration_seconds": 2.6484716000268236,
+      "tests_run": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_f2rec_r1_region_geometry",
+      "status": "passed",
+      "duration_seconds": 0.9209774000337347,
+      "tests_run": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_f2rec_r2_goal_selection",
+      "status": "passed",
+      "duration_seconds": 1.4749420000007376,
+      "tests_run": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_f2rec_r3_cleanup",
+      "status": "passed",
+      "duration_seconds": 1.6989506999962032,
+      "tests_run": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_f2rec_r4_recovery",
+      "status": "passed",
+      "duration_seconds": 2.061312999925576,
+      "tests_run": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_fixed_route_walk",
+      "status": "passed",
+      "duration_seconds": 4.628046800033189,
+      "tests_run": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_goal_reach_policy",
+      "status": "passed",
+      "duration_seconds": 3.099205099977553,
+      "tests_run": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_ground_calibration",
+      "status": "passed",
+      "duration_seconds": 0.3895859000040218,
+      "tests_run": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_ground_continuation_quality",
+      "status": "passed",
+      "duration_seconds": 0.8931981000350788,
+      "tests_run": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_ground_motion",
+      "status": "passed",
+      "duration_seconds": 0.3794497000053525,
+      "tests_run": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_ground_traversal",
+      "status": "passed",
+      "duration_seconds": 0.6039749999763444,
+      "tests_run": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_incremental_motion_closed_loop",
+      "status": "passed",
+      "duration_seconds": 0.8905658998992294,
+      "tests_run": 18,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_incremental_motion_closed_loop_measurement",
+      "status": "passed",
+      "duration_seconds": 1.6368009999860078,
+      "tests_run": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_incremental_motion_controller",
+      "status": "passed",
+      "duration_seconds": 0.8771272000158206,
+      "tests_run": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_incremental_motion_performance",
+      "status": "passed",
+      "duration_seconds": 1.00034410005901,
+      "tests_run": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_incremental_motion_proof",
+      "status": "passed",
+      "duration_seconds": 3.262020899914205,
+      "tests_run": 18,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_incremental_motion_table",
+      "status": "passed",
+      "duration_seconds": 0.4037778000347316,
+      "tests_run": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_inline_planning_clock",
+      "status": "passed",
+      "duration_seconds": 0.894199899979867,
+      "tests_run": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_input_responsibility",
+      "status": "passed",
+      "duration_seconds": 0.3685789000010118,
+      "tests_run": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_jump_up",
+      "status": "passed",
+      "duration_seconds": 1.5738021000288427,
+      "tests_run": 17,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_jump_up_calibration",
+      "status": "passed",
+      "duration_seconds": 0.40743030002340674,
+      "tests_run": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_known_map_planning",
+      "status": "passed",
+      "duration_seconds": 1.9101510000182316,
+      "tests_run": 17,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_known_world_follow_driver",
+      "status": "passed",
+      "duration_seconds": 0.45739619992673397,
+      "tests_run": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_motion_baseline_recovery",
+      "status": "passed",
+      "duration_seconds": 1.6173221999779344,
+      "tests_run": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_motion_benchmarks",
+      "status": "passed",
+      "duration_seconds": 2.6540002999827266,
+      "tests_run": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_motion_continuation_quality",
+      "status": "passed",
+      "duration_seconds": 2.275637299986556,
+      "tests_run": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_motion_residual",
+      "status": "passed",
+      "duration_seconds": 0.43864949990529567,
+      "tests_run": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_motion_risk",
+      "status": "passed",
+      "duration_seconds": 0.3743838999653235,
+      "tests_run": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_motion_start_delivery",
+      "status": "passed",
+      "duration_seconds": 7.677035000058822,
+      "tests_run": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_closed_loop",
+      "status": "passed",
+      "duration_seconds": 14.530687099904753,
+      "tests_run": 56,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_dead_path_probe",
+      "status": "passed",
+      "duration_seconds": 0.4810945999342948,
+      "tests_run": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_design_metrics",
+      "status": "passed",
+      "duration_seconds": 6.2187501000007614,
+      "tests_run": 32,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_event_sequences",
+      "status": "passed",
+      "duration_seconds": 5.96851920010522,
+      "tests_run": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_handoff",
+      "status": "passed",
+      "duration_seconds": 0.6658863000338897,
+      "tests_run": 22,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_interrupt_matrix",
+      "status": "passed",
+      "duration_seconds": 0.3934045999776572,
+      "tests_run": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_layer_live",
+      "status": "passed",
+      "duration_seconds": 0.18965239997487515,
+      "tests_run": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_lifecycle",
+      "status": "passed",
+      "duration_seconds": 0.44380510004702955,
+      "tests_run": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_owners",
+      "status": "passed",
+      "duration_seconds": 0.3687128000892699,
+      "tests_run": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_product_delivery",
+      "status": "passed",
+      "duration_seconds": 3.569451400078833,
+      "tests_run": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_product_metrics",
+      "status": "passed",
+      "duration_seconds": 3.502053100033663,
+      "tests_run": 22,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_replay_known_map",
+      "status": "passed",
+      "duration_seconds": 0.14255210000555962,
+      "tests_run": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_route_handoff",
+      "status": "passed",
+      "duration_seconds": 3.3548497000010684,
+      "tests_run": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_seed_scan",
+      "status": "passed",
+      "duration_seconds": 0.11626569996587932,
+      "tests_run": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_session",
+      "status": "passed",
+      "duration_seconds": 2.580225400044583,
+      "tests_run": 62,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_structure_baseline",
+      "status": "passed",
+      "duration_seconds": 0.13116059999447316,
+      "tests_run": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_supervised_interruptions",
+      "status": "passed",
+      "duration_seconds": 13.512111000018194,
+      "tests_run": 28,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_package_boundaries",
+      "status": "passed",
+      "duration_seconds": 0.4360884000780061,
+      "tests_run": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_planner_worker",
+      "status": "passed",
+      "duration_seconds": 4.831101300078444,
+      "tests_run": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_planning_coordinator",
+      "status": "passed",
+      "duration_seconds": 0.48075860005337745,
+      "tests_run": 20,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_planning_ownership_gate",
+      "status": "passed",
+      "duration_seconds": 0.21519060002174228,
+      "tests_run": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_post_input_loss_landing_recovery",
+      "status": "passed",
+      "duration_seconds": 6.59217700001318,
+      "tests_run": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_probe_handoff_resolution",
+      "status": "passed",
+      "duration_seconds": 0.6663531999802217,
+      "tests_run": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_public_repository_completeness",
+      "status": "passed",
+      "duration_seconds": 52.701196500100195,
+      "tests_run": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_r27_async_admission",
+      "status": "passed",
+      "duration_seconds": 3.4284052998991683,
+      "tests_run": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_r28_async_generation",
+      "status": "passed",
+      "duration_seconds": 1.5202679999638349,
+      "tests_run": 36,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_r28_baseline_alignment",
+      "status": "passed",
+      "duration_seconds": 0.47224789997562766,
+      "tests_run": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_r28_corner_progress",
+      "status": "passed",
+      "duration_seconds": 6.876954299979843,
+      "tests_run": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_r28_dual_planning",
+      "status": "passed",
+      "duration_seconds": 0.6282078999793157,
+      "tests_run": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_r28_generation_formal_chain",
+      "status": "passed",
+      "duration_seconds": 3.1299816999817267,
+      "tests_run": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_r28_information_planning_updates",
+      "status": "passed",
+      "duration_seconds": 0.7459141999715939,
+      "tests_run": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_r28_migration_faults",
+      "status": "passed",
+      "duration_seconds": 6.660387099953368,
+      "tests_run": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_r28_persistent_budget_formal",
+      "status": "passed",
+      "duration_seconds": 13.139820999931544,
+      "tests_run": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_r28_planning_failure_handoff",
+      "status": "passed",
+      "duration_seconds": 4.221315699978732,
+      "tests_run": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_r28_planning_history",
+      "status": "passed",
+      "duration_seconds": 1.1063549999380484,
+      "tests_run": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_r28_planning_retry_successor",
+      "status": "passed",
+      "duration_seconds": 0.48656600003596395,
+      "tests_run": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_r28_product_repairs",
+      "status": "passed",
+      "duration_seconds": 2.878790199989453,
+      "tests_run": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_r28_reanchor_handoff",
+      "status": "passed",
+      "duration_seconds": 2.433750900090672,
+      "tests_run": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_r28_screening_retirement",
+      "status": "passed",
+      "duration_seconds": 3.9219327999744564,
+      "tests_run": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_r28_shared_recovery",
+      "status": "passed",
+      "duration_seconds": 3.2265027000103146,
+      "tests_run": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_r28_terminal_approach",
+      "status": "passed",
+      "duration_seconds": 2.3761485000140965,
+      "tests_run": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_r28_world_change_retirement",
+      "status": "passed",
+      "duration_seconds": 3.574144499958493,
+      "tests_run": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_reference_baselines",
+      "status": "passed",
+      "duration_seconds": 0.4287044999655336,
+      "tests_run": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_reference_evidence",
+      "status": "passed",
+      "duration_seconds": 0.4694664999842644,
+      "tests_run": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_retry_ledger",
+      "status": "passed",
+      "duration_seconds": 1.0230340999551117,
+      "tests_run": 30,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_route_body_advance",
+      "status": "passed",
+      "duration_seconds": 7.63364650006406,
+      "tests_run": 20,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_runtime_adapter",
+      "status": "passed",
+      "duration_seconds": 0.3875586000503972,
+      "tests_run": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_runtime_backend_io",
+      "status": "passed",
+      "duration_seconds": 2.6992080999771133,
+      "tests_run": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_runtime_navigation_driver_state",
+      "status": "passed",
+      "duration_seconds": 0.3995084000052884,
+      "tests_run": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_runtime_navigation_state_consumers",
+      "status": "passed",
+      "duration_seconds": 4.523253099992871,
+      "tests_run": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_runtime_navigation_verified_handoff",
+      "status": "passed",
+      "duration_seconds": 3.6434395000105724,
+      "tests_run": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_s0r_evidence",
+      "status": "passed",
+      "duration_seconds": 2.1962164000142366,
+      "tests_run": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_segment_entry",
+      "status": "passed",
+      "duration_seconds": 0.4911871999502182,
+      "tests_run": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_shape_trials",
+      "status": "passed",
+      "duration_seconds": 0.35265030001755804,
+      "tests_run": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_sim_visual_air_query_short_circuit",
+      "status": "passed",
+      "duration_seconds": 1.6326553999679163,
+      "tests_run": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_simulation_isolation",
+      "status": "passed",
+      "duration_seconds": 3.4941257999744266,
+      "tests_run": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_sound_sparse_motion_proof_d105",
+      "status": "passed",
+      "duration_seconds": 0.8151405999669805,
+      "tests_run": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_standalone_export",
+      "status": "passed",
+      "duration_seconds": 29.17935990006663,
+      "tests_run": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_task_risk_ledger",
+      "status": "passed",
+      "duration_seconds": 0.3941599999088794,
+      "tests_run": 17,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_trajectory_proto_commitment",
+      "status": "passed",
+      "duration_seconds": 2.2763330000452697,
+      "tests_run": 37,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_trajectory_proto_contracts",
+      "status": "passed",
+      "duration_seconds": 43.16109479998704,
+      "tests_run": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_trajectory_proto_m0_probe",
+      "status": "passed",
+      "duration_seconds": 8.093808599980548,
+      "tests_run": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_trajectory_proto_primitive_matrix",
+      "status": "passed",
+      "duration_seconds": 33.666102599934675,
+      "tests_run": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_trajectory_proto_reference_search",
+      "status": "passed",
+      "duration_seconds": 3.5728613000828773,
+      "tests_run": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "tests.motion_nav.test_world_knowledge_geometry",
+      "status": "passed",
+      "duration_seconds": 3.652546299970709,
+      "tests_run": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ]
+}

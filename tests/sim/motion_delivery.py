@@ -58,7 +58,16 @@ class DeterministicMotionWorker:
         if (type(tick) is not int or tick < 0
                 or self._tick is not None and tick < self._tick):
             raise ValueError("motion delivery requires monotonic physical ticks")
+        if tick != self._tick:
+            # The product ruler's receive-cycle identity follows its virtual
+            # clock.  Counting background-thread calls would make otherwise
+            # identical runs depend on host scheduling.
+            self.poll_count += 1
         self._tick = tick
+
+    def observe_simulated_movement_tick(self, movement_tick: int) -> None:
+        """Bind delivery to the shared harness clock used by every worker."""
+        self.advance_tick(movement_tick)
 
     def is_alive(self):
         return not self._closed
@@ -90,7 +99,6 @@ class DeterministicMotionWorker:
             return ()
         if self._tick is None:
             raise ValueError("motion delivery has no physical clock")
-        self.poll_count += 1
         ready = []
         while self._pending and self._pending[0][1]["ready_tick"] <= self._tick:
             job, record = self._pending.popleft()
@@ -106,8 +114,22 @@ class DeterministicMotionWorker:
         self._pending.clear()
 
     def control_step(self, context):
-        self.advance_tick(context.backend.movement_tick)
+        # ``runner.run`` publishes this movement tick before it asks any
+        # control source to decide.  Keep the explicit call idempotent for
+        # direct users of this control step outside that runner.
+        self.observe_simulated_movement_tick(context.backend.movement_tick)
+        inbox = context.session._motion_result_inbox
+        if (inbox.receiver_thread_id is not None
+                and not inbox.wait_for_receiver(timeout=10.)):
+            raise AssertionError(
+                "motion receiver did not observe the advanced virtual tick"
+            )
         # This is the runner's normal control step with only transport time set.
         from mc2p.contracts.behavior import BehaviorProfileV0
         context.driver.tick(BehaviorProfileV0(), context.clock[0] + 500_000_000)
+        if (inbox.receiver_thread_id is not None
+                and not inbox.wait_for_receiver(timeout=10.)):
+            raise AssertionError(
+                "motion receiver did not finish the virtual-tick control cycle"
+            )
         return ()

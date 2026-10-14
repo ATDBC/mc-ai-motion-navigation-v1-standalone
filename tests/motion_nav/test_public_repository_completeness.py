@@ -154,10 +154,15 @@ class PublicRepositoryCompletenessTests(unittest.TestCase):
         ))
         self.assertFalse(any(
             path.startswith("mc2p/backends/craftground")
-            or path.startswith("mc2p/backends/runtime_overlays/mc121_structured/")
+            or (path.startswith("mc2p/backends/runtime_overlays/mc121_structured/")
+                and path != "mc2p/backends/runtime_overlays/mc121_structured/BehaviorPlayerMixin.java")
             or path.startswith("tests/java/legacy_craftground/")
             for path in selected_paths
         ))
+        self.assertIn(
+            "mc2p/backends/runtime_overlays/mc121_structured/BehaviorPlayerMixin.java",
+            selected_paths,
+        )
         self.assertFalse(any(
             path.startswith("mc2p/skills/follow_playground")
             or path in {

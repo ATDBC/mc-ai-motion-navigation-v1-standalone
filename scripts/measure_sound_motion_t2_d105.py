@@ -304,7 +304,11 @@ def recompute_receiver_timing(index_path: Path) -> dict:
             "recorded_summary": recorded_summary}
 
 
-def verify_evidence_index(index_path: Path) -> dict:
+def verify_evidence_index(
+    index_path: Path,
+    *,
+    require_current_sources: bool = True,
+) -> dict:
     index_path = Path(index_path).resolve()
     evidence_root = index_path.parent
     errors = []
@@ -333,12 +337,13 @@ def verify_evidence_index(index_path: Path) -> dict:
                 errors.append("T2 evidence hash mismatch: " + item["path"])
                 continue
             verified += 1
-        for item in index.get("source_files", []):
-            path = (ROOT / item["path"]).resolve()
-            if ROOT not in path.parents or not path.is_file():
-                errors.append("T2 source path is missing or escapes repository: " + item["path"])
-            elif sha256_lf_path(path) != item.get("sha256"):
-                errors.append("T2 source hash mismatch: " + item["path"])
+        if require_current_sources:
+            for item in index.get("source_files", []):
+                path = (ROOT / item["path"]).resolve()
+                if ROOT not in path.parents or not path.is_file():
+                    errors.append("T2 source path is missing or escapes repository: " + item["path"])
+                elif sha256_lf_path(path) != item.get("sha256"):
+                    errors.append("T2 source hash mismatch: " + item["path"])
         timing = recompute_receiver_timing(evidence_root / "receiver-timing/index.json")
         if not timing["passed"]:
             errors.extend("receiver timing: " + error for error in timing["errors"])

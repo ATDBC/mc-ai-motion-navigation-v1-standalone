@@ -5,6 +5,7 @@ from dataclasses import replace, asdict
 import unittest
 import math
 import random
+import threading
 from unittest.mock import patch
 
 from mc2p.motion_nav.async_work import (
@@ -61,14 +62,20 @@ from mc2p.motion_nav.async_work import AsyncOwnerDiagnostics, AsyncWorkEvent, As
 
 class DeferredMotionWorker:
     def __init__(self):
+        self.lock = threading.Lock()
         self.jobs = []
         self.results = []
     def submit(self, job):
-        self.jobs.append(job)
+        with self.lock:
+            self.jobs.append(job)
         return True
     def poll_available(self):
-        results, self.results = tuple(self.results), []
-        return results
+        with self.lock:
+            results, self.results = tuple(self.results), []
+            return results
+    def deliver(self, *results):
+        with self.lock:
+            self.results.extend(results)
     def close(self):
         pass
     def is_alive(self):
@@ -140,7 +147,8 @@ class R27IdentityTests(unittest.TestCase):
         worker = DeferredMotionWorker()
         owner, frame, anchor, world, ledger = gap_owner(worker, clock_ns=lambda: clock[0])
         owner.decide(frame, anchor, ledger, world, changed_cells=(), current_scope=owner.computation_scope)
-        worker.results.append(_execute_job(worker.jobs[-1]))
+        worker.deliver(_execute_job(worker.jobs[-1]))
+        self.assertTrue(owner.result_inbox.wait_for_receiver(timeout=10))
         original = coordination.prepare_planned_gap_motion
         def expensive_verify(*args, **kwargs):
             result = original(*args, **kwargs)
@@ -345,7 +353,8 @@ class R27IdentityTests(unittest.TestCase):
         old_failure = GapMotionSolveResult(old.connection_id, old.candidate_revision,
             SolveResult(SolveStatus.INTERNAL_ERROR), 1, old.work_identity)
         rng = random.Random(seed)
-        worker.results.extend([old_failure] * rng.randint(1, 3))
+        worker.deliver(*([old_failure] * rng.randint(1, 3)))
+        self.assertTrue(successor._motion_result_inbox.wait_for_receiver(timeout=10))
         result = driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
         self.assertIsNone(result.report.failure)
         self.assertFalse(successor.report.terminal)
@@ -353,7 +362,8 @@ class R27IdentityTests(unittest.TestCase):
         new_result = _execute_job(new)
         deliveries = [new_result, old_failure, _execute_job(old), new_result]
         rng.shuffle(deliveries)
-        worker.results.extend(deliveries)
+        worker.deliver(*deliveries)
+        self.assertTrue(successor._motion_result_inbox.wait_for_receiver(timeout=10))
         result = driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
         self.assertIsNone(result.report.failure)
         # Two transport ticks have passed: the old start window is expired.
@@ -364,7 +374,8 @@ class R27IdentityTests(unittest.TestCase):
         self.assertIs(refresh.operation, MotionJobOperation.REVALIDATE)
         self.assertNotEqual(refresh.work_identity, new.work_identity)
         self.assertFalse(result.decision.action.movement.jump)
-        worker.results.extend((_execute_job(refresh), old_failure, new_result))
+        worker.deliver(_execute_job(refresh), old_failure, new_result)
+        self.assertTrue(successor._motion_result_inbox.wait_for_receiver(timeout=10))
         result = driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
         self.assertIsNone(result.report.failure)
         for _ in range(4):
@@ -565,12 +576,13 @@ class R27IdentityTests(unittest.TestCase):
         owner, frame, anchor, world, ledger = gap_owner(worker, clock_ns=lambda: clock[0])
         owner.decide(frame, anchor, ledger, world, changed_cells=(), current_scope=owner.computation_scope)
         result = _execute_job(worker.jobs[-1])
-        worker.results.append(result)
+        worker.deliver(result)
         original = worker.poll_available
         def late_delivery():
             clock[0] += 1_000_000_000
             return original()
         worker.poll_available = late_delivery
+        self.assertTrue(owner.result_inbox.wait_for_receiver(timeout=10))
         decision = owner.decide(frame, anchor, ledger, world, changed_cells=(), current_scope=owner.computation_scope)
         self.assertFalse(decision.movement.jump)
         self.assertFalse(any(r.disposition.value == "applied" for r in owner.admission_records))
@@ -584,11 +596,12 @@ class R27IdentityTests(unittest.TestCase):
         old_frame = candidate_fixtures.VerifiedMotionRouteIntegrationTests.frame(world._world, old_anchor.physics_state, 1)
         owner.decide(old_frame, old_anchor, ledger, world, changed_cells=(), current_scope=owner.computation_scope)
         job = worker.jobs[-1]
-        worker.results.append(GapMotionSolveResult(
+        worker.deliver(GapMotionSolveResult(
             job.connection_id, job.candidate_revision,
             SolveResult(SolveStatus.NEEDS_STATE, reasons=("entry_speed_outside_trial",)),
             1, job.work_identity,
         ))
+        self.assertTrue(owner.result_inbox.wait_for_receiver(timeout=10))
         decision = owner.decide(frame, anchor, ledger, world, changed_cells=(), current_scope=owner.computation_scope)
         self.assertEqual(decision.state.value, "running")
         self.assertGreaterEqual(len(worker.jobs), 2)
@@ -607,9 +620,11 @@ class R27IdentityTests(unittest.TestCase):
         self.assertEqual(len([e for e in owner.events if e.operation == "finish"]), 1)
     def test_recreating_same_route_allocates_distinct_execution_identity(self):
         worker = DeferredMotionWorker()
+        inbox = MotionResultInbox(worker=worker)
+        self.addCleanup(inbox.close)
         identities = []
         for _ in range(2):
-            owner, frame, anchor, world, ledger = gap_owner(worker)
+            owner, frame, anchor, world, ledger = gap_owner(worker, inbox=inbox)
             owner.decide(frame, anchor, ledger, world, changed_cells=(), current_scope=owner.computation_scope)
             identities.append(worker.jobs[-1].work_identity)
             owner.cancel_work()
@@ -622,10 +637,12 @@ class R27IdentityTests(unittest.TestCase):
         second = replace(first, scope=replace(first.scope, world_session_id="world-b"))
         for identity in (first, second):
             self.assertTrue(inbox.register(identity))
-            worker.results.append(GapMotionSolveResult(
+            inbox.mark_submitted(identity)
+            worker.deliver(GapMotionSolveResult(
                 "edge", 1, SolveResult(SolveStatus.INTERNAL_ERROR), 0, identity,
             ))
         inbox.drain_once(worker, 1)
+        self.assertTrue(inbox.wait_for_receiver(timeout=10))
         self.assertEqual(tuple(r.work_identity for r in inbox.take(first)), (first,))
         self.assertEqual(tuple(r.work_identity for r in inbox.take(second)), (second,))
 
@@ -634,14 +651,17 @@ class R27IdentityTests(unittest.TestCase):
         worker = DeferredMotionWorker()
         identity = AsyncWorkIdentity(AsyncComputationScope("world", "task", 1), "owner", AsyncWorkKind.MOTION_SOLVE, "edge", 1)
         self.assertTrue(inbox.register(identity))
+        inbox.mark_submitted(identity)
         current = GapMotionSolveResult("edge", 1, SolveResult(SolveStatus.INTERNAL_ERROR), 0, identity)
-        worker.results.extend([current, current])
-        worker.results.extend(replace(current, work_identity=replace(identity, revision=i)) for i in range(2, 150))
+        worker.deliver(current, current,
+            *(replace(current, work_identity=replace(identity, revision=i)) for i in range(2, 150)))
         inbox.drain_once(worker, 1)
+        self.assertTrue(inbox.wait_for_receiver(timeout=10))
         self.assertEqual(inbox.take(identity), (current,))
         inbox.retire(identity)
-        worker.results.append(current)
+        worker.deliver(current)
         inbox.drain_once(worker, 2)
+        self.assertTrue(inbox.wait_for_receiver(timeout=10))
         self.assertEqual(inbox.take(identity), ())
 
 

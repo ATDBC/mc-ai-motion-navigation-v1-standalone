@@ -3,6 +3,7 @@ from mc2p.skills.navigation_session_driver import RuntimeNavigationDriverState
 from dataclasses import asdict, replace
 from pathlib import Path
 import random
+import threading
 
 from mc2p.contracts.behavior import BehaviorProfileV0
 from mc2p.contracts.reset import ResetRequestV0
@@ -236,18 +237,25 @@ def run_gap_sequence(seed, *, service_followup=True):
     class HeldWorker(InlineMotionWorker):
         def __init__(self):
             super().__init__()
+            self.lock = threading.Lock()
             self.jobs = []
             self.deliveries = []
 
         def submit(self, job):
-            self.jobs.append(job)
+            with self.lock:
+                self.jobs.append(job)
             self.activity.append(ObservedAsyncActivity(job.work_identity, "submit"))
             return True
 
         def poll_available(self):
-            done, self.deliveries = tuple(self.deliveries), []
+            with self.lock:
+                done, self.deliveries = tuple(self.deliveries), []
             self.activity.extend(ObservedAsyncActivity(result.work_identity, "poll") for result in done)
             return done
+
+        def deliver(self, *results):
+            with self.lock:
+                self.deliveries.extend(results)
 
     clock = [100_000_000]
     scene = Scene({(x, 63, z): "minecraft:grass_block" for x in (-1, 0, 1) for z in (0, 2, 3)},
@@ -287,14 +295,14 @@ def run_gap_sequence(seed, *, service_followup=True):
             if driver.source is not None:
                 if current is not original and len(worker.jobs) >= 2 and not old_delivered:
                     new = worker.jobs[-1]
-                    worker.deliveries = [GapMotionSolveResult(old.connection_id, old.candidate_revision,
-                        SolveResult(SolveStatus.INTERNAL_ERROR), 0, old.work_identity)]
+                    worker.deliver(GapMotionSolveResult(old.connection_id, old.candidate_revision,
+                        SolveResult(SolveStatus.INTERNAL_ERROR), 0, old.work_identity))
                     old_delivered = True
                     events.append("old_failure_delivered")
                 elif new is not None and not delivered:
                     deliveries = [_execute_job(new), _execute_job(old), _execute_job(new)]
                     rng.shuffle(deliveries)
-                    worker.deliveries.extend(deliveries)
+                    worker.deliver(*deliveries)
                     delivered = True
                     serviced_job_count = len(worker.jobs)
                     events.append("interleaved_results_delivered")
@@ -303,9 +311,12 @@ def run_gap_sequence(seed, *, service_followup=True):
                     # starvation. Service later solve/revalidation jobs through
                     # the same real implementation, on the following frame.
                     pending = worker.jobs[serviced_job_count:]
-                    worker.deliveries.extend(_execute_job(job) for job in pending)
+                    worker.deliver(*(_execute_job(job) for job in pending))
                     followup_operations.extend(job.operation.value for job in pending)
                     serviced_job_count = len(worker.jobs)
+                if (current._motion_result_inbox.receiver_thread_id is not None
+                        and not current._motion_result_inbox.wait_for_receiver(timeout=10)):
+                    raise AssertionError("motion receiver did not finish the virtual-tick delivery cycle")
                 result = driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
                 if result is not None and result.report.failure is not None:
                     raise AssertionError(result.report.failure)

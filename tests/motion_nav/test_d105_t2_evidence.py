@@ -16,12 +16,18 @@ class T2EvidenceTests(unittest.TestCase):
         self.assertEqual(sha256_lf_bytes(b"first\r\nsecond\r\n"),
                          sha256_lf_bytes(b"first\nsecond\n"))
 
-    def test_actual_index_recomputes_every_declared_evidence_hash(self) -> None:
+    def test_historical_index_recomputes_evidence_without_rebinding_sources(self) -> None:
         from scripts.measure_sound_motion_t2_d105 import verify_evidence_index
 
-        result = verify_evidence_index(
-            ROOT / "evidence/motion_navigation/sound-motion-proof-d105-v1/t2/index.json")
+        index = ROOT / "evidence/motion_navigation/sound-motion-proof-d105-v1/t2/index.json"
+        strict = verify_evidence_index(index)
+        result = verify_evidence_index(index, require_current_sources=False)
 
+        self.assertFalse(strict["passed"])
+        self.assertIn(
+            "T2 source hash mismatch: mc2p/motion_nav/motion_worker.py",
+            strict["errors"],
+        )
         self.assertTrue(result["passed"], result["errors"])
         self.assertGreaterEqual(result["evidence_file_count"], 15)
         self.assertEqual(result["verified_evidence_file_count"],

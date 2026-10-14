@@ -46,6 +46,8 @@ class ProductDeliveryTests(unittest.TestCase):
         self.assertEqual([row.candidate_revision for row in worker.poll_available()], [1, 2])
         self.assertEqual([row["ready_tick"] for row in worker.records], [17, 11])
         self.assertEqual([row["delivery_tick"] for row in worker.records], [17, 17])
+        self.assertEqual([row["submission_poll"] for row in worker.records], [1, 1])
+        self.assertEqual([row["delivery_poll"] for row in worker.records], [8, 8])
         self.assertEqual([row.operation for row in worker.activity], ["submit", "submit", "poll", "poll"])
         worker.close()
         self.assertFalse(worker.is_alive())
@@ -104,7 +106,7 @@ class ProductDeliveryTests(unittest.TestCase):
             self.assertEqual(record["motion_jobs"][0]["delay_ticks"], 7)
             self.assertEqual(record["motion_jobs"][1]["delay_ticks"], 2)
             for row in record["motion_jobs"]:
-                self.assertGreaterEqual(row["delivery_tick"], row["ready_tick"])
+                self.assertEqual(row["delivery_tick"], row["ready_tick"])
                 self.assertGreaterEqual(row["delivery_poll"], row["submission_poll"])
             self.assertEqual(summary["groups"][0]["exceptions"], 0)
             self.assertEqual(summary["groups"][0]["safety_violation_tasks"], 0)

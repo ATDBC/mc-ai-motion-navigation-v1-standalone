@@ -107,9 +107,23 @@ def build_runtime_case(*, follow=False, gap=False):
     runtime = PlayerRuntimeV1(backend, _RecordingTrace(), lambda: clock[0])
     assert runtime.reset(ResetRequestV0("reset-io", backend.episode, "test", 1, 10_000_000_000)).succeeded
     seed_memory(runtime, backend.scene)
+    motion = InlineMotionWorker()
     session = NavigationSession("io-session", NavigationSessionProfiles.load(CONFIG),
-                                planner_worker=InlinePlannerWorker(), motion_worker=InlineMotionWorker(),
+                                planner_worker=InlinePlannerWorker(), motion_worker=motion,
                                 clock_ns=lambda: clock[0])
+    # This fixture advances the simulated client without sleeping between
+    # movement ticks.  Wait for the real inbox receiver to consume the inline
+    # worker's current batch before the next simulated decision; otherwise OS
+    # thread scheduling, rather than movement ticks, decides whether an air
+    # action is delivered before its execution window expires.
+    inbox = session._motion_result_inbox
+    original_drain = inbox.drain_once
+    def fixture_drain(worker, sequence):
+        inbox.attach_worker(worker)
+        if not inbox.wait_for_receiver(timeout=10.):
+            raise AssertionError("the motion receiver failed the runtime-fault fixture barrier")
+        return original_drain(worker, sequence)
+    inbox.drain_once = fixture_drain
     driver = RuntimeNavigationDriver(runtime, session, clock_ns=lambda: clock[0],
                                     observation_request=ObservationRequestV3("navigation_v1", entity_track_id=TRACK))
     manager = None

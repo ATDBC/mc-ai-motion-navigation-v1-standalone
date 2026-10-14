@@ -264,7 +264,33 @@ class ImmutableWorldSection:
     def __post_init__(self) -> None:
         from mc2p.contracts.motion_activation import validate_frozen_value
         validate_frozen_value(self)
+        self._validate_structure()
+
+    @classmethod
+    def _from_validated_observation(
+        cls,
+        position: SectionPos,
+        facts: tuple[tuple[BlockPos, CellFact], ...],
+        dependency_versions: tuple[tuple[BlockPos, int], ...],
+    ) -> ImmutableWorldSection:
+        """Build from owner-created facts that already ran their constructors.
+
+        The public constructor and the process boundary still validate the
+        complete immutable graph.  The world owner only needs to validate the
+        section index because every CellFact entered through _apply after its
+        own dataclass constructor had checked the nested values.
+        """
+        value = object.__new__(cls)
+        object.__setattr__(value, "position", position)
+        object.__setattr__(value, "facts", facts)
+        object.__setattr__(value, "dependency_versions", dependency_versions)
+        value._validate_structure()
+        return value
+
+    def _validate_structure(self) -> None:
         _section(self.position)
+        if type(self.facts) is not tuple or type(self.dependency_versions) is not tuple:
+            raise ContractViolation("section facts and versions must be immutable")
         positions = tuple(position for position, _ in self.facts)
         if positions != tuple(sorted(set(positions))):
             raise ContractViolation("section facts must be sorted and unique")
@@ -291,14 +317,26 @@ class SnapshotSourceProvenance:
 
 
 def _snapshot_observation(method):
-    """Commit immutable sections once per observation batch, under the owner lock."""
+    """Finalize one observation batch under the snapshot-owner lock.
+
+    Geometry changes must immediately replace their immutable section and
+    retire published snapshots.  Evidence-only refreshes stay in the live
+    world until the next borrow, where all pending evidence is coalesced into
+    one immutable replacement instead of rebuilding the same section every
+    control frame.
+    """
     @wraps(method)
     def apply(self, *args, **kwargs):
         with self._snapshot_version_lock:
             try:
                 return method(self, *args, **kwargs)
             finally:
-                self._commit_snapshot_sections()
+                changed_sections = {
+                    block_section(position)
+                    for position in self._snapshot_changed_positions
+                }
+                self._commit_snapshot_sections(changed_sections)
+                self._invalidate_changed_snapshots()
     return apply
 
 
@@ -869,8 +907,15 @@ class WorldKnowledge:
                 self._evidence_revision
         self._prune_tombstones()
 
-    def _commit_snapshot_sections(self) -> None:
-        for position in self._snapshot_dirty_sections:
+    def _commit_snapshot_sections(
+        self, sections: set[SectionPos] | None = None,
+    ) -> None:
+        selected = (
+            set(self._snapshot_dirty_sections)
+            if sections is None
+            else self._snapshot_dirty_sections.intersection(sections)
+        )
+        for position in selected:
             cells = self._sections.get(position)
             if not cells:
                 self._snapshot_sections.pop(position, None)
@@ -878,8 +923,11 @@ class WorldKnowledge:
             facts = tuple(sorted(cells.items()))
             versions = tuple((cell, self._snapshot_epoch + self._cell_semantic_versions[cell])
                              for cell, _ in facts)
-            self._snapshot_sections[position] = ImmutableWorldSection(position, facts, versions)
-        self._snapshot_dirty_sections.clear()
+            self._snapshot_sections[position] = \
+                ImmutableWorldSection._from_validated_observation(position, facts, versions)
+        self._snapshot_dirty_sections.difference_update(selected)
+
+    def _invalidate_changed_snapshots(self) -> None:
         if self._snapshot_changed_positions:
             with self._snapshot_publication_lock:
                 for revision in tuple(self._ready_snapshot_revisions):
@@ -941,6 +989,11 @@ class WorldKnowledge:
         if size > self._max_snapshot_cells or not self._snapshot_version_lock.acquire(False):
             return None
         try:
+            # Evidence refreshes do not change collision semantics and can be
+            # much more frequent than motion work.  Materialize their latest
+            # stamps/evidence once here, only when a worker actually borrows a
+            # version.  Existing immutable sections remain valid for old work.
+            self._commit_snapshot_sections()
             references = tuple(self._snapshot_sections[position]
                                for x in range(bounds.min_x // WORLD_SECTION_SIZE,
                                               bounds.max_x // WORLD_SECTION_SIZE + 1)

@@ -1,0 +1,11 @@
+{
+  "schema": "mc2p.public-production-semantic-hashes.v1",
+  "scope": "D107 D103 regression recovery production changes",
+  "source_commit": "4571d2cf3c4a7c88bfea326d2bce0d1907d5cf76",
+  "normalization": "CRLF_TO_LF",
+  "files": {
+    "mc2p/motion_nav/motion_worker.py": "09a8c1292d99705e3beb71251376644b216362cc95da9851d35f3ee7eccacf1d",
+    "mc2p/motion_nav/online_motion.py": "def6188a875b76e3468a1a5b39f7564fb904f9b7b0b2fe9c3fd15860cbe758b9",
+    "mc2p/motion_nav/world_model.py": "a737cacf1870b74ed20e01d649766068b83a6d88532abe40b050b34232535e52"
+  }
+}

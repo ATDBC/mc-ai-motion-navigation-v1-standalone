@@ -162,6 +162,67 @@ class SnapshotTests(unittest.TestCase):
         self.assertNotEqual(new_lease.identity.digest, old_lease.identity.digest)
         self.assertEqual(old_lease.cell(self.position).stamp.sequence_id, 1)
 
+    def test_evidence_only_refresh_is_coalesced_until_snapshot_borrow(self):
+        section_position = (0, 0, 0)
+        original = self.world._snapshot_sections[section_position]
+        original_geometry_revision = self.world.view().geometry_revision
+        original_evidence_revision = self.world.view().evidence_revision
+
+        self.observe(2, {self.position: self.stone})
+
+        live = self.world.view().cell(self.position)
+        self.assertEqual(live.stamp.sequence_id, 2)
+        self.assertEqual(self.world.view().geometry_revision, original_geometry_revision)
+        self.assertGreater(self.world.view().evidence_revision, original_evidence_revision)
+        self.assertIs(self.world._snapshot_sections[section_position], original)
+
+        refreshed = self.world.borrow_snapshot_version(
+            self.bounds, ruleset=JAVA_1_21_RULESET,
+        )
+        self.assertIsNotNone(refreshed)
+        self.assertIsNot(refreshed.section_references[0], original)
+        self.assertEqual(dict(refreshed.section_references[0].facts)[self.position].stamp.sequence_id, 2)
+        self.assertEqual(dict(original.facts)[self.position].stamp.sequence_id, 1)
+
+    def test_latest_visual_air_evidence_is_preserved_when_snapshot_is_borrowed(self):
+        air = (1, 0, 0)
+        first_stamp = self.stamp(2)
+        first = VisualAirEvidence(first_stamp, 3.0, False)
+        self.world.confirm_air(first_stamp, (air,), {air: first})
+        section_position = (0, 0, 0)
+        original = self.world._snapshot_sections[section_position]
+
+        newer_stamp = self.stamp(3)
+        newer = VisualAirEvidence(newer_stamp, 1.0, True)
+        self.world.confirm_air(newer_stamp, (air,), {air: newer})
+
+        self.assertIs(self.world._snapshot_sections[section_position], original)
+        self.assertEqual(self.world.view().cell(air).visual_air_evidence, newer)
+        refreshed = self.world.borrow_snapshot_version(
+            self.bounds, ruleset=JAVA_1_21_RULESET,
+        )
+        self.assertIsNotNone(refreshed)
+        self.assertEqual(
+            dict(refreshed.section_references[0].facts)[air].visual_air_evidence,
+            newer,
+        )
+
+    def test_locally_validated_observation_does_not_repeat_deep_graph_validation(self):
+        import mc2p.contracts.motion_activation as activation
+        dirt = BlockGeometry.full_cube("minecraft:dirt")
+
+        with patch.object(
+            activation,
+            "validate_frozen_value",
+            side_effect=AssertionError("trusted observation repeated deep validation"),
+        ):
+            self.observe(2, {self.position: dirt})
+
+        self.assertEqual(
+            self.world._snapshot_sections[(0, 0, 0)].facts[0][1].block,
+            dirt,
+        )
+
     def test_capacity_returns_not_ready_without_waiting(self):
         world = WorldKnowledge(WorldSessionId("capacity"), max_snapshot_leases=1)
         self.world = world

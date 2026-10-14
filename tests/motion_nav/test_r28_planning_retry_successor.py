@@ -334,6 +334,7 @@ class SuccessorAndContinuationContractTests(unittest.TestCase):
         from mc2p.motion_nav.motion_worker import MotionWorkerPort
         planner = _InlinePlanner()
         motion = Mock(spec=MotionWorkerPort)
+        motion.is_alive.return_value = True
         session = NavigationSession(
             "old-session", self._session_profiles(),
             planner_worker=planner, retry_ledger=RetryLedger("old-task"),

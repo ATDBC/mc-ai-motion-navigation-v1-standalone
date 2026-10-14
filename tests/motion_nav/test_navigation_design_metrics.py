@@ -3,10 +3,37 @@ import tempfile
 from pathlib import Path
 import unittest
 
-from scripts.navigation_design_metrics import NON_IMPLEMENTATION_ENUMS, measure
+from scripts.navigation_design_metrics import (
+    NON_IMPLEMENTATION_ENUMS,
+    TYPED_LIFECYCLE_CLASSIFICATIONS,
+    measure,
+)
 
 
 class NavigationDesignMetricsTests(unittest.TestCase):
+    def test_prepared_pipeline_types_have_reviewed_non_dispatch_roles(self):
+        expected = {
+            'ActivationStatus',
+            'DependencyStatus',
+            'PreparedAdmissionStatus',
+            'PreparedComputeStatus',
+            'PreparedHandoffRejectReason',
+            'PreparedHandoffStatus',
+            'PreparedQueryStatus',
+            'PreparedRejectReason',
+            'PreparedSubmitStatus',
+            'ProofUse',
+            'ReferenceStatus',
+            'SnapshotLeaseStatus',
+            'StreamApplicationReason',
+            'StreamApplicationStatus',
+            'StreamStartBranch',
+        }
+        self.assertEqual(set(TYPED_LIFECYCLE_CLASSIFICATIONS), expected)
+        self.assertTrue(expected.issubset(NON_IMPLEMENTATION_ENUMS))
+        self.assertTrue(all(TYPED_LIFECYCLE_CLASSIFICATIONS[name]
+                            for name in expected))
+
     def test_handoff_disposition_is_internal_lifecycle(self):
         self.assertIn('HandoffDisposition', NON_IMPLEMENTATION_ENUMS)
         root = Path(__file__).resolve().parents[2]
@@ -14,7 +41,10 @@ class NavigationDesignMetricsTests(unittest.TestCase):
         self.assertEqual(report['unclassified'], [])
         self.assertEqual(len(report['capability_checks']), 2)
         self.assertEqual(len(report['proxy_implementation_dispatch']), 1)
-        self.assertEqual(len(report['direct_action_dispatch']), 42)
+        # D103 added one explicit JumpGap compatibility check in the motion
+        # coordinator.  It is a real action-type branch, so the ruler keeps it
+        # visible instead of hiding it with the prepared-lifecycle statuses.
+        self.assertEqual(len(report['direct_action_dispatch']), 43)
         for rows in (report['proxy_implementation_dispatch'], report['direct_action_dispatch']):
             self.assertFalse(any(row.get('classification') == 'HandoffDisposition' for row in rows))
 

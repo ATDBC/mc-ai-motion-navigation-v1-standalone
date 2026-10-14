@@ -219,6 +219,13 @@ def input_application_has_finished(record: InputApplicationRecord, *, by_tick: i
     if record.status in {InputApplicationStatus.APPLIED, InputApplicationStatus.APPLIED_OUTSIDE_WINDOW}:
         return (len(record.applied_ticks) >= record.action.valid_for_ticks
                 and (by_tick is None or record.applied_ticks[-1] <= by_tick))
+    if record.status is InputApplicationStatus.SUPERSEDED:
+        # A command that already ran can retire after a later command was
+        # actually observed.  The later sample ends the remaining lease, so
+        # the old command has no unobserved body responsibility left.  A
+        # never-applied command may still arrive late and must stay retained.
+        return (bool(record.applied_ticks)
+                and record.applied_ticks[-1] < record.resolved_at_tick)
     return False
 
 

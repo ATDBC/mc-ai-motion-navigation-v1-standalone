@@ -40,13 +40,13 @@ class MotionBaselineRecoveryTests(unittest.TestCase):
         from tests.sim.backend import Perturbations
         class LateRevalidation(_DeliveryWorker):
             delayed = None
-            delayed_submission_poll = None
+            delayed_submission_tick = None
             def submit(self, job):
                 self.delivery_polls = 3 if job.operation is MotionJobOperation.SOLVE else 1
                 if job.operation is MotionJobOperation.REVALIDATE and self.delayed is None:
                     self.delivery_polls += 1
                     self.delayed = job
-                    self.delayed_submission_poll = self.poll_count
+                    self.delayed_submission_tick = self.observed_movement_tick
                 return super().submit(job)
         worker = LateRevalidation()
         stolen = []
@@ -60,7 +60,8 @@ class MotionBaselineRecoveryTests(unittest.TestCase):
             proposals = driver.prepare_proposals(deadline)
             external = ()
             if (len(worker.jobs) == 1 and worker._pending
-                    and worker.poll_count == worker._pending[0][0] - 1 and not stolen):
+                    and worker.observed_movement_tick == worker._pending[0][0] - 1
+                    and not stolen):
                 source = runtime.register_ordered_source('conditioned-revalidation-look')
                 intent = ActionIntentV1(ordered_intent_id(source, 1), source.source_id,
                     source.episode_id, runtime.observation.sequence_id, ActionPriorityV0.SAFETY,
@@ -80,9 +81,9 @@ class MotionBaselineRecoveryTests(unittest.TestCase):
         self.assertIs(worker.delayed.operation, MotionJobOperation.REVALIDATE)
         delivered = next(r for r in worker.results if r.work_identity == worker.delayed.work_identity)
         self.assertIs(delivered.solve_result.status, SolveStatus.NEEDS_STATE)
-        delivered_poll = next(poll for poll, job in worker.deliveries
+        delivered_tick = next(tick for tick, job in worker.observed_deliveries
                               if job.work_identity == worker.delayed.work_identity)
-        self.assertEqual(delivered_poll - worker.delayed_submission_poll, 2)
+        self.assertEqual(delivered_tick - worker.delayed_submission_tick, 2)
         self.assertEqual(result.outcome, 'success', result.reason)
         self.assertFalse(result.violations)
         self.assertFalse(result.trace[-1]['source_bound'])

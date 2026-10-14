@@ -66,6 +66,32 @@ NON_IMPLEMENTATION_ENUMS.update({'PlanningFrontierKind', 'ActionPriorityV0',
                                 'FixedMeleePhase', 'ComparisonOperatorV0'})
 NEUTRAL_VALUE_SYMBOLS = {'mc2p.motion_nav.physics_types.JAVA_1_21_RULESET', 'math.pi', 'math.inf'}
 
+# These records describe the prepared-motion job, proof, activation and input
+# stream lifecycle.  They are reviewed here one by one because treating an
+# unknown enum as harmless would hide a newly introduced action/controller
+# selector from this ruler.
+TYPED_LIFECYCLE_CLASSIFICATIONS = {
+    'ActivationStatus': 'Runtime 激活结果，不选择动作或控制器',
+    'DependencyStatus': '已绑定世界依赖的复核结果',
+    'PreparedAdmissionStatus': '准备结果的登记状态',
+    'PreparedComputeStatus': '后台准备计算结果',
+    'PreparedHandoffRejectReason': '动作交接拒绝原因',
+    'PreparedHandoffStatus': '动作交接许可结果',
+    'PreparedQueryStatus': '已准备结果与当前入口的匹配结果',
+    'PreparedRejectReason': '准备结果拒绝原因',
+    'PreparedSubmitStatus': '准备作业提交结果',
+    'ProofUse': '同一证明的候选、执行和安全收尾用途',
+    'ReferenceStatus': '准备证明引用的保留和释放结果',
+    'SnapshotLeaseStatus': '局部世界快照租约结果',
+    'StreamApplicationReason': '输入流应用失败或偏离原因',
+    'StreamApplicationStatus': '输入流实际应用结果',
+    'StreamStartBranch': '输入流起点按时或晚一 tick 分支',
+}
+NON_IMPLEMENTATION_ENUMS.update(TYPED_LIFECYCLE_CLASSIFICATIONS)
+CLASSIFICATION_NOTES.update(TYPED_LIFECYCLE_CLASSIFICATIONS)
+NEUTRAL_VALUE_SYMBOLS.add('errno.EPIPE')
+CLASSIFICATION_NOTES['errno.EPIPE'] = '操作系统管道关闭错误码，不选择运动实现'
+
 
 def _symbols(node, aliases, declaration_nodes=()):
     result = set()

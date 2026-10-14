@@ -10,8 +10,8 @@ from unittest.mock import patch
 
 from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.common import ContractViolation
-from mc2p.motion_nav.motion_solver import MotionCommandTick
-from mc2p.motion_nav.motion_worker import MotionResultInbox
+from mc2p.motion_nav.motion_solver import MotionCommandTick, SolveResult, SolveStatus
+from mc2p.motion_nav.motion_worker import GapMotionSolveResult, MotionResultInbox
 from mc2p.motion_nav.prepared_motion import (
     PreparedAdmissionStatus, PreparedComputeCounts, PreparedComputeResult, PreparedComputeStatus,
     PreparedCurrentFacts, PreparedQueryStatus, PreparedRejectReason, PreparedSubmitStatus,
@@ -488,6 +488,27 @@ class ReceiverTests(unittest.TestCase):
             self.assertEqual(results, [first])
             self.assertEqual(worker.poll_available(), (second,))
             self.assertEqual(worker.poll_available(), ())
+
+    def test_mark_submitted_wakes_receiver_for_legacy_result(self):
+        worker = QueuedWorker()
+        inbox = MotionResultInbox(worker=worker)
+        self.addCleanup(inbox.close)
+        identity = self.request.async_identity
+        self.assertTrue(inbox.register(identity))
+        self.assertTrue(inbox.wait_for_receiver(timeout=10))
+        result = GapMotionSolveResult(
+            identity.subject_id,
+            identity.revision,
+            SolveResult(SolveStatus.INTERNAL_ERROR),
+            0,
+            identity,
+        )
+        worker.put(result)
+        with patch.object(inbox._wake, "set", wraps=inbox._wake.set) as wake:
+            inbox.mark_submitted(identity)
+            wake.assert_called_once_with()
+        self.assertTrue(inbox.wait_for_receiver(timeout=10))
+        self.assertEqual(inbox.take(identity), (result,))
 
     def test_successor_transfers_same_inbox_receiver_and_close_is_idempotent(self):
         from mc2p.motion_nav.navigation_session import NavigationSession
