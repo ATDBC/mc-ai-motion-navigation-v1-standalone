@@ -159,8 +159,15 @@ class _InlinePort:
 
 
 class _ControlMeter:
-    """One complete tick and exclusive phase spans; profile all hot call aliases."""
-    def __init__(self):
+    """Measure either call provenance or elapsed time, never both formally."""
+    MODES = frozenset({"legacy-combined", "call-count", "performance"})
+
+    def __init__(self, measurement_mode="legacy-combined"):
+        if measurement_mode not in self.MODES:
+            raise ValueError("unknown G2 measurement mode: " + repr(measurement_mode))
+        self.measurement_mode = measurement_mode
+        self.profile_enabled = measurement_mode in ("legacy-combined", "call-count")
+        self.timing_valid = measurement_mode in ("legacy-combined", "performance")
         self.calls = dict.fromkeys(FORBIDDEN_OPERATIONS, 0)
         self.fixture_calls = dict.fromkeys(FORBIDDEN_OPERATIONS, 0)
         self.in_fixture_backend = False
@@ -227,7 +234,9 @@ class _ControlMeter:
     @contextmanager
     def tick(self, kind, movement_tick, *, due_ns=None):
         previous = sys.getprofile()
-        self.started = time.perf_counter_ns()
+        if self.measurement_mode == "performance" and previous is not None:
+            raise ValueError("performance measurement requires sys.setprofile to be disabled")
+        self.started = time.perf_counter_ns() if self.timing_valid else None
         self.phase_started = self.started
         self.phase, self.phases = "observation", dict.fromkeys(PHASES, 0)
         self.phase_calls = dict.fromkeys(PHASES, 0)
@@ -235,25 +244,31 @@ class _ControlMeter:
         self.sent_sequences = []
         before = dict(self.calls)
         self.active = True
-        sys.setprofile(self._profile)
+        if self.profile_enabled:
+            sys.setprofile(self._profile)
         try:
             yield
         finally:
             self._switch(None)
             self.active = False
-            sys.setprofile(previous)
-            ended = time.perf_counter_ns()
-            self.samples.append(dict(kind=kind, movement_tick=movement_tick, started_ns=self.started,
-                ended_ns=ended, duration_ns=ended - self.started, phases_ns=self.phases,
-                phase_calls=self.phase_calls, forbidden_calls={k: self.calls[k] - before[k] for k in before},
-                forbidden_events=list(self.tick_events), scheduled_ns=due_ns,
-                sent_sequences=list(self.sent_sequences),
-                wake_lateness_ns=None if due_ns is None else max(0, self.started - due_ns),
-                deadline_miss=due_ns is not None and ended > due_ns + PERIOD_NS))
+            if self.profile_enabled:
+                sys.setprofile(previous)
+            sample = dict(kind=kind, movement_tick=movement_tick,
+                phase_calls=self.phase_calls, sent_sequences=list(self.sent_sequences))
+            if self.profile_enabled:
+                sample.update(forbidden_calls={k: self.calls[k] - before[k] for k in before},
+                              forbidden_events=list(self.tick_events))
+            if self.timing_valid:
+                ended = time.perf_counter_ns()
+                sample.update(started_ns=self.started, ended_ns=ended,
+                    duration_ns=ended - self.started, phases_ns=self.phases, scheduled_ns=due_ns,
+                    wake_lateness_ns=None if due_ns is None else max(0, self.started - due_ns),
+                    deadline_miss=due_ns is not None and ended > due_ns + PERIOD_NS)
+            self.samples.append(sample)
 
     def _switch(self, name):
-        now = time.perf_counter_ns()
-        if self.phase is not None:
+        now = time.perf_counter_ns() if self.timing_valid else None
+        if self.phase is not None and self.timing_valid:
             self.phases[self.phase] += now - self.phase_started
         self.phase, self.phase_started = name, now
         if name is not None:
@@ -274,9 +289,10 @@ class _ControlMeter:
 
 class _Case(ActivationTests):
     """Thin isolated fixture; Runtime, coordinator, supervisor and inbox are real."""
-    def __init__(self, axes, inbox, worker, *, realtime=False):
+    def __init__(self, axes, inbox, worker, *, realtime=False,
+                 measurement_mode="legacy-combined"):
         super().__init__("runTest")
-        self.axes, self.meter, self.inbox, self.worker = axes, _ControlMeter(), inbox, worker
+        self.axes, self.meter, self.inbox, self.worker = axes, _ControlMeter(measurement_mode), inbox, worker
         self.negative = axes.get("negative_case_id")
         self.clock, self.events = [100_000_000], []
         self.task = TaskIntentV0("g2-task", "navigate", "{}",
@@ -951,13 +967,18 @@ def _final_resources(report):
                 queued_returns=report.queued_returns)
 
 
-def _probe(axes, inbox, worker, *, group="fast", realtime=False, warmup=False):
+def _probe(axes, inbox, worker, *, group="fast", realtime=False, warmup=False,
+           measurement_mode="legacy-combined"):
     case = None
     raw = dict(schema="d102-contract-raw-v1", group=group, axes=axes, warmup=warmup,
                producer_id="tests.sim.d102_prepared_motion._probe", status="FAIL",
-               second_jump_authorizations=0, continuous_complete=False)
+               second_jump_authorizations=0, continuous_complete=False,
+               measurement_mode=measurement_mode,
+               profile_enabled=measurement_mode in ("legacy-combined", "call-count"),
+               timing_valid=measurement_mode in ("legacy-combined", "performance"))
     try:
-        case = _Case(axes, inbox, worker, realtime=realtime)
+        case = _Case(axes, inbox, worker, realtime=realtime,
+                     measurement_mode=measurement_mode)
         case.run(fallback=group == "fallback", negative=axes.get("negative_case_id"))
         if hasattr(case, "bundle"):
             raw.update(canonical_prepared_payloads(case.parent_request, case.bundle, case.lease.snapshot))
@@ -965,8 +986,9 @@ def _probe(axes, inbox, worker, *, group="fast", realtime=False, warmup=False):
         raw.update(typed_result=case.typed_result, continuous_complete=case.completed,
             second_jump_authorizations=int(case.f.executor.action_index == 1),
             native_events=case.native_events, transport_events=case.transport_events,
-            control_samples=case.meter.samples, hot_path_calls=case.meter.calls,
-            fixture_backend_calls=case.meter.fixture_calls,
+            control_samples=case.meter.samples,
+            hot_path_calls=case.meter.calls if case.meter.profile_enabled else None,
+            fixture_backend_calls=case.meter.fixture_calls if case.meter.profile_enabled else None,
             control_thread_id=threading.get_ident(), receiver_thread_id=inbox.receiver_thread_id,
             request_preparation_started_ns=case.request_started,
             control_preparation_ns=case.prepare_durations, background_publish_ns=case.validation_durations,
@@ -1006,7 +1028,9 @@ def _probe(axes, inbox, worker, *, group="fast", realtime=False, warmup=False):
         raw.update(exception_type=type(error).__name__, failure_reason=str(error), traceback=traceback.format_exc())
         if case is not None:
             raw.update(native_events=case.native_events, control_samples=case.meter.samples,
-                hot_path_calls=case.meter.calls, resource_high_water=case.resource_high_water,
+                hot_path_calls=case.meter.calls if case.meter.profile_enabled else None,
+                fixture_backend_calls=case.meter.fixture_calls if case.meter.profile_enabled else None,
+                resource_high_water=case.resource_high_water,
                 control_thread_id=threading.get_ident(), receiver_thread_id=inbox.receiver_thread_id)
             try:
                 raw["released_by_original_owner"] = case.release()
@@ -1105,11 +1129,12 @@ def _write_probe(raw, output, *, run_id, case_id):
                 raw_sha256=_hash(path), status=raw["status"], warmup=raw["warmup"])
 
 
-def record_probe(axes, *, output, manifest, transport="inline"):
+def record_probe(axes, *, output, manifest, transport="inline",
+                 measurement_mode="legacy-combined"):
     output = _fresh(output)
     worker = _InlinePort() if transport == "inline" else MotionSolverWorker()
     inbox = MotionResultInbox(worker=worker)
-    raw = _probe(axes, inbox, worker)
+    raw = _probe(axes, inbox, worker, measurement_mode=measurement_mode)
     closed = inbox.close(timeout_seconds=10)
     raw["final_resources"] = _final_resources(closed)
     raw["native_close_report"] = asdict(closed)
@@ -1117,7 +1142,9 @@ def record_probe(axes, *, output, manifest, transport="inline"):
     row = _write_probe(raw, output, run_id=run_id, case_id="probe")
     index = dict(schema="d102-g2-run-v1", stage="probe", run_id=run_id, cases=[row], case_count=1,
                  manifest_sha256=_hash(manifest), environment=dict(system=platform.system(), python=sys.version,
-                 executable=sys.executable), final_resources=raw["final_resources"])
+                 executable=sys.executable), final_resources=raw["final_resources"],
+                 measurement_mode=measurement_mode,
+                 profile_enabled=raw["profile_enabled"], timing_valid=raw["timing_valid"])
     (output / "index.json").write_bytes(canonical_bytes(index))
     return raw
 
@@ -1125,6 +1152,15 @@ def record_probe(axes, *, output, manifest, transport="inline"):
 def validate_probe(raw, *, check_performance=True):
     """Read recorded work; never infer readiness from request queuing."""
     errors = []
+    measurement_mode = raw.get("measurement_mode", "legacy-combined")
+    profile_enabled = raw.get("profile_enabled", measurement_mode != "performance")
+    timing_valid = raw.get("timing_valid", measurement_mode != "call-count")
+    if measurement_mode not in _ControlMeter.MODES:
+        errors.append("unknown measurement mode")
+    if profile_enabled is not (measurement_mode in ("legacy-combined", "call-count")):
+        errors.append("profile state differs from measurement mode")
+    if timing_valid is not (measurement_mode in ("legacy-combined", "performance")):
+        errors.append("timing validity differs from measurement mode")
     events = raw.get("native_events", [])
     publishes = [e for e in events if e.get("operation") == "publish"]
     consumes = [e for e in events if e.get("operation") == "first_consume"]
@@ -1152,25 +1188,37 @@ def validate_probe(raw, *, check_performance=True):
     if not samples:
         errors.append("missing complete control samples")
     for sample in samples:
-        phases = sample.get("phases_ns", {})
         calls = sample.get("phase_calls", {})
-        if (set(phases) != set(PHASES) or set(calls) != set(PHASES)
-                or any(type(v) is not int or v < 0 for v in phases.values())
+        if (set(calls) != set(PHASES)
                 or any(type(v) is not int or v < 0 for v in calls.values())
                 or any(calls.get(name, 0) <= 0 for name in ("observation", "handle", "comparison", "budget", "handoff"))
                 or (sample.get("sent_sequences") and any(calls.get(name, 0) <= 0
                     for name in ("ledger_receipt", "arbitration", "send")))):
             errors.append("missing actual control phase coverage")
-        if type(sample.get("duration_ns")) is not int or sample["duration_ns"] < sum(phases.values()):
-            errors.append("complete control duration does not cover phases")
+        if timing_valid:
+            phases = sample.get("phases_ns", {})
+            if (set(phases) != set(PHASES)
+                    or any(type(v) is not int or v < 0 for v in phases.values())
+                    or type(sample.get("duration_ns")) is not int
+                    or sample["duration_ns"] < sum(phases.values())):
+                errors.append("complete control duration does not cover phases")
+        elif any(name in sample for name in (
+                "started_ns", "ended_ns", "duration_ns", "phases_ns", "scheduled_ns",
+                "wake_lateness_ns", "deadline_miss")):
+            errors.append("call-count mode cannot claim production timing")
     forbidden = raw.get("hot_path_calls", {})
-    if set(forbidden) != set(FORBIDDEN_OPERATIONS) or any(type(v) is not int or v < 0 for v in forbidden.values()):
-        errors.append("incomplete hot-path forbidden call counters")
-    for name, value in forbidden.items():
-        measured = sum(e.get("operation") == name and e.get("provenance") == "control"
-            for s in samples for e in s.get("forbidden_events", []))
-        if value != measured:
-            errors.append("hot-path counter/event mismatch: " + name)
+    if profile_enabled:
+        if (type(forbidden) is not dict or set(forbidden) != set(FORBIDDEN_OPERATIONS)
+                or any(type(v) is not int or v < 0 for v in forbidden.values())):
+            errors.append("incomplete hot-path forbidden call counters")
+        else:
+            for name, value in forbidden.items():
+                measured = sum(e.get("operation") == name and e.get("provenance") == "control"
+                    for s in samples for e in s.get("forbidden_events", []))
+                if value != measured:
+                    errors.append("hot-path counter/event mismatch: " + name)
+    elif forbidden is not None or any("forbidden_events" in sample for sample in samples):
+        errors.append("performance mode cannot report profile-derived call counts")
     records = raw.get("first_receipt_sample_records", [])
     by_sequence = {r.get("control_sequence"): r for r in records}
     accepted = [e for e in raw.get("native_activations", []) if e.get("result", {}).get("status") == "activated"]
@@ -1223,6 +1271,9 @@ def validate_probe(raw, *, check_performance=True):
                 or raw.get("unnecessary_stops_before_second") != 0):
             errors.append("timely prepared case stopped or missed continuous input")
     if check_performance:
+        if not timing_valid or (measurement_mode == "performance" and profile_enabled):
+            errors.append("performance validation requires timing_valid=true and profile_enabled=false")
+            return tuple(dict.fromkeys(errors))
         for kind in ("complete", "start", "handoff"):
             durations = [s.get("duration_ns") for s in samples if kind == "complete" or s.get("kind") == kind]
             if not durations or any(type(n) is not int or n < 0 for n in durations):
@@ -1286,11 +1337,22 @@ def recompute_run(input_path):
                 raise ValueError("payload semantic mismatch: " + "; ".join(payload_errors))
         rows.append(raw)
     counted = [r for r in rows if not r["warmup"]]
-    timings = [s for raw in counted for s in raw.get("control_samples", [])]
+    measurement_mode = index.get("measurement_mode", "legacy-combined")
+    profile_enabled = index.get("profile_enabled", measurement_mode != "performance")
+    timing_valid = index.get("timing_valid", measurement_mode != "call-count")
+    if any(raw.get("measurement_mode", "legacy-combined") != measurement_mode
+            or raw.get("profile_enabled", raw.get("measurement_mode") != "performance") is not profile_enabled
+            or raw.get("timing_valid", raw.get("measurement_mode") != "call-count") is not timing_valid
+            for raw in rows):
+        raise ValueError("measurement mode differs between index and raw cases")
+    timings = ([s for raw in counted for s in raw.get("control_samples", [])]
+               if timing_valid else [])
     errors = [raw["case_id"] + ": " + error for raw in counted
               for error in validate_probe(raw, check_performance=False)]
     report = dict(raw_case_count=len(rows), measured_case_count=len(counted), warmup_case_count=len(rows)-len(counted),
-                formal_performance=index["stage"] == "realtime",
+                measurement_mode=measurement_mode, profile_enabled=profile_enabled,
+                timing_valid=timing_valid,
+                formal_performance=index["stage"] == "realtime" and timing_valid and not profile_enabled,
                 complete=_quantiles([s["duration_ns"] for s in timings]),
                 start=_quantiles([s["duration_ns"] for s in timings if s["kind"] == "start"]),
                 handoff=_quantiles([s["duration_ns"] for s in timings if s["kind"] == "handoff"]), errors=errors)
@@ -1370,13 +1432,17 @@ def recompute_run(input_path):
             type(r.get("native_worker_pid")) is not int or r.get("resource_fifo_source") != "native_multiprocessing_queue"
             for r in rows) or len({r.get("receiver_thread_id") for r in rows}) != 1:
         errors.append("run did not retain one native spawn worker and receiver")
-    forbidden = sum(sum(raw.get("hot_path_calls", {}).values()) for raw in rows)
-    if forbidden:
+    forbidden = (sum(sum(raw.get("hot_path_calls", {}).values()) for raw in rows)
+                 if profile_enabled else None)
+    if profile_enabled and forbidden:
         errors.append("hot-path forbidden calls occurred")
-    deadlines = sum(s.get("deadline_miss") is True for raw in rows for s in raw.get("control_samples", []))
-    if deadlines:
+    deadlines = (sum(s.get("deadline_miss") is True for raw in rows
+                     for s in raw.get("control_samples", [])) if timing_valid else None)
+    if timing_valid and deadlines:
         errors.append("actual control deadline missed")
-    if stage == "realtime":
+    if stage == "realtime" and timing_valid:
+        if profile_enabled:
+            errors.append("formal realtime performance cannot run with profile enabled")
         for kind in ("complete", "start", "handoff"):
             q = report[kind]
             if not q["count"] or q["p95_ms"] > 8 or q["p99_ms"] > 15 or q["max_ms"] >= 30:
@@ -1484,7 +1550,10 @@ def capacity_probe(*, output):
     return report
 
 
-def run_d102_matrix(stage, *, manifest, output, command_argv=None):
+def run_d102_matrix(stage, *, manifest, output, command_argv=None,
+                    measurement_mode="call-count"):
+    if measurement_mode not in ("call-count", "performance"):
+        raise ValueError("formal G2 recording requires call-count or performance mode")
     previous_stage = _require_previous_stage(stage, output)
     output = _fresh(output)
     run_id = uuid.uuid4().hex
@@ -1503,14 +1572,16 @@ def run_d102_matrix(stage, *, manifest, output, command_argv=None):
     rows, raws = [], []
     if stage == "realtime":
         for i in range(10):
-            raw = _probe(axes[i % len(axes)], inbox, worker, group="realtime", realtime=True, warmup=True)
+            raw = _probe(axes[i % len(axes)], inbox, worker, group="realtime", realtime=True,
+                         warmup=True, measurement_mode=measurement_mode)
             raws.append(raw)
             rows.append(_write_probe(raw, output, run_id=run_id, case_id=f"warmup-{i+1:02}"))
             if raw["status"] != "PASS" or not raw.get("released_by_original_owner"):
                 break
     if not raws or all(raw["status"] == "PASS" for raw in raws):
         for i, coordinate in enumerate(axes):
-            raw = _probe(coordinate, inbox, worker, group=GROUPS[stage], realtime=stage == "realtime")
+            raw = _probe(coordinate, inbox, worker, group=GROUPS[stage],
+                         realtime=stage == "realtime", measurement_mode=measurement_mode)
             raws.append(raw)
             rows.append(_write_probe(raw, output, run_id=run_id, case_id=f"{GROUPS[stage]}-{i+1:03}"))
             # A failed owner close or unresolved body stops the stage immediately.
@@ -1520,7 +1591,8 @@ def run_d102_matrix(stage, *, manifest, output, command_argv=None):
             raw["status"] == "PASS" and raw.get("released_by_original_owner") for raw in raws):
         for case_id in _read(manifest)["representative_negative_case_ids"]:
             coordinate = dict(axes[0], negative_case_id=case_id)
-            raw = _probe(coordinate, inbox, worker, group="representative_negative")
+            raw = _probe(coordinate, inbox, worker, group="representative_negative",
+                         measurement_mode=measurement_mode)
             raws.append(raw)
             rows.append(_write_probe(raw, output, run_id=run_id, case_id="negative-" + case_id))
             if raw["status"] != "PASS" or not raw.get("released_by_original_owner") or validate_probe(raw, check_performance=False):
@@ -1528,11 +1600,14 @@ def run_d102_matrix(stage, *, manifest, output, command_argv=None):
     close = inbox.close(timeout_seconds=10)
     final = _final_resources(close)
     argv = command_argv or [sys.executable, "scripts/measure_prepared_motion_d102.py", "--stage", stage,
-            "--manifest", str(manifest), "--output", str(output)]
+            "--manifest", str(manifest), "--output", str(output),
+            "--measurement-mode", measurement_mode]
     index = dict(schema="d102-g2-run-v1", stage=stage, run_id=run_id, utc=datetime.now(timezone.utc).isoformat(),
         case_count=len(rows), cases=rows, environment=dict(system=platform.system(), python=sys.version,
         executable=sys.executable), command_argv=argv, command=subprocess.list2cmdline(argv),
         manifest_sha256=_hash(manifest), transport=transport, final_resources=final, native_close_report=asdict(close),
+        measurement_mode=measurement_mode,
+        profile_enabled=measurement_mode == "call-count", timing_valid=measurement_mode == "performance",
         source=source, predecessor=predecessor, previous_stage=previous_stage, capacity=capacity,
         historical_d101_m0="FAILED", historical_d098_p3="FAILED")
     (output / "index.json").write_bytes(canonical_bytes(index))

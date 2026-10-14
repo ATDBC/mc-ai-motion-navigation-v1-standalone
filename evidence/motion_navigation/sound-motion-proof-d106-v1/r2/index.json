@@ -1,0 +1,191 @@
+{
+  "schema": "mc2p.d106-r2-index.v1",
+  "formal_platform": "Windows",
+  "source_commit": "b17179c5b397867e3c3c8898dd9a32dbd47e55ed",
+  "status": "PASS",
+  "paired_result": {
+    "schema": "mc2p.d106-r2-pair.v1",
+    "axes": {
+      "platform_width": 2,
+      "start_offset": 0,
+      "entry_offset": 0.0,
+      "direction": "south",
+      "backlog": 0
+    },
+    "count_mode": {
+      "profile_enabled": true,
+      "timing_valid": false,
+      "validation_errors": []
+    },
+    "performance_mode": {
+      "profile_enabled": false,
+      "timing_valid": true,
+      "validation_errors": []
+    },
+    "business_fields_equal": true,
+    "input_trace_equal": true,
+    "fields": {
+      "status": "PASS",
+      "typed_result": "ACTIVATED",
+      "continuous_complete": true,
+      "second_jump_authorizations": 1,
+      "actual_first_start_offset": 0,
+      "actual_application_ticks": [
+        [
+          11
+        ],
+        [
+          12
+        ],
+        [
+          13
+        ],
+        [
+          14
+        ],
+        [
+          15
+        ],
+        [
+          16
+        ],
+        [
+          17
+        ],
+        [
+          18
+        ],
+        [
+          19
+        ],
+        [
+          20
+        ],
+        [
+          21
+        ],
+        [
+          22
+        ],
+        [
+          23
+        ],
+        [
+          24
+        ],
+        [
+          25
+        ],
+        [
+          26
+        ],
+        [
+          27
+        ],
+        [
+          28
+        ],
+        [
+          29
+        ],
+        [
+          30
+        ],
+        [
+          31
+        ],
+        [
+          32
+        ],
+        [
+          33
+        ],
+        [
+          34
+        ],
+        [
+          35
+        ],
+        [
+          36
+        ],
+        [
+          37
+        ],
+        [
+          38
+        ],
+        [
+          39
+        ],
+        [
+          40
+        ],
+        [
+          41
+        ]
+      ],
+      "native_final_state": {
+        "ruleset_id": "minecraft-java-1_21-player-motion-r1",
+        "state_schema": "mc2p.physics-state.v1",
+        "session": {
+          "value": "fixture:episode:clock"
+        },
+        "movement_tick_id": 41,
+        "position": [
+          0.5,
+          1.0,
+          5.687641499593768
+        ],
+        "velocity_blocks_per_tick": [
+          0.0,
+          -0.0784000015258789,
+          0.0044717866331665385
+        ],
+        "yaw_radians": 0.0,
+        "pitch_radians": 0.0,
+        "pose": "standing",
+        "body_width": 0.6,
+        "body_height": 1.8,
+        "on_ground": true,
+        "horizontal_collision": false,
+        "vertical_collision": true,
+        "sprinting": false,
+        "sneaking": false,
+        "jumping_cooldown_ticks": 0,
+        "fall_distance_blocks": 0.0,
+        "movement_speed_attribute": 0.1,
+        "step_height_blocks": 0.6,
+        "gravity_attribute": 0.08,
+        "jump_strength_attribute": 0.42,
+        "food_points": 20,
+        "saturation_points": 5.0,
+        "game_mode": "survival",
+        "status_effects": [],
+        "swimming": false,
+        "submerged_in_water": false,
+        "climbing": false,
+        "fall_flying": false,
+        "flying": false,
+        "allow_flying": false,
+        "is_using_item": false
+      },
+      "unauthorized_body_steps": 0,
+      "safety_violations": 0,
+      "released_by_original_owner": true
+    }
+  },
+  "tests": {
+    "new_checks": "4/4",
+    "windows_matrix": "36/36",
+    "all_d102_related": "280/280"
+  },
+  "command": "$env:PYTHONPATH='.'; .\\.venv\\python.exe .tmp\\run_d106_r2_pair.py",
+  "artifacts": {
+    "call-count/index.json": "1f4883107da752082e94dd740c90adbb7ed6a5ebb7a5b441f3f655516e434519",
+    "call-count/probe.json.gz": "5e26d1fd6119c9a47075a9020dc9666cc13052923586cdbb66bceff590e158a2",
+    "comparison.json": "5e6df514c33916d098205791a25744fa7a3838542361714bdcec4d3c74329bf7",
+    "performance/index.json": "2b82fa4107171267239432bd86aac37357b13bba11ab1f300bb2945e9f11971d",
+    "performance/probe.json.gz": "37110dcb952c4abf7af36e0226b68df9bcd7f38dfea443b3ffac0ca98506337e"
+  }
+}

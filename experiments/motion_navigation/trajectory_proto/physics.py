@@ -1,6 +1,7 @@
 """Count-bounded access to the existing Java 1.21 step; no copied formulas."""
 from dataclasses import dataclass, fields, is_dataclass
 from enum import Enum
+from functools import lru_cache
 import hashlib
 import json
 
@@ -49,11 +50,20 @@ class CountedPhysics:
         return step(state, command, world, JAVA_1_21_RULESET)
 
 
+@lru_cache(maxsize=None)
+def _dataclass_field_names(dataclass_type: type) -> tuple[str, ...]:
+    """Cache schema metadata without changing canonical field order."""
+    return tuple(field.name for field in fields(dataclass_type))
+
+
 def _canonical(value):
     if isinstance(value, Enum):
         return value.value
     if is_dataclass(value):
-        return {field.name: _canonical(getattr(value, field.name)) for field in fields(value)}
+        return {
+            field_name: _canonical(getattr(value, field_name))
+            for field_name in _dataclass_field_names(type(value))
+        }
     if isinstance(value, (tuple, list)):
         return [_canonical(item) for item in value]
     if isinstance(value, (set, frozenset)):

@@ -1,0 +1,28 @@
+{
+  "schema": "mc2p.d106-r4-fix-round2.v1",
+  "source_commit": "0e3bbd44b9fe17fe8aec037dcc5ae9070977d163",
+  "status": "FIXED_AND_FORMALLY_RERUN",
+  "changes": [
+    "manual verified execution uses the Runtime-owned input ledger",
+    "verified commands pass CandidateExecutionWindow to Runtime",
+    "private ledger submissions and duplicate receipt ingestion were removed"
+  ],
+  "tests": {
+    "green": "123/123"
+  },
+  "fabric_result": {
+    "timeline_count": 40,
+    "NEXT_MOVEMENT_TICK": 40,
+    "LATER_MOVEMENT_TICK": 0,
+    "INCOMPLETE": 0,
+    "ordered_source_release_status": "released",
+    "sidecar_status": "sealed",
+    "sidecar_dropped_events": 0,
+    "b10_probe_status": "failed",
+    "b10_primary_failure": "R4 approach did not reach speed band (0.5, 1.0) within 80 ticks",
+    "failure_after_ftick_validations": true,
+    "failure_path": "pre-solve legacy R4 moving-entry fixture",
+    "body_safety": "on_ground, full health, no collision, stopped safely",
+    "related_to_runtime_ledger_fix": false
+  }
+}

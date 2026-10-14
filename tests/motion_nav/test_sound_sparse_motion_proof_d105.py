@@ -330,6 +330,24 @@ class SoundSparseMotionProofTests(unittest.TestCase):
         with self.assertRaises(ContractViolation):
             self.sparse.validate_sound_sparse_proof(replace(proof, trajectory_hash="0" * 64))
 
+    def test_scanner_computes_the_complete_proof_digest_once(self):
+        request, local, inputs, evidence = self._flat_fixture()
+        original = self.sparse.trajectory_digest
+        complete_proof_digests = 0
+
+        def counted(value):
+            nonlocal complete_proof_digests
+            if type(value) is self.sparse.SoundSparseProof:
+                complete_proof_digests += 1
+            return original(value)
+
+        with patch.object(self.sparse, "trajectory_digest", side_effect=counted):
+            result = self.sparse.scan_sound_sparse_commitment(
+                request, inputs, local, evidence)
+
+        self.assertIs(result.status, legacy.ScanStatus.VERIFIED_CANDIDATE)
+        self.assertEqual(complete_proof_digests, 1)
+
 
 if __name__ == "__main__":
     unittest.main()

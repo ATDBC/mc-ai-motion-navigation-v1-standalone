@@ -390,7 +390,7 @@ def scan_sound_sparse_commitment(request, inputs, world, boundary_inputs, *,
             trajectory_hash="",
         )
         proof = replace(proof, trajectory_hash=trajectory_digest(proof))
-        validate_sound_sparse_proof(proof)
+        _validate_sound_sparse_proof_structure(proof)
         return SoundSparseScanResult(
             ScanStatus.VERIFIED_CANDIDATE, None, counter.counts, proof)
     except CountLimit as limited:
@@ -403,11 +403,16 @@ def scan_sound_sparse_commitment(request, inputs, world, boundary_inputs, *,
 
 
 def validate_sound_sparse_proof(proof: SoundSparseProof) -> None:
-    """Validate the compact structure without treating omissions as safety facts."""
+    """Validate an externally supplied proof's identity and compact structure."""
     if type(proof) is not SoundSparseProof:
         raise ContractViolation("sound sparse proof requires its exact type")
     if trajectory_digest(replace(proof, trajectory_hash="")) != proof.trajectory_hash:
         raise ContractViolation("sound sparse proof digest has changed")
+    _validate_sound_sparse_proof_structure(proof)
+
+
+def _validate_sound_sparse_proof_structure(proof: SoundSparseProof) -> None:
+    """Check the freshly built structure without recomputing its full digest."""
     end = len(proof.inputs)
     for branch in proof.branches:
         decisions = branch.boundary_decisions

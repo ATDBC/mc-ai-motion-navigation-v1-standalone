@@ -9,6 +9,7 @@ import importlib
 import importlib.util
 import json
 from pathlib import Path
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -73,14 +74,79 @@ class MatrixTests(unittest.TestCase):
         self.addCleanup(case.restore)
         return case
 
-    def sample(self, output, **axes):
+    def sample(self, output, *, measurement_mode="legacy-combined", **axes):
         coordinates = dict(platform_width=2, start_offset=0, entry_offset=0.,
                            direction="south", backlog=0)
         coordinates.update(axes)
         raw = self.meter().record_probe(coordinates, output=Path(output),
-                                       manifest=MANIFEST, transport="inline")
+                                       manifest=MANIFEST, transport="inline",
+                                       measurement_mode=measurement_mode)
         self.assertEqual(raw["status"], "PASS", raw.get("failure_reason", raw.get("typed_result")))
         return raw
+
+    def test_performance_mode_rejects_an_active_profile_hook(self):
+        meter = self.meter()._ControlMeter("performance")
+        previous = sys.getprofile()
+        sys.setprofile(lambda frame, event, arg: None)
+        try:
+            with self.assertRaisesRegex(ValueError, "profile"):
+                with meter.tick("start", 10):
+                    pass
+        finally:
+            sys.setprofile(previous)
+
+    def test_call_count_mode_reports_sources_without_claiming_timing(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            raw = self.sample(root, measurement_mode="call-count")
+            report = self.meter().recompute_run(root / "index.json")
+        self.assertEqual(raw["measurement_mode"], "call-count")
+        self.assertTrue(raw["profile_enabled"])
+        self.assertFalse(raw["timing_valid"])
+        self.assertTrue(raw["hot_path_calls"])
+        self.assertTrue(any(sample["forbidden_events"] for sample in raw["control_samples"]))
+        self.assertTrue(all("duration_ns" not in sample and "phases_ns" not in sample
+                            for sample in raw["control_samples"]))
+        self.assertTrue(any("performance validation requires" in error for error in
+                            self.meter().validate_probe(raw, check_performance=True)))
+        self.assertFalse(report["timing_valid"])
+        self.assertTrue(report["profile_enabled"])
+        self.assertEqual(report["complete"]["count"], 0)
+
+    def test_performance_mode_disables_profile_and_records_explicit_spans(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            raw = self.sample(root, measurement_mode="performance")
+            report = self.meter().recompute_run(root / "index.json")
+        self.assertEqual(raw["measurement_mode"], "performance")
+        self.assertFalse(raw["profile_enabled"])
+        self.assertTrue(raw["timing_valid"])
+        self.assertIsNone(raw["hot_path_calls"])
+        self.assertTrue(all("forbidden_events" not in sample for sample in raw["control_samples"]))
+        self.assertTrue(raw["control_samples"])
+        self.assertTrue(all(sample["duration_ns"] >= sum(sample["phases_ns"].values())
+                            for sample in raw["control_samples"]))
+        self.assertTrue(report["timing_valid"])
+        self.assertFalse(report["profile_enabled"])
+        self.assertGreater(report["complete"]["count"], 0)
+
+    def test_measurement_modes_preserve_the_same_seeded_behavior(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            counted = self.sample(root / "count", measurement_mode="call-count",
+                                  platform_width=3, start_offset=1, entry_offset=.05,
+                                  direction="west", backlog=1)
+            timed = self.sample(root / "performance", measurement_mode="performance",
+                                platform_width=3, start_offset=1, entry_offset=.05,
+                                direction="west", backlog=1)
+        fields = ("status", "typed_result", "continuous_complete", "second_jump_authorizations",
+                  "actual_first_start_offset", "actual_application_ticks", "native_final_state",
+                  "unauthorized_body_steps", "safety_violations", "released_by_original_owner")
+        self.assertEqual({name: counted.get(name) for name in fields},
+                         {name: timed.get(name) for name in fields})
+        counted_inputs = [row["requested_movement"] for row in counted["native_motion_trace"]]
+        timed_inputs = [row["requested_movement"] for row in timed["native_motion_trace"]]
+        self.assertEqual(counted_inputs, timed_inputs)
 
     def test_fast_matrix_is_144_independent_exact_entries(self):
         # Reusing a single proof for the +/- offsets must fail this test.

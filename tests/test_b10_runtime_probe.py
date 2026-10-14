@@ -1,10 +1,25 @@
 from __future__ import annotations
 
+from dataclasses import replace
+import inspect
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
+from mc2p.contracts.action_receipt import (
+    ClientBehaviorReceiptV3,
+    ClientInputApplicationV1,
+)
+from mc2p.contracts.action_v1 import ActionSnapshotV1
 from mc2p.motion_nav.online_motion import InputApplicationLedger
+from mc2p.motion_nav.online_motion import InputApplicationStatus
+from mc2p.motion_nav.motion_candidate import (
+    MotionCandidateAdmitter,
+    MotionCandidateStatus,
+    VerifiedMotionExecutor,
+    VerifiedMotionExecutorState,
+)
+from mc2p.motion_nav.motion_risk import TaskDamageBudget
 
 from scripts import b10_gap_solver_runtime as probe
 from scripts.b10_gap_solver_runtime import (
@@ -39,6 +54,34 @@ class _Adapter:
 
 
 class B10RuntimeProbeTests(unittest.TestCase):
+    @staticmethod
+    def _receipt(
+            request_sequence_id: int,
+            applications: tuple[ClientInputApplicationV1, ...],
+    ) -> ClientBehaviorReceiptV3:
+        return ClientBehaviorReceiptV3(
+            "mc2p.client_action_receipt.v3",
+            request_sequence_id + 1,
+            "client_behavior_v1",
+            "episode",
+            request_sequence_id,
+            "executed",
+            "controls_applied",
+            "Render thread",
+            True,
+            "client_tick_action_boundary",
+            100,
+            0,
+            0,
+            0,
+            0,
+            applications[-1].movement_tick_id,
+            2,
+            applications,
+            0,
+            applications[0].movement_tick_id,
+        )
+
     def test_information_wait_keeps_the_route_look_and_requests_a_new_frame(self):
         route_control = ControlFrameProposalV1()
         proposal = SimpleNamespace(
@@ -200,6 +243,9 @@ class B10RuntimeProbeTests(unittest.TestCase):
     def test_live_probe_reuses_one_planner_and_motion_worker(self):
         planner = unittest.mock.MagicMock()
         motion = unittest.mock.MagicMock()
+        runtime = unittest.mock.MagicMock()
+        source = object()
+        runtime.register_ordered_source.return_value = source
         planner.__enter__.return_value = planner
         motion.__enter__.return_value = motion
         expected = object()
@@ -214,14 +260,151 @@ class B10RuntimeProbeTests(unittest.TestCase):
             ) as delegated,
         ):
             actual = probe.run_b10_gap_solver_runtime(
-                object(), object(), "episode", object(), 1,
+                runtime, object(), "episode", object(), 1,
                 lambda *_: None, lambda *_: None,
             )
 
         self.assertIs(actual, expected)
+        runtime.register_ordered_source.assert_called_once_with("b10-gap-solver")
+        runtime.unregister_ordered_source.assert_called_once_with(source)
         delegated.assert_called_once()
         self.assertIs(delegated.call_args.kwargs["planner_worker"], planner)
         self.assertIs(delegated.call_args.kwargs["motion_worker"], motion)
+        self.assertIs(delegated.call_args.kwargs["manual_source"], source)
+
+    def test_live_probe_unregisters_manual_source_once_when_inner_probe_fails(self):
+        planner = unittest.mock.MagicMock()
+        motion = unittest.mock.MagicMock()
+        runtime = unittest.mock.MagicMock()
+        source = object()
+        runtime.register_ordered_source.return_value = source
+        planner.__enter__.return_value = planner
+        motion.__enter__.return_value = motion
+        with (
+            patch.object(probe, "PlannerWorker", return_value=planner),
+            patch.object(probe, "MotionSolverWorker", return_value=motion),
+            patch.object(
+                probe,
+                "_run_b10_gap_solver_runtime",
+                side_effect=RuntimeError("fixture failure"),
+            ),
+            self.assertRaisesRegex(RuntimeError, "fixture failure"),
+        ):
+            probe.run_b10_gap_solver_runtime(
+                runtime, object(), "episode", object(), 1,
+                lambda *_: None, lambda *_: None,
+            )
+
+        runtime.unregister_ordered_source.assert_called_once_with(source)
+
+    def test_manual_probe_uses_runtime_ledger_for_prior_and_current_samples(self):
+        source = inspect.getsource(probe._run_b10_gap_solver_runtime)
+        self.assertIn("ledger = _runtime_input_ledger(runtime)", source)
+        self.assertNotIn("InputApplicationLedger(max_records=64)", source)
+        self.assertNotIn("_observe_manual_executor_receipt", source)
+        self.assertIn("input_execution_window=execution_window", source)
+
+        from tests.motion_nav.test_b10_motion_candidate import solved_candidate
+
+        anchor, reusable = solved_candidate()
+        admission = MotionCandidateAdmitter().admit(
+            reusable,
+            anchor,
+            planning_request_id="request-1",
+            planning_generation=4,
+            goal_id="goal-1",
+            goal_revision=2,
+            route_id="route-1",
+            route_revision=3,
+            action_index=1,
+            candidate_revision=5,
+            damage_budget=TaskDamageBudget(),
+            intended_start_tick=11,
+            changed_cells=(),
+        )
+        self.assertIs(admission.status, MotionCandidateStatus.ACCEPTED)
+        executor = VerifiedMotionExecutor()
+        executor.start(admission.candidate)
+        ledger = InputApplicationLedger(max_records=64)
+        ledger.establish_baseline(
+            anchor.session,
+            "episode",
+            movement_tick_id=anchor.movement_tick_id,
+        )
+
+        first = executor.decide(anchor, ledger)
+        previous_action = ActionSnapshotV1(
+            "episode", 69, anchor.observation_sequence_id, 1_000_000,
+            movement=MovementV1(), valid_for_ticks=1,
+        )
+        current_action = ActionSnapshotV1(
+            "episode", 70, anchor.observation_sequence_id, 1_000_000,
+            movement=first.movement, valid_for_ticks=1,
+        )
+        ledger.submit(
+            anchor.session, previous_action,
+            requested_first_tick=11,
+        )
+        ledger.submit(
+            anchor.session, current_action,
+            requested_first_tick=first.expected_movement_tick,
+            latest_allowed_first_tick=first.latest_movement_tick,
+        )
+        executor.register_submission(
+            first.command_index,
+            control_sequence=70,
+            requested_movement_tick=first.expected_movement_tick,
+            requested_latest_movement_tick=first.latest_movement_tick,
+        )
+        receipt = self._receipt(
+            70,
+            (
+                ClientInputApplicationV1(
+                    "mc2p.input-application.v1",
+                    11,
+                    "episode",
+                    69,
+                    111,
+                    "lease_exhausted",
+                    0.0,
+                    0.0,
+                    False,
+                    False,
+                    False,
+                ),
+                ClientInputApplicationV1(
+                    "mc2p.input-application.v1",
+                    12,
+                    "episode",
+                    70,
+                    112,
+                    "leased",
+                    float(first.movement.forward),
+                    float(first.movement.strafe),
+                    first.movement.jump,
+                    first.movement.sneak,
+                    first.movement.sprint,
+                ),
+            ),
+        )
+
+        ledger.observe_receipt(receipt)
+        delayed = admission.candidate.proof.start_variant(12)
+        self.assertIsNotNone(delayed)
+        observed = replace(
+            anchor,
+            observation_sequence_id=anchor.observation_sequence_id + 1,
+            movement_tick_id=12,
+            physics_state=delayed.trajectory[1],
+        )
+        continued = executor.decide(observed, ledger)
+
+        self.assertEqual(ledger.sample(11), receipt.input_applications[0])
+        self.assertEqual(ledger.sample(12), receipt.input_applications[1])
+        self.assertIs(ledger.record(70).status, InputApplicationStatus.APPLIED)
+        self.assertIs(continued.state, VerifiedMotionExecutorState.RUNNING)
+        self.assertEqual(continued.command_index, 1)
+        self.assertEqual(continued.reason, "submit_verified_command")
 
     def test_uses_runtime_owned_navigation_frame_without_second_ingest(self):
         expected = SimpleNamespace(body=SimpleNamespace(sequence_id=7))

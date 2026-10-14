@@ -341,18 +341,23 @@ def run_b10_gap_solver_runtime(
     with PlannerWorker() as planner_worker, MotionSolverWorker(
         max_pending=4,
     ) as motion_worker:
-        return _run_b10_gap_solver_runtime(
-            runtime,
-            backend,
-            episode,
-            directory,
-            deadline_ns,
-            fixture_writer,
-            player_teleporter,
-            planner_worker=planner_worker,
-            motion_worker=motion_worker,
-            pipeline_diagnostic=pipeline_diagnostic,
-        )
+        manual_source = runtime.register_ordered_source(_SOURCE)
+        try:
+            return _run_b10_gap_solver_runtime(
+                runtime,
+                backend,
+                episode,
+                directory,
+                deadline_ns,
+                fixture_writer,
+                player_teleporter,
+                planner_worker=planner_worker,
+                motion_worker=motion_worker,
+                manual_source=manual_source,
+                pipeline_diagnostic=pipeline_diagnostic,
+            )
+        finally:
+            runtime.unregister_ordered_source(manual_source)
 
 
 def _run_b10_gap_solver_runtime(
@@ -366,6 +371,7 @@ def _run_b10_gap_solver_runtime(
     *,
     planner_worker: PlannerWorker,
     motion_worker: MotionSolverWorker,
+    manual_source,
     pipeline_diagnostic: Callable[[], dict] | None = None,
 ) -> tuple[dict, list[dict], list[dict]]:
     """Solve and execute frozen trials, including the default coordinator."""
@@ -379,8 +385,6 @@ def _run_b10_gap_solver_runtime(
     rows: list[dict] = []
     counter = 0
     latest_application = None
-    manual_source = runtime.register_ordered_source(_SOURCE)
-
     def diagnostic() -> None:
         row = dict(
             episode_id=episode,
@@ -392,7 +396,9 @@ def _run_b10_gap_solver_runtime(
         rows.append(row)
         append_jsonl(directory / "diagnostics.jsonl", row)
 
-    def step(movement=MovementV1(), *, look=None, request=None):
+    def step(
+            movement=MovementV1(), *, look=None, request=None,
+            input_execution_window: CandidateExecutionWindow | None = None):
         nonlocal counter, frame, latest_application
         runtime.cancel_source(manual_source.source_id)
         counter += 1
@@ -416,6 +422,7 @@ def _run_b10_gap_solver_runtime(
         result = runtime.step(
             task, behavior, min(deadline_ns, now + 5_000_000_000),
             observation_request=active_request,
+            input_execution_window=input_execution_window,
         )
         if result.observation is None or result.backend_result is None:
             raise RuntimeError(f"B10 Fabric step failed: {result.report}")
@@ -735,7 +742,7 @@ def _run_b10_gap_solver_runtime(
             raise RuntimeError(f"B10 candidate rejected: {admission.reason}")
         executor = VerifiedMotionExecutor()
         executor.start(admission.candidate)
-        ledger = InputApplicationLedger(max_records=64)
+        ledger = _runtime_input_ledger(runtime)
         current_anchor = anchor
         samples = []
         for _ in range(len(solved.proof.commands) + 2):
@@ -756,8 +763,15 @@ def _run_b10_gap_solver_runtime(
                 ))
                 if abs(yaw_delta) > 1.0e-6:
                     look = LookV1(yaw_delta, 0.0)
+            execution_window = (
+                None if submission_window is None
+                else CandidateExecutionWindow(
+                    submission_window[1], submission_window[2],
+                )
+            )
             result = step(
                 decision.movement, look=look, request=active_request,
+                input_execution_window=execution_window,
             )
             action = result.decision.action
             receipt = result.backend_result.receipt
@@ -772,34 +786,12 @@ def _run_b10_gap_solver_runtime(
                 )
             if submission_window is not None:
                 _, expected_tick, latest_tick = submission_window
-                ledger.submit(
-                    anchor.session, action,
-                    requested_first_tick=expected_tick,
-                    latest_allowed_first_tick=latest_tick,
-                )
                 executor.register_submission(
                     decision.command_index,
                     control_sequence=action.request_sequence_id,
                     requested_movement_tick=expected_tick,
                     requested_latest_movement_tick=latest_tick,
                 )
-            else:
-                # The gateway still applied a real neutral control request.
-                # Record it in the ledger without presenting it to the motion
-                # executor as a verified action command.
-                observed_first_tick = min(
-                    application.movement_tick_id
-                    for application in owned_applications
-                )
-                ledger.submit(
-                    anchor.session, action,
-                    requested_first_tick=observed_first_tick,
-                    latest_allowed_first_tick=observed_first_tick,
-                )
-            # Coast and landing frames still carry authoritative applied-input
-            # samples even though they are not new verified commands.
-            for application in owned_applications:
-                ledger.observe_sample(application)
             if latest_application is None:
                 raise RuntimeError("B10 execution lost the movement-tick receipt")
             built_after = build_physics_state(
@@ -1615,5 +1607,4 @@ def _run_b10_gap_solver_runtime(
             and summary["solve_time_ns"]["maximum"] < 30_000_000
         )),
     ]
-    runtime.unregister_ordered_source(manual_source)
     return summary, rows, checks

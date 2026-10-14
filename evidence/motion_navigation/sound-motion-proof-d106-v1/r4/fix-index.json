@@ -1,0 +1,16 @@
+{
+  "schema": "mc2p.d106-r4-fix.v1",
+  "source_commit": "fc80dac01d14f8c69e986cb95d2987419e497b78",
+  "status": "FIXED_AWAITING_FORMAL_T3",
+  "changes": [
+    "manual ledger observes the complete V3 receipt after the trial baseline",
+    "manual ordered source unregisters exactly once on normal and exceptional exit"
+  ],
+  "tests": {
+    "red_failures": 3,
+    "green": "123/123"
+  },
+  "production_runtime_changed": false,
+  "sidecar_changed": false,
+  "fabric_rerun": false
+}

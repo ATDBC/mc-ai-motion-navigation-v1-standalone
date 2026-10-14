@@ -1,0 +1,25 @@
+{
+  "schema": "mc2p.d106-r0.v1",
+  "recorded_at_utc": "2026-10-14T01:07:53.288180+00:00",
+  "formal_platform": "Windows",
+  "recording_platform": "Windows-10-10.0.26200-SP0",
+  "implementation_base": "9888776d6101480ea3c5490b971b4f81800e5f2f",
+  "plan_commit": "399b8a26ffb1cbd86367ca631a0ae1df7064c271",
+  "d105_indices": {
+    "evidence/motion_navigation/sound-motion-proof-d105-v1/t1/index.json": "1c0141f02ba987189a76b83dc6c92f98eef633936759bc836113a2bb0ab230e1",
+    "evidence/motion_navigation/sound-motion-proof-d105-v1/t2/index.json": "c2825f2d4be1333e9843a3dc3c169b558bc3332bbc5554e1609f88e0a317de01",
+    "evidence/motion_navigation/sound-motion-proof-d105-v1/t3/index.json": "46d18a63b2fd09a689d6d125490b4be65b1d0b1e54718116dd1b3c86526dc1a2"
+  },
+  "d105_status": {
+    "T1": "FAILED_STOPPED",
+    "T2": "PARTIAL_STOPPED",
+    "T3": "FAILED_STOPPED"
+  },
+  "authorized": {
+    "scheme_b": false,
+    "t2_3": false,
+    "continuous_two_jump": false,
+    "zero_wait_handoff": false
+  },
+  "evidence_root": "evidence/motion_navigation/sound-motion-proof-d106-v1"
+}

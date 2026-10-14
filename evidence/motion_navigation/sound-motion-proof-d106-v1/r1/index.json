@@ -1,0 +1,44 @@
+{
+  "schema": "mc2p.d106-r1-index.v1",
+  "recorded_at_utc": "2026-10-14T01:11:27.678262+00:00",
+  "formal_platform": "Windows",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "source_commit": "4010da19551bd903ff4cb80d1999542b85352d68",
+  "status": "FAILED_STOPPED",
+  "functional": {
+    "positive_completed": 200,
+    "positive_runs": 200,
+    "negative_classifications": {
+      "duplicate_first": "CONTRACT_REJECTED",
+      "first_late_two": "CONTRACT_REJECTED",
+      "middle_late_one": "BOUNDED_DEVIATION",
+      "out_of_order_first": "CONTRACT_REJECTED"
+    },
+    "safety_violations": 0,
+    "digest_and_semantics_match_d105_excluding_source_hashes": true
+  },
+  "performance_ms": {
+    "p50_ms": 0.0723,
+    "p95_ms": 0.1252,
+    "p99_ms": 16.5732,
+    "max_ms": 23.2877
+  },
+  "gate_failures": [
+    "p99_above_15ms"
+  ],
+  "scheme_b_implemented": false,
+  "commands": {
+    "tests": ".\\.venv\\python.exe -m unittest tests.motion_nav.test_sound_sparse_motion_proof_d105 tests.motion_nav.test_d105_sound_sparse_m0 -v",
+    "verify": ".\\.venv\\python.exe scripts\\verify_sound_sparse_motion_proof_d105.py --output .tmp\\d106-r1\\verify.json",
+    "m0": ".\\.venv\\python.exe scripts\\measure_sound_sparse_motion_d105.py M0 --rounds 100 --output .tmp\\d106-r1\\m0-formal-r1"
+  },
+  "artifacts": {
+    "m0/decisions.jsonl.gz": "cf9c9d04df9c6bd1515a3e1cdbb30fb063f54874fc9c99c33c7c8de8e5fff6d9",
+    "m0/fixture.jsonl.gz": "4162ab9335f5a58f18a489cab0ecd7d41c4182c0ef2e96aa68fd3fc43c510cbe",
+    "m0/manifest.json": "5651aba8c0a29ca9f55b9825ccd35af6300fb5d05cd1a635f56ed89eaa76478f",
+    "m0/runs.jsonl.gz": "042df1647d1738d5a58bcebf632a1912b1f3c6e73412777df8c16689062b44a7",
+    "m0/source-hashes.json": "0f4e6a9252ce085227c14a1daa9f95dc1f7bbe4e284489d4401f9ebea89d3e54",
+    "m0/summary.json": "ba0ead3bf54a7bf5c24664b33883f91db7f7cc237c3241e46a0825ea25cbfc44",
+    "verification.json": "2d5073ec98e8e0734726f5f2d73dbf780899c21e3355da81c096d8ea17b98d54"
+  }
+}

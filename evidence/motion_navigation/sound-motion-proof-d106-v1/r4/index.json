@@ -1,0 +1,53 @@
+{
+  "schema": "mc2p.d106-r4-index.v1",
+  "formal_platform": "Windows",
+  "status": "FAILED_STOPPED",
+  "correction_rounds_used": 2,
+  "preflight": "NO_JAVA_HOME; no game run and no trials",
+  "round1": {
+    "timeline_classifications": {
+      "NEXT_MOVEMENT_TICK": 2,
+      "LATER_MOVEMENT_TICK": 0,
+      "INCOMPLETE": 38
+    },
+    "ordered_source_release_status": "released",
+    "failure": "private ledger rejected a Runtime-submitted prior request"
+  },
+  "round2": {
+    "timeline_count": 40,
+    "NEXT_MOVEMENT_TICK": 40,
+    "LATER_MOVEMENT_TICK": 0,
+    "INCOMPLETE": 0,
+    "ordered_source_release_status": "released",
+    "sidecar_status": "sealed",
+    "sidecar_dropped_events": 0,
+    "b10_probe_status": "failed",
+    "b10_primary_failure": "R4 approach did not reach speed band (0.5, 1.0) within 80 ticks",
+    "failure_after_ftick_validations": true,
+    "failure_path": "pre-solve legacy R4 moving-entry fixture",
+    "body_safety": "on_ground, full health, no collision, stopped safely",
+    "related_to_runtime_ledger_fix": false
+  },
+  "conclusion": "F-TICK passed in round2; the enclosing B10 gate failed afterward in the pre-existing moving-entry fixture",
+  "continuous_two_jump_authorized": false,
+  "artifacts": {
+    "fix-index.json": "68e3ae5c48a144a44ff56c271c029f26ee12b0c24f0a08c7cef8edb4e6868414",
+    "fix-round2-index.json": "6b566c93ef7653e9e7bb58a0559c4a7a5d1a0499ae47c6be2d5f82dffee5d45d",
+    "formal-t3/index.json": "4be2d3ab666ff77ee7f6d8c24fdfe36694f7e0775fcb06f0fa07dfe034e16514",
+    "formal-t3/probe-stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "formal-t3/probe-stdout.txt": "fb054663427dedecddf4b11b510001bb04633d686f3566b01460df83404f02c7",
+    "formal-t3/summary.json": "01de193b617ea858352524b9f27bebaeb56cb44f27856cb8ad77a70a322a77e3",
+    "formal-t3/timelines.jsonl": "9d5738c3d67ab6dffaf5190b20e48e48510e8a04d90767b8e990e96b3de05ca3",
+    "formal-t3-round2/index.json": "f920e87d1834d30acde673aec9d7a1d8ec38c1cfd12ce2a02e63cc0ceedbaac0",
+    "formal-t3-round2/probe-stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "formal-t3-round2/probe-stdout.txt": "2f205197d480f6174d3f55a596b8945278115714b6916d027cc5a53652ed0968",
+    "formal-t3-round2/summary.json": "e8e49d74733a0986f0af211f52083b48a69a0f71fde330280808d91607384e9c",
+    "formal-t3-round2/timelines.jsonl": "3d838bf898af864fe5f29b8ed7a288dcb1c7f475865f6e5b8cec9342249c3716",
+    "offline-root-cause.json": "3cddf8e450525cf41c3e140c4fd58d9ccbee0856f120572b5e9c4d98cfb36d6c",
+    "preflight-no-java-home/index.json": "ae2091ef3e490eba99f96bfe9b8d0d55856fe72e7ad9f4a63d4445909193bf4f",
+    "preflight-no-java-home/probe-stderr.txt": "af89df718683078699122f69c7230f04a02ee298a089b3d471feda48e01aad55",
+    "preflight-no-java-home/probe-stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "preflight-no-java-home/summary.json": "696ec715287ba9fb5398811d66344e0158b90d2febaedb6eb279a4593cb9cc6e",
+    "preflight-no-java-home/timelines.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

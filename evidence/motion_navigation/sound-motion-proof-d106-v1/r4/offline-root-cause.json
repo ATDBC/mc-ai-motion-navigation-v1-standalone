@@ -1,0 +1,31 @@
+{
+  "schema": "mc2p.d106-r4-offline-root-cause.v1",
+  "source_run": "artifacts/fabric-deployment/20261013T131224340162Z-90a78bfa",
+  "status": "ROOT_CAUSE_CONFIRMED",
+  "failed_validation": "validation-2-2",
+  "missing_private_ledger_tick": 453,
+  "receipt_samples": [
+    {
+      "movement_tick": 453,
+      "request_sequence_id": 450,
+      "state": "lease_exhausted",
+      "neutral": true
+    },
+    {
+      "movement_tick": 454,
+      "request_sequence_id": 451,
+      "state": "neutral",
+      "neutral": true
+    }
+  ],
+  "direct_cause": "the manual B10 probe filtered the complete receipt by the current request before feeding its private ledger",
+  "formal_runtime_affected": false,
+  "sidecar_comparison_required": false,
+  "source_cleanup": "the exception skipped the happy-path unregister; runtime.close later landed safely but did not provide ordered-source unregistration evidence",
+  "raw_sha256": {
+    "client-0/b10-gap-solver-trials.jsonl": "a0d5c41030d53e33dff6a7a9a7672b0a22ba803bfb714ad97fcbb41313dad61f",
+    "client-0/ftick-events/segment-00000000.jsonl": "857b374d00d6455fea1366c6902004db52af0df63661de5b2e539f2dba6fee85",
+    "client-0/trace.jsonl": "df422045f61eda8f72ae0d6ea4937cb2ccf03257f39d10658a3aae4800b2860d",
+    "result.json": "cd5bdbb587b8722f7a83dbd6b14be967bee8ec987012f92575459bdac8d99cd7"
+  }
+}

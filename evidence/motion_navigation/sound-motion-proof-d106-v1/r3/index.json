@@ -1,0 +1,50 @@
+{
+  "schema": "mc2p.d106-r3-index.v1",
+  "formal_platform": "Windows",
+  "source_commit": "9419f592b248e8bec0d2ad039f66c91eaa78e340",
+  "status": "PASS",
+  "production_files_changed": [],
+  "tests": {
+    "new": "5/5",
+    "related": "81/81"
+  },
+  "safety": {
+    "trusted_projection_equals_full": true,
+    "local_result_equals_full_when_all_reads_fit": true,
+    "out_of_bounds_known_air_is_missing_information": true,
+    "out_of_bounds_known_block_is_missing_information": true,
+    "unknown_dependency_is_missing_information": true,
+    "changed_formal_dependency_is_rejected": true,
+    "false_safe": 0
+  },
+  "diagnostic_timing": {
+    "scope": "in-process medians; excludes real spawn IPC, serialization and first consumption",
+    "full_snapshot": {
+      "cells": 6496,
+      "bytes": 1514939
+    },
+    "local_snapshot": {
+      "cells": 18,
+      "bytes": 4753
+    },
+    "seal_core_median_ms": {
+      "full": 641.15,
+      "local": 2.34
+    },
+    "prepare_fixed_motion_median_ms": {
+      "full": 780.43,
+      "local": 151.0
+    },
+    "trusted_receiver_median_ms": {
+      "full": 14.25,
+      "local": 13.27
+    },
+    "rounds": {
+      "seal_full": 5,
+      "seal_local": 10,
+      "worker_each": 5,
+      "receiver_each": 10
+    }
+  },
+  "t2_3_run": false
+}
