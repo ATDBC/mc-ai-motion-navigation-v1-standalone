@@ -1,0 +1,267 @@
+{
+  "causal_boundary": "The pre-D103 2026-09-25 raw run directory is unavailable. D105 and D106 traces can describe their own timing but cannot prove whether D103 caused a B10 timing change.",
+  "causal_conclusion": "unavailable",
+  "method": {
+    "control_frame_timings": "each recorded duration is summarized independently; missing fields are unavailable and durations are never added together",
+    "control_prepare": "trace step dispatched_monotonic_ns minus decision_observation_received_ns",
+    "movement_tick_continuity": "sorted unique receipt application tick ids",
+    "over_50ms": "strictly greater than 50.0 ms",
+    "percentiles": "nearest-rank"
+  },
+  "runs": [
+    {
+      "control_frames": {
+        "backend_blocking_io_ms": {
+          "maximum": 50.4739,
+          "over_50ms_count": 4,
+          "p50": 46.1168,
+          "p95": 48.6454,
+          "p99": 50.3059,
+          "sample_count": 182
+        },
+        "backend_elapsed_ms": {
+          "maximum": 50.9644,
+          "over_50ms_count": 7,
+          "p50": 46.6548,
+          "p95": 49.2273,
+          "p99": 50.8513,
+          "sample_count": 182
+        },
+        "control_wall_ms": {
+          "maximum": 52.0961,
+          "over_50ms_count": 10,
+          "p50": 47.8582,
+          "p95": 50.6043,
+          "p99": 52.0482,
+          "sample_count": 182
+        },
+        "invalid_fields": {
+          "backend_blocking_io_ns": 0,
+          "backend_elapsed_ns": 0,
+          "control_wall_ns": 0,
+          "proposal_elapsed_ns": 0,
+          "runtime_outside_backend_ns": 0
+        },
+        "missing_fields": {
+          "backend_blocking_io_ns": 0,
+          "backend_elapsed_ns": 0,
+          "control_wall_ns": 0,
+          "proposal_elapsed_ns": 0,
+          "runtime_outside_backend_ns": 0
+        },
+        "proposal_elapsed_ms": {
+          "maximum": 2.178,
+          "over_50ms_count": 0,
+          "p50": 0.3702,
+          "p95": 1.8714,
+          "p99": 2.1027,
+          "sample_count": 182
+        },
+        "reason_counts": {
+          "awaiting_verified_motion": 10,
+          "coast_to_verified_landing": 140,
+          "no_known_route_requires_information": 1,
+          "planning_submitted": 11,
+          "submit_verified_command": 20
+        },
+        "row_count": 182,
+        "runtime_outside_backend_ms": {
+          "maximum": 2.4393,
+          "over_50ms_count": 0,
+          "p50": 1.1748,
+          "p95": 1.9196,
+          "p99": 2.2956,
+          "sample_count": 182
+        },
+        "source": "artifacts/fabric-deployment/20261014T195140557635Z-c650fe0d/client-0/b10-coordinator-control-frames.jsonl",
+        "status": "available",
+        "timing_status": "available"
+      },
+      "ftick": {
+        "event_sources": [
+          "artifacts/fabric-deployment/20261014T195140557635Z-c650fe0d/client-0/ftick-events/segment-00000000.jsonl"
+        ],
+        "input_sampled_ticks": {
+          "application_count": 3219,
+          "contiguous": true,
+          "duplicate_count": 0,
+          "first": 1,
+          "gaps": [],
+          "last": 3219,
+          "unique_tick_count": 3219
+        },
+        "kind_counts": {
+          "CLIENT_FRAME_RECEIVED": 3219,
+          "CLIENT_OBSERVATION_SENT": 3219,
+          "INPUT_SAMPLED": 3219,
+          "MOVEMENT_APPLIED": 3219,
+          "SUMMARY": 1
+        },
+        "movement_applied_ticks": {
+          "application_count": 3219,
+          "contiguous": true,
+          "duplicate_count": 0,
+          "first": 1,
+          "gaps": [],
+          "last": 3219,
+          "unique_tick_count": 3219
+        },
+        "status": "available",
+        "summary": "unavailable",
+        "summary_reason": "ftick summary file is absent; event counts are reported"
+      },
+      "label": "D108-A5R",
+      "path": "artifacts/fabric-deployment/20261014T195140557635Z-c650fe0d",
+      "receiver_diagnostics": {
+        "cycle_count": 603,
+        "cycle_duration_ns": {
+          "maximum": 1226800,
+          "p95": 188100,
+          "p99": 871000,
+          "samples": 603
+        },
+        "deliveries": [
+          {
+            "first_control_consume_tick": 1371,
+            "identity": "'motion_solve:23268766a536ddecbaeb6f7758a62cd2a603c152a480d1974b58b190465ff0c3'",
+            "receiver_observed_result_tick": 1370,
+            "receiver_observed_to_registry_publish_ticks": 0,
+            "registry_publish_tick": 1370,
+            "registry_publish_to_first_control_consume_ticks": 1
+          },
+          {
+            "first_control_consume_tick": 1391,
+            "identity": "'motion_solve:395c6f08ba7d0e71737c7990e6fba59f773a38dd146f6bc30522c3dd030db157'",
+            "receiver_observed_result_tick": 1390,
+            "receiver_observed_to_registry_publish_ticks": 0,
+            "registry_publish_tick": 1390,
+            "registry_publish_to_first_control_consume_ticks": 1
+          },
+          {
+            "first_control_consume_tick": 1411,
+            "identity": "'motion_solve:4e581c8c3f6b2a3144ce9cb3250d4c896d725e4f3882629b833b75f5a9472a23'",
+            "receiver_observed_result_tick": 1410,
+            "receiver_observed_to_registry_publish_ticks": 0,
+            "registry_publish_tick": 1410,
+            "registry_publish_to_first_control_consume_ticks": 1
+          },
+          {
+            "first_control_consume_tick": 1431,
+            "identity": "'motion_solve:fe1f3b93af26fe7ffd1a5cc955b4776548d05b663764f881b8bd598285302efc'",
+            "receiver_observed_result_tick": 1430,
+            "receiver_observed_to_registry_publish_ticks": 0,
+            "registry_publish_tick": 1430,
+            "registry_publish_to_first_control_consume_ticks": 1
+          },
+          {
+            "first_control_consume_tick": 1451,
+            "identity": "'motion_solve:ea63dc81f8a7c6a32d68dea9af637952269702129e0c3d6dfc01229e8bd4743a'",
+            "receiver_observed_result_tick": 1450,
+            "receiver_observed_to_registry_publish_ticks": 0,
+            "registry_publish_tick": 1450,
+            "registry_publish_to_first_control_consume_ticks": 1
+          },
+          {
+            "first_control_consume_tick": 1471,
+            "identity": "'motion_solve:fe617fa005cee57b5d34f9aaed8c3db04c141153a9a1e04621228bfd680f6ad6'",
+            "receiver_observed_result_tick": 1470,
+            "receiver_observed_to_registry_publish_ticks": 0,
+            "registry_publish_tick": 1470,
+            "registry_publish_to_first_control_consume_ticks": 1
+          },
+          {
+            "first_control_consume_tick": 1491,
+            "identity": "'motion_solve:2cb6476a3783c46ee8782fa848152942066c80e5ee3a6694a32f547e42822156'",
+            "receiver_observed_result_tick": 1490,
+            "receiver_observed_to_registry_publish_ticks": 0,
+            "registry_publish_tick": 1490,
+            "registry_publish_to_first_control_consume_ticks": 1
+          },
+          {
+            "first_control_consume_tick": 1511,
+            "identity": "'motion_solve:f0bb9beaaff3b4e35ba197add943e84a5fe7319dd136ad0e7d39712856c9c9b7'",
+            "receiver_observed_result_tick": 1510,
+            "receiver_observed_to_registry_publish_ticks": 0,
+            "registry_publish_tick": 1510,
+            "registry_publish_to_first_control_consume_ticks": 1
+          },
+          {
+            "first_control_consume_tick": 1531,
+            "identity": "'motion_solve:8d79db197df88dce416f778d968ea7a56e6e0b14ab6e65bf30497ed40920620a'",
+            "receiver_observed_result_tick": 1530,
+            "receiver_observed_to_registry_publish_ticks": 0,
+            "registry_publish_tick": 1530,
+            "registry_publish_to_first_control_consume_ticks": 1
+          },
+          {
+            "first_control_consume_tick": 1551,
+            "identity": "'motion_solve:fcb27c81940328ab90088bc1a8350bdbcc5c68df3264fee25889fb3bf7aef46e'",
+            "receiver_observed_result_tick": 1550,
+            "receiver_observed_to_registry_publish_ticks": 0,
+            "registry_publish_tick": 1550,
+            "registry_publish_to_first_control_consume_ticks": 1
+          }
+        ],
+        "delivery_count": 10,
+        "delivery_tick_unavailable_count": 0,
+        "published_but_next_decision_invisible_count": 0,
+        "schema_version": "mc2p.b10-receiver-diagnostic-summary.v2",
+        "source": "artifacts/fabric-deployment/20261014T195140557635Z-c650fe0d/client-0/b10-receiver-diagnostics.jsonl",
+        "status": "available",
+        "worker_completion_to_receiver_observed": {
+          "reason": "worker completion is not present in the existing result protocol",
+          "status": "unavailable"
+        }
+      },
+      "status": "available",
+      "trace": {
+        "application_state_counts": {
+          "leased": 787,
+          "neutral": 2432
+        },
+        "control_prepare_ms": {
+          "maximum": 31.2439,
+          "over_50ms_count": 0,
+          "p50": 3.1111,
+          "p95": 4.6472,
+          "p99": 23.3283,
+          "sample_count": 3219
+        },
+        "control_prepare_status": "available",
+        "lease_exhausted": {
+          "application_count": 0,
+          "frame_count": 0
+        },
+        "missing_fields": {
+          "input_application_frames": 0,
+          "invalid_timing_frames": 0,
+          "receipt_frames": 0,
+          "timing_frames": 0
+        },
+        "movement_ticks": {
+          "application_count": 3219,
+          "contiguous": true,
+          "duplicate_count": 0,
+          "first": 1,
+          "gaps": [],
+          "last": 3219,
+          "unique_tick_count": 3219
+        },
+        "receipt_applications_per_frame": {
+          "maximum": 1,
+          "minimum": 1,
+          "sample_count": 3219,
+          "total": 3219
+        },
+        "receiver_delivery_timing": {
+          "reason": "legacy trace records do not identify receiver publication and first control-frame consumption movement ticks",
+          "status": "unavailable"
+        },
+        "source": "artifacts/fabric-deployment/20261014T195140557635Z-c650fe0d/client-0/trace.jsonl",
+        "status": "available",
+        "step_frames": 3219
+      }
+    }
+  ],
+  "schema_version": "mc2p.d108-b10-trace-audit.v2"
+}

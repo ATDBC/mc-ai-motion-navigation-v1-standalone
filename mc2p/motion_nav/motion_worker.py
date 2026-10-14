@@ -219,18 +219,17 @@ class MotionSolverWorker:
         context = multiprocessing.get_context("spawn")
         try:
             self._requests = context.Queue(maxsize=min(max_pending, 2))
-            if sys.platform == "win32":
-                original_error_handler = self._requests._on_queue_feeder_error
-                def feeder_error(error, value):
-                    diagnostic = (type(error).__name__, getattr(error, "errno", None), getattr(error, "winerror", None))
-                    if (self._closed and isinstance(error, OSError)
-                            and (getattr(error, "errno", None) == errno.EPIPE
-                                 or getattr(error, "winerror", None) == 109)):
-                        self._expected_close_feeder_errors.append(diagnostic)
-                        return  # This queued computation was discarded by close.
-                    self._unexpected_feeder_errors.append(diagnostic)
-                    original_error_handler(error, value)
-                self._requests._on_queue_feeder_error = feeder_error
+            original_error_handler = self._requests._on_queue_feeder_error
+            def feeder_error(error, value):
+                diagnostic = (type(error).__name__, getattr(error, "errno", None), getattr(error, "winerror", None))
+                if (self._closed and isinstance(error, OSError)
+                        and (getattr(error, "errno", None) == errno.EPIPE
+                             or getattr(error, "winerror", None) == 109)):
+                    self._expected_close_feeder_errors.append(diagnostic)
+                    return  # Closing a dead worker's read end intentionally wakes this feeder.
+                self._unexpected_feeder_errors.append(diagnostic)
+                original_error_handler(error, value)
+            self._requests._on_queue_feeder_error = feeder_error
             self._results = context.Queue(maxsize=min(max_pending, 2))
             self._process = context.Process(
                 target=_worker,
@@ -314,21 +313,38 @@ class MotionSolverWorker:
         for channel in (self._requests, self._results):
             if channel is None:
                 continue
-            channel.cancel_join_thread()
-            channel.close()
             no_child = process is None or process.pid is None or not process.is_alive()
             feeder = getattr(channel, "_thread", None)
             has_feeder = isinstance(feeder, threading.Thread)
+            posix_feeder_owns_ends = sys.platform != "win32" and no_child and has_feeder
+            channel.cancel_join_thread()
+            if first_close and posix_feeder_owns_ends:
+                # A dead child cannot drain queued bytes. Close only the read
+                # end before publishing Queue's sentinel so a blocked POSIX
+                # feeder wakes with the expected EPIPE. The feeder remains
+                # the sole owner of the writer while it is alive.
+                reader = getattr(channel, "_reader", None)
+                if reader is not None:
+                    reader.close()
+            channel.close()
             feeder_owns_ends = sys.platform == "win32" and no_child and has_feeder
-            if no_child and not feeder_owns_ends:
+            if no_child and not has_feeder:
                 # No child can consume queued bytes now. Closing the parent
-                # pipe ends wakes a feeder blocked on an unconsumed large job.
+                # endpoints is safe because no feeder can race their handles.
                 for name in ("_reader", "_writer"):
                     endpoint = getattr(channel, name, None)
                     if endpoint is not None:
                         endpoint.close()
             if has_feeder and feeder is not threading.current_thread():
                 _join_queue_feeder(feeder, getattr(channel, "_writer", None), deadline)
+            if posix_feeder_owns_ends and not feeder.is_alive():
+                # Connection.close() is idempotent. The feeder normally
+                # closed both ends in its finally block; this only completes
+                # a partially initialized or exceptionally exited feeder.
+                for name in ("_reader", "_writer"):
+                    endpoint = getattr(channel, name, None)
+                    if endpoint is not None:
+                        endpoint.close()
             if feeder_owns_ends and feeder.is_alive():
                 # The original deadline is exhausted. Retain actual liveness
                 # in the report; pipe close is only best-effort cleanup now.
@@ -490,6 +506,14 @@ class MotionResultInbox:
         self._validation_bytes = 0
         self._releases = deque()
         self._last_drain_sequence: int | None = None
+        # Read-only timing evidence.  These rows never participate in
+        # admission, activation or retry decisions and are bounded like the
+        # other diagnostic histories owned by this inbox.
+        self._receiver_diagnostics = deque(maxlen=4096)
+        self._diagnostic_consumed = deque(maxlen=self.MAX_HISTORY)
+        self._receiver_diagnostics_enabled = False
+        self._diagnostic_cycle = 0
+        self._diagnostic_movement_tick: int | None = None
         self.discarded_results = 0
         if worker is not None:
             try:
@@ -501,6 +525,32 @@ class MotionResultInbox:
     @property
     def receiver_thread_id(self) -> int | None:
         return None if self._receiver is None else self._receiver.ident
+
+    def publish_diagnostic_movement_tick(self, movement_tick: int) -> None:
+        """Publish a read-only clock label for receiver evidence.
+
+        The label is never read by admission or execution decisions.  Formal
+        probes call this before a control decision so background publication
+        can be related to Minecraft movement ticks without adding a barrier.
+        """
+        require_nonnegative_int(movement_tick, "receiver diagnostic movement tick")
+        with self._lock:
+            self._receiver_diagnostics_enabled = True
+            self._diagnostic_movement_tick = movement_tick
+
+    def _diagnostic_tick_locked(self) -> int | None:
+        current = self._current_facts
+        return (
+            current.movement_tick
+            if current is not None else self._diagnostic_movement_tick
+        )
+
+    def _mark_diagnostic_consumed_locked(self, identity: AsyncWorkIdentity) -> bool:
+        """Remember one first-consume row without retaining identities forever."""
+        if identity in self._diagnostic_consumed:
+            return False
+        self._diagnostic_consumed.append(identity)
+        return True
 
     def attach_worker(self, worker: MotionWorkerPort) -> None:
         if not isinstance(worker, MotionWorkerPort):
@@ -1009,9 +1059,10 @@ class MotionResultInbox:
             if (terminal.action != actual or terminal.control_sequence != actual.request_sequence_id
                     or terminal.session.value != consumer.world_session_id):
                 return ReferenceRejectReason.COMMAND_IDENTITY
-            # The ledger can supersede an older command after observing a
-            # newer one, then still observe the older command's late apply.
-            # That local ordering is not a client revocation receipt.
+            # SUPERSEDED is the ledger's local terminal summary after a newer
+            # applied sample. It is not an explicit terminal receipt for the
+            # proof registry, even though the client sequence gate rejects any
+            # later request whose sequence is no longer newer.
             if terminal.status is InputApplicationStatus.SUPERSEDED:
                 return ReferenceRejectReason.COMMAND_REVOCATION_UNCONFIRMED
             if terminal.status not in terminal_states or terminal.resolved_at_tick is None:
@@ -1074,6 +1125,15 @@ class MotionResultInbox:
                 return self._OVERDUE
             if registered is None:
                 return self._NOT_READY
+            if (self._receiver_diagnostics_enabled
+                    and self._mark_diagnostic_consumed_locked(identity)):
+                self._receiver_diagnostics.append({
+                    "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+                    "event": "first_control_consume",
+                    "identity": repr(identity.key),
+                    "movement_tick": movement_tick,
+                    "monotonic_ns": time.perf_counter_ns(),
+                })
             # Returning a cached object also avoids the value constructor's
             # recursive immutable-graph check on the control thread.
             # This is registration availability, not entry/body authorization.
@@ -1114,7 +1174,23 @@ class MotionResultInbox:
             raise ContractViolation("motion inbox take requires typed identity")
         with self._lock:
             result = self._results.pop(identity, None)
+            if (result is not None and self._receiver_diagnostics_enabled
+                    and self._mark_diagnostic_consumed_locked(identity)):
+                self._receiver_diagnostics.append({
+                    "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+                    "event": "first_control_consume",
+                    "identity": repr(identity.key),
+                    "movement_tick": self._diagnostic_tick_locked(),
+                    "monotonic_ns": time.perf_counter_ns(),
+                })
         return () if result is None else (result,)
+
+    def drain_receiver_diagnostics(self) -> tuple[dict, ...]:
+        """Return bounded read-only timing rows without changing control state."""
+        with self._lock:
+            rows = tuple(self._receiver_diagnostics)
+            self._receiver_diagnostics.clear()
+            return rows
 
     def peek(self, identity: AsyncWorkIdentity) -> GapMotionSolveResult | None:
         if type(identity) is not AsyncWorkIdentity:
@@ -1359,6 +1435,14 @@ class MotionResultInbox:
                     self._finish_locked(record)
                 return
             self._results[result.work_identity] = result
+            if self._receiver_diagnostics_enabled:
+                self._receiver_diagnostics.append({
+                    "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+                    "event": "registry_publish",
+                    "identity": repr(result.work_identity.key),
+                    "movement_tick": self._diagnostic_tick_locked(),
+                    "monotonic_ns": time.perf_counter_ns(),
+                })
             self._finish_locked(record)
 
     def _publish_prepared(self, record, validated, current, ready_query) -> None:
@@ -1395,6 +1479,17 @@ class MotionResultInbox:
                     maximum_commands=len(handle.hot_view.inputs) + max(len(tail.inputs) for tail in handle.hot_view.safety_tails))
                 self._registry[handle.proof_token] = registered
                 record.admission = validated.admission
+            if self._receiver_diagnostics_enabled:
+                self._receiver_diagnostics.append({
+                    "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+                    "event": "registry_publish",
+                    "identity": repr(record.identity.key),
+                    "movement_tick": self._diagnostic_tick_locked(),
+                    "monotonic_ns": time.perf_counter_ns(),
+                    "status": (
+                        None if record.admission is None else record.admission.status.value
+                    ),
+                })
             self._finish_locked(record)
 
     def _process_prepared(self, message: PreparedWireMessage) -> None:
@@ -1472,7 +1567,12 @@ class MotionResultInbox:
             while not self._stop.is_set():
                 self._wake.wait(.01)
                 self._wake.clear()
+                result_count = 0
                 with self._lock:
+                    diagnostics_enabled = self._receiver_diagnostics_enabled
+                    cycle_started_ns = (
+                        time.perf_counter_ns() if diagnostics_enabled else None
+                    )
                     requested = self._requested_cycle
                     records = tuple(record for record in self._active.values()
                                     if not record.retired and not record.processing and not record.finished
@@ -1491,7 +1591,18 @@ class MotionResultInbox:
                         alive = worker.is_alive()
                     except Exception:
                         results, alive = (), False
+                    result_count = len(results)
                     for result in results:
+                        identity = getattr(result, "work_identity", None)
+                        if diagnostics_enabled and type(identity) is AsyncWorkIdentity:
+                            with self._lock:
+                                self._receiver_diagnostics.append({
+                                    "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+                                    "event": "receiver_observed_result",
+                                    "identity": repr(identity.key),
+                                    "movement_tick": self._diagnostic_tick_locked(),
+                                    "monotonic_ns": time.perf_counter_ns(),
+                                })
                         if type(result) is PreparedWireMessage:
                             self._process_prepared(result)
                         elif type(result) is GapMotionSolveResult:
@@ -1516,6 +1627,19 @@ class MotionResultInbox:
                                     self._finish_locked(record)
                 self._return_leases()
                 with self._cycle_condition:
+                    if diagnostics_enabled:
+                        cycle_finished_ns = time.perf_counter_ns()
+                        self._diagnostic_cycle += 1
+                        self._receiver_diagnostics.append({
+                            "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+                            "event": "receiver_cycle",
+                            "cycle": self._diagnostic_cycle,
+                            "movement_tick": self._diagnostic_tick_locked(),
+                            "started_monotonic_ns": cycle_started_ns,
+                            "finished_monotonic_ns": cycle_finished_ns,
+                            "duration_ns": cycle_finished_ns - cycle_started_ns,
+                            "result_count": result_count,
+                        })
                     self._cycle = max(self._cycle, requested)
                     self._cycle_condition.notify_all()
         finally:

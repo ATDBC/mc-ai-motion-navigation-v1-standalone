@@ -728,6 +728,18 @@ def append_jsonl(path: Path, value: object) -> None:
         os.fsync(stream.fileno())
 
 
+def write_jsonl_atomic(path: Path, values: Sequence[object]) -> None:
+    """Replace a JSONL document with one durable batch write."""
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    with temporary.open("w", encoding="utf-8", newline="\n") as stream:
+        stream.write("".join(strict_json_dumps(value) + "\n" for value in values))
+        stream.flush()
+        os.fsync(stream.fileno())
+    temporary.replace(path)
+
+
 def write_json_atomic(path: Path, value: object, *, replace_retry_seconds: float = 0) -> None:
     """Replace a JSON document only after its complete temporary is durable."""
     if not 0<=replace_retry_seconds<=.1: raise ValueError('atomic replace retry must be 0..100ms')

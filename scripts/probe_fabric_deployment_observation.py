@@ -605,11 +605,21 @@ def _close_client(runtime, backend, transport, process, identity) -> tuple[dict 
     return cleanup, failures
 
 
-def _runtime_trace(directory: Path, backend, *, capture_close_diagnostics: bool):
+def _runtime_trace(
+        directory: Path,
+        backend,
+        *,
+        capture_close_diagnostics: bool,
+        async_delivery: bool = False,
+):
     if capture_close_diagnostics:
         from scripts.fabric_visibility_scenario import CloseDiagnosticsTrace
-        return CloseDiagnosticsTrace(directory, backend)
-    return JsonlTraceWriterV0(directory / "trace.jsonl")
+        sink = CloseDiagnosticsTrace(directory, backend)
+    else:
+        sink = JsonlTraceWriterV0(directory / "trace.jsonl")
+    if async_delivery:
+        return BoundedAsyncTraceWriter(sink, capacity=16_384)
+    return sink
 
 
 class _DiagnosticsJsonlSink:
@@ -1088,6 +1098,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                                 or (b10_gap_solver_probe and time_diagnostics)
                                 or (continuous_height_probe and time_diagnostics)
                             ),
+                            async_delivery=b10_gap_solver_probe,
                         )
                     if c1_probe and time_diagnostics:
                         trace = _RuntimeDiagnosticsTrace(directory, backend, trace)

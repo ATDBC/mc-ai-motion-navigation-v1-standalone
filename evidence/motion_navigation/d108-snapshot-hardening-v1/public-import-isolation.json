@@ -1,0 +1,2871 @@
+{
+  "schema_version": "mc2p.d108-public-import-isolation.v1",
+  "export_root": "D:\\My_project\\mc_ai\\.tmp\\d108-a5r-public",
+  "python": "D:\\My_project\\mc_ai\\.venv\\python.exe",
+  "pythonpath": null,
+  "reported_module_count": 185,
+  "reported_modules_all_inside_export": true,
+  "mc2p_file": "mc2p/__init__.py",
+  "mc2p_inside_export": true,
+  "loaded_project_module_count": 386,
+  "loaded_project_modules_all_inside_export": true,
+  "reported_modules": [
+    {
+      "module": "tests.motion_nav.test_action_continuity_admission",
+      "file": "tests/motion_nav/test_action_continuity_admission.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_action_continuity_fabric_options",
+      "file": "tests/motion_nav/test_action_continuity_fabric_options.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_action_continuity_formal",
+      "file": "tests/motion_nav/test_action_continuity_formal.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_action_continuity_solver_limits",
+      "file": "tests/motion_nav/test_action_continuity_solver_limits.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_action_controller_adapter",
+      "file": "tests/motion_nav/test_action_controller_adapter.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_action_entry_handoff_repair",
+      "file": "tests/motion_nav/test_action_entry_handoff_repair.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_action_entry_late_hardening",
+      "file": "tests/motion_nav/test_action_entry_late_hardening.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_action_preconditions",
+      "file": "tests/motion_nav/test_action_preconditions.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_action_spec_boundaries",
+      "file": "tests/motion_nav/test_action_spec_boundaries.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_action_spec_integration",
+      "file": "tests/motion_nav/test_action_spec_integration.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_action_specs",
+      "file": "tests/motion_nav/test_action_specs.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_air_transition_solver",
+      "file": "tests/motion_nav/test_air_transition_solver.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_async_gap_revalidation_delivery",
+      "file": "tests/motion_nav/test_async_gap_revalidation_delivery.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_async_work_verification",
+      "file": "tests/motion_nav/test_async_work_verification.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b02_geometry_acceptance",
+      "file": "tests/motion_nav/test_b02_geometry_acceptance.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b06_block_motion_traits",
+      "file": "tests/motion_nav/test_b06_block_motion_traits.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b06_environment_identity",
+      "file": "tests/motion_nav/test_b06_environment_identity.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b06_fabric_material_probe",
+      "file": "tests/motion_nav/test_b06_fabric_material_probe.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b06_movement_contracts",
+      "file": "tests/motion_nav/test_b06_movement_contracts.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b06_ordinary_profiles",
+      "file": "tests/motion_nav/test_b06_ordinary_profiles.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b06_registry_export",
+      "file": "tests/motion_nav/test_b06_registry_export.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b07_shape_matrix",
+      "file": "tests/motion_nav/test_b07_shape_matrix.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b07_step_route",
+      "file": "tests/motion_nav/test_b07_step_route.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b07_step_runtime",
+      "file": "tests/motion_nav/test_b07_step_runtime.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b07_step_transition",
+      "file": "tests/motion_nav/test_b07_step_transition.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b07_support_surfaces",
+      "file": "tests/motion_nav/test_b07_support_surfaces.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b07_surface_planning",
+      "file": "tests/motion_nav/test_b07_surface_planning.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b08_ground_modes",
+      "file": "tests/motion_nav/test_b08_ground_modes.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b09_air_transitions",
+      "file": "tests/motion_nav/test_b09_air_transitions.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b09r_physics_contracts",
+      "file": "tests/motion_nav/test_b09r_physics_contracts.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b09r_physics_rollout",
+      "file": "tests/motion_nav/test_b09r_physics_rollout.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b09r_physics_step",
+      "file": "tests/motion_nav/test_b09r_physics_step.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b09r_physics_validation",
+      "file": "tests/motion_nav/test_b09r_physics_validation.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b10_foundation_tools",
+      "file": "tests/motion_nav/test_b10_foundation_tools.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b10_gap_solver",
+      "file": "tests/motion_nav/test_b10_gap_solver.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b10_motion_candidate",
+      "file": "tests/motion_nav/test_b10_motion_candidate.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b10_motion_worker",
+      "file": "tests/motion_nav/test_b10_motion_worker.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b10_online_motion",
+      "file": "tests/motion_nav/test_b10_online_motion.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b11_block_placement",
+      "file": "tests/motion_nav/test_b11_block_placement.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b11_bridge_planning",
+      "file": "tests/motion_nav/test_b11_bridge_planning.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b11_world_change_navigation",
+      "file": "tests/motion_nav/test_b11_world_change_navigation.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_continuous_descent",
+      "file": "tests/motion_nav/test_continuous_descent.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_continuous_height_execution",
+      "file": "tests/motion_nav/test_continuous_height_execution.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_continuous_height_full_matrix",
+      "file": "tests/motion_nav/test_continuous_height_full_matrix.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_continuous_height_planning",
+      "file": "tests/motion_nav/test_continuous_height_planning.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d057_route_prefix",
+      "file": "tests/motion_nav/test_d057_route_prefix.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d058_route_revalidation_benchmark",
+      "file": "tests/motion_nav/test_d058_route_revalidation_benchmark.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d058_runtime_validation",
+      "file": "tests/motion_nav/test_d058_runtime_validation.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d058_validation_plan",
+      "file": "tests/motion_nav/test_d058_validation_plan.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d059_consumers_and_identity",
+      "file": "tests/motion_nav/test_d059_consumers_and_identity.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d059_terminal_selection_dependencies",
+      "file": "tests/motion_nav/test_d059_terminal_selection_dependencies.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d059_validation_diagnostics",
+      "file": "tests/motion_nav/test_d059_validation_diagnostics.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d060_terminal_node_exact_proof",
+      "file": "tests/motion_nav/test_d060_terminal_node_exact_proof.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d061_long_session_benchmark",
+      "file": "tests/motion_nav/test_d061_long_session_benchmark.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d062_direct_walk_validation",
+      "file": "tests/motion_nav/test_d062_direct_walk_validation.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d063_goal_surface_information",
+      "file": "tests/motion_nav/test_d063_goal_surface_information.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d064_ground_direct_handoff",
+      "file": "tests/motion_nav/test_d064_ground_direct_handoff.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d094_fabric_timing_metric",
+      "file": "tests/motion_nav/test_d094_fabric_timing_metric.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d098_windows_trial_wrapper",
+      "file": "tests/motion_nav/test_d098_windows_trial_wrapper.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d101_continuous_probe",
+      "file": "tests/motion_nav/test_d101_continuous_probe.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d101_input_stream",
+      "file": "tests/motion_nav/test_d101_input_stream.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d101_measurement",
+      "file": "tests/motion_nav/test_d101_measurement.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d102_action_handoff",
+      "file": "tests/motion_nav/test_d102_action_handoff.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d102_contract_red",
+      "file": "tests/motion_nav/test_d102_contract_red.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d102_contracts",
+      "file": "tests/motion_nav/test_d102_contracts.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d102_prepared_proof",
+      "file": "tests/motion_nav/test_d102_prepared_proof.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d102_receiver",
+      "file": "tests/motion_nav/test_d102_receiver.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d102_registry_lifecycle",
+      "file": "tests/motion_nav/test_d102_registry_lifecycle.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d102_runtime_activation",
+      "file": "tests/motion_nav/test_d102_runtime_activation.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d102_windows_matrix",
+      "file": "tests/motion_nav/test_d102_windows_matrix.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d102_world_snapshot",
+      "file": "tests/motion_nav/test_d102_world_snapshot.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d103_observation_hot_path",
+      "file": "tests/motion_nav/test_d103_observation_hot_path.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d105_ftick",
+      "file": "tests/motion_nav/test_d105_ftick.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d105_receiver_trust_boundary",
+      "file": "tests/motion_nav/test_d105_receiver_trust_boundary.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d105_sound_sparse_m0",
+      "file": "tests/motion_nav/test_d105_sound_sparse_m0.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d105_t2_evidence",
+      "file": "tests/motion_nav/test_d105_t2_evidence.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d106_local_snapshot",
+      "file": "tests/motion_nav/test_d106_local_snapshot.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d107_b10_trace_audit",
+      "file": "tests/motion_nav/test_d107_b10_trace_audit.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d107_shard_runner",
+      "file": "tests/motion_nav/test_d107_shard_runner.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d108_receiver_tick_delivery",
+      "file": "tests/motion_nav/test_d108_receiver_tick_delivery.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d108_snapshot_materialization",
+      "file": "tests/motion_nav/test_d108_snapshot_materialization.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_execution_supervisor",
+      "file": "tests/motion_nav/test_execution_supervisor.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_external_motion",
+      "file": "tests/motion_nav/test_external_motion.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_external_motion_recovery",
+      "file": "tests/motion_nav/test_external_motion_recovery.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_f1_known_world_following",
+      "file": "tests/motion_nav/test_f1_known_world_following.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_f1_known_world_following_fabric",
+      "file": "tests/motion_nav/test_f1_known_world_following_fabric.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_f2_ground_completion_region",
+      "file": "tests/motion_nav/test_f2_ground_completion_region.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_f2_ground_route_gates",
+      "file": "tests/motion_nav/test_f2_ground_route_gates.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_f2_ground_start_window",
+      "file": "tests/motion_nav/test_f2_ground_start_window.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_f2_non_center_ground_route",
+      "file": "tests/motion_nav/test_f2_non_center_ground_route.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_f2r_piecewise_completion",
+      "file": "tests/motion_nav/test_f2r_piecewise_completion.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_f2rec_r0_baseline",
+      "file": "tests/motion_nav/test_f2rec_r0_baseline.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_f2rec_r1_region_geometry",
+      "file": "tests/motion_nav/test_f2rec_r1_region_geometry.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_f2rec_r2_goal_selection",
+      "file": "tests/motion_nav/test_f2rec_r2_goal_selection.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_f2rec_r3_cleanup",
+      "file": "tests/motion_nav/test_f2rec_r3_cleanup.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_f2rec_r4_recovery",
+      "file": "tests/motion_nav/test_f2rec_r4_recovery.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_fixed_route_walk",
+      "file": "tests/motion_nav/test_fixed_route_walk.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_goal_reach_policy",
+      "file": "tests/motion_nav/test_goal_reach_policy.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_ground_calibration",
+      "file": "tests/motion_nav/test_ground_calibration.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_ground_continuation_quality",
+      "file": "tests/motion_nav/test_ground_continuation_quality.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_ground_motion",
+      "file": "tests/motion_nav/test_ground_motion.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_ground_traversal",
+      "file": "tests/motion_nav/test_ground_traversal.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_incremental_motion_closed_loop",
+      "file": "tests/motion_nav/test_incremental_motion_closed_loop.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_incremental_motion_closed_loop_measurement",
+      "file": "tests/motion_nav/test_incremental_motion_closed_loop_measurement.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_incremental_motion_controller",
+      "file": "tests/motion_nav/test_incremental_motion_controller.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_incremental_motion_performance",
+      "file": "tests/motion_nav/test_incremental_motion_performance.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_incremental_motion_proof",
+      "file": "tests/motion_nav/test_incremental_motion_proof.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_incremental_motion_table",
+      "file": "tests/motion_nav/test_incremental_motion_table.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_inline_planning_clock",
+      "file": "tests/motion_nav/test_inline_planning_clock.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_input_responsibility",
+      "file": "tests/motion_nav/test_input_responsibility.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_jump_up",
+      "file": "tests/motion_nav/test_jump_up.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_jump_up_calibration",
+      "file": "tests/motion_nav/test_jump_up_calibration.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_known_map_planning",
+      "file": "tests/motion_nav/test_known_map_planning.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_known_world_follow_driver",
+      "file": "tests/motion_nav/test_known_world_follow_driver.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_motion_baseline_recovery",
+      "file": "tests/motion_nav/test_motion_baseline_recovery.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_motion_benchmarks",
+      "file": "tests/motion_nav/test_motion_benchmarks.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_motion_continuation_quality",
+      "file": "tests/motion_nav/test_motion_continuation_quality.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_motion_residual",
+      "file": "tests/motion_nav/test_motion_residual.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_motion_risk",
+      "file": "tests/motion_nav/test_motion_risk.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_motion_start_delivery",
+      "file": "tests/motion_nav/test_motion_start_delivery.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_closed_loop",
+      "file": "tests/motion_nav/test_navigation_closed_loop.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_dead_path_probe",
+      "file": "tests/motion_nav/test_navigation_dead_path_probe.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_design_metrics",
+      "file": "tests/motion_nav/test_navigation_design_metrics.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_event_sequences",
+      "file": "tests/motion_nav/test_navigation_event_sequences.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_handoff",
+      "file": "tests/motion_nav/test_navigation_handoff.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_interrupt_matrix",
+      "file": "tests/motion_nav/test_navigation_interrupt_matrix.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_layer_live",
+      "file": "tests/motion_nav/test_navigation_layer_live.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_lifecycle",
+      "file": "tests/motion_nav/test_navigation_lifecycle.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_owners",
+      "file": "tests/motion_nav/test_navigation_owners.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_product_delivery",
+      "file": "tests/motion_nav/test_navigation_product_delivery.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_product_metrics",
+      "file": "tests/motion_nav/test_navigation_product_metrics.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_replay_known_map",
+      "file": "tests/motion_nav/test_navigation_replay_known_map.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_route_handoff",
+      "file": "tests/motion_nav/test_navigation_route_handoff.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_seed_scan",
+      "file": "tests/motion_nav/test_navigation_seed_scan.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_session",
+      "file": "tests/motion_nav/test_navigation_session.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_structure_baseline",
+      "file": "tests/motion_nav/test_navigation_structure_baseline.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_supervised_interruptions",
+      "file": "tests/motion_nav/test_navigation_supervised_interruptions.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_package_boundaries",
+      "file": "tests/motion_nav/test_package_boundaries.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_planner_worker",
+      "file": "tests/motion_nav/test_planner_worker.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_planning_coordinator",
+      "file": "tests/motion_nav/test_planning_coordinator.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_planning_ownership_gate",
+      "file": "tests/motion_nav/test_planning_ownership_gate.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_post_input_loss_landing_recovery",
+      "file": "tests/motion_nav/test_post_input_loss_landing_recovery.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_probe_handoff_resolution",
+      "file": "tests/motion_nav/test_probe_handoff_resolution.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_public_repository_completeness",
+      "file": "tests/motion_nav/test_public_repository_completeness.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r27_async_admission",
+      "file": "tests/motion_nav/test_r27_async_admission.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_async_generation",
+      "file": "tests/motion_nav/test_r28_async_generation.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_baseline_alignment",
+      "file": "tests/motion_nav/test_r28_baseline_alignment.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_corner_progress",
+      "file": "tests/motion_nav/test_r28_corner_progress.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_dual_planning",
+      "file": "tests/motion_nav/test_r28_dual_planning.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_generation_formal_chain",
+      "file": "tests/motion_nav/test_r28_generation_formal_chain.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_information_planning_updates",
+      "file": "tests/motion_nav/test_r28_information_planning_updates.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_migration_faults",
+      "file": "tests/motion_nav/test_r28_migration_faults.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_persistent_budget_formal",
+      "file": "tests/motion_nav/test_r28_persistent_budget_formal.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_planning_failure_handoff",
+      "file": "tests/motion_nav/test_r28_planning_failure_handoff.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_planning_history",
+      "file": "tests/motion_nav/test_r28_planning_history.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_planning_retry_successor",
+      "file": "tests/motion_nav/test_r28_planning_retry_successor.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_product_repairs",
+      "file": "tests/motion_nav/test_r28_product_repairs.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_reanchor_handoff",
+      "file": "tests/motion_nav/test_r28_reanchor_handoff.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_screening_retirement",
+      "file": "tests/motion_nav/test_r28_screening_retirement.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_shared_recovery",
+      "file": "tests/motion_nav/test_r28_shared_recovery.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_terminal_approach",
+      "file": "tests/motion_nav/test_r28_terminal_approach.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_world_change_retirement",
+      "file": "tests/motion_nav/test_r28_world_change_retirement.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_reference_baselines",
+      "file": "tests/motion_nav/test_reference_baselines.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_reference_evidence",
+      "file": "tests/motion_nav/test_reference_evidence.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_retry_ledger",
+      "file": "tests/motion_nav/test_retry_ledger.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_route_body_advance",
+      "file": "tests/motion_nav/test_route_body_advance.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_runtime_adapter",
+      "file": "tests/motion_nav/test_runtime_adapter.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_runtime_backend_io",
+      "file": "tests/motion_nav/test_runtime_backend_io.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_runtime_navigation_driver_state",
+      "file": "tests/motion_nav/test_runtime_navigation_driver_state.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_runtime_navigation_state_consumers",
+      "file": "tests/motion_nav/test_runtime_navigation_state_consumers.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_runtime_navigation_verified_handoff",
+      "file": "tests/motion_nav/test_runtime_navigation_verified_handoff.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_s0r_evidence",
+      "file": "tests/motion_nav/test_s0r_evidence.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_segment_entry",
+      "file": "tests/motion_nav/test_segment_entry.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_shape_trials",
+      "file": "tests/motion_nav/test_shape_trials.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_sim_visual_air_query_short_circuit",
+      "file": "tests/motion_nav/test_sim_visual_air_query_short_circuit.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_simulation_isolation",
+      "file": "tests/motion_nav/test_simulation_isolation.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_sound_sparse_motion_proof_d105",
+      "file": "tests/motion_nav/test_sound_sparse_motion_proof_d105.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_standalone_export",
+      "file": "tests/motion_nav/test_standalone_export.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_task_risk_ledger",
+      "file": "tests/motion_nav/test_task_risk_ledger.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_trajectory_proto_commitment",
+      "file": "tests/motion_nav/test_trajectory_proto_commitment.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_trajectory_proto_contracts",
+      "file": "tests/motion_nav/test_trajectory_proto_contracts.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_trajectory_proto_m0_probe",
+      "file": "tests/motion_nav/test_trajectory_proto_m0_probe.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_trajectory_proto_primitive_matrix",
+      "file": "tests/motion_nav/test_trajectory_proto_primitive_matrix.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_trajectory_proto_reference_search",
+      "file": "tests/motion_nav/test_trajectory_proto_reference_search.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_world_knowledge_geometry",
+      "file": "tests/motion_nav/test_world_knowledge_geometry.py",
+      "inside_export": true
+    }
+  ],
+  "loaded_project_modules": [
+    {
+      "module": "experiments.motion_navigation.trajectory_proto.commitment",
+      "file": "experiments/motion_navigation/trajectory_proto/commitment.py",
+      "inside_export": true
+    },
+    {
+      "module": "experiments.motion_navigation.trajectory_proto.contracts",
+      "file": "experiments/motion_navigation/trajectory_proto/contracts.py",
+      "inside_export": true
+    },
+    {
+      "module": "experiments.motion_navigation.trajectory_proto.d101_continuous_probe",
+      "file": "experiments/motion_navigation/trajectory_proto/d101_continuous_probe.py",
+      "inside_export": true
+    },
+    {
+      "module": "experiments.motion_navigation.trajectory_proto.d101_input_stream",
+      "file": "experiments/motion_navigation/trajectory_proto/d101_input_stream.py",
+      "inside_export": true
+    },
+    {
+      "module": "experiments.motion_navigation.trajectory_proto.d101_measurement",
+      "file": "experiments/motion_navigation/trajectory_proto/d101_measurement.py",
+      "inside_export": true
+    },
+    {
+      "module": "experiments.motion_navigation.trajectory_proto.decision",
+      "file": "experiments/motion_navigation/trajectory_proto/decision.py",
+      "inside_export": true
+    },
+    {
+      "module": "experiments.motion_navigation.trajectory_proto.frozen_templates",
+      "file": "experiments/motion_navigation/trajectory_proto/frozen_templates.py",
+      "inside_export": true
+    },
+    {
+      "module": "experiments.motion_navigation.trajectory_proto.incremental_proof",
+      "file": "experiments/motion_navigation/trajectory_proto/incremental_proof.py",
+      "inside_export": true
+    },
+    {
+      "module": "experiments.motion_navigation.trajectory_proto.m0_probe",
+      "file": "experiments/motion_navigation/trajectory_proto/m0_probe.py",
+      "inside_export": true
+    },
+    {
+      "module": "experiments.motion_navigation.trajectory_proto.measurement",
+      "file": "experiments/motion_navigation/trajectory_proto/measurement.py",
+      "inside_export": true
+    },
+    {
+      "module": "experiments.motion_navigation.trajectory_proto.motion_table",
+      "file": "experiments/motion_navigation/trajectory_proto/motion_table.py",
+      "inside_export": true
+    },
+    {
+      "module": "experiments.motion_navigation.trajectory_proto.physics",
+      "file": "experiments/motion_navigation/trajectory_proto/physics.py",
+      "inside_export": true
+    },
+    {
+      "module": "experiments.motion_navigation.trajectory_proto.primitive_search",
+      "file": "experiments/motion_navigation/trajectory_proto/primitive_search.py",
+      "inside_export": true
+    },
+    {
+      "module": "experiments.motion_navigation.trajectory_proto.reference_search",
+      "file": "experiments/motion_navigation/trajectory_proto/reference_search.py",
+      "inside_export": true
+    },
+    {
+      "module": "experiments.motion_navigation.trajectory_proto.rollout_trace",
+      "file": "experiments/motion_navigation/trajectory_proto/rollout_trace.py",
+      "inside_export": true
+    },
+    {
+      "module": "experiments.motion_navigation.trajectory_proto.scenarios",
+      "file": "experiments/motion_navigation/trajectory_proto/scenarios.py",
+      "inside_export": true
+    },
+    {
+      "module": "experiments.motion_navigation.trajectory_proto.sound_sparse_proof",
+      "file": "experiments/motion_navigation/trajectory_proto/sound_sparse_proof.py",
+      "inside_export": true
+    },
+    {
+      "module": "experiments.motion_navigation.trajectory_proto.template_controller",
+      "file": "experiments/motion_navigation/trajectory_proto/template_controller.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p",
+      "file": "mc2p/__init__.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.backends",
+      "file": "mc2p/backends/__init__.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.backends.client_behavior_payload",
+      "file": "mc2p/backends/client_behavior_payload.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.backends.client_observation_payload",
+      "file": "mc2p/backends/client_observation_payload.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.backends.client_observation_payload_v3",
+      "file": "mc2p/backends/client_observation_payload_v3.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.backends.deployment_transport",
+      "file": "mc2p/backends/deployment_transport.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.backends.fabric_behavior",
+      "file": "mc2p/backends/fabric_behavior.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.contracts",
+      "file": "mc2p/contracts/__init__.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.contracts.action",
+      "file": "mc2p/contracts/action.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.contracts.action_receipt",
+      "file": "mc2p/contracts/action_receipt.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.contracts.action_v1",
+      "file": "mc2p/contracts/action_v1.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.contracts.behavior",
+      "file": "mc2p/contracts/behavior.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.contracts.common",
+      "file": "mc2p/contracts/common.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.contracts.intent_source",
+      "file": "mc2p/contracts/intent_source.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.contracts.motion_activation",
+      "file": "mc2p/contracts/motion_activation.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.contracts.observation",
+      "file": "mc2p/contracts/observation.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.contracts.observation_request_v3",
+      "file": "mc2p/contracts/observation_request_v3.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.contracts.observation_v2",
+      "file": "mc2p/contracts/observation_v2.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.contracts.observation_v3",
+      "file": "mc2p/contracts/observation_v3.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.contracts.report",
+      "file": "mc2p/contracts/report.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.contracts.reset",
+      "file": "mc2p/contracts/reset.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.contracts.task",
+      "file": "mc2p/contracts/task.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav",
+      "file": "mc2p/motion_nav/__init__.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.action_preconditions",
+      "file": "mc2p/motion_nav/action_preconditions.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.action_requirements",
+      "file": "mc2p/motion_nav/action_requirements.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.action_route",
+      "file": "mc2p/motion_nav/action_route.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.action_route_executor",
+      "file": "mc2p/motion_nav/action_route_executor.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.actions",
+      "file": "mc2p/motion_nav/actions/__init__.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.actions.contracts",
+      "file": "mc2p/motion_nav/actions/contracts.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.actions.controlled_drop",
+      "file": "mc2p/motion_nav/actions/controlled_drop.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.actions.existing",
+      "file": "mc2p/motion_nav/actions/existing.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.actions.registry",
+      "file": "mc2p/motion_nav/actions/registry.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.air_motion",
+      "file": "mc2p/motion_nav/air_motion.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.async_work",
+      "file": "mc2p/motion_nav/async_work.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.block_motion_traits",
+      "file": "mc2p/motion_nav/block_motion_traits.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.body_control",
+      "file": "mc2p/motion_nav/body_control.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.bridge_planner",
+      "file": "mc2p/motion_nav/bridge_planner.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.controlled_drop",
+      "file": "mc2p/motion_nav/controlled_drop.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.environment_identity",
+      "file": "mc2p/motion_nav/environment_identity.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.evidence",
+      "file": "mc2p/motion_nav/evidence/__init__.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.evidence.ground_calibration",
+      "file": "mc2p/motion_nav/evidence/ground_calibration.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.evidence.physics_validation",
+      "file": "mc2p/motion_nav/evidence/physics_validation.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.evidence.shape_trials",
+      "file": "mc2p/motion_nav/evidence/shape_trials.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.execution_supervisor",
+      "file": "mc2p/motion_nav/execution_supervisor.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.external_motion",
+      "file": "mc2p/motion_nav/external_motion.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.external_motion_recovery",
+      "file": "mc2p/motion_nav/external_motion_recovery.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.fixed_route",
+      "file": "mc2p/motion_nav/fixed_route.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.geometry",
+      "file": "mc2p/motion_nav/geometry.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.goal_observation",
+      "file": "mc2p/motion_nav/goal_observation.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.goal_planning_policy",
+      "file": "mc2p/motion_nav/goal_planning_policy.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.goal_reach_policy",
+      "file": "mc2p/motion_nav/goal_reach_policy.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.ground_modes",
+      "file": "mc2p/motion_nav/ground_modes.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.ground_motion",
+      "file": "mc2p/motion_nav/ground_motion.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.ground_route_execution",
+      "file": "mc2p/motion_nav/ground_route_execution.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.ground_traversal",
+      "file": "mc2p/motion_nav/ground_traversal.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.input_stream",
+      "file": "mc2p/motion_nav/input_stream.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.jump_gap",
+      "file": "mc2p/motion_nav/jump_gap.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.jump_up",
+      "file": "mc2p/motion_nav/jump_up.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.known_map_planner",
+      "file": "mc2p/motion_nav/known_map_planner.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.landing_edge_probe",
+      "file": "mc2p/motion_nav/landing_edge_probe.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.landing_evidence",
+      "file": "mc2p/motion_nav/landing_evidence.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.legacy",
+      "file": "mc2p/motion_nav/legacy/__init__.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.legacy.air_confirmation",
+      "file": "mc2p/motion_nav/legacy/air_confirmation.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.motion_candidate",
+      "file": "mc2p/motion_nav/motion_candidate.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.motion_coordination",
+      "file": "mc2p/motion_nav/motion_coordination.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.motion_residual",
+      "file": "mc2p/motion_nav/motion_residual.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.motion_risk",
+      "file": "mc2p/motion_nav/motion_risk.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.motion_solver",
+      "file": "mc2p/motion_nav/motion_solver.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.motion_worker",
+      "file": "mc2p/motion_nav/motion_worker.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.movement_transition",
+      "file": "mc2p/motion_nav/movement_transition.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.navigation_handoff",
+      "file": "mc2p/motion_nav/navigation_handoff.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.navigation_lifecycle",
+      "file": "mc2p/motion_nav/navigation_lifecycle.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.navigation_owners",
+      "file": "mc2p/motion_nav/navigation_owners.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.navigation_session",
+      "file": "mc2p/motion_nav/navigation_session.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.observed_block_adapter",
+      "file": "mc2p/motion_nav/observed_block_adapter.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.online_motion",
+      "file": "mc2p/motion_nav/online_motion.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.physics_1_21",
+      "file": "mc2p/motion_nav/physics_1_21.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.physics_adapter",
+      "file": "mc2p/motion_nav/physics_adapter.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.physics_rollout",
+      "file": "mc2p/motion_nav/physics_rollout.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.physics_types",
+      "file": "mc2p/motion_nav/physics_types.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.planner_worker",
+      "file": "mc2p/motion_nav/planner_worker.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.planning_coordinator",
+      "file": "mc2p/motion_nav/planning_coordinator.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.planning_reference",
+      "file": "mc2p/motion_nav/planning_reference.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.prepared_motion",
+      "file": "mc2p/motion_nav/prepared_motion.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.prepared_motion_proof",
+      "file": "mc2p/motion_nav/prepared_motion_proof.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.prepared_motion_validation",
+      "file": "mc2p/motion_nav/prepared_motion_validation.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.probe_body_controller",
+      "file": "mc2p/motion_nav/probe_body_controller.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.retry_ledger",
+      "file": "mc2p/motion_nav/retry_ledger.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.route_admission",
+      "file": "mc2p/motion_nav/route_admission.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.route_body_controller",
+      "file": "mc2p/motion_nav/route_body_controller.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.route_validation",
+      "file": "mc2p/motion_nav/route_validation.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.runtime_adapter",
+      "file": "mc2p/motion_nav/runtime_adapter.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.safe_ground_control",
+      "file": "mc2p/motion_nav/safe_ground_control.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.segment_entry",
+      "file": "mc2p/motion_nav/segment_entry.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.step_transition",
+      "file": "mc2p/motion_nav/step_transition.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.support_surfaces",
+      "file": "mc2p/motion_nav/support_surfaces.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.world_interaction",
+      "file": "mc2p/motion_nav/world_interaction.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.world_model",
+      "file": "mc2p/motion_nav/world_model.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.motion_nav.world_snapshot",
+      "file": "mc2p/motion_nav/world_snapshot.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.runtime",
+      "file": "mc2p/runtime/__init__.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.runtime.arbiter",
+      "file": "mc2p/runtime/arbiter.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.runtime.arbiter_v1",
+      "file": "mc2p/runtime/arbiter_v1.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.runtime.async_trace",
+      "file": "mc2p/runtime/async_trace.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.runtime.backend",
+      "file": "mc2p/runtime/backend.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.runtime.backend_v1",
+      "file": "mc2p/runtime/backend_v1.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.runtime.failure_disposition",
+      "file": "mc2p/runtime/failure_disposition.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.runtime.intent_sources",
+      "file": "mc2p/runtime/intent_sources.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.runtime.player_runtime",
+      "file": "mc2p/runtime/player_runtime.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.runtime.player_runtime_v1",
+      "file": "mc2p/runtime/player_runtime_v1.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.runtime.segmented_trace",
+      "file": "mc2p/runtime/segmented_trace.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.runtime.trace",
+      "file": "mc2p/runtime/trace.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.skills",
+      "file": "mc2p/skills/__init__.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.skills.attack_evidence",
+      "file": "mc2p/skills/attack_evidence.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.skills.block_geometry",
+      "file": "mc2p/skills/block_geometry.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.skills.block_placement_driver",
+      "file": "mc2p/skills/block_placement_driver.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.skills.combat_aim",
+      "file": "mc2p/skills/combat_aim.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.skills.fixed_melee",
+      "file": "mc2p/skills/fixed_melee.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.skills.follow_tracking",
+      "file": "mc2p/skills/follow_tracking.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.skills.follow_types",
+      "file": "mc2p/skills/follow_types.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.skills.known_world_follow_driver",
+      "file": "mc2p/skills/known_world_follow_driver.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.skills.local_navigation",
+      "file": "mc2p/skills/local_navigation.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.skills.local_perception",
+      "file": "mc2p/skills/local_perception.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.skills.melee_strike_driver",
+      "file": "mc2p/skills/melee_strike_driver.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.skills.motion_guard",
+      "file": "mc2p/skills/motion_guard.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.skills.navigation_evidence",
+      "file": "mc2p/skills/navigation_evidence.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.skills.navigation_look",
+      "file": "mc2p/skills/navigation_look.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.skills.navigation_session_driver",
+      "file": "mc2p/skills/navigation_session_driver.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.skills.navigation_views",
+      "file": "mc2p/skills/navigation_views.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.skills.perception_needs",
+      "file": "mc2p/skills/perception_needs.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.skills.targeting",
+      "file": "mc2p/skills/targeting.py",
+      "inside_export": true
+    },
+    {
+      "module": "mc2p.skills.world_change_navigation_driver",
+      "file": "mc2p/skills/world_change_navigation_driver.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.action_continuity_fabric_runtime",
+      "file": "scripts/action_continuity_fabric_runtime.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.action_entry_late_hardening",
+      "file": "scripts/action_entry_late_hardening.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.audit_d107_b10_trace",
+      "file": "scripts/audit_d107_b10_trace.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.b06_ordinary_material_runtime",
+      "file": "scripts/b06_ordinary_material_runtime.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.b10_gap_solver_runtime",
+      "file": "scripts/b10_gap_solver_runtime.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.benchmark_d061_long_session",
+      "file": "scripts/benchmark_d061_long_session.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.bounded_process",
+      "file": "scripts/bounded_process.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.build_fabric_deployment_probe",
+      "file": "scripts/build_fabric_deployment_probe.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.calibrate_b02_ground_motion",
+      "file": "scripts/calibrate_b02_ground_motion.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.client_time_evidence",
+      "file": "scripts/client_time_evidence.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.continuous_height_runtime",
+      "file": "scripts/continuous_height_runtime.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.control_probe_core",
+      "file": "scripts/control_probe_core.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.d105_ftick",
+      "file": "scripts/d105_ftick.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.export_b06_block_registry",
+      "file": "scripts/export_b06_block_registry.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.export_motion_navigation_standalone",
+      "file": "scripts/export_motion_navigation_standalone.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.f1_known_world_following_fabric",
+      "file": "scripts/f1_known_world_following_fabric.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.f2_ground_route_evidence",
+      "file": "scripts/f2_ground_route_evidence.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.f2_ground_route_quality",
+      "file": "scripts/f2_ground_route_quality.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.f2_ground_route_runtime",
+      "file": "scripts/f2_ground_route_runtime.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.fabric_container_scenario",
+      "file": "scripts/fabric_container_scenario.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.fabric_deployment_launch",
+      "file": "scripts/fabric_deployment_launch.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.fabric_deployment_sandbox",
+      "file": "scripts/fabric_deployment_sandbox.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.fabric_runtime_smoke_evidence",
+      "file": "scripts/fabric_runtime_smoke_evidence.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.fixed_route_runtime_core",
+      "file": "scripts/fixed_route_runtime_core.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.follow_evidence",
+      "file": "scripts/follow_evidence.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.follow_fixture_world",
+      "file": "scripts/follow_fixture_world.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.follow_runtime_host",
+      "file": "scripts/follow_runtime_host.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.formal_observation_v3_evidence",
+      "file": "scripts/formal_observation_v3_evidence.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.formal_observation_v3_trace",
+      "file": "scripts/formal_observation_v3_trace.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.jump_up_calibration_runtime",
+      "file": "scripts/jump_up_calibration_runtime.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.measure_d098_trial_windows",
+      "file": "scripts/measure_d098_trial_windows.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.navigation_coordination_metrics",
+      "file": "scripts/navigation_coordination_metrics.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.navigation_dead_path_probe",
+      "file": "scripts/navigation_dead_path_probe.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.navigation_design_metrics",
+      "file": "scripts/navigation_design_metrics.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.navigation_layer_live_demo",
+      "file": "scripts/navigation_layer_live_demo.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.navigation_migration_evidence",
+      "file": "scripts/navigation_migration_evidence.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.navigation_s0r_evidence",
+      "file": "scripts/navigation_s0r_evidence.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.navigation_structure_baseline",
+      "file": "scripts/navigation_structure_baseline.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.navigation_structure_inventory",
+      "file": "scripts/navigation_structure_inventory.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.navigation_structure_paths",
+      "file": "scripts/navigation_structure_paths.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.probe_fabric_deployment_observation",
+      "file": "scripts/probe_fabric_deployment_observation.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.process_tree",
+      "file": "scripts/process_tree.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.r25_planning_information_runtime",
+      "file": "scripts/r25_planning_information_runtime.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.r28_baseline_alignment",
+      "file": "scripts/r28_baseline_alignment.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.r28_product_fabric_runtime",
+      "file": "scripts/r28_product_fabric_runtime.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.run_action_continuity_fabric",
+      "file": "scripts/run_action_continuity_fabric.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.run_continuous_height_matrix",
+      "file": "scripts/run_continuous_height_matrix.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.run_motion_nav_shards",
+      "file": "scripts/run_motion_nav_shards.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.step_transition_runtime",
+      "file": "scripts/step_transition_runtime.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.streaming_time_evidence",
+      "file": "scripts/streaming_time_evidence.py",
+      "inside_export": true
+    },
+    {
+      "module": "scripts.visibility_fixture_world",
+      "file": "scripts/visibility_fixture_world.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.d102_contract_cases",
+      "file": "tests/motion_nav/d102_contract_cases.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_action_continuity_admission",
+      "file": "tests/motion_nav/test_action_continuity_admission.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_action_continuity_fabric_options",
+      "file": "tests/motion_nav/test_action_continuity_fabric_options.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_action_continuity_formal",
+      "file": "tests/motion_nav/test_action_continuity_formal.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_action_continuity_solver_limits",
+      "file": "tests/motion_nav/test_action_continuity_solver_limits.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_action_controller_adapter",
+      "file": "tests/motion_nav/test_action_controller_adapter.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_action_entry_handoff_repair",
+      "file": "tests/motion_nav/test_action_entry_handoff_repair.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_action_entry_late_hardening",
+      "file": "tests/motion_nav/test_action_entry_late_hardening.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_action_preconditions",
+      "file": "tests/motion_nav/test_action_preconditions.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_action_spec_boundaries",
+      "file": "tests/motion_nav/test_action_spec_boundaries.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_action_spec_integration",
+      "file": "tests/motion_nav/test_action_spec_integration.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_action_specs",
+      "file": "tests/motion_nav/test_action_specs.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_air_transition_solver",
+      "file": "tests/motion_nav/test_air_transition_solver.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_async_gap_revalidation_delivery",
+      "file": "tests/motion_nav/test_async_gap_revalidation_delivery.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_async_work_verification",
+      "file": "tests/motion_nav/test_async_work_verification.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b02_geometry_acceptance",
+      "file": "tests/motion_nav/test_b02_geometry_acceptance.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b06_block_motion_traits",
+      "file": "tests/motion_nav/test_b06_block_motion_traits.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b06_environment_identity",
+      "file": "tests/motion_nav/test_b06_environment_identity.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b06_fabric_material_probe",
+      "file": "tests/motion_nav/test_b06_fabric_material_probe.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b06_movement_contracts",
+      "file": "tests/motion_nav/test_b06_movement_contracts.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b06_ordinary_profiles",
+      "file": "tests/motion_nav/test_b06_ordinary_profiles.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b06_registry_export",
+      "file": "tests/motion_nav/test_b06_registry_export.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b07_shape_matrix",
+      "file": "tests/motion_nav/test_b07_shape_matrix.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b07_step_route",
+      "file": "tests/motion_nav/test_b07_step_route.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b07_step_runtime",
+      "file": "tests/motion_nav/test_b07_step_runtime.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b07_step_transition",
+      "file": "tests/motion_nav/test_b07_step_transition.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b07_support_surfaces",
+      "file": "tests/motion_nav/test_b07_support_surfaces.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b07_surface_planning",
+      "file": "tests/motion_nav/test_b07_surface_planning.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b08_ground_modes",
+      "file": "tests/motion_nav/test_b08_ground_modes.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b09_air_transitions",
+      "file": "tests/motion_nav/test_b09_air_transitions.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b09r_physics_contracts",
+      "file": "tests/motion_nav/test_b09r_physics_contracts.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b09r_physics_rollout",
+      "file": "tests/motion_nav/test_b09r_physics_rollout.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b09r_physics_step",
+      "file": "tests/motion_nav/test_b09r_physics_step.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b09r_physics_validation",
+      "file": "tests/motion_nav/test_b09r_physics_validation.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b10_foundation_tools",
+      "file": "tests/motion_nav/test_b10_foundation_tools.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b10_gap_solver",
+      "file": "tests/motion_nav/test_b10_gap_solver.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b10_motion_candidate",
+      "file": "tests/motion_nav/test_b10_motion_candidate.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b10_motion_worker",
+      "file": "tests/motion_nav/test_b10_motion_worker.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b10_online_motion",
+      "file": "tests/motion_nav/test_b10_online_motion.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b11_block_placement",
+      "file": "tests/motion_nav/test_b11_block_placement.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b11_bridge_planning",
+      "file": "tests/motion_nav/test_b11_bridge_planning.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_b11_world_change_navigation",
+      "file": "tests/motion_nav/test_b11_world_change_navigation.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_continuous_descent",
+      "file": "tests/motion_nav/test_continuous_descent.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_continuous_height_execution",
+      "file": "tests/motion_nav/test_continuous_height_execution.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_continuous_height_full_matrix",
+      "file": "tests/motion_nav/test_continuous_height_full_matrix.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_continuous_height_planning",
+      "file": "tests/motion_nav/test_continuous_height_planning.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d057_route_prefix",
+      "file": "tests/motion_nav/test_d057_route_prefix.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d058_route_revalidation_benchmark",
+      "file": "tests/motion_nav/test_d058_route_revalidation_benchmark.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d058_runtime_validation",
+      "file": "tests/motion_nav/test_d058_runtime_validation.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d058_validation_plan",
+      "file": "tests/motion_nav/test_d058_validation_plan.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d059_consumers_and_identity",
+      "file": "tests/motion_nav/test_d059_consumers_and_identity.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d059_terminal_selection_dependencies",
+      "file": "tests/motion_nav/test_d059_terminal_selection_dependencies.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d059_validation_diagnostics",
+      "file": "tests/motion_nav/test_d059_validation_diagnostics.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d060_terminal_node_exact_proof",
+      "file": "tests/motion_nav/test_d060_terminal_node_exact_proof.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d061_long_session_benchmark",
+      "file": "tests/motion_nav/test_d061_long_session_benchmark.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d062_direct_walk_validation",
+      "file": "tests/motion_nav/test_d062_direct_walk_validation.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d063_goal_surface_information",
+      "file": "tests/motion_nav/test_d063_goal_surface_information.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d064_ground_direct_handoff",
+      "file": "tests/motion_nav/test_d064_ground_direct_handoff.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d094_fabric_timing_metric",
+      "file": "tests/motion_nav/test_d094_fabric_timing_metric.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d098_windows_trial_wrapper",
+      "file": "tests/motion_nav/test_d098_windows_trial_wrapper.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d101_continuous_probe",
+      "file": "tests/motion_nav/test_d101_continuous_probe.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d101_input_stream",
+      "file": "tests/motion_nav/test_d101_input_stream.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d101_measurement",
+      "file": "tests/motion_nav/test_d101_measurement.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d102_action_handoff",
+      "file": "tests/motion_nav/test_d102_action_handoff.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d102_contract_red",
+      "file": "tests/motion_nav/test_d102_contract_red.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d102_contracts",
+      "file": "tests/motion_nav/test_d102_contracts.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d102_prepared_proof",
+      "file": "tests/motion_nav/test_d102_prepared_proof.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d102_receiver",
+      "file": "tests/motion_nav/test_d102_receiver.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d102_registry_lifecycle",
+      "file": "tests/motion_nav/test_d102_registry_lifecycle.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d102_runtime_activation",
+      "file": "tests/motion_nav/test_d102_runtime_activation.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d102_windows_matrix",
+      "file": "tests/motion_nav/test_d102_windows_matrix.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d102_world_snapshot",
+      "file": "tests/motion_nav/test_d102_world_snapshot.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d103_observation_hot_path",
+      "file": "tests/motion_nav/test_d103_observation_hot_path.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d105_ftick",
+      "file": "tests/motion_nav/test_d105_ftick.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d105_receiver_trust_boundary",
+      "file": "tests/motion_nav/test_d105_receiver_trust_boundary.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d105_sound_sparse_m0",
+      "file": "tests/motion_nav/test_d105_sound_sparse_m0.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d105_t2_evidence",
+      "file": "tests/motion_nav/test_d105_t2_evidence.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d106_local_snapshot",
+      "file": "tests/motion_nav/test_d106_local_snapshot.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d107_b10_trace_audit",
+      "file": "tests/motion_nav/test_d107_b10_trace_audit.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d107_shard_runner",
+      "file": "tests/motion_nav/test_d107_shard_runner.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d108_receiver_tick_delivery",
+      "file": "tests/motion_nav/test_d108_receiver_tick_delivery.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_d108_snapshot_materialization",
+      "file": "tests/motion_nav/test_d108_snapshot_materialization.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_execution_supervisor",
+      "file": "tests/motion_nav/test_execution_supervisor.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_external_motion",
+      "file": "tests/motion_nav/test_external_motion.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_external_motion_recovery",
+      "file": "tests/motion_nav/test_external_motion_recovery.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_f1_known_world_following",
+      "file": "tests/motion_nav/test_f1_known_world_following.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_f1_known_world_following_fabric",
+      "file": "tests/motion_nav/test_f1_known_world_following_fabric.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_f2_ground_completion_region",
+      "file": "tests/motion_nav/test_f2_ground_completion_region.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_f2_ground_route_gates",
+      "file": "tests/motion_nav/test_f2_ground_route_gates.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_f2_ground_start_window",
+      "file": "tests/motion_nav/test_f2_ground_start_window.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_f2_non_center_ground_route",
+      "file": "tests/motion_nav/test_f2_non_center_ground_route.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_f2r_piecewise_completion",
+      "file": "tests/motion_nav/test_f2r_piecewise_completion.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_f2rec_r0_baseline",
+      "file": "tests/motion_nav/test_f2rec_r0_baseline.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_f2rec_r1_region_geometry",
+      "file": "tests/motion_nav/test_f2rec_r1_region_geometry.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_f2rec_r2_goal_selection",
+      "file": "tests/motion_nav/test_f2rec_r2_goal_selection.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_f2rec_r3_cleanup",
+      "file": "tests/motion_nav/test_f2rec_r3_cleanup.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_f2rec_r4_recovery",
+      "file": "tests/motion_nav/test_f2rec_r4_recovery.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_fixed_route_walk",
+      "file": "tests/motion_nav/test_fixed_route_walk.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_goal_reach_policy",
+      "file": "tests/motion_nav/test_goal_reach_policy.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_ground_calibration",
+      "file": "tests/motion_nav/test_ground_calibration.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_ground_continuation_quality",
+      "file": "tests/motion_nav/test_ground_continuation_quality.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_ground_motion",
+      "file": "tests/motion_nav/test_ground_motion.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_ground_traversal",
+      "file": "tests/motion_nav/test_ground_traversal.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_incremental_motion_closed_loop",
+      "file": "tests/motion_nav/test_incremental_motion_closed_loop.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_incremental_motion_closed_loop_measurement",
+      "file": "tests/motion_nav/test_incremental_motion_closed_loop_measurement.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_incremental_motion_controller",
+      "file": "tests/motion_nav/test_incremental_motion_controller.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_incremental_motion_performance",
+      "file": "tests/motion_nav/test_incremental_motion_performance.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_incremental_motion_proof",
+      "file": "tests/motion_nav/test_incremental_motion_proof.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_incremental_motion_table",
+      "file": "tests/motion_nav/test_incremental_motion_table.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_inline_planning_clock",
+      "file": "tests/motion_nav/test_inline_planning_clock.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_input_responsibility",
+      "file": "tests/motion_nav/test_input_responsibility.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_jump_up",
+      "file": "tests/motion_nav/test_jump_up.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_jump_up_calibration",
+      "file": "tests/motion_nav/test_jump_up_calibration.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_known_map_planning",
+      "file": "tests/motion_nav/test_known_map_planning.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_known_world_follow_driver",
+      "file": "tests/motion_nav/test_known_world_follow_driver.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_motion_baseline_recovery",
+      "file": "tests/motion_nav/test_motion_baseline_recovery.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_motion_benchmarks",
+      "file": "tests/motion_nav/test_motion_benchmarks.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_motion_continuation_quality",
+      "file": "tests/motion_nav/test_motion_continuation_quality.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_motion_residual",
+      "file": "tests/motion_nav/test_motion_residual.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_motion_risk",
+      "file": "tests/motion_nav/test_motion_risk.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_motion_start_delivery",
+      "file": "tests/motion_nav/test_motion_start_delivery.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_closed_loop",
+      "file": "tests/motion_nav/test_navigation_closed_loop.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_dead_path_probe",
+      "file": "tests/motion_nav/test_navigation_dead_path_probe.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_design_metrics",
+      "file": "tests/motion_nav/test_navigation_design_metrics.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_event_sequences",
+      "file": "tests/motion_nav/test_navigation_event_sequences.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_handoff",
+      "file": "tests/motion_nav/test_navigation_handoff.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_interrupt_matrix",
+      "file": "tests/motion_nav/test_navigation_interrupt_matrix.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_layer_live",
+      "file": "tests/motion_nav/test_navigation_layer_live.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_lifecycle",
+      "file": "tests/motion_nav/test_navigation_lifecycle.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_owners",
+      "file": "tests/motion_nav/test_navigation_owners.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_product_delivery",
+      "file": "tests/motion_nav/test_navigation_product_delivery.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_product_metrics",
+      "file": "tests/motion_nav/test_navigation_product_metrics.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_replay_known_map",
+      "file": "tests/motion_nav/test_navigation_replay_known_map.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_route_handoff",
+      "file": "tests/motion_nav/test_navigation_route_handoff.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_seed_scan",
+      "file": "tests/motion_nav/test_navigation_seed_scan.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_session",
+      "file": "tests/motion_nav/test_navigation_session.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_structure_baseline",
+      "file": "tests/motion_nav/test_navigation_structure_baseline.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_supervised_interruptions",
+      "file": "tests/motion_nav/test_navigation_supervised_interruptions.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_package_boundaries",
+      "file": "tests/motion_nav/test_package_boundaries.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_planner_worker",
+      "file": "tests/motion_nav/test_planner_worker.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_planning_coordinator",
+      "file": "tests/motion_nav/test_planning_coordinator.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_planning_ownership_gate",
+      "file": "tests/motion_nav/test_planning_ownership_gate.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_post_input_loss_landing_recovery",
+      "file": "tests/motion_nav/test_post_input_loss_landing_recovery.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_probe_handoff_resolution",
+      "file": "tests/motion_nav/test_probe_handoff_resolution.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_public_repository_completeness",
+      "file": "tests/motion_nav/test_public_repository_completeness.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r27_async_admission",
+      "file": "tests/motion_nav/test_r27_async_admission.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_async_generation",
+      "file": "tests/motion_nav/test_r28_async_generation.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_baseline_alignment",
+      "file": "tests/motion_nav/test_r28_baseline_alignment.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_corner_progress",
+      "file": "tests/motion_nav/test_r28_corner_progress.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_dual_planning",
+      "file": "tests/motion_nav/test_r28_dual_planning.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_generation_formal_chain",
+      "file": "tests/motion_nav/test_r28_generation_formal_chain.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_information_planning_updates",
+      "file": "tests/motion_nav/test_r28_information_planning_updates.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_migration_faults",
+      "file": "tests/motion_nav/test_r28_migration_faults.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_persistent_budget_formal",
+      "file": "tests/motion_nav/test_r28_persistent_budget_formal.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_planning_failure_handoff",
+      "file": "tests/motion_nav/test_r28_planning_failure_handoff.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_planning_history",
+      "file": "tests/motion_nav/test_r28_planning_history.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_planning_retry_successor",
+      "file": "tests/motion_nav/test_r28_planning_retry_successor.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_product_repairs",
+      "file": "tests/motion_nav/test_r28_product_repairs.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_reanchor_handoff",
+      "file": "tests/motion_nav/test_r28_reanchor_handoff.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_screening_retirement",
+      "file": "tests/motion_nav/test_r28_screening_retirement.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_shared_recovery",
+      "file": "tests/motion_nav/test_r28_shared_recovery.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_terminal_approach",
+      "file": "tests/motion_nav/test_r28_terminal_approach.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_r28_world_change_retirement",
+      "file": "tests/motion_nav/test_r28_world_change_retirement.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_reference_baselines",
+      "file": "tests/motion_nav/test_reference_baselines.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_reference_evidence",
+      "file": "tests/motion_nav/test_reference_evidence.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_retry_ledger",
+      "file": "tests/motion_nav/test_retry_ledger.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_route_body_advance",
+      "file": "tests/motion_nav/test_route_body_advance.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_runtime_adapter",
+      "file": "tests/motion_nav/test_runtime_adapter.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_runtime_backend_io",
+      "file": "tests/motion_nav/test_runtime_backend_io.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_runtime_navigation_driver_state",
+      "file": "tests/motion_nav/test_runtime_navigation_driver_state.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_runtime_navigation_state_consumers",
+      "file": "tests/motion_nav/test_runtime_navigation_state_consumers.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_runtime_navigation_verified_handoff",
+      "file": "tests/motion_nav/test_runtime_navigation_verified_handoff.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_s0r_evidence",
+      "file": "tests/motion_nav/test_s0r_evidence.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_segment_entry",
+      "file": "tests/motion_nav/test_segment_entry.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_shape_trials",
+      "file": "tests/motion_nav/test_shape_trials.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_sim_visual_air_query_short_circuit",
+      "file": "tests/motion_nav/test_sim_visual_air_query_short_circuit.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_simulation_isolation",
+      "file": "tests/motion_nav/test_simulation_isolation.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_sound_sparse_motion_proof_d105",
+      "file": "tests/motion_nav/test_sound_sparse_motion_proof_d105.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_standalone_export",
+      "file": "tests/motion_nav/test_standalone_export.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_task_risk_ledger",
+      "file": "tests/motion_nav/test_task_risk_ledger.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_trajectory_proto_commitment",
+      "file": "tests/motion_nav/test_trajectory_proto_commitment.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_trajectory_proto_contracts",
+      "file": "tests/motion_nav/test_trajectory_proto_contracts.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_trajectory_proto_m0_probe",
+      "file": "tests/motion_nav/test_trajectory_proto_m0_probe.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_trajectory_proto_primitive_matrix",
+      "file": "tests/motion_nav/test_trajectory_proto_primitive_matrix.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_trajectory_proto_reference_search",
+      "file": "tests/motion_nav/test_trajectory_proto_reference_search.py",
+      "inside_export": true
+    },
+    {
+      "module": "tests.motion_nav.test_world_knowledge_geometry",
+      "file": "tests/motion_nav/test_world_knowledge_geometry.py",
+      "inside_export": true
+    }
+  ]
+}

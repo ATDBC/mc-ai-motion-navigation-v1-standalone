@@ -227,3 +227,11 @@ HANDOFF-H-02 已由 D094 的同面着地补走关闭，两个落点族继续以�
 | TP5A-S-01 | 覆盖边界 | seen只按nominal完整状态合并；相同nominal状态的前缀可得到不同late状态和结果 | 不列为第三项交付阻塞；可能丢失晚支轨迹或历史资格，不把它说成双支安全支配证明，也未证明默认三族因去重丢解 |
 
 Task5A已停止、未签署，P0未通过；不进入5B。完整18族搜索、runner、正式Windows性能量尺及TP-P1—TP-P4均未开始。候选源码、原报告、独立审查和Task4历史证据保留。后续重新实施须由用户明确授权并冻结范围，原两周时间盒不重置。
+
+### D108 新登记缺陷（2026-10-15）
+
+| 编号 | 严重度 | 当前事实 | 当前处理 |
+|---|---|---|---|
+| D108-C-01 | P1 | B10 旧 R4 带速入口在控制帧 3192 触发 Runtime `deadline_exceeded`；40 个 F-TICK validation 在此之前均已通过 | 原始 Fabric 目录、manifest 和哈希保留。D108 不修改运动逻辑；恢复 B10 前单独做根因阶段 |
+| D108-C-02 | P1 | 失败清理在 Runtime 已非 READY 时继续注销来源，抛出 `formal Runtime must be ready`，覆盖 D108-C-01 的主失败，并留下 ordered source | 清理必须保留 primary failure，再单列 cleanup failure，并在 Runtime 失败后有界释放来源；本阶段只登记，不把外层错误当作原始根因 |
+| D108-C-03 | P2 | `BoundedAsyncTraceWriter.close()` 使用阻塞 `queue.put()` 发送停止标记，随后无期限 `join()`；队列或 sink 卡住时，owner 收尾没有有界期限 | 本轮只登记生命周期债，不改 trace 协议。后续应改成有界停止与有界 join，并分别保留主失败和收尾失败 |

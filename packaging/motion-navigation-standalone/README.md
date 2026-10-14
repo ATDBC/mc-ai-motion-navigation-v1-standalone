@@ -2,6 +2,8 @@
 
 这个仓库是主项目按固定清单生成的源码快照。它包含当前正式实现、共享契约、配置、测试、Fabric 客户端代码和四类现行设计文档。`EXPORT-METADATA.json` 记录来源提交，`SHA256SUMS.txt` 覆盖导出的每个文件。
 
+2026-10-15，D108 的 A1—A5-R3 已完成，但 B10 不退步门槛未关闭。观察更新与不可变 section 物化已经分开；借用只处理相关范围。分片器能有界终止登记的进程树。B10 的六类 JSONL、Runtime trace 和 F-TICK 已移出控制 tick 的同步写盘路径；receiver 诊断默认关闭。现有协议测量“receiver 观察 → 注册发布 → 控制消费”，不能测 worker 实际完成时刻。A5-R3 让 receiver 去重集合只登记真正进入有界缓冲的记录，并把旧 A5 的含混 ready 字段标为 legacy。最近一次完整结果仍是 A5-R2：Windows 主源码正逆各 186／186 个模块、2307 项，本公开快照正逆各 185／185 个模块、2283 项。Linux 动态生命周期矩阵仍待三方复核。去掉同步文件 I/O 后，B10 仍在约 3200 个游戏 tick 后触发旧 `deadline_exceeded`，清理又覆盖原始错误并留下 ordered source；原始失败已保留，本阶段没有修改运动逻辑。当前入口为 [D108](docs/motion_navigation/decisions/0108-separate-world-invalidation-from-snapshot-materialization.md)、[计划](docs/motion_navigation/stages/d108-snapshot-and-bounded-verification-hardening-plan.md)、[验收](docs/motion_navigation/acceptance/d108-snapshot-and-bounded-verification-hardening.md)和 `evidence/motion_navigation/d108-snapshot-hardening-v1/`。
+
 2026-10-14，D107 已完成。D103 留下的观察热路径和异步测试回归已经关闭：F1 缩短场景由约 182 ms/tick 降至 14.57 ms/tick；同语义观察只更新证据，不再重建约 3,400 格的不可变 section；几何变化仍立即重建并使旧依赖失效。计划登记的 11 个回归模块全部恢复。Windows 正序、逆序各运行 184／184 个独立模块、2264 项检查，零失败、错误、超时和跳过。D106 的 R1／R4 停止结论保持不变，现有 trace 不能证明 D103 性能回归导致 B10 跨 tick。当前入口为 [D107](docs/motion_navigation/decisions/0107-repair-d103-regressions-before-new-motion-work.md)、[阶段](docs/motion_navigation/stages/d103-regression-recovery-plan.md)、[验收](docs/motion_navigation/acceptance/d103-regression-recovery.md)和 `evidence/motion_navigation/d107-regression-recovery-v1/`。
 
 2026-10-14，D106 已部分完成并停止。T1-R 去掉重复证明摘要后保持功能、安全和摘要一致，但 Windows M0 P99 为 16.5732 ms，仍未达到 15 ms，R1 **FAILED／STOPPED**，方案 B 未实施。R2 已把 G2 的调用计数与无 profile 性能计时拆开并通过。R3 已证明现有 UNKNOWN 与依赖复核足以让局部快照保守失败，没有修改生产代码。R4 的第二轮 Fabric 取得 40／40 `NEXT_MOVEMENT_TICK`，但随后旧 B10 移动入口夹具在一次观察跨两个 movement tick 时没有进入 `(0.5, 1.0)` 速度带，因此 R4 **FAILED／STOPPED**。该失败发生在动作求解前，身体全程安全。连续两跳、零等待交接、T2-3 和新动作仍未授权。现行入口为 [D106](docs/motion_navigation/decisions/0106-repair-d105-cost-measurement-and-tick-diagnostics.md)、[阶段](docs/motion_navigation/stages/d105-cost-measurement-and-tick-remediation-plan.md)、[验收](docs/motion_navigation/acceptance/d105-cost-measurement-and-tick-remediation.md)和 `evidence/motion_navigation/sound-motion-proof-d106-v1/`。
@@ -22,7 +24,7 @@ D102 的公开证据只包含紧凑失败索引、D102／D103 前置试验和可
 
 2026-10-11，D098 的隔离实验已经停止于 P3。Windows 原样复测与三方 D097-A 的 1,423,766 条非计时样本逐项一致；项目自有控制器、冻结表、可信轨迹、增量伤害、主轨迹复用和 24-step 分摊已经完成。P3 滚动闭环最终运行 37 个场景各 3 轮，共 1,338 个完整决定；P50／P95／P99／最大值为 0.2521／15.8503／19.8099／20.0919 ms。所有 1,227 次后端推进均有 owner、实验账本和许可来源，但承诺后恢复为 0／27，并有 54 次身体责任未解决和 6 次伤害额度超出。因此 P3 未通过，P4 和正式链适配未授权；`mc2p` 没有修改，也没有新的 Fabric 结论。
 
-当前先读 D107、对应阶段与验收，再按需追溯 D106、D105、D104 和 D103 的历史止损。需要追溯连续运动设计时，再读 [D101](docs/motion_navigation/decisions/0101-clarify-short-open-loop-timing-and-lifecycle.md)、[D100](docs/motion_navigation/decisions/0100-use-risk-aware-continuous-deviation-recovery.md)、[按风险连续运动架构](docs/motion_navigation/architecture/risk-aware-continuous-motion-v1.md)、[D099](docs/motion_navigation/decisions/0099-adopt-game-first-risk-graded-short-open-loop-control.md)和 [D098](docs/motion_navigation/decisions/0098-validate-and-optimize-incremental-motion-proof-on-windows.md)。P1—P3 的历史隔离实验检查可以运行：
+当前先读 D108、对应计划与验收，再按需追溯 D107—D103 的历史止损。需要追溯连续运动设计时，再读 [D101](docs/motion_navigation/decisions/0101-clarify-short-open-loop-timing-and-lifecycle.md)、[D100](docs/motion_navigation/decisions/0100-use-risk-aware-continuous-deviation-recovery.md)、[按风险连续运动架构](docs/motion_navigation/architecture/risk-aware-continuous-motion-v1.md)、[D099](docs/motion_navigation/decisions/0099-adopt-game-first-risk-graded-short-open-loop-control.md)和 [D098](docs/motion_navigation/decisions/0098-validate-and-optimize-incremental-motion-proof-on-windows.md)。P1—P3 的历史隔离实验检查可以运行：
 
 ```text
 python -m unittest tests.motion_nav.test_incremental_motion_controller tests.motion_nav.test_incremental_motion_table tests.motion_nav.test_incremental_motion_proof tests.motion_nav.test_incremental_motion_performance tests.motion_nav.test_incremental_motion_closed_loop tests.motion_nav.test_incremental_motion_closed_loop_measurement -q
@@ -85,9 +87,9 @@ Windows 是正式开发、自动验收和 Fabric 实机平台；Linux 仅用于�
 ## 先读什么
 
 1. `AGENTS.md`
-2. [F2REC 阶段](docs/motion_navigation/stages/F2REC-rebuild-from-f2r.md)
-3. [F2REC 验收](docs/motion_navigation/acceptance/F2REC-rebuild-from-f2r.md)、[D090](docs/motion_navigation/decisions/0090-rebuild-main-from-f2r-and-recover-only-validated-parts.md)和 [D091](docs/motion_navigation/decisions/0091-sign-region-geometry-and-defer-column-top-handoff.md)
-4. `docs/motion_navigation/architecture/continuous-ground-route-execution-v1.md` 和 D074；基础历史见 [F2 阶段](docs/motion_navigation/stages/F2-non-center-ground-route-execution.md)与 [F2 验收](docs/motion_navigation/acceptance/F2-non-center-ground-route-execution.md)。
+2. [D108 计划](docs/motion_navigation/stages/d108-snapshot-and-bounded-verification-hardening-plan.md)
+3. [D108 验收](docs/motion_navigation/acceptance/d108-snapshot-and-bounded-verification-hardening.md)和 [D108 决定](docs/motion_navigation/decisions/0108-separate-world-invalidation-from-snapshot-materialization.md)
+4. 需要追溯产品能力时再读 F2REC、连续地面路线和对应历史验收。
 5. `docs/motion_navigation/architecture/navigation-coordination-v1.md`（第 17 节包含当前 R28 目标和已实施的持续目标语义）
 6. 当前实现和证据读 R27 阶段文档、`navigation-coordination-refactor.md` 第 20 节与 `defect-ledger.md`。
 7. 连续高度与物理范围读 M3、B09-R、B10 的对应 architecture 和 acceptance。

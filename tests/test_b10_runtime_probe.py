@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import replace
 import inspect
+from pathlib import Path
+import tempfile
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -249,20 +251,21 @@ class B10RuntimeProbeTests(unittest.TestCase):
         planner.__enter__.return_value = planner
         motion.__enter__.return_value = motion
         expected = object()
-        with (
-            patch.object(probe, "PlannerWorker", return_value=planner, create=True),
-            patch.object(probe, "MotionSolverWorker", return_value=motion, create=True),
-            patch.object(
-                probe,
-                "_run_b10_gap_solver_runtime",
-                return_value=expected,
-                create=True,
-            ) as delegated,
-        ):
-            actual = probe.run_b10_gap_solver_runtime(
-                runtime, object(), "episode", object(), 1,
-                lambda *_: None, lambda *_: None,
-            )
+        with tempfile.TemporaryDirectory() as temporary:
+            with (
+                patch.object(probe, "PlannerWorker", return_value=planner, create=True),
+                patch.object(probe, "MotionSolverWorker", return_value=motion, create=True),
+                patch.object(
+                    probe,
+                    "_run_b10_gap_solver_runtime",
+                    return_value=expected,
+                    create=True,
+                ) as delegated,
+            ):
+                actual = probe.run_b10_gap_solver_runtime(
+                    runtime, object(), "episode", Path(temporary), 1,
+                    lambda *_: None, lambda *_: None,
+                )
 
         self.assertIs(actual, expected)
         runtime.register_ordered_source.assert_called_once_with("b10-gap-solver")
@@ -280,20 +283,21 @@ class B10RuntimeProbeTests(unittest.TestCase):
         runtime.register_ordered_source.return_value = source
         planner.__enter__.return_value = planner
         motion.__enter__.return_value = motion
-        with (
-            patch.object(probe, "PlannerWorker", return_value=planner),
-            patch.object(probe, "MotionSolverWorker", return_value=motion),
-            patch.object(
-                probe,
-                "_run_b10_gap_solver_runtime",
-                side_effect=RuntimeError("fixture failure"),
-            ),
-            self.assertRaisesRegex(RuntimeError, "fixture failure"),
-        ):
-            probe.run_b10_gap_solver_runtime(
-                runtime, object(), "episode", object(), 1,
-                lambda *_: None, lambda *_: None,
-            )
+        with tempfile.TemporaryDirectory() as temporary:
+            with (
+                patch.object(probe, "PlannerWorker", return_value=planner),
+                patch.object(probe, "MotionSolverWorker", return_value=motion),
+                patch.object(
+                    probe,
+                    "_run_b10_gap_solver_runtime",
+                    side_effect=RuntimeError("fixture failure"),
+                ),
+                self.assertRaisesRegex(RuntimeError, "fixture failure"),
+            ):
+                probe.run_b10_gap_solver_runtime(
+                    runtime, object(), "episode", Path(temporary), 1,
+                    lambda *_: None, lambda *_: None,
+                )
 
         runtime.unregister_ordered_source.assert_called_once_with(source)
 

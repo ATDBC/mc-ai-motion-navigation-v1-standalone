@@ -15,6 +15,7 @@ if __package__ in {None, ""}:
 
 from mc2p.runtime.segmented_trace import iter_segmented_jsonl
 from scripts.control_probe_core import write_json_atomic
+from scripts.b10_gap_solver_runtime import _receiver_diagnostic_summary
 
 
 _DIRECTION_NAMES = ("south", "east", "north", "west")
@@ -360,6 +361,18 @@ def analyze_run(run_dir: Path) -> dict:
         ordered_source_release_status=source_release_status,
         failures=failures,
     )
+    receiver_path = client / "b10-receiver-diagnostics.jsonl"
+    if receiver_path.is_file():
+        receiver_rows = list(_jsonl(receiver_path))
+        summary["receiver_diagnostics"] = _receiver_diagnostic_summary(
+            receiver_rows,
+        )
+    else:
+        summary["receiver_diagnostics"] = {
+            "schema_version": "mc2p.b10-receiver-diagnostic-summary.v1",
+            "status": "unavailable",
+            "reason": "b10_receiver_diagnostics_missing",
+        }
     return summary
 
 
@@ -406,6 +419,7 @@ def write_evidence(output: Path, summary: dict, *, command: list[str],
             run / "result.json",
             run / "supervision.json",
             run / "client-0/b10-gap-solver-trials.jsonl",
+            run / "client-0/b10-receiver-diagnostics.jsonl",
             run / "client-0/trace.jsonl",
             run / "client-0/ftick-events/complete.json",
             run / "client-0/ftick-events/manifest.jsonl",

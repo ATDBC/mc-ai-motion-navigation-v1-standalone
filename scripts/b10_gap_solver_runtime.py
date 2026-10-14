@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, replace
+import json
 import math
 from pathlib import Path
 import time
-from typing import Callable
+from typing import Callable, Mapping
 
 from mc2p.contracts.action import ActionPriorityV0
 from mc2p.contracts.action_receipt import ClientBehaviorReceiptV3
@@ -54,7 +55,11 @@ from mc2p.motion_nav.movement_transition import ResourceState
 from mc2p.motion_nav.step_transition import load_step_profile
 from mc2p.motion_nav.support_surfaces import query_support_surfaces
 from mc2p.motion_nav.world_model import CellKnowledge
-from scripts.control_probe_core import append_jsonl, write_json_atomic
+from scripts.control_probe_core import (
+    strict_json_dumps,
+    write_json_atomic,
+    write_jsonl_atomic,
+)
 
 
 _SOURCE = "b10-gap-solver"
@@ -80,6 +85,180 @@ _STATE_ASSUMPTIONS = dict(
     gravity_attribute=.08,
     jump_strength_attribute=.42,
 )
+
+
+class _B10EvidenceOverflow(RuntimeError):
+    """The bounded B10 evidence buffer could not retain every row."""
+
+
+@dataclass(frozen=True, slots=True)
+class _B10StreamSpec:
+    max_rows: int
+    max_bytes: int
+    max_record_bytes: int
+
+    def __post_init__(self) -> None:
+        if type(self.max_rows) is not int or self.max_rows <= 0:
+            raise ValueError("B10 stream max_rows must be positive")
+        if type(self.max_bytes) is not int or self.max_bytes <= 0:
+            raise ValueError("B10 stream max_bytes must be positive")
+        if type(self.max_record_bytes) is not int or self.max_record_bytes <= 0:
+            raise ValueError("B10 stream max_record_bytes must be positive")
+        if self.max_record_bytes > self.max_bytes:
+            raise ValueError("B10 stream record bound exceeds its byte bound")
+
+
+# These limits exceed the largest formal B10 batch recorded before A5-R2 by at
+# least 2x while bounding the total retained JSON to 43 MiB.  The trial count
+# follows the frozen 150-trial task bound; control frames follow 10 * 28.
+_B10_STREAM_SPECS: Mapping[str, _B10StreamSpec] = {
+    "diagnostics.jsonl": _B10StreamSpec(8_192, 16 << 20, 8 << 10),
+    "b10-gap-solver-trials.jsonl": _B10StreamSpec(256, 4 << 20, 64 << 10),
+    "b10-coordinator-control-frames.jsonl": _B10StreamSpec(
+        1_024, 4 << 20, 16 << 10,
+    ),
+    "b10-coordinator-trials.jsonl": _B10StreamSpec(32, 2 << 20, 64 << 10),
+    "r4-moving-gap-negative-trials.jsonl": _B10StreamSpec(
+        64, 1 << 20, 16 << 10,
+    ),
+    "b10-receiver-diagnostics.jsonl": _B10StreamSpec(
+        16_384, 16 << 20, 4 << 10,
+    ),
+}
+
+
+class _B10EvidenceBuffer:
+    """Retain every B10 JSONL stream off the control path and flush once."""
+
+    def __init__(
+            self,
+            directory: Path,
+            *,
+            stream_specs: Mapping[str, _B10StreamSpec] = _B10_STREAM_SPECS,
+    ) -> None:
+        if not isinstance(directory, Path):
+            raise TypeError("B10 evidence directory must be a Path")
+        if type(stream_specs) is not dict:
+            stream_specs = dict(stream_specs)
+        if not stream_specs:
+            raise ValueError("B10 evidence streams cannot be empty")
+        self._directory = directory
+        self._specs = dict(stream_specs)
+        self._records: dict[str, list[object]] = {
+            name: [] for name in self._specs
+        }
+        self._bytes = dict.fromkeys(self._specs, 0)
+        self._overflow = dict.fromkeys(self._specs, 0)
+        self._receiver_seen: set[str] = set()
+        self._duplicates = 0
+        self._flushed = False
+        self._flush_failures: list[str] = []
+
+    @property
+    def duplicate_count(self) -> int:
+        return self._duplicates
+
+    @property
+    def overflow_count(self) -> int:
+        return sum(self._overflow.values())
+
+    @property
+    def flush_failure_count(self) -> int:
+        return len(self._flush_failures)
+
+    def rows(self, stream: str) -> tuple[dict, ...]:
+        self._require_stream(stream)
+        return tuple(dict(row) for row in self._records[stream])
+
+    def _require_stream(self, stream: str) -> _B10StreamSpec:
+        if type(stream) is not str or stream not in self._specs:
+            raise ValueError(f"unknown B10 evidence stream: {stream!r}")
+        return self._specs[stream]
+
+    def append(self, stream: str, row: object) -> bool:
+        spec = self._require_stream(stream)
+        encoded = strict_json_dumps(row)
+        size = len(encoded.encode("utf-8")) + 1
+        if (size > spec.max_record_bytes
+                or len(self._records[stream]) >= spec.max_rows
+                or self._bytes[stream] + size > spec.max_bytes):
+            self._overflow[stream] += 1
+            return False
+        # Round-tripping breaks every caller-owned mutable reference.  The
+        # buffer therefore keeps the exact JSON value seen on the control tick.
+        self._records[stream].append(json.loads(encoded))
+        self._bytes[stream] += size
+        return True
+
+    def collect_receiver(self, inbox, trial: str) -> None:
+        if type(trial) is not str or not trial or len(trial) > 128:
+            raise ValueError("receiver diagnostic trial id is invalid")
+        for row in inbox.drain_receiver_diagnostics():
+            if type(row) is not dict or len(row) > 16:
+                raise ValueError("receiver diagnostic row is not a small record")
+            fields: dict[str, str | int | bool | None] = {"trial": trial}
+            for key, value in row.items():
+                if type(key) is not str or type(value) not in (str, int, bool, type(None)):
+                    raise ValueError("receiver diagnostic row contains a non-scalar field")
+                if type(value) is str and len(value) > 512:
+                    raise ValueError("receiver diagnostic string is too large")
+                fields[key] = value
+            frozen = strict_json_dumps(fields)
+            if frozen in self._receiver_seen:
+                self._duplicates += 1
+                continue
+            if self.append("b10-receiver-diagnostics.jsonl", fields):
+                self._receiver_seen.add(frozen)
+
+    def flush(self) -> None:
+        if self._flushed:
+            if self.overflow_count:
+                raise _B10EvidenceOverflow(
+                    f"B10 evidence buffer overflowed by {self.overflow_count} rows"
+                )
+            return
+        for stream, spec in self._specs.items():
+            rows = list(self._records[stream])
+            if self._overflow[stream]:
+                rows.append({
+                    "schema_version": "mc2p.b10-evidence-buffer-overflow.v1",
+                    "event": "buffer_overflow",
+                    "stream": stream,
+                    "max_rows": spec.max_rows,
+                    "max_bytes": spec.max_bytes,
+                    "overflow_count": self._overflow[stream],
+                })
+            if rows:
+                write_jsonl_atomic(self._directory / stream, rows)
+        self._flushed = True
+        if self.overflow_count:
+            raise _B10EvidenceOverflow(
+                f"B10 evidence buffer overflowed by {self.overflow_count} rows"
+            )
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, _traceback) -> bool:
+        try:
+            self.flush()
+        except BaseException as flush_error:
+            self._flush_failures.append(
+                f"{type(flush_error).__name__}: {flush_error}"
+            )
+            if exc_type is None:
+                raise
+            if exc is not None and hasattr(exc, "add_note"):
+                exc.add_note(
+                    "B10 evidence flush also failed: "
+                    f"{type(flush_error).__name__}: {flush_error}"
+                )
+        return False
+
+
+# Historical tests and imports used this name.  The active implementation is
+# the unified buffer above; no receiver-only production buffer remains.
+_ReceiverDiagnosticOverflow = _B10EvidenceOverflow
 
 
 def _bounded_fixture_feet_y(observed_y: float) -> int:
@@ -138,6 +317,69 @@ def _information_retry_allowed(
 def _percentile(values: list[int], fraction: float) -> int:
     ordered = sorted(values)
     return ordered[max(0, math.ceil(len(ordered) * fraction) - 1)]
+
+
+def _receiver_diagnostic_summary(rows: list[dict]) -> dict:
+    cycles = [row for row in rows if row.get("event") == "receiver_cycle"]
+    durations = [row["duration_ns"] for row in cycles
+                 if type(row.get("duration_ns")) is int]
+    observed = {row.get("identity"): row for row in rows
+                if row.get("event") == "receiver_observed_result"
+                and type(row.get("identity")) is str}
+    published = {row.get("identity"): row for row in rows
+                 if row.get("event") == "registry_publish"
+                 and type(row.get("identity")) is str}
+    consumed = {row.get("identity"): row for row in rows
+                if row.get("event") == "first_control_consume"
+                and type(row.get("identity")) is str}
+    delivery = []
+    invisible_next_decision = 0
+    unavailable = 0
+    for identity, publish in published.items():
+        observed_row = observed.get(identity)
+        consume = consumed.get(identity)
+        observed_tick = (
+            None if observed_row is None else observed_row.get("movement_tick")
+        )
+        publish_tick = publish.get("movement_tick")
+        consume_tick = None if consume is None else consume.get("movement_tick")
+        if not all(type(value) is int for value in
+                   (observed_tick, publish_tick, consume_tick)):
+            unavailable += 1
+        elif consume_tick > publish_tick + 1:
+            invisible_next_decision += 1
+        delivery.append({
+            "identity": identity,
+            "receiver_observed_result_tick": observed_tick,
+            "registry_publish_tick": publish_tick,
+            "first_control_consume_tick": consume_tick,
+            "receiver_observed_to_registry_publish_ticks": (
+                None if type(observed_tick) is not int or type(publish_tick) is not int
+                else publish_tick - observed_tick
+            ),
+            "registry_publish_to_first_control_consume_ticks": (
+                None if type(publish_tick) is not int or type(consume_tick) is not int
+                else consume_tick - publish_tick
+            ),
+        })
+    return {
+        "schema_version": "mc2p.b10-receiver-diagnostic-summary.v2",
+        "worker_completion_to_receiver_observed": {
+            "status": "unavailable",
+            "reason": "worker completion is not present in the existing result protocol",
+        },
+        "cycle_count": len(cycles),
+        "cycle_duration_ns": {
+            "samples": len(durations),
+            "p95": None if not durations else _percentile(durations, .95),
+            "p99": None if not durations else _percentile(durations, .99),
+            "maximum": None if not durations else max(durations),
+        },
+        "delivery_count": len(delivery),
+        "delivery_tick_unavailable_count": unavailable,
+        "published_but_next_decision_invisible_count": invisible_next_decision,
+        "deliveries": delivery,
+    }
 
 
 def _application_matches(application, movement: MovementV1) -> bool:
@@ -338,26 +580,29 @@ def run_b10_gap_solver_runtime(
     *, pipeline_diagnostic: Callable[[], dict] | None = None,
 ) -> tuple[dict, list[dict], list[dict]]:
     """Keep background workers alive across the whole controlled probe."""
-    with PlannerWorker() as planner_worker, MotionSolverWorker(
-        max_pending=4,
-    ) as motion_worker:
-        manual_source = runtime.register_ordered_source(_SOURCE)
-        try:
-            return _run_b10_gap_solver_runtime(
-                runtime,
-                backend,
-                episode,
-                directory,
-                deadline_ns,
-                fixture_writer,
-                player_teleporter,
-                planner_worker=planner_worker,
-                motion_worker=motion_worker,
-                manual_source=manual_source,
-                pipeline_diagnostic=pipeline_diagnostic,
-            )
-        finally:
-            runtime.unregister_ordered_source(manual_source)
+    evidence_buffer = _B10EvidenceBuffer(directory)
+    with evidence_buffer:
+        with PlannerWorker() as planner_worker, MotionSolverWorker(
+            max_pending=4,
+        ) as motion_worker:
+            manual_source = runtime.register_ordered_source(_SOURCE)
+            try:
+                return _run_b10_gap_solver_runtime(
+                    runtime,
+                    backend,
+                    episode,
+                    directory,
+                    deadline_ns,
+                    fixture_writer,
+                    player_teleporter,
+                    planner_worker=planner_worker,
+                    motion_worker=motion_worker,
+                    manual_source=manual_source,
+                    evidence_buffer=evidence_buffer,
+                    pipeline_diagnostic=pipeline_diagnostic,
+                )
+            finally:
+                runtime.unregister_ordered_source(manual_source)
 
 
 def _run_b10_gap_solver_runtime(
@@ -372,6 +617,7 @@ def _run_b10_gap_solver_runtime(
     planner_worker: PlannerWorker,
     motion_worker: MotionSolverWorker,
     manual_source,
+    evidence_buffer: _B10EvidenceBuffer,
     pipeline_diagnostic: Callable[[], dict] | None = None,
 ) -> tuple[dict, list[dict], list[dict]]:
     """Solve and execute frozen trials, including the default coordinator."""
@@ -394,7 +640,7 @@ def _run_b10_gap_solver_runtime(
         if pipeline_diagnostic is not None:
             row["observation_pipeline"] = pipeline_diagnostic()
         rows.append(row)
-        append_jsonl(directory / "diagnostics.jsonl", row)
+        evidence_buffer.append("diagnostics.jsonl", row)
 
     def step(
             movement=MovementV1(), *, look=None, request=None,
@@ -861,7 +1107,7 @@ def _run_b10_gap_solver_runtime(
             samples=samples,
         )
         trials.append(trial)
-        append_jsonl(directory / "b10-gap-solver-trials.jsonl", trial)
+        evidence_buffer.append("b10-gap-solver-trials.jsonl", trial)
 
     run_trial(0, 0, "preflight")
     for direction_index in range(4):
@@ -902,6 +1148,8 @@ def _run_b10_gap_solver_runtime(
         ),
     )
     coordinator_trials: list[dict] = []
+    def collect_receiver_diagnostics(session: NavigationSession, trial: str) -> None:
+        evidence_buffer.collect_receiver(session._motion_result_inbox, trial)
 
     def anchor_now() -> StateAnchor:
         if latest_application is None:
@@ -947,6 +1195,7 @@ def _run_b10_gap_solver_runtime(
         )
         source = runtime.register_ordered_source(route_id)
         session.bind_source(source)
+        trial_name = f"default-session-{direction_index}-{repetition}"
         try:
             session.start(SurfacePlanningRequest(
                 repetition + 1,
@@ -969,6 +1218,9 @@ def _run_b10_gap_solver_runtime(
             # may need at most five 36-degree look frames to undo an earlier
             # information look before that proof can be solved and started.
             while len(samples) < 28:
+                session._motion_result_inbox.publish_diagnostic_movement_tick(
+                    current_anchor.movement_tick_id,
+                )
                 proposal_started_ns = time.perf_counter_ns()
                 observation_age_ns = max(
                     0,
@@ -982,6 +1234,7 @@ def _run_b10_gap_solver_runtime(
                     input_ledger=ledger,
                 )
                 proposal_elapsed_ns = time.perf_counter_ns() - proposal_started_ns
+                collect_receiver_diagnostics(session, trial_name)
                 decision = proposal.route_decision
                 if proposal.report.state is NavigationSessionState.COMPLETE:
                     break
@@ -1041,10 +1294,10 @@ def _run_b10_gap_solver_runtime(
                         frame = _runtime_navigation_frame(runtime)
                         diagnostic()
                         current_anchor = anchor_now()
-                        append_jsonl(
-                            directory / "b10-coordinator-control-frames.jsonl",
+                        evidence_buffer.append(
+                            "b10-coordinator-control-frames.jsonl",
                             {
-                                "trial": f"default-session-{direction_index}-{repetition}",
+                                "trial": trial_name,
                                 "observation_sequence_id": frame.body.sequence_id,
                                 "session_state": proposal.report.state.value,
                                 "decision_state": (
@@ -1154,10 +1407,10 @@ def _run_b10_gap_solver_runtime(
                     **window_diagnostics,
                 )
                 samples.append(sample)
-                append_jsonl(
-                    directory / "b10-coordinator-control-frames.jsonl",
+                evidence_buffer.append(
+                    "b10-coordinator-control-frames.jsonl",
                     {
-                        "trial": f"default-session-{direction_index}-{repetition}",
+                        "trial": trial_name,
                         "observation_sequence_id": frame.body.sequence_id,
                         "session_state": proposal.report.state.value,
                         **sample,
@@ -1174,7 +1427,7 @@ def _run_b10_gap_solver_runtime(
                 target[0] + .5, float(target[1] + 1), target[2] + .5,
             )
             trial = dict(
-                name=f"default-session-{direction_index}-{repetition}",
+                name=trial_name,
                 direction_index=direction_index,
                 repetition=repetition,
                 waiting_polls=waiting_polls,
@@ -1196,8 +1449,9 @@ def _run_b10_gap_solver_runtime(
                 samples=samples,
             )
             coordinator_trials.append(trial)
-            append_jsonl(directory / "b10-coordinator-trials.jsonl", trial)
+            evidence_buffer.append("b10-coordinator-trials.jsonl", trial)
         finally:
+            collect_receiver_diagnostics(session, trial_name)
             if runtime.state.value == "ready":
                 runtime.cancel_source(source.source_id)
                 runtime.unregister_ordered_source(source)
@@ -1438,8 +1692,8 @@ def _run_b10_gap_solver_runtime(
                         ),
                     )
                     moving_negative_trials.append(negative)
-                    append_jsonl(
-                        directory / "r4-moving-gap-negative-trials.jsonl",
+                    evidence_buffer.append(
+                        "r4-moving-gap-negative-trials.jsonl",
                         negative,
                     )
                     fixture_writer((low_ceiling,), "minecraft:air")
@@ -1534,6 +1788,9 @@ def _run_b10_gap_solver_runtime(
             p95=_percentile(physics_snapshot_times, .95),
             p99=_percentile(physics_snapshot_times, .99),
             maximum=max(physics_snapshot_times),
+        ),
+        receiver_diagnostics=_receiver_diagnostic_summary(
+            list(evidence_buffer.rows("b10-receiver-diagnostics.jsonl")),
         ),
         trials=trials,
         coordinator_trials=coordinator_trials,

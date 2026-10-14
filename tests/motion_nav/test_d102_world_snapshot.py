@@ -164,6 +164,9 @@ class SnapshotTests(unittest.TestCase):
 
     def test_evidence_only_refresh_is_coalesced_until_snapshot_borrow(self):
         section_position = (0, 0, 0)
+        self.assertIsNotNone(self.world.borrow_snapshot_version(
+            self.bounds, ruleset=JAVA_1_21_RULESET,
+        ))
         original = self.world._snapshot_sections[section_position]
         original_geometry_revision = self.world.view().geometry_revision
         original_evidence_revision = self.world.view().evidence_revision
@@ -190,6 +193,9 @@ class SnapshotTests(unittest.TestCase):
         first = VisualAirEvidence(first_stamp, 3.0, False)
         self.world.confirm_air(first_stamp, (air,), {air: first})
         section_position = (0, 0, 0)
+        self.assertIsNotNone(self.world.borrow_snapshot_version(
+            self.bounds, ruleset=JAVA_1_21_RULESET,
+        ))
         original = self.world._snapshot_sections[section_position]
 
         newer_stamp = self.stamp(3)
@@ -217,6 +223,9 @@ class SnapshotTests(unittest.TestCase):
             side_effect=AssertionError("trusted observation repeated deep validation"),
         ):
             self.observe(2, {self.position: dirt})
+            self.assertIsNotNone(self.world.borrow_snapshot_version(
+                self.bounds, ruleset=JAVA_1_21_RULESET,
+            ))
 
         self.assertEqual(
             self.world._snapshot_sections[(0, 0, 0)].facts[0][1].block,

@@ -51,8 +51,21 @@ class D107B10TraceAuditTests(unittest.TestCase):
                 _step(received=None, dispatched=None, applications=None),
             ])
             _write_jsonl(run / "client-0" / "b10-coordinator-control-frames.jsonl", [
-                {"control_wall_ns": 12_000_000, "reason_code": "planning_submitted"},
-                {"control_wall_ns": 55_000_000, "reason_code": "executing"},
+                {
+                    "control_wall_ns": 12_000_000,
+                    "backend_elapsed_ns": 7_000_000,
+                    "backend_blocking_io_ns": 6_000_000,
+                    "runtime_outside_backend_ns": 5_000_000,
+                    "proposal_elapsed_ns": 2_000_000,
+                    "reason_code": "planning_submitted",
+                },
+                {
+                    "control_wall_ns": 55_000_000,
+                    "backend_elapsed_ns": 45_000_000,
+                    "backend_blocking_io_ns": 40_000_000,
+                    "runtime_outside_backend_ns": 10_000_000,
+                    "reason_code": "executing",
+                },
             ])
             _write_jsonl(run / "client-0" / "ftick-events" / "segment-00000000.jsonl", [
                 {"kind": "INPUT_SAMPLED", "movement_tick_id": 10},
@@ -66,6 +79,8 @@ class D107B10TraceAuditTests(unittest.TestCase):
         self.assertEqual(result["trace"]["step_frames"], 3)
         self.assertEqual(result["trace"]["control_prepare_ms"]["sample_count"], 2)
         self.assertEqual(result["trace"]["control_prepare_ms"]["over_50ms_count"], 1)
+        self.assertEqual(result["trace"]["control_prepare_status"], "available")
+        self.assertEqual(result["trace"]["receiver_delivery_timing"]["status"], "unavailable")
         self.assertEqual(result["trace"]["receipt_applications_per_frame"]["maximum"], 2)
         self.assertEqual(result["trace"]["lease_exhausted"]["application_count"], 1)
         self.assertEqual(result["trace"]["movement_ticks"]["gaps"], [
@@ -73,6 +88,11 @@ class D107B10TraceAuditTests(unittest.TestCase):
         ])
         self.assertEqual(result["trace"]["missing_fields"]["timing_frames"], 1)
         self.assertEqual(result["control_frames"]["control_wall_ms"]["over_50ms_count"], 1)
+        self.assertEqual(result["control_frames"]["backend_elapsed_ms"]["p50"], 7.0)
+        self.assertEqual(result["control_frames"]["backend_blocking_io_ms"]["maximum"], 40.0)
+        self.assertEqual(result["control_frames"]["runtime_outside_backend_ms"]["maximum"], 10.0)
+        self.assertEqual(result["control_frames"]["proposal_elapsed_ms"]["sample_count"], 1)
+        self.assertEqual(result["control_frames"]["missing_fields"]["proposal_elapsed_ns"], 1)
         self.assertEqual(result["ftick"]["kind_counts"], {
             "INPUT_SAMPLED": 2,
             "MOVEMENT_APPLIED": 1,
@@ -96,6 +116,35 @@ class D107B10TraceAuditTests(unittest.TestCase):
         self.assertIn("2026-09-25", report["runs"][1]["reason"])
         self.assertEqual(report["causal_conclusion"], "unavailable")
 
+    def test_old_trace_without_dispatch_fields_reports_unavailable(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            run = Path(temporary) / "run"
+            _write_jsonl(run / "client-0" / "trace.jsonl", [
+                _step(received=None, dispatched=None, applications=[]),
+            ])
+            result = analyze_run("old", run)
+
+        self.assertEqual(result["trace"]["control_prepare_status"], "unavailable")
+        self.assertIn(
+            "decision_observation_received_ns",
+            result["trace"]["control_prepare_unavailable_reason"],
+        )
+
+    def test_empty_control_frame_file_is_explicitly_unavailable(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            run = Path(temporary) / "run"
+            _write_jsonl(run / "client-0" / "trace.jsonl", [
+                _step(received=1, dispatched=2, applications=[]),
+            ])
+            _write_jsonl(
+                run / "client-0" / "b10-coordinator-control-frames.jsonl", [],
+            )
+            result = analyze_run("empty-control", run)
+
+        self.assertEqual(result["control_frames"]["row_count"], 0)
+        self.assertEqual(result["control_frames"]["timing_status"], "unavailable")
+        self.assertIn("no rows", result["control_frames"]["timing_unavailable_reason"])
+
     def test_cli_writes_deterministic_json_and_rejects_bad_run_argument(self) -> None:
         script = Path(__file__).resolve().parents[2] / "scripts" / "audit_d107_b10_trace.py"
         with tempfile.TemporaryDirectory() as temporary:
@@ -117,7 +166,7 @@ class D107B10TraceAuditTests(unittest.TestCase):
 
             self.assertEqual(completed.returncode, 0, completed.stderr)
             written = json.loads(output.read_text(encoding="utf-8"))
-            self.assertEqual(written["schema_version"], "mc2p.d107-b10-trace-audit.v1")
+            self.assertEqual(written["schema_version"], "mc2p.d108-b10-trace-audit.v2")
             self.assertEqual([run["label"] for run in written["runs"]], ["d106", "d103_pre"])
             self.assertNotEqual(bad.returncode, 0)
 

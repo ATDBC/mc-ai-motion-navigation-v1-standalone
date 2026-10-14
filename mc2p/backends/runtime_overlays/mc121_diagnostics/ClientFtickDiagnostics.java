@@ -5,14 +5,19 @@ import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 /** Read-only action-to-movement timeline sidecar for the D105 F-TICK probe. */
 public final class ClientFtickDiagnostics {
     public static final boolean ENABLED = "1".equals(System.getenv("MC2P_FTICK_DIAGNOSTICS"));
     private static final long MAX_EVENTS = 65_536;
+    private static final int MAX_EVENT_CHARS = 4_096;
+    private static final long MAX_BUFFERED_CHARS = 16L * 1024 * 1024;
     private static ClientTimeSegmentWriter writer;
+    private static final List<String> bufferedEvents = new ArrayList<>();
     private static boolean initialized, closed;
-    private static long eventSequence, eventCount, droppedEventCount;
+    private static long eventSequence, eventCount, droppedEventCount, bufferedChars;
 
     private ClientFtickDiagnostics() {}
 
@@ -20,10 +25,7 @@ public final class ClientFtickDiagnostics {
         if (ENABLED && !timeEnabled)
             throw new IllegalStateException("F-TICK diagnostics require explicit time diagnostics");
         if (initialized || closed) return;
-        try {
-            if (ENABLED) writer = new ClientTimeSegmentWriter(Path.of("ftick-events"), 16 * 1024 * 1024);
-            initialized = true;
-        } catch (IOException error) { throw new UncheckedIOException(error); }
+        initialized = true;
     }
 
     public static void frameReceived(String episode, long observationSequence,
@@ -55,7 +57,7 @@ public final class ClientFtickDiagnostics {
             String kind, String episode, Long generation, Long observationSequence,
             Long requestSequence, Long movementTick, long monotonicNs) {
         if (!ENABLED || closed) return;
-        if (!initialized || writer == null)
+        if (!initialized)
             throw new IllegalStateException("F-TICK diagnostic boundary is not ready");
         if (monotonicNs < 0) throw new IllegalArgumentException("invalid F-TICK timestamp");
         if (eventCount >= MAX_EVENTS) {
@@ -72,7 +74,14 @@ public final class ClientFtickDiagnostics {
         nullable(row, "request_sequence_id", requestSequence);
         nullable(row, "movement_tick_id", movementTick);
         row.addProperty("monotonic_ns", monotonicNs);
-        writer.accept(row.toString());
+        String encoded = row.toString();
+        if (encoded.length() > MAX_EVENT_CHARS
+                || bufferedChars + encoded.length() > MAX_BUFFERED_CHARS) {
+            droppedEventCount++;
+            return;
+        }
+        bufferedEvents.add(encoded);
+        bufferedChars += encoded.length();
         eventCount++;
     }
 
@@ -85,14 +94,20 @@ public final class ClientFtickDiagnostics {
     public static synchronized void close() {
         if (closed) return;
         closed = true;
-        if (writer == null) return;
+        if (!ENABLED) return;
         var summary = new JsonObject();
         summary.addProperty("schema_version", "mc2p.client-ftick-summary.v1");
         summary.addProperty("kind", "SUMMARY");
         summary.addProperty("event_count", eventCount);
         summary.addProperty("dropped_event_count", droppedEventCount);
-        writer.accept(summary.toString());
-        try { writer.close(); }
+        try {
+            writer = new ClientTimeSegmentWriter(
+                    Path.of("ftick-events"), 16 * 1024 * 1024);
+            for (String row : bufferedEvents) writer.accept(row);
+            writer.accept(summary.toString());
+            writer.close();
+            bufferedEvents.clear();
+        }
         catch (IOException error) { throw new UncheckedIOException(error); }
     }
 }

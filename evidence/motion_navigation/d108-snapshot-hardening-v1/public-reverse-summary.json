@@ -1,0 +1,1136 @@
+{
+  "schema_version": "mc2p.d108-shard-summary.v2",
+  "label": "public-reverse",
+  "formal_platform": "Windows",
+  "source_report": ".tmp/d108-a5r-public-final-reverse.json",
+  "source_report_sha256": "29ece00e40b820b7f3f979288836576ae9ca9e5b82c72749f5cdf8d5dbf2f475",
+  "order": "reverse",
+  "timeout_seconds": 300.0,
+  "module_count": 185,
+  "tests_run": 2279,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "timeout_count": 0,
+  "launch_error_count": 0,
+  "duration_seconds_sum": 947.9852035004878,
+  "module_status_counts": {
+    "passed": 185,
+    "failed": 0,
+    "error": 0,
+    "timeout": 0,
+    "launch_error": 0
+  },
+  "modules": [
+    {
+      "module": "tests.motion_nav.test_world_knowledge_geometry",
+      "status": "passed",
+      "tests_run": 24,
+      "duration_seconds": 3.396959900041111
+    },
+    {
+      "module": "tests.motion_nav.test_trajectory_proto_reference_search",
+      "status": "passed",
+      "tests_run": 25,
+      "duration_seconds": 3.5180509999627247
+    },
+    {
+      "module": "tests.motion_nav.test_trajectory_proto_primitive_matrix",
+      "status": "passed",
+      "tests_run": 9,
+      "duration_seconds": 33.35060149990022
+    },
+    {
+      "module": "tests.motion_nav.test_trajectory_proto_m0_probe",
+      "status": "passed",
+      "tests_run": 7,
+      "duration_seconds": 7.592850500019267
+    },
+    {
+      "module": "tests.motion_nav.test_trajectory_proto_contracts",
+      "status": "passed",
+      "tests_run": 24,
+      "duration_seconds": 32.175303200026974
+    },
+    {
+      "module": "tests.motion_nav.test_trajectory_proto_commitment",
+      "status": "passed",
+      "tests_run": 37,
+      "duration_seconds": 2.1550234999740496
+    },
+    {
+      "module": "tests.motion_nav.test_task_risk_ledger",
+      "status": "passed",
+      "tests_run": 17,
+      "duration_seconds": 0.36355850007385015
+    },
+    {
+      "module": "tests.motion_nav.test_standalone_export",
+      "status": "passed",
+      "tests_run": 12,
+      "duration_seconds": 25.82096260006074
+    },
+    {
+      "module": "tests.motion_nav.test_sound_sparse_motion_proof_d105",
+      "status": "passed",
+      "tests_run": 15,
+      "duration_seconds": 0.8061746000312269
+    },
+    {
+      "module": "tests.motion_nav.test_simulation_isolation",
+      "status": "passed",
+      "tests_run": 2,
+      "duration_seconds": 3.4278420000337064
+    },
+    {
+      "module": "tests.motion_nav.test_sim_visual_air_query_short_circuit",
+      "status": "passed",
+      "tests_run": 8,
+      "duration_seconds": 1.6065391999436542
+    },
+    {
+      "module": "tests.motion_nav.test_shape_trials",
+      "status": "passed",
+      "tests_run": 4,
+      "duration_seconds": 0.3645952999358997
+    },
+    {
+      "module": "tests.motion_nav.test_segment_entry",
+      "status": "passed",
+      "tests_run": 6,
+      "duration_seconds": 0.453038000036031
+    },
+    {
+      "module": "tests.motion_nav.test_s0r_evidence",
+      "status": "passed",
+      "tests_run": 8,
+      "duration_seconds": 2.1528849999886006
+    },
+    {
+      "module": "tests.motion_nav.test_runtime_navigation_verified_handoff",
+      "status": "passed",
+      "tests_run": 13,
+      "duration_seconds": 3.236783100059256
+    },
+    {
+      "module": "tests.motion_nav.test_runtime_navigation_state_consumers",
+      "status": "passed",
+      "tests_run": 2,
+      "duration_seconds": 3.0338563999393955
+    },
+    {
+      "module": "tests.motion_nav.test_runtime_navigation_driver_state",
+      "status": "passed",
+      "tests_run": 3,
+      "duration_seconds": 0.3953135999618098
+    },
+    {
+      "module": "tests.motion_nav.test_runtime_backend_io",
+      "status": "passed",
+      "tests_run": 7,
+      "duration_seconds": 2.5535899000242352
+    },
+    {
+      "module": "tests.motion_nav.test_runtime_adapter",
+      "status": "passed",
+      "tests_run": 14,
+      "duration_seconds": 0.39347949996590614
+    },
+    {
+      "module": "tests.motion_nav.test_route_body_advance",
+      "status": "passed",
+      "tests_run": 20,
+      "duration_seconds": 7.279415900004096
+    },
+    {
+      "module": "tests.motion_nav.test_retry_ledger",
+      "status": "passed",
+      "tests_run": 30,
+      "duration_seconds": 1.009154500090517
+    },
+    {
+      "module": "tests.motion_nav.test_reference_evidence",
+      "status": "passed",
+      "tests_run": 2,
+      "duration_seconds": 0.3988371000159532
+    },
+    {
+      "module": "tests.motion_nav.test_reference_baselines",
+      "status": "passed",
+      "tests_run": 3,
+      "duration_seconds": 0.3939072999637574
+    },
+    {
+      "module": "tests.motion_nav.test_r28_world_change_retirement",
+      "status": "passed",
+      "tests_run": 2,
+      "duration_seconds": 3.388422799995169
+    },
+    {
+      "module": "tests.motion_nav.test_r28_terminal_approach",
+      "status": "passed",
+      "tests_run": 9,
+      "duration_seconds": 2.326745100086555
+    },
+    {
+      "module": "tests.motion_nav.test_r28_shared_recovery",
+      "status": "passed",
+      "tests_run": 5,
+      "duration_seconds": 2.8268805999541655
+    },
+    {
+      "module": "tests.motion_nav.test_r28_screening_retirement",
+      "status": "passed",
+      "tests_run": 2,
+      "duration_seconds": 3.8987068999558687
+    },
+    {
+      "module": "tests.motion_nav.test_r28_reanchor_handoff",
+      "status": "passed",
+      "tests_run": 14,
+      "duration_seconds": 2.314327600062825
+    },
+    {
+      "module": "tests.motion_nav.test_r28_product_repairs",
+      "status": "passed",
+      "tests_run": 5,
+      "duration_seconds": 2.8509828000096604
+    },
+    {
+      "module": "tests.motion_nav.test_r28_planning_retry_successor",
+      "status": "passed",
+      "tests_run": 14,
+      "duration_seconds": 0.4541939999908209
+    },
+    {
+      "module": "tests.motion_nav.test_r28_planning_history",
+      "status": "passed",
+      "tests_run": 4,
+      "duration_seconds": 1.0457490999251604
+    },
+    {
+      "module": "tests.motion_nav.test_r28_planning_failure_handoff",
+      "status": "passed",
+      "tests_run": 13,
+      "duration_seconds": 4.166237400029786
+    },
+    {
+      "module": "tests.motion_nav.test_r28_persistent_budget_formal",
+      "status": "passed",
+      "tests_run": 8,
+      "duration_seconds": 13.090850100037642
+    },
+    {
+      "module": "tests.motion_nav.test_r28_migration_faults",
+      "status": "passed",
+      "tests_run": 3,
+      "duration_seconds": 6.030907499953173
+    },
+    {
+      "module": "tests.motion_nav.test_r28_information_planning_updates",
+      "status": "passed",
+      "tests_run": 12,
+      "duration_seconds": 0.7196521000005305
+    },
+    {
+      "module": "tests.motion_nav.test_r28_generation_formal_chain",
+      "status": "passed",
+      "tests_run": 11,
+      "duration_seconds": 3.0246220999397337
+    },
+    {
+      "module": "tests.motion_nav.test_r28_dual_planning",
+      "status": "passed",
+      "tests_run": 16,
+      "duration_seconds": 0.5706566999433562
+    },
+    {
+      "module": "tests.motion_nav.test_r28_corner_progress",
+      "status": "passed",
+      "tests_run": 1,
+      "duration_seconds": 6.838271899963729
+    },
+    {
+      "module": "tests.motion_nav.test_r28_baseline_alignment",
+      "status": "passed",
+      "tests_run": 9,
+      "duration_seconds": 0.45282080001197755
+    },
+    {
+      "module": "tests.motion_nav.test_r28_async_generation",
+      "status": "passed",
+      "tests_run": 36,
+      "duration_seconds": 1.4635421999264508
+    },
+    {
+      "module": "tests.motion_nav.test_r27_async_admission",
+      "status": "passed",
+      "tests_run": 25,
+      "duration_seconds": 3.3335578000405803
+    },
+    {
+      "module": "tests.motion_nav.test_public_repository_completeness",
+      "status": "passed",
+      "tests_run": 4,
+      "duration_seconds": 47.47716310003307
+    },
+    {
+      "module": "tests.motion_nav.test_probe_handoff_resolution",
+      "status": "passed",
+      "tests_run": 10,
+      "duration_seconds": 0.6005650000879541
+    },
+    {
+      "module": "tests.motion_nav.test_post_input_loss_landing_recovery",
+      "status": "passed",
+      "tests_run": 21,
+      "duration_seconds": 6.614600199973211
+    },
+    {
+      "module": "tests.motion_nav.test_planning_ownership_gate",
+      "status": "passed",
+      "tests_run": 5,
+      "duration_seconds": 0.2433337999973446
+    },
+    {
+      "module": "tests.motion_nav.test_planning_coordinator",
+      "status": "passed",
+      "tests_run": 20,
+      "duration_seconds": 0.4524187999777496
+    },
+    {
+      "module": "tests.motion_nav.test_planner_worker",
+      "status": "passed",
+      "tests_run": 15,
+      "duration_seconds": 4.571921300026588
+    },
+    {
+      "module": "tests.motion_nav.test_package_boundaries",
+      "status": "passed",
+      "tests_run": 4,
+      "duration_seconds": 0.4217765999492258
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_supervised_interruptions",
+      "status": "passed",
+      "tests_run": 28,
+      "duration_seconds": 13.37100449996069
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_structure_baseline",
+      "status": "passed",
+      "tests_run": 4,
+      "duration_seconds": 0.15450890001375228
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_session",
+      "status": "passed",
+      "tests_run": 62,
+      "duration_seconds": 2.4579287000233307
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_seed_scan",
+      "status": "passed",
+      "tests_run": 1,
+      "duration_seconds": 0.12509240000508726
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_route_handoff",
+      "status": "passed",
+      "tests_run": 7,
+      "duration_seconds": 3.22719269990921
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_replay_known_map",
+      "status": "passed",
+      "tests_run": 2,
+      "duration_seconds": 0.1564364000223577
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_product_metrics",
+      "status": "passed",
+      "tests_run": 22,
+      "duration_seconds": 3.324563500005752
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_product_delivery",
+      "status": "passed",
+      "tests_run": 4,
+      "duration_seconds": 3.2753690999234095
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_owners",
+      "status": "passed",
+      "tests_run": 3,
+      "duration_seconds": 0.36723680002614856
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_lifecycle",
+      "status": "passed",
+      "tests_run": 11,
+      "duration_seconds": 0.45268460002262145
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_layer_live",
+      "status": "passed",
+      "tests_run": 5,
+      "duration_seconds": 0.18590560008306056
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_interrupt_matrix",
+      "status": "passed",
+      "tests_run": 1,
+      "duration_seconds": 0.3922973000444472
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_handoff",
+      "status": "passed",
+      "tests_run": 22,
+      "duration_seconds": 0.5984278999967501
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_event_sequences",
+      "status": "passed",
+      "tests_run": 21,
+      "duration_seconds": 5.750005200039595
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_design_metrics",
+      "status": "passed",
+      "tests_run": 32,
+      "duration_seconds": 5.917605600086972
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_dead_path_probe",
+      "status": "passed",
+      "tests_run": 1,
+      "duration_seconds": 0.42310210003051907
+    },
+    {
+      "module": "tests.motion_nav.test_navigation_closed_loop",
+      "status": "passed",
+      "tests_run": 56,
+      "duration_seconds": 14.272905400022864
+    },
+    {
+      "module": "tests.motion_nav.test_motion_start_delivery",
+      "status": "passed",
+      "tests_run": 12,
+      "duration_seconds": 7.6346691000508144
+    },
+    {
+      "module": "tests.motion_nav.test_motion_risk",
+      "status": "passed",
+      "tests_run": 4,
+      "duration_seconds": 0.3624690000433475
+    },
+    {
+      "module": "tests.motion_nav.test_motion_residual",
+      "status": "passed",
+      "tests_run": 5,
+      "duration_seconds": 0.3920732999686152
+    },
+    {
+      "module": "tests.motion_nav.test_motion_continuation_quality",
+      "status": "passed",
+      "tests_run": 10,
+      "duration_seconds": 2.249286700040102
+    },
+    {
+      "module": "tests.motion_nav.test_motion_benchmarks",
+      "status": "passed",
+      "tests_run": 3,
+      "duration_seconds": 2.6192440999438986
+    },
+    {
+      "module": "tests.motion_nav.test_motion_baseline_recovery",
+      "status": "passed",
+      "tests_run": 6,
+      "duration_seconds": 1.5710324000101537
+    },
+    {
+      "module": "tests.motion_nav.test_known_world_follow_driver",
+      "status": "passed",
+      "tests_run": 19,
+      "duration_seconds": 0.453668599948287
+    },
+    {
+      "module": "tests.motion_nav.test_known_map_planning",
+      "status": "passed",
+      "tests_run": 17,
+      "duration_seconds": 1.7975025000050664
+    },
+    {
+      "module": "tests.motion_nav.test_jump_up_calibration",
+      "status": "passed",
+      "tests_run": 3,
+      "duration_seconds": 0.3628522000508383
+    },
+    {
+      "module": "tests.motion_nav.test_jump_up",
+      "status": "passed",
+      "tests_run": 17,
+      "duration_seconds": 1.340982099995017
+    },
+    {
+      "module": "tests.motion_nav.test_input_responsibility",
+      "status": "passed",
+      "tests_run": 10,
+      "duration_seconds": 0.36083629995118827
+    },
+    {
+      "module": "tests.motion_nav.test_inline_planning_clock",
+      "status": "passed",
+      "tests_run": 4,
+      "duration_seconds": 0.8405527999857441
+    },
+    {
+      "module": "tests.motion_nav.test_incremental_motion_table",
+      "status": "passed",
+      "tests_run": 4,
+      "duration_seconds": 0.3916696000378579
+    },
+    {
+      "module": "tests.motion_nav.test_incremental_motion_proof",
+      "status": "passed",
+      "tests_run": 18,
+      "duration_seconds": 3.261966099962592
+    },
+    {
+      "module": "tests.motion_nav.test_incremental_motion_performance",
+      "status": "passed",
+      "tests_run": 6,
+      "duration_seconds": 0.9795857999706641
+    },
+    {
+      "module": "tests.motion_nav.test_incremental_motion_controller",
+      "status": "passed",
+      "tests_run": 4,
+      "duration_seconds": 0.9060847999062389
+    },
+    {
+      "module": "tests.motion_nav.test_incremental_motion_closed_loop_measurement",
+      "status": "passed",
+      "tests_run": 5,
+      "duration_seconds": 1.577610500040464
+    },
+    {
+      "module": "tests.motion_nav.test_incremental_motion_closed_loop",
+      "status": "passed",
+      "tests_run": 18,
+      "duration_seconds": 0.8641333000268787
+    },
+    {
+      "module": "tests.motion_nav.test_ground_traversal",
+      "status": "passed",
+      "tests_run": 6,
+      "duration_seconds": 0.5401113000698388
+    },
+    {
+      "module": "tests.motion_nav.test_ground_motion",
+      "status": "passed",
+      "tests_run": 5,
+      "duration_seconds": 0.36288489995058626
+    },
+    {
+      "module": "tests.motion_nav.test_ground_continuation_quality",
+      "status": "passed",
+      "tests_run": 11,
+      "duration_seconds": 0.8069180999882519
+    },
+    {
+      "module": "tests.motion_nav.test_ground_calibration",
+      "status": "passed",
+      "tests_run": 3,
+      "duration_seconds": 0.3615021000150591
+    },
+    {
+      "module": "tests.motion_nav.test_goal_reach_policy",
+      "status": "passed",
+      "tests_run": 15,
+      "duration_seconds": 2.9752431999659166
+    },
+    {
+      "module": "tests.motion_nav.test_fixed_route_walk",
+      "status": "passed",
+      "tests_run": 25,
+      "duration_seconds": 4.454097299952991
+    },
+    {
+      "module": "tests.motion_nav.test_f2rec_r4_recovery",
+      "status": "passed",
+      "tests_run": 4,
+      "duration_seconds": 2.059472600114532
+    },
+    {
+      "module": "tests.motion_nav.test_f2rec_r3_cleanup",
+      "status": "passed",
+      "tests_run": 4,
+      "duration_seconds": 1.5417678999947384
+    },
+    {
+      "module": "tests.motion_nav.test_f2rec_r2_goal_selection",
+      "status": "passed",
+      "tests_run": 6,
+      "duration_seconds": 1.4572519999928772
+    },
+    {
+      "module": "tests.motion_nav.test_f2rec_r1_region_geometry",
+      "status": "passed",
+      "tests_run": 7,
+      "duration_seconds": 0.8707376999082044
+    },
+    {
+      "module": "tests.motion_nav.test_f2rec_r0_baseline",
+      "status": "passed",
+      "tests_run": 5,
+      "duration_seconds": 2.443121899967082
+    },
+    {
+      "module": "tests.motion_nav.test_f2r_piecewise_completion",
+      "status": "passed",
+      "tests_run": 8,
+      "duration_seconds": 1.8129770000232384
+    },
+    {
+      "module": "tests.motion_nav.test_f2_non_center_ground_route",
+      "status": "passed",
+      "tests_run": 6,
+      "duration_seconds": 2.3390619000419974
+    },
+    {
+      "module": "tests.motion_nav.test_f2_ground_start_window",
+      "status": "passed",
+      "tests_run": 9,
+      "duration_seconds": 0.802957099978812
+    },
+    {
+      "module": "tests.motion_nav.test_f2_ground_route_gates",
+      "status": "passed",
+      "tests_run": 15,
+      "duration_seconds": 1.2750308000249788
+    },
+    {
+      "module": "tests.motion_nav.test_f2_ground_completion_region",
+      "status": "passed",
+      "tests_run": 13,
+      "duration_seconds": 30.64734339993447
+    },
+    {
+      "module": "tests.motion_nav.test_f1_known_world_following_fabric",
+      "status": "passed",
+      "tests_run": 17,
+      "duration_seconds": 0.5131305999821052
+    },
+    {
+      "module": "tests.motion_nav.test_f1_known_world_following",
+      "status": "passed",
+      "tests_run": 8,
+      "duration_seconds": 47.10714800003916
+    },
+    {
+      "module": "tests.motion_nav.test_external_motion_recovery",
+      "status": "passed",
+      "tests_run": 7,
+      "duration_seconds": 0.39211269991938025
+    },
+    {
+      "module": "tests.motion_nav.test_external_motion",
+      "status": "passed",
+      "tests_run": 20,
+      "duration_seconds": 0.4220845999661833
+    },
+    {
+      "module": "tests.motion_nav.test_execution_supervisor",
+      "status": "passed",
+      "tests_run": 5,
+      "duration_seconds": 0.4566181000554934
+    },
+    {
+      "module": "tests.motion_nav.test_d108_snapshot_materialization",
+      "status": "passed",
+      "tests_run": 11,
+      "duration_seconds": 1.9902014000108466
+    },
+    {
+      "module": "tests.motion_nav.test_d108_receiver_tick_delivery",
+      "status": "passed",
+      "tests_run": 8,
+      "duration_seconds": 0.9242917000083253
+    },
+    {
+      "module": "tests.motion_nav.test_d107_shard_runner",
+      "status": "passed",
+      "tests_run": 18,
+      "duration_seconds": 9.326558399945498
+    },
+    {
+      "module": "tests.motion_nav.test_d107_b10_trace_audit",
+      "status": "passed",
+      "tests_run": 5,
+      "duration_seconds": 1.0185960000380874
+    },
+    {
+      "module": "tests.motion_nav.test_d106_local_snapshot",
+      "status": "passed",
+      "tests_run": 5,
+      "duration_seconds": 3.561104499967769
+    },
+    {
+      "module": "tests.motion_nav.test_d105_t2_evidence",
+      "status": "passed",
+      "tests_run": 6,
+      "duration_seconds": 0.27399640006478876
+    },
+    {
+      "module": "tests.motion_nav.test_d105_sound_sparse_m0",
+      "status": "passed",
+      "tests_run": 4,
+      "duration_seconds": 0.5991330000106245
+    },
+    {
+      "module": "tests.motion_nav.test_d105_receiver_trust_boundary",
+      "status": "passed",
+      "tests_run": 5,
+      "duration_seconds": 2.8541467000031844
+    },
+    {
+      "module": "tests.motion_nav.test_d105_ftick",
+      "status": "passed",
+      "tests_run": 12,
+      "duration_seconds": 0.7816875000717118
+    },
+    {
+      "module": "tests.motion_nav.test_d103_observation_hot_path",
+      "status": "passed",
+      "tests_run": 5,
+      "duration_seconds": 0.21661220001988113
+    },
+    {
+      "module": "tests.motion_nav.test_d102_world_snapshot",
+      "status": "passed",
+      "tests_run": 32,
+      "duration_seconds": 0.6008332000346854
+    },
+    {
+      "module": "tests.motion_nav.test_d102_windows_matrix",
+      "status": "passed",
+      "tests_run": 36,
+      "duration_seconds": 55.18720589997247
+    },
+    {
+      "module": "tests.motion_nav.test_d102_runtime_activation",
+      "status": "passed",
+      "tests_run": 37,
+      "duration_seconds": 101.34891880000941
+    },
+    {
+      "module": "tests.motion_nav.test_d102_registry_lifecycle",
+      "status": "passed",
+      "tests_run": 38,
+      "duration_seconds": 60.27979399997275
+    },
+    {
+      "module": "tests.motion_nav.test_d102_receiver",
+      "status": "passed",
+      "tests_run": 32,
+      "duration_seconds": 43.98846879997291
+    },
+    {
+      "module": "tests.motion_nav.test_d102_prepared_proof",
+      "status": "passed",
+      "tests_run": 11,
+      "duration_seconds": 27.35459170001559
+    },
+    {
+      "module": "tests.motion_nav.test_d102_contracts",
+      "status": "passed",
+      "tests_run": 37,
+      "duration_seconds": 0.7182694000657648
+    },
+    {
+      "module": "tests.motion_nav.test_d102_contract_red",
+      "status": "passed",
+      "tests_run": 5,
+      "duration_seconds": 12.45400869997684
+    },
+    {
+      "module": "tests.motion_nav.test_d102_action_handoff",
+      "status": "passed",
+      "tests_run": 36,
+      "duration_seconds": 43.692483699996956
+    },
+    {
+      "module": "tests.motion_nav.test_d101_measurement",
+      "status": "passed",
+      "tests_run": 6,
+      "duration_seconds": 1.0743073999183252
+    },
+    {
+      "module": "tests.motion_nav.test_d101_input_stream",
+      "status": "passed",
+      "tests_run": 12,
+      "duration_seconds": 0.4247767999768257
+    },
+    {
+      "module": "tests.motion_nav.test_d101_continuous_probe",
+      "status": "passed",
+      "tests_run": 5,
+      "duration_seconds": 0.8486869999906048
+    },
+    {
+      "module": "tests.motion_nav.test_d098_windows_trial_wrapper",
+      "status": "passed",
+      "tests_run": 16,
+      "duration_seconds": 0.2160338000394404
+    },
+    {
+      "module": "tests.motion_nav.test_d094_fabric_timing_metric",
+      "status": "passed",
+      "tests_run": 7,
+      "duration_seconds": 10.833163099945523
+    },
+    {
+      "module": "tests.motion_nav.test_d064_ground_direct_handoff",
+      "status": "passed",
+      "tests_run": 21,
+      "duration_seconds": 0.5419258000329137
+    },
+    {
+      "module": "tests.motion_nav.test_d063_goal_surface_information",
+      "status": "passed",
+      "tests_run": 8,
+      "duration_seconds": 3.4951480999588966
+    },
+    {
+      "module": "tests.motion_nav.test_d062_direct_walk_validation",
+      "status": "passed",
+      "tests_run": 16,
+      "duration_seconds": 0.4809050998883322
+    },
+    {
+      "module": "tests.motion_nav.test_d061_long_session_benchmark",
+      "status": "passed",
+      "tests_run": 6,
+      "duration_seconds": 2.297725999960676
+    },
+    {
+      "module": "tests.motion_nav.test_d060_terminal_node_exact_proof",
+      "status": "passed",
+      "tests_run": 6,
+      "duration_seconds": 0.4525565999792889
+    },
+    {
+      "module": "tests.motion_nav.test_d059_validation_diagnostics",
+      "status": "passed",
+      "tests_run": 4,
+      "duration_seconds": 0.6008353000506759
+    },
+    {
+      "module": "tests.motion_nav.test_d059_terminal_selection_dependencies",
+      "status": "passed",
+      "tests_run": 8,
+      "duration_seconds": 0.6004236999433488
+    },
+    {
+      "module": "tests.motion_nav.test_d059_consumers_and_identity",
+      "status": "passed",
+      "tests_run": 9,
+      "duration_seconds": 0.5707929000491276
+    },
+    {
+      "module": "tests.motion_nav.test_d058_validation_plan",
+      "status": "passed",
+      "tests_run": 11,
+      "duration_seconds": 0.5412356000160798
+    },
+    {
+      "module": "tests.motion_nav.test_d058_runtime_validation",
+      "status": "passed",
+      "tests_run": 104,
+      "duration_seconds": 5.7533549999352545
+    },
+    {
+      "module": "tests.motion_nav.test_d058_route_revalidation_benchmark",
+      "status": "passed",
+      "tests_run": 1,
+      "duration_seconds": 7.7407500999979675
+    },
+    {
+      "module": "tests.motion_nav.test_d057_route_prefix",
+      "status": "passed",
+      "tests_run": 5,
+      "duration_seconds": 0.5999965000664815
+    },
+    {
+      "module": "tests.motion_nav.test_continuous_height_planning",
+      "status": "passed",
+      "tests_run": 9,
+      "duration_seconds": 0.6875034000258893
+    },
+    {
+      "module": "tests.motion_nav.test_continuous_height_full_matrix",
+      "status": "passed",
+      "tests_run": 15,
+      "duration_seconds": 8.013802399975248
+    },
+    {
+      "module": "tests.motion_nav.test_continuous_height_execution",
+      "status": "passed",
+      "tests_run": 5,
+      "duration_seconds": 0.631542400107719
+    },
+    {
+      "module": "tests.motion_nav.test_continuous_descent",
+      "status": "passed",
+      "tests_run": 11,
+      "duration_seconds": 4.391724299988709
+    },
+    {
+      "module": "tests.motion_nav.test_b11_world_change_navigation",
+      "status": "passed",
+      "tests_run": 15,
+      "duration_seconds": 1.835727100027725
+    },
+    {
+      "module": "tests.motion_nav.test_b11_bridge_planning",
+      "status": "passed",
+      "tests_run": 8,
+      "duration_seconds": 0.48278429999481887
+    },
+    {
+      "module": "tests.motion_nav.test_b11_block_placement",
+      "status": "passed",
+      "tests_run": 16,
+      "duration_seconds": 0.4220694999676198
+    },
+    {
+      "module": "tests.motion_nav.test_b10_online_motion",
+      "status": "passed",
+      "tests_run": 25,
+      "duration_seconds": 0.3680402999743819
+    },
+    {
+      "module": "tests.motion_nav.test_b10_motion_worker",
+      "status": "passed",
+      "tests_run": 5,
+      "duration_seconds": 3.6682998000178486
+    },
+    {
+      "module": "tests.motion_nav.test_b10_motion_candidate",
+      "status": "passed",
+      "tests_run": 45,
+      "duration_seconds": 6.8263159999623895
+    },
+    {
+      "module": "tests.motion_nav.test_b10_gap_solver",
+      "status": "passed",
+      "tests_run": 21,
+      "duration_seconds": 12.595887499977835
+    },
+    {
+      "module": "tests.motion_nav.test_b10_foundation_tools",
+      "status": "passed",
+      "tests_run": 2,
+      "duration_seconds": 0.5427501000231132
+    },
+    {
+      "module": "tests.motion_nav.test_b09r_physics_validation",
+      "status": "passed",
+      "tests_run": 3,
+      "duration_seconds": 0.3668214000063017
+    },
+    {
+      "module": "tests.motion_nav.test_b09r_physics_step",
+      "status": "passed",
+      "tests_run": 25,
+      "duration_seconds": 0.4883026001043618
+    },
+    {
+      "module": "tests.motion_nav.test_b09r_physics_rollout",
+      "status": "passed",
+      "tests_run": 6,
+      "duration_seconds": 0.4525166000239551
+    },
+    {
+      "module": "tests.motion_nav.test_b09r_physics_contracts",
+      "status": "passed",
+      "tests_run": 10,
+      "duration_seconds": 0.3628050999250263
+    },
+    {
+      "module": "tests.motion_nav.test_b09_air_transitions",
+      "status": "passed",
+      "tests_run": 22,
+      "duration_seconds": 0.9284195000072941
+    },
+    {
+      "module": "tests.motion_nav.test_b08_ground_modes",
+      "status": "passed",
+      "tests_run": 23,
+      "duration_seconds": 1.5184390000067651
+    },
+    {
+      "module": "tests.motion_nav.test_b07_surface_planning",
+      "status": "passed",
+      "tests_run": 18,
+      "duration_seconds": 1.8477713000029325
+    },
+    {
+      "module": "tests.motion_nav.test_b07_support_surfaces",
+      "status": "passed",
+      "tests_run": 11,
+      "duration_seconds": 0.3619798000436276
+    },
+    {
+      "module": "tests.motion_nav.test_b07_step_transition",
+      "status": "passed",
+      "tests_run": 11,
+      "duration_seconds": 0.3622149000875652
+    },
+    {
+      "module": "tests.motion_nav.test_b07_step_runtime",
+      "status": "passed",
+      "tests_run": 1,
+      "duration_seconds": 0.3652398999547586
+    },
+    {
+      "module": "tests.motion_nav.test_b07_step_route",
+      "status": "passed",
+      "tests_run": 6,
+      "duration_seconds": 0.42332140007056296
+    },
+    {
+      "module": "tests.motion_nav.test_b07_shape_matrix",
+      "status": "passed",
+      "tests_run": 5,
+      "duration_seconds": 0.36329710006248206
+    },
+    {
+      "module": "tests.motion_nav.test_b06_registry_export",
+      "status": "passed",
+      "tests_run": 1,
+      "duration_seconds": 0.15477170003578067
+    },
+    {
+      "module": "tests.motion_nav.test_b06_ordinary_profiles",
+      "status": "passed",
+      "tests_run": 7,
+      "duration_seconds": 0.731149600003846
+    },
+    {
+      "module": "tests.motion_nav.test_b06_movement_contracts",
+      "status": "passed",
+      "tests_run": 14,
+      "duration_seconds": 0.7052686999086291
+    },
+    {
+      "module": "tests.motion_nav.test_b06_fabric_material_probe",
+      "status": "passed",
+      "tests_run": 2,
+      "duration_seconds": 0.3702063999371603
+    },
+    {
+      "module": "tests.motion_nav.test_b06_environment_identity",
+      "status": "passed",
+      "tests_run": 6,
+      "duration_seconds": 0.3650210000341758
+    },
+    {
+      "module": "tests.motion_nav.test_b06_block_motion_traits",
+      "status": "passed",
+      "tests_run": 5,
+      "duration_seconds": 0.3626751999836415
+    },
+    {
+      "module": "tests.motion_nav.test_b02_geometry_acceptance",
+      "status": "passed",
+      "tests_run": 5,
+      "duration_seconds": 14.245153399999253
+    },
+    {
+      "module": "tests.motion_nav.test_async_work_verification",
+      "status": "passed",
+      "tests_run": 14,
+      "duration_seconds": 5.386068499996327
+    },
+    {
+      "module": "tests.motion_nav.test_async_gap_revalidation_delivery",
+      "status": "passed",
+      "tests_run": 2,
+      "duration_seconds": 1.4598052999936044
+    },
+    {
+      "module": "tests.motion_nav.test_air_transition_solver",
+      "status": "passed",
+      "tests_run": 6,
+      "duration_seconds": 2.2113508000038564
+    },
+    {
+      "module": "tests.motion_nav.test_action_specs",
+      "status": "passed",
+      "tests_run": 7,
+      "duration_seconds": 0.3625430000247434
+    },
+    {
+      "module": "tests.motion_nav.test_action_spec_integration",
+      "status": "passed",
+      "tests_run": 9,
+      "duration_seconds": 0.5994571000337601
+    },
+    {
+      "module": "tests.motion_nav.test_action_spec_boundaries",
+      "status": "passed",
+      "tests_run": 3,
+      "duration_seconds": 0.3691068000625819
+    },
+    {
+      "module": "tests.motion_nav.test_action_preconditions",
+      "status": "passed",
+      "tests_run": 29,
+      "duration_seconds": 6.16170040005818
+    },
+    {
+      "module": "tests.motion_nav.test_action_entry_late_hardening",
+      "status": "passed",
+      "tests_run": 11,
+      "duration_seconds": 6.815985599998385
+    },
+    {
+      "module": "tests.motion_nav.test_action_entry_handoff_repair",
+      "status": "passed",
+      "tests_run": 9,
+      "duration_seconds": 7.661862600012682
+    },
+    {
+      "module": "tests.motion_nav.test_action_controller_adapter",
+      "status": "passed",
+      "tests_run": 5,
+      "duration_seconds": 0.46339110005646944
+    },
+    {
+      "module": "tests.motion_nav.test_action_continuity_solver_limits",
+      "status": "passed",
+      "tests_run": 15,
+      "duration_seconds": 1.2589583999942988
+    },
+    {
+      "module": "tests.motion_nav.test_action_continuity_formal",
+      "status": "passed",
+      "tests_run": 9,
+      "duration_seconds": 3.534848300041631
+    },
+    {
+      "module": "tests.motion_nav.test_action_continuity_fabric_options",
+      "status": "passed",
+      "tests_run": 4,
+      "duration_seconds": 0.48934070009272546
+    },
+    {
+      "module": "tests.motion_nav.test_action_continuity_admission",
+      "status": "passed",
+      "tests_run": 4,
+      "duration_seconds": 0.6077549000037834
+    }
+  ]
+}

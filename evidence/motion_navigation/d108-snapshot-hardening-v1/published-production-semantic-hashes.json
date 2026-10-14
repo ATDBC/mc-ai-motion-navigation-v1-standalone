@@ -1,0 +1,17 @@
+{
+  "schema": "mc2p.public-production-semantic-hashes.v1",
+  "scope": "D108 world snapshot materialization and bounded worker teardown",
+  "source_commit": "44e4892a",
+  "normalization": "CRLF_TO_LF",
+  "files": {
+    "mc2p/motion_nav/motion_worker.py": "8cec98ba38c2de709c5764f2cc6bae2ba1341eb7356b61090c8ef80498a5ecca",
+    "mc2p/motion_nav/online_motion.py": "420d0e21ea0263b746a00d45aab09aa8db2fe5c9228dc1ea47a1b26b9d614838",
+    "mc2p/motion_nav/world_model.py": "f57ebe6c6a48046ecf44c2ec610552d821e054969b4a7cab702abbc769d580ad",
+    "scripts/audit_d107_b10_trace.py": "2b29232c014705c8b5cb9c753498c1bd697df871b6324c5b756f046e62141b39",
+    "scripts/b10_gap_solver_runtime.py": "c206f94840d814f9db9f7655bfd83727b0f9508099e47b17af9f629caf438639",
+    "scripts/control_probe_core.py": "c6020ca7fcc0843207374c8f81a764f9bca0b449591b5c68e7855aa0d2693424",
+    "scripts/d105_ftick.py": "6dc02885222cffc42f795598bed764f7a1b462f5ec2eac0dea3b578246d077e1",
+    "scripts/probe_fabric_deployment_observation.py": "e9682a160f70c2d30d24621cc8ec3fedae5aa590235124225e337a68496d2ac0",
+    "mc2p/backends/runtime_overlays/mc121_diagnostics/ClientFtickDiagnostics.java": "8c0ed54706bbb464a12649e3911e8798bec958cb4b9d51ce7eb4e27eae6869fe"
+  }
+}

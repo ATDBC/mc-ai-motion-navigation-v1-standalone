@@ -654,6 +654,125 @@ class RegistryTests(unittest.TestCase):
         self.assertEqual(reader.close.call_count, 1, "the main thread raced the sentinel's reader close")
         self.assertEqual(writer.close.call_count, 1, "the main thread raced the sentinel's writer close")
 
+    def test_posix_close_wakes_feeder_before_queue_sentinel_and_does_not_race_writer(self):
+        events = []
+
+        class Endpoint:
+            def __init__(self, name):
+                self.name = name
+                self.closed = False
+                self.underlying_close_count = 0
+
+            def close(self):
+                events.append(f"close-{self.name}")
+                if not self.closed:
+                    self.closed = True
+                    self.underlying_close_count += 1
+
+        reader, writer = Endpoint("reader"), Endpoint("writer")
+        feeder = Mock(spec=threading.Thread)
+        feeder.is_alive.return_value = True
+        channel = Mock()
+        channel._reader, channel._writer, channel._thread = reader, writer, feeder
+        channel.close.side_effect = lambda: events.append("queue-close")
+
+        def joined(_timeout):
+            events.append("feeder-join")
+            self.assertTrue(reader.closed, "closing the read end must wake a blocked POSIX writer")
+            self.assertIn("queue-close", events, "the queue sentinel must precede the bounded join")
+            reader.close()
+            writer.close()
+            feeder.is_alive.return_value = False
+
+        feeder.join.side_effect = joined
+        worker = MotionSolverWorker.__new__(MotionSolverWorker)
+        worker._closed = False
+        worker._process = worker._results = None
+        worker._requests = channel
+
+        with patch("mc2p.motion_nav.motion_worker.sys.platform", "linux"):
+            report = worker.close(timeout_seconds=.05)
+
+        self.assertLess(events.index("close-reader"), events.index("queue-close"))
+        self.assertLess(events.index("queue-close"), events.index("feeder-join"))
+        self.assertEqual(reader.underlying_close_count, 1)
+        self.assertEqual(writer.underlying_close_count, 1)
+        self.assertEqual(report.live_queue_feeders, 0)
+
+    def test_posix_live_feeder_keeps_writer_until_bounded_close_reports_it(self):
+        feeder = Mock(spec=threading.Thread)
+        feeder.is_alive.return_value = True
+        reader, writer = Mock(), Mock()
+        channel = Mock()
+        channel._reader, channel._writer, channel._thread = reader, writer, feeder
+        worker = MotionSolverWorker.__new__(MotionSolverWorker)
+        worker._closed = False
+        worker._process = worker._results = None
+        worker._requests = channel
+
+        with patch("mc2p.motion_nav.motion_worker.sys.platform", "linux"):
+            report = worker.close(timeout_seconds=0.)
+
+        reader.close.assert_called_once()
+        writer.close.assert_not_called()
+        self.assertEqual(report.live_queue_feeders, 1)
+        self.assertTrue(report.timed_out)
+
+    def test_posix_queue_without_feeder_is_closed_by_main_thread_once(self):
+        class Endpoint:
+            def __init__(self):
+                self.closed = False
+                self.underlying_close_count = 0
+
+            def close(self):
+                if not self.closed:
+                    self.closed = True
+                    self.underlying_close_count += 1
+
+        reader, writer = Endpoint(), Endpoint()
+        channel = Mock()
+        channel._reader, channel._writer, channel._thread = reader, writer, None
+        worker = MotionSolverWorker.__new__(MotionSolverWorker)
+        worker._closed = False
+        worker._process = worker._results = None
+        worker._requests = channel
+
+        with patch("mc2p.motion_nav.motion_worker.sys.platform", "linux"):
+            first = worker.close(timeout_seconds=.05)
+            second = worker.close(timeout_seconds=.05)
+
+        self.assertEqual(reader.underlying_close_count, 1)
+        self.assertEqual(writer.underlying_close_count, 1)
+        self.assertTrue(first.fully_released)
+        self.assertTrue(second.fully_released)
+
+    def test_posix_expected_broken_pipe_is_structured_but_other_errors_still_report(self):
+        context = Mock()
+        context.Process.return_value.pid = None
+        context.Process.return_value.is_alive.return_value = False
+        first, second = Mock(), Mock()
+        context.Queue.side_effect = (first, second)
+        original = first._on_queue_feeder_error
+
+        with patch("mc2p.motion_nav.motion_worker.sys.platform", "linux"), patch(
+            "mc2p.motion_nav.motion_worker.multiprocessing.get_context",
+            return_value=context,
+        ):
+            worker = MotionSolverWorker()
+            try:
+                handler = first._on_queue_feeder_error
+                self.assertIsNot(handler, original)
+                worker._closed = True
+                handler(BrokenPipeError(errno.EPIPE, "expected close wakeup"), b"queued")
+                handler(OSError(errno.EBADF, "unexpected close error"), b"queued")
+                report = worker.close()
+            finally:
+                worker.close()
+
+        self.assertEqual(original.call_count, 1)
+        self.assertEqual(report.expected_close_feeder_errors, 1)
+        self.assertEqual(report.unexpected_feeder_errors, 1)
+
     def test_expected_close_feeder_errors_are_counted_and_other_errors_are_logged(self):
         context = Mock()
         context.Process.return_value.pid = None

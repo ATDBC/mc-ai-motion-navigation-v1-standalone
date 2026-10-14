@@ -317,13 +317,12 @@ class SnapshotSourceProvenance:
 
 
 def _snapshot_observation(method):
-    """Finalize one observation batch under the snapshot-owner lock.
+    """Apply facts and invalidate derived snapshot state under the owner lock.
 
-    Geometry changes must immediately replace their immutable section and
-    retire published snapshots.  Evidence-only refreshes stay in the live
-    world until the next borrow, where all pending evidence is coalesced into
-    one immutable replacement instead of rebuilding the same section every
-    control frame.
+    Observation never constructs an immutable worker section. Geometry
+    changes retire the current cached reference immediately; evidence-only
+    refreshes leave the old immutable reference available to old borrowers.
+    A later borrow materializes only the dirty sections in its own bounds.
     """
     @wraps(method)
     def apply(self, *args, **kwargs):
@@ -335,7 +334,7 @@ def _snapshot_observation(method):
                     block_section(position)
                     for position in self._snapshot_changed_positions
                 }
-                self._commit_snapshot_sections(changed_sections)
+                self._retire_changed_snapshot_sections(changed_sections)
                 self._invalidate_changed_snapshots()
     return apply
 
@@ -569,6 +568,7 @@ class WorldKnowledge:
         self._snapshot_publication_lock = threading.Lock()
         self._snapshot_sections: dict[SectionPos, ImmutableWorldSection] = {}
         self._snapshot_dirty_sections: set[SectionPos] = set()
+        self._snapshot_dirty_positions: dict[SectionPos, set[BlockPos]] = {}
         self._snapshot_changed_positions: set[BlockPos] = set()
         self._cell_semantic_versions: dict[BlockPos, int] = {}
         self._snapshot_epoch = uuid.uuid4().int << 64
@@ -607,7 +607,9 @@ class WorldKnowledge:
                     self._cell_semantic_versions.pop(old_position, None)
             self._geometry_changes.append((self._geometry_revision, position))
             self._cell_semantic_versions[position] = self._geometry_revision
-            self._snapshot_dirty_sections.add(block_section(position))
+            section = block_section(position)
+            self._snapshot_dirty_sections.add(section)
+            self._snapshot_dirty_positions.setdefault(section, set()).add(position)
             self._snapshot_changed_positions.add(position)
 
     @property
@@ -821,6 +823,7 @@ class WorldKnowledge:
         self._evidence_revision += 1
         self._section_evidence_revisions[section_position] = self._evidence_revision
         self._snapshot_dirty_sections.add(section_position)
+        self._snapshot_dirty_positions.setdefault(section_position, set()).add(position)
         if semantic_changed:
             self._geometry_revision += 1
             self._record_geometry_changes((position,))
@@ -908,24 +911,61 @@ class WorldKnowledge:
         self._prune_tombstones()
 
     def _commit_snapshot_sections(
-        self, sections: set[SectionPos] | None = None,
+        self, sections: set[SectionPos],
     ) -> None:
-        selected = (
-            set(self._snapshot_dirty_sections)
-            if sections is None
-            else self._snapshot_dirty_sections.intersection(sections)
-        )
+        if type(sections) is not set:
+            raise ContractViolation("snapshot materialization requires an explicit section set")
+        for section in sections:
+            _section(section)
+        selected = self._snapshot_dirty_sections.intersection(sections)
         for position in selected:
             cells = self._sections.get(position)
             if not cells:
                 self._snapshot_sections.pop(position, None)
+                self._snapshot_dirty_positions.pop(position, None)
                 continue
-            facts = tuple(sorted(cells.items()))
-            versions = tuple((cell, self._snapshot_epoch + self._cell_semantic_versions[cell])
-                             for cell, _ in facts)
+            previous = self._snapshot_sections.get(position)
+            dirty = self._snapshot_dirty_positions.get(position, set())
+            if (previous is not None and len(previous.facts) == len(cells)
+                    and all(cell in cells for cell, _ in previous.facts)):
+                # Evidence refreshes preserve cell membership and semantic
+                # versions. Reuse every unchanged pair and the complete
+                # dependency tuple, so a one-cell stamp refresh does not
+                # allocate thousands of short-lived tracked tuples.
+                facts = tuple(
+                    (pair[0], cells[pair[0]]) if pair[0] in dirty else pair
+                    for pair in previous.facts
+                )
+                versions = previous.dependency_versions
+            else:
+                facts = tuple(sorted(cells.items()))
+                versions = tuple(
+                    (cell, self._snapshot_epoch + self._cell_semantic_versions[cell])
+                    for cell, _ in facts
+                )
             self._snapshot_sections[position] = \
                 ImmutableWorldSection._from_validated_observation(position, facts, versions)
         self._snapshot_dirty_sections.difference_update(selected)
+        for position in selected:
+            self._snapshot_dirty_positions.pop(position, None)
+
+    def _retire_changed_snapshot_sections(
+        self, sections: set[SectionPos],
+    ) -> None:
+        """Retire stale cache entries without materializing replacements."""
+        for section in sections:
+            self._snapshot_sections.pop(section, None)
+            # Once the immutable base is gone, the next borrow performs a
+            # complete section build. Per-cell evidence deltas are no longer
+            # useful and must not accumulate removed positions.
+            self._snapshot_dirty_positions.pop(section, None)
+            if self._sections.get(section):
+                self._snapshot_dirty_sections.add(section)
+            else:
+                # Empty and evicted sections have no immutable payload to
+                # build. Keeping their marker would make the pending set grow
+                # independently of the live-world capacity.
+                self._snapshot_dirty_sections.discard(section)
 
     def _invalidate_changed_snapshots(self) -> None:
         if self._snapshot_changed_positions:
@@ -989,19 +1029,23 @@ class WorldKnowledge:
         if size > self._max_snapshot_cells or not self._snapshot_version_lock.acquire(False):
             return None
         try:
-            # Evidence refreshes do not change collision semantics and can be
-            # much more frequent than motion work.  Materialize their latest
-            # stamps/evidence once here, only when a worker actually borrows a
-            # version.  Existing immutable sections remain valid for old work.
-            self._commit_snapshot_sections()
-            references = tuple(self._snapshot_sections[position]
-                               for x in range(bounds.min_x // WORLD_SECTION_SIZE,
-                                              bounds.max_x // WORLD_SECTION_SIZE + 1)
-                               for y in range(bounds.min_y // WORLD_SECTION_SIZE,
-                                              bounds.max_y // WORLD_SECTION_SIZE + 1)
-                               for z in range(bounds.min_z // WORLD_SECTION_SIZE,
-                                              bounds.max_z // WORLD_SECTION_SIZE + 1)
-                               if (position := (x, y, z)) in self._snapshot_sections)
+            requested_sections = {
+                (x, y, z)
+                for x in range(bounds.min_x // WORLD_SECTION_SIZE,
+                               bounds.max_x // WORLD_SECTION_SIZE + 1)
+                for y in range(bounds.min_y // WORLD_SECTION_SIZE,
+                               bounds.max_y // WORLD_SECTION_SIZE + 1)
+                for z in range(bounds.min_z // WORLD_SECTION_SIZE,
+                               bounds.max_z // WORLD_SECTION_SIZE + 1)
+            }
+            # Build current immutable payloads only for this request. Dirty
+            # sections elsewhere remain pending for their own future borrow.
+            self._commit_snapshot_sections(requested_sections)
+            references = tuple(
+                self._snapshot_sections[position]
+                for position in sorted(requested_sections)
+                if position in self._snapshot_sections
+            )
             self._snapshot_local_revision += 1
             metadata = (self.session.value, self._geometry_revision, self._evidence_revision,
                         self._snapshot_epoch + self._snapshot_local_revision,

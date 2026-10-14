@@ -185,9 +185,13 @@ class StandaloneExportTests(unittest.TestCase):
             self.root / "evidence/motion_navigation/d107-regression-recovery-v1/"
             "published-production-semantic-hashes.json"
         ).read_text("utf-8"))["files"]
+        d108 = json.loads((
+            self.root / "evidence/motion_navigation/d108-snapshot-hardening-v1/"
+            "published-production-semantic-hashes.json"
+        ).read_text("utf-8"))["files"]
         current_semantics = {**canonical, **r1, **r2, **r3, **handoff,
                              **late_handoff, **post_loss, **tp0, **published,
-                             **d105, **d107}
+                             **d105, **d107, **d108}
         tp0_root = self.root / "evidence/motion_navigation/trajectory-proto-tp0-v1"
         frozen = json.loads((tp0_root / "frozen-control-manifest.json").read_text("utf-8"))
         audit = json.loads((tp0_root / "fabric/audit-summary.json").read_text("utf-8"))

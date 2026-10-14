@@ -14,11 +14,26 @@ import json
 import math
 import os
 from pathlib import Path
+import sys
 import tempfile
 from typing import Iterable, Sequence
 
+ROOT = Path(__file__).resolve().parents[1]
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(ROOT))
 
-SCHEMA_VERSION = "mc2p.d107-b10-trace-audit.v1"
+from scripts.b10_gap_solver_runtime import _receiver_diagnostic_summary
+
+
+SCHEMA_VERSION = "mc2p.d108-b10-trace-audit.v2"
+
+_CONTROL_TIMING_FIELDS = (
+    "control_wall_ns",
+    "backend_elapsed_ns",
+    "backend_blocking_io_ns",
+    "runtime_outside_backend_ns",
+    "proposal_elapsed_ns",
+)
 
 
 def _percentile(values: Sequence[float], quantile: float) -> float | None:
@@ -143,7 +158,7 @@ def _trace_summary(path: Path) -> dict:
         if frame_has_lease_exhausted:
             lease_frames += 1
 
-    return {
+    result = {
         "status": "available",
         "source": path.as_posix(),
         "step_frames": step_frames,
@@ -162,28 +177,65 @@ def _trace_summary(path: Path) -> dict:
             "invalid_timing_frames": invalid_timing_frames,
         },
     }
+    result["control_prepare_status"] = (
+        "available" if control_ms else "unavailable"
+    )
+    if not control_ms:
+        result["control_prepare_unavailable_reason"] = (
+            "trace steps do not contain both decision_observation_received_ns "
+            "and dispatched_monotonic_ns"
+        )
+    result["receiver_delivery_timing"] = {
+        "status": "unavailable",
+        "reason": (
+            "legacy trace records do not identify receiver publication and "
+            "first control-frame consumption movement ticks"
+        ),
+    }
+    return result
 
 
 def _control_frame_summary(path: Path) -> dict:
-    control_ms: list[float] = []
-    missing = 0
+    timings: dict[str, list[float]] = {
+        field: [] for field in _CONTROL_TIMING_FIELDS
+    }
+    missing: Counter[str] = Counter()
+    invalid: Counter[str] = Counter()
     reason_counts: Counter[str] = Counter()
+    row_count = 0
     for row in _iter_jsonl(path):
-        wall_ns = row.get("control_wall_ns")
-        if type(wall_ns) is int and wall_ns >= 0:
-            control_ms.append(wall_ns / 1_000_000.0)
-        else:
-            missing += 1
+        row_count += 1
+        for field in _CONTROL_TIMING_FIELDS:
+            value = row.get(field)
+            if type(value) is int and value >= 0:
+                timings[field].append(value / 1_000_000.0)
+            elif value is None:
+                missing[field] += 1
+            else:
+                invalid[field] += 1
         reason = row.get("reason_code")
         if isinstance(reason, str):
             reason_counts[reason] += 1
-    return {
+    result = {
         "status": "available",
         "source": path.as_posix(),
-        "control_wall_ms": _timing_summary(control_ms),
-        "missing_control_wall_frames": missing,
+        "row_count": row_count,
+        "timing_status": "available" if row_count else "unavailable",
+        "missing_fields": {
+            field: missing[field] for field in _CONTROL_TIMING_FIELDS
+        },
+        "invalid_fields": {
+            field: invalid[field] for field in _CONTROL_TIMING_FIELDS
+        },
         "reason_counts": dict(sorted(reason_counts.items())),
     }
+    for field in _CONTROL_TIMING_FIELDS:
+        result[field.removesuffix("_ns") + "_ms"] = _timing_summary(
+            timings[field]
+        )
+    if not row_count:
+        result["timing_unavailable_reason"] = "control-frame file contains no rows"
+    return result
 
 
 def _ftick_summary(client: Path) -> dict:
@@ -228,6 +280,19 @@ def _ftick_summary(client: Path) -> dict:
     return result
 
 
+def _receiver_summary(client: Path) -> dict:
+    path = client / "b10-receiver-diagnostics.jsonl"
+    if not path.is_file():
+        return {
+            "status": "unavailable",
+            "reason": "client-0/b10-receiver-diagnostics.jsonl is absent",
+        }
+    result = _receiver_diagnostic_summary(list(_iter_jsonl(path)))
+    result["status"] = "available"
+    result["source"] = path.as_posix()
+    return result
+
+
 def analyze_run(label: str, run: Path) -> dict:
     run = Path(run)
     trace = run / "client-0" / "trace.jsonl"
@@ -254,6 +319,7 @@ def analyze_run(label: str, run: Path) -> dict:
             }
         ),
         "ftick": _ftick_summary(client),
+        "receiver_diagnostics": _receiver_summary(client),
     }
 
 
@@ -276,6 +342,10 @@ def build_report(
             "percentiles": "nearest-rank",
             "over_50ms": "strictly greater than 50.0 ms",
             "movement_tick_continuity": "sorted unique receipt application tick ids",
+            "control_frame_timings": (
+                "each recorded duration is summarized independently; missing "
+                "fields are unavailable and durations are never added together"
+            ),
         },
         "runs": measured + missing,
         "causal_conclusion": "unavailable",
