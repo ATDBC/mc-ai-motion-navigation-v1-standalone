@@ -1,0 +1,39 @@
+检出 5c1485d：场景 e28_short，上限 80 tick，墙钟 2.77 s，约 34.6 ms/tick
+  apply_observed_blocks@control             41 次       60.4 ms（占墙钟 2.2%）
+  相邻两次观察摄取的间隔（≈每个控制周期墙钟）：中位 22.6 ms，P95 69.8 ms，最大 843.4 ms，>50 ms 共 4 个
+  safety_violations=[] source_released=True
+检出 8167d92：场景 e28_short，上限 80 tick，墙钟 3.84 s，约 48.0 ms/tick
+  apply_observed_blocks@control             41 次       46.8 ms（占墙钟 1.2%）
+  commit:batch@control                      53 次      537.3 ms（占墙钟 14.0%），重建 section 86 个
+  观察批次提交：53 次，其中实际重建 5 次；单次最长 255.9 ms（重建 24 个 section），单批最多重建 24 个 section
+  实际重建的批次（第几次提交: 毫秒/section 数）：#0/摄取0次后: 39.5/18，#1/摄取0次后: 202.6/24，#2/摄取1次后: 0.3/2，#3/摄取1次后: 38.7/18，#4/摄取1次后: 255.9/24
+  相邻两次观察摄取的间隔（≈每个控制周期墙钟）：中位 17.7 ms，P95 76.6 ms，最大 1496.3 ms，>50 ms 共 3 个
+  每批观察后仍待合并证据的 section 数：中位 4，最大 4（下一次借用会在接收线程上持锁一次性重建它们）
+  控制线程取 _snapshot_version_lock：53 次，中位 0.004 ms，最大 0.043 ms，>1 ms 共 0 次
+  safety_violations=[] source_released=True
+检出 5c1485d：场景 e28_short，上限 80 tick，墙钟 2.27 s，约 28.4 ms/tick
+  apply_observed_blocks@control             41 次       47.9 ms（占墙钟 2.1%）
+  相邻两次观察摄取的间隔（≈每个控制周期墙钟）：中位 21.1 ms，P95 74.1 ms，最大 650.6 ms，>50 ms 共 5 个
+  safety_violations=[] source_released=True
+检出 8167d92：场景 e28_short，上限 80 tick，墙钟 3.41 s，约 42.6 ms/tick
+  apply_observed_blocks@control             41 次       44.5 ms（占墙钟 1.3%）
+  commit:batch@control                      53 次      540.3 ms（占墙钟 15.9%），重建 section 86 个
+  观察批次提交：53 次，其中实际重建 5 次；单次最长 249.6 ms（重建 24 个 section），单批最多重建 24 个 section
+  实际重建的批次（第几次提交: 毫秒/section 数）：#0/摄取0次后: 25.5/18，#1/摄取0次后: 228.5/24，#2/摄取1次后: 0.2/2，#3/摄取1次后: 36.1/18，#4/摄取1次后: 249.6/24
+  相邻两次观察摄取的间隔（≈每个控制周期墙钟）：中位 15.4 ms，P95 61.2 ms，最大 1365.9 ms，>50 ms 共 3 个
+  每批观察后仍待合并证据的 section 数：中位 4，最大 4（下一次借用会在接收线程上持锁一次性重建它们）
+  控制线程取 _snapshot_version_lock：53 次，中位 0.004 ms，最大 0.014 ms，>1 ms 共 0 次
+  safety_violations=[] source_released=True
+检出 5c1485d：场景 e28_short，上限 80 tick，墙钟 2.41 s，约 30.1 ms/tick
+  apply_observed_blocks@control             41 次       44.0 ms（占墙钟 1.8%）
+  相邻两次观察摄取的间隔（≈每个控制周期墙钟）：中位 17.3 ms，P95 80.5 ms，最大 761.2 ms，>50 ms 共 4 个
+  safety_violations=[] source_released=True
+检出 8167d92：场景 e28_short，上限 80 tick，墙钟 3.63 s，约 45.4 ms/tick
+  apply_observed_blocks@control             41 次       51.4 ms（占墙钟 1.4%）
+  commit:batch@control                      53 次      595.1 ms（占墙钟 16.4%），重建 section 86 个
+  观察批次提交：53 次，其中实际重建 5 次；单次最长 289.7 ms（重建 24 个 section），单批最多重建 24 个 section
+  实际重建的批次（第几次提交: 毫秒/section 数）：#0/摄取0次后: 37.9/18，#1/摄取0次后: 244.5/24，#2/摄取1次后: 0.2/2，#3/摄取1次后: 22.5/18，#4/摄取1次后: 289.7/24
+  相邻两次观察摄取的间隔（≈每个控制周期墙钟）：中位 19.7 ms，P95 59.0 ms，最大 1392.6 ms，>50 ms 共 3 个
+  每批观察后仍待合并证据的 section 数：中位 4，最大 4（下一次借用会在接收线程上持锁一次性重建它们）
+  控制线程取 _snapshot_version_lock：53 次，中位 0.005 ms，最大 0.043 ms，>1 ms 共 0 次
+  safety_violations=[] source_released=True

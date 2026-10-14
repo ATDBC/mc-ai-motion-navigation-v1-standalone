@@ -1,0 +1,15 @@
+E35：D106 审查 E27 的慢模块在 D103 前与 D107 上串行运行（Linux，单核绑定 taskset -c 3，同一机器；另一核同时运行计时实验）
+== 5c1485d（D103 前）
+  100.1 s  test_f2_ground_completion_region  Ran 13 tests in 99.236s OK
+   30.5 s  test_d094_fabric_timing_metric  Ran 7 tests in 29.633s OK
+   39.2 s  test_navigation_closed_loop  Ran 56 tests in 38.461s OK
+   35.6 s  test_navigation_supervised_interruptions  Ran 28 tests in 34.909s OK
+   13.8 s  test_d058_runtime_validation  Ran 104 tests in 12.901s OK
+  130.3 s  test_f1_known_world_following  Ran 8 tests in 129.457s OK
+== 8167d92（D107）
+   96.0 s  test_f2_ground_completion_region  Ran 13 tests in 95.116s OK
+   35.3 s  test_d094_fabric_timing_metric  Ran 7 tests in 34.527s OK
+   41.4 s  test_navigation_closed_loop  Ran 56 tests in 40.662s OK
+   40.3 s  test_navigation_supervised_interruptions  Ran 28 tests in 39.553s OK
+   15.2 s  test_d058_runtime_validation  Ran 104 tests in 14.280s OK
+  145.5 s  test_f1_known_world_following  Ran 8 tests in 144.390s OK

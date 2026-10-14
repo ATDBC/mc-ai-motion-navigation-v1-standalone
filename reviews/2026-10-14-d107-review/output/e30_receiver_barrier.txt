@@ -1,0 +1,81 @@
+barrier  test_r27_async_admission                   ran=25  fail=0 err=0    8.6s
+barrier  test_r27_async_admission                   ran=25  fail=0 err=0    9.7s
+barrier  test_r27_async_admission                   ran=25  fail=0 err=0    9.2s
+none     test_r27_async_admission                   ran=25  fail=15 err=0    7.9s AssertionError: <MotionJobOperation.SOLVE: 'solve'> is not <MotionJobOperation.REVALIDATE: 'revalidate'>
+none     test_r27_async_admission                   ran=25  fail=16 err=0    7.8s AssertionError: <MotionJobOperation.SOLVE: 'solve'> is not <MotionJobOperation.REVALIDATE: 'revalidate'>
+none     test_r27_async_admission                   ran=25  fail=14 err=0    8.3s AssertionError: <MotionJobOperation.SOLVE: 'solve'> is not <MotionJobOperation.REVALIDATE: 'revalidate'>
+sleep50  test_r27_async_admission                   ran=25  fail=0 err=0   12.6s
+sleep50  test_r27_async_admission                   ran=25  fail=0 err=0   12.6s
+sleep50  test_r27_async_admission                   ran=25  fail=0 err=0   13.0s
+barrier  test_motion_start_delivery                 ran=12  fail=0 err=0   24.1s
+barrier  test_motion_start_delivery                 ran=12  fail=0 err=0   22.8s
+barrier  test_motion_start_delivery                 ran=12  fail=0 err=0   22.1s
+none     test_motion_start_delivery                 ran=12  fail=13 err=0   34.2s AssertionError: 4 != 1
+none     test_motion_start_delivery                 ran=12  fail=12 err=0   36.3s AssertionError: 4 != 1
+none     test_motion_start_delivery                 ran=12  fail=14 err=0   34.2s AssertionError: 4 != 1
+sleep50  test_motion_start_delivery                 ran=12  fail=3 err=0   70.7s AssertionError: 4 != 1
+sleep50  test_motion_start_delivery                 ran=12  fail=3 err=0   71.9s AssertionError: 4 != 1
+sleep50  test_motion_start_delivery                 ran=12  fail=3 err=0   70.8s AssertionError: 3 != 1
+barrier  test_motion_baseline_recovery              ran=6   fail=0 err=0    4.1s
+barrier  test_motion_baseline_recovery              ran=6   fail=0 err=0    3.8s
+barrier  test_motion_baseline_recovery              ran=6   fail=0 err=0    3.3s
+none     test_motion_baseline_recovery              ran=6   fail=2 err=0    5.8s  : motion_unsolvable:motion_retry_exhausted:execution_window_expired
+none     test_motion_baseline_recovery              ran=6   fail=2 err=0    5.3s  : motion_unsolvable:motion_retry_exhausted:execution_window_expired
+none     test_motion_baseline_recovery              ran=6   fail=2 err=0    5.5s  : motion_unsolvable:motion_retry_exhausted:execution_window_expired
+sleep50  test_motion_baseline_recovery              ran=6   fail=2 err=0    9.7s  : motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack
+sleep50  test_motion_baseline_recovery              ran=6   fail=2 err=0    9.6s  : motion_unsolvable:motion_retry_exhausted:execution_window_expired
+sleep50  test_motion_baseline_recovery              ran=6   fail=2 err=0    9.5s  : motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack
+barrier  test_async_gap_revalidation_delivery       ran=2   fail=0 err=0    3.0s
+barrier  test_async_gap_revalidation_delivery       ran=2   fail=0 err=0    3.3s
+barrier  test_async_gap_revalidation_delivery       ran=2   fail=0 err=0    3.1s
+none     test_async_gap_revalidation_delivery       ran=2   fail=0 err=0    2.9s
+none     test_async_gap_revalidation_delivery       ran=2   fail=0 err=0    2.9s
+none     test_async_gap_revalidation_delivery       ran=2   fail=0 err=0    3.4s
+sleep50  test_async_gap_revalidation_delivery       ran=2   fail=0 err=0    9.9s
+sleep50  test_async_gap_revalidation_delivery       ran=2   fail=0 err=0   10.1s
+sleep50  test_async_gap_revalidation_delivery       ran=2   fail=0 err=0    9.9s
+barrier  test_runtime_backend_io                    ran=7   fail=0 err=0    6.4s
+barrier  test_runtime_backend_io                    ran=7   fail=0 err=0    7.2s
+barrier  test_runtime_backend_io                    ran=7   fail=0 err=0    7.0s
+none     test_runtime_backend_io                    ran=7   fail=0 err=0    8.1s
+none     test_runtime_backend_io                    ran=7   fail=0 err=0    7.8s
+none     test_runtime_backend_io                    ran=7   fail=0 err=0    8.3s
+sleep50  test_runtime_backend_io                    ran=7   fail=0 err=0   10.4s
+sleep50  test_runtime_backend_io                    ran=7   fail=0 err=0    9.9s
+sleep50  test_runtime_backend_io                    ran=7   fail=0 err=0   10.0s
+barrier  test_navigation_product_delivery           ran=4   fail=0 err=0    9.9s
+barrier  test_navigation_product_delivery           ran=4   fail=0 err=0    7.2s
+barrier  test_navigation_product_delivery           ran=4   fail=0 err=0    7.0s
+none     test_navigation_product_delivery           ran=4   fail=1 err=0    5.1s AssertionError: 65 != 43
+none     test_navigation_product_delivery           ran=4   fail=1 err=0    4.6s AssertionError: 67 != 43
+none     test_navigation_product_delivery           ran=4   fail=1 err=0    5.1s AssertionError: 68 != 43
+sleep50  test_navigation_product_delivery           ran=4   fail=1 err=0   11.4s AssertionError: 45 != 43
+sleep50  test_navigation_product_delivery           ran=4   fail=1 err=0   11.6s AssertionError: 45 != 43
+sleep50  test_navigation_product_delivery           ran=4   fail=1 err=0   11.0s AssertionError: 45 != 43
+barrier  test_action_continuity_formal              ran=9   fail=0 err=0    9.6s
+barrier  test_action_continuity_formal              ran=9   fail=0 err=0    8.8s
+barrier  test_action_continuity_formal              ran=9   fail=0 err=0    8.9s
+none     test_action_continuity_formal              ran=9   fail=3 err=0   13.7s  : ('motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack', _Metrics(jump_ticks=(), jump_entry_speeds=(), movement_gap_before_
+none     test_action_continuity_formal              ran=9   fail=2 err=0   13.4s  : ('motion_unsolvable:motion_retry_exhausted:execution_window_expired', _Metrics(jump_ticks=(), jump_entry_speeds=(), movement_gap_before_jump=None,
+none     test_action_continuity_formal              ran=9   fail=4 err=0   13.0s  : ('motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack', _Metrics(jump_ticks=(), jump_entry_speeds=(), movement_gap_before_
+sleep50  test_action_continuity_formal              ran=9   fail=0 err=0   29.8s
+sleep50  test_action_continuity_formal              ran=9   fail=0 err=0   29.5s
+sleep50  test_action_continuity_formal              ran=9   fail=0 err=0   29.8s
+barrier  test_runtime_navigation_verified_handoff   ran=13  fail=0 err=0    5.9s
+barrier  test_runtime_navigation_verified_handoff   ran=13  fail=0 err=0    6.2s
+barrier  test_runtime_navigation_verified_handoff   ran=13  fail=0 err=0    6.3s
+none     test_runtime_navigation_verified_handoff   ran=13  fail=1 err=0    7.0s AssertionError: 4 != 3
+none     test_runtime_navigation_verified_handoff   ran=13  fail=0 err=0    7.1s
+none     test_runtime_navigation_verified_handoff   ran=13  fail=1 err=0    7.1s AssertionError: 4 != 3
+sleep50  test_runtime_navigation_verified_handoff   ran=13  fail=0 err=0    7.6s
+sleep50  test_runtime_navigation_verified_handoff   ran=13  fail=0 err=0    6.5s
+sleep50  test_runtime_navigation_verified_handoff   ran=13  fail=0 err=0    7.1s
+barrier  test_r28_reanchor_handoff                  ran=14  fail=0 err=0    5.7s
+barrier  test_r28_reanchor_handoff                  ran=14  fail=0 err=0    5.8s
+barrier  test_r28_reanchor_handoff                  ran=14  fail=0 err=0    6.6s
+none     test_r28_reanchor_handoff                  ran=14  fail=2 err=0    8.2s AssertionError: [] is not true
+none     test_r28_reanchor_handoff                  ran=14  fail=2 err=0    8.2s AssertionError: [] is not true
+none     test_r28_reanchor_handoff                  ran=14  fail=2 err=0    7.6s AssertionError: [] is not true
+sleep50  test_r28_reanchor_handoff                  ran=14  fail=0 err=0   11.1s
+sleep50  test_r28_reanchor_handoff                  ran=14  fail=0 err=0   10.7s
+sleep50  test_r28_reanchor_handoff                  ran=14  fail=0 err=0   10.3s

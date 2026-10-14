@@ -1,0 +1,12 @@
+检出 5c1485d：不加记录包装时 50 次打开/关闭的结果 {'正常关闭': 50}
+检出 5c1485d（posix）：10 次打开/关闭的结果 {'正常关闭': 10}
+检出 98a0542：不加记录包装时 50 次打开/关闭的结果 {'OSError errno=9': 50}
+第 1 次：同一连接对象被关闭两次：
+  fd=3 线程=QueueFeederThread 调用链=_bootstrap_inner > run > _feed > close
+  fd=3 线程=MainThread 调用链=main > __exit__ > close > close
+检出 98a0542（posix）：10 次打开/关闭的结果 {'TypeError': 10, '同一连接对象进入底层关闭两次': 10}
+检出 8167d92：不加记录包装时 50 次打开/关闭的结果 {'OSError errno=9': 50}
+第 1 次：同一连接对象被关闭两次：
+  fd=3 线程=QueueFeederThread 调用链=_bootstrap_inner > run > _feed > close
+  fd=3 线程=MainThread 调用链=main > __exit__ > close > close
+检出 8167d92（posix）：10 次打开/关闭的结果 {'TypeError': 10, '同一连接对象进入底层关闭两次': 10}

@@ -1,0 +1,5 @@
+检出 8167d92，receiver 屏障已去掉；分别撤销 D107 的两处生产修复后运行 test_async_gap_revalidation_delivery：
+none ran 2 fail 0 err 0
+no-wake ran 2 fail 0 err 0
+no-retire ran 2 fail 0 err 0
+neither ran 2 fail 0 err 0

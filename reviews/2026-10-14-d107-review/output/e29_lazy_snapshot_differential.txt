@@ -1,0 +1,12 @@
+检出 98a0542：操作计数 {'air': 757, 'blocks': 1096, 'borrow': 870, 'deps': 464, 'invalidate': 285, 'refresh': 1046, 'release': 267, 'skip': 15, '借用:lease_capacity': 8, '借用:lease_not_ready': 538, '借用:lease_ready': 324, '借用:not_published': 546, '借用:published': 324}
+  全部可观察结果摘要 1afc23826132ff553450c0d8d8d0508f14a10f55f5f64ef4e3f8f722a80086de
+  （该检出没有惰性提交，不做不变量检查）
+检出 8167d92：操作计数 {'air': 757, 'blocks': 1096, 'borrow': 870, 'deps': 464, 'invalidate': 285, 'refresh': 1046, 'release': 267, 'skip': 15, '借用:lease_capacity': 8, '借用:lease_not_ready': 538, '借用:lease_ready': 324, '借用:not_published': 546, '借用:published': 324}
+  全部可观察结果摘要 1afc23826132ff553450c0d8d8d0508f14a10f55f5f64ef4e3f8f722a80086de
+  D107 不变量检查（section 语义与依赖版本不滞后）：16825 次
+检出 8167d92（变异：借用时不补提交）：操作计数 {'air': 757, 'blocks': 1096, 'borrow': 870, 'deps': 464, 'invalidate': 285, 'refresh': 1046, 'release': 267, 'skip': 15, '借用:lease_capacity': 8, '借用:lease_not_ready': 538, '借用:lease_ready': 324, '借用:not_published': 546, '借用:published': 324}
+  全部可观察结果摘要 8cee7f7e29b92c7e4e64a44a43cb143f64c707953f8aafb6054567b537670c13
+  D107 不变量检查（section 语义与依赖版本不滞后）：16825 次
+检出 8167d92（修法探针：几何变化也推迟到借用时重建）：操作计数 {'air': 757, 'blocks': 1096, 'borrow': 870, 'deps': 464, 'invalidate': 285, 'refresh': 1046, 'release': 267, 'skip': 15, '借用:lease_capacity': 8, '借用:lease_not_ready': 538, '借用:lease_ready': 324, '借用:not_published': 546, '借用:published': 324}
+  全部可观察结果摘要 1afc23826132ff553450c0d8d8d0508f14a10f55f5f64ef4e3f8f722a80086de
+  （修法探针模式：section 按设计可滞后到借用时，不做不变量检查）
