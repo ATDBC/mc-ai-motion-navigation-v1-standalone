@@ -1,0 +1,39 @@
+== c2cc1ad，taskset -c 1,2（两个 CPU）
+检出 c2cc1ad：PlayerRuntimeV1 reset 后 close（一次 close neutral），每组 50 次
+  项目现状，不加时
+    close_release 诊断行的 diagnostics：{'null': 50}
+    export_runtime_time_evidence 错误：{"'NoneType' object is not subscriptable | time events do not cover all formal observations": 50}
+    Runtime cleanup failures：{'无': 50}
+  项目现状，按实测投影 P95 补足
+    close_release 诊断行的 diagnostics：{'null': 50}
+    export_runtime_time_evidence 错误：{"'NoneType' object is not subscriptable | time events do not cover all formal observations": 50}
+    Runtime cleanup failures：{'无': 50}
+  对照（调用方线程入队前抓取），按实测投影 P95 补足
+    close_release 诊断行的 diagnostics：{'{"client_tick": 1001}': 50}
+    export_runtime_time_evidence 错误：{'time events do not cover all formal observations': 50}
+    Runtime cleanup failures：{'无': 50}
+== c2cc1ad，taskset -c 1（单 CPU）
+检出 c2cc1ad：PlayerRuntimeV1 reset 后 close（一次 close neutral），每组 50 次
+  项目现状，不加时
+    close_release 诊断行的 diagnostics：{'{"client_tick": 1001}': 49, 'null': 1}
+    export_runtime_time_evidence 错误：{'time events do not cover all formal observations': 49, "'NoneType' object is not subscriptable | time events do not cover all formal observations": 1}
+    Runtime cleanup failures：{'无': 50}
+  项目现状，按实测投影 P95 补足
+    close_release 诊断行的 diagnostics：{'{"client_tick": 1001}': 48, 'null': 2}
+    export_runtime_time_evidence 错误：{'time events do not cover all formal observations': 48, "'NoneType' object is not subscriptable | time events do not cover all formal observations": 2}
+    Runtime cleanup failures：{'无': 50}
+  对照（调用方线程入队前抓取），按实测投影 P95 补足
+    close_release 诊断行的 diagnostics：{'{"client_tick": 1001}': 50}
+    export_runtime_time_evidence 错误：{'time events do not cover all formal observations': 50}
+    Runtime cleanup failures：{'无': 50}
+== a9d51a2（D1 所用生产代码），taskset -c 1,2
+检出 a9d51a2：PlayerRuntimeV1 reset 后 close（一次 close neutral），每组 20 次
+  （本检出没有 D109 的单次投影契约 write_projected，对照组不适用，略过）
+  项目现状，不加时
+    close_release 诊断行的 diagnostics：{'{"client_tick": 1000}': 20}
+    export_runtime_time_evidence 错误：{'deployment timing samples do not cover one exact Runtime episode | time events do not cover all formal observations': 20}
+    Runtime cleanup failures：{'cleanup': 20}
+  项目现状，按实测投影 P95 补足
+    close_release 诊断行的 diagnostics：{'{"client_tick": 1000}': 20}
+    export_runtime_time_evidence 错误：{'deployment timing samples do not cover one exact Runtime episode | time events do not cover all formal observations': 20}
+    Runtime cleanup failures：{'cleanup': 20}

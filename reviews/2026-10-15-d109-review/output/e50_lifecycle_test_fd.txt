@@ -1,0 +1,11 @@
+== c2cc1ad
+AssertionError: 6 != 5
+FAILED (failures=1)
+AssertionError: 6 != 5
+FAILED (failures=1)
+AssertionError: 6 != 5
+FAILED (failures=1)
+== c2cc1ad（对照：恢复 stderr 后再计数）
+OK
+OK
+OK

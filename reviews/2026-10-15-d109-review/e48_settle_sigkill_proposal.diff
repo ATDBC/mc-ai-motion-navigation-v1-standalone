@@ -1,0 +1,22 @@
+diff --git a/scripts/run_motion_nav_shards.py b/scripts/run_motion_nav_shards.py
+index 0af0cfb..be5f21a 100644
+--- a/scripts/run_motion_nav_shards.py
++++ b/scripts/run_motion_nav_shards.py
+@@ -937,6 +937,17 @@ def _settle_linux_subreaper_scope(
+             ]
+             new_pids = set(registered) - previous_pids
+             if live_adopted or new_pids:
++                # The first cleanup already sent SIGTERM. A handler that forks
++                # on SIGTERM must not get another turn, so settle with SIGKILL.
++                for identity in current:
++                    if identity == root_identity or not _identity_is_alive(identity):
++                        continue
++                    try:
++                        candidate = psutil.Process(identity.pid)
++                        if abs(candidate.create_time() - identity.create_time) <= .01:
++                            candidate.kill()
++                    except psutil.Error:
++                        pass
+                 remaining = max(0.0, deadline - time.perf_counter())
+                 round_cleanup = _cleanup_process_tree(
+                     root_identity,

@@ -1,0 +1,5 @@
+检出 c2cc1ad
+  场景 1：close(1.0) 用时 1.00 s → incomplete，worker_alive=True，accepted=4，dropped=6，pending=4，failure=worker_join；放开后再 close → sealed，written=4，worker_alive=False
+  场景 2：sink 卡住、未 close：0.8 s 内退出，返回码 0
+  场景 3：sink 正常、未 close：1.8 s 内退出，返回码 0；已接纳 2000 条，文件里 676 行（未 close 时缺少 trace_delivery_summary）
+  场景 4：30 次主线程写完即退出 → {'返回码 0': 30}；标准错误首行 无

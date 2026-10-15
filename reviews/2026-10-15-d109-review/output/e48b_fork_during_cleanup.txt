@@ -1,0 +1,4 @@
+项目检出：5 次 → cleanup {'failed': 5}；分片器返回后仍存活 5 次；登记进程数 114–120；用时 4.1–4.7 s
+  错误（5 次）：Linux subreaper scope did not reach two stable scans
+  错误（5 次）：not all Linux subreaper-adopted children were reaped
+对照检出（settle 阶段直接 SIGKILL）：5 次 → cleanup {'passed': 5}；分片器返回后仍存活 0 次；登记进程数 3–3；用时 1.2–1.7 s

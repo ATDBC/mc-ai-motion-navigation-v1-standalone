@@ -1,0 +1,22 @@
+diff --git a/tests/motion_nav/test_d102_registry_lifecycle.py b/tests/motion_nav/test_d102_registry_lifecycle.py
+index 3d9edc9..18eaeff 100644
+--- a/tests/motion_nav/test_d102_registry_lifecycle.py
++++ b/tests/motion_nav/test_d102_registry_lifecycle.py
+@@ -640,11 +640,15 @@ class RegistryTests(unittest.TestCase):
+                         references.append(weakref.ref(worker))
+                         del worker
+             time.sleep(.2)
++            os.dup2(saved_stderr_fd, 2)
++            os.close(saved_stderr_fd)
++            saved_stderr_fd = None
+             observed = resource_count()
+             immediate_release = all(reference() is None for reference in references)
+         finally:
+-            os.dup2(saved_stderr_fd, 2)
+-            os.close(saved_stderr_fd)
++            if saved_stderr_fd is not None:
++                os.dup2(saved_stderr_fd, 2)
++                os.close(saved_stderr_fd)
+             if previous_gc:
+                 gc.enable()
+             gc.collect()

@@ -1,0 +1,12 @@
+项目检出 c2cc1ad：10 次 → {'FAILED (failures=3)': 8, 'FAILED (failures=2)': 2}；测试结束后残留的场景进程 0 个（已强杀）
+  fast_root_exit               失败 0/10
+  setsid                       失败 10/10；AssertionError: 6098 not found in set() : setsid did not record daemon as adopted
+  double_fork                  失败 0/10
+  ignore_sigterm_holds_output  失败 10/10；AssertionError: 6115 not found in set() : ignore_sigterm_holds_output did not record daemon as adopted
+  fork_during_cleanup          失败 8/10；AssertionError: 'failed' != 'passed'
+对照检出（settle 阶段直接 SIGKILL） c2cc1ad（工作区有对照改动）：10 次 → {'FAILED (failures=2)': 10}；测试结束后残留的场景进程 0 个（已强杀）
+  fast_root_exit               失败 0/10
+  setsid                       失败 10/10；AssertionError: 7856 not found in set() : setsid did not record daemon as adopted
+  double_fork                  失败 0/10
+  ignore_sigterm_holds_output  失败 10/10；AssertionError: 7879 not found in set() : ignore_sigterm_holds_output did not record daemon as adopted
+  fork_during_cleanup          失败 0/10

@@ -1,0 +1,4 @@
+检出 c2cc1ad
+  test_timeout_kills_descendant_holding_output_pipe_with_bounded_cleanup：30 次 → {'OK': 30}；最长连续通过 30；单次用时 4.3–4.3 s
+  test_linux_subreaper_adversarial_matrix：10 次 → {'FAILED (failures=3)': 10}；最长连续通过 0；单次用时 9.0–12.0 s
+    首个失败：FAIL: test_linux_subreaper_adversarial_matrix (tests.motion_nav.test_d107_shard_runner.MotionNavShardRunnerTests.test_linux_subreaper_adversarial_matrix) (name='ignore_sigterm_holds_output') | AssertionError: 2074 not found in set() : ignore_sigterm_holds_output did not record daemon as adopted | FAIL: test_linux_subreaper_adversarial_matrix (tests.motion_nav.test_d107_shard_runner.MotionNavShardRunnerTests.test_linux_subreaper_adversarial_matrix) (name='fork_during_cleanup') | AssertionError: 'failed' != 'passed'

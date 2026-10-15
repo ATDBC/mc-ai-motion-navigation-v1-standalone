@@ -1,0 +1,8 @@
+检出 a9d51a2：操作计数 {'air': 757, 'blocks': 1096, 'borrow': 870, 'deps': 464, 'invalidate': 285, 'refresh': 1046, 'release': 267, 'skip': 15, '借用:lease_capacity': 8, '借用:lease_not_ready': 538, '借用:lease_ready': 324, '借用:not_published': 546, '借用:published': 324}
+  全部可观察结果摘要 1afc23826132ff553450c0d8d8d0508f14a10f55f5f64ef4e3f8f722a80086de
+  D108 每步不变量 4800 次、借用逐项比对 870 次；借用时增量复用 102 个 section、整段构造 422 个
+  检查失败：无
+检出 c2cc1ad：操作计数 {'air': 757, 'blocks': 1096, 'borrow': 870, 'deps': 464, 'invalidate': 285, 'refresh': 1046, 'release': 267, 'skip': 15, '借用:lease_capacity': 8, '借用:lease_not_ready': 538, '借用:lease_ready': 324, '借用:not_published': 546, '借用:published': 324}
+  全部可观察结果摘要 1afc23826132ff553450c0d8d8d0508f14a10f55f5f64ef4e3f8f722a80086de
+  D108 每步不变量 4800 次、借用逐项比对 870 次；借用时增量复用 102 个 section、整段构造 422 个
+  检查失败：无
