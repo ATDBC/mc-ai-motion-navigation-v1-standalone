@@ -1,0 +1,23 @@
+检出 98a0542：操作计数 {'air': 757, 'blocks': 1096, 'borrow': 870, 'deps': 464, 'invalidate': 285, 'refresh': 1046, 'release': 267, 'skip': 15, '借用:lease_capacity': 8, '借用:lease_not_ready': 538, '借用:lease_ready': 324, '借用:not_published': 546, '借用:published': 324}
+  全部可观察结果摘要 1afc23826132ff553450c0d8d8d0508f14a10f55f5f64ef4e3f8f722a80086de
+  检查失败：无
+检出 8167d92：操作计数 {'air': 757, 'blocks': 1096, 'borrow': 870, 'deps': 464, 'invalidate': 285, 'refresh': 1046, 'release': 267, 'skip': 15, '借用:lease_capacity': 8, '借用:lease_not_ready': 538, '借用:lease_ready': 324, '借用:not_published': 546, '借用:published': 324}
+  全部可观察结果摘要 1afc23826132ff553450c0d8d8d0508f14a10f55f5f64ef4e3f8f722a80086de
+  D107 不变量检查 4800 次
+  检查失败：无
+检出 a9d51a2：操作计数 {'air': 757, 'blocks': 1096, 'borrow': 870, 'deps': 464, 'invalidate': 285, 'refresh': 1046, 'release': 267, 'skip': 15, '借用:lease_capacity': 8, '借用:lease_not_ready': 538, '借用:lease_ready': 324, '借用:not_published': 546, '借用:published': 324}
+  全部可观察结果摘要 1afc23826132ff553450c0d8d8d0508f14a10f55f5f64ef4e3f8f722a80086de
+  D108 每步不变量 4800 次、借用逐项比对 870 次；借用时增量复用 102 个 section、整段构造 422 个
+  检查失败：无
+检出 a9d51a2（变异：语义变化后不撤下缓存）：操作计数 {'air': 757, 'blocks': 1096, 'borrow': 870, 'deps': 464, 'invalidate': 285, 'refresh': 1046, 'release': 267, 'skip': 15, '借用:lease_capacity': 8, '借用:lease_not_ready': 538, '借用:lease_ready': 324, '借用:not_published': 546, '借用:published': 324}
+  全部可观察结果摘要 57f0c7e74c0458390057f5669c329463119a2a889a8b84523517166a8751b84c
+  D108 每步不变量 8 次、借用逐项比对 2 次；借用时增量复用 171 个 section、整段构造 353 个
+  检查失败：per-cell dirty mark names a removed cell
+检出 a9d51a2（变异：借用时不物化）：操作计数 {'air': 757, 'blocks': 1096, 'borrow': 870, 'deps': 464, 'invalidate': 285, 'refresh': 1046, 'release': 267, 'skip': 15, '借用:lease_capacity': 8, '借用:lease_not_ready': 538, '借用:lease_ready': 324, '借用:not_published': 546, '借用:published': 324}
+  全部可观察结果摘要 0fd30c19a7a970298834d2cf7fe5f3e629eeacc2c141eb1e85a226a3fca0635b
+  D108 每步不变量 6 次、借用逐项比对 0 次；借用时增量复用 0 个 section、整段构造 0 个
+  检查失败：borrowed sections differ from the live sections inside the bounds
+检出 a9d51a2（变异：纯证据刷新不登记逐格脏标记）：操作计数 {'air': 757, 'blocks': 1096, 'borrow': 870, 'deps': 464, 'invalidate': 285, 'refresh': 1046, 'release': 267, 'skip': 15, '借用:lease_capacity': 8, '借用:lease_not_ready': 538, '借用:lease_ready': 324, '借用:not_published': 546, '借用:published': 324}
+  全部可观察结果摘要 c5ad3e7ea8271030a0e42ae60707f6463a5a56eddea360fa36eb1a93757ab887
+  D108 每步不变量 95 次、借用逐项比对 16 次；借用时增量复用 102 个 section、整段构造 422 个
+  检查失败：borrowed section (0, 0, 0) differs from a fresh build

@@ -1,0 +1,5 @@
+检出 a9d51a2
+  场景 1：队列容量 4，接收 4，丢弃 6；close() 调用 2.0 s 后已返回 = False
+          放开 sink 后 close() 返回 = True，总耗时 2.0 s
+  场景 2：sink 卡住、未调用 close：解释器 3 s 后仍未退出（主线程已打印：'main thread finished'），由 subprocess 超时强杀
+  场景 3：sink 正常、未调用 close：解释器 3 s 后仍未退出（主线程已打印：'main thread finished'），由 subprocess 超时强杀

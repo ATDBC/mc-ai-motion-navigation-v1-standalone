@@ -1,0 +1,27 @@
+检出 a9d51a2
+  探针默认 timeout 240 s；任务期限 = 启动时刻 + (timeout - 25) s；B10 允许上限 600 s
+  b10-fabric             命令带 --timeout-seconds=否（实际 240 s，任务预算 215 s）
+    40 次 validation 锚点 33–747；10 次默认协调链交付 1402–1590；停止 tick 3192
+    控制帧墙钟中位 45.5 ms → 控制循环约 145 s；推出循环前启动开销约 70 s；主失败 ContractViolation: formal Runtime must be ready
+  b10-fabric-a5r         命令带 --timeout-seconds=否（实际 240 s，任务预算 215 s）
+    40 次 validation 锚点 32–734；10 次默认协调链交付 1371–1551；停止 tick 3219
+    控制帧墙钟中位 47.9 ms → 控制循环约 154 s；推出循环前启动开销约 61 s；主失败 ContractViolation: formal Runtime must be ready
+  b10-fabric-a5r2        命令带 --timeout-seconds=否（实际 240 s，任务预算 215 s）
+    40 次 validation 锚点 34–744；10 次默认协调链交付 1396–1577；停止 tick 3223
+    控制帧墙钟中位 49.7 ms → 控制循环约 160 s；推出循环前启动开销约 55 s；主失败 ContractViolation: formal Runtime must be ready
+  b10-fabric-a5r2-final  命令带 --timeout-seconds=否（实际 240 s，任务预算 215 s）
+    40 次 validation 锚点 33–738；10 次默认协调链交付 1378–1558；停止 tick 3207
+    控制帧墙钟中位 49.7 ms → 控制循环约 159 s；推出循环前启动开销约 56 s；主失败 ContractViolation: formal Runtime must be ready
+  阶段顺序（scripts/b10_gap_solver_runtime.py）：preflight → 40 validation → turn_preflight → 40 turn_validation → 10 默认协调链 → R4（3 速度带 × 4 方向 × 5 次 = 60 次验证 + 24 个负例，每次先做最多 80 tick 的带速接近）
+  历史 B10 正式命令：
+    B10B-single-action-solving.md:41  --timeout-seconds 600
+    d108-snapshot-and-bounded-verification-hardening.md:118  --timeout-seconds 未传（默认）
+    navigation-coordination-refactor.md:506  --timeout-seconds 600
+    evidence/motion_navigation/d108-snapshot-hardening-v1/b10-fabric  --timeout-seconds 未传（默认）；status=failed
+    evidence/motion_navigation/d108-snapshot-hardening-v1/b10-fabric-a5r  --timeout-seconds 未传（默认）；status=failed
+    evidence/motion_navigation/d108-snapshot-hardening-v1/b10-fabric-a5r2  --timeout-seconds 未传（默认）；status=failed
+    evidence/motion_navigation/d108-snapshot-hardening-v1/b10-fabric-a5r2-final  --timeout-seconds 未传（默认）；status=failed
+    evidence/motion_navigation/sound-motion-proof-d105-v1/t3-preflight-no-java-home  --timeout-seconds 未传（默认）；status=failed
+    evidence/motion_navigation/sound-motion-proof-d106-v1/r4/formal-t3  --timeout-seconds 未传（默认）；status=failed
+    evidence/motion_navigation/sound-motion-proof-d106-v1/r4/formal-t3-round2  --timeout-seconds 未传（默认）；status=failed
+    evidence/motion_navigation/sound-motion-proof-d106-v1/r4/preflight-no-java-home  --timeout-seconds 未传（默认）；status=failed

@@ -1,0 +1,12 @@
+检出 8167d92：删除最后一个引用后 worker 仍存活（需循环 GC）= False；gc.collect() 后仍存活 = False
+  idle          10 次后 fd 增量：不做 GC +0，gc.collect() 后 +0
+  killed        10 次后 fd 增量：不做 GC +0，gc.collect() 后 +0
+  killed_full   10 次后 fd 增量：不做 GC +0，gc.collect() 后 +0
+  killed_large  10 次后 fd 增量：不做 GC +0，gc.collect() 后 +0
+  crash_large   10 次后 fd 增量：不做 GC +0，gc.collect() 后 +0
+检出 a9d51a2：删除最后一个引用后 worker 仍存活（需循环 GC）= True；gc.collect() 后仍存活 = False
+  idle          10 次后 fd 增量：不做 GC +20，gc.collect() 后 +0
+  killed        10 次后 fd 增量：不做 GC +20，gc.collect() 后 +0
+  killed_full   10 次后 fd 增量：不做 GC +20，gc.collect() 后 +0
+  killed_large  10 次后 fd 增量：不做 GC +20，gc.collect() 后 +0
+  crash_large   10 次后 fd 增量：不做 GC +20，gc.collect() 后 +0

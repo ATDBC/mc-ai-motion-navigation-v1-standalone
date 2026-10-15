@@ -1,0 +1,4 @@
+PID 1 = process_api；孤儿退出后僵尸残留 1.57, 1.74, 1.74, 1.74, 1.74 s
+  项目检出 a9d51a2：12 次 → {'FAILED (failures=1)': 12}
+    首个失败：AssertionError: 'failed' != 'passed'
+  对照检出（僵尸视为已停止 + 重算 status） a9d51a2（工作区有对照改动）：12 次 → {'OK': 12}

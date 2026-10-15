@@ -1,0 +1,14 @@
+--- a/scripts/run_motion_nav_shards.py
++++ b/scripts/run_motion_nav_shards.py
+@@ -1044,6 +1044,11 @@
+     parser.add_argument("--report", type=Path, required=True)
+     parser.add_argument("--start-gate", type=Path, required=True)
+     args = parser.parse_args(argv)
++    if sys.platform.startswith("linux"):
++        # Keep double-forked daemons inside this module's tree: orphans are
++        # re-parented here instead of to PID 1, so the parent's scan sees them.
++        import ctypes
++        ctypes.CDLL(None, use_errno=True).prctl(36, 1, 0, 0, 0)  # PR_SET_CHILD_SUBREAPER
+     deadline = time.monotonic() + START_GATE_SECONDS
+     while not args.start_gate.is_file():
+         if time.monotonic() >= deadline:

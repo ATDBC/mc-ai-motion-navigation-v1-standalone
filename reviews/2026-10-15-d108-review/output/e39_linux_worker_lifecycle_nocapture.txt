@@ -1,0 +1,14 @@
+检出 8167d92：每场景 20 次（Linux，spawn）；不重定向标准错误
+  idle          {'正常返回': 20}；close 中位   369.6 ms，最大   443.9 ms；timed_out 0，存活 feeder 0，预期 feeder 错误 0，非预期 0；标准错误中的异常 未统计
+  killed        {'正常返回': 20}；close 中位     0.3 ms，最大     0.5 ms；timed_out 0，存活 feeder 0，预期 feeder 错误 0，非预期 0；标准错误中的异常 未统计
+  killed_full   {'正常返回': 20}；close 中位  5000.6 ms，最大  5000.7 ms；timed_out 16，存活 feeder 16，预期 feeder 错误 0，非预期 0；标准错误中的异常 未统计
+  killed_large  {'正常返回': 20}；close 中位     1.0 ms，最大     4.2 ms；timed_out 0，存活 feeder 0，预期 feeder 错误 0，非预期 0；标准错误中的异常 未统计
+  crash_large   {'正常返回': 20}；close 中位     0.6 ms，最大     0.8 ms；timed_out 0，存活 feeder 0，预期 feeder 错误 0，非预期 0；标准错误中的异常 未统计
+  全部结束后：fd 增量 3，线程增量 16，存活子进程增量 1
+检出 a9d51a2：每场景 20 次（Linux，spawn）；不重定向标准错误
+  idle          {'正常返回': 20}；close 中位   379.6 ms，最大   515.9 ms；timed_out 0，存活 feeder 0，预期 feeder 错误 0，非预期 0；标准错误中的异常 未统计
+  killed        {'正常返回': 20}；close 中位     0.4 ms，最大     1.7 ms；timed_out 0，存活 feeder 0，预期 feeder 错误 0，非预期 0；标准错误中的异常 未统计
+  killed_full   {'正常返回': 20}；close 中位     0.6 ms，最大     4.8 ms；timed_out 0，存活 feeder 0，预期 feeder 错误 40，非预期 0；标准错误中的异常 未统计
+  killed_large  {'正常返回': 20}；close 中位     0.7 ms，最大     1.3 ms；timed_out 0，存活 feeder 0，预期 feeder 错误 20，非预期 0；标准错误中的异常 未统计
+  crash_large   {'正常返回': 20}；close 中位     0.6 ms，最大     2.1 ms；timed_out 0，存活 feeder 0，预期 feeder 错误 0，非预期 0；标准错误中的异常 未统计
+  全部结束后：fd 增量 27，线程增量 0，存活子进程增量 1

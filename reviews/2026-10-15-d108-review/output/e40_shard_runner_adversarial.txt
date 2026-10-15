@@ -1,0 +1,24 @@
+（一）项目检出
+检出 a9d51a2：每个场景模块上限 3 s
+  grandchild_sleep  返回   4.4 s；status=timeout；cleanup=passed，报告 surviving=0；登记到的 PID ['grandchild']，实际仍存活=无；module exceeded 3 seconds
+  ignore_sigterm    返回   6.0 s；status=timeout；cleanup=failed，报告 surviving=0；登记到的 PID ['grandchild']，实际仍存活=无；module exceeded 3 seconds; process-tree cleanup failed
+  setsid_child      返回   5.0 s；status=timeout；cleanup=passed，报告 surviving=0；登记到的 PID ['grandchild']，实际仍存活=无；module exceeded 3 seconds
+  double_fork       返回   3.1 s；status=timeout；cleanup=passed，报告 surviving=0；登记到的 PID ['daemon']，实际仍存活=['daemon:5954']；module exceeded 3 seconds
+  pass_leave_bg     返回   1.9 s；status=passed；cleanup=passed，报告 surviving=0；登记到的 PID ['grandchild']，实际仍存活=无；
+  zero_tests        返回   0.3 s；status=error；cleanup=passed，报告 surviving=0；登记到的 PID 无，实际仍存活=无；zero tests were discovered
+（二）对照：只加 e43_zombie_cleanup_proposal.diff
+检出 a9d51a2：每个场景模块上限 3 s
+  grandchild_sleep  返回   4.6 s；status=timeout；cleanup=passed，报告 surviving=0；登记到的 PID ['grandchild']，实际仍存活=无；module exceeded 3 seconds
+  ignore_sigterm    返回   6.0 s；status=timeout；cleanup=passed，报告 surviving=0；登记到的 PID ['grandchild']，实际仍存活=无；module exceeded 3 seconds
+  setsid_child      返回   5.0 s；status=timeout；cleanup=passed，报告 surviving=0；登记到的 PID ['grandchild']，实际仍存活=无；module exceeded 3 seconds
+  double_fork       返回   3.1 s；status=timeout；cleanup=passed，报告 surviving=0；登记到的 PID ['daemon']，实际仍存活=['daemon:5981']；module exceeded 3 seconds
+  pass_leave_bg     返回   1.9 s；status=passed；cleanup=passed，报告 surviving=0；登记到的 PID ['grandchild']，实际仍存活=无；
+  zero_tests        返回   0.2 s；status=error；cleanup=passed，报告 surviving=0；登记到的 PID 无，实际仍存活=无；zero tests were discovered
+（三）对照：再加 e40_subreaper_proposal.diff（Linux 子收割者）
+检出 a9d51a2：每个场景模块上限 3 s
+  grandchild_sleep  返回   4.8 s；status=timeout；cleanup=passed，报告 surviving=0；登记到的 PID ['grandchild']，实际仍存活=无；module exceeded 3 seconds
+  ignore_sigterm    返回   6.0 s；status=timeout；cleanup=passed，报告 surviving=0；登记到的 PID ['grandchild']，实际仍存活=无；module exceeded 3 seconds
+  setsid_child      返回   5.0 s；status=timeout；cleanup=passed，报告 surviving=0；登记到的 PID ['grandchild']，实际仍存活=无；module exceeded 3 seconds
+  double_fork       返回   5.0 s；status=timeout；cleanup=passed，报告 surviving=0；登记到的 PID ['daemon']，实际仍存活=无；module exceeded 3 seconds
+  pass_leave_bg     返回   2.0 s；status=passed；cleanup=passed，报告 surviving=0；登记到的 PID ['grandchild']，实际仍存活=无；
+  zero_tests        返回   0.3 s；status=error；cleanup=passed，报告 surviving=0；登记到的 PID 无，实际仍存活=无；zero tests were discovered

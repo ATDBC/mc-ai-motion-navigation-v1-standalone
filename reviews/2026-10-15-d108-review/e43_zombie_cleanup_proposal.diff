@@ -1,0 +1,50 @@
+diff --git a/scripts/process_tree.py b/scripts/process_tree.py
+index 2c9ca53..63a7196 100644
+--- a/scripts/process_tree.py
++++ b/scripts/process_tree.py
+@@ -52,6 +52,14 @@ def _same_process(process: psutil.Process, identity: ProcessIdentityV0) -> bool:
+         return False
+
+
++def _is_live(process: psutil.Process) -> bool:
++    """A zombie has exited and holds no files; only its PID awaits a reaper."""
++    try:
++        return process.is_running() and process.status() != psutil.STATUS_ZOMBIE
++    except (psutil.NoSuchProcess, psutil.AccessDenied):
++        return False
++
++
+ def capture_registered_tree(root: ProcessIdentityV0) -> ProcessTreeSnapshotV0:
+     try:
+         process = psutil.Process(root.pid)
+@@ -142,7 +150,7 @@ def terminate_registered_tree(
+         except psutil.NoSuchProcess:
+             stopped.append(identity)
+             continue
+-        if _same_process(process, identity) and process.is_running():
++        if _same_process(process, identity) and _is_live(process):
+             surviving.append(identity)
+         else:
+             stopped.append(identity)
+diff --git a/scripts/run_motion_nav_shards.py b/scripts/run_motion_nav_shards.py
+index 56bead6..16c5c9f 100644
+--- a/scripts/run_motion_nav_shards.py
++++ b/scripts/run_motion_nav_shards.py
+@@ -530,6 +530,7 @@ def _identity_is_alive(identity: ProcessIdentityV0) -> bool:
+         return (
+             abs(process.create_time() - identity.create_time) <= 0.01
+             and process.is_running()
++            and process.status() != psutil.STATUS_ZOMBIE
+         )
+     except (psutil.NoSuchProcess, psutil.AccessDenied):
+         return False
+@@ -574,8 +575,7 @@ def _refresh_cleanup_liveness(
+     stopped = [item for item in registered if item not in surviving]
+     cleanup["stopped"] = [_identity_payload(item) for item in stopped]
+     cleanup["surviving"] = [_identity_payload(item) for item in surviving]
+-    if surviving:
+-        cleanup["status"] = "failed"
++    cleanup["status"] = "failed" if surviving or cleanup["errors"] else "passed"
+
+
+ def _close_posix_session(process_group_id: int) -> list[str]:
