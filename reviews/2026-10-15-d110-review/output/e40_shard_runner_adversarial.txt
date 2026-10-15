@@ -1,0 +1,7 @@
+检出 f663586：每个场景模块上限 3 s
+  grandchild_sleep  返回   3.2 s；status=timeout；cleanup=passed，报告 surviving=0；登记到的 PID ['grandchild']，实际仍存活=无；module exceeded 3 seconds
+  ignore_sigterm    返回   4.2 s；status=timeout；cleanup=passed，报告 surviving=0；登记到的 PID ['grandchild']，实际仍存活=无；module exceeded 3 seconds
+  setsid_child      返回   3.7 s；status=timeout；cleanup=passed，报告 surviving=0；登记到的 PID ['grandchild']，实际仍存活=无；module exceeded 3 seconds
+  double_fork       返回   3.2 s；status=timeout；cleanup=passed，报告 surviving=0；登记到的 PID ['daemon']，实际仍存活=无；module exceeded 3 seconds
+  pass_leave_bg     返回   0.8 s；status=passed；cleanup=passed，报告 surviving=0；登记到的 PID ['grandchild']，实际仍存活=无；
+  zero_tests        返回   0.4 s；status=error；cleanup=passed，报告 surviving=0；登记到的 PID 无，实际仍存活=无；zero tests were discovered

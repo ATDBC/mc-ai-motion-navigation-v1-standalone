@@ -1,0 +1,7 @@
+检出 f663586
+  test_linux_subreaper_adversarial_matrix：20 次 → {'OK': 20}；最长连续通过 20；单次用时 6.9–7.5 s
+  test_timeout_kills_descendant_holding_output_pipe_with_bounded_cleanup：10 次 → {'OK': 10}；最长连续通过 10；单次用时 4.2–4.3 s
+  test_settle_kills_exact_registered_descendants_without_another_sigterm：10 次 → {'OK': 10}；最长连续通过 10；单次用时 0.1–0.2 s
+  test_settle_preserves_kill_access_denial_as_cleanup_failure：10 次 → {'OK': 10}；最长连续通过 10；单次用时 0.1–0.1 s
+  test_real_worker_lifecycle_matrix_releases_without_cyclic_gc：10 次 → {'OK': 10}；最长连续通过 10；单次用时 14.8–15.6 s
+  test_async_close_diagnostics_survives_real_runtime_backend_close：30 次 → {'OK': 30}；最长连续通过 30；单次用时 0.5–0.7 s

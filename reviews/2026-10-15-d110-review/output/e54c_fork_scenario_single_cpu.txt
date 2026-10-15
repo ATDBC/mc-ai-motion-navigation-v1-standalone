@@ -1,0 +1,20 @@
+== 单 CPU（taskset -c 1），20 次；对照只改测试场景：由父进程在 fork 后写子进程 PID（e54_fork_scenario_pid_test_proposal.diff）
+D110 f663586：20 次 → {'OK': 16, 'FAILED (failures=1)': 4}；测试结束后残留的场景进程 0 个（已强杀）
+  fast_root_exit               失败 0/20
+  setsid                       失败 0/20
+  double_fork                  失败 0/20
+  ignore_sigterm_holds_output  失败 0/20
+  fork_during_cleanup          失败 4/20；AssertionError: False is not true : fork_during_cleanup did not establish late
+D110+测试对照 f663586（工作区有对照改动）：20 次 → {'OK': 20}；测试结束后残留的场景进程 0 个（已强杀）
+  fast_root_exit               失败 0/20
+  setsid                       失败 0/20
+  double_fork                  失败 0/20
+  ignore_sigterm_holds_output  失败 0/20
+  fork_during_cleanup          失败 0/20
+== 两个 CPU（taskset -c 1,2），20 次
+D110 f663586：20 次 → {'OK': 20}；测试结束后残留的场景进程 0 个（已强杀）
+  fast_root_exit               失败 0/20
+  setsid                       失败 0/20
+  double_fork                  失败 0/20
+  ignore_sigterm_holds_output  失败 0/20
+  fork_during_cleanup          失败 0/20

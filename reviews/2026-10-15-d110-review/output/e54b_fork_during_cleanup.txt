@@ -1,0 +1,4 @@
+D110：10 次 → cleanup {'passed': 10}；分片器返回后仍存活 0 次；登记进程数 3–3；用时 1.2–1.7 s
+D109：10 次 → cleanup {'failed': 10}；分片器返回后仍存活 10 次；登记进程数 100–107；用时 4.2–4.8 s
+  错误（10 次）：Linux subreaper scope did not reach two stable scans
+  错误（10 次）：not all Linux subreaper-adopted children were reaped

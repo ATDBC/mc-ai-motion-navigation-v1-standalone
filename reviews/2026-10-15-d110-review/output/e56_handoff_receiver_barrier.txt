@@ -1,0 +1,11 @@
+== 单核（taskset -c 3）
+检出 f663586，每组 30 次
+  原样（decide 后只等一轮）：{'OK': 18, 'FAILED (errors=1)': 12}
+  对照（最多再等 5 轮）：{'OK': 30}；出现 PreparedMotionJob 时已等的轮数 {'CYCLES=1': 17, 'CYCLES=2': 13}
+检出 c2cc1ad，每组 30 次
+  原样（decide 后只等一轮）：{'FAILED (errors=1)': 8, 'OK': 22}
+  对照（最多再等 5 轮）：{'OK': 30}；出现 PreparedMotionJob 时已等的轮数 {'CYCLES=1': 26, 'CYCLES=2': 4}
+== 只改测试的对照（e56_handoff_barrier_test_proposal.diff），单核（taskset -c 3）
+检出 f663586
+  test_same_worker_solve_choice_is_frozen_before_prepare：30 次 → {'OK': 30}；最长连续通过 30；单次用时 5.0–5.7 s
+整个模块（对照检出）：OK

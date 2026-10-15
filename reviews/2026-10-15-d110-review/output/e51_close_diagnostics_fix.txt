@@ -1,0 +1,65 @@
+== f663586，taskset -c 1,2
+检出 f663586：reset 后 close，经 _runtime_trace(capture_close_diagnostics=True)
+  异步（B10 入口），不加时（50 次）
+    最后一行 diagnostics：{'{"client_tick": 1001}': 50}
+    close 行数（trace, 诊断）：{'(1, 1)': 50}
+    归因错误：{'time events do not cover all formal observations': 50}
+    Runtime cleanup failures：{'无': 50}
+    SHA-256 前 12 位（trace, 诊断）：{"('bed55bfd2529', '6ed59146072b')": 50}
+  异步，先排 200 条填充记录，投影补足到实测 P95（10 次）
+    最后一行 diagnostics：{'{"client_tick": 1001}': 10}
+    close 行数（trace, 诊断）：{'(1, 1)': 10}
+    归因错误：{'time events do not cover all formal observations': 10}
+    Runtime cleanup failures：{'无': 10}
+    SHA-256 前 12 位（trace, 诊断）：{"('a439fe993e2c', '6ed59146072b')": 10}
+  同步（async_delivery=False）（50 次）
+    最后一行 diagnostics：{'{"client_tick": 1001}': 50}
+    close 行数（trace, 诊断）：{'(1, 1)': 50}
+    归因错误：{'time events do not cover all formal observations': 50}
+    Runtime cleanup failures：{'无': 50}
+    SHA-256 前 12 位（trace, 诊断）：{"('bed55bfd2529', '6ed59146072b')": 50}
+  注入 A：close neutral 后诊断为 None → 最后一行 null；归因错误：close_release episode=episode-1 sequence=1: diagnostics must be an object, got None | time events do not cover all formal observations
+  注入 B：队列满 → trace 记录类型 ['reset', 'filler', 'trace_delivery_summary']；诊断行 0；dropped_records=1；cleanup=无
+== f663586，taskset -c 1（单 CPU）
+检出 f663586：reset 后 close，经 _runtime_trace(capture_close_diagnostics=True)
+  异步（B10 入口），不加时（50 次）
+    最后一行 diagnostics：{'{"client_tick": 1001}': 50}
+    close 行数（trace, 诊断）：{'(1, 1)': 50}
+    归因错误：{'time events do not cover all formal observations': 50}
+    Runtime cleanup failures：{'无': 50}
+    SHA-256 前 12 位（trace, 诊断）：{"('bed55bfd2529', '6ed59146072b')": 50}
+  异步，先排 200 条填充记录，投影补足到实测 P95（10 次）
+    最后一行 diagnostics：{'{"client_tick": 1001}': 10}
+    close 行数（trace, 诊断）：{'(1, 1)': 10}
+    归因错误：{'time events do not cover all formal observations': 10}
+    Runtime cleanup failures：{'无': 10}
+    SHA-256 前 12 位（trace, 诊断）：{"('a439fe993e2c', '6ed59146072b')": 10}
+  同步（async_delivery=False）（50 次）
+    最后一行 diagnostics：{'{"client_tick": 1001}': 50}
+    close 行数（trace, 诊断）：{'(1, 1)': 50}
+    归因错误：{'time events do not cover all formal observations': 50}
+    Runtime cleanup failures：{'无': 50}
+    SHA-256 前 12 位（trace, 诊断）：{"('bed55bfd2529', '6ed59146072b')": 50}
+  注入 A：close neutral 后诊断为 None → 最后一行 null；归因错误：close_release episode=episode-1 sequence=1: diagnostics must be an object, got None | time events do not cover all formal observations
+  注入 B：队列满 → trace 记录类型 ['reset', 'filler', 'trace_delivery_summary']；诊断行 0；dropped_records=1；cleanup=无
+== c2cc1ad（D109），taskset -c 1,2
+检出 c2cc1ad：reset 后 close，经 _runtime_trace(capture_close_diagnostics=True)
+  异步（B10 入口），不加时（50 次）
+    最后一行 diagnostics：{'null': 50}
+    close 行数（trace, 诊断）：{'(1, 1)': 50}
+    归因错误：{"'NoneType' object is not subscriptable | time events do not cover all formal observations": 50}
+    Runtime cleanup failures：{'无': 50}
+    SHA-256 前 12 位（trace, 诊断）：{"('bed55bfd2529', '8facdf2b83ee')": 50}
+  异步，先排 200 条填充记录，投影补足到实测 P95（10 次）
+    最后一行 diagnostics：{'null': 10}
+    close 行数（trace, 诊断）：{'(1, 1)': 10}
+    归因错误：{"'NoneType' object is not subscriptable | time events do not cover all formal observations": 10}
+    Runtime cleanup failures：{'无': 10}
+    SHA-256 前 12 位（trace, 诊断）：{"('a439fe993e2c', '8facdf2b83ee')": 10}
+  同步（async_delivery=False）（50 次）
+    最后一行 diagnostics：{'{"client_tick": 1001}': 50}
+    close 行数（trace, 诊断）：{'(1, 1)': 50}
+    归因错误：{'time events do not cover all formal observations': 50}
+    Runtime cleanup failures：{'无': 50}
+    SHA-256 前 12 位（trace, 诊断）：{"('bed55bfd2529', '6ed59146072b')": 50}
+  （本检出的 CloseDiagnosticsTrace 没有 async_delivery 参数，失败注入略过）
