@@ -70,4 +70,4 @@ POSIX Queue feeder 重复关闭文件描述符是真实资源问题，单独修�
 
 观察热路径、按范围物化、分片进程树终止、receiver 晚到矩阵和正确 trace 字段都已落地。A5-R2 又把 B10 自身六类 JSONL、Runtime trace 和 F-TICK 从控制 tick 的同步写盘路径移走；收尾批写失败不会覆盖已经发生的主异常。A5-R3 让 receiver 去重集合只登记真正进入有界缓冲的记录，并把旧 A5 的含混 ready 字段改为 legacy 证据。现有协议只能测 receiver 观察、注册发布和控制消费，不能测 worker 实际完成时刻。最近一次完整结果仍是 A5-R2：Windows 主源码正序、逆序各 186／186 个模块、2307 项，独立公开快照正序、逆序各 185／185 个模块、2283 项。Linux 动态生命周期矩阵仍待三方复核。
 
-B10 四方向时间线为 40／40 下一 movement tick。去掉同步文件 I/O 后，控制线程自身 P95 降到 0.8191 ms，批次仍在约 3200 个 50 ms 游戏 tick 后触发旧 `deadline_exceeded`。清理阶段又用 `formal Runtime must be ready` 覆盖该原始失败，并未释放 ordered source。失败证据保持原样；D108 不顺带修运动行为。因此本决定的基础设施目标已经实现，B10 不退步条件没有关闭，不能据此恢复连续两跳或新动作。
+B10 四方向时间线为 40／40 下一 movement tick。去掉同步文件 I/O 后，控制线程自身 P95 降到 0.8191 ms，批次仍在约 3200 个 50 ms 游戏 tick 后触发 `deadline_exceeded`。后续复核确认，D108 四次命令都遗漏了 `--timeout-seconds 600`，实际任务预算只有 215 秒；最近一次停止前已经完成 24 个 R4 试次。因此该失败应登记为探针总预算待复验，不能直接归因到 R4 运动逻辑。清理阶段又用 `formal Runtime must be ready` 覆盖原始失败。ordered source 显式注销失败，但会在 Runtime 最终关闭时由 `arbiter.clear()` 清除。D109 将先按当前 HEAD 重跑 600 秒诊断，再处理清理与生命周期边界。B10 不退步条件仍未关闭，不能据此恢复连续两跳或新动作。

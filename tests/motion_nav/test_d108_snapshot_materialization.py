@@ -4,6 +4,9 @@ from __future__ import annotations
 import threading
 import time
 import unittest
+import math
+import statistics
+import sys
 from unittest.mock import patch
 
 from mc2p.contracts.common import ContractViolation
@@ -156,17 +159,72 @@ class SnapshotMaterializationTests(unittest.TestCase):
                 raise AssertionError("borrow materialized an unrelated dirty section")
             return original_builder(section, facts, versions)
 
-        started = time.perf_counter()
         with patch.object(
             ImmutableWorldSection, "_from_validated_observation",
             side_effect=reject_unrelated,
         ):
             self.borrow(0)
-        elapsed = time.perf_counter() - started
 
         self.assertFalse(unrelated_started.is_set())
-        self.assertLess(elapsed, .10)
         self.assertIn((1, 0, 0), self.world._snapshot_dirty_sections)
+
+    def test_one_section_borrow_has_constant_observable_work(self) -> None:
+        diagnostics = []
+        for section_count in (4, 16, 32):
+            world = WorldKnowledge(WorldSessionId(f"d109-work-{section_count}"))
+            positions = tuple((section * 16, 0, 0)
+                              for section in range(section_count))
+            stamp = ObservationStamp(
+                world.session, 1, 1, "d109-work-clock", 1,
+            )
+            world.observe_blocks(stamp, {
+                position: self.stone for position in positions
+            })
+            old_borrows = tuple(
+                world.borrow_snapshot_version(
+                    self.bounds(section), ruleset=JAVA_1_21_RULESET,
+                )
+                for section in range(section_count)
+            )
+            world.observe_blocks(ObservationStamp(
+                world.session, 2, 2, "d109-work-clock", 2,
+            ), {position: self.dirt for position in positions})
+
+            borrowed = world.borrow_snapshot_version(
+                self.bounds(0), ruleset=JAVA_1_21_RULESET,
+            )
+            self.assertIsNotNone(borrowed)
+            report = world.snapshot_materialization_diagnostics
+            diagnostics.append(report)
+
+            self.assertEqual(report.requested_sections, 1)
+            self.assertEqual(report.dirty_sections_before, section_count)
+            self.assertEqual(report.selected_sections, 1)
+            self.assertEqual(report.materialized_sections, 1)
+            self.assertEqual(report.committed_sections, 1)
+            self.assertEqual(report.dirty_sections_after, section_count - 1)
+            self.assertEqual(
+                dict(borrowed.section_references[0].facts)[positions[0]].block,
+                self.dirt,
+            )
+            for section, old in enumerate(old_borrows):
+                self.assertEqual(
+                    dict(old.section_references[0].facts)[positions[section]].block,
+                    self.stone,
+                )
+            self.assertLessEqual(
+                len(world._snapshot_sections), world.section_count,
+            )
+            self.assertLessEqual(
+                len(world._snapshot_dirty_sections), world.section_count,
+            )
+
+        self.assertEqual(
+            {(row.requested_sections, row.selected_sections,
+              row.materialized_sections, row.committed_sections)
+             for row in diagnostics},
+            {(1, 1, 1, 1)},
+        )
 
     def test_gate_detects_missing_semantic_cache_retirement_mutation(self) -> None:
         position = (0, 0, 0)
@@ -204,6 +262,11 @@ class SnapshotMaterializationTests(unittest.TestCase):
             self.borrow(0)
         with self.assertRaises(AssertionError):
             self.assertEqual(built, [(0, 0, 0)])
+        with self.assertRaises(AssertionError):
+            self.assertEqual(
+                self.world.snapshot_materialization_diagnostics.selected_sections,
+                1,
+            )
 
     def test_materialization_rejects_an_implicit_global_scope(self) -> None:
         with self.assertRaisesRegex(ContractViolation, "explicit section set"):
@@ -328,25 +391,58 @@ class SnapshotMaterializationTests(unittest.TestCase):
         self.assertNotIn((0, 0, 0), self.world._snapshot_sections)
         self.assertIn((0, 0, 0), self.world._snapshot_dirty_sections)
 
-    def test_windows_semantic_observation_and_local_borrow_deadlines(self) -> None:
-        from scripts.benchmark_d108_snapshot_materialization import run_probe
-        result = run_probe(samples=3)
+    @unittest.skipUnless(sys.platform == "win32", "formal performance gate is Windows-only")
+    def test_windows_benchmark_preserves_raw_distribution_and_deadline(self) -> None:
+        from scripts.benchmark_d108_snapshot_materialization import (
+            _passes_deadline, run_probe,
+        )
+        result = run_probe(samples=20)
+        self.assertEqual(result["samples_per_case"], 20)
         self.assertTrue(result["passed"])
         self.assertEqual(
             [row["sections"] for row in result["semantic_changes"]],
             [1, 2, 4, 8],
         )
+        for row in result["semantic_changes"]:
+            self.assertEqual(len(row["raw_samples_ms"]), 20)
+            self.assert_raw_summary(row)
         self.assertEqual(
             [row["unrelated_dirty_sections"] for row in result["unrelated_dirty"]],
             [4, 16, 32],
         )
         for row in result["unrelated_dirty"]:
+            self.assertEqual(row["samples"], 20)
+            self.assertEqual(len(row["raw_samples_ms"]), 20)
             self.assertIn("owner_lock_wait_ms", row)
             self.assertIn("python_control_unavailable_ms", row)
             self.assertTrue(row["range_lifecycle_passed"])
+            self.assert_raw_summary(row)
         self.assertEqual(result["b10_bounds"]["bounds"], [-2, 2, 61, 68, -2, 4])
+        self.assertEqual(result["b10_bounds"]["samples"], 20)
+        self.assertEqual(len(result["b10_bounds"]["raw_samples_ms"]), 20)
+        self.assert_raw_summary(result["b10_bounds"])
         self.assertIn("owner_lock_wait_ms", result["b10_bounds"])
         self.assertIn("python_control_unavailable_ms", result["b10_bounds"])
+
+        self.assertTrue(_passes_deadline({
+            "p95_ms": 8.0, "p99_ms": 15.0, "max_ms": 29.999,
+        }))
+        for values in (
+            {"p95_ms": 8.001, "p99_ms": 15.0, "max_ms": 29.0},
+            {"p95_ms": 8.0, "p99_ms": 15.001, "max_ms": 29.0},
+            {"p95_ms": 8.0, "p99_ms": 15.0, "max_ms": 30.0},
+        ):
+            with self.subTest(values=values):
+                self.assertFalse(_passes_deadline(values))
+
+    def assert_raw_summary(self, row) -> None:
+        samples = row["raw_samples_ms"]
+        ordered = sorted(samples)
+        self.assertEqual(row["samples"], len(samples))
+        self.assertEqual(row["p50_ms"], statistics.median(samples))
+        self.assertEqual(row["p95_ms"], ordered[math.ceil(len(samples) * .95) - 1])
+        self.assertEqual(row["p99_ms"], ordered[math.ceil(len(samples) * .99) - 1])
+        self.assertEqual(row["max_ms"], max(samples))
 
 
 def range_sections(start: int, stop: int | None = None):

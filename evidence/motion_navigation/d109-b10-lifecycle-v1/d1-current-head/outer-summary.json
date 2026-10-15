@@ -1,0 +1,30 @@
+{
+  "schema_version": "mc2p.d109-d1-outer-summary.v1",
+  "source_run": "artifacts/fabric-deployment/20261015T012119841247Z-adc8b98e",
+  "status": "failed",
+  "primary_failure": {
+    "message": "['client-0:b10b_solver_is_bounded', 'client-0:complete_time_event_attribution']",
+    "type": "DeploymentEvidenceFailure"
+  },
+  "cleanup_failures": [
+    {
+      "code": "cleanup",
+      "detail_json": "{\"exception_type\": \"RuntimeError\"}",
+      "message": "asynchronous trace worker failed",
+      "retryable": true,
+      "schema_version": "mc2p.failure.v0",
+      "source": "runtime"
+    }
+  ],
+  "failed_checks": [
+    {
+      "name": "client-0:b10b_solver_is_bounded",
+      "passed": false
+    },
+    {
+      "name": "client-0:complete_time_event_attribution",
+      "passed": false
+    }
+  ],
+  "preservation_note": "copied as fields from result.json; inner failure is not inferred from these values"
+}

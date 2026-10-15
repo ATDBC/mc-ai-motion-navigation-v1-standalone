@@ -10,7 +10,8 @@ from tempfile import TemporaryDirectory
 
 from scripts.d105_ftick import (
     _ordered_source_release, _run_probe, analyze_run, classify_tick_trace,
-    fabric_probe_command, summarize_ftick, write_evidence,
+    _source_release_is_accepted, fabric_probe_command, summarize_ftick,
+    write_evidence,
 )
 
 
@@ -299,7 +300,64 @@ class D105FTickTests(unittest.TestCase):
 
         self.assertEqual(_ordered_source_release((registered,)), "not_released")
         self.assertEqual(
-            _ordered_source_release((registered, released)), "released",
+            _ordered_source_release((registered, released)), "explicitly_released",
+        )
+
+    def test_native_source_lifecycle_distinguishes_close_fallback(self):
+        self.assertEqual(
+            _ordered_source_release((), {
+                "b10_lifecycle": {"ordered_source_release": {
+                    "status": "cleared_on_runtime_close",
+                }},
+            }),
+            "cleared_on_close",
+        )
+        self.assertEqual(
+            _ordered_source_release((), {
+                "b10_lifecycle": {"ordered_source_release": {
+                    "status": "not_released",
+                }},
+            }),
+            "not_released",
+        )
+
+    def test_source_release_classification_rejects_registration_and_unknown_status(self):
+        source = {
+            "episode_id": "fabric-21001-0", "generation": 1,
+            "scope_id": "scope", "slot": 0,
+            "source_id": "ordered/scope/0/1",
+        }
+        registered = {
+            "record_type": "ordered_source_registered",
+            "payload": {"label": "b10-gap-solver", "source": source},
+        }
+        self.assertEqual(_ordered_source_release(()), "registration_invalid")
+        self.assertEqual(
+            _ordered_source_release((registered, registered)),
+            "registration_invalid",
+        )
+        self.assertEqual(
+            _ordered_source_release((), {
+                "b10_lifecycle": {"ordered_source_release": {
+                    "status": "future_status",
+                }},
+            }),
+            "invalid_status",
+        )
+        self.assertFalse(_source_release_is_accepted("registration_invalid"))
+        self.assertFalse(_source_release_is_accepted("not_released"))
+        self.assertFalse(_source_release_is_accepted("invalid_status"))
+        self.assertTrue(_source_release_is_accepted("explicitly_released"))
+        self.assertTrue(_source_release_is_accepted("cleared_on_close"))
+
+    def test_transitional_released_status_remains_compatible(self):
+        self.assertEqual(
+            _ordered_source_release((), {
+                "b10_lifecycle": {"ordered_source_release": {
+                    "status": "released",
+                }},
+            }),
+            "explicitly_released",
         )
 
     def test_replay_index_records_replay_command_and_source_return_code(self):

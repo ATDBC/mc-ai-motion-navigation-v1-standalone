@@ -1,6 +1,7 @@
 """Evidence helpers for the D105 T2 Windows timeline."""
 from pathlib import Path
 import json
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -57,7 +58,10 @@ class T2EvidenceTests(unittest.TestCase):
 
         self.assertTrue(result["passed"], result["errors"])
         self.assertEqual(timing["generation_command_argv"][0], ".\\.venv\\python.exe")
-        self.assertTrue((ROOT / ".venv/python.exe").is_file())
+        if (ROOT / "EXPORT-METADATA.json").is_file():
+            self.assertTrue(Path(sys.executable).is_file())
+        else:
+            self.assertTrue((ROOT / ".venv/python.exe").is_file())
         with tempfile.TemporaryDirectory() as temporary:
             target = Path(temporary)
             (target / "receiver-timing").mkdir()
@@ -73,6 +77,16 @@ class T2EvidenceTests(unittest.TestCase):
         self.assertFalse(mutated["passed"])
         self.assertTrue(any("receiver timing command" in error for error in mutated["errors"]),
                         mutated["errors"])
+
+    def test_standalone_export_uses_current_interpreter_for_recorded_repository_python(self) -> None:
+        from scripts import measure_sound_motion_t2_d105 as meter
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "EXPORT-METADATA.json").write_text("{}\n", "utf-8")
+            with patch.object(meter, "ROOT", root):
+                self.assertTrue(meter._interpreter_is_available(meter.REPOSITORY_PYTHON))
+                self.assertFalse(meter._interpreter_is_available(r".\.venv\other.exe"))
 
     def test_timeline_is_segmented_without_using_clock_as_a_gate(self) -> None:
         from scripts.measure_sound_motion_t2_d105 import extract_timeline

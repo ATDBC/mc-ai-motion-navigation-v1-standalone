@@ -1,0 +1,70 @@
+{
+  "schema_version": "mc2p.d109-final-b10-first-attempt.v1",
+  "source_commit": "f0392c08",
+  "source_run": "artifacts/fabric-deployment/20261015T054128985247Z-0d18d08c",
+  "command": ".venv\\python.exe scripts\\probe_fabric_deployment_observation.py --seed 21001 --server-port 25597 --ipc-port 8140 --b10-gap-solver-probe --time-diagnostics --physics-tick-diagnostics --ftick-diagnostics --timeout-seconds 600",
+  "status": "failed",
+  "primary_failure": {
+    "message": "['client-0:b10b_solver_is_bounded', 'client-0:complete_time_event_attribution']",
+    "type": "DeploymentEvidenceFailure"
+  },
+  "cleanup_failures": [
+    {
+      "code": "cleanup",
+      "detail_json": "{\"exception_type\": \"RuntimeError\"}",
+      "message": "asynchronous trace evidence was not sealed: AsyncTraceCleanupFailure(stage='sink_write', exception_type='AttributeError', message=\"'dict' object has no attribute 'observation'\")",
+      "retryable": true,
+      "schema_version": "mc2p.failure.v0",
+      "source": "runtime"
+    }
+  ],
+  "functional_matrix": {
+    "preflight": 1,
+    "validation": "40/40",
+    "turn_preflight": 1,
+    "turn_validation": "40/40",
+    "default_coordination": "10/10",
+    "r4": "60/60",
+    "typed_negative": 24
+  },
+  "ordered_source_release": {
+    "source_id": "ordered/2c3e3f71bbff400ea2b0f1b8fcbfd326/0/1",
+    "status": "explicitly_released"
+  },
+  "minimum_health": 20.0,
+  "final_health": 20.0,
+  "damage_events": 0,
+  "raw_files": {
+    "result.json": {
+      "bytes": 2317708,
+      "sha256": "95b2e93893760321fe62b9d2244940798799cbb4fe0a15a1ad583bfef241369b"
+    },
+    "worker-result.json": {
+      "bytes": 2317141,
+      "sha256": "4af5d54b89ebea98d7f0439c43435ceba4b678c3c08c0e7db5cff97c52c0d06c"
+    },
+    "client-0/trace.jsonl": {
+      "bytes": 135078782,
+      "sha256": "80d69d478b1b388d2d0535eca2c5457a922842976a06638ba0b0557dd30c0bea"
+    },
+    "client-0/mc2p-client-time.jsonl": {
+      "bytes": 3181236,
+      "sha256": "ae315a58f1ca8ecf0914b13c5f95f71c6871d5c3f5fd41f966a50a778ddd7243"
+    },
+    "client-0/physics-tick-events/manifest.jsonl": {
+      "bytes": 252,
+      "sha256": "8ac787a27caa3c5c6388fafdbbc8f1b3af4d7fa480021bd72a34008cb6b63aa9"
+    }
+  },
+  "repair": {
+    "red": "BoundedAsyncTraceWriter projected payloads before CloseDiagnosticsTrace read them as typed objects.",
+    "scope": "single projected-payload contract; no motion, deadline, or action change",
+    "direct_adjacent_tests": 134,
+    "skipped": 0,
+    "test_log": {
+      "bytes": 6841,
+      "sha256": "754f022f815ac1e41f0dce4bc01b9d1562a4e6481c1ddb013f5c713c3e89e7a4"
+    }
+  },
+  "boundary": "This failed run is retained separately. It does not rewrite D1 and is not the post-repair final B10 result."
+}

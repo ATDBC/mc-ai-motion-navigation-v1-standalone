@@ -3,15 +3,13 @@ from __future__ import annotations
 
 from collections import Counter, deque
 from dataclasses import dataclass
+from enum import StrEnum
 import math
-from queue import Full, Queue
+from queue import Empty, Full, Queue
 import threading
 import time
 
 from mc2p.runtime.trace import TraceSinkV0, trace_projection
-
-
-_STOP = object()
 
 
 @dataclass(frozen=True, slots=True)
@@ -22,6 +20,33 @@ class AsyncTraceStats:
     capacity: int
     peak_depth: int
     worker_failed: bool
+
+
+class AsyncTraceCloseStatus(StrEnum):
+    SEALED = "sealed"
+    INCOMPLETE = "incomplete"
+
+
+@dataclass(frozen=True, slots=True)
+class AsyncTraceCleanupFailure:
+    stage: str
+    exception_type: str
+    message: str
+
+
+@dataclass(frozen=True, slots=True)
+class AsyncTraceCloseResult:
+    status: AsyncTraceCloseStatus
+    sealed: bool
+    worker_alive: bool
+    accepted: int
+    written: int
+    dropped: int
+    indeterminate_or_pending: int
+    cleanup_failure: AsyncTraceCleanupFailure | None
+    rejected_before_accept: int
+    accepted_dropped: int
+    accepted_indeterminate: int
 
 
 class BoundedAsyncTraceWriter:
@@ -37,13 +62,19 @@ class BoundedAsyncTraceWriter:
         self._queue: Queue[object] = Queue(maxsize=capacity)
         self._lock = threading.Lock()
         self._accepted = self._written = self._dropped = self._peak = 0
+        self._rejected_before_accept = self._accepted_dropped = 0
+        self._accepted_indeterminate = 0
         self._dropped_by_type: Counter[str] = Counter()
+        self._indeterminate_by_type: Counter[str] = Counter()
         self._projection_samples: deque[int] = deque(maxlen=4096)
         self._projection_count = self._projection_total = self._projection_max = 0
         self._worker_error: BaseException | None = None
+        self._cleanup_failure: AsyncTraceCleanupFailure | None = None
         self._closing = self._closed = False
+        self._sealed = False
+        self._stop_requested = threading.Event()
         self._worker = threading.Thread(
-            target=self._run, name="mc2p-trace-writer", daemon=False,
+            target=self._run, name="mc2p-trace-writer", daemon=True,
         )
         self._worker.start()
 
@@ -55,10 +86,6 @@ class BoundedAsyncTraceWriter:
                 self._capacity, self._peak, self._worker_error is not None,
             )
 
-    def _raise_worker_error(self) -> None:
-        if self._worker_error is not None:
-            raise RuntimeError("asynchronous trace worker failed") from self._worker_error
-
     def write(self, record_type: str, payload: object) -> None:
         if type(record_type) is not str or not record_type:
             raise ValueError("record_type must be non-empty")
@@ -67,6 +94,7 @@ class BoundedAsyncTraceWriter:
                 raise ValueError("asynchronous trace writer is closed")
             if self._worker_error is not None:
                 self._dropped += 1
+                self._rejected_before_accept += 1
                 self._dropped_by_type[record_type] += 1
                 return
         snapshot = self._snapshot_payload(payload)
@@ -75,12 +103,14 @@ class BoundedAsyncTraceWriter:
                 raise ValueError("asynchronous trace writer is closed")
             if self._worker_error is not None:
                 self._dropped += 1
+                self._rejected_before_accept += 1
                 self._dropped_by_type[record_type] += 1
                 return
             try:
                 self._queue.put_nowait((record_type, snapshot))
             except Full:
                 self._dropped += 1
+                self._rejected_before_accept += 1
                 self._dropped_by_type[record_type] += 1
             else:
                 self._accepted += 1
@@ -89,44 +119,134 @@ class BoundedAsyncTraceWriter:
     def _drop_accepted(self, record_type: str) -> None:
         with self._lock:
             self._dropped += 1
+            self._accepted_dropped += 1
             self._dropped_by_type[record_type] += 1
+
+    def _mark_accepted_indeterminate(self, record_type: str) -> None:
+        with self._lock:
+            self._accepted_indeterminate += 1
+            self._indeterminate_by_type[record_type] += 1
+
+    @staticmethod
+    def _failure(stage: str, error: BaseException) -> AsyncTraceCleanupFailure:
+        return AsyncTraceCleanupFailure(
+            stage, type(error).__name__, str(error),
+        )
+
+    def _remember_failure(self, stage: str, error: BaseException) -> None:
+        with self._lock:
+            if self._worker_error is None:
+                self._worker_error = error
+            if self._cleanup_failure is None:
+                self._cleanup_failure = self._failure(stage, error)
 
     def _run(self) -> None:
         failed = False
-        while True:
-            item = self._queue.get()
-            try:
-                if item is _STOP:
-                    return
-                record_type, payload = item
-                if failed:
-                    self._drop_accepted(record_type)
+        sink_close_attempted = False
+        try:
+            while True:
+                try:
+                    item = self._queue.get(timeout=.05)
+                except Empty:
+                    if self._stop_requested.is_set():
+                        break
                     continue
                 try:
-                    started = time.perf_counter_ns()
-                    projected = trace_projection(payload)
-                    elapsed = time.perf_counter_ns() - started
-                    with self._lock:
-                        self._projection_count += 1
-                        self._projection_total += elapsed
-                        self._projection_max = max(self._projection_max, elapsed)
-                        self._projection_samples.append(elapsed)
-                    write_projected = getattr(self._sink, "write_projected", None)
-                    if callable(write_projected):
-                        write_projected(record_type, projected)
+                    record_type, payload = item
+                    if failed:
+                        self._drop_accepted(record_type)
+                        continue
+                    try:
+                        started = time.perf_counter_ns()
+                        projected = trace_projection(payload)
+                        elapsed = time.perf_counter_ns() - started
+                        with self._lock:
+                            self._projection_count += 1
+                            self._projection_total += elapsed
+                            self._projection_max = max(self._projection_max, elapsed)
+                            self._projection_samples.append(elapsed)
+                    except BaseException as error:
+                        self._remember_failure("trace_projection", error)
+                        self._drop_accepted(record_type)
+                        failed = True
+                        continue
+                    try:
+                        write_projected = getattr(self._sink, "write_projected", None)
+                        if callable(write_projected):
+                            write_projected(record_type, projected)
+                        else:
+                            self._sink.write(record_type, projected)
+                    except BaseException as error:
+                        self._remember_failure("sink_write", error)
+                        self._mark_accepted_indeterminate(record_type)
+                        failed = True
                     else:
-                        self._sink.write(record_type, projected)
+                        with self._lock:
+                            self._written += 1
+                finally:
+                    self._queue.task_done()
+                if self._stop_requested.is_set() and self._queue.empty():
+                    break
+
+            if not failed:
+                try:
+                    self._sink.write("trace_delivery_summary", self._summary())
                 except BaseException as error:
-                    with self._lock:
-                        if self._worker_error is None:
-                            self._worker_error = error
-                    self._drop_accepted(record_type)
+                    self._remember_failure("summary_write", error)
                     failed = True
-                else:
-                    with self._lock:
-                        self._written += 1
-            finally:
-                self._queue.task_done()
+            try:
+                sink_close_attempted = True
+                self._sink.close()
+            except BaseException as error:
+                self._remember_failure("sink_close", error)
+                failed = True
+            with self._lock:
+                self._sealed = not failed
+        except BaseException as error:
+            self._remember_failure("worker", error)
+            failed = True
+        finally:
+            if not sink_close_attempted:
+                try:
+                    sink_close_attempted = True
+                    self._sink.close()
+                except BaseException as error:
+                    self._remember_failure("sink_close", error)
+                    failed = True
+            with self._lock:
+                self._sealed = not failed
+                self._closed = True
+
+    def _close_result(self) -> AsyncTraceCloseResult:
+        worker_alive = self._worker.is_alive()
+        with self._lock:
+            pending = max(
+                0,
+                self._accepted - self._written - self._accepted_dropped
+                - self._accepted_indeterminate,
+            )
+            indeterminate_or_pending = self._accepted_indeterminate + pending
+            cleanup_failure = self._cleanup_failure
+            sealed = self._sealed and not worker_alive
+            if worker_alive:
+                cleanup_failure = AsyncTraceCleanupFailure(
+                    "worker_join", "TimeoutError",
+                    "asynchronous trace worker did not stop before close deadline",
+                )
+            return AsyncTraceCloseResult(
+                AsyncTraceCloseStatus.SEALED if sealed
+                else AsyncTraceCloseStatus.INCOMPLETE,
+                sealed,
+                worker_alive,
+                self._accepted,
+                self._written,
+                self._dropped,
+                indeterminate_or_pending,
+                cleanup_failure,
+                self._rejected_before_accept,
+                self._accepted_dropped,
+                self._accepted_indeterminate,
+            )
 
     @classmethod
     def _snapshot_payload(cls, value: object) -> object:
@@ -165,6 +285,11 @@ class BoundedAsyncTraceWriter:
                 "accepted_records": self._accepted,
                 "written_records": self._written,
                 "dropped_records": self._dropped,
+                "accepted_dropped_records": self._accepted_dropped,
+                "accepted_indeterminate_records": self._accepted_indeterminate,
+                "indeterminate_by_record_type": dict(sorted(
+                    self._indeterminate_by_type.items()
+                )),
                 "dropped_by_record_type": dict(sorted(self._dropped_by_type.items())),
                 "capacity": self._capacity,
                 "peak_depth": self._peak,
@@ -179,35 +304,15 @@ class BoundedAsyncTraceWriter:
                 },
             }
 
-    def close(self) -> None:
+    def close(self, *, timeout_seconds: float = 5.0) -> AsyncTraceCloseResult:
+        if (type(timeout_seconds) not in (int, float)
+                or not math.isfinite(float(timeout_seconds))
+                or timeout_seconds < 0):
+            raise ValueError("trace close timeout must be finite and nonnegative")
+        deadline = time.monotonic() + min(float(timeout_seconds), 30.0)
         with self._lock:
-            if self._closed:
-                self._raise_worker_error()
-                return
             self._closing = True
-        self._queue.put(_STOP)
-        self._worker.join()
-        error: BaseException | None = None
-        with self._lock:
-            error = self._worker_error
-        try:
-            if error is None:
-                self._sink.write("trace_delivery_summary", self._summary())
-        except BaseException as summary_error:
-            error = summary_error
-            with self._lock:
-                if self._worker_error is None:
-                    self._worker_error = summary_error
-        try:
-            self._sink.close()
-        except BaseException as close_error:
-            if error is None:
-                error = close_error
-                with self._lock:
-                    if self._worker_error is None:
-                        self._worker_error = close_error
-        finally:
-            with self._lock:
-                self._closed = True
-        if error is not None:
-            raise RuntimeError("asynchronous trace worker failed") from error
+        self._stop_requested.set()
+        if self._worker is not threading.current_thread():
+            self._worker.join(max(0.0, deadline - time.monotonic()))
+        return self._close_result()

@@ -213,8 +213,19 @@ class F1SegmentedDiagnosticTrace:
         )
         try:
             self.diagnostics = SegmentedJsonlWriter(directory / "diagnostics")
-        except BaseException:
-            self.trace.close()
+        except BaseException as error:
+            try:
+                close_result = self.trace.close()
+                if getattr(close_result, "sealed", True) is not True:
+                    error.add_note(
+                        "formal trace rollback remained incomplete: "
+                        f"{getattr(close_result, 'cleanup_failure', None)!r}"
+                    )
+            except BaseException as cleanup_error:
+                error.add_note(
+                    "formal trace rollback also failed: "
+                    f"{type(cleanup_error).__name__}: {cleanup_error}"
+                )
             raise
 
     def write(self, record_type: str, payload: object) -> None:
@@ -234,7 +245,12 @@ class F1SegmentedDiagnosticTrace:
     def close(self) -> None:
         primary = None
         try:
-            self.trace.close()
+            result = self.trace.close()
+            if getattr(result, "sealed", True) is not True:
+                raise RuntimeError(
+                    "formal follow trace was not sealed: "
+                    f"{getattr(result, 'cleanup_failure', None)!r}"
+                )
         except BaseException as error:
             primary = error
         try:

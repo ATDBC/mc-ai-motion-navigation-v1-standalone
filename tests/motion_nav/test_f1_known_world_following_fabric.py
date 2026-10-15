@@ -42,6 +42,56 @@ class F1KnownWorldFollowingFabricTests(unittest.TestCase):
         from scripts import f1_known_world_following_fabric as api
         return api
 
+    def test_diagnostic_trace_constructor_keeps_primary_when_trace_rollback_fails(self):
+        api = self.api()
+
+        class Trace:
+            def __init__(self, close_result=None, close_error=None):
+                self.close_result = close_result
+                self.close_error = close_error
+                self.close_calls = 0
+
+            def close(self):
+                self.close_calls += 1
+                if self.close_error is not None:
+                    raise self.close_error
+                return self.close_result
+
+        cases = (
+            (
+                Trace(SimpleNamespace(
+                    sealed=False, cleanup_failure="worker still alive",
+                )),
+                "formal trace rollback remained incomplete",
+            ),
+            (
+                Trace(close_error=OSError("trace rollback failed")),
+                "formal trace rollback also failed",
+            ),
+        )
+        for trace, expected_note in cases:
+            with self.subTest(expected_note=expected_note), TemporaryDirectory() as raw:
+                with (
+                    patch.object(api, "SegmentedTraceWriter", return_value=object()),
+                    patch.object(api, "BoundedAsyncTraceWriter", return_value=trace),
+                    patch.object(
+                        api, "SegmentedJsonlWriter",
+                        side_effect=RuntimeError("diagnostics construction failed"),
+                    ),
+                    self.assertRaisesRegex(
+                        RuntimeError, "diagnostics construction failed",
+                    ) as caught,
+                ):
+                    api.F1SegmentedDiagnosticTrace(
+                        Path(raw), SimpleNamespace(),
+                    )
+
+                self.assertEqual(trace.close_calls, 1)
+                self.assertTrue(any(
+                    expected_note in note
+                    for note in getattr(caught.exception, "__notes__", ())
+                ))
+
     def test_f1_runner_diagnostics_json_round_trips_typed_route_validation(self):
         self.assertIn(
             "observation_sequence_id", BodyRouteValidation.__dataclass_fields__,

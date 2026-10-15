@@ -1,0 +1,1 @@
+$env:PYTHONPATH='.'; .\.venv\python.exe scripts\benchmark_d108_snapshot_materialization.py --samples 20 --output evidence\motion_navigation\d109-b10-lifecycle-v1\d6-snapshot-materialization\result.json

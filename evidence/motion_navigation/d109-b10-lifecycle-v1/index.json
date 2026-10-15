@@ -1,0 +1,163 @@
+{
+  "schema_version": "mc2p.d109-evidence-index.v1",
+  "formal_platform": "Windows",
+  "status": "final_b10_complete_lifecycle_closed_d109_gates_failed",
+  "baseline_commit": "680d7a7654f3824e29662dcdba900b9e24313bce",
+  "source_run": "artifacts/fabric-deployment/20261015T012119841247Z-adc8b98e",
+  "d1": {
+    "matrix_complete": true,
+    "runtime_inner_failure": null,
+    "outer_primary_failure": {
+      "message": "['client-0:b10b_solver_is_bounded', 'client-0:complete_time_event_attribution']",
+      "type": "DeploymentEvidenceFailure"
+    },
+    "cleanup_failures": [
+      {
+        "code": "cleanup",
+        "detail_json": "{\"exception_type\": \"RuntimeError\"}",
+        "message": "asynchronous trace worker failed",
+        "retryable": true,
+        "schema_version": "mc2p.failure.v0",
+        "source": "runtime"
+      }
+    ],
+    "c01": "closed_as_previous_command_budget_omission",
+    "stage_passed": false,
+    "remaining_blocks": [
+      "solver maximum outlier",
+      "incomplete time attribution",
+      "asynchronous trace cleanup failure"
+    ]
+  },
+  "large_raw_policy": "hash and summarize; do not copy 137 MB trace into Git",
+  "files": {
+    "d1-current-head/command.txt": {
+      "bytes": 225,
+      "sha256": "af20b35f2b5add24ac101ff2b9512a3a49f9eb23334484af68d6d1e632a2182b"
+    },
+    "d1-current-head/independent-summary.json": {
+      "bytes": 11162,
+      "sha256": "5c6ba39d15078b617d67fd52a8645ed142e2e358f61d328bc9c00fce1bbcd7f4"
+    },
+    "d1-current-head/outer-summary.json": {
+      "bytes": 940,
+      "sha256": "37906639d133f8ac2068e9524984e029b47ecfbb830fd5419f60d89d3ebbf27b"
+    },
+    "d1-current-head/source-run.json": {
+      "bytes": 663,
+      "sha256": "e796f7a1945cd32ad541a76029148e5c6158953efcdeb88164364503abf5dc32"
+    },
+    "d1-current-head/trial-summary.json": {
+      "bytes": 2607,
+      "sha256": "334e295e694bf8f9bf8617825431767f78d705278d7600cbdbbbff22d8f5e903"
+    },
+    "d1-preflight-no-java-home/command.txt": {
+      "bytes": 225,
+      "sha256": "af20b35f2b5add24ac101ff2b9512a3a49f9eb23334484af68d6d1e632a2182b"
+    },
+    "d1-preflight-no-java-home/console.txt": {
+      "bytes": 1089,
+      "sha256": "643c70b227d7092d9aeb0fd25e5cba0a85cc90f7eaccc2d0ec4a0727ffee6505"
+    },
+    "d1-preflight-no-java-home/summary.json": {
+      "bytes": 477,
+      "sha256": "f38107a0caca6d3930a018a8e8a4bd6a03a83426ae26ecf809243b84f79cbd86"
+    },
+    "d6-snapshot-materialization/command.txt": {
+      "bytes": 201,
+      "sha256": "93b7ded679400120940506cefcba4797a90096112309960e0a9eb724ad215a4d"
+    },
+    "d6-snapshot-materialization/provenance.json": {
+      "bytes": 688,
+      "sha256": "132793d813a1b8cfd57ccdd31517c4331e33d28c9bdc24f4b077d9fd3dcc244a"
+    },
+    "d6-snapshot-materialization/result.json": {
+      "bytes": 5446,
+      "sha256": "2eb374f56701339bde7f480ab27f7ff3bdef6052264713564349f702be0a0bcb"
+    },
+    "d8-final-b10-first-attempt/command.txt": {
+      "bytes": 224,
+      "sha256": "710225da897910492e9527257c83e64533d6401de1424c71090148fcb7121cf5"
+    },
+    "d8-final-b10-first-attempt/summary.json": {
+      "bytes": 2738,
+      "sha256": "07fcdf1004907c7c18d4e8f0ea898139f3f757a466710cceb41b3d177b8b49b0"
+    },
+    "d8-final-b10-post-repair/command.txt": {
+      "bytes": 224,
+      "sha256": "710225da897910492e9527257c83e64533d6401de1424c71090148fcb7121cf5"
+    },
+    "d8-final-b10-post-repair/summary.json": {
+      "bytes": 5434,
+      "sha256": "411361cfa943d5d7a1eef69b97dcc2291fe5ee15fa9b5eaabb808514d1079dae"
+    },
+    "d8-post-b10-regression/commands.txt": {
+      "bytes": 2493,
+      "sha256": "dd3ec968800cfab963a9e67562b16eed55eee3b43bcff519457cf422afe9cfcc"
+    },
+    "d8-post-b10-regression/summary.json": {
+      "bytes": 1814,
+      "sha256": "f3b6cb6f219b04717084068f20f69f6c7133e357b14743720d5562e1e9bda1fc"
+    },
+    "d8-windows-regression/commands.txt": {
+      "bytes": 2537,
+      "sha256": "0b34dac3c0f853a08e2dbb84c90922ba0f145a7751e8532ae7d8580531687b7a"
+    },
+    "d8-windows-regression/summary.json": {
+      "bytes": 4752,
+      "sha256": "80a4c5685865f05c7ec12e05bb9ffc7d1e18f7d61d65e8ad3b7c443ad2e43aeb"
+    },
+    "published-production-semantic-hashes.json": {
+      "bytes": 1888,
+      "sha256": "657aade98fa1637515663ba93ff1ca4192f96ae057450f5620c3f42dca13ebd4"
+    },
+    "README.md": {
+      "bytes": 2344,
+      "sha256": "283f7c1009932c204236e2cc09531cc402ed83c3f9364a84a53937550a5fe1ad"
+    }
+  },
+  "d6": {
+    "formal_platform": "Windows",
+    "source_commit": "9e7228d4d0042612fc6715d888f8db02bfce4099",
+    "samples_per_case": 20,
+    "passed": true,
+    "absolute_deadlines_ms": {
+      "p95_lte": 8.0,
+      "p99_lte": 15.0,
+      "max_lt": 30.0
+    },
+    "raw_samples_preserved": true
+  },
+  "final_b10": {
+    "source_commit": "d9c564d400bc3fe809b1f7293033922bd6832b1b",
+    "source_run": "artifacts/fabric-deployment/20261015T055515931896Z-82d614a6",
+    "functional_matrix_complete": true,
+    "safety_passed": true,
+    "ordered_source_release": "explicitly_released",
+    "trace": {
+      "accepted": 22409,
+      "written": 22409,
+      "dropped": 0,
+      "indeterminate_or_pending": 0,
+      "worker_failed": false
+    },
+    "cleanup_failures": [],
+    "stage_passed": false,
+    "remaining_blocks": [
+      "solver maximum 41.0339 ms exceeds 30 ms",
+      "time attribution ended with a NoneType error"
+    ],
+    "stop_rule": "two limited repair rounds consumed; no third repair or B10 rerun"
+  },
+  "post_b10_windows_regression": {
+    "source_commit": "53b6ffa5486ac23c5de6c4728955ef0c81d04821",
+    "direct_adjacent": "427/427",
+    "source_forward": "186 modules / 2331 tests",
+    "source_reverse": "186 modules / 2331 tests",
+    "snapshot_forward": "185 modules / 2307 tests",
+    "snapshot_reverse": "185 modules / 2307 tests",
+    "java": "3/3 source and 3/3 snapshot",
+    "snapshot_verify_files": 2305,
+    "passed": true
+  }
+}

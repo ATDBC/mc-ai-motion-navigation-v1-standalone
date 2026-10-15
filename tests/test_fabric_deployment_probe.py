@@ -463,6 +463,89 @@ class FabricDeploymentProbeTests(unittest.TestCase):
             "or (continuous_height_probe and time_diagnostics)", source,
         )
 
+    def test_async_close_diagnostics_accepts_projected_runtime_records(self):
+        from dataclasses import dataclass
+        from tempfile import TemporaryDirectory
+        from types import SimpleNamespace
+
+        from mc2p.runtime.async_trace import (
+            AsyncTraceCloseStatus, BoundedAsyncTraceWriter,
+        )
+        from scripts.fabric_visibility_scenario import CloseDiagnosticsTrace
+
+        @dataclass(frozen=True)
+        class Observation:
+            episode_id: str
+            sequence_id: int
+
+        @dataclass(frozen=True)
+        class Result:
+            observation: Observation | None
+
+        with TemporaryDirectory(prefix="mc2p-async-close-diagnostics-") as directory:
+            root = Path(directory)
+            sink = CloseDiagnosticsTrace(
+                root, SimpleNamespace(last_diagnostics={"movement_tick": 17}),
+            )
+            trace = BoundedAsyncTraceWriter(sink, capacity=8)
+            trace.write("reset", {"result": Result(Observation("episode", 0))})
+            trace.write("step", {"backend_result": Result(Observation("episode", 1))})
+            trace.write(
+                "close_release",
+                {"backend_result": Result(Observation("episode", 2))},
+            )
+
+            result = trace.close(timeout_seconds=2.0)
+
+            self.assertIs(result.status, AsyncTraceCloseStatus.SEALED)
+            records = [json.loads(row) for row in (root / "trace.jsonl").read_text(
+                "utf-8",
+            ).splitlines()]
+            self.assertEqual(
+                [record["record_type"] for record in records],
+                ["reset", "step", "close_release", "trace_delivery_summary"],
+            )
+            self.assertEqual(
+                records[2]["payload"]["backend_result"]["observation"],
+                {"episode_id": "episode", "sequence_id": 2},
+            )
+            diagnostics = [json.loads(row) for row in (
+                root / "diagnostics.jsonl"
+            ).read_text("utf-8").splitlines()]
+            self.assertEqual(diagnostics, [{
+                "diagnostics": {"movement_tick": 17},
+                "episode_id": "episode",
+                "observation_sequence_id": 2,
+            }])
+
+    def test_async_close_diagnostics_preserves_record_when_observation_is_missing(self):
+        from tempfile import TemporaryDirectory
+        from types import SimpleNamespace
+
+        from mc2p.runtime.async_trace import (
+            AsyncTraceCloseStatus, BoundedAsyncTraceWriter,
+        )
+        from scripts.fabric_visibility_scenario import CloseDiagnosticsTrace
+
+        with TemporaryDirectory(prefix="mc2p-async-close-missing-") as directory:
+            root = Path(directory)
+            trace = BoundedAsyncTraceWriter(
+                CloseDiagnosticsTrace(
+                    root, SimpleNamespace(last_diagnostics={"movement_tick": 17}),
+                ),
+                capacity=4,
+            )
+            trace.write("close_release", {"backend_result": {}})
+
+            result = trace.close(timeout_seconds=2.0)
+
+            self.assertIs(result.status, AsyncTraceCloseStatus.SEALED)
+            records = [json.loads(row) for row in (root / "trace.jsonl").read_text(
+                "utf-8",
+            ).splitlines()]
+            self.assertEqual(records[0]["record_type"], "close_release")
+            self.assertFalse((root / "diagnostics.jsonl").exists())
+
     def test_segmented_c1_trace_captures_diagnostics_for_every_formal_observation(self):
         import json
         from tempfile import TemporaryDirectory
@@ -713,6 +796,17 @@ class FabricDeploymentProbeTests(unittest.TestCase):
             (worker, supervision, False),
         ):
             self.assertEqual(finalize_result(changed, parent, ports)["status"], "failed")
+
+        cleanup_only = finalize_result(
+            {**worker, "cleanup_failures": [{"stage": "fixture_cleanup"}]},
+            supervision,
+            True,
+        )
+        self.assertIsNone(cleanup_only["primary_failure"])
+        self.assertEqual(
+            cleanup_only["cleanup_failures"],
+            [{"stage": "fixture_cleanup"}],
+        )
 
     def test_formal_trace_requires_real_association_and_zero_image_diagnostics(self):
         from scripts.probe_fabric_deployment_observation import evaluate_trace

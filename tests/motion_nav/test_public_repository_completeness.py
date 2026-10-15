@@ -12,6 +12,33 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class PublicRepositoryCompletenessTests(unittest.TestCase):
+    def test_d109_publication_inputs_are_selected(self):
+        selected_paths = {
+            path.as_posix() for path in collect_export_files(load_manifest())
+        }
+        required = (
+            "scripts/benchmark_d108_snapshot_materialization.py",
+            "scripts/d105_ftick.py",
+            "scripts/f1_known_world_following_fabric.py",
+            "scripts/process_tree.py",
+            "scripts/run_motion_nav_shards.py",
+            "tests/test_async_trace.py",
+            "tests/motion_nav/test_d102_registry_lifecycle.py",
+            "tests/motion_nav/test_d107_shard_runner.py",
+            "tests/motion_nav/test_d108_snapshot_materialization.py",
+            "docs/motion_navigation/decisions/0109-retest-b10-budget-and-bound-lifecycle-cleanup.md",
+            "docs/motion_navigation/stages/d109-b10-budget-and-lifecycle-repair-plan.md",
+            "docs/motion_navigation/acceptance/d109-b10-budget-and-lifecycle-repair.md",
+            "evidence/motion_navigation/d109-b10-lifecycle-v1/index.json",
+            "evidence/motion_navigation/d109-b10-lifecycle-v1/SHA256SUMS.txt",
+            "evidence/motion_navigation/d109-b10-lifecycle-v1/published-production-semantic-hashes.json",
+            "evidence/motion_navigation/d109-b10-lifecycle-v1/d6-snapshot-materialization/result.json",
+        )
+        self.assertEqual(
+            tuple(path for path in required if path not in selected_paths),
+            (),
+        )
+
     def test_f2_snapshot_selects_formal_tools_and_final_evidence(self):
         selected_paths = {
             path.as_posix() for path in collect_export_files(load_manifest())

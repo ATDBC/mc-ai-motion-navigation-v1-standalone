@@ -215,20 +215,29 @@ class MotionSolverWorker:
         self._unfinished_count = 0
         self._expected_close_feeder_errors = deque(maxlen=64)
         self._unexpected_feeder_errors = deque(maxlen=64)
+        self._request_feeder_error_original = None
+        self._request_feeder_error_handler = None
         self._requests = self._results = self._process = None
         context = multiprocessing.get_context("spawn")
         try:
             self._requests = context.Queue(maxsize=min(max_pending, 2))
             original_error_handler = self._requests._on_queue_feeder_error
+            owner_ref = weakref.ref(self)
             def feeder_error(error, value):
+                owner = owner_ref()
+                if owner is None:
+                    original_error_handler(error, value)
+                    return
                 diagnostic = (type(error).__name__, getattr(error, "errno", None), getattr(error, "winerror", None))
-                if (self._closed and isinstance(error, OSError)
+                if (owner._closed and isinstance(error, OSError)
                         and (getattr(error, "errno", None) == errno.EPIPE
                              or getattr(error, "winerror", None) == 109)):
-                    self._expected_close_feeder_errors.append(diagnostic)
+                    owner._expected_close_feeder_errors.append(diagnostic)
                     return  # Closing a dead worker's read end intentionally wakes this feeder.
-                self._unexpected_feeder_errors.append(diagnostic)
+                owner._unexpected_feeder_errors.append(diagnostic)
                 original_error_handler(error, value)
+            self._request_feeder_error_original = original_error_handler
+            self._request_feeder_error_handler = feeder_error
             self._requests._on_queue_feeder_error = feeder_error
             self._results = context.Queue(maxsize=min(max_pending, 2))
             self._process = context.Process(
@@ -355,11 +364,25 @@ class MotionSolverWorker:
                             endpoint.close()
                         except OSError:
                             pass
+            self._restore_request_feeder_error_handler(channel, feeder)
         alive, feeders = int(self.is_alive()), self.live_queue_feeders
         return MotionCloseReport(worker_exit_code=self.exit_code, live_workers=alive,
             live_queue_feeders=feeders, timed_out=bool(alive or feeders),
             expected_close_feeder_errors=len(getattr(self, "_expected_close_feeder_errors", ())),
             unexpected_feeder_errors=len(getattr(self, "_unexpected_feeder_errors", ())))
+
+    def _restore_request_feeder_error_handler(self, channel, feeder) -> None:
+        if channel is not self._requests:
+            return
+        installed = getattr(self, "_request_feeder_error_handler", None)
+        original = getattr(self, "_request_feeder_error_original", None)
+        if installed is None or original is None:
+            return
+        if isinstance(feeder, threading.Thread) and feeder.is_alive():
+            return
+        if getattr(channel, "_on_queue_feeder_error", None) is installed:
+            channel._on_queue_feeder_error = original
+        self._request_feeder_error_handler = None
 
     def __enter__(self) -> MotionSolverWorker:
         return self

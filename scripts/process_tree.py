@@ -48,8 +48,23 @@ def _same_process(process: psutil.Process, identity: ProcessIdentityV0) -> bool:
             process.pid == identity.pid
             and abs(process.create_time() - identity.create_time) <= 0.01
         )
-    except (psutil.NoSuchProcess, psutil.AccessDenied):
+    except psutil.NoSuchProcess:
         return False
+
+
+def _is_live(process: psutil.Process) -> bool:
+    """Return whether a process can still execute or retain resources.
+
+    A zombie has exited and only awaits its parent (or a subreaper) collecting
+    the status.  Treat inspection denial conservatively as live so cleanup can
+    never be reported as successful merely because the OS hid the process.
+    """
+    try:
+        return process.is_running() and process.status() != psutil.STATUS_ZOMBIE
+    except psutil.NoSuchProcess:
+        return False
+    except psutil.AccessDenied:
+        return True
 
 
 def capture_registered_tree(root: ProcessIdentityV0) -> ProcessTreeSnapshotV0:
@@ -89,13 +104,19 @@ def terminate_registered_tree(
 
     processes: dict[int, psutil.Process] = {}
     stopped: list[ProcessIdentityV0] = []
+    errors: list[str] = []
     for identity in identities:
         try:
             process = psutil.Process(identity.pid)
         except psutil.NoSuchProcess:
             stopped.append(identity)
             continue
-        if not _same_process(process, identity):
+        try:
+            same_process = _same_process(process, identity)
+        except psutil.AccessDenied:
+            errors.append(f"inspect pid {identity.pid}: access denied")
+            continue
+        if not same_process:
             if identity == root:
                 raise ProcessIdentityError(
                     f"root pid {identity.pid} creation time changed before cleanup"
@@ -104,7 +125,6 @@ def terminate_registered_tree(
             continue
         processes[identity.pid] = process
 
-    errors: list[str] = []
     ordered = [
         processes[identity.pid]
         for identity in identities
@@ -122,7 +142,12 @@ def terminate_registered_tree(
     del gone
     for process in alive:
         identity = by_pid[process.pid]
-        if not _same_process(process, identity):
+        try:
+            same_process = _same_process(process, identity)
+        except psutil.AccessDenied:
+            errors.append(f"inspect pid {process.pid} before kill: access denied")
+            continue
+        if not same_process:
             continue
         try:
             process.kill()
@@ -142,7 +167,13 @@ def terminate_registered_tree(
         except psutil.NoSuchProcess:
             stopped.append(identity)
             continue
-        if _same_process(process, identity) and process.is_running():
+        try:
+            same_process = _same_process(process, identity)
+        except psutil.AccessDenied:
+            errors.append(f"inspect pid {identity.pid} after cleanup: access denied")
+            surviving.append(identity)
+            continue
+        if same_process and _is_live(process):
             surviving.append(identity)
         else:
             stopped.append(identity)
@@ -150,5 +181,5 @@ def terminate_registered_tree(
         attempted=identities,
         stopped=tuple(sorted(stopped, key=lambda item: item.pid)),
         surviving=tuple(sorted(surviving, key=lambda item: item.pid)),
-        errors=tuple(errors),
+        errors=tuple(dict.fromkeys(errors)),
     )

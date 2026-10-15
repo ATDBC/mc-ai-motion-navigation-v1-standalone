@@ -115,7 +115,7 @@ D106 不另抄一份可能漂移的模块表，逐条使用 `sound-motion-proof-
 
 公开导出的最终文件数记录在证据索引中。源树和独立快照均通过导出校验；Java 门禁各 3／3。公开集合少 1 个模块、24 项，原因仍是本地 46 MiB D102 原始证据没有进入公开仓库。证据目录里的 `public-*-summary.json` 保留 A5-R 历史结果；A5-R2 最终公开正逆报告只存在本机导出清单排除的 `.tmp` 中，没有进入公开仓库。证据索引只保存这两份外部收据的路径、字节数和 SHA-256。公开仓库读者只能核对生产代码语义哈希、证据哈希和 `verify`，不能把收据哈希当成已经公开了完整运行报告。
 
-B10 使用正式命令 `--b10-gap-solver-probe --time-diagnostics --physics-tick-diagnostics --ftick-diagnostics`。第一次 A5 批次的 receiver 证据仍在每次 `propose()` 后逐行打开文件、flush 和 fsync，因此该批次的控制时序只保留为失败记录，不能作为最终 receiver 延迟结论。它还把 receiver 从结果队列取到消息的时刻误写成 worker 完成时刻；旧字段和原始证据不回写。
+B10 的历史 D108 命令是 `--b10-gap-solver-probe --time-diagnostics --physics-tick-diagnostics --ftick-diagnostics`。它遗漏了历史正式 B10 使用的 `--timeout-seconds 600`，因此实际采用 240 秒默认值，并只给任务留下 215 秒。D108 的原命令和失败记录保持不变；D109 起的正式命令必须显式追加 `--timeout-seconds 600`。第一次 A5 批次的 receiver 证据仍在每次 `propose()` 后逐行打开文件、flush 和 fsync，因此该批次的控制时序只保留为失败记录，不能作为最终 receiver 延迟结论。它还把 receiver 从结果队列取到消息的时刻误写成 worker 完成时刻；旧字段和原始证据不回写。
 
 A5-R 将记录改为容量 4096 的有界内存缓冲。控制循环只追加有类型、不可变的小记录；重复记录去重，溢出会写入结构化计数并使批次失败。运行完成或异常收尾时只批量写盘并 fsync 一次。诊断默认关闭，只有正式探针发布 movement tick 标签后才启用。
 
@@ -146,6 +146,6 @@ A5-R3 的 receiver、B10 runtime、Fabric 探针、异步 trace 和 F-TICK 相�
 
 A5-R3 独立导出仍为 2280 个文件，`verify` 通过；导出内 receiver、B10 runtime 和 standalone 相邻检查为 47／47。该结果只证明本轮改动已进入可校验快照，不替代 A5-R2 的公开正逆完整矩阵。
 
-B10 随后在旧 R4 带速入口路径触发 Runtime `deadline_exceeded`。清理代码又在 Runtime 已非 READY 时调用注销，外层最终只报告 `formal Runtime must be ready`，覆盖了原始失败；ordered source 没有释放。原始目录、manifest、哈希和失败结果均保留。这是新登记缺陷，不在 D108 中修改运动逻辑。因此 D108 的快照、分片器和 receiver 量尺完成，B10 不退步门槛仍未关闭；不能写成阶段整体通过。
+B10 随后在 R4 矩阵中触发 Runtime `deadline_exceeded`。当前最强证据表明，这是 215 秒探针总预算用尽：最近一次停止在 movement tick 3208，原始试次文件中已经完成 24 个 `r4_validation_*` 试次。它不能证明某个 R4 动作超时。清理代码又在 Runtime 已非 READY 时调用注销，外层最终只报告 `formal Runtime must be ready`，覆盖了原始失败。ordered source 的显式注销失败，但随后会由 `Runtime.close()` 的 `arbiter.clear()` 清除。原始目录、manifest、哈希和失败结果均保留。D109 会先用当前 HEAD 和 `--timeout-seconds 600` 复验，再处理清理与生命周期问题；在此之前 B10 不退步门槛仍未关闭。
 
 证据位于 `evidence/motion_navigation/d108-snapshot-hardening-v1/`。D103—D107 的历史记录保持原样。

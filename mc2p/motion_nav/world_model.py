@@ -107,6 +107,18 @@ class ObservationStamp:
 
 
 @dataclass(frozen=True, slots=True)
+class SnapshotMaterializationDiagnostics:
+    """Bounded work performed by the most recent snapshot-section commit."""
+
+    requested_sections: int
+    dirty_sections_before: int
+    selected_sections: int
+    materialized_sections: int
+    committed_sections: int
+    dirty_sections_after: int
+
+
+@dataclass(frozen=True, slots=True)
 class VisualAirEvidence:
     """What part of one visually empty cell was actually exposed."""
 
@@ -584,6 +596,8 @@ class WorldKnowledge:
         self._ready_snapshot_revisions: set[int] = set()
         self._published_snapshot_bytes = 0
         self._snapshot_sources: WeakValueDictionary[str, SnapshotSourceProvenance] = WeakValueDictionary()
+        self._snapshot_materialization_diagnostics = \
+            SnapshotMaterializationDiagnostics(0, 0, 0, 0, 0, 0)
 
     @property
     def known_cell_count(self) -> int:
@@ -629,6 +643,12 @@ class WorldKnowledge:
             | set(self._section_geometry_revisions)
             | set(self._section_evidence_revisions)
         )
+
+    @property
+    def snapshot_materialization_diagnostics(
+        self,
+    ) -> SnapshotMaterializationDiagnostics:
+        return self._snapshot_materialization_diagnostics
 
     def section_geometry_revision(self, section: SectionPos) -> int:
         _section(section)
@@ -917,7 +937,9 @@ class WorldKnowledge:
             raise ContractViolation("snapshot materialization requires an explicit section set")
         for section in sections:
             _section(section)
+        dirty_sections_before = len(self._snapshot_dirty_sections)
         selected = self._snapshot_dirty_sections.intersection(sections)
+        materialized_sections = 0
         for position in selected:
             cells = self._sections.get(position)
             if not cells:
@@ -945,9 +967,18 @@ class WorldKnowledge:
                 )
             self._snapshot_sections[position] = \
                 ImmutableWorldSection._from_validated_observation(position, facts, versions)
+            materialized_sections += 1
         self._snapshot_dirty_sections.difference_update(selected)
         for position in selected:
             self._snapshot_dirty_positions.pop(position, None)
+        self._snapshot_materialization_diagnostics = SnapshotMaterializationDiagnostics(
+            requested_sections=len(sections),
+            dirty_sections_before=dirty_sections_before,
+            selected_sections=len(selected),
+            materialized_sections=materialized_sections,
+            committed_sections=len(selected),
+            dirty_sections_after=len(self._snapshot_dirty_sections),
+        )
 
     def _retire_changed_snapshot_sections(
         self, sections: set[SectionPos],

@@ -1,0 +1,17 @@
+{
+  "schema_version": "mc2p.d109-d1-source-run.v1",
+  "source_commit": "680d7a7654f3824e29662dcdba900b9e24313bce",
+  "source_run": "artifacts/fabric-deployment/20261015T012119841247Z-adc8b98e",
+  "formal_platform": "Windows",
+  "seed": 21001,
+  "server_port": 25597,
+  "ipc_port": 8140,
+  "timeout_seconds": 600,
+  "task_budget_seconds": 575,
+  "used_seconds_approx": 338.3249482,
+  "remaining_seconds_approx": 236.6750518,
+  "raw_trace_bytes": 137007302,
+  "raw_trace_sha256": "6b277018deaf1ef4d0957e925898c12fa29b263962b42a4a85af46917b1644e6",
+  "raw_trace_publication": "not copied; exceeds compact evidence scope",
+  "console_exit_code": 1
+}

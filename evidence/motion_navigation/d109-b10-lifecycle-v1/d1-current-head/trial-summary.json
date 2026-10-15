@@ -1,0 +1,105 @@
+{
+  "schema_version": "mc2p.d109-d1-trial-summary.v1",
+  "source_run": "artifacts/fabric-deployment/20261015T012119841247Z-adc8b98e",
+  "preflight": 1,
+  "validation": {
+    "passed": 40,
+    "total": 40
+  },
+  "turn_preflight": 1,
+  "turn_validation": {
+    "passed": 40,
+    "total": 40
+  },
+  "coordinator": {
+    "passed": 10,
+    "total": 10
+  },
+  "r4_validation": {
+    "passed": 60,
+    "total": 60,
+    "per_speed_band": [
+      20,
+      20,
+      20
+    ]
+  },
+  "typed_negative_case_count": 24,
+  "matrix_complete": true,
+  "last_trial": {
+    "name": "r4_validation_2-3-4",
+    "group": "r4_validation_2",
+    "anchor_movement_tick_id": 5621,
+    "landed": true,
+    "final_position": [
+      3.3677242872661513,
+      0.0,
+      -9.5
+    ]
+  },
+  "last_movement_tick": 5640,
+  "solver_time_ns": {
+    "maximum": 46665600,
+    "p95": 24589800,
+    "p99": 26976100,
+    "samples": 142
+  },
+  "receiver": {
+    "delivery_count": 11,
+    "registry_publish_to_first_control_consume_ticks": [
+      1,
+      1,
+      1,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "published_but_next_decision_invisible_count": 1,
+    "worker_completion_to_receiver_observed": {
+      "reason": "worker completion is not present in the existing result protocol",
+      "status": "unavailable"
+    }
+  },
+  "time_attribution": {
+    "status": "failed",
+    "errors": [
+      "deployment timing samples do not cover one exact Runtime episode"
+    ],
+    "event_count": 12204,
+    "observation_count": 5637,
+    "packet_update_count": 314,
+    "regression_count": 0
+  },
+  "inner_runtime_failure": null,
+  "inner_failure_source": "full Runtime trace scan found no non-null failure/exception/error and no deadline_exceeded or body-responsibility marker",
+  "health": {
+    "minimum": 20.0,
+    "final": 20.0,
+    "damage_event_count": 0
+  },
+  "ordered_sources": {
+    "registered_count": 11,
+    "unregistered_count": 11,
+    "missing_unregistration": [],
+    "unexpected_unregistration": []
+  },
+  "ftick": {
+    "schema_version": "mc2p.segment-complete.v1",
+    "segment_count": 1,
+    "record_count": 22555,
+    "byte_count": 5913015,
+    "manifest_sha256": "9ea55ae5c46e188fd24b0020bdc161fc5889190497081a1fc3e6900c5a6332e8"
+  },
+  "physics_tick": {
+    "schema_version": "mc2p.segment-complete.v1",
+    "segment_count": 1,
+    "record_count": 5640,
+    "byte_count": 6289288,
+    "manifest_sha256": "3c31da61f862205aa262a8853948e8d2078415c87c010a3f095a98e4a4e345df"
+  }
+}

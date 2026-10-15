@@ -1,0 +1,314 @@
+{
+  "schema_version": "mc2p.d109-d1-independent-summary.v1",
+  "source_head": "680d7a7654f3824e29662dcdba900b9e24313bce",
+  "run_dir": "artifacts\\fabric-deployment\\20261015T012119841247Z-adc8b98e",
+  "outer_exit_code": 1,
+  "outer_primary_failure": {
+    "message": "['client-0:b10b_solver_is_bounded', 'client-0:complete_time_event_attribution']",
+    "type": "DeploymentEvidenceFailure"
+  },
+  "outer_cleanup_failures": [
+    {
+      "code": "cleanup",
+      "detail_json": "{\"exception_type\": \"RuntimeError\"}",
+      "message": "asynchronous trace worker failed",
+      "retryable": true,
+      "schema_version": "mc2p.failure.v0",
+      "source": "runtime"
+    }
+  ],
+  "failed_checks": [
+    "client-0:b10b_solver_is_bounded",
+    "client-0:complete_time_event_attribution"
+  ],
+  "inner_runtime_failure": null,
+  "inner_failure_evidence": "no non-null failure/exception/error field in Runtime trace; no deadline_exceeded/body-responsibility marker in trace or trial files",
+  "matrix": {
+    "b10_trial_groups": {
+      "preflight": 1,
+      "validation": 40,
+      "turn_preflight": 1,
+      "turn_validation": 40,
+      "r4_validation_0": 20,
+      "r4_validation_1": 20,
+      "r4_validation_2": 20
+    },
+    "coordinator_trials": 10,
+    "coordinator_success": 10,
+    "moving_negative_case_count": 24,
+    "validation_success": "40/40",
+    "turn_validation_success": "40/40",
+    "r4_validation_success": "60/60",
+    "complete": true
+  },
+  "last_trial": {
+    "name": "r4_validation_2-3-4",
+    "group": "r4_validation_2",
+    "anchor_movement_tick_id": 5621,
+    "landed": true,
+    "final_position": [
+      3.3677242872661513,
+      0.0,
+      -9.5
+    ]
+  },
+  "last_movement_tick": 5640,
+  "last_observation_sequence_id": 5636,
+  "budget": {
+    "configured_timeout_seconds": 600,
+    "task_budget_seconds": 575,
+    "used_seconds_approx": 338.3249482,
+    "remaining_seconds_approx": 236.6750518
+  },
+  "solver_time_ns": {
+    "maximum": 46665600,
+    "p95": 24589800,
+    "p99": 26976100,
+    "samples": 142
+  },
+  "receiver": {
+    "cycle_count": 589,
+    "cycle_duration_ns": {
+      "maximum": 2937800,
+      "p95": 554400,
+      "p99": 865600,
+      "samples": 589
+    },
+    "deliveries": [
+      {
+        "first_control_consume_tick": 1371,
+        "identity": "'motion_solve:74781f94696587f1f1e6e6625464ceb1e2648e1ba36b339db7e406d9a007b4a7'",
+        "receiver_observed_result_tick": 1370,
+        "receiver_observed_to_registry_publish_ticks": 0,
+        "registry_publish_tick": 1370,
+        "registry_publish_to_first_control_consume_ticks": 1
+      },
+      {
+        "first_control_consume_tick": 1391,
+        "identity": "'motion_solve:f83da9d83285106070323f33b3d08e8a78dd1e6297b6c89cb1af7dcf3d678c1a'",
+        "receiver_observed_result_tick": 1390,
+        "receiver_observed_to_registry_publish_ticks": 0,
+        "registry_publish_tick": 1390,
+        "registry_publish_to_first_control_consume_ticks": 1
+      },
+      {
+        "first_control_consume_tick": 1412,
+        "identity": "'motion_solve:326f8e4da45a79f07d60bd1b6f3c7f904f1a1d7477df8db0d2d35410c6957f84'",
+        "receiver_observed_result_tick": 1411,
+        "receiver_observed_to_registry_publish_ticks": 0,
+        "registry_publish_tick": 1411,
+        "registry_publish_to_first_control_consume_ticks": 1
+      },
+      {
+        "first_control_consume_tick": 1414,
+        "identity": "'motion_solve:5068571d473a5fd79cc2c9885bbca81e0759388d002e4c2c3a5bf3252b883725'",
+        "receiver_observed_result_tick": 1412,
+        "receiver_observed_to_registry_publish_ticks": 0,
+        "registry_publish_tick": 1412,
+        "registry_publish_to_first_control_consume_ticks": 2
+      },
+      {
+        "first_control_consume_tick": 1434,
+        "identity": "'motion_solve:a36713b067b8fe20cfd2cd36ba4274b777ce8afe193f546624c1f6a1dad8cadb'",
+        "receiver_observed_result_tick": 1433,
+        "receiver_observed_to_registry_publish_ticks": 0,
+        "registry_publish_tick": 1433,
+        "registry_publish_to_first_control_consume_ticks": 1
+      },
+      {
+        "first_control_consume_tick": 1454,
+        "identity": "'motion_solve:1c534cb4aad9b72d4be0798236f81481592740af4b9f8ad26186af312843f768'",
+        "receiver_observed_result_tick": 1453,
+        "receiver_observed_to_registry_publish_ticks": 0,
+        "registry_publish_tick": 1453,
+        "registry_publish_to_first_control_consume_ticks": 1
+      },
+      {
+        "first_control_consume_tick": 1474,
+        "identity": "'motion_solve:ef16a0aa5f85b66a67f9c101e6fc282c63d1328cda56e34402542d92a283d1a2'",
+        "receiver_observed_result_tick": 1473,
+        "receiver_observed_to_registry_publish_ticks": 0,
+        "registry_publish_tick": 1473,
+        "registry_publish_to_first_control_consume_ticks": 1
+      },
+      {
+        "first_control_consume_tick": 1494,
+        "identity": "'motion_solve:4f4cbbd73bbcf9e9145c58ceb989f91d0f1cfb26a429c0c0f5aefa1764e19909'",
+        "receiver_observed_result_tick": 1493,
+        "receiver_observed_to_registry_publish_ticks": 0,
+        "registry_publish_tick": 1493,
+        "registry_publish_to_first_control_consume_ticks": 1
+      },
+      {
+        "first_control_consume_tick": 1514,
+        "identity": "'motion_solve:46cc5bb5aa014223a2d121127e33d1efb58e4c7b9ef727874c698f8146680211'",
+        "receiver_observed_result_tick": 1513,
+        "receiver_observed_to_registry_publish_ticks": 0,
+        "registry_publish_tick": 1513,
+        "registry_publish_to_first_control_consume_ticks": 1
+      },
+      {
+        "first_control_consume_tick": 1534,
+        "identity": "'motion_solve:137dfbdfa62d75951afb6b1afe99cf471a7ed6355d258153ff62f5f02ef14e1c'",
+        "receiver_observed_result_tick": 1533,
+        "receiver_observed_to_registry_publish_ticks": 0,
+        "registry_publish_tick": 1533,
+        "registry_publish_to_first_control_consume_ticks": 1
+      },
+      {
+        "first_control_consume_tick": 1554,
+        "identity": "'motion_solve:6e43ea2a7a9511a7bf7feef713d9449737bb1fdd6f9b59661848fb819c1c6e89'",
+        "receiver_observed_result_tick": 1553,
+        "receiver_observed_to_registry_publish_ticks": 0,
+        "registry_publish_tick": 1553,
+        "registry_publish_to_first_control_consume_ticks": 1
+      }
+    ],
+    "delivery_count": 11,
+    "delivery_tick_unavailable_count": 0,
+    "published_but_next_decision_invisible_count": 1,
+    "schema_version": "mc2p.b10-receiver-diagnostic-summary.v2",
+    "worker_completion_to_receiver_observed": {
+      "reason": "worker completion is not present in the existing result protocol",
+      "status": "unavailable"
+    }
+  },
+  "ftick": {
+    "schema_version": "mc2p.segment-complete.v1",
+    "segment_count": 1,
+    "record_count": 22555,
+    "byte_count": 5913015,
+    "manifest_sha256": "9ea55ae5c46e188fd24b0020bdc161fc5889190497081a1fc3e6900c5a6332e8"
+  },
+  "physics_tick": {
+    "schema_version": "mc2p.segment-complete.v1",
+    "segment_count": 1,
+    "record_count": 5640,
+    "byte_count": 6289288,
+    "manifest_sha256": "3c31da61f862205aa262a8853948e8d2078415c87c010a3f095a98e4a4e345df"
+  },
+  "ordered_sources": {
+    "registered_count": 11,
+    "unregistered_count": 11,
+    "missing_unregistration": [],
+    "unexpected_unregistration": []
+  },
+  "health": {
+    "minimum": 20.0,
+    "final": 20.0,
+    "damage_event_count": 0
+  },
+  "client_cleanup": {
+    "cleanup": {
+      "attempted": [
+        {
+          "create_time": 1792027289.5195742,
+          "pid": 42984
+        }
+      ],
+      "errors": [],
+      "stopped": [
+        {
+          "create_time": 1792027289.5195742,
+          "pid": 42984
+        }
+      ],
+      "surviving": []
+    },
+    "errors": [],
+    "graceful": true,
+    "passed": true,
+    "return_code": 0
+  },
+  "server_cleanup": {
+    "cleanup": {
+      "attempted": [
+        {
+          "create_time": 1792027285.195016,
+          "pid": 13856
+        }
+      ],
+      "errors": [],
+      "stopped": [
+        {
+          "create_time": 1792027285.195016,
+          "pid": 13856
+        }
+      ],
+      "surviving": []
+    },
+    "errors": [],
+    "graceful": true,
+    "passed": true,
+    "return_code": 0
+  },
+  "trace_record_types": {
+    "reset": 1,
+    "ordered_source_registered": 11,
+    "source_cancel": 5461,
+    "ordered_intent": 5636,
+    "dispatch": 5636,
+    "step": 5636,
+    "navigation_session_decision": 185,
+    "navigation_route_decision": 173,
+    "ordered_source_unregistered": 11,
+    "close_release": 1
+  },
+  "files": {
+    "result.json": {
+      "bytes": 2326966,
+      "sha256": "6ff8d03e6c61f750c0307cb402667025b07726d071b06f02a4c0df4486779555"
+    },
+    "worker-result.json": {
+      "bytes": 2326396,
+      "sha256": "110811a9ca03e66839c3c6e273f7f89541f8ac30b042eee9e86d98a964e73d1b"
+    },
+    "supervision.json": {
+      "bytes": 527,
+      "sha256": "18b91dce8eebfdf1bf2d327dd54c5e73d8dcc03cdb3239d4dfd6cdf1938c3a92"
+    },
+    "client-0/b10-gap-solver.json": {
+      "bytes": 1114527,
+      "sha256": "7b90cadec4050aa82f26477cd5bf16d7c3bbf7bdefc41281a877728b777164cc"
+    },
+    "client-0/b10-gap-solver-trials.jsonl": {
+      "bytes": 956153,
+      "sha256": "1d9acc100a2b42256d294b1860a0c798fefc1655643cbe467dac45290e9582a0"
+    },
+    "client-0/b10-coordinator-trials.jsonl": {
+      "bytes": 149298,
+      "sha256": "64fa4f838e670759a8c29492ee551165ab56d54386c49fe4839999e549c111f2"
+    },
+    "client-0/r4-moving-gap-negative-trials.jsonl": {
+      "bytes": 4360,
+      "sha256": "bc02bcad32eba5da2539b57a7e575d185278eace96cf8ca28d24b8a9356016ff"
+    },
+    "client-0/b10-receiver-diagnostics.jsonl": {
+      "bytes": 172884,
+      "sha256": "830fcf1a76505a45ed84a11ec58fd971e538128aa7a8134df0f5888aa3262021"
+    },
+    "client-0/diagnostics.jsonl": {
+      "bytes": 9290970,
+      "sha256": "471add4eff89c9c6f7f40a53f2cfbf7a874083a3d845f4d133712d00ff9289fc"
+    },
+    "client-0/trace.jsonl": {
+      "bytes": 137007302,
+      "sha256": "6b277018deaf1ef4d0957e925898c12fa29b263962b42a4a85af46917b1644e6"
+    },
+    "client-0/time-report.json": {
+      "bytes": 1019243,
+      "sha256": "510b2dfd2b8eff395382e622b219b679797e6c0447f88bab264a155c2cceb823"
+    },
+    "client-0/ftick-events/complete.json": {
+      "bytes": 191,
+      "sha256": "f0986f7cb0fd6d16092cf98de8492eba2a2df4a46528f148e2478c8fa7804e2f"
+    },
+    "client-0/physics-tick-events/complete.json": {
+      "bytes": 190,
+      "sha256": "ebdfe169f4a2ac98010bd80602ce85271a275f1f68b1e951b69aa821d45d15cb"
+    }
+  },
+  "source_run": "artifacts/fabric-deployment/20261015T012119841247Z-adc8b98e",
+  "source_run_publication": "raw run remains local because the trace is 137 MB; this evidence directory preserves hashes and small structured summaries",
+  "baseline_relation": "run started from clean 680d7a7654f3824e29662dcdba900b9e24313bce before D109 production changes"
+}

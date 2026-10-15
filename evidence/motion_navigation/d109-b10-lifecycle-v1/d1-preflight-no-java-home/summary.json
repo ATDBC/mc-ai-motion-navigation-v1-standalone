@@ -1,0 +1,10 @@
+{
+  "schema_version": "mc2p.d109-d1-environment-preflight.v1",
+  "source_commit": "680d7a7654f3824e29662dcdba900b9e24313bce",
+  "status": "environment_failure_before_game_launch",
+  "exit_code": 1,
+  "reason": "OpenJDK 21 was not found through JAVA_HOME or PATH",
+  "product_result": null,
+  "retry_action": "set JAVA_HOME to .venv/Library/lib/jvm and rerun the identical command once",
+  "formal_run": "artifacts/fabric-deployment/20261015T012119841247Z-adc8b98e"
+}

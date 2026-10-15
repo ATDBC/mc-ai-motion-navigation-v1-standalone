@@ -1,0 +1,68 @@
+{
+  "schema_version": "mc2p.d109-post-b10-regression.v1",
+  "source_commit": "53b6ffa5486ac23c5de6c4728955ef0c81d04821",
+  "source_worktree_dirty": false,
+  "direct_adjacent": {
+    "tests": 427,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "reports": {
+    "source_forward": {
+      "modules": 186,
+      "tests": 2331,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timeouts": 0,
+      "bytes": 699925,
+      "sha256": "29f0281d333c5abc0782f3a2849b75709310bbbd7550945397310a5e7f6342ab"
+    },
+    "source_reverse": {
+      "modules": 186,
+      "tests": 2331,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timeouts": 0,
+      "bytes": 700349,
+      "sha256": "99eb8275ce5eac7aea429c4cb25c2def04006b3ab0b15446c4158d1ef72660ef"
+    },
+    "snapshot_forward": {
+      "modules": 185,
+      "tests": 2307,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timeouts": 0,
+      "bytes": 693117,
+      "sha256": "2b39e4e38ab2a697c1e8cd72843b9bfee567568caedc1cbbc7bd6b2b46129397"
+    },
+    "snapshot_reverse": {
+      "modules": 185,
+      "tests": 2307,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "timeouts": 0,
+      "bytes": 691907,
+      "sha256": "d4607ce1ac2d0bcacb50058cd6c448b95fb32627cb16e8d015e687b18989a7b2"
+    }
+  },
+  "source_java_gates": {
+    "tests": 3,
+    "passed": 3
+  },
+  "snapshot_java_gates": {
+    "tests": 3,
+    "passed": 3
+  },
+  "standalone": {
+    "selected_source_file_count": 2304,
+    "verified_files_after_export": 2305,
+    "verified_files_after_tests": 2305,
+    "source_commit": "53b6ffa5486ac23c5de6c4728955ef0c81d04821"
+  },
+  "boundary": "Large shard reports stay under .tmp/d109-d8; this file preserves counts and SHA-256. No Fabric rerun was performed after the single post-repair B10."
+}

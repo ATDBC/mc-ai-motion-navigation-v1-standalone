@@ -493,7 +493,19 @@ def finalize_result(worker: dict, supervision, ports_free: bool) -> dict:
         and not supervision.cleanup_failures and supervision.process_stopped and ports_free)
     result.update(status="passed" if okay else "failed", parent_supervision=trace_projection(supervision), ports_free=ports_free)
     if not okay:
-        result["primary_failure"] = worker.get("primary_failure") or "parent_or_worker_evidence_failed"
+        # A cleanup failure makes the batch fail, but it is not the execution's
+        # primary failure. Preserve None for cleanup-only outcomes so callers
+        # can inspect the typed secondary list directly.
+        primary = worker.get("primary_failure") or supervision.primary_failure
+        if primary is None and supervision.return_code != 0:
+            primary = "parent_process_failed_without_primary"
+        evidence_failed = (
+            not worker.get("checks")
+            or not all(c.get("passed") is True for c in worker.get("checks", ()))
+        )
+        if primary is None and evidence_failed:
+            primary = "worker_evidence_failed"
+        result["primary_failure"] = primary
     result["cleanup_failures"] = list(worker.get("cleanup_failures", [])) + list(supervision.cleanup_failures)
     return result
 
@@ -577,17 +589,37 @@ def _stop(process, identity, *, server: bool = False) -> dict:
                 and not cleanup.surviving and not cleanup.errors and process.poll() == 0)
 
 
-def _close_client(runtime, backend, transport, process, identity) -> tuple[dict | None, list]:
+def _close_client(
+        runtime, backend, transport, process, identity, *,
+        b10_lifecycle: dict | None = None,
+) -> tuple[dict | None, list]:
     failures, cleanup = [], None
+    runtime_state_after_close = None
     if runtime is not None:
         try:
             runtime.close()
         except BaseException as error:
             failures.append(dict(stage="runtime_close", type=type(error).__name__))
+        runtime_state_after_close = getattr(
+            getattr(runtime, "state", None), "value", None,
+        )
         try:
             failures.extend(trace_projection(runtime.cleanup_failures))
         except BaseException as error:
             failures.append(dict(stage="runtime_cleanup_report", type=type(error).__name__))
+    if b10_lifecycle:
+        try:
+            from scripts.b10_gap_solver_runtime import finalize_b10_source_release
+            finalize_b10_source_release(
+                b10_lifecycle,
+                runtime_state=runtime_state_after_close,
+            )
+        except BaseException as error:
+            b10_lifecycle.setdefault("cleanup_failures", []).append({
+                "stage": "ordered_source_lifecycle_finalize",
+                "type": type(error).__name__,
+                "message": str(error),
+            })
     if backend is not None:
         try:
             backend.close()
@@ -697,12 +729,22 @@ class _RuntimeDiagnosticsTrace:
     def close(self):
         error = None
         try:
-            self.delegate.close()
+            result = self.delegate.close()
+            if getattr(result, "sealed", True) is not True:
+                raise RuntimeError(
+                    "runtime trace evidence was not sealed: "
+                    f"{getattr(result, 'cleanup_failure', None)!r}"
+                )
         except BaseException as caught:
             error = caught
         try:
             if self._diagnostics is not None:
-                self._diagnostics.close()
+                result = self._diagnostics.close()
+                if getattr(result, "sealed", True) is not True:
+                    raise RuntimeError(
+                        "runtime diagnostics evidence was not sealed: "
+                        f"{getattr(result, 'cleanup_failure', None)!r}"
+                    )
                 if self._diagnostics.stats.dropped_records:
                     raise RuntimeError("runtime diagnostics queue dropped records")
         except BaseException as caught:
@@ -980,6 +1022,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
     )
     deadline = time.perf_counter_ns() + round((timeout - 25) * 1e9)
     failure, cleanup_failures, checks, sessions = None, [], [], []
+    b10_lifecycles = []
     diagnostic_failures = []
     session_records = []
     server = server_identity = None
@@ -1065,6 +1108,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                 "--gameDir", str(directory), "--quickPlayMultiplayer", f"127.0.0.1:{server_port}"]
             write_argument_file(directory / "client.args", arguments)
             process = identity = backend = runtime = None
+            b10_lifecycle = {} if b10_gap_solver_probe else None
             client_preclosed = False
             with (directory / "console.log").open("xb") as output:
                 transport = DeploymentTransport(port=ipc_port)
@@ -1521,6 +1565,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                             fixture_writer=write_b10_fixture,
                             player_teleporter=teleport_b10_player,
                             pipeline_diagnostic=lambda: observation_pipeline_diagnostics(runtime, backend),
+                            lifecycle_report=b10_lifecycle,
                         )
                     elif continuous_height_probe:
                         from scripts.continuous_height_runtime import (
@@ -1702,6 +1747,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                         # fill while no Runtime step is consuming receipts.
                         cleanup, close_failures = _close_client(
                             runtime, backend, transport, process, identity,
+                            b10_lifecycle=b10_lifecycle,
                         )
                         client_preclosed = True
                         cleanup_failures.extend(close_failures)
@@ -1937,12 +1983,29 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                     if not client_preclosed:
                         cleanup, close_failures = _close_client(
                             runtime, backend, transport, process, identity,
+                            b10_lifecycle=b10_lifecycle,
                         )
                         cleanup_failures.extend(close_failures)
                         if cleanup is not None:
                             write_json_atomic(directory / "cleanup.json", cleanup)
                             if not cleanup["passed"] or not cleanup["graceful"]:
                                 cleanup_failures.append(dict(client=number, **cleanup))
+                    if b10_lifecycle:
+                        for item in b10_lifecycle.get("cleanup_failures", ()):
+                            cleanup_failures.append({"client": number, **item})
+                        b10_lifecycles.append(dict(b10_lifecycle))
+                        try:
+                            write_json_atomic(
+                                directory / "b10-lifecycle.json",
+                                b10_lifecycles[-1],
+                            )
+                        except BaseException as error:
+                            cleanup_failures.append({
+                                "client": number,
+                                "stage": "b10_lifecycle_evidence_write",
+                                "type": type(error).__name__,
+                                "message": str(error),
+                            })
                     time_check, diagnostic_failure = collect_time_evidence(directory, enabled=time_diagnostics)
                     checks.append({**time_check, "name": f"client-{number}:" + time_check["name"]})
                     if diagnostic_failure is not None:
@@ -2105,6 +2168,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
         ftick_diagnostics=ftick_diagnostics,
         status="passed" if failure is None and not cleanup_failures else "failed", checks=checks,
         primary_failure=failure, cleanup_failures=cleanup_failures, diagnostic_failures=diagnostic_failures, sessions=sessions,
+        b10_lifecycle=(b10_lifecycles[0] if b10_lifecycles else None),
         limits=["local vanilla server/direct client interface slice only", "no complete timing, visibility or training acceptance"])
     write_json_atomic(run_dir / "result.json", result)
     return 0 if result["status"] == "passed" else 1

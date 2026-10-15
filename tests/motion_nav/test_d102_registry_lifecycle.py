@@ -7,11 +7,18 @@ from dataclasses import replace
 from contextlib import redirect_stderr
 from types import SimpleNamespace
 import errno
+import gc
 import io
+import os
+import queue
+import tempfile
 import time
 import threading
 import unittest
+import weakref
 from unittest.mock import Mock, patch
+
+import psutil
 
 from mc2p.contracts.action_v1 import ActionSnapshotV1, LookV1, MovementTickWindowV1, MovementV1
 from mc2p.contracts.action_receipt import ClientInputApplicationV1
@@ -488,6 +495,7 @@ class RegistryTests(unittest.TestCase):
         context.Process.return_value.start.side_effect = RuntimeError("start refused")
         first, second = Mock(), Mock()
         context.Queue.side_effect = (first, second)
+        original_error_handler = first._on_queue_feeder_error
         with patch("mc2p.motion_nav.motion_worker.multiprocessing.get_context", return_value=context):
             with self.assertRaisesRegex(RuntimeError, "start refused"):
                 MotionSolverWorker()
@@ -495,6 +503,7 @@ class RegistryTests(unittest.TestCase):
             self.assertTrue(channel.close.called, "constructor failure leaked a queue")
             self.assertTrue(channel.cancel_join_thread.called)
             self.assertFalse(channel.join_thread.called)
+        self.assertIs(first._on_queue_feeder_error, original_error_handler)
         worker = MotionSolverWorker(max_pending=2)
         self.addCleanup(worker.close)
         inbox = MotionResultInbox(worker=worker, current_facts=self.current)
@@ -520,6 +529,140 @@ class RegistryTests(unittest.TestCase):
         final = inbox.close(timeout_seconds=.5)
         self.assertTrue(final.fully_released)
         self.assertEqual(final.retained_bytes + final.lease_count, 0)
+
+    def test_request_feeder_callback_is_weak_and_restored_only_after_feeder_exit(self):
+        context = Mock()
+        context.Process.return_value.pid = None
+        context.Process.return_value.is_alive.return_value = False
+        first, second = Mock(), Mock()
+        context.Queue.side_effect = (first, second)
+        original = first._on_queue_feeder_error
+
+        with patch(
+            "mc2p.motion_nav.motion_worker.multiprocessing.get_context",
+            return_value=context,
+        ):
+            worker = MotionSolverWorker()
+        installed = first._on_queue_feeder_error
+        closure = () if installed.__closure__ is None else tuple(
+            cell.cell_contents for cell in installed.__closure__
+        )
+        self.assertNotIn(worker, closure)
+        owner_refs = [item for item in closure if isinstance(item, weakref.ReferenceType)]
+        self.assertEqual(len(owner_refs), 1)
+        self.assertIs(owner_refs[0](), worker)
+
+        feeder = Mock(spec=threading.Thread)
+        feeder.is_alive.return_value = True
+        first._thread = feeder
+        first._reader, first._writer = Mock(), Mock()
+        with patch("mc2p.motion_nav.motion_worker.sys.platform", "linux"):
+            first_close = worker.close(timeout_seconds=0.)
+        self.assertTrue(first_close.timed_out)
+        self.assertIs(first._on_queue_feeder_error, installed)
+
+        feeder.is_alive.return_value = False
+        with patch("mc2p.motion_nav.motion_worker.sys.platform", "linux"):
+            second_close = worker.close(timeout_seconds=.05)
+        self.assertFalse(second_close.timed_out)
+        self.assertIs(first._on_queue_feeder_error, original)
+
+        owner = weakref.ref(worker)
+        del worker
+        self.assertIsNone(owner())
+        installed(OSError(errno.EBADF, "owner already released"), b"queued")
+        original.assert_called_once()
+
+    def test_real_worker_lifecycle_matrix_releases_without_cyclic_gc(self):
+        scenarios = ("idle", "killed", "full", "large", "crash")
+        large = b"x" * (8 * 1024 * 1024)
+        process = psutil.Process()
+
+        def resource_count():
+            descriptor_or_handle = (
+                process.num_handles() if os.name == "nt" else process.num_fds()
+            )
+            feeders = sum(
+                thread.name == "QueueFeederThread"
+                for thread in threading.enumerate()
+            )
+            children = sum(
+                child.is_running() and child.status() != psutil.STATUS_ZOMBIE
+                for child in process.children(recursive=True)
+            )
+            return descriptor_or_handle, feeders, children
+
+        def wait_dead(worker):
+            deadline = time.monotonic() + 5.
+            while worker.is_alive() and time.monotonic() < deadline:
+                time.sleep(.01)
+
+        def prepare(worker, scenario):
+            if scenario == "idle":
+                return
+            if scenario == "crash":
+                worker._requests.put_nowait(large)
+                wait_dead(worker)
+                return
+            worker._process.terminate()
+            worker._process.join(5.)
+            if scenario == "full":
+                for index in range(16):
+                    try:
+                        worker._requests.put_nowait(("filler", index))
+                    except queue.Full:
+                        break
+            elif scenario == "large":
+                worker._requests.put_nowait(large)
+                time.sleep(.05)
+
+        # Warm multiprocessing's process-wide helpers before freezing counts.
+        warm = MotionSolverWorker(max_pending=2)
+        warm.close()
+        del warm
+        gc.collect()
+        baseline = resource_count()
+        previous_gc = gc.isenabled()
+        gc.disable()
+        references = []
+        reports = []
+        observed = baseline
+        immediate_release = False
+        saved_stderr_fd = os.dup(2)
+        try:
+            with tempfile.TemporaryFile() as captured_stderr:
+                os.dup2(captured_stderr.fileno(), 2)
+                for scenario in scenarios:
+                    for _ in range(10):
+                        worker = MotionSolverWorker(max_pending=2)
+                        prepare(worker, scenario)
+                        reports.append(worker.close(timeout_seconds=5.))
+                        references.append(weakref.ref(worker))
+                        del worker
+            time.sleep(.2)
+            observed = resource_count()
+            immediate_release = all(reference() is None for reference in references)
+        finally:
+            os.dup2(saved_stderr_fd, 2)
+            os.close(saved_stderr_fd)
+            if previous_gc:
+                gc.enable()
+            gc.collect()
+            collected = resource_count()
+        self.assertTrue(immediate_release)
+        self.assertTrue(all(report.live_workers == 0 for report in reports))
+        self.assertTrue(all(report.live_queue_feeders == 0 for report in reports))
+        self.assertEqual(observed[1:], baseline[1:])
+        if os.name != "nt":
+            self.assertEqual(observed[0], baseline[0])
+            self.assertEqual(collected, baseline)
+        else:
+            # Windows multiprocessing owns process/semaphore handles outside
+            # the worker object's reference graph.  Their count is diagnostic;
+            # immediate worker release plus zero live feeders/children is the
+            # formal no-cycle assertion on the project platform.
+            self.assertGreaterEqual(observed[0], baseline[0])
+            self.assertEqual(collected[1:], baseline[1:])
 
     def test_worker_transfer_keeps_one_receiver(self):
         from mc2p.motion_nav.navigation_session import NavigationSession

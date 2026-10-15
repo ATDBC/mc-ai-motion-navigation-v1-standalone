@@ -144,6 +144,22 @@ class CloseDiagnosticsTrace:
             append_jsonl(self.directory/'diagnostics.jsonl',dict(episode_id=obs.episode_id,
                 observation_sequence_id=obs.sequence_id,diagnostics=self.backend.last_diagnostics))
 
+    def write_projected(self,kind,payload):
+        self.trace.write_projected(kind,payload)
+        if kind!='close_release' or type(payload) is not dict:
+            return
+        backend_result=payload.get('backend_result')
+        observation=(backend_result.get('observation')
+                     if type(backend_result) is dict else None)
+        if type(observation) is not dict:
+            return
+        episode_id=observation.get('episode_id')
+        sequence_id=observation.get('sequence_id')
+        if type(episode_id) is not str or type(sequence_id) is not int:
+            return
+        append_jsonl(self.directory/'diagnostics.jsonl',dict(episode_id=episode_id,
+            observation_sequence_id=sequence_id,diagnostics=self.backend.last_diagnostics))
+
     def close(self): self.trace.close()
 
 

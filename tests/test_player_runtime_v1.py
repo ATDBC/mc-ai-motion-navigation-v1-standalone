@@ -1,5 +1,6 @@
 from dataclasses import replace
 import unittest
+from unittest.mock import patch
 
 from mc2p.contracts.action import ActionPriorityV0, ActionSnapshotV0
 from mc2p.contracts.action_v1 import (
@@ -220,6 +221,101 @@ class RuntimeV1Tests(unittest.TestCase):
     def test_runtime_owns_one_navigation_world_adapter_for_all_tasks(self):
         owner = self.runtime.navigation_observation_adapter
         self.assertIs(owner, self.runtime.navigation_observation_adapter)
+
+    def test_constructor_failure_closes_owned_async_trace(self):
+        from mc2p.runtime.async_trace import (
+            AsyncTraceCloseStatus, BoundedAsyncTraceWriter,
+        )
+        from tests.test_async_trace import _MemorySink
+
+        backend = Backend()
+        backend.action_schema_version = "legacy"
+        sink = _MemorySink()
+        trace = BoundedAsyncTraceWriter(sink, capacity=1)
+
+        with self.assertRaises(ContractViolation):
+            PlayerRuntimeV1(backend, trace)
+
+        result = trace.close(timeout_seconds=0.0)
+        self.assertIs(result.status, AsyncTraceCloseStatus.SEALED)
+        self.assertTrue(sink.closed)
+
+    def test_constructor_keeps_primary_error_when_trace_rollback_is_incomplete(self):
+        from mc2p.runtime.async_trace import (
+            AsyncTraceCleanupFailure, AsyncTraceCloseResult,
+            AsyncTraceCloseStatus,
+        )
+
+        class IncompleteTrace(legacy._RecordingTrace):
+            def close(self):
+                return AsyncTraceCloseResult(
+                    AsyncTraceCloseStatus.INCOMPLETE,
+                    False, True, 1, 0, 0, 1,
+                    AsyncTraceCleanupFailure(
+                        "worker_join", "TimeoutError", "still blocked",
+                    ),
+                    0, 0, 0,
+                )
+
+        backend = Backend()
+        backend.action_schema_version = "legacy"
+        with self.assertRaises(ContractViolation) as caught:
+            PlayerRuntimeV1(backend, IncompleteTrace())
+
+        self.assertIn("explicit Action V1 backend", str(caught.exception))
+        self.assertIn(
+            "owned trace cleanup remained incomplete",
+            getattr(caught.exception, "__notes__", ()),
+        )
+
+    def test_mid_constructor_failure_rolls_back_owned_async_trace(self):
+        from mc2p.runtime.async_trace import (
+            AsyncTraceCloseStatus, BoundedAsyncTraceWriter,
+        )
+        from tests.test_async_trace import _MemorySink
+
+        sink = _MemorySink()
+        trace = BoundedAsyncTraceWriter(sink, capacity=1)
+        with (
+            patch(
+                "mc2p.runtime.player_runtime_v1.NavigationObservationAdapter",
+                side_effect=RuntimeError("adapter construction failed"),
+            ),
+            self.assertRaisesRegex(RuntimeError, "adapter construction failed"),
+        ):
+            PlayerRuntimeV1(Backend(), trace)
+
+        result = trace.close(timeout_seconds=0.0)
+        self.assertIs(result.status, AsyncTraceCloseStatus.SEALED)
+        self.assertTrue(sink.closed)
+
+    def test_runtime_records_typed_incomplete_async_trace_close(self):
+        from mc2p.runtime.async_trace import (
+            AsyncTraceCleanupFailure, AsyncTraceCloseResult,
+            AsyncTraceCloseStatus,
+        )
+
+        class IncompleteTrace(legacy._RecordingTrace):
+            def close(self):
+                return AsyncTraceCloseResult(
+                    AsyncTraceCloseStatus.INCOMPLETE,
+                    False, True, 2, 1, 0, 1,
+                    AsyncTraceCleanupFailure(
+                        "worker_join", "TimeoutError", "still blocked",
+                    ),
+                    0, 0, 0,
+                )
+
+        runtime = PlayerRuntimeV1(
+            Backend(), IncompleteTrace(), clock_ns=lambda: 10,
+        )
+        self.assertTrue(runtime.reset(legacy._reset_request()).succeeded)
+
+        runtime.close()
+
+        self.assertEqual(runtime.state.value, "closed")
+        self.assertTrue(runtime.cleanup_failures)
+        self.assertIn("was not sealed", runtime.cleanup_failures[-1].message)
 
     def test_v3_runtime_updates_world_without_a_navigation_task(self):
         backend = V3WorldBackend()

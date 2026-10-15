@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 import ctypes
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 import fnmatch
 import io
@@ -45,6 +46,10 @@ PROCESS_POLL_SECONDS = 0.025
 TREE_TERMINATE_GRACE_SECONDS = 1.0
 ROOT_WAIT_SECONDS = 1.0
 START_GATE_SECONDS = 5.0
+SUBREAPER_SETTLE_SECONDS = 2.0
+_PR_SET_CHILD_SUBREAPER = 36
+_PR_GET_CHILD_SUBREAPER = 37
+_WAIT_NO_HANG = getattr(os, "WNOHANG", 1)
 
 
 def _default_module_timeout(platform_name: str) -> float:
@@ -191,6 +196,253 @@ class _WindowsJob:
             )
         count = min(int(process_ids.number_of_process_ids_in_list), 1024)
         return tuple(int(process_ids.process_id_list[index]) for index in range(count))
+
+
+def _current_process_identity() -> ProcessIdentityV0:
+    process = psutil.Process(os.getpid())
+    return ProcessIdentityV0(process.pid, process.create_time())
+
+
+def _direct_child_identities(
+    owner: ProcessIdentityV0,
+) -> tuple[ProcessIdentityV0, ...]:
+    process = psutil.Process(owner.pid)
+    if abs(process.create_time() - owner.create_time) > .01:
+        raise ProcessIdentityError(
+            f"pid {owner.pid} creation time does not match the subreaper owner"
+        )
+    return tuple(sorted(
+        (
+            ProcessIdentityV0(child.pid, child.create_time())
+            for child in process.children(recursive=False)
+        ),
+        key=lambda identity: identity.pid,
+    ))
+
+
+def _set_child_subreaper(enabled: bool) -> None:
+    library = ctypes.CDLL(None, use_errno=True)
+    result = library.prctl(
+        ctypes.c_int(_PR_SET_CHILD_SUBREAPER),
+        ctypes.c_ulong(1 if enabled else 0),
+        ctypes.c_ulong(0),
+        ctypes.c_ulong(0),
+        ctypes.c_ulong(0),
+    )
+    if result != 0:
+        error_number = ctypes.get_errno()
+        raise OSError(error_number, os.strerror(error_number))
+
+
+def _get_child_subreaper() -> bool:
+    library = ctypes.CDLL(None, use_errno=True)
+    current = ctypes.c_int()
+    result = library.prctl(
+        ctypes.c_int(_PR_GET_CHILD_SUBREAPER),
+        ctypes.byref(current),
+        ctypes.c_ulong(0),
+        ctypes.c_ulong(0),
+        ctypes.c_ulong(0),
+    )
+    if result != 0:
+        error_number = ctypes.get_errno()
+        raise OSError(error_number, os.strerror(error_number))
+    return bool(current.value)
+
+
+def _stable_direct_child_identity(
+    hinted: ProcessIdentityV0,
+    runner_pid: int,
+) -> ProcessIdentityV0 | None:
+    """Return one exact, twice-confirmed child identity.
+
+    The second PPID and creation-time read closes the PID-reuse window between
+    enumeration and cleanup authorization.  Losing direct-child membership is
+    not an error: the next bounded scan may see the process under its current
+    owner.
+    """
+    process = psutil.Process(hinted.pid)
+    first = ProcessIdentityV0(process.pid, process.create_time())
+    if process.ppid() != runner_pid:
+        return None
+    second = ProcessIdentityV0(process.pid, process.create_time())
+    if process.ppid() != runner_pid:
+        return None
+    if first != second:
+        return second
+    return first
+
+
+@dataclass
+class _LinuxSubreaperGuard:
+    runner: ProcessIdentityV0
+    baseline: tuple[ProcessIdentityV0, ...]
+    _active: "_LinuxModuleScope | None" = field(default=None, init=False)
+
+    def begin(self, root: ProcessIdentityV0) -> "_LinuxModuleScope":
+        if self._active is not None:
+            raise RuntimeError("a Linux subreaper module scope is already active")
+        if _current_process_identity() != self.runner:
+            raise RuntimeError("Linux subreaper runner identity changed")
+        children = _direct_child_identities(self.runner)
+        allowed = {identity.pid: identity for identity in self.baseline}
+        allowed[root.pid] = root
+        unexpected = [
+            identity for identity in children
+            if allowed.get(identity.pid) != identity
+        ]
+        if root not in children:
+            raise RuntimeError("module root is not a direct child of the subreaper")
+        if unexpected:
+            raise RuntimeError(
+                "Linux subreaper module scope found an unrelated child"
+            )
+        scope = _LinuxModuleScope(guard=self, root=root)
+        self._active = scope
+        return scope
+
+
+@dataclass
+class _LinuxModuleScope:
+    guard: _LinuxSubreaperGuard
+    root: ProcessIdentityV0
+    adopted: dict[int, ProcessIdentityV0] = field(default_factory=dict)
+    reaped: set[int] = field(default_factory=set)
+    ownership_failed: bool = False
+    _finished: bool = False
+
+    def capture_adopted(
+        self,
+        registered: dict[int, ProcessIdentityV0],
+        diagnostics: list[str],
+    ) -> None:
+        if self._finished:
+            raise RuntimeError("Linux subreaper module scope is already finished")
+        try:
+            runner = _current_process_identity()
+        except (psutil.Error, ValueError) as error:
+            self.ownership_failed = True
+            diagnostics.append(
+                f"inspect Linux subreaper runner: {type(error).__name__}: {error}"
+            )
+            return
+        if runner != self.guard.runner:
+            self.ownership_failed = True
+            diagnostics.append("Linux subreaper runner identity changed")
+            return
+        try:
+            candidates = _direct_child_identities(self.guard.runner)
+        except (psutil.Error, ProcessIdentityError, ValueError) as error:
+            self.ownership_failed = True
+            diagnostics.append(
+                f"enumerate Linux subreaper children: {type(error).__name__}: {error}"
+            )
+            return
+        baseline = {identity.pid: identity for identity in self.guard.baseline}
+        for hinted in candidates:
+            if hinted == self.root:
+                continue
+            previous = baseline.get(hinted.pid)
+            if previous == hinted:
+                continue
+            if previous is not None:
+                self.ownership_failed = True
+                diagnostics.append(
+                    f"baseline pid {hinted.pid} identity changed during module scope"
+                )
+                continue
+            if hinted.create_time + .01 < self.root.create_time:
+                self.ownership_failed = True
+                diagnostics.append(
+                    f"ignored direct child pid {hinted.pid}: it predates module root"
+                )
+                continue
+            try:
+                stable = _stable_direct_child_identity(
+                    hinted, self.guard.runner.pid,
+                )
+            except psutil.AccessDenied as error:
+                self.ownership_failed = True
+                diagnostics.append(
+                    f"inspect adopted pid {hinted.pid}: access denied: {error}"
+                )
+                continue
+            except (psutil.NoSuchProcess, ValueError):
+                continue
+            if stable is None:
+                continue
+            if stable != hinted:
+                self.ownership_failed = True
+                diagnostics.append(
+                    f"adopted pid {hinted.pid} identity changed during authorization"
+                )
+                continue
+            current = registered.get(stable.pid)
+            if current is not None and current != stable:
+                self.ownership_failed = True
+                diagnostics.append(
+                    f"adopted pid {stable.pid} conflicts with registered identity"
+                )
+                continue
+            registered[stable.pid] = stable
+            self.adopted[stable.pid] = stable
+
+    def reap_stopped(self) -> list[str]:
+        errors: list[str] = []
+        for identity in tuple(self.adopted.values()):
+            if _identity_is_alive(identity):
+                continue
+            try:
+                waited_pid, _status = os.waitpid(identity.pid, _WAIT_NO_HANG)
+            except ChildProcessError:
+                self.reaped.add(identity.pid)
+                continue
+            except OSError as error:
+                errors.append(
+                    f"reap adopted pid {identity.pid}: {type(error).__name__}: {error}"
+                )
+                continue
+            if waited_pid not in (0, identity.pid):
+                errors.append(
+                    f"reap adopted pid {identity.pid}: unexpected pid {waited_pid}"
+                )
+            elif waited_pid == identity.pid:
+                self.reaped.add(identity.pid)
+        return errors
+
+    def finish(self) -> None:
+        if self._finished:
+            return
+        self._finished = True
+        if self.guard._active is self:
+            self.guard._active = None
+
+
+def _enable_linux_subreaper() -> _LinuxSubreaperGuard | None:
+    if not sys.platform.startswith("linux"):
+        return None
+    runner = _current_process_identity()
+    baseline = _direct_child_identities(runner)
+    if baseline:
+        raise RuntimeError(
+            "Linux subreaper cannot start with an existing child process"
+        )
+    _set_child_subreaper(True)
+    try:
+        if not _get_child_subreaper():
+            raise RuntimeError("Linux child subreaper could not be verified")
+        after = _direct_child_identities(runner)
+        if after:
+            raise RuntimeError(
+                "Linux subreaper found an existing child after activation"
+            )
+    except BaseException:
+        try:
+            _set_child_subreaper(False)
+        except OSError:
+            pass
+        raise
+    return _LinuxSubreaperGuard(runner=runner, baseline=baseline)
 
 
 def _popen_windows_handle(process: subprocess.Popen[str]) -> int:
@@ -530,9 +782,13 @@ def _identity_is_alive(identity: ProcessIdentityV0) -> bool:
         return (
             abs(process.create_time() - identity.create_time) <= 0.01
             and process.is_running()
+            and process.status() != psutil.STATUS_ZOMBIE
         )
-    except (psutil.NoSuchProcess, psutil.AccessDenied):
+    except psutil.NoSuchProcess:
         return False
+    except psutil.AccessDenied:
+        # Permission loss cannot prove that the registered identity stopped.
+        return True
 
 
 def _bounded_root_fallback(process: subprocess.Popen[str]) -> list[str]:
@@ -574,8 +830,9 @@ def _refresh_cleanup_liveness(
     stopped = [item for item in registered if item not in surviving]
     cleanup["stopped"] = [_identity_payload(item) for item in stopped]
     cleanup["surviving"] = [_identity_payload(item) for item in surviving]
-    if surviving:
-        cleanup["status"] = "failed"
+    cleanup["status"] = (
+        "failed" if surviving or cleanup.get("errors") else "passed"
+    )
 
 
 def _close_posix_session(process_group_id: int) -> list[str]:
@@ -619,13 +876,14 @@ def _cleanup_process_tree(
     registered: tuple[ProcessIdentityV0, ...],
     *,
     process: subprocess.Popen[str] | None = None,
+    grace_seconds: float = TREE_TERMINATE_GRACE_SECONDS,
 ) -> dict:
     errors: list[str] = []
     try:
         cleanup = terminate_registered_tree(
             root_identity,
             registered,
-            grace_seconds=TREE_TERMINATE_GRACE_SECONDS,
+            grace_seconds=grace_seconds,
         )
     except Exception as error:
         errors.append(f"{type(error).__name__}: {error}")
@@ -652,6 +910,88 @@ def _cleanup_process_tree(
     }
 
 
+def _settle_linux_subreaper_scope(
+    scope: _LinuxModuleScope,
+    root_identity: ProcessIdentityV0,
+    registered: dict[int, ProcessIdentityV0],
+    cleanup: dict,
+    diagnostics: list[str],
+    *,
+    process: subprocess.Popen[str],
+) -> tuple[dict, tuple[ProcessIdentityV0, ...]]:
+    """Boundedly collect, stop and reap children adopted during cleanup."""
+    deadline = time.perf_counter() + SUBREAPER_SETTLE_SECONDS
+    all_errors = list(cleanup.get("errors", ()))
+    stable_scans = 0
+    settled = False
+    previous_pids = set(registered)
+    try:
+        while time.perf_counter() < deadline:
+            scope.capture_adopted(registered, diagnostics)
+            current = tuple(sorted(
+                registered.values(), key=lambda identity: identity.pid,
+            ))
+            live_adopted = [
+                identity for identity in scope.adopted.values()
+                if _identity_is_alive(identity)
+            ]
+            new_pids = set(registered) - previous_pids
+            if live_adopted or new_pids:
+                remaining = max(0.0, deadline - time.perf_counter())
+                round_cleanup = _cleanup_process_tree(
+                    root_identity,
+                    current,
+                    process=process,
+                    grace_seconds=min(.2, remaining),
+                )
+                all_errors.extend(round_cleanup.get("errors", ()))
+                previous_pids = set(registered)
+            all_errors.extend(scope.reap_stopped())
+            scope.capture_adopted(registered, diagnostics)
+            live_adopted = [
+                identity for identity in scope.adopted.values()
+                if _identity_is_alive(identity)
+            ]
+            if not live_adopted and set(registered) == previous_pids:
+                stable_scans += 1
+                if stable_scans >= 2:
+                    settled = True
+                    break
+            else:
+                stable_scans = 0
+                previous_pids = set(registered)
+            time.sleep(.01)
+    finally:
+        scope.finish()
+    identities = tuple(sorted(
+        registered.values(), key=lambda identity: identity.pid,
+    ))
+    cleanup["registered_processes"] = len(identities)
+    cleanup["attempted"] = [_identity_payload(item) for item in identities]
+    cleanup["errors"] = list(dict.fromkeys(all_errors))
+    if not settled:
+        cleanup["errors"].append(
+            "Linux subreaper scope did not reach two stable scans"
+        )
+    _refresh_cleanup_liveness(cleanup, identities)
+    cleanup["adopted_processes"] = [
+        _identity_payload(item)
+        for item in sorted(scope.adopted.values(), key=lambda identity: identity.pid)
+    ]
+    cleanup["adopted_reaped"] = all(
+        identity.pid in scope.reaped for identity in scope.adopted.values()
+    )
+    if scope.adopted and not cleanup["adopted_reaped"]:
+        cleanup["errors"].append(
+            "not all Linux subreaper-adopted children were reaped"
+        )
+        cleanup["status"] = "failed"
+    if scope.ownership_failed:
+        cleanup["errors"].append("Linux subreaper ownership could not be proven")
+        cleanup["status"] = "failed"
+    return cleanup, identities
+
+
 def _run_module(
     python: str,
     script: Path,
@@ -660,6 +1000,8 @@ def _run_module(
     path: Path,
     timeout_seconds: float,
     child_report: Path,
+    *,
+    subreaper_guard: _LinuxSubreaperGuard | None = None,
 ) -> dict:
     item = _empty_result(module, path)
     start_gate = child_report.with_suffix(".start-gate")
@@ -717,33 +1059,15 @@ def _run_module(
                 errors=[f"{type(error).__name__}: {error}", *cleanup_errors],
             )
             return item
-    try:
-        start_gate.write_text("start\n", encoding="ascii")
-    except OSError as error:
-        cleanup_errors = _bounded_root_fallback(process)
-        if job is not None:
-            try:
-                job.close()
-            except OSError as close_error:
-                cleanup_errors.append(
-                    f"close Windows job: {type(close_error).__name__}: {close_error}"
-                )
-        item.update(
-            status="launch_error",
-            duration_seconds=time.perf_counter() - started,
-            return_code=process.returncode,
-            stdout=_read_output(stdout_path),
-            stderr=_read_output(stderr_path),
-            diagnostic=f"start gate unavailable: {type(error).__name__}: {error}",
-        )
-        item["cleanup"].update(status="failed", errors=cleanup_errors)
-        return item
     registration_diagnostics: list[str] = []
     registered: dict[int, ProcessIdentityV0] = {}
+    subreaper_scope: _LinuxModuleScope | None = None
     try:
         root_process = psutil.Process(process.pid)
         root_identity = ProcessIdentityV0(process.pid, root_process.create_time())
         registered[root_identity.pid] = root_identity
+        if subreaper_guard is not None:
+            subreaper_scope = subreaper_guard.begin(root_identity)
     except (psutil.Error, ValueError) as error:
         cleanup_errors: list[str] = []
         try:
@@ -773,17 +1097,61 @@ def _run_module(
             errors=[f"{type(error).__name__}: {error}", *cleanup_errors],
         )
         return item
+    except RuntimeError as error:
+        cleanup_errors = _bounded_root_fallback(process)
+        item.update(
+            status="launch_error",
+            duration_seconds=time.perf_counter() - started,
+            return_code=process.returncode,
+            stdout=_read_output(stdout_path),
+            stderr=_read_output(stderr_path),
+            diagnostic=f"Linux subreaper scope unavailable: {error}",
+        )
+        item["cleanup"].update(
+            status="failed",
+            errors=[f"RuntimeError: {error}", *cleanup_errors],
+        )
+        return item
+    try:
+        start_gate.write_text("start\n", encoding="ascii")
+    except OSError as error:
+        cleanup_errors = _bounded_root_fallback(process)
+        if subreaper_scope is not None:
+            subreaper_scope.finish()
+        if job is not None:
+            try:
+                job.close()
+            except OSError as close_error:
+                cleanup_errors.append(
+                    f"close Windows job: {type(close_error).__name__}: {close_error}"
+                )
+        item.update(
+            status="launch_error",
+            duration_seconds=time.perf_counter() - started,
+            return_code=process.returncode,
+            stdout=_read_output(stdout_path),
+            stderr=_read_output(stderr_path),
+            diagnostic=f"start gate unavailable: {type(error).__name__}: {error}",
+        )
+        item["cleanup"].update(status="failed", errors=cleanup_errors)
+        return item
 
     deadline = started + timeout_seconds
     timed_out = False
     while process.poll() is None:
         _capture_into(root_identity, registered, registration_diagnostics)
+        if subreaper_scope is not None:
+            subreaper_scope.capture_adopted(
+                registered, registration_diagnostics,
+            )
         remaining = deadline - time.perf_counter()
         if remaining <= 0:
             timed_out = True
             break
         time.sleep(min(PROCESS_POLL_SECONDS, remaining))
     _capture_into(root_identity, registered, registration_diagnostics)
+    if subreaper_scope is not None:
+        subreaper_scope.capture_adopted(registered, registration_diagnostics)
     child: dict | None = None
     try:
         child = json.loads(child_report.read_text(encoding="utf-8"))
@@ -808,7 +1176,12 @@ def _run_module(
         )
     identities = tuple(sorted(registered.values(), key=lambda identity: identity.pid))
     cleanup = _cleanup_process_tree(root_identity, identities, process=process)
-    cleanup["isolation"] = "windows_job" if os.name == "nt" else "posix_session"
+    cleanup["isolation"] = (
+        "windows_job" if os.name == "nt"
+        else "linux_subreaper_posix_session"
+        if subreaper_scope is not None
+        else "posix_session"
+    )
     if job is not None:
         try:
             job.close()
@@ -826,6 +1199,21 @@ def _run_module(
     elif os.name != "nt":
         cleanup["errors"].extend(_close_posix_session(root_identity.pid))
         cleanup["session_closed"] = not cleanup["errors"]
+        try:
+            process.wait(timeout=ROOT_WAIT_SECONDS)
+        except subprocess.TimeoutExpired:
+            cleanup["errors"].append(
+                "root process did not exit after bounded tree cleanup"
+            )
+        if subreaper_scope is not None:
+            cleanup, identities = _settle_linux_subreaper_scope(
+                subreaper_scope,
+                root_identity,
+                registered,
+                cleanup,
+                registration_diagnostics,
+                process=process,
+            )
         _refresh_cleanup_liveness(
             cleanup,
             identities,
@@ -837,11 +1225,12 @@ def _run_module(
     if cleanup["errors"]:
         cleanup["status"] = "failed"
     item["cleanup"] = cleanup
-    try:
-        process.wait(timeout=ROOT_WAIT_SECONDS)
-    except subprocess.TimeoutExpired:
-        cleanup["status"] = "failed"
-        cleanup["errors"].append("root process did not exit after bounded tree cleanup")
+    if process.returncode is None:
+        try:
+            process.wait(timeout=ROOT_WAIT_SECONDS)
+        except subprocess.TimeoutExpired:
+            cleanup["status"] = "failed"
+            cleanup["errors"].append("root process did not exit after bounded tree cleanup")
     stdout = _read_output(stdout_path)
     stderr = _read_output(stderr_path)
     if timed_out:
@@ -1004,6 +1393,29 @@ def _run_parent(argv: list[str]) -> int:
         "summary": _summary([]),
         "modules": [],
     }
+    subreaper_guard: _LinuxSubreaperGuard | None = None
+    if sys.platform.startswith("linux"):
+        try:
+            subreaper_guard = _enable_linux_subreaper()
+        except (OSError, psutil.Error, ProcessIdentityError, RuntimeError) as error:
+            payload.update(
+                state="complete",
+                finished_at=_utc_now(),
+                infrastructure_failure=(
+                    "Linux child subreaper unavailable: "
+                    f"{type(error).__name__}: {error}"
+                ),
+                posix_subreaper={"status": "unavailable"},
+            )
+            _write_json_atomic(report, payload)
+            return 1
+        payload["posix_subreaper"] = {
+            "status": "enabled",
+            "runner": _identity_payload(subreaper_guard.runner),
+            "baseline_children": [],
+        }
+    else:
+        payload["posix_subreaper"] = {"status": "not_applicable"}
     _write_json_atomic(report, payload)
     script = Path(__file__).resolve()
     with TemporaryDirectory(prefix="motion-nav-shards-") as temporary:
@@ -1020,6 +1432,7 @@ def _run_parent(argv: list[str]) -> int:
                 path.relative_to(root),
                 args.timeout_seconds,
                 temporary_root / f"{index:04d}.json",
+                subreaper_guard=subreaper_guard,
             )
             payload["modules"].append(result)
             payload["completed_modules"] = index

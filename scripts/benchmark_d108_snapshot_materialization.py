@@ -50,9 +50,10 @@ def _percentile(values: list[float], quantile: float) -> float:
     return ordered[max(0, math.ceil(len(ordered) * quantile) - 1)]
 
 
-def _summary(values: list[float]) -> dict[str, float]:
+def _summary(values: list[float]) -> dict[str, object]:
     return {
         "samples": len(values),
+        "raw_samples_ms": list(values),
         "p50_ms": statistics.median(values),
         "p95_ms": _percentile(values, .95),
         "p99_ms": _percentile(values, .99),
@@ -60,7 +61,7 @@ def _summary(values: list[float]) -> dict[str, float]:
     }
 
 
-def _passes_deadline(summary: dict[str, float]) -> bool:
+def _passes_deadline(summary: dict[str, object]) -> bool:
     return (summary["p95_ms"] <= 8.0 and summary["p99_ms"] <= 15.0
             and summary["max_ms"] < 30.0)
 

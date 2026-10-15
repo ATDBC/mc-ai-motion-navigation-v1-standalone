@@ -1,0 +1,23 @@
+{
+  "schema": "mc2p.public-production-semantic-hashes.v1",
+  "scope": "D109 bounded lifecycle cleanup, snapshot gate, and public verification",
+  "source_commit": "d9c564d400bc3fe809b1f7293033922bd6832b1b",
+  "normalization": "CRLF_TO_LF",
+  "files": {
+    "mc2p/motion_nav/motion_worker.py": "c840630eaf65924f1304464c2135c9086226ff9262a385abd7776c9eafb156bb",
+    "mc2p/motion_nav/world_model.py": "a4ae6978d49b7c67144f5ec89a58117aae336a6e3b64082f7b90ba57d7cf27e8",
+    "mc2p/runtime/__init__.py": "e8ce822c619048e9db308f10bef70446dff435d241752e629bca4474395ed7dd",
+    "mc2p/runtime/async_trace.py": "8d6f4342dfc64f4a2b58ade1a735753dc0a96bc6a70ef1d508611d919793b4ff",
+    "mc2p/runtime/player_runtime_v1.py": "44cfbf01f5ee9904c498443867eccace3e906f2b91b03839eb4a270e06a2ba8b",
+    "mc2p/runtime/trace.py": "7b891fe9b3c25bccffbe6c0060e126721460ce34b119ea8488bc9c73888a2e37",
+    "scripts/b10_gap_solver_runtime.py": "db6aa40d86c6de848515bd4ca0f808a886376c4071dc9025d974c566bc7388cc",
+    "scripts/benchmark_d108_snapshot_materialization.py": "ad2be6a4defb05592a37b973ef5e17d6ac7b24efd3a3d8d187fbbaf216a2f2d2",
+    "scripts/d105_ftick.py": "590e8ba2f4596cef8310c510368583150ed3eda00d07d732c510ffbd24177b6c",
+    "scripts/f1_known_world_following_fabric.py": "034b9c0bac70c502847607845ebecc3ac21b8e98ed9068803a8530febd8a2d05",
+    "scripts/fabric_visibility_scenario.py": "719d04ae4a969ed19bc60f7817828ed7fbd51590f6f6f24e293be9b55f754f1a",
+    "scripts/measure_sound_motion_t2_d105.py": "59c083c293dc728e2f16cd3345c30bb70ffd140d6e1380633ded158d26f7fd42",
+    "scripts/probe_fabric_deployment_observation.py": "34cdf74ec76d80a5968fe33edf48d4957d1eafb551b39be1333c5ec4c436a683",
+    "scripts/process_tree.py": "0c9e0e2be32f74ea48afd5d25b49a77477917174e7746a50f8e96b226abc2d3e",
+    "scripts/run_motion_nav_shards.py": "44a3d7fd07b8201b03abc14881ff0cd258038672d60e11446040c8298d425376"
+  }
+}

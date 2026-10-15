@@ -578,31 +578,122 @@ def run_b10_gap_solver_runtime(
     fixture_writer: Callable[[tuple[tuple[int, int, int], ...], str], None],
     player_teleporter: Callable[[float, float, float, float, float], None],
     *, pipeline_diagnostic: Callable[[], dict] | None = None,
+    lifecycle_report: dict | None = None,
 ) -> tuple[dict, list[dict], list[dict]]:
-    """Keep background workers alive across the whole controlled probe."""
+    """Keep workers alive and preserve the first execution failure.
+
+    Cleanup is reported separately because raising from a ``finally`` block
+    would replace the Runtime/driver failure that caused cleanup to start.
+    """
+    report = {} if lifecycle_report is None else lifecycle_report
+    report.clear()
+    report.update(
+        schema_version="mc2p.b10-probe-lifecycle.v1",
+        ordered_source_release={
+            "status": "not_released",
+            "source_id": None,
+        },
+        cleanup_failures=[],
+    )
     evidence_buffer = _B10EvidenceBuffer(directory)
-    with evidence_buffer:
-        with PlannerWorker() as planner_worker, MotionSolverWorker(
-            max_pending=4,
-        ) as motion_worker:
-            manual_source = runtime.register_ordered_source(_SOURCE)
-            try:
-                return _run_b10_gap_solver_runtime(
-                    runtime,
-                    backend,
-                    episode,
-                    directory,
-                    deadline_ns,
-                    fixture_writer,
-                    player_teleporter,
-                    planner_worker=planner_worker,
-                    motion_worker=motion_worker,
-                    manual_source=manual_source,
-                    evidence_buffer=evidence_buffer,
-                    pipeline_diagnostic=pipeline_diagnostic,
+    planner_owner = motion_owner = None
+    manual_source = None
+    result = None
+    completed = False
+    primary: BaseException | None = None
+    primary_traceback = None
+
+    def cleanup_failure(stage: str, error: BaseException) -> None:
+        report["cleanup_failures"].append({
+            "stage": stage,
+            "type": type(error).__name__,
+            "message": str(error),
+        })
+
+    try:
+        planner_owner = PlannerWorker()
+        planner_worker = planner_owner.__enter__()
+        motion_owner = MotionSolverWorker(max_pending=4)
+        motion_worker = motion_owner.__enter__()
+        manual_source = runtime.register_ordered_source(_SOURCE)
+        report["ordered_source_release"]["source_id"] = getattr(
+            manual_source, "source_id", None,
+        )
+        result = _run_b10_gap_solver_runtime(
+            runtime,
+            backend,
+            episode,
+            directory,
+            deadline_ns,
+            fixture_writer,
+            player_teleporter,
+            planner_worker=planner_worker,
+            motion_worker=motion_worker,
+            manual_source=manual_source,
+            evidence_buffer=evidence_buffer,
+            pipeline_diagnostic=pipeline_diagnostic,
+        )
+        completed = True
+    except BaseException as error:
+        primary = error
+        primary_traceback = error.__traceback__
+    finally:
+        if manual_source is not None:
+            if getattr(getattr(runtime, "state", None), "value", None) == "ready":
+                try:
+                    runtime.unregister_ordered_source(manual_source)
+                except BaseException as error:
+                    cleanup_failure("ordered_source_unregister", error)
+                    report["ordered_source_release"]["status"] = (
+                        "pending_runtime_close"
+                    )
+                else:
+                    report["ordered_source_release"]["status"] = (
+                        "explicitly_released"
+                    )
+            else:
+                report["ordered_source_release"]["status"] = (
+                    "pending_runtime_close"
                 )
-            finally:
-                runtime.unregister_ordered_source(manual_source)
+        for stage, owner in (
+            ("motion_worker_close", motion_owner),
+            ("planner_worker_close", planner_owner),
+        ):
+            if owner is None:
+                continue
+            try:
+                owner.__exit__(
+                    None if primary is None else type(primary),
+                    primary,
+                    primary_traceback,
+                )
+            except BaseException as error:
+                cleanup_failure(stage, error)
+        try:
+            evidence_buffer.flush()
+        except BaseException as error:
+            cleanup_failure("evidence_flush", error)
+
+    if primary is not None:
+        raise primary.with_traceback(primary_traceback)
+    if not completed:
+        raise RuntimeError("B10 probe ended without a result or primary failure")
+    return result
+
+
+def finalize_b10_source_release(report: dict, *, runtime_state: str | None) -> dict:
+    """Resolve deferred release from the close boundary's immutable facts."""
+    release = report.get("ordered_source_release")
+    if type(release) is not dict:
+        raise ValueError("B10 lifecycle omitted ordered source release")
+    if release.get("status") == "explicitly_released":
+        return report
+    release["status"] = (
+        "cleared_on_runtime_close"
+        if release.get("source_id") is not None and runtime_state == "closed"
+        else "not_released"
+    )
+    return report
 
 
 def _run_b10_gap_solver_runtime(

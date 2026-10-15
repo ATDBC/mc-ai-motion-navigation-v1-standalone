@@ -246,6 +246,8 @@ class B10RuntimeProbeTests(unittest.TestCase):
         planner = unittest.mock.MagicMock()
         motion = unittest.mock.MagicMock()
         runtime = unittest.mock.MagicMock()
+        runtime.state.value = "ready"
+        runtime.cleanup_failures = ()
         source = object()
         runtime.register_ordered_source.return_value = source
         planner.__enter__.return_value = planner
@@ -279,6 +281,8 @@ class B10RuntimeProbeTests(unittest.TestCase):
         planner = unittest.mock.MagicMock()
         motion = unittest.mock.MagicMock()
         runtime = unittest.mock.MagicMock()
+        runtime.state.value = "ready"
+        runtime.cleanup_failures = ()
         source = object()
         runtime.register_ordered_source.return_value = source
         planner.__enter__.return_value = planner
@@ -300,6 +304,245 @@ class B10RuntimeProbeTests(unittest.TestCase):
                 )
 
         runtime.unregister_ordered_source.assert_called_once_with(source)
+
+    def test_failed_runtime_preserves_primary_and_defers_source_to_runtime_close(self):
+        planner = unittest.mock.MagicMock()
+        motion = unittest.mock.MagicMock()
+        runtime = unittest.mock.MagicMock()
+        runtime.state.value = "failed"
+        source = unittest.mock.MagicMock(source_id="ordered/b10/0/1")
+        runtime.register_ordered_source.return_value = source
+        planner.__enter__.return_value = planner
+        motion.__enter__.return_value = motion
+        lifecycle = {}
+        with tempfile.TemporaryDirectory() as temporary:
+            with (
+                patch.object(probe, "PlannerWorker", return_value=planner),
+                patch.object(probe, "MotionSolverWorker", return_value=motion),
+                patch.object(
+                    probe,
+                    "_run_b10_gap_solver_runtime",
+                    side_effect=TimeoutError("original deadline"),
+                ),
+                self.assertRaisesRegex(TimeoutError, "original deadline"),
+            ):
+                probe.run_b10_gap_solver_runtime(
+                    runtime, object(), "episode", Path(temporary), 1,
+                    lambda *_: None, lambda *_: None,
+                    lifecycle_report=lifecycle,
+                )
+
+        runtime.unregister_ordered_source.assert_not_called()
+        self.assertEqual(lifecycle["ordered_source_release"]["status"],
+                         "pending_runtime_close")
+        self.assertEqual(lifecycle["cleanup_failures"], [])
+
+        probe.finalize_b10_source_release(lifecycle, runtime_state="closed")
+        self.assertEqual(lifecycle["ordered_source_release"]["status"],
+                         "cleared_on_runtime_close")
+
+    def test_unregister_failure_is_secondary_and_does_not_replace_primary(self):
+        planner = unittest.mock.MagicMock()
+        motion = unittest.mock.MagicMock()
+        runtime = unittest.mock.MagicMock()
+        runtime.state.value = "ready"
+        source = unittest.mock.MagicMock(source_id="ordered/b10/0/1")
+        runtime.register_ordered_source.return_value = source
+        runtime.unregister_ordered_source.side_effect = OSError("cleanup broke")
+        planner.__enter__.return_value = planner
+        motion.__enter__.return_value = motion
+        lifecycle = {}
+        with tempfile.TemporaryDirectory() as temporary:
+            with (
+                patch.object(probe, "PlannerWorker", return_value=planner),
+                patch.object(probe, "MotionSolverWorker", return_value=motion),
+                patch.object(
+                    probe,
+                    "_run_b10_gap_solver_runtime",
+                    side_effect=RuntimeError("primary broke"),
+                ),
+                self.assertRaisesRegex(RuntimeError, "primary broke"),
+            ):
+                probe.run_b10_gap_solver_runtime(
+                    runtime, object(), "episode", Path(temporary), 1,
+                    lambda *_: None, lambda *_: None,
+                    lifecycle_report=lifecycle,
+                )
+
+        self.assertEqual(lifecycle["ordered_source_release"]["status"],
+                         "pending_runtime_close")
+        self.assertEqual(
+            lifecycle["cleanup_failures"],
+            [{"stage": "ordered_source_unregister", "type": "OSError",
+              "message": "cleanup broke"}],
+        )
+
+    def test_multiple_cleanup_failures_remain_secondary_to_driver_failure(self):
+        planner = unittest.mock.MagicMock()
+        motion = unittest.mock.MagicMock()
+        runtime = unittest.mock.MagicMock()
+        runtime.state.value = "ready"
+        source = unittest.mock.MagicMock(source_id="ordered/b10/0/1")
+        runtime.register_ordered_source.return_value = source
+        runtime.unregister_ordered_source.side_effect = OSError("unregister")
+        planner.__enter__.return_value = planner
+        motion.__enter__.return_value = motion
+        planner.__exit__.side_effect = RuntimeError("planner close")
+        motion.__exit__.side_effect = RuntimeError("motion close")
+        lifecycle = {}
+        with tempfile.TemporaryDirectory() as temporary:
+            with (
+                patch.object(probe, "PlannerWorker", return_value=planner),
+                patch.object(probe, "MotionSolverWorker", return_value=motion),
+                patch.object(
+                    probe, "_run_b10_gap_solver_runtime",
+                    side_effect=ValueError("driver primary"),
+                ),
+                self.assertRaisesRegex(ValueError, "driver primary"),
+            ):
+                probe.run_b10_gap_solver_runtime(
+                    runtime, object(), "episode", Path(temporary), 1,
+                    lambda *_: None, lambda *_: None,
+                    lifecycle_report=lifecycle,
+                )
+
+        self.assertEqual(
+            [item["stage"] for item in lifecycle["cleanup_failures"]],
+            ["ordered_source_unregister", "motion_worker_close",
+             "planner_worker_close"],
+        )
+
+    def test_cleanup_only_failure_is_reported_without_discarding_result(self):
+        planner = unittest.mock.MagicMock()
+        motion = unittest.mock.MagicMock()
+        runtime = unittest.mock.MagicMock()
+        runtime.state.value = "ready"
+        source = unittest.mock.MagicMock(source_id="ordered/b10/0/1")
+        runtime.register_ordered_source.return_value = source
+        runtime.unregister_ordered_source.side_effect = OSError("cleanup only")
+        planner.__enter__.return_value = planner
+        motion.__enter__.return_value = motion
+        expected = object()
+        lifecycle = {}
+        with tempfile.TemporaryDirectory() as temporary:
+            with (
+                patch.object(probe, "PlannerWorker", return_value=planner),
+                patch.object(probe, "MotionSolverWorker", return_value=motion),
+                patch.object(probe, "_run_b10_gap_solver_runtime",
+                             return_value=expected),
+            ):
+                actual = probe.run_b10_gap_solver_runtime(
+                    runtime, object(), "episode", Path(temporary), 1,
+                    lambda *_: None, lambda *_: None,
+                    lifecycle_report=lifecycle,
+                )
+
+        self.assertIs(actual, expected)
+        self.assertEqual(len(lifecycle["cleanup_failures"]), 1)
+        self.assertEqual(lifecycle["cleanup_failures"][0]["stage"],
+                         "ordered_source_unregister")
+
+    def test_nonclosed_runtime_cannot_claim_close_cleared_the_source(self):
+        lifecycle = {
+            "ordered_source_release": {
+                "status": "pending_runtime_close",
+                "source_id": "ordered/b10/0/1",
+            },
+            "cleanup_failures": [{
+                "stage": "ordered_source_unregister",
+                "type": "OSError",
+                "message": "unregister broke",
+            }],
+        }
+
+        probe.finalize_b10_source_release(lifecycle, runtime_state="failed")
+
+        self.assertEqual(lifecycle["ordered_source_release"]["status"],
+                         "not_released")
+        self.assertEqual(len(lifecycle["cleanup_failures"]), 1)
+
+    def test_successful_probe_unregister_failure_is_closed_in_formal_owner_path(self):
+        from scripts.probe_fabric_deployment_observation import _close_client
+        planner = unittest.mock.MagicMock()
+        motion = unittest.mock.MagicMock()
+        runtime = unittest.mock.MagicMock()
+        runtime.state.value = "ready"
+        runtime.cleanup_failures = ()
+        source = unittest.mock.MagicMock(source_id="ordered/b10/0/1")
+        runtime.register_ordered_source.return_value = source
+        runtime.unregister_ordered_source.side_effect = OSError("unregister")
+        planner.__enter__.return_value = planner
+        motion.__enter__.return_value = motion
+        expected = object()
+        lifecycle = {}
+        with tempfile.TemporaryDirectory() as temporary:
+            with (
+                patch.object(probe, "PlannerWorker", return_value=planner),
+                patch.object(probe, "MotionSolverWorker", return_value=motion),
+                patch.object(probe, "_run_b10_gap_solver_runtime",
+                             return_value=expected),
+            ):
+                self.assertIs(probe.run_b10_gap_solver_runtime(
+                    runtime, object(), "episode", Path(temporary), 1,
+                    lambda *_: None, lambda *_: None,
+                    lifecycle_report=lifecycle,
+                ), expected)
+        runtime.close.side_effect = lambda: setattr(runtime.state, "value", "closed")
+        transport = unittest.mock.MagicMock()
+
+        _, close_failures = _close_client(
+            runtime, None, transport, None, None,
+            b10_lifecycle=lifecycle,
+        )
+
+        self.assertEqual(close_failures, [])
+        self.assertEqual(lifecycle["ordered_source_release"]["status"],
+                         "cleared_on_runtime_close")
+        self.assertEqual(lifecycle["cleanup_failures"][0]["stage"],
+                         "ordered_source_unregister")
+        runtime.has_ordered_source.assert_not_called()
+
+    def test_failed_probe_primary_survives_formal_owner_close(self):
+        from scripts.probe_fabric_deployment_observation import _close_client
+        planner = unittest.mock.MagicMock()
+        motion = unittest.mock.MagicMock()
+        runtime = unittest.mock.MagicMock()
+        runtime.state.value = "ready"
+        runtime.cleanup_failures = ()
+        source = unittest.mock.MagicMock(source_id="ordered/b10/0/1")
+        runtime.register_ordered_source.return_value = source
+        planner.__enter__.return_value = planner
+        motion.__enter__.return_value = motion
+        lifecycle = {}
+
+        def fail(*_args, **_kwargs):
+            runtime.state.value = "failed"
+            raise TimeoutError("primary deadline")
+
+        with tempfile.TemporaryDirectory() as temporary:
+            with (
+                patch.object(probe, "PlannerWorker", return_value=planner),
+                patch.object(probe, "MotionSolverWorker", return_value=motion),
+                patch.object(probe, "_run_b10_gap_solver_runtime",
+                             side_effect=fail),
+                self.assertRaisesRegex(TimeoutError, "primary deadline"),
+            ):
+                probe.run_b10_gap_solver_runtime(
+                    runtime, object(), "episode", Path(temporary), 1,
+                    lambda *_: None, lambda *_: None,
+                    lifecycle_report=lifecycle,
+                )
+        runtime.close.side_effect = lambda: setattr(runtime.state, "value", "closed")
+
+        _close_client(
+            runtime, None, unittest.mock.MagicMock(), None, None,
+            b10_lifecycle=lifecycle,
+        )
+
+        self.assertEqual(lifecycle["ordered_source_release"]["status"],
+                         "cleared_on_runtime_close")
+        runtime.unregister_ordered_source.assert_not_called()
+        runtime.has_ordered_source.assert_not_called()
 
     def test_manual_probe_uses_runtime_ledger_for_prior_and_current_samples(self):
         source = inspect.getsource(probe._run_b10_gap_solver_runtime)

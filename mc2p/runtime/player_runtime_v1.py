@@ -73,32 +73,45 @@ class PlayerRuntimeV1:
 
     def __init__(self, backend: PlayerBackendV1, trace_writer: TraceSinkV0,
                  clock_ns: Callable[[], int] = time.perf_counter_ns) -> None:
-        if getattr(backend, "action_schema_version", None) != "mc2p.action-snapshot.v1":
-            raise ContractViolation("formal Runtime requires an explicit Action V1 backend")
-        self._observation_schema = validate_observation_schema(getattr(backend, "observation_schema_version", None))
-        self._observation_type = ObservationSnapshotV3 if self._observation_schema == OBSERVATION_V3 else ObservationSnapshotV2
-        self._backend, self._trace, self._clock = backend, trace_writer, clock_ns
-        self._arbiter = ActionArbiterV1()
-        self._io_lock, self._cancel_lock = threading.RLock(), threading.Lock()
-        self._state = RuntimeStateV1.NEW
-        self._observation: ObservationSnapshotV2 | ObservationSnapshotV3 | None = None
-        self._episodes: set[str] = set()
-        self._request_sequence = self._step_number = 0
-        self._cancel_reason: str | None = None
-        self._backend_closed = False
-        self._cleanup_failures: list[FailureV0] = []
-        self._backend_elapsed_ns_total = 0
-        self._backend_blocking_io_ns_total = 0
-        self._input_ledger = InputApplicationLedger()
-        self._prepared_application_port = None
-        # Keep one navigation world owner for the Runtime session.  Individual
-        # tasks may create and retire navigation sessions without losing or
-        # duplicating the live map.
-        self._navigation_observation_adapter = NavigationObservationAdapter()
-        self._failure_policy = FailureDispositionPolicy()
-        self._last_failure_disposition: FailureDispositionDecision | None = None
-        self._force_neutral_reason: str | None = None
-        self._last_navigation_ingest_ns: int | None = None
+        self._trace = trace_writer
+        try:
+            if getattr(backend, "action_schema_version", None) != "mc2p.action-snapshot.v1":
+                raise ContractViolation("formal Runtime requires an explicit Action V1 backend")
+            self._observation_schema = validate_observation_schema(getattr(backend, "observation_schema_version", None))
+            self._observation_type = ObservationSnapshotV3 if self._observation_schema == OBSERVATION_V3 else ObservationSnapshotV2
+            self._backend, self._clock = backend, clock_ns
+            self._arbiter = ActionArbiterV1()
+            self._io_lock, self._cancel_lock = threading.RLock(), threading.Lock()
+            self._state = RuntimeStateV1.NEW
+            self._observation: ObservationSnapshotV2 | ObservationSnapshotV3 | None = None
+            self._episodes: set[str] = set()
+            self._request_sequence = self._step_number = 0
+            self._cancel_reason: str | None = None
+            self._backend_closed = False
+            self._cleanup_failures: list[FailureV0] = []
+            self._backend_elapsed_ns_total = 0
+            self._backend_blocking_io_ns_total = 0
+            self._input_ledger = InputApplicationLedger()
+            self._prepared_application_port = None
+            # Keep one navigation world owner for the Runtime session.  Individual
+            # tasks may create and retire navigation sessions without losing or
+            # duplicating the live map.
+            self._navigation_observation_adapter = NavigationObservationAdapter()
+            self._failure_policy = FailureDispositionPolicy()
+            self._last_failure_disposition: FailureDispositionDecision | None = None
+            self._force_neutral_reason: str | None = None
+            self._last_navigation_ingest_ns: int | None = None
+        except BaseException as error:
+            try:
+                close_result = trace_writer.close()
+                if getattr(close_result, "sealed", True) is not True:
+                    error.add_note("owned trace cleanup remained incomplete")
+            except BaseException as cleanup_error:
+                error.add_note(
+                    "owned trace cleanup also failed: "
+                    f"{type(cleanup_error).__name__}: {cleanup_error}"
+                )
+            raise
 
     @property
     def state(self) -> RuntimeStateV1:
@@ -723,7 +736,13 @@ class PlayerRuntimeV1:
                     self._close_backend()
                 finally:
                     try:
-                        self._trace.close()
+                        trace_close = self._trace.close()
+                        if getattr(trace_close, "sealed", True) is not True:
+                            detail = getattr(trace_close, "cleanup_failure", None)
+                            raise RuntimeError(
+                                "asynchronous trace evidence was not sealed: "
+                                f"{detail!r}"
+                            )
                     except Exception as error:
                         self._cleanup_failures.append(self._exception_failure(error, FailureCodeV0.CLEANUP, classify=False))
                     finally:

@@ -1,0 +1,13 @@
+{
+  "schema_version": "mc2p.d109-d6-evidence-provenance.v1",
+  "formal_platform": "Windows",
+  "source_commit": "9e7228d4d0042612fc6715d888f8db02bfce4099",
+  "source_worktree_clean": true,
+  "started_utc": "2026-10-15T02:51:17.9201481Z",
+  "finished_utc": "2026-10-15T02:51:20.0813183Z",
+  "command": "$env:PYTHONPATH='.'; .\\.venv\\python.exe scripts\\benchmark_d108_snapshot_materialization.py --samples 20 --output evidence\\motion_navigation\\d109-b10-lifecycle-v1\\d6-snapshot-materialization\\result.json",
+  "exit_code": 0,
+  "result_file": "result.json",
+  "result_bytes": 5446,
+  "result_sha256": "2eb374f56701339bde7f480ab27f7ff3bdef6052264713564349f702be0a0bcb"
+}

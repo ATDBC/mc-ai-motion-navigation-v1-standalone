@@ -1,0 +1,160 @@
+{
+  "schema_version": "mc2p.d109-final-b10-post-repair.v1",
+  "source_commit": "d9c564d400bc3fe809b1f7293033922bd6832b1b",
+  "source_run": "artifacts/fabric-deployment/20261015T055515931896Z-82d614a6",
+  "command": ".venv\\python.exe scripts\\probe_fabric_deployment_observation.py --seed 21001 --server-port 25597 --ipc-port 8140 --b10-gap-solver-probe --time-diagnostics --physics-tick-diagnostics --ftick-diagnostics --timeout-seconds 600",
+  "status": "failed",
+  "primary_failure": {
+    "message": "['client-0:b10b_solver_is_bounded', 'client-0:complete_time_event_attribution']",
+    "type": "DeploymentEvidenceFailure"
+  },
+  "cleanup_failures": [],
+  "failed_checks": [
+    "client-0:b10b_solver_is_bounded",
+    "client-0:complete_time_event_attribution"
+  ],
+  "functional_matrix": {
+    "preflight": 1,
+    "validation": "40/40",
+    "turn_preflight": 1,
+    "turn_validation": "40/40",
+    "default_coordination": "10/10",
+    "r4": "60/60",
+    "typed_negative": 24
+  },
+  "ordered_source_release": {
+    "source_id": "ordered/5ea387d740144dc69e27daf304530322/0/1",
+    "status": "explicitly_released"
+  },
+  "lifecycle_cleanup_failures": [],
+  "trace_delivery_summary": {
+    "accepted_dropped_records": 0,
+    "accepted_indeterminate_records": 0,
+    "accepted_records": 22409,
+    "capacity": 16384,
+    "dropped_by_record_type": {},
+    "dropped_records": 0,
+    "indeterminate_by_record_type": {},
+    "peak_depth": 5,
+    "projection_timing_ns": {
+      "count": 22409,
+      "maximum": 864100,
+      "p95": 220100,
+      "p99": 255200,
+      "sample_count": 4096,
+      "total": 1615560300
+    },
+    "schema_version": "mc2p.trace-delivery-summary.v1",
+    "worker_failed": false,
+    "written_records": 22409
+  },
+  "solve_time": {
+    "samples": 142,
+    "p95_ns": 24538800,
+    "p99_ns": 26423400,
+    "maximum_ns": 41033900,
+    "p95_ms": 24.5388,
+    "p99_ms": 26.4234,
+    "maximum_ms": 41.0339
+  },
+  "time_attribution": {
+    "status": "failed",
+    "errors": [
+      "'NoneType' object is not subscriptable"
+    ],
+    "event_count": 12026,
+    "observation_count": 5552,
+    "packet_update_count": 309,
+    "regression_count": 0
+  },
+  "safety": {
+    "minimum_health": 20.0,
+    "final_health": 20.0,
+    "damage_events": 0
+  },
+  "raw_files": {
+    "result.json": {
+      "bytes": 2342022,
+      "sha256": "04d9ce61c928ff8915dd96b32a90c5320c9bd3061c772d630d5764a63af85497"
+    },
+    "worker-result.json": {
+      "bytes": 2341453,
+      "sha256": "ec9f330232fbfb42acb70434b794f5f74486fd881c1e94e8a78c72bb6344003b"
+    },
+    "server-cleanup.json": {
+      "bytes": 239,
+      "sha256": "0828a403f90acf97839f21a5d1f7fc04e2fbdc7aaa27cc6fff831499cf187df9"
+    },
+    "supervision.json": {
+      "bytes": 526,
+      "sha256": "c614cccac152d3c1111194ebdb4dc187558b0d7ff95823eb2a4720d727c62d40"
+    },
+    "client-0/b10-gap-solver.json": {
+      "bytes": 1122086,
+      "sha256": "10256f9402a5fbd11fa436b47d746a36f4192ec0848a968cc2168743f3990e11"
+    },
+    "client-0/b10-lifecycle.json": {
+      "bytes": 196,
+      "sha256": "cbb0075e0fa49d4405839a03912c54e662fc8ce124c2b3985dc443211423671c"
+    },
+    "client-0/cleanup.json": {
+      "bytes": 241,
+      "sha256": "1f793b4b7d7947d283b419ac26e23d0acb189ad6d6a714ef20546ae39ba9a520"
+    },
+    "client-0/trace.jsonl": {
+      "bytes": 134907740,
+      "sha256": "73e10174ad49ff4db992460cb21b39d7f6d46f087d4d6e9e889f5d8786a3f39d"
+    },
+    "client-0/mc2p-client-time.jsonl": {
+      "bytes": 3176439,
+      "sha256": "543e9c406ea1876ac3a68bfb279d8285e354cf3a6780773932ddc0968babdcb1"
+    },
+    "client-0/time-report.json": {
+      "bytes": 1003782,
+      "sha256": "4719433a8ad953c69f15ad5c713915befa063ed18f671dc87c08296a46aeb2c0"
+    },
+    "client-0/diagnostics.jsonl": {
+      "bytes": 9150651,
+      "sha256": "a31774af815eb5150c6dd1aa73dcc0ed79cec925c7a1536577caa49c76a9d6dd"
+    },
+    "client-0/b10-receiver-diagnostics.jsonl": {
+      "bytes": 168710,
+      "sha256": "7d09d117f3367c89a80a975d3009dcd7269a7d94f1083a81cf90786c76e36090"
+    },
+    "client-0/physics-tick-events/manifest.jsonl": {
+      "bytes": 252,
+      "sha256": "b702e14f2a23225b526e82c9ea5f4e1a26c358be65340a1edfe00ac7edbe36f8"
+    },
+    "client-0/physics-tick-events/complete.json": {
+      "bytes": 190,
+      "sha256": "61ebe87ec9ebb4ec02815d1b8dddd216dbf806139a10f10e3ff2a676a16a3264"
+    },
+    "client-0/physics-tick-events/segment-00000000.jsonl": {
+      "bytes": 6211966,
+      "sha256": "6d3b300a77eaa23d603a10cd1535b2e9b14f4a09053ed916e213c4e69b33b199"
+    },
+    "client-0/ftick-events/manifest.jsonl": {
+      "bytes": 254,
+      "sha256": "9921836dcf7386efc534605f64da29d3fca2bea5250a340dab97beeda7c9ce85"
+    },
+    "client-0/ftick-events/complete.json": {
+      "bytes": 191,
+      "sha256": "7238609478d977d98b0290998fb346a676e97d148cfe4d5af8e4c1dce971a277"
+    },
+    "client-0/ftick-events/segment-00000000.jsonl": {
+      "bytes": 5822994,
+      "sha256": "b0592dd32044b16a51f1501a06093f4e1a578443c7d94089a04a4dd675244e8f"
+    }
+  },
+  "conclusion": {
+    "d2_source_lifecycle": "closed_in_fabric",
+    "d4_async_trace_lifecycle": "closed_in_fabric",
+    "functional_and_safety_matrix": "passed",
+    "d109": "not_passed",
+    "remaining_blocks": [
+      "solver maximum 41.0339 ms exceeds 30 ms",
+      "time attribution ended with a NoneType error"
+    ],
+    "stop_rule": "No third repair or additional B10 rerun is authorized for this stage."
+  }
+}

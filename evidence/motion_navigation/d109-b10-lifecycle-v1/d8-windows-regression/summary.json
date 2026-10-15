@@ -1,0 +1,145 @@
+{
+  "schema_version": "mc2p.d109-d8-windows-regression-summary.v1",
+  "generated_at_utc": "2026-10-15T05:36:44.984099+00:00",
+  "formal_platform": "Windows",
+  "source_commit": "cb06b44884e8a7641b797887f0c12183a6b1d451",
+  "source_worktree_dirty": false,
+  "python": "3.11.16",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "snapshot": {
+    "source_commit": "cb06b44884e8a7641b797887f0c12183a6b1d451",
+    "selected_source_files": 2298,
+    "verified_files": 2299,
+    "export_manifest_sha256": "eddb1adff736fce9f5eddb8611517666164b5f71c733f8133fee21f267f0842e"
+  },
+  "results": {
+    "direct_adjacent": {
+      "tests": 425,
+      "passed": 425,
+      "failures": 0,
+      "errors": 0,
+      "timeouts": 0,
+      "skipped": 0,
+      "raw_report_location": "local_tmp_not_published",
+      "bytes": 1232,
+      "sha256": "a32a22d8d51b8c24f5a971994eb5e3856c67ffb9984a02994b1bab9a892fe85e"
+    },
+    "source_forward": {
+      "modules": 186,
+      "tests": 2331,
+      "failures": 0,
+      "errors": 0,
+      "timeouts": 0,
+      "skipped": 0,
+      "raw_report_location": "local_tmp_not_published",
+      "bytes": 700529,
+      "sha256": "4a374357f46acf1c66e461be8631b6585fa374b0b6a2f020c0d574a04f9519ba"
+    },
+    "source_reverse": {
+      "modules": 186,
+      "tests": 2331,
+      "failures": 0,
+      "errors": 0,
+      "timeouts": 0,
+      "skipped": 0,
+      "raw_report_location": "local_tmp_not_published",
+      "bytes": 700100,
+      "sha256": "ff99ce9742b7b1b53cfc02c369fc4a6e81e6aa4cf400d915456953157eef4a66"
+    },
+    "source_java": {
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "timeouts": 0,
+      "skipped": 0,
+      "raw_report_location": "local_tmp_not_published",
+      "bytes": 106,
+      "sha256": "e80efda4b8cac9fcecd861947b33393d9c91febad41c1c35e315de7970036148"
+    },
+    "snapshot_forward": {
+      "modules": 185,
+      "tests": 2307,
+      "failures": 0,
+      "errors": 0,
+      "timeouts": 0,
+      "skipped": 0,
+      "raw_report_location": "local_tmp_not_published",
+      "bytes": 691318,
+      "sha256": "45945b8d8ee8adbcb56679f937307a631bfb1a1e380de4fc4dc03a4cc1f3231e"
+    },
+    "snapshot_reverse": {
+      "modules": 185,
+      "tests": 2307,
+      "failures": 0,
+      "errors": 0,
+      "timeouts": 0,
+      "skipped": 0,
+      "raw_report_location": "local_tmp_not_published",
+      "bytes": 691189,
+      "sha256": "9a69180283a096054aaebe67d8445f61ccdac33dda1de572738710c91c3b8304"
+    },
+    "snapshot_java": {
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "timeouts": 0,
+      "skipped": 0,
+      "raw_report_location": "local_tmp_not_published",
+      "bytes": 106,
+      "sha256": "a8bff9fd722c4bea4fa66b7e5d09c4a86c561dea3bc96dbae37616102b161a5b"
+    },
+    "snapshot_verify": {
+      "files": 2299,
+      "failures": 0,
+      "errors": 0,
+      "timeouts": 0,
+      "skipped": 0,
+      "raw_report_location": "local_tmp_not_published",
+      "bytes": 33,
+      "sha256": "bc2c65354b0add495643211dcd679930afaa093cd21c739a511d16aadec2e8e5"
+    }
+  },
+  "preflight_and_stopped_runs": [
+    {
+      "kind": "missing_java_home",
+      "detail": "Java gates did not start; rerun with project OpenJDK 21 passed.",
+      "bytes": 2677,
+      "sha256": "4556a6414e112e6b17f4fd7497eac5af37e3dbb4b601b32f9c765e049648a7d3"
+    },
+    {
+      "kind": "missing_exported_virtualenv",
+      "detail": "First exported run stopped because historical evidence required source .venv.",
+      "bytes": 342041,
+      "sha256": "e99d3fbf0433d238c67b0011196ca946d8c69d89855dfd52f80085a74218a872"
+    },
+    {
+      "kind": "stale_snapshot_assertion",
+      "detail": "Second exported run stopped because one test still asserted ROOT/.venv directly.",
+      "bytes": 339731,
+      "sha256": "a828767ac3bccba8ae9042a46868d8243fab8bc1959bdd3f759cf7c9415b7187"
+    }
+  ],
+  "publication_fixes": [
+    {
+      "commit": "15b142f6",
+      "scope": "test fixture only",
+      "result": "Observation V3 tracked_entity tick follows the synthetic native tick."
+    },
+    {
+      "commit": "016a9685",
+      "scope": "evidence verifier and test",
+      "result": "Standalone export represents the exact recorded repository interpreter with the current verifier interpreter; other missing paths still fail."
+    },
+    {
+      "commit": "cb06b448",
+      "scope": "test assertion only",
+      "result": "Standalone assertion no longer requires the source checkout virtual environment."
+    }
+  ],
+  "passed": true,
+  "not_run": [
+    "final Fabric B10 600-second run",
+    "Linux supplemental lifecycle matrix"
+  ],
+  "boundary": "D8 Windows regression and public snapshot gates are complete; D109 remains open until the separately authorized final Fabric B10 run and remaining platform review."
+}

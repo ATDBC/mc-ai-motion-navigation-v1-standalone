@@ -18,7 +18,7 @@ from mc2p.contracts.observation_v3 import ObservedBlockV3
 class TraceSinkV0(Protocol):
     def write(self, record_type: str, payload: object) -> None: ...
 
-    def close(self) -> None: ...
+    def close(self) -> object | None: ...
 
 
 @lru_cache(maxsize=256)
@@ -114,13 +114,13 @@ class JsonlTraceWriterV0:
         self._closed = False
         self._lock = threading.Lock()
 
-    def write(self, record_type: str, payload: object) -> None:
+    def _write_projected(self, record_type: str, payload: object) -> None:
         if not record_type or not isinstance(record_type, str):
             raise ValueError("record_type must be non-empty")
         record = {
             "schema_version": "mc2p.trace-record.v0",
             "record_type": record_type,
-            "payload": trace_projection(payload),
+            "payload": payload,
         }
         line = json.dumps(
             record,
@@ -133,6 +133,13 @@ class JsonlTraceWriterV0:
                 raise ValueError("trace writer is closed")
             self._stream.write(line + "\n")
             self._stream.flush()
+
+    def write(self, record_type: str, payload: object) -> None:
+        self._write_projected(record_type, trace_projection(payload))
+
+    def write_projected(self, record_type: str, payload: object) -> None:
+        """Write payload that already passed ``trace_projection`` once."""
+        self._write_projected(record_type, payload)
 
     def close(self) -> None:
         with self._lock:

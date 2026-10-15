@@ -1,0 +1,19 @@
+# D109 final-byte Windows regression after the post-repair B10 (PowerShell)
+
+# Direct and adjacent: the same 20 modules listed in d8-windows-regression/commands.txt.
+.\.venv\python.exe -m unittest tests.test_async_trace tests.test_player_runtime_v1 tests.test_player_runtime_v1_smoke tests.test_b10_runtime_probe tests.test_fabric_deployment_probe tests.motion_nav.test_d105_ftick tests.motion_nav.test_d107_shard_runner tests.motion_nav.test_d108_snapshot_materialization tests.motion_nav.test_d108_receiver_tick_delivery tests.motion_nav.test_f1_known_world_following_fabric tests.motion_nav.test_f1_known_world_following tests.motion_nav.test_d102_registry_lifecycle tests.motion_nav.test_d102_world_snapshot tests.motion_nav.test_d102_runtime_activation tests.motion_nav.test_d102_receiver tests.motion_nav.test_d102_prepared_proof tests.motion_nav.test_d102_action_handoff tests.motion_nav.test_d105_receiver_trust_boundary tests.motion_nav.test_b10_motion_worker tests.motion_nav.test_d105_t2_evidence
+
+.\.venv\python.exe scripts\run_motion_nav_shards.py --root . --python .\.venv\python.exe --timeout-seconds 300 --report .tmp\d109-d8\source-forward-post-b10.json
+.\.venv\python.exe scripts\run_motion_nav_shards.py --root . --python .\.venv\python.exe --timeout-seconds 300 --reverse --report .tmp\d109-d8\source-reverse-post-b10.json
+$env:JAVA_HOME=(Resolve-Path '.venv\Library\lib\jvm').Path
+$env:PATH="$env:JAVA_HOME\bin;$env:PATH"
+.\.venv\python.exe -m unittest tests.test_standalone_java_gates
+
+.\.venv\python.exe scripts\export_motion_navigation_standalone.py export --root D:\My_project\mc_ai\.tmp\d109-d8-public-snapshot-post-b10 --clean
+.\.venv\python.exe scripts\export_motion_navigation_standalone.py verify --root D:\My_project\mc_ai\.tmp\d109-d8-public-snapshot-post-b10
+
+# Run in D:\My_project\mc_ai\.tmp\d109-d8-public-snapshot-post-b10.
+D:\My_project\mc_ai\.venv\python.exe scripts\run_motion_nav_shards.py --root . --python D:\My_project\mc_ai\.venv\python.exe --timeout-seconds 300 --report D:\My_project\mc_ai\.tmp\d109-d8\snapshot-forward-post-b10.json
+D:\My_project\mc_ai\.venv\python.exe scripts\run_motion_nav_shards.py --root . --python D:\My_project\mc_ai\.venv\python.exe --timeout-seconds 300 --reverse --report D:\My_project\mc_ai\.tmp\d109-d8\snapshot-reverse-post-b10.json
+D:\My_project\mc_ai\.venv\python.exe -m unittest tests.test_standalone_java_gates
+D:\My_project\mc_ai\.venv\python.exe scripts\export_motion_navigation_standalone.py verify --root .

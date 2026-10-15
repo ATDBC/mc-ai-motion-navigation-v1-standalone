@@ -57,6 +57,20 @@ def _resolve_interpreter(value: str) -> Path:
     return candidate if candidate.is_absolute() else ROOT / candidate
 
 
+def _interpreter_is_available(value: str) -> bool:
+    if _resolve_interpreter(value).is_file():
+        return True
+    # A source checkout owns ``.venv/python.exe``.  A standalone export
+    # deliberately does not copy that environment, so the exact recorded
+    # repository interpreter is represented by the interpreter running the
+    # verifier.  Other missing paths must still fail.
+    recorded = os.path.normcase(value.replace("/", "\\"))
+    expected = os.path.normcase(REPOSITORY_PYTHON)
+    return (recorded == expected
+            and (ROOT / "EXPORT-METADATA.json").is_file()
+            and Path(sys.executable).is_file())
+
+
 def _command_argv(command: str) -> list[str]:
     return [value.strip('"') for value in shlex.split(command, posix=False)]
 
@@ -88,14 +102,14 @@ def validate_generation_commands(index_path: Path) -> dict:
             errors.append("T2 root index has no generation commands")
         for name, command in commands.items():
             interpreter = _command_interpreter(command) if type(command) is str else ""
-            if not interpreter or not _resolve_interpreter(interpreter).is_file():
+            if not interpreter or not _interpreter_is_available(interpreter):
                 errors.append("generation command interpreter does not exist: " + str(name))
         timing_path = index_path.parent / "receiver-timing/index.json"
         timing = _read_json(timing_path)
         argv = timing.get("generation_command_argv")
         command = timing.get("generation_command")
         if (type(argv) is not list or not argv or type(argv[0]) is not str
-                or not _resolve_interpreter(argv[0]).is_file()):
+                or not _interpreter_is_available(argv[0])):
             errors.append("receiver timing argv interpreter does not exist")
         if (type(command) is not str
                 or _command_interpreter(command) != (argv[0] if type(argv) is list and argv else None)):

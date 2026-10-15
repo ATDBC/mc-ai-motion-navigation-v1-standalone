@@ -14,6 +14,7 @@ from unittest.mock import Mock, patch
 import psutil
 
 from scripts import run_motion_nav_shards as shard_runner
+from scripts import process_tree
 from scripts.process_tree import ProcessIdentityV0
 
 
@@ -112,6 +113,303 @@ def _read_atomic_report(path: Path, *, timeout: float = 5.0) -> dict:
 
 
 class MotionNavShardRunnerTests(unittest.TestCase):
+    def test_linux_subreaper_requires_verified_prctl_and_empty_baseline(self):
+        runner = ProcessIdentityV0(pid=123, create_time=456.0)
+
+        with patch.object(shard_runner.sys, "platform", "linux"), patch.object(
+            shard_runner, "_current_process_identity", return_value=runner,
+        ), patch.object(
+            shard_runner, "_direct_child_identities", return_value=(),
+        ), patch.object(
+            shard_runner, "_set_child_subreaper", return_value=None,
+        ) as enable, patch.object(
+            shard_runner, "_get_child_subreaper", return_value=True,
+        ):
+            guard = shard_runner._enable_linux_subreaper()
+
+        self.assertEqual(guard.runner, runner)
+        self.assertEqual(guard.baseline, ())
+        enable.assert_called_once_with(True)
+
+        existing = ProcessIdentityV0(pid=124, create_time=457.0)
+        with patch.object(shard_runner.sys, "platform", "linux"), patch.object(
+            shard_runner, "_current_process_identity", return_value=runner,
+        ), patch.object(
+            shard_runner, "_direct_child_identities", return_value=(existing,),
+        ):
+            with self.assertRaisesRegex(RuntimeError, "existing child"):
+                shard_runner._enable_linux_subreaper()
+
+        with patch.object(shard_runner.sys, "platform", "linux"), patch.object(
+            shard_runner, "_current_process_identity", return_value=runner,
+        ), patch.object(
+            shard_runner, "_direct_child_identities", return_value=(),
+        ), patch.object(
+            shard_runner, "_set_child_subreaper", return_value=None,
+        ), patch.object(
+            shard_runner, "_get_child_subreaper", return_value=False,
+        ):
+            with self.assertRaisesRegex(RuntimeError, "could not be verified"):
+                shard_runner._enable_linux_subreaper()
+
+    def test_linux_parent_fails_before_launch_when_subreaper_is_unavailable(self):
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            _write_package(root, {
+                "test_one.py": (
+                    "import unittest\n"
+                    "class Case(unittest.TestCase):\n"
+                    " def test_ok(self): pass\n"
+                ),
+            })
+            report = root / "report.json"
+            with patch.object(shard_runner.sys, "platform", "linux"), patch.object(
+                shard_runner,
+                "_enable_linux_subreaper",
+                side_effect=OSError("not supported"),
+            ), patch.object(shard_runner, "_run_module") as run_module:
+                return_code = shard_runner._run_parent([
+                    "--root", str(root),
+                    "--report", str(report),
+                ])
+
+            payload = json.loads(report.read_text(encoding="utf-8"))
+            self.assertEqual(return_code, 1)
+            self.assertEqual(payload["state"], "complete")
+            self.assertEqual(payload["posix_subreaper"], {"status": "unavailable"})
+            self.assertIn("subreaper unavailable", payload["infrastructure_failure"])
+            run_module.assert_not_called()
+
+    def test_linux_subreaper_scope_is_exclusive(self):
+        runner = shard_runner._current_process_identity()
+        first_root = ProcessIdentityV0(pid=123, create_time=runner.create_time + 1.0)
+        second_root = ProcessIdentityV0(pid=124, create_time=runner.create_time + 2.0)
+        guard = shard_runner._LinuxSubreaperGuard(runner=runner, baseline=())
+
+        with patch.object(
+            shard_runner, "_direct_child_identities", return_value=(first_root,),
+        ):
+            scope = guard.begin(first_root)
+            with self.assertRaisesRegex(RuntimeError, "already active"):
+                guard.begin(second_root)
+            scope.finish()
+        with patch.object(
+            shard_runner, "_direct_child_identities", return_value=(second_root,),
+        ):
+            second = guard.begin(second_root)
+            second.finish()
+
+    def test_subreaper_adoption_requires_stable_parent_identity_and_time_window(self):
+        runner = shard_runner._current_process_identity()
+        root = ProcessIdentityV0(pid=123, create_time=runner.create_time + 10.0)
+        adopted = ProcessIdentityV0(pid=124, create_time=root.create_time + 1.0)
+        too_old = ProcessIdentityV0(pid=125, create_time=root.create_time - 1.0)
+        guard = shard_runner._LinuxSubreaperGuard(runner=runner, baseline=())
+        with patch.object(
+            shard_runner, "_direct_child_identities", return_value=(root,),
+        ):
+            scope = guard.begin(root)
+        registered = {root.pid: root}
+        diagnostics = []
+
+        with patch.object(
+            shard_runner, "_current_process_identity", return_value=runner,
+        ), patch.object(
+            shard_runner,
+            "_direct_child_identities",
+            return_value=(root, adopted, too_old),
+        ), patch.object(
+            shard_runner, "_stable_direct_child_identity", side_effect=lambda value, _pid: value,
+        ):
+            scope.capture_adopted(registered, diagnostics)
+
+        self.assertEqual(registered, {root.pid: root, adopted.pid: adopted})
+        self.assertEqual(scope.adopted, {adopted.pid: adopted})
+        self.assertTrue(any("predates module root" in item for item in diagnostics))
+
+    def test_subreaper_access_denied_and_pid_reuse_fail_closed(self):
+        runner = shard_runner._current_process_identity()
+        root = ProcessIdentityV0(pid=123, create_time=runner.create_time + 10.0)
+        denied_hint = ProcessIdentityV0(pid=124, create_time=root.create_time + 1.0)
+        reused_hint = ProcessIdentityV0(pid=125, create_time=root.create_time + 2.0)
+        guard = shard_runner._LinuxSubreaperGuard(runner=runner, baseline=())
+        with patch.object(
+            shard_runner, "_direct_child_identities", return_value=(root,),
+        ):
+            scope = guard.begin(root)
+        diagnostics = []
+        registered = {root.pid: root}
+
+        def stable(identity, _runner_pid):
+            if identity.pid == denied_hint.pid:
+                raise psutil.AccessDenied(identity.pid)
+            if identity.pid == reused_hint.pid:
+                return ProcessIdentityV0(identity.pid, identity.create_time + 10.0)
+            return identity
+
+        with patch.object(
+            shard_runner, "_current_process_identity", return_value=runner,
+        ), patch.object(
+            shard_runner,
+            "_direct_child_identities",
+            return_value=(root, denied_hint, reused_hint),
+        ), patch.object(
+            shard_runner, "_stable_direct_child_identity", side_effect=stable,
+        ):
+            scope.capture_adopted(registered, diagnostics)
+
+        self.assertEqual(registered, {root.pid: root})
+        self.assertTrue(scope.ownership_failed)
+        self.assertTrue(any("access denied" in item.lower() for item in diagnostics))
+        self.assertTrue(any("identity changed" in item for item in diagnostics))
+
+    def test_subreaper_never_authorizes_forged_or_baseline_pid(self):
+        runner = shard_runner._current_process_identity()
+        baseline = ProcessIdentityV0(pid=120, create_time=runner.create_time - 1.0)
+        root = ProcessIdentityV0(pid=123, create_time=runner.create_time + 10.0)
+        forged = ProcessIdentityV0(pid=999, create_time=root.create_time + 1.0)
+        guard = shard_runner._LinuxSubreaperGuard(runner=runner, baseline=(baseline,))
+        with patch.object(
+            shard_runner,
+            "_direct_child_identities",
+            return_value=(baseline, root),
+        ):
+            scope = guard.begin(root)
+        registered = {root.pid: root}
+
+        with patch.object(
+            shard_runner, "_current_process_identity", return_value=runner,
+        ), patch.object(
+            shard_runner,
+            "_direct_child_identities",
+            return_value=(baseline, root),
+        ):
+            scope.capture_adopted(registered, [])
+        shard_runner._merge_child_registration(
+            {"registered_tree": [{"pid": forged.pid, "create_time": forged.create_time}]},
+            registered,
+            [],
+            authorized_identities=scope.adopted,
+        )
+
+        self.assertEqual(registered, {root.pid: root})
+        self.assertNotIn(baseline.pid, scope.adopted)
+        self.assertNotIn(forged.pid, registered)
+
+    def test_subreaper_reaps_only_exact_adopted_children(self):
+        runner = shard_runner._current_process_identity()
+        root = ProcessIdentityV0(pid=123, create_time=runner.create_time + 10.0)
+        adopted = ProcessIdentityV0(pid=124, create_time=root.create_time + 1.0)
+        guard = shard_runner._LinuxSubreaperGuard(runner=runner, baseline=())
+        with patch.object(
+            shard_runner, "_direct_child_identities", return_value=(root,),
+        ):
+            scope = guard.begin(root)
+        scope.adopted[adopted.pid] = adopted
+
+        with patch.object(
+            shard_runner, "_identity_is_alive", return_value=False,
+        ), patch.object(
+            shard_runner.os, "waitpid", return_value=(adopted.pid, 0), create=True,
+        ) as waitpid:
+            errors = scope.reap_stopped()
+
+        self.assertEqual(errors, [])
+        self.assertEqual(scope.reaped, {adopted.pid})
+        waitpid.assert_called_once_with(adopted.pid, shard_runner._WAIT_NO_HANG)
+
+    def test_zombie_is_stopped_after_exact_identity_match(self):
+        identity = ProcessIdentityV0(pid=123, create_time=456.0)
+        zombie = Mock()
+        zombie.pid = identity.pid
+        zombie.create_time.return_value = identity.create_time
+        zombie.is_running.return_value = True
+        zombie.status.return_value = psutil.STATUS_ZOMBIE
+
+        self.assertFalse(process_tree._is_live(zombie))
+        with patch.object(shard_runner.psutil, "Process", return_value=zombie):
+            self.assertFalse(shard_runner._identity_is_alive(identity))
+
+    def test_liveness_access_denied_remains_conservatively_alive(self):
+        identity = ProcessIdentityV0(pid=123, create_time=456.0)
+        inaccessible = Mock()
+        inaccessible.pid = identity.pid
+        inaccessible.create_time.return_value = identity.create_time
+        inaccessible.is_running.return_value = True
+        inaccessible.status.side_effect = psutil.AccessDenied(identity.pid)
+
+        self.assertTrue(process_tree._is_live(inaccessible))
+        with patch.object(
+            shard_runner.psutil, "Process", return_value=inaccessible,
+        ):
+            self.assertTrue(shard_runner._identity_is_alive(identity))
+
+        with patch.object(process_tree.psutil, "Process", return_value=inaccessible):
+            cleanup = process_tree.terminate_registered_tree(
+                identity, (identity,), grace_seconds=0,
+            )
+        self.assertEqual(cleanup.surviving, (identity,))
+
+    def test_identity_inspection_denial_never_grants_cleanup_success(self):
+        identity = ProcessIdentityV0(pid=123, create_time=456.0)
+        inaccessible = Mock()
+        inaccessible.pid = identity.pid
+        inaccessible.create_time.side_effect = psutil.AccessDenied(identity.pid)
+
+        with patch.object(process_tree.psutil, "Process", return_value=inaccessible):
+            cleanup = process_tree.terminate_registered_tree(
+                identity, (identity,), grace_seconds=0,
+            )
+
+        self.assertEqual(cleanup.surviving, (identity,))
+        self.assertTrue(any("access denied" in error for error in cleanup.errors))
+        inaccessible.terminate.assert_not_called()
+
+    def test_refresh_recomputes_cleanup_status_from_final_facts(self):
+        identity = ProcessIdentityV0(pid=123, create_time=456.0)
+        cleanup = {
+            "status": "failed",
+            "stopped": [],
+            "surviving": [{"pid": 123, "create_time": 456.0}],
+            "errors": [],
+        }
+
+        for _ in range(30):
+            cleanup["status"] = "failed"
+            cleanup["surviving"] = [{"pid": 123, "create_time": 456.0}]
+            with patch.object(shard_runner, "_identity_is_alive", return_value=False):
+                shard_runner._refresh_cleanup_liveness(cleanup, (identity,))
+            self.assertEqual(cleanup["status"], "passed")
+            self.assertEqual(cleanup["surviving"], [])
+
+    def test_refresh_preserves_real_survivor_or_error_as_failure(self):
+        identity = ProcessIdentityV0(pid=123, create_time=456.0)
+        survivor = {
+            "status": "passed", "stopped": [], "surviving": [], "errors": [],
+        }
+        with patch.object(shard_runner, "_identity_is_alive", return_value=True):
+            shard_runner._refresh_cleanup_liveness(survivor, (identity,))
+        self.assertEqual(survivor["status"], "failed")
+
+        errored = {
+            "status": "failed", "stopped": [], "surviving": [],
+            "errors": ["access denied"],
+        }
+        with patch.object(shard_runner, "_identity_is_alive", return_value=False):
+            shard_runner._refresh_cleanup_liveness(errored, (identity,))
+        self.assertEqual(errored["status"], "failed")
+
+    def test_reused_pid_is_not_treated_as_registered_process(self):
+        identity = ProcessIdentityV0(pid=123, create_time=456.0)
+        reused = Mock()
+        reused.pid = identity.pid
+        reused.create_time.return_value = 789.0
+        reused.is_running.return_value = True
+        reused.status.return_value = psutil.STATUS_RUNNING
+
+        with patch.object(shard_runner.psutil, "Process", return_value=reused):
+            self.assertFalse(shard_runner._identity_is_alive(identity))
+
     def test_each_module_runs_in_its_own_process_and_has_a_typed_result(self):
         with TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -362,6 +660,152 @@ class MotionNavShardRunnerTests(unittest.TestCase):
                     _stop_pid(runner.pid)
                 if descendant_pid is not None:
                     _stop_pid(descendant_pid)
+
+    def test_linux_subreaper_adversarial_matrix(self):
+        scenarios = {
+            "fast_root_exit": (
+                ["daemon"],
+                """
+import os, subprocess, sys, time, unittest
+from pathlib import Path
+class Case(unittest.TestCase):
+ def test_exit(self):
+  root = Path(__file__).resolve().parents[2]
+  subprocess.Popen([sys.executable, '-c',
+   \"import os,time; from pathlib import Path; Path(r'%s').write_text(str(os.getpid())); time.sleep(30)\"])
+  deadline=time.monotonic()+2
+  while not Path(r'%s').exists() and time.monotonic()<deadline: time.sleep(.001)
+  os._exit(7)
+""",
+            ),
+            "setsid": (
+                ["daemon"],
+                """
+import subprocess, sys, time, unittest
+class Case(unittest.TestCase):
+ def test_wait(self):
+  subprocess.Popen([sys.executable, '-c',
+   \"import os,signal,time; from pathlib import Path; os.setsid(); signal.signal(signal.SIGTERM,signal.SIG_IGN); Path(r'%s').write_text(str(os.getpid())); time.sleep(30)\"])
+  time.sleep(30)
+""",
+            ),
+            "double_fork": (
+                ["daemon"],
+                """
+import subprocess, sys, time, unittest
+class Case(unittest.TestCase):
+ def test_wait(self):
+  code=\"\"\"import os,time
+os.setsid()
+if os.fork()==0:
+ from pathlib import Path
+ Path(r'%s').write_text(str(os.getpid()))
+ time.sleep(30)
+os._exit(0)
+\"\"\"
+  subprocess.Popen([sys.executable,'-c',code]).wait()
+  time.sleep(30)
+""",
+            ),
+            "ignore_sigterm_holds_output": (
+                ["daemon"],
+                """
+import subprocess, sys, time, unittest
+class Case(unittest.TestCase):
+ def test_wait(self):
+  subprocess.Popen([sys.executable,'-c',
+   \"import os,signal,time; from pathlib import Path; signal.signal(signal.SIGTERM,signal.SIG_IGN); Path(r'%s').write_text(str(os.getpid())); print('ready',flush=True); time.sleep(30)\"])
+  time.sleep(30)
+""",
+            ),
+            "fork_during_cleanup": (
+                ["daemon", "late"],
+                """
+import subprocess, sys, time, unittest
+class Case(unittest.TestCase):
+ def test_wait(self):
+  code=\"\"\"import os,signal,time
+from pathlib import Path
+Path(r'%s').write_text(str(os.getpid()))
+def stop(_signum,_frame):
+ if os.fork()==0:
+  os.setsid()
+  Path(r'%s').write_text(str(os.getpid()))
+  time.sleep(30)
+ os._exit(0)
+signal.signal(signal.SIGTERM,stop)
+time.sleep(30)
+\"\"\"
+  subprocess.Popen([sys.executable,'-c',code])
+  time.sleep(30)
+""",
+            ),
+        }
+        if not sys.platform.startswith("linux"):
+            self.assertEqual(
+                set(scenarios),
+                {
+                    "fast_root_exit", "setsid", "double_fork",
+                    "ignore_sigterm_holds_output", "fork_during_cleanup",
+                },
+            )
+            return
+
+        for name, (pid_names, template) in scenarios.items():
+            with self.subTest(name=name), TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                pid_paths = {
+                    pid_name: root / f"{pid_name}.pid" for pid_name in pid_names
+                }
+                substitutions = []
+                if name == "fast_root_exit":
+                    substitutions = [pid_paths["daemon"], pid_paths["daemon"]]
+                elif name == "fork_during_cleanup":
+                    substitutions = [pid_paths["daemon"], pid_paths["late"]]
+                else:
+                    substitutions = [pid_paths["daemon"]]
+                _write_package(root, {
+                    f"test_{name}.py": template % tuple(map(str, substitutions)),
+                })
+                completed, payload = _invoke(
+                    root, "--timeout-seconds", "1", timeout=15,
+                )
+                result = payload["modules"][0]
+                try:
+                    self.assertEqual(completed.returncode, 1)
+                    self.assertEqual(result["cleanup"]["status"], "passed")
+                    self.assertEqual(result["cleanup"]["surviving"], [])
+                    self.assertEqual(
+                        result["cleanup"]["isolation"],
+                        "linux_subreaper_posix_session",
+                    )
+                    self.assertTrue(result["cleanup"]["adopted_reaped"])
+                    adopted_pids = {
+                        item["pid"]
+                        for item in result["cleanup"]["adopted_processes"]
+                    }
+                    for pid_name, pid_path in pid_paths.items():
+                        self.assertTrue(
+                            pid_path.is_file(),
+                            f"{name} did not establish {pid_name}",
+                        )
+                        self.assertFalse(
+                            psutil.pid_exists(int(pid_path.read_text())),
+                            f"{name} left {pid_name} alive or unreaped",
+                        )
+                    required_adopted = (
+                        {"late"} if name == "fork_during_cleanup" else {"daemon"}
+                    )
+                    for pid_name in required_adopted:
+                        self.assertIn(
+                            int(pid_paths[pid_name].read_text()),
+                            adopted_pids,
+                            f"{name} did not record {pid_name} as adopted",
+                        )
+                finally:
+                    for pid_path in pid_paths.values():
+                        if pid_path.is_file():
+                            _stop_pid(int(pid_path.read_text()))
 
     def test_cleanup_exception_is_preserved_as_structured_failure(self):
         identity = ProcessIdentityV0(pid=123, create_time=456.0)

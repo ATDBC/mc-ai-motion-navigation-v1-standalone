@@ -306,8 +306,25 @@ def _client_sidecar(path: Path) -> tuple[tuple[dict, ...], bool, int, str]:
     return events, True, summaries[0]["dropped_event_count"], "sealed"
 
 
-def _ordered_source_release(trace_rows: tuple[dict, ...]) -> str:
-    """Require the B10 probe source to leave through its explicit owner path."""
+def _ordered_source_release(
+        trace_rows: tuple[dict, ...], result: dict | None = None,
+) -> str:
+    """Classify explicit owner release or Runtime-close registry clearing."""
+    if type(result) is dict:
+        lifecycle = result.get("b10_lifecycle")
+        release = (
+            lifecycle.get("ordered_source_release")
+            if type(lifecycle) is dict else None
+        )
+        if type(release) is dict:
+            native = release.get("status")
+            if native in {"explicitly_released", "released"}:
+                return "explicitly_released"
+            if native == "cleared_on_runtime_close":
+                return "cleared_on_close"
+            if native == "not_released":
+                return "not_released"
+            return "invalid_status"
     registrations = []
     releases = []
     for row in trace_rows:
@@ -324,7 +341,12 @@ def _ordered_source_release(trace_rows: tuple[dict, ...]) -> str:
             releases.append(source.get("source_id"))
     if len(registrations) != 1:
         return "registration_invalid"
-    return "released" if releases.count(registrations[0]) == 1 else "not_released"
+    return ("explicitly_released"
+            if releases.count(registrations[0]) == 1 else "not_released")
+
+
+def _source_release_is_accepted(status: str) -> bool:
+    return status in {"explicitly_released", "cleared_on_close"}
 
 
 def analyze_run(run_dir: Path) -> dict:
@@ -334,7 +356,7 @@ def analyze_run(run_dir: Path) -> dict:
     trials = tuple(row for row in _jsonl(client / "b10-gap-solver-trials.jsonl")
                    if row.get("group") == "validation")
     trace_rows = _jsonl(client / "trace.jsonl")
-    source_release_status = _ordered_source_release(trace_rows)
+    source_release_status = _ordered_source_release(trace_rows, result)
     client_rows, sealed, dropped, sidecar_status = _client_sidecar(
         client / "ftick-events",
     )
@@ -348,7 +370,7 @@ def analyze_run(run_dir: Path) -> dict:
         failures.append("b10_probe_regression")
     if sidecar_status != "sealed":
         failures.append("client_sidecar_" + sidecar_status)
-    if source_release_status != "released":
+    if not _source_release_is_accepted(source_release_status):
         failures.append("ordered_source_" + source_release_status)
     if failures:
         summary["status"] = "failed"
