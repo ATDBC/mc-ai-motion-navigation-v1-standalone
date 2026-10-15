@@ -1,0 +1,6 @@
+{
+  "status": "environment_preflight_failed_before_game_start",
+  "reason": "JAVA_HOME did not point to OpenJDK 21",
+  "counts_as_official_b10_run": false,
+  "action": "set project JDK 21 and run the single authorized B10 command"
+}

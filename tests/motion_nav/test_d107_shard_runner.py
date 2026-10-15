@@ -318,6 +318,91 @@ class MotionNavShardRunnerTests(unittest.TestCase):
         self.assertEqual(scope.reaped, {adopted.pid})
         waitpid.assert_called_once_with(adopted.pid, shard_runner._WAIT_NO_HANG)
 
+    def test_settle_kills_exact_registered_descendants_without_another_sigterm(self):
+        for newly_adopted in (False, True):
+            with self.subTest(newly_adopted=newly_adopted):
+                root = ProcessIdentityV0(123, 456.)
+                child = ProcessIdentityV0(124, 457.)
+                reused = ProcessIdentityV0(125, 458.)
+                zombie = ProcessIdentityV0(126, 459.)
+                exited = ProcessIdentityV0(127, 460.)
+                identities = (root, child, reused, zombie, exited)
+                processes = {}
+                for identity in identities:
+                    process = Mock()
+                    process.create_time.return_value = identity.create_time
+                    process.is_running.return_value = True
+                    process.status.return_value = psutil.STATUS_RUNNING
+                    processes[identity.pid] = process
+                processes[reused.pid].create_time.return_value = 999.
+                processes[zombie.pid].status.return_value = psutil.STATUS_ZOMBIE
+                processes[exited.pid].is_running.return_value = False
+                processes[child.pid].kill.side_effect = lambda: setattr(
+                    processes[child.pid].is_running, "return_value", False,
+                )
+                registered = {item.pid: item for item in identities}
+                scope = Mock()
+                scope.adopted = {}
+                scope.reaped = set()
+                scope.ownership_failed = False
+                scope.reap_stopped.return_value = []
+                if newly_adopted:
+                    del registered[child.pid]
+
+                    def capture(registered, _diagnostics):
+                        registered[child.pid] = child
+                        scope.adopted[child.pid] = child
+                        scope.reaped.add(child.pid)
+
+                    scope.capture_adopted.side_effect = capture
+                cleanup = {"errors": []}
+
+                with patch.object(
+                    shard_runner.psutil, "Process", side_effect=processes.__getitem__,
+                ), patch.object(
+                    shard_runner, "_identity_is_alive", return_value=False,
+                ), patch.object(shard_runner.time, "sleep"), patch.object(
+                    shard_runner, "_cleanup_process_tree", return_value={"errors": []},
+                ) as terminate_tree:
+                    result, observed = shard_runner._settle_linux_subreaper_scope(
+                        scope, root, registered, cleanup, [], process=Mock(),
+                    )
+
+                processes[child.pid].kill.assert_called_once_with()
+                for identity in (root, reused, zombie, exited):
+                    processes[identity.pid].kill.assert_not_called()
+                for process in processes.values():
+                    process.terminate.assert_not_called()
+                terminate_tree.assert_not_called()
+                scope.finish.assert_called_once_with()
+                self.assertEqual(result["status"], "passed")
+                self.assertEqual(set(observed), set(identities))
+
+    def test_settle_preserves_kill_access_denial_as_cleanup_failure(self):
+        root = ProcessIdentityV0(123, 456.)
+        child = ProcessIdentityV0(124, 457.)
+        scope = Mock(adopted={}, reaped=set(), ownership_failed=False)
+        scope.reap_stopped.return_value = []
+        process = Mock()
+        process.create_time.return_value = child.create_time
+        process.is_running.return_value = True
+        process.status.return_value = psutil.STATUS_RUNNING
+        process.kill.side_effect = psutil.AccessDenied(child.pid)
+
+        with patch.object(
+            shard_runner.psutil, "Process", return_value=process,
+        ), patch.object(
+            shard_runner, "_identity_is_alive", return_value=False,
+        ), patch.object(shard_runner.time, "sleep"):
+            result, _ = shard_runner._settle_linux_subreaper_scope(
+                scope, root, {root.pid: root, child.pid: child},
+                {"errors": []}, [], process=Mock(),
+            )
+
+        self.assertEqual(result["status"], "failed")
+        self.assertTrue(any("AccessDenied" in error for error in result["errors"]))
+        process.terminate.assert_not_called()
+
     def test_zombie_is_stopped_after_exact_identity_match(self):
         identity = ProcessIdentityV0(pid=123, create_time=456.0)
         zombie = Mock()
@@ -784,6 +869,9 @@ time.sleep(30)
                         item["pid"]
                         for item in result["cleanup"]["adopted_processes"]
                     }
+                    attempted_pids = {
+                        item["pid"] for item in result["cleanup"]["attempted"]
+                    }
                     for pid_name, pid_path in pid_paths.items():
                         self.assertTrue(
                             pid_path.is_file(),
@@ -793,9 +881,17 @@ time.sleep(30)
                             psutil.pid_exists(int(pid_path.read_text())),
                             f"{name} left {pid_name} alive or unreaped",
                         )
-                    required_adopted = (
-                        {"late"} if name == "fork_during_cleanup" else {"daemon"}
-                    )
+                        self.assertIn(
+                            int(pid_path.read_text()),
+                            attempted_pids | adopted_pids,
+                            f"{name} did not register {pid_name} for cleanup",
+                        )
+                    if name == "fork_during_cleanup":
+                        required_adopted = {"late"}
+                    elif name in {"fast_root_exit", "double_fork"}:
+                        required_adopted = {"daemon"}
+                    else:
+                        required_adopted = set()
                     for pid_name in required_adopted:
                         self.assertIn(
                             int(pid_paths[pid_name].read_text()),

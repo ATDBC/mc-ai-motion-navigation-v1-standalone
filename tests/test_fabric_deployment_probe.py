@@ -468,9 +468,7 @@ class FabricDeploymentProbeTests(unittest.TestCase):
         from tempfile import TemporaryDirectory
         from types import SimpleNamespace
 
-        from mc2p.runtime.async_trace import (
-            AsyncTraceCloseStatus, BoundedAsyncTraceWriter,
-        )
+        from mc2p.runtime.async_trace import AsyncTraceCloseStatus
         from scripts.fabric_visibility_scenario import CloseDiagnosticsTrace
 
         @dataclass(frozen=True)
@@ -484,10 +482,10 @@ class FabricDeploymentProbeTests(unittest.TestCase):
 
         with TemporaryDirectory(prefix="mc2p-async-close-diagnostics-") as directory:
             root = Path(directory)
-            sink = CloseDiagnosticsTrace(
+            trace = CloseDiagnosticsTrace(
                 root, SimpleNamespace(last_diagnostics={"movement_tick": 17}),
+                async_delivery=True,
             )
-            trace = BoundedAsyncTraceWriter(sink, capacity=8)
             trace.write("reset", {"result": Result(Observation("episode", 0))})
             trace.write("step", {"backend_result": Result(Observation("episode", 1))})
             trace.write(
@@ -495,7 +493,7 @@ class FabricDeploymentProbeTests(unittest.TestCase):
                 {"backend_result": Result(Observation("episode", 2))},
             )
 
-            result = trace.close(timeout_seconds=2.0)
+            result = trace.close()
 
             self.assertIs(result.status, AsyncTraceCloseStatus.SEALED)
             records = [json.loads(row) for row in (root / "trace.jsonl").read_text(
@@ -518,26 +516,163 @@ class FabricDeploymentProbeTests(unittest.TestCase):
                 "observation_sequence_id": 2,
             }])
 
+    def test_async_close_diagnostics_survives_real_runtime_backend_close(self):
+        import threading
+        from tempfile import TemporaryDirectory
+
+        from mc2p.contracts.reset import ResetRequestV0
+        from mc2p.runtime.player_runtime_v1 import PlayerRuntimeV1
+        from mc2p.runtime.trace import JsonlTraceWriterV0
+        from scripts.probe_fabric_deployment_observation import _runtime_trace
+        from tests.test_player_runtime_v1 import Backend
+
+        backend_closed = threading.Event()
+        caller_thread = threading.get_ident()
+        reads = []
+
+        class ClearingBackend(Backend):
+            def __init__(self):
+                super().__init__()
+                self.diagnostics = {"client_tick": 17, "nested": {"value": 3}}
+
+            @property
+            def last_diagnostics(self):
+                reads.append(threading.get_ident())
+                return self.diagnostics
+
+            def close(self):
+                super().close()
+                self.diagnostics["nested"]["value"] = 99
+                self.diagnostics = None
+                backend_closed.set()
+
+        original_write = JsonlTraceWriterV0.write_projected
+
+        def write_after_backend_close(sink, kind, payload):
+            if kind == "close_release":
+                if not backend_closed.wait(2):
+                    raise TimeoutError("Runtime did not close backend before draining trace")
+            original_write(sink, kind, payload)
+
+        with TemporaryDirectory(prefix="mc2p-real-close-diagnostics-") as directory:
+            root = Path(directory)
+            backend = ClearingBackend()
+            trace = _runtime_trace(
+                root, backend, capture_close_diagnostics=True, async_delivery=True,
+            )
+            runtime = PlayerRuntimeV1(backend, trace, clock_ns=lambda: 10)
+            with patch.object(JsonlTraceWriterV0, "write_projected", write_after_backend_close):
+                self.assertTrue(runtime.reset(
+                    ResetRequestV0("reset", "episode", "remote-session", 0, 100),
+                ).succeeded)
+                runtime.close()
+            self.assertEqual(runtime.cleanup_failures, ())
+            self.assertIsNone(backend.last_diagnostics)
+            records = [json.loads(line) for line in (root / "trace.jsonl").read_text(
+                "utf-8",
+            ).splitlines()]
+            diagnostics = [json.loads(line) for line in (root / "diagnostics.jsonl").read_text(
+                "utf-8",
+            ).splitlines()]
+            close_records = [r for r in records if r["record_type"] == "close_release"]
+            self.assertEqual(len(diagnostics), len(close_records))
+            self.assertEqual(diagnostics, [{
+                "episode_id": "episode", "observation_sequence_id": 1,
+                "diagnostics": {"client_tick": 17, "nested": {"value": 3}},
+            }])
+            self.assertEqual(set(close_records[0]["payload"]), {"action", "backend_result"})
+            self.assertEqual(set(reads), {caller_thread})
+
+    def test_async_close_diagnostics_are_not_written_for_rejected_record(self):
+        import threading
+        from tempfile import TemporaryDirectory
+        from types import SimpleNamespace
+
+        from mc2p.runtime.async_trace import BoundedAsyncTraceWriter
+        from mc2p.runtime.trace import JsonlTraceWriterV0
+        from scripts.probe_fabric_deployment_observation import _runtime_trace
+
+        entered, release = threading.Event(), threading.Event()
+        original_write = JsonlTraceWriterV0.write_projected
+
+        def blocked_write(sink, kind, payload):
+            if kind == "reset":
+                entered.set()
+                if not release.wait(2):
+                    raise TimeoutError("test did not release trace writer")
+            original_write(sink, kind, payload)
+
+        def small_queue(sink, *, capacity):
+            return BoundedAsyncTraceWriter(sink, capacity=1)
+
+        with TemporaryDirectory(prefix="mc2p-rejected-close-diagnostics-") as directory:
+            root = Path(directory)
+            with patch("mc2p.runtime.async_trace.BoundedAsyncTraceWriter", small_queue), \
+                    patch.object(JsonlTraceWriterV0, "write_projected", blocked_write):
+                trace = _runtime_trace(
+                    root, SimpleNamespace(last_diagnostics={"client_tick": 17}),
+                    capture_close_diagnostics=True, async_delivery=True,
+                )
+                try:
+                    trace.write("reset", {})
+                    self.assertTrue(entered.wait(1))
+                    trace.write("step", {})
+                    trace.write("close_release", {"backend_result": {
+                        "observation": {"episode_id": "episode", "sequence_id": 2},
+                    }})
+                    self.assertEqual(trace.stats.dropped_records, 1)
+                    self.assertFalse((root / "diagnostics.jsonl").exists())
+                finally:
+                    release.set()
+                    result = trace.close()
+            self.assertTrue(result.sealed)
+            self.assertEqual((result.accepted, result.written, result.rejected_before_accept), (2, 2, 1))
+            records = [json.loads(line) for line in (root / "trace.jsonl").read_text(
+                "utf-8",
+            ).splitlines()]
+            self.assertEqual([r["record_type"] for r in records], ["reset", "step", "trace_delivery_summary"])
+            self.assertFalse((root / "diagnostics.jsonl").exists())
+
+    def test_async_close_diagnostics_are_not_written_when_trace_write_fails(self):
+        from tempfile import TemporaryDirectory
+        from types import SimpleNamespace
+
+        from mc2p.runtime.trace import JsonlTraceWriterV0
+        from scripts.probe_fabric_deployment_observation import _runtime_trace
+
+        with TemporaryDirectory(prefix="mc2p-failed-close-diagnostics-") as directory:
+            root = Path(directory)
+            trace = _runtime_trace(
+                root, SimpleNamespace(last_diagnostics={"client_tick": 17}),
+                capture_close_diagnostics=True, async_delivery=True,
+            )
+            with patch.object(JsonlTraceWriterV0, "write_projected", side_effect=OSError("disk full")):
+                trace.write("close_release", {"backend_result": {
+                    "observation": {"episode_id": "episode", "sequence_id": 1},
+                }})
+                result = trace.close()
+            self.assertFalse(result.sealed)
+            self.assertEqual(result.accepted_indeterminate, 1)
+            self.assertEqual(result.cleanup_failure.stage, "sink_write")
+            self.assertEqual((root / "trace.jsonl").read_text("utf-8"), "")
+            self.assertFalse((root / "diagnostics.jsonl").exists())
+
     def test_async_close_diagnostics_preserves_record_when_observation_is_missing(self):
         from tempfile import TemporaryDirectory
         from types import SimpleNamespace
 
-        from mc2p.runtime.async_trace import (
-            AsyncTraceCloseStatus, BoundedAsyncTraceWriter,
-        )
+        from mc2p.runtime.async_trace import AsyncTraceCloseStatus
         from scripts.fabric_visibility_scenario import CloseDiagnosticsTrace
 
         with TemporaryDirectory(prefix="mc2p-async-close-missing-") as directory:
             root = Path(directory)
-            trace = BoundedAsyncTraceWriter(
-                CloseDiagnosticsTrace(
-                    root, SimpleNamespace(last_diagnostics={"movement_tick": 17}),
-                ),
-                capacity=4,
+            trace = CloseDiagnosticsTrace(
+                root, SimpleNamespace(last_diagnostics={"movement_tick": 17}),
+                async_delivery=True,
             )
             trace.write("close_release", {"backend_result": {}})
 
-            result = trace.close(timeout_seconds=2.0)
+            result = trace.close()
 
             self.assertIs(result.status, AsyncTraceCloseStatus.SEALED)
             records = [json.loads(row) for row in (root / "trace.jsonl").read_text(

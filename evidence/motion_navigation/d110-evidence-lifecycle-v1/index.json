@@ -1,0 +1,35 @@
+{
+  "schema_version": "mc2p.d110-evidence-index.v1",
+  "formal_platform": "Windows",
+  "status": "close_attribution_closed_solver_wall_gate_failed_stage_stopped",
+  "baseline_commit": "8bac547a",
+  "implementation_commit": "67f4f1d82fa3946472437f6f747e005591fd2bca",
+  "source_run": "artifacts/fabric-deployment/20261015T110422093517Z-a092f04f",
+  "large_raw_policy": "hash and summarize; do not copy Runtime trace, worlds, or local artifacts into Git",
+  "files": {
+    "fabric-b10/command.txt": {
+      "bytes": 302,
+      "sha256": "74718712220226dfa5f9579f0886f2550a15f06a70a874477dc439ce8eac1c7c"
+    },
+    "fabric-b10/preflight.json": {
+      "bytes": 233,
+      "sha256": "07af0a7fc9ea74f7c2b4ffcec68996631fe5eb041a609ed4fb85094389560091"
+    },
+    "fabric-b10/summary.json": {
+      "bytes": 6585,
+      "sha256": "0317a477e82ea56ebcc2d82ddf69c2acef7de8762627a6ab60af9cb542b180bf"
+    },
+    "README.md": {
+      "bytes": 869,
+      "sha256": "a42528ec135b3d9aa69825bc4e725fddd1905be39b97c8fc81bf4802f6773d44"
+    },
+    "windows-regression/commands.txt": {
+      "bytes": 624,
+      "sha256": "73332721bf5e30ffb1a55c71e72927b35de8bdc3bad98d5519abc46e41c9e4b7"
+    },
+    "windows-regression/summary.json": {
+      "bytes": 1797,
+      "sha256": "ce08a6165791412190352a5bba8e0705e853e11646317b9c4df883bfc62c7e89"
+    }
+  }
+}

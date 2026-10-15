@@ -1,0 +1,199 @@
+{
+  "schema_version": "mc2p.d110-b10-summary.v1",
+  "formal_platform": "Windows",
+  "source_commit": "67f4f1d82fa3946472437f6f747e005591fd2bca",
+  "source_run": "artifacts/fabric-deployment/20261015T110422093517Z-a092f04f",
+  "status": "failed",
+  "primary_failure": {
+    "message": "['client-0:b10b_solver_is_bounded']",
+    "type": "DeploymentEvidenceFailure"
+  },
+  "failed_checks": [
+    "client-0:b10b_solver_is_bounded"
+  ],
+  "passed_checks": [
+    "client-0:b10b_preflight_separate_from_validation",
+    "client-0:b10b_four_directions_ten_fabric_runs_each",
+    "client-0:b10c_turn_exit_four_directions_ten_runs_each",
+    "client-0:b10b_all_validation_runs_land_in_target",
+    "client-0:b10c_default_coordinator_ten_fabric_runs",
+    "client-0:r4_three_speed_bands_four_directions_five_runs_each",
+    "client-0:r4_two_typed_negative_cases_per_speed_direction_category",
+    "client-0:b10b_proof_records_stay_correlated",
+    "client-0:exact_continuous_v3",
+    "client-0:separate_monotonic_client_samples",
+    "client-0:exact_action_receipt_association",
+    "client-0:normal_input_ticks_continue",
+    "client-0:no_image_fields_or_binary_projection",
+    "client-0:continuous_zero_image_diagnostics",
+    "client-0:one_reset_5251_runtime_steps",
+    "client-0:complete_time_event_attribution",
+    "client-0:observation_pipeline_frames_recorded",
+    "client-0:legacy_block_parity_disabled",
+    "source_cache_and_launch_unchanged",
+    "v3_python_and_java_sources_unchanged"
+  ],
+  "cleanup_failures": [],
+  "lifecycle": {
+    "cleanup_failures": [],
+    "ordered_source_release": {
+      "source_id": "ordered/0bf7812806514bf9abde7da93e7290ca/0/1",
+      "status": "explicitly_released"
+    },
+    "schema_version": "mc2p.b10-probe-lifecycle.v1"
+  },
+  "matrix": {
+    "validation_count": 40,
+    "validation_success_count": 40,
+    "turn_validation_count": 40,
+    "turn_validation_success_count": 40,
+    "coordinator_validation_count": 10,
+    "coordinator_validation_success_count": 10,
+    "moving_validation_count": 60,
+    "moving_validation_success_count": 60,
+    "moving_negative_case_count": 24
+  },
+  "solver": {
+    "trials": 142,
+    "solve_time_ns": {
+      "maximum": 39248400,
+      "p95": 24602800,
+      "p99": 27628100,
+      "samples": 142
+    },
+    "solve_thread_cpu_ns": {
+      "count": 142,
+      "max": 31250000,
+      "min": 0,
+      "p95": 31250000,
+      "p99": 31250000
+    },
+    "solve_thread_cpu_ns_distribution": {
+      "31250000": 42,
+      "15625000": 94,
+      "0": 6
+    },
+    "solve_gc_overlap_count": 102,
+    "solve_gc_trial_counts": {
+      "gen0": 95,
+      "gen1": 7,
+      "gen2": 1
+    },
+    "solve_measurement_error_count": 0,
+    "wall_outliers_ge_30ms": [
+      {
+        "name": "r4_validation_2-1-4",
+        "group": "r4_validation_2",
+        "direction_index": 1,
+        "repetition": 4,
+        "requested_speed_band": [
+          2.0,
+          3.0
+        ],
+        "entry_speed_blocks_per_second": 2.70725264428316,
+        "candidates_evaluated": 3,
+        "solve_time_ns": 39248400,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 1
+        },
+        "solve_gc_overlap": true,
+        "solve_measurement_errors": []
+      }
+    ],
+    "interpretation": "唯一超过 30 ms 的样本也是唯一发生 gen2 collection 的样本；这是相关性证据。Windows thread_time_ns 以 15.625 ms 为主要步进，不能精确分离求解、GC 和调度成本。现行墙钟最大值门槛仍失败。"
+  },
+  "trace": {
+    "rows": 21210,
+    "diagnostics_rows": 5253,
+    "delivery_summary": {
+      "accepted_dropped_records": 0,
+      "accepted_indeterminate_records": 0,
+      "accepted_records": 21209,
+      "capacity": 16384,
+      "dropped_by_record_type": {},
+      "dropped_records": 0,
+      "indeterminate_by_record_type": {},
+      "peak_depth": 5,
+      "projection_timing_ns": {
+        "count": 21209,
+        "maximum": 666000,
+        "p95": 203800,
+        "p99": 241800,
+        "sample_count": 4096,
+        "total": 1510813200
+      },
+      "schema_version": "mc2p.trace-delivery-summary.v1",
+      "worker_failed": false,
+      "written_records": 21209
+    },
+    "last_close_diagnostics": {
+      "diagnostics": {
+        "client_tick": 5947,
+        "framebuffer_capture_attempts": 0,
+        "gui_render_attempts": 0,
+        "gui_render_completions": 0,
+        "has_integrated_server": false,
+        "image_encode_attempts": 0,
+        "observation_pipeline": {
+          "air_query_ns": 100,
+          "block_read_count": 0,
+          "block_read_ns": 48499,
+          "cache_rebuilt": false,
+          "culled_block_count": 0,
+          "halo_read_count": 0,
+          "json_build_ns": 57701,
+          "observation_payload_bytes": 7925,
+          "observation_state_build_ns": 150099,
+          "packed_block_count": 13,
+          "packed_box_count": 13,
+          "schema_version": "mc2p.jvm-observation-pipeline.v1",
+          "store_record_count": 13,
+          "surface_compute_ns": 26400,
+          "surface_pack_ns": 0
+        },
+        "remote_address": "127.0.0.1:25597",
+        "schema_version": "mc2p.deployment_diagnostics.v2",
+        "window_recorded": true,
+        "window_visible": false,
+        "window_visible_at_creation": false,
+        "world_render_attempts": 17423,
+        "world_render_completions": 0
+      },
+      "episode_id": "fabric-21001-0",
+      "observation_sequence_id": 5252
+    }
+  },
+  "raw_files": {
+    "result.json": {
+      "bytes": 2365708,
+      "sha256": "2170beacd1d58197bb87a21053bfe2279550e67cb910eb7d578cc4aa1093af9f"
+    },
+    "worker-result.json": {
+      "bytes": 2365138,
+      "sha256": "7d3c7789d675d3927bca5a29a905ac5bc839344579393dd4a12c07fff25e7285"
+    },
+    "client-0/b10-gap-solver.json": {
+      "bytes": 1134422,
+      "sha256": "5bbde34394ec4213c2e863379569248929702c6d87eb3e5f67086d1f6e1364af"
+    },
+    "client-0/b10-gap-solver-trials.jsonl": {
+      "bytes": 977858,
+      "sha256": "69e6f2befa21f90577b99e4bfbd151c7febf4aaed18114ffd6e3ca7d0d44c22c"
+    },
+    "client-0/trace.jsonl": {
+      "bytes": 126688108,
+      "sha256": "2d0907db635afc64b0bc684fe550d3766b61988f497cf72d20ad6809c7e68899"
+    },
+    "client-0/diagnostics.jsonl": {
+      "bytes": 8665157,
+      "sha256": "885f01adcce2957660f4f331f0b46dd534a4dff0990a579f332b38d40fde34d8"
+    },
+    "client-0/time-report.json": {
+      "bytes": 949656,
+      "sha256": "f549bc9816240ccd4852d2d5015563a849a1c171d8cdeb249f9b5bacbab8e2b9"
+    }
+  }
+}

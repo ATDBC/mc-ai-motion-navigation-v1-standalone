@@ -64,13 +64,20 @@ def export_runtime_time_evidence(directory: Path) -> dict:
                     if record["record_type"] == "reset" else
                     record["payload"]["backend_result"]["observation"]
                 )
+                context = (
+                    f"{record['record_type']} episode={observation['episode_id']} "
+                    f"sequence={observation['sequence_id']}"
+                )
                 try:
                     row = next(diagnostics)
                 except StopIteration:
                     raise ValueError(
-                        "deployment timing samples do not cover one exact Runtime episode"
+                        f"{context}: diagnostics row is missing"
                     ) from None
-                client_tick = row["diagnostics"]["client_tick"]
+                diagnostic = row.get("diagnostics")
+                if type(diagnostic) is not dict:
+                    raise ValueError(f"{context}: diagnostics must be an object, got {diagnostic!r}")
+                client_tick = diagnostic.get("client_tick")
                 if (observation["source_backend"] != "fabric"
                         or observation["sequence_id"] != expected_sequence
                         or row["observation_sequence_id"] != expected_sequence

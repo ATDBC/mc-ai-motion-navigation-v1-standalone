@@ -126,7 +126,8 @@
     "tests/motion_nav/test_sound_sparse_motion_proof_d105.py",
     "tests/motion_nav/test_d106_local_snapshot.py",
     ".superpowers/sdd/2026-10-10-continuous-short-trajectory-prototype/*.md",
-    "evidence/motion_navigation/d109-b10-lifecycle-v1/**/*"
+    "evidence/motion_navigation/d109-b10-lifecycle-v1/**/*",
+    "evidence/motion_navigation/d110-evidence-lifecycle-v1/**/*"
   ],
   "exclude_globs": [
     "tests/motion_nav/test_d102_evidence_contract.py"
@@ -617,6 +618,14 @@
     "evidence/motion_navigation/d109-b10-lifecycle-v1/published-production-semantic-hashes.json",
     "evidence/motion_navigation/d109-b10-lifecycle-v1/d6-snapshot-materialization/command.txt",
     "evidence/motion_navigation/d109-b10-lifecycle-v1/d6-snapshot-materialization/provenance.json",
-    "evidence/motion_navigation/d109-b10-lifecycle-v1/d6-snapshot-materialization/result.json"
+    "evidence/motion_navigation/d109-b10-lifecycle-v1/d6-snapshot-materialization/result.json",
+    "docs/motion_navigation/decisions/0110-repair-close-diagnostics-and-measure-solver-tail.md",
+    "docs/motion_navigation/stages/d110-evidence-and-lifecycle-repair-plan.md",
+    "docs/motion_navigation/acceptance/d110-evidence-and-lifecycle-repair.md",
+    "evidence/motion_navigation/d110-evidence-lifecycle-v1/README.md",
+    "evidence/motion_navigation/d110-evidence-lifecycle-v1/index.json",
+    "evidence/motion_navigation/d110-evidence-lifecycle-v1/SHA256SUMS.txt",
+    "evidence/motion_navigation/d110-evidence-lifecycle-v1/windows-regression/summary.json",
+    "evidence/motion_navigation/d110-evidence-lifecycle-v1/fabric-b10/summary.json"
   ]
 }

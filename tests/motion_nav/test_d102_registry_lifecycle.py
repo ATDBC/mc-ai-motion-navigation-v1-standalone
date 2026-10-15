@@ -639,12 +639,16 @@ class RegistryTests(unittest.TestCase):
                         reports.append(worker.close(timeout_seconds=5.))
                         references.append(weakref.ref(worker))
                         del worker
+            os.dup2(saved_stderr_fd, 2)
+            os.close(saved_stderr_fd)
+            saved_stderr_fd = None
             time.sleep(.2)
             observed = resource_count()
             immediate_release = all(reference() is None for reference in references)
         finally:
-            os.dup2(saved_stderr_fd, 2)
-            os.close(saved_stderr_fd)
+            if saved_stderr_fd is not None:
+                os.dup2(saved_stderr_fd, 2)
+                os.close(saved_stderr_fd)
             if previous_gc:
                 gc.enable()
             gc.collect()

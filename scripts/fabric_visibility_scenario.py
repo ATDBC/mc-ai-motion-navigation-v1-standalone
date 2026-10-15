@@ -132,35 +132,60 @@ def evaluate_visibility_stages(stages: dict) -> list[dict]:
 
 
 class CloseDiagnosticsTrace:
-    """The scenario records normal samples; capture the Runtime's extra close neutral too."""
-    def __init__(self,directory: Path,backend):
-        self.directory,self.backend=directory,backend
-        self.trace=JsonlTraceWriterV0(directory/'trace.jsonl')
+    """Capture close diagnostics on the caller and admit them with the trace."""
 
-    def write(self,kind,payload):
-        self.trace.write(kind,payload)
-        if kind=='close_release':
-            obs=payload['backend_result'].observation
-            append_jsonl(self.directory/'diagnostics.jsonl',dict(episode_id=obs.episode_id,
-                observation_sequence_id=obs.sequence_id,diagnostics=self.backend.last_diagnostics))
+    def __init__(self, directory: Path, backend, *, async_delivery: bool = False):
+        self.backend = backend
+        self.trace = _CloseDiagnosticsSink(directory)
+        if async_delivery:
+            from mc2p.runtime.async_trace import BoundedAsyncTraceWriter
+            self.trace = BoundedAsyncTraceWriter(self.trace, capacity=16_384)
 
-    def write_projected(self,kind,payload):
-        self.trace.write_projected(kind,payload)
-        if kind!='close_release' or type(payload) is not dict:
-            return
-        backend_result=payload.get('backend_result')
-        observation=(backend_result.get('observation')
-                     if type(backend_result) is dict else None)
-        if type(observation) is not dict:
-            return
-        episode_id=observation.get('episode_id')
-        sequence_id=observation.get('sequence_id')
-        if type(episode_id) is not str or type(sequence_id) is not int:
-            return
-        append_jsonl(self.directory/'diagnostics.jsonl',dict(episode_id=episode_id,
-            observation_sequence_id=sequence_id,diagnostics=self.backend.last_diagnostics))
+    @property
+    def stats(self):
+        return self.trace.stats
 
-    def close(self): self.trace.close()
+    def write(self, kind, payload):
+        if kind == 'close_release':
+            result = payload.get('backend_result')
+            observation = (result.get('observation') if type(result) is dict
+                           else getattr(result, 'observation', None))
+            episode_id = (observation.get('episode_id') if type(observation) is dict
+                          else getattr(observation, 'episode_id', None))
+            sequence_id = (observation.get('sequence_id') if type(observation) is dict
+                           else getattr(observation, 'sequence_id', None))
+            row = None
+            if type(episode_id) is str and type(sequence_id) is int:
+                row = dict(episode_id=episode_id, observation_sequence_id=sequence_id,
+                           diagnostics=self.backend.last_diagnostics)
+            payload = dict(trace_payload=payload, close_diagnostics=row)
+        self.trace.write(kind, payload)
+
+    def close(self):
+        return self.trace.close()
+
+
+class _CloseDiagnosticsSink:
+    """Unwrap the admitted close record without changing the public trace schema."""
+
+    def __init__(self, directory: Path):
+        self.directory = Path(directory)
+        self.trace = JsonlTraceWriterV0(self.directory / 'trace.jsonl')
+
+    def write(self, kind, payload):
+        self.write_projected(kind, trace_projection(payload))
+
+    def write_projected(self, kind, payload):
+        row = None
+        if kind == 'close_release':
+            row = payload['close_diagnostics']
+            payload = payload['trace_payload']
+        self.trace.write_projected(kind, payload)
+        if row is not None:
+            append_jsonl(self.directory / 'diagnostics.jsonl', row)
+
+    def close(self):
+        self.trace.close()
 
 
 def run_visibility_runtime(runtime,backend,episode: str,directory: Path,deadline: int):

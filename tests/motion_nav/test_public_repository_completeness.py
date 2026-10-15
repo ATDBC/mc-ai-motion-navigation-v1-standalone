@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class PublicRepositoryCompletenessTests(unittest.TestCase):
-    def test_d109_publication_inputs_are_selected(self):
+    def test_d109_and_d110_publication_inputs_are_selected(self):
         selected_paths = {
             path.as_posix() for path in collect_export_files(load_manifest())
         }
@@ -33,6 +33,14 @@ class PublicRepositoryCompletenessTests(unittest.TestCase):
             "evidence/motion_navigation/d109-b10-lifecycle-v1/SHA256SUMS.txt",
             "evidence/motion_navigation/d109-b10-lifecycle-v1/published-production-semantic-hashes.json",
             "evidence/motion_navigation/d109-b10-lifecycle-v1/d6-snapshot-materialization/result.json",
+            "docs/motion_navigation/decisions/0110-repair-close-diagnostics-and-measure-solver-tail.md",
+            "docs/motion_navigation/stages/d110-evidence-and-lifecycle-repair-plan.md",
+            "docs/motion_navigation/acceptance/d110-evidence-and-lifecycle-repair.md",
+            "evidence/motion_navigation/d110-evidence-lifecycle-v1/README.md",
+            "evidence/motion_navigation/d110-evidence-lifecycle-v1/index.json",
+            "evidence/motion_navigation/d110-evidence-lifecycle-v1/SHA256SUMS.txt",
+            "evidence/motion_navigation/d110-evidence-lifecycle-v1/windows-regression/summary.json",
+            "evidence/motion_navigation/d110-evidence-lifecycle-v1/fabric-b10/summary.json",
         )
         self.assertEqual(
             tuple(path for path in required if path not in selected_paths),

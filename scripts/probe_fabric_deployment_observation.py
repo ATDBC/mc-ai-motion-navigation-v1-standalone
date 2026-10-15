@@ -646,9 +646,8 @@ def _runtime_trace(
 ):
     if capture_close_diagnostics:
         from scripts.fabric_visibility_scenario import CloseDiagnosticsTrace
-        sink = CloseDiagnosticsTrace(directory, backend)
-    else:
-        sink = JsonlTraceWriterV0(directory / "trace.jsonl")
+        return CloseDiagnosticsTrace(directory, backend, async_delivery=async_delivery)
+    sink = JsonlTraceWriterV0(directory / "trace.jsonl")
     if async_delivery:
         return BoundedAsyncTraceWriter(sink, capacity=16_384)
     return sink

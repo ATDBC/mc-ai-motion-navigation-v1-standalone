@@ -1,0 +1,8 @@
+Windows direct and adjacent: 21 modules, 448 tests
+Source sharded forward: scripts/run_motion_nav_shards.py -> .tmp/d110/source-forward-final2.json
+Source sharded reverse: scripts/run_motion_nav_shards.py -> .tmp/d110/source-reverse-final.json
+Public snapshot forward: scripts/run_motion_nav_shards.py -> .tmp/d110/snapshot-forward.json
+Public snapshot reverse: scripts/run_motion_nav_shards.py -> .tmp/d110/snapshot-reverse.json
+Source and snapshot Java gates: 3/3 each
+Code-complete snapshot verify: 2310 files before and after full matrix
+Final publication snapshot verify after documentation/evidence update: 2318 files

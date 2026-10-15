@@ -1,0 +1,65 @@
+{
+  "source_forward": {
+    "modules": 186,
+    "tests": 2333,
+    "summary": {
+      "passed": 186,
+      "failed": 0,
+      "error": 0,
+      "timeout": 0,
+      "launch_error": 0
+    },
+    "bytes": 700934,
+    "sha256": "bfbddc29284aa76ca406ad153f9a1a86d2154b655fc131de19925391ec1f3a7f"
+  },
+  "source_reverse": {
+    "modules": 186,
+    "tests": 2333,
+    "summary": {
+      "passed": 186,
+      "failed": 0,
+      "error": 0,
+      "timeout": 0,
+      "launch_error": 0
+    },
+    "bytes": 700761,
+    "sha256": "1b562d28031d9bab51892529f1f4b41bd12461c9738d9915eb14a3eb5760ee6a"
+  },
+  "snapshot_forward": {
+    "modules": 185,
+    "tests": 2309,
+    "summary": {
+      "passed": 185,
+      "failed": 0,
+      "error": 0,
+      "timeout": 0,
+      "launch_error": 0
+    },
+    "bytes": 692115,
+    "sha256": "204fe219b8fca5aee32efbbac666fbbfe078c2b732daa7842f263904faff1133"
+  },
+  "snapshot_reverse": {
+    "modules": 185,
+    "tests": 2309,
+    "summary": {
+      "passed": 185,
+      "failed": 0,
+      "error": 0,
+      "timeout": 0,
+      "launch_error": 0
+    },
+    "bytes": 692492,
+    "sha256": "6023882c5dc887cd7b710dea089a2c845caf3d7eb5bad13d2055e90894235b50"
+  },
+  "direct_and_adjacent": {
+    "tests": 448,
+    "passed": 448,
+    "failed": 0
+  },
+  "java_source": "3/3",
+  "java_snapshot": "3/3",
+  "line_ending_observation": "冻结哈希要求工作区同时保留 LF 与 CRLF；D110 未改写这些历史字节，已登记为后续卫生债。",
+  "code_complete_snapshot_verify_files": 2310,
+  "final_publication_snapshot_verify_files": 2318,
+  "final_publication_note": "完整快照矩阵在代码完成、文档证据补齐前运行；之后只改变文档、证据、导出清单和公开完整性测试，最终 2318 文件快照重新 verify 并运行 Java 3/3。"
+}

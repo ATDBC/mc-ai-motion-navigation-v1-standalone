@@ -910,6 +910,33 @@ def _cleanup_process_tree(
     }
 
 
+def _kill_registered_linux_descendants(
+    root_identity: ProcessIdentityV0,
+    registered: tuple[ProcessIdentityV0, ...],
+) -> list[str]:
+    """Stop exact registered descendants without running SIGTERM handlers again."""
+    errors: list[str] = []
+    for identity in registered:
+        if identity.pid == root_identity.pid:
+            continue
+        try:
+            process = psutil.Process(identity.pid)
+            if (
+                abs(process.create_time() - identity.create_time) <= .01
+                and process.is_running()
+                and process.status() != psutil.STATUS_ZOMBIE
+            ):
+                process.kill()
+        except psutil.NoSuchProcess:
+            pass
+        except psutil.AccessDenied as error:
+            errors.append(
+                f"kill registered Linux pid {identity.pid}: "
+                f"{type(error).__name__}: {error}"
+            )
+    return errors
+
+
 def _settle_linux_subreaper_scope(
     scope: _LinuxModuleScope,
     root_identity: ProcessIdentityV0,
@@ -931,21 +958,10 @@ def _settle_linux_subreaper_scope(
             current = tuple(sorted(
                 registered.values(), key=lambda identity: identity.pid,
             ))
-            live_adopted = [
-                identity for identity in scope.adopted.values()
-                if _identity_is_alive(identity)
-            ]
-            new_pids = set(registered) - previous_pids
-            if live_adopted or new_pids:
-                remaining = max(0.0, deadline - time.perf_counter())
-                round_cleanup = _cleanup_process_tree(
-                    root_identity,
-                    current,
-                    process=process,
-                    grace_seconds=min(.2, remaining),
-                )
-                all_errors.extend(round_cleanup.get("errors", ()))
-                previous_pids = set(registered)
+            all_errors.extend(_kill_registered_linux_descendants(
+                root_identity, current,
+            ))
+            previous_pids = set(registered)
             all_errors.extend(scope.reap_stopped())
             scope.capture_adopted(registered, diagnostics)
             live_adopted = [

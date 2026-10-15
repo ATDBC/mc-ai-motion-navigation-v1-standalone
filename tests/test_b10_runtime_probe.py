@@ -1,7 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import replace
+from dataclasses import asdict, replace
+import ast
+import hashlib
 import inspect
+import json
 from pathlib import Path
 import tempfile
 from types import SimpleNamespace
@@ -56,6 +59,194 @@ class _Adapter:
 
 
 class B10RuntimeProbeTests(unittest.TestCase):
+    def test_solver_bound_keeps_original_wall_and_candidate_limits(self):
+        tree = ast.parse(inspect.getsource(probe._run_b10_gap_solver_runtime))
+        guard = next(node for node in ast.walk(tree)
+                     if isinstance(node, ast.Call)
+                     and any(keyword.arg == "name"
+                             and isinstance(keyword.value, ast.Constant)
+                             and keyword.value.value == "b10b_solver_is_bounded"
+                             for keyword in node.keywords))
+        passed = next(keyword.value for keyword in guard.keywords
+                      if keyword.arg == "passed")
+        code = compile(ast.Expression(passed), "<B10 solver bound>", "eval")
+        for wall, candidates, expected in (
+            (29_999_999, 12, True), (30_000_000, 12, False),
+            (1, 13, False), (41_033_900, 1, False),
+        ):
+            with self.subTest(wall=wall, candidates=candidates):
+                self.assertIs(eval(code, {
+                    "trials": [{"candidates_evaluated": candidates,
+                                "solve_thread_cpu_ns": 1,
+                                "solve_gc_overlap": True}],
+                    "summary": {"solve_time_ns": {"maximum": wall}},
+                }), expected)
+
+    def test_final_trial_retains_identity_entry_and_solve_measurement_fields(self):
+        from tests.motion_nav.test_b10_gap_solver import fixture, B10GapSolverTests
+
+        anchor, world, target, _ = fixture()
+        solved = probe.solve_one_cell_gap(
+            anchor, world, B10GapSolverTests().request(target),
+        )
+        # Exercise the actual nested trial body without starting a Fabric batch.
+        tree = ast.parse(inspect.getsource(probe._run_b10_gap_solver_runtime))
+        trial_body = next(node for node in ast.walk(tree)
+                          if isinstance(node, ast.FunctionDef) and node.name == "run_trial")
+        trial_body.body = [node for node in trial_body.body
+                           if not isinstance(node, ast.Nonlocal)]
+        executor = unittest.mock.Mock()
+        executor.state = VerifiedMotionExecutorState.COMPLETE
+        executor.decide.return_value.state = VerifiedMotionExecutorState.COMPLETE
+        trials = []
+        namespace = dict(vars(probe))
+        namespace.update(
+            frame=SimpleNamespace(
+                session=anchor.session, world=world,
+                body=SimpleNamespace(
+                    sequence_id=anchor.observation_sequence_id,
+                    velocity_blocks_per_second=(0, 0, 0),
+                    position=(.5, 64., 2.5), is_on_ground=True,
+                ),
+            ),
+            latest_application=SimpleNamespace(
+                movement_tick_id=10, request_sequence_id=1,
+            ),
+            targets=((0, 63, 2),), request=object(), episode="episode",
+            solve_times=[], physics_snapshot_times=[], trials=trials,
+            runtime=SimpleNamespace(input_ledger=InputApplicationLedger()),
+            evidence_buffer=unittest.mock.Mock(),
+            build_physics_state=lambda *_args: SimpleNamespace(
+                status=probe.StateBuildStatus.READY, state=anchor.physics_state,
+            ),
+            _gap_physics_snapshot=lambda *_args: world,
+            PhysicsWorldView=lambda *_args: world,
+            solve_one_cell_gap=lambda *_args: solved,
+            MotionCandidateAdmitter=lambda: SimpleNamespace(
+                admit=lambda *_args, **_kwargs: SimpleNamespace(
+                    status=MotionCandidateStatus.ACCEPTED, candidate=object(),
+                ),
+            ),
+            VerifiedMotionExecutor=lambda: executor,
+        )
+        exec(compile(ast.fix_missing_locations(ast.Module(
+            body=[trial_body], type_ignores=[],
+        )), "<B10 run_trial>", "exec"), namespace)
+
+        namespace["run_trial"](0, 4, "validation", prepared_entry=True)
+
+        trial = trials[0]
+        self.assertEqual((trial["name"], trial["group"], trial["direction_index"],
+                          trial["repetition"]),
+                         ("validation-0-4", "validation", 0, 4))
+        self.assertEqual(trial["entry_position"], list(anchor.physics_state.position))
+        self.assertEqual(trial["candidates_evaluated"], solved.candidates_evaluated)
+        self.assertIn("solve_thread_cpu_ns", trial)
+        self.assertIn("solve_gc_collections_delta", trial)
+        self.assertIn("solve_gc_overlap", trial)
+
+    def test_solve_measurement_keeps_frozen_input_and_complete_solver_result(self):
+        from tests.motion_nav.test_b10_gap_solver import fixture, B10GapSolverTests
+
+        anchor, world, target, _ = fixture()
+        request = B10GapSolverTests().request(target)
+        digest = lambda value: hashlib.sha256(
+            json.dumps(asdict(value), sort_keys=True).encode()
+        ).hexdigest()
+        self.assertEqual(digest(request),
+                         "856739c0e3c1d87f441167bff75f362ae9e13e94f7dd2ab566c152cd8973784a")
+        baseline = probe.solve_one_cell_gap(anchor, world, request)
+        self.assertEqual(digest(baseline),
+                         "d0f5204a59c51da7598adabca7b745ea2123a60650920f39db3e92e00cdedc13")
+
+        actual, measurement = probe._measure_gap_solve(anchor, world, request)
+
+        self.assertEqual(actual, baseline)
+        self.assertEqual(digest(request),
+                         "856739c0e3c1d87f441167bff75f362ae9e13e94f7dd2ab566c152cd8973784a")
+        self.assertGreaterEqual(measurement["solve_time_ns"], 0)
+        self.assertGreaterEqual(measurement["solve_thread_cpu_ns"], 0)
+        self.assertEqual(set(measurement["solve_gc_collections_delta"]),
+                         {"gen0", "gen1", "gen2"})
+        self.assertIs(type(measurement["solve_gc_overlap"]), bool)
+        self.assertEqual(measurement["solve_measurement_errors"], [])
+
+    def test_solve_measurement_records_cpu_and_each_completed_gc_generation(self):
+        before = [{"collections": 7}, {"collections": 5}, {"collections": 2}]
+        after = [{"collections": 9}, {"collections": 5}, {"collections": 3}]
+        expected = object()
+        anchor, world, request = object(), object(), object()
+        with (
+            patch.object(probe, "solve_one_cell_gap", return_value=expected) as solve,
+            patch.object(probe.time, "perf_counter_ns", side_effect=[100, 160]),
+            patch.object(probe.time, "thread_time_ns", side_effect=[10, 50]),
+            patch("gc.get_stats", side_effect=[before, after]),
+        ):
+            actual, measurement = probe._measure_gap_solve(anchor, world, request)
+
+        self.assertIs(actual, expected)
+        solve.assert_called_once_with(anchor, world, request)
+        self.assertEqual(measurement, {
+            "solve_time_ns": 60,
+            "solve_thread_cpu_ns": 40,
+            "solve_gc_collections_delta": {"gen0": 2, "gen1": 0, "gen2": 1},
+            "solve_gc_overlap": True,
+            "solve_measurement_errors": [],
+        })
+        self.assertEqual(json.loads(json.dumps(measurement)), measurement)
+
+    def test_failed_optional_measurement_preserves_solve_result_and_reports_unknown(self):
+        expected = object()
+        with (
+            patch.object(probe, "solve_one_cell_gap", return_value=expected) as solve,
+            patch.object(probe.time, "thread_time_ns", side_effect=OSError("cpu clock")),
+            patch("gc.get_stats", side_effect=RuntimeError("gc statistics")),
+        ):
+            actual, measurement = probe._measure_gap_solve(1, 2, 3)
+
+        self.assertIs(actual, expected)
+        solve.assert_called_once_with(1, 2, 3)
+        self.assertIsNone(measurement["solve_thread_cpu_ns"])
+        self.assertEqual(measurement["solve_gc_collections_delta"],
+                         {"gen0": None, "gen1": None, "gen2": None})
+        self.assertIs(measurement["solve_gc_overlap"], False)
+        self.assertEqual({error["stage"] for error in
+                          measurement["solve_measurement_errors"]},
+                         {"thread_cpu_before", "thread_cpu_after", "gc_before", "gc_after"})
+
+    def test_solver_error_survives_optional_measurement_errors(self):
+        expected = ValueError("original solver failure")
+        with (
+            patch.object(probe, "solve_one_cell_gap", side_effect=expected) as solve,
+            patch.object(probe.time, "thread_time_ns", side_effect=OSError("cpu clock")),
+            patch("gc.get_stats", side_effect=RuntimeError("gc statistics")),
+            self.assertRaises(ValueError) as raised,
+        ):
+            probe._measure_gap_solve(1, 2, 3)
+        self.assertIs(raised.exception, expected)
+        solve.assert_called_once_with(1, 2, 3)
+
+    def test_solve_summary_counts_only_available_cpu_samples_and_gc_overlap(self):
+        rows = [
+            {"solve_thread_cpu_ns": value, "solve_gc_overlap": index == 2,
+             "solve_measurement_errors": []}
+            for index, value in enumerate(range(1, 101))
+        ]
+        rows.append({"solve_thread_cpu_ns": None, "solve_gc_overlap": False,
+                     "solve_measurement_errors": [{"stage": "gc_before"}]})
+
+        summary = probe._solve_measurement_summary(rows)
+
+        self.assertEqual(summary, {
+            "solve_thread_cpu_ns": {"count": 100, "min": 1, "max": 100,
+                                    "p95": 95, "p99": 99},
+            "solve_gc_overlap_count": 1,
+            "solve_measurement_error_count": 1,
+        })
+        self.assertEqual(probe._solve_measurement_summary([])["solve_thread_cpu_ns"],
+                         {"count": 0, "min": None, "max": None,
+                          "p95": None, "p99": None})
+
     @staticmethod
     def _receipt(
             request_sequence_id: int,

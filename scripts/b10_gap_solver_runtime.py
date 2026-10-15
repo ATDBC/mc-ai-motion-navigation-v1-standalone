@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, replace
+import gc
 import json
 import math
 from pathlib import Path
@@ -26,7 +27,7 @@ from mc2p.motion_nav.environment_identity import load_frozen_environment
 from mc2p.motion_nav.ground_motion import load_ground_motion_profile
 from mc2p.motion_nav.jump_up import load_jump_up_profile
 from mc2p.motion_nav.motion_solver import (
-    SOLVER_ID, GapSolveRequest, LandingRegion, SolveStatus,
+    SOLVER_ID, GapSolveRequest, LandingRegion, SolveResult, SolveStatus,
     load_gap_solver_policy, solve_one_cell_gap,
 )
 from mc2p.motion_nav.motion_coordination import _gap_physics_snapshot
@@ -317,6 +318,80 @@ def _information_retry_allowed(
 def _percentile(values: list[int], fraction: float) -> int:
     ordered = sorted(values)
     return ordered[max(0, math.ceil(len(ordered) * fraction) - 1)]
+
+
+def _measure_gap_solve(anchor, world, request) -> tuple[SolveResult, dict]:
+    """Add optional diagnostics without changing the solve or its wall interval.
+
+    GC counters are process-wide completed collections, so overlap indicates a
+    collection during this interval, not that this solve caused or paid for it.
+    """
+    errors = []
+
+    def sample(stage, reader):
+        try:
+            return reader()
+        except Exception as error:
+            errors.append(dict(stage=stage, type=type(error).__name__,
+                               message=str(error)))
+            return None
+
+    def gc_counts():
+        counts = tuple(row["collections"] for row in gc.get_stats())
+        if len(counts) != 3 or any(type(value) is not int or value < 0
+                                   for value in counts):
+            raise ValueError("GC statistics must contain three collection counts")
+        return counts
+
+    def delta(before, after):
+        value = after - before
+        if type(value) is not int or value < 0:
+            raise ValueError("solve diagnostic counter moved backwards or is invalid")
+        return value
+
+    gc_before = sample("gc_before", gc_counts)
+    cpu_before = sample("thread_cpu_before", time.thread_time_ns)
+    started = time.perf_counter_ns()
+    # Do not catch solver errors: diagnostic failures must never replace them.
+    solved = solve_one_cell_gap(anchor, world, request)
+    solve_ns = time.perf_counter_ns() - started
+    cpu_after = sample("thread_cpu_after", time.thread_time_ns)
+    gc_after = sample("gc_after", gc_counts)
+    cpu_ns = None
+    if cpu_before is not None and cpu_after is not None:
+        cpu_ns = sample("thread_cpu_delta", lambda: delta(cpu_before, cpu_after))
+    gc_delta = dict.fromkeys(("gen0", "gen1", "gen2"))
+    if gc_before is not None and gc_after is not None:
+        for index, name in enumerate(gc_delta):
+            gc_delta[name] = sample(
+                f"{name}_delta", lambda: delta(gc_before[index], gc_after[index]),
+            )
+    return solved, dict(
+        solve_time_ns=solve_ns,
+        solve_thread_cpu_ns=cpu_ns,
+        solve_gc_collections_delta=gc_delta,
+        # False with null deltas/errors means unknown, not proven GC absence.
+        solve_gc_overlap=any(value is not None and value > 0
+                             for value in gc_delta.values()),
+        solve_measurement_errors=errors,
+    )
+
+
+def _solve_measurement_summary(trials: list[dict]) -> dict:
+    cpu = [trial["solve_thread_cpu_ns"] for trial in trials
+           if trial["solve_thread_cpu_ns"] is not None]
+    return dict(
+        solve_thread_cpu_ns=dict(
+            count=len(cpu), min=min(cpu) if cpu else None,
+            max=max(cpu) if cpu else None,
+            p95=_percentile(cpu, .95) if cpu else None,
+            p99=_percentile(cpu, .99) if cpu else None,
+        ),
+        solve_gc_overlap_count=sum(trial["solve_gc_overlap"] for trial in trials),
+        solve_measurement_error_count=sum(
+            bool(trial["solve_measurement_errors"]) for trial in trials
+        ),
+    )
 
 
 def _receiver_diagnostic_summary(rows: list[dict]) -> dict:
@@ -1015,13 +1090,12 @@ def _run_b10_gap_solver_runtime(
                 live_physics_world, anchor, solve_request,
             )
             snapshot_ns = time.perf_counter_ns() - snapshot_started
-            started = time.perf_counter_ns()
-            solved = solve_one_cell_gap(
+            solved, solve_measurement = _measure_gap_solve(
                 anchor,
                 solve_world,
                 solve_request,
             )
-            solve_ns = time.perf_counter_ns() - started
+            solve_ns = solve_measurement["solve_time_ns"]
             if (solved.status is not SolveStatus.NEEDS_WORLD
                     or not solved.missing_cells):
                 break
@@ -1182,7 +1256,7 @@ def _run_b10_gap_solver_runtime(
             anchor_movement_tick_id=anchor.movement_tick_id,
             information_rounds=information_rounds,
             information_attempts=[list(attempt) for attempt in information_attempts],
-            solve_time_ns=solve_ns,
+            **solve_measurement,
             candidates_evaluated=solved.candidates_evaluated,
             command_count=len(solved.proof.commands),
             tick_input_count=len(solved.proof.tick_inputs),
@@ -1874,6 +1948,7 @@ def _run_b10_gap_solver_runtime(
             p99=_percentile(solve_times, .99),
             maximum=max(solve_times),
         ),
+        **_solve_measurement_summary(trials),
         physics_snapshot_time_ns=dict(
             samples=len(physics_snapshot_times),
             p95=_percentile(physics_snapshot_times, .95),
