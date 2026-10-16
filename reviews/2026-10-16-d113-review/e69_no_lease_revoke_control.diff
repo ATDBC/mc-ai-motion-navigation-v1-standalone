@@ -1,0 +1,13 @@
+diff --git a/mc2p/skills/navigation_session_driver.py b/mc2p/skills/navigation_session_driver.py
+index 16cfdcd..662d50d 100644
+--- a/mc2p/skills/navigation_session_driver.py
++++ b/mc2p/skills/navigation_session_driver.py
+@@ -353,7 +353,7 @@ class RuntimeNavigationDriver:
+             # its earlier lease before arbitration; otherwise an old neutral
+             # or moving intent can be selected again with almost no deadline
+             # left and fail the whole Runtime during the backend tick.
+-            self.runtime.cancel_source(self.source.source_id)
++            pass  # E69 control: old movement lease is not revoked
+         proposals = (control,)
+         self._prepared_deadline_ns = deadline
+         self._prepared_proposal = proposal

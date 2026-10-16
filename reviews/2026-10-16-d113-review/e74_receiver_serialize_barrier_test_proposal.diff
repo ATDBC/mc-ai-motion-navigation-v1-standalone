@@ -1,0 +1,17 @@
+diff --git a/tests/motion_nav/test_d102_action_handoff.py b/tests/motion_nav/test_d102_action_handoff.py
+index 3a7695f..1b647cb 100644
+--- a/tests/motion_nav/test_d102_action_handoff.py
++++ b/tests/motion_nav/test_d102_action_handoff.py
+@@ -465,7 +465,11 @@ class ActionHandoffTests(unittest.TestCase):
+              patch.object(value_module, "validate_frozen_value", side_effect=observed("graph", value_module.validate_frozen_value)), \
+              patch.object(pickle, "dumps", side_effect=observed("serialize", pickle.dumps)):
+             self.prepare()
+-            self.assertTrue(self.inbox.wait_for_receiver(timeout=10))
++            # Snapshot sealing and request serialization can use separate receiver cycles.
++            for _ in range(5):
++                self.assertTrue(self.inbox.wait_for_receiver(timeout=10))
++                if any(event[0] == "serialize" for event in events):
++                    break
+         self.assertEqual([event for event in events if event[1] == control_thread], [])
+         self.assertEqual({event[0] for event in events}, {"digest", "graph", "serialize"})
+         self.assertEqual({event[1] for event in events}, {self.inbox.receiver_thread_id})

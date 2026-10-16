@@ -1,0 +1,31 @@
+formal-default/raw
+  step 记录 2242，step_failure 1
+  连续选中同一移动 intent 的段长分布：{1: 2179, 2: 9, 5: 8, 6: 1}
+  段长 ≥ 2 的段（按试次）：
+    coordinator-baseline-1-4             延迟    0  intent …/10/2  连续 2 步  最后一步余量 200.8484 ms
+    coordinator-worker-delay-2-0-0       延迟    2  intent …/21/2  连续 2 步  最后一步余量 201.7634 ms
+    coordinator-worker-delay-2-0-1       延迟    2  intent …/22/2  连续 2 步  最后一步余量 201.8700 ms
+    coordinator-worker-delay-2-1-0       延迟    2  intent …/23/2  连续 2 步  最后一步余量 202.2666 ms
+    coordinator-worker-delay-2-1-1       延迟    2  intent …/24/2  连续 2 步  最后一步余量 201.5652 ms
+    coordinator-worker-delay-2-2-0       延迟    2  intent …/25/2  连续 2 步  最后一步余量 202.1953 ms
+    coordinator-worker-delay-2-2-1       延迟    2  intent …/26/2  连续 2 步  最后一步余量 201.9139 ms
+    coordinator-worker-delay-2-3-0       延迟    2  intent …/27/2  连续 2 步  最后一步余量 201.5486 ms
+    coordinator-worker-delay-2-3-1       延迟    2  intent …/28/2  连续 2 步  最后一步余量 202.2114 ms
+    coordinator-worker-delay-5-0-0       延迟    5  intent …/29/2  连续 5 步  最后一步余量 67.5960 ms
+    coordinator-worker-delay-5-0-1       延迟    5  intent …/30/2  连续 5 步  最后一步余量 50.5571 ms
+    coordinator-worker-delay-5-1-0       延迟    5  intent …/31/2  连续 5 步  最后一步余量 51.1402 ms
+    coordinator-worker-delay-5-1-1       延迟    5  intent …/32/2  连续 5 步  最后一步余量 51.0512 ms
+    coordinator-worker-delay-5-2-0       延迟    5  intent …/33/2  连续 5 步  最后一步余量 51.1771 ms
+    coordinator-worker-delay-5-2-1       延迟    5  intent …/34/2  连续 5 步  最后一步余量 51.4929 ms
+    coordinator-worker-delay-5-3-0       延迟    5  intent …/35/2  连续 5 步  最后一步余量 50.6807 ms
+    coordinator-worker-delay-5-3-1       延迟    5  intent …/36/2  连续 5 步  最后一步余量 51.6572 ms
+    （未写出试次终态）                            延迟 None  intent …/37/2  连续 6 步  step_failure（无派发后观察）
+  失败步的全部候选 intent（过期时刻 − 上一步派发）：
+    ['0', '1', '1487']    447.77 ms
+    ['1', '37', '2']     51.40 ms
+  失败步 2242：intent ['1', '37', '2']，期限距上一步派发 51.4031 ms，按 50 ms 节拍下一步派发时只剩约 1.4 ms
+targeted-5tick/raw
+  step 记录 43，step_failure 0
+  连续选中同一移动 intent 的段长分布：{1: 38, 5: 1}
+  段长 ≥ 2 的段（按试次）：
+    coordinator-worker-delay-5-0-0       延迟    5  intent …/1/5  连续 5 步  最后一步余量 51.3320 ms

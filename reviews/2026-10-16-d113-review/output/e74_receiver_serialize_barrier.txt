@@ -1,0 +1,11 @@
+E74：tests.motion_nav.test_d102_action_handoff.ActionHandoffTests.test_parent_request_building_stays_on_existing_receiver
+每次单独起一个解释器，taskset -c 1，同一核上另有一个 Python 忙循环制造争用；用 D110 审查的 e53_repeat_project_tests.py 统计。
+
+== 原样 origin/main 81367da
+检出 81367da
+  test_parent_request_building_stays_on_existing_receiver：40 次 → {'OK': 35, 'FAILED (failures=1)': 5}；最长连续通过 12；单次用时 8.4–10.3 s
+    首个失败：FAIL: test_parent_request_building_stays_on_existing_receiver (tests.motion_nav.test_d102_action_handoff.ActionHandoffTests.test_parent_request_building_stays_on_existing_receiver) | AssertionError: Items in the second set but not the first:
+
+== 测试侧修正（e74_receiver_serialize_barrier_test_proposal.diff）
+检出 81367da
+  test_parent_request_building_stays_on_existing_receiver：40 次 → {'OK': 40}；最长连续通过 40；单次用时 8.1–9.8 s

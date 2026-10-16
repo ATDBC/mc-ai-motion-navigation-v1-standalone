@@ -1,0 +1,10 @@
+检出 54a904e；第一个作业 5 tick 后可见，其余 1 tick
+  terrace_two_ledges     首个作业 1 tick：success 用 146 tick；作业 ['action-1:solve/前缀1', 'action-3:solve/前缀1']
+  terrace_two_ledges     首个作业 5 tick：success 用 159 tick；作业 ['action-1:solve/前缀1', 'action-1:revalidate/前缀5', 'action-3:solve/前缀5']
+  terrace_three_ledges   首个作业 1 tick：success 用 188 tick；作业 ['action-1:solve/前缀1', 'action-3:solve/前缀1', 'action-5:solve/前缀1']
+  terrace_three_ledges   首个作业 5 tick：success 用 201 tick；作业 ['action-1:solve/前缀1', 'action-1:revalidate/前缀5', 'action-3:solve/前缀5', 'action-5:solve/前缀1']
+检出 81367da；第一个作业 5 tick 后可见，其余 1 tick
+  terrace_two_ledges     首个作业 1 tick：success 用 146 tick；作业 ['action-1:solve/前缀1', 'action-3:solve/前缀1']
+  terrace_two_ledges     首个作业 5 tick：success 用 159 tick；作业 ['action-1:solve/前缀1', 'action-1:revalidate/前缀5', 'action-3:solve/前缀5']
+  terrace_three_ledges   首个作业 1 tick：success 用 188 tick；作业 ['action-1:solve/前缀1', 'action-3:solve/前缀1', 'action-5:solve/前缀1']
+  terrace_three_ledges   首个作业 5 tick：success 用 205 tick；作业 ['action-1:solve/前缀1', 'action-1:revalidate/前缀5', 'action-3:solve/前缀5', 'action-5:solve/前缀5']

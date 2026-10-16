@@ -1,0 +1,26 @@
+检出 81367da
+  gap     延迟    5：success 原因 goal_state_satisfied；Runtime 失败 0 次，首次 -
+  gap     延迟    6：failed  原因 motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack；Runtime 失败 0 次，首次 -
+  gap     延迟   10：failed  原因 motion_unsolvable:motion_retry_exhausted:execution_window_expired；Runtime 失败 0 次，首次 -
+  gap     延迟 永不返回：failed  原因 motion_unsolvable:motion_solver_request_expired；Runtime 失败 0 次，首次 -
+  jump_up 延迟    5：success 原因 goal_state_satisfied；Runtime 失败 0 次，首次 -
+  jump_up 延迟    6：failed  原因 motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack；Runtime 失败 0 次，首次 -
+  jump_up 延迟   10：failed  原因 motion_unsolvable:motion_retry_exhausted:execution_window_expired；Runtime 失败 0 次，首次 -
+  jump_up 延迟 永不返回：failed  原因 motion_unsolvable:motion_solver_request_expired；Runtime 失败 0 次，首次 -
+  drop    延迟    5：success 原因 goal_state_satisfied；Runtime 失败 0 次，首次 -
+  drop    延迟    6：failed  原因 motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack；Runtime 失败 0 次，首次 -
+  drop    延迟   10：failed  原因 motion_unsolvable:motion_retry_exhausted:execution_window_expired；Runtime 失败 0 次，首次 -
+  drop    延迟 永不返回：failed  原因 motion_unsolvable:motion_solver_request_expired；Runtime 失败 0 次，首次 -
+检出 81367da（含对照改动：1 file changed, 1 insertion(+), 1 deletion(-)）
+  gap     延迟    5：success 原因 goal_state_satisfied；Runtime 失败 0 次，首次 -
+  gap     延迟    6：failed  原因 motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack；Runtime 失败 0 次，首次 -
+  gap     延迟   10：failed  原因 control_unavailable；Runtime 失败 21 次，首次 deadline_exceeded:Runtime deadline expired
+  gap     延迟 永不返回：failed  原因 control_unavailable；Runtime 失败 21 次，首次 deadline_exceeded:Runtime deadline expired
+  jump_up 延迟    5：success 原因 goal_state_satisfied；Runtime 失败 0 次，首次 -
+  jump_up 延迟    6：failed  原因 motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack；Runtime 失败 0 次，首次 -
+  jump_up 延迟   10：failed  原因 control_unavailable；Runtime 失败 21 次，首次 deadline_exceeded:Runtime deadline expired
+  jump_up 延迟 永不返回：failed  原因 control_unavailable；Runtime 失败 21 次，首次 deadline_exceeded:Runtime deadline expired
+  drop    延迟    5：success 原因 goal_state_satisfied；Runtime 失败 0 次，首次 -
+  drop    延迟    6：failed  原因 motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack；Runtime 失败 0 次，首次 -
+  drop    延迟   10：failed  原因 motion_unsolvable:motion_retry_exhausted:execution_window_expired；Runtime 失败 0 次，首次 -
+  drop    延迟 永不返回：failed  原因 motion_unsolvable:motion_solver_request_expired；Runtime 失败 0 次，首次 -

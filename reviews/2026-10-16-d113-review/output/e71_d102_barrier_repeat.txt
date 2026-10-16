@@ -1,0 +1,2 @@
+检出 81367da
+  test_old_permission_cannot_prepare_new_generation：30 次 → {'OK': 30}；最长连续通过 30；单次用时 8.1–10.1 s
