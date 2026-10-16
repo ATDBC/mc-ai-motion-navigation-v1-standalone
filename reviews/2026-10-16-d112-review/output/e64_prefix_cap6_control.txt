@@ -1,0 +1,27 @@
+== 对照树：origin/main 54a904e + e64_prefix_cap6_control.diff（准备前缀上限 5→6，只在临时工作树）
+检出 54a904e；组件延迟 = 结果在提交后第几个 movement tick 对控制线程可见
+  gap     延迟  5：success 作业 2  提交→可见 [5, 5]  前缀长度 [3, 5]  原因 goal_state_satisfied
+  gap     延迟  6：success 作业 2  提交→可见 [6, 6]  前缀长度 [3, 6]  原因 goal_state_satisfied
+  gap     延迟  7：failed  作业 3  提交→可见 [7, 7, 7]  前缀长度 [3, 6, 6]  原因 motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack
+  jump_up 延迟  5：success 作业 2  提交→可见 [5, 5]  前缀长度 [3, 5]  原因 goal_state_satisfied
+  jump_up 延迟  6：success 作业 2  提交→可见 [6, 6]  前缀长度 [3, 6]  原因 goal_state_satisfied
+  jump_up 延迟  7：failed  作业 3  提交→可见 [7, 7, 7]  前缀长度 [3, 6, 6]  原因 motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack
+  drop    延迟  5：success 作业 2  提交→可见 [5, 5]  前缀长度 [1, 5]  原因 goal_state_satisfied
+  drop    延迟  6：success 作业 2  提交→可见 [6, 6]  前缀长度 [1, 6]  原因 goal_state_satisfied
+  drop    延迟  7：failed  作业 3  提交→可见 [7, 7, 7]  前缀长度 [1, 6, 6]  原因 motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack
+
+== 同一组 11 个直接与相邻测试模块（221 项）
+-- 对照树
+FAIL: test_cold_first_result_then_hot_revalidation_completes (tests.motion_nav.test_action_continuity_formal.ActionContinuityFormalTests.test_cold_first_result_then_hot_revalidation_completes)
+AssertionError: 6 != 5
+FAIL: test_preparation_prefix_and_window_are_bounded (tests.motion_nav.test_action_continuity_solver_limits.ActionContinuitySolverLimitsTests.test_preparation_prefix_and_window_are_bounded)
+AssertionError: ContractViolation not raised
+FAIL: test_complete_solve_samples_once_at_delivery_before_entry_wait (tests.motion_nav.test_motion_start_delivery.StartDeliveryFormalTests.test_complete_solve_samples_once_at_delivery_before_entry_wait) (delay=7)
+AssertionError: 6 != 5
+FAIL: test_delivery_beyond_prefix_bound_is_bounded_without_unsafe_start (tests.motion_nav.test_motion_start_delivery.StartDeliveryFormalTests.test_delivery_beyond_prefix_bound_is_bounded_without_unsafe_start)
+AssertionError: False is not true
+Ran 221 tests in 81.763s
+FAILED (failures=4, skipped=1)
+-- origin/main
+Ran 221 tests in 80.311s
+OK (skipped=1)

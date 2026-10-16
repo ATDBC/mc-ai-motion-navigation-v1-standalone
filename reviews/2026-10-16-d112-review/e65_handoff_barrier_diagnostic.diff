@@ -1,0 +1,16 @@
+diff --git a/tests/motion_nav/test_d102_action_handoff.py b/tests/motion_nav/test_d102_action_handoff.py
+index 5a0bbd7..795cef5 100644
+--- a/tests/motion_nav/test_d102_action_handoff.py
++++ b/tests/motion_nav/test_d102_action_handoff.py
+@@ -592,9 +592,11 @@ class ActionHandoffTests(unittest.TestCase):
+             set(candidate.proof.world_dependencies) | {(0, 6, 3)})))
+         self.executor._verified_motion[1] = replace(
+             candidate, candidate=replace(candidate.candidate, proof=proof))
++        known = {id(job) for job in self.worker.jobs}
+         self.prepare()
+         self.assertTrue(self.inbox.wait_for_receiver(timeout=10))
+         job = [job for job in self.worker.jobs if isinstance(job, PreparedMotionJob)][-1]
++        self.assertNotIn(id(job), known, "DIAG picked a PreparedMotionJob submitted before prepare()")
+         self.worker.put(_execute_job(job))
+         self.assertTrue(self.inbox.wait_for_receiver(timeout=10))
+         fresh = self.executor.stage_prepared_action(self.frame(self.current), self.current)

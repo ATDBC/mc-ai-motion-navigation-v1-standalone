@@ -1,0 +1,20 @@
+检出 54a904e；每个作业的“提交→可见”延迟从 {D, D+1} 随机取，每格 20 个种子
+  gap     D=2（2/3）：{'success': 20}
+  gap     D=3（3/4）：{'success': 20}
+  gap     D=4（4/5）：{'success': 17, 'failed': 3}
+      种子 6 延迟 [4, 5, 5] 作业 ['solve/前缀3', 'revalidate/前缀4', 'revalidate/前缀4'] → motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack
+      种子 8 延迟 [4, 5, 5] 作业 ['solve/前缀3', 'revalidate/前缀4', 'revalidate/前缀4'] → motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack
+  jump_up D=2（2/3）：{'success': 20}
+  jump_up D=3（3/4）：{'success': 20}
+  jump_up D=4（4/5）：{'success': 13, 'failed': 7}
+      种子 1 延迟 [4, 4, 5] 作业 ['solve/前缀3', 'revalidate/前缀4', 'solve/前缀4'] → motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack
+      种子 3 延迟 [4, 4, 5] 作业 ['solve/前缀3', 'revalidate/前缀4', 'solve/前缀4'] → motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack
+  drop    D=2（2/3）：{'success': 17, 'failed': 3}
+      种子 6 延迟 [2, 3, 3] 作业 ['solve/前缀1', 'revalidate/前缀2', 'revalidate/前缀2'] → motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack
+      种子 8 延迟 [2, 3, 3] 作业 ['solve/前缀1', 'revalidate/前缀2', 'revalidate/前缀2'] → motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack
+  drop    D=3（3/4）：{'success': 17, 'failed': 3}
+      种子 6 延迟 [3, 4, 4] 作业 ['solve/前缀1', 'revalidate/前缀3', 'revalidate/前缀3'] → motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack
+      种子 8 延迟 [3, 4, 4] 作业 ['solve/前缀1', 'revalidate/前缀3', 'revalidate/前缀3'] → motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack
+  drop    D=4（4/5）：{'success': 17, 'failed': 3}
+      种子 6 延迟 [4, 5, 5] 作业 ['solve/前缀1', 'revalidate/前缀4', 'revalidate/前缀4'] → motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack
+      种子 8 延迟 [4, 5, 5] 作业 ['solve/前缀1', 'revalidate/前缀4', 'revalidate/前缀4'] → motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack

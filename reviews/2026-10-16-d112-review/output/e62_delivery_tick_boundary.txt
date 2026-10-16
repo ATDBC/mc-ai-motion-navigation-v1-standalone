@@ -1,0 +1,19 @@
+检出 54a904e；组件延迟 = 结果在提交后第几个 movement tick 对控制线程可见
+  gap     延迟  2：success 作业 1  提交→可见 [2]  前缀长度 [3]  原因 goal_state_satisfied
+  gap     延迟  3：success 作业 1  提交→可见 [3]  前缀长度 [3]  原因 goal_state_satisfied
+  gap     延迟  4：success 作业 2  提交→可见 [4, 4]  前缀长度 [3, 4]  原因 goal_state_satisfied
+  gap     延迟  5：success 作业 2  提交→可见 [5, 5]  前缀长度 [3, 5]  原因 goal_state_satisfied
+  gap     延迟  6：failed  作业 3  提交→可见 [6, 6, 6]  前缀长度 [3, 5, 5]  原因 motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack
+  gap     延迟  7：failed  作业 3  提交→可见 [7, 7, 7]  前缀长度 [3, 5, 5]  原因 motion_unsolvable:motion_retry_exhausted:execution_window_expired
+  jump_up 延迟  2：success 作业 1  提交→可见 [2]  前缀长度 [3]  原因 goal_state_satisfied
+  jump_up 延迟  3：success 作业 1  提交→可见 [3]  前缀长度 [3]  原因 goal_state_satisfied
+  jump_up 延迟  4：success 作业 3  提交→可见 [4, 4, 4]  前缀长度 [3, 4, 4]  原因 goal_state_satisfied
+  jump_up 延迟  5：success 作业 2  提交→可见 [5, 5]  前缀长度 [3, 5]  原因 goal_state_satisfied
+  jump_up 延迟  6：failed  作业 3  提交→可见 [6, 6, 6]  前缀长度 [3, 5, 5]  原因 motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack
+  jump_up 延迟  7：failed  作业 3  提交→可见 [7, 7, 7]  前缀长度 [3, 5, 5]  原因 motion_unsolvable:motion_retry_exhausted:execution_window_expired
+  drop    延迟  2：success 作业 2  提交→可见 [2, 2]  前缀长度 [1, 2]  原因 goal_state_satisfied
+  drop    延迟  3：success 作业 2  提交→可见 [3, 3]  前缀长度 [1, 3]  原因 goal_state_satisfied
+  drop    延迟  4：success 作业 2  提交→可见 [4, 4]  前缀长度 [1, 4]  原因 goal_state_satisfied
+  drop    延迟  5：success 作业 2  提交→可见 [5, 5]  前缀长度 [1, 5]  原因 goal_state_satisfied
+  drop    延迟  6：failed  作业 3  提交→可见 [6, 6, 6]  前缀长度 [1, 5, 5]  原因 motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack
+  drop    延迟  7：failed  作业 3  提交→可见 [7, 7, 7]  前缀长度 [1, 5, 5]  原因 motion_unsolvable:motion_retry_exhausted:execution_window_expired

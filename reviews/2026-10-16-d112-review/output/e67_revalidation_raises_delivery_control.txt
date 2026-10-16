@@ -1,0 +1,30 @@
+== 对照树：origin/main 54a904e + e67_revalidation_raises_delivery_control.diff（revalidation 结果只允许把交付估计往上调，只在临时工作树）
+-- E66 抖动
+检出 54a904e；每个作业的“提交→可见”延迟从 {D, D+1} 随机取，每格 20 个种子
+  gap     D=2（2/3）：{'success': 20}
+  gap     D=3（3/4）：{'success': 20}
+  gap     D=4（4/5）：{'success': 20}
+  jump_up D=2（2/3）：{'success': 20}
+  jump_up D=3（3/4）：{'success': 20}
+  jump_up D=4（4/5）：{'success': 13, 'failed': 7}
+      种子 1 延迟 [4, 4, 5] 作业 ['solve/前缀3', 'revalidate/前缀4', 'solve/前缀4'] → motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack
+      种子 3 延迟 [4, 4, 5] 作业 ['solve/前缀3', 'revalidate/前缀4', 'solve/前缀4'] → motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack
+  drop    D=2（2/3）：{'success': 20}
+  drop    D=3（3/4）：{'success': 20}
+  drop    D=4（4/5）：{'success': 20}
+
+-- E62 固定延迟边界
+检出 54a904e；组件延迟 = 结果在提交后第几个 movement tick 对控制线程可见
+  gap     延迟  4：success 作业 2  提交→可见 [4, 4]  前缀长度 [3, 4]  原因 goal_state_satisfied
+  gap     延迟  5：success 作业 2  提交→可见 [5, 5]  前缀长度 [3, 5]  原因 goal_state_satisfied
+  gap     延迟  6：failed  作业 3  提交→可见 [6, 6, 6]  前缀长度 [3, 5, 5]  原因 motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack
+  jump_up 延迟  4：success 作业 3  提交→可见 [4, 4, 4]  前缀长度 [3, 4, 4]  原因 goal_state_satisfied
+  jump_up 延迟  5：success 作业 2  提交→可见 [5, 5]  前缀长度 [3, 5]  原因 goal_state_satisfied
+  jump_up 延迟  6：failed  作业 3  提交→可见 [6, 6, 6]  前缀长度 [3, 5, 5]  原因 motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack
+  drop    延迟  4：success 作业 2  提交→可见 [4, 4]  前缀长度 [1, 4]  原因 goal_state_satisfied
+  drop    延迟  5：success 作业 2  提交→可见 [5, 5]  前缀长度 [1, 5]  原因 goal_state_satisfied
+  drop    延迟  6：failed  作业 3  提交→可见 [6, 6, 6]  前缀长度 [1, 5, 5]  原因 motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack
+
+-- 同一组 11 个直接与相邻测试模块
+Ran 221 tests in 77.570s
+OK (skipped=1)

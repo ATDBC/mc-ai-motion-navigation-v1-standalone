@@ -1,0 +1,16 @@
+E65：test_d102_action_handoff.ActionHandoffTests.test_old_permission_cannot_prepare_new_generation
+每次单独起一个解释器，taskset -c 1，用 D110 审查的 e53_repeat_project_tests.py 统计。
+
+== 原样 origin/main 54a904e
+检出 54a904e
+  test_old_permission_cannot_prepare_new_generation：30 次 → {'FAILED (errors=1)': 3, 'OK': 27}；最长连续通过 20；单次用时 7.6–9.4 s
+  （全量分片 linux-forward 中同一错误：ContractViolation: approval requires a proved real action boundary，见 linux-forward-summary.txt）
+
+== 诊断变体（e65_handoff_barrier_diagnostic.diff：原取法不变，只断言取到的作业不是 prepare() 之前已提交的）
+检出 54a904e
+  test_old_permission_cannot_prepare_new_generation：40 次 → {'OK': 37, 'FAILED (failures=1)': 3}；最长连续通过 15；单次用时 7.2–9.7 s
+    首个失败：FAIL: test_old_permission_cannot_prepare_new_generation (tests.motion_nav.test_d102_action_handoff.ActionHandoffTests.test_old_permission_cannot_prepare_new_generation) | AssertionError: 140236278189840 unexpectedly found in {140236280619568, 140236278189840} : DIAG picked a PreparedMotionJob submitted before prepare()
+
+== 测试侧修正（e65_handoff_barrier_test_proposal.diff：记下 prepare() 前的作业，最多 5 个接收周期等到新的 PreparedMotionJob）
+检出 54a904e
+  test_old_permission_cannot_prepare_new_generation：30 次 → {'OK': 30}；最长连续通过 30；单次用时 8.3–9.9 s

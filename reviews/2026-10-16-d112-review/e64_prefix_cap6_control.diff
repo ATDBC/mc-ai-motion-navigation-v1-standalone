@@ -1,0 +1,70 @@
+diff --git a/mc2p/motion_nav/fixed_route.py b/mc2p/motion_nav/fixed_route.py
+index 3ca542e..30c5f0c 100644
+--- a/mc2p/motion_nav/fixed_route.py
++++ b/mc2p/motion_nav/fixed_route.py
+@@ -407,7 +407,7 @@ class GroundHandoffTarget:
+                 or type(self.latest_tick) is not int
+                 or not self.first_tick <= self.latest_tick < self.first_tick + 20
+                 or type(self.movements) is not tuple
+-                or not 1 <= len(self.movements) <= 5
++                or not 1 <= len(self.movements) <= 6
+                 or any(type(value) is not MovementV1 for value in self.movements)
+                 or type(self.movement_yaws_radians) is not tuple
+                 or (self.movement_yaws_radians
+diff --git a/mc2p/motion_nav/motion_coordination.py b/mc2p/motion_nav/motion_coordination.py
+index b63343e..cb7de4a 100644
+--- a/mc2p/motion_nav/motion_coordination.py
++++ b/mc2p/motion_nav/motion_coordination.py
+@@ -838,7 +838,7 @@ class MotionRouteCoordinator:
+                 or self._delivery_identity == result.work_identity):
+             return
+         # Sample first arrival from the real source, before any entry wait.
+-        self._delivery_ticks = min(5, max(1, anchor.movement_tick_id
++        self._delivery_ticks = min(6, max(1, anchor.movement_tick_id
+             - job.anchor.movement_tick_id))
+         self._delivery_identity = result.work_identity
+
+diff --git a/mc2p/motion_nav/motion_solver.py b/mc2p/motion_nav/motion_solver.py
+index 54e392c..4b691f9 100644
+--- a/mc2p/motion_nav/motion_solver.py
++++ b/mc2p/motion_nav/motion_solver.py
+@@ -502,7 +502,7 @@ class VerifiedMotionPreparation:
+     def __post_init__(self) -> None:
+         count = len(self.commands)
+         if (type(self.source_anchor) is not StateAnchor
+-                or type(self.commands) is not tuple or not 1 <= count <= 5
++                or type(self.commands) is not tuple or not 1 <= count <= 6
+                 or any(type(command) is not MotionCommandTick
+                        for command in self.commands)
+                 or type(self.tick_inputs) is not tuple
+@@ -1166,7 +1166,7 @@ def revalidate_gap_motion(
+             or type(anchor) is not StateAnchor
+             or type(world) is not PhysicsWorldView
+             or type(execution_window) is not CandidateExecutionWindow
+-            or type(entry_prefix) is not tuple or len(entry_prefix) > 5
++            or type(entry_prefix) is not tuple or len(entry_prefix) > 6
+             or any(type(command) is not MotionCommandTick for command in entry_prefix)):
+         raise ContractViolation("gap revalidation requires proof, anchor, world and window")
+     if (anchor.session != world.session
+@@ -1584,7 +1584,7 @@ def _prepare_air_transition(
+     """
+     if (type(anchor) is not StateAnchor or type(world) is not PhysicsWorldView
+             or type(request) not in {GapSolveRequest, AirTransitionSolveRequest}
+-            or type(entry_prefix) is not tuple or len(entry_prefix) > 5
++            or type(entry_prefix) is not tuple or len(entry_prefix) > 6
+             or any(type(command) is not MotionCommandTick
+                    for command in entry_prefix)):
+         raise ContractViolation("motion preparation requires typed inputs and at most five ticks")
+diff --git a/mc2p/motion_nav/motion_worker.py b/mc2p/motion_nav/motion_worker.py
+index b3a1dba..61ae616 100644
+--- a/mc2p/motion_nav/motion_worker.py
++++ b/mc2p/motion_nav/motion_worker.py
+@@ -92,7 +92,7 @@ class GapMotionSolveJob:
+         if (self.operation is MotionJobOperation.REVALIDATE) != (
+                 type(self.proof) is VerifiedMotionResult):
+             raise ContractViolation("revalidation requires exactly one old proof")
+-        if (type(self.entry_prefix) is not tuple or len(self.entry_prefix) > 5
++        if (type(self.entry_prefix) is not tuple or len(self.entry_prefix) > 6
+                 or any(type(command) is not MotionCommandTick for command in self.entry_prefix)):
+             raise ContractViolation("motion preparation prefix must be bounded")
+

@@ -1,0 +1,27 @@
+diff --git a/mc2p/motion_nav/motion_coordination.py b/mc2p/motion_nav/motion_coordination.py
+index b63343e..55733cd 100644
+--- a/mc2p/motion_nav/motion_coordination.py
++++ b/mc2p/motion_nav/motion_coordination.py
+@@ -828,7 +828,7 @@ class MotionRouteCoordinator:
+             self, result: GapMotionSolveResult, anchor: StateAnchor, *,
+             current_scope: AsyncComputationScope) -> None:
+         job = self._solve_basis_job
+-        if (job is None or job.operation is not MotionJobOperation.SOLVE
++        if (job is None
+                 or result.solve_result.status is not SolveStatus.SOLVED
+                 or result.work_identity is None
+                 or self._work.check(result.work_identity, self._clock(),
+@@ -838,8 +838,11 @@ class MotionRouteCoordinator:
+                 or self._delivery_identity == result.work_identity):
+             return
+         # Sample first arrival from the real source, before any entry wait.
+-        self._delivery_ticks = min(5, max(1, anchor.movement_tick_id
+-            - job.anchor.movement_tick_id))
++        ticks = min(5, max(1, anchor.movement_tick_id - job.anchor.movement_tick_id))
++        if job.operation is not MotionJobOperation.SOLVE and ticks <= self._delivery_ticks:
++            # A faster revalidation never shortens the complete-solve preparation.
++            return
++        self._delivery_ticks = ticks
+         self._delivery_identity = result.work_identity
+
+     def _accept_result(
