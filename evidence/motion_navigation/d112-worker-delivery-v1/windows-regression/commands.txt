@@ -1,0 +1,8 @@
+.\.venv\python.exe scripts\run_motion_nav_shards.py --root . --report .tmp\d112-source-forward-final.json
+.\.venv\python.exe scripts\run_motion_nav_shards.py --root . --reverse --report .tmp\d112-source-reverse-final.json
+.\.venv\python.exe scripts\export_motion_navigation_standalone.py export --root .tmp\d112-public --clean
+.\.venv\python.exe scripts\export_motion_navigation_standalone.py verify --root .tmp\d112-public
+.\.venv\python.exe scripts\run_motion_nav_shards.py --root .tmp\d112-public --python D:\My_project\mc_ai\.venv\python.exe --report .tmp\d112-public-forward.json
+.\.venv\python.exe scripts\run_motion_nav_shards.py --root .tmp\d112-public --python D:\My_project\mc_ai\.venv\python.exe --reverse --report .tmp\d112-public-reverse.json
+$env:JAVA_HOME=(Resolve-Path .venv\Library\lib\jvm).Path
+.\.venv\python.exe -m unittest tests.test_standalone_java_gates

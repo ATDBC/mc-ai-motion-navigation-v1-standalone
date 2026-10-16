@@ -1097,6 +1097,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                 time_diagnostics=time_diagnostics,block_parity_diagnostics=block_parity,
                 physics_tick_diagnostics=physics_tick_diagnostics,
                 ftick_diagnostics=ftick_diagnostics,
+                session_timeout_seconds=timeout,
                 control_diagnostics=(
                     c1r_control_frame_probe or b12b_partial_combat_probe
                 ))

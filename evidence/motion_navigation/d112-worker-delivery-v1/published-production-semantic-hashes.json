@@ -1,0 +1,17 @@
+{
+  "schema": "mc2p.public-production-semantic-hashes.v1",
+  "scope": "D112 worker delivery, bounded degradation, calibrated acceptance, and Fabric harness lifetime",
+  "normalization": "CRLF_TO_LF",
+  "source_commit": "WORKTREE_FINAL_D112",
+  "files": {
+    "mc2p/motion_nav/fixed_route.py": "7a274d8593956672553bf71aa666b41010b0874a98939abbe7975f93a23ad1b9",
+    "mc2p/motion_nav/motion_coordination.py": "c3a4c699bbc0288c9ead331277ed0862a043e261b5e2bea76d2b184840d4361b",
+    "mc2p/motion_nav/motion_solver.py": "fac5e087c0d7ae620cc720e11f9dfeb8147613341325334f9b7d50aba4f83b92",
+    "mc2p/motion_nav/motion_worker.py": "f284fa7b42ed9c86c96a8790b2e5d93cf3caf7cd44f154b478d82e8e5616796d",
+    "scripts/analyze_d112_delivery_baseline.py": "63dc8469dfb92df986212bae13f451508c9241a115d44780c92e5371e492a176",
+    "scripts/b10_gap_solver_runtime.py": "27817adc1042c7b5b8a3b346bbdf0b72350590a10b87d771b877c2ca8358f7a1",
+    "deployment/fabric-observation-probe/src/main/java/com/mc2p/deployment/DeploymentObservationProbe.java": "00e357093d5526b0f2f9af67f28a0326f0d002932355ffaf07f67a5b389b9405",
+    "scripts/fabric_deployment_sandbox.py": "b6749abc8293d8fe4baa5f063d8267397e839e8c4bb49bc4c42a8d0d78c70a6e",
+    "scripts/probe_fabric_deployment_observation.py": "51ca7401f5d25589a8ed3cfb405521d921388c2080f7d44c66597f2388cbd3e5"
+  }
+}

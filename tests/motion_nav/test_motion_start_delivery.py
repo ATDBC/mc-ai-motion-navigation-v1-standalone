@@ -146,7 +146,7 @@ class StartDeliveryFormalTests(unittest.TestCase):
                 with patch.object(MotionRouteCoordinator, '_sample_solve_delivery', record_sample):
                     result = run(case, motion_factory=lambda: worker)
                 self.assertTrue(samples)
-                self.assertEqual(samples[0][1], min(4, delay))
+                self.assertEqual(samples[0][1], min(5, delay))
                 self.assertEqual(len({sample[0] for sample in samples}), len(samples))
                 self.assertTrue(all(sample[2:] == (MotionJobOperation.SOLVE, SolveStatus.SOLVED)
                                     for sample in samples))
@@ -287,7 +287,7 @@ class StartDeliveryFormalTests(unittest.TestCase):
         self.assertFalse(result.violations)
         self.assertEqual(result.damage, 0.)
         self.assertFalse(result.trace[-1]["source_bound"])
-        self.assertTrue(all(len(job.entry_prefix) <= 4 for job in worker.jobs))
+        self.assertTrue(all(len(job.entry_prefix) <= 5 for job in worker.jobs))
 
     def test_current_drop_first_grants_keep_slack_and_actual_prefix(self):
         factory = recovery_cases.MotionBaselineRecoveryTests()
@@ -312,7 +312,7 @@ class StartDeliveryFormalTests(unittest.TestCase):
                     self.assertEqual(candidate.proof.execution_window.latest_start_tick
                                      - candidate.intended_start_tick, 1)
                     self.assertIsNotNone(candidate.proof.preparation)
-                self.assertTrue(all(1 <= len(job.entry_prefix) <= 4 for job in worker.jobs))
+                self.assertTrue(all(1 <= len(job.entry_prefix) <= 5 for job in worker.jobs))
 
     def test_original_six_late_drop_tasks_complete_with_same_inputs(self):
         factory = recovery_cases.MotionBaselineRecoveryTests()

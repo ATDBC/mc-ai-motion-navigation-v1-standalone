@@ -342,7 +342,7 @@ class ActionContinuitySolverLimitsTests(unittest.TestCase):
         self.assertIs(rejected.status, SolveStatus.INVALID_INPUT)
         self.assertIn("preparation_execution_window_detached", rejected.reasons)
         with self.assertRaises(ContractViolation):
-            solve_prepared_air_transition(anchor, world, request, (command,) * 5)
+            solve_prepared_air_transition(anchor, world, request, (command,) * 6)
 
         old = solve_one_cell_gap(anchor, world, request)
         no_prefix = solve_prepared_air_transition(anchor, world, request, ())

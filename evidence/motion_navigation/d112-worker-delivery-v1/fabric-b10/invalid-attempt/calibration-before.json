@@ -1,0 +1,69 @@
+{
+  "device_admission": false,
+  "purpose": "reference_calibration_only",
+  "rounds": [
+    {
+      "cpu_ms": {
+        "maximum": 31.25,
+        "minimum": 15.625,
+        "p50": 31.25,
+        "p95": 31.25,
+        "p99": 31.25,
+        "samples": 20
+      },
+      "input_signature_sha256": "1eb3f54fe7334d995fb38661d3b4377deeebe690661b2d213ff9b805a56b6476",
+      "round": 1,
+      "wall_ms": {
+        "maximum": 25.4693,
+        "minimum": 24.9694,
+        "p50": 25.1256,
+        "p95": 25.2933,
+        "p99": 25.4693,
+        "samples": 20
+      },
+      "warmups": 3,
+      "workload": {
+        "candidates_evaluated": 1,
+        "command_count": 16,
+        "status": "solved",
+        "tick_input_count": 16,
+        "trajectory_state_count": 17,
+        "world_dependency_count": 17
+      }
+    },
+    {
+      "cpu_ms": {
+        "maximum": 31.25,
+        "minimum": 15.625,
+        "p50": 31.25,
+        "p95": 31.25,
+        "p99": 31.25,
+        "samples": 20
+      },
+      "input_signature_sha256": "1eb3f54fe7334d995fb38661d3b4377deeebe690661b2d213ff9b805a56b6476",
+      "round": 2,
+      "wall_ms": {
+        "maximum": 25.2355,
+        "minimum": 24.9589,
+        "p50": 25.0114,
+        "p95": 25.103,
+        "p99": 25.2355,
+        "samples": 20
+      },
+      "warmups": 3,
+      "workload": {
+        "candidates_evaluated": 1,
+        "command_count": 16,
+        "status": "solved",
+        "tick_input_count": 16,
+        "trajectory_state_count": 17,
+        "world_dependency_count": 17
+      }
+    }
+  ],
+  "schema_version": "mc2p.d112-delivery-baseline.v1",
+  "timing_note": "Compare paired runs on the same machine; runtime degrades by tick margin rather than rejecting slower devices.",
+  "wall_median_drift_percent_from_first_round": [
+    -0.45451650905848906
+  ]
+}

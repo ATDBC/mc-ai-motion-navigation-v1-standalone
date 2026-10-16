@@ -60,6 +60,200 @@ class _Adapter:
 
 
 class B10RuntimeProbeTests(unittest.TestCase):
+    def test_coordinator_matrix_preregisters_all_56_scenarios(self):
+        scenarios = probe._b10_coordinator_scenarios()
+
+        self.assertEqual(len(scenarios), 56)
+        self.assertEqual(
+            sum(item.kind == "baseline" for item in scenarios),
+            20,
+        )
+        self.assertEqual(
+            sum(item.kind == "first_input_late1" for item in scenarios),
+            8,
+        )
+        self.assertEqual(
+            {
+                delay: sum(
+                    item.kind == "worker_delay"
+                    and item.worker_delay_ticks == delay
+                    for item in scenarios
+                )
+                for delay in (2, 5, 10)
+            },
+            {2: 8, 5: 8, 10: 8},
+        )
+        self.assertEqual(
+            sum(item.kind == "worker_never_return" for item in scenarios),
+            4,
+        )
+        self.assertEqual(
+            {item.direction_index for item in scenarios},
+            {0, 1, 2, 3},
+        )
+        late = tuple(
+            item for item in scenarios if item.kind == "first_input_late1"
+        )
+        self.assertTrue(all(not item.fabric_supported for item in late))
+        self.assertTrue(all(
+            item.unsupported_reason == "fabric_input_late1_injection_unavailable"
+            for item in late
+        ))
+
+    def test_tick_delayed_worker_releases_by_movement_tick_without_sleep(self):
+        class FakeWorker:
+            def __init__(self):
+                self.available = []
+                self.submitted = []
+
+            def submit(self, job):
+                self.submitted.append(job)
+                return True
+
+            def poll_available(self):
+                available, self.available = tuple(self.available), []
+                return available
+
+            def close(self):
+                raise AssertionError("the fixture wrapper does not own the worker")
+
+            def is_alive(self):
+                return True
+
+        real = FakeWorker()
+        delayed = probe._MovementTickDelayedMotionWorker(real)
+        scenario = probe._B10CoordinatorScenario(
+            "worker-delay-2-east-0", "worker_delay", 0, 0,
+            worker_delay_ticks=2,
+        )
+        job = SimpleNamespace(work_identity="identity-1")
+        result = SimpleNamespace(work_identity="identity-1")
+
+        delayed.begin_trial(scenario, movement_tick=40)
+        self.assertTrue(delayed.submit(job))
+        real.available.append(result)
+        self.assertEqual(delayed.poll_available(), ())
+        delayed.publish_movement_tick(41)
+        self.assertEqual(delayed.poll_available(), ())
+        delayed.publish_movement_tick(42)
+        self.assertEqual(delayed.poll_available(), (result,))
+        evidence = delayed.end_trial()
+
+        self.assertEqual(evidence["scenario"], scenario.name)
+        self.assertEqual(evidence["worker_delay_ticks"], 2)
+        self.assertEqual(evidence["submissions"], [{
+            "identity": "'identity-1'",
+            "submit_tick": 40,
+            "worker_observe_tick": 40,
+            "wrapper_publish_tick": 42,
+            "discarded_as_stale": False,
+        }])
+
+    def test_tick_delayed_worker_never_return_and_next_trial_drop_stale_results(self):
+        class FakeWorker:
+            def __init__(self):
+                self.available = []
+
+            def submit(self, _job):
+                return True
+
+            def poll_available(self):
+                available, self.available = tuple(self.available), []
+                return available
+
+            def close(self):
+                raise AssertionError("the fixture wrapper does not own the worker")
+
+            def is_alive(self):
+                return True
+
+        real = FakeWorker()
+        delayed = probe._MovementTickDelayedMotionWorker(real)
+        never = probe._B10CoordinatorScenario(
+            "never-east", "worker_never_return", 0, 0,
+            never_return=True,
+        )
+        old_job = SimpleNamespace(work_identity="old")
+        old_result = SimpleNamespace(work_identity="old")
+
+        delayed.begin_trial(never, movement_tick=80)
+        self.assertTrue(delayed.submit(old_job))
+        real.available.append(old_result)
+        self.assertEqual(delayed.poll_available(), ())
+        delayed.publish_movement_tick(120)
+        self.assertEqual(delayed.poll_available(), ())
+        evidence = delayed.end_trial()
+        self.assertIsNone(
+            evidence["submissions"][0]["wrapper_publish_tick"],
+        )
+        self.assertEqual(evidence["held_result_count"], 1)
+
+        baseline = probe._B10CoordinatorScenario(
+            "baseline-east", "baseline", 0, 0,
+        )
+        delayed.begin_trial(baseline, movement_tick=121)
+        # A result that completed after the old trial ended must never be
+        # released into the new session.
+        real.available.append(old_result)
+        self.assertEqual(delayed.poll_available(), ())
+        next_evidence = delayed.end_trial()
+        self.assertEqual(next_evidence["stale_result_count"], 1)
+
+    def test_tick_delay_is_total_from_submit_not_extra_after_real_completion(self):
+        class SlowWorker:
+            def __init__(self):
+                self.available = []
+
+            def submit(self, _job):
+                return True
+
+            def poll_available(self):
+                available, self.available = tuple(self.available), []
+                return available
+
+            def close(self):
+                raise AssertionError("the fixture wrapper does not own the worker")
+
+            def is_alive(self):
+                return True
+
+        real = SlowWorker()
+        delayed = probe._MovementTickDelayedMotionWorker(real)
+        scenario = probe._B10CoordinatorScenario(
+            "worker-delay-2-east", "worker_delay", 0, 0,
+            worker_delay_ticks=2,
+        )
+        job = SimpleNamespace(work_identity="identity")
+        result = SimpleNamespace(work_identity="identity")
+
+        delayed.begin_trial(scenario, movement_tick=40)
+        self.assertTrue(delayed.submit(job))
+        delayed.publish_movement_tick(44)
+        real.available.append(result)
+
+        self.assertEqual(delayed.poll_available(), (result,))
+        evidence = delayed.end_trial()
+        self.assertEqual(evidence["submissions"][0]["submit_tick"], 40)
+        self.assertEqual(evidence["submissions"][0]["worker_observe_tick"], 44)
+        self.assertEqual(evidence["submissions"][0]["wrapper_publish_tick"], 44)
+
+    def test_formal_coordinator_uses_the_preregistered_tick_delay_port(self):
+        source = inspect.getsource(probe._run_b10_gap_solver_runtime)
+
+        self.assertIn("_b10_coordinator_scenarios()", source)
+        self.assertIn("_MovementTickDelayedMotionWorker(motion_worker)", source)
+        self.assertIn("delayed_motion_worker.begin_trial(", source)
+        self.assertIn("delayed_motion_worker.publish_movement_tick(", source)
+        self.assertIn("motion_worker=delayed_motion_worker", source)
+        self.assertIn("delayed_motion_worker.end_trial()", source)
+        self.assertIn(')["deliveries"]', source)
+        self.assertNotIn(')["delivery"]', source)
+        self.assertNotIn("time.sleep(scenario.worker_delay", source)
+        self.assertIn("coordinator_delivery_gate(trial)", source)
+        self.assertIn('sample["actual_minus_expected_ticks"] >= 0', source)
+        self.assertIn('sample["actual_minus_latest_ticks"] <= 0', source)
+
+
     def test_local_diagnostics_keep_strings_until_control_trials_finish(self):
         tree = ast.parse(inspect.getsource(probe._run_b10_gap_solver_runtime))
         diagnostic = next(node for node in ast.walk(tree)
@@ -250,7 +444,7 @@ class B10RuntimeProbeTests(unittest.TestCase):
                 self.assertEqual(rows[0], {"value": 1})
                 self.assertEqual(rows[1]["overflow_count"], 1)
 
-    def test_solver_bound_keeps_original_wall_and_candidate_limits(self):
+    def test_solver_bound_keeps_candidate_limit_but_wall_time_is_report_only(self):
         tree = ast.parse(inspect.getsource(probe._run_b10_gap_solver_runtime))
         guard = next(node for node in ast.walk(tree)
                      if isinstance(node, ast.Call)
@@ -262,16 +456,22 @@ class B10RuntimeProbeTests(unittest.TestCase):
                       if keyword.arg == "passed")
         code = compile(ast.Expression(passed), "<B10 solver bound>", "eval")
         for wall, candidates, expected in (
-            (29_999_999, 12, True), (30_000_000, 12, False),
-            (1, 13, False), (41_033_900, 1, False),
+            (29_999_999, 12, True), (30_000_000, 12, True),
+            (1, 13, False), (41_033_900, 1, True),
         ):
             with self.subTest(wall=wall, candidates=candidates):
                 self.assertIs(eval(code, {
                     "trials": [{"candidates_evaluated": candidates,
+                                "command_count": 20,
                                 "solve_thread_cpu_ns": 1,
                                 "solve_gc_overlap": True}],
                     "summary": {"solve_time_ns": {"maximum": wall}},
                 }), expected)
+
+        source = inspect.getsource(probe._run_b10_gap_solver_runtime)
+        self.assertIn('scope="synchronous_probe_only"', source)
+        self.assertIn('disposition="report_only"', source)
+        self.assertIn('warning_threshold_ns=30_000_000', source)
 
     def test_gc_diagnostic_completeness_is_checked_separately_from_raw_wall(self):
         tree = ast.parse(inspect.getsource(probe._run_b10_gap_solver_runtime))

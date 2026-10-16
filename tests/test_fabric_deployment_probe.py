@@ -310,6 +310,23 @@ class FabricDeploymentProbeTests(unittest.TestCase):
         self.assertIn("observationRequest = ClientObservationRequestV3.navigation()", source)
         self.assertIn("if (!executor.receiptReady()) return;", source)
 
+    def test_formal_timeout_is_forwarded_to_one_fixed_client_deadline(self):
+        java = (ROOT / (
+            "deployment/fabric-observation-probe/src/main/java/com/mc2p/deployment/"
+            "DeploymentObservationProbe.java"
+        )).read_text("utf-8")
+        python = (ROOT / "scripts/probe_fabric_deployment_observation.py").read_text(
+            "utf-8"
+        )
+
+        self.assertIn('durationMillis("MC2P_SESSION_TIMEOUT_MILLIS")', java)
+        self.assertIn("deadline = Math.addExact(", java)
+        self.assertIn("System.nanoTime(),", java)
+        self.assertIn("Math.multiplyExact(value, 1_000_000L)", java)
+        self.assertNotIn("90_000_000_000L", java)
+        self.assertNotIn("deadline = System.nanoTime() + 30_000_000_000L", java)
+        self.assertIn("session_timeout_seconds=timeout", python)
+
     def test_observation_pipeline_diagnostics_keep_stage_owners_separate(self):
         from types import SimpleNamespace
         from scripts.probe_fabric_deployment_observation import observation_pipeline_diagnostics

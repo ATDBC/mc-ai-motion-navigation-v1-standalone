@@ -399,8 +399,12 @@ class RouteBodyAdvanceTests(unittest.TestCase):
     def test_stop_protection_does_not_repeat_verified_input_consumption(self):
         fixture = test_b10_motion_candidate.VerifiedMotionRouteIntegrationTests()
         anchor, world, active, executor = fixture.coordinator_fixture()
+        solved = test_b10_motion_candidate.solve_planned_gap(
+            active, 0, anchor, world, 11,
+        )
         prepared = test_b10_motion_candidate.prepare_planned_gap_motion(
-            active, 0, anchor, world, candidate_revision=1, intended_start_tick=11)
+            active, 0, anchor, world, candidate_revision=1,
+            intended_start_tick=11, precomputed=solved)
         frame = fixture.frame(world._world, anchor.physics_state,
                               anchor.observation_sequence_id)
         executor.start(active.action_route, frame, verified_motion=(prepared.candidate,))

@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\scripts\probe_fabric_deployment_observation.py", line 1562, in run_worker
+    stages, rows, episode_checks = run_b10_gap_solver_runtime(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\scripts\b10_gap_solver_runtime.py", line 1145, in run_b10_gap_solver_runtime
+    raise primary.with_traceback(primary_traceback)
+  File "D:\My_project\mc_ai\scripts\b10_gap_solver_runtime.py", line 1087, in run_b10_gap_solver_runtime
+    result = _run_b10_gap_solver_runtime(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\scripts\b10_gap_solver_runtime.py", line 2048, in _run_b10_gap_solver_runtime
+    receiver_delivery = _receiver_diagnostic_summary(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'delivery'

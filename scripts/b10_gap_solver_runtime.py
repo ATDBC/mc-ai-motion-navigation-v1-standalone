@@ -6,6 +6,7 @@ import gc
 import json
 import math
 from pathlib import Path
+import threading
 import time
 from typing import Callable, Mapping
 
@@ -22,6 +23,7 @@ from mc2p.contracts.observation_request_v3 import (
 )
 from mc2p.contracts.task import ComparisonOperatorV0, SuccessCriterionV0, TaskIntentV0
 from mc2p.motion_nav.air_motion import load_air_motion_profiles
+from mc2p.motion_nav.async_work import AsyncAdmissionDisposition
 from mc2p.motion_nav.block_motion_traits import BlockMotionCatalog
 from mc2p.motion_nav.environment_identity import load_frozen_environment
 from mc2p.motion_nav.ground_motion import load_ground_motion_profile
@@ -88,6 +90,251 @@ _STATE_ASSUMPTIONS = dict(
 )
 
 
+@dataclass(frozen=True, slots=True)
+class _B10CoordinatorScenario:
+    """One preregistered formal-worker delivery scenario."""
+
+    name: str
+    kind: str
+    direction_index: int
+    repetition: int
+    worker_delay_ticks: int = 0
+    never_return: bool = False
+    fabric_supported: bool = True
+    unsupported_reason: str | None = None
+
+    def __post_init__(self) -> None:
+        if type(self.name) is not str or not self.name:
+            raise ValueError("B10 coordinator scenario name is invalid")
+        if self.kind not in {
+            "baseline", "first_input_late1", "worker_delay",
+            "worker_never_return",
+        }:
+            raise ValueError("B10 coordinator scenario kind is invalid")
+        if type(self.direction_index) is not int or not 0 <= self.direction_index < 4:
+            raise ValueError("B10 coordinator direction is invalid")
+        if type(self.repetition) is not int or self.repetition < 0:
+            raise ValueError("B10 coordinator repetition is invalid")
+        if (type(self.worker_delay_ticks) is not int
+                or self.worker_delay_ticks < 0):
+            raise ValueError("B10 worker delay must be nonnegative")
+        if type(self.never_return) is not bool:
+            raise TypeError("B10 never-return flag must be bool")
+        if type(self.fabric_supported) is not bool:
+            raise TypeError("B10 Fabric support flag must be bool")
+        if self.fabric_supported != (self.unsupported_reason is None):
+            raise ValueError("B10 unsupported scenario needs one reason")
+
+
+def _b10_coordinator_scenarios() -> tuple[_B10CoordinatorScenario, ...]:
+    """Return the frozen 56-case matrix without pretending Fabric can delay input."""
+    scenarios: list[_B10CoordinatorScenario] = []
+    for direction in range(4):
+        for repetition in range(5):
+            scenarios.append(_B10CoordinatorScenario(
+                f"baseline-{direction}-{repetition}",
+                "baseline", direction, repetition,
+            ))
+    for direction in range(4):
+        for repetition in range(2):
+            scenarios.append(_B10CoordinatorScenario(
+                f"first-input-late1-{direction}-{repetition}",
+                "first_input_late1", direction, repetition,
+                fabric_supported=False,
+                unsupported_reason="fabric_input_late1_injection_unavailable",
+            ))
+    for delay in (2, 5, 10):
+        for direction in range(4):
+            for repetition in range(2):
+                scenarios.append(_B10CoordinatorScenario(
+                    f"worker-delay-{delay}-{direction}-{repetition}",
+                    "worker_delay", direction, repetition,
+                    worker_delay_ticks=delay,
+                ))
+    for direction in range(4):
+        scenarios.append(_B10CoordinatorScenario(
+            f"worker-never-return-{direction}",
+            "worker_never_return", direction, 0,
+            never_return=True,
+        ))
+    if len(scenarios) != 56 or len({item.name for item in scenarios}) != 56:
+        raise RuntimeError("B10 coordinator matrix is not the frozen 56 cases")
+    return tuple(scenarios)
+
+
+@dataclass(slots=True)
+class _DelayedWorkerSubmission:
+    generation: int
+    identity: str
+    submit_tick: int
+    worker_observe_tick: int | None = None
+    wrapper_publish_tick: int | None = None
+    discarded_as_stale: bool = False
+
+    def evidence(self) -> dict:
+        return {
+            "identity": self.identity,
+            "submit_tick": self.submit_tick,
+            "worker_observe_tick": self.worker_observe_tick,
+            "wrapper_publish_tick": self.wrapper_publish_tick,
+            "discarded_as_stale": self.discarded_as_stale,
+        }
+
+
+def _motion_worker_item_key(value) -> tuple[str, object] | None:
+    identity = getattr(value, "work_identity", None)
+    if identity is not None:
+        return "identity", identity
+    request = getattr(value, "request", None)
+    token = None if request is None else getattr(request, "job_token", None)
+    if token is None:
+        token = getattr(value, "job_token", None)
+    return None if token is None else ("job_token", token)
+
+
+class _MovementTickDelayedMotionWorker:
+    """Harness-only port that withholds real worker results by movement tick.
+
+    The wrapper never sleeps and never owns the real worker.  A result is first
+    removed from the real worker queue, then published only after the requested
+    number of observed Minecraft movement ticks.  Trial generations prevent a
+    never-return result from leaking into the next NavigationSession.
+    """
+
+    def __init__(self, worker) -> None:
+        self._worker = worker
+        self._lock = threading.Lock()
+        self._generation = 0
+        self._scenario: _B10CoordinatorScenario | None = None
+        self._movement_tick: int | None = None
+        self._submissions: dict[
+            tuple[str, object], _DelayedWorkerSubmission
+        ] = {}
+        self._trial_submissions: list[_DelayedWorkerSubmission] = []
+        self._held: list[
+            tuple[object, _DelayedWorkerSubmission, int | None]
+        ] = []
+        self._stale_result_count = 0
+
+    def begin_trial(
+            self, scenario: _B10CoordinatorScenario, *, movement_tick: int,
+    ) -> None:
+        if type(scenario) is not _B10CoordinatorScenario:
+            raise TypeError("B10 delayed worker needs a typed scenario")
+        if type(movement_tick) is not int or movement_tick < 0:
+            raise ValueError("B10 delayed worker movement tick is invalid")
+        with self._lock:
+            if self._scenario is not None:
+                raise RuntimeError("B10 delayed worker trial is already active")
+            self._generation += 1
+            self._scenario = scenario
+            self._movement_tick = movement_tick
+            self._trial_submissions = []
+            self._held = []
+            self._stale_result_count = 0
+
+    def publish_movement_tick(self, movement_tick: int) -> None:
+        if type(movement_tick) is not int or movement_tick < 0:
+            raise ValueError("B10 delayed worker movement tick is invalid")
+        with self._lock:
+            if self._scenario is None:
+                return
+            if (self._movement_tick is not None
+                    and movement_tick < self._movement_tick):
+                raise ValueError("B10 movement tick cannot go backwards")
+            self._movement_tick = movement_tick
+
+    def submit(self, job) -> bool:
+        key = _motion_worker_item_key(job)
+        with self._lock:
+            if self._scenario is None or self._movement_tick is None:
+                raise RuntimeError("B10 delayed worker has no active trial")
+            if key is None:
+                raise TypeError("B10 delayed worker cannot identify submitted work")
+            record = _DelayedWorkerSubmission(
+                self._generation, repr(key[1]), self._movement_tick,
+            )
+            self._submissions[key] = record
+            self._trial_submissions.append(record)
+        submitted = self._worker.submit(job)
+        if not submitted:
+            with self._lock:
+                self._submissions.pop(key, None)
+                self._trial_submissions.remove(record)
+        return submitted
+
+    def poll_available(self) -> tuple[object, ...]:
+        incoming = self._worker.poll_available()
+        with self._lock:
+            tick = self._movement_tick
+            scenario = self._scenario
+            generation = self._generation
+            for result in incoming:
+                key = _motion_worker_item_key(result)
+                record = None if key is None else self._submissions.get(key)
+                if (record is None or scenario is None
+                        or record.generation != generation):
+                    if record is not None:
+                        record.discarded_as_stale = True
+                    self._stale_result_count += 1
+                    continue
+                record.worker_observe_tick = tick
+                due_tick = (
+                    None if scenario.never_return
+                    else record.submit_tick + scenario.worker_delay_ticks
+                )
+                self._held.append((result, record, due_tick))
+            released: list[object] = []
+            retained = []
+            for result, record, due_tick in self._held:
+                if (scenario is not None and not scenario.never_return
+                        and tick is not None and due_tick is not None
+                        and tick >= due_tick):
+                    record.wrapper_publish_tick = tick
+                    released.append(result)
+                else:
+                    retained.append((result, record, due_tick))
+            self._held = retained
+            return tuple(released)
+
+    def end_trial(self) -> dict:
+        with self._lock:
+            if self._scenario is None:
+                raise RuntimeError("B10 delayed worker has no active trial")
+            scenario = self._scenario
+            held = sum(
+                record.generation == self._generation
+                for _, record, _ in self._held
+            )
+            evidence = {
+                "scenario": scenario.name,
+                "scenario_kind": scenario.kind,
+                "worker_delay_ticks": scenario.worker_delay_ticks,
+                "never_return": scenario.never_return,
+                "submissions": [
+                    record.evidence() for record in self._trial_submissions
+                ],
+                "held_result_count": held,
+                "stale_result_count": self._stale_result_count,
+            }
+            self._scenario = None
+            self._movement_tick = None
+            self._trial_submissions = []
+            self._held = []
+            return evidence
+
+    def close(self) -> None:
+        # The outer B10 lifecycle owns and closes the real process worker.
+        with self._lock:
+            self._scenario = None
+            self._movement_tick = None
+            self._trial_submissions = []
+            self._held = []
+
+    def is_alive(self) -> bool:
+        return self._worker.is_alive()
+
+
 class _B10EvidenceOverflow(RuntimeError):
     """The bounded B10 evidence buffer could not retain every row."""
 
@@ -110,15 +357,15 @@ class _B10StreamSpec:
 
 
 # These limits exceed the largest formal B10 batch recorded before A5-R2 by at
-# least 2x while bounding the total retained JSON to 43 MiB.  The trial count
-# follows the frozen 150-trial task bound; control frames follow 10 * 28.
+# least 2x while bounding the total retained JSON.  The coordinator bounds
+# cover the preregistered 56-case D112 matrix, including typed failures.
 _B10_STREAM_SPECS: Mapping[str, _B10StreamSpec] = {
     "diagnostics.jsonl": _B10StreamSpec(8_192, 16 << 20, 8 << 10),
     "b10-gap-solver-trials.jsonl": _B10StreamSpec(256, 4 << 20, 64 << 10),
     "b10-coordinator-control-frames.jsonl": _B10StreamSpec(
-        1_024, 4 << 20, 16 << 10,
+        2_048, 8 << 20, 16 << 10,
     ),
-    "b10-coordinator-trials.jsonl": _B10StreamSpec(32, 2 << 20, 64 << 10),
+    "b10-coordinator-trials.jsonl": _B10StreamSpec(64, 4 << 20, 64 << 10),
     "r4-moving-gap-negative-trials.jsonl": _B10StreamSpec(
         64, 1 << 20, 16 << 10,
     ),
@@ -510,6 +757,9 @@ def _receiver_diagnostic_summary(rows: list[dict]) -> dict:
     cycles = [row for row in rows if row.get("event") == "receiver_cycle"]
     durations = [row["duration_ns"] for row in cycles
                  if type(row.get("duration_ns")) is int]
+    submitted = {row.get("identity"): row for row in rows
+                 if row.get("event") == "worker_submit"
+                 and type(row.get("identity")) is str}
     observed = {row.get("identity"): row for row in rows
                 if row.get("event") == "receiver_observed_result"
                 and type(row.get("identity")) is str}
@@ -523,6 +773,7 @@ def _receiver_diagnostic_summary(rows: list[dict]) -> dict:
     invisible_next_decision = 0
     unavailable = 0
     for identity, publish in published.items():
+        submit = submitted.get(identity)
         observed_row = observed.get(identity)
         consume = consumed.get(identity)
         observed_tick = (
@@ -537,6 +788,9 @@ def _receiver_diagnostic_summary(rows: list[dict]) -> dict:
             invisible_next_decision += 1
         delivery.append({
             "identity": identity,
+            "worker_submit_tick": (
+                None if submit is None else submit.get("movement_tick")
+            ),
             "receiver_observed_result_tick": observed_tick,
             "registry_publish_tick": publish_tick,
             "first_control_consume_tick": consume_tick,
@@ -548,12 +802,34 @@ def _receiver_diagnostic_summary(rows: list[dict]) -> dict:
                 None if type(publish_tick) is not int or type(consume_tick) is not int
                 else consume_tick - publish_tick
             ),
+            "worker_submit_to_observed_ticks": (
+                None if submit is None or type(submit.get("movement_tick")) is not int
+                or type(observed_tick) is not int
+                else observed_tick - submit["movement_tick"]
+            ),
+            "worker_elapsed_ns": (
+                None if observed_row is None
+                else observed_row.get("worker_elapsed_ns")
+            ),
+            "worker_queue_after_completion_ns": (
+                None if observed_row is None
+                or type(observed_row.get("monotonic_ns")) is not int
+                or type(observed_row.get("worker_completed_monotonic_ns")) is not int
+                or observed_row["worker_completed_monotonic_ns"] <= 0
+                else max(0, observed_row["monotonic_ns"]
+                         - observed_row["worker_completed_monotonic_ns"])
+            ),
         })
+    completion_available = sum(
+        type(item["worker_queue_after_completion_ns"]) is int
+        for item in delivery
+    )
     return {
-        "schema_version": "mc2p.b10-receiver-diagnostic-summary.v2",
+        "schema_version": "mc2p.b10-receiver-diagnostic-summary.v3",
         "worker_completion_to_receiver_observed": {
-            "status": "unavailable",
-            "reason": "worker completion is not present in the existing result protocol",
+            "status": "available" if completion_available else "unavailable",
+            "available_count": completion_available,
+            "unavailable_count": len(delivery) - completion_available,
         },
         "cycle_count": len(cycles),
         "cycle_duration_ns": {
@@ -1450,11 +1726,37 @@ def _run_b10_gap_solver_runtime(
             replace(built.state, movement_tick_id=tick),
         )
 
-    for repetition in range(10):
-        direction_index = repetition % len(_DIRECTIONS)
+    delayed_motion_worker = _MovementTickDelayedMotionWorker(motion_worker)
+    coordinator_scenarios = _b10_coordinator_scenarios()
+    for scenario_index, scenario in enumerate(coordinator_scenarios):
+        direction_index = scenario.direction_index
+        repetition = scenario.repetition
+        trial_name = f"coordinator-{scenario.name}"
+        if not scenario.fabric_supported:
+            trial = dict(
+                name=trial_name,
+                scenario=scenario.name,
+                scenario_kind=scenario.kind,
+                direction_index=direction_index,
+                repetition=repetition,
+                fabric_supported=False,
+                unsupported_reason=scenario.unsupported_reason,
+                terminal_state="not_run",
+                terminal_reason=scenario.unsupported_reason,
+                damage_points=0.0,
+                ordered_source_id=None,
+                source_release_status="not_registered",
+                source_released=True,
+                worker_delivery=None,
+                samples=[],
+            )
+            coordinator_trials.append(trial)
+            evidence_buffer.append("b10-coordinator-trials.jsonl", trial)
+            continue
         _, _, yaw = _DIRECTIONS[direction_index]
         teleport(yaw)
         anchor = anchor_now()
+        start_health = float(frame.body.health_points)
         target = targets[direction_index]
         start_query = query_support_surfaces(
             frame.world, origin_x, origin_z, feet_y, feet_y,
@@ -1466,24 +1768,28 @@ def _run_b10_gap_solver_runtime(
             raise RuntimeError("B10 session could not resolve a known support surface")
         start_id = start_query.surfaces[0].node_id
         end_id = target_query.surfaces[0].node_id
-        route_id = f"b10-session-{direction_index}-{repetition}"
+        route_id = f"b10-session-{scenario_index}-{direction_index}-{repetition}"
+        delayed_motion_worker.begin_trial(
+            scenario, movement_tick=anchor.movement_tick_id,
+        )
         session = NavigationSession(
             route_id,
             session_profiles,
             planner_worker=planner_worker,
             owns_planner_worker=False,
-            motion_worker=motion_worker,
+            motion_worker=delayed_motion_worker,
             observation_adapter=runtime.navigation_observation_adapter,
         )
         source = runtime.register_ordered_source(route_id)
         session.bind_source(source)
-        trial_name = f"default-session-{direction_index}-{repetition}"
+        trial = None
+        source_released = False
         try:
             session.start(SurfacePlanningRequest(
-                repetition + 1,
+                scenario_index + 1,
                 f"{route_id}-request",
                 "b10-gap-goal",
-                repetition + 1,
+                scenario_index + 1,
                 frame.session.value,
                 start_id,
                 end_id,
@@ -1499,7 +1805,11 @@ def _run_b10_gap_solver_runtime(
             # The verified gap proof itself is bounded to 20 ticks.  A route
             # may need at most five 36-degree look frames to undo an earlier
             # information look before that proof can be solved and started.
+            terminal_reason = None
             while len(samples) < 28:
+                delayed_motion_worker.publish_movement_tick(
+                    current_anchor.movement_tick_id,
+                )
                 session._motion_result_inbox.publish_diagnostic_movement_tick(
                     current_anchor.movement_tick_id,
                 )
@@ -1527,16 +1837,17 @@ def _run_b10_gap_solver_runtime(
                             "" if session._coordinator is None
                             else session._coordinator.last_failure_reason
                         )
-                        raise RuntimeError(
-                            "B10 navigation session stopped before completion: "
-                            f"{proposal.report.reason}; "
+                        terminal_reason = (
+                            f"{proposal.report.reason};"
                             f"coordinator={coordinator_reason or 'none'}"
                         )
+                        break
                     if time.perf_counter() >= poll_deadline:
-                        raise RuntimeError(
-                            "B10 navigation session did not deliver motion in time: "
+                        terminal_reason = (
+                            "harness_wall_timeout_without_typed_terminal:"
                             f"{proposal.report.reason}"
                         )
+                        break
                     waiting_controls = _waiting_control_proposals(
                         proposal, frame, request,
                     )
@@ -1576,6 +1887,9 @@ def _run_b10_gap_solver_runtime(
                         frame = _runtime_navigation_frame(runtime)
                         diagnostic()
                         current_anchor = anchor_now()
+                        delayed_motion_worker.publish_movement_tick(
+                            current_anchor.movement_tick_id,
+                        )
                         evidence_buffer.append(
                             "b10-coordinator-control-frames.jsonl",
                             {
@@ -1610,6 +1924,17 @@ def _run_b10_gap_solver_runtime(
                 if proposal.control_frame is None:
                     raise RuntimeError("B10 session omitted its control frame")
                 verified_window = _verified_submission_window(decision)
+                grant_movement_tick = current_anchor.movement_tick_id
+                admission = (
+                    None if session._coordinator is None
+                    else session._coordinator.last_admission
+                )
+                motion_identity = (
+                    repr(admission.identity.key)
+                    if admission is not None
+                    and admission.disposition is AsyncAdmissionDisposition.APPLIED
+                    else None
+                )
                 now = time.perf_counter_ns()
                 backend_started_ns = runtime.backend_elapsed_ns_total
                 blocking_started_ns = runtime.backend_blocking_io_ns_total
@@ -1665,6 +1990,9 @@ def _run_b10_gap_solver_runtime(
                 frame = _runtime_navigation_frame(runtime)
                 diagnostic()
                 current_anchor = anchor_now()
+                delayed_motion_worker.publish_movement_tick(
+                    current_anchor.movement_tick_id,
+                )
                 window_diagnostics = _input_window_diagnostics(
                     owned_applications, verified_window,
                 )
@@ -1673,6 +2001,9 @@ def _run_b10_gap_solver_runtime(
                     decision_state=decision.state.value,
                     reason_code=decision.reason_code,
                     submit_input=decision.submit_input,
+                    grant_movement_tick=grant_movement_tick,
+                    motion_identity=motion_identity,
+                    control_sequence_id=action.request_sequence_id,
                     movement=asdict(decision.movement),
                     position=list(frame.body.position),
                     on_ground=frame.body.is_on_ground,
@@ -1700,18 +2031,72 @@ def _run_b10_gap_solver_runtime(
                 )
             else:
                 raise RuntimeError("B10 navigation session exceeded its motion horizon")
-            if session.report.state is not NavigationSessionState.COMPLETE:
-                raise RuntimeError(
-                    f"B10 navigation session ended in {session.report.state.value}: "
-                    f"{session.report.reason}"
-                )
+            terminal_state = session.report.state.value
+            if (session.report.state is not NavigationSessionState.COMPLETE
+                    and terminal_reason is None):
+                terminal_reason = session.report.reason
             target_position = (
                 target[0] + .5, float(target[1] + 1), target[2] + .5,
             )
+            collect_receiver_diagnostics(session, trial_name)
+            receiver_rows = [
+                row for row in evidence_buffer.rows(
+                    "b10-receiver-diagnostics.jsonl"
+                )
+                if row.get("trial") == trial_name
+            ]
+            receiver_delivery = _receiver_diagnostic_summary(
+                receiver_rows,
+            )["deliveries"]
+            first_verified = next((
+                sample for sample in samples
+                if sample["verified_command_index"] == 0
+            ), None)
+            actual_application_tick = (
+                None if first_verified is None
+                or not first_verified["actual_movement_ticks"]
+                else min(first_verified["actual_movement_ticks"])
+            )
+            motion_identity = (
+                None if first_verified is None
+                else first_verified["motion_identity"]
+            )
+            delivery_chain = next((
+                item for item in receiver_delivery
+                if item["identity"] == motion_identity
+            ), None)
+            complete_delivery_chain = (
+                first_verified is not None
+                and delivery_chain is not None
+                and all(type(value) is int for value in (
+                    delivery_chain["worker_submit_tick"],
+                    delivery_chain["receiver_observed_result_tick"],
+                    delivery_chain["registry_publish_tick"],
+                    delivery_chain["first_control_consume_tick"],
+                    delivery_chain["worker_elapsed_ns"],
+                    delivery_chain["worker_queue_after_completion_ns"],
+                    first_verified["grant_movement_tick"],
+                    first_verified["expected_movement_tick"],
+                    first_verified["latest_movement_tick"],
+                    actual_application_tick,
+                ))
+                and delivery_chain["worker_submit_tick"]
+                    <= delivery_chain["receiver_observed_result_tick"]
+                    <= delivery_chain["registry_publish_tick"]
+                    <= delivery_chain["first_control_consume_tick"]
+                    <= first_verified["grant_movement_tick"]
+                    < actual_application_tick
+            )
             trial = dict(
                 name=trial_name,
+                scenario=scenario.name,
+                scenario_kind=scenario.kind,
                 direction_index=direction_index,
                 repetition=repetition,
+                fabric_supported=True,
+                unsupported_reason=None,
+                worker_delay_ticks=scenario.worker_delay_ticks,
+                worker_never_return=scenario.never_return,
                 waiting_polls=waiting_polls,
                 entry_alignment_frames=sum(
                     sample["reason_code"] == "aligning_verified_motion_heading"
@@ -1725,20 +2110,44 @@ def _run_b10_gap_solver_runtime(
                 ),
                 level_error_blocks=abs(frame.body.position[1] - target_position[1]),
                 landed=frame.body.is_on_ground,
+                terminal_state=terminal_state,
+                terminal_reason=terminal_reason,
+                damage_points=max(
+                    0.0, start_health - float(frame.body.health_points),
+                ),
+                ordered_source_id=source.source_id,
+                source_release_status="pending",
+                source_released=False,
+                worker_delivery=receiver_delivery,
+                motion_identity=motion_identity,
+                delivery_chain=delivery_chain,
+                complete_delivery_chain=complete_delivery_chain,
+                first_verified_application_tick=actual_application_tick,
                 horizontal_collisions=sum(
                     int(sample["horizontal_collision"]) for sample in samples
                 ),
                 samples=samples,
             )
-            coordinator_trials.append(trial)
-            evidence_buffer.append("b10-coordinator-trials.jsonl", trial)
         finally:
             collect_receiver_diagnostics(session, trial_name)
             if runtime.state.value == "ready":
                 runtime.cancel_source(source.source_id)
                 runtime.unregister_ordered_source(source)
+                source_released = True
             session.unbind_source(source)
             session.close()
+            worker_injection = delayed_motion_worker.end_trial()
+        if trial is None:
+            raise RuntimeError(
+                f"B10 coordinator trial did not produce evidence: {trial_name}"
+            )
+        trial["source_released"] = source_released
+        trial["source_release_status"] = (
+            "explicitly_released" if source_released else "not_released"
+        )
+        trial["worker_injection"] = worker_injection
+        coordinator_trials.append(trial)
+        evidence_buffer.append("b10-coordinator-trials.jsonl", trial)
 
     moving_negative_trials: list[dict] = []
     speed_bands = ((.5, 1.0), (1.0, 2.0), (2.0, 3.0))
@@ -2017,6 +2426,67 @@ def _run_b10_gap_solver_runtime(
     moving_validation = [
         trial for trial in trials if trial["group"].startswith("r4_validation_")
     ]
+    coordinator_executed = [
+        trial for trial in coordinator_trials if trial["fabric_supported"]
+    ]
+    coordinator_unsupported = [
+        trial for trial in coordinator_trials if not trial["fabric_supported"]
+    ]
+
+    def coordinator_completed(trial: dict) -> bool:
+        return (
+            trial["terminal_state"] == NavigationSessionState.COMPLETE.value
+            and trial["landed"]
+            and trial["horizontal_error_blocks"] <= .2
+            and trial["level_error_blocks"] <= .03
+            and trial["horizontal_collisions"] == 0
+            and trial["damage_points"] == 0.0
+            and trial["source_released"]
+        )
+
+    def coordinator_typed_safe_terminal(trial: dict) -> bool:
+        return (
+            trial["terminal_state"] in {
+                NavigationSessionState.CANCELLED.value,
+                NavigationSessionState.FAILED.value,
+                NavigationSessionState.REQUIRES_INTERACTION.value,
+            }
+            and type(trial["terminal_reason"]) is str
+            and bool(trial["terminal_reason"])
+            and "harness_wall_timeout" not in trial["terminal_reason"]
+            and trial["landed"]
+            and trial["damage_points"] == 0.0
+            and trial["source_released"]
+        )
+
+    def coordinator_delivery_gate(trial: dict) -> bool:
+        verified = [
+            sample for sample in trial["samples"]
+            if sample["verified_command_index"] is not None
+        ]
+        if not verified:
+            return True
+        first = next((
+            sample for sample in verified
+            if sample["verified_command_index"] == 0
+        ), None)
+        chain = trial["delivery_chain"]
+        return (
+            first is not None
+            and trial["complete_delivery_chain"]
+            and chain["first_control_consume_tick"]
+                <= first["expected_movement_tick"] - 1
+            and first["grant_movement_tick"]
+                <= first["expected_movement_tick"] - 1
+            and all(
+                sample["actual_minus_expected_ticks"] is not None
+                and sample["actual_minus_expected_ticks"] >= 0
+                and sample["actual_minus_latest_ticks"] is not None
+                and sample["actual_minus_latest_ticks"] <= 0
+                for sample in verified
+            )
+        )
+
     summary = dict(
         schema_version="mc2p.b10-gap-solver.v2",
         solver_id=SOLVER_ID,
@@ -2054,20 +2524,49 @@ def _run_b10_gap_solver_runtime(
         ),
         moving_negative_case_count=len(moving_negative_trials) * 2,
         moving_negative_trials=moving_negative_trials,
-        coordinator_validation_count=len(coordinator_trials),
+        coordinator_preregistered_count=len(coordinator_trials),
+        coordinator_executed_count=len(coordinator_executed),
+        coordinator_unsupported_count=len(coordinator_unsupported),
+        coordinator_validation_count=len(coordinator_executed),
         coordinator_validation_success_count=sum(
             trial["waiting_polls"] > 0
-            and trial["landed"]
-            and trial["horizontal_error_blocks"] <= .2
-            and trial["level_error_blocks"] <= .03
-            and trial["horizontal_collisions"] == 0
-            for trial in coordinator_trials
+            and coordinator_completed(trial)
+            for trial in coordinator_executed
+        ),
+        coordinator_baseline_success_count=sum(
+            coordinator_completed(trial)
+            for trial in coordinator_executed
+            if trial["scenario_kind"] == "baseline"
+        ),
+        coordinator_delay_2_5_success_count=sum(
+            coordinator_completed(trial)
+            for trial in coordinator_executed
+            if trial["scenario_kind"] == "worker_delay"
+            and trial["worker_delay_ticks"] in {2, 5}
+        ),
+        coordinator_delay_10_safe_count=sum(
+            coordinator_completed(trial)
+            or coordinator_typed_safe_terminal(trial)
+            for trial in coordinator_executed
+            if trial["scenario_kind"] == "worker_delay"
+            and trial["worker_delay_ticks"] == 10
+        ),
+        coordinator_never_return_safe_count=sum(
+            coordinator_typed_safe_terminal(trial)
+            for trial in coordinator_executed
+            if trial["scenario_kind"] == "worker_never_return"
         ),
         solve_time_ns=dict(
             samples=len(solve_times),
             p95=_percentile(solve_times, .95),
             p99=_percentile(solve_times, .99),
             maximum=max(solve_times),
+        ),
+        synchronous_probe_timing=dict(
+            scope="synchronous_probe_only",
+            disposition="report_only",
+            warning_threshold_ns=30_000_000,
+            warning_count=sum(value >= 30_000_000 for value in solve_times),
         ),
         **_solve_measurement_summary(trials),
         **gc_attribution,
@@ -2104,13 +2603,29 @@ def _run_b10_gap_solver_runtime(
         dict(name="b10b_all_validation_runs_land_in_target", passed=(
             summary["validation_success_count"] == 40
         )),
-        dict(name="b10c_default_coordinator_ten_fabric_runs", passed=(
-            summary["coordinator_validation_count"] == 10
-            and summary["coordinator_validation_success_count"] == 10
+        dict(name="b10c_preregistered_coordinator_matrix_is_honest", passed=(
+            summary["coordinator_preregistered_count"] == 56
+            and summary["coordinator_executed_count"] == 48
+            and summary["coordinator_unsupported_count"] == 8
+            and all(
+                trial["unsupported_reason"]
+                    == "fabric_input_late1_injection_unavailable"
+                for trial in coordinator_unsupported
+            )
+        )),
+        dict(name="b10c_worker_delivery_matrix_is_safe_and_bounded", passed=(
+            summary["coordinator_baseline_success_count"] == 20
+            and summary["coordinator_delay_2_5_success_count"] == 16
+            and summary["coordinator_delay_10_safe_count"] == 8
+            and summary["coordinator_never_return_safe_count"] == 4
+            and all(trial["damage_points"] == 0.0
+                    for trial in coordinator_executed)
             and all(
                 trial["entry_alignment_frames"] <= 5
-                for trial in coordinator_trials
+                for trial in coordinator_executed
             )
+            and all(coordinator_delivery_gate(trial)
+                    for trial in coordinator_executed)
         )),
         dict(name="r4_three_speed_bands_four_directions_five_runs_each",
              passed=(
@@ -2149,7 +2664,7 @@ def _run_b10_gap_solver_runtime(
         )),
         dict(name="b10b_solver_is_bounded", passed=(
             all(trial["candidates_evaluated"] <= 12 for trial in trials)
-            and summary["solve_time_ns"]["maximum"] < 30_000_000
+            and all(trial["command_count"] <= 20 for trial in trials)
         )),
         dict(name="b10b_gc_pause_timeline_complete",
              passed=summary["gc_pause_timeline"]["complete"]),

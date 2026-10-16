@@ -407,7 +407,7 @@ class GroundHandoffTarget:
                 or type(self.latest_tick) is not int
                 or not self.first_tick <= self.latest_tick < self.first_tick + 20
                 or type(self.movements) is not tuple
-                or not 1 <= len(self.movements) <= 4
+                or not 1 <= len(self.movements) <= 5
                 or any(type(value) is not MovementV1 for value in self.movements)
                 or type(self.movement_yaws_radians) is not tuple
                 or (self.movement_yaws_radians

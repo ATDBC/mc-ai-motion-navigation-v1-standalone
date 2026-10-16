@@ -71,4 +71,6 @@ GC 全程记录 **656 个事件、328 个完整区间**，gen0／gen1／gen2 分
 
 D111 **FAILED／STOPPED**，D110-SOLVE-01 保持未关闭。不修改 30 ms 门槛，不重跑 B10，不追加求解器优化；连续两跳、零等待交接和新动作仍未授权。
 
+2026-10-16 后注：用户确认本次正式运行时还有其他程序在工作；三方又确认 D111 整轮的求解线程 CPU 和无关 trace 投影均比 D110 慢。该信息不改变旧门槛下的失败，但限制了性能解释：本批可以证明 GC 不是整体超限主因，不能代表空闲机器上的稳定求解速度。后续按 [D112](../decisions/0112-separate-reference-calibration-from-runtime-delivery.md) 区分参考机校准、生产交付期限和跨设备有界降级。
+
 Windows 是正式性能平台。三方 D110 审查已在 Linux 上补齐 settle、zombie／双 fork 和 fd 动态复核；D111 又采纳两项只改测试的时序修正。Linux 机制结果不替代 Windows 墙钟，也不声称本轮 Windows 执行了 Linux fork 动态场景。相关状态见[缺陷台账](defect-ledger.md)。

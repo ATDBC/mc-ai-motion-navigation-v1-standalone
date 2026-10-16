@@ -43,7 +43,9 @@ public final class DeploymentObservationProbe implements ClientModInitializer {
         serverPort = port("MC2P_SERVER_PORT");
         transport = new ProbeTransport(port("MC2P_IPC_PORT"), 30000);
         executor = new ClientBehaviorExecutor();
-        deadline = System.nanoTime() + 90_000_000_000L;
+        deadline = Math.addExact(
+                System.nanoTime(),
+                durationMillis("MC2P_SESSION_TIMEOUT_MILLIS"));
         transport.start();
         ClientTickEvents.START_CLIENT_TICK.register(this::startTick);
         ClientTickEvents.END_CLIENT_TICK.register(this::endTick);
@@ -62,6 +64,16 @@ public final class DeploymentObservationProbe implements ClientModInitializer {
         int value = Integer.parseInt(text);
         if (value < 1 || value > 65535) throw new IllegalArgumentException("invalid loopback port");
         return value;
+    }
+
+    private static long durationMillis(String name) {
+        String text = System.getenv(name);
+        if (text == null || !text.matches("[0-9]{6,7}"))
+            throw new IllegalArgumentException("invalid session timeout");
+        long value = Long.parseLong(text);
+        if (value < 120_000L || value > 3_600_000L)
+            throw new IllegalArgumentException("invalid session timeout");
+        return Math.multiplyExact(value, 1_000_000L);
     }
 
     private void startTick(MinecraftClient client) {
@@ -173,7 +185,6 @@ public final class DeploymentObservationProbe implements ClientModInitializer {
             transport.offer(DeploymentSampleEncoder.encode(
                     episode, payload, receipt, diagnostics));
             pending = false;
-            deadline = System.nanoTime() + 30_000_000_000L;
         } catch (RuntimeException error) { fail(client, error); }
     }
 

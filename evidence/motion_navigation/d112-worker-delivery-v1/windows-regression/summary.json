@@ -1,0 +1,74 @@
+{
+  "java": {
+    "public": {
+      "passed": 3,
+      "total": 3
+    },
+    "source": {
+      "passed": 3,
+      "total": 3
+    }
+  },
+  "post_fabric_scope": "One harness field-name fix; 62 focused tests and current snapshot verify only. Full shards were not rerun.",
+  "reports": {
+    "public_forward": {
+      "cleanup_failures": 0,
+      "modules": 187,
+      "path": ".tmp/d112-public/.tmp/d112-public-forward.json",
+      "sha256": "d9676146f6e0494116d56cf2f4521d9d498fad4576f8c9dc26a8b1670f6fbf06",
+      "summary": {
+        "error": 0,
+        "failed": 0,
+        "launch_error": 0,
+        "passed": 187,
+        "timeout": 0
+      },
+      "tests": 2323
+    },
+    "public_reverse": {
+      "cleanup_failures": 0,
+      "modules": 187,
+      "path": ".tmp/d112-public/.tmp/d112-public-reverse.json",
+      "sha256": "2055332924a953e797e35b83039d4dd5ed9ec6345a75d46aebe3714c4181900b",
+      "summary": {
+        "error": 0,
+        "failed": 0,
+        "launch_error": 0,
+        "passed": 187,
+        "timeout": 0
+      },
+      "tests": 2323
+    },
+    "source_forward": {
+      "cleanup_failures": 0,
+      "modules": 188,
+      "path": ".tmp/d112-source-forward-final.json",
+      "sha256": "0d7e7e4ca3bb10764ff692587e6d072687e10afb32f6cd3500efcf7a0f8c5034",
+      "summary": {
+        "error": 0,
+        "failed": 0,
+        "launch_error": 0,
+        "passed": 188,
+        "timeout": 0
+      },
+      "tests": 2347
+    },
+    "source_reverse": {
+      "cleanup_failures": 0,
+      "modules": 188,
+      "path": ".tmp/d112-source-reverse-final.json",
+      "sha256": "4d1e51b1fa0df67ec0b96fbe86c591d0b8c4c8cfeb7ec1655d4b75a5b9448b15",
+      "summary": {
+        "error": 0,
+        "failed": 0,
+        "launch_error": 0,
+        "passed": 188,
+        "timeout": 0
+      },
+      "tests": 2347
+    }
+  },
+  "schema": "mc2p.d112-windows-regression.v1",
+  "standalone_verify_files_after_documentation": 2354,
+  "standalone_verify_files_before_fabric": 2338
+}

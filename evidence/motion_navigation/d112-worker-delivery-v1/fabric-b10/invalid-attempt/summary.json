@@ -1,0 +1,75 @@
+{
+  "artifact": "artifacts/fabric-deployment/20261016T033758422187Z-0bf7d2cd",
+  "boundary": "The KeyError occurred while assembling the first D112 coordinator trial after 82 legacy solver trials; no D112 coordinator trial record was completed. This attempt cannot judge robot behavior and is retained as invalid harness evidence.",
+  "calibration_comparison": {
+    "comparable": true,
+    "metrics": [
+      {
+        "after_mean_ms": 24.7302,
+        "before_mean_ms": 25.0685,
+        "drift_percent": -1.3495023635239467,
+        "metric": "p50",
+        "within_10_percent": true
+      },
+      {
+        "after_mean_ms": 24.83575,
+        "before_mean_ms": 25.19815,
+        "drift_percent": -1.4382008202983076,
+        "metric": "p95",
+        "within_10_percent": true
+      }
+    ],
+    "schema": "mc2p.d112-calibration-comparison.v1",
+    "workload_match": true,
+    "workload_signature_match": true
+  },
+  "cleanup_failures": [],
+  "coordinator_control_frame_rows": 20,
+  "coordinator_trial_rows": 0,
+  "ipc_port": 8142,
+  "legacy_solver_trial_rows": 82,
+  "ordered_source_release": {
+    "source_id": "ordered/9f30b6ec2bc445299075f01767a0d460/0/1",
+    "status": "explicitly_released"
+  },
+  "primary_failure": {
+    "message": "'delivery'",
+    "type": "KeyError"
+  },
+  "raw_files": {
+    "client-0/b10-coordinator-control-frames.jsonl": {
+      "bytes": 19951,
+      "sha256": "1a73e39c5963ceeeea737fabd1188ce5f88310bd4143595076c220f5fe993986"
+    },
+    "client-0/b10-gap-solver-trials.jsonl": {
+      "bytes": 554871,
+      "sha256": "1a990175e627f88e3988174c8d01cc21e6213be3aec8acbfa792edc5f4ae4706"
+    },
+    "client-0/b10-lifecycle.json": {
+      "bytes": 196,
+      "sha256": "0e11d74296c5f06a8ce66015a63f661c595dbe24514a13e4eb45e57b925f5ba9"
+    },
+    "client-0/b10-receiver-diagnostics.jsonl": {
+      "bytes": 17618,
+      "sha256": "2f9b0281f8001deac76399d0aec498ab93e7870732b6c8bfac4e59b59827c8d4"
+    },
+    "client-0/trace.jsonl": {
+      "bytes": 24224363,
+      "sha256": "0e7ff021bfea5055bd4bff1be4721e19e5f7eb1c60302882f340ccda1152b996"
+    },
+    "failure.txt": {
+      "bytes": 857,
+      "sha256": "d833944df941861e7cbfb8b436fee8b726eecba868ef44ced63fd6bb87fb3421"
+    },
+    "result.json": {
+      "bytes": 15273,
+      "sha256": "938b7fa5775d62c84edc0cdf45f0efe63219b35b37e2643d8619f3616fb1aeec"
+    }
+  },
+  "receiver_diagnostic_rows": 62,
+  "schema": "mc2p.d112-fabric-summary.v1",
+  "seed": 21003,
+  "server_port": 25599,
+  "status": "INVALID_HARNESS_RUN",
+  "timeout_seconds": 600
+}

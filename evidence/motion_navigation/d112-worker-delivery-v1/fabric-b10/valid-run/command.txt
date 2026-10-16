@@ -1,0 +1,2 @@
+$env:JAVA_HOME=(Resolve-Path .venv\Library\lib\jvm).Path
+.\.venv\python.exe scripts\probe_fabric_deployment_observation.py --seed 21003 --server-port 25601 --ipc-port 8144 --b10-gap-solver-probe --time-diagnostics --physics-tick-diagnostics --ftick-diagnostics --timeout-seconds 600

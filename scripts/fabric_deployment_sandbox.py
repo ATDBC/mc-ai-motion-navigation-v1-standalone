@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import locale
+import math
 import os
 from pathlib import Path
 import re
@@ -109,7 +110,8 @@ def client_environment(base: dict[str, str], *, token: str, server_port: int, ip
                        time_diagnostics: bool = False, block_parity_diagnostics: bool = False,
                        physics_tick_diagnostics: bool = False,
                        control_diagnostics: bool = False,
-                       ftick_diagnostics: bool = False) -> dict[str, str]:
+                       ftick_diagnostics: bool = False,
+                       session_timeout_seconds: float = 240.0) -> dict[str, str]:
     _port(server_port)
     _port(ipc_port)
     if type(token) is not str or re.fullmatch("[0-9a-f]{64}", token) is None:
@@ -128,6 +130,13 @@ def client_environment(base: dict[str, str], *, token: str, server_port: int, ip
         raise ValueError('control diagnostics selection must be boolean')
     if type(ftick_diagnostics) is not bool:
         raise ValueError('F-TICK diagnostics selection must be boolean')
+    if (type(session_timeout_seconds) not in (int, float)
+            or not math.isfinite(session_timeout_seconds)
+            or not 120 <= session_timeout_seconds <= 3600):
+        raise ValueError("client session timeout must be within [120, 3600] seconds")
+    timeout_milliseconds = round(session_timeout_seconds * 1000)
+    if abs(timeout_milliseconds / 1000 - session_timeout_seconds) > 1.0e-9:
+        raise ValueError("client session timeout requires millisecond precision")
     if (physics_tick_diagnostics or control_diagnostics or ftick_diagnostics) and not time_diagnostics:
         raise ValueError('physics, control and F-TICK diagnostics require time diagnostics')
     if not SURFACE_NATIVE_LIBRARY.is_file():
@@ -138,6 +147,7 @@ def client_environment(base: dict[str, str], *, token: str, server_port: int, ip
     result = {key: value for key, value in base.items()
               if key.upper() not in blocked and not key.upper().startswith(("FABRIC_", "MC2P_"))}
     result.update(MC2P_SESSION_TOKEN=token, MC2P_SERVER_PORT=str(server_port), MC2P_IPC_PORT=str(ipc_port),
+        MC2P_SESSION_TIMEOUT_MILLIS=str(timeout_milliseconds),
         MC2P_SURFACE_NATIVE_LIBRARY=str(SURFACE_NATIVE_LIBRARY.resolve()),
         HTTP_PROXY="http://127.0.0.1:7897", HTTPS_PROXY="http://127.0.0.1:7897", ALL_PROXY="http://127.0.0.1:7897",
         NO_PROXY="localhost,127.0.0.1,::1,repo.huaweicloud.com")

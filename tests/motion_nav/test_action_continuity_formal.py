@@ -363,7 +363,7 @@ class ActionContinuityFormalTests(unittest.TestCase):
         self.assertIsNotNone(refreshed)
         self.assertEqual(refreshed.preparation.source_anchor, revalidation.anchor)
         self.assertEqual(refreshed.entry_state, refreshed.preparation.trajectory[-1])
-        self.assertEqual(len(refreshed.preparation.commands), 4)
+        self.assertEqual(len(refreshed.preparation.commands), 5)
         self._assert_executed_preparation(result, worker)
 
     def test_first_jump_loses_arbitration_without_false_application(self):

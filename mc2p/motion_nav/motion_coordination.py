@@ -37,7 +37,6 @@ from mc2p.motion_nav.motion_solver import (
     GapSolveRequest, GapSolverPolicy, LandingRegion, MotionSolveKind,
     MotionCommandTick, VerifiedMotionResult, SolveResult, SolveStatus, check_motion_entry,
     gap_entry_heading_delta_radians, gap_entry_heading_is_aligned,
-    solve_air_transition, solve_one_cell_gap,
 )
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.retry_ledger import (
@@ -126,6 +125,7 @@ def _gap_physics_snapshot(world, anchor, request) -> PhysicsWorldView:
 class GapPreparationStatus(StrEnum):
     READY = "ready"
     UNSUPPORTED_ROUTE_ACTION = "unsupported_route_action"
+    PRECOMPUTED_REQUIRED = "precomputed_required"
     SOLVE_FAILED = "solve_failed"
     ADMISSION_REJECTED = "admission_rejected"
     REVALIDATION_REQUIRED = "revalidation_required"
@@ -364,9 +364,12 @@ def prepare_planned_gap_motion(
             GapPreparationStatus.UNSUPPORTED_ROUTE_ACTION,
             reason=request_reason,
         )
+    if precomputed is None:
+        return GapPreparationResult(
+            GapPreparationStatus.PRECOMPUTED_REQUIRED,
+            reason="precomputed_required",
+        )
     solved = precomputed
-    if solved is None:
-        solved = solve_one_cell_gap(anchor, world, request)
     if solved.status is not SolveStatus.SOLVED or solved.proof is None:
         return GapPreparationResult(
             GapPreparationStatus.SOLVE_FAILED,
@@ -442,7 +445,12 @@ def prepare_planned_air_transition(
             GapPreparationStatus.UNSUPPORTED_ROUTE_ACTION,
             reason=request_reason,
         )
-    solved = precomputed or solve_air_transition(anchor, world, request)
+    if precomputed is None:
+        return GapPreparationResult(
+            GapPreparationStatus.PRECOMPUTED_REQUIRED,
+            reason="precomputed_required",
+        )
+    solved = precomputed
     if solved.status is not SolveStatus.SOLVED or solved.proof is None:
         return GapPreparationResult(
             GapPreparationStatus.SOLVE_FAILED,
@@ -830,7 +838,7 @@ class MotionRouteCoordinator:
                 or self._delivery_identity == result.work_identity):
             return
         # Sample first arrival from the real source, before any entry wait.
-        self._delivery_ticks = min(4, max(1, anchor.movement_tick_id
+        self._delivery_ticks = min(5, max(1, anchor.movement_tick_id
             - job.anchor.movement_tick_id))
         self._delivery_identity = result.work_identity
 
@@ -1308,7 +1316,7 @@ class MotionRouteCoordinator:
         sx, sy, sz = action_spec(action).solve_geometry(action, anchor).start
         state = anchor.physics_state
         speed = math.hypot(state.velocity_blocks_per_tick[0], state.velocity_blocks_per_tick[2])
-        # One conditional prefix, at most four ticks / 200 ms of preparation.
+        # One conditional prefix, at most five ticks / 250 ms of preparation.
         # Each real tick still passes arbitration, and the ledger must match it.
         if math.hypot(state.position[0] - sx, state.position[2] - sz) > max(.20, speed * 4 + .20):
             return

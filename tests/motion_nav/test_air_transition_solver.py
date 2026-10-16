@@ -2,6 +2,7 @@ from dataclasses import replace
 import math
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.online_motion import (
@@ -76,6 +77,33 @@ def fixture(kind, direction=(0, 1), *, speed=1.5, missing=()):
 
 
 class AirTransitionSolverTests(unittest.TestCase):
+
+    def test_supported_air_transition_requires_precomputed_result_without_inline_solving(self):
+        from mc2p.motion_nav.motion_coordination import (
+            GapPreparationStatus, prepare_planned_air_transition,
+        )
+        from mc2p.motion_nav.motion_solver import MotionSolveKind
+
+        anchor, world, _ = fixture(MotionSolveKind.JUMP_UP, speed=1.5)
+        route = self.active_route(MotionSolveKind.JUMP_UP)
+
+        with patch(
+            "mc2p.motion_nav.motion_coordination.solve_air_transition",
+            side_effect=AssertionError("control path must not solve inline"),
+            create=True,
+        ):
+            prepared = prepare_planned_air_transition(
+                route, 0, anchor, world,
+                candidate_revision=1, intended_start_tick=11,
+                policies=self.policies,
+            )
+
+        self.assertIs(
+            prepared.status, GapPreparationStatus.PRECOMPUTED_REQUIRED,
+        )
+        self.assertEqual(prepared.reason, "precomputed_required")
+        self.assertIsNone(prepared.solve_result)
+        self.assertIsNone(prepared.candidate)
     @classmethod
     def setUpClass(cls):
         from mc2p.motion_nav.motion_solver import load_air_transition_solver_policies

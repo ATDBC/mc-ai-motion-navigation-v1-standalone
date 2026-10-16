@@ -19,7 +19,9 @@ from mc2p.motion_nav.action_route_executor import (
 from mc2p.motion_nav.body_control import StopCause
 from mc2p.motion_nav.fixed_route import FixedRoute, RoutePoint
 from mc2p.motion_nav.jump_gap import JumpGapEdge
-from mc2p.motion_nav.online_motion import InputApplicationLedger
+from mc2p.motion_nav.online_motion import (
+    CandidateExecutionWindow, InputApplicationLedger,
+)
 from mc2p.motion_nav.motion_candidate import (
     MotionCandidateAdmitter, MotionCandidateContext, MotionCandidateStatus,
     VerifiedMotionCandidate, VerifiedMotionExecutor, VerifiedMotionExecutorState,
@@ -29,7 +31,7 @@ from mc2p.motion_nav.motion_risk import TaskDamageBudget
 from mc2p.motion_nav.motion_solver import SolveResult, SolveStatus, solve_one_cell_gap
 from mc2p.motion_nav.motion_coordination import (
     GapPreparationResult, GapPreparationStatus, MotionRouteCoordinator,
-    prepare_planned_gap_motion,
+    _planned_gap_request, prepare_planned_gap_motion,
 )
 from mc2p.motion_nav.motion_worker import (
     GapMotionSolveResult, MotionSolverWorker, _execute_job,
@@ -79,6 +81,17 @@ def solved_candidate():
         ),
     )
     return anchor, candidate
+
+
+def solve_planned_gap(route, action_index, anchor, world, intended_start_tick):
+    request, reason = _planned_gap_request(
+        route, action_index, anchor,
+        CandidateExecutionWindow(
+            intended_start_tick, intended_start_tick + 1,
+        ),
+    )
+    assert request is not None, reason
+    return solve_one_cell_gap(anchor, world, request)
 
 
 def pending_domain_result(coordinator, connection, revision, result, anchor):
@@ -918,6 +931,28 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
         )
         return anchor, physics_world, active, executor
 
+    def test_supported_gap_requires_precomputed_result_without_inline_solving(self):
+        anchor, physics_world, active, _ = self.coordinator_fixture(
+            "precomputed-gap-required",
+        )
+
+        with patch(
+            "mc2p.motion_nav.motion_coordination.solve_one_cell_gap",
+            side_effect=AssertionError("control path must not solve inline"),
+            create=True,
+        ):
+            prepared = prepare_planned_gap_motion(
+                active, 0, anchor, physics_world,
+                candidate_revision=1, intended_start_tick=11,
+            )
+
+        self.assertIs(
+            prepared.status, GapPreparationStatus.PRECOMPUTED_REQUIRED,
+        )
+        self.assertEqual(prepared.reason, "precomputed_required")
+        self.assertIsNone(prepared.solve_result)
+        self.assertIsNone(prepared.candidate)
+
     def test_motion_coordinator_requires_explicit_task_ledger(self):
         _, _, active, executor = self.coordinator_fixture("explicit-ledger")
         with MotionSolverWorker(max_pending=1) as worker:
@@ -1429,9 +1464,11 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
             ExecutableCorridor((start_id, end_id), (), 2.0, end_id),
             action_route, planning_generation=2,
         )
+        solved = solve_planned_gap(active, 1, anchor, physics_world, 11)
         prepared = prepare_planned_gap_motion(
             active, 1, anchor, physics_world,
             candidate_revision=1, intended_start_tick=11,
+            precomputed=solved,
         )
         self.assertIs(prepared.status, GapPreparationStatus.READY)
         executor = ActionRouteExecutor(
@@ -1525,9 +1562,11 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
             ExecutableCorridor((start_id, end_id), (), 2.0, end_id),
             action_route, planning_generation=2,
         )
+        solved = solve_planned_gap(active, 0, anchor, physics_world, 11)
         prepared = prepare_planned_gap_motion(
             active, 0, anchor, physics_world,
             candidate_revision=1, intended_start_tick=11,
+            precomputed=solved,
         )
         executor = ActionRouteExecutor(
             ground_profile(), jump_profile(), step_profile(),
@@ -2095,10 +2134,12 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
             action_route, planning_generation=7,
         )
         _, physics_world, _, _ = fixture()
+        solved = solve_planned_gap(active, 0, anchor, physics_world, 11)
 
         prepared = prepare_planned_gap_motion(
             active, 0, anchor, physics_world,
             candidate_revision=1, intended_start_tick=11,
+            precomputed=solved,
         )
 
         self.assertIs(prepared.status, GapPreparationStatus.READY)
@@ -2112,6 +2153,7 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
             active, 0, anchor, physics_world,
             candidate_revision=2, intended_start_tick=11,
             changed_cells=(prepared.candidate.proof.world_dependencies[0],),
+            precomputed=solved,
         )
         self.assertIs(changed.status, GapPreparationStatus.ADMISSION_REJECTED)
         self.assertEqual(changed.reason, "world_dependency_changed")
@@ -2153,9 +2195,11 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
             ExecutableCorridor((start_id, end_id), (), 2.0, end_id),
             action_route, planning_generation=3,
         )
+        solved = solve_planned_gap(active, 0, anchor, physics_world, 11)
         prepared = prepare_planned_gap_motion(
             active, 0, anchor, physics_world,
             candidate_revision=1, intended_start_tick=11,
+            precomputed=solved,
         )
         reusable = prepared.candidate.candidate
         later = replace(
@@ -2227,9 +2271,11 @@ class VerifiedMotionRouteIntegrationTests(unittest.TestCase):
             action_route, planning_generation=8,
         )
 
+        solved = solve_planned_gap(active, 0, anchor, physics_world, 11)
         prepared = prepare_planned_gap_motion(
             active, 0, anchor, physics_world,
             candidate_revision=1, intended_start_tick=11,
+            precomputed=solved,
         )
 
         self.assertIs(prepared.status, GapPreparationStatus.READY)

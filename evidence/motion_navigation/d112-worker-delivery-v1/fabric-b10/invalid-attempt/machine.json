@@ -1,0 +1,6 @@
+{
+  "Name": "Intel(R) Core(TM) Ultra 7 270K Plus",
+  "NumberOfCores": 24,
+  "NumberOfLogicalProcessors": 24,
+  "MaxClockSpeed": 3700
+}

@@ -1,0 +1,22 @@
+{
+  "comparable": true,
+  "metrics": [
+    {
+      "after_mean_ms": 24.7302,
+      "before_mean_ms": 25.0685,
+      "drift_percent": -1.3495023635239467,
+      "metric": "p50",
+      "within_10_percent": true
+    },
+    {
+      "after_mean_ms": 24.83575,
+      "before_mean_ms": 25.19815,
+      "drift_percent": -1.4382008202983076,
+      "metric": "p95",
+      "within_10_percent": true
+    }
+  ],
+  "schema": "mc2p.d112-calibration-comparison.v1",
+  "workload_match": true,
+  "workload_signature_match": true
+}

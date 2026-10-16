@@ -92,7 +92,7 @@ class GapMotionSolveJob:
         if (self.operation is MotionJobOperation.REVALIDATE) != (
                 type(self.proof) is VerifiedMotionResult):
             raise ContractViolation("revalidation requires exactly one old proof")
-        if (type(self.entry_prefix) is not tuple or len(self.entry_prefix) > 4
+        if (type(self.entry_prefix) is not tuple or len(self.entry_prefix) > 5
                 or any(type(command) is not MotionCommandTick for command in self.entry_prefix)):
             raise ContractViolation("motion preparation prefix must be bounded")
 
@@ -120,6 +120,7 @@ class GapMotionSolveResult:
     solve_result: SolveResult
     elapsed_ns: int
     work_identity: AsyncWorkIdentity | None = None
+    completed_monotonic_ns: int = 0
 
     def __post_init__(self) -> None:
         require_identifier(self.connection_id, "motion connection id")
@@ -131,6 +132,10 @@ class GapMotionSolveResult:
         if (self.work_identity is not None
                 and type(self.work_identity) is not AsyncWorkIdentity):
             raise ContractViolation("motion result work identity must be typed")
+        require_nonnegative_int(
+            self.completed_monotonic_ns,
+            "motion worker completion time",
+        )
 
 
 @runtime_checkable
@@ -186,10 +191,12 @@ def _execute_job(job: GapMotionSolveJob | PreparedMotionJob) -> GapMotionSolveRe
             SolveStatus.INTERNAL_ERROR,
             reasons=(type(error).__name__,),
         )
+    completed = time.perf_counter_ns()
     return GapMotionSolveResult(
         job.connection_id, job.candidate_revision, solved,
-        time.perf_counter_ns() - started,
+        completed - started,
         job.work_identity,
+        completed,
     )
 
 
@@ -709,6 +716,14 @@ class MotionResultInbox:
             if record is not None and not record.finished:
                 record.submitted = True
                 submitted = True
+                if self._receiver_diagnostics_enabled:
+                    self._receiver_diagnostics.append({
+                        "schema_version": "mc2p.motion-receiver-diagnostic.v3",
+                        "event": "worker_submit",
+                        "identity": repr(identity.key),
+                        "movement_tick": self._diagnostic_tick_locked(),
+                        "monotonic_ns": time.perf_counter_ns(),
+                    })
         if submitted:
             self._wake.set()
 
@@ -1620,11 +1635,17 @@ class MotionResultInbox:
                         if diagnostics_enabled and type(identity) is AsyncWorkIdentity:
                             with self._lock:
                                 self._receiver_diagnostics.append({
-                                    "schema_version": "mc2p.motion-receiver-diagnostic.v2",
+                                    "schema_version": "mc2p.motion-receiver-diagnostic.v3",
                                     "event": "receiver_observed_result",
                                     "identity": repr(identity.key),
                                     "movement_tick": self._diagnostic_tick_locked(),
                                     "monotonic_ns": time.perf_counter_ns(),
+                                    "worker_elapsed_ns": getattr(
+                                        result, "elapsed_ns", None,
+                                    ),
+                                    "worker_completed_monotonic_ns": getattr(
+                                        result, "completed_monotonic_ns", None,
+                                    ),
                                 })
                         if type(result) is PreparedWireMessage:
                             self._process_prepared(result)

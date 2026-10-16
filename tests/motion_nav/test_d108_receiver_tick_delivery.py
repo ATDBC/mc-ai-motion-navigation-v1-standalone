@@ -261,7 +261,11 @@ class D108ReceiverTickDeliveryTests(unittest.TestCase):
         summary = _receiver_diagnostic_summary([
             {"event": "receiver_cycle", "duration_ns": 4},
             {"event": "receiver_cycle", "duration_ns": 9},
-            {"event": "receiver_observed_result", "identity": "a", "movement_tick": 10},
+            {"event": "worker_submit", "identity": "a", "movement_tick": 8,
+             "monotonic_ns": 100},
+            {"event": "receiver_observed_result", "identity": "a", "movement_tick": 10,
+             "monotonic_ns": 180, "worker_elapsed_ns": 40,
+             "worker_completed_monotonic_ns": 160},
             {"event": "registry_publish", "identity": "a", "movement_tick": 10},
             {"event": "first_control_consume", "identity": "a", "movement_tick": 12},
             {"event": "receiver_observed_result", "identity": "b", "movement_tick": None},
@@ -274,7 +278,7 @@ class D108ReceiverTickDeliveryTests(unittest.TestCase):
         self.assertEqual(summary["delivery_tick_unavailable_count"], 1)
         self.assertEqual(
             summary["worker_completion_to_receiver_observed"]["status"],
-            "unavailable",
+            "available",
         )
         self.assertEqual(
             summary["deliveries"][0]["receiver_observed_to_registry_publish_ticks"],
@@ -284,6 +288,8 @@ class D108ReceiverTickDeliveryTests(unittest.TestCase):
             summary["deliveries"][0]["registry_publish_to_first_control_consume_ticks"],
             2,
         )
+        self.assertEqual(summary["deliveries"][0]["worker_submit_to_observed_ticks"], 2)
+        self.assertEqual(summary["deliveries"][0]["worker_queue_after_completion_ns"], 20)
 
     def test_receiver_evidence_buffers_without_control_path_io_and_flushes_once(self) -> None:
         rows = (
@@ -501,6 +507,9 @@ class D108ReceiverTickDeliveryTests(unittest.TestCase):
     def test_receiver_diagnostics_report_cycles_publish_and_first_consume(self) -> None:
         clock, backend, _, session, driver = self._fixture()
         wait_gate = _ReceiverWaitGate()
+        session._motion_result_inbox.publish_diagnostic_movement_tick(
+            backend.movement_tick,
+        )
         with patch("mc2p.motion_nav.navigation_session.MotionSolverWorker",
                    _TickScheduledWorker), wait_gate.patch():
             for _ in range(20):
@@ -510,9 +519,6 @@ class D108ReceiverTickDeliveryTests(unittest.TestCase):
                     break
             worker = _TickScheduledWorker.instances[0]
             job = worker.jobs[0]
-            session._motion_result_inbox.publish_diagnostic_movement_tick(
-                backend.movement_tick,
-            )
             wait_gate.deliver(worker, session._motion_result_inbox, job)
             for _ in range(4):
                 step = driver.tick(BehaviorProfileV0(), clock[0] + 500_000_000)
@@ -520,15 +526,26 @@ class D108ReceiverTickDeliveryTests(unittest.TestCase):
 
         rows = session._motion_result_inbox.drain_receiver_diagnostics()
         cycle_rows = [row for row in rows if row["event"] == "receiver_cycle"]
+        submit_rows = [row for row in rows if row["event"] == "worker_submit"]
         observed_rows = [row for row in rows if row["event"] == "receiver_observed_result"]
         publish_rows = [row for row in rows if row["event"] == "registry_publish"]
         consume_rows = [row for row in rows if row["event"] == "first_control_consume"]
         self.assertTrue(cycle_rows)
         self.assertTrue(all(row["duration_ns"] >= 0 for row in cycle_rows))
+        self.assertEqual(len(submit_rows), 1)
         self.assertEqual(len(observed_rows), 1)
         self.assertEqual(len(publish_rows), 1)
         self.assertEqual(len(consume_rows), 1)
         self.assertEqual(publish_rows[0]["identity"], consume_rows[0]["identity"])
+        self.assertEqual(submit_rows[0]["identity"], publish_rows[0]["identity"])
+        self.assertIsInstance(submit_rows[0]["movement_tick"], int)
+        self.assertIsInstance(submit_rows[0]["monotonic_ns"], int)
+        self.assertIsInstance(observed_rows[0]["worker_elapsed_ns"], int)
+        self.assertIsInstance(observed_rows[0]["worker_completed_monotonic_ns"], int)
+        self.assertGreaterEqual(
+            observed_rows[0]["monotonic_ns"],
+            observed_rows[0]["worker_completed_monotonic_ns"],
+        )
         self.assertIsInstance(publish_rows[0]["movement_tick"], int)
         self.assertIsInstance(consume_rows[0]["movement_tick"], int)
         self.assertGreaterEqual(

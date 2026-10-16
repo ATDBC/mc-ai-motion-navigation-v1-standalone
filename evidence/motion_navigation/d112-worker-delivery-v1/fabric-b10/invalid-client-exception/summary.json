@@ -1,0 +1,77 @@
+{
+  "schema": "mc2p.d112-invalid-client-exception.v1",
+  "status": "INVALID_HARNESS_RUN",
+  "artifact": "artifacts/fabric-deployment/20261016T054616381907Z-d14c19f7",
+  "seed": 21003,
+  "server_port": 25600,
+  "ipc_port": 8143,
+  "timeout_seconds": 600,
+  "boundary": "The attempt completed 28 executable D112 trials, then the Fabric client exposed only IllegalStateException and Python timed out waiting for the next observation during the first worker-delay-5 trial. A separate timeout-propagation mismatch was found and fixed, but the final run reproduced the later client failure, so this attempt is not attributed to that mismatch.",
+  "legacy_solver_trial_rows": 82,
+  "coordinator_trial_rows": 36,
+  "coordinator_control_frame_rows": 552,
+  "completed_executable_trials": 28,
+  "unsupported_late1_records": 8,
+  "completed_baseline_trials": 20,
+  "completed_worker_delay_2_trials": 8,
+  "damage_points": 0.0,
+  "complete_identity_chains": 28,
+  "verified_window_miss_count": 0,
+  "calibration_comparison": {
+    "schema": "mc2p.d112-calibration-comparison.v1",
+    "workload_match": true,
+    "workload_signature_match": true,
+    "comparable": true,
+    "metrics": [
+      {
+        "metric": "p50",
+        "before_mean_ms": 25.19645,
+        "after_mean_ms": 24.836599999999997,
+        "drift_percent": -1.4281773821312191,
+        "within_10_percent": true
+      },
+      {
+        "metric": "p95",
+        "before_mean_ms": 25.46865,
+        "after_mean_ms": 24.941200000000002,
+        "drift_percent": -2.0709774565985954,
+        "within_10_percent": true
+      }
+    ]
+  },
+  "primary_failure": {
+    "type": "RuntimeError",
+    "code": "deadline_exceeded",
+    "message": "Fabric client exposed IllegalStateException; Python timed out waiting for the next observation"
+  },
+  "raw_files": {
+    "client-0/b10-gap-solver-trials.jsonl": {
+      "bytes": 553473,
+      "sha256": "6d2a289caa25f5c1fea1c099273cfa2747af81a77e63e3aa1110d01543aff54c"
+    },
+    "client-0/b10-coordinator-trials.jsonl": {
+      "bytes": 581431,
+      "sha256": "61023992b7fd00d8370014e18d46a019076c16c14e9af64e937b2a6570d89d02"
+    },
+    "client-0/b10-coordinator-control-frames.jsonl": {
+      "bytes": 571548,
+      "sha256": "9ff60d2f0954c78886b1457d6df0eb1f412449d40fb6d370f5a25898e5a00e21"
+    },
+    "client-0/b10-receiver-diagnostics.jsonl": {
+      "bytes": 551364,
+      "sha256": "1b427f350be0be9569f5e2fae1c51c99a06ff7c4e7081afb139f6e9c0094745d"
+    },
+    "client-0/b10-lifecycle.json": {
+      "bytes": 201,
+      "sha256": "465dfaa5a59e15ab5303c19bc20cd3961df7d9e6115352eecd6b2475a9cd6e60"
+    },
+    "failure.txt": {
+      "bytes": 1426,
+      "sha256": "586ff3e1b9f8d89c47490cd9e4d99bfb1b3467ac0d8bb7a30ed8947f5c680252"
+    },
+    "result.json": {
+      "bytes": 15936,
+      "sha256": "d899a8eeeea91aba933df37b21a45467600e88fa372c9ba9a6c6a726c50b6dd3"
+    }
+  }
+}

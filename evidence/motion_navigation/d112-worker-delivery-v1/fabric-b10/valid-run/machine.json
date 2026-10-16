@@ -1,0 +1,9 @@
+{
+  "platform": "Windows",
+  "os_caption": "Microsoft Windows 11 专业版",
+  "os_version": "10.0.26200",
+  "cpu": "Intel(R) Core(TM) Ultra 7 270K Plus",
+  "logical_processors": 24,
+  "python": "3.11.16",
+  "captured_at": "2026-10-16T13:57:35.4910157+08:00"
+}

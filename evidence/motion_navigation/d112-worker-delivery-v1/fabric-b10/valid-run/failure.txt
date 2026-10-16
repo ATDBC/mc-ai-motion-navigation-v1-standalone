@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "D:\My_project\mc_ai\scripts\probe_fabric_deployment_observation.py", line 1563, in run_worker
+    stages, rows, episode_checks = run_b10_gap_solver_runtime(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\scripts\b10_gap_solver_runtime.py", line 1145, in run_b10_gap_solver_runtime
+    raise primary.with_traceback(primary_traceback)
+  File "D:\My_project\mc_ai\scripts\b10_gap_solver_runtime.py", line 1087, in run_b10_gap_solver_runtime
+    result = _run_b10_gap_solver_runtime(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\My_project\mc_ai\scripts\b10_gap_solver_runtime.py", line 1874, in _run_b10_gap_solver_runtime
+    raise RuntimeError(
+RuntimeError: B10 waiting observation failed: ExecutionReportV0(report_id='report-2001', task_id='b10-gap-solver', episode_id='fabric-21003-0', runtime_step=2001, status=<ExecutionStatusV0.TIMED_OUT: 'timed_out'>, phase='runtime_failure', progress=0.0, selected_intent_ids=('ordered/6853f50cb56d4ec2860047ba88d1eb34/1/30/2',), action_sequence_id=2000, observation_sequence_id=None, risk_events=(), recoveries=(), failure=FailureV0(code=<FailureCodeV0.DEADLINE_EXCEEDED: 'deadline_exceeded'>, message='timed out', retryable=True, source='runtime', detail_json='{"exception_type": "TimeoutError"}', schema_version='mc2p.failure.v0'), schema_version='mc2p.execution-report.v0')

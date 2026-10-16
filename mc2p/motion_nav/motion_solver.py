@@ -502,7 +502,7 @@ class VerifiedMotionPreparation:
     def __post_init__(self) -> None:
         count = len(self.commands)
         if (type(self.source_anchor) is not StateAnchor
-                or type(self.commands) is not tuple or not 1 <= count <= 4
+                or type(self.commands) is not tuple or not 1 <= count <= 5
                 or any(type(command) is not MotionCommandTick
                        for command in self.commands)
                 or type(self.tick_inputs) is not tuple
@@ -1166,7 +1166,7 @@ def revalidate_gap_motion(
             or type(anchor) is not StateAnchor
             or type(world) is not PhysicsWorldView
             or type(execution_window) is not CandidateExecutionWindow
-            or type(entry_prefix) is not tuple or len(entry_prefix) > 4
+            or type(entry_prefix) is not tuple or len(entry_prefix) > 5
             or any(type(command) is not MotionCommandTick for command in entry_prefix)):
         raise ContractViolation("gap revalidation requires proof, anchor, world and window")
     if (anchor.session != world.session
@@ -1584,10 +1584,10 @@ def _prepare_air_transition(
     """
     if (type(anchor) is not StateAnchor or type(world) is not PhysicsWorldView
             or type(request) not in {GapSolveRequest, AirTransitionSolveRequest}
-            or type(entry_prefix) is not tuple or len(entry_prefix) > 4
+            or type(entry_prefix) is not tuple or len(entry_prefix) > 5
             or any(type(command) is not MotionCommandTick
                    for command in entry_prefix)):
-        raise ContractViolation("motion preparation requires typed inputs and at most four ticks")
+        raise ContractViolation("motion preparation requires typed inputs and at most five ticks")
     entry_check = check_motion_entry(anchor, world, request)
     if entry_check is not None:
         return entry_check

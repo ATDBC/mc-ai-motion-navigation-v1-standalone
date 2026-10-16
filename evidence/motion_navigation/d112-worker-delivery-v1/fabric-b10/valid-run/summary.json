@@ -1,0 +1,224 @@
+{
+  "schema": "mc2p.d112-fabric-summary.v1",
+  "status": "FAILED_STOPPED",
+  "artifact": "artifacts/fabric-deployment/20261016T055758879589Z-f137ddfd",
+  "seed": 21003,
+  "server_port": 25601,
+  "ipc_port": 8144,
+  "timeout_seconds": 600,
+  "calibration_comparison": {
+    "schema": "mc2p.d112-calibration-comparison.v1",
+    "workload_match": true,
+    "workload_signature_match": true,
+    "comparable": true,
+    "metrics": [
+      {
+        "metric": "p50",
+        "before_mean_ms": 24.887050000000002,
+        "after_mean_ms": 24.908549999999998,
+        "drift_percent": 0.08639031142701155,
+        "within_10_percent": true
+      },
+      {
+        "metric": "p95",
+        "before_mean_ms": 25.1798,
+        "after_mean_ms": 25.145699999999998,
+        "drift_percent": -0.1354260160922733,
+        "within_10_percent": true
+      }
+    ]
+  },
+  "legacy_solver_trial_rows": 82,
+  "coordinator_trial_rows": 37,
+  "matrix": {
+    "baseline": {
+      "expected": 20,
+      "recorded": 20,
+      "completed": 20
+    },
+    "first_input_late1": {
+      "expected": 8,
+      "recorded_unsupported": 8,
+      "fabric_supported": false
+    },
+    "worker_delay_2": {
+      "expected": 8,
+      "recorded": 8,
+      "completed": 8
+    },
+    "worker_delay_5": {
+      "expected": 8,
+      "recorded": 1,
+      "completed": 0,
+      "safe_typed_failure": 1
+    },
+    "worker_delay_10": {
+      "expected": 8,
+      "recorded": 0
+    },
+    "worker_never_return": {
+      "expected": 4,
+      "recorded": 0
+    }
+  },
+  "first_blocking_behavior_failure": {
+    "trial": "coordinator-worker-delay-5-0-0",
+    "terminal_state": "failed",
+    "terminal_reason": "motion_unsolvable:motion_retry_exhausted:new_motion_grant_has_no_start_slack;coordinator=motion_retry_exhausted:new_motion_grant_has_no_start_slack",
+    "landed": true,
+    "damage_points": 0.0,
+    "source_release_status": "explicitly_released",
+    "worker_delivery_attempts": 3
+  },
+  "delivery": {
+    "complete_identity_chain_count": 28,
+    "verified_window_miss_count": 0,
+    "consume_to_earliest_tick_lead": {
+      "maximum": 1,
+      "minimum": 1,
+      "p50": 1,
+      "p95": 1,
+      "p99": 1,
+      "samples": 28,
+      "values": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    "first_input_to_latest_tick_margin": {
+      "maximum": 1,
+      "minimum": 1,
+      "p50": 1,
+      "p95": 1,
+      "p99": 1,
+      "samples": 28,
+      "values": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  "performance": {
+    "coordinator_proposal_plus_runtime_outside_ms": {
+      "definition": "proposal_elapsed_ns plus runtime_outside_backend_ns",
+      "invalid": 0,
+      "maximum": 3.496,
+      "minimum": 0.6423,
+      "missing": 0,
+      "p50": 1.1888,
+      "p95": 3.15,
+      "p99": 3.3558,
+      "samples": 574
+    },
+    "trace_control_prepare_ms": {
+      "definition": "trace step dispatched_monotonic_ns minus decision_observation_received_ns",
+      "invalid": 0,
+      "maximum": 29.9488,
+      "minimum": 0.8388,
+      "missing": 0,
+      "p50": 1.0006,
+      "p95": 4.8791,
+      "p99": 22.4488,
+      "samples": 2000
+    }
+  },
+  "stage_gate_failures": [
+    "worker_delay_5_must_complete",
+    "trace_control_prepare_p99_must_be_at_most_15_ms"
+  ],
+  "secondary_harness_failure": {
+    "type": "RuntimeError",
+    "code": "deadline_exceeded",
+    "message": "A later waiting-observation step timed out after the blocking delay-5 behavior result had already been recorded; the Fabric client only exposed IllegalStateException."
+  },
+  "lifecycle": {
+    "cleanup_failures": [],
+    "ordered_source_release": {
+      "source_id": "ordered/6853f50cb56d4ec2860047ba88d1eb34/0/1",
+      "status": "cleared_on_runtime_close"
+    },
+    "schema_version": "mc2p.b10-probe-lifecycle.v1"
+  },
+  "raw_files": {
+    "client-0/b10-gap-solver-trials.jsonl": {
+      "bytes": 554014,
+      "sha256": "5cbba218f85e79de990e30917dfdb93879fd95d8dd23774af8eab192f9561946"
+    },
+    "client-0/b10-coordinator-trials.jsonl": {
+      "bytes": 598351,
+      "sha256": "b0e4fbd4c0163126d160ee7cd5ddf57491dd2f0e0487d0aceb33d44e0faa07f1"
+    },
+    "client-0/b10-coordinator-control-frames.jsonl": {
+      "bytes": 588501,
+      "sha256": "e88883b78734f3e0da321bb2176f22b8a153cda393a64a03372b810cb7506d4a"
+    },
+    "client-0/b10-receiver-diagnostics.jsonl": {
+      "bytes": 578374,
+      "sha256": "23ded4b9169988ceb426a163759f2dd629fb4ba7505dd4da8d65f7ff3465476b"
+    },
+    "client-0/b10-lifecycle.json": {
+      "bytes": 201,
+      "sha256": "268a4b8a841adc2db733f5c267dd95cccef0c4cc10c347fe27923809b1b0b510"
+    },
+    "failure.txt": {
+      "bytes": 1426,
+      "sha256": "92bcf901ce8f12dd03cf985a4da7a08469c0f9df13019be8ee46cb27a1a166e3"
+    },
+    "result.json": {
+      "bytes": 15938,
+      "sha256": "0ac092faef2ef81f868fa07d31379e2cf2fab388e28b073b533ad827bf6b6534"
+    }
+  }
+}
