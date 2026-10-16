@@ -1,0 +1,4 @@
+== cf101b4：D111 改动的根目录测试模块（不在 tests/motion_nav 分片范围内）
+tests.test_b10_runtime_probe: Ran 48 tests in 0.530s  OK
+tests.test_fabric_deployment_probe: Ran 36 tests in 6.848s  OK (skipped=1)
+tests.test_player_runtime_v1: Ran 44 tests in 15.358s  OK

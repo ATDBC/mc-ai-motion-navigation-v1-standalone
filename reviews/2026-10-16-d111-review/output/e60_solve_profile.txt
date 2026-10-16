@@ -1,0 +1,35 @@
+检出 cf101b4：每种入口 10 次 × 4 方向（Linux）
+  静止对正       中位  37.24 ms；候选 1，命令 16，轨迹状态 17，延迟起跳变体 1
+  带速 0.75    中位  37.39 ms；候选 1，命令 16，轨迹状态 17，延迟起跳变体 1
+  带速 1.5     中位  39.03 ms；候选 2，命令 16，轨迹状态 17，延迟起跳变体 1
+  带速 2.5     中位  44.15 ms；候选 4，命令 16，轨迹状态 17，延迟起跳变体 1
+  cProfile（80 次求解，按累计耗时，前 28 个函数）：
+    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+    80    0.001    0.000   11.431    0.143 motion_solver.py:1558(solve_one_cell_gap)
+    80    0.004    0.000   11.423    0.143 motion_solver.py:1422(solve_air_transition)
+    31620    0.777    0.000   10.909    0.000 physics_1_21.py:315(step)
+    160    0.166    0.001    9.897    0.062 motion_solver.py:874(_release_recovery_evidence)
+    80    0.002    0.000    5.461    0.068 motion_solver.py:1052(_prove_delayed_starts)
+    80    0.009    0.000    5.430    0.068 motion_solver.py:964(_replay_verified_commands)
+    63240    0.802    0.000    2.789    0.000 dataclasses.py:1455(replace)
+    31620    0.112    0.000    2.251    0.000 physics_1_21.py:233(_contacts_unmodeled_material)
+    191060    0.068    0.000    2.142    0.000 physics_adapter.py:194(cell)
+    191060    0.108    0.000    2.075    0.000 world_model.py:427(cell)
+    191060    0.359    0.000    1.605    0.000 world_model.py:439(_cell_at_valid_position)
+    1242540    0.722    0.000    1.595    0.000 {built-in method builtins.any}
+    63240    0.739    0.000    1.582    0.000 physics_types.py:111(__post_init__)
+    31620    0.065    0.000    1.326    0.000 physics_adapter.py:197(shapes)
+    299020    0.479    0.000    1.318    0.000 world_model.py:160(__post_init__)
+    31620    0.142    0.000    1.230    0.000 world_model.py:468(validate_sections)
+    140920    0.196    0.000    1.100    0.000 world_model.py:169(moved)
+    31620    0.173    0.000    1.060    0.000 geometry.py:94(required_cells_for_sweep)
+    240    0.001    0.000    0.987    0.004 motion_solver.py:1397(_ranked_air_rollouts)
+    160    0.020    0.000    0.986    0.006 motion_solver.py:1283(_rollout_air_template)
+    561040    0.317    0.000    0.961    0.000 world_model.py:55(_section)
+    2216880    0.801    0.000    0.949    0.000 world_model.py:61(_finite)
+    31620    0.082    0.000    0.854    0.000 physics_1_21.py:94(_resolve)
+    126480    0.116    0.000    0.836    0.000 physics_types.py:146(body_box)
+    204260    0.061    0.000    0.691    0.000 physics_adapter.py:206(<genexpr>)
+    363700    0.223    0.000    0.683    0.000 world_model.py:39(_position)
+    172640    0.083    0.000    0.630    0.000 world_model.py:44(block_section)
+    250700    0.128    0.000    0.592    0.000 world_model.py:653(section_geometry_revision)

@@ -1,0 +1,10 @@
+== 单 CPU（taskset -c 1）：D5 矩阵逐子场景，20 次（脚本沿用 D110 审查 E54）
+D111 cf101b4：20 次 → {'OK': 20}；测试结束后残留的场景进程 0 个（已强杀）
+  fast_root_exit               失败 0/20
+  setsid                       失败 0/20
+  double_fork                  失败 0/20
+  ignore_sigterm_holds_output  失败 0/20
+  fork_during_cleanup          失败 0/20
+== 单核（taskset -c 2）：动作交接测试，30 次（脚本沿用 D110 审查 E53）
+检出 cf101b4
+  test_same_worker_solve_choice_is_frozen_before_prepare：30 次 → {'OK': 30}；最长连续通过 30；单次用时 3.7–4.5 s
