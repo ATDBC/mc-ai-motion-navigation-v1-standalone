@@ -1,0 +1,6339 @@
+{
+  "schema_version": "mc2p.d111-b10-summary.v1",
+  "formal_platform": "Windows",
+  "source_commit": "01afa1212214e8f985c547641a30a052a062be9a",
+  "source_run": "artifacts/fabric-deployment/20261015T151355333152Z-0f9aee96",
+  "status": "FAILED/STOPPED",
+  "formal_b10_runs": 1,
+  "timeout_seconds": 600,
+  "primary_failure": {
+    "message": "['client-0:b10b_solver_is_bounded']",
+    "type": "DeploymentEvidenceFailure"
+  },
+  "failed_checks": [
+    "client-0:b10b_solver_is_bounded"
+  ],
+  "passed_checks": [
+    "client-0:b10b_preflight_separate_from_validation",
+    "client-0:b10b_four_directions_ten_fabric_runs_each",
+    "client-0:b10c_turn_exit_four_directions_ten_runs_each",
+    "client-0:b10b_all_validation_runs_land_in_target",
+    "client-0:b10c_default_coordinator_ten_fabric_runs",
+    "client-0:r4_three_speed_bands_four_directions_five_runs_each",
+    "client-0:r4_two_typed_negative_cases_per_speed_direction_category",
+    "client-0:b10b_proof_records_stay_correlated",
+    "client-0:b10b_gc_pause_timeline_complete",
+    "client-0:exact_continuous_v3",
+    "client-0:separate_monotonic_client_samples",
+    "client-0:exact_action_receipt_association",
+    "client-0:normal_input_ticks_continue",
+    "client-0:no_image_fields_or_binary_projection",
+    "client-0:continuous_zero_image_diagnostics",
+    "client-0:one_reset_5399_runtime_steps",
+    "client-0:complete_time_event_attribution",
+    "client-0:observation_pipeline_frames_recorded",
+    "client-0:legacy_block_parity_disabled",
+    "source_cache_and_launch_unchanged",
+    "v3_python_and_java_sources_unchanged"
+  ],
+  "cleanup_failures": [],
+  "diagnostic_failures": [],
+  "lifecycle": {
+    "cleanup_failures": [],
+    "ordered_source_release": {
+      "source_id": "ordered/c40f326e63864c0b98aeec802fb59216/0/1",
+      "status": "explicitly_released"
+    },
+    "schema_version": "mc2p.b10-probe-lifecycle.v1"
+  },
+  "ports_free": true,
+  "matrix": {
+    "validation_count": 40,
+    "validation_success_count": 40,
+    "turn_validation_count": 40,
+    "turn_validation_success_count": 40,
+    "coordinator_validation_count": 10,
+    "coordinator_validation_success_count": 10,
+    "moving_validation_count": 60,
+    "moving_validation_success_count": 60,
+    "moving_negative_case_count": 24
+  },
+  "safety": {
+    "initial_health": 20.0,
+    "final_health": 20.0,
+    "damage_events": 0,
+    "evidence": "result.json sessions[0].initial/final; functional checks all passed"
+  },
+  "solver": {
+    "trials": 142,
+    "raw_wall_gate_ns": 30000000,
+    "raw_wall_gate_comparison": "<",
+    "solve_time_ns": {
+      "maximum": 39960500,
+      "p95": 31887300,
+      "p99": 33440800,
+      "samples": 142
+    },
+    "solve_wall_minus_gc_pause_ns": {
+      "diagnostic_only": true,
+      "maximum": 33176100,
+      "p95": 31496300,
+      "p99": 32170500,
+      "samples": 142
+    },
+    "raw_wall_samples_ge_30ms": 19,
+    "corrected_samples_ge_30ms": 17,
+    "solve_thread_cpu_ns": {
+      "count": 142,
+      "max": 46875000,
+      "min": 0,
+      "p95": 31250000,
+      "p99": 46875000
+    },
+    "solve_gc_overlap_count": 78,
+    "solve_measurement_error_count": 0,
+    "samples": [
+      {
+        "name": "preflight-0-0",
+        "group": "preflight",
+        "direction_index": 0,
+        "repetition": 0,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092012867578100,
+        "solve_ended_ns": 1092012896441000,
+        "solve_time_ns": 28862900,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 92700,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 92700,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 28770200,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-0-0",
+        "group": "validation",
+        "direction_index": 0,
+        "repetition": 0,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092013810007100,
+        "solve_ended_ns": 1092013838382300,
+        "solve_time_ns": 28375200,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 173800,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 173800,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 28201400,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-0-1",
+        "group": "validation",
+        "direction_index": 0,
+        "repetition": 1,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092014716214000,
+        "solve_ended_ns": 1092014744466300,
+        "solve_time_ns": 28252300,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 112500,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 112500,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 28139800,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-0-2",
+        "group": "validation",
+        "direction_index": 0,
+        "repetition": 2,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092015674469700,
+        "solve_ended_ns": 1092015703655800,
+        "solve_time_ns": 29186100,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 1,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 1,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 326700,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 326700,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 28859400,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-0-3",
+        "group": "validation",
+        "direction_index": 0,
+        "repetition": 3,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092016564517200,
+        "solve_ended_ns": 1092016604477700,
+        "solve_time_ns": 39960500,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 1
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 1
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 11187700
+        },
+        "solve_gc_pause_overlap_ns": 11187700,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 28772800,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-0-4",
+        "group": "validation",
+        "direction_index": 0,
+        "repetition": 4,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092017524604000,
+        "solve_ended_ns": 1092017553704500,
+        "solve_time_ns": 29100500,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 115400,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 115400,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 28985100,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-0-5",
+        "group": "validation",
+        "direction_index": 0,
+        "repetition": 5,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092018422018300,
+        "solve_ended_ns": 1092018450893400,
+        "solve_time_ns": 28875100,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 139500,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 139500,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 28735600,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-0-6",
+        "group": "validation",
+        "direction_index": 0,
+        "repetition": 6,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092019315764900,
+        "solve_ended_ns": 1092019344256600,
+        "solve_time_ns": 28491700,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 125200,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 125200,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 28366500,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-0-7",
+        "group": "validation",
+        "direction_index": 0,
+        "repetition": 7,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092020222850500,
+        "solve_ended_ns": 1092020251577900,
+        "solve_time_ns": 28727400,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 159600,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 159600,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 28567800,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-0-8",
+        "group": "validation",
+        "direction_index": 0,
+        "repetition": 8,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092021118168200,
+        "solve_ended_ns": 1092021146272500,
+        "solve_time_ns": 28104300,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 147800,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 147800,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27956500,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-0-9",
+        "group": "validation",
+        "direction_index": 0,
+        "repetition": 9,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092022015387600,
+        "solve_ended_ns": 1092022044528100,
+        "solve_time_ns": 29140500,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 218500,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 218500,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 28922000,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-1-0",
+        "group": "validation",
+        "direction_index": 1,
+        "repetition": 0,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092022975675100,
+        "solve_ended_ns": 1092023004885000,
+        "solve_time_ns": 29209900,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 181600,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 181600,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 29028300,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-1-1",
+        "group": "validation",
+        "direction_index": 1,
+        "repetition": 1,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092023870576700,
+        "solve_ended_ns": 1092023899325000,
+        "solve_time_ns": 28748300,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 136300,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 136300,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 28612000,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-1-2",
+        "group": "validation",
+        "direction_index": 1,
+        "repetition": 2,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092024762324400,
+        "solve_ended_ns": 1092024791253200,
+        "solve_time_ns": 28928800,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 236900,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 236900,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 28691900,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-1-3",
+        "group": "validation",
+        "direction_index": 1,
+        "repetition": 3,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092025723551900,
+        "solve_ended_ns": 1092025751875200,
+        "solve_time_ns": 28323300,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 144400,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 144400,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 28178900,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-1-4",
+        "group": "validation",
+        "direction_index": 1,
+        "repetition": 4,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092026615656300,
+        "solve_ended_ns": 1092026644589400,
+        "solve_time_ns": 28933100,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 189500,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 189500,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 28743600,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-1-5",
+        "group": "validation",
+        "direction_index": 1,
+        "repetition": 5,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092027574603800,
+        "solve_ended_ns": 1092027602353000,
+        "solve_time_ns": 27749200,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 149300,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 149300,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27599900,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-1-6",
+        "group": "validation",
+        "direction_index": 1,
+        "repetition": 6,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092028464629900,
+        "solve_ended_ns": 1092028492432800,
+        "solve_time_ns": 27802900,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27802900,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-1-7",
+        "group": "validation",
+        "direction_index": 1,
+        "repetition": 7,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092029424433400,
+        "solve_ended_ns": 1092029452400300,
+        "solve_time_ns": 27966900,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27966900,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-1-8",
+        "group": "validation",
+        "direction_index": 1,
+        "repetition": 8,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092030316192300,
+        "solve_ended_ns": 1092030342269000,
+        "solve_time_ns": 26076700,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26076700,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-1-9",
+        "group": "validation",
+        "direction_index": 1,
+        "repetition": 9,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092031271412500,
+        "solve_ended_ns": 1092031297198000,
+        "solve_time_ns": 25785500,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 25785500,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-2-0",
+        "group": "validation",
+        "direction_index": 2,
+        "repetition": 0,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092032163041600,
+        "solve_ended_ns": 1092032194291800,
+        "solve_time_ns": 31250200,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 172100,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 172100,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 31078100,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-2-1",
+        "group": "validation",
+        "direction_index": 2,
+        "repetition": 1,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092033111378700,
+        "solve_ended_ns": 1092033141462700,
+        "solve_time_ns": 30084000,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 30084000,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-2-2",
+        "group": "validation",
+        "direction_index": 2,
+        "repetition": 2,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092034017717300,
+        "solve_ended_ns": 1092034047036200,
+        "solve_time_ns": 29318900,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 29318900,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-2-3",
+        "group": "validation",
+        "direction_index": 2,
+        "repetition": 3,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092034974143200,
+        "solve_ended_ns": 1092035003125900,
+        "solve_time_ns": 28982700,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 28982700,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-2-4",
+        "group": "validation",
+        "direction_index": 2,
+        "repetition": 4,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092035867939800,
+        "solve_ended_ns": 1092035896386300,
+        "solve_time_ns": 28446500,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 28446500,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-2-5",
+        "group": "validation",
+        "direction_index": 2,
+        "repetition": 5,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092036762087400,
+        "solve_ended_ns": 1092036790654000,
+        "solve_time_ns": 28566600,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 28566600,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-2-6",
+        "group": "validation",
+        "direction_index": 2,
+        "repetition": 6,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092037723348700,
+        "solve_ended_ns": 1092037751390500,
+        "solve_time_ns": 28041800,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 28041800,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-2-7",
+        "group": "validation",
+        "direction_index": 2,
+        "repetition": 7,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092038611865000,
+        "solve_ended_ns": 1092038638706300,
+        "solve_time_ns": 26841300,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26841300,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-2-8",
+        "group": "validation",
+        "direction_index": 2,
+        "repetition": 8,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092039524001200,
+        "solve_ended_ns": 1092039550900700,
+        "solve_time_ns": 26899500,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26899500,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-2-9",
+        "group": "validation",
+        "direction_index": 2,
+        "repetition": 9,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092040418032400,
+        "solve_ended_ns": 1092040444577400,
+        "solve_time_ns": 26545000,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26545000,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-3-0",
+        "group": "validation",
+        "direction_index": 3,
+        "repetition": 0,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092041313468100,
+        "solve_ended_ns": 1092041339867400,
+        "solve_time_ns": 26399300,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26399300,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-3-1",
+        "group": "validation",
+        "direction_index": 3,
+        "repetition": 1,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092042223254800,
+        "solve_ended_ns": 1092042249655400,
+        "solve_time_ns": 26400600,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26400600,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-3-2",
+        "group": "validation",
+        "direction_index": 3,
+        "repetition": 2,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092043116567900,
+        "solve_ended_ns": 1092043142150600,
+        "solve_time_ns": 25582700,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 25582700,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-3-3",
+        "group": "validation",
+        "direction_index": 3,
+        "repetition": 3,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092044075615700,
+        "solve_ended_ns": 1092044103584900,
+        "solve_time_ns": 27969200,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27969200,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-3-4",
+        "group": "validation",
+        "direction_index": 3,
+        "repetition": 4,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092044964424800,
+        "solve_ended_ns": 1092044991868100,
+        "solve_time_ns": 27443300,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27443300,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-3-5",
+        "group": "validation",
+        "direction_index": 3,
+        "repetition": 5,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092045924163300,
+        "solve_ended_ns": 1092045950644900,
+        "solve_time_ns": 26481600,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26481600,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-3-6",
+        "group": "validation",
+        "direction_index": 3,
+        "repetition": 6,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092046816652200,
+        "solve_ended_ns": 1092046843266500,
+        "solve_time_ns": 26614300,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26614300,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-3-7",
+        "group": "validation",
+        "direction_index": 3,
+        "repetition": 7,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092047773598500,
+        "solve_ended_ns": 1092047800137700,
+        "solve_time_ns": 26539200,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26539200,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-3-8",
+        "group": "validation",
+        "direction_index": 3,
+        "repetition": 8,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092048667565100,
+        "solve_ended_ns": 1092048693646700,
+        "solve_time_ns": 26081600,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26081600,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "validation-3-9",
+        "group": "validation",
+        "direction_index": 3,
+        "repetition": 9,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092049609963500,
+        "solve_ended_ns": 1092049637606500,
+        "solve_time_ns": 27643000,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27643000,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_preflight-0-0",
+        "group": "turn_preflight",
+        "direction_index": 0,
+        "repetition": 0,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092050572086500,
+        "solve_ended_ns": 1092050598971400,
+        "solve_time_ns": 26884900,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26884900,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-0-0",
+        "group": "turn_validation",
+        "direction_index": 0,
+        "repetition": 0,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092051313449100,
+        "solve_ended_ns": 1092051339732100,
+        "solve_time_ns": 26283000,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26283000,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-0-1",
+        "group": "turn_validation",
+        "direction_index": 0,
+        "repetition": 1,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092052123587800,
+        "solve_ended_ns": 1092052149809200,
+        "solve_time_ns": 26221400,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26221400,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-0-2",
+        "group": "turn_validation",
+        "direction_index": 0,
+        "repetition": 2,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092052862752000,
+        "solve_ended_ns": 1092052889075100,
+        "solve_time_ns": 26323100,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26323100,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-0-3",
+        "group": "turn_validation",
+        "direction_index": 0,
+        "repetition": 3,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092053619071400,
+        "solve_ended_ns": 1092053644525400,
+        "solve_time_ns": 25454000,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 25454000,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-0-4",
+        "group": "turn_validation",
+        "direction_index": 0,
+        "repetition": 4,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092054361520100,
+        "solve_ended_ns": 1092054386852500,
+        "solve_time_ns": 25332400,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 25332400,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-0-5",
+        "group": "turn_validation",
+        "direction_index": 0,
+        "repetition": 5,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092055118864100,
+        "solve_ended_ns": 1092055144394900,
+        "solve_time_ns": 25530800,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 25530800,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-0-6",
+        "group": "turn_validation",
+        "direction_index": 0,
+        "repetition": 6,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092055909124800,
+        "solve_ended_ns": 1092055933729700,
+        "solve_time_ns": 24604900,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 24604900,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-0-7",
+        "group": "turn_validation",
+        "direction_index": 0,
+        "repetition": 7,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092056669755500,
+        "solve_ended_ns": 1092056694186300,
+        "solve_time_ns": 24430800,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 24430800,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-0-8",
+        "group": "turn_validation",
+        "direction_index": 0,
+        "repetition": 8,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092057409655200,
+        "solve_ended_ns": 1092057435192200,
+        "solve_time_ns": 25537000,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 25537000,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-0-9",
+        "group": "turn_validation",
+        "direction_index": 0,
+        "repetition": 9,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092058169101100,
+        "solve_ended_ns": 1092058196097200,
+        "solve_time_ns": 26996100,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26996100,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-1-0",
+        "group": "turn_validation",
+        "direction_index": 1,
+        "repetition": 0,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092058960653000,
+        "solve_ended_ns": 1092058986668200,
+        "solve_time_ns": 26015200,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26015200,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-1-1",
+        "group": "turn_validation",
+        "direction_index": 1,
+        "repetition": 1,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092059719699100,
+        "solve_ended_ns": 1092059745857600,
+        "solve_time_ns": 26158500,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26158500,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-1-2",
+        "group": "turn_validation",
+        "direction_index": 1,
+        "repetition": 2,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092060462622600,
+        "solve_ended_ns": 1092060487766400,
+        "solve_time_ns": 25143800,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 25143800,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-1-3",
+        "group": "turn_validation",
+        "direction_index": 1,
+        "repetition": 3,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092061271650800,
+        "solve_ended_ns": 1092061297410200,
+        "solve_time_ns": 25759400,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 25759400,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-1-4",
+        "group": "turn_validation",
+        "direction_index": 1,
+        "repetition": 4,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092062013374500,
+        "solve_ended_ns": 1092062038997800,
+        "solve_time_ns": 25623300,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 25623300,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-1-5",
+        "group": "turn_validation",
+        "direction_index": 1,
+        "repetition": 5,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092062823147200,
+        "solve_ended_ns": 1092062850159000,
+        "solve_time_ns": 27011800,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27011800,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-1-6",
+        "group": "turn_validation",
+        "direction_index": 1,
+        "repetition": 6,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092063564079700,
+        "solve_ended_ns": 1092063589751700,
+        "solve_time_ns": 25672000,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 25672000,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-1-7",
+        "group": "turn_validation",
+        "direction_index": 1,
+        "repetition": 7,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092064374766300,
+        "solve_ended_ns": 1092064401661200,
+        "solve_time_ns": 26894900,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26894900,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-1-8",
+        "group": "turn_validation",
+        "direction_index": 1,
+        "repetition": 8,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092065117413000,
+        "solve_ended_ns": 1092065145013000,
+        "solve_time_ns": 27600000,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27600000,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-1-9",
+        "group": "turn_validation",
+        "direction_index": 1,
+        "repetition": 9,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092065870728600,
+        "solve_ended_ns": 1092065898182200,
+        "solve_time_ns": 27453600,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27453600,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-2-0",
+        "group": "turn_validation",
+        "direction_index": 2,
+        "repetition": 0,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092066612837400,
+        "solve_ended_ns": 1092066640397800,
+        "solve_time_ns": 27560400,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27560400,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-2-1",
+        "group": "turn_validation",
+        "direction_index": 2,
+        "repetition": 1,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092067369716300,
+        "solve_ended_ns": 1092067397089400,
+        "solve_time_ns": 27373100,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27373100,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-2-2",
+        "group": "turn_validation",
+        "direction_index": 2,
+        "repetition": 2,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092068112070300,
+        "solve_ended_ns": 1092068139073300,
+        "solve_time_ns": 27003000,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27003000,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-2-3",
+        "group": "turn_validation",
+        "direction_index": 2,
+        "repetition": 3,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092068920699700,
+        "solve_ended_ns": 1092068949467900,
+        "solve_time_ns": 28768200,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 28768200,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-2-4",
+        "group": "turn_validation",
+        "direction_index": 2,
+        "repetition": 4,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092069661617300,
+        "solve_ended_ns": 1092069688992900,
+        "solve_time_ns": 27375600,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27375600,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-2-5",
+        "group": "turn_validation",
+        "direction_index": 2,
+        "repetition": 5,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092070415279500,
+        "solve_ended_ns": 1092070442946900,
+        "solve_time_ns": 27667400,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27667400,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-2-6",
+        "group": "turn_validation",
+        "direction_index": 2,
+        "repetition": 6,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092071222621700,
+        "solve_ended_ns": 1092071250150300,
+        "solve_time_ns": 27528600,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27528600,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-2-7",
+        "group": "turn_validation",
+        "direction_index": 2,
+        "repetition": 7,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092071961240200,
+        "solve_ended_ns": 1092071988488400,
+        "solve_time_ns": 27248200,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27248200,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-2-8",
+        "group": "turn_validation",
+        "direction_index": 2,
+        "repetition": 8,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092072719144500,
+        "solve_ended_ns": 1092072746570700,
+        "solve_time_ns": 27426200,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27426200,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-2-9",
+        "group": "turn_validation",
+        "direction_index": 2,
+        "repetition": 9,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092073462287200,
+        "solve_ended_ns": 1092073490121300,
+        "solve_time_ns": 27834100,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27834100,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-3-0",
+        "group": "turn_validation",
+        "direction_index": 3,
+        "repetition": 0,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092074219731600,
+        "solve_ended_ns": 1092074246173000,
+        "solve_time_ns": 26441400,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26441400,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-3-1",
+        "group": "turn_validation",
+        "direction_index": 3,
+        "repetition": 1,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092074965711200,
+        "solve_ended_ns": 1092074992342200,
+        "solve_time_ns": 26631000,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26631000,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-3-2",
+        "group": "turn_validation",
+        "direction_index": 3,
+        "repetition": 2,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092075759241100,
+        "solve_ended_ns": 1092075786330400,
+        "solve_time_ns": 27089300,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27089300,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-3-3",
+        "group": "turn_validation",
+        "direction_index": 3,
+        "repetition": 3,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092076518838700,
+        "solve_ended_ns": 1092076546096600,
+        "solve_time_ns": 27257900,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27257900,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-3-4",
+        "group": "turn_validation",
+        "direction_index": 3,
+        "repetition": 4,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092077260942600,
+        "solve_ended_ns": 1092077287929700,
+        "solve_time_ns": 26987100,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26987100,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-3-5",
+        "group": "turn_validation",
+        "direction_index": 3,
+        "repetition": 5,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092078017446200,
+        "solve_ended_ns": 1092078044414000,
+        "solve_time_ns": 26967800,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26967800,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-3-6",
+        "group": "turn_validation",
+        "direction_index": 3,
+        "repetition": 6,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092078774216700,
+        "solve_ended_ns": 1092078800942600,
+        "solve_time_ns": 26725900,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26725900,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-3-7",
+        "group": "turn_validation",
+        "direction_index": 3,
+        "repetition": 7,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092079517987400,
+        "solve_ended_ns": 1092079545048300,
+        "solve_time_ns": 27060900,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27060900,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-3-8",
+        "group": "turn_validation",
+        "direction_index": 3,
+        "repetition": 8,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092080325527100,
+        "solve_ended_ns": 1092080351636600,
+        "solve_time_ns": 26109500,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26109500,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "turn_validation-3-9",
+        "group": "turn_validation",
+        "direction_index": 3,
+        "repetition": 9,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092081066294600,
+        "solve_ended_ns": 1092081092332800,
+        "solve_time_ns": 26038200,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": false,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 0,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26038200,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_0-0-0",
+        "group": "r4_validation_0",
+        "direction_index": 0,
+        "repetition": 0,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092103376334400,
+        "solve_ended_ns": 1092103406477000,
+        "solve_time_ns": 30142600,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 108600,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 108600,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 30034000,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_0-0-1",
+        "group": "r4_validation_0",
+        "direction_index": 0,
+        "repetition": 1,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092106361890000,
+        "solve_ended_ns": 1092106392511500,
+        "solve_time_ns": 30621500,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 140800,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 140800,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 30480700,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_0-0-2",
+        "group": "r4_validation_0",
+        "direction_index": 0,
+        "repetition": 2,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092109310967200,
+        "solve_ended_ns": 1092109341892600,
+        "solve_time_ns": 30925400,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 155400,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 155400,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 30770000,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_0-0-3",
+        "group": "r4_validation_0",
+        "direction_index": 0,
+        "repetition": 3,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092112274765800,
+        "solve_ended_ns": 1092112303523600,
+        "solve_time_ns": 28757800,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 174700,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 174700,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 28583100,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_0-0-4",
+        "group": "r4_validation_0",
+        "direction_index": 0,
+        "repetition": 4,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092115167082500,
+        "solve_ended_ns": 1092115196399900,
+        "solve_time_ns": 29317400,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 162100,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 162100,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 29155300,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_1-0-0",
+        "group": "r4_validation_1",
+        "direction_index": 0,
+        "repetition": 0,
+        "candidates_evaluated": 2,
+        "solve_started_ns": 1092118369942300,
+        "solve_ended_ns": 1092118400646600,
+        "solve_time_ns": 30704300,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 174400,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 174400,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 30529900,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_1-0-1",
+        "group": "r4_validation_1",
+        "direction_index": 0,
+        "repetition": 1,
+        "candidates_evaluated": 2,
+        "solve_started_ns": 1092120322345900,
+        "solve_ended_ns": 1092120354586600,
+        "solve_time_ns": 32240700,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 149300,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 149300,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 32091400,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_1-0-2",
+        "group": "r4_validation_1",
+        "direction_index": 0,
+        "repetition": 2,
+        "candidates_evaluated": 2,
+        "solve_started_ns": 1092122259930500,
+        "solve_ended_ns": 1092122290375800,
+        "solve_time_ns": 30445300,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 162900,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 162900,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 30282400,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_1-0-3",
+        "group": "r4_validation_1",
+        "direction_index": 0,
+        "repetition": 3,
+        "candidates_evaluated": 2,
+        "solve_started_ns": 1092124210715100,
+        "solve_ended_ns": 1092124242602400,
+        "solve_time_ns": 31887300,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 1,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 1,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 265900,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 265900,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 31621400,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_1-0-4",
+        "group": "r4_validation_1",
+        "direction_index": 0,
+        "repetition": 4,
+        "candidates_evaluated": 2,
+        "solve_started_ns": 1092126213579600,
+        "solve_ended_ns": 1092126243521100,
+        "solve_time_ns": 29941500,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 154500,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 154500,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 29787000,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_2-0-0",
+        "group": "r4_validation_2",
+        "direction_index": 0,
+        "repetition": 0,
+        "candidates_evaluated": 3,
+        "solve_started_ns": 1092128719986500,
+        "solve_ended_ns": 1092128751535100,
+        "solve_time_ns": 31548600,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 156800,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 156800,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 31391800,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_2-0-1",
+        "group": "r4_validation_2",
+        "direction_index": 0,
+        "repetition": 1,
+        "candidates_evaluated": 3,
+        "solve_started_ns": 1092130321395700,
+        "solve_ended_ns": 1092130353622400,
+        "solve_time_ns": 32226700,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 214300,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 214300,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 32012400,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_2-0-2",
+        "group": "r4_validation_2",
+        "direction_index": 0,
+        "repetition": 2,
+        "candidates_evaluated": 3,
+        "solve_started_ns": 1092131922359600,
+        "solve_ended_ns": 1092131954728400,
+        "solve_time_ns": 32368800,
+        "solve_thread_cpu_ns": 46875000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 198300,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 198300,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 32170500,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_2-0-3",
+        "group": "r4_validation_2",
+        "direction_index": 0,
+        "repetition": 3,
+        "candidates_evaluated": 3,
+        "solve_started_ns": 1092133522544900,
+        "solve_ended_ns": 1092133552792100,
+        "solve_time_ns": 30247200,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 1,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 1,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 298800,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 298800,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 29948400,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_2-0-4",
+        "group": "r4_validation_2",
+        "direction_index": 0,
+        "repetition": 4,
+        "candidates_evaluated": 3,
+        "solve_started_ns": 1092135123674700,
+        "solve_ended_ns": 1092135156013100,
+        "solve_time_ns": 32338400,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 174800,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 174800,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 32163600,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_0-1-0",
+        "group": "r4_validation_0",
+        "direction_index": 1,
+        "repetition": 0,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092147120230300,
+        "solve_ended_ns": 1092147141618800,
+        "solve_time_ns": 21388500,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 126500,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 126500,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 21262000,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_0-1-1",
+        "group": "r4_validation_0",
+        "direction_index": 1,
+        "repetition": 1,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092150019363400,
+        "solve_ended_ns": 1092150043483000,
+        "solve_time_ns": 24119600,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 241300,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 241300,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 23878300,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_0-1-2",
+        "group": "r4_validation_0",
+        "direction_index": 1,
+        "repetition": 2,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092152919655500,
+        "solve_ended_ns": 1092152944845600,
+        "solve_time_ns": 25190100,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 245800,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 245800,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 24944300,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_0-1-3",
+        "group": "r4_validation_0",
+        "direction_index": 1,
+        "repetition": 3,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092155814076700,
+        "solve_ended_ns": 1092155837375100,
+        "solve_time_ns": 23298400,
+        "solve_thread_cpu_ns": 0,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 149800,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 149800,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 23148600,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_0-1-4",
+        "group": "r4_validation_0",
+        "direction_index": 1,
+        "repetition": 4,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092158760539700,
+        "solve_ended_ns": 1092158792722900,
+        "solve_time_ns": 32183200,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 169200,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 169200,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 32014000,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_1-1-0",
+        "group": "r4_validation_1",
+        "direction_index": 1,
+        "repetition": 0,
+        "candidates_evaluated": 2,
+        "solve_started_ns": 1092161911208800,
+        "solve_ended_ns": 1092161937315800,
+        "solve_time_ns": 26107000,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 120000,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 120000,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 25987000,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_1-1-1",
+        "group": "r4_validation_1",
+        "direction_index": 1,
+        "repetition": 1,
+        "candidates_evaluated": 2,
+        "solve_started_ns": 1092163864077900,
+        "solve_ended_ns": 1092163889982400,
+        "solve_time_ns": 25904500,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 228000,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 228000,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 25676500,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_1-1-2",
+        "group": "r4_validation_1",
+        "direction_index": 1,
+        "repetition": 2,
+        "candidates_evaluated": 2,
+        "solve_started_ns": 1092165809526400,
+        "solve_ended_ns": 1092165835825400,
+        "solve_time_ns": 26299000,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 230900,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 230900,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26068100,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_1-1-3",
+        "group": "r4_validation_1",
+        "direction_index": 1,
+        "repetition": 3,
+        "candidates_evaluated": 2,
+        "solve_started_ns": 1092167774836300,
+        "solve_ended_ns": 1092167801301000,
+        "solve_time_ns": 26464700,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 1,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 1,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 1035600,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 1035600,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 25429100,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_1-1-4",
+        "group": "r4_validation_1",
+        "direction_index": 1,
+        "repetition": 4,
+        "candidates_evaluated": 2,
+        "solve_started_ns": 1092169709979500,
+        "solve_ended_ns": 1092169736152500,
+        "solve_time_ns": 26173000,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 389700,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 389700,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 25783300,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_2-1-0",
+        "group": "r4_validation_2",
+        "direction_index": 1,
+        "repetition": 0,
+        "candidates_evaluated": 3,
+        "solve_started_ns": 1092172222446400,
+        "solve_ended_ns": 1092172249717100,
+        "solve_time_ns": 27270700,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 330500,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 330500,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26940200,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_2-1-1",
+        "group": "r4_validation_2",
+        "direction_index": 1,
+        "repetition": 1,
+        "candidates_evaluated": 3,
+        "solve_started_ns": 1092173817920900,
+        "solve_ended_ns": 1092173843850900,
+        "solve_time_ns": 25930000,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 227800,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 227800,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 25702200,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_2-1-2",
+        "group": "r4_validation_2",
+        "direction_index": 1,
+        "repetition": 2,
+        "candidates_evaluated": 3,
+        "solve_started_ns": 1092175414733100,
+        "solve_ended_ns": 1092175440017500,
+        "solve_time_ns": 25284400,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 180800,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 180800,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 25103600,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_2-1-3",
+        "group": "r4_validation_2",
+        "direction_index": 1,
+        "repetition": 3,
+        "candidates_evaluated": 3,
+        "solve_started_ns": 1092177075225400,
+        "solve_ended_ns": 1092177102069600,
+        "solve_time_ns": 26844200,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 186700,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 186700,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26657500,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_2-1-4",
+        "group": "r4_validation_2",
+        "direction_index": 1,
+        "repetition": 4,
+        "candidates_evaluated": 3,
+        "solve_started_ns": 1092178670577100,
+        "solve_ended_ns": 1092178704017900,
+        "solve_time_ns": 33440800,
+        "solve_thread_cpu_ns": 46875000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 264700,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 264700,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 33176100,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_0-2-0",
+        "group": "r4_validation_0",
+        "direction_index": 2,
+        "repetition": 0,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092198269123300,
+        "solve_ended_ns": 1092198293383900,
+        "solve_time_ns": 24260600,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 156700,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 156700,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 24103900,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_0-2-1",
+        "group": "r4_validation_0",
+        "direction_index": 2,
+        "repetition": 1,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092201165925500,
+        "solve_ended_ns": 1092201190529500,
+        "solve_time_ns": 24604000,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 211000,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 211000,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 24393000,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_0-2-2",
+        "group": "r4_validation_0",
+        "direction_index": 2,
+        "repetition": 2,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092204111480600,
+        "solve_ended_ns": 1092204136129000,
+        "solve_time_ns": 24648400,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 201600,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 201600,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 24446800,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_0-2-3",
+        "group": "r4_validation_0",
+        "direction_index": 2,
+        "repetition": 3,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092207074310000,
+        "solve_ended_ns": 1092207100506900,
+        "solve_time_ns": 26196900,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 231900,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 231900,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 25965000,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_0-2-4",
+        "group": "r4_validation_0",
+        "direction_index": 2,
+        "repetition": 4,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092209965724600,
+        "solve_ended_ns": 1092209988816100,
+        "solve_time_ns": 23091500,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 172100,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 172100,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 22919400,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_1-2-0",
+        "group": "r4_validation_1",
+        "direction_index": 2,
+        "repetition": 0,
+        "candidates_evaluated": 2,
+        "solve_started_ns": 1092213161794600,
+        "solve_ended_ns": 1092213188273800,
+        "solve_time_ns": 26479200,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 230700,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 230700,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26248500,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_1-2-1",
+        "group": "r4_validation_1",
+        "direction_index": 2,
+        "repetition": 1,
+        "candidates_evaluated": 2,
+        "solve_started_ns": 1092215111408900,
+        "solve_ended_ns": 1092215137504000,
+        "solve_time_ns": 26095100,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 242600,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 242600,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 25852500,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_1-2-2",
+        "group": "r4_validation_1",
+        "direction_index": 2,
+        "repetition": 2,
+        "candidates_evaluated": 2,
+        "solve_started_ns": 1092217114450900,
+        "solve_ended_ns": 1092217141300200,
+        "solve_time_ns": 26849300,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 1,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 1,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 380200,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 380200,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26469100,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_1-2-3",
+        "group": "r4_validation_1",
+        "direction_index": 2,
+        "repetition": 3,
+        "candidates_evaluated": 2,
+        "solve_started_ns": 1092219114700800,
+        "solve_ended_ns": 1092219140503100,
+        "solve_time_ns": 25802300,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 189600,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 189600,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 25612700,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_1-2-4",
+        "group": "r4_validation_1",
+        "direction_index": 2,
+        "repetition": 4,
+        "candidates_evaluated": 2,
+        "solve_started_ns": 1092221116557400,
+        "solve_ended_ns": 1092221143712100,
+        "solve_time_ns": 27154700,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 251200,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 251200,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26903500,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_2-2-0",
+        "group": "r4_validation_2",
+        "direction_index": 2,
+        "repetition": 0,
+        "candidates_evaluated": 3,
+        "solve_started_ns": 1092223572917700,
+        "solve_ended_ns": 1092223604724300,
+        "solve_time_ns": 31806600,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 310300,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 310300,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 31496300,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_2-2-1",
+        "group": "r4_validation_2",
+        "direction_index": 2,
+        "repetition": 1,
+        "candidates_evaluated": 3,
+        "solve_started_ns": 1092225169110700,
+        "solve_ended_ns": 1092225196616600,
+        "solve_time_ns": 27505900,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 197300,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 197300,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27308600,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_2-2-2",
+        "group": "r4_validation_2",
+        "direction_index": 2,
+        "repetition": 2,
+        "candidates_evaluated": 3,
+        "solve_started_ns": 1092226821889600,
+        "solve_ended_ns": 1092226850490800,
+        "solve_time_ns": 28601200,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 190200,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 190200,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 28411000,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_2-2-3",
+        "group": "r4_validation_2",
+        "direction_index": 2,
+        "repetition": 3,
+        "candidates_evaluated": 3,
+        "solve_started_ns": 1092228423208000,
+        "solve_ended_ns": 1092228450569400,
+        "solve_time_ns": 27361400,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 179400,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 179400,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27182000,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_2-2-4",
+        "group": "r4_validation_2",
+        "direction_index": 2,
+        "repetition": 4,
+        "candidates_evaluated": 3,
+        "solve_started_ns": 1092230023825500,
+        "solve_ended_ns": 1092230050463300,
+        "solve_time_ns": 26637800,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 170700,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 170700,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26467100,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_0-3-0",
+        "group": "r4_validation_0",
+        "direction_index": 3,
+        "repetition": 0,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092249859106100,
+        "solve_ended_ns": 1092249882641100,
+        "solve_time_ns": 23535000,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 116700,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 116700,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 23418300,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_0-3-1",
+        "group": "r4_validation_0",
+        "direction_index": 3,
+        "repetition": 1,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092252772268700,
+        "solve_ended_ns": 1092252796474800,
+        "solve_time_ns": 24206100,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 115800,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 115800,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 24090300,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_0-3-2",
+        "group": "r4_validation_0",
+        "direction_index": 3,
+        "repetition": 2,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092255664687500,
+        "solve_ended_ns": 1092255688424800,
+        "solve_time_ns": 23737300,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 126100,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 126100,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 23611200,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_0-3-3",
+        "group": "r4_validation_0",
+        "direction_index": 3,
+        "repetition": 3,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092258572792200,
+        "solve_ended_ns": 1092258596705800,
+        "solve_time_ns": 23913600,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 183100,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 183100,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 23730500,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_0-3-4",
+        "group": "r4_validation_0",
+        "direction_index": 3,
+        "repetition": 4,
+        "candidates_evaluated": 1,
+        "solve_started_ns": 1092261463648300,
+        "solve_ended_ns": 1092261488661600,
+        "solve_time_ns": 25013300,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 1,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 1,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 286700,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 286700,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 24726600,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_1-3-0",
+        "group": "r4_validation_1",
+        "direction_index": 3,
+        "repetition": 0,
+        "candidates_evaluated": 2,
+        "solve_started_ns": 1092264613131100,
+        "solve_ended_ns": 1092264638803900,
+        "solve_time_ns": 25672800,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 117900,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 117900,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 25554900,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_1-3-1",
+        "group": "r4_validation_1",
+        "direction_index": 3,
+        "repetition": 1,
+        "candidates_evaluated": 2,
+        "solve_started_ns": 1092266560379500,
+        "solve_ended_ns": 1092266585345200,
+        "solve_time_ns": 24965700,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 117800,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 117800,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 24847900,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_1-3-2",
+        "group": "r4_validation_1",
+        "direction_index": 3,
+        "repetition": 2,
+        "candidates_evaluated": 2,
+        "solve_started_ns": 1092268509873200,
+        "solve_ended_ns": 1092268534249700,
+        "solve_time_ns": 24376500,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 141000,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 141000,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 24235500,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_1-3-3",
+        "group": "r4_validation_1",
+        "direction_index": 3,
+        "repetition": 3,
+        "candidates_evaluated": 2,
+        "solve_started_ns": 1092270459514600,
+        "solve_ended_ns": 1092270486377900,
+        "solve_time_ns": 26863300,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 212000,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 212000,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26651300,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_1-3-4",
+        "group": "r4_validation_1",
+        "direction_index": 3,
+        "repetition": 4,
+        "candidates_evaluated": 2,
+        "solve_started_ns": 1092272409325900,
+        "solve_ended_ns": 1092272436671100,
+        "solve_time_ns": 27345200,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 157400,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 157400,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 27187800,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_2-3-0",
+        "group": "r4_validation_2",
+        "direction_index": 3,
+        "repetition": 0,
+        "candidates_evaluated": 3,
+        "solve_started_ns": 1092274914775500,
+        "solve_ended_ns": 1092274940999700,
+        "solve_time_ns": 26224200,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 187800,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 187800,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26036400,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_2-3-1",
+        "group": "r4_validation_2",
+        "direction_index": 3,
+        "repetition": 1,
+        "candidates_evaluated": 3,
+        "solve_started_ns": 1092276511075500,
+        "solve_ended_ns": 1092276538381300,
+        "solve_time_ns": 27305800,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 310500,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 310500,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26995300,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_2-3-2",
+        "group": "r4_validation_2",
+        "direction_index": 3,
+        "repetition": 2,
+        "candidates_evaluated": 3,
+        "solve_started_ns": 1092278160891700,
+        "solve_ended_ns": 1092278187440400,
+        "solve_time_ns": 26548700,
+        "solve_thread_cpu_ns": 15625000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 195800,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 195800,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 26352900,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_2-3-3",
+        "group": "r4_validation_2",
+        "direction_index": 3,
+        "repetition": 3,
+        "candidates_evaluated": 3,
+        "solve_started_ns": 1092279774402800,
+        "solve_ended_ns": 1092279800289400,
+        "solve_time_ns": 25886600,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 0,
+          "gen1": 1,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 0,
+          "gen1": 1,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 0,
+          "gen1": 385900,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 385900,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 25500700,
+        "solve_measurement_errors": []
+      },
+      {
+        "name": "r4_validation_2-3-4",
+        "group": "r4_validation_2",
+        "direction_index": 3,
+        "repetition": 4,
+        "candidates_evaluated": 3,
+        "solve_started_ns": 1092281370466700,
+        "solve_ended_ns": 1092281401737100,
+        "solve_time_ns": 31270400,
+        "solve_thread_cpu_ns": 31250000,
+        "solve_gc_collections_delta": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_overlap": true,
+        "solve_gc_pause_overlap_counts": {
+          "gen0": 1,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns_by_generation": {
+          "gen0": 286900,
+          "gen1": 0,
+          "gen2": 0
+        },
+        "solve_gc_pause_overlap_ns": 286900,
+        "solve_gc_pause_complete": true,
+        "solve_wall_minus_gc_pause_ns": 30983500,
+        "solve_measurement_errors": []
+      }
+    ],
+    "interpretation": "原始墙钟与扣除已记录 GC 停顿后的诊断值均仍超限；现有数据不能把剩余时间进一步分成求解工作与调度，也不能证明 D110 超限全部由 GC 引起。门槛不变，不重跑。"
+  },
+  "gc_pause_timeline": {
+    "clock": "perf_counter_ns",
+    "complete": true,
+    "dropped_events": 0,
+    "event_count": 656,
+    "max_events": 65536,
+    "measurement_error_count": 0,
+    "unpaired_events": 0,
+    "interval_count": 328,
+    "by_generation": {
+      "gen0": {
+        "count": 298,
+        "total_ns": 45874000,
+        "maximum_ns": 408400
+      },
+      "gen1": {
+        "count": 27,
+        "total_ns": 9784100,
+        "maximum_ns": 1193000
+      },
+      "gen2": {
+        "count": 3,
+        "total_ns": 42358800,
+        "maximum_ns": 16734400
+      }
+    },
+    "intervals": [
+      {
+        "end_ns": 1092012150810700,
+        "generation": 0,
+        "start_ns": 1092012150658500
+      },
+      {
+        "end_ns": 1092012239241700,
+        "generation": 0,
+        "start_ns": 1092012239052200
+      },
+      {
+        "end_ns": 1092012239472800,
+        "generation": 0,
+        "start_ns": 1092012239453800
+      },
+      {
+        "end_ns": 1092012239761300,
+        "generation": 0,
+        "start_ns": 1092012239731200
+      },
+      {
+        "end_ns": 1092012240872500,
+        "generation": 0,
+        "start_ns": 1092012240782400
+      },
+      {
+        "end_ns": 1092012244340500,
+        "generation": 0,
+        "start_ns": 1092012244242200
+      },
+      {
+        "end_ns": 1092012245612300,
+        "generation": 0,
+        "start_ns": 1092012245590200
+      },
+      {
+        "end_ns": 1092012245716600,
+        "generation": 0,
+        "start_ns": 1092012245701300
+      },
+      {
+        "end_ns": 1092012268661500,
+        "generation": 0,
+        "start_ns": 1092012268605800
+      },
+      {
+        "end_ns": 1092012269357300,
+        "generation": 0,
+        "start_ns": 1092012269310400
+      },
+      {
+        "end_ns": 1092012311233500,
+        "generation": 0,
+        "start_ns": 1092012311147600
+      },
+      {
+        "end_ns": 1092012363577200,
+        "generation": 1,
+        "start_ns": 1092012363201100
+      },
+      {
+        "end_ns": 1092012364145500,
+        "generation": 0,
+        "start_ns": 1092012364120300
+      },
+      {
+        "end_ns": 1092012411931100,
+        "generation": 0,
+        "start_ns": 1092012411833000
+      },
+      {
+        "end_ns": 1092012463153200,
+        "generation": 0,
+        "start_ns": 1092012463056800
+      },
+      {
+        "end_ns": 1092012514441500,
+        "generation": 0,
+        "start_ns": 1092012514310600
+      },
+      {
+        "end_ns": 1092012816634900,
+        "generation": 0,
+        "start_ns": 1092012816525000
+      },
+      {
+        "end_ns": 1092012883141900,
+        "generation": 0,
+        "start_ns": 1092012883049200
+      },
+      {
+        "end_ns": 1092013370226900,
+        "generation": 0,
+        "start_ns": 1092013370121600
+      },
+      {
+        "end_ns": 1092013825902900,
+        "generation": 0,
+        "start_ns": 1092013825729100
+      },
+      {
+        "end_ns": 1092014613872000,
+        "generation": 0,
+        "start_ns": 1092014613768000
+      },
+      {
+        "end_ns": 1092014739535500,
+        "generation": 0,
+        "start_ns": 1092014739423000
+      },
+      {
+        "end_ns": 1092015522531600,
+        "generation": 0,
+        "start_ns": 1092015522423900
+      },
+      {
+        "end_ns": 1092015691659800,
+        "generation": 1,
+        "start_ns": 1092015691333100
+      },
+      {
+        "end_ns": 1092016594114100,
+        "generation": 2,
+        "start_ns": 1092016582926400
+      },
+      {
+        "end_ns": 1092016605565900,
+        "generation": 0,
+        "start_ns": 1092016605549600
+      },
+      {
+        "end_ns": 1092016665301100,
+        "generation": 0,
+        "start_ns": 1092016665235400
+      },
+      {
+        "end_ns": 1092016717373100,
+        "generation": 0,
+        "start_ns": 1092016717327700
+      },
+      {
+        "end_ns": 1092017171817000,
+        "generation": 0,
+        "start_ns": 1092017171733200
+      },
+      {
+        "end_ns": 1092017540189400,
+        "generation": 0,
+        "start_ns": 1092017540074000
+      },
+      {
+        "end_ns": 1092018437340700,
+        "generation": 0,
+        "start_ns": 1092018437201200
+      },
+      {
+        "end_ns": 1092019330885900,
+        "generation": 0,
+        "start_ns": 1092019330760700
+      },
+      {
+        "end_ns": 1092020237931800,
+        "generation": 0,
+        "start_ns": 1092020237772200
+      },
+      {
+        "end_ns": 1092021133877800,
+        "generation": 0,
+        "start_ns": 1092021133730000
+      },
+      {
+        "end_ns": 1092022030758800,
+        "generation": 0,
+        "start_ns": 1092022030540300
+      },
+      {
+        "end_ns": 1092022986718400,
+        "generation": 0,
+        "start_ns": 1092022986536800
+      },
+      {
+        "end_ns": 1092023564524400,
+        "generation": 1,
+        "start_ns": 1092023564213600
+      },
+      {
+        "end_ns": 1092023886660900,
+        "generation": 0,
+        "start_ns": 1092023886524600
+      },
+      {
+        "end_ns": 1092024778569500,
+        "generation": 0,
+        "start_ns": 1092024778332600
+      },
+      {
+        "end_ns": 1092025739163900,
+        "generation": 0,
+        "start_ns": 1092025739019500
+      },
+      {
+        "end_ns": 1092026634229400,
+        "generation": 0,
+        "start_ns": 1092026634039900
+      },
+      {
+        "end_ns": 1092027589902600,
+        "generation": 0,
+        "start_ns": 1092027589753300
+      },
+      {
+        "end_ns": 1092028564886100,
+        "generation": 0,
+        "start_ns": 1092028564701100
+      },
+      {
+        "end_ns": 1092029474767500,
+        "generation": 0,
+        "start_ns": 1092029474612200
+      },
+      {
+        "end_ns": 1092030416383600,
+        "generation": 0,
+        "start_ns": 1092030416212600
+      },
+      {
+        "end_ns": 1092031321225200,
+        "generation": 0,
+        "start_ns": 1092031321084700
+      },
+      {
+        "end_ns": 1092032181595800,
+        "generation": 0,
+        "start_ns": 1092032181423700
+      },
+      {
+        "end_ns": 1092033211143200,
+        "generation": 0,
+        "start_ns": 1092033210940500
+      },
+      {
+        "end_ns": 1092034168161300,
+        "generation": 1,
+        "start_ns": 1092034167885700
+      },
+      {
+        "end_ns": 1092035073704600,
+        "generation": 0,
+        "start_ns": 1092035073562700
+      },
+      {
+        "end_ns": 1092036020187400,
+        "generation": 0,
+        "start_ns": 1092036019998700
+      },
+      {
+        "end_ns": 1092036913684000,
+        "generation": 0,
+        "start_ns": 1092036913432800
+      },
+      {
+        "end_ns": 1092037823195500,
+        "generation": 0,
+        "start_ns": 1092037823054600
+      },
+      {
+        "end_ns": 1092038762658900,
+        "generation": 0,
+        "start_ns": 1092038762513900
+      },
+      {
+        "end_ns": 1092039659011600,
+        "generation": 0,
+        "start_ns": 1092039658854100
+      },
+      {
+        "end_ns": 1092040571617900,
+        "generation": 0,
+        "start_ns": 1092040571453900
+      },
+      {
+        "end_ns": 1092041413879800,
+        "generation": 0,
+        "start_ns": 1092041413687400
+      },
+      {
+        "end_ns": 1092042424446400,
+        "generation": 0,
+        "start_ns": 1092042424298100
+      },
+      {
+        "end_ns": 1092043317585700,
+        "generation": 0,
+        "start_ns": 1092043317428300
+      },
+      {
+        "end_ns": 1092044208769500,
+        "generation": 0,
+        "start_ns": 1092044208617200
+      },
+      {
+        "end_ns": 1092045164766800,
+        "generation": 1,
+        "start_ns": 1092045164456600
+      },
+      {
+        "end_ns": 1092046074333400,
+        "generation": 0,
+        "start_ns": 1092046074178900
+      },
+      {
+        "end_ns": 1092047117796200,
+        "generation": 0,
+        "start_ns": 1092047117639900
+      },
+      {
+        "end_ns": 1092048009205000,
+        "generation": 0,
+        "start_ns": 1092048009062500
+      },
+      {
+        "end_ns": 1092048968404200,
+        "generation": 0,
+        "start_ns": 1092048968256400
+      },
+      {
+        "end_ns": 1092049862781000,
+        "generation": 0,
+        "start_ns": 1092049862630400
+      },
+      {
+        "end_ns": 1092050858575100,
+        "generation": 0,
+        "start_ns": 1092050858421000
+      },
+      {
+        "end_ns": 1092051667070700,
+        "generation": 0,
+        "start_ns": 1092051666909400
+      },
+      {
+        "end_ns": 1092052424283500,
+        "generation": 0,
+        "start_ns": 1092052424137400
+      },
+      {
+        "end_ns": 1092053215636300,
+        "generation": 0,
+        "start_ns": 1092053215479500
+      },
+      {
+        "end_ns": 1092053970977700,
+        "generation": 0,
+        "start_ns": 1092053970820800
+      },
+      {
+        "end_ns": 1092054815518800,
+        "generation": 0,
+        "start_ns": 1092054815371300
+      },
+      {
+        "end_ns": 1092055575860300,
+        "generation": 1,
+        "start_ns": 1092055575596400
+      },
+      {
+        "end_ns": 1092056363636500,
+        "generation": 0,
+        "start_ns": 1092056363498700
+      },
+      {
+        "end_ns": 1092057123767000,
+        "generation": 0,
+        "start_ns": 1092057123621800
+      },
+      {
+        "end_ns": 1092057865198600,
+        "generation": 0,
+        "start_ns": 1092057865050700
+      },
+      {
+        "end_ns": 1092058622230600,
+        "generation": 0,
+        "start_ns": 1092058622086600
+      },
+      {
+        "end_ns": 1092059363524200,
+        "generation": 0,
+        "start_ns": 1092059363377700
+      },
+      {
+        "end_ns": 1092060174652500,
+        "generation": 0,
+        "start_ns": 1092060174501700
+      },
+      {
+        "end_ns": 1092060918121400,
+        "generation": 0,
+        "start_ns": 1092060917956000
+      },
+      {
+        "end_ns": 1092061608891800,
+        "generation": 0,
+        "start_ns": 1092061608740300
+      },
+      {
+        "end_ns": 1092062468896300,
+        "generation": 0,
+        "start_ns": 1092062468730900
+      },
+      {
+        "end_ns": 1092063259754500,
+        "generation": 0,
+        "start_ns": 1092063259573900
+      },
+      {
+        "end_ns": 1092064019569500,
+        "generation": 0,
+        "start_ns": 1092064019415900
+      },
+      {
+        "end_ns": 1092064812607100,
+        "generation": 1,
+        "start_ns": 1092064812278200
+      },
+      {
+        "end_ns": 1092065568329300,
+        "generation": 0,
+        "start_ns": 1092065568151000
+      },
+      {
+        "end_ns": 1092066324223300,
+        "generation": 0,
+        "start_ns": 1092066324039500
+      },
+      {
+        "end_ns": 1092067066915700,
+        "generation": 0,
+        "start_ns": 1092067066714100
+      },
+      {
+        "end_ns": 1092067975953900,
+        "generation": 0,
+        "start_ns": 1092067975773500
+      },
+      {
+        "end_ns": 1092068718575900,
+        "generation": 0,
+        "start_ns": 1092068718419300
+      },
+      {
+        "end_ns": 1092069358501800,
+        "generation": 0,
+        "start_ns": 1092069358263800
+      },
+      {
+        "end_ns": 1092070264198700,
+        "generation": 0,
+        "start_ns": 1092070264037400
+      },
+      {
+        "end_ns": 1092071019865200,
+        "generation": 0,
+        "start_ns": 1092071019652000
+      },
+      {
+        "end_ns": 1092071808899600,
+        "generation": 0,
+        "start_ns": 1092071808733400
+      },
+      {
+        "end_ns": 1092072567018900,
+        "generation": 0,
+        "start_ns": 1092072566848400
+      },
+      {
+        "end_ns": 1092073311498400,
+        "generation": 0,
+        "start_ns": 1092073311353700
+      },
+      {
+        "end_ns": 1092074067866300,
+        "generation": 1,
+        "start_ns": 1092074067582100
+      },
+      {
+        "end_ns": 1092074812755400,
+        "generation": 0,
+        "start_ns": 1092074812599900
+      },
+      {
+        "end_ns": 1092075571432400,
+        "generation": 0,
+        "start_ns": 1092075571265800
+      },
+      {
+        "end_ns": 1092076215377700,
+        "generation": 0,
+        "start_ns": 1092076215210800
+      },
+      {
+        "end_ns": 1092077158730000,
+        "generation": 0,
+        "start_ns": 1092077158450900
+      },
+      {
+        "end_ns": 1092077915138200,
+        "generation": 0,
+        "start_ns": 1092077914967500
+      },
+      {
+        "end_ns": 1092078673376700,
+        "generation": 0,
+        "start_ns": 1092078673217800
+      },
+      {
+        "end_ns": 1092079414189000,
+        "generation": 0,
+        "start_ns": 1092079413996300
+      },
+      {
+        "end_ns": 1092080174113300,
+        "generation": 0,
+        "start_ns": 1092080173959700
+      },
+      {
+        "end_ns": 1092080963712900,
+        "generation": 0,
+        "start_ns": 1092080963543100
+      },
+      {
+        "end_ns": 1092081720468700,
+        "generation": 0,
+        "start_ns": 1092081720314000
+      },
+      {
+        "end_ns": 1092081974699000,
+        "generation": 0,
+        "start_ns": 1092081974506700
+      },
+      {
+        "end_ns": 1092082028397500,
+        "generation": 1,
+        "start_ns": 1092082028010300
+      },
+      {
+        "end_ns": 1092083016023800,
+        "generation": 0,
+        "start_ns": 1092083015780100
+      },
+      {
+        "end_ns": 1092084075384200,
+        "generation": 0,
+        "start_ns": 1092084075079500
+      },
+      {
+        "end_ns": 1092084175399300,
+        "generation": 0,
+        "start_ns": 1092084175218800
+      },
+      {
+        "end_ns": 1092085221667900,
+        "generation": 0,
+        "start_ns": 1092085221430200
+      },
+      {
+        "end_ns": 1092086263617100,
+        "generation": 0,
+        "start_ns": 1092086263378300
+      },
+      {
+        "end_ns": 1092087273834300,
+        "generation": 0,
+        "start_ns": 1092087273592500
+      },
+      {
+        "end_ns": 1092088266069400,
+        "generation": 0,
+        "start_ns": 1092088265767200
+      },
+      {
+        "end_ns": 1092089274089600,
+        "generation": 0,
+        "start_ns": 1092089273681200
+      },
+      {
+        "end_ns": 1092089373486200,
+        "generation": 0,
+        "start_ns": 1092089373308100
+      },
+      {
+        "end_ns": 1092090418653700,
+        "generation": 0,
+        "start_ns": 1092090418402500
+      },
+      {
+        "end_ns": 1092091424519800,
+        "generation": 0,
+        "start_ns": 1092091424174600
+      },
+      {
+        "end_ns": 1092092271772500,
+        "generation": 1,
+        "start_ns": 1092092270579500
+      },
+      {
+        "end_ns": 1092092314478400,
+        "generation": 0,
+        "start_ns": 1092092314421700
+      },
+      {
+        "end_ns": 1092092319034300,
+        "generation": 0,
+        "start_ns": 1092092318908000
+      },
+      {
+        "end_ns": 1092092364773200,
+        "generation": 0,
+        "start_ns": 1092092364709000
+      },
+      {
+        "end_ns": 1092092365798500,
+        "generation": 0,
+        "start_ns": 1092092365751100
+      },
+      {
+        "end_ns": 1092092414650500,
+        "generation": 0,
+        "start_ns": 1092092414545600
+      },
+      {
+        "end_ns": 1092092515934100,
+        "generation": 0,
+        "start_ns": 1092092515796900
+      },
+      {
+        "end_ns": 1092092617202200,
+        "generation": 0,
+        "start_ns": 1092092617073000
+      },
+      {
+        "end_ns": 1092092667831100,
+        "generation": 0,
+        "start_ns": 1092092667731500
+      },
+      {
+        "end_ns": 1092092720232300,
+        "generation": 0,
+        "start_ns": 1092092720145200
+      },
+      {
+        "end_ns": 1092092769189200,
+        "generation": 0,
+        "start_ns": 1092092769057400
+      },
+      {
+        "end_ns": 1092092819326900,
+        "generation": 0,
+        "start_ns": 1092092819183400
+      },
+      {
+        "end_ns": 1092092871504900,
+        "generation": 1,
+        "start_ns": 1092092871245500
+      },
+      {
+        "end_ns": 1092092921063800,
+        "generation": 0,
+        "start_ns": 1092092920965100
+      },
+      {
+        "end_ns": 1092092971193700,
+        "generation": 0,
+        "start_ns": 1092092971097300
+      },
+      {
+        "end_ns": 1092093071285500,
+        "generation": 0,
+        "start_ns": 1092093071154500
+      },
+      {
+        "end_ns": 1092093221765300,
+        "generation": 0,
+        "start_ns": 1092093221614400
+      },
+      {
+        "end_ns": 1092093372844600,
+        "generation": 0,
+        "start_ns": 1092093372715000
+      },
+      {
+        "end_ns": 1092093473479800,
+        "generation": 0,
+        "start_ns": 1092093473352900
+      },
+      {
+        "end_ns": 1092093574997800,
+        "generation": 0,
+        "start_ns": 1092093574825400
+      },
+      {
+        "end_ns": 1092093858998700,
+        "generation": 0,
+        "start_ns": 1092093858879600
+      },
+      {
+        "end_ns": 1092094010738700,
+        "generation": 0,
+        "start_ns": 1092094010593600
+      },
+      {
+        "end_ns": 1092094113346900,
+        "generation": 0,
+        "start_ns": 1092094113214600
+      },
+      {
+        "end_ns": 1092094163862300,
+        "generation": 0,
+        "start_ns": 1092094163779900
+      },
+      {
+        "end_ns": 1092094567757400,
+        "generation": 1,
+        "start_ns": 1092094567603200
+      },
+      {
+        "end_ns": 1092094718546400,
+        "generation": 0,
+        "start_ns": 1092094718432800
+      },
+      {
+        "end_ns": 1092094870057700,
+        "generation": 0,
+        "start_ns": 1092094869929200
+      },
+      {
+        "end_ns": 1092094971826100,
+        "generation": 0,
+        "start_ns": 1092094971696800
+      },
+      {
+        "end_ns": 1092095071857400,
+        "generation": 0,
+        "start_ns": 1092095071737300
+      },
+      {
+        "end_ns": 1092095172946500,
+        "generation": 0,
+        "start_ns": 1092095172825500
+      },
+      {
+        "end_ns": 1092095410204900,
+        "generation": 0,
+        "start_ns": 1092095410078600
+      },
+      {
+        "end_ns": 1092095510724000,
+        "generation": 0,
+        "start_ns": 1092095510597100
+      },
+      {
+        "end_ns": 1092095714317800,
+        "generation": 0,
+        "start_ns": 1092095714180000
+      },
+      {
+        "end_ns": 1092096115338600,
+        "generation": 0,
+        "start_ns": 1092096115213500
+      },
+      {
+        "end_ns": 1092096469833200,
+        "generation": 0,
+        "start_ns": 1092096469696100
+      },
+      {
+        "end_ns": 1092096875584100,
+        "generation": 0,
+        "start_ns": 1092096875452300
+      },
+      {
+        "end_ns": 1092098170745900,
+        "generation": 1,
+        "start_ns": 1092098170501100
+      },
+      {
+        "end_ns": 1092098993552500,
+        "generation": 2,
+        "start_ns": 1092098979115800
+      },
+      {
+        "end_ns": 1092098998441600,
+        "generation": 0,
+        "start_ns": 1092098998391600
+      },
+      {
+        "end_ns": 1092099115926100,
+        "generation": 0,
+        "start_ns": 1092099115841800
+      },
+      {
+        "end_ns": 1092099164741200,
+        "generation": 0,
+        "start_ns": 1092099164666000
+      },
+      {
+        "end_ns": 1092099414476200,
+        "generation": 0,
+        "start_ns": 1092099414343300
+      },
+      {
+        "end_ns": 1092099719662200,
+        "generation": 0,
+        "start_ns": 1092099719541200
+      },
+      {
+        "end_ns": 1092100072829000,
+        "generation": 0,
+        "start_ns": 1092100072714500
+      },
+      {
+        "end_ns": 1092100375303300,
+        "generation": 0,
+        "start_ns": 1092100375183800
+      },
+      {
+        "end_ns": 1092100712753000,
+        "generation": 0,
+        "start_ns": 1092100712634400
+      },
+      {
+        "end_ns": 1092101066976200,
+        "generation": 0,
+        "start_ns": 1092101066813200
+      },
+      {
+        "end_ns": 1092101231014300,
+        "generation": 0,
+        "start_ns": 1092101230834000
+      },
+      {
+        "end_ns": 1092101522457400,
+        "generation": 0,
+        "start_ns": 1092101522306300
+      },
+      {
+        "end_ns": 1092101875249300,
+        "generation": 1,
+        "start_ns": 1092101874954400
+      },
+      {
+        "end_ns": 1092102263366400,
+        "generation": 0,
+        "start_ns": 1092102263202900
+      },
+      {
+        "end_ns": 1092102618551600,
+        "generation": 0,
+        "start_ns": 1092102618436500
+      },
+      {
+        "end_ns": 1092103023934200,
+        "generation": 0,
+        "start_ns": 1092103023805700
+      },
+      {
+        "end_ns": 1092103378802600,
+        "generation": 0,
+        "start_ns": 1092103378694000
+      },
+      {
+        "end_ns": 1092103459791600,
+        "generation": 0,
+        "start_ns": 1092103459682800
+      },
+      {
+        "end_ns": 1092103917804600,
+        "generation": 0,
+        "start_ns": 1092103917669300
+      },
+      {
+        "end_ns": 1092104610886900,
+        "generation": 0,
+        "start_ns": 1092104610728600
+      },
+      {
+        "end_ns": 1092105013423500,
+        "generation": 0,
+        "start_ns": 1092105013297300
+      },
+      {
+        "end_ns": 1092105669627100,
+        "generation": 0,
+        "start_ns": 1092105669509800
+      },
+      {
+        "end_ns": 1092106365144100,
+        "generation": 0,
+        "start_ns": 1092106365003300
+      },
+      {
+        "end_ns": 1092106717028400,
+        "generation": 0,
+        "start_ns": 1092106716861500
+      },
+      {
+        "end_ns": 1092108012195100,
+        "generation": 1,
+        "start_ns": 1092108011954300
+      },
+      {
+        "end_ns": 1092108870590400,
+        "generation": 0,
+        "start_ns": 1092108870453400
+      },
+      {
+        "end_ns": 1092109318732700,
+        "generation": 0,
+        "start_ns": 1092109318577300
+      },
+      {
+        "end_ns": 1092109917309100,
+        "generation": 0,
+        "start_ns": 1092109917115200
+      },
+      {
+        "end_ns": 1092110962417900,
+        "generation": 0,
+        "start_ns": 1092110962273500
+      },
+      {
+        "end_ns": 1092111818929000,
+        "generation": 0,
+        "start_ns": 1092111818802500
+      },
+      {
+        "end_ns": 1092112281854200,
+        "generation": 0,
+        "start_ns": 1092112281679500
+      },
+      {
+        "end_ns": 1092112761989800,
+        "generation": 0,
+        "start_ns": 1092112761846500
+      },
+      {
+        "end_ns": 1092113921016800,
+        "generation": 0,
+        "start_ns": 1092113920861800
+      },
+      {
+        "end_ns": 1092114762111300,
+        "generation": 0,
+        "start_ns": 1092114761975700
+      },
+      {
+        "end_ns": 1092115174706200,
+        "generation": 0,
+        "start_ns": 1092115174544100
+      },
+      {
+        "end_ns": 1092115772506900,
+        "generation": 0,
+        "start_ns": 1092115772279700
+      },
+      {
+        "end_ns": 1092116869901300,
+        "generation": 1,
+        "start_ns": 1092116869622600
+      },
+      {
+        "end_ns": 1092117179381800,
+        "generation": 0,
+        "start_ns": 1092117179261300
+      },
+      {
+        "end_ns": 1092117963613600,
+        "generation": 0,
+        "start_ns": 1092117963469400
+      },
+      {
+        "end_ns": 1092118375954000,
+        "generation": 0,
+        "start_ns": 1092118375779600
+      },
+      {
+        "end_ns": 1092118822490900,
+        "generation": 0,
+        "start_ns": 1092118822350700
+      },
+      {
+        "end_ns": 1092120018505700,
+        "generation": 0,
+        "start_ns": 1092120018288900
+      },
+      {
+        "end_ns": 1092120332826800,
+        "generation": 0,
+        "start_ns": 1092120332677500
+      },
+      {
+        "end_ns": 1092120808616300,
+        "generation": 0,
+        "start_ns": 1092120808364400
+      },
+      {
+        "end_ns": 1092122021859400,
+        "generation": 0,
+        "start_ns": 1092122021687800
+      },
+      {
+        "end_ns": 1092122271688000,
+        "generation": 0,
+        "start_ns": 1092122271525100
+      },
+      {
+        "end_ns": 1092123017966300,
+        "generation": 0,
+        "start_ns": 1092123017769500
+      },
+      {
+        "end_ns": 1092124109499400,
+        "generation": 0,
+        "start_ns": 1092124109351000
+      },
+      {
+        "end_ns": 1092124218665900,
+        "generation": 1,
+        "start_ns": 1092124218400000
+      },
+      {
+        "end_ns": 1092124969544600,
+        "generation": 0,
+        "start_ns": 1092124969376100
+      },
+      {
+        "end_ns": 1092126062222900,
+        "generation": 0,
+        "start_ns": 1092126062064800
+      },
+      {
+        "end_ns": 1092126224349400,
+        "generation": 0,
+        "start_ns": 1092126224194900
+      },
+      {
+        "end_ns": 1092126971812700,
+        "generation": 0,
+        "start_ns": 1092126971612900
+      },
+      {
+        "end_ns": 1092127871253700,
+        "generation": 0,
+        "start_ns": 1092127871020800
+      },
+      {
+        "end_ns": 1092128722165500,
+        "generation": 0,
+        "start_ns": 1092128722008700
+      },
+      {
+        "end_ns": 1092129174857700,
+        "generation": 0,
+        "start_ns": 1092129174692400
+      },
+      {
+        "end_ns": 1092130323993100,
+        "generation": 0,
+        "start_ns": 1092130323778800
+      },
+      {
+        "end_ns": 1092130773713600,
+        "generation": 0,
+        "start_ns": 1092130773555600
+      },
+      {
+        "end_ns": 1092131924570900,
+        "generation": 0,
+        "start_ns": 1092131924372600
+      },
+      {
+        "end_ns": 1092132358809000,
+        "generation": 0,
+        "start_ns": 1092132358651500
+      },
+      {
+        "end_ns": 1092133524978500,
+        "generation": 1,
+        "start_ns": 1092133524679700
+      },
+      {
+        "end_ns": 1092133959861100,
+        "generation": 0,
+        "start_ns": 1092133959699000
+      },
+      {
+        "end_ns": 1092135126046300,
+        "generation": 0,
+        "start_ns": 1092135125871500
+      },
+      {
+        "end_ns": 1092135560907900,
+        "generation": 0,
+        "start_ns": 1092135560727500
+      },
+      {
+        "end_ns": 1092135964864400,
+        "generation": 0,
+        "start_ns": 1092135964650100
+      },
+      {
+        "end_ns": 1092135966191300,
+        "generation": 0,
+        "start_ns": 1092135966112300
+      },
+      {
+        "end_ns": 1092136014990200,
+        "generation": 0,
+        "start_ns": 1092136014900400
+      },
+      {
+        "end_ns": 1092136016280300,
+        "generation": 0,
+        "start_ns": 1092136016171300
+      },
+      {
+        "end_ns": 1092136067263900,
+        "generation": 0,
+        "start_ns": 1092136067145900
+      },
+      {
+        "end_ns": 1092136166272900,
+        "generation": 0,
+        "start_ns": 1092136166149700
+      },
+      {
+        "end_ns": 1092136267306600,
+        "generation": 0,
+        "start_ns": 1092136267177500
+      },
+      {
+        "end_ns": 1092136418447000,
+        "generation": 0,
+        "start_ns": 1092136418326400
+      },
+      {
+        "end_ns": 1092136571450900,
+        "generation": 1,
+        "start_ns": 1092136571113800
+      },
+      {
+        "end_ns": 1092136823410900,
+        "generation": 0,
+        "start_ns": 1092136823290500
+      },
+      {
+        "end_ns": 1092136924034700,
+        "generation": 0,
+        "start_ns": 1092136923924900
+      },
+      {
+        "end_ns": 1092137161142900,
+        "generation": 0,
+        "start_ns": 1092137161018300
+      },
+      {
+        "end_ns": 1092137362932200,
+        "generation": 0,
+        "start_ns": 1092137362807200
+      },
+      {
+        "end_ns": 1092137564345600,
+        "generation": 0,
+        "start_ns": 1092137564206800
+      },
+      {
+        "end_ns": 1092137867155200,
+        "generation": 0,
+        "start_ns": 1092137867043200
+      },
+      {
+        "end_ns": 1092138219891200,
+        "generation": 0,
+        "start_ns": 1092138219735400
+      },
+      {
+        "end_ns": 1092139212026700,
+        "generation": 0,
+        "start_ns": 1092139211839000
+      },
+      {
+        "end_ns": 1092140332824200,
+        "generation": 0,
+        "start_ns": 1092140332679300
+      },
+      {
+        "end_ns": 1092140623261100,
+        "generation": 0,
+        "start_ns": 1092140623134600
+      },
+      {
+        "end_ns": 1092141512181300,
+        "generation": 0,
+        "start_ns": 1092141512025700
+      },
+      {
+        "end_ns": 1092142628372000,
+        "generation": 1,
+        "start_ns": 1092142628091800
+      },
+      {
+        "end_ns": 1092142872694300,
+        "generation": 0,
+        "start_ns": 1092142872574900
+      },
+      {
+        "end_ns": 1092144974683400,
+        "generation": 0,
+        "start_ns": 1092144974524200
+      },
+      {
+        "end_ns": 1092147120860700,
+        "generation": 0,
+        "start_ns": 1092147120734200
+      },
+      {
+        "end_ns": 1092150020519500,
+        "generation": 0,
+        "start_ns": 1092150020278200
+      },
+      {
+        "end_ns": 1092152921322200,
+        "generation": 0,
+        "start_ns": 1092152921076400
+      },
+      {
+        "end_ns": 1092155815247500,
+        "generation": 0,
+        "start_ns": 1092155815097700
+      },
+      {
+        "end_ns": 1092158761686300,
+        "generation": 0,
+        "start_ns": 1092158761517100
+      },
+      {
+        "end_ns": 1092160725249200,
+        "generation": 0,
+        "start_ns": 1092160725014100
+      },
+      {
+        "end_ns": 1092161913494000,
+        "generation": 0,
+        "start_ns": 1092161913374000
+      },
+      {
+        "end_ns": 1092163869260600,
+        "generation": 0,
+        "start_ns": 1092163869032600
+      },
+      {
+        "end_ns": 1092165817731700,
+        "generation": 0,
+        "start_ns": 1092165817500800
+      },
+      {
+        "end_ns": 1092167788995000,
+        "generation": 1,
+        "start_ns": 1092167787959400
+      },
+      {
+        "end_ns": 1092169715607400,
+        "generation": 0,
+        "start_ns": 1092169715217700
+      },
+      {
+        "end_ns": 1092172225051800,
+        "generation": 0,
+        "start_ns": 1092172224721300
+      },
+      {
+        "end_ns": 1092173831722800,
+        "generation": 0,
+        "start_ns": 1092173831495000
+      },
+      {
+        "end_ns": 1092175429313700,
+        "generation": 0,
+        "start_ns": 1092175429132900
+      },
+      {
+        "end_ns": 1092177091025500,
+        "generation": 0,
+        "start_ns": 1092177090838800
+      },
+      {
+        "end_ns": 1092178689389800,
+        "generation": 0,
+        "start_ns": 1092178689125100
+      },
+      {
+        "end_ns": 1092179514307700,
+        "generation": 0,
+        "start_ns": 1092179514141700
+      },
+      {
+        "end_ns": 1092179515175300,
+        "generation": 0,
+        "start_ns": 1092179515080800
+      },
+      {
+        "end_ns": 1092179519590100,
+        "generation": 0,
+        "start_ns": 1092179519452400
+      },
+      {
+        "end_ns": 1092181581937700,
+        "generation": 0,
+        "start_ns": 1092181581743400
+      },
+      {
+        "end_ns": 1092183862168800,
+        "generation": 0,
+        "start_ns": 1092183862033600
+      },
+      {
+        "end_ns": 1092186162418800,
+        "generation": 1,
+        "start_ns": 1092186162046800
+      },
+      {
+        "end_ns": 1092188975213500,
+        "generation": 0,
+        "start_ns": 1092188975056600
+      },
+      {
+        "end_ns": 1092191213545600,
+        "generation": 0,
+        "start_ns": 1092191213391600
+      },
+      {
+        "end_ns": 1092193772791600,
+        "generation": 0,
+        "start_ns": 1092193772455500
+      },
+      {
+        "end_ns": 1092196110756900,
+        "generation": 0,
+        "start_ns": 1092196110595300
+      },
+      {
+        "end_ns": 1092198272463900,
+        "generation": 0,
+        "start_ns": 1092198272307200
+      },
+      {
+        "end_ns": 1092201169583900,
+        "generation": 0,
+        "start_ns": 1092201169372900
+      },
+      {
+        "end_ns": 1092204115398200,
+        "generation": 0,
+        "start_ns": 1092204115196600
+      },
+      {
+        "end_ns": 1092207078119600,
+        "generation": 0,
+        "start_ns": 1092207077887700
+      },
+      {
+        "end_ns": 1092209969264100,
+        "generation": 0,
+        "start_ns": 1092209969092000
+      },
+      {
+        "end_ns": 1092213177012800,
+        "generation": 0,
+        "start_ns": 1092213176782100
+      },
+      {
+        "end_ns": 1092215126635900,
+        "generation": 0,
+        "start_ns": 1092215126393300
+      },
+      {
+        "end_ns": 1092217130049700,
+        "generation": 1,
+        "start_ns": 1092217129669500
+      },
+      {
+        "end_ns": 1092219130156500,
+        "generation": 0,
+        "start_ns": 1092219129966900
+      },
+      {
+        "end_ns": 1092221135675000,
+        "generation": 0,
+        "start_ns": 1092221135423800
+      },
+      {
+        "end_ns": 1092223593589400,
+        "generation": 0,
+        "start_ns": 1092223593279100
+      },
+      {
+        "end_ns": 1092225185876900,
+        "generation": 0,
+        "start_ns": 1092225185679600
+      },
+      {
+        "end_ns": 1092226838251400,
+        "generation": 0,
+        "start_ns": 1092226838061200
+      },
+      {
+        "end_ns": 1092228438785600,
+        "generation": 0,
+        "start_ns": 1092228438606200
+      },
+      {
+        "end_ns": 1092230039221900,
+        "generation": 0,
+        "start_ns": 1092230039051200
+      },
+      {
+        "end_ns": 1092230865128500,
+        "generation": 0,
+        "start_ns": 1092230864962000
+      },
+      {
+        "end_ns": 1092230866249700,
+        "generation": 0,
+        "start_ns": 1092230866201200
+      },
+      {
+        "end_ns": 1092230869734700,
+        "generation": 0,
+        "start_ns": 1092230869605300
+      },
+      {
+        "end_ns": 1092235213909700,
+        "generation": 0,
+        "start_ns": 1092235213731200
+      },
+      {
+        "end_ns": 1092237770549300,
+        "generation": 1,
+        "start_ns": 1092237770162000
+      },
+      {
+        "end_ns": 1092240343128100,
+        "generation": 2,
+        "start_ns": 1092240326393700
+      },
+      {
+        "end_ns": 1092240346238400,
+        "generation": 0,
+        "start_ns": 1092240346209100
+      },
+      {
+        "end_ns": 1092240351073200,
+        "generation": 0,
+        "start_ns": 1092240351046000
+      },
+      {
+        "end_ns": 1092240355496600,
+        "generation": 0,
+        "start_ns": 1092240355471000
+      },
+      {
+        "end_ns": 1092240863741900,
+        "generation": 0,
+        "start_ns": 1092240863584000
+      },
+      {
+        "end_ns": 1092241519884100,
+        "generation": 0,
+        "start_ns": 1092241519788700
+      },
+      {
+        "end_ns": 1092242261714200,
+        "generation": 0,
+        "start_ns": 1092242261560500
+      },
+      {
+        "end_ns": 1092242623621500,
+        "generation": 0,
+        "start_ns": 1092242623491500
+      },
+      {
+        "end_ns": 1092243267590300,
+        "generation": 0,
+        "start_ns": 1092243267486100
+      },
+      {
+        "end_ns": 1092243971431000,
+        "generation": 0,
+        "start_ns": 1092243971344300
+      },
+      {
+        "end_ns": 1092244711820300,
+        "generation": 0,
+        "start_ns": 1092244711683900
+      },
+      {
+        "end_ns": 1092245168754000,
+        "generation": 0,
+        "start_ns": 1092245168665700
+      },
+      {
+        "end_ns": 1092245870094000,
+        "generation": 1,
+        "start_ns": 1092245869869000
+      },
+      {
+        "end_ns": 1092247316582800,
+        "generation": 0,
+        "start_ns": 1092247316475400
+      },
+      {
+        "end_ns": 1092247780212900,
+        "generation": 0,
+        "start_ns": 1092247780118600
+      },
+      {
+        "end_ns": 1092249471566600,
+        "generation": 0,
+        "start_ns": 1092249471441100
+      },
+      {
+        "end_ns": 1092249870028300,
+        "generation": 0,
+        "start_ns": 1092249869911600
+      },
+      {
+        "end_ns": 1092252468877300,
+        "generation": 0,
+        "start_ns": 1092252468702400
+      },
+      {
+        "end_ns": 1092252785058800,
+        "generation": 0,
+        "start_ns": 1092252784943000
+      },
+      {
+        "end_ns": 1092255359931000,
+        "generation": 0,
+        "start_ns": 1092255359768700
+      },
+      {
+        "end_ns": 1092255673857900,
+        "generation": 0,
+        "start_ns": 1092255673731800
+      },
+      {
+        "end_ns": 1092258269338100,
+        "generation": 0,
+        "start_ns": 1092258269177200
+      },
+      {
+        "end_ns": 1092258585161300,
+        "generation": 0,
+        "start_ns": 1092258584978200
+      },
+      {
+        "end_ns": 1092261161643500,
+        "generation": 0,
+        "start_ns": 1092261161482200
+      },
+      {
+        "end_ns": 1092261477097100,
+        "generation": 1,
+        "start_ns": 1092261476810400
+      },
+      {
+        "end_ns": 1092263420749200,
+        "generation": 0,
+        "start_ns": 1092263420575900
+      },
+      {
+        "end_ns": 1092264613968000,
+        "generation": 0,
+        "start_ns": 1092264613850100
+      },
+      {
+        "end_ns": 1092265366944000,
+        "generation": 0,
+        "start_ns": 1092265366819600
+      },
+      {
+        "end_ns": 1092266561844900,
+        "generation": 0,
+        "start_ns": 1092266561727100
+      },
+      {
+        "end_ns": 1092268511571300,
+        "generation": 0,
+        "start_ns": 1092268511430300
+      },
+      {
+        "end_ns": 1092270461235900,
+        "generation": 0,
+        "start_ns": 1092270461023900
+      },
+      {
+        "end_ns": 1092272411098000,
+        "generation": 0,
+        "start_ns": 1092272410940600
+      },
+      {
+        "end_ns": 1092274133366200,
+        "generation": 0,
+        "start_ns": 1092274133201100
+      },
+      {
+        "end_ns": 1092274918646200,
+        "generation": 0,
+        "start_ns": 1092274918458400
+      },
+      {
+        "end_ns": 1092276517856600,
+        "generation": 0,
+        "start_ns": 1092276517546100
+      },
+      {
+        "end_ns": 1092278166299700,
+        "generation": 0,
+        "start_ns": 1092278166103900
+      },
+      {
+        "end_ns": 1092279786451800,
+        "generation": 1,
+        "start_ns": 1092279786065900
+      },
+      {
+        "end_ns": 1092281387573500,
+        "generation": 0,
+        "start_ns": 1092281387286600
+      }
+    ],
+    "raw_events_policy": "656 原始事件保留在本地 b10-gap-solver.json；公开 328 个已配对区间和 142 份求解指标，用于复算交集与诊断分布。"
+  },
+  "trace": {
+    "rows": 21806,
+    "diagnostics_rows": 5401,
+    "delivery_summary": {
+      "accepted_dropped_records": 0,
+      "accepted_indeterminate_records": 0,
+      "accepted_records": 21805,
+      "capacity": 16384,
+      "dropped_by_record_type": {},
+      "dropped_records": 0,
+      "indeterminate_by_record_type": {},
+      "peak_depth": 5,
+      "projection_timing_ns": {
+        "count": 21805,
+        "maximum": 14882400,
+        "p95": 267300,
+        "p99": 341100,
+        "sample_count": 4096,
+        "total": 1825187600
+      },
+      "schema_version": "mc2p.trace-delivery-summary.v1",
+      "worker_failed": false,
+      "written_records": 21805
+    },
+    "last_close_diagnostics": {
+      "diagnostics": {
+        "client_tick": 6157,
+        "framebuffer_capture_attempts": 0,
+        "gui_render_attempts": 0,
+        "gui_render_completions": 0,
+        "has_integrated_server": false,
+        "image_encode_attempts": 0,
+        "observation_pipeline": {
+          "air_query_ns": 100,
+          "block_read_count": 0,
+          "block_read_ns": 46800,
+          "cache_rebuilt": false,
+          "culled_block_count": 0,
+          "halo_read_count": 0,
+          "json_build_ns": 57601,
+          "observation_payload_bytes": 7923,
+          "observation_state_build_ns": 156399,
+          "packed_block_count": 12,
+          "packed_box_count": 12,
+          "schema_version": "mc2p.jvm-observation-pipeline.v1",
+          "store_record_count": 12,
+          "surface_compute_ns": 26399,
+          "surface_pack_ns": 0
+        },
+        "remote_address": "127.0.0.1:25598",
+        "schema_version": "mc2p.deployment_diagnostics.v2",
+        "window_recorded": true,
+        "window_visible": false,
+        "window_visible_at_creation": false,
+        "world_render_attempts": 17849,
+        "world_render_completions": 0
+      },
+      "episode_id": "fabric-21002-0",
+      "observation_sequence_id": 5400
+    }
+  },
+  "raw_files": {
+    "result.json": {
+      "path": "artifacts/fabric-deployment/20261015T151355333152Z-0f9aee96/result.json",
+      "bytes": 2608034,
+      "sha256": "433d4d1a9ef097c68a90afc9f3679adc73ed2047ae98c7024d2a47e7ce795168"
+    },
+    "worker-result.json": {
+      "path": "artifacts/fabric-deployment/20261015T151355333152Z-0f9aee96/worker-result.json",
+      "bytes": 2607464,
+      "sha256": "7f34b5910e178952d85514c8cc037295b338922f00a056519ef2665d71d26165"
+    },
+    "launch.json": {
+      "path": "artifacts/fabric-deployment/20261015T151355333152Z-0f9aee96/launch.json",
+      "bytes": 82282,
+      "sha256": "3c05a23b0bcd806b59a31cb601e2824d9632058a037b2a9e9748754ea498eb13"
+    },
+    "supervision.json": {
+      "path": "artifacts/fabric-deployment/20261015T151355333152Z-0f9aee96/supervision.json",
+      "bytes": 527,
+      "sha256": "c00e4b3852ce67a9527cce35b3a2bebda77e5bb38f0afff89a7b014e1d0d32b5"
+    },
+    "client-0/b10-gap-solver.json": {
+      "path": "artifacts/fabric-deployment/20261015T151355333152Z-0f9aee96/client-0/b10-gap-solver.json",
+      "bytes": 1255936,
+      "sha256": "c56fc75d27a174667b120de7124451cd5e5553c04397094c3ce82cfc89fbac99"
+    },
+    "client-0/b10-gap-solver-trials.jsonl": {
+      "path": "artifacts/fabric-deployment/20261015T151355333152Z-0f9aee96/client-0/b10-gap-solver-trials.jsonl",
+      "bytes": 986891,
+      "sha256": "a4bbe5035edb80a601df3e5684a32216584535fcca1d663f87ae0a8a0d030d78"
+    },
+    "client-0/b10-coordinator-trials.jsonl": {
+      "path": "artifacts/fabric-deployment/20261015T151355333152Z-0f9aee96/client-0/b10-coordinator-trials.jsonl",
+      "bytes": 150941,
+      "sha256": "dab5d48b2b9bf54e3e93bf97dd3a581990af7153021ce635c266d1fa8ac2e4ca"
+    },
+    "client-0/b10-coordinator-control-frames.jsonl": {
+      "path": "artifacts/fabric-deployment/20261015T151355333152Z-0f9aee96/client-0/b10-coordinator-control-frames.jsonl",
+      "bytes": 169389,
+      "sha256": "e8b21b66222c0976ffa2e42eb76793ab68fab9f28f5c88692f46df520405cd94"
+    },
+    "client-0/r4-moving-gap-negative-trials.jsonl": {
+      "path": "artifacts/fabric-deployment/20261015T151355333152Z-0f9aee96/client-0/r4-moving-gap-negative-trials.jsonl",
+      "bytes": 4360,
+      "sha256": "bc02bcad32eba5da2539b57a7e575d185278eace96cf8ca28d24b8a9356016ff"
+    },
+    "client-0/b10-receiver-diagnostics.jsonl": {
+      "path": "artifacts/fabric-deployment/20261015T151355333152Z-0f9aee96/client-0/b10-receiver-diagnostics.jsonl",
+      "bytes": 174869,
+      "sha256": "0e95acb6d4b88447866578a072eb034665334d6d5482a6a03a6ec872f7f2c60d"
+    },
+    "client-0/b10-lifecycle.json": {
+      "path": "artifacts/fabric-deployment/20261015T151355333152Z-0f9aee96/client-0/b10-lifecycle.json",
+      "bytes": 196,
+      "sha256": "4d5c0080160337e47e02d6ae22ed5695af5cff83048de14f39aa61359787773c"
+    },
+    "client-0/trace.jsonl": {
+      "path": "artifacts/fabric-deployment/20261015T151355333152Z-0f9aee96/client-0/trace.jsonl",
+      "bytes": 115864469,
+      "sha256": "1f086b83b1d7b652e0c8755490e8ee3151671b3b9a36d3a45800d27bc536d1ba"
+    },
+    "client-0/diagnostics.jsonl": {
+      "path": "artifacts/fabric-deployment/20261015T151355333152Z-0f9aee96/client-0/diagnostics.jsonl",
+      "bytes": 8906140,
+      "sha256": "869f69838925e46b0e06989cfc6a74c333af252ee29aea3b8621ea8117682859"
+    },
+    "client-0/time-report.json": {
+      "path": "artifacts/fabric-deployment/20261015T151355333152Z-0f9aee96/client-0/time-report.json",
+      "bytes": 976597,
+      "sha256": "2410adb9c19129b2016490fca42c79e81fe5fcd35c5ba8f42372cd0b998a56cf"
+    },
+    "client-0/time-events.jsonl": {
+      "path": "artifacts/fabric-deployment/20261015T151355333152Z-0f9aee96/client-0/time-events.jsonl",
+      "bytes": 3095268,
+      "sha256": "84130ffefcc43a8d2769109b434c701f292901b67df1d9e37ded52e31db16351"
+    },
+    "client-0/physics-tick-events/manifest.jsonl": {
+      "path": "artifacts/fabric-deployment/20261015T151355333152Z-0f9aee96/client-0/physics-tick-events/manifest.jsonl",
+      "bytes": 252,
+      "sha256": "52dec956d4ba7f7470058c23013979bc96e56a10c4acfe8fc91362c943c4d336"
+    },
+    "client-0/physics-tick-events/complete.json": {
+      "path": "artifacts/fabric-deployment/20261015T151355333152Z-0f9aee96/client-0/physics-tick-events/complete.json",
+      "bytes": 190,
+      "sha256": "241eacef1ffc607f6ddc04c4fcef83cd9e8d59dc440e72fe281419051b26274a"
+    },
+    "client-0/physics-tick-events/segment-00000000.jsonl": {
+      "path": "artifacts/fabric-deployment/20261015T151355333152Z-0f9aee96/client-0/physics-tick-events/segment-00000000.jsonl",
+      "bytes": 6022050,
+      "sha256": "d6cb9e8706cebcc0be02c2ed0c61d89f03e78cc2e9d3739f396ee56d3109055c"
+    },
+    "client-0/ftick-events/manifest.jsonl": {
+      "path": "artifacts/fabric-deployment/20261015T151355333152Z-0f9aee96/client-0/ftick-events/manifest.jsonl",
+      "bytes": 254,
+      "sha256": "7c6e26c4bfffee9f328193483726a4bac1204c41e9a86851bd21f90d8b03a0cb"
+    },
+    "client-0/ftick-events/complete.json": {
+      "path": "artifacts/fabric-deployment/20261015T151355333152Z-0f9aee96/client-0/ftick-events/complete.json",
+      "bytes": 191,
+      "sha256": "09260c1466111746b9a68979c8ee49095d7b5e714e00ff0104c498eaa1e96329"
+    },
+    "client-0/ftick-events/segment-00000000.jsonl": {
+      "path": "artifacts/fabric-deployment/20261015T151355333152Z-0f9aee96/client-0/ftick-events/segment-00000000.jsonl",
+      "bytes": 5665005,
+      "sha256": "cc4ba31fed2a27083703a264c705ac28c867da0757d6d1aa1df890dfaa7f0ccb"
+    }
+  }
+}

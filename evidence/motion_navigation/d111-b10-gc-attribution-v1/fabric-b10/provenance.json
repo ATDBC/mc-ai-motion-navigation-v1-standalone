@@ -1,0 +1,66 @@
+{
+  "schema_version": "mc2p.d111-b10-provenance.v1",
+  "source_commit": "01afa1212214e8f985c547641a30a052a062be9a",
+  "baseline_commit": "f4ebbd0c7a04378762a5b6e57086b56113812169",
+  "source_run": "artifacts/fabric-deployment/20261015T151355333152Z-0f9aee96",
+  "formal_platform": "Windows",
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "seed": 21002,
+  "server_port": 25598,
+  "ipc_port": 8141,
+  "timeout_seconds": 600,
+  "diagnostics": {
+    "time": true,
+    "physics_tick": true,
+    "ftick": true,
+    "receiver_default": false
+  },
+  "deployment": {
+    "assets": {
+      "index_sha1": "6ae5eb70fe411facbb5c6c66003475c07a251a76",
+      "metadata_sha256": "5404cb6ea748fbf94aeb62fc6ca0505cbbc984e7b5857abf662d971cb9ac2912",
+      "object_count": 3911
+    },
+    "launch": {
+      "client_only": true,
+      "jar_count": 136,
+      "project_directory_count": 2,
+      "remap_jar_count": 100
+    },
+    "server": {
+      "fixture_animals": false,
+      "properties_sha256": "b3ef892d6ca6ff930700a6097cbb0ca6c373d0ca9284118068548ac871e98f6b",
+      "scope": "new isolated loopback vanilla test server; offline identity only",
+      "seed": 21002,
+      "server_launch": null,
+      "server_mods": [],
+      "server_port": 25598,
+      "server_sha256": "c96394da86f9d9f9ef7ca2d2ee1f2f0980c29b7aa5c94b43c02c50435dbcf53f",
+      "upstream_sha1": "450698d1863ab5180c25d7c804ef0fe6369dd1ba",
+      "world_name": "world"
+    }
+  },
+  "core_sources_unchanged": true,
+  "production_semantic_hashes": {
+    "normalization": "CRLF_TO_LF",
+    "files": {
+      "mc2p/motion_nav/motion_worker.py": "c840630eaf65924f1304464c2135c9086226ff9262a385abd7776c9eafb156bb",
+      "mc2p/motion_nav/world_model.py": "a4ae6978d49b7c67144f5ec89a58117aae336a6e3b64082f7b90ba57d7cf27e8",
+      "mc2p/runtime/__init__.py": "e8ce822c619048e9db308f10bef70446dff435d241752e629bca4474395ed7dd",
+      "mc2p/runtime/async_trace.py": "8d6f4342dfc64f4a2b58ade1a735753dc0a96bc6a70ef1d508611d919793b4ff",
+      "mc2p/runtime/player_runtime_v1.py": "44cfbf01f5ee9904c498443867eccace3e906f2b91b03839eb4a270e06a2ba8b",
+      "mc2p/runtime/trace.py": "7b891fe9b3c25bccffbe6c0060e126721460ce34b119ea8488bc9c73888a2e37",
+      "scripts/b10_gap_solver_runtime.py": "77cfb9b92eeb8afa4be88933b07b13432b6c69886ca2dfbe100b7fbe6581a8ac",
+      "scripts/benchmark_d108_snapshot_materialization.py": "ad2be6a4defb05592a37b973ef5e17d6ac7b24efd3a3d8d187fbbaf216a2f2d2",
+      "scripts/client_time_evidence.py": "f7a1475704791bfec0077c8e8bac774da4d88fbebb582855bb2d54d4292e209a",
+      "scripts/d105_ftick.py": "590e8ba2f4596cef8310c510368583150ed3eda00d07d732c510ffbd24177b6c",
+      "scripts/f1_known_world_following_fabric.py": "034b9c0bac70c502847607845ebecc3ac21b8e98ed9068803a8530febd8a2d05",
+      "scripts/fabric_visibility_scenario.py": "81fe4d72249ad8e584d26db464b85eb8e439a3d9b260bb74ab294939a8c8e1a2",
+      "scripts/measure_sound_motion_t2_d105.py": "59c083c293dc728e2f16cd3345c30bb70ffd140d6e1380633ded158d26f7fd42",
+      "scripts/probe_fabric_deployment_observation.py": "b4ea0510b07b981e4aa18d77ad98571649ef75e6a0502c0bbeb15e24f897105a",
+      "scripts/process_tree.py": "0c9e0e2be32f74ea48afd5d25b49a77477917174e7746a50f8e96b226abc2d3e",
+      "scripts/run_motion_nav_shards.py": "cc03a9eea1c5afa9b39e20e271136f51186997db01e6daa2f77575b7e42523ce"
+    }
+  },
+  "command_evidence": "主代理实际执行命令转录；B10 result/launch/summary 与本地原始文件哈希共同绑定本次唯一批次。"
+}

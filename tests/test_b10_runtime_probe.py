@@ -7,6 +7,7 @@ import inspect
 import json
 from pathlib import Path
 import tempfile
+import threading
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -59,6 +60,196 @@ class _Adapter:
 
 
 class B10RuntimeProbeTests(unittest.TestCase):
+    def test_local_diagnostics_keep_strings_until_control_trials_finish(self):
+        tree = ast.parse(inspect.getsource(probe._run_b10_gap_solver_runtime))
+        diagnostic = next(node for node in ast.walk(tree)
+                          if isinstance(node, ast.FunctionDef) and node.name == "diagnostic")
+        with tempfile.TemporaryDirectory() as temporary:
+            rows = []
+            backend = SimpleNamespace(last_diagnostics={"nested": [{"tick": 3}]})
+            buffer = probe._B10EvidenceBuffer(Path(temporary))
+            namespace = dict(vars(probe), rows=rows, backend=backend, evidence_buffer=buffer,
+                             episode="e", pipeline_diagnostic=lambda: {"nested": [4]},
+                             runtime=SimpleNamespace(observation=SimpleNamespace(sequence_id=2)))
+            exec(compile(ast.fix_missing_locations(ast.Module(body=[diagnostic], type_ignores=[])),
+                         "<B10 diagnostic>", "exec"), namespace)
+            with patch.object(probe.json, "loads", side_effect=AssertionError("hot parse")):
+                namespace["diagnostic"]()
+            self.assertEqual(len(rows), 1)
+            self.assertIs(type(rows[0]), str)
+            backend.last_diagnostics["nested"][0]["tick"] = 999
+            self.assertEqual(json.loads(rows[0]), buffer.rows("diagnostics.jsonl")[0])
+            self.assertEqual(json.loads(rows[0])["diagnostics"]["nested"][0]["tick"], 3)
+
+    def test_gc_pause_can_overlap_multiple_samples_and_stop_in_a_later_sample(self):
+        timeline = probe._GCPauseTimeline()
+        timeline.events.extend([(2, "start", 120)])
+        trials = [{"solve_started_ns": start, "solve_ended_ns": end,
+                   "solve_time_ns": end - start}
+                  for start, end in ((100, 150), (160, 200), (250, 300))]
+        timeline.events.append((2, "stop", 180))
+        result = probe._attribute_solve_gc_pauses(trials, timeline)
+        self.assertEqual([row["solve_gc_pause_overlap_ns"] for row in trials], [30, 20, 0])
+        self.assertEqual([row["solve_wall_minus_gc_pause_ns"] for row in trials], [20, 20, 50])
+        self.assertTrue(result["gc_pause_timeline"]["complete"])
+
+    def test_callback_clock_failure_inside_solver_never_masks_solver_exception(self):
+        timeline = probe._GCPauseTimeline()
+        error = ValueError("solver failed")
+        def solve(*_args):
+            timeline.callback("start", {"generation": 2})
+            raise error
+        with (patch.object(probe, "solve_one_cell_gap", side_effect=solve),
+              patch.object(probe.time, "perf_counter_ns", side_effect=[100, OSError("callback clock")]),
+              self.assertRaises(ValueError) as raised):
+            probe._measure_gap_solve(1, 2, 3)
+        self.assertIs(raised.exception, error)
+        self.assertEqual(timeline.measurement_error_count, 1)
+
+    def test_full_probe_installs_gc_timeline_and_removes_only_it_on_all_exits(self):
+        for fails in (False, True):
+            with self.subTest(fails=fails), tempfile.TemporaryDirectory() as temporary:
+                runtime = unittest.mock.MagicMock()
+                runtime.state.value = "ready"
+                existing = lambda *_args: None
+                callbacks = [existing]
+                seen = []
+                error = ValueError("original solver failure")
+                def execute(*_args, **kwargs):
+                    timeline = kwargs["gc_timeline"]
+                    seen.append(timeline)
+                    self.assertEqual(callbacks, [existing, timeline.callback])
+                    if fails:
+                        raise error
+                    return "result"
+                with (patch.object(probe.gc, "callbacks", callbacks),
+                      patch.object(probe, "PlannerWorker"),
+                      patch.object(probe, "MotionSolverWorker"),
+                      patch.object(probe, "_run_b10_gap_solver_runtime", side_effect=execute)):
+                    if fails:
+                        with self.assertRaises(ValueError) as raised:
+                            probe.run_b10_gap_solver_runtime(runtime, None, "episode", Path(temporary),
+                                                           1, lambda *_: None, lambda *_: None)
+                        self.assertIs(raised.exception, error)
+                    else:
+                        self.assertEqual(probe.run_b10_gap_solver_runtime(
+                            runtime, None, "episode", Path(temporary), 1,
+                            lambda *_: None, lambda *_: None), "result")
+                self.assertEqual(len(seen), 1)
+                self.assertEqual(callbacks, [existing])
+
+    def test_gc_timeline_attributes_other_thread_and_late_stop_after_solve(self):
+        timeline = probe._GCPauseTimeline()
+        expected = object()
+        def solve(*_args):
+            thread = threading.Thread(target=lambda: timeline.callback("start", {"generation": 2}))
+            thread.start()
+            thread.join()
+            return expected
+        with patch.object(probe.time, "perf_counter_ns", side_effect=[100, 120, 160, 190]):
+            with patch.object(probe, "solve_one_cell_gap", side_effect=solve):
+                actual, measurement = probe._measure_gap_solve(1, 2, 3)
+            self.assertEqual(len(timeline.events), 1)
+            timeline.callback("stop", {"generation": 2})
+        summary = probe._attribute_solve_gc_pauses([measurement], timeline)
+        self.assertIs(actual, expected)
+        self.assertEqual((measurement["solve_started_ns"], measurement["solve_ended_ns"]), (100, 160))
+        self.assertEqual(measurement["solve_gc_pause_overlap_ns"], 40)
+        self.assertEqual(measurement["solve_wall_minus_gc_pause_ns"], 20)
+        self.assertEqual(measurement["solve_gc_pause_overlap_counts"], {"gen0": 0, "gen1": 0, "gen2": 1})
+        self.assertEqual(summary["gc_pause_timeline"]["intervals"], [{"generation": 2, "start_ns": 120, "end_ns": 190}])
+
+    def test_gc_timeline_unpaired_overflow_and_bad_clock_are_visible_unknown(self):
+        for events, limit in (([("stop", 1), ("start", 2)], 10),
+                              ([("start", 0), ("stop", 0)], 1)):
+            with self.subTest(events=events):
+                timeline = probe._GCPauseTimeline(max_events=limit)
+                with patch.object(probe.time, "perf_counter_ns", side_effect=[110, 140]):
+                    for phase, generation in events:
+                        timeline.callback(phase, {"generation": generation})
+                trial = {"solve_started_ns": 100, "solve_ended_ns": 200, "solve_time_ns": 100}
+                result = probe._attribute_solve_gc_pauses([trial], timeline)
+                self.assertFalse(result["gc_pause_timeline"]["complete"])
+                self.assertIsNone(trial["solve_wall_minus_gc_pause_ns"])
+        timeline = probe._GCPauseTimeline()
+        with patch.object(probe.time, "perf_counter_ns", side_effect=OSError("clock")):
+            timeline.callback("start", {"generation": 0})
+        self.assertEqual(timeline.measurement_error_count, 1)
+
+    def test_gc_callback_finally_preserves_existing_callbacks_and_solver_error(self):
+        existing = lambda *_args: None
+        callbacks = [existing]
+        error = ValueError("solver failed")
+        with patch.object(probe.gc, "callbacks", callbacks):
+            timeline = probe._GCPauseTimeline()
+            with self.assertRaises(ValueError) as raised:
+                with timeline:
+                    self.assertIs(callbacks[0], existing)
+                    with patch.object(probe.time, "perf_counter_ns", side_effect=OSError("clock")):
+                        timeline.callback("start", {"generation": 0})
+                    raise error
+            self.assertIs(raised.exception, error)
+            self.assertEqual(callbacks, [existing])
+
+    def test_gc_overlap_clips_boundaries_and_uses_union_for_corrected_wall(self):
+        timeline = probe._GCPauseTimeline()
+        timeline.events.extend([(0, "start", 80), (0, "stop", 120),
+                                (1, "start", 110), (1, "stop", 140),
+                                (2, "start", 200), (2, "stop", 220)])
+        trial = {"solve_started_ns": 100, "solve_ended_ns": 200, "solve_time_ns": 100}
+        result = probe._attribute_solve_gc_pauses([trial], timeline)
+        self.assertEqual(trial["solve_gc_pause_overlap_ns"], 40)
+        self.assertEqual(trial["solve_wall_minus_gc_pause_ns"], 60)
+        self.assertEqual(trial["solve_gc_pause_overlap_counts"], {"gen0": 1, "gen1": 1, "gen2": 0})
+        self.assertEqual(result["solve_wall_minus_gc_pause_ns"]["maximum"], 60)
+
+    def test_buffer_keeps_only_canonical_strings_and_detaches_nested_values(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            buffer = probe._B10EvidenceBuffer(Path(temporary))
+            original = {"nested": [{"value": "中文\n"}], "other": 1.25}
+            expected = probe.strict_json_dumps(original)
+            with patch.object(probe.json, "loads", side_effect=AssertionError("hot parse")):
+                self.assertTrue(buffer.append("diagnostics.jsonl", original))
+            self.assertEqual(buffer._records["diagnostics.jsonl"], [expected])
+            original["nested"][0]["value"] = "changed"
+            decoded = buffer.rows("diagnostics.jsonl")
+            decoded[0]["nested"][0]["value"] = "mutated reader"
+            self.assertEqual(buffer.rows("diagnostics.jsonl")[0]["nested"][0]["value"], "中文\n")
+            self.assertEqual(buffer._bytes["diagnostics.jsonl"], len(expected.encode()) + 1)
+
+    def test_buffer_jsonl_matches_legacy_roundtrip_bytes_for_all_streams(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            buffer = probe._B10EvidenceBuffer(root)
+            source = [{"z": [True, None, {"text": "中文\n\""}], "a": -0.0},
+                      {"integer": 12345678901234567890, "float": 1e-12}]
+            for stream in probe._B10_STREAM_SPECS:
+                for row in source:
+                    buffer.append(stream, row)
+            buffer.flush()
+            for stream in probe._B10_STREAM_SPECS:
+                legacy = root / (stream + ".legacy")
+                probe.write_jsonl_atomic(legacy, [json.loads(probe.strict_json_dumps(row))
+                                                for row in source])
+                self.assertEqual((root / stream).read_bytes(), legacy.read_bytes())
+
+    def test_buffer_row_byte_and_record_limits_keep_accepted_order(self):
+        size = len(probe.strict_json_dumps({"value": 1}).encode()) + 1
+        for spec in (probe._B10StreamSpec(1, size * 3, size * 3),
+                     probe._B10StreamSpec(3, size, size),
+                     probe._B10StreamSpec(3, size * 3, size)):
+            with self.subTest(spec=spec), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                buffer = probe._B10EvidenceBuffer(root, stream_specs={"x.jsonl": spec})
+                self.assertTrue(buffer.append("x.jsonl", {"value": 1}))
+                self.assertFalse(buffer.append("x.jsonl", {"value": 222222}))
+                self.assertEqual(buffer.rows("x.jsonl"), ({"value": 1},))
+                with self.assertRaises(probe._B10EvidenceOverflow):
+                    buffer.flush()
+                rows = [json.loads(line) for line in (root / "x.jsonl").read_text().splitlines()]
+                self.assertEqual(rows[0], {"value": 1})
+                self.assertEqual(rows[1]["overflow_count"], 1)
+
     def test_solver_bound_keeps_original_wall_and_candidate_limits(self):
         tree = ast.parse(inspect.getsource(probe._run_b10_gap_solver_runtime))
         guard = next(node for node in ast.walk(tree)
@@ -81,6 +272,19 @@ class B10RuntimeProbeTests(unittest.TestCase):
                                 "solve_gc_overlap": True}],
                     "summary": {"solve_time_ns": {"maximum": wall}},
                 }), expected)
+
+    def test_gc_diagnostic_completeness_is_checked_separately_from_raw_wall(self):
+        tree = ast.parse(inspect.getsource(probe._run_b10_gap_solver_runtime))
+        guard = next(node for node in ast.walk(tree)
+                     if isinstance(node, ast.Call)
+                     and any(keyword.arg == "name"
+                             and isinstance(keyword.value, ast.Constant)
+                             and keyword.value.value == "b10b_gc_pause_timeline_complete"
+                             for keyword in node.keywords))
+        passed = next(keyword.value for keyword in guard.keywords if keyword.arg == "passed")
+        code = compile(ast.Expression(passed), "<B10 GC completeness>", "eval")
+        for complete in (False, True):
+            self.assertIs(eval(code, {"summary": {"gc_pause_timeline": {"complete": complete}}}), complete)
 
     def test_final_trial_retains_identity_entry_and_solve_measurement_fields(self):
         from tests.motion_nav.test_b10_gap_solver import fixture, B10GapSolverTests
@@ -188,6 +392,8 @@ class B10RuntimeProbeTests(unittest.TestCase):
         solve.assert_called_once_with(anchor, world, request)
         self.assertEqual(measurement, {
             "solve_time_ns": 60,
+            "solve_started_ns": 100,
+            "solve_ended_ns": 160,
             "solve_thread_cpu_ns": 40,
             "solve_gc_collections_delta": {"gen0": 2, "gen1": 0, "gen2": 1},
             "solve_gc_overlap": True,

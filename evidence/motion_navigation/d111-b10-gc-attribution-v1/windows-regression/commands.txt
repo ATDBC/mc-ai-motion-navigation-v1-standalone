@@ -1,0 +1,26 @@
+# Implementer direct and adjacent checks
+.venv/python.exe -m unittest tests.motion_nav.test_d102_action_handoff tests.motion_nav.test_d107_shard_runner
+.venv/python.exe -m unittest tests.motion_nav.test_public_repository_completeness tests.motion_nav.test_standalone_export
+.venv/python.exe -m unittest tests.test_b10_runtime_probe tests.motion_nav.test_d108_receiver_tick_delivery tests.test_client_time_evidence tests.test_async_trace tests.test_fabric_deployment_probe tests.test_segmented_trace tests.test_player_runtime_v1
+
+# Source full matrix, raw reports in .tmp/d111/
+.venv/python.exe scripts/run_motion_nav_shards.py --timeout-seconds 360 --report .tmp/d111/source-forward.json
+.venv/python.exe scripts/run_motion_nav_shards.py --reverse --timeout-seconds 360 --report .tmp/d111/source-reverse.json
+
+# Independent snapshot full matrix (cwd=.tmp/d111-public-snapshot)
+D:/My_project/mc_ai/.venv/python.exe scripts/run_motion_nav_shards.py --timeout-seconds 360 --report D:/My_project/mc_ai/.tmp/d111/snapshot-forward.json
+D:/My_project/mc_ai/.venv/python.exe scripts/run_motion_nav_shards.py --reverse --timeout-seconds 360 --report D:/My_project/mc_ai/.tmp/d111/snapshot-reverse.json
+
+# Source and snapshot: Java gates and snapshot verify, terminal results transcribed by the main agent
+# JAVA_HOME/PATH pointed to the project JDK21 for these invocations.
+# Source Java (cwd=repository)
+.\.venv\python.exe -m unittest tests.test_standalone_java_gates
+# Snapshot Java (cwd=.tmp\d111-public-snapshot)
+D:\My_project\mc_ai\.venv\python.exe -m unittest tests.test_standalone_java_gates
+# First verify after export (cwd=repository)
+.\.venv\python.exe scripts\export_motion_navigation_standalone.py verify --root .tmp\d111-public-snapshot
+# Verify after full snapshot matrix (cwd=.tmp\d111-public-snapshot)
+D:\My_project\mc_ai\.venv\python.exe scripts\export_motion_navigation_standalone.py verify --root .
+# Source Java 3/3 OK; snapshot Java 3/3 OK.
+# Before and after the snapshot full matrix: STANDALONE_EXPORT_OK files=2322.
+# No separate tee logs were saved for these Java/verify invocations.

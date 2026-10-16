@@ -1,6 +1,6 @@
 # D109：B10 总预算复验与生命周期修复验收
 
-日期：2026-10-15。状态：**D0—D8 已完成已授权实现和 Windows 验收。最终 Fabric B10 的功能、安全、来源释放和 trace 封存通过；求解最大值与 time attribution 门槛未过，D109 停止为未通过。Linux 补充复核仍待三方完成。**
+日期：2026-10-15。状态：**D0—D8 已完成已授权实现和 Windows 验收。最终 Fabric B10 的功能、安全、来源释放和 trace 封存通过；求解最大值与 time attribution 门槛未过，D109 停止为未通过。后续三方 D110 Linux 复核已关闭 D109-N1／N2／N4，历史性能失败保留。**
 
 本文件记录 [D109](../decisions/0109-retest-b10-budget-and-bound-lifecycle-cleanup.md) 的结果。实施顺序和止损条件见[阶段计划](../stages/d109-b10-budget-and-lifecycle-repair-plan.md)。D106—D108 的历史证据不回写。
 
@@ -235,3 +235,7 @@ D4 第二轮修正和最终 B10 证据提交后，又在干净提交 `53b6ffa548
 - `complete_time_event_attribution`：保存 12026 个事件和 5552 次观察，回归计数为 0，但报告以 `'NoneType' object is not subscriptable` 结束。
 
 这两项与生命周期修复分开记录。按本阶段最多两轮限定修正的规则，不再开始第三轮修正，也不再重跑 B10。D109 最终状态为 **未通过并停止**；连续两跳、零等待交接和新动作仍未授权。
+
+## 2026-10-15 后续 Linux 复核
+
+上文 D3／D5／D7 和 POSIX 待办保留为 D109 签署时的证据边界。三方随后对 D110 最终公开字节完成 Linux 动态复核：185 个模块 cleanup 全过，D5 矩阵 20／20，fork 链 10／10 且返回后零存活，D7 无自动 GC 的 fd 门禁 10／10。因此 D109-N1／N2／N4 与 D110-LINUX-01 已关闭；单 CPU 的 PID 文件及 receiver 周期两项测试竞态由 D111 采纳修正，原生产断言保留。复核来源和范围见[缺陷台账](defect-ledger.md)。这些结果不改变本页的历史 B10 失败，也不替代 Windows 性能验收。

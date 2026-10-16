@@ -235,11 +235,23 @@ Task5A已停止、未签署，P0未通过；不进入5B。完整18族搜索、ru
 | D108-C-01 | P1，已关闭 | D108 四次 B10 命令均遗漏 `--timeout-seconds 600`，使用 240 秒默认值后只剩 215 秒任务预算。D109 在代码修改前绑定 `680d7a76`，显式使用 600 秒：40／40 validation、40／40 turn validation、10／10 默认协调链和 60／60 R4 全部完成，24 个 typed negative 完整运行；最后 movement tick 5640，零伤害、零身体责任未解决 | 关闭为旧验收命令预算不足，不修改运动逻辑。外层仍因一个 46.6656 ms 求解最大值和 time attribution 不完整而失败，cleanup 另报异步 trace 失败；三者不能回写成 R4 动作失败。证据见 `d109-b10-lifecycle-v1/` |
 | D108-C-02 | P1，已关闭 | 旧探针在 Runtime 已非 READY 时继续注销来源，`formal Runtime must be ready` 会覆盖主失败。D109 D2 已把主执行异常与 cleanup 分开；D2-R 又把 close 兜底核对移入正式 client owner，避免 Runtime 引用清空后误报 `not_released` | 已关闭。新 summary 原生区分 `primary_failure`、`cleanup_failures` 和 `explicitly_released／cleared_on_runtime_close／not_released`；F-TICK 只接受前两类。258 项直接及相邻检查通过。D1 前历史证据不回写，D8 再跑正式 Fabric |
 | D108-C-03 | P2，已关闭 | `BoundedAsyncTraceWriter.close()` 会阻塞提交停止标记并无期限 `join()`；即使 sink 正常，漏调 `close()` 时非守护 writer 也会阻止解释器退出；D8 首次最终 B10 又暴露异步投影后的 `dict` 被 close diagnostics 按 typed object 读取 | D109 D4／D4-R 改为有界幂等 close、daemon worker 和单次投影契约。最终 Fabric B10 接纳并写入 22409／22409 条，确定丢弃和不确定记录均为 0，`worker_failed=false`，外层与 lifecycle cleanup failure 均为空。首次 B10 失败保留，修正后唯一一次重跑关闭本项 |
-| D109-N1 | P2，代码已关闭，待 Linux 最终字节复核 | Linux 上已被强杀的孙进程在被 PID 1 收养前处于 zombie，旧存活检查把它算作存活；后续列表变空后 cleanup 状态也不会重算回 `passed` | D109 D3 已排除 zombie，并按最终 surviving 与 errors 重算状态；AccessDenied 仍保守失败，PID 复用不取得清理权限。Windows 与跨平台门禁 24／24，状态重算 30／30；三方对照曾在 Linux 动态 30／30，项目最终字节仍待复核 |
-| D109-N2 | P3，代码已关闭，待 Linux 最终字节复核 | POSIX 上双 fork 后创建新会话的守护进程可能逃过 25 ms 后代轮询和原进程组，报告却写 `cleanup=passed` | D109 D5 已让 Linux 父 runner 在任何模块前启用并读回确认 subreaper。每轮先登记 root 再放 start gate；只授权 PID／创建时间、PPID 二次核对、本轮时间窗和非基线全部成立的收养后代。清理扫描到稳定并精确回收 zombie。Windows 63 项直接及相邻检查通过，Job Object 不变；快速退出、双 fork、清理期再 fork 等最终 Linux 动态矩阵待三方复核 |
+| D109-N1 | P2，已关闭 | Linux 上已被强杀的孙进程处于 zombie，旧检查算作存活，cleanup 也不会在最终列表变空后重算 `passed` | D109 D3 排除 zombie 并按最终 surviving/errors 重算；身份与 AccessDenied 边界保留。三方对 D110 公开字节复核：185 个模块 cleanup 全过，E40 六类对抗场景无存活；结合既有 Linux 动态 30／30 关闭。Windows 本轮不替代 Linux 动态结果 |
+| D109-N2 | P3，已关闭 | POSIX 双 fork／新会话可能逃过后代轮询和原进程组，cleanup 却报告通过 | subreaper、身份登记、稳定扫描及精确回收已实现。三方 D110 Linux D5 矩阵 20／20、fork 链 10／10、返回后零存活，185 模块 cleanup 全过；单 CPU 测试前置条件竞态另列 D111-TEST-01，不改写成生产清理失败 |
 | D109-N3 | P3，已关闭 | 快照测试用 3 个样本判断绝对毫秒门槛；Linux 全量负载下偶发失败，测到的是机器负载而非“无关脏 section 不增加工作” | D109 D6／D6-R 已改为确定性工作量门禁。无关脏 section 为 4／16／32 时，一格范围请求均只提交和物化 1 个 section；漏范围过滤 mutation 会失败。正式 Windows 8／15／30 ms 门槛保持不变并通过；20 项原始样本、命令、HEAD、时间和哈希已进入 D109 evidence，可独立重算 |
-| D109-N4 | P3，代码已关闭，待 POSIX 最终字节复核 | feeder 错误回调强引用 worker，形成 `worker → Queue → callback → worker` 环；关闭自动 GC 后，重复创建关闭会持续占用文件描述符 | D109 D7 已让回调只捕获 worker 弱引用和原 handler。只有 feeder 不存在或确认退出、且 handler 仍归本 worker时才恢复；close 超时会保留弱回调，晚退出后可恢复。Windows idle／killed／队列满／8 MiB／crash 共 50 次无 GC 生命周期矩阵中，worker 弱引用立即清空，feeder 线程和子进程回到基线；直接及相邻检查 124／124。POSIX fd 零增长留给三方最终字节复核 |
+| D109-N4 | P3，已关闭 | feeder 错误回调强引用 worker 形成环，关闭自动 GC 后反复创建关闭会占用文件描述符 | D109 D7 改为弱引用并按 feeder 退出恢复 handler；Windows 50 次无 GC 矩阵通过。三方 D110 Linux D7 连续 10／10，通过完整生命周期及 fd 门禁，补齐 POSIX 最终字节复核 |
 | D110-CLOSE-01 | P1，已关闭 | close 诊断由异步 writer 在后端关闭后读取；Fabric 后端会把诊断清成 `None`，导致时间归因缺行、类型错误或 `NoneType` 错误 | D110 在调用线程、后端关闭前抓取诊断，并让它与同一条 `close_release` trace 记录同生同灭。正式 B10 的 `complete_time_event_attribution` 通过，最后一条诊断有效；trace 接纳与写入 21209／21209，零丢弃、零不确定记录 |
-| D110-SOLVE-01 | P3，性能债未关闭 | B10 求解偶发墙钟超过 30 ms，旧证据没有 CPU 和 GC 信息，无法区分求解工作、垃圾回收与调度 | D110 为 142 个样本补齐线程 CPU、三代 GC collection delta 和试次身份。P95／P99／最大值为 24.6028／27.6281／39.2484 ms；唯一超限样本也是唯一 gen2 重叠样本，但 Windows CPU 计时以 15.625 ms 为主要步进，只能说明相关，不能证明因果。原墙钟门槛保持失败，后续调整须另写决定 |
-| D110-LINUX-01 | P3，代码已修，待 Linux 最终字节复核 | settle 阶段重复发送 `SIGTERM`，异常信号处理器可以继续 fork，分片器返回后仍有后代存活 | 第一次正常清理仍保留一次 `SIGTERM`；settle 对身份匹配的已登记非 root、非 zombie 后代直接 `SIGKILL`。Windows 直接和相邻检查通过；最终 POSIX 动态矩阵仍由 Linux 补跑 |
+| D110-SOLVE-01 | P3，性能债未关闭 | B10 原始求解墙钟超过 30 ms；D110 最大 39.2484 ms，唯一超限样本与唯一 gen2 重叠，CPU 粒度不足以证明因果 | D111 唯一一次 B10 的 raw P95／P99／最大值为 31.8873／33.4408／39.9605 ms；扣除完整记录的 GC 停顿后为 31.4963／32.1705／33.1761 ms，仍超限。剩余墙钟未分离求解与调度，D110 历史不回写；门槛不变，D111 FAILED／STOPPED，不重跑 |
+| D110-LINUX-01 | P3，已关闭 | settle 重复发送 `SIGTERM`，异常处理器可继续 fork 并留下后代 | settle 改为直接 `SIGKILL` 身份匹配的已登记后代。三方 D110 Linux D5 矩阵 20／20、fork 链 10／10，返回后零存活且只登记 3 个进程；settle 两个单元检查各 10／10。单 CPU PID 文件调度竞态另由 D111-TEST-01 修正 |
 | D110-EOL-01 | P3，测试卫生债 | 冻结字节哈希依赖混合行尾：同一工作区需要同时保留 LF 与 CRLF，统一转换会让与本次行为无关的导出测试失败 | D110 恢复冻结字节后完成源树和公开快照正逆矩阵；没有把行尾改动提交。后续应把语义哈希与平台 checkout 字节分开，不能在诊断批次顺手改写历史证据 |
+
+### D111 测量与测试收尾（2026-10-15）
+
+| 编号 | 严重度 | 当前事实 | 当前处理 |
+|---|---|---|---|
+| D111-BUFFER-01 | P3，已关闭 | B10 缓冲及本地诊断长时间保留两份字典树，增加 GC 跟踪对象；三方 Linux 实验说明这部分会增加 GC 停顿，但不证明 D110 的 Windows 超限因果 | `01afa121` 改存规范 JSON 字符串；六类 JSONL 字节、容量、隔离、溢出及 flush 失败检查通过。唯一正式 B10 功能和证据完整性通过，原性能债仍保留 |
+| D111-GC-01 | P3，已关闭 | 旧 collection delta 无法给出精确停顿区间，逐样本立即结算会漏掉其他线程晚到的 stop | 全程同钟记录、试次后统一求交；656 事件完整配成 328 区间，无丢弃、未配对、测量错误。晚 stop、跨样本、异常和原 callback 保留均有检查；corrected 仅作诊断 |
+| D111-TEST-01 | P3，已关闭 | 单 CPU 快速清理可能在新子进程写 PID 前杀死它，Linux fork 测试误报前置条件失败 | 采纳三方 proposal，由信号处理父进程写 fork 返回的 PID；收养、登记和零存活断言保持。三方对应测试改法单 CPU 20／20；D111 Windows 完整正逆通过，不声称本轮重跑 Linux 动态场景 |
+| D111-TEST-02 | P3，已关闭 | handoff 测试只等一个 receiver 周期，快照封存后可能尚未提交 `PreparedMotionJob`；D109 起单核偶发 | 最多等五轮，出现正式作业立即退出；命令、身份、空中与动作索引断言保持。三方改法单核 30／30；D111 模块及 Windows 完整正逆通过 |
+| D111-HASH-01 | P3，已关闭 | D110 未公开实际运行提交的生产语义哈希，公开读者无法核对运行与公开脚本是否相同 | 补齐 source `67f4f1d8`、public `f663586` 与 CRLF→LF；16 文件 × 两份 Git 对象，32／32 重算一致，纳入导出与完整性门禁 |
+
+Linux 复核来源：`bee34bd:reviews/2026-10-15-d110-review.md` 的 E40、E53—E56 与完整矩阵。以上关闭只针对已复核的生命周期机制或测试问题，不改变 D109／D110／D111 的历史性能失败。D111 的实现和唯一 B10 结果见[验收](d111-b10-gc-attribution-and-buffer.md)与 `evidence/motion_navigation/d111-b10-gc-attribution-v1/`。

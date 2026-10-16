@@ -482,8 +482,14 @@ class ActionHandoffTests(unittest.TestCase):
         self.assertTrue(self.inbox.wait_for_receiver(timeout=10))
         self.coordinator.decide(self.frame(self.current), self.current, self.ledger, self.physics_world,
                                 changed_cells=(), current_scope=self.coordinator.computation_scope)
-        self.assertTrue(self.inbox.wait_for_receiver(timeout=10))
-        prepared, = [job for job in self.worker.jobs if isinstance(job, PreparedMotionJob)]
+        # Snapshot sealing and request submission can use separate receiver cycles.
+        prepared = []
+        for _ in range(5):
+            self.assertTrue(self.inbox.wait_for_receiver(timeout=10))
+            prepared = [job for job in self.worker.jobs if isinstance(job, PreparedMotionJob)]
+            if prepared:
+                break
+        prepared, = prepared
         self.assertEqual(prepared.request.commands, self.inbox._active[prepared.request.async_identity].request.commands)
         self.assertNotEqual(prepared.request.async_identity, selection.work_identity)
         self.assertFalse(self.current.physics_state.on_ground)

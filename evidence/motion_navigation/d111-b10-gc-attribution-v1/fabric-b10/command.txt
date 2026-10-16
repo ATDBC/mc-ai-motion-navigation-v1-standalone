@@ -1,0 +1,1 @@
+$env:JAVA_HOME='D:\My_project\mc_ai\.venv\Library\lib\jvm'; $env:PATH="$env:JAVA_HOME\bin;$env:PATH"; .\.venv\python.exe scripts\probe_fabric_deployment_observation.py --seed 21002 --server-port 25598 --ipc-port 8141 --b10-gap-solver-probe --time-diagnostics --physics-tick-diagnostics --ftick-diagnostics --timeout-seconds 600

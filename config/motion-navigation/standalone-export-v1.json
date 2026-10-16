@@ -127,7 +127,8 @@
     "tests/motion_nav/test_d106_local_snapshot.py",
     ".superpowers/sdd/2026-10-10-continuous-short-trajectory-prototype/*.md",
     "evidence/motion_navigation/d109-b10-lifecycle-v1/**/*",
-    "evidence/motion_navigation/d110-evidence-lifecycle-v1/**/*"
+    "evidence/motion_navigation/d110-evidence-lifecycle-v1/**/*",
+    "evidence/motion_navigation/d111-b10-gc-attribution-v1/**/*"
   ],
   "exclude_globs": [
     "tests/motion_nav/test_d102_evidence_contract.py"
@@ -625,7 +626,20 @@
     "evidence/motion_navigation/d110-evidence-lifecycle-v1/README.md",
     "evidence/motion_navigation/d110-evidence-lifecycle-v1/index.json",
     "evidence/motion_navigation/d110-evidence-lifecycle-v1/SHA256SUMS.txt",
+    "evidence/motion_navigation/d110-evidence-lifecycle-v1/published-production-semantic-hashes.json",
     "evidence/motion_navigation/d110-evidence-lifecycle-v1/windows-regression/summary.json",
-    "evidence/motion_navigation/d110-evidence-lifecycle-v1/fabric-b10/summary.json"
+    "evidence/motion_navigation/d110-evidence-lifecycle-v1/fabric-b10/summary.json",
+    "docs/motion_navigation/decisions/0111-remove-b10-observer-gc-distortion.md",
+    "docs/motion_navigation/stages/d111-b10-gc-attribution-and-buffer-plan.md",
+    "docs/motion_navigation/acceptance/d111-b10-gc-attribution-and-buffer.md",
+    "evidence/motion_navigation/d111-b10-gc-attribution-v1/README.md",
+    "evidence/motion_navigation/d111-b10-gc-attribution-v1/.gitattributes",
+    "evidence/motion_navigation/d111-b10-gc-attribution-v1/index.json",
+    "evidence/motion_navigation/d111-b10-gc-attribution-v1/SHA256SUMS.txt",
+    "evidence/motion_navigation/d111-b10-gc-attribution-v1/windows-regression/summary.json",
+    "evidence/motion_navigation/d111-b10-gc-attribution-v1/windows-regression/commands.txt",
+    "evidence/motion_navigation/d111-b10-gc-attribution-v1/fabric-b10/summary.json",
+    "evidence/motion_navigation/d111-b10-gc-attribution-v1/fabric-b10/command.txt",
+    "evidence/motion_navigation/d111-b10-gc-attribution-v1/fabric-b10/provenance.json"
   ]
 }

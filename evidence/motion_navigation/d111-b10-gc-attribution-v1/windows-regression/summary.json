@@ -1,0 +1,120 @@
+{
+  "schema_version": "mc2p.d111-windows-regression.v1",
+  "source_commit": "01afa1212214e8f985c547641a30a052a062be9a",
+  "formal_platform": "Windows",
+  "source_forward": {
+    "modules": 186,
+    "selected_modules": 186,
+    "tests": 2334,
+    "skipped": 0,
+    "cleanup_bad": 0,
+    "summary": {
+      "passed": 186,
+      "failed": 0,
+      "error": 0,
+      "timeout": 0,
+      "launch_error": 0
+    },
+    "started_at": "2026-10-15T13:47:00.928256+00:00",
+    "finished_at": "2026-10-15T14:06:16.388499+00:00",
+    "raw_report": {
+      "path": ".tmp/d111/source-forward.json",
+      "bytes": 707563,
+      "sha256": "5503dfdece3730f924d65a56127566f587a081a8c421b5413a25c33e38f1d502"
+    }
+  },
+  "source_reverse": {
+    "modules": 186,
+    "selected_modules": 186,
+    "tests": 2334,
+    "skipped": 0,
+    "cleanup_bad": 0,
+    "summary": {
+      "passed": 186,
+      "failed": 0,
+      "error": 0,
+      "timeout": 0,
+      "launch_error": 0
+    },
+    "started_at": "2026-10-15T14:06:21.175738+00:00",
+    "finished_at": "2026-10-15T14:27:15.342045+00:00",
+    "raw_report": {
+      "path": ".tmp/d111/source-reverse.json",
+      "bytes": 708743,
+      "sha256": "eb78af412d15ee6509c27d3054d651605f3a880dc2093eea7de5ebc8160d3fad"
+    }
+  },
+  "snapshot_forward": {
+    "modules": 185,
+    "selected_modules": 185,
+    "tests": 2310,
+    "skipped": 0,
+    "cleanup_bad": 0,
+    "summary": {
+      "passed": 185,
+      "failed": 0,
+      "error": 0,
+      "timeout": 0,
+      "launch_error": 0
+    },
+    "started_at": "2026-10-15T14:28:11.967245+00:00",
+    "finished_at": "2026-10-15T14:50:03.132821+00:00",
+    "raw_report": {
+      "path": ".tmp/d111/snapshot-forward.json",
+      "bytes": 692179,
+      "sha256": "ac3992c75a6cd75b4236a1afa0ab719fa15895a34886b4e0fe39e3fa980d03bb"
+    }
+  },
+  "snapshot_reverse": {
+    "modules": 185,
+    "selected_modules": 185,
+    "tests": 2310,
+    "skipped": 0,
+    "cleanup_bad": 0,
+    "summary": {
+      "passed": 185,
+      "failed": 0,
+      "error": 0,
+      "timeout": 0,
+      "launch_error": 0
+    },
+    "started_at": "2026-10-15T14:50:06.958159+00:00",
+    "finished_at": "2026-10-15T15:12:40.376473+00:00",
+    "raw_report": {
+      "path": ".tmp/d111/snapshot-reverse.json",
+      "bytes": 692958,
+      "sha256": "8bdff034aa8aaef3376ed2d4c6905568b2171b51d237ac5ff1e9c72b0d9a0d58"
+    }
+  },
+  "direct_and_adjacent": {
+    "tests": 263,
+    "passed": 262,
+    "skipped": 1,
+    "failed": 0,
+    "skipped_case": "tests.test_segmented_trace.SegmentedTraceTests.test_symlink_root_and_segment_are_rejected",
+    "reason": "Windows does not permit the symlink fixture"
+  },
+  "independent_review": {
+    "tests": 79,
+    "passed": 79,
+    "failed": 0,
+    "skipped": 0
+  },
+  "java_source": {
+    "tests": 3,
+    "passed": 3,
+    "evidence": "主代理终端实测转录，未单独保存日志"
+  },
+  "java_snapshot": {
+    "tests": 3,
+    "passed": 3,
+    "evidence": "主代理终端实测转录，未单独保存日志"
+  },
+  "pre_b10_snapshot_verify": {
+    "files": 2322,
+    "before_full_matrix": "STANDALONE_EXPORT_OK files=2322",
+    "after_full_matrix": "STANDALONE_EXPORT_OK files=2322",
+    "evidence": "主代理终端实测转录，未单独保存日志"
+  },
+  "publication_boundary": "完整矩阵和 2322 文件 verify 对应代码完成、结果文档与公开证据补齐前的独立快照；结果收尾只改文档、证据、导出清单及公开完整性测试。"
+}

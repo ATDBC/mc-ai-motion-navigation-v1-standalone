@@ -145,7 +145,7 @@ class _B10EvidenceBuffer:
             raise ValueError("B10 evidence streams cannot be empty")
         self._directory = directory
         self._specs = dict(stream_specs)
-        self._records: dict[str, list[object]] = {
+        self._records: dict[str, list[str]] = {
             name: [] for name in self._specs
         }
         self._bytes = dict.fromkeys(self._specs, 0)
@@ -169,7 +169,7 @@ class _B10EvidenceBuffer:
 
     def rows(self, stream: str) -> tuple[dict, ...]:
         self._require_stream(stream)
-        return tuple(dict(row) for row in self._records[stream])
+        return tuple(json.loads(row) for row in self._records[stream])
 
     def _require_stream(self, stream: str) -> _B10StreamSpec:
         if type(stream) is not str or stream not in self._specs:
@@ -185,9 +185,9 @@ class _B10EvidenceBuffer:
                 or self._bytes[stream] + size > spec.max_bytes):
             self._overflow[stream] += 1
             return False
-        # Round-tripping breaks every caller-owned mutable reference.  The
-        # buffer therefore keeps the exact JSON value seen on the control tick.
-        self._records[stream].append(json.loads(encoded))
+        # The immutable JSON breaks caller references without retaining a
+        # second, GC-tracked object tree during the control trials.
+        self._records[stream].append(encoded)
         self._bytes[stream] += size
         return True
 
@@ -219,7 +219,7 @@ class _B10EvidenceBuffer:
                 )
             return
         for stream, spec in self._specs.items():
-            rows = list(self._records[stream])
+            rows = list(self.rows(stream))
             if self._overflow[stream]:
                 rows.append({
                     "schema_version": "mc2p.b10-evidence-buffer-overflow.v1",
@@ -320,6 +320,115 @@ def _percentile(values: list[int], fraction: float) -> int:
     return ordered[max(0, math.ceil(len(ordered) * fraction) - 1)]
 
 
+class _GCPauseTimeline:
+    """Bounded process-wide events; pair and attribute only after all trials."""
+
+    def __init__(self, *, max_events: int = 65_536) -> None:
+        if type(max_events) is not int or max_events <= 0:
+            raise ValueError("GC timeline event limit must be positive")
+        self.events: list[tuple[int, str, int]] = []
+        self.max_events = max_events
+        self.dropped_events = 0
+        self.measurement_error_count = 0
+        self.callback = self._record
+
+    def _record(self, phase, info) -> None:
+        # Never let optional instrumentation replace a solver exception. No
+        # dictionaries, pairing, logging or attribution on the callback path.
+        try:
+            generation = info["generation"]
+            if phase not in ("start", "stop") or type(generation) is not int or generation not in (0, 1, 2):
+                raise ValueError("invalid GC callback event")
+            if len(self.events) >= self.max_events:
+                self.dropped_events += 1
+                return
+            self.events.append((generation, phase, time.perf_counter_ns()))
+        except BaseException:
+            self.measurement_error_count += 1
+
+    def __enter__(self):
+        gc.callbacks.append(self.callback)
+        return self
+
+    def close(self) -> None:
+        # Identity avoids invoking equality on third-party callbacks.
+        for index in range(len(gc.callbacks) - 1, -1, -1):
+            if gc.callbacks[index] is self.callback:
+                del gc.callbacks[index]
+
+    def __exit__(self, *_args) -> bool:
+        self.close()
+        return False
+
+
+def _attribute_solve_gc_pauses(trials: list[dict], timeline: _GCPauseTimeline) -> dict:
+    """Intersect complete GC intervals with the frozen raw solve intervals.
+
+    Final derived fields live in the summary's trials. Already accepted JSONL
+    rows keep raw same-clock start/end values and their original byte budgets.
+    """
+    pending: dict[int, int] = {}
+    intervals = []
+    unpaired = 0
+    for generation, phase, stamp in timeline.events:
+        if phase == "start":
+            unpaired += int(generation in pending)
+            pending[generation] = stamp
+        else:
+            started = pending.pop(generation, None)
+            if started is None or stamp < started:
+                unpaired += 1
+            else:
+                intervals.append(dict(generation=generation, start_ns=started, end_ns=stamp))
+    unpaired += len(pending)
+    complete = not (unpaired or timeline.dropped_events or timeline.measurement_error_count)
+    corrected = []
+    for trial in trials:
+        started, ended = trial["solve_started_ns"], trial["solve_ended_ns"]
+        counts = dict.fromkeys(("gen0", "gen1", "gen2"), 0)
+        by_generation = dict(counts)
+        clips = []
+        for interval in intervals:
+            low = max(started, interval["start_ns"])
+            high = min(ended, interval["end_ns"])
+            if high > low:
+                name = f"gen{interval['generation']}"
+                counts[name] += 1
+                by_generation[name] += high - low
+                clips.append((low, high))
+        # A union also remains conservative for injected overlapping intervals.
+        pause = 0
+        previous_end = started
+        for low, high in sorted(clips):
+            pause += max(0, high - max(low, previous_end))
+            previous_end = max(previous_end, high)
+        value = trial["solve_time_ns"] - pause if complete else None
+        trial.update(solve_gc_pause_overlap_counts=counts,
+                     solve_gc_pause_overlap_ns_by_generation=by_generation,
+                     solve_gc_pause_overlap_ns=pause,
+                     solve_gc_pause_complete=complete,
+                     solve_wall_minus_gc_pause_ns=value)
+        if value is not None:
+            corrected.append(value)
+    return dict(
+        gc_pause_timeline=dict(
+            clock="perf_counter_ns", max_events=timeline.max_events,
+            event_count=len(timeline.events), dropped_events=timeline.dropped_events,
+            measurement_error_count=timeline.measurement_error_count,
+            unpaired_events=unpaired, complete=complete,
+            events=[dict(generation=g, phase=p, monotonic_ns=t)
+                    for g, p, t in timeline.events],
+            intervals=intervals,
+        ),
+        solve_wall_minus_gc_pause_ns=dict(
+            diagnostic_only=True, samples=len(corrected),
+            p95=_percentile(corrected, .95) if corrected else None,
+            p99=_percentile(corrected, .99) if corrected else None,
+            maximum=max(corrected) if corrected else None,
+        ),
+    )
+
+
 def _measure_gap_solve(anchor, world, request) -> tuple[SolveResult, dict]:
     """Add optional diagnostics without changing the solve or its wall interval.
 
@@ -354,7 +463,8 @@ def _measure_gap_solve(anchor, world, request) -> tuple[SolveResult, dict]:
     started = time.perf_counter_ns()
     # Do not catch solver errors: diagnostic failures must never replace them.
     solved = solve_one_cell_gap(anchor, world, request)
-    solve_ns = time.perf_counter_ns() - started
+    ended = time.perf_counter_ns()
+    solve_ns = ended - started
     cpu_after = sample("thread_cpu_after", time.thread_time_ns)
     gc_after = sample("gc_after", gc_counts)
     cpu_ns = None
@@ -368,6 +478,8 @@ def _measure_gap_solve(anchor, world, request) -> tuple[SolveResult, dict]:
             )
     return solved, dict(
         solve_time_ns=solve_ns,
+        solve_started_ns=started,
+        solve_ended_ns=ended,
         solve_thread_cpu_ns=cpu_ns,
         solve_gc_collections_delta=gc_delta,
         # False with null deltas/errors means unknown, not proven GC absence.
@@ -671,6 +783,7 @@ def run_b10_gap_solver_runtime(
         cleanup_failures=[],
     )
     evidence_buffer = _B10EvidenceBuffer(directory)
+    gc_timeline = _GCPauseTimeline()
     planner_owner = motion_owner = None
     manual_source = None
     result = None
@@ -686,6 +799,7 @@ def run_b10_gap_solver_runtime(
         })
 
     try:
+        gc_timeline.__enter__()
         planner_owner = PlannerWorker()
         planner_worker = planner_owner.__enter__()
         motion_owner = MotionSolverWorker(max_pending=4)
@@ -706,6 +820,7 @@ def run_b10_gap_solver_runtime(
             motion_worker=motion_worker,
             manual_source=manual_source,
             evidence_buffer=evidence_buffer,
+            gc_timeline=gc_timeline,
             pipeline_diagnostic=pipeline_diagnostic,
         )
         completed = True
@@ -713,6 +828,7 @@ def run_b10_gap_solver_runtime(
         primary = error
         primary_traceback = error.__traceback__
     finally:
+        gc_timeline.close()
         if manual_source is not None:
             if getattr(getattr(runtime, "state", None), "value", None) == "ready":
                 try:
@@ -784,6 +900,7 @@ def _run_b10_gap_solver_runtime(
     motion_worker: MotionSolverWorker,
     manual_source,
     evidence_buffer: _B10EvidenceBuffer,
+    gc_timeline: _GCPauseTimeline,
     pipeline_diagnostic: Callable[[], dict] | None = None,
 ) -> tuple[dict, list[dict], list[dict]]:
     """Solve and execute frozen trials, including the default coordinator."""
@@ -794,7 +911,7 @@ def _run_b10_gap_solver_runtime(
     )
     behavior = BehaviorProfileV0()
     frame = _runtime_navigation_frame(runtime)
-    rows: list[dict] = []
+    rows: list[str] = []
     counter = 0
     latest_application = None
     def diagnostic() -> None:
@@ -805,7 +922,7 @@ def _run_b10_gap_solver_runtime(
         )
         if pipeline_diagnostic is not None:
             row["observation_pipeline"] = pipeline_diagnostic()
-        rows.append(row)
+        rows.append(strict_json_dumps(row))
         evidence_buffer.append("diagnostics.jsonl", row)
 
     def step(
@@ -1889,6 +2006,10 @@ def _run_b10_gap_solver_runtime(
                     ),
                 )
 
+    # All control trials have finished. A delayed stop callback can now pair
+    # with a start from an earlier solve before any sample is attributed.
+    gc_timeline.close()
+    gc_attribution = _attribute_solve_gc_pauses(trials, gc_timeline)
     validation = [trial for trial in trials if trial["group"] == "validation"]
     turn_validation = [
         trial for trial in trials if trial["group"] == "turn_validation"
@@ -1949,6 +2070,7 @@ def _run_b10_gap_solver_runtime(
             maximum=max(solve_times),
         ),
         **_solve_measurement_summary(trials),
+        **gc_attribution,
         physics_snapshot_time_ns=dict(
             samples=len(physics_snapshot_times),
             p95=_percentile(physics_snapshot_times, .95),
@@ -2029,5 +2151,7 @@ def _run_b10_gap_solver_runtime(
             all(trial["candidates_evaluated"] <= 12 for trial in trials)
             and summary["solve_time_ns"]["maximum"] < 30_000_000
         )),
+        dict(name="b10b_gc_pause_timeline_complete",
+             passed=summary["gc_pause_timeline"]["complete"]),
     ]
-    return summary, rows, checks
+    return summary, [json.loads(row) for row in rows], checks

@@ -813,10 +813,12 @@ class Case(unittest.TestCase):
 from pathlib import Path
 Path(r'%s').write_text(str(os.getpid()))
 def stop(_signum,_frame):
- if os.fork()==0:
+ pid=os.fork()
+ if pid==0:
   os.setsid()
-  Path(r'%s').write_text(str(os.getpid()))
   time.sleep(30)
+  os._exit(0)
+ Path(r'%s').write_text(str(pid))
  os._exit(0)
 signal.signal(signal.SIGTERM,stop)
 time.sleep(30)

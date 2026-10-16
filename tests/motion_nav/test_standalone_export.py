@@ -51,6 +51,33 @@ class StandaloneExportTests(unittest.TestCase):
             attributes,
         )
 
+    def test_d110_historical_semantics_are_exported_without_claiming_current_bytes(self):
+        relative = "evidence/motion_navigation/d110-evidence-lifecycle-v1/published-production-semantic-hashes.json"
+        report = json.loads((self.root / relative).read_text("utf-8"))
+        self.assertEqual(report["source_commit"], "67f4f1d82fa3946472437f6f747e005591fd2bca")
+        self.assertEqual(report["public_commit"], "f66358654398a18d01d224cc4f5902ef48a31b84")
+        self.assertEqual(report["normalization"], "CRLF_TO_LF")
+        self.assertTrue({"scripts/b10_gap_solver_runtime.py",
+                         "scripts/client_time_evidence.py",
+                         "scripts/fabric_visibility_scenario.py",
+                         "scripts/run_motion_nav_shards.py",
+                         "scripts/probe_fabric_deployment_observation.py"}
+                        <= report["files"].keys())
+        for expected in report["files"].values():
+            self.assertRegex(expected, r"^[0-9a-f]{64}$")
+        # A source-only snapshot or public clone need not contain private
+        # historical objects. Check each available commit, never D111's bytes.
+        if not (ROOT / ".git").exists():
+            return
+        commits = [commit for commit in (report["source_commit"], report["public_commit"])
+                   if subprocess.run(["git", "cat-file", "-e", f"{commit}^{{commit}}"],
+                                     cwd=ROOT, capture_output=True).returncode == 0]
+        for name, expected in report["files"].items():
+            for commit in commits:
+                raw = subprocess.check_output(["git", "show", f"{commit}:{name}"], cwd=ROOT)
+                self.assertEqual(hashlib.sha256(raw.replace(b"\r\n", b"\n")).hexdigest(),
+                                 expected, (commit, name))
+
     def test_reviewed_missing_dependencies_are_real_export_files(self) -> None:
         required = (
             "tests/test_navigation_motion.py",

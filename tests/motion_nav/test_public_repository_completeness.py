@@ -1,4 +1,7 @@
 from pathlib import Path
+import hashlib
+import json
+import math
 import unittest
 
 from scripts.export_motion_navigation_standalone import (
@@ -12,6 +15,61 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class PublicRepositoryCompletenessTests(unittest.TestCase):
+    def test_d111_publication_inputs_and_published_attribution_are_complete(self):
+        selected = {path.as_posix() for path in collect_export_files(load_manifest())}
+        directory = "evidence/motion_navigation/d111-b10-gc-attribution-v1"
+        required = [
+            "docs/motion_navigation/decisions/0111-remove-b10-observer-gc-distortion.md",
+            "docs/motion_navigation/stages/d111-b10-gc-attribution-and-buffer-plan.md",
+            "docs/motion_navigation/acceptance/d111-b10-gc-attribution-and-buffer.md",
+            *[f"{directory}/{name}" for name in (
+                "README.md", ".gitattributes", "index.json", "SHA256SUMS.txt",
+                "windows-regression/summary.json", "windows-regression/commands.txt",
+                "fabric-b10/summary.json", "fabric-b10/command.txt", "fabric-b10/provenance.json")],
+        ]
+        self.assertEqual([name for name in required if name not in selected], [])
+        root = ROOT / directory
+        self.assertEqual((root / ".gitattributes").read_text("utf-8").strip(), "* -text")
+        index = json.loads((root / "index.json").read_text("utf-8"))
+        files = {path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file()}
+        self.assertEqual(set(index["files"]), files - {"index.json", "SHA256SUMS.txt"})
+        for name, info in index["files"].items():
+            raw = (root / name).read_bytes()
+            self.assertEqual(len(raw), info["bytes"], name)
+            self.assertEqual(hashlib.sha256(raw).hexdigest(), info["sha256"], name)
+        checksums = dict((name, digest) for digest, name in
+                         (line.split("  ", 1) for line in (root / "SHA256SUMS.txt").read_text("utf-8").splitlines()))
+        self.assertEqual(set(checksums), files - {"SHA256SUMS.txt"})
+        for name, digest in checksums.items():
+            self.assertEqual(hashlib.sha256((root / name).read_bytes()).hexdigest(), digest, name)
+        summary = json.loads((root / "fabric-b10/summary.json").read_text("utf-8"))
+        self.assertEqual(summary["status"], "FAILED/STOPPED")
+        self.assertEqual(summary["formal_b10_runs"], 1)
+        self.assertEqual(summary["failed_checks"], ["client-0:b10b_solver_is_bounded"])
+        gc = summary["gc_pause_timeline"]
+        self.assertTrue(gc["complete"])
+        self.assertEqual((gc["event_count"], gc["interval_count"]), (656, 328))
+        samples = summary["solver"]["samples"]
+        self.assertEqual(len(samples), 142)
+        for sample in samples:
+            start, end = sample["solve_started_ns"], sample["solve_ended_ns"]
+            self.assertEqual(end - start, sample["solve_time_ns"])
+            clips = sorted((max(start, interval["start_ns"]), min(end, interval["end_ns"]))
+                           for interval in gc["intervals"]
+                           if min(end, interval["end_ns"]) > max(start, interval["start_ns"]))
+            pause, previous_end = 0, start
+            for low, high in clips:
+                pause += max(0, high - max(low, previous_end))
+                previous_end = max(previous_end, high)
+            self.assertEqual(pause, sample["solve_gc_pause_overlap_ns"], sample["name"])
+            self.assertEqual(end - start - pause, sample["solve_wall_minus_gc_pause_ns"], sample["name"])
+        for name in ("solve_time_ns", "solve_wall_minus_gc_pause_ns"):
+            values = sorted(sample[name] for sample in samples)
+            expected = summary["solver"][name]
+            self.assertEqual(expected["p95"], values[math.ceil(len(values) * .95) - 1])
+            self.assertEqual(expected["p99"], values[math.ceil(len(values) * .99) - 1])
+            self.assertEqual(expected["maximum"], values[-1])
+
     def test_d109_and_d110_publication_inputs_are_selected(self):
         selected_paths = {
             path.as_posix() for path in collect_export_files(load_manifest())
@@ -39,6 +97,7 @@ class PublicRepositoryCompletenessTests(unittest.TestCase):
             "evidence/motion_navigation/d110-evidence-lifecycle-v1/README.md",
             "evidence/motion_navigation/d110-evidence-lifecycle-v1/index.json",
             "evidence/motion_navigation/d110-evidence-lifecycle-v1/SHA256SUMS.txt",
+            "evidence/motion_navigation/d110-evidence-lifecycle-v1/published-production-semantic-hashes.json",
             "evidence/motion_navigation/d110-evidence-lifecycle-v1/windows-regression/summary.json",
             "evidence/motion_navigation/d110-evidence-lifecycle-v1/fabric-b10/summary.json",
         )
