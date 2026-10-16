@@ -1,0 +1,427 @@
+{
+  "status": "PASSED_LOCAL_ONLY",
+  "production_commit": "f161a0c521c43c364cd533358b21df342bba5821",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "python": "3.11.16 | packaged by conda-forge | (main, Sep  2 2026, 23:31:17) [MSC v.1944 64 bit (AMD64)]",
+  "interpreter": "D:\\My_project\\mc_ai\\.venv\\python.exe",
+  "timeout_seconds_per_module": 300,
+  "reports": {
+    "source-forward": {
+      "raw_path": ".tmp\\d113-task4\\source-forward.json",
+      "sha256": "6a090ce8bceed20a000192f1405233f726c8c2e9e1a82dfd5cc0440265f87f96",
+      "modules": 191,
+      "summary": {
+        "passed": 191,
+        "failed": 0,
+        "error": 0,
+        "timeout": 0,
+        "launch_error": 0
+      },
+      "counts": {
+        "tests_run": 2387,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "cleanup_failures": 0,
+      "started_at": "2026-10-16T12:20:43.340104+00:00",
+      "finished_at": "2026-10-16T12:44:35.793643+00:00"
+    },
+    "source-reverse": {
+      "raw_path": ".tmp\\d113-task4\\source-reverse.json",
+      "sha256": "4c35784068a0343678abe4215f96e94dc32ad44e3dd189676268ff8fb56e7f8b",
+      "modules": 191,
+      "summary": {
+        "passed": 191,
+        "failed": 0,
+        "error": 0,
+        "timeout": 0,
+        "launch_error": 0
+      },
+      "counts": {
+        "tests_run": 2387,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "cleanup_failures": 0,
+      "started_at": "2026-10-16T12:44:36.074897+00:00",
+      "finished_at": "2026-10-16T13:08:32.737677+00:00"
+    },
+    "snapshot-forward": {
+      "raw_path": ".tmp\\d113-task4\\snapshot-forward.json",
+      "sha256": "d7bf92198c4317f33393460fd1e3a124fee684197fd1fe244acbcae5a7024678",
+      "modules": 190,
+      "summary": {
+        "passed": 190,
+        "failed": 0,
+        "error": 0,
+        "timeout": 0,
+        "launch_error": 0
+      },
+      "counts": {
+        "tests_run": 2363,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "cleanup_failures": 0,
+      "started_at": "2026-10-16T13:08:58.829573+00:00",
+      "finished_at": "2026-10-16T13:31:08.448686+00:00"
+    },
+    "snapshot-reverse": {
+      "raw_path": ".tmp\\d113-task4\\snapshot-reverse.json",
+      "sha256": "cd1fbd3dec59e7f4489a951b6b58d6cb4d956548107cb56e45fee563caa50fa6",
+      "modules": 190,
+      "summary": {
+        "passed": 190,
+        "failed": 0,
+        "error": 0,
+        "timeout": 0,
+        "launch_error": 0
+      },
+      "counts": {
+        "tests_run": 2363,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "cleanup_failures": 0,
+      "started_at": "2026-10-16T13:31:08.743399+00:00",
+      "finished_at": "2026-10-16T13:53:51.901359+00:00"
+    }
+  },
+  "source_java_all_tests": 13,
+  "source_pure_java_gates": 3,
+  "snapshot_pure_java_gates": 3,
+  "focused_adjacent": {
+    "tests": 292,
+    "revision": "2ccd237a",
+    "clock_test_fix_adjacent_tests": 83,
+    "clock_test_revision": "f161a0c5"
+  },
+  "mutation_groups_caught": 6,
+  "historical_environment_failures_excluded_from_final_matrix": true,
+  "log_packaging": "plain .log files remain local; exact gzip copies enter the public snapshot",
+  "logs": [
+    {
+      "local_only_log": "b10-inspect-fresh.log",
+      "public_log": "raw/b10-inspect-fresh.log.gz",
+      "uncompressed_sha256": "af18c25664fd8dff2c351eead6274790f8c0d61f9f8b80f97864120f2efd3beb"
+    },
+    {
+      "local_only_log": "cli-red.log",
+      "public_log": "raw/cli-red.log.gz",
+      "uncompressed_sha256": "950efa722fb0bd128245fc6499fee0abdc25daa410acc764654751eb8583b508"
+    },
+    {
+      "local_only_log": "d105-interpreter-final-green.log",
+      "public_log": "raw/d105-interpreter-final-green.log.gz",
+      "uncompressed_sha256": "54374dff0454017cbdae4621effdb69eab023df585f821c70a8320ca27e59078"
+    },
+    {
+      "local_only_log": "duplicate-identity-red.log",
+      "public_log": "raw/duplicate-identity-red.log.gz",
+      "uncompressed_sha256": "76b754365eaedc7853dddbc036c9154ba04b8d90fa2d8d5c8290ae6bc9648756"
+    },
+    {
+      "local_only_log": "focused-adjacent-final.log",
+      "public_log": "raw/focused-adjacent-final.log.gz",
+      "uncompressed_sha256": "2d0e9bb14a4f416c6065e95f65c41198af6872c40e1aae3066044ba3dc4d01be"
+    },
+    {
+      "local_only_log": "focused-adjacent-initial-failed.log",
+      "public_log": "raw/focused-adjacent-initial-failed.log.gz",
+      "uncompressed_sha256": "beab02cefb64d5e3bf1e136005a358d61594f8dcb75cd9cea76c709933375c12"
+    },
+    {
+      "local_only_log": "frozen-input-final-green.log",
+      "public_log": "raw/frozen-input-final-green.log.gz",
+      "uncompressed_sha256": "de16b40613accb673c8d50f616f0a37172007085b76a1015ca861c9a195ba51f"
+    },
+    {
+      "local_only_log": "frozen-input-first-failed.log",
+      "public_log": "raw/frozen-input-first-failed.log.gz",
+      "uncompressed_sha256": "b23323ec7916270645d9c2671bdb11c4e96bcccf13e64958b2834d92d7b62464"
+    },
+    {
+      "local_only_log": "hash-red.log",
+      "public_log": "raw/hash-red.log.gz",
+      "uncompressed_sha256": "f1ef0b5ff88775c0b44071d99e2b90c2ad54d6e0f2e9283965c946eb367d50e6"
+    },
+    {
+      "local_only_log": "java-stale-provenance-failed.log",
+      "public_log": "raw/java-stale-provenance-failed.log.gz",
+      "uncompressed_sha256": "1ac25dc718f6852984ef2b61a255e2dd03c85589674f6df24254d1ca3028c414"
+    },
+    {
+      "local_only_log": "local-raw-reference-final-green.log",
+      "public_log": "raw/local-raw-reference-final-green.log.gz",
+      "uncompressed_sha256": "3b6df4c4463a9a28bad4edb49d198d6e08f5da6ba0af9031b8683bd47145d327"
+    },
+    {
+      "local_only_log": "local-raw-reference-first-failed.log",
+      "public_log": "raw/local-raw-reference-first-failed.log.gz",
+      "uncompressed_sha256": "ebbb611c7027f2719d1f26577ccaac8f3a268ee4bf510e722d1e82671f74c138"
+    },
+    {
+      "local_only_log": "main-bytes-preflight-green.log",
+      "public_log": "raw/main-bytes-preflight-green.log.gz",
+      "uncompressed_sha256": "d5ede42f6a34ae13cbe82221cf7e41d95f747d8bdc5a39a1d282b60774498b90"
+    },
+    {
+      "local_only_log": "mutations-final.log",
+      "public_log": "raw/mutations-final.log.gz",
+      "uncompressed_sha256": "6d01e5ad0f100cbf71ad0a02f2c0b3439437f35d7ebd56ea5a8122a6322578d2"
+    },
+    {
+      "local_only_log": "snapshot-export.log",
+      "public_log": "raw/snapshot-export.log.gz",
+      "uncompressed_sha256": "2ff7552fb843c17f13920cd81aceaa1da5bafa490179090afee551a60fe6bcb6"
+    },
+    {
+      "local_only_log": "snapshot-forward-cpu-clock-failed.log",
+      "public_log": "raw/snapshot-forward-cpu-clock-failed.log.gz",
+      "uncompressed_sha256": "edb0e68bc8431554bbbd80e58bc7db6e6a1363f86a2a921d4ed92b5f936e60b7"
+    },
+    {
+      "local_only_log": "snapshot-forward.log",
+      "public_log": "raw/snapshot-forward.log.gz",
+      "uncompressed_sha256": "c280377e1e38ee12300f966ec513e367f3369dfb9bc16e42a9e6123fe55568e2"
+    },
+    {
+      "local_only_log": "snapshot-java.log",
+      "public_log": "raw/snapshot-java.log.gz",
+      "uncompressed_sha256": "6a223f9653fc52c0c5fc068cc1ae994bc0297f953c2b265b820bcf1df6a54671"
+    },
+    {
+      "local_only_log": "snapshot-reverse.log",
+      "public_log": "raw/snapshot-reverse.log.gz",
+      "uncompressed_sha256": "2a3e1aed5d1d8cf75b748ce074ca63cfe2372478da48e9df5d2a2f8fbe86eeee"
+    },
+    {
+      "local_only_log": "snapshot-verify-after.log",
+      "public_log": "raw/snapshot-verify-after.log.gz",
+      "uncompressed_sha256": "a7cdfd6bed6c5a0261f7dbe3a30885c62e44a3fd99bf3b2a316ce9764703957e"
+    },
+    {
+      "local_only_log": "snapshot-verify-before.log",
+      "public_log": "raw/snapshot-verify-before.log.gz",
+      "uncompressed_sha256": "a7cdfd6bed6c5a0261f7dbe3a30885c62e44a3fd99bf3b2a316ce9764703957e"
+    },
+    {
+      "local_only_log": "source-forward-first-env-failed.log",
+      "public_log": "raw/source-forward-first-env-failed.log.gz",
+      "uncompressed_sha256": "c04fc287a559ce480ffc207e1822ca8cedf683c97e147f0781843fc88137e97e"
+    },
+    {
+      "local_only_log": "source-forward-fourth-env-failed.log",
+      "public_log": "raw/source-forward-fourth-env-failed.log.gz",
+      "uncompressed_sha256": "9875a40398bbffbbac9c2286a05eb35a977a5674a77066d39f7f0d0db1db059e"
+    },
+    {
+      "local_only_log": "source-forward-pre-clock-test-fix.log",
+      "public_log": "raw/source-forward-pre-clock-test-fix.log.gz",
+      "uncompressed_sha256": "9def09689d9b0daf8a065ea6ff1fa727da2998220fae4bc692f4e52fcf1670e4"
+    },
+    {
+      "local_only_log": "source-forward-second-env-failed.log",
+      "public_log": "raw/source-forward-second-env-failed.log.gz",
+      "uncompressed_sha256": "c5b192ee2f5589b5182e10490ee9e93d7a0ce15746a2c75f3eac7ff41d4ab44b"
+    },
+    {
+      "local_only_log": "source-forward-third-env-failed.log",
+      "public_log": "raw/source-forward-third-env-failed.log.gz",
+      "uncompressed_sha256": "5eb67dc2909548ca268ddb3db01681a008d5592e341bab2793ce3958b203b3c8"
+    },
+    {
+      "local_only_log": "source-forward.log",
+      "public_log": "raw/source-forward.log.gz",
+      "uncompressed_sha256": "834f5fd8da3965a3337beb4752bb1e2e301dcb837b4f184cb72d139411ceac59"
+    },
+    {
+      "local_only_log": "source-java-build.log",
+      "public_log": "raw/source-java-build.log.gz",
+      "uncompressed_sha256": "3c9bf67b986a7b439806bec3291027bfb7f7478b2e0088051b2e48aa5a6c0d23"
+    },
+    {
+      "local_only_log": "source-java-final-bytes.log",
+      "public_log": "raw/source-java-final-bytes.log.gz",
+      "uncompressed_sha256": "3a5580387216291de8ff2ca0b574410b6f4a16a166a1c8bdce98ba62f8241343"
+    },
+    {
+      "local_only_log": "source-reverse-pre-clock-test-fix.log",
+      "public_log": "raw/source-reverse-pre-clock-test-fix.log.gz",
+      "uncompressed_sha256": "cd47f66037966080d681e0b6ce77597e7d24daaf948ca61e35541699e1e0e64f"
+    },
+    {
+      "local_only_log": "source-reverse.log",
+      "public_log": "raw/source-reverse.log.gz",
+      "uncompressed_sha256": "e6e4b955899620bcb3636c0a93365476b6f79cb483ac1b6c40eb1d2fe7b81ebe"
+    },
+    {
+      "local_only_log": "target-and-export-final.log",
+      "public_log": "raw/target-and-export-final.log.gz",
+      "uncompressed_sha256": "b574bf1106cd92815df2e60f255efaa390d103bbf428ae4bbdb974f93ec7ad75"
+    },
+    {
+      "local_only_log": "target-red.log",
+      "public_log": "raw/target-red.log.gz",
+      "uncompressed_sha256": "c28113bdf0a0c281556c6f20d677633ba8e58247f7d8242103c32fd6dc5aca88"
+    },
+    {
+      "local_only_log": "zero-cpu-green.log",
+      "public_log": "raw/zero-cpu-green.log.gz",
+      "uncompressed_sha256": "86ddd803899fc5cd2ba5d621ed7a608ebf6129bf3ecff2350eb06f0868b86894"
+    },
+    {
+      "local_only_log": "zero-cpu-mutation.log",
+      "public_log": "raw/zero-cpu-mutation.log.gz",
+      "uncompressed_sha256": "0e0b0b415e9cffe9df0a8768e765fedc5ed70a6753af72482a6d74ad6a55d673"
+    },
+    {
+      "local_only_log": "zero-cpu-red.log",
+      "public_log": "raw/zero-cpu-red.log.gz",
+      "uncompressed_sha256": "39ffc2fb5ed733ec6827c4f1c27321a7de8321f5e00e9e9e49973be8a4c5a149"
+    }
+  ],
+  "production_semantic_hashes": {
+    "deployment/fabric-observation-probe/src/main/java/com/mc2p/deployment/DeploymentObservationProbe.java": "f8a5e35c75aec0562efad743cc696991ccf1081a3db0fad4ed679b7d25a99704",
+    "deployment/fabric-observation-probe/src/main/java/com/mc2p/deployment/ProbeFailureDiagnostics.java": "f1fc1bafc4540121fbc39dbb71d5a15533da2aff2e2103b956f5c6874658c0c2",
+    "mc2p/motion_nav/motion_coordination.py": "7ab51fac869f00e1319d36045f64bce065ef39c4cc4238c823ed0bd5e97b1d0e",
+    "mc2p/motion_nav/motion_solver.py": "88b72d76fbf0a7ae731c56f37c6b670424160c686ee815ae94d9e143037dc739",
+    "mc2p/motion_nav/motion_worker.py": "2a8e472e0e6e42afb773e79949c170aa52c89c72f8c5735dc33310f48ec0ae0c",
+    "scripts/analyze_d113_delivery_baseline.py": "17771556d77d092c931acf701ba4005f4b4b6529bef61d52ddfc8722a76af22c",
+    "scripts/b10_gap_solver_runtime.py": "3d2ac496f27a7b1f78d435399faa0a2e88fd89f223057b35146a4a3d0306a642",
+    "scripts/probe_fabric_deployment_observation.py": "c856a3f9bcf56c8273d8e2f80af88b2bfbaa49afc23eacc547673a4314332cb4"
+  },
+  "gates": [
+    {
+      "name": "source-forward",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "scripts/run_motion_nav_shards.py",
+        "--report",
+        "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.tmp\\d113-task4\\source-forward.json"
+      ],
+      "cwd": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree",
+      "status": "passed",
+      "started_ns": 1792153243207828600,
+      "returncode": 0,
+      "finished_ns": 1792154675927537000
+    },
+    {
+      "name": "source-reverse",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "scripts/run_motion_nav_shards.py",
+        "--report",
+        "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.tmp\\d113-task4\\source-reverse.json",
+        "--reverse"
+      ],
+      "cwd": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree",
+      "status": "passed",
+      "started_ns": 1792154675928037900,
+      "returncode": 0,
+      "finished_ns": 1792156112891452300
+    },
+    {
+      "name": "snapshot-export",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "scripts/export_motion_navigation_standalone.py",
+        "export",
+        "--root",
+        "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.tmp\\d113-public-task4-final",
+        "--clean"
+      ],
+      "cwd": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree",
+      "status": "passed",
+      "started_ns": 1792156112892452800,
+      "returncode": 0,
+      "finished_ns": 1792156137675407700
+    },
+    {
+      "name": "snapshot-verify-before",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "scripts/export_motion_navigation_standalone.py",
+        "verify",
+        "--root",
+        "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.tmp\\d113-public-task4-final"
+      ],
+      "cwd": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree",
+      "status": "passed",
+      "started_ns": 1792156137675908700,
+      "returncode": 0,
+      "finished_ns": 1792156138685078600
+    },
+    {
+      "name": "snapshot-forward",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "scripts/run_motion_nav_shards.py",
+        "--report",
+        "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.tmp\\d113-task4\\snapshot-forward.json"
+      ],
+      "cwd": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.tmp\\d113-public-task4-final",
+      "status": "passed",
+      "started_ns": 1792156138686082400,
+      "returncode": 0,
+      "finished_ns": 1792157468606097500
+    },
+    {
+      "name": "snapshot-reverse",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "scripts/run_motion_nav_shards.py",
+        "--report",
+        "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.tmp\\d113-task4\\snapshot-reverse.json",
+        "--reverse"
+      ],
+      "cwd": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.tmp\\d113-public-task4-final",
+      "status": "passed",
+      "started_ns": 1792157468607596300,
+      "returncode": 0,
+      "finished_ns": 1792158831944253400
+    },
+    {
+      "name": "snapshot-java",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "-m",
+        "unittest",
+        "tests.test_standalone_java_gates",
+        "-v"
+      ],
+      "cwd": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.tmp\\d113-public-task4-final",
+      "status": "passed",
+      "started_ns": 1792158831945755700,
+      "returncode": 0,
+      "finished_ns": 1792158835457733300
+    },
+    {
+      "name": "snapshot-verify-after",
+      "command": [
+        "D:\\My_project\\mc_ai\\.venv\\python.exe",
+        "scripts/export_motion_navigation_standalone.py",
+        "verify",
+        "--root",
+        "D:\\My_project\\mc_ai\\.tmp\\d113-worktree\\.tmp\\d113-public-task4-final"
+      ],
+      "cwd": "D:\\My_project\\mc_ai\\.tmp\\d113-worktree",
+      "status": "passed",
+      "started_ns": 1792158835457733300,
+      "returncode": 0,
+      "finished_ns": 1792158836468863800
+    }
+  ]
+}

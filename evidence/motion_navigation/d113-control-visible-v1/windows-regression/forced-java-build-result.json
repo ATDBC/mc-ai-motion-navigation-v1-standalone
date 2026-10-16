@@ -1,0 +1,25 @@
+{
+  "return_code": 0,
+  "primary_failure": null,
+  "cleanup_failures": [],
+  "process_stopped": true,
+  "registered_processes": [
+    {
+      "pid": 38600,
+      "create_time": 1792150009.0933964
+    },
+    {
+      "pid": 42836,
+      "create_time": 1792150008.452163
+    },
+    {
+      "pid": 48792,
+      "create_time": 1792150008.4839797
+    },
+    {
+      "pid": 59800,
+      "create_time": 1792150009.1115105
+    }
+  ],
+  "schema_version": "mc2p.bounded-process-result.v0"
+}

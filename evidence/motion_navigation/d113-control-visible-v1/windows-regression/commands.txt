@@ -1,0 +1,24 @@
+# source-forward
+# cwd=D:\My_project\mc_ai\.tmp\d113-worktree
+D:\My_project\mc_ai\.venv\python.exe scripts/run_motion_nav_shards.py --report D:\My_project\mc_ai\.tmp\d113-worktree\.tmp\d113-task4\source-forward.json
+# source-reverse
+# cwd=D:\My_project\mc_ai\.tmp\d113-worktree
+D:\My_project\mc_ai\.venv\python.exe scripts/run_motion_nav_shards.py --report D:\My_project\mc_ai\.tmp\d113-worktree\.tmp\d113-task4\source-reverse.json --reverse
+# snapshot-export
+# cwd=D:\My_project\mc_ai\.tmp\d113-worktree
+D:\My_project\mc_ai\.venv\python.exe scripts/export_motion_navigation_standalone.py export --root D:\My_project\mc_ai\.tmp\d113-worktree\.tmp\d113-public-task4-final --clean
+# snapshot-verify-before
+# cwd=D:\My_project\mc_ai\.tmp\d113-worktree
+D:\My_project\mc_ai\.venv\python.exe scripts/export_motion_navigation_standalone.py verify --root D:\My_project\mc_ai\.tmp\d113-worktree\.tmp\d113-public-task4-final
+# snapshot-forward
+# cwd=D:\My_project\mc_ai\.tmp\d113-worktree\.tmp\d113-public-task4-final
+D:\My_project\mc_ai\.venv\python.exe scripts/run_motion_nav_shards.py --report D:\My_project\mc_ai\.tmp\d113-worktree\.tmp\d113-task4\snapshot-forward.json
+# snapshot-reverse
+# cwd=D:\My_project\mc_ai\.tmp\d113-worktree\.tmp\d113-public-task4-final
+D:\My_project\mc_ai\.venv\python.exe scripts/run_motion_nav_shards.py --report D:\My_project\mc_ai\.tmp\d113-worktree\.tmp\d113-task4\snapshot-reverse.json --reverse
+# snapshot-java
+# cwd=D:\My_project\mc_ai\.tmp\d113-worktree\.tmp\d113-public-task4-final
+D:\My_project\mc_ai\.venv\python.exe -m unittest tests.test_standalone_java_gates -v
+# snapshot-verify-after
+# cwd=D:\My_project\mc_ai\.tmp\d113-worktree
+D:\My_project\mc_ai\.venv\python.exe scripts/export_motion_navigation_standalone.py verify --root D:\My_project\mc_ai\.tmp\d113-worktree\.tmp\d113-public-task4-final

@@ -971,7 +971,13 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                b12b_partial_combat_probe: bool = False,
                surface_cost_probe: bool = False,
                physics_tick_diagnostics: bool = False,
-               ftick_diagnostics: bool = False) -> int:
+               ftick_diagnostics: bool = False,
+               b10_targeted_probe: str | None = None) -> int:
+    if b10_targeted_probe is not None:
+        from scripts.b10_gap_solver_runtime import _selected_b10_coordinator_scenarios
+        _selected_b10_coordinator_scenarios(b10_targeted_probe)
+        if not b10_gap_solver_probe:
+            raise ValueError("targeted B10 probe requires B10 mode")
     c1_probe = (c1_fixed_melee_probe or c1_moving_melee_probe
                 or c1_external_motion_probe or c1r_control_frame_probe
                 or b12a_attack_evidence_probe or b12b_partial_combat_probe)
@@ -1566,6 +1572,7 @@ def run_worker(run_dir: Path, launch: dict, seed: int, server_port: int, ipc_por
                             player_teleporter=teleport_b10_player,
                             pipeline_diagnostic=lambda: observation_pipeline_diagnostics(runtime, backend),
                             lifecycle_report=b10_lifecycle,
+                            targeted_probe=b10_targeted_probe,
                         )
                     elif continuous_height_probe:
                         from scripts.continuous_height_runtime import (
@@ -2214,6 +2221,8 @@ def main(argv=None) -> int:
                         help='calibrate and validate gap jumps and controlled drops')
     parser.add_argument('--b10-gap-solver-probe', action='store_true',
                         help='solve and validate one-cell gaps in a controlled session')
+    parser.add_argument('--b10-targeted-probe', choices=['coordinator-worker-delay-5-0-0'],
+                        help='run only the D113 5-tick diagnostic case; never formal acceptance')
     parser.add_argument('--continuous-height-probe', action='store_true',
                         help='run continuous low-height and descending routes')
     parser.add_argument('--continuous-height-full-matrix', action='store_true',
@@ -2276,6 +2285,8 @@ def main(argv=None) -> int:
         parser.error('F-TICK diagnostics requires --time-diagnostics')
     if args.ftick_diagnostics and not args.b10_gap_solver_probe:
         parser.error('F-TICK diagnostics requires --b10-gap-solver-probe')
+    if args.b10_targeted_probe is not None and not args.b10_gap_solver_probe:
+        parser.error('targeted B10 probe requires --b10-gap-solver-probe')
     if (args.c1r_control_frame_probe or args.b12b_partial_combat_probe
             or args.surface_cost_probe) \
             and not args.time_diagnostics:
@@ -2334,7 +2345,8 @@ def main(argv=None) -> int:
                           args.b12b_partial_combat_probe,
                           args.surface_cost_probe,
                           args.physics_tick_diagnostics,
-                          args.ftick_diagnostics)
+                          args.ftick_diagnostics,
+                          b10_targeted_probe=args.b10_targeted_probe)
 
     if not port_free(args.server_port) or not port_free(args.ipc_port):
         parser.error("a local test port is occupied")
@@ -2383,6 +2395,8 @@ def main(argv=None) -> int:
     if args.b08_ground_modes_probe: command.append('--b08-ground-modes-probe')
     if args.b09_air_motion_probe: command.append('--b09-air-motion-probe')
     if args.b10_gap_solver_probe: command.append('--b10-gap-solver-probe')
+    if args.b10_targeted_probe is not None:
+        command.extend(['--b10-targeted-probe', args.b10_targeted_probe])
     if args.continuous_height_probe: command.append('--continuous-height-probe')
     if args.continuous_height_full_matrix:
         command.extend([

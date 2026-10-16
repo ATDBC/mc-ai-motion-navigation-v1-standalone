@@ -1607,6 +1607,15 @@ def _prepare_air_transition(
     inputs: list[TickInput] = []
     dependencies: set[BlockPos] = set()
     resource_reasons: set[str] = set()
+    # Releasing all keys may coast into a step side and stop. Only an entirely
+    # neutral, fixed-look prefix can use that contact; all physics and support
+    # checks still apply, and the complete prefix is replayed below.
+    neutral_fixed_look = all(
+        command.movement == MovementV1()
+        and _angle_error(command.required_movement_yaw_radians,
+                         anchor.physics_state.yaw_radians) <= 1.0e-9
+        for command in entry_prefix
+    )
     for command in entry_prefix:
         if (command.movement.jump
                 or _angle_error(command.required_movement_yaw_radians,
@@ -1643,7 +1652,10 @@ def _prepare_air_transition(
                 SolveStatus.NEEDS_STATE,
                 reasons=("preparation_left_ground_support",),
             )
-        if current.horizontal_collision:
+        if (current.horizontal_collision
+                and not (neutral_fixed_look and math.hypot(
+                    current.velocity_blocks_per_tick[0],
+                    current.velocity_blocks_per_tick[2]) <= 1.0e-9)):
             return SolveResult(
                 SolveStatus.HARD_CONFLICT,
                 reasons=("preparation_horizontal_collision",),

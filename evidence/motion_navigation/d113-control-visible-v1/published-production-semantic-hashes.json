@@ -1,0 +1,17 @@
+{
+  "schema": "mc2p.public-production-semantic-hashes.v1",
+  "scope": "D113 control-visible delivery, jitter repair, client diagnostics and bounded Fabric harness",
+  "normalization": "CRLF_TO_LF",
+  "source_commit": "f161a0c521c43c364cd533358b21df342bba5821",
+  "base_commit": "9c06158baa35508632e4d7a889e971d4434f65e8",
+  "files": {
+    "deployment/fabric-observation-probe/src/main/java/com/mc2p/deployment/DeploymentObservationProbe.java": "f8a5e35c75aec0562efad743cc696991ccf1081a3db0fad4ed679b7d25a99704",
+    "deployment/fabric-observation-probe/src/main/java/com/mc2p/deployment/ProbeFailureDiagnostics.java": "f1fc1bafc4540121fbc39dbb71d5a15533da2aff2e2103b956f5c6874658c0c2",
+    "mc2p/motion_nav/motion_coordination.py": "7ab51fac869f00e1319d36045f64bce065ef39c4cc4238c823ed0bd5e97b1d0e",
+    "mc2p/motion_nav/motion_solver.py": "88b72d76fbf0a7ae731c56f37c6b670424160c686ee815ae94d9e143037dc739",
+    "mc2p/motion_nav/motion_worker.py": "2a8e472e0e6e42afb773e79949c170aa52c89c72f8c5735dc33310f48ec0ae0c",
+    "scripts/analyze_d113_delivery_baseline.py": "17771556d77d092c931acf701ba4005f4b4b6529bef61d52ddfc8722a76af22c",
+    "scripts/b10_gap_solver_runtime.py": "3d2ac496f27a7b1f78d435399faa0a2e88fd89f223057b35146a4a3d0306a642",
+    "scripts/probe_fabric_deployment_observation.py": "c856a3f9bcf56c8273d8e2f80af88b2bfbaa49afc23eacc547673a4314332cb4"
+  }
+}

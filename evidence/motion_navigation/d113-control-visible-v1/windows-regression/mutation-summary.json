@@ -1,0 +1,28 @@
+[
+  {
+    "mutation": "Task 1 original regression mutations",
+    "caught": true
+  },
+  {
+    "mutation": "Task 3 original regression mutations",
+    "caught": true
+  },
+  {
+    "mutation": "mixed-probe-production",
+    "caught": true,
+    "tests": 1,
+    "failures": 1
+  },
+  {
+    "mutation": "target-broadening",
+    "caught": true,
+    "tests": 1,
+    "failures": 1
+  },
+  {
+    "mutation": "trust-cached-target-delay",
+    "caught": true,
+    "tests": 1,
+    "failures": 1
+  }
+]

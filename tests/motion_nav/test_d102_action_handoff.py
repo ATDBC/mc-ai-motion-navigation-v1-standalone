@@ -592,9 +592,19 @@ class ActionHandoffTests(unittest.TestCase):
             set(candidate.proof.world_dependencies) | {(0, 6, 3)})))
         self.executor._verified_motion[1] = replace(
             candidate, candidate=replace(candidate.candidate, proof=proof))
+        old_jobs = {id(job) for job in self.worker.jobs}
         self.prepare()
-        self.assertTrue(self.inbox.wait_for_receiver(timeout=10))
-        job = [job for job in self.worker.jobs if isinstance(job, PreparedMotionJob)][-1]
+        new_jobs = []
+        for _ in range(5):
+            self.assertTrue(self.inbox.wait_for_receiver(timeout=10))
+            new_jobs = [job for job in self.worker.jobs
+                        if isinstance(job, PreparedMotionJob) and id(job) not in old_jobs]
+            if new_jobs:
+                break
+        self.assertEqual(len(new_jobs), 1, "this prepare must submit exactly one new job")
+        job, = new_jobs
+        self.assertEqual(job.request.stream.generation_id,
+                         self.coordinator.generation_for(1).generation_id)
         self.worker.put(_execute_job(job))
         self.assertTrue(self.inbox.wait_for_receiver(timeout=10))
         fresh = self.executor.stage_prepared_action(self.frame(self.current), self.current)

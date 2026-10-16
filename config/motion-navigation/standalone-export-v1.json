@@ -129,7 +129,8 @@
     "evidence/motion_navigation/d109-b10-lifecycle-v1/**/*",
     "evidence/motion_navigation/d110-evidence-lifecycle-v1/**/*",
     "evidence/motion_navigation/d111-b10-gc-attribution-v1/**/*",
-    "evidence/motion_navigation/d112-worker-delivery-v1/**/*"
+    "evidence/motion_navigation/d112-worker-delivery-v1/**/*",
+    "evidence/motion_navigation/d113-control-visible-v1/**/*"
   ],
   "exclude_globs": [
     "tests/motion_nav/test_d102_evidence_contract.py"
@@ -642,6 +643,8 @@
     "evidence/motion_navigation/d111-b10-gc-attribution-v1/windows-regression/commands.txt",
     "evidence/motion_navigation/d111-b10-gc-attribution-v1/fabric-b10/summary.json",
     "evidence/motion_navigation/d111-b10-gc-attribution-v1/fabric-b10/command.txt",
-    "evidence/motion_navigation/d111-b10-gc-attribution-v1/fabric-b10/provenance.json"
+    "evidence/motion_navigation/d111-b10-gc-attribution-v1/fabric-b10/provenance.json",
+    "evidence/motion_navigation/d113-control-visible-v1/d112-read-only-baseline.json",
+    "evidence/motion_navigation/d113-control-visible-v1/published-production-semantic-hashes.json"
   ]
 }

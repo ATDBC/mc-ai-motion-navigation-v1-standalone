@@ -148,8 +148,12 @@ class StartDeliveryFormalTests(unittest.TestCase):
                 self.assertTrue(samples)
                 self.assertEqual(samples[0][1], min(5, delay))
                 self.assertEqual(len({sample[0] for sample in samples}), len(samples))
-                self.assertTrue(all(sample[2:] == (MotionJobOperation.SOLVE, SolveStatus.SOLVED)
-                                    for sample in samples))
+                self.assertEqual(samples[0][2:],
+                                 (MotionJobOperation.SOLVE, SolveStatus.SOLVED))
+                # D113 also samples current revalidation deliveries. Neither
+                # faster revalidation nor a later solve may lower the estimate.
+                self.assertEqual([sample[1] for sample in samples],
+                                 sorted(sample[1] for sample in samples))
                 self.assertFalse(result.violations)
 
     def test_fast_alignment_revalidation_keeps_complete_solve_preparation(self):

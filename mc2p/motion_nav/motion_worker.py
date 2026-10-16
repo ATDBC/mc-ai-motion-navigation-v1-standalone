@@ -541,6 +541,8 @@ class MotionResultInbox:
         # other diagnostic histories owned by this inbox.
         self._receiver_diagnostics = deque(maxlen=4096)
         self._diagnostic_consumed = deque(maxlen=self.MAX_HISTORY)
+        self._diagnostic_visible = deque(maxlen=self.MAX_HISTORY)
+        self._diagnostic_taken = deque(maxlen=self.MAX_HISTORY)
         self._receiver_diagnostics_enabled = False
         self._diagnostic_cycle = 0
         self._diagnostic_movement_tick: int | None = None
@@ -569,11 +571,12 @@ class MotionResultInbox:
             self._diagnostic_movement_tick = movement_tick
 
     def _diagnostic_tick_locked(self) -> int | None:
+        # The caller's published control clock can be newer than prepared
+        # admission facts. Reading it must never update those body facts.
+        if self._diagnostic_movement_tick is not None:
+            return self._diagnostic_movement_tick
         current = self._current_facts
-        return (
-            current.movement_tick
-            if current is not None else self._diagnostic_movement_tick
-        )
+        return None if current is None else current.movement_tick
 
     def _mark_diagnostic_consumed_locked(self, identity: AsyncWorkIdentity) -> bool:
         """Remember one first-consume row without retaining identities forever."""
@@ -581,6 +584,29 @@ class MotionResultInbox:
             return False
         self._diagnostic_consumed.append(identity)
         return True
+
+    def _record_control_read_locked(self, identity: AsyncWorkIdentity, *, tick: int | None,
+                                    access_kind: str, consumed: bool = False) -> None:
+        if not self._receiver_diagnostics_enabled:
+            return
+        visible = identity not in self._diagnostic_visible
+        consume = consumed and self._mark_diagnostic_consumed_locked(identity)
+        take = access_kind == "legacy_take" and identity not in self._diagnostic_taken
+        if not (visible or consume or take):
+            return
+        row = dict(schema_version="mc2p.motion-receiver-diagnostic.v4",
+                   identity=repr(identity.key), movement_tick=tick,
+                   monotonic_ns=time.perf_counter_ns(), access_kind=access_kind,
+                   removes_result=access_kind == "legacy_take")
+        if visible:
+            self._diagnostic_visible.append(identity)
+            self._receiver_diagnostics.append(dict(row, event="first_control_visible"))
+        if consume:
+            # Preserve the historical take / prepared READY consumption endpoint.
+            self._receiver_diagnostics.append(dict(row, event="first_control_consume"))
+        if take:
+            self._diagnostic_taken.append(identity)
+            self._receiver_diagnostics.append(dict(row, event="result_take"))
 
     def attach_worker(self, worker: MotionWorkerPort) -> None:
         if not isinstance(worker, MotionWorkerPort):
@@ -706,7 +732,8 @@ class MotionResultInbox:
         self._wake.set()
         return True
 
-    def mark_submitted(self, identity: AsyncWorkIdentity) -> None:
+    def mark_submitted(self, identity: AsyncWorkIdentity, *,
+                       job_anchor_movement_tick: int | None = None) -> None:
         """Record the legacy owner's existing nonblocking submission fact."""
         if type(identity) is not AsyncWorkIdentity:
             raise ContractViolation("motion submission requires the existing typed computation identity")
@@ -716,16 +743,20 @@ class MotionResultInbox:
             if record is not None and not record.finished:
                 record.submitted = True
                 submitted = True
-                if self._receiver_diagnostics_enabled:
-                    self._receiver_diagnostics.append({
-                        "schema_version": "mc2p.motion-receiver-diagnostic.v3",
-                        "event": "worker_submit",
-                        "identity": repr(identity.key),
-                        "movement_tick": self._diagnostic_tick_locked(),
-                        "monotonic_ns": time.perf_counter_ns(),
-                    })
+                self._record_worker_submit_locked(identity, job_anchor_movement_tick)
         if submitted:
             self._wake.set()
+
+    def _record_worker_submit_locked(self, identity, job_anchor_movement_tick=None,
+                                     prepared_entry_state_movement_tick=None) -> None:
+        if self._receiver_diagnostics_enabled:
+            tick = self._diagnostic_tick_locked()
+            self._receiver_diagnostics.append(dict(
+                schema_version="mc2p.motion-receiver-diagnostic.v4", event="worker_submit",
+                identity=repr(identity.key), movement_tick=tick, worker_submit_tick=tick,
+                job_anchor_movement_tick=job_anchor_movement_tick,
+                prepared_entry_state_movement_tick=prepared_entry_state_movement_tick,
+                monotonic_ns=time.perf_counter_ns()))
 
     def prepare_snapshot(self, bounds: PhysicsWorldBounds, *, ruleset: PhysicsRuleset,
                          identity: AsyncWorkIdentity) -> SnapshotLeaseResult:
@@ -1163,15 +1194,8 @@ class MotionResultInbox:
                 return self._OVERDUE
             if registered is None:
                 return self._NOT_READY
-            if (self._receiver_diagnostics_enabled
-                    and self._mark_diagnostic_consumed_locked(identity)):
-                self._receiver_diagnostics.append({
-                    "schema_version": "mc2p.motion-receiver-diagnostic.v2",
-                    "event": "first_control_consume",
-                    "identity": repr(identity.key),
-                    "movement_tick": movement_tick,
-                    "monotonic_ns": time.perf_counter_ns(),
-                })
+            self._record_control_read_locked(identity, tick=movement_tick,
+                access_kind="prepared_ready_query", consumed=True)
             # Returning a cached object also avoids the value constructor's
             # recursive immutable-graph check on the control thread.
             # This is registration availability, not entry/body authorization.
@@ -1212,15 +1236,9 @@ class MotionResultInbox:
             raise ContractViolation("motion inbox take requires typed identity")
         with self._lock:
             result = self._results.pop(identity, None)
-            if (result is not None and self._receiver_diagnostics_enabled
-                    and self._mark_diagnostic_consumed_locked(identity)):
-                self._receiver_diagnostics.append({
-                    "schema_version": "mc2p.motion-receiver-diagnostic.v2",
-                    "event": "first_control_consume",
-                    "identity": repr(identity.key),
-                    "movement_tick": self._diagnostic_tick_locked(),
-                    "monotonic_ns": time.perf_counter_ns(),
-                })
+            if result is not None:
+                self._record_control_read_locked(identity, tick=self._diagnostic_tick_locked(),
+                    access_kind="legacy_take", consumed=True)
         return () if result is None else (result,)
 
     def drain_receiver_diagnostics(self) -> tuple[dict, ...]:
@@ -1234,7 +1252,11 @@ class MotionResultInbox:
         if type(identity) is not AsyncWorkIdentity:
             raise ContractViolation("motion inbox peek requires typed identity")
         with self._lock:
-            return self._results.get(identity)
+            result = self._results.get(identity)
+            if result is not None:
+                self._record_control_read_locked(identity, tick=self._diagnostic_tick_locked(),
+                    access_kind="legacy_peek")
+            return result
 
     def _remember_locked(self, record: _MotionAdmissionRecord) -> None:
         # Historical records hold diagnostics only, never the large object graph.
@@ -1353,6 +1375,8 @@ class MotionResultInbox:
             with self._lock:
                 record.processing = False
                 record.submitted = submitted
+                if submitted:
+                    self._record_worker_submit_locked(record.identity, anchor.movement_tick_id)
                 if not submitted:
                     self._results[record.identity] = GapMotionSolveResult(record.identity.subject_id,
                         record.identity.revision, SolveResult(SolveStatus.INTERNAL_ERROR,
@@ -1448,6 +1472,11 @@ class MotionResultInbox:
             with self._lock:
                 record.processing = False
                 record.submitted = submitted
+                if submitted:
+                    # A prepared request binds a predicted entry state, not a
+                    # job anchor. Keep that label separate from submission.
+                    self._record_worker_submit_locked(record.identity,
+                        prepared_entry_state_movement_tick=request.entry_state.movement_tick_id)
                 if not submitted:
                     record.submission = PreparedSubmitResult(PreparedSubmitStatus.QUEUE_FULL)
                     record.computation = PreparedComputeResult(PreparedComputeStatus.BUDGET_EXHAUSTED,

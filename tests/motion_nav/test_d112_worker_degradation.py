@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 import unittest
+from unittest.mock import patch
 
 from mc2p.contracts.behavior import BehaviorProfileV0
 from tests.motion_nav.test_action_continuity_formal import (
@@ -148,10 +149,23 @@ class D112WorkerDegradationTests(unittest.TestCase):
                 self.assertEqual(result.outcome, "failed", result.reason)
                 self.assertEqual(
                     result.reason,
-                    "motion_unsolvable:motion_inbox_capacity_exhausted",
+                    "motion_unsolvable:motion_solver_request_expired",
                 )
                 self.assertEqual(worker.observed_deliveries, [])
                 self.assertEqual(len(worker.jobs), 2)
+
+    def test_capacity_rejected_before_any_timeout_keeps_capacity_detail(self):
+        from mc2p.motion_nav.motion_worker import MotionResultInbox
+
+        worker = _AliveNoResultWorker(delivery_polls=0)
+        # Reject the initial request, before any request can expire.
+        with patch.object(MotionResultInbox, "register", return_value=False):
+            result = self._run(_gap_case(), worker)
+        self._assert_bounded_and_safe(result)
+        self._assert_no_blind_strict_start(result, worker)
+        self.assertEqual(result.outcome, "failed", result.reason)
+        self.assertEqual(result.reason, "motion_unsolvable:motion_inbox_capacity_exhausted")
+        self.assertEqual(worker.jobs, [])
 
     def test_losing_command_after_release_safe_boundaries_recovers(self):
         for action, case in _action_cases().items():

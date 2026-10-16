@@ -6,6 +6,7 @@ import gc
 import json
 import math
 from pathlib import Path
+import sys
 import threading
 import time
 from typing import Callable, Mapping
@@ -162,6 +163,83 @@ def _b10_coordinator_scenarios() -> tuple[_B10CoordinatorScenario, ...]:
     return tuple(scenarios)
 
 
+_D113_TARGETED_PROBE = "coordinator-worker-delay-5-0-0"
+
+
+def _selected_b10_coordinator_scenarios(targeted_probe: str | None):
+    if targeted_probe is None:
+        return _b10_coordinator_scenarios()
+    if type(targeted_probe) is not str or targeted_probe != _D113_TARGETED_PROBE:
+        raise ValueError("only the explicit D113 5-tick targeted probe is supported")
+    return tuple(scenario for scenario in _b10_coordinator_scenarios()
+                 if f"coordinator-{scenario.name}" == targeted_probe)
+
+
+def _targeted_b10_summary(trials: list[dict], *, runtime_state: str):
+    """One-case diagnostic evidence can never sign the frozen formal matrix."""
+    one_case = len(trials) == 1 and trials[0].get("name") == _D113_TARGETED_PROBE
+    trial = trials[0] if one_case else {}
+    deliveries = trial.get("worker_delivery", ())
+    injection = trial.get("worker_injection", {})
+    submissions = injection.get("submissions", ())
+    # Do not trust a cached delay value or a receiver/take endpoint as visibility.
+    identity_chain = one_case and bool(submissions) and not injection.get("stale_result_count", 0)
+    identities = [row.get("identity") for row in submissions]
+    identity_chain = bool(identity_chain
+        and all(type(identity) is str and identity for identity in identities)
+        and len(set(identities)) == len(identities)
+        and set(identities) == {row.get("identity") for row in deliveries})
+    for submission in submissions:
+        matches = [row for row in deliveries if row.get("identity") == submission.get("identity")]
+        identity_chain = identity_chain and len(matches) == 1
+        if len(matches) != 1:
+            continue
+        delivery = matches[0]
+        submit = submission.get("worker_submit_tick")
+        visible = submission.get("first_control_visible_tick")
+        identity_chain = identity_chain and (
+            type(submit) is int and type(visible) is int and visible - submit == 5
+            and submission.get("injection_status") == "matched"
+            and submission.get("target_visible_tick") == visible
+            and submission.get("requested_delivery_ticks") == 5
+            and submission.get("actual_delivery_ticks") == 5
+            and delivery.get("worker_submit_tick") == submit
+            and delivery.get("first_control_visible_tick") == visible)
+    chain = trial.get("delivery_chain") or {}
+    first = next((sample for sample in trial.get("samples", ())
+                  if sample.get("verified_command_index") == 0), {})
+    ticks = [chain.get(key) for key in (
+        "worker_submit_tick", "receiver_observed_result_tick", "registry_publish_tick",
+        "first_control_visible_tick", "first_control_consume_tick", "result_take_tick")]
+    identity_chain = bool(identity_chain and trial.get("complete_delivery_chain")
+        and chain.get("identity") == trial.get("motion_identity") == first.get("motion_identity")
+        and any(row.get("identity") == chain.get("identity") for row in submissions)
+        and all(type(tick) is int for tick in ticks)
+        and ticks == sorted(ticks)
+        and type(first.get("grant_movement_tick")) is int
+        and type(first.get("expected_movement_tick")) is int
+        and ticks[-1] <= first["grant_movement_tick"] < first["expected_movement_tick"]
+        and all(sample.get("actual_minus_latest_ticks") is not None
+                and sample["actual_minus_latest_ticks"] <= 0
+                for sample in trial.get("samples", ())
+                if sample.get("verified_command_index") is not None))
+    safe_complete = bool(one_case and trial.get("terminal_state") == "complete"
+        and trial.get("landed") and trial.get("damage_points") == 0.
+        and trial.get("source_released") and trial.get("horizontal_collisions") == 0
+        and trial.get("horizontal_error_blocks", float("inf")) <= .2
+        and trial.get("level_error_blocks", float("inf")) <= .03
+        and runtime_state == "ready")
+    summary = dict(schema_version="mc2p.d113-targeted-probe.v1", mode="targeted_probe",
+                   partial=False, matrix_complete=False, formal_acceptance_eligible=False,
+                   targeted_probe=_D113_TARGETED_PROBE, coordinator_preregistered_count=1,
+                   coordinator_executed_count=len(trials), coordinator_trials=trials,
+                   runtime_state=runtime_state, actual_5_tick_identity_chain=identity_chain)
+    checks = [dict(name="d113_targeted_one_case_only", passed=one_case),
+              dict(name="d113_targeted_actual_5_tick_identity_chain", passed=identity_chain),
+              dict(name="d113_targeted_safe_complete_and_runtime_usable", passed=safe_complete)]
+    return summary, checks
+
+
 @dataclass(slots=True)
 class _DelayedWorkerSubmission:
     generation: int
@@ -170,6 +248,12 @@ class _DelayedWorkerSubmission:
     worker_observe_tick: int | None = None
     wrapper_publish_tick: int | None = None
     discarded_as_stale: bool = False
+    job_anchor_movement_tick: int | None = None
+    operation: str | None = None
+    requested_delivery_ticks: int = 0
+    target_visible_tick: int | None = None
+    first_control_visible_tick: int | None = None
+    injection_status: str = "incomplete"
 
     def evidence(self) -> dict:
         return {
@@ -178,6 +262,15 @@ class _DelayedWorkerSubmission:
             "worker_observe_tick": self.worker_observe_tick,
             "wrapper_publish_tick": self.wrapper_publish_tick,
             "discarded_as_stale": self.discarded_as_stale,
+            "job_anchor_movement_tick": self.job_anchor_movement_tick,
+            "operation": self.operation,
+            "worker_submit_tick": self.submit_tick,
+            "requested_delivery_ticks": self.requested_delivery_ticks,
+            "target_visible_tick": self.target_visible_tick,
+            "first_control_visible_tick": self.first_control_visible_tick,
+            "actual_delivery_ticks": (None if self.first_control_visible_tick is None
+                                      else self.first_control_visible_tick - self.submit_tick),
+            "injection_status": self.injection_status,
         }
 
 
@@ -193,12 +286,10 @@ def _motion_worker_item_key(value) -> tuple[str, object] | None:
 
 
 class _MovementTickDelayedMotionWorker:
-    """Harness-only port that withholds real worker results by movement tick.
+    """Harness-only first-control-read gate; receiver publication stays natural.
 
-    The wrapper never sleeps and never owns the real worker.  A result is first
-    removed from the real worker queue, then published only after the requested
-    number of observed Minecraft movement ticks.  Trial generations prevent a
-    never-return result from leaking into the next NavigationSession.
+    Only never-return withholds results on the worker port, so unfinished work
+    continues to occupy real inbox slots. The real worker remains outer-owned.
     """
 
     def __init__(self, worker) -> None:
@@ -215,6 +306,71 @@ class _MovementTickDelayedMotionWorker:
             tuple[object, _DelayedWorkerSubmission, int | None]
         ] = []
         self._stale_result_count = 0
+        self._gate_inbox = None
+        self._gate_originals = {}
+
+    def install_read_gate(self, inbox) -> None:
+        from mc2p.motion_nav.async_work import AsyncWorkIdentity
+        from mc2p.contracts.common import require_nonnegative_int
+        from mc2p.motion_nav.motion_worker import MotionResultInbox
+        if type(inbox) is not MotionResultInbox:
+            raise TypeError("B10 gate requires the existing typed inbox instance")
+        if self._gate_inbox is not None:
+            raise RuntimeError("B10 read gate already installed")
+        self._gate_inbox = inbox
+        self._gate_originals = {name: getattr(inbox, name) for name in ("peek", "take", "query_prepared")}
+
+        def read(name, identity, **kwargs):
+            if type(identity) is not AsyncWorkIdentity:
+                # Invoke the public validator before the harness can hide work.
+                return self._gate_originals[name](identity, **kwargs)
+            if name == "query_prepared":
+                require_nonnegative_int(kwargs["movement_tick"], "prepared query movement tick")
+            with self._lock:
+                record = self._submissions.get(("identity", identity))
+                tick = self._movement_tick
+                if (self._scenario is None or record is None
+                        or record.generation != self._generation):
+                    # A registered request can be polled before its worker
+                    # accepts it. Missing submission alone is not a stale result.
+                    if record is not None:
+                        self._stale_result_count += 1
+                        record.discarded_as_stale = True
+                        record.injection_status = "old_generation"
+                    return invisible(name)
+                target = record.target_visible_tick
+                if self._scenario.never_return or tick is None or (target is not None and tick < target):
+                    return invisible(name)
+            value = self._gate_originals[name](identity, **kwargs)
+            ready = (value is not None if name == "peek" else bool(value) if name == "take"
+                     else value.status is PreparedQueryStatus.READY_MATCH)
+            with self._lock:
+                if record.first_control_visible_tick is None:
+                    if ready:
+                        record.first_control_visible_tick = tick
+                        if record.injection_status == "incomplete":
+                            record.injection_status = ("matched" if target is None or tick == target
+                                                       else "control_tick_skipped")
+                    elif target is not None and tick >= target and record.injection_status == "incomplete":
+                        record.injection_status = ("worker_not_ready" if tick == target
+                                                   else "control_tick_skipped")
+            return value
+
+        def invisible(name):
+            return None if name == "peek" else () if name == "take" else inbox._NOT_READY
+
+        from mc2p.motion_nav.motion_worker import PreparedQueryStatus
+        inbox.peek = lambda identity: read("peek", identity)
+        inbox.take = lambda identity: read("take", identity)
+        inbox.query_prepared = lambda identity, *, movement_tick: read(
+            "query_prepared", identity, movement_tick=movement_tick)
+
+    def _remove_read_gate(self) -> None:
+        if self._gate_inbox is not None:
+            for name, native in self._gate_originals.items():
+                setattr(self._gate_inbox, name, native)
+        self._gate_inbox = None
+        self._gate_originals = {}
 
     def begin_trial(
             self, scenario: _B10CoordinatorScenario, *, movement_tick: int,
@@ -227,6 +383,8 @@ class _MovementTickDelayedMotionWorker:
             if self._scenario is not None:
                 raise RuntimeError("B10 delayed worker trial is already active")
             self._generation += 1
+            self._submissions = {key: record for key, record in self._submissions.items()
+                                 if record.generation >= self._generation - 1}
             self._scenario = scenario
             self._movement_tick = movement_tick
             self._trial_submissions = []
@@ -252,14 +410,25 @@ class _MovementTickDelayedMotionWorker:
             if key is None:
                 raise TypeError("B10 delayed worker cannot identify submitted work")
             record = _DelayedWorkerSubmission(
-                self._generation, repr(key[1]), self._movement_tick,
+                self._generation, repr(getattr(key[1], "key", key[1])), self._movement_tick,
+                job_anchor_movement_tick=getattr(getattr(job, "anchor", None), "movement_tick_id", None),
+                operation=getattr(getattr(job, "operation", None), "value", None),
+                requested_delivery_ticks=self._scenario.worker_delay_ticks,
+                target_visible_tick=(None if self._scenario.never_return or self._scenario.kind == "baseline"
+                                     else self._movement_tick + self._scenario.worker_delay_ticks),
             )
             self._submissions[key] = record
+            prepared_identity = getattr(getattr(job, "request", None), "async_identity", None)
+            if prepared_identity is not None:
+                self._submissions[("identity", prepared_identity)] = record
+                record.identity = repr(prepared_identity.key)
             self._trial_submissions.append(record)
         submitted = self._worker.submit(job)
         if not submitted:
             with self._lock:
                 self._submissions.pop(key, None)
+                if prepared_identity is not None:
+                    self._submissions.pop(("identity", prepared_identity), None)
                 self._trial_submissions.remove(record)
         return submitted
 
@@ -279,10 +448,7 @@ class _MovementTickDelayedMotionWorker:
                     self._stale_result_count += 1
                     continue
                 record.worker_observe_tick = tick
-                due_tick = (
-                    None if scenario.never_return
-                    else record.submit_tick + scenario.worker_delay_ticks
-                )
+                due_tick = None if scenario.never_return else record.submit_tick
                 self._held.append((result, record, due_tick))
             released: list[object] = []
             retained = []
@@ -298,6 +464,7 @@ class _MovementTickDelayedMotionWorker:
             return tuple(released)
 
     def end_trial(self) -> dict:
+        self._remove_read_gate()
         with self._lock:
             if self._scenario is None:
                 raise RuntimeError("B10 delayed worker has no active trial")
@@ -325,6 +492,7 @@ class _MovementTickDelayedMotionWorker:
 
     def close(self) -> None:
         # The outer B10 lifecycle owns and closes the real process worker.
+        self._remove_read_gate()
         with self._lock:
             self._scenario = None
             self._movement_tick = None
@@ -337,6 +505,20 @@ class _MovementTickDelayedMotionWorker:
 
 class _B10EvidenceOverflow(RuntimeError):
     """The bounded B10 evidence buffer could not retain every row."""
+
+
+def _worker_injection_valid(trial: dict) -> bool:
+    injection = trial.get("worker_injection", {})
+    if injection.get("stale_result_count", 0):
+        return False
+    if trial["scenario_kind"] != "worker_delay":
+        return True
+    submissions = injection.get("submissions", ())
+    return bool(submissions) and all(
+        row["injection_status"] == "matched"
+        and row["first_control_visible_tick"] == row["target_visible_tick"]
+        and row["actual_delivery_ticks"] == row["requested_delivery_ticks"]
+        for row in submissions)
 
 
 @dataclass(frozen=True, slots=True)
@@ -438,13 +620,15 @@ class _B10EvidenceBuffer:
         self._bytes[stream] += size
         return True
 
-    def collect_receiver(self, inbox, trial: str) -> None:
+    def collect_receiver(self, inbox, trial: str, *, episode_id: str | None = None) -> None:
         if type(trial) is not str or not trial or len(trial) > 128:
             raise ValueError("receiver diagnostic trial id is invalid")
         for row in inbox.drain_receiver_diagnostics():
             if type(row) is not dict or len(row) > 16:
                 raise ValueError("receiver diagnostic row is not a small record")
             fields: dict[str, str | int | bool | None] = {"trial": trial}
+            if episode_id is not None:
+                fields["episode_id"] = episode_id
             for key, value in row.items():
                 if type(key) is not str or type(value) not in (str, int, bool, type(None)):
                     raise ValueError("receiver diagnostic row contains a non-scalar field")
@@ -753,6 +937,30 @@ def _solve_measurement_summary(trials: list[dict]) -> dict:
     )
 
 
+def _partial_b10_summary(evidence_buffer, gc_timeline, *, targeted_probe=None) -> dict:
+    """Report retained evidence on failure, without manufacturing later gates."""
+    trials = list(evidence_buffer.rows("b10-gap-solver-trials.jsonl"))
+    coordinator = list(evidence_buffer.rows("b10-coordinator-trials.jsonl"))
+    times = [trial["solve_time_ns"] for trial in trials]
+    return dict(
+        schema_version="mc2p.b10-partial-summary.v1", partial=True, matrix_complete=False,
+        mode="targeted_probe" if targeted_probe is not None else "formal_matrix",
+        formal_acceptance_eligible=targeted_probe is None,
+        targeted_probe=targeted_probe,
+        synchronous_probe_timing=dict(scope="synchronous_probe_only", disposition="report_only",
+            planned_count=0 if targeted_probe is not None else 142,
+            completed_count=len(trials), warning_threshold_ns=30_000_000,
+            warning_count=sum(value >= 30_000_000 for value in times)),
+        coordinator_matrix=dict(planned_count=len(_selected_b10_coordinator_scenarios(targeted_probe)),
+                                recorded_count=len(coordinator),
+                                completed_count=sum(row.get("terminal_state") == "complete" for row in coordinator)),
+        solve_time_ns=dict(samples=len(times), p95=_percentile(times, .95) if times else None,
+            p99=_percentile(times, .99) if times else None, maximum=max(times) if times else None),
+        **_solve_measurement_summary(trials), **_attribute_solve_gc_pauses(trials, gc_timeline),
+        trials=trials, coordinator_trials=coordinator,
+    )
+
+
 def _receiver_diagnostic_summary(rows: list[dict]) -> dict:
     cycles = [row for row in rows if row.get("event") == "receiver_cycle"]
     durations = [row["duration_ns"] for row in cycles
@@ -769,10 +977,15 @@ def _receiver_diagnostic_summary(rows: list[dict]) -> dict:
     consumed = {row.get("identity"): row for row in rows
                 if row.get("event") == "first_control_consume"
                 and type(row.get("identity")) is str}
+    visible = {row.get("identity"): row for row in rows
+               if row.get("event") == "first_control_visible" and type(row.get("identity")) is str}
+    taken = {row.get("identity"): row for row in rows
+             if row.get("event") == "result_take" and type(row.get("identity")) is str}
     delivery = []
     invisible_next_decision = 0
     unavailable = 0
-    for identity, publish in published.items():
+    for identity in dict.fromkeys((*submitted, *observed, *published)):
+        publish = published.get(identity, {})
         submit = submitted.get(identity)
         observed_row = observed.get(identity)
         consume = consumed.get(identity)
@@ -781,6 +994,9 @@ def _receiver_diagnostic_summary(rows: list[dict]) -> dict:
         )
         publish_tick = publish.get("movement_tick")
         consume_tick = None if consume is None else consume.get("movement_tick")
+        visible_tick = visible.get(identity, {}).get("movement_tick")
+        take_tick = taken.get(identity, {}).get("movement_tick")
+        submit_tick = None if submit is None else submit.get("worker_submit_tick", submit.get("movement_tick"))
         if not all(type(value) is int for value in
                    (observed_tick, publish_tick, consume_tick)):
             unavailable += 1
@@ -788,12 +1004,15 @@ def _receiver_diagnostic_summary(rows: list[dict]) -> dict:
             invisible_next_decision += 1
         delivery.append({
             "identity": identity,
-            "worker_submit_tick": (
-                None if submit is None else submit.get("movement_tick")
-            ),
+            "worker_submit_tick": submit_tick,
+            "job_anchor_movement_tick": None if submit is None else submit.get("job_anchor_movement_tick"),
             "receiver_observed_result_tick": observed_tick,
             "registry_publish_tick": publish_tick,
             "first_control_consume_tick": consume_tick,
+            "first_control_visible_tick": visible_tick,
+            "result_take_tick": take_tick,
+            "actual_delivery_ticks": (visible_tick - submit_tick
+                if type(visible_tick) is int and type(submit_tick) is int else None),
             "receiver_observed_to_registry_publish_ticks": (
                 None if type(observed_tick) is not int or type(publish_tick) is not int
                 else publish_tick - observed_tick
@@ -825,7 +1044,7 @@ def _receiver_diagnostic_summary(rows: list[dict]) -> dict:
         for item in delivery
     )
     return {
-        "schema_version": "mc2p.b10-receiver-diagnostic-summary.v3",
+        "schema_version": "mc2p.b10-receiver-diagnostic-summary.v4",
         "worker_completion_to_receiver_observed": {
             "status": "available" if completion_available else "unavailable",
             "available_count": completion_available,
@@ -1042,12 +1261,14 @@ def run_b10_gap_solver_runtime(
     player_teleporter: Callable[[float, float, float, float, float], None],
     *, pipeline_diagnostic: Callable[[], dict] | None = None,
     lifecycle_report: dict | None = None,
+    targeted_probe: str | None = None,
 ) -> tuple[dict, list[dict], list[dict]]:
     """Keep workers alive and preserve the first execution failure.
 
     Cleanup is reported separately because raising from a ``finally`` block
     would replace the Runtime/driver failure that caused cleanup to start.
     """
+    _selected_b10_coordinator_scenarios(targeted_probe)  # Validate before acquiring resources.
     report = {} if lifecycle_report is None else lifecycle_report
     report.clear()
     report.update(
@@ -1098,6 +1319,7 @@ def run_b10_gap_solver_runtime(
             evidence_buffer=evidence_buffer,
             gc_timeline=gc_timeline,
             pipeline_diagnostic=pipeline_diagnostic,
+            targeted_probe=targeted_probe,
         )
         completed = True
     except BaseException as error:
@@ -1105,6 +1327,15 @@ def run_b10_gap_solver_runtime(
         primary_traceback = error.__traceback__
     finally:
         gc_timeline.close()
+        if not completed:
+            try:
+                partial = _partial_b10_summary(evidence_buffer, gc_timeline, targeted_probe=targeted_probe)
+                partial["primary_error_type"] = None if primary is None else type(primary).__name__
+                (directory / "b10-gap-solver-partial-summary.json").write_text(
+                    strict_json_dumps(partial) + "\n", encoding="utf-8")
+                report["partial_summary"] = "b10-gap-solver-partial-summary.json"
+            except BaseException as error:
+                cleanup_failure("partial_summary", error)
         if manual_source is not None:
             if getattr(getattr(runtime, "state", None), "value", None) == "ready":
                 try:
@@ -1178,6 +1409,7 @@ def _run_b10_gap_solver_runtime(
     evidence_buffer: _B10EvidenceBuffer,
     gc_timeline: _GCPauseTimeline,
     pipeline_diagnostic: Callable[[], dict] | None = None,
+    targeted_probe: str | None = None,
 ) -> tuple[dict, list[dict], list[dict]]:
     """Solve and execute frozen trials, including the default coordinator."""
     task = TaskIntentV0(
@@ -1640,6 +1872,7 @@ def _run_b10_gap_solver_runtime(
         )
         trial = dict(
             name=f"{group}-{direction_index}-{repetition}",
+            episode_id=episode,
             group=group, direction_index=direction_index, repetition=repetition,
             moving_exit=moving_exit,
             requested_speed_band=list(speed_band) if speed_band is not None else None,
@@ -1667,17 +1900,18 @@ def _run_b10_gap_solver_runtime(
         trials.append(trial)
         evidence_buffer.append("b10-gap-solver-trials.jsonl", trial)
 
-    run_trial(0, 0, "preflight")
-    for direction_index in range(4):
-        for repetition in range(10):
-            run_trial(direction_index, repetition, "validation")
-    run_trial(0, 0, "turn_preflight", moving_exit=True)
-    for direction_index in range(4):
-        for repetition in range(10):
-            run_trial(
-                direction_index, repetition, "turn_validation",
-                moving_exit=True,
-            )
+    if targeted_probe is None:
+        run_trial(0, 0, "preflight")
+        for direction_index in range(4):
+            for repetition in range(10):
+                run_trial(direction_index, repetition, "validation")
+        run_trial(0, 0, "turn_preflight", moving_exit=True)
+        for direction_index in range(4):
+            for repetition in range(10):
+                run_trial(
+                    direction_index, repetition, "turn_validation",
+                    moving_exit=True,
+                )
 
     environment = load_frozen_environment(CONFIG / "environment-v1.json")
     catalog = BlockMotionCatalog.load(
@@ -1707,7 +1941,7 @@ def _run_b10_gap_solver_runtime(
     )
     coordinator_trials: list[dict] = []
     def collect_receiver_diagnostics(session: NavigationSession, trial: str) -> None:
-        evidence_buffer.collect_receiver(session._motion_result_inbox, trial)
+        evidence_buffer.collect_receiver(session._motion_result_inbox, trial, episode_id=episode)
 
     def anchor_now() -> StateAnchor:
         if latest_application is None:
@@ -1727,7 +1961,7 @@ def _run_b10_gap_solver_runtime(
         )
 
     delayed_motion_worker = _MovementTickDelayedMotionWorker(motion_worker)
-    coordinator_scenarios = _b10_coordinator_scenarios()
+    coordinator_scenarios = _selected_b10_coordinator_scenarios(targeted_probe)
     for scenario_index, scenario in enumerate(coordinator_scenarios):
         direction_index = scenario.direction_index
         repetition = scenario.repetition
@@ -1780,6 +2014,7 @@ def _run_b10_gap_solver_runtime(
             motion_worker=delayed_motion_worker,
             observation_adapter=runtime.navigation_observation_adapter,
         )
+        delayed_motion_worker.install_read_gate(session._motion_result_inbox)
         source = runtime.register_ordered_source(route_id)
         session.bind_source(source)
         trial = None
@@ -1819,6 +2054,7 @@ def _run_b10_gap_solver_runtime(
                     proposal_started_ns
                     - runtime.observation.received_at_monotonic_ns,
                 )
+                decision_observation_sequence_id = runtime.observation.sequence_id
                 proposal = session.propose(
                     frame,
                     current_anchor,
@@ -1893,7 +2129,13 @@ def _run_b10_gap_solver_runtime(
                         evidence_buffer.append(
                             "b10-coordinator-control-frames.jsonl",
                             {
+                                "schema_version": "mc2p.b10-coordinator-control-frame.v2",
                                 "trial": trial_name,
+                                "episode_id": episode,
+                                "scenario_kind": scenario.kind,
+                                "control_sequence_id": idle.decision.action.request_sequence_id,
+                                "decision_observation_sequence_id": decision_observation_sequence_id,
+                                "result_observation_sequence_id": frame.body.sequence_id,
                                 "observation_sequence_id": frame.body.sequence_id,
                                 "session_state": proposal.report.state.value,
                                 "decision_state": (
@@ -2023,7 +2265,12 @@ def _run_b10_gap_solver_runtime(
                 evidence_buffer.append(
                     "b10-coordinator-control-frames.jsonl",
                     {
+                        "schema_version": "mc2p.b10-coordinator-control-frame.v2",
                         "trial": trial_name,
+                        "episode_id": episode,
+                        "scenario_kind": scenario.kind,
+                        "decision_observation_sequence_id": decision_observation_sequence_id,
+                        "result_observation_sequence_id": frame.body.sequence_id,
                         "observation_sequence_id": frame.body.sequence_id,
                         "session_state": proposal.report.state.value,
                         **sample,
@@ -2129,14 +2376,38 @@ def _run_b10_gap_solver_runtime(
                 samples=samples,
             )
         finally:
-            collect_receiver_diagnostics(session, trial_name)
+            primary_failure = sys.exc_info()[1]
+            cleanup_errors = []
+
+            def cleanup(stage, operation):
+                try:
+                    return operation()
+                except BaseException as error:
+                    cleanup_errors.append((stage, error))
+
+            cleanup("receiver_diagnostics", lambda: collect_receiver_diagnostics(session, trial_name))
             if runtime.state.value == "ready":
-                runtime.cancel_source(source.source_id)
-                runtime.unregister_ordered_source(source)
-                source_released = True
-            session.unbind_source(source)
-            session.close()
-            worker_injection = delayed_motion_worker.end_trial()
+                cleanup("source_cancel", lambda: runtime.cancel_source(source.source_id))
+                before_unregister = len(cleanup_errors)
+                cleanup("source_unregister", lambda: runtime.unregister_ordered_source(source))
+                source_released = len(cleanup_errors) == before_unregister
+            cleanup("session_unbind", lambda: session.unbind_source(source))
+            cleanup("session_close", session.close)
+            worker_injection = cleanup("injection_end_trial", delayed_motion_worker.end_trial)
+            if primary_failure is not None or cleanup_errors:
+                partial_trial = dict(
+                    name=trial_name, scenario=scenario.name, scenario_kind=scenario.kind,
+                    fabric_supported=True, partial=True,
+                    terminal_state="incomplete", primary_error_type=(type(primary_failure).__name__
+                        if primary_failure is not None else type(cleanup_errors[0][1]).__name__),
+                    source_released=source_released, worker_injection=worker_injection,
+                    cleanup_failures=[dict(stage=stage, type=type(error).__name__)
+                                      for stage, error in cleanup_errors],
+                )
+                cleanup("partial_trial_evidence", lambda: evidence_buffer.append(
+                    "b10-coordinator-trials.jsonl", partial_trial))
+            if primary_failure is None and cleanup_errors:
+                raise cleanup_errors[0][1]
         if trial is None:
             raise RuntimeError(
                 f"B10 coordinator trial did not produce evidence: {trial_name}"
@@ -2148,6 +2419,11 @@ def _run_b10_gap_solver_runtime(
         trial["worker_injection"] = worker_injection
         coordinator_trials.append(trial)
         evidence_buffer.append("b10-coordinator-trials.jsonl", trial)
+
+    if targeted_probe is not None:
+        summary, checks = _targeted_b10_summary(coordinator_trials, runtime_state=runtime.state.value)
+        write_json_atomic(directory / "b10-gap-solver.json", summary)
+        return summary, [json.loads(row) for row in rows], checks
 
     moving_negative_trials: list[dict] = []
     speed_bands = ((.5, 1.0), (1.0, 2.0), (2.0, 3.0))
@@ -2435,7 +2711,8 @@ def _run_b10_gap_solver_runtime(
 
     def coordinator_completed(trial: dict) -> bool:
         return (
-            trial["terminal_state"] == NavigationSessionState.COMPLETE.value
+            _worker_injection_valid(trial)
+            and trial["terminal_state"] == NavigationSessionState.COMPLETE.value
             and trial["landed"]
             and trial["horizontal_error_blocks"] <= .2
             and trial["level_error_blocks"] <= .03
@@ -2446,7 +2723,8 @@ def _run_b10_gap_solver_runtime(
 
     def coordinator_typed_safe_terminal(trial: dict) -> bool:
         return (
-            trial["terminal_state"] in {
+            _worker_injection_valid(trial)
+            and trial["terminal_state"] in {
                 NavigationSessionState.CANCELLED.value,
                 NavigationSessionState.FAILED.value,
                 NavigationSessionState.REQUIRES_INTERACTION.value,
@@ -2460,6 +2738,8 @@ def _run_b10_gap_solver_runtime(
         )
 
     def coordinator_delivery_gate(trial: dict) -> bool:
+        if not _worker_injection_valid(trial):
+            return False
         verified = [
             sample for sample in trial["samples"]
             if sample["verified_command_index"] is not None
@@ -2489,6 +2769,7 @@ def _run_b10_gap_solver_runtime(
 
     summary = dict(
         schema_version="mc2p.b10-gap-solver.v2",
+        partial=False, matrix_complete=True,
         solver_id=SOLVER_ID,
         preflight_count=1,
         turn_preflight_count=1,
@@ -2565,6 +2846,8 @@ def _run_b10_gap_solver_runtime(
         synchronous_probe_timing=dict(
             scope="synchronous_probe_only",
             disposition="report_only",
+            planned_count=142,
+            completed_count=len(trials),
             warning_threshold_ns=30_000_000,
             warning_count=sum(value >= 30_000_000 for value in solve_times),
         ),

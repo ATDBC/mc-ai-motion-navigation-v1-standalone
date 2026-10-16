@@ -828,8 +828,7 @@ class MotionRouteCoordinator:
             self, result: GapMotionSolveResult, anchor: StateAnchor, *,
             current_scope: AsyncComputationScope) -> None:
         job = self._solve_basis_job
-        if (job is None or job.operation is not MotionJobOperation.SOLVE
-                or result.solve_result.status is not SolveStatus.SOLVED
+        if (job is None
                 or result.work_identity is None
                 or self._work.check(result.work_identity, self._clock(),
                                     current_scope=current_scope) is not WorkCheck.READY
@@ -837,9 +836,11 @@ class MotionRouteCoordinator:
                 or result.candidate_revision != self._candidate_revision
                 or self._delivery_identity == result.work_identity):
             return
-        # Sample first arrival from the real source, before any entry wait.
-        self._delivery_ticks = min(5, max(1, anchor.movement_tick_id
-            - job.anchor.movement_tick_id))
+        # Delivery time is independent of solve success. A slower revalidation
+        # raises preparation time, while a faster one cannot shorten the time
+        # already observed for a full solve. Sample before any entry wait.
+        self._delivery_ticks = max(self._delivery_ticks, min(5, max(
+            1, anchor.movement_tick_id - job.anchor.movement_tick_id)))
         self._delivery_identity = result.work_identity
 
     def _accept_result(
@@ -1082,7 +1083,8 @@ class MotionRouteCoordinator:
             self, index: int, anchor: StateAnchor,
             world: PhysicsWorldView, *,
             revalidate_proof: VerifiedMotionResult | None = None,
-            entry_prefix: tuple[MotionCommandTick, ...] | None = None) -> None:
+            entry_prefix: tuple[MotionCommandTick, ...] | None = None,
+            registration_failure_reason: str = "motion_inbox_capacity_exhausted") -> None:
         if entry_prefix is None:
             # The existing one-tick waiting input is part of the prediction,
             # rather than silently consuming the first action's delay variant.
@@ -1132,7 +1134,7 @@ class MotionRouteCoordinator:
         self._work.begin(identity, window)
         self._remember_work_window(self._work_identity, self._work_window)
         if not self.result_inbox.register(self._work_identity):
-            self.last_failure_reason = "motion_inbox_capacity_exhausted"
+            self.last_failure_reason = registration_failure_reason
             self._retire_work(self.last_failure_reason)
             self.executor.cancel()
             return
@@ -1150,7 +1152,8 @@ class MotionRouteCoordinator:
         self._pending_submitted_tick = anchor.movement_tick_id
         submitted = self.worker.submit(self._pending_job)
         if submitted:
-            self.result_inbox.mark_submitted(self._pending_job.work_identity)
+            self.result_inbox.mark_submitted(self._pending_job.work_identity,
+                job_anchor_movement_tick=self._pending_job.anchor.movement_tick_id)
             self._pending_job = None
             self.last_failure_reason = ""
         else:
@@ -1170,7 +1173,8 @@ class MotionRouteCoordinator:
         if self._pending_job is None:
             return
         if self.worker.submit(self._pending_job):
-            self.result_inbox.mark_submitted(self._pending_job.work_identity)
+            self.result_inbox.mark_submitted(self._pending_job.work_identity,
+                job_anchor_movement_tick=self._pending_job.anchor.movement_tick_id)
             self._pending_job = None
             self.last_failure_reason = ""
 
@@ -1316,7 +1320,7 @@ class MotionRouteCoordinator:
         sx, sy, sz = action_spec(action).solve_geometry(action, anchor).start
         state = anchor.physics_state
         speed = math.hypot(state.velocity_blocks_per_tick[0], state.velocity_blocks_per_tick[2])
-        # One conditional prefix, at most five ticks / 250 ms of preparation.
+        # This moving prewarm prefix has at most four ticks / 200 ms.
         # Each real tick still passes arbitration, and the ledger must match it.
         if math.hypot(state.position[0] - sx, state.position[2] - sz) > max(.20, speed * 4 + .20):
             return
@@ -1435,6 +1439,7 @@ class MotionRouteCoordinator:
                         and expired_action_index == self.executor.action_index):
                     self._submit_action(
                         expired_action_index, anchor, world,
+                        registration_failure_reason="motion_solver_request_expired",
                     )
             else:
                 self.last_failure_reason = "motion_solver_retry_exhausted"

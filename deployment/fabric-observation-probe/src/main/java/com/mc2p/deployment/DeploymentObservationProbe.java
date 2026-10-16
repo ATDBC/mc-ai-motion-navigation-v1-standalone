@@ -81,7 +81,8 @@ public final class DeploymentObservationProbe implements ClientModInitializer {
         if (failed) return;
         try {
             if (System.nanoTime() >= deadline) throw new IllegalStateException("session deadline exceeded");
-            if (transport.failure() != null) throw new IllegalStateException("transport failed");
+            Throwable transportFailure = transport.failure();
+            if (transportFailure != null) throw ProbeFailureDiagnostics.transportFailure(transportFailure);
             if (episode == null) {
                 byte[] frame = transport.poll();
                 if (frame == null) { bootstrap("waiting_session"); return; }
@@ -192,7 +193,7 @@ public final class DeploymentObservationProbe implements ClientModInitializer {
         failed = true;
         transport.requestStop();
         // No payload, credential or potentially parser-supplied message is printed.
-        System.err.println("MC2P_DEPLOYMENT_SESSION_FAILED:" + error.getClass().getSimpleName());
+        System.err.println("MC2P_DEPLOYMENT_SESSION_FAILED:" + ProbeFailureDiagnostics.format(error));
         try { executor.reset(client); }
         finally {
             observationRequest = ClientObservationRequestV3.navigation();

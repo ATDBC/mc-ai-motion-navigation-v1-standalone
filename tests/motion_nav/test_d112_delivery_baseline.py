@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 
 class D112DeliveryBaselineTests(unittest.TestCase):
@@ -155,7 +156,23 @@ class D112DeliveryBaselineTests(unittest.TestCase):
             self.assertEqual(row["wall_ms"]["samples"], 2)
             self.assertEqual(row["cpu_ms"]["samples"], 2)
             self.assertGreater(row["wall_ms"]["minimum"], 0)
-            self.assertGreater(row["cpu_ms"]["minimum"], 0)
+            # Windows may quantize a short thread CPU interval to zero.
+            # CPU is report-only; wall time and the work signature stay checked.
+            self.assertGreaterEqual(row["cpu_ms"]["minimum"], 0)
+
+    def test_zero_thread_cpu_interval_is_retained_as_report_only(self):
+        from scripts.analyze_d112_delivery_baseline import run_calibration
+
+        with patch("scripts.analyze_d112_delivery_baseline.time.thread_time_ns", return_value=0):
+            report = run_calibration(warmups=0, samples=1, rounds=1)
+
+        self.assertEqual(report["purpose"], "reference_calibration_only")
+        self.assertFalse(report["device_admission"])
+        row, = report["rounds"]
+        self.assertEqual(row["cpu_ms"]["samples"], 1)
+        self.assertEqual(row["cpu_ms"]["minimum"], 0)
+        self.assertEqual(row["cpu_ms"]["maximum"], 0)
+        self.assertGreater(row["wall_ms"]["minimum"], 0)
 
     @staticmethod
     def _write_jsonl(path: Path, rows) -> None:

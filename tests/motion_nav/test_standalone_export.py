@@ -51,6 +51,30 @@ class StandaloneExportTests(unittest.TestCase):
             attributes,
         )
 
+    def test_d113_read_only_baseline_is_a_required_export_file(self):
+        relative = "evidence/motion_navigation/d113-control-visible-v1/d112-read-only-baseline.json"
+        self.assertIn("evidence/motion_navigation/d113-control-visible-v1/**/*", self.manifest.include_globs)
+        self.assertIn(relative, {path.as_posix() for path in self.manifest.required_paths})
+        self.assertEqual((self.root / relative).read_bytes(), (ROOT / relative).read_bytes())
+
+    def test_d113_current_semantics_cover_changed_production_and_exported_bytes(self):
+        relative = "evidence/motion_navigation/d113-control-visible-v1/published-production-semantic-hashes.json"
+        self.assertIn(relative, {path.as_posix() for path in self.manifest.required_paths})
+        report = json.loads((self.root / relative).read_text("utf-8"))
+        self.assertEqual(report["normalization"], "CRLF_TO_LF")
+        self.assertTrue({
+            "mc2p/motion_nav/motion_coordination.py",
+            "mc2p/motion_nav/motion_solver.py",
+            "mc2p/motion_nav/motion_worker.py",
+            "scripts/analyze_d113_delivery_baseline.py",
+            "scripts/b10_gap_solver_runtime.py",
+            "deployment/fabric-observation-probe/src/main/java/com/mc2p/deployment/DeploymentObservationProbe.java",
+            "deployment/fabric-observation-probe/src/main/java/com/mc2p/deployment/ProbeFailureDiagnostics.java",
+        } <= report["files"].keys())
+        for name, expected in report["files"].items():
+            raw = (self.root / name).read_bytes().replace(b"\r\n", b"\n")
+            self.assertEqual(hashlib.sha256(raw).hexdigest(), expected, name)
+
     def test_d110_historical_semantics_are_exported_without_claiming_current_bytes(self):
         relative = "evidence/motion_navigation/d110-evidence-lifecycle-v1/published-production-semantic-hashes.json"
         report = json.loads((self.root / relative).read_text("utf-8"))
@@ -224,9 +248,13 @@ class StandaloneExportTests(unittest.TestCase):
             self.root / "evidence/motion_navigation/d112-worker-delivery-v1/"
             "published-production-semantic-hashes.json"
         ).read_text("utf-8"))["files"]
+        d113 = json.loads((
+            self.root / "evidence/motion_navigation/d113-control-visible-v1/"
+            "published-production-semantic-hashes.json"
+        ).read_text("utf-8"))["files"]
         current_semantics = {**canonical, **r1, **r2, **r3, **handoff,
                              **late_handoff, **post_loss, **tp0, **published,
-                             **d105, **d107, **d108, **d109, **d112}
+                             **d105, **d107, **d108, **d109, **d112, **d113}
         tp0_root = self.root / "evidence/motion_navigation/trajectory-proto-tp0-v1"
         frozen = json.loads((tp0_root / "frozen-control-manifest.json").read_text("utf-8"))
         audit = json.loads((tp0_root / "fabric/audit-summary.json").read_text("utf-8"))

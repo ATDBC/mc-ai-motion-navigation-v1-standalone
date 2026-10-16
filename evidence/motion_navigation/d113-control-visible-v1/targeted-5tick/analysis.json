@@ -1,0 +1,442 @@
+{
+  "status": "PASSED_TARGETED_ONLY",
+  "run_id": "20261016T135933394751Z-02977bdb",
+  "formal_acceptance_eligible": false,
+  "matrix_complete": false,
+  "summary": {
+    "actual_5_tick_identity_chain": true,
+    "coordinator_executed_count": 1,
+    "coordinator_preregistered_count": 1,
+    "formal_acceptance_eligible": false,
+    "matrix_complete": false,
+    "mode": "targeted_probe",
+    "partial": false,
+    "runtime_state": "ready",
+    "schema_version": "mc2p.d113-targeted-probe.v1",
+    "targeted_probe": "coordinator-worker-delay-5-0-0"
+  },
+  "trial": {
+    "command_count": 22,
+    "complete_delivery_chain": true,
+    "damage_points": 0.0,
+    "delivery_chain": {
+      "actual_delivery_ticks": 5,
+      "first_control_consume_tick": 27,
+      "first_control_visible_tick": 27,
+      "identity": "'motion_solve:2da13b92708263e073846ac3345dbe8533f3c7d3bfb1e5fee1686b0c35d96d9d'",
+      "job_anchor_movement_tick": 22,
+      "receiver_observed_result_tick": 22,
+      "receiver_observed_to_registry_publish_ticks": 0,
+      "registry_publish_tick": 22,
+      "registry_publish_to_first_control_consume_ticks": 5,
+      "result_take_tick": 27,
+      "worker_elapsed_ns": 21358200,
+      "worker_queue_after_completion_ns": 12400100,
+      "worker_submit_tick": 22,
+      "worker_submit_to_observed_ticks": 0
+    },
+    "direction_index": 0,
+    "entry_alignment_frames": 0,
+    "fabric_supported": true,
+    "final_position": [
+      0.5,
+      0.0,
+      0.4378073057283682
+    ],
+    "first_verified_application_tick": 28,
+    "horizontal_collisions": 0,
+    "horizontal_error_blocks": 0.06219269427163182,
+    "landed": true,
+    "level_error_blocks": 0.0,
+    "motion_identity": "'motion_solve:2da13b92708263e073846ac3345dbe8533f3c7d3bfb1e5fee1686b0c35d96d9d'",
+    "name": "coordinator-worker-delay-5-0-0",
+    "ordered_source_id": "ordered/b3b9f3c0c01e421cb9298abd577b4916/1/1",
+    "repetition": 0,
+    "scenario": "worker-delay-5-0-0",
+    "scenario_kind": "worker_delay",
+    "source_release_status": "explicitly_released",
+    "source_released": true,
+    "terminal_reason": null,
+    "terminal_state": "complete",
+    "unsupported_reason": null,
+    "waiting_polls": 7,
+    "worker_delay_ticks": 5,
+    "worker_delivery": [
+      {
+        "actual_delivery_ticks": 5,
+        "first_control_consume_tick": 22,
+        "first_control_visible_tick": 22,
+        "identity": "'motion_solve:8759c63f7eed37bf894c62d9672207107ce17ec25fe9bbfe8c8a5c40a0ae46ef'",
+        "job_anchor_movement_tick": 17,
+        "receiver_observed_result_tick": 17,
+        "receiver_observed_to_registry_publish_ticks": 0,
+        "registry_publish_tick": 17,
+        "registry_publish_to_first_control_consume_ticks": 5,
+        "result_take_tick": 22,
+        "worker_elapsed_ns": 21182700,
+        "worker_queue_after_completion_ns": 16367700,
+        "worker_submit_tick": 17,
+        "worker_submit_to_observed_ticks": 0
+      },
+      {
+        "actual_delivery_ticks": 5,
+        "first_control_consume_tick": 27,
+        "first_control_visible_tick": 27,
+        "identity": "'motion_solve:2da13b92708263e073846ac3345dbe8533f3c7d3bfb1e5fee1686b0c35d96d9d'",
+        "job_anchor_movement_tick": 22,
+        "receiver_observed_result_tick": 22,
+        "receiver_observed_to_registry_publish_ticks": 0,
+        "registry_publish_tick": 22,
+        "registry_publish_to_first_control_consume_ticks": 5,
+        "result_take_tick": 27,
+        "worker_elapsed_ns": 21358200,
+        "worker_queue_after_completion_ns": 12400100,
+        "worker_submit_tick": 22,
+        "worker_submit_to_observed_ticks": 0
+      }
+    ],
+    "worker_injection": {
+      "held_result_count": 0,
+      "never_return": false,
+      "scenario": "worker-delay-5-0-0",
+      "scenario_kind": "worker_delay",
+      "stale_result_count": 0,
+      "submissions": [
+        {
+          "actual_delivery_ticks": 5,
+          "discarded_as_stale": false,
+          "first_control_visible_tick": 22,
+          "identity": "'motion_solve:8759c63f7eed37bf894c62d9672207107ce17ec25fe9bbfe8c8a5c40a0ae46ef'",
+          "injection_status": "matched",
+          "job_anchor_movement_tick": 17,
+          "operation": "solve",
+          "requested_delivery_ticks": 5,
+          "submit_tick": 17,
+          "target_visible_tick": 22,
+          "worker_observe_tick": 17,
+          "worker_submit_tick": 17,
+          "wrapper_publish_tick": 17
+        },
+        {
+          "actual_delivery_ticks": 5,
+          "discarded_as_stale": false,
+          "first_control_visible_tick": 27,
+          "identity": "'motion_solve:2da13b92708263e073846ac3345dbe8533f3c7d3bfb1e5fee1686b0c35d96d9d'",
+          "injection_status": "matched",
+          "job_anchor_movement_tick": 22,
+          "operation": "revalidate",
+          "requested_delivery_ticks": 5,
+          "submit_tick": 22,
+          "target_visible_tick": 27,
+          "worker_observe_tick": 22,
+          "worker_submit_tick": 22,
+          "wrapper_publish_tick": 22
+        }
+      ],
+      "worker_delay_ticks": 5
+    },
+    "worker_never_return": false
+  },
+  "control_prepare": {
+    "all_trace_diagnostic": {
+      "samples": 43,
+      "minimum": 1.0784,
+      "p50": 1.7325,
+      "p95": 4.8543,
+      "p99": 58.5049,
+      "maximum": 58.5049,
+      "missing": 0,
+      "invalid": 0,
+      "definition": "trace step dispatched_monotonic_ns minus decision_observation_received_ns"
+    },
+    "production_control_prepare": {
+      "samples": 29,
+      "minimum": 1.1108,
+      "p50": 1.771,
+      "p95": 4.1572,
+      "p99": 4.8543,
+      "maximum": 4.8543,
+      "missing": 0,
+      "invalid": 0,
+      "definition": "trace step dispatched_monotonic_ns minus decision_observation_received_ns",
+      "source_association_count": 29
+    },
+    "synchronous_probe": {
+      "samples": 0,
+      "minimum": null,
+      "p50": null,
+      "p95": null,
+      "p99": null,
+      "maximum": null,
+      "missing": 0,
+      "invalid": 0,
+      "definition": "trace step dispatched_monotonic_ns minus decision_observation_received_ns",
+      "source_association_count": 0
+    },
+    "other_fixture": {
+      "samples": 14,
+      "minimum": 1.0784,
+      "p50": 1.35,
+      "p95": 58.5049,
+      "p99": 58.5049,
+      "maximum": 58.5049,
+      "missing": 0,
+      "invalid": 0,
+      "definition": "trace step dispatched_monotonic_ns minus decision_observation_received_ns",
+      "source_association_count": 14
+    },
+    "mapping_issues": [],
+    "performance_signable": true,
+    "production_thresholds_met": true
+  },
+  "identity_delivery": {
+    "identities": [
+      {
+        "episode_id": "fabric-21001-0",
+        "trial": "coordinator-worker-delay-5-0-0",
+        "identity": "'motion_solve:2da13b92708263e073846ac3345dbe8533f3c7d3bfb1e5fee1686b0c35d96d9d'",
+        "worker_submit_tick": 22,
+        "job_anchor_movement_tick": 22,
+        "receiver_observed_result_tick": 22,
+        "registry_publish_tick": 22,
+        "first_control_visible_tick": 27,
+        "first_control_consume_tick": 27,
+        "result_take_tick": 27,
+        "actual_delivery_ticks": 5,
+        "endpoint_available": true,
+        "complete": true,
+        "invalid_order": false,
+        "historical_consume_semantics": "take_or_prepared_READY; never substituted for visibility",
+        "historical_submit_to_consume_ticks": 5,
+        "submit_to_receiver_ticks": 0,
+        "receiver_to_publish_ticks": 0,
+        "publish_to_first_control_visible_ticks": 5,
+        "first_control_visible_to_take_ticks": 0,
+        "result_take_applicable": true,
+        "worker_elapsed_ns": 21358200,
+        "worker_completed_monotonic_ns": 1173960434200700
+      },
+      {
+        "episode_id": "fabric-21001-0",
+        "trial": "coordinator-worker-delay-5-0-0",
+        "identity": "'motion_solve:8759c63f7eed37bf894c62d9672207107ce17ec25fe9bbfe8c8a5c40a0ae46ef'",
+        "worker_submit_tick": 17,
+        "job_anchor_movement_tick": 17,
+        "receiver_observed_result_tick": 17,
+        "registry_publish_tick": 17,
+        "first_control_visible_tick": 22,
+        "first_control_consume_tick": 22,
+        "result_take_tick": 22,
+        "actual_delivery_ticks": 5,
+        "endpoint_available": true,
+        "complete": true,
+        "invalid_order": false,
+        "historical_consume_semantics": "take_or_prepared_READY; never substituted for visibility",
+        "historical_submit_to_consume_ticks": 5,
+        "submit_to_receiver_ticks": 0,
+        "receiver_to_publish_ticks": 0,
+        "publish_to_first_control_visible_ticks": 5,
+        "first_control_visible_to_take_ticks": 0,
+        "result_take_applicable": true,
+        "worker_elapsed_ns": 21182700,
+        "worker_completed_monotonic_ns": 1173960183183900
+      }
+    ],
+    "identity_count": 2,
+    "duplicate_events": [],
+    "incomplete_count": 0,
+    "visibility_endpoint_unavailable_count": 0,
+    "historical_submit_to_consume_ticks": {
+      "samples": 2,
+      "minimum": 5,
+      "p50": 5,
+      "p95": 5,
+      "p99": 5,
+      "maximum": 5
+    },
+    "historical_missing_consume_count": 0,
+    "invalid_order_count": 0,
+    "actual_delivery_ticks": {
+      "samples": 2,
+      "minimum": 5,
+      "p50": 5,
+      "p95": 5,
+      "p99": 5,
+      "maximum": 5
+    }
+  },
+  "checks": [
+    {
+      "name": "client-0:d113_targeted_one_case_only",
+      "passed": true
+    },
+    {
+      "name": "client-0:d113_targeted_actual_5_tick_identity_chain",
+      "passed": true
+    },
+    {
+      "name": "client-0:d113_targeted_safe_complete_and_runtime_usable",
+      "passed": true
+    },
+    {
+      "name": "client-0:exact_continuous_v3",
+      "passed": true
+    },
+    {
+      "name": "client-0:separate_monotonic_client_samples",
+      "passed": true
+    },
+    {
+      "name": "client-0:exact_action_receipt_association",
+      "passed": true
+    },
+    {
+      "name": "client-0:normal_input_ticks_continue",
+      "passed": true
+    },
+    {
+      "name": "client-0:no_image_fields_or_binary_projection",
+      "passed": true
+    },
+    {
+      "name": "client-0:continuous_zero_image_diagnostics",
+      "passed": true
+    },
+    {
+      "name": "client-0:one_reset_43_runtime_steps",
+      "passed": true
+    },
+    {
+      "name": "client-0:complete_time_event_attribution",
+      "passed": true
+    },
+    {
+      "name": "client-0:observation_pipeline_frames_recorded",
+      "passed": true
+    },
+    {
+      "name": "client-0:legacy_block_parity_disabled",
+      "passed": true
+    },
+    {
+      "name": "source_cache_and_launch_unchanged",
+      "passed": true
+    },
+    {
+      "name": "v3_python_and_java_sources_unchanged",
+      "passed": true
+    }
+  ],
+  "cleanup": {
+    "cleanup": {
+      "attempted": [
+        {
+          "create_time": 1792159189.50415,
+          "pid": 66180
+        }
+      ],
+      "errors": [],
+      "stopped": [
+        {
+          "create_time": 1792159189.50415,
+          "pid": 66180
+        }
+      ],
+      "surviving": []
+    },
+    "errors": [],
+    "graceful": true,
+    "passed": true,
+    "return_code": 0
+  },
+  "lifecycle": {
+    "cleanup_failures": [],
+    "ordered_source_release": {
+      "source_id": "ordered/b3b9f3c0c01e421cb9298abd577b4916/0/1",
+      "status": "explicitly_released"
+    },
+    "schema_version": "mc2p.b10-probe-lifecycle.v1"
+  },
+  "raw_files": [
+    {
+      "source_relative": "result.json",
+      "public": "raw/result.json.gz",
+      "sha256": "41f57fe76522cc67f8d097f00c4ce78dc2871f1da4c7272735445ab43df3214e",
+      "bytes": 145927
+    },
+    {
+      "source_relative": "worker.log",
+      "public": "raw/worker.log.gz",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source_relative": "client-0/b10-gap-solver.json",
+      "public": "raw/b10-gap-solver.json.gz",
+      "sha256": "c3b862ff7371518df0112e3effa9076cbb80ccf1ce3dae89db752d14cc659ad2",
+      "bytes": 25571
+    },
+    {
+      "source_relative": "client-0/b10-coordinator-trials.jsonl",
+      "public": "raw/b10-coordinator-trials.jsonl.gz",
+      "sha256": "7fb4b7319bac412556415493e888d4a6efcd2473c4994feb11e20edc86d4955c",
+      "bytes": 25202
+    },
+    {
+      "source_relative": "client-0/b10-coordinator-control-frames.jsonl",
+      "public": "raw/b10-coordinator-control-frames.jsonl.gz",
+      "sha256": "585b57e07137d0ebee7ce0f31a9ffed0516bca90b1b38cea4398296cf4236389",
+      "bytes": 32589
+    },
+    {
+      "source_relative": "client-0/b10-receiver-diagnostics.jsonl",
+      "public": "raw/b10-receiver-diagnostics.jsonl.gz",
+      "sha256": "158c4685d6754bd5e0f8b70a0c65d0d82e8e460096b220bf5d304ccc00ad479b",
+      "bytes": 32544
+    },
+    {
+      "source_relative": "client-0/trace.jsonl",
+      "public": "raw/trace.jsonl.gz",
+      "sha256": "0d4676176471257bb5dc5098d3822e1323cbc9b786352a8b408915277c17bbfa",
+      "bytes": 1140777
+    },
+    {
+      "source_relative": "client-0/b10-lifecycle.json",
+      "public": "raw/b10-lifecycle.json.gz",
+      "sha256": "a34f5d238e3910e95d49245160fbdd86a3ed59a72e97a3ded92feb186d2696f5",
+      "bytes": 196
+    },
+    {
+      "source_relative": "client-0/cleanup.json",
+      "public": "raw/cleanup.json.gz",
+      "sha256": "00082771dcf3c46168c3fc74e7a9c3a65701c4ac34d928c540b18a9f67a3c2b6",
+      "bytes": 237
+    },
+    {
+      "source_relative": "client-0/time-report.json",
+      "public": "raw/time-report.json.gz",
+      "sha256": "003798fb57ba683b05173047f94a427fa1c617635cf774c6c6e55d1cd3dc0989",
+      "bytes": 8137
+    },
+    {
+      "source_relative": "client-0/time-events.jsonl",
+      "public": "raw/time-events.jsonl.gz",
+      "sha256": "bbb68cf9b831236dc98872d4dc335f4c7f5391536f8c308345747384463210bf",
+      "bytes": 187481
+    },
+    {
+      "source_relative": "client-0/diagnostics.jsonl",
+      "public": "raw/diagnostics.jsonl.gz",
+      "sha256": "3ad0f9896cb4cdc6272f29bbda8aa9045bb1f02c7ed47f161aaf2663515eed97",
+      "bytes": 73473
+    },
+    {
+      "source_relative": "client-0/observation-pipeline-report.json",
+      "public": "raw/observation-pipeline-report.json.gz",
+      "sha256": "6ec2e4e6cd8011aeab26577a090ec96a8610025fda7c2ac581f9c3afe9b375d1",
+      "bytes": 1458
+    }
+  ],
+  "shutdown_diagnostic": "MC2P_DEPLOYMENT_SESSION_FAILED:IllegalStateException:cause=EOFException:source=ProbeTransport.java:109",
+  "shutdown_boundary": "Occurred only after complete accepted result during normal graceful transport closure; no harness/client correction used."
+}

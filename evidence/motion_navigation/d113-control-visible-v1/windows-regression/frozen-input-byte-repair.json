@@ -1,0 +1,21 @@
+{
+  "cause": "frozen manifests contain per-file byte contracts: v7 LF, v8 CRLF",
+  "first_blanket_restoration_reverted": true,
+  "original_expectations_unchanged": true,
+  "files": [
+    {
+      "path": "tests/sim/manifests/navigation-product-r28-v7.json",
+      "expected_sha256": "d45648f789351227e47e6f3b2646413ed8152c72c44b5d621c55695413ebf8c6",
+      "before_sha256": "ac794639e362fb445f43cb86f53c8ee13ec839aa5293c2a98261c680ca08cc88",
+      "after_sha256": "d45648f789351227e47e6f3b2646413ed8152c72c44b5d621c55695413ebf8c6",
+      "selected_bytes": "git_HEAD"
+    },
+    {
+      "path": "tests/sim/manifests/navigation-product-r28-v8.json",
+      "expected_sha256": "c29e9158f461a647ae1b34ace278a3652e67052e3d9fcb80282fe517bf09efd6",
+      "before_sha256": "c29e9158f461a647ae1b34ace278a3652e67052e3d9fcb80282fe517bf09efd6",
+      "after_sha256": "c29e9158f461a647ae1b34ace278a3652e67052e3d9fcb80282fe517bf09efd6",
+      "selected_bytes": "current"
+    }
+  ]
+}

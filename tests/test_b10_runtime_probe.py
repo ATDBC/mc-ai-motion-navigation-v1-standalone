@@ -100,7 +100,7 @@ class B10RuntimeProbeTests(unittest.TestCase):
             for item in late
         ))
 
-    def test_tick_delayed_worker_releases_by_movement_tick_without_sleep(self):
+    def test_tick_delayed_worker_leaves_receiver_publication_natural_without_sleep(self):
         class FakeWorker:
             def __init__(self):
                 self.available = []
@@ -132,22 +132,26 @@ class B10RuntimeProbeTests(unittest.TestCase):
         delayed.begin_trial(scenario, movement_tick=40)
         self.assertTrue(delayed.submit(job))
         real.available.append(result)
-        self.assertEqual(delayed.poll_available(), ())
+        self.assertEqual(delayed.poll_available(), (result,))
         delayed.publish_movement_tick(41)
         self.assertEqual(delayed.poll_available(), ())
         delayed.publish_movement_tick(42)
-        self.assertEqual(delayed.poll_available(), (result,))
+        self.assertEqual(delayed.poll_available(), ())
         evidence = delayed.end_trial()
 
         self.assertEqual(evidence["scenario"], scenario.name)
         self.assertEqual(evidence["worker_delay_ticks"], 2)
-        self.assertEqual(evidence["submissions"], [{
+        self.assertEqual(len(evidence["submissions"]), 1)
+        self.assertEqual({key: evidence["submissions"][0][key] for key in (
+            "identity", "submit_tick", "worker_observe_tick", "wrapper_publish_tick",
+            "discarded_as_stale")}, {
             "identity": "'identity-1'",
             "submit_tick": 40,
             "worker_observe_tick": 40,
-            "wrapper_publish_tick": 42,
+            "wrapper_publish_tick": 40,
             "discarded_as_stale": False,
-        }])
+        })
+        self.assertEqual(evidence["submissions"][0]["injection_status"], "incomplete")
 
     def test_tick_delayed_worker_never_return_and_next_trial_drop_stale_results(self):
         class FakeWorker:
@@ -240,12 +244,15 @@ class B10RuntimeProbeTests(unittest.TestCase):
     def test_formal_coordinator_uses_the_preregistered_tick_delay_port(self):
         source = inspect.getsource(probe._run_b10_gap_solver_runtime)
 
-        self.assertIn("_b10_coordinator_scenarios()", source)
+        self.assertIn("_selected_b10_coordinator_scenarios(targeted_probe)", source)
+        self.assertEqual(probe._selected_b10_coordinator_scenarios(None),
+                         probe._b10_coordinator_scenarios())
         self.assertIn("_MovementTickDelayedMotionWorker(motion_worker)", source)
         self.assertIn("delayed_motion_worker.begin_trial(", source)
         self.assertIn("delayed_motion_worker.publish_movement_tick(", source)
         self.assertIn("motion_worker=delayed_motion_worker", source)
-        self.assertIn("delayed_motion_worker.end_trial()", source)
+        self.assertIn("delayed_motion_worker.end_trial", source)
+        self.assertIn("delayed_motion_worker.install_read_gate(session._motion_result_inbox)", source)
         self.assertIn(')["deliveries"]', source)
         self.assertNotIn(')["delivery"]', source)
         self.assertNotIn("time.sleep(scenario.worker_delay", source)

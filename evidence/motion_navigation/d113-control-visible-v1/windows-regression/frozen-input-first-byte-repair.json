@@ -1,0 +1,182 @@
+{
+  "cause": "worktree core.autocrlf=true changed frozen fixture byte hashes",
+  "expected_base_sha256": "d45648f789351227e47e6f3b2646413ed8152c72c44b5d621c55695413ebf8c6",
+  "before_base_sha256": "ac794639e362fb445f43cb86f53c8ee13ec839aa5293c2a98261c680ca08cc88",
+  "head_base_sha256": "d45648f789351227e47e6f3b2646413ed8152c72c44b5d621c55695413ebf8c6",
+  "files": [
+    {
+      "path": "experiments/navigation-floating-wall-mazes-v1/layouts/maze_03_floating.json",
+      "before_sha256": "99c144d6806e16e5e217d33062f0cf6b6a94de11d39b831d91ac5b103747740d",
+      "after_sha256": "39145f39d191916d57c60b21efb832b0f0574e49c2aca71157b85d5c4d70190f",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "experiments/navigation-floating-wall-mazes-v1/layouts/maze_04_floating.json",
+      "before_sha256": "8ceed09961c4f9be04da1ff8fb777d4509c8d93ab10a35cb3cd98db794c21326",
+      "after_sha256": "081fdc8df4fbdd30e910d6a7416a948aedffb9c0af6456e048884b143e5d73fe",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "experiments/navigation-floating-wall-mazes-v1/layouts/maze_05_floating.json",
+      "before_sha256": "a9a512d3ea1ebc7b92a96f29cdfc1cc652ca673aebdfb2d27e1f464d09cd1579",
+      "after_sha256": "2373c43730230a852ee0f1dee97e64aadacfdebfa398458b114f1dd283d1755c",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "experiments/navigation-floating-wall-mazes-v1/layouts/maze_06_floating.json",
+      "before_sha256": "c210ce66cf37348ea0817028f7663508f6086d859e20dacd9d06d0f378ebc2bc",
+      "after_sha256": "9195822aaecec274a0048323ccc503b99bff2fcf7c2ec1fb84bc98a25cd26b0d",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "experiments/navigation-floating-wall-mazes-v1/overlay/config/maze-layouts/maze_03_floating.json",
+      "before_sha256": "99c144d6806e16e5e217d33062f0cf6b6a94de11d39b831d91ac5b103747740d",
+      "after_sha256": "39145f39d191916d57c60b21efb832b0f0574e49c2aca71157b85d5c4d70190f",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "experiments/navigation-floating-wall-mazes-v1/overlay/config/maze-layouts/maze_04_floating.json",
+      "before_sha256": "8ceed09961c4f9be04da1ff8fb777d4509c8d93ab10a35cb3cd98db794c21326",
+      "after_sha256": "081fdc8df4fbdd30e910d6a7416a948aedffb9c0af6456e048884b143e5d73fe",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "experiments/navigation-floating-wall-mazes-v1/overlay/config/maze-layouts/maze_05_floating.json",
+      "before_sha256": "a9a512d3ea1ebc7b92a96f29cdfc1cc652ca673aebdfb2d27e1f464d09cd1579",
+      "after_sha256": "2373c43730230a852ee0f1dee97e64aadacfdebfa398458b114f1dd283d1755c",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "experiments/navigation-floating-wall-mazes-v1/overlay/config/maze-layouts/maze_06_floating.json",
+      "before_sha256": "c210ce66cf37348ea0817028f7663508f6086d859e20dacd9d06d0f378ebc2bc",
+      "after_sha256": "9195822aaecec274a0048323ccc503b99bff2fcf7c2ec1fb84bc98a25cd26b0d",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "tests/sim/manifests/continuous-height-full-matrix.json",
+      "before_sha256": "fa5dff01964ec126935e6fbd4c237e447a46e8119ab3b780e0901f168d3d1ab3",
+      "after_sha256": "e20217db2b2ed48b7b94da082b0c7a1e74f31f8311775c8b2fe33d18039426e7",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "tests/sim/manifests/continuous-height-planning-matrix.json",
+      "before_sha256": "184e6574d709b1d0e2e1df8c8fa5e4d0c5dee79b270939f359a36b9c5d681ce5",
+      "after_sha256": "e3467525f785cff037987d9f8ab99d3a13bd47e2367cd6b8fea3a05b87fb3082",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "tests/sim/manifests/navigation-async-work-r27-hardening.json",
+      "before_sha256": "89a02dfe1f5314de2236153f602c92bb734bfed72509273e67ca15416938691b",
+      "after_sha256": "b0d11cc9426db063ef284eca36b0acd2f90cebcdbb5e22e9bec39a78f59aebea",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "tests/sim/manifests/navigation-coordination-event-sequences.json",
+      "before_sha256": "4de6cde53821400f161016665f707d30719047632c16a70d5ed34fe80b8c72b2",
+      "after_sha256": "4c7453f9747aeff50779b506b76d9f43baaefc4ebcc6cb6022456deec77295d4",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "tests/sim/manifests/navigation-coordination-interrupt-late.json",
+      "before_sha256": "fe9c9f4bf8da1718bf5776924656df6398aec304e30a33e2e4e06a766fccf6a8",
+      "after_sha256": "c55f9d955798ab8d120e4d0b149c01c700ca184e0ddf42429b251715622461ec",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "tests/sim/manifests/navigation-coordination-s0-before-sneak.json",
+      "before_sha256": "1caee559a16dd0aebe654b516a44a625600a49fad23ce468d4e8245148c0d928",
+      "after_sha256": "a44f85708f023b7fceb2806b5e9c309aa2b411ffb0846418fc61d885189332ba",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "tests/sim/manifests/navigation-coordination-s0a-calibrated.json",
+      "before_sha256": "7d2a31dd20f7f4a5594a04e8755b70845a812f2946687140b1378c6efe984263",
+      "after_sha256": "0800bf288b73362ef3a01bfc3ec7d6ce336c2f382403a62dcddca98cb1eed1af",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "tests/sim/manifests/navigation-coordination-s5-seeds.json",
+      "before_sha256": "a450e96866136346b96cce89ac8c15da8a97cdc0f729e7980251d9ac0b863e4a",
+      "after_sha256": "3821e02f6e18694167565a3818ea67ec5fbda609144d05da93bbe3993abfae81",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "tests/sim/manifests/navigation-coordination-scan.json",
+      "before_sha256": "7d2a31dd20f7f4a5594a04e8755b70845a812f2946687140b1378c6efe984263",
+      "after_sha256": "0800bf288b73362ef3a01bfc3ec7d6ce336c2f382403a62dcddca98cb1eed1af",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "tests/sim/manifests/navigation-coordination-smoke-pre-d058.json",
+      "before_sha256": "b9d0ad4a8d1bd915fb959de1da95c9726eff87f33e757dfe74813186cde5183c",
+      "after_sha256": "3fca7910e2296b5dba47dfc016feec1cd658398172d7793d5f816e620932b2d3",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "tests/sim/manifests/navigation-coordination-smoke.json",
+      "before_sha256": "32b2093c890831f7d45849a3f2e1cc08aae38a898b4345cbfe1d56d098cf9216",
+      "after_sha256": "c581cf4e02564a78eea954bfe7171add62c9195c171b32db8f559c9dfd09dd71",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "tests/sim/manifests/navigation-product-f2-ground-route-v1.json",
+      "before_sha256": "151921c4889861bbecb6ff90982fe77fee334383866a57df4e1914335e871f11",
+      "after_sha256": "bb1a92c955b2ca4fd9b8512adada8e2ec8d2effd58d0c83b875e069de95d710b",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "tests/sim/manifests/navigation-product-f2s-support-region-v9.json",
+      "before_sha256": "4cbd2c1bc25b6e6b3c03aa5b85404b38d88e6abc3fd77d4b15b8ca2cd9971336",
+      "after_sha256": "6737cafe6cd218a40a6585fcd1ab59176fb55dd685b82ff9a29b93cb4e3f0a69",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "tests/sim/manifests/navigation-product-r28-v2.json",
+      "before_sha256": "5a0ffe494ef0a6a1bbcef892701166054936c0f48b15b0d09d04139bb08374e2",
+      "after_sha256": "58c7652b41db6a612042bceabe26d8e22e53899ac7b69f4503c5d7c564d82c04",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "tests/sim/manifests/navigation-product-r28-v3.json",
+      "before_sha256": "17fd405e55a9c80e750afcf3b72837e408a4736743e4101a831761a9374bfb3d",
+      "after_sha256": "b0865c4f5c13d99c9c9464b8215ac8570e61e68ed242b9ba6e664fd96e178e09",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "tests/sim/manifests/navigation-product-r28-v4.json",
+      "before_sha256": "fbee2590bd5843ab43fe7a09c324b07ab810e4e4e122f80d101576430466c8ae",
+      "after_sha256": "9571d30dafc93608806dff04e10a1042caf3a7a0421958e44ee3f9467b2a192e",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "tests/sim/manifests/navigation-product-r28-v7.json",
+      "before_sha256": "ac794639e362fb445f43cb86f53c8ee13ec839aa5293c2a98261c680ca08cc88",
+      "after_sha256": "d45648f789351227e47e6f3b2646413ed8152c72c44b5d621c55695413ebf8c6",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "tests/sim/manifests/navigation-product-r28-v8.json",
+      "before_sha256": "c29e9158f461a647ae1b34ace278a3652e67052e3d9fcb80282fe517bf09efd6",
+      "after_sha256": "418a330e892ce19663f3a4d560d8ade1fe4875ef3146883fd0b12e882545c526",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "tests/sim/manifests/navigation-product-r28.json",
+      "before_sha256": "a80cff5db663a5f076be5d1c5d52358c9cd89720f595efce4b01e8e6627e6e4c",
+      "after_sha256": "50ea50c73d31e29bb576427ca556183e805ef514dc000d763b375e1950b5069c",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "tests/sim/manifests/navigation-structure-f1-functions.json",
+      "before_sha256": "d3b88271b63355159a80c2cca7164dd08fa90267b401f24fe7f7ac292398e47f",
+      "after_sha256": "2c451c1b99dacea1d88e0faba49ed3dff0bf59f2e4ed918a52072b85b1bbd774",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    },
+    {
+      "path": "tests/sim/manifests/prepared-motion-proof-d102-v1.json",
+      "before_sha256": "03eddd361d0909c6f88e82a06d1681286f31edf0c648faa566563f13d15c8e34",
+      "after_sha256": "975a0358afdfe3768df5a802e2dfd43291545905dca61d0da75940dd8cdd796f",
+      "change": "restore Git HEAD raw bytes; semantic JSON unchanged"
+    }
+  ]
+}

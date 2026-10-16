@@ -1,0 +1,10 @@
+{
+  "status": "PASSED_PACKAGING_ONLY",
+  "export_test_count": 15,
+  "export_test_seconds": 40.06,
+  "independent_snapshot": ".tmp/d113-public-task4-closeout",
+  "prior_verified_files": 2473,
+  "expected_final_verified_files": 2477,
+  "boundary": "After full matrices, only documents and evidence metadata changed; this is export/verify, not another full source/snapshot matrix.",
+  "production_source_commit": "f161a0c521c43c364cd533358b21df342bba5821"
+}
