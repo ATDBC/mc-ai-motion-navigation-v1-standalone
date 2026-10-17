@@ -74,6 +74,24 @@ def group_control_prepare(trace_rows, coordinator_frames, probe_trials):
                 frame.get(name) is None for name in ("episode_id", "control_sequence_id",
                     "decision_observation_sequence_id", "result_observation_sequence_id")):
             issues.append(dict(group="production_control_prepare", source_index=index, issue="missing_v2_identifier"))
+        if frame.get("schema_version") == "mc2p.b10-coordinator-control-frame.v3":
+            required = (
+                "episode_id",
+                "control_sequence_id",
+                "decision_observation_sequence_id",
+                "result_observation_sequence_id",
+                "observation_sequence_id",
+                "proposal_elapsed_ns",
+                "runtime_outside_backend_ns",
+            )
+            for name in required:
+                if frame.get(name) is None:
+                    issues.append(dict(
+                        group="production_control_prepare",
+                        source_index=index,
+                        issue="missing_v3_field",
+                        field=name,
+                    ))
         assign(frame, 3, frame.get("result_observation_sequence_id", frame.get("observation_sequence_id")),
                "production_control_prepare", index)
     for index, trial in enumerate(probe_trials):

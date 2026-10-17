@@ -268,6 +268,61 @@ class D113TraceGroupingTests(unittest.TestCase):
             [{"episode_id": "a", "result_observation_sequence_id": 2, "control_sequence_id": 1}])
         self.assertEqual(result["production_control_prepare"]["maximum"], 4)
 
+    def test_v3_control_frame_requires_complete_unique_identity(self):
+        row = trace("a", 1, 1, 2, 4)
+        complete = {
+            "schema_version": "mc2p.b10-coordinator-control-frame.v3",
+            "episode_id": "a",
+            "control_sequence_id": 1,
+            "decision_observation_sequence_id": 1,
+            "result_observation_sequence_id": 2,
+            "observation_sequence_id": 2,
+            "proposal_elapsed_ns": 1,
+            "runtime_outside_backend_ns": 1,
+        }
+        self.assertTrue(
+            self.analyze([row], [complete])["performance_signable"]
+        )
+        for field in (
+            "episode_id",
+            "control_sequence_id",
+            "decision_observation_sequence_id",
+            "result_observation_sequence_id",
+            "observation_sequence_id",
+            "proposal_elapsed_ns",
+            "runtime_outside_backend_ns",
+        ):
+            with self.subTest(field=field):
+                missing = dict(complete)
+                missing.pop(field)
+                result = self.analyze([row], [missing])
+                self.assertFalse(result["performance_signable"])
+                self.assertIn(
+                    "missing_v3_field",
+                    {issue["issue"] for issue in result["mapping_issues"]},
+                )
+
+    def test_v2_identifier_rule_is_preserved(self):
+        row = trace("a", 1, 1, 2, 4)
+        complete = {
+            "schema_version": "mc2p.b10-coordinator-control-frame.v2",
+            "episode_id": "a",
+            "control_sequence_id": 1,
+            "decision_observation_sequence_id": 1,
+            "result_observation_sequence_id": 2,
+        }
+        self.assertTrue(
+            self.analyze([row], [complete])["performance_signable"]
+        )
+        incomplete = dict(complete)
+        incomplete.pop("control_sequence_id")
+        result = self.analyze([row], [incomplete])
+        self.assertFalse(result["performance_signable"])
+        self.assertIn(
+            "missing_v2_identifier",
+            {issue["issue"] for issue in result["mapping_issues"]},
+        )
+
     def test_ambiguous_missing_duplicate_and_invalid_mapping_block_signing(self):
         for rows, frames in [
             ([trace("a", 1, 1, 2, 4), trace("b", 1, 1, 2, 5)], [{"observation_sequence_id": 2}]),

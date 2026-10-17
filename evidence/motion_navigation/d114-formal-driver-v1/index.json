@@ -1,0 +1,9 @@
+{
+  "d110_solve_01": "OPEN",
+  "fabric_rerun_count": 0,
+  "formal_run": "formal-default",
+  "historical_d113": "FAILED/STOPPED",
+  "schema_version": "mc2p.d114-evidence-index.v1",
+  "status": "PASSED_WITH_PRESERVED_FAILED_COMMAND_AND_READ_ONLY_CORRECTION",
+  "windows_regression": "windows-regression"
+}

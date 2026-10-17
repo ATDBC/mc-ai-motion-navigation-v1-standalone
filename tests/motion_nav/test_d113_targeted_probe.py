@@ -22,6 +22,9 @@ def completed_trial():
                      actual_delivery_ticks=5, injection_status="matched")
     return dict(name=TARGET, scenario_kind="worker_delay", terminal_state="complete",
                 damage_points=0., source_released=True, landed=True,
+                old_manual_intent_selected=False, old_session_intent_selected=False,
+                left_start_support=False, bounded_terminal=True,
+                recorded_control_frames=1, adopted_frame_count=1,
                 horizontal_error_blocks=.01, level_error_blocks=.01,
                 horizontal_collisions=0, complete_delivery_chain=True,
                 motion_identity="job", delivery_chain=chain, worker_delivery=[chain],
@@ -94,6 +97,8 @@ class D113TargetedProbeTests(unittest.TestCase):
             lambda t: t["delivery_chain"].update(result_take_tick=None),
             lambda t: t.update(damage_points=1),
             lambda t: t.update(source_released=False),
+            lambda t: t.update(old_manual_intent_selected=True),
+            lambda t: t.update(old_session_intent_selected=True),
             lambda t: t.update(terminal_state="failed"),
         ]
         for mutation in mutations:

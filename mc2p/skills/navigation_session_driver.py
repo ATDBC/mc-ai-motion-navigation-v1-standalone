@@ -146,6 +146,11 @@ class RuntimeNavigationDriver:
         return () if proposal is None else proposal.prepared_streams
 
     @property
+    def prepared_proposal(self) -> NavigationSessionProposal | None:
+        """Return the proposal only while one parent frame is prepared."""
+        return self._prepared_proposal
+
+    @property
     def goal_id(self) -> str | None:
         return self._goal_id
 

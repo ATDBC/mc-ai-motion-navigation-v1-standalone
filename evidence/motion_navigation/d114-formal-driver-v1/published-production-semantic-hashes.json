@@ -1,0 +1,13 @@
+{
+  "schema": "mc2p.public-production-semantic-hashes.v1",
+  "scope": "D114 formal RuntimeNavigationDriver harness remediation",
+  "normalization": "CRLF_TO_LF",
+  "source_commit": "2ca3bd4d95b265e987e49df28605cf552cdf7b91",
+  "base_commit": "d077629fdd238d495d67ce312d8be2f91122e18a",
+  "files": {
+    "mc2p/skills/navigation_session_driver.py": "e066f94ebe134c31c196668907011a98a76846296a378962cd15a90977b84181",
+    "scripts/analyze_d113_delivery_baseline.py": "00e200096e1bc0ad47b0abb298a09233efdf4891364344e3b2d0264a28597ff7",
+    "scripts/analyze_d114_formal_driver_run.py": "9151d924bc3d00caf4927010473816b17700077cb72486d0b2a0af5ed8637988",
+    "scripts/b10_gap_solver_runtime.py": "7e243cf579fcc870e60000dc29453ca3334c9a558e012db5c4d07378c6ab3494"
+  }
+}

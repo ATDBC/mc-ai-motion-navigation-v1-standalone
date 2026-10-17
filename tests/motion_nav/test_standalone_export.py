@@ -57,7 +57,39 @@ class StandaloneExportTests(unittest.TestCase):
         self.assertIn(relative, {path.as_posix() for path in self.manifest.required_paths})
         self.assertEqual((self.root / relative).read_bytes(), (ROOT / relative).read_bytes())
 
-    def test_d113_current_semantics_cover_changed_production_and_exported_bytes(self):
+    def test_d114_restores_failed_trajectory_reports_as_required_export_files(self):
+        relatives = (
+            ".superpowers/sdd/2026-10-10-continuous-short-trajectory-prototype/"
+            "task-5a-r1-report.md",
+            ".superpowers/sdd/2026-10-10-continuous-short-trajectory-prototype/"
+            "task-5a-r2-plan.md",
+            ".superpowers/sdd/2026-10-10-continuous-short-trajectory-prototype/"
+            "task-5a-r2-report.md",
+        )
+        required = {path.as_posix() for path in self.manifest.required_paths}
+        for relative in relatives:
+            with self.subTest(relative=relative):
+                self.assertIn(relative, required)
+                self.assertEqual(
+                    (self.root / relative).read_bytes(),
+                    (ROOT / relative).read_bytes(),
+                )
+
+        originals = {relative: (self.root / relative).read_bytes() for relative in relatives}
+        try:
+            for relative in relatives:
+                (self.root / relative).unlink()
+            with self.assertRaises(ExportViolation) as raised:
+                verify_tree(self.root, manifest=self.manifest)
+            for relative in relatives:
+                self.assertIn(relative, str(raised.exception))
+        finally:
+            for relative, contents in originals.items():
+                target = self.root / relative
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(contents)
+
+    def test_d113_historical_semantics_are_exported_without_claiming_current_bytes(self):
         relative = "evidence/motion_navigation/d113-control-visible-v1/published-production-semantic-hashes.json"
         self.assertIn(relative, {path.as_posix() for path in self.manifest.required_paths})
         report = json.loads((self.root / relative).read_text("utf-8"))
@@ -71,6 +103,33 @@ class StandaloneExportTests(unittest.TestCase):
             "deployment/fabric-observation-probe/src/main/java/com/mc2p/deployment/DeploymentObservationProbe.java",
             "deployment/fabric-observation-probe/src/main/java/com/mc2p/deployment/ProbeFailureDiagnostics.java",
         } <= report["files"].keys())
+        for expected in report["files"].values():
+            self.assertRegex(expected, r"^[0-9a-f]{64}$")
+        if not (ROOT / ".git").exists():
+            return
+        commit = report["source_commit"]
+        if subprocess.run(["git", "cat-file", "-e", f"{commit}^{{commit}}"],
+                          cwd=ROOT, capture_output=True).returncode != 0:
+            return
+        for name, expected in report["files"].items():
+            raw = subprocess.check_output(["git", "show", f"{commit}:{name}"], cwd=ROOT)
+            self.assertEqual(hashlib.sha256(raw.replace(b"\r\n", b"\n")).hexdigest(),
+                             expected, (commit, name))
+
+    def test_d114_current_semantics_cover_changed_production_and_exported_bytes(self):
+        relative = "evidence/motion_navigation/d114-formal-driver-v1/published-production-semantic-hashes.json"
+        self.assertIn(relative, {path.as_posix() for path in self.manifest.required_paths})
+        report = json.loads((self.root / relative).read_text("utf-8"))
+        self.assertEqual(report["schema"], "mc2p.public-production-semantic-hashes.v1")
+        self.assertEqual(report["normalization"], "CRLF_TO_LF")
+        self.assertEqual(report["base_commit"], "d077629fdd238d495d67ce312d8be2f91122e18a")
+        self.assertEqual(report["source_commit"], "2ca3bd4d95b265e987e49df28605cf552cdf7b91")
+        self.assertEqual(set(report["files"]), {
+            "mc2p/skills/navigation_session_driver.py",
+            "scripts/analyze_d113_delivery_baseline.py",
+            "scripts/analyze_d114_formal_driver_run.py",
+            "scripts/b10_gap_solver_runtime.py",
+        })
         for name, expected in report["files"].items():
             raw = (self.root / name).read_bytes().replace(b"\r\n", b"\n")
             self.assertEqual(hashlib.sha256(raw).hexdigest(), expected, name)
@@ -252,9 +311,14 @@ class StandaloneExportTests(unittest.TestCase):
             self.root / "evidence/motion_navigation/d113-control-visible-v1/"
             "published-production-semantic-hashes.json"
         ).read_text("utf-8"))["files"]
+        d114 = json.loads((
+            self.root / "evidence/motion_navigation/d114-formal-driver-v1/"
+            "published-production-semantic-hashes.json"
+        ).read_text("utf-8"))["files"]
         current_semantics = {**canonical, **r1, **r2, **r3, **handoff,
                              **late_handoff, **post_loss, **tp0, **published,
-                             **d105, **d107, **d108, **d109, **d112, **d113}
+                             **d105, **d107, **d108, **d109, **d112, **d113,
+                             **d114}
         tp0_root = self.root / "evidence/motion_navigation/trajectory-proto-tp0-v1"
         frozen = json.loads((tp0_root / "frozen-control-manifest.json").read_text("utf-8"))
         audit = json.loads((tp0_root / "fabric/audit-summary.json").read_text("utf-8"))

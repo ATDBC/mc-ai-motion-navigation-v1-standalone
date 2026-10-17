@@ -1,0 +1,31 @@
+{
+  "errors": 0,
+  "export_verify_files": 2516,
+  "failures": 0,
+  "java": "source 3/3; snapshot 3/3",
+  "note": "Final source and final exported-snapshot byte reruns after independent-review hardening are complete.",
+  "platform": "Windows",
+  "schema_version": "mc2p.d114-windows-regression.v1",
+  "skipped": 0,
+  "snapshot": {
+    "forward": {
+      "modules": 191,
+      "tests": 2382
+    },
+    "reverse": {
+      "modules": 191,
+      "tests": 2382
+    }
+  },
+  "source": {
+    "forward": {
+      "modules": 192,
+      "tests": 2406
+    },
+    "reverse": {
+      "modules": 192,
+      "tests": 2406
+    }
+  },
+  "timeouts": 0
+}

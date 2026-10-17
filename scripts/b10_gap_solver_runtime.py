@@ -53,12 +53,21 @@ from mc2p.motion_nav.physics_types import (
 from mc2p.motion_nav.navigation_session import (
     NavigationSession, NavigationSessionProfiles, NavigationSessionState,
 )
-from mc2p.motion_nav.known_map_planner import SurfacePlanningRequest
 from mc2p.motion_nav.planner_worker import PlannerWorker
-from mc2p.motion_nav.movement_transition import ResourceState
+from mc2p.motion_nav.movement_transition import (
+    GoalState,
+    GoalSupport,
+    MovementMode,
+)
 from mc2p.motion_nav.step_transition import load_step_profile
 from mc2p.motion_nav.support_surfaces import query_support_surfaces
-from mc2p.motion_nav.world_model import CellKnowledge
+from mc2p.motion_nav.world_model import Aabb, CellKnowledge
+from mc2p.runtime.player_runtime_v1 import RuntimeStateV1, RuntimeStepResultV1
+from mc2p.skills.navigation_session_driver import (
+    NavigationFrameDiagnostics,
+    RuntimeNavigationDriver,
+    RuntimeNavigationDriverState,
+)
 from scripts.control_probe_core import (
     strict_json_dumps,
     write_json_atomic,
@@ -223,12 +232,11 @@ def _targeted_b10_summary(trials: list[dict], *, runtime_state: str):
                 and sample["actual_minus_latest_ticks"] <= 0
                 for sample in trial.get("samples", ())
                 if sample.get("verified_command_index") is not None))
-    safe_complete = bool(one_case and trial.get("terminal_state") == "complete"
-        and trial.get("landed") and trial.get("damage_points") == 0.
-        and trial.get("source_released") and trial.get("horizontal_collisions") == 0
-        and trial.get("horizontal_error_blocks", float("inf")) <= .2
-        and trial.get("level_error_blocks", float("inf")) <= .03
-        and runtime_state == "ready")
+    safe_complete = bool(
+        one_case
+        and _b10_coordinator_completed(trial)
+        and runtime_state == "ready"
+    )
     summary = dict(schema_version="mc2p.d113-targeted-probe.v1", mode="targeted_probe",
                    partial=False, matrix_complete=False, formal_acceptance_eligible=False,
                    targeted_probe=_D113_TARGETED_PROBE, coordinator_preregistered_count=1,
@@ -503,6 +511,350 @@ class _MovementTickDelayedMotionWorker:
         return self._worker.is_alive()
 
 
+@dataclass(frozen=True, slots=True)
+class _B10FormalDriverFrame:
+    """One paired prepare/control/adopt frame from the shared B10 loop."""
+
+    movement_tick_before: int
+    movement_tick_after: int
+    decision_observation_sequence_id: int
+    observation_age_ns: int
+    proposal_elapsed_ns: int
+    control_wall_ns: int
+    backend_elapsed_ns: int
+    backend_blocking_io_ns: int
+    proposal: object
+    result: RuntimeStepResultV1
+    diagnostics: NavigationFrameDiagnostics | None
+
+
+@dataclass(frozen=True, slots=True)
+class _B10FormalDriverScenarioResult:
+    """Bounded outcome of one component or Fabric coordinator scenario."""
+
+    terminal_state: str
+    terminal_reason: str
+    bounded_terminal: bool
+    ordered_source_id: str | None
+    source_released: bool
+    manual_intent_selected: bool
+    old_session_intent_selected: bool
+    prepared_frame_count: int
+    adopted_frame_count: int
+    discarded_frame_count: int
+    waiting_frame_count: int
+    observed_action_routes: tuple[tuple[str, ...], ...]
+    observed_route_endpoints: tuple[tuple[float, float, float], ...]
+    frames: tuple[_B10FormalDriverFrame, ...]
+    worker_injection: dict
+
+
+def _runtime_movement_tick(runtime) -> int:
+    observation = runtime.observation
+    own = None if observation is None else observation.self_state.value
+    tick = None if own is None else own.movement_tick_id
+    if type(tick) is not int or tick < 0:
+        raise RuntimeError("B10 formal driver requires a movement tick")
+    return tick
+
+
+def _b10_stale_intent_seen(
+    seen_intents: set[str],
+    current_intents: set[str],
+    selected_intents: set[str],
+    candidate_intents: set[str],
+) -> bool:
+    """Return whether arbitration still mentions an older session intent."""
+    return bool(
+        (seen_intents - current_intents)
+        .intersection(selected_intents | candidate_intents)
+    )
+
+
+def _run_b10_formal_driver_scenario(
+    *,
+    runtime,
+    session: NavigationSession,
+    delayed_motion_worker: _MovementTickDelayedMotionWorker,
+    scenario: _B10CoordinatorScenario,
+    goal_state: GoalState,
+    goal_id: str,
+    goal_revision: int,
+    task: TaskIntentV0,
+    behavior: BehaviorProfileV0,
+    manual_source=None,
+    clock_ns: Callable[[], int] = time.perf_counter_ns,
+    max_control_frames: int = 64,
+    after_frame: Callable[[_B10FormalDriverFrame], None] | None = None,
+) -> _B10FormalDriverScenarioResult:
+    """Run one B10 scenario through the same formal driver on every frame.
+
+    The game backend can be Fabric or CalculatorBackend.  Only the backend and
+    clock differ; worker delay, navigation preparation, Runtime arbitration,
+    result adoption and source release remain on this one path.
+    """
+    if type(session) is not NavigationSession:
+        raise TypeError("B10 formal driver requires NavigationSession")
+    if type(delayed_motion_worker) is not _MovementTickDelayedMotionWorker:
+        raise TypeError("B10 formal driver requires the delayed worker gate")
+    if type(scenario) is not _B10CoordinatorScenario:
+        raise TypeError("B10 formal driver requires a typed scenario")
+    if type(goal_state) is not GoalState:
+        raise TypeError("B10 formal driver requires a GoalState")
+    if type(max_control_frames) is not int or max_control_frames < 1:
+        raise ValueError("B10 formal driver frame limit must be positive")
+
+    manual_intents: set[str] = set()
+    manual_intent_prefix = None
+    if manual_source is not None:
+        manual_intent_prefix = f"{manual_source.source_id}/"
+        manual_intents.update(runtime.cancel_source(manual_source.source_id))
+
+    driver = RuntimeNavigationDriver(
+        runtime,
+        session,
+        clock_ns=clock_ns,
+    )
+    frames: list[_B10FormalDriverFrame] = []
+    seen_session_intents: set[str] = set()
+    manual_intent_selected = False
+    old_session_intent_selected = False
+    worker_injection: dict = {}
+    primary_error: BaseException | None = None
+    prepared_frame_count = 0
+    adopted_frame_count = 0
+    discarded_frame_count = 0
+    waiting_frame_count = 0
+    observed_action_routes: list[tuple[str, ...]] = []
+    observed_route_endpoints: list[tuple[float, float, float]] = []
+    registered_source = None
+
+    movement_tick = _runtime_movement_tick(runtime)
+    delayed_motion_worker.begin_trial(scenario, movement_tick=movement_tick)
+    delayed_motion_worker.install_read_gate(session._motion_result_inbox)
+    try:
+        driver.start(
+            goal_id,
+            goal_revision,
+            goal_state,
+            clock_ns(),
+        )
+        ordered_source_id = (
+            None if driver.source is None else driver.source.source_id
+        )
+        registered_source = driver.source
+        for _ in range(max_control_frames):
+            tick_before = _runtime_movement_tick(runtime)
+            delayed_motion_worker.publish_movement_tick(tick_before)
+            session._motion_result_inbox.publish_diagnostic_movement_tick(
+                tick_before,
+            )
+            decision_observation_sequence_id = runtime.observation.sequence_id
+            observation_age_ns = max(
+                0,
+                time.perf_counter_ns()
+                - runtime.observation.received_at_monotonic_ns,
+            )
+            owner_deadline = min(
+                task.deadline_monotonic_ns,
+                clock_ns() + 5_000_000_000,
+            )
+            proposal_started_ns = time.perf_counter_ns()
+            proposals = driver.prepare_proposals(owner_deadline)
+            prepared_frame_count += 1
+            proposal_elapsed_ns = time.perf_counter_ns() - proposal_started_ns
+            proposal = driver.prepared_proposal
+            if proposal is None:
+                driver.discard_prepared()
+                discarded_frame_count += 1
+                raise RuntimeError("B10 formal driver omitted its prepared proposal")
+            if not any(
+                ordered.intent.movement is not None
+                for control in proposals
+                for ordered in control.intents
+            ):
+                waiting_frame_count += 1
+            current_intents = {
+                ordered.intent.intent_id
+                for control in proposals
+                for ordered in control.intents
+            }
+            prepared_streams = driver.prepared_streams
+            control_started_ns = time.perf_counter_ns()
+            backend_started_ns = runtime.backend_elapsed_ns_total
+            blocking_started_ns = runtime.backend_blocking_io_ns_total
+            try:
+                result = runtime.control_frame(
+                    task,
+                    behavior,
+                    owner_deadline,
+                    proposals=proposals,
+                    prepared_streams=prepared_streams,
+                )
+            except BaseException:
+                driver.discard_prepared()
+                discarded_frame_count += 1
+                raise
+            control_wall_ns = time.perf_counter_ns() - control_started_ns
+            backend_elapsed_ns = (
+                runtime.backend_elapsed_ns_total - backend_started_ns
+            )
+            backend_blocking_io_ns = (
+                runtime.backend_blocking_io_ns_total - blocking_started_ns
+            )
+            driver.adopt_result(result)
+            adopted_frame_count += 1
+            active_route = session.active_route
+            if active_route is not None:
+                route_kinds = tuple(
+                    type(action).__name__
+                    for action in active_route.action_route.actions
+                )
+                if route_kinds not in observed_action_routes:
+                    observed_action_routes.append(route_kinds)
+                last_action = active_route.action_route.actions[-1]
+                fixed_route = getattr(last_action, "fixed_route", None)
+                if fixed_route is not None:
+                    point = fixed_route.points[-1]
+                    endpoint = (point.x, point.y, point.z)
+                    if endpoint not in observed_route_endpoints:
+                        observed_route_endpoints.append(endpoint)
+            tick_after = _runtime_movement_tick(runtime)
+            diagnostics = driver.last_frame_diagnostics
+            selected = set(
+                () if result.decision is None
+                else (intent_id for _, intent_id in result.decision.selected_intents)
+            )
+            candidates = set(
+                () if result.decision is None
+                else result.decision.candidate_intent_ids
+            )
+            manual_intent_selected = bool(
+                manual_intent_selected
+                or manual_intents.intersection(selected | candidates)
+                or (
+                    manual_intent_prefix is not None
+                    and any(
+                        intent_id.startswith(manual_intent_prefix)
+                        for intent_id in selected | candidates
+                    )
+                )
+            )
+            old_session_intent_selected = bool(
+                old_session_intent_selected
+                or _b10_stale_intent_seen(
+                    seen_session_intents,
+                    current_intents,
+                    selected,
+                    candidates,
+                )
+            )
+            seen_session_intents.update(current_intents)
+            frame = _B10FormalDriverFrame(
+                tick_before,
+                tick_after,
+                decision_observation_sequence_id,
+                observation_age_ns,
+                proposal_elapsed_ns,
+                control_wall_ns,
+                backend_elapsed_ns,
+                backend_blocking_io_ns,
+                proposal,
+                result,
+                diagnostics,
+            )
+            frames.append(frame)
+            if after_frame is not None:
+                after_frame(frame)
+
+            if runtime.state is not RuntimeStateV1.READY:
+                break
+            if driver.state in {
+                RuntimeNavigationDriverState.SUCCESS,
+                RuntimeNavigationDriverState.FAILED,
+                RuntimeNavigationDriverState.CANCELLED,
+                RuntimeNavigationDriverState.STOPPED,
+                RuntimeNavigationDriverState.INTERACTION_REQUIRED,
+            }:
+                if driver.release("b10_formal_scenario_terminal"):
+                    break
+        else:
+            if driver.source is not None:
+                released = driver.release("b10_formal_scenario_frame_limit")
+                if not released or driver.source is not None:
+                    raise RuntimeError(
+                        "B10 formal driver frame limit left body responsibility "
+                        "unresolved"
+                    )
+    except BaseException as error:
+        primary_error = error
+        raise
+    finally:
+        cleanup_error: BaseException | None = None
+        if driver.has_prepared_frame:
+            try:
+                driver.discard_prepared()
+                discarded_frame_count += 1
+            except BaseException as error:
+                cleanup_error = error
+        if primary_error is not None and driver.source is not None:
+            try:
+                driver.release("b10_formal_scenario_exception")
+            except BaseException as error:
+                if cleanup_error is None:
+                    cleanup_error = error
+        try:
+            worker_injection = delayed_motion_worker.end_trial()
+        except BaseException as error:
+            if cleanup_error is None:
+                cleanup_error = error
+        try:
+            session.close()
+        except BaseException as error:
+            if cleanup_error is None:
+                cleanup_error = error
+        if primary_error is None and cleanup_error is not None:
+            raise cleanup_error
+
+    terminal_state = session.report.state.value
+    terminal_reason = session.report.reason
+    source_released = bool(
+        driver.source is None
+        and (
+            registered_source is None
+            or not runtime.has_ordered_source(registered_source)
+        )
+    )
+    bounded_terminal = bool(
+        source_released
+        and runtime.state is RuntimeStateV1.READY
+        and driver.state in {
+            RuntimeNavigationDriverState.SUCCESS,
+            RuntimeNavigationDriverState.FAILED,
+            RuntimeNavigationDriverState.CANCELLED,
+            RuntimeNavigationDriverState.STOPPED,
+            RuntimeNavigationDriverState.INTERACTION_REQUIRED,
+        }
+    )
+    return _B10FormalDriverScenarioResult(
+        terminal_state,
+        terminal_reason,
+        bounded_terminal,
+        ordered_source_id,
+        source_released,
+        manual_intent_selected,
+        old_session_intent_selected,
+        prepared_frame_count,
+        adopted_frame_count,
+        discarded_frame_count,
+        waiting_frame_count,
+        tuple(observed_action_routes),
+        tuple(observed_route_endpoints),
+        tuple(frames),
+        worker_injection,
+    )
+
+
 class _B10EvidenceOverflow(RuntimeError):
     """The bounded B10 evidence buffer could not retain every row."""
 
@@ -519,6 +871,216 @@ def _worker_injection_valid(trial: dict) -> bool:
         and row["first_control_visible_tick"] == row["target_visible_tick"]
         and row["actual_delivery_ticks"] == row["requested_delivery_ticks"]
         for row in submissions)
+
+
+def _b10_coordinator_source_and_safety_valid(trial: dict) -> bool:
+    recorded = trial.get("recorded_control_frames")
+    adopted = trial.get("adopted_frame_count")
+    return bool(
+        _worker_injection_valid(trial)
+        and type(recorded) is int
+        and recorded > 0
+        and recorded == adopted
+        and trial.get("bounded_terminal") is True
+        and trial.get("landed") is True
+        and trial.get("damage_points") == 0.0
+        and trial.get("source_released") is True
+        and trial.get("old_manual_intent_selected") is False
+        and trial.get("old_session_intent_selected") is False
+        and trial.get("left_start_support") is False
+    )
+
+
+def _b10_coordinator_completed(trial: dict) -> bool:
+    return bool(
+        _b10_coordinator_source_and_safety_valid(trial)
+        and trial.get("terminal_state")
+            == NavigationSessionState.COMPLETE.value
+        and trial.get("horizontal_error_blocks", float("inf")) <= .2
+        and trial.get("level_error_blocks", float("inf")) <= .03
+        and trial.get("horizontal_collisions") == 0
+    )
+
+
+def _b10_coordinator_typed_safe_terminal(trial: dict) -> bool:
+    reason = trial.get("terminal_reason")
+    unresolved = (
+        "deadline",
+        "unavailable",
+        "unresolved",
+    )
+    return bool(
+        _b10_coordinator_source_and_safety_valid(trial)
+        and trial.get("terminal_state") in {
+            NavigationSessionState.CANCELLED.value,
+            NavigationSessionState.FAILED.value,
+            NavigationSessionState.REQUIRES_INTERACTION.value,
+        }
+        and type(reason) is str
+        and reason
+        and "harness_wall_timeout" not in reason
+        and not any(marker in reason.lower() for marker in unresolved)
+    )
+
+
+def _b10_coordinator_never_return_safe(trial: dict) -> bool:
+    reason = trial.get("terminal_reason")
+    injection = trial.get("worker_injection", {})
+    return bool(
+        _b10_coordinator_typed_safe_terminal(trial)
+        and trial.get("scenario_kind") == "worker_never_return"
+        and "motion_solver_request_expired" in reason
+        and trial.get("waiting_polls", 0) > 0
+        and trial.get("verified_command_count") == 0
+        and trial.get("jump_pulses") == 0
+        and not trial.get("left_start_support")
+        and injection.get("held_result_count") == 2
+    )
+
+
+def _b10_delivery_chain_fields(samples, receiver_delivery) -> dict:
+    first_verified = next((
+        sample for sample in samples
+        if sample["verified_command_index"] == 0
+    ), None)
+    actual_application_tick = (
+        None if first_verified is None
+        or not first_verified["actual_movement_ticks"]
+        else min(first_verified["actual_movement_ticks"])
+    )
+    motion_identity = (
+        None if first_verified is None
+        else first_verified["motion_identity"]
+    )
+    delivery_chain = next((
+        item for item in receiver_delivery
+        if item["identity"] == motion_identity
+    ), None)
+    complete_delivery_chain = (
+        first_verified is not None
+        and delivery_chain is not None
+        and all(type(value) is int for value in (
+            delivery_chain["worker_submit_tick"],
+            delivery_chain["receiver_observed_result_tick"],
+            delivery_chain["registry_publish_tick"],
+            delivery_chain["first_control_consume_tick"],
+            delivery_chain["worker_elapsed_ns"],
+            delivery_chain["worker_queue_after_completion_ns"],
+            first_verified["grant_movement_tick"],
+            first_verified["expected_movement_tick"],
+            first_verified["latest_movement_tick"],
+            actual_application_tick,
+        ))
+        and delivery_chain["worker_submit_tick"]
+            <= delivery_chain["receiver_observed_result_tick"]
+            <= delivery_chain["registry_publish_tick"]
+            <= delivery_chain["first_control_consume_tick"]
+            <= first_verified["grant_movement_tick"]
+            < actual_application_tick
+    )
+    return {
+        "motion_identity": motion_identity,
+        "delivery_chain": delivery_chain,
+        "complete_delivery_chain": complete_delivery_chain,
+        "first_verified_application_tick": actual_application_tick,
+    }
+
+
+def _b10_formal_trial_fields(
+    formal_result: _B10FormalDriverScenarioResult,
+    *,
+    samples,
+    recorded_control_frames: int,
+    start_position: tuple[float, float, float],
+) -> dict:
+    """Build the strict lifecycle fields shared by Fabric and component trials."""
+    verified_command_count = sum(
+        sample["verified_command_index"] is not None
+        for sample in samples
+    )
+    left_start_support = _b10_uncommanded_body_departed(
+        formal_result.frames,
+        verified_command_count=verified_command_count,
+        start_position=start_position,
+    )
+    return {
+        "terminal_state": formal_result.terminal_state,
+        "terminal_reason": formal_result.terminal_reason,
+        "ordered_source_id": formal_result.ordered_source_id,
+        "source_release_status": (
+            "explicitly_released"
+            if formal_result.source_released else "not_released"
+        ),
+        "source_released": formal_result.source_released,
+        "bounded_terminal": formal_result.bounded_terminal,
+        "old_manual_intent_selected": formal_result.manual_intent_selected,
+        "old_session_intent_selected": (
+            formal_result.old_session_intent_selected
+        ),
+        "recorded_control_frames": recorded_control_frames,
+        "adopted_frame_count": formal_result.adopted_frame_count,
+        "verified_command_count": verified_command_count,
+        "jump_pulses": sum(
+            int(sample["movement"]["jump"])
+            for sample in samples
+        ),
+        "left_start_support": left_start_support,
+        "worker_injection": formal_result.worker_injection,
+    }
+
+
+def _b10_uncommanded_body_departed(
+    frames,
+    *,
+    verified_command_count: int,
+    start_position: tuple[float, float, float],
+) -> bool:
+    """Reject real uncommanded displacement, not a one-frame ground flag blip."""
+    if verified_command_count != 0:
+        return False
+    for frame in frames:
+        body = frame.result.observation.self_state.value
+        position = body.position
+        if position.y < start_position[1] - .01:
+            return True
+        if not body.is_on_ground and (
+            abs(position.x - start_position[0]) > .01
+            or abs(position.y - start_position[1]) > .01
+            or abs(position.z - start_position[2]) > .01
+        ):
+            return True
+    return False
+
+
+def _b10_coordinator_delivery_gate(trial: dict) -> bool:
+    if not _worker_injection_valid(trial):
+        return False
+    verified = [
+        sample for sample in trial["samples"]
+        if sample["verified_command_index"] is not None
+    ]
+    if not verified:
+        return True
+    first = next((
+        sample for sample in verified
+        if sample["verified_command_index"] == 0
+    ), None)
+    chain = trial["delivery_chain"]
+    return bool(
+        first is not None
+        and trial["complete_delivery_chain"]
+        and chain["first_control_consume_tick"]
+            <= first["expected_movement_tick"] - 1
+        and first["grant_movement_tick"]
+            <= first["expected_movement_tick"] - 1
+        and all(
+            sample["actual_minus_expected_ticks"] is not None
+            and sample["actual_minus_expected_ticks"] >= 0
+            and sample["actual_minus_latest_ticks"] is not None
+            and sample["actual_minus_latest_ticks"] <= 0
+            for sample in verified
+        )
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -1109,22 +1671,6 @@ def _pending_air_request(frame, request: _AirRequestSource | None):
     )
 
 
-def _waiting_control_proposals(proposal, frame, request):
-    """Advance any bounded wait that needs a new observation or look."""
-    if proposal.control_frame is None:
-        return ()
-    decision = getattr(proposal, "route_decision", None)
-    if (decision is not None
-            and decision.reason_code == "awaiting_verified_motion"):
-        return (proposal.control_frame,)
-    return (
-        proposal.control_frame,
-        ControlFrameProposalV1(
-            observation_request=_pending_air_request(frame, request),
-        ),
-    )
-
-
 def _targeted_information_request(frame, positions):
     """Request only the unknown cells that currently block one calculation."""
     pending = tuple(sorted({
@@ -1249,6 +1795,147 @@ def _input_window_diagnostics(
             else (latest_tick - actual_tick) * 50.0
         ),
     }
+
+
+@dataclass(frozen=True, slots=True)
+class _B10CapturedFormalFrame:
+    navigation_frame: NavigationFrame
+    latest_application: object
+    waiting: bool
+    sample: dict | None
+    evidence: dict
+
+
+def _capture_b10_formal_driver_frame(
+    *,
+    driver_frame: _B10FormalDriverFrame,
+    runtime,
+    session: NavigationSession,
+    trial_name: str,
+    episode: str,
+    scenario_kind: str,
+    evidence_buffer: _B10EvidenceBuffer,
+) -> _B10CapturedFormalFrame:
+    """Capture the v3 row used by both Fabric and component evidence."""
+    proposal = driver_frame.proposal
+    decision = proposal.route_decision
+    result = driver_frame.result
+    if (result.observation is None or result.backend_result is None
+            or result.decision is None):
+        raise RuntimeError(f"B10 formal driver step failed: {result.report}")
+    receipt = result.backend_result.receipt
+    if type(receipt) is not ClientBehaviorReceiptV3:
+        raise RuntimeError("B10 formal driver requires V3 input evidence")
+    latest_application = receipt.last_input_sample
+    if latest_application is None:
+        raise RuntimeError("B10 formal driver lost its movement tick")
+    navigation_frame = _runtime_navigation_frame(runtime)
+    verified_window = None if decision is None else _verified_submission_window(decision)
+    action = result.decision.action
+    owned_applications = tuple(
+        application
+        for application in receipt.input_applications
+        if application.request_sequence_id == action.request_sequence_id
+    )
+    admission = (
+        None if session._coordinator is None
+        else session._coordinator.last_admission
+    )
+    motion_identity = (
+        repr(admission.identity.key)
+        if admission is not None
+        and admission.disposition is AsyncAdmissionDisposition.APPLIED
+        else None
+    )
+    reason_code = proposal.report.reason if decision is None else decision.reason_code
+    submit_input = bool(decision is not None and decision.submit_input)
+    evidence = {
+        "schema_version": "mc2p.b10-coordinator-control-frame.v3",
+        "trial": trial_name,
+        "episode_id": episode,
+        "scenario_kind": scenario_kind,
+        "control_sequence_id": action.request_sequence_id,
+        "decision_observation_sequence_id": (
+            driver_frame.decision_observation_sequence_id
+        ),
+        "result_observation_sequence_id": navigation_frame.body.sequence_id,
+        "observation_sequence_id": navigation_frame.body.sequence_id,
+        "session_state": proposal.report.state.value,
+        "decision_state": None if decision is None else decision.state.value,
+        "reason_code": reason_code,
+        "submit_input": submit_input,
+        "grant_movement_tick": driver_frame.movement_tick_before,
+        "motion_identity": motion_identity,
+        "position": list(navigation_frame.body.position),
+        "on_ground": navigation_frame.body.is_on_ground,
+        "horizontal_collision": navigation_frame.body.horizontal_collision,
+        "observation_age_ns": driver_frame.observation_age_ns,
+        "proposal_elapsed_ns": driver_frame.proposal_elapsed_ns,
+        "control_wall_ns": driver_frame.control_wall_ns,
+        "backend_elapsed_ns": driver_frame.backend_elapsed_ns,
+        "backend_blocking_io_ns": driver_frame.backend_blocking_io_ns,
+        "runtime_outside_backend_ns": max(
+            0,
+            driver_frame.control_wall_ns - driver_frame.backend_elapsed_ns,
+        ),
+        "driver_proposed_intents": (
+            () if driver_frame.diagnostics is None
+            else driver_frame.diagnostics.proposed_intents
+        ),
+        "driver_selected_intents": (
+            () if driver_frame.diagnostics is None
+            else driver_frame.diagnostics.selected_intents
+        ),
+        "driver_candidate_intents": (
+            () if driver_frame.diagnostics is None
+            else driver_frame.diagnostics.candidate_intents
+        ),
+        "driver_action_deadline_ns": (
+            None if driver_frame.diagnostics is None
+            else driver_frame.diagnostics.action_deadline_ns
+        ),
+    }
+    sample = None
+    if submit_input:
+        if not owned_applications:
+            raise RuntimeError("B10 formal driver input had no application sample")
+        sample = {
+            "command_index": decision.verified_command_index,
+            "decision_state": decision.state.value,
+            "reason_code": decision.reason_code,
+            "submit_input": True,
+            "grant_movement_tick": driver_frame.movement_tick_before,
+            "motion_identity": motion_identity,
+            "control_sequence_id": action.request_sequence_id,
+            "movement": asdict(decision.movement),
+            "position": list(navigation_frame.body.position),
+            "on_ground": navigation_frame.body.is_on_ground,
+            "horizontal_collision": navigation_frame.body.horizontal_collision,
+            "observation_age_ns": driver_frame.observation_age_ns,
+            "proposal_elapsed_ns": driver_frame.proposal_elapsed_ns,
+            "route_control_time_ns": decision.control_time_ns,
+            "control_wall_ns": driver_frame.control_wall_ns,
+            "backend_elapsed_ns": driver_frame.backend_elapsed_ns,
+            "backend_blocking_io_ns": driver_frame.backend_blocking_io_ns,
+            "runtime_outside_backend_ns": max(
+                0,
+                driver_frame.control_wall_ns - driver_frame.backend_elapsed_ns,
+            ),
+            **_input_window_diagnostics(owned_applications, verified_window),
+        }
+        evidence.update(sample)
+    if not evidence_buffer.append(
+        "b10-coordinator-control-frames.jsonl",
+        evidence,
+    ):
+        raise _B10EvidenceOverflow("B10 formal driver frame evidence overflow")
+    return _B10CapturedFormalFrame(
+        navigation_frame,
+        latest_application,
+        not submit_input,
+        sample,
+        evidence,
+    )
 
 
 def run_b10_gap_solver_runtime(
@@ -1989,8 +2676,8 @@ def _run_b10_gap_solver_runtime(
             continue
         _, _, yaw = _DIRECTIONS[direction_index]
         teleport(yaw)
-        anchor = anchor_now()
         start_health = float(frame.body.health_points)
+        start_position = frame.body.position
         target = targets[direction_index]
         start_query = query_support_surfaces(
             frame.world, origin_x, origin_z, feet_y, feet_y,
@@ -2000,12 +2687,7 @@ def _run_b10_gap_solver_runtime(
         )
         if not start_query.surfaces or not target_query.surfaces:
             raise RuntimeError("B10 session could not resolve a known support surface")
-        start_id = start_query.surfaces[0].node_id
-        end_id = target_query.surfaces[0].node_id
         route_id = f"b10-session-{scenario_index}-{direction_index}-{repetition}"
-        delayed_motion_worker.begin_trial(
-            scenario, movement_tick=anchor.movement_tick_id,
-        )
         session = NavigationSession(
             route_id,
             session_profiles,
@@ -2014,409 +2696,149 @@ def _run_b10_gap_solver_runtime(
             motion_worker=delayed_motion_worker,
             observation_adapter=runtime.navigation_observation_adapter,
         )
-        delayed_motion_worker.install_read_gate(session._motion_result_inbox)
-        source = runtime.register_ordered_source(route_id)
-        session.bind_source(source)
-        trial = None
-        source_released = False
-        try:
-            session.start(SurfacePlanningRequest(
-                scenario_index + 1,
-                f"{route_id}-request",
-                "b10-gap-goal",
-                scenario_index + 1,
-                frame.session.value,
-                start_id,
-                end_id,
-                initial_resources=ResourceState((
-                    ("food_points", float(frame.body.food_points)),
-                )),
-            ), frame)
-            ledger = _runtime_input_ledger(runtime)
-            waiting_polls = 0
-            current_anchor = anchor
-            samples: list[dict] = []
-            poll_deadline = time.perf_counter() + 5.0
-            # The verified gap proof itself is bounded to 20 ticks.  A route
-            # may need at most five 36-degree look frames to undo an earlier
-            # information look before that proof can be solved and started.
-            terminal_reason = None
-            while len(samples) < 28:
-                delayed_motion_worker.publish_movement_tick(
-                    current_anchor.movement_tick_id,
-                )
-                session._motion_result_inbox.publish_diagnostic_movement_tick(
-                    current_anchor.movement_tick_id,
-                )
-                proposal_started_ns = time.perf_counter_ns()
-                observation_age_ns = max(
-                    0,
-                    proposal_started_ns
-                    - runtime.observation.received_at_monotonic_ns,
-                )
-                decision_observation_sequence_id = runtime.observation.sequence_id
-                proposal = session.propose(
-                    frame,
-                    current_anchor,
-                    min(deadline_ns, time.perf_counter_ns() + 500_000_000),
-                    input_ledger=ledger,
-                )
-                proposal_elapsed_ns = time.perf_counter_ns() - proposal_started_ns
-                collect_receiver_diagnostics(session, trial_name)
-                decision = proposal.route_decision
-                if proposal.report.state is NavigationSessionState.COMPLETE:
-                    break
-                if decision is None or not decision.submit_input:
-                    waiting_polls += 1
-                    if proposal.report.terminal:
-                        coordinator_reason = (
-                            "" if session._coordinator is None
-                            else session._coordinator.last_failure_reason
-                        )
-                        terminal_reason = (
-                            f"{proposal.report.reason};"
-                            f"coordinator={coordinator_reason or 'none'}"
-                        )
-                        break
-                    if time.perf_counter() >= poll_deadline:
-                        terminal_reason = (
-                            "harness_wall_timeout_without_typed_terminal:"
-                            f"{proposal.report.reason}"
-                        )
-                        break
-                    waiting_controls = _waiting_control_proposals(
-                        proposal, frame, request,
-                    )
-                    if waiting_controls:
-                        control_started_ns = time.perf_counter_ns()
-                        backend_started_ns = runtime.backend_elapsed_ns_total
-                        blocking_started_ns = runtime.backend_blocking_io_ns_total
-                        idle = runtime.control_frame(
-                            task,
-                            behavior,
-                            min(deadline_ns, time.perf_counter_ns() + 5_000_000_000),
-                            proposals=waiting_controls,
-                        )
-                        control_wall_ns = time.perf_counter_ns() - control_started_ns
-                        backend_elapsed_ns = (
-                            runtime.backend_elapsed_ns_total - backend_started_ns
-                        )
-                        blocking_elapsed_ns = (
-                            runtime.backend_blocking_io_ns_total - blocking_started_ns
-                        )
-                        if (idle.observation is None
-                                or idle.backend_result is None
-                                or idle.decision is None):
-                            raise RuntimeError(
-                                f"B10 waiting observation failed: {idle.report}"
-                            )
-                        receipt = idle.backend_result.receipt
-                        if type(receipt) is not ClientBehaviorReceiptV3:
-                            raise RuntimeError(
-                                "B10 waiting observation requires V3 input evidence"
-                            )
-                        latest_application = receipt.last_input_sample
-                        if latest_application is None:
-                            raise RuntimeError(
-                                "B10 waiting observation lost its movement tick"
-                            )
-                        frame = _runtime_navigation_frame(runtime)
-                        diagnostic()
-                        current_anchor = anchor_now()
-                        delayed_motion_worker.publish_movement_tick(
-                            current_anchor.movement_tick_id,
-                        )
-                        evidence_buffer.append(
-                            "b10-coordinator-control-frames.jsonl",
-                            {
-                                "schema_version": "mc2p.b10-coordinator-control-frame.v2",
-                                "trial": trial_name,
-                                "episode_id": episode,
-                                "scenario_kind": scenario.kind,
-                                "control_sequence_id": idle.decision.action.request_sequence_id,
-                                "decision_observation_sequence_id": decision_observation_sequence_id,
-                                "result_observation_sequence_id": frame.body.sequence_id,
-                                "observation_sequence_id": frame.body.sequence_id,
-                                "session_state": proposal.report.state.value,
-                                "decision_state": (
-                                    None if decision is None
-                                    else decision.state.value
-                                ),
-                                "reason_code": (
-                                    proposal.report.reason if decision is None
-                                    else decision.reason_code
-                                ),
-                                "submit_input": (
-                                    False if decision is None
-                                    else decision.submit_input
-                                ),
-                                "observation_age_ns": observation_age_ns,
-                                "proposal_elapsed_ns": proposal_elapsed_ns,
-                                "control_wall_ns": control_wall_ns,
-                                "backend_elapsed_ns": backend_elapsed_ns,
-                                "backend_blocking_io_ns": blocking_elapsed_ns,
-                                "runtime_outside_backend_ns": max(
-                                    0, control_wall_ns - backend_elapsed_ns,
-                                ),
-                            },
-                        )
-                    else:
-                        time.sleep(.005)
-                    continue
-                if proposal.control_frame is None:
-                    raise RuntimeError("B10 session omitted its control frame")
-                verified_window = _verified_submission_window(decision)
-                grant_movement_tick = current_anchor.movement_tick_id
-                admission = (
-                    None if session._coordinator is None
-                    else session._coordinator.last_admission
-                )
-                motion_identity = (
-                    repr(admission.identity.key)
-                    if admission is not None
-                    and admission.disposition is AsyncAdmissionDisposition.APPLIED
-                    else None
-                )
-                now = time.perf_counter_ns()
-                backend_started_ns = runtime.backend_elapsed_ns_total
-                blocking_started_ns = runtime.backend_blocking_io_ns_total
-                result = runtime.control_frame(
-                    task,
-                    behavior,
-                    min(deadline_ns, now + 5_000_000_000),
-                    proposals=(
-                        proposal.control_frame,
-                        ControlFrameProposalV1(
-                            observation_request=_pending_air_request(frame, request),
-                        ),
-                    ),
-                    input_execution_window=(
-                        None if verified_window is None
-                        else CandidateExecutionWindow(
-                            verified_window[1], verified_window[2],
-                        )
-                    ),
-                )
-                control_wall_ns = time.perf_counter_ns() - now
-                backend_elapsed_ns = (
-                    runtime.backend_elapsed_ns_total - backend_started_ns
-                )
-                blocking_elapsed_ns = (
-                    runtime.backend_blocking_io_ns_total - blocking_started_ns
-                )
-                if (result.observation is None or result.backend_result is None
-                        or result.decision is None):
-                    raise RuntimeError(
-                        f"B10 navigation session Fabric step failed: {result.report}"
-                    )
-                action = result.decision.action
-                if verified_window is not None:
-                    session.register_verified_submission(
-                        proposal, control_sequence=action.request_sequence_id,
-                    )
-                receipt = result.backend_result.receipt
-                if type(receipt) is not ClientBehaviorReceiptV3:
-                    raise RuntimeError(
-                        "B10 navigation session requires V3 input evidence"
-                    )
-                owned_applications = tuple(
-                    application
-                    for application in receipt.input_applications
-                    if application.request_sequence_id == action.request_sequence_id
-                )
-                if not owned_applications:
-                    raise RuntimeError(
-                        "B10 session input had no formal application sample"
-                    )
-                latest_application = receipt.last_input_sample
-                frame = _runtime_navigation_frame(runtime)
-                diagnostic()
-                current_anchor = anchor_now()
-                delayed_motion_worker.publish_movement_tick(
-                    current_anchor.movement_tick_id,
-                )
-                window_diagnostics = _input_window_diagnostics(
-                    owned_applications, verified_window,
-                )
-                sample = dict(
-                    command_index=decision.verified_command_index,
-                    decision_state=decision.state.value,
-                    reason_code=decision.reason_code,
-                    submit_input=decision.submit_input,
-                    grant_movement_tick=grant_movement_tick,
-                    motion_identity=motion_identity,
-                    control_sequence_id=action.request_sequence_id,
-                    movement=asdict(decision.movement),
-                    position=list(frame.body.position),
-                    on_ground=frame.body.is_on_ground,
-                    horizontal_collision=frame.body.horizontal_collision,
-                    observation_age_ns=observation_age_ns,
-                    proposal_elapsed_ns=proposal_elapsed_ns,
-                    route_control_time_ns=decision.control_time_ns,
-                    control_wall_ns=control_wall_ns,
-                    backend_elapsed_ns=backend_elapsed_ns,
-                    backend_blocking_io_ns=blocking_elapsed_ns,
-                    runtime_outside_backend_ns=max(
-                        0, control_wall_ns - backend_elapsed_ns,
-                    ),
-                    **window_diagnostics,
-                )
-                samples.append(sample)
-                evidence_buffer.append(
-                    "b10-coordinator-control-frames.jsonl",
-                    {
-                        "schema_version": "mc2p.b10-coordinator-control-frame.v2",
-                        "trial": trial_name,
-                        "episode_id": episode,
-                        "scenario_kind": scenario.kind,
-                        "decision_observation_sequence_id": decision_observation_sequence_id,
-                        "result_observation_sequence_id": frame.body.sequence_id,
-                        "observation_sequence_id": frame.body.sequence_id,
-                        "session_state": proposal.report.state.value,
-                        **sample,
-                    },
-                )
-            else:
-                raise RuntimeError("B10 navigation session exceeded its motion horizon")
-            terminal_state = session.report.state.value
-            if (session.report.state is not NavigationSessionState.COMPLETE
-                    and terminal_reason is None):
-                terminal_reason = session.report.reason
-            target_position = (
-                target[0] + .5, float(target[1] + 1), target[2] + .5,
-            )
+        waiting_polls = 0
+        samples: list[dict] = []
+
+        def capture_formal_frame(
+            driver_frame: _B10FormalDriverFrame,
+        ) -> None:
+            nonlocal frame, latest_application, waiting_polls
             collect_receiver_diagnostics(session, trial_name)
-            receiver_rows = [
-                row for row in evidence_buffer.rows(
-                    "b10-receiver-diagnostics.jsonl"
-                )
-                if row.get("trial") == trial_name
-            ]
-            receiver_delivery = _receiver_diagnostic_summary(
-                receiver_rows,
-            )["deliveries"]
-            first_verified = next((
-                sample for sample in samples
-                if sample["verified_command_index"] == 0
-            ), None)
-            actual_application_tick = (
-                None if first_verified is None
-                or not first_verified["actual_movement_ticks"]
-                else min(first_verified["actual_movement_ticks"])
-            )
-            motion_identity = (
-                None if first_verified is None
-                else first_verified["motion_identity"]
-            )
-            delivery_chain = next((
-                item for item in receiver_delivery
-                if item["identity"] == motion_identity
-            ), None)
-            complete_delivery_chain = (
-                first_verified is not None
-                and delivery_chain is not None
-                and all(type(value) is int for value in (
-                    delivery_chain["worker_submit_tick"],
-                    delivery_chain["receiver_observed_result_tick"],
-                    delivery_chain["registry_publish_tick"],
-                    delivery_chain["first_control_consume_tick"],
-                    delivery_chain["worker_elapsed_ns"],
-                    delivery_chain["worker_queue_after_completion_ns"],
-                    first_verified["grant_movement_tick"],
-                    first_verified["expected_movement_tick"],
-                    first_verified["latest_movement_tick"],
-                    actual_application_tick,
-                ))
-                and delivery_chain["worker_submit_tick"]
-                    <= delivery_chain["receiver_observed_result_tick"]
-                    <= delivery_chain["registry_publish_tick"]
-                    <= delivery_chain["first_control_consume_tick"]
-                    <= first_verified["grant_movement_tick"]
-                    < actual_application_tick
-            )
-            trial = dict(
-                name=trial_name,
-                scenario=scenario.name,
+            captured = _capture_b10_formal_driver_frame(
+                driver_frame=driver_frame,
+                runtime=runtime,
+                session=session,
+                trial_name=trial_name,
+                episode=episode,
                 scenario_kind=scenario.kind,
-                direction_index=direction_index,
-                repetition=repetition,
-                fabric_supported=True,
-                unsupported_reason=None,
-                worker_delay_ticks=scenario.worker_delay_ticks,
-                worker_never_return=scenario.never_return,
-                waiting_polls=waiting_polls,
-                entry_alignment_frames=sum(
-                    sample["reason_code"] == "aligning_verified_motion_heading"
-                    for sample in samples
-                ),
-                command_count=len(samples),
-                final_position=list(frame.body.position),
-                horizontal_error_blocks=math.hypot(
-                    frame.body.position[0] - target_position[0],
-                    frame.body.position[2] - target_position[2],
-                ),
-                level_error_blocks=abs(frame.body.position[1] - target_position[1]),
-                landed=frame.body.is_on_ground,
-                terminal_state=terminal_state,
-                terminal_reason=terminal_reason,
-                damage_points=max(
-                    0.0, start_health - float(frame.body.health_points),
-                ),
-                ordered_source_id=source.source_id,
-                source_release_status="pending",
-                source_released=False,
-                worker_delivery=receiver_delivery,
-                motion_identity=motion_identity,
-                delivery_chain=delivery_chain,
-                complete_delivery_chain=complete_delivery_chain,
-                first_verified_application_tick=actual_application_tick,
-                horizontal_collisions=sum(
-                    int(sample["horizontal_collision"]) for sample in samples
-                ),
-                samples=samples,
+                evidence_buffer=evidence_buffer,
             )
-        finally:
-            primary_failure = sys.exc_info()[1]
-            cleanup_errors = []
+            frame = captured.navigation_frame
+            latest_application = captured.latest_application
+            diagnostic()
+            if captured.waiting:
+                waiting_polls += 1
+            if captured.sample is not None:
+                samples.append(captured.sample)
 
-            def cleanup(stage, operation):
-                try:
-                    return operation()
-                except BaseException as error:
-                    cleanup_errors.append((stage, error))
-
-            cleanup("receiver_diagnostics", lambda: collect_receiver_diagnostics(session, trial_name))
-            if runtime.state.value == "ready":
-                cleanup("source_cancel", lambda: runtime.cancel_source(source.source_id))
-                before_unregister = len(cleanup_errors)
-                cleanup("source_unregister", lambda: runtime.unregister_ordered_source(source))
-                source_released = len(cleanup_errors) == before_unregister
-            cleanup("session_unbind", lambda: session.unbind_source(source))
-            cleanup("session_close", session.close)
-            worker_injection = cleanup("injection_end_trial", delayed_motion_worker.end_trial)
-            if primary_failure is not None or cleanup_errors:
-                partial_trial = dict(
-                    name=trial_name, scenario=scenario.name, scenario_kind=scenario.kind,
-                    fabric_supported=True, partial=True,
-                    terminal_state="incomplete", primary_error_type=(type(primary_failure).__name__
-                        if primary_failure is not None else type(cleanup_errors[0][1]).__name__),
-                    source_released=source_released, worker_injection=worker_injection,
-                    cleanup_failures=[dict(stage=stage, type=type(error).__name__)
-                                      for stage, error in cleanup_errors],
-                )
-                cleanup("partial_trial_evidence", lambda: evidence_buffer.append(
-                    "b10-coordinator-trials.jsonl", partial_trial))
-            if primary_failure is None and cleanup_errors:
-                raise cleanup_errors[0][1]
-        if trial is None:
-            raise RuntimeError(
-                f"B10 coordinator trial did not produce evidence: {trial_name}"
-            )
-        trial["source_released"] = source_released
-        trial["source_release_status"] = (
-            "explicitly_released" if source_released else "not_released"
+        target_position = (
+            target[0] + .5,
+            float(target[1] + 1),
+            target[2] + .5,
         )
-        trial["worker_injection"] = worker_injection
+        goal_state = GoalState(
+            Aabb(
+                target_position[0] - .2,
+                target_position[1] - .08,
+                target_position[2] - .2,
+                target_position[0] + .2,
+                target_position[1] + .08,
+                target_position[2] + .2,
+            ),
+            GoalSupport.SOLID,
+            frozenset({MovementMode.WALK}),
+            frozenset({"standing"}),
+            .6,
+        )
+        try:
+            formal_result = _run_b10_formal_driver_scenario(
+                runtime=runtime,
+                session=session,
+                delayed_motion_worker=delayed_motion_worker,
+                scenario=scenario,
+                goal_state=goal_state,
+                goal_id="b10-gap-goal",
+                goal_revision=scenario_index + 1,
+                task=task,
+                behavior=behavior,
+                manual_source=manual_source,
+                clock_ns=time.perf_counter_ns,
+                max_control_frames=96,
+                after_frame=capture_formal_frame,
+            )
+        except BaseException as error:
+            evidence_buffer.append(
+                "b10-coordinator-trials.jsonl",
+                {
+                    "name": trial_name,
+                    "scenario": scenario.name,
+                    "scenario_kind": scenario.kind,
+                    "fabric_supported": True,
+                    "partial": True,
+                    "terminal_state": "incomplete",
+                    "primary_error_type": type(error).__name__,
+                    "source_release_status": (
+                        "shared_cleanup_not_signed_after_error"
+                    ),
+                    "source_released": False,
+                    "recorded_control_frames": len(samples) + waiting_polls,
+                },
+            )
+            raise
+        collect_receiver_diagnostics(session, trial_name)
+        receiver_rows = [
+            row for row in evidence_buffer.rows(
+                "b10-receiver-diagnostics.jsonl"
+            )
+            if row.get("trial") == trial_name
+        ]
+        receiver_delivery = _receiver_diagnostic_summary(
+            receiver_rows,
+        )["deliveries"]
+        delivery_fields = _b10_delivery_chain_fields(
+            samples,
+            receiver_delivery,
+        )
+        recorded_control_frames = sum(
+            row.get("trial") == trial_name
+            for row in evidence_buffer.rows(
+                "b10-coordinator-control-frames.jsonl"
+            )
+        )
+        formal_fields = _b10_formal_trial_fields(
+            formal_result,
+            samples=samples,
+            recorded_control_frames=recorded_control_frames,
+            start_position=start_position,
+        )
+        trial = dict(
+            name=trial_name,
+            scenario=scenario.name,
+            scenario_kind=scenario.kind,
+            direction_index=direction_index,
+            repetition=repetition,
+            fabric_supported=True,
+            unsupported_reason=None,
+            worker_delay_ticks=scenario.worker_delay_ticks,
+            worker_never_return=scenario.never_return,
+            waiting_polls=waiting_polls,
+            entry_alignment_frames=sum(
+                sample["reason_code"] == "aligning_verified_motion_heading"
+                for sample in samples
+            ),
+            command_count=len(samples),
+            final_position=list(frame.body.position),
+            horizontal_error_blocks=math.hypot(
+                frame.body.position[0] - target_position[0],
+                frame.body.position[2] - target_position[2],
+            ),
+            level_error_blocks=abs(
+                frame.body.position[1] - target_position[1]
+            ),
+            landed=frame.body.is_on_ground,
+            damage_points=max(
+                0.0,
+                start_health - float(frame.body.health_points),
+            ),
+            worker_delivery=receiver_delivery,
+            **delivery_fields,
+            horizontal_collisions=sum(
+                int(sample["horizontal_collision"])
+                for sample in samples
+            ),
+            samples=samples,
+            **formal_fields,
+        )
         coordinator_trials.append(trial)
         evidence_buffer.append("b10-coordinator-trials.jsonl", trial)
 
@@ -2709,64 +3131,6 @@ def _run_b10_gap_solver_runtime(
         trial for trial in coordinator_trials if not trial["fabric_supported"]
     ]
 
-    def coordinator_completed(trial: dict) -> bool:
-        return (
-            _worker_injection_valid(trial)
-            and trial["terminal_state"] == NavigationSessionState.COMPLETE.value
-            and trial["landed"]
-            and trial["horizontal_error_blocks"] <= .2
-            and trial["level_error_blocks"] <= .03
-            and trial["horizontal_collisions"] == 0
-            and trial["damage_points"] == 0.0
-            and trial["source_released"]
-        )
-
-    def coordinator_typed_safe_terminal(trial: dict) -> bool:
-        return (
-            _worker_injection_valid(trial)
-            and trial["terminal_state"] in {
-                NavigationSessionState.CANCELLED.value,
-                NavigationSessionState.FAILED.value,
-                NavigationSessionState.REQUIRES_INTERACTION.value,
-            }
-            and type(trial["terminal_reason"]) is str
-            and bool(trial["terminal_reason"])
-            and "harness_wall_timeout" not in trial["terminal_reason"]
-            and trial["landed"]
-            and trial["damage_points"] == 0.0
-            and trial["source_released"]
-        )
-
-    def coordinator_delivery_gate(trial: dict) -> bool:
-        if not _worker_injection_valid(trial):
-            return False
-        verified = [
-            sample for sample in trial["samples"]
-            if sample["verified_command_index"] is not None
-        ]
-        if not verified:
-            return True
-        first = next((
-            sample for sample in verified
-            if sample["verified_command_index"] == 0
-        ), None)
-        chain = trial["delivery_chain"]
-        return (
-            first is not None
-            and trial["complete_delivery_chain"]
-            and chain["first_control_consume_tick"]
-                <= first["expected_movement_tick"] - 1
-            and first["grant_movement_tick"]
-                <= first["expected_movement_tick"] - 1
-            and all(
-                sample["actual_minus_expected_ticks"] is not None
-                and sample["actual_minus_expected_ticks"] >= 0
-                and sample["actual_minus_latest_ticks"] is not None
-                and sample["actual_minus_latest_ticks"] <= 0
-                for sample in verified
-            )
-        )
-
     summary = dict(
         schema_version="mc2p.b10-gap-solver.v2",
         partial=False, matrix_complete=True,
@@ -2811,29 +3175,29 @@ def _run_b10_gap_solver_runtime(
         coordinator_validation_count=len(coordinator_executed),
         coordinator_validation_success_count=sum(
             trial["waiting_polls"] > 0
-            and coordinator_completed(trial)
+            and _b10_coordinator_completed(trial)
             for trial in coordinator_executed
         ),
         coordinator_baseline_success_count=sum(
-            coordinator_completed(trial)
+            _b10_coordinator_completed(trial)
             for trial in coordinator_executed
             if trial["scenario_kind"] == "baseline"
         ),
         coordinator_delay_2_5_success_count=sum(
-            coordinator_completed(trial)
+            _b10_coordinator_completed(trial)
             for trial in coordinator_executed
             if trial["scenario_kind"] == "worker_delay"
             and trial["worker_delay_ticks"] in {2, 5}
         ),
         coordinator_delay_10_safe_count=sum(
-            coordinator_completed(trial)
-            or coordinator_typed_safe_terminal(trial)
+            _b10_coordinator_completed(trial)
+            or _b10_coordinator_typed_safe_terminal(trial)
             for trial in coordinator_executed
             if trial["scenario_kind"] == "worker_delay"
             and trial["worker_delay_ticks"] == 10
         ),
         coordinator_never_return_safe_count=sum(
-            coordinator_typed_safe_terminal(trial)
+            _b10_coordinator_never_return_safe(trial)
             for trial in coordinator_executed
             if trial["scenario_kind"] == "worker_never_return"
         ),
@@ -2907,7 +3271,7 @@ def _run_b10_gap_solver_runtime(
                 trial["entry_alignment_frames"] <= 5
                 for trial in coordinator_executed
             )
-            and all(coordinator_delivery_gate(trial)
+            and all(_b10_coordinator_delivery_gate(trial)
                     for trial in coordinator_executed)
         )),
         dict(name="r4_three_speed_bands_four_directions_five_runs_each",

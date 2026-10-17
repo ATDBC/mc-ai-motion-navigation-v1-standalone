@@ -120,6 +120,7 @@
     "scripts/verify_prepared_motion_d102.py",
     "scripts/run_motion_nav_shards.py",
     "scripts/audit_d107_b10_trace.py",
+    "scripts/analyze_d114_formal_driver_run.py",
     "tests/motion_nav/d102_contract_cases.py",
     "tests/motion_nav/test_incremental_motion_*.py",
     "tests/motion_nav/test_trajectory_proto_*.py",
@@ -130,7 +131,8 @@
     "evidence/motion_navigation/d110-evidence-lifecycle-v1/**/*",
     "evidence/motion_navigation/d111-b10-gc-attribution-v1/**/*",
     "evidence/motion_navigation/d112-worker-delivery-v1/**/*",
-    "evidence/motion_navigation/d113-control-visible-v1/**/*"
+    "evidence/motion_navigation/d113-control-visible-v1/**/*",
+    "evidence/motion_navigation/d114-formal-driver-v1/**/*"
   ],
   "exclude_globs": [
     "tests/motion_nav/test_d102_evidence_contract.py"
@@ -571,6 +573,7 @@
     "docs/motion_navigation/stages/d103-regression-recovery-plan.md",
     "docs/motion_navigation/acceptance/d103-regression-recovery.md",
     "scripts/run_motion_nav_shards.py",
+    "scripts/analyze_d114_formal_driver_run.py",
     "scripts/audit_d107_b10_trace.py",
     "tests/motion_nav/test_d107_shard_runner.py",
     "tests/motion_nav/test_d107_b10_trace_audit.py",
@@ -604,6 +607,9 @@
     "tests/motion_nav/test_trajectory_proto_primitive_matrix.py",
     "tests/motion_nav/test_trajectory_proto_m0_probe.py",
     ".superpowers/sdd/2026-10-10-continuous-short-trajectory-prototype/task-5a-brief.md",
+    ".superpowers/sdd/2026-10-10-continuous-short-trajectory-prototype/task-5a-r1-report.md",
+    ".superpowers/sdd/2026-10-10-continuous-short-trajectory-prototype/task-5a-r2-plan.md",
+    ".superpowers/sdd/2026-10-10-continuous-short-trajectory-prototype/task-5a-r2-report.md",
     ".superpowers/sdd/2026-10-10-continuous-short-trajectory-prototype/task-5a-report.md",
     ".superpowers/sdd/2026-10-10-continuous-short-trajectory-prototype/task-5a-review.md",
     "docs/motion_navigation/decisions/0109-retest-b10-budget-and-bound-lifecycle-cleanup.md",
@@ -645,6 +651,7 @@
     "evidence/motion_navigation/d111-b10-gc-attribution-v1/fabric-b10/command.txt",
     "evidence/motion_navigation/d111-b10-gc-attribution-v1/fabric-b10/provenance.json",
     "evidence/motion_navigation/d113-control-visible-v1/d112-read-only-baseline.json",
-    "evidence/motion_navigation/d113-control-visible-v1/published-production-semantic-hashes.json"
+    "evidence/motion_navigation/d113-control-visible-v1/published-production-semantic-hashes.json",
+    "evidence/motion_navigation/d114-formal-driver-v1/published-production-semantic-hashes.json"
   ]
 }

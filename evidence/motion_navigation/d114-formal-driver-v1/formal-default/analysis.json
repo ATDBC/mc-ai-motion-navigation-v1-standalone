@@ -1,0 +1,178 @@
+{
+  "d110_solve_01": "OPEN",
+  "fabric": {
+    "baseline_complete": 20,
+    "cleanup_failures": [],
+    "coordinator_executed": 48,
+    "coordinator_preregistered": 56,
+    "coordinator_unsupported_late1": 8,
+    "delay_10_safe_corrected": 8,
+    "delay_10_safe_recorded": 5,
+    "delay_2_5_complete": 16,
+    "never_return_safe": 4,
+    "r4": "60/60",
+    "turn_validation": "40/40",
+    "typed_negative": 24,
+    "validation": "40/40"
+  },
+  "fabric_rerun_after_correction": false,
+  "final_interpretation": "accepted_after_read_only_measurement_correction",
+  "measurement_correction": {
+    "delay_10_count": 8,
+    "delay_10_safe_count_after": 8,
+    "delay_10_safe_count_before": 5,
+    "false_departure_count": 3,
+    "schema_version": "mc2p.d114-formal-driver-run-analysis.v1",
+    "source_hashes": {
+      "b10-coordinator-trials.jsonl": "e080cf1f84a95b6167e14495f43e517f1dbaae53bb83cb4ec103ff68f82b2bf8",
+      "trace.jsonl": "9ee89521c8a5f52dea7db0c5106109d653b9cf01bde4c7884d8b49fdaffe1e5d"
+    },
+    "source_hashes_unchanged": true,
+    "trials": [
+      {
+        "accepted_after_correction": true,
+        "actual_departure": false,
+        "damage_points": 0.0,
+        "name": "coordinator-worker-delay-10-0-0",
+        "recorded_left_start_support": false,
+        "source_released": true,
+        "terminal_reason": "motion_unsolvable:motion_retry_exhausted:execution_window_expired",
+        "terminal_state": "failed",
+        "trace_frame_count": 31,
+        "trace_tick_end": 2283,
+        "trace_tick_start": 2253
+      },
+      {
+        "accepted_after_correction": true,
+        "actual_departure": false,
+        "damage_points": 0.0,
+        "name": "coordinator-worker-delay-10-0-1",
+        "recorded_left_start_support": true,
+        "source_released": true,
+        "terminal_reason": "motion_unsolvable:motion_retry_exhausted:execution_window_expired",
+        "terminal_state": "failed",
+        "trace_frame_count": 31,
+        "trace_tick_end": 2316,
+        "trace_tick_start": 2286
+      },
+      {
+        "accepted_after_correction": true,
+        "actual_departure": false,
+        "damage_points": 0.0,
+        "name": "coordinator-worker-delay-10-1-0",
+        "recorded_left_start_support": false,
+        "source_released": true,
+        "terminal_reason": "motion_unsolvable:motion_retry_exhausted:execution_window_expired",
+        "terminal_state": "failed",
+        "trace_frame_count": 31,
+        "trace_tick_end": 2351,
+        "trace_tick_start": 2321
+      },
+      {
+        "accepted_after_correction": true,
+        "actual_departure": false,
+        "damage_points": 0.0,
+        "name": "coordinator-worker-delay-10-1-1",
+        "recorded_left_start_support": true,
+        "source_released": true,
+        "terminal_reason": "motion_unsolvable:motion_retry_exhausted:execution_window_expired",
+        "terminal_state": "failed",
+        "trace_frame_count": 31,
+        "trace_tick_end": 2384,
+        "trace_tick_start": 2354
+      },
+      {
+        "accepted_after_correction": true,
+        "actual_departure": false,
+        "damage_points": 0.0,
+        "name": "coordinator-worker-delay-10-2-0",
+        "recorded_left_start_support": false,
+        "source_released": true,
+        "terminal_reason": "motion_unsolvable:motion_retry_exhausted:execution_window_expired",
+        "terminal_state": "failed",
+        "trace_frame_count": 31,
+        "trace_tick_end": 2419,
+        "trace_tick_start": 2389
+      },
+      {
+        "accepted_after_correction": true,
+        "actual_departure": false,
+        "damage_points": 0.0,
+        "name": "coordinator-worker-delay-10-2-1",
+        "recorded_left_start_support": true,
+        "source_released": true,
+        "terminal_reason": "motion_unsolvable:motion_retry_exhausted:execution_window_expired",
+        "terminal_state": "failed",
+        "trace_frame_count": 31,
+        "trace_tick_end": 2452,
+        "trace_tick_start": 2422
+      },
+      {
+        "accepted_after_correction": true,
+        "actual_departure": false,
+        "damage_points": 0.0,
+        "name": "coordinator-worker-delay-10-3-0",
+        "recorded_left_start_support": false,
+        "source_released": true,
+        "terminal_reason": "motion_unsolvable:motion_retry_exhausted:execution_window_expired",
+        "terminal_state": "failed",
+        "trace_frame_count": 31,
+        "trace_tick_end": 2487,
+        "trace_tick_start": 2457
+      },
+      {
+        "accepted_after_correction": true,
+        "actual_departure": false,
+        "damage_points": 0.0,
+        "name": "coordinator-worker-delay-10-3-1",
+        "recorded_left_start_support": false,
+        "source_released": true,
+        "terminal_reason": "motion_unsolvable:motion_retry_exhausted:execution_window_expired",
+        "terminal_state": "failed",
+        "trace_frame_count": 31,
+        "trace_tick_end": 2521,
+        "trace_tick_start": 2491
+      }
+    ]
+  },
+  "performance_signable": true,
+  "production_control_prepare_ms": {
+    "definition": "trace step dispatched_monotonic_ns minus decision_observation_received_ns",
+    "invalid": 0,
+    "maximum": 5.8878,
+    "minimum": 0.8843,
+    "missing": 0,
+    "p50": 1.1479,
+    "p95": 2.96,
+    "p99": 5.4988,
+    "samples": 1211,
+    "source_association_count": 1211
+  },
+  "production_thresholds_met": true,
+  "recorded_command_status": "failed",
+  "recorded_failed_gate": "b10c_worker_delivery_matrix_is_safe_and_bounded",
+  "recorded_primary_failure": {
+    "message": "['client-0:b10c_worker_delivery_matrix_is_safe_and_bounded']",
+    "type": "DeploymentEvidenceFailure"
+  },
+  "run_id": "20261016T195312300169Z-6a7ddaf2",
+  "schema_version": "mc2p.d114-formal-driver-acceptance.v1",
+  "solver_report_only": {
+    "maximum": 26543700,
+    "p95": 23908600,
+    "p99": 24429000,
+    "samples": 142
+  },
+  "synchronous_probe_ms_report_only": {
+    "definition": "trace step dispatched_monotonic_ns minus decision_observation_received_ns",
+    "invalid": 0,
+    "maximum": 27.9042,
+    "minimum": 20.412,
+    "missing": 0,
+    "p50": 22.68,
+    "p95": 25.7821,
+    "p99": 26.2237,
+    "samples": 142,
+    "source_association_count": 142
+  }
+}

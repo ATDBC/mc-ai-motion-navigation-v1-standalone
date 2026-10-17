@@ -195,19 +195,44 @@ class ActionHandoffTests(unittest.TestCase):
         self.assertIs(result.status, PreparedSubmitStatus.ACCEPTED)
         return result
 
-    def ready_next(self):
-        self.prepare()
-        for _ in range(4):
+    def wait_for_current_prepared_job(self, *, action_index, existing_job_ids=()):
+        fields = self.coordinator._prepared_fields
+        stream = self.coordinator.generation_for(action_index)
+        self.assertIsNotNone(fields, "the coordinator did not retain the current preparation identity")
+        self.assertIsNotNone(stream, "the coordinator did not retain the current stream generation")
+        expected_identity = fields.async_identity
+        expected_generation = stream.generation_id
+        existing_job_ids = frozenset(existing_job_ids)
+        for _ in range(5):
             self.assertTrue(self.inbox.wait_for_receiver(timeout=10))
-            self.prepare()
-            for job in tuple(self.worker.jobs):
-                if isinstance(job, PreparedMotionJob) and job.request.stream.action_index == 1:
-                    self.worker.put(_execute_job(job))
-                    self.assertTrue(self.inbox.wait_for_receiver(timeout=10))
-                    handle = next(h for h in self.inbox.registered_handles if h.action_index == 1)
-                    self.executor.install_prepared_motion(handle)
-                    return handle
-        self.fail("the same worker never received the parent-frozen PREPARE request")
+            matching = [job for job in self.worker.jobs
+                        if isinstance(job, PreparedMotionJob)
+                        and id(job) not in existing_job_ids
+                        and job.request.async_identity == expected_identity
+                        and job.request.stream.generation_id == expected_generation
+                        and job.request.stream.action_index == action_index]
+            if matching:
+                self.assertEqual(len(matching), 1,
+                                 "one preparation identity must submit exactly one worker job")
+                return matching[0]
+        observed = tuple((job.request.async_identity.key, job.request.stream.generation_id,
+                          job.request.stream.action_index) for job in self.worker.jobs
+                         if isinstance(job, PreparedMotionJob))
+        self.fail("the receiver did not submit the current preparation within five cycles: "
+                  f"expected={(expected_identity.key, expected_generation, action_index)!r}, "
+                  f"observed={observed!r}")
+
+    def ready_next(self):
+        existing_job_ids = {id(job) for job in self.worker.jobs}
+        self.prepare()
+        job = self.wait_for_current_prepared_job(action_index=1, existing_job_ids=existing_job_ids)
+        self.worker.put(_execute_job(job))
+        self.assertTrue(self.inbox.wait_for_receiver(timeout=10))
+        admission = self.inbox.prepared_admission(job.request.async_identity)
+        self.assertIsNotNone(admission)
+        self.assertIsNotNone(admission.handle)
+        self.executor.install_prepared_motion(admission.handle)
+        return admission.handle
 
     def observe_first(self, *, stop_airborne=False):
         proof = self.proofs[0]
@@ -278,12 +303,12 @@ class ActionHandoffTests(unittest.TestCase):
                     proof = replace(proof, world_dependencies=tuple(sorted(set(proof.world_dependencies) | {(0, 6, 3)})))
                 self.executor._verified_motion[1] = replace(installed,
                     candidate=replace(installed.candidate, proof=proof))
+                existing_job_ids = {id(job) for job in self.worker.jobs}
                 self.prepare(commands=proof.commands)
                 self.assertNotEqual(self.coordinator.generation_for(1).generation_id, original.generation_id)
-                self.assertTrue(self.inbox.wait_for_receiver(timeout=10))
-                for job in tuple(self.worker.jobs):
-                    if isinstance(job, PreparedMotionJob):
-                        self.worker.put(_execute_job(job))
+                job = self.wait_for_current_prepared_job(
+                    action_index=1, existing_job_ids=existing_job_ids)
+                self.worker.put(_execute_job(job))
                 self.assertTrue(self.inbox.wait_for_receiver(timeout=10))
 
     def test_same_route_handoff_keeps_body_owner(self):
@@ -464,11 +489,14 @@ class ActionHandoffTests(unittest.TestCase):
         with patch.object(proof_module, "canonical_motion_digest", side_effect=observed("digest", proof_module.canonical_motion_digest)), \
              patch.object(value_module, "validate_frozen_value", side_effect=observed("graph", value_module.validate_frozen_value)), \
              patch.object(pickle, "dumps", side_effect=observed("serialize", pickle.dumps)):
+            existing_job_ids = {id(job) for job in self.worker.jobs}
             self.prepare()
-            self.assertTrue(self.inbox.wait_for_receiver(timeout=10))
+            job = self.wait_for_current_prepared_job(
+                action_index=1, existing_job_ids=existing_job_ids)
         self.assertEqual([event for event in events if event[1] == control_thread], [])
         self.assertEqual({event[0] for event in events}, {"digest", "graph", "serialize"})
         self.assertEqual({event[1] for event in events}, {self.inbox.receiver_thread_id})
+        self.assertEqual(job.request.async_identity, self.coordinator._prepared_fields.async_identity)
 
     def test_same_worker_solve_choice_is_frozen_before_prepare(self):
         self.executor._verified_motion.pop(1)
@@ -480,16 +508,12 @@ class ActionHandoffTests(unittest.TestCase):
         selection, = [job for job in self.worker.jobs if isinstance(job, GapMotionSolveJob)]
         self.worker.put(_execute_job(selection))
         self.assertTrue(self.inbox.wait_for_receiver(timeout=10))
+        existing_job_ids = {id(job) for job in self.worker.jobs}
         self.coordinator.decide(self.frame(self.current), self.current, self.ledger, self.physics_world,
                                 changed_cells=(), current_scope=self.coordinator.computation_scope)
         # Snapshot sealing and request submission can use separate receiver cycles.
-        prepared = []
-        for _ in range(5):
-            self.assertTrue(self.inbox.wait_for_receiver(timeout=10))
-            prepared = [job for job in self.worker.jobs if isinstance(job, PreparedMotionJob)]
-            if prepared:
-                break
-        prepared, = prepared
+        prepared = self.wait_for_current_prepared_job(
+            action_index=1, existing_job_ids=existing_job_ids)
         self.assertEqual(prepared.request.commands, self.inbox._active[prepared.request.async_identity].request.commands)
         self.assertNotEqual(prepared.request.async_identity, selection.work_identity)
         self.assertFalse(self.current.physics_state.on_ground)
@@ -594,15 +618,7 @@ class ActionHandoffTests(unittest.TestCase):
             candidate, candidate=replace(candidate.candidate, proof=proof))
         old_jobs = {id(job) for job in self.worker.jobs}
         self.prepare()
-        new_jobs = []
-        for _ in range(5):
-            self.assertTrue(self.inbox.wait_for_receiver(timeout=10))
-            new_jobs = [job for job in self.worker.jobs
-                        if isinstance(job, PreparedMotionJob) and id(job) not in old_jobs]
-            if new_jobs:
-                break
-        self.assertEqual(len(new_jobs), 1, "this prepare must submit exactly one new job")
-        job, = new_jobs
+        job = self.wait_for_current_prepared_job(action_index=1, existing_job_ids=old_jobs)
         self.assertEqual(job.request.stream.generation_id,
                          self.coordinator.generation_for(1).generation_id)
         self.worker.put(_execute_job(job))

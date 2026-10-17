@@ -7,6 +7,7 @@ import inspect
 import json
 from pathlib import Path
 import tempfile
+import textwrap
 import threading
 from types import SimpleNamespace
 import unittest
@@ -41,9 +42,7 @@ from scripts.b10_gap_solver_runtime import (
     _runtime_navigation_frame,
     _targeted_information_request,
     _verified_submission_window,
-    _waiting_control_proposals,
 )
-from mc2p.contracts.intent_source import ControlFrameProposalV1
 from mc2p.contracts.action_v1 import MovementV1
 from mc2p.contracts.observation_request_v3 import ObservationRequestV3
 from mc2p.motion_nav.world_model import CellKnowledge
@@ -242,23 +241,72 @@ class B10RuntimeProbeTests(unittest.TestCase):
         self.assertEqual(evidence["submissions"][0]["wrapper_publish_tick"], 44)
 
     def test_formal_coordinator_uses_the_preregistered_tick_delay_port(self):
-        source = inspect.getsource(probe._run_b10_gap_solver_runtime)
+        outer = inspect.getsource(probe._run_b10_gap_solver_runtime)
+        outer_tree = ast.parse(textwrap.dedent(outer))
+        shared = inspect.getsource(probe._run_b10_formal_driver_scenario)
+        delivery_gate = inspect.getsource(
+            probe._b10_coordinator_delivery_gate
+        )
 
-        self.assertIn("_selected_b10_coordinator_scenarios(targeted_probe)", source)
+        self.assertIn("_selected_b10_coordinator_scenarios(targeted_probe)", outer)
         self.assertEqual(probe._selected_b10_coordinator_scenarios(None),
                          probe._b10_coordinator_scenarios())
-        self.assertIn("_MovementTickDelayedMotionWorker(motion_worker)", source)
-        self.assertIn("delayed_motion_worker.begin_trial(", source)
-        self.assertIn("delayed_motion_worker.publish_movement_tick(", source)
-        self.assertIn("motion_worker=delayed_motion_worker", source)
-        self.assertIn("delayed_motion_worker.end_trial", source)
-        self.assertIn("delayed_motion_worker.install_read_gate(session._motion_result_inbox)", source)
-        self.assertIn(')["deliveries"]', source)
-        self.assertNotIn(')["delivery"]', source)
-        self.assertNotIn("time.sleep(scenario.worker_delay", source)
-        self.assertIn("coordinator_delivery_gate(trial)", source)
-        self.assertIn('sample["actual_minus_expected_ticks"] >= 0', source)
-        self.assertIn('sample["actual_minus_latest_ticks"] <= 0', source)
+        self.assertIn("_MovementTickDelayedMotionWorker(motion_worker)", outer)
+        self.assertIn("_run_b10_formal_driver_scenario(", outer)
+        coordinator_loop = next(
+            node for node in ast.walk(outer_tree)
+            if isinstance(node, ast.For)
+            and "coordinator_scenarios" in ast.dump(node.iter)
+        )
+        loop_calls = tuple(
+            node for node in ast.walk(coordinator_loop)
+            if isinstance(node, ast.Call)
+        )
+        helper_calls = tuple(
+            node for node in loop_calls
+            if isinstance(node.func, ast.Name)
+            and node.func.id == "_run_b10_formal_driver_scenario"
+        )
+        self.assertEqual(len(helper_calls), 1)
+        forbidden_names = {"step"}
+        forbidden_attributes = {
+            "control_frame",
+            "prepare_proposals",
+            "adopt_result",
+            "discard_prepared",
+        }
+        self.assertFalse(tuple(
+            node for node in loop_calls
+            if (
+                isinstance(node.func, ast.Name)
+                and node.func.id in forbidden_names
+            ) or (
+                isinstance(node.func, ast.Attribute)
+                and node.func.attr in forbidden_attributes
+            )
+        ))
+        self.assertIn("delayed_motion_worker.begin_trial(", shared)
+        self.assertIn("delayed_motion_worker.publish_movement_tick(", shared)
+        self.assertIn("driver.prepare_proposals(", shared)
+        self.assertIn("driver.adopt_result(result)", shared)
+        self.assertIn("driver.discard_prepared()", shared)
+        self.assertIn("delayed_motion_worker.end_trial", shared)
+        self.assertIn(
+            "delayed_motion_worker.install_read_gate(session._motion_result_inbox)",
+            shared,
+        )
+        self.assertIn(')["deliveries"]', outer)
+        self.assertNotIn(')["delivery"]', outer)
+        self.assertNotIn("time.sleep(scenario.worker_delay", outer)
+        self.assertIn("coordinator_delivery_gate(trial)", outer)
+        self.assertIn(
+            'sample["actual_minus_expected_ticks"] >= 0',
+            delivery_gate,
+        )
+        self.assertIn(
+            'sample["actual_minus_latest_ticks"] <= 0',
+            delivery_gate,
+        )
 
 
     def test_local_diagnostics_keep_strings_until_control_trials_finish(self):
@@ -686,45 +734,6 @@ class B10RuntimeProbeTests(unittest.TestCase):
             applications,
             0,
             applications[0].movement_tick_id,
-        )
-
-    def test_information_wait_keeps_the_route_look_and_requests_a_new_frame(self):
-        route_control = ControlFrameProposalV1()
-        proposal = SimpleNamespace(
-            control_frame=route_control,
-            route_decision=None,
-        )
-        frame = SimpleNamespace(world=SimpleNamespace(
-            cell=lambda _position: SimpleNamespace(
-                knowledge=CellKnowledge.UNKNOWN,
-            ),
-        ))
-        request = ObservationRequestV3("navigation_v1", ((1, 2, 3),))
-
-        controls = _waiting_control_proposals(proposal, frame, request)
-
-        self.assertEqual(controls[0], route_control)
-        self.assertEqual(controls[1].observation_request, request)
-
-    def test_verified_motion_wait_does_not_keep_changing_the_world_basis(self):
-        route_control = ControlFrameProposalV1()
-        proposal = SimpleNamespace(
-            control_frame=route_control,
-            route_decision=SimpleNamespace(
-                reason_code="awaiting_verified_motion",
-            ),
-        )
-
-        controls = _waiting_control_proposals(proposal, object(), object())
-
-        self.assertEqual(controls, (route_control,))
-
-    def test_wait_without_a_control_frame_does_not_emit_an_empty_tick(self):
-        self.assertEqual(
-            _waiting_control_proposals(
-                SimpleNamespace(control_frame=None), object(), None,
-            ),
-            (),
         )
 
     def test_information_retry_continues_while_solver_reveals_new_cells(self):
